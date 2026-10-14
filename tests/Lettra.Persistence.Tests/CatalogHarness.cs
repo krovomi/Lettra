@@ -94,8 +94,14 @@ internal static class CatalogScenarios
     public static async Task ProvisionAndMigrateAsync(CatalogHarness harness, DatabaseProvider provider)
     {
         IServiceProvider services = harness.Services;
-        await services.InitializeCatalogAsync(migrate: true, default);
-        // Deux fois : l'import de la configuration est idempotent.
+        await using (CatalogDbContext db = await services.GetRequiredService<IDbContextFactory<CatalogDbContext>>().CreateDbContextAsync())
+        {
+            await db.Database.MigrateAsync();
+        }
+
+        // Plusieurs instances qui démarrent ensemble importent la même configuration sans conflit.
+        await Task.WhenAll(Enumerable.Range(0, 4).Select(_ => Task.Run(() => services.InitializeCatalogAsync(migrate: false, default))));
+        // Puis encore une fois : l'import de la configuration est idempotent.
         await services.InitializeCatalogAsync(migrate: true, default);
 
         Result<DossierId> created = await Create(services, "Dossier A");

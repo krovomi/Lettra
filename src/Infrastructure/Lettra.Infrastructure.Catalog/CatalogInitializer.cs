@@ -17,17 +17,35 @@ public sealed class CatalogInitializer(
     public async Task InitializeAsync(bool migrate, CancellationToken cancellationToken)
     {
         CatalogOptions declared = options.Value;
-        CatalogDbContext db = await factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
-        await using (db.ConfigureAwait(false))
+        if (migrate)
         {
-            if (migrate)
+            CatalogDbContext db = await factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+            await using (db.ConfigureAwait(false))
             {
                 await db.Database.MigrateAsync(cancellationToken).ConfigureAwait(false);
             }
+        }
 
-            await ImportAsync(db, declared, clock.GetUtcNow(), cancellationToken).ConfigureAwait(false);
+        // Plusieurs instances peuvent démarrer ensemble sur le même catalogue : celle qui perd la course à l'insertion
+        // relit ce que l'autre a écrit et recommence (l'import est idempotent).
+        for (int attempt = 1; ; attempt++)
+        {
+            CatalogDbContext db = await factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+            await using (db.ConfigureAwait(false))
+            {
+                try
+                {
+                    await ImportAsync(db, declared, clock.GetUtcNow(), cancellationToken).ConfigureAwait(false);
+                    return;
+                }
+                catch (DbUpdateException) when (attempt < MaxImportAttempts)
+                {
+                }
+            }
         }
     }
+
+    private const int MaxImportAttempts = 3;
 
     private static async Task ImportAsync(CatalogDbContext db, CatalogOptions declared, DateTimeOffset now, CancellationToken cancellationToken)
     {

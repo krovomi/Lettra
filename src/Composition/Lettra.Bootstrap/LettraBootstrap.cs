@@ -97,18 +97,29 @@ public static class LettraBootstrap
         }
     }
 
-    private static Action<DbContextOptionsBuilder> CatalogDatabase(IConfiguration configuration)
+    /// <summary>
+    /// Lu à la construction des options, pas à l'enregistrement : la configuration complète (y compris les sources
+    /// ajoutées après coup, par exemple par les hôtes de test) est alors connue.
+    /// </summary>
+    private static Action<DbContextOptionsBuilder> CatalogDatabase(IConfiguration configuration) => builder =>
     {
         DatabaseProvider provider = configuration.GetValue("Lettra:Catalog:Provider", DatabaseProvider.Sqlite);
         string name = configuration.GetValue("Lettra:Catalog:ConnectionStringName", "Catalog")!;
         string connectionString = configuration.GetConnectionString(name)
             ?? throw new InvalidOperationException($"ConnectionStrings:{name} (base Catalog) est obligatoire.");
-        return provider switch
+        switch (provider)
         {
-            DatabaseProvider.Sqlite => builder => SqliteConfigurator.ConfigureCatalog(builder, connectionString),
-            DatabaseProvider.PostgreSql => builder => PostgreSqlConfigurator.ConfigureCatalog(builder, connectionString),
-            DatabaseProvider.SqlServer => builder => SqlServerConfigurator.ConfigureCatalog(builder, connectionString),
-            _ => throw new NotSupportedException($"Provider {provider} inconnu pour le catalogue."),
-        };
-    }
+            case DatabaseProvider.Sqlite:
+                SqliteConfigurator.ConfigureCatalog(builder, connectionString);
+                break;
+            case DatabaseProvider.PostgreSql:
+                PostgreSqlConfigurator.ConfigureCatalog(builder, connectionString);
+                break;
+            case DatabaseProvider.SqlServer:
+                SqlServerConfigurator.ConfigureCatalog(builder, connectionString);
+                break;
+            default:
+                throw new NotSupportedException($"Provider {provider} inconnu pour le catalogue.");
+        }
+    };
 }
