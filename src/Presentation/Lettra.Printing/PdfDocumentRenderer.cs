@@ -8,14 +8,20 @@ using PdfSharp.Pdf;
 
 namespace Lettra.Printing;
 
-/// <summary>Rend un document commercial en PDF. Sans état ; utilisable depuis plusieurs fils.</summary>
+/// <summary>Rend un document commercial en PDF/A-3b. Sans état ; utilisable depuis plusieurs fils.</summary>
 public interface IDocumentPdfRenderer
 {
     byte[] Render(PrintableDocument document);
+
+    /// <summary>
+    /// Rend le document avec des fichiers joints (PDF/A-3 « associated files ») : c'est ainsi qu'un Factur-X
+    /// embarque son XML CII (phase 5).
+    /// </summary>
+    byte[] Render(PrintableDocument document, IReadOnlyList<PdfAttachment> attachments);
 }
 
 /// <summary>
-/// Rendu PDF A4 avec PDFsharp/MigraDoc (MIT). Les totaux et la ventilation de TVA sont recalculés par
+/// Rendu PDF/A-3b A4 avec PDFsharp/MigraDoc (MIT), vérifié par veraPDF en CI. Les totaux et la ventilation de TVA sont recalculés par
 /// <see cref="DocumentCalculator"/> : le PDF montre exactement les montants que le serveur retient.
 /// Textes dans la langue du document (<see cref="PrintableDocument.Culture"/>), pas dans celle de l'utilisateur.
 /// </summary>
@@ -28,9 +34,12 @@ public sealed class PdfDocumentRenderer : IDocumentPdfRenderer
     private static readonly Color Rule = new(0xD1, 0xD5, 0xDB);
     private static readonly Color Band = new(0xF3, 0xF4, 0xF6);
 
-    public byte[] Render(PrintableDocument document)
+    public byte[] Render(PrintableDocument document) => Render(document, []);
+
+    public byte[] Render(PrintableDocument document, IReadOnlyList<PdfAttachment> attachments)
     {
         ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(attachments);
         EmbeddedFontResolver.EnsureInstalled();
 
         MigraDoc.Rendering.PdfDocumentRenderer renderer = new() { Document = Build(document) };
@@ -39,9 +48,7 @@ public sealed class PdfDocumentRenderer : IDocumentPdfRenderer
         pdf.Info.Title = Title(document);
         pdf.Info.Author = document.Seller.Name;
         pdf.Info.Creator = "Lettra";
-        using MemoryStream output = new();
-        pdf.Save(output, false);
-        return output.ToArray();
+        return PdfA3.Save(pdf, document.Culture, attachments);
     }
 
     /// <summary>Modèle MigraDoc du document, avant rendu (les tests y lisent les textes).</summary>

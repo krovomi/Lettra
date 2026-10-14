@@ -37,6 +37,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
+## Liberation Fonts
+
+- Origine : https://github.com/liberationfonts/liberation-fonts (version 2.1.5)
+- Licence : SIL Open Font License 1.1 (texte complet dans `third_party/liberation-fonts/LICENSE`)
+- Intégré dans `third_party/liberation-fonts/` : Liberation Sans Regular et Bold, incorporées aux PDF des devis
+  et factures par `Lettra.Printing`. L'OFL permet d'incorporer et redistribuer la police avec un logiciel commercial ;
+  elle ne s'applique pas aux documents produits avec elle.
+
 ## Paquets NuGet
 
 Les licences des paquets NuGet sont celles déclarées par leurs auteurs ; la nomenclature (SBOM CycloneDX)
