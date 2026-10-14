@@ -153,6 +153,83 @@
   <data name="Error.Rights.StateInvalid" xml:space="preserve"><value>This account state is not valid.</value></data>
   <data name="Error.Numbering.SeriesNotFound" xml:space="preserve"><value>This numbering series does not exist in the client file.</value></data>
   <data name="Error.Numbering.Contention" xml:space="preserve"><value>Too many documents are being validated in this client file at once. Try again.</value></data>
+  <data name="Error.Billing.CustomerRequired" xml:space="preserve"><value>Choose a customer.</value></data>
+  <data name="Error.Billing.LinesRequired" xml:space="preserve"><value>Add at least one line.</value></data>
+  <data name="Error.Billing.TooManyLines" xml:space="preserve"><value>A document has at most 500 lines.</value></data>
+  <data name="Error.Billing.LineReferenceTooLong" xml:space="preserve"><value>The line reference exceeds 50 characters.</value></data>
+  <data name="Error.Billing.LineDesignationRequired" xml:space="preserve"><value>Enter the line description.</value></data>
+  <data name="Error.Billing.LineDesignationTooLong" xml:space="preserve"><value>The description exceeds 200 characters.</value></data>
+  <data name="Error.Billing.LineDescriptionTooLong" xml:space="preserve"><value>The line details exceed 2,000 characters.</value></data>
+  <data name="Error.Billing.LineKindInvalid" xml:space="preserve"><value>Choose goods or service.</value></data>
+  <data name="Error.Billing.LineQuantityInvalid" xml:space="preserve"><value>The quantity must not be zero.</value></data>
+  <data name="Error.Billing.LinePriceInvalid" xml:space="preserve"><value>The unit price must be zero or more.</value></data>
+  <data name="Error.Billing.LineDiscountInvalid" xml:space="preserve"><value>The discount must be between 0 and 100%.</value></data>
+  <data name="Error.Billing.VatRegimeInvalid" xml:space="preserve"><value>This VAT regime is not recognised.</value></data>
+  <data name="Error.Billing.ExemptionUnknown" xml:space="preserve"><value>This exemption reason is not recognised.</value></data>
+  <data name="Error.Billing.ExemptionOutsideStandardRegime" xml:space="preserve"><value>A per-line exemption is only possible under the standard VAT regime.</value></data>
+  <data name="Error.Billing.SubjectTooLong" xml:space="preserve"><value>The subject exceeds 200 characters.</value></data>
+  <data name="Error.Billing.NotesTooLong" xml:space="preserve"><value>The notes exceed 4,000 characters.</value></data>
+  <data name="Error.Billing.PaymentTermsTooLong" xml:space="preserve"><value>The payment terms exceed 500 characters.</value></data>
+  <data name="Error.Billing.DeliveryAddressTooLong" xml:space="preserve"><value>The delivery address exceeds 500 characters.</value></data>
+  <data name="Error.Billing.CreditReasonTooLong" xml:space="preserve"><value>The credit note reason exceeds 500 characters.</value></data>
+  <data name="Error.Billing.DueDateBeforeIssueDate" xml:space="preserve"><value>The due date cannot be before the issue date.</value></data>
+  <data name="Error.Billing.NotDraft" xml:space="preserve"><value>This document is validated and can no longer be changed.</value></data>
+  <data name="Error.Billing.VersionMismatch" xml:space="preserve"><value>Someone changed this document in the meantime. Reload it.</value></data>
+  <data name="Error.Billing.NotCompliant" xml:space="preserve"><value>Mandatory information is missing: the document cannot be validated.</value></data>
+  <data name="Error.Billing.CompanyProfileMissing" xml:space="preserve"><value>Fill in the issuing company profile first.</value></data>
+  <data name="Error.Billing.DownPaymentInvalid" xml:space="preserve"><value>Enter a down payment percentage or amount, not both.</value></data>
+  <data name="Error.Quote.NotFound" xml:space="preserve"><value>This quote does not exist.</value></data>
+  <data name="Error.Quote.ValidUntilBeforeIssueDate" xml:space="preserve"><value>The expiry date cannot be before the quote date.</value></data>
+  <data name="Error.Quote.NotValidated" xml:space="preserve"><value>Validate the quote first.</value></data>
+  <data name="Error.Quote.NotAccepted" xml:space="preserve"><value>The customer must accept the quote first.</value></data>
+  <data name="Error.Quote.AlreadyInvoiced" xml:space="preserve"><value>This quote already has its final invoice.</value></data>
+  <data name="Error.Quote.DownPaymentsExceedTotal" xml:space="preserve"><value>The down payments would exceed the quote total.</value></data>
+  <data name="Error.Invoice.NotFound" xml:space="preserve"><value>This invoice does not exist.</value></data>
+  <data name="Error.Invoice.NotValidated" xml:space="preserve"><value>Validate the invoice first.</value></data>
+  <data name="Error.Invoice.AlreadyIssued" xml:space="preserve"><value>This invoice has already been issued.</value></data>
+  <data name="Error.Invoice.CannotCreditCreditNote" xml:space="preserve"><value>A credit note cannot be credited.</value></data>
+  <data name="Error.Invoice.CreditLineUnknown" xml:space="preserve"><value>This line does not exist on the original invoice.</value></data>
+  <data name="Error.Invoice.CreditExceedsBalance" xml:space="preserve"><value>The credit note exceeds the remaining balance of the invoice.</value></data>
+  <data name="Error.Invoice.NothingToCredit" xml:space="preserve"><value>This invoice has already been fully credited.</value></data>
+  <data name="Error.Invoice.DerivedDocumentLocked" xml:space="preserve"><value>The lines of this document come from another document and cannot be changed.</value></data>
+  <data name="Error.CompanyProfile.NameRequired" xml:space="preserve"><value>Enter the company name.</value></data>
+  <data name="Error.CompanyProfile.NameTooLong" xml:space="preserve"><value>The company name exceeds 200 characters.</value></data>
+  <data name="Error.CompanyProfile.PaymentDaysInvalid" xml:space="preserve"><value>The payment period is 0 to 60 days.</value></data>
+  <data name="Error.CompanyProfile.NotFound" xml:space="preserve"><value>The company profile has not been filled in yet.</value></data>
+  <data name="Error.PriceList.NameRequired" xml:space="preserve"><value>Enter the price list name.</value></data>
+  <data name="Error.PriceList.NameTooLong" xml:space="preserve"><value>The price list name exceeds 100 characters.</value></data>
+  <data name="Error.PriceList.EntryInvalid" xml:space="preserve"><value>Each entry gives either a positive price or a 0 to 100% discount.</value></data>
+  <data name="Error.PriceList.EntryDuplicate" xml:space="preserve"><value>An item appears twice in the price list.</value></data>
+  <data name="Error.PriceList.CatalogItemUnknown" xml:space="preserve"><value>An item in the price list does not exist in the catalogue.</value></data>
+  <data name="Error.PriceList.CustomerUnknown" xml:space="preserve"><value>A customer in the price list does not exist.</value></data>
+  <data name="Error.PriceList.NotFound" xml:space="preserve"><value>This price list does not exist.</value></data>
+  <data name="Error.Mention.SellerName" xml:space="preserve"><value>Issuer name</value></data>
+  <data name="Error.Mention.SellerAddress" xml:space="preserve"><value>Issuer registered address</value></data>
+  <data name="Error.Mention.SellerSiren" xml:space="preserve"><value>Issuer SIREN or SIRET</value></data>
+  <data name="Error.Mention.SellerRcs" xml:space="preserve"><value>Trade register (RCS) and city</value></data>
+  <data name="Error.Mention.SellerLegalForm" xml:space="preserve"><value>Legal form and share capital</value></data>
+  <data name="Error.Mention.SellerVatNumber" xml:space="preserve"><value>Issuer EU VAT number</value></data>
+  <data name="Error.Mention.CustomerName" xml:space="preserve"><value>Customer name</value></data>
+  <data name="Error.Mention.CustomerAddress" xml:space="preserve"><value>Customer address</value></data>
+  <data name="Error.Mention.CustomerSiren" xml:space="preserve"><value>Customer SIREN (2026 reform)</value></data>
+  <data name="Error.Mention.CustomerVatNumber" xml:space="preserve"><value>Customer EU VAT number</value></data>
+  <data name="Error.Mention.Number" xml:space="preserve"><value>Unique number in a chronological sequence</value></data>
+  <data name="Error.Mention.IssueDate" xml:space="preserve"><value>Issue date</value></data>
+  <data name="Error.Mention.DeliveryDate" xml:space="preserve"><value>Delivery or completion date</value></data>
+  <data name="Error.Mention.OperationCategory" xml:space="preserve"><value>Operation category: goods, services or mixed (2026 reform)</value></data>
+  <data name="Error.Mention.DeliveryAddress" xml:space="preserve"><value>Delivery address (2026 reform)</value></data>
+  <data name="Error.Mention.VatOnDebits" xml:space="preserve"><value>Option for VAT on invoicing (2026 reform)</value></data>
+  <data name="Error.Mention.Lines" xml:space="preserve"><value>At least one line</value></data>
+  <data name="Error.Mention.LineDesignation" xml:space="preserve"><value>Precise line description</value></data>
+  <data name="Error.Mention.LineQuantity" xml:space="preserve"><value>Line quantity</value></data>
+  <data name="Error.Mention.LineUnitPrice" xml:space="preserve"><value>Line unit price excluding VAT</value></data>
+  <data name="Error.Mention.Totals" xml:space="preserve"><value>Totals excluding VAT, VAT per rate and including VAT</value></data>
+  <data name="Error.Mention.DueDate" xml:space="preserve"><value>Payment due date</value></data>
+  <data name="Error.Mention.EarlyPaymentDiscount" xml:space="preserve"><value>Early payment discount terms ("No discount" if none)</value></data>
+  <data name="Error.Mention.LatePenalties" xml:space="preserve"><value>Late payment penalty rate</value></data>
+  <data name="Error.Mention.RecoveryIndemnity" xml:space="preserve"><value>Fixed €40 recovery fee</value></data>
+  <data name="Error.Mention.VatExemptionText" xml:space="preserve"><value>Legal wording for the exemption or reverse charge</value></data>
+  <data name="Error.Mention.OriginalInvoice" xml:space="preserve"><value>Number of the invoice being credited</value></data>
   <data name="Session.Title" xml:space="preserve"><value>Session</value></data>
   <data name="Session.SignedInAs" xml:space="preserve"><value>Signed in as {0}.</value></data>
   <data name="Session.Continue" xml:space="preserve"><value>Continue</value></data>
