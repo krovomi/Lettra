@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Lettra.Poc.Sync.Client\Lettra.Poc.Sync.Client.csproj" />
+    <ProjectReference Include="..\Lettra.Poc.Sync.Server\Lettra.Poc.Sync.Server.csproj" />
+  </ItemGroup>
+
+</Project>
