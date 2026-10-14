@@ -15,6 +15,12 @@ internal static class Assemblies
     public static readonly Assembly PersistenceSqlServer = typeof(Infrastructure.Persistence.SqlServer.SqlServerConfigurator).Assembly;
     public static readonly Assembly Catalog = typeof(Infrastructure.Catalog.CatalogOptions).Assembly;
     public static readonly Assembly IdentityLocal = typeof(Infrastructure.Identity.Local.LocalIdentityOptions).Assembly;
+    public static readonly Assembly IdentityOidc = typeof(Infrastructure.Identity.Oidc.DependencyInjection).Assembly;
+    public static readonly Assembly External = typeof(Infrastructure.External.DependencyInjection).Assembly;
+    public static readonly Assembly Observability = typeof(Infrastructure.Observability.DependencyInjection).Assembly;
+    public static readonly Assembly SupervisionDomain = typeof(Supervision.Domain.SupervisionDomain).Assembly;
+    public static readonly Assembly SupervisionApplication = typeof(Supervision.Application.DependencyInjection).Assembly;
+    public static readonly Assembly SupervisionInfrastructure = typeof(Supervision.Infrastructure.DependencyInjection).Assembly;
     public static readonly Assembly Bootstrap = typeof(Bootstrap.LettraBootstrap).Assembly;
     public static readonly Assembly UiAbstractions = typeof(UI.Abstractions.ICustomersGateway).Assembly;
     public static readonly Assembly UiShared = typeof(UI.Shared.Routes).Assembly;
@@ -24,7 +30,8 @@ internal static class Assemblies
     public static IEnumerable<Assembly> All =>
     [
         Calculations, Contracts, Domain, Application, Persistence, PersistenceSqlite, PersistencePostgreSql,
-        PersistenceSqlServer, Catalog, IdentityLocal, Bootstrap, UiAbstractions, UiShared, UiGatewayHttp, UiGatewayInProcess,
+        PersistenceSqlServer, Catalog, IdentityLocal, IdentityOidc, External, Observability, SupervisionDomain,
+        SupervisionApplication, SupervisionInfrastructure, Bootstrap, UiAbstractions, UiShared, UiGatewayHttp, UiGatewayInProcess,
     ];
 
     public static IEnumerable<string> LettraReferencesOf(Assembly assembly) =>

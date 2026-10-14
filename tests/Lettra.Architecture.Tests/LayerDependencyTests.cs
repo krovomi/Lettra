@@ -21,6 +21,12 @@ public sealed class LayerDependencyTests
         { "Lettra.Infrastructure.Persistence.SqlServer", ["Lettra.Application", "Lettra.Domain", "Lettra.Infrastructure.Persistence"] },
         { "Lettra.Infrastructure.Catalog", ["Lettra.Application", "Lettra.Domain", "Lettra.Infrastructure.Persistence"] },
         { "Lettra.Infrastructure.Identity.Local", ["Lettra.Application", "Lettra.Domain"] },
+        { "Lettra.Infrastructure.Identity.Oidc", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain"] },
+        { "Lettra.Infrastructure.External", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain"] },
+        { "Lettra.Infrastructure.Observability", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain"] },
+        { "Lettra.Supervision.Domain", ["Lettra.Calculations", "Lettra.Domain"] },
+        { "Lettra.Supervision.Application", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain", "Lettra.Supervision.Domain"] },
+        { "Lettra.Supervision.Infrastructure", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain", "Lettra.Supervision.Application", "Lettra.Supervision.Domain"] },
         { "Lettra.UI.Abstractions", ["Lettra.Contracts"] },
         { "Lettra.UI.Shared", ["Lettra.Contracts", "Lettra.UI.Abstractions"] },
         { "Lettra.UI.Gateway.Http", ["Lettra.Contracts", "Lettra.UI.Abstractions"] },
@@ -46,10 +52,26 @@ public sealed class LayerDependencyTests
     }
 
     [Fact]
-    public void Le_domaine_n_utilise_aucun_framework() =>
-        Types.InAssembly(Assemblies.Domain)
-            .ShouldNot().HaveDependencyOnAny("Microsoft", "System.Text.Json", "System.Net.Http", "System.Data")
-            .GetResult().FailingTypeNames.Should().BeNullOrEmpty();
+    public void Les_domaines_n_utilisent_aucun_framework()
+    {
+        foreach (Assembly assembly in new[] { Assemblies.Domain, Assemblies.SupervisionDomain })
+        {
+            Types.InAssembly(assembly)
+                .ShouldNot().HaveDependencyOnAny("Microsoft", "System.Text.Json", "System.Net.Http", "System.Data")
+                .GetResult().FailingTypeNames.Should().BeNullOrEmpty(because: assembly.GetName().Name);
+        }
+    }
+
+    [Fact]
+    public void Le_coeur_ne_connait_pas_les_modules()
+    {
+        foreach (Assembly assembly in new[] { Assemblies.Domain, Assemblies.Application, Assemblies.Contracts })
+        {
+            Assemblies.LettraReferencesOf(assembly)
+                .Should().NotContain(name => name.StartsWith("Lettra.Supervision.", StringComparison.Ordinal),
+                    because: $"{assembly.GetName().Name} est partagé par tous les modules (ADR-0001)");
+        }
+    }
 
     [Fact]
     public void Les_contrats_et_l_ui_ne_voient_jamais_le_domaine_ni_ef()

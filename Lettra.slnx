@@ -16,11 +16,20 @@
   </Folder>
   <Folder Name="/src/Infrastructure/">
     <Project Path="src/Infrastructure/Lettra.Infrastructure.Catalog/Lettra.Infrastructure.Catalog.csproj" />
+    <Project Path="src/Infrastructure/Lettra.Infrastructure.External/Lettra.Infrastructure.External.csproj" />
     <Project Path="src/Infrastructure/Lettra.Infrastructure.Identity.Local/Lettra.Infrastructure.Identity.Local.csproj" />
+    <Project Path="src/Infrastructure/Lettra.Infrastructure.Identity.Oidc/Lettra.Infrastructure.Identity.Oidc.csproj" />
+    <Project Path="src/Infrastructure/Lettra.Infrastructure.Observability/Lettra.Infrastructure.Observability.csproj" />
     <Project Path="src/Infrastructure/Lettra.Infrastructure.Persistence.PostgreSql/Lettra.Infrastructure.Persistence.PostgreSql.csproj" />
     <Project Path="src/Infrastructure/Lettra.Infrastructure.Persistence.SqlServer/Lettra.Infrastructure.Persistence.SqlServer.csproj" />
     <Project Path="src/Infrastructure/Lettra.Infrastructure.Persistence.Sqlite/Lettra.Infrastructure.Persistence.Sqlite.csproj" />
     <Project Path="src/Infrastructure/Lettra.Infrastructure.Persistence/Lettra.Infrastructure.Persistence.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Supervision/">
+    <Project Path="src/Modules/Supervision/Lettra.Supervision.Application/Lettra.Supervision.Application.csproj" />
+    <Project Path="src/Modules/Supervision/Lettra.Supervision.Domain/Lettra.Supervision.Domain.csproj" />
+    <Project Path="src/Modules/Supervision/Lettra.Supervision.Infrastructure/Lettra.Supervision.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/Composition/">
     <Project Path="src/Composition/Lettra.Bootstrap/Lettra.Bootstrap.csproj" />
@@ -35,6 +44,7 @@
     <Project Path="src/Hosts/Lettra.Api/Lettra.Api.csproj" />
     <Project Path="src/Hosts/Lettra.App.Maui/Lettra.App.Maui.csproj" />
     <Project Path="src/Hosts/Lettra.Web/Lettra.Web.csproj" />
+    <Project Path="src/Hosts/Lettra.Worker/Lettra.Worker.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Lettra.Api.Tests/Lettra.Api.Tests.csproj" />
