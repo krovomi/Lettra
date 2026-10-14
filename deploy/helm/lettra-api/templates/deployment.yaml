@@ -1,0 +1,88 @@
+{{- if not .Values.image.tag }}{{ fail "image.tag est obligatoire : on déploie une image signée par son SHA, jamais latest" }}{{ end -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lettra-api
+  labels:
+    {{- include "lettra-api.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicas }}
+  {{- end }}
+  revisionHistoryLimit: 5
+  strategy:
+    rollingUpdate: { maxUnavailable: 0, maxSurge: 1 }
+  selector:
+    matchLabels:
+      {{- include "lettra-api.selector" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "lettra-api.labels" . | nindent 8 }}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile: { type: RuntimeDefault }
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              {{- include "lettra-api.selector" . | nindent 14 }}
+      containers:
+        - name: api
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - { name: http, containerPort: 8080 }
+          env:
+            - { name: ASPNETCORE_ENVIRONMENT, value: {{ .Values.aspnetcoreEnvironment | default "Production" | quote }} }
+            - { name: Lettra__Observability__Cell, value: {{ .Values.cell | quote }} }
+            - { name: Lettra__Observability__Environment, value: {{ .Values.environment | quote }} }
+            - { name: OTEL_EXPORTER_OTLP_ENDPOINT, value: {{ .Values.otel.endpoint | quote }} }
+            - { name: OTEL_EXPORTER_OTLP_PROTOCOL, value: {{ .Values.otel.protocol | quote }} }
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.instance.id=$(POD_NAME),k8s.namespace.name=$(POD_NAMESPACE)"
+            - name: POD_NAME
+              valueFrom: { fieldRef: { fieldPath: metadata.name } }
+            - name: POD_NAMESPACE
+              valueFrom: { fieldRef: { fieldPath: metadata.namespace } }
+            {{- range $key, $value := .Values.settings }}
+            - { name: {{ $key }}, value: {{ $value | quote }} }
+            {{- end }}
+            {{- range $key, $ref := .Values.secretEnv }}
+            {{- if $ref.secret }}
+            - name: {{ $key }}
+              valueFrom: { secretKeyRef: { name: {{ $ref.secret }}, key: {{ $ref.key }} } }
+            {{- end }}
+            {{- end }}
+          {{- with .Values.existingSecret }}
+          envFrom:
+            - secretRef: { name: {{ . }} }
+          {{- end }}
+          readinessProbe:
+            httpGet: { path: /health, port: http }
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /health, port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}

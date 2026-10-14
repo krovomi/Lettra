@@ -33,7 +33,9 @@
       "tests\\Lettra.Identity.Tests\\Lettra.Identity.Tests.csproj",
       "tests\\Lettra.External.Tests\\Lettra.External.Tests.csproj",
       "tests\\Lettra.Persistence.Tests\\Lettra.Persistence.Tests.csproj",
-      "tests\\Lettra.UI.Tests\\Lettra.UI.Tests.csproj"
+      "tests\\Lettra.UI.Tests\\Lettra.UI.Tests.csproj",
+      "tests\\Lettra.Observability.Tests\\Lettra.Observability.Tests.csproj",
+      "tests\\Lettra.Supervision.Tests\\Lettra.Supervision.Tests.csproj"
     ]
   }
 }

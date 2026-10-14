@@ -1,0 +1,94 @@
+# Objectifs de service de Lettra.Api (annexe E §1, annexe G §4). Cibles à valider avec le PO :
+#   disponibilité 99,9 % par mois ; lectures p95 < 300 ms ; validation d'une facture p95 < 800 ms.
+# Les histogrammes ont des bornes exactes à 0,3 s et 0,8 s (SloBuckets.cs).
+# Métriques reçues en OTLP par Prometheus : service.namespace/service.name devient job="lettra/lettra-api".
+groups:
+  - name: lettra-slo-enregistrements
+    interval: 30s
+    rules:
+      # Disponibilité : part des réponses 5xx.
+      - record: lettra:api_erreurs:ratio_rate5m
+        expr: |
+          sum(rate(http_server_request_duration_seconds_count{job="lettra/lettra-api",http_response_status_code=~"5.."}[5m]))
+          / clamp_min(sum(rate(http_server_request_duration_seconds_count{job="lettra/lettra-api"}[5m])), 1e-9)
+      - record: lettra:api_erreurs:ratio_rate30m
+        expr: |
+          sum(rate(http_server_request_duration_seconds_count{job="lettra/lettra-api",http_response_status_code=~"5.."}[30m]))
+          / clamp_min(sum(rate(http_server_request_duration_seconds_count{job="lettra/lettra-api"}[30m])), 1e-9)
+      - record: lettra:api_erreurs:ratio_rate1h
+        expr: |
+          sum(rate(http_server_request_duration_seconds_count{job="lettra/lettra-api",http_response_status_code=~"5.."}[1h]))
+          / clamp_min(sum(rate(http_server_request_duration_seconds_count{job="lettra/lettra-api"}[1h])), 1e-9)
+      - record: lettra:api_erreurs:ratio_rate6h
+        expr: |
+          sum(rate(http_server_request_duration_seconds_count{job="lettra/lettra-api",http_response_status_code=~"5.."}[6h]))
+          / clamp_min(sum(rate(http_server_request_duration_seconds_count{job="lettra/lettra-api"}[6h])), 1e-9)
+
+      # Latence des lectures : part des GET plus lents que 300 ms (objectif : 95 % sous 300 ms).
+      - record: lettra:api_lectures_lentes:ratio_rate30m
+        expr: |
+          1 - sum(rate(http_server_request_duration_seconds_bucket{job="lettra/lettra-api",http_request_method="GET",le="0.3"}[30m]))
+          / clamp_min(sum(rate(http_server_request_duration_seconds_count{job="lettra/lettra-api",http_request_method="GET"}[30m])), 1e-9)
+      - record: lettra:api_lectures_lentes:ratio_rate6h
+        expr: |
+          1 - sum(rate(http_server_request_duration_seconds_bucket{job="lettra/lettra-api",http_request_method="GET",le="0.3"}[6h]))
+          / clamp_min(sum(rate(http_server_request_duration_seconds_count{job="lettra/lettra-api",http_request_method="GET"}[6h])), 1e-9)
+
+      # Latence des validations (route .../validation, module Facturation en phase 3) : objectif 95 % sous 800 ms.
+      - record: lettra:api_validations_lentes:ratio_rate30m
+        expr: |
+          1 - sum(rate(http_server_request_duration_seconds_bucket{job="lettra/lettra-api",http_route=~".*/validation",le="0.8"}[30m]))
+          / clamp_min(sum(rate(http_server_request_duration_seconds_count{job="lettra/lettra-api",http_route=~".*/validation"}[30m])), 1e-9)
+      - record: lettra:api_validations_lentes:ratio_rate6h
+        expr: |
+          1 - sum(rate(http_server_request_duration_seconds_bucket{job="lettra/lettra-api",http_route=~".*/validation",le="0.8"}[6h]))
+          / clamp_min(sum(rate(http_server_request_duration_seconds_count{job="lettra/lettra-api",http_route=~".*/validation"}[6h])), 1e-9)
+
+  # Consommation du budget d'erreur par fenêtres multiples (annexe G §4) :
+  # rapide = 14,4 fois le rythme normal sur 1 h (et 5 min) → S1 ; lente = 6 fois sur 6 h (et 30 min) → S2.
+  - name: lettra-slo-alertes
+    rules:
+      - alert: LettraBudgetErreurConsommeVite
+        expr: lettra:api_erreurs:ratio_rate1h > (14.4 * 0.001) and lettra:api_erreurs:ratio_rate5m > (14.4 * 0.001)
+        for: 2m
+        labels:
+          severity: S1
+          category: availability
+          scope: cell
+          cell: "{{ $externalLabels.cell }}"
+        annotations:
+          title: Budget d'erreur de l'API consommé très vite
+          runbook_url: https://github.com/krovomi/Lettra/blob/main/deploy/runbooks/budget-erreur.md
+      - alert: LettraBudgetErreurConsommeLentement
+        expr: lettra:api_erreurs:ratio_rate6h > (6 * 0.001) and lettra:api_erreurs:ratio_rate30m > (6 * 0.001)
+        for: 15m
+        labels:
+          severity: S2
+          category: availability
+          scope: cell
+          cell: "{{ $externalLabels.cell }}"
+        annotations:
+          title: Budget d'erreur de l'API consommé trop vite
+          runbook_url: https://github.com/krovomi/Lettra/blob/main/deploy/runbooks/budget-erreur.md
+      - alert: LettraLecturesLentes
+        expr: lettra:api_lectures_lentes:ratio_rate6h > (6 * 0.05) and lettra:api_lectures_lentes:ratio_rate30m > (6 * 0.05)
+        for: 15m
+        labels:
+          severity: S2
+          category: performance
+          scope: cell
+          cell: "{{ $externalLabels.cell }}"
+        annotations:
+          title: Les lectures dépassent 300 ms trop souvent
+          runbook_url: https://github.com/krovomi/Lettra/blob/main/deploy/runbooks/latence.md
+      - alert: LettraValidationsLentes
+        expr: lettra:api_validations_lentes:ratio_rate6h > (6 * 0.05) and lettra:api_validations_lentes:ratio_rate30m > (6 * 0.05)
+        for: 15m
+        labels:
+          severity: S2
+          category: performance
+          scope: cell
+          cell: "{{ $externalLabels.cell }}"
+        annotations:
+          title: Les validations de factures dépassent 800 ms trop souvent
+          runbook_url: https://github.com/krovomi/Lettra/blob/main/deploy/runbooks/latence.md

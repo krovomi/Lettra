@@ -1,0 +1,6 @@
+apiVersion: v2
+name: lettra-api
+description: Lettra.Api (sans état) - sert l'API REST et l'application WebAssembly. Mêmes binaires dans tous les modes (ADR-0002).
+type: application
+version: 0.1.0
+appVersion: "phase-2"

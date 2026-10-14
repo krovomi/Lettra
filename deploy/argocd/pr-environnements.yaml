@@ -1,0 +1,53 @@
+# Environnements éphémères par pull request (ADR-0009, annexe E §4) sur le cluster de recette.
+# Une PR étiquetée « env:pr » obtient l'espace de noms lettra-pr-<numéro>, l'image construite par
+# .github/workflows/pr-environment.yml. L'exposition (passerelle, nom DNS) arrive avec la passerelle de la cellule.
+# Retirer l'étiquette ou fermer la PR détruit l'environnement (prune).
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: lettra-pr
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - pullRequest:
+        requeueAfterSeconds: 300
+        github:
+          owner: krovomi
+          repo: Lettra
+          labels: ["env:pr"]
+          # Jeton GitHub en lecture seule (secret de la cellule de recette).
+          tokenRef:
+            secretName: argocd-github
+            key: token
+  template:
+    metadata:
+      name: "lettra-pr-{{ .number }}"
+      labels:
+        lettra.fr/environnement: pr
+    spec:
+      project: lettra
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "lettra-pr-{{ .number }}"
+      source:
+        repoURL: https://github.com/krovomi/Lettra.git
+        targetRevision: "{{ .head_sha }}"
+        path: deploy/helm/lettra-cell
+        helm:
+          releaseName: "pr-{{ .number }}"
+          valueFiles:
+            - values-pr.yaml
+          valuesObject:
+            cell: "pr-{{ .number }}"
+            lettra-api:
+              cell: "pr-{{ .number }}"
+              image:
+                tag: "pr-{{ .number }}-{{ .head_short_sha }}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

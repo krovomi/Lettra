@@ -1,0 +1,66 @@
+# Routage des alertes d'infrastructure de la cellule (annexe G §4 à §6).
+# Deux chemins indépendants : l'astreinte est prévenue directement, sans dépendre de Lettra ; chaque alerte est aussi
+# recopiée dans le module Supervision (centre d'alertes). Une notification ne porte que titre, gravité, portée et lien.
+# Les adresses et jetons sont des fichiers montés depuis les secrets de la cellule : aucun secret dans ce fichier.
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: aucun
+  group_by: [alertname, cell]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+  routes:
+    # Battement permanent : si l'outil d'astreinte ne le reçoit plus, c'est la chaîne d'alerte qui est en panne.
+    - matchers: ['alertname="Watchdog"']
+      receiver: battement
+      group_wait: 0s
+      group_interval: 1m
+      repeat_interval: 1m
+    # Copie de toute alerte classée dans le centre d'alertes (base de supervision de la cellule).
+    - matchers: ['severity=~"S1|S2|S3|S4"']
+      receiver: lettra-supervision
+      continue: true
+      group_wait: 10s
+    # S1 : appel et SMS de l'astreinte, prise en charge sous 15 minutes, 24 h sur 24.
+    - matchers: ['severity="S1"']
+      receiver: astreinte-appel
+      group_wait: 10s
+      repeat_interval: 15m
+    # S2 : ticket d'astreinte, 4 heures ouvrées.
+    - matchers: ['severity="S2"']
+      receiver: astreinte-ticket
+      group_wait: 1m
+      repeat_interval: 4h
+    # S3 et S4 : centre d'alertes et résumés seulement (route du dessus), personne n'est réveillé.
+
+inhibit_rules:
+  # Quand l'API est arrêtée, ses symptômes (budget d'erreur, latence) ne réveillent personne de plus.
+  - source_matchers: ['severity="S1"', 'category="availability"']
+    target_matchers: ['severity=~"S2|S3"']
+    equal: [cell]
+
+receivers:
+  - name: aucun
+  - name: battement
+    webhook_configs:
+      - url_file: /etc/alertmanager/secrets/lettra-alerting/battement-url
+        send_resolved: false
+  - name: lettra-supervision
+    webhook_configs:
+      - url_file: /etc/alertmanager/secrets/lettra-alerting/supervision-url
+        send_resolved: true
+        max_alerts: 50
+        http_config:
+          authorization:
+            type: Bearer
+            credentials_file: /etc/alertmanager/secrets/lettra-alerting/supervision-token
+  - name: astreinte-appel
+    webhook_configs:
+      - url_file: /etc/alertmanager/secrets/lettra-alerting/astreinte-appel-url
+        send_resolved: true
+  - name: astreinte-ticket
+    webhook_configs:
+      - url_file: /etc/alertmanager/secrets/lettra-alerting/astreinte-ticket-url
+        send_resolved: true
