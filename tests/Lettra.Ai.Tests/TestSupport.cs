@@ -112,6 +112,7 @@ internal sealed class AssistantHarness : IAsyncDisposable
         services.AddSingleton<IAiSkillCatalog>(SkillCatalog.LoadEmbedded());
         services.AddAiTools();
         services.RemoveAll<IAiDossierContext>().AddScoped<IAiDossierContext, FakeDossierContext>();
+        services.AddSingleton<IAiAuditLog, InMemoryAiAuditLog>();
         services.AddAiOrchestration(configuration);
         services.AddKeyedSingleton<IAiEngine>(AiEngineKind.ClaudeEu, engine);
         if (webHandler is not null)
@@ -169,4 +170,19 @@ internal sealed class AssistantHarness : IAsyncDisposable
     }
 
     public ValueTask DisposeAsync() => _services.DisposeAsync();
+}
+
+/// <summary>Journal IA en mémoire : en production, c'est la table <c>AiJournal</c> de la base du dossier.</summary>
+internal sealed class InMemoryAiAuditLog : IAiAuditLog
+{
+    private readonly System.Collections.Concurrent.ConcurrentQueue<AiAuditEntry> _entries = new();
+
+    public ValueTask AppendAsync(AiAuditEntry entry, CancellationToken cancellationToken)
+    {
+        _entries.Enqueue(entry);
+        return ValueTask.CompletedTask;
+    }
+
+    public ValueTask<IReadOnlyList<AiAuditEntry>> ReadAsync(DossierId dossier, int limit, CancellationToken cancellationToken) =>
+        ValueTask.FromResult<IReadOnlyList<AiAuditEntry>>([.. _entries.Where(e => e.Dossier == dossier).Reverse().Take(limit)]);
 }

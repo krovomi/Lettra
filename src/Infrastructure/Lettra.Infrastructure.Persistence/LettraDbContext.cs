@@ -1,5 +1,6 @@
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Domain.Parties;
+using Lettra.Infrastructure.Persistence.Ai;
 using Lettra.Infrastructure.Persistence.Numbering;
 using Lettra.Infrastructure.Persistence.Tenancy;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +22,8 @@ public sealed class LettraDbContext(DbContextOptions<LettraDbContext> options, T
     internal DbSet<DossierStamp> DossierStamp => Set<DossierStamp>();
 
     internal DbSet<NumberSeries> NumberSeries => Set<NumberSeries>();
+
+    internal DbSet<AiJournalRecord> AiJournal => Set<AiJournalRecord>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
