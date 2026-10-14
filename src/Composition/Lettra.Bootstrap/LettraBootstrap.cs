@@ -3,13 +3,16 @@ using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Infrastructure.Catalog;
 using Lettra.Infrastructure.External;
 using Lettra.Infrastructure.Identity.Local;
+using Lettra.Infrastructure.Identity.Oidc;
 using Lettra.Infrastructure.Observability;
 using Lettra.Infrastructure.Persistence;
 using Lettra.Infrastructure.Persistence.PostgreSql;
 using Lettra.Infrastructure.Persistence.Sqlite;
+using Lettra.Infrastructure.Persistence.Sqlite.Local;
 using Lettra.Infrastructure.Persistence.SqlServer;
 using Lettra.Infrastructure.Persistence.Tenancy;
 using Lettra.Supervision.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -18,11 +21,15 @@ namespace Lettra.Bootstrap;
 /// <summary>
 /// Composition root. Le mode de déploiement (<c>Lettra:DeploymentMode</c>) choisit les adapters ;
 /// le métier n'en sait rien. L'hôte ajoute seulement ce qui dépend de lui : la source du dossier
-/// demandé (<see cref="IRequestedDossierSource"/>) et, côté API, l'authentification.
+/// demandé (<see cref="IRequestedDossierSource"/>), le coffre de l'OS sur le poste (<c>IKekStore</c>)
+/// et, côté API, l'authentification.
 /// </summary>
 public static class LettraBootstrap
 {
     public const string DeploymentModeKey = "Lettra:DeploymentMode";
+
+    /// <summary>Répertoire des dossiers du poste (modes 1 et 4).</summary>
+    public const string LocalDataDirectoryKey = "Lettra:Local:DataDirectory";
 
     public static DeploymentMode GetDeploymentMode(this IConfiguration configuration) =>
         configuration.GetValue<DeploymentMode?>(DeploymentModeKey)
@@ -35,33 +42,73 @@ public static class LettraBootstrap
 
         // Communs à tous les modes. Chaque chantier remplit son AddXxx ; la composition root ne change pas.
         services.AddApplication();
-        services.AddPersistenceCore();
+        // En SaaS, l'API ne migre pas : le Worker migre toutes les bases en amont, par vagues.
+        services.AddPersistenceCore(new PersistenceOptions { MigrateOnOpen = mode != DeploymentMode.HostedSaaS });
         services.AddExternalServices(configuration);
         services.AddLettraObservability(configuration, mode);
 
         return mode switch
         {
             DeploymentMode.IsolatedDesktop => services
-                .AddSingleton<IDbProviderConfigurator, SqliteConfigurator>()
-                .AddConfigurationCatalog(configuration)
-                .AddLocalIdentity(configuration),
-
-            DeploymentMode.LocalNetwork => services
-                .AddSingleton<IDbProviderConfigurator, SqliteConfigurator>()
-                .AddSingleton<IDbProviderConfigurator, PostgreSqlConfigurator>()
-                .AddSingleton<IDbProviderConfigurator, SqlServerConfigurator>()
-                .AddConfigurationCatalog(configuration)
+                .AddLocalDossiers(configuration[LocalDataDirectoryKey]
+                    ?? throw new InvalidOperationException($"{LocalDataDirectoryKey} est obligatoire en mode {mode}."))
                 .AddLocalIdentity(configuration)
                 .AddSupervision(configuration),
 
-            // Phase 2 en cours : la base Catalog arrive avec le chantier « Persistance et tenancy ».
-            DeploymentMode.OnPremRemote or DeploymentMode.HostedSaaS => throw new NotSupportedException(
-                $"Mode {mode} : nécessite la base Catalog (phase 2, en cours)."),
+            // Serveur du cabinet : dossiers sur SQLite, PostgreSQL ou SQL Server, catalogue sur le même serveur.
+            DeploymentMode.LocalNetwork => services
+                .AddSqliteProvider()
+                .AddPostgreSqlProvider()
+                .AddSqlServerProvider()
+                .AddCatalogDatabase(configuration, CatalogDatabase(configuration))
+                .AddLocalIdentity(configuration)
+                .AddSupervision(configuration),
+
+            // PostgreSQL dédié (mode 3) ou cellule SaaS (mode 5) : une base par dossier, derrière PgBouncer en SaaS.
+            DeploymentMode.OnPremRemote or DeploymentMode.HostedSaaS => services
+                .AddPostgreSqlProvider()
+                .AddCatalogDatabase(configuration, CatalogDatabase(configuration))
+                .AddOidcIdentity(configuration)
+                .AddSupervision(configuration),
 
             DeploymentMode.HybridCloud => throw new NotSupportedException(
                 $"Mode {mode} : nécessite la synchronisation (phase 4)."),
 
             _ => throw new NotSupportedException($"Mode {mode} inconnu."),
+        };
+    }
+
+    /// <summary>
+    /// À appeler au démarrage de l'hôte, après la construction du conteneur. Poste : cabinet local et premier dossier.
+    /// Serveur : migration du catalogue (sauf en SaaS, où le Worker s'en charge) et import des déclarations de la configuration.
+    /// </summary>
+    public static async Task InitializeLettraAsync(this IServiceProvider services, IConfiguration configuration, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        switch (configuration.GetDeploymentMode())
+        {
+            case DeploymentMode.IsolatedDesktop:
+                await services.GetRequiredService<LocalDossierStartup>().EnsureReadyAsync(cancellationToken).ConfigureAwait(false);
+                break;
+            case DeploymentMode.LocalNetwork or DeploymentMode.OnPremRemote or DeploymentMode.HostedSaaS:
+                bool migrate = configuration.GetValue("Lettra:Catalog:MigrateOnStartup", configuration.GetDeploymentMode() != DeploymentMode.HostedSaaS);
+                await services.InitializeCatalogAsync(migrate, cancellationToken).ConfigureAwait(false);
+                break;
+        }
+    }
+
+    private static Action<DbContextOptionsBuilder> CatalogDatabase(IConfiguration configuration)
+    {
+        DatabaseProvider provider = configuration.GetValue("Lettra:Catalog:Provider", DatabaseProvider.Sqlite);
+        string name = configuration.GetValue("Lettra:Catalog:ConnectionStringName", "Catalog")!;
+        string connectionString = configuration.GetConnectionString(name)
+            ?? throw new InvalidOperationException($"ConnectionStrings:{name} (base Catalog) est obligatoire.");
+        return provider switch
+        {
+            DatabaseProvider.Sqlite => builder => SqliteConfigurator.ConfigureCatalog(builder, connectionString),
+            DatabaseProvider.PostgreSql => builder => PostgreSqlConfigurator.ConfigureCatalog(builder, connectionString),
+            DatabaseProvider.SqlServer => builder => SqlServerConfigurator.ConfigureCatalog(builder, connectionString),
+            _ => throw new NotSupportedException($"Provider {provider} inconnu pour le catalogue."),
         };
     }
 }

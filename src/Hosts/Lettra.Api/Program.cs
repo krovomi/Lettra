@@ -24,6 +24,9 @@ builder.Services.AddHealthChecks();
 
 WebApplication app = builder.Build();
 
+// Catalogue : migration (sauf en SaaS, où le Worker migre) et import des déclarations de la configuration.
+await app.Services.InitializeLettraAsync(app.Configuration, CancellationToken.None).ConfigureAwait(false);
+
 // Aucune exception ni pile d'appel ne sort : un code générique, le détail reste dans la trace technique.
 app.UseExceptionHandler(errorApp => errorApp.Run(context => ErrorResults.Unexpected().ExecuteAsync(context)));
 app.UseStatusCodePages();

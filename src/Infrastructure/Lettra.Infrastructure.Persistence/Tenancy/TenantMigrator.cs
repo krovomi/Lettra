@@ -39,6 +39,13 @@ public sealed class TenantMigrator(IDossierDbContextFactory factory, TimeProvide
                 throw DossierMismatchException.For(tenant, stamp.DossierId);
             }
 
+            // Une base vierge n'est initialisée qu'à la création du dossier : ailleurs (Worker), c'est une erreur de
+            // routage, et on refuse avant d'y créer la moindre table.
+            if (applied.Count == 0 && !stampIfMissing)
+            {
+                throw DossierMismatchException.For(tenant, null);
+            }
+
             if (pending.Count > 0)
             {
                 await context.Database.MigrateAsync(cancellationToken).ConfigureAwait(false);

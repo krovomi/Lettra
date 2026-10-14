@@ -44,6 +44,6 @@ dotnet_diagnostic.CA1000.severity = none
 dotnet_diagnostic.CA1711.severity = none
 
 # Migrations EF générées : pas d'analyse de style.
-[**/Migrations/*.cs]
+[**/{Migrations,CatalogMigrations}/*.cs]
 generated_code = true
 dotnet_analyzer_diagnostic.severity = none

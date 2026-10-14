@@ -92,6 +92,48 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
 
                     b.ToTable("Customers", (string)null);
                 });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Numbering.NumberSeries", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Next")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Prefix")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Code");
+
+                    b.ToTable("NumberSeries", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Tenancy.DossierStamp", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("DossierId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganisationId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DossierStamp", (string)null);
+                });
 #pragma warning restore 612, 618
         }
     }

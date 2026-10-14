@@ -19,6 +19,13 @@ public sealed class PostgreSqlConfigurator : IDbProviderConfigurator
     public void Configure(DbContextOptionsBuilder builder, string connectionString, TenantDescriptor tenant)
     {
         ArgumentNullException.ThrowIfNull(tenant);
+        if (tenant.Schema is not null)
+        {
+            // Un schéma par dossier dans une base partagée : les migrations (générées sans schéma) créent
+            // les tables dans le premier schéma du search_path.
+            connectionString = new NpgsqlConnectionStringBuilder(connectionString) { SearchPath = tenant.Schema }.ConnectionString;
+        }
+
         builder.UseNpgsql(connectionString, o =>
         {
             o.MigrationsAssembly(MigrationsAssembly);

@@ -24,7 +24,7 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>>
 /// Racine d'agrégat : frontière de cohérence et de transaction. Les agrégats
 /// <b>enregistrent</b> leurs événements ; l'infrastructure les récupère après persistance.
 /// </summary>
-public abstract class AggregateRoot<TId> : Entity<TId>
+public abstract class AggregateRoot<TId> : Entity<TId>, IHasDomainEvents
     where TId : struct, IEquatable<TId>
 {
     private readonly List<IDomainEvent> _domainEvents = [];
@@ -39,4 +39,12 @@ public abstract class AggregateRoot<TId> : Entity<TId>
     protected void Raise(IDomainEvent domainEvent) => _domainEvents.Add(domainEvent);
 
     public void ClearDomainEvents() => _domainEvents.Clear();
+}
+
+/// <summary>Ce que l'infrastructure voit d'un agrégat, quel que soit le type de son identifiant.</summary>
+public interface IHasDomainEvents
+{
+    IReadOnlyList<IDomainEvent> DomainEvents { get; }
+
+    void ClearDomainEvents();
 }

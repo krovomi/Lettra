@@ -16,9 +16,13 @@ public sealed class LettraApiFactory : WebApplicationFactory<Program>
 
     public ConcurrentQueue<string> Logs { get; } = new();
 
+    public static readonly Guid OrganisationId = new("0199e3a0-0000-7000-8000-0000000000c1");
+
     public static Dictionary<string, string?> DossierSettings(string database) => new()
     {
+        ["ConnectionStrings:Catalog"] = $"Data Source={database}.catalog;Pooling=False",
         ["Lettra:Dossiers:0:Id"] = DossierId.ToString(),
+        ["Lettra:Dossiers:0:OrganisationId"] = OrganisationId.ToString(),
         ["Lettra:Dossiers:0:Provider"] = "Sqlite",
         ["Lettra:Dossiers:0:ConnectionSecretRef"] = "config:Test",
         ["ConnectionStrings:Test"] = $"Data Source={database};Pooling=False",

@@ -18,7 +18,7 @@ dotnet test Lettra.Ci.slnf                     # tous les tests (hors MAUI)
 
 L'API démarre en mode 2 (réseau local) sur un dossier SQLite de démonstration (`appsettings.Development.json`).
 L'application MAUI (`src/Hosts/Lettra.App.Maui`) se construit sous Windows avec la charge de travail
-`maui-windows` ; elle tourne en mode 1 (poste isolé) sur une base SQLite locale.
+`maui-windows` ; elle tourne en mode 1 (poste isolé) : au premier lancement, elle crée le cabinet local et un premier dossier chiffré.
 
 `Lettra.slnx` contient tout ; `Lettra.Ci.slnf` exclut le projet MAUI pour les machines Linux et la CI.
 
@@ -48,6 +48,10 @@ tests/             Domain, Application, Architecture, Persistence (3 providers),
 | Même résultat par HTTP et en in-process | ADR-0005 | `GatewayParityTests` |
 | Aucune donnée de dossier dans les journaux, à tous les niveaux | annexe G | `NoDossierDataInLogsTests` |
 | Une seule règle d'arrondi, TVA par taux | ADR-0005 | `RoundingTests` |
+| Une base n'est ouverte que si son estampille est celle du dossier | ADR-0003 | `Une_base_d_un_autre_dossier_est_refusee` (3 providers) |
+| Numérotation sans trou ni doublon sous concurrence | ADR-0007 | `Numerotation_continue_sous_concurrence` (3 providers) |
+| Base de dossier SQLite chiffrée par sa DEK, DEK enveloppée par la clé du cabinet | ADR-0011 | `LocalDossierTests`, `DossierKeyringTests` |
+| Création de dossier, reprise et migration par vagues avec bail | ADR-0009 | `Creation_de_dossier_et_vagues_de_migration_par_le_catalogue` (3 providers) |
 
 ## Conventions
 
@@ -65,10 +69,26 @@ Build et tests Linux (dont PostgreSQL et SQL Server via Testcontainers), build M
 Security), vérification des avis de tiers (notice MIT de Paperasse), image de l'API construite, publiée sur GHCR et
 signée (cosign, sans clé) sur `main`.
 
+## Persistance et dossiers
+
+| Mode | Registre des dossiers | Bases | Secrets et clés |
+|---|---|---|---|
+| 1. Poste isolé (MAUI) | registre local (`{id}.lettra` par dossier) | SQLite chiffré (SQLite3 Multiple Ciphers) | KEK du cabinet dans le coffre de l'OS (MAUI `SecureStorage`) |
+| 2. Serveur du cabinet | base Catalog (SQLite, PostgreSQL ou SQL Server) | SQLite, PostgreSQL ou SQL Server | `config:` (bases déclarées), `cluster:` (bases créées) |
+| 3 et 5. PostgreSQL dédié, SaaS | base Catalog PostgreSQL | une base PostgreSQL par dossier | coffre de la cellule injecté en configuration |
+
+- Les migrations portent le même identifiant dans les trois assemblies de providers (`20261014000001_…`) : après
+  `dotnet ef migrations add`, renommer la migration pour aligner son horodatage. Le catalogue a ses propres migrations
+  (`CatalogMigrations/`, `--context CatalogDbContext`).
+- `Lettra.Worker` : migration du catalogue, reprise des créations de dossiers interrompues, puis migration des bases par
+  vagues (canari de 25 bases, arrêt au-delà de 5 % d'échecs, bail par dossier pour plusieurs Workers).
+  `Lettra:Worker:RunOnce=true` pour un job de déploiement.
+- En SaaS, l'API ne migre jamais une base : elle vérifie l'estampille et laisse la migration au Worker.
+
 ## Pas encore dans ce socle
 
-- Base Catalog, Keycloak, comptes locaux multi-utilisateurs : phase 2 (l'API refuse de démarrer hors développement en mode 2).
-- Registre local des dossiers, SQLCipher et coffre de l'OS (MAUI) : phase 2.
+- Keycloak et comptes locaux multi-utilisateurs : chantier « Identité et autorisations » de la phase 2.
+- Bases SQLite chiffrées côté serveur (mode 2) et chiffrement de champs en PostgreSQL : la DEK existe déjà par dossier.
 - Outbox, synchronisation, `Idempotency-Key`, `ETag` : POC synchronisation puis phase 4.
 - Pipeline OpenTelemetry exporté (les conventions et le test « pas de données dans les journaux » sont là) : phase 2.
 - Livrables non logiciels de la phase 0 : analyse de risques, AIPD initiale, cible ASVS, références réglementaires relues

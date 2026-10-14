@@ -27,6 +27,7 @@ public static class DependencyInjection
         services.AddSingleton<ITenantCatalog>(sp => sp.GetRequiredService<LocalTenantCatalog>());
         services.AddSingleton<IDossierDirectory>(sp => sp.GetRequiredService<LocalTenantCatalog>());
         services.AddSingleton<IDossierProvisioner, LocalDossierProvisioner>();
+        services.AddSingleton<LocalDossierStartup>();
         return services;
     }
 }

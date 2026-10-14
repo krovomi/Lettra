@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
 {
     [DbContext(typeof(LettraDbContext))]
-    [Migration("20261014175311_InitialCustomers")]
-    partial class InitialCustomers
+    [Migration("20261014210000_TamponDossierEtNumerotation")]
+    partial class TamponDossierEtNumerotation
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -94,6 +94,48 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.HasIndex("Siren");
 
                     b.ToTable("Customers", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Numbering.NumberSeries", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Next")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Prefix")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Code");
+
+                    b.ToTable("NumberSeries", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Tenancy.DossierStamp", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("DossierId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OrganisationId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DossierStamp", (string)null);
                 });
 #pragma warning restore 612, 618
         }

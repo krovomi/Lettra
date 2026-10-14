@@ -2,6 +2,7 @@ using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Infrastructure.Persistence.PostgreSql;
 using Lettra.Infrastructure.Persistence.Sqlite;
 using Lettra.Infrastructure.Persistence.SqlServer;
+using Lettra.Infrastructure.Catalog;
 using Testcontainers.MsSql;
 using Testcontainers.PostgreSql;
 
@@ -27,7 +28,45 @@ public sealed class SqliteTests : IDisposable
         await CustomerPersistenceScenarios.IsolationAsync(harness, DatabaseProvider.Sqlite, Database("a"), Database("b"));
     }
 
-    public void Dispose() => Directory.Delete(_folder, recursive: true);
+    [Fact]
+    public async Task Numerotation_continue_sous_concurrence()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await TenancyScenarios.NumberingAsync(harness, DatabaseProvider.Sqlite, Database("num"));
+    }
+
+    [Fact]
+    public async Task Une_base_d_un_autre_dossier_est_refusee()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await TenancyScenarios.StampGuardAsync(harness, DatabaseProvider.Sqlite, Database("tampon"));
+    }
+
+    [Fact]
+    public async Task Creation_de_dossier_et_vagues_de_migration_par_le_catalogue()
+    {
+        await using CatalogHarness harness = new(
+            s => s.AddSqliteProvider(),
+            b => SqliteConfigurator.ConfigureCatalog(b, Database("catalog")),
+            new Dictionary<string, string?> { ["Provider"] = "Sqlite", ["Directory"] = Path.Combine(_folder, "srv-a") });
+        await CatalogScenarios.ProvisionAndMigrateAsync(harness, DatabaseProvider.Sqlite);
+    }
+
+    [Fact]
+    public async Task Cabinet_inconnu()
+    {
+        await using CatalogHarness harness = new(
+            s => s.AddSqliteProvider(),
+            b => SqliteConfigurator.ConfigureCatalog(b, Database("catalog-inconnu")),
+            new Dictionary<string, string?> { ["Provider"] = "Sqlite", ["Directory"] = _folder });
+        await CatalogScenarios.UnknownOrganisationAsync(harness);
+    }
+
+    public void Dispose()
+    {
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        Directory.Delete(_folder, recursive: true);
+    }
 }
 
 /// <summary>Docker est-il joignable ? Sinon les tests de conteneurs sont ignorés localement (jamais en CI).</summary>
@@ -78,6 +117,42 @@ public sealed class PostgreSqlTests : IAsyncLifetime
         await using TenantHarness harness = new(new PostgreSqlConfigurator());
         await CustomerPersistenceScenarios.IsolationAsync(harness, DatabaseProvider.PostgreSql, Database("b"), Database("c"));
     }
+
+    [SkippableFact]
+    public async Task Numerotation_continue_sous_concurrence()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new PostgreSqlConfigurator());
+        await TenancyScenarios.NumberingAsync(harness, DatabaseProvider.PostgreSql, Database("num"));
+    }
+
+    [SkippableFact]
+    public async Task Une_base_d_un_autre_dossier_est_refusee()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new PostgreSqlConfigurator());
+        await TenancyScenarios.StampGuardAsync(harness, DatabaseProvider.PostgreSql, Database("tampon"));
+    }
+
+    [SkippableFact]
+    public async Task Un_schema_par_dossier_dans_une_meme_base()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new PostgreSqlConfigurator());
+        await TenancyScenarios.SchemaPerDossierAsync(harness, DatabaseProvider.PostgreSql, Database("schemas"));
+    }
+
+    [SkippableFact]
+    public async Task Creation_de_dossier_et_vagues_de_migration_par_le_catalogue()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        string server = new Npgsql.NpgsqlConnectionStringBuilder(_container!.GetConnectionString()) { Database = null }.ConnectionString;
+        await using CatalogHarness harness = new(
+            s => s.AddPostgreSqlProvider(),
+            b => PostgreSqlConfigurator.ConfigureCatalog(b, Database("catalog")),
+            new Dictionary<string, string?> { ["Provider"] = "PostgreSql", ["ConnectionString"] = server });
+        await CatalogScenarios.ProvisionAndMigrateAsync(harness, DatabaseProvider.PostgreSql);
+    }
 }
 
 public sealed class SqlServerTests : IAsyncLifetime
@@ -118,5 +193,35 @@ public sealed class SqlServerTests : IAsyncLifetime
         Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new SqlServerConfigurator());
         await CustomerPersistenceScenarios.IsolationAsync(harness, DatabaseProvider.SqlServer, Database("b"), Database("c"));
+    }
+
+    [SkippableFact]
+    public async Task Numerotation_continue_sous_concurrence()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new SqlServerConfigurator());
+        await TenancyScenarios.NumberingAsync(harness, DatabaseProvider.SqlServer, Database("num"));
+    }
+
+    [SkippableFact]
+    public async Task Une_base_d_un_autre_dossier_est_refusee()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new SqlServerConfigurator());
+        await TenancyScenarios.StampGuardAsync(harness, DatabaseProvider.SqlServer, Database("tampon"));
+    }
+
+    [SkippableFact]
+    public async Task Creation_de_dossier_et_vagues_de_migration_par_le_catalogue()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        Microsoft.Data.SqlClient.SqlConnectionStringBuilder server = new(_container!.GetConnectionString());
+        server.Remove("Initial Catalog");
+        server.Remove("Database");
+        await using CatalogHarness harness = new(
+            s => s.AddSqlServerProvider(),
+            b => SqlServerConfigurator.ConfigureCatalog(b, Database("catalog")),
+            new Dictionary<string, string?> { ["Provider"] = "SqlServer", ["ConnectionString"] = server.ConnectionString });
+        await CatalogScenarios.ProvisionAndMigrateAsync(harness, DatabaseProvider.SqlServer);
     }
 }
