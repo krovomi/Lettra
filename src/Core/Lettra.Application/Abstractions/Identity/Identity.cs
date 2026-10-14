@@ -24,6 +24,9 @@ public enum Permission
     // Module Catalogue (chantier Tiers et Catalogue). Numérotation par plages de 10 pour éviter les collisions.
     CatalogueConsulter = 20,
     CatalogueGerer = 21,
+
+    /// <summary>Utiliser l'assistant IA (annexe F §10). Même valeur que le catalogue des permissions de la phase 2.</summary>
+    IaUtiliser = 60,
 }
 
 /// <summary>Permissions effectives d'un utilisateur sur un dossier.</summary>

@@ -25,6 +25,14 @@
     <Project Path="src/Infrastructure/Lettra.Infrastructure.Persistence.Sqlite/Lettra.Infrastructure.Persistence.Sqlite.csproj" />
     <Project Path="src/Infrastructure/Lettra.Infrastructure.Persistence/Lettra.Infrastructure.Persistence.csproj" />
   </Folder>
+  <Folder Name="/src/Ai/">
+    <Project Path="src/Ai/Lettra.Ai.Claude/Lettra.Ai.Claude.csproj" />
+    <Project Path="src/Ai/Lettra.Ai.Local/Lettra.Ai.Local.csproj" />
+    <Project Path="src/Ai/Lettra.Ai.Orchestration/Lettra.Ai.Orchestration.csproj" />
+    <Project Path="src/Ai/Lettra.Ai.Privacy/Lettra.Ai.Privacy.csproj" />
+    <Project Path="src/Ai/Lettra.Ai.Skills/Lettra.Ai.Skills.csproj" />
+    <Project Path="src/Ai/Lettra.Ai.Tools/Lettra.Ai.Tools.csproj" />
+  </Folder>
   <Folder Name="/src/Modules/" />
   <Folder Name="/src/Modules/Supervision/">
     <Project Path="src/Modules/Supervision/Lettra.Supervision.Application/Lettra.Supervision.Application.csproj" />
@@ -47,6 +55,7 @@
     <Project Path="src/Hosts/Lettra.Worker/Lettra.Worker.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Lettra.Ai.Tests/Lettra.Ai.Tests.csproj" />
     <Project Path="tests/Lettra.Api.Tests/Lettra.Api.Tests.csproj" />
     <Project Path="tests/Lettra.Application.Tests/Lettra.Application.Tests.csproj" />
     <Project Path="tests/Lettra.Architecture.Tests/Lettra.Architecture.Tests.csproj" />

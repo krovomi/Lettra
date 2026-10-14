@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Pseudonymisation et ré-identification côté serveur (ADR-0012, annexe F §10). Aucune dépendance externe. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Lettra.Application\Lettra.Application.csproj" />
+  </ItemGroup>
+
+</Project>

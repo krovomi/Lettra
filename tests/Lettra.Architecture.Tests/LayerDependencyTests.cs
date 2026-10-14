@@ -31,6 +31,14 @@ public sealed class LayerDependencyTests
         { "Lettra.UI.Shared", ["Lettra.Calculations", "Lettra.Contracts", "Lettra.UI.Abstractions"] },
         { "Lettra.UI.Gateway.Http", ["Lettra.Contracts", "Lettra.UI.Abstractions"] },
         { "Lettra.UI.Gateway.InProcess", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain", "Lettra.UI.Abstractions"] },
+
+        // Couche IA (annexe B §4.1) : des adapters des ports de l'application, sans accès direct aux bases.
+        { "Lettra.Ai.Skills", ["Lettra.Application"] },
+        { "Lettra.Ai.Privacy", ["Lettra.Application"] },
+        { "Lettra.Ai.Tools", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain"] },
+        { "Lettra.Ai.Orchestration", ["Lettra.Ai.Privacy", "Lettra.Application", "Lettra.Contracts", "Lettra.Domain"] },
+        { "Lettra.Ai.Claude", ["Lettra.Application"] },
+        { "Lettra.Ai.Local", ["Lettra.Application"] },
     };
 
     [Theory]
@@ -101,4 +109,23 @@ public sealed class LayerDependencyTests
             .Select(a => a.GetName().Name)
             .Should().BeEmpty();
     }
+
+    [Fact]
+    public void La_couche_IA_passe_par_les_cas_d_usage_et_jamais_par_les_bases()
+    {
+        foreach (Assembly assembly in new[] { Assemblies.AiSkills, Assemblies.AiPrivacy, Assemblies.AiTools, Assemblies.AiOrchestration, Assemblies.AiClaude, Assemblies.AiLocal })
+        {
+            Types.InAssembly(assembly)
+                .ShouldNot().HaveDependencyOnAny("Microsoft.EntityFrameworkCore", "Microsoft.AspNetCore", "Lettra.Infrastructure", "Lettra.UI")
+                .GetResult().FailingTypeNames.Should().BeNullOrEmpty(because: $"{assembly.GetName().Name} : les outils de l'IA appellent les cas d'usage, avec les droits de l'utilisateur (ADR-0006)");
+        }
+    }
+
+    [Fact]
+    public void Seul_l_adapter_Claude_connait_le_SDK_Anthropic() =>
+        Assemblies.All
+            .Where(a => a != Assemblies.AiClaude)
+            .Where(a => a.GetReferencedAssemblies().Any(r => r.Name == "Anthropic"))
+            .Select(a => a.GetName().Name)
+            .Should().BeEmpty(because: "le moteur est derrière le port IAiEngine (ADR-0012)");
 }

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- AccountingAssistant (annexe B §4.2) : la boucle d'outils est tenue par le serveur, chaque étape passe par
+       les mêmes contrôles (politique du cabinet, droits, pseudonymisation, validation, journal, contrôle de la réponse). -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Lettra.Application\Lettra.Application.csproj" />
+    <ProjectReference Include="..\Lettra.Ai.Privacy\Lettra.Ai.Privacy.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lettra.Ai.Tests" />
+  </ItemGroup>
+
+</Project>

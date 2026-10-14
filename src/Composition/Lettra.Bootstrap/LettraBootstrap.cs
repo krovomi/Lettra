@@ -38,6 +38,7 @@ public static class LettraBootstrap
         services.AddPersistenceCore();
         services.AddExternalServices(configuration);
         services.AddLettraObservability(configuration, mode);
+        services.AddLettraAi(configuration);
 
         return mode switch
         {

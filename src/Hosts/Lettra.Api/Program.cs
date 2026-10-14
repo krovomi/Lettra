@@ -42,6 +42,7 @@ api.MapCustomers();
 api.MapSuppliers();
 api.MapCatalog();
 api.MapDirectory();
+api.MapAssistant();
 
 app.MapHealthChecks("/health");
 app.MapFallbackToFile("index.html");

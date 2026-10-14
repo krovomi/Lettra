@@ -65,6 +65,17 @@
   <data name="Error.Address.CityRequired" xml:space="preserve"><value>La ville est obligatoire.</value></data>
   <data name="Error.Address.LineRequired" xml:space="preserve"><value>L'adresse est obligatoire.</value></data>
   <data name="Error.Address.PostalCodeInvalid" xml:space="preserve"><value>Ce code postal n'est pas valide (5 chiffres en France).</value></data>
+  <data name="Error.Ai.Disabled" xml:space="preserve"><value>L'assistant IA est désactivé pour ce cabinet. L'administrateur du cabinet peut l'activer.</value></data>
+  <data name="Error.Ai.DossierExcluded" xml:space="preserve"><value>Le cabinet a exclu ce dossier de l'assistant IA.</value></data>
+  <data name="Error.Ai.EngineUnavailable" xml:space="preserve"><value>Aucun moteur d'IA n'est disponible pour ce cabinet. Les contrôles de conformité restent actifs.</value></data>
+  <data name="Error.Ai.FeatureDisabled" xml:space="preserve"><value>Cette fonction de l'assistant n'est pas activée par le cabinet.</value></data>
+  <data name="Error.Ai.Refused" xml:space="preserve"><value>L'assistant a refusé de répondre à cette demande. Reformulez-la ou traitez-la sans l'assistant.</value></data>
+  <data name="Error.Ai.SkillPackStale" xml:space="preserve"><value>Le référentiel métier de l'assistant date de plus de six mois : vérifiez les seuils et les taux sur les sites officiels.</value></data>
+  <data name="Error.Ai.ToolRejected" xml:space="preserve"><value>L'assistant a demandé une action qui n'est pas disponible : elle a été refusée.</value></data>
+  <data name="Error.Ai.ToolRoundsExceeded" xml:space="preserve"><value>L'assistant a atteint le nombre maximal d'étapes sans conclure.</value></data>
+  <data name="Error.Ai.Truncated" xml:space="preserve"><value>La réponse a été tronquée.</value></data>
+  <data name="Error.Ai.UngroundedAmounts" xml:space="preserve"><value>Ces montants ne viennent pas d'un calcul de Lettra : vérifiez-les avant de les utiliser.</value></data>
+  <data name="Error.Ai.UnknownReferences" xml:space="preserve"><value>La réponse cite des références inconnues : vérifiez-les.</value></data>
   <data name="Error.Api.IdempotencyKeyReused" xml:space="preserve"><value>Cette opération a déjà été envoyée avec un contenu différent.</value></data>
   <data name="Error.Api.Unexpected" xml:space="preserve"><value>Une erreur inattendue est survenue. Réessayez.</value></data>
   <data name="Error.Api.Unreachable" xml:space="preserve"><value>Le serveur est injoignable. Vérifiez la connexion.</value></data>

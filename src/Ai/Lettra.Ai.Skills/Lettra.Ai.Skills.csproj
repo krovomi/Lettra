@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Skill pack Paperasse embarqué (annexe B §3) : jamais de téléchargement à l'exécution, chaque fichier
+       est vérifié par SHA-256 au démarrage. vendor/paperasse est en lecture seule, épinglé sur f2e15c4. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Lettra.Application\Lettra.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="vendor\paperasse\**\*" LogicalName="skillpack/vendor/paperasse/%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="overlays\**\*" LogicalName="skillpack/overlays/%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="skillpack.manifest.json" LogicalName="skillpack/skillpack.manifest.json" />
+  </ItemGroup>
+
+</Project>
