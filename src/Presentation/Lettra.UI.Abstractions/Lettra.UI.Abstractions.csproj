@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Ports de l'UI : ce que l'interface sait demander, en types Contracts uniquement. -->
+  <PropertyGroup>
+    <IsTrimmable>true</IsTrimmable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Lettra.Contracts\Lettra.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

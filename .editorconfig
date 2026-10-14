@@ -1,0 +1,49 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{csproj,props,targets,xml,json,yml,yaml,resx,slnx}]
+indent_size = 2
+
+[*.cs]
+csharp_style_namespace_declarations = file_scoped:warning
+csharp_style_var_for_built_in_types = false:none
+dotnet_sort_system_directives_first = true
+csharp_prefer_braces = true:warning
+
+# Noms d'erreur et de ressources en français : pas de contrôle orthographique d'identifiants.
+dotnet_diagnostic.CA1724.severity = none
+# Les exceptions métier n'existent pas (les échecs sont des valeurs) : constructeurs standard inutiles.
+dotnet_diagnostic.CA1032.severity = none
+# Messages de journalisation : LoggerMessage obligatoire hors tests (perf + pas d'interpolation de données).
+dotnet_diagnostic.CA1848.severity = warning
+dotnet_diagnostic.CA1873.severity = none
+# Les textes visibles passent par les .resx ; CA1303 vise les littéraux passés à des API localisables.
+dotnet_diagnostic.CA1303.severity = none
+# Types internes instanciés par l'injection de dépendances.
+dotnet_diagnostic.CA1812.severity = none
+
+[*.razor]
+indent_size = 4
+
+[tests/**.cs]
+dotnet_diagnostic.CA1848.severity = none
+
+[*.cs]
+# Code C# uniquement : les conflits avec des mots-clés VB (« Error ») ne concernent pas Lettra.
+dotnet_diagnostic.CA1716.severity = none
+# Fabriques statiques sur Result<T> (Success/Failure) : idiome voulu.
+dotnet_diagnostic.CA1000.severity = none
+# Noms imposés par l'annexe F (Permission, IRequirePermission) et l'idiome médiateur (RequestHandlerDelegate).
+dotnet_diagnostic.CA1711.severity = none
+
+# Migrations EF générées : pas d'analyse de style.
+[**/Migrations/*.cs]
+generated_code = true
+dotnet_analyzer_diagnostic.severity = none

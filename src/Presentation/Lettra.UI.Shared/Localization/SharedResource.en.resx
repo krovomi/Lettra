@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Customers.Create.Done" xml:space="preserve"><value>Customer “{0}” created.</value></data>
+  <data name="Customers.Create.Submit" xml:space="preserve"><value>Create customer</value></data>
+  <data name="Customers.Create.Title" xml:space="preserve"><value>New customer</value></data>
+  <data name="Customers.Field.AddressLine1" xml:space="preserve"><value>Address</value></data>
+  <data name="Customers.Field.AddressLine2" xml:space="preserve"><value>Address line 2</value></data>
+  <data name="Customers.Field.City" xml:space="preserve"><value>City</value></data>
+  <data name="Customers.Field.CountryCode" xml:space="preserve"><value>Country (ISO code, e.g. FR)</value></data>
+  <data name="Customers.Field.Email" xml:space="preserve"><value>Email</value></data>
+  <data name="Customers.Field.Kind" xml:space="preserve"><value>Customer type</value></data>
+  <data name="Customers.Field.Name" xml:space="preserve"><value>Name or company name</value></data>
+  <data name="Customers.Field.PostalCode" xml:space="preserve"><value>Postal code</value></data>
+  <data name="Customers.Field.Siren" xml:space="preserve"><value>SIREN</value></data>
+  <data name="Customers.Field.Siret" xml:space="preserve"><value>SIRET</value></data>
+  <data name="Customers.Field.VatNumber" xml:space="preserve"><value>EU VAT number</value></data>
+  <data name="Customers.Kind.Company" xml:space="preserve"><value>Company</value></data>
+  <data name="Customers.Kind.Individual" xml:space="preserve"><value>Individual</value></data>
+  <data name="Customers.List.Empty" xml:space="preserve"><value>No customers yet.</value></data>
+  <data name="Customers.List.Title" xml:space="preserve"><value>Customers in this file</value></data>
+  <data name="Customers.Title" xml:space="preserve"><value>Customers</value></data>
+  <data name="Error.Address.CityRequired" xml:space="preserve"><value>The city is required.</value></data>
+  <data name="Error.Address.LineRequired" xml:space="preserve"><value>The address is required.</value></data>
+  <data name="Error.Address.PostalCodeInvalid" xml:space="preserve"><value>This postal code is not valid (5 digits in France).</value></data>
+  <data name="Error.Api.IdempotencyKeyReused" xml:space="preserve"><value>This operation was already sent with different content.</value></data>
+  <data name="Error.Api.Unexpected" xml:space="preserve"><value>An unexpected error occurred. Please try again.</value></data>
+  <data name="Error.Api.Unreachable" xml:space="preserve"><value>The server cannot be reached. Check the connection.</value></data>
+  <data name="Error.CountryCode.Invalid" xml:space="preserve"><value>Enter a 2-letter country code (FR, BE…).</value></data>
+  <data name="Error.Customer.IndividualCannotHaveCompanyIds" xml:space="preserve"><value>An individual has no SIREN or VAT number.</value></data>
+  <data name="Error.Customer.KindInvalid" xml:space="preserve"><value>Choose the customer type.</value></data>
+  <data name="Error.Customer.NameRequired" xml:space="preserve"><value>The customer name is required.</value></data>
+  <data name="Error.Customer.NameTooLong" xml:space="preserve"><value>The name must not exceed 200 characters.</value></data>
+  <data name="Error.Customer.NotFound" xml:space="preserve"><value>This customer could not be found.</value></data>
+  <data name="Error.Customer.SirenRequired" xml:space="preserve"><value>A French company must have a SIREN (or a SIRET).</value></data>
+  <data name="Error.Customer.SiretSirenMismatch" xml:space="preserve"><value>This SIRET does not belong to the SIREN entered.</value></data>
+  <data name="Error.Dossier.Mismatch" xml:space="preserve"><value>This action targets a different client file than the one open.</value></data>
+  <data name="Error.Dossier.NotFound" xml:space="preserve"><value>This client file could not be found or you do not have access to it.</value></data>
+  <data name="Error.Dossier.Required" xml:space="preserve"><value>Open a client file first.</value></data>
+  <data name="Error.Email.Invalid" xml:space="preserve"><value>This email address is not valid.</value></data>
+  <data name="Error.Money.CurrencyMismatch" xml:space="preserve"><value>The amounts are in different currencies.</value></data>
+  <data name="Error.Security.Forbidden" xml:space="preserve"><value>You do not have permission for this action in this file.</value></data>
+  <data name="Error.Security.Unauthenticated" xml:space="preserve"><value>Your session has expired, please sign in again.</value></data>
+  <data name="Error.Siren.Invalid" xml:space="preserve"><value>The SIREN must have 9 digits and a valid check digit.</value></data>
+  <data name="Error.Siret.Invalid" xml:space="preserve"><value>The SIRET must have 14 digits and a valid check digit.</value></data>
+  <data name="Error.Validation.Invalid" xml:space="preserve"><value>This value is not valid.</value></data>
+  <data name="Error.Validation.Required" xml:space="preserve"><value>This field is required.</value></data>
+  <data name="Error.Validation.TooLong" xml:space="preserve"><value>This text is too long.</value></data>
+  <data name="Error.VatNumber.Invalid" xml:space="preserve"><value>This EU VAT number is not valid.</value></data>
+  <data name="Error.VatRate.Unknown" xml:space="preserve"><value>This VAT rate is not recognised.</value></data>
+  <data name="Loading" xml:space="preserve"><value>Loading…</value></data>
+  <data name="Nav.Customers" xml:space="preserve"><value>Customers</value></data>
+  <data name="Nav.Label" xml:space="preserve"><value>Main navigation</value></data>
+  <data name="NotFound" xml:space="preserve"><value>This page does not exist.</value></data>
+</root>

@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- L'API publique versionnée (ADR-0005) : records immuables, codes d'erreur,
+       contexte JSON généré. Aucune dépendance, compilable pour WASM, sans réflexion. -->
+  <PropertyGroup>
+    <IsTrimmable>true</IsTrimmable>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+</Project>

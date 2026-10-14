@@ -1,0 +1,152 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  CI: true
+
+jobs:
+  build-test:
+    name: Build et tests (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      # La restauration échoue sur toute vulnérabilité connue (NuGetAudit, avertissements bloquants).
+      - name: Restauration et audit des dépendances
+        run: dotnet restore Lettra.Ci.slnf
+
+      - name: Build (analyseurs, nullable, avertissements bloquants)
+        run: dotnet build Lettra.Ci.slnf -c Release --no-restore
+
+      # Tests d'architecture, domaine, application, API, UI ; persistance sur SQLite, PostgreSQL et
+      # SQL Server (Testcontainers) ; test « aucune donnée de dossier dans les journaux ».
+      - name: Tests
+        run: dotnet test Lettra.Ci.slnf -c Release --no-build --logger "trx;LogFilePrefix=lettra" --results-directory TestResults
+
+      - name: Résultats de tests
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/*.trx
+
+      - name: Avis de tiers (notice MIT de Paperasse)
+        run: build/check-third-party-notices.sh
+
+  maui-windows:
+    name: Build MAUI (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Charge de travail MAUI
+        run: dotnet workload install maui-windows
+      - name: Build Lettra.App.Maui
+        run: dotnet build src/Hosts/Lettra.App.Maui/Lettra.App.Maui.csproj -c Release
+
+  secrets:
+    name: Détection de secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  sbom:
+    name: SBOM (CycloneDX)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - run: dotnet restore Lettra.Ci.slnf
+      - uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: cyclonedx-json
+          output-file: lettra.cdx.json
+          upload-artifact: true
+
+  codeql:
+    name: Analyse statique de sécurité (CodeQL)
+    # CodeQL exige GitHub Advanced Security sur un dépôt privé : sinon, ce sont les analyseurs .NET
+    # (règles de sécurité CA2xxx/CA3xxx, bloquantes au build) qui font office d'analyse statique.
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: csharp
+          build-mode: manual
+      - run: dotnet build Lettra.Ci.slnf -c Release
+      - uses: github/codeql-action/analyze@v3
+
+  image:
+    name: Image signée
+    needs: [build-test, secrets]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write # signature sans clé (Sigstore, OIDC GitHub)
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+      - name: Build de l'image
+        if: github.event_name != 'push'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: lettra-api:ci
+      - uses: docker/login-action@v3
+        if: github.event_name == 'push'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build et publication
+        id: push
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          sbom: true
+          provenance: mode=max
+          tags: ghcr.io/${{ github.repository_owner }}/lettra-api:${{ github.sha }}
+      - uses: sigstore/cosign-installer@v3
+        if: github.event_name == 'push'
+      - name: Signature de l'image
+        if: github.event_name == 'push'
+        run: cosign sign --yes ghcr.io/${{ github.repository_owner }}/lettra-api@${{ steps.push.outputs.digest }}

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- EF Core agnostique du provider : un seul modèle, une base par dossier.
+       Chaque provider a son projet de migrations (Persistence.Sqlite, .PostgreSql, .SqlServer). -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Lettra.Application\Lettra.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lettra.Infrastructure.Persistence.Sqlite" />
+    <InternalsVisibleTo Include="Lettra.Infrastructure.Persistence.PostgreSql" />
+    <InternalsVisibleTo Include="Lettra.Infrastructure.Persistence.SqlServer" />
+    <InternalsVisibleTo Include="Lettra.Persistence.Tests" />
+  </ItemGroup>
+
+</Project>

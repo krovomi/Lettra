@@ -1,0 +1,34 @@
+using Lettra.Application.Abstractions.Tenancy;
+using Lettra.Domain.Parties;
+using Microsoft.EntityFrameworkCore;
+
+namespace Lettra.Infrastructure.Persistence;
+
+/// <summary>
+/// Le DbContext d'un dossier. Un seul modèle pour les trois providers ; seule la chaîne
+/// de connexion (et l'assembly de migrations) change d'un dossier à l'autre.
+/// </summary>
+public sealed class LettraDbContext(DbContextOptions<LettraDbContext> options, TenantDescriptor tenant) : DbContext(options)
+{
+    public TenantDescriptor Tenant { get; } = tenant;
+
+    public DbSet<Customer> Customers => Set<Customer>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        ArgumentNullException.ThrowIfNull(modelBuilder);
+        if (Tenant.Schema is not null)
+        {
+            modelBuilder.HasDefaultSchema(Tenant.Schema);
+        }
+
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(LettraDbContext).Assembly);
+    }
+
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        ArgumentNullException.ThrowIfNull(configurationBuilder);
+        // Montants : decimal(18,4) partout, arrondi au centime par la règle unique de Lettra.Calculations.
+        configurationBuilder.Properties<decimal>().HavePrecision(18, 4);
+    }
+}

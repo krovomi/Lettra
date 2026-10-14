@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <!-- Hôte Blazor WebAssembly (PWA). Servi par Lettra.Api ; parle à l'API par la gateway HTTP. -->
+  <PropertyGroup>
+    <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
+    <SatelliteResourceLanguages>fr;en</SatelliteResourceLanguages>
+    <!-- CA1515 : Program est public par convention de l'hôte. -->
+    <NoWarn>$(NoWarn);CA1515</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Presentation\Lettra.UI.Shared\Lettra.UI.Shared.csproj" />
+    <ProjectReference Include="..\..\Presentation\Lettra.UI.Gateway.Http\Lettra.UI.Gateway.Http.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>

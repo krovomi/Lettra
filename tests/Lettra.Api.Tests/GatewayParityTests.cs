@@ -1,0 +1,101 @@
+using Lettra.Bootstrap;
+using Lettra.Contracts.Common;
+using Lettra.Contracts.Customers;
+using Lettra.UI.Abstractions;
+using Lettra.UI.Gateway.Http;
+using Lettra.UI.Gateway.InProcess;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Http;
+
+namespace Lettra.Api.Tests;
+
+/// <summary>
+/// ADR-0005 : la même UI appelle la même interface, par HTTP (WASM) ou en direct (MAUI hors ligne).
+/// Les deux chemins doivent produire le même résultat et les mêmes codes d'erreur.
+/// </summary>
+public sealed class GatewayParityTests(LettraApiFactory factory) : IClassFixture<LettraApiFactory>, IDisposable
+{
+    private readonly string _folder = Directory.CreateTempSubdirectory("lettra-maui-").FullName;
+
+    private ServiceProvider HttpGateway(Guid dossier)
+    {
+        ServiceCollection services = new();
+        services.AddSingleton<IDossierSelection>(new FixedDossierSelection(dossier));
+        services.AddHttpGateways(new Uri("http://localhost/"));
+        services.ConfigureAll<HttpClientFactoryOptions>(o =>
+            o.HttpMessageHandlerBuilderActions.Add(b => b.PrimaryHandler = factory.Server.CreateHandler()));
+        return services.BuildServiceProvider();
+    }
+
+    private ServiceProvider InProcessGateway(Guid dossier)
+    {
+        Dictionary<string, string?> settings = LettraApiFactory.DossierSettings(Path.Combine(_folder, "poste.db"));
+        settings[LettraBootstrap.DeploymentModeKey] = "IsolatedDesktop";
+        IConfiguration configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
+
+        ServiceCollection services = new();
+        services.AddLogging();
+        services.AddLettra(configuration);
+        services.AddSingleton<IDossierSelection>(new FixedDossierSelection(dossier));
+        services.AddInProcessGateways();
+        return services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
+    }
+
+    public static TheoryData<string> Transports => ["http", "in-process"];
+
+    private ServiceProvider Gateway(string transport, Guid? dossier = null) =>
+        transport == "http"
+            ? HttpGateway(dossier ?? LettraApiFactory.DossierId)
+            : InProcessGateway(dossier ?? LettraApiFactory.DossierId);
+
+    [Theory]
+    [MemberData(nameof(Transports))]
+    public async Task Creer_puis_lister(string transport)
+    {
+        await using ServiceProvider services = Gateway(transport);
+        ICustomersGateway gateway = services.GetRequiredService<ICustomersGateway>();
+
+        OperationResult<CustomerResponse> created = await gateway.CreateAsync(CustomerApiTests.Martin(), default);
+        OperationResult<PagedResponse<CustomerSummary>> list = await gateway.ListAsync(1, 50, default);
+
+        created.IsSuccess.Should().BeTrue();
+        created.Value!.Siren.Should().Be("732829320");
+        list.Value!.Items.Should().Contain(c => c.Id == created.Value.Id);
+    }
+
+    [Theory]
+    [MemberData(nameof(Transports))]
+    public async Task Memes_codes_d_erreur_par_champ(string transport)
+    {
+        await using ServiceProvider services = Gateway(transport);
+        CreateCustomerRequest request = CustomerApiTests.Martin();
+        request.Siret = "73282932000075";
+        request.PostalCode = "7500";
+
+        OperationResult<CustomerResponse> result = await services.GetRequiredService<ICustomersGateway>().CreateAsync(request, default);
+
+        result.Errors.Should().BeEquivalentTo(new[]
+        {
+            new ErrorDetail(ErrorCodes.SharedKernel.SiretInvalid, nameof(CreateCustomerRequest.Siret)),
+            new ErrorDetail(ErrorCodes.SharedKernel.PostalCodeInvalid, nameof(CreateCustomerRequest.PostalCode)),
+        });
+    }
+
+    [Theory]
+    [MemberData(nameof(Transports))]
+    public async Task Dossier_inconnu_meme_refus(string transport)
+    {
+        await using ServiceProvider services = Gateway(transport, dossier: Guid.CreateVersion7());
+
+        OperationResult<PagedResponse<CustomerSummary>> result = await services.GetRequiredService<ICustomersGateway>().ListAsync(1, 10, default);
+
+        result.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Tenancy.DossierNotFound);
+    }
+
+    public void Dispose()
+    {
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        Directory.Delete(_folder, recursive: true);
+    }
+}

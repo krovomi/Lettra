@@ -1,0 +1,47 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+    <File Path="nuget.config" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Core/">
+    <Project Path="src/Core/Lettra.Application/Lettra.Application.csproj" />
+    <Project Path="src/Core/Lettra.Calculations/Lettra.Calculations.csproj" />
+    <Project Path="src/Core/Lettra.Contracts/Lettra.Contracts.csproj" />
+    <Project Path="src/Core/Lettra.Domain/Lettra.Domain.csproj" />
+  </Folder>
+  <Folder Name="/src/Infrastructure/">
+    <Project Path="src/Infrastructure/Lettra.Infrastructure.Catalog/Lettra.Infrastructure.Catalog.csproj" />
+    <Project Path="src/Infrastructure/Lettra.Infrastructure.Identity.Local/Lettra.Infrastructure.Identity.Local.csproj" />
+    <Project Path="src/Infrastructure/Lettra.Infrastructure.Persistence.PostgreSql/Lettra.Infrastructure.Persistence.PostgreSql.csproj" />
+    <Project Path="src/Infrastructure/Lettra.Infrastructure.Persistence.SqlServer/Lettra.Infrastructure.Persistence.SqlServer.csproj" />
+    <Project Path="src/Infrastructure/Lettra.Infrastructure.Persistence.Sqlite/Lettra.Infrastructure.Persistence.Sqlite.csproj" />
+    <Project Path="src/Infrastructure/Lettra.Infrastructure.Persistence/Lettra.Infrastructure.Persistence.csproj" />
+  </Folder>
+  <Folder Name="/src/Composition/">
+    <Project Path="src/Composition/Lettra.Bootstrap/Lettra.Bootstrap.csproj" />
+  </Folder>
+  <Folder Name="/src/Presentation/">
+    <Project Path="src/Presentation/Lettra.UI.Abstractions/Lettra.UI.Abstractions.csproj" />
+    <Project Path="src/Presentation/Lettra.UI.Gateway.Http/Lettra.UI.Gateway.Http.csproj" />
+    <Project Path="src/Presentation/Lettra.UI.Gateway.InProcess/Lettra.UI.Gateway.InProcess.csproj" />
+    <Project Path="src/Presentation/Lettra.UI.Shared/Lettra.UI.Shared.csproj" />
+  </Folder>
+  <Folder Name="/src/Hosts/">
+    <Project Path="src/Hosts/Lettra.Api/Lettra.Api.csproj" />
+    <Project Path="src/Hosts/Lettra.App.Maui/Lettra.App.Maui.csproj" />
+    <Project Path="src/Hosts/Lettra.Web/Lettra.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Lettra.Api.Tests/Lettra.Api.Tests.csproj" />
+    <Project Path="tests/Lettra.Application.Tests/Lettra.Application.Tests.csproj" />
+    <Project Path="tests/Lettra.Architecture.Tests/Lettra.Architecture.Tests.csproj" />
+    <Project Path="tests/Lettra.Domain.Tests/Lettra.Domain.Tests.csproj" />
+    <Project Path="tests/Lettra.Persistence.Tests/Lettra.Persistence.Tests.csproj" />
+    <Project Path="tests/Lettra.UI.Tests/Lettra.UI.Tests.csproj" />
+  </Folder>
+</Solution>

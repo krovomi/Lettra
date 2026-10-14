@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Cas d'usage et ports. Dépend du domaine et des contrats (modèles de lecture),
+       jamais de l'infrastructure. -->
+  <ItemGroup>
+    <ProjectReference Include="..\Lettra.Domain\Lettra.Domain.csproj" />
+    <ProjectReference Include="..\Lettra.Contracts\Lettra.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lettra.Application.Tests" />
+  </ItemGroup>
+
+</Project>
