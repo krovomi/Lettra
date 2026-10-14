@@ -15,6 +15,7 @@ public static class SharedKernelErrors
     public const string CityRequiredCode = "Address.CityRequired";
     public const string CurrencyMismatchCode = "Money.CurrencyMismatch";
     public const string VatRateUnknownCode = "VatRate.Unknown";
+    public const string IbanInvalidCode = "Iban.Invalid";
 
     public static Error SirenInvalid => Error.Validation(SirenInvalidCode);
     public static Error SiretInvalid => Error.Validation(SiretInvalidCode);
@@ -25,4 +26,5 @@ public static class SharedKernelErrors
     public static Error AddressLineRequired => Error.Validation(AddressLineRequiredCode);
     public static Error CityRequired => Error.Validation(CityRequiredCode);
     public static Error VatRateUnknown => Error.Validation(VatRateUnknownCode);
+    public static Error IbanInvalid => Error.Validation(IbanInvalidCode);
 }
