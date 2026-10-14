@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
+using Lettra.Contracts.Identity;
 
 namespace Lettra.Contracts.Serialization;
 
@@ -14,4 +15,7 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(CustomerResponse))]
 [JsonSerializable(typeof(PagedResponse<CustomerSummary>))]
 [JsonSerializable(typeof(ProblemResponse))]
+[JsonSerializable(typeof(SessionResponse))]
+[JsonSerializable(typeof(CreateLocalAccountRequest))]
+[JsonSerializable(typeof(UnlockLocalSessionRequest))]
 public sealed partial class ContractsJsonContext : JsonSerializerContext;

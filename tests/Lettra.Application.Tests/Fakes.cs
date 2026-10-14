@@ -31,7 +31,7 @@ internal sealed class FakePermissions : IPermissionService
 {
     public HashSet<Permission> Granted { get; } = [.. Enum.GetValues<Permission>()];
 
-    public ValueTask<IReadOnlySet<Permission>> GetEffectiveAsync(Guid userId, DossierId dossier, CancellationToken cancellationToken) =>
+    public ValueTask<IReadOnlySet<Permission>> GetEffectiveAsync(Guid userId, AuthorizationScope scope, CancellationToken cancellationToken) =>
         ValueTask.FromResult<IReadOnlySet<Permission>>(Granted);
 }
 

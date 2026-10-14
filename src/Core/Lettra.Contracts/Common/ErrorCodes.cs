@@ -44,6 +44,19 @@ public static class ErrorCodes
     {
         public const string Unauthenticated = "Security.Unauthenticated";
         public const string Forbidden = "Security.Forbidden";
+        public const string MfaRequired = "Security.MfaRequired";
+        public const string CsrfHeaderMissing = "Security.CsrfHeaderMissing";
+    }
+
+    public static class LocalAccount
+    {
+        public const string AlreadyExists = "LocalAccount.AlreadyExists";
+        public const string NotFound = "LocalAccount.NotFound";
+        public const string InvalidPassphrase = "LocalAccount.InvalidPassphrase";
+        public const string LockedOut = "LocalAccount.LockedOut";
+        public const string PassphraseTooShort = "LocalAccount.PassphraseTooShort";
+        public const string PassphraseMismatch = "LocalAccount.PassphraseMismatch";
+        public const string NotSupported = "LocalAccount.NotSupported";
     }
 
     public static class Tenancy
