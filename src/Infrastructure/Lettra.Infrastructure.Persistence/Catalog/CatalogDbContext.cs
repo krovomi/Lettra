@@ -3,8 +3,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Lettra.Infrastructure.Persistence.Catalog;
 
 /// <summary>
-/// Base « Catalog » du plan de contrôle (modes 2, 3 et 5) : cabinets, serveurs de bases et dossiers. Les droits
-/// (rôles à portée) relèvent de l'identité (<c>IAuthorizationDirectory</c>).
+/// Base « Catalog » du plan de contrôle (modes 2, 3 et 5) : cabinets, serveurs de bases, dossiers, et le registre
+/// des droits (comptes, groupes, rôles à portée) lu par <c>IAuthorizationDirectory</c>.
 /// Ses migrations vivent, comme celles des dossiers, dans les trois assemblies de providers.
 /// </summary>
 public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options) : DbContext(options)
@@ -16,6 +16,20 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
     public DbSet<CatalogCluster> Clusters => Set<CatalogCluster>();
 
     public DbSet<CatalogDossier> Dossiers => Set<CatalogDossier>();
+
+    public DbSet<CatalogUserAccount> UserAccounts => Set<CatalogUserAccount>();
+
+    public DbSet<CatalogGroup> Groups => Set<CatalogGroup>();
+
+    public DbSet<CatalogGroupMember> GroupMembers => Set<CatalogGroupMember>();
+
+    public DbSet<CatalogGroupDossier> GroupDossiers => Set<CatalogGroupDossier>();
+
+    public DbSet<CatalogRoleAssignment> RoleAssignments => Set<CatalogRoleAssignment>();
+
+    public DbSet<CatalogCustomRole> CustomRoles => Set<CatalogCustomRole>();
+
+    public DbSet<CatalogCustomRolePermission> CustomRolePermissions => Set<CatalogCustomRolePermission>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -62,6 +76,67 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
             e.HasIndex(x => new { x.State, x.SchemaVersion });
             e.HasOne<CatalogOrganisation>().WithMany().HasForeignKey(x => x.OrganisationId);
             e.HasOne<CatalogCluster>().WithMany().HasForeignKey(x => x.ClusterId).IsRequired(false);
+        });
+
+        // Registre des droits : pas de clé étrangère vers les dossiers ou les cabinets, le registre peut citer une
+        // portée avant qu'elle n'existe ; la cohérence de cabinet est vérifiée à la lecture.
+        modelBuilder.Entity<CatalogUserAccount>(e =>
+        {
+            e.ToTable("UserAccounts");
+            e.Property(x => x.Id).ValueGeneratedNever();
+            e.Property(x => x.State).HasConversion<int>();
+            e.HasIndex(x => x.OrganisationId);
+        });
+
+        modelBuilder.Entity<CatalogGroup>(e =>
+        {
+            e.ToTable("Groups");
+            e.Property(x => x.Id).ValueGeneratedNever();
+            e.Property(x => x.Name).HasMaxLength(CatalogGroup.MaxNameLength);
+            e.HasIndex(x => x.OrganisationId);
+        });
+
+        modelBuilder.Entity<CatalogGroupMember>(e =>
+        {
+            e.ToTable("GroupMembers");
+            e.HasKey(x => new { x.GroupId, x.UserId });
+            e.HasIndex(x => x.UserId);
+            e.HasOne<CatalogGroup>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<CatalogGroupDossier>(e =>
+        {
+            e.ToTable("GroupDossiers");
+            e.HasKey(x => new { x.GroupId, x.DossierId });
+            e.HasIndex(x => x.DossierId);
+            e.HasOne<CatalogGroup>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<CatalogRoleAssignment>(e =>
+        {
+            e.ToTable("RoleAssignments");
+            e.Property(x => x.Id).ValueGeneratedNever();
+            e.Property(x => x.SubjectKind).HasConversion<int>();
+            e.Property(x => x.ScopeKind).HasConversion<int>();
+            e.Property(x => x.RoleKey).HasMaxLength(CatalogRoleAssignment.MaxRoleKeyLength);
+            e.HasIndex(x => new { x.SubjectKind, x.SubjectId });
+        });
+
+        modelBuilder.Entity<CatalogCustomRole>(e =>
+        {
+            e.ToTable("CustomRoles");
+            e.HasKey(x => new { x.OrganisationId, x.Key });
+            e.Property(x => x.Key).HasMaxLength(CatalogRoleAssignment.MaxRoleKeyLength);
+            e.Property(x => x.WidestScope).HasConversion<int>();
+        });
+
+        modelBuilder.Entity<CatalogCustomRolePermission>(e =>
+        {
+            e.ToTable("CustomRolePermissions");
+            e.HasKey(x => new { x.OrganisationId, x.RoleKey, x.Permission });
+            e.Property(x => x.RoleKey).HasMaxLength(CatalogRoleAssignment.MaxRoleKeyLength);
+            e.Property(x => x.Permission).HasConversion<int>();
+            e.HasOne<CatalogCustomRole>().WithMany().HasForeignKey(x => new { x.OrganisationId, x.RoleKey }).OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
