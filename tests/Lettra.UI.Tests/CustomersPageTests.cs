@@ -44,11 +44,13 @@ public sealed class CultureCollection;
 public sealed class CustomersPageTests : BunitContext
 {
     private readonly FakeCustomersGateway _gateway = new();
+    private readonly FakeDirectoryGateway _directory = new();
 
     public CustomersPageTests()
     {
         Services.AddLettraUi();
         Services.AddSingleton<ICustomersGateway>(_gateway);
+        Services.AddSingleton<IDirectoryGateway>(_directory);
     }
 
     private static void UseCulture(string name) => LettraCultures.Apply(CultureInfo.GetCultureInfo(name));
@@ -127,5 +129,34 @@ public sealed class CustomersPageTests : BunitContext
         page.WaitForAssertion(() => page.Markup.Should().Contain("A French company must have a SIREN (or a SIRET)."));
         page.Find("#siren ~ .validation-message").TextContent.Should().Be("A French company must have a SIREN (or a SIRET).");
         page.Markup.Should().Contain("You do not have permission for this action in this file.");
+    }
+
+    [Fact]
+    public void L_annuaire_pre_remplit_une_entreprise_cliente()
+    {
+        UseCulture("fr-FR");
+        _directory.Companies.Add(FakeDirectoryGateway.Danone);
+        IRenderedComponent<Customers> page = Render<Customers>();
+
+        page.Find("#customer-lookup-query").Input("danone");
+        page.Find("#customer-lookup-query").KeyDown("Enter");
+        page.Find("#customer-lookup-query").KeyDown("Enter");
+
+        page.Find("#name").GetAttribute("value").Should().Be("DANONE");
+        page.Find("#siret").GetAttribute("value").Should().Be("55203253400646");
+        page.Find("#vat").GetAttribute("value").Should().Be("FR27552032534");
+        page.Find("#zip").GetAttribute("value").Should().Be("75009");
+    }
+
+    [Fact]
+    public void L_annuaire_n_est_propose_que_pour_une_entreprise()
+    {
+        UseCulture("fr-FR");
+        IRenderedComponent<Customers> page = Render<Customers>();
+
+        page.FindAll("#customer-lookup-query").Should().HaveCount(1);
+        page.FindAll("input[type=radio]")[1].Change(CustomerKindDto.Individual.ToString());
+
+        page.FindAll("#customer-lookup-query").Should().BeEmpty();
     }
 }

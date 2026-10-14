@@ -1,13 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <!-- Razor Class Library : TOUTE l'UI, partagée par le WASM et le MAUI.
-       Ne voit que les contrats et les ports UI : jamais le domaine ni EF. -->
+       Ne voit que les contrats, les ports UI et les calculs purs : jamais le domaine ni EF. -->
   <ItemGroup>
     <SupportedPlatform Include="browser" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Lettra.UI.Abstractions\Lettra.UI.Abstractions.csproj" />
+    <!-- Fonctions pures partagées (ADR-0005) : le prix TTC affiché par le catalogue est celui que retiendra le serveur. -->
+    <ProjectReference Include="..\..\Core\Lettra.Calculations\Lettra.Calculations.csproj" />
   </ItemGroup>
 
   <ItemGroup>

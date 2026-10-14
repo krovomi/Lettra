@@ -20,6 +20,10 @@ public enum Permission
 {
     TiersConsulter = 1,
     TiersCreer = 2,
+
+    // Module Catalogue (chantier Tiers et Catalogue). Numérotation par plages de 10 pour éviter les collisions.
+    CatalogueConsulter = 20,
+    CatalogueGerer = 21,
 }
 
 /// <summary>Permissions effectives d'un utilisateur sur un dossier.</summary>

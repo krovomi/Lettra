@@ -28,7 +28,7 @@ public sealed class LayerDependencyTests
         { "Lettra.Supervision.Application", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain", "Lettra.Supervision.Domain"] },
         { "Lettra.Supervision.Infrastructure", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain", "Lettra.Supervision.Application", "Lettra.Supervision.Domain"] },
         { "Lettra.UI.Abstractions", ["Lettra.Contracts"] },
-        { "Lettra.UI.Shared", ["Lettra.Contracts", "Lettra.UI.Abstractions"] },
+        { "Lettra.UI.Shared", ["Lettra.Calculations", "Lettra.Contracts", "Lettra.UI.Abstractions"] },
         { "Lettra.UI.Gateway.Http", ["Lettra.Contracts", "Lettra.UI.Abstractions"] },
         { "Lettra.UI.Gateway.InProcess", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain", "Lettra.UI.Abstractions"] },
     };

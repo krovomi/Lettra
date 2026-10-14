@@ -40,6 +40,9 @@ app.UseStaticFiles();
 
 RouteGroupBuilder api = app.MapGroup("/api/v1").AddEndpointFilter<TenantEndpointFilter>();
 api.MapCustomers();
+api.MapSuppliers();
+api.MapCatalog();
+api.MapDirectory();
 
 app.MapHealthChecks("/health");
 

@@ -1,0 +1,130 @@
+@typeparam TItem
+@inject IStringLocalizer<SharedResource> L
+@* Liste de choix au clavier (F4) : saisie filtrante, flèches, Entrée, Échap. *@
+<div class="lg-dialog-backdrop" @onclick="CancelAsync">
+    <div class="lg-dialog" role="dialog" aria-modal="true" aria-labelledby="@($"{_id}-title")" @onclick:stopPropagation>
+        <h2 id="@($"{_id}-title")">@Title</h2>
+        <input @ref="_input" value="@_filter" @oninput="OnInput" @onkeydown="OnKeyDown"
+               role="combobox" aria-expanded="true" aria-controls="@($"{_id}-options")" autocomplete="off"
+               aria-label="@L["ChoiceList.Filter"]"
+               aria-activedescendant="@(_matches.Count > 0 ? $"{_id}-opt-{_highlight}" : null)" />
+        <ul id="@($"{_id}-options")" class="lg-options" role="listbox">
+            @for (int i = 0; i < _matches.Count; i++)
+            {
+                int index = i;
+                <li id="@($"{_id}-opt-{i}")" role="option" aria-selected="@(i == _highlight ? "true" : "false")"
+                    @onclick="() => SelectAsync(index)">@ItemText(_matches[i])</li>
+            }
+        </ul>
+        <div class="lg-hint">@string.Format(CultureInfo.CurrentCulture, L["ChoiceList.Hint"], _total)</div>
+    </div>
+</div>
+
+@code {
+    /// <summary>Titre déjà traduit.</summary>
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired] public IReadOnlyList<TItem> Items { get; set; } = default!;
+
+    [Parameter, EditorRequired] public Func<TItem, string, bool> Matches { get; set; } = default!;
+
+    [Parameter, EditorRequired] public Func<TItem, string> ItemText { get; set; } = default!;
+
+    [Parameter] public string InitialFilter { get; set; } = string.Empty;
+
+    [Parameter] public int MaxResults { get; set; } = 50;
+
+    [Parameter] public EventCallback<TItem> OnSelected { get; set; }
+
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private readonly string _id = "lg-dlg-" + Guid.NewGuid().ToString("N")[..8];
+    private ElementReference _input;
+    private string _filter = string.Empty;
+    private List<TItem> _matches = [];
+    private int _total;
+    private int _highlight;
+
+    protected override void OnInitialized()
+    {
+        _filter = InitialFilter;
+        Apply();
+        if (_matches.Count == 0 && _filter.Length > 0)
+        {
+            _filter = string.Empty;
+            Apply();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await _input.FocusAsync();
+        }
+    }
+
+    private void OnInput(ChangeEventArgs e)
+    {
+        _filter = e.Value?.ToString() ?? string.Empty;
+        Apply();
+    }
+
+    private void Apply()
+    {
+        List<TItem> all = Items.Where(i => Matches(i, _filter.Trim())).ToList();
+        _total = all.Count;
+        _matches = all.Take(MaxResults).ToList();
+        _highlight = 0;
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        int last = Math.Max(0, _matches.Count - 1);
+        switch (e.Key)
+        {
+            case "ArrowDown":
+                _highlight = Math.Min(_highlight + 1, last);
+                break;
+            case "ArrowUp":
+                _highlight = Math.Max(_highlight - 1, 0);
+                break;
+            case "PageDown":
+                _highlight = Math.Min(_highlight + 10, last);
+                break;
+            case "PageUp":
+                _highlight = Math.Max(_highlight - 10, 0);
+                break;
+            case "Home":
+                if (e.CtrlKey)
+                {
+                    _highlight = 0;
+                }
+
+                break;
+            case "End":
+                if (e.CtrlKey)
+                {
+                    _highlight = last;
+                }
+
+                break;
+            case "Enter":
+                await SelectAsync(_highlight);
+                break;
+            case "Escape":
+                await CancelAsync();
+                break;
+        }
+    }
+
+    private async Task SelectAsync(int index)
+    {
+        if (index >= 0 && index < _matches.Count)
+        {
+            await OnSelected.InvokeAsync(_matches[index]);
+        }
+    }
+
+    private Task CancelAsync() => OnCancel.InvokeAsync();
+}
