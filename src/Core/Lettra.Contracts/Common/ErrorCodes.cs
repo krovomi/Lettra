@@ -117,6 +117,21 @@ public static class ErrorCodes
         public const string Contention = "Numbering.Contention";
     }
 
+    public static class Ai
+    {
+        public const string Disabled = "Ai.Disabled";
+        public const string FeatureDisabled = "Ai.FeatureDisabled";
+        public const string DossierExcluded = "Ai.DossierExcluded";
+        public const string EngineUnavailable = "Ai.EngineUnavailable";
+        public const string Refused = "Ai.Refused";
+        public const string ToolRoundsExceeded = "Ai.ToolRoundsExceeded";
+        public const string Truncated = "Ai.Truncated";
+        public const string ToolRejected = "Ai.ToolRejected";
+        public const string UngroundedAmounts = "Ai.UngroundedAmounts";
+        public const string UnknownReferences = "Ai.UnknownReferences";
+        public const string SkillPackStale = "Ai.SkillPackStale";
+    }
+
     public static class Api
     {
         public const string IdempotencyKeyReused = "Api.IdempotencyKeyReused";

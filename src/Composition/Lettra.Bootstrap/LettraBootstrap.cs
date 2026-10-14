@@ -46,6 +46,7 @@ public static class LettraBootstrap
         services.AddPersistenceCore(new PersistenceOptions { MigrateOnOpen = mode != DeploymentMode.HostedSaaS });
         services.AddExternalServices(configuration);
         services.AddLettraObservability(configuration, mode);
+        services.AddLettraAi(configuration);
 
         return mode switch
         {

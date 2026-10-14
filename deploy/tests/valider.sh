@@ -51,6 +51,11 @@ if helm template c lettra-cell --set lettra-api.image.tag=ci --set lettra-worker
   echo "un cluster au-delà du budget de dossiers actifs doit être refusé" >&2; exit 1
 fi
 echo "   budget de dossiers actifs par cluster : refus vérifié"
+if helm template c lettra-cell --set lettra-api.image.tag=ci --set lettra-worker.image.tag=ci \
+     --set lettra-api.oidc.authority= >/dev/null 2>&1; then
+  echo "une API sans realm Keycloak doit être refusée" >&2; exit 1
+fi
+echo "   realm Keycloak obligatoire : refus vérifié"
 
 step "OpenTofu : format et validation (sans état ni identifiants)"
 cd "$ROOT/deploy/opentofu"

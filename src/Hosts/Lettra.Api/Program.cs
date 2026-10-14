@@ -54,6 +54,7 @@ api.MapCustomers();
 api.MapSuppliers();
 api.MapCatalog();
 api.MapDirectory();
+api.MapAssistant();
 
 // Administration du cabinet : même authentification et anti-CSRF, sans dossier ; la permission porte sur le cabinet.
 app.MapGroup($"/api/v1/cabinets/{{{CabinetPermissionEndpointFilter.RouteKey}:guid}}")

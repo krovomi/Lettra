@@ -1,3 +1,4 @@
+using Lettra.Application.Abstractions.Ai;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Authorization;
@@ -14,6 +15,11 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.TryAddSingleton(TimeProvider.System);
+
+        // Assistant IA désactivé tant que la couche IA (Lettra.Ai.*) n'est pas composée.
+        services.TryAddSingleton<IAiUsagePolicy, DisabledAiUsagePolicy>();
+        services.TryAddSingleton<IAiAuditLog, EmptyAiAuditLog>();
+        services.TryAddScoped<IAccountingAssistant, UnavailableAccountingAssistant>();
         services.AddScoped<ICommandDispatcher, CommandDispatcher>();
         services.AddScoped<IQueryDispatcher, QueryDispatcher>();
 

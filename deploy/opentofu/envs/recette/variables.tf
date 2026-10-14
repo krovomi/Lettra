@@ -22,6 +22,13 @@ variable "alerting" {
   sensitive = true
 }
 
+variable "bff_client_secret" {
+  description = "Secret du client BFF du realm de recette (coffre de la pipeline)."
+  type        = string
+  default     = null
+  sensitive   = true
+}
+
 variable "state_passphrase" {
   description = "Phrase de passe du chiffrement de l'état (coffre de la pipeline), au moins 16 caractères."
   type        = string

@@ -2,6 +2,8 @@
 environment: recette
 lettra-api:
   environment: recette
+  oidc:
+    authority: https://auth.recette.lettra.fr/realms/lettra
   settings:
     Lettra__DeploymentMode: HostedSaaS
     Lettra__Observability__ServiceName: lettra-api

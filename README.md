@@ -33,7 +33,9 @@ src/
   Composition/     Bootstrap : AddLettra(), le seul endroit qui connaît le mode de déploiement
   Presentation/    UI.Abstractions (ports), UI.Shared (toute l'UI, RCL), UI.Gateway.Http, UI.Gateway.InProcess
   Hosts/           Api (Minimal APIs, sert le WASM), Web (WASM), App.Maui (Blazor Hybrid), Worker (jobs SaaS)
-tests/             Domain, Application, Architecture, Persistence (3 providers), Api (bout en bout), UI (bUnit)
+  Ai/              Couche IA (annexe B) : Skills (Paperasse épinglé), Privacy (pseudonymisation), Tools, Orchestration,
+                   Claude et Local (moteurs derrière le port IAiEngine)
+tests/             Domain, Application, Architecture, Persistence (3 providers), Api (bout en bout), UI (bUnit), Ai
 ```
 
 ## Ce que le socle garantit (et teste)
@@ -52,6 +54,24 @@ tests/             Domain, Application, Architecture, Persistence (3 providers),
 | Numérotation sans trou ni doublon sous concurrence | ADR-0007 | `Numerotation_continue_sous_concurrence` (3 providers) |
 | Base de dossier SQLite chiffrée par sa DEK, DEK enveloppée par la clé du cabinet | ADR-0011 | `LocalDossierTests`, `DossierKeyringTests` |
 | Création de dossier, reprise et migration par vagues avec bail | ADR-0009 | `Creation_de_dossier_et_vagues_de_migration_par_le_catalogue` (3 providers) |
+
+## Assistant IA (annexe B, ADR-0006, ADR-0012)
+
+Désactivé par défaut. `POST /api/v1/assistant` (permission `IaUtiliser`) renvoie un flux NDJSON d'événements
+(`text`, `rule`, `tool`, `citation`, `warning`, `completed`…) ; `GET /api/v1/assistant/journal` lit le journal du dossier.
+L'IA explique et rédige ; elle ne valide, n'émet ni ne supprime rien, et ne voit que des données pseudonymisées.
+
+```json
+"Lettra": { "Ai": {
+  "Enabled": true, "Engine": "ClaudeEu", "Features": [ "RegulatoryQuestions" ], "OfficialWebLookup": false,
+  "Claude": { "BaseUrl": null, "Model": "claude-opus-5-5" },
+  "Local": { "Endpoint": null, "Model": "mistral-small" }
+} }
+```
+
+La clé d'API n'est jamais dans un fichier versionné : `Lettra__Ai__Claude__ApiKey` ou `ANTHROPIC_API_KEY`. Sans clé (ou
+sans point d'accès local), le moteur n'existe pas et l'assistant répond `Ai.EngineUnavailable`. Le manifeste du skill pack
+se régénère avec `node src/Ai/tools/update-skillpack-manifest.js`.
 
 ## Conventions
 

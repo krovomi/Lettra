@@ -8,8 +8,34 @@ Lettra embarque ou embarquera du contenu tiers sous licence. Chaque composant ve
 
 - Origine : https://github.com/romainsimon/paperasse (skills `comptable`, `controleur-fiscal`, `commissaire-aux-comptes`)
 - Licence : MIT ; données sous Licence Ouverte Etalab 2.0
-- Statut : pas encore intégré au produit (POC « IA métier » en cours). À l'intégration, copier la notice MIT
-  complète ici et le fichier `LICENSE` dans `third_party/paperasse/`, au commit épinglé (annexe B).
+- Intégré dans `src/Ai/Lettra.Ai.Skills/vendor/paperasse/`, épinglé au commit `f2e15c4` (annexe B §2) : `SKILL.md`
+  et fiches de référence des trois skills, embarqués comme ressources et vérifiés par empreinte SHA-256 au démarrage
+  (`skillpack.manifest.json`). Les scripts JavaScript ne sont pas embarqués ; leurs règles déterministes sont
+  portées en C# avec des tests de parité.
+
+```
+MIT License
+
+Copyright (c) 2026 Romain Simon
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
 
 ## Paquets NuGet
 

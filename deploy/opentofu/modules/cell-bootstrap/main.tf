@@ -57,9 +57,10 @@ resource "kubernetes_secret_v1" "api" {
     name      = "lettra-api"
     namespace = kubernetes_namespace_v1.cell["lettra"].metadata[0].name
   }
-  data = {
-    "Lettra__Supervision__WebhookToken" = var.alerting.supervision_token
-  }
+  data = merge(
+    { "Lettra__Supervision__WebhookToken" = var.alerting.supervision_token },
+    var.bff_client_secret == null ? {} : { "Lettra__Identity__Oidc__BffClientSecret" = var.bff_client_secret },
+  )
 }
 
 # Redis de la cellule : cache distribué, sessions du BFF et trousseau Data Protection de l'API.
