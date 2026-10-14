@@ -30,6 +30,7 @@
       "tests\\Lettra.Application.Tests\\Lettra.Application.Tests.csproj",
       "tests\\Lettra.Architecture.Tests\\Lettra.Architecture.Tests.csproj",
       "tests\\Lettra.Domain.Tests\\Lettra.Domain.Tests.csproj",
+      "tests\\Lettra.Identity.Tests\\Lettra.Identity.Tests.csproj",
       "tests\\Lettra.Persistence.Tests\\Lettra.Persistence.Tests.csproj",
       "tests\\Lettra.UI.Tests\\Lettra.UI.Tests.csproj"
     ]

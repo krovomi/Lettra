@@ -84,7 +84,6 @@ public static class LettraAuthentication
                 o.Scope.Clear();
                 o.Scope.Add("openid");
                 o.Scope.Add("profile");
-                o.Scope.Add("organization");
                 o.TokenValidationParameters.NameClaimType = OidcClaims.PreferredUserName;
                 o.Events.OnTokenValidated = context =>
                 {
