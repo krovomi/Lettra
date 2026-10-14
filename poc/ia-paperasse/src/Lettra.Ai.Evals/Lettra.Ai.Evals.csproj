@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Lettra.Compliance\Lettra.Compliance.csproj" />
+    <ProjectReference Include="..\Lettra.Ai.Abstractions\Lettra.Ai.Abstractions.csproj" />
+    <ProjectReference Include="..\Lettra.Ai.Skills\Lettra.Ai.Skills.csproj" />
+    <ProjectReference Include="..\Lettra.Ai.Privacy\Lettra.Ai.Privacy.csproj" />
+    <ProjectReference Include="..\Lettra.Poc.Application\Lettra.Poc.Application.csproj" />
+    <ProjectReference Include="..\Lettra.Ai.Tools\Lettra.Ai.Tools.csproj" />
+    <ProjectReference Include="..\Lettra.Ai.Orchestration\Lettra.Ai.Orchestration.csproj" />
+    <ProjectReference Include="..\Lettra.Ai.Claude\Lettra.Ai.Claude.csproj" />
+    <ProjectReference Include="..\Lettra.Ai.Local\Lettra.Ai.Local.csproj" />
+    <ProjectReference Include="..\Lettra.Ai.Stub\Lettra.Ai.Stub.csproj" />
+    <ProjectReference Include="..\Lettra.Ai.Composition\Lettra.Ai.Composition.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="cases\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

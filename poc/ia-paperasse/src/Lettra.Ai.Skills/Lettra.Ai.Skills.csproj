@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Lettra.Ai.Abstractions\Lettra.Ai.Abstractions.csproj" />
+  </ItemGroup>
+
+  <!-- Skill pack embarqué : jamais de téléchargement à l'exécution, chaque fichier est vérifié par SHA-256 au démarrage. -->
+  <ItemGroup>
+    <EmbeddedResource Include="vendor\paperasse\**\*" LogicalName="skillpack/vendor/paperasse/%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="overlays\**\*" LogicalName="skillpack/overlays/%(RecursiveDir)%(Filename)%(Extension)" />
+    <EmbeddedResource Include="skillpack.manifest.json" LogicalName="skillpack/skillpack.manifest.json" />
+  </ItemGroup>
+
+</Project>

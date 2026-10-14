@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Lettra.Compliance</RootNamespace>
+  </PropertyGroup>
+
+  <!-- Référentiel Paperasse : une seule copie, celle du skill pack épinglé (vendor/), embarquée ici. -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\Lettra.Ai.Skills\vendor\paperasse\comptable\data\facturation\mentions-obligatoires.json"
+                      LogicalName="Lettra.Compliance.mentions-obligatoires.json" />
+  </ItemGroup>
+
+</Project>
