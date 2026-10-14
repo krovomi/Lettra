@@ -1,0 +1,8 @@
+bin/
+obj/
+*.db
+*.db-wal
+*.db-shm
+keys/
+dossiers/
+TestResults/

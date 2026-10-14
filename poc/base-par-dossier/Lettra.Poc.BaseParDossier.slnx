@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Lettra.Domain/Lettra.Domain.csproj" />
+    <Project Path="src/Lettra.Application.Abstractions/Lettra.Application.Abstractions.csproj" />
+    <Project Path="src/Lettra.Infrastructure.Persistence/Lettra.Infrastructure.Persistence.csproj" />
+    <Project Path="src/Lettra.Infrastructure.Persistence.Sqlite/Lettra.Infrastructure.Persistence.Sqlite.csproj" />
+    <Project Path="src/Lettra.Infrastructure.Persistence.PostgreSql/Lettra.Infrastructure.Persistence.PostgreSql.csproj" />
+    <Project Path="src/Lettra.Infrastructure.Persistence.SqlServer/Lettra.Infrastructure.Persistence.SqlServer.csproj" />
+    <Project Path="src/Lettra.Infrastructure.Security/Lettra.Infrastructure.Security.csproj" />
+    <Project Path="src/Lettra.Infrastructure.Catalog/Lettra.Infrastructure.Catalog.csproj" />
+    <Project Path="src/Lettra.Composition/Lettra.Composition.csproj" />
+    <Project Path="src/Lettra.Worker/Lettra.Worker.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Lettra.Persistence.Tests/Lettra.Persistence.Tests.csproj" />
+  </Folder>
+</Solution>
