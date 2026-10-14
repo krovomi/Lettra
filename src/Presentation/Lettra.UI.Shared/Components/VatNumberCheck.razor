@@ -1,0 +1,70 @@
+@* Bouton « Vérifier (VIES) » à côté du numéro de TVA : interroge le registre européen à la demande et
+   affiche le résultat ou l'erreur traduite. N'empêche jamais l'enregistrement. *@
+@inject IDirectoryGateway DirectoryGateway
+@inject IStringLocalizer<SharedResource> L
+
+<button type="button" class="lettra-vies-check" @onclick="CheckAsync" disabled="@(_busy || string.IsNullOrWhiteSpace(VatNumber))">@L["Vies.Check"]</button>
+@if (_error is not null)
+{
+    <span class="validation-message lettra-vies-result" role="alert">@L.Error(_error)</span>
+}
+else if (_result is not null)
+{
+    <span class="lettra-vies-result @(_result.IsValid ? "lettra-success" : "validation-message")" role="status">
+        @(_result.IsValid ? L["Vies.Valid"] : L["Vies.Invalid"])
+        @if (!string.IsNullOrWhiteSpace(_result.Name))
+        {
+            <text> · @_result.Name</text>
+        }
+    </span>
+}
+
+@code {
+    /// <summary>Numéro saisi dans le formulaire.</summary>
+    [Parameter] public string? VatNumber { get; set; }
+
+    private VatNumberCheckResponse? _result;
+    private string? _error;
+    private bool _busy;
+    private string? _checked;
+
+    protected override void OnParametersSet()
+    {
+        // Le numéro a changé depuis la vérification : l'ancien résultat ne vaut plus.
+        if (_checked is not null && !string.Equals(_checked, VatNumber, StringComparison.Ordinal))
+        {
+            _result = null;
+            _error = null;
+            _checked = null;
+        }
+    }
+
+    private async Task CheckAsync()
+    {
+        if (string.IsNullOrWhiteSpace(VatNumber))
+        {
+            return;
+        }
+
+        _busy = true;
+        _result = null;
+        _error = null;
+        try
+        {
+            _checked = VatNumber;
+            OperationResult<VatNumberCheckResponse> result = await DirectoryGateway.CheckVatNumberAsync(VatNumber.Trim(), CancellationToken.None);
+            if (result.IsSuccess)
+            {
+                _result = result.Value;
+            }
+            else
+            {
+                _error = result.Errors[0].Code;
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

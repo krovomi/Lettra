@@ -1,0 +1,401 @@
+@page "/catalog"
+@inject ICatalogGateway Gateway
+@inject IStringLocalizer<SharedResource> L
+
+<PageTitle>@L["Catalog.Title"] · Lettra</PageTitle>
+
+<h1 tabindex="-1">@L["Catalog.Title"]</h1>
+
+<GlobalShortcuts Scope="_pageScope" />
+
+<CascadingValue Value="_density">
+    <section class="lettra-card @_density.CssClass()" aria-labelledby="catalog-list-title">
+        <h2 id="catalog-list-title">@L["Catalog.List.Title"]</h2>
+
+        <div class="lettra-toolbar">
+            <label for="catalog-search">@L["Catalog.Search"]</label>
+            <input id="catalog-search" type="search" @ref="_searchInput" @bind="_search" @bind:after="ReloadAsync" autocomplete="off" />
+            <label for="catalog-archived">
+                <input id="catalog-archived" type="checkbox" @bind="_includeArchived" @bind:after="ReloadAsync" />
+                @L["Catalog.ShowArchived"]
+            </label>
+            <button type="button" id="catalog-new" @onclick="AddRowFromButtonAsync">@L["Catalog.New"]</button>
+        </div>
+        <p class="lettra-muted">@L["Catalog.Hint"]</p>
+
+        <div id="catalog-status" aria-live="polite">
+            @foreach (ErrorDetail error in _errors)
+            {
+                <p class="validation-message" role="alert">@L.Error(error.Code)</p>
+            }
+            @if (_status is not null)
+            {
+                <p class="lettra-success" role="status">@_status</p>
+            }
+        </div>
+
+        @if (_loading)
+        {
+            <p>@L["Loading"]</p>
+        }
+        else if (_rows.Count == 0)
+        {
+            <p>@L["Catalog.List.Empty"]</p>
+        }
+
+        <FunctionKeyBar Grid="_grid" />
+        <div class="lettra-grid-host">
+            <DataEntryGrid TItem="CatalogRow" @ref="_grid" Items="_rows" Columns="_columns" KeySelector="RowKey"
+                           Scope="_gridScope" IsReadOnly="IsArchived" RowClass="RowClass" SaveItem="SaveAsync"
+                           EndReached="AddRowAtEndAsync" AriaLabel="@L["Catalog.Grid"]" />
+        </div>
+    </section>
+</CascadingValue>
+
+@if (_choice is { } choice)
+{
+    <ChoiceListDialog TItem="ChoiceOption" Title="@choice.Title" Items="choice.Options" Matches="OptionMatches"
+                      ItemText="OptionText" OnSelected="ChoiceSelectedAsync" OnCancel="ChoiceCancelledAsync" />
+}
+
+@code {
+    private const int PageSize = 500;
+
+    /// <summary>Clés des colonnes (contexte des commandes, focus).</summary>
+    public static class Column
+    {
+        public const string Reference = "reference";
+        public const string Designation = "designation";
+        public const string Kind = "kind";
+        public const string Unit = "unit";
+        public const string Price = "price";
+        public const string Vat = "vat";
+        public const string PriceInclTax = "priceInclTax";
+    }
+
+    private static readonly VatRateOption FallbackVatRate = new("FR-20", 20m);
+
+    private readonly Dictionary<Guid, string?> _descriptions = [];
+    private List<CatalogRow> _rows = [];
+    private IReadOnlyList<GridColumn<CatalogRow>> _columns = [];
+    private CatalogReferenceData _reference = new(["C62"], [FallbackVatRate]);
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private string? _status;
+    private string? _search;
+    private bool _includeArchived;
+    private bool _loading = true;
+    private UiDensity _density = UiDensity.Expert;
+    private DataEntryGrid<CatalogRow>? _grid;
+    private ElementReference _searchInput;
+    private KeyboardScope _gridScope = default!;
+    private KeyboardScope _pageScope = default!;
+    private ChoiceState? _choice;
+
+    private sealed record ChoiceState(int Row, string Column, string Title, IReadOnlyList<ChoiceOption> Options);
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private static object RowKey(CatalogRow row) => row.Key;
+
+    private static bool IsArchived(CatalogRow row) => row.IsArchived;
+
+    private static string? RowClass(CatalogRow row) => row.IsArchived ? "lg-archived" : null;
+
+    protected override void OnInitialized()
+    {
+        _columns =
+        [
+            new() { Key = Column.Reference, Label = L["Catalog.Column.Reference"], Width = "8rem",
+                    Display = r => r.Reference, Parse = (r, t) => r with { Reference = t.Trim() } },
+            new() { Key = Column.Designation, Label = L["Catalog.Column.Designation"], Width = "minmax(12rem, 3fr)", Wide = true,
+                    Display = r => r.Designation, Parse = (r, t) => r with { Designation = t.Trim() } },
+            new() { Key = Column.Kind, Label = L["Catalog.Column.Kind"], Width = "6rem",
+                    Display = r => KindLabel(r.Kind), Parse = (r, t) => r with { Kind = ParseKind(t) } },
+            new() { Key = Column.Unit, Label = L["Catalog.Column.Unit"], Width = "7rem",
+                    Display = r => UnitLabel(r.UnitCode), Parse = (r, t) => r with { UnitCode = ParseUnit(t) } },
+            new() { Key = Column.Price, Label = L["Catalog.Column.PriceExclTax"], Width = "7rem", Numeric = true,
+                    Display = r => GridNumber.FormatPrice(r.UnitPriceExclTax, Culture), Parse = ParsePrice },
+            new() { Key = Column.Vat, Label = L["Catalog.Column.Vat"], Width = "5rem", Numeric = true,
+                    Display = r => VatLabel(r.VatRatePercent), Parse = ParseVat },
+            new() { Key = Column.PriceInclTax, Label = L["Catalog.Column.PriceInclTax"], Width = "7rem", Numeric = true,
+                    Display = r => GridNumber.FormatAmount(PriceConversion.InclTax(r.UnitPriceExclTax, r.VatRatePercent), Culture) },
+        ];
+
+        // Commandes de la grille : les seules touches que le module JS remonte à .NET.
+        _gridScope = new KeyboardScope("grid")
+            .Bind("F4", L["Catalog.Command.ChoiceList"], OpenChoice, CanOpenChoice)
+            .Bind("Insert", L["Catalog.Command.New"], ctx => AddRowAsync())
+            .Bind("Ctrl+Delete", L["Catalog.Command.Archive"], ToggleArchiveAsync, ctx => ctx.Row >= 0 && ctx.Row < _rows.Count);
+
+        _pageScope = new KeyboardScope("page")
+            .Bind("F3", L["Catalog.Command.Search"], async _ => await _searchInput.FocusAsync())
+            .Bind("Ctrl+Shift+D", L["Catalog.Command.Density"], _ =>
+            {
+                _density = _density == UiDensity.Expert ? UiDensity.Comfort : UiDensity.Expert;
+                StateHasChanged();
+            });
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        OperationResult<CatalogReferenceData> reference = await Gateway.GetReferenceDataAsync(CancellationToken.None);
+        if (reference.IsSuccess && reference.Value is not null)
+        {
+            _reference = reference.Value;
+        }
+        else
+        {
+            _errors = reference.Errors;
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        _errors = [];
+        _status = null;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        OperationResult<PagedResponse<CatalogItemSummary>> result =
+            await Gateway.ListAsync(string.IsNullOrWhiteSpace(_search) ? null : _search.Trim(), _includeArchived, 1, PageSize, CancellationToken.None);
+        if (result.IsSuccess && result.Value is not null)
+        {
+            _rows = result.Value.Items.Select(CatalogRow.From).ToList();
+        }
+        else
+        {
+            _errors = [.. _errors, .. result.Errors];
+            _rows = [];
+        }
+
+        _loading = false;
+    }
+
+    // ---------- enregistrement d'une saisie ----------
+
+    /// <summary>
+    /// Appelé par la grille pour chaque cellule modifiée : modification immédiate d'un article existant ;
+    /// création d'une nouvelle ligne dès que la référence et la désignation sont saisies. En cas de refus du
+    /// serveur, l'erreur traduite s'affiche et la cellule reprend sa valeur.
+    /// </summary>
+    private async Task<CatalogRow?> SaveAsync(GridItemChange<CatalogRow> change)
+    {
+        CatalogRow row = change.After;
+        _errors = [];
+        _status = null;
+
+        OperationResult<CatalogItemResponse> result;
+        if (row.Id is not { } id)
+        {
+            if (string.IsNullOrWhiteSpace(row.Reference) || string.IsNullOrWhiteSpace(row.Designation))
+            {
+                StateHasChanged();
+                return row;   // ligne en cours de saisie : créée quand référence et désignation seront remplies
+            }
+
+            result = await Gateway.CreateAsync(row.ToRequest(null), CancellationToken.None);
+        }
+        else
+        {
+            result = await Gateway.UpdateAsync(id, row.ToRequest(_descriptions.GetValueOrDefault(id)), CancellationToken.None);
+        }
+
+        if (!result.IsSuccess || result.Value is null)
+        {
+            _errors = result.Errors;
+            StateHasChanged();
+            return null;
+        }
+
+        _descriptions[result.Value.Id] = result.Value.Description;
+        _status = string.Format(Culture, L[row.Id is null ? "Catalog.Created" : "Catalog.Saved"], result.Value.Reference);
+        StateHasChanged();
+        return CatalogRow.From(result.Value, row.Key);
+    }
+
+    // ---------- lignes ----------
+
+    private async Task AddRowAsync()
+    {
+        string unit = _reference.UnitCodes.Contains("C62") ? "C62" : _reference.UnitCodes.FirstOrDefault() ?? "C62";
+        VatRateOption vat = _reference.VatRates.FirstOrDefault(v => v.Code == FallbackVatRate.Code)
+            ?? _reference.VatRates.FirstOrDefault() ?? FallbackVatRate;
+        _rows.Add(CatalogRow.New(unit, vat));
+        _grid?.Refresh();
+        StateHasChanged();
+        if (_grid is not null)
+        {
+            await _grid.FocusCellAsync(_rows.Count - 1, Column.Reference);
+        }
+    }
+
+    private Task AddRowAtEndAsync() => AddRowAsync();
+
+    private Task AddRowFromButtonAsync() => AddRowAsync();
+
+    /// <summary>Ctrl+Suppr : archive l'article (ou le réactive s'il l'est) ; une ligne pas encore créée est simplement retirée.</summary>
+    private async Task ToggleArchiveAsync(CommandContext context)
+    {
+        CatalogRow row = _rows[context.Row];
+        _errors = [];
+        _status = null;
+        if (row.Id is not { } id)
+        {
+            _rows.RemoveAt(context.Row);
+        }
+        else
+        {
+            OperationResult<CatalogItemResponse> result = await Gateway.SetArchivedAsync(id, !row.IsArchived, CancellationToken.None);
+            if (!result.IsSuccess || result.Value is null)
+            {
+                _errors = result.Errors;
+                StateHasChanged();
+                return;
+            }
+
+            CatalogRow updated = CatalogRow.From(result.Value, row.Key);
+            int index = _rows.FindIndex(r => r.Key == row.Key);
+            if (index >= 0)
+            {
+                if (updated.IsArchived && !_includeArchived)
+                {
+                    _rows.RemoveAt(index);
+                }
+                else
+                {
+                    _rows[index] = updated;
+                }
+            }
+
+            _status = string.Format(Culture, L[updated.IsArchived ? "Catalog.ArchivedDone" : "Catalog.Reactivated"], updated.Reference);
+        }
+
+        _grid?.Refresh();
+        StateHasChanged();
+        if (_grid is not null && _rows.Count > 0)
+        {
+            await _grid.FocusCellAsync(Math.Min(context.Row, _rows.Count - 1), Column.Reference);
+        }
+    }
+
+    // ---------- listes de choix (F4) ----------
+
+    private bool CanOpenChoice(CommandContext context) =>
+        context.Row >= 0 && context.Row < _rows.Count && !_rows[context.Row].IsArchived
+        && context.Column is Column.Kind or Column.Unit or Column.Vat;
+
+    private void OpenChoice(CommandContext context)
+    {
+        (string title, IReadOnlyList<ChoiceOption> options) = context.Column switch
+        {
+            Column.Kind => (L["Catalog.Choice.Kind"].Value, KindOptions()),
+            Column.Unit => (L["Catalog.Choice.Unit"].Value, UnitOptions()),
+            _ => (L["Catalog.Choice.Vat"].Value, VatOptions()),
+        };
+        _choice = new ChoiceState(context.Row, context.Column, title, options);
+        StateHasChanged();
+    }
+
+    private async Task ChoiceSelectedAsync(ChoiceOption option)
+    {
+        ChoiceState? choice = _choice;
+        _choice = null;
+        if (choice is null || _grid is null)
+        {
+            return;
+        }
+
+        await _grid.CommitCellAsync(choice.Row, choice.Column, option.Code);
+        await _grid.FocusCellAsync(choice.Row, choice.Column);
+    }
+
+    private async Task ChoiceCancelledAsync()
+    {
+        ChoiceState? choice = _choice;
+        _choice = null;
+        if (choice is not null && _grid is not null)
+        {
+            await _grid.FocusCellAsync(choice.Row, choice.Column);
+        }
+    }
+
+    private static bool OptionMatches(ChoiceOption option, string filter) =>
+        filter.Length == 0
+        || option.Label.Contains(filter, StringComparison.CurrentCultureIgnoreCase)
+        || option.Code.Contains(filter, StringComparison.OrdinalIgnoreCase);
+
+    private static string OptionText(ChoiceOption option) => option.Label;
+
+    private List<ChoiceOption> KindOptions() =>
+        [.. Enum.GetValues<CatalogItemKindDto>().Select(k => new ChoiceOption(k.ToString(), KindLabel(k)))];
+
+    private List<ChoiceOption> UnitOptions() =>
+        [.. _reference.UnitCodes.Select(u => new ChoiceOption(u, $"{UnitLabel(u)} ({u})"))];
+
+    private List<ChoiceOption> VatOptions() =>
+        [.. _reference.VatRates.Select(v => new ChoiceOption(v.Code, VatLabel(v.Percent)))];
+
+    // ---------- affichage et lecture des cellules ----------
+
+    private string KindLabel(CatalogItemKindDto kind) => L[$"CatalogItemKind.{kind}"];
+
+    private string UnitLabel(string code)
+    {
+        LocalizedString label = L[$"Unit.{code}"];
+        return label.ResourceNotFound ? code : label.Value;
+    }
+
+    private string VatLabel(decimal percent) => string.Format(Culture, L["Catalog.VatPercent"], percent.ToString("0.##", Culture));
+
+    /// <summary>Nature : nom, ou début du libellé traduit (« B » ou « Bien », « S » ou « Service »).</summary>
+    private CatalogItemKindDto ParseKind(string text)
+    {
+        string value = text.Trim();
+        CatalogItemKindDto[] kinds = Enum.GetValues<CatalogItemKindDto>();
+        CatalogItemKindDto[] matches = kinds
+            .Where(k => k.ToString().Equals(value, StringComparison.OrdinalIgnoreCase)
+                || (value.Length > 0 && KindLabel(k).StartsWith(value, StringComparison.CurrentCultureIgnoreCase)))
+            .ToArray();
+        return matches.Length == 1 ? matches[0] : throw new FormatException(value);
+    }
+
+    /// <summary>Unité : code CEE-ONU (« HUR ») ou début du libellé traduit (« Heure »), parmi les unités servies par le serveur.</summary>
+    private string ParseUnit(string text)
+    {
+        string value = text.Trim();
+        string? exact = _reference.UnitCodes.FirstOrDefault(u => u.Equals(value, StringComparison.OrdinalIgnoreCase)
+            || UnitLabel(u).Equals(value, StringComparison.CurrentCultureIgnoreCase));
+        if (exact is not null)
+        {
+            return exact;
+        }
+
+        string[] matches = value.Length == 0
+            ? []
+            : _reference.UnitCodes.Where(u => UnitLabel(u).StartsWith(value, StringComparison.CurrentCultureIgnoreCase)).ToArray();
+        return matches.Length == 1 ? matches[0] : throw new FormatException(value);
+    }
+
+    private static CatalogRow ParsePrice(CatalogRow row, string text) =>
+        GridNumber.TryParse(text, Culture, out decimal price) ? row with { UnitPriceExclTax = price } : throw new FormatException(text);
+
+    /// <summary>TVA : code (« FR-5.5 ») ou taux (« 5,5 », « 20 % »), parmi les taux servis par le serveur.</summary>
+    private CatalogRow ParseVat(CatalogRow row, string text)
+    {
+        string value = text.Trim();
+        VatRateOption? rate = _reference.VatRates.FirstOrDefault(v => v.Code.Equals(value, StringComparison.OrdinalIgnoreCase));
+        if (rate is null && GridNumber.TryParse(value.Replace("%", string.Empty, StringComparison.Ordinal), Culture, out decimal percent))
+        {
+            rate = _reference.VatRates.FirstOrDefault(v => v.Percent == percent);
+        }
+
+        return rate is null
+            ? throw new FormatException(value)
+            : row with { VatRateCode = rate.Code, VatRatePercent = rate.Percent };
+    }
+}
