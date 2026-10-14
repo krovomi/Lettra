@@ -1,0 +1,223 @@
+@page "/"
+@using System.Diagnostics
+@using Lettra.Poc.Grille.Calculs
+@using Lettra.Poc.Grille.Ui.Clavier
+@using Lettra.Poc.Grille.Ui.Grille
+@using Lettra.Poc.Grille.Wasm.Saisie
+
+<PageTitle>Lettra · POC grille clavier</PageTitle>
+
+<CascadingValue Value="_densite">
+    <div class="page @_densite.CssClass()">
+        <header class="entete">
+            <h1>Facture F-2026-POC <small>@_lignes.Count.ToString("N0") lignes</small></h1>
+            <div class="actions">
+                <button type="button" @onclick="BasculerDensite" title="Ctrl+Shift+D">Densité : @_densite</button>
+                <button type="button" @onclick="() => Charger(1_000)">1 000 lignes</button>
+                <button type="button" @onclick="() => Charger(10_000)">10 000 lignes</button>
+                <span class="mesure" data-render-ms="@_dernierRenduMs.ToString("0")">rendu : @_dernierRenduMs.ToString("0") ms</span>
+            </div>
+        </header>
+
+        <GlobalShortcuts Scope="_scopeGlobal" />
+        <FunctionKeyBar Grid="_grille" />
+
+        <main class="zone-grille">
+            <DataEntryGrid TItem="LigneFacture" @ref="_grille" Items="_lignes" Columns="_colonnes" KeySelector="CleLigne"
+                           Scope="_scopeGrille" IsReadOnly="EstValidee" RowClass="ClasseLigne"
+                           OnItemChanged="LigneModifiee" EndReached="AjouterLigneEnFin" ShowPerformance="true"
+                           AriaLabel="Lignes de la facture" />
+        </main>
+
+        <footer class="pied">
+            <PanneauTotaux @ref="_totaux" @key="_lignes" Lignes="_lignes" />
+            <p class="statut" role="status" aria-live="polite">@_statut</p>
+        </footer>
+
+        @if (_choixArticle is { } ligneArticle)
+        {
+            <ChoiceListDialog TItem="Article" Title="@($"Article de la ligne {ligneArticle + 1} (F4)")" Items="DonneesDemo.Catalogue"
+                              InitialFilter="@_lignes[ligneArticle].Article" Matches="ArticleCorrespond"
+                              ItemText="@(a => $"{a.Code} · {a.Designation} · {Format.Montant(a.PrixUnitaireHt)} € HT · TVA {Format.Taux(a.TauxTva)} %")"
+                              OnSelected="ArticleChoisi" OnCancel="FermerListes" />
+        }
+        @if (_recherche)
+        {
+            <ChoiceListDialog TItem="int" Title="Rechercher une ligne (F3)" Items="IndexLignes()" Matches="LigneCorrespond"
+                              ItemText="@(i => $"Ligne {i + 1} · {_lignes[i].Article} · {_lignes[i].Designation} · {Format.Montant(_lignes[i].MontantHt)} € HT")"
+                              OnSelected="LigneTrouvee" OnCancel="FermerListes" />
+        }
+        @if (_aide)
+        {
+            <div class="lg-dialog-backdrop" @onclick="() => _aide = false">
+                <div class="lg-dialog aide" role="dialog" aria-modal="true" aria-label="Raccourcis clavier">
+                    <h2>Raccourcis clavier</h2>
+                    <table>
+                        <tr><th>Entrée / Tab</th><td>Cellule suivante ; sur la dernière cellule, nouvelle ligne</td></tr>
+                        <tr><th>Shift+Entrée / Shift+Tab</th><td>Cellule précédente</td></tr>
+                        <tr><th>↑ ↓</th><td>Même colonne, ligne précédente ou suivante</td></tr>
+                        <tr><th>← →</th><td>Colonne voisine (en mode édition F2 : déplace le curseur dans le texte)</td></tr>
+                        <tr><th>Page↑ Page↓, Ctrl+Début/Fin</th><td>Page précédente ou suivante, première ou dernière ligne</td></tr>
+                        <tr><th>F2</th><td>Mode édition dans la cellule</td></tr>
+                        <tr><th>Échap</th><td>Annule la saisie de la cellule</td></tr>
+                        @foreach (var b in _registre.VisibleBindings)
+                        {
+                            <tr><th>@b.Chord</th><td>@b.Label</td></tr>
+                        }
+                    </table>
+                    <div class="lg-hint">Les touches sont les mêmes en français et en anglais. Échap ou clic pour fermer.</div>
+                </div>
+            </div>
+        }
+    </div>
+</CascadingValue>
+
+@code {
+    [Inject] private ShortcutRegistry _registre { get; set; } = default!;
+
+    private List<LigneFacture> _lignes = DonneesDemo.Lignes(1_000);
+    private readonly IReadOnlyList<GridColumn<LigneFacture>> _colonnes = ColonnesFacture.Creer(DonneesDemo.Catalogue);
+    private DataEntryGrid<LigneFacture>? _grille;
+    private PanneauTotaux? _totaux;
+    private UiDensity _densite = UiDensity.Expert;
+    private KeyboardScope _scopeGrille = default!;
+    private KeyboardScope _scopeGlobal = default!;
+    private int? _choixArticle;
+    private bool _recherche;
+    private bool _aide;
+    private string _statut = "";
+    private long _debutRendu;
+    private double _dernierRenduMs;
+
+    private static object CleLigne(LigneFacture l) => l.Id;
+    private static bool EstValidee(LigneFacture l) => l.Statut == StatutLigne.Validee;
+    private static string? ClasseLigne(LigneFacture l) => l.Statut == StatutLigne.Validee ? "lg-validee" : null;
+
+    protected override void OnInitialized()
+    {
+        _debutRendu = Stopwatch.GetTimestamp();
+
+        // Commandes métier de la grille : les seules touches que le module JS remonte à .NET.
+        _scopeGrille = new KeyboardScope("grille")
+            .Bind("F3", "Rechercher", _ => { _recherche = true; StateHasChanged(); })
+            .Bind("F4", "Liste de choix", ctx => { _choixArticle = ctx.Row; StateHasChanged(); }, ctx => ctx.Row >= 0 && !EstValidee(_lignes[ctx.Row]))
+            .Bind("F9", "Recalculer", _ => { _totaux?.RecalculerMaintenant(); Statut("Totaux recalculés."); })
+            .Bind("F10", "Valider la ligne", ValiderLigne, ctx => ctx.Row >= 0)
+            .Bind("Insert", "Insérer une ligne", InsererLigne, ctx => ctx.Row >= 0)
+            .Bind("Ctrl+Delete", "Supprimer la ligne", SupprimerLigne, ctx => ctx.Row >= 0);
+
+        _scopeGlobal = new KeyboardScope("global")
+            .Bind("F1", "Aide", _ => { _aide = !_aide; StateHasChanged(); })
+            .Bind("Ctrl+Shift+D", "Densité", _ => { BasculerDensite(); StateHasChanged(); })
+            .Bind("Escape", "Fermer", _ => { _aide = false; StateHasChanged(); }, _ => _aide, showInBar: false);
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (_debutRendu == 0) return;
+        _dernierRenduMs = Stopwatch.GetElapsedTime(_debutRendu).TotalMilliseconds;
+        _debutRendu = 0;
+        StateHasChanged();
+    }
+
+    private void Charger(int nombre)
+    {
+        _debutRendu = Stopwatch.GetTimestamp();
+        _lignes = DonneesDemo.Lignes(nombre);
+    }
+
+    private void BasculerDensite() => _densite = _densite == UiDensity.Expert ? UiDensity.Confort : UiDensity.Expert;
+
+    private void LigneModifiee(GridItemChange<LigneFacture> changement) => _totaux?.Remplacer(changement.Before, changement.After);
+
+    private async Task AjouterLigneEnFin()
+    {
+        var ligne = LigneFacture.Vide();
+        _lignes.Add(ligne);
+        _totaux?.Ajouter(ligne);
+        _grille!.Refresh();
+        await _grille.FocusCellAsync(_lignes.Count - 1, "article");
+        Statut($"Ligne {_lignes.Count} ajoutée.");
+    }
+
+    private async Task InsererLigne(CommandContext ctx)
+    {
+        var ligne = LigneFacture.Vide();
+        _lignes.Insert(ctx.Row + 1, ligne);
+        _totaux?.Ajouter(ligne);
+        _grille!.Refresh();
+        await _grille.FocusCellAsync(ctx.Row + 1, "article");
+        Statut($"Ligne {ctx.Row + 2} insérée.");
+    }
+
+    private async Task SupprimerLigne(CommandContext ctx)
+    {
+        if (EstValidee(_lignes[ctx.Row])) { Statut($"La ligne {ctx.Row + 1} est validée : elle ne peut plus être supprimée."); return; }
+        _totaux?.Retirer(_lignes[ctx.Row]);
+        _lignes.RemoveAt(ctx.Row);
+        if (_lignes.Count == 0) { _lignes.Add(LigneFacture.Vide()); _totaux?.Ajouter(_lignes[0]); }
+        _grille!.Refresh();
+        await _grille.FocusCellAsync(Math.Min(ctx.Row, _lignes.Count - 1), ctx.Column);
+        Statut($"Ligne {ctx.Row + 1} supprimée.");
+    }
+
+    private void ValiderLigne(CommandContext ctx)
+    {
+        var ligne = _lignes[ctx.Row];
+        if (string.IsNullOrWhiteSpace(ligne.Article) || ligne.Quantite == 0m)
+        {
+            Statut($"Ligne {ctx.Row + 1} : article et quantité sont obligatoires pour valider.");
+            return;
+        }
+        _lignes[ctx.Row] = ligne with { Statut = StatutLigne.Validee };
+        _grille!.Refresh();
+        Statut($"Ligne {ctx.Row + 1} validée.");
+    }
+
+    private static bool ArticleCorrespond(Article a, string filtre) =>
+        filtre.Length == 0
+        || a.Code.Contains(filtre, StringComparison.OrdinalIgnoreCase)
+        || a.Designation.Contains(filtre, StringComparison.OrdinalIgnoreCase);
+
+    private async Task ArticleChoisi(Article article)
+    {
+        var ligne = _choixArticle!.Value;
+        var avant = _lignes[ligne];
+        _lignes[ligne] = ColonnesFacture.Appliquer(avant, article);
+        _totaux?.Remplacer(avant, _lignes[ligne]);
+        _choixArticle = null;
+        _grille!.Refresh();
+        await _grille.FocusCellAsync(ligne, "quantite");
+    }
+
+    private IReadOnlyList<int> IndexLignes() => Enumerable.Range(0, _lignes.Count).ToList();
+
+    private bool LigneCorrespond(int i, string filtre) =>
+        filtre.Length > 0
+        && (_lignes[i].Article.Contains(filtre, StringComparison.OrdinalIgnoreCase)
+            || _lignes[i].Designation.Contains(filtre, StringComparison.OrdinalIgnoreCase)
+            || (i + 1).ToString() == filtre);
+
+    private async Task LigneTrouvee(int ligne)
+    {
+        _recherche = false;
+        StateHasChanged();
+        await _grille!.FocusCellAsync(ligne, "article");
+    }
+
+    private async Task FermerListes()
+    {
+        var ligne = _choixArticle;
+        _choixArticle = null;
+        _recherche = false;
+        StateHasChanged();
+        var cible = await _grille!.GetActiveCellAsync();
+        await _grille.FocusCellAsync(ligne ?? cible.Row, cible.Column.Length > 0 ? cible.Column : "article");
+    }
+
+    private void Statut(string message)
+    {
+        _statut = message;
+        StateHasChanged();
+    }
+}

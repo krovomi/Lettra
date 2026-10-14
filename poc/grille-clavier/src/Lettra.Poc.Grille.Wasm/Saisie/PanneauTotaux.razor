@@ -1,0 +1,59 @@
+@using Lettra.Poc.Grille.Calculs
+@implements IDisposable
+@* Totaux tenus à jour ligne par ligne (O(1) par saisie) et affichés en différé (anti-rebond),
+   hors du rendu des cellules (annexe A §4.2, point 4). F9 force un recalcul complet. *@
+<section class="totaux" aria-label="Totaux de la facture">
+    @foreach (var taux in _totaux.ParTaux)
+    {
+        <span>TVA @Format.Taux(taux.Taux) % : base @Format.Montant(taux.BaseHt) · TVA @Format.Montant(taux.Tva)</span>
+    }
+    <span class="total">Total HT <strong data-total="ht">@Format.Montant(_totaux.TotalHt)</strong></span>
+    <span class="total">TVA <strong>@Format.Montant(_totaux.TotalTva)</strong></span>
+    <span class="total">Total TTC <strong data-total="ttc">@Format.Montant(_totaux.TotalTtc)</strong></span>
+    <span class="calcul">recalcul complet : @_dureeMs.ToString("0.0") ms</span>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<LigneFacture> Lignes { get; set; } = default!;
+    [Parameter] public int DelaiMs { get; set; } = 150;
+
+    private CumulParTaux _cumul = new();
+    private TotauxFacture _totaux = TotauxFacture.Calculer([]);
+    private CancellationTokenSource? _attente;
+    private double _dureeMs;
+
+    protected override void OnInitialized() => Reinitialiser();
+
+    public void Ajouter(LigneFacture ligne) { _cumul.Ajouter(ligne); Planifier(); }
+    public void Retirer(LigneFacture ligne) { _cumul.Retirer(ligne); Planifier(); }
+    public void Remplacer(LigneFacture avant, LigneFacture apres) { _cumul.Remplacer(avant, apres); Planifier(); }
+
+    /// <summary>Recalcul complet depuis les lignes (chargement d'une facture, F9).</summary>
+    public void RecalculerMaintenant()
+    {
+        _attente?.Cancel();
+        Reinitialiser();
+        StateHasChanged();
+    }
+
+    private void Reinitialiser()
+    {
+        var debut = System.Diagnostics.Stopwatch.GetTimestamp();
+        _cumul = CumulParTaux.Depuis(Lignes);
+        _totaux = _cumul.Totaux();
+        _dureeMs = System.Diagnostics.Stopwatch.GetElapsedTime(debut).TotalMilliseconds;
+    }
+
+    private void Planifier()
+    {
+        _attente?.Cancel();
+        _attente = new CancellationTokenSource();
+        var jeton = _attente.Token;
+        _ = Task.Delay(DelaiMs, jeton).ContinueWith(t =>
+        {
+            if (!t.IsCanceled) InvokeAsync(() => { _totaux = _cumul.Totaux(); StateHasChanged(); });
+        }, TaskScheduler.Default);
+    }
+
+    public void Dispose() => _attente?.Cancel();
+}

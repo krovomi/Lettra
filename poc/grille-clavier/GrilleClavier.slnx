@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Lettra.Poc.Grille.Calculs/Lettra.Poc.Grille.Calculs.csproj" />
+    <Project Path="src/Lettra.Poc.Grille.Ui/Lettra.Poc.Grille.Ui.csproj" />
+    <Project Path="src/Lettra.Poc.Grille.Wasm/Lettra.Poc.Grille.Wasm.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Lettra.Poc.Grille.Tests/Lettra.Poc.Grille.Tests.csproj" />
+  </Folder>
+</Solution>

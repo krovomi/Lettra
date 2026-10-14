@@ -1,0 +1,12 @@
+{
+  "name": "lettra-poc-grille-e2e",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "serve": "^14.2.6"
+  }
+}
