@@ -73,6 +73,7 @@ public static class DependencyInjection
     {
         services.AddScoped<IRequestedDossierSource, SelectionDossierSource>();
         services.AddSingleton<ICustomersGateway, InProcessCustomersGateway>();
+        services.AddSingleton<ISessionGateway, InProcessSessionGateway>();
         return services;
     }
 }
