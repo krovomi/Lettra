@@ -82,12 +82,19 @@ signée (cosign, sans clé) sur `main`.
   (`CatalogMigrations/`, `--context CatalogDbContext`).
 - `Lettra.Worker` : migration du catalogue, reprise des créations de dossiers interrompues, puis migration des bases par
   vagues (canari de 25 bases, arrêt au-delà de 5 % d'échecs, bail par dossier pour plusieurs Workers).
-  `Lettra:Worker:RunOnce=true` pour un job de déploiement.
+  `Lettra:Worker:RunOnce=true` pour un job de déploiement. Hors `RunOnce`, il lance aussi la passe d'escalade de la
+  Supervision chaque minute (`Lettra:Worker:Escalation`).
+- Registre des droits (modes 2, 3 et 5) : comptes, groupes, placements des dossiers, attributions et rôles du cabinet
+  dans la base Catalog ; `Lettra:Authorization` y est importé au démarrage, sans rien retirer.
+- Création d'un dossier : `POST /api/v1/cabinets/{cabinetId}/dossiers` (permission `DossiersCreer` sur le cabinet).
 - En SaaS, l'API ne migre jamais une base : elle vérifie l'estampille et laisse la migration au Worker.
 
 ## Pas encore dans ce socle
 
-- Keycloak et comptes locaux multi-utilisateurs : chantier « Identité et autorisations » de la phase 2.
+- Cas d'usage d'administration des droits (inviter, rattacher à un groupe, attribuer un rôle) et liste des dossiers
+  accessibles à l'utilisateur.
+- Identité système du Worker pour exécuter des cas d'usage protégés (compte de service Keycloak, principal interne en mode 1).
+- Registre d'alertes persistant : en attendant, chaque processus a le sien, et le Worker n'escalade que ses propres alertes.
 - Bases SQLite chiffrées côté serveur (mode 2) et chiffrement de champs en PostgreSQL : la DEK existe déjà par dossier.
 - Outbox, synchronisation, `Idempotency-Key`, `ETag` : POC synchronisation puis phase 4.
 - Pipeline OpenTelemetry exporté (les conventions et le test « pas de données dans les journaux » sont là) : phase 2.

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Cryptography;
 using Lettra.Application;
 using Lettra.Application.Abstractions.External;
@@ -24,6 +25,16 @@ internal sealed class CatalogHarness : IAsyncDisposable
 {
     public static readonly OrganisationId Organisation = new(new Guid("0199e3a0-0000-7000-8000-0000000000c1"));
 
+    public static readonly Guid OtherCabinet = new("0199e3a0-0000-7000-8000-0000000000c2");
+
+    public static readonly Guid Member = new("0199e3a0-0000-7000-8000-00000000e001");
+
+    public static readonly Guid Group = new("0199e3a0-0000-7000-8000-00000000a001");
+
+    public static readonly Guid ForeignGroup = new("0199e3a0-0000-7000-8000-00000000a002");
+
+    public static readonly Guid AuditedDossier = new("0199e3a0-0000-7000-8000-00000000d0d1");
+
     private readonly ServiceProvider _root;
 
     public CatalogHarness(
@@ -39,6 +50,32 @@ internal sealed class CatalogHarness : IAsyncDisposable
             ["Lettra:Organisations:0:Kek"] = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)),
             ["Lettra:Clusters:srv-a:CellId"] = "cellule-test",
             ["Lettra:Clusters:srv-a:MaxDatabases"] = "100",
+
+            // Registre des droits déclaré : un membre de deux groupes, dont un d'un autre cabinet (ignoré).
+            ["Lettra:Authorization:Users:0:Id"] = Member.ToString(),
+            ["Lettra:Authorization:Users:0:Cabinet"] = Organisation.Value.ToString(),
+            ["Lettra:Authorization:Users:0:Groups:0"] = Group.ToString(),
+            ["Lettra:Authorization:Users:0:Groups:1"] = ForeignGroup.ToString(),
+            ["Lettra:Authorization:Users:0:Assignments:0:Role"] = "auditeur",
+            ["Lettra:Authorization:Users:0:Assignments:0:Scope"] = "Dossier",
+            ["Lettra:Authorization:Users:0:Assignments:0:ScopeId"] = AuditedDossier.ToString(),
+            ["Lettra:Authorization:Users:0:Assignments:0:ExpiresAt"] = "2027-01-31T00:00:00Z",
+            ["Lettra:Authorization:Groups:0:Id"] = Group.ToString(),
+            ["Lettra:Authorization:Groups:0:Cabinet"] = Organisation.Value.ToString(),
+            ["Lettra:Authorization:Groups:0:Name"] = "Pôle social",
+            ["Lettra:Authorization:Groups:0:Assignments:0:Role"] = "collaborateur",
+            ["Lettra:Authorization:Groups:0:Assignments:0:Scope"] = "Groupe",
+            ["Lettra:Authorization:Groups:0:Assignments:0:ScopeId"] = Group.ToString(),
+            ["Lettra:Authorization:Groups:1:Id"] = ForeignGroup.ToString(),
+            ["Lettra:Authorization:Groups:1:Cabinet"] = OtherCabinet.ToString(),
+            ["Lettra:Authorization:Groups:1:Assignments:0:Role"] = "manager",
+            ["Lettra:Authorization:Groups:1:Assignments:0:Scope"] = "Groupe",
+            ["Lettra:Authorization:Groups:1:Assignments:0:ScopeId"] = ForeignGroup.ToString(),
+            ["Lettra:Authorization:Roles:0:Cabinet"] = Organisation.Value.ToString(),
+            ["Lettra:Authorization:Roles:0:Key"] = "stagiaire",
+            ["Lettra:Authorization:Roles:0:Permissions:0"] = "TiersConsulter",
+            ["Lettra:Authorization:Roles:0:Permissions:1"] = "CatalogueConsulter",
+            ["Lettra:Authorization:Roles:0:RequiresExpiry"] = "true",
         };
         foreach ((string key, string? value) in cluster)
         {
@@ -162,6 +199,56 @@ internal static class CatalogScenarios
         await harness.UpdateDossierAsync(leased, d => d.State = DossierState.Provisioning);
         (await services.ResumeDossierProvisioningAsync(default)).Should().Be(1);
         (await harness.DossierAsync(leased)).State.Should().Be(DossierState.Active);
+    }
+
+    /// <summary>Registre des droits dans la base Catalog : import de la configuration, profil et chemins de portée.</summary>
+    public static async Task AuthorizationDirectoryAsync(CatalogHarness harness)
+    {
+        IServiceProvider services = harness.Services;
+        await services.InitializeCatalogAsync(migrate: true, default);
+        // Deux imports : ni attribution, ni appartenance, ni permission en double.
+        await services.InitializeCatalogAsync(migrate: false, default);
+
+        DossierId inGroup = (await Create(services, "Dossier du pôle")).Value;
+        DossierId outOfGroup = (await Create(services, "Dossier hors pôle")).Value;
+        await using (CatalogDbContext db = await services.GetRequiredService<IDbContextFactory<CatalogDbContext>>().CreateDbContextAsync())
+        {
+            db.GroupDossiers.Add(new CatalogGroupDossier { GroupId = CatalogHarness.Group, DossierId = inGroup.Value });
+            // Un groupe d'un autre cabinet qui prétend contenir le dossier : ignoré à la lecture.
+            db.GroupDossiers.Add(new CatalogGroupDossier { GroupId = CatalogHarness.ForeignGroup, DossierId = outOfGroup.Value });
+            await db.SaveChangesAsync();
+        }
+
+        IAuthorizationDirectory directory = services.GetRequiredService<IAuthorizationDirectory>();
+        UserAuthorizationProfile? profile = await directory.FindUserAsync(CatalogHarness.Member, default);
+        profile.Should().NotBeNull();
+        profile!.State.Should().Be(AccountState.Active);
+        profile.Cabinet.Should().Be(CatalogHarness.Organisation);
+        profile.Groups.Should().Equal(new GroupId(CatalogHarness.Group));
+        profile.Assignments.Should().BeEquivalentTo(new[]
+        {
+            new RoleAssignment(new SubjectRef(SubjectKind.User, CatalogHarness.Member), "auditeur",
+                new AuthorizationScope(ScopeKind.Dossier, CatalogHarness.AuditedDossier), DateTimeOffset.Parse("2027-01-31T00:00:00Z", CultureInfo.InvariantCulture)),
+            new RoleAssignment(new SubjectRef(SubjectKind.Group, CatalogHarness.Group), "collaborateur",
+                AuthorizationScope.ForGroup(new GroupId(CatalogHarness.Group))),
+        });
+        RoleDefinition stagiaire = profile.CustomRoles.Should().ContainSingle().Subject;
+        stagiaire.Key.Should().Be("stagiaire");
+        stagiaire.RequiresExpiry.Should().BeTrue();
+        stagiaire.Permissions.Should().BeEquivalentTo(new[] { Permission.TiersConsulter, Permission.CatalogueConsulter });
+
+        (await directory.FindUserAsync(Guid.CreateVersion7(), default)).Should().BeNull();
+
+        AuthorizationScope cabinet = AuthorizationScope.ForCabinet(CatalogHarness.Organisation);
+        (await directory.GetScopePathAsync(AuthorizationScope.ForDossier(inGroup), default))!.Ancestors.Should().Equal(
+            AuthorizationScope.ForDossier(inGroup), AuthorizationScope.ForGroup(new GroupId(CatalogHarness.Group)), cabinet, AuthorizationScope.Plateforme);
+        (await directory.GetScopePathAsync(AuthorizationScope.ForDossier(outOfGroup), default))!.Ancestors.Should().Equal(
+            AuthorizationScope.ForDossier(outOfGroup), cabinet, AuthorizationScope.Plateforme);
+        (await directory.GetScopePathAsync(AuthorizationScope.ForDossier(new DossierId(Guid.CreateVersion7())), default)).Should().BeNull();
+        (await directory.GetScopePathAsync(AuthorizationScope.ForGroup(new GroupId(CatalogHarness.ForeignGroup)), default))!.Cabinet
+            .Should().Be(new OrganisationId(CatalogHarness.OtherCabinet));
+        (await directory.GetScopePathAsync(cabinet, default))!.Ancestors.Should().Equal(cabinet, AuthorizationScope.Plateforme);
+        (await directory.GetScopePathAsync(AuthorizationScope.ForCabinet(new OrganisationId(Guid.CreateVersion7())), default)).Should().BeNull();
     }
 
     public static async Task UnknownOrganisationAsync(CatalogHarness harness)

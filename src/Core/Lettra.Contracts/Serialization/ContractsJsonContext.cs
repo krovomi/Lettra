@@ -5,6 +5,7 @@ using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Customers;
 using Lettra.Contracts.Identity;
 using Lettra.Contracts.Directory;
+using Lettra.Contracts.Dossiers;
 using Lettra.Contracts.Suppliers;
 
 namespace Lettra.Contracts.Serialization;
@@ -31,4 +32,6 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(CatalogReferenceData))]
 [JsonSerializable(typeof(CompanySearchResponse))]
 [JsonSerializable(typeof(VatNumberCheckResponse))]
+[JsonSerializable(typeof(CreateDossierRequest))]
+[JsonSerializable(typeof(DossierSummary))]
 public sealed partial class ContractsJsonContext : JsonSerializerContext;
