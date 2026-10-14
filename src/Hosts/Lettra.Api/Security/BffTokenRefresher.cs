@@ -41,7 +41,7 @@ internal interface ITokenEndpointClient
 /// ce regroupement couvre la course.
 /// </para>
 /// </summary>
-internal sealed class BffTokenRefresher(ITokenEndpointClient client, TimeProvider clock, ILogger<BffTokenRefresher> logger)
+internal sealed partial class BffTokenRefresher(ITokenEndpointClient client, TimeProvider clock, ILogger<BffTokenRefresher> logger)
 {
     private static readonly TimeSpan RefreshBefore = TimeSpan.FromSeconds(60);
     private static readonly TimeSpan ShareResultFor = TimeSpan.FromSeconds(30);
@@ -88,7 +88,7 @@ internal sealed class BffTokenRefresher(ITokenEndpointClient client, TimeProvide
     private Task<TokenRefreshResult> RefreshOnceAsync(string refreshToken, CancellationToken cancellationToken)
     {
         string key = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken)));
-        Lazy<Task<TokenRefreshResult>> refresh = _inFlight.GetOrAdd(key, _ => new Lazy<Task<TokenRefreshResult>>(async () =>
+        Lazy<Task<TokenRefreshResult>> refresh = _inFlight.GetOrAdd(key, _key => new Lazy<Task<TokenRefreshResult>>(async () =>
         {
             try
             {
@@ -109,11 +109,11 @@ internal sealed class BffTokenRefresher(ITokenEndpointClient client, TimeProvide
         _inFlight.TryRemove(key, out _);
     }
 
-    private static void LogRevoked(ILogger logger) =>
-        logger.LogInformation(new EventId(2100, "BffSessionRevoked"), "Session du BFF fermée : rafraîchissement refusé par le fournisseur d'identité");
+    [LoggerMessage(EventId = 2100, Level = LogLevel.Information, Message = "Session du BFF fermée : rafraîchissement refusé par le fournisseur d'identité")]
+    private static partial void LogRevoked(ILogger logger);
 
-    private static void LogUnavailable(ILogger logger) =>
-        logger.LogWarning(new EventId(2101, "BffRefreshUnavailable"), "Rafraîchissement du jeton impossible pour l'instant ; nouvel essai à la prochaine requête");
+    [LoggerMessage(EventId = 2101, Level = LogLevel.Warning, Message = "Rafraîchissement du jeton impossible pour l'instant ; nouvel essai à la prochaine requête")]
+    private static partial void LogUnavailable(ILogger logger);
 }
 
 /// <summary>Client du point de jeton Keycloak, découvert par le document OpenID du realm.</summary>

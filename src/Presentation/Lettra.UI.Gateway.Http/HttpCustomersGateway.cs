@@ -98,12 +98,31 @@ internal sealed class DossierHeaderHandler(IDossierSelection selection) : Delega
     }
 }
 
+/// <summary>
+/// En-tête anti-CSRF exigé par l'API pour les appels authentifiés par le cookie du BFF (annexe F §2). Le
+/// navigateur ne l'ajoute jamais de lui-même à une requête venue d'un autre site.
+/// </summary>
+internal sealed class CsrfHeaderHandler : DelegatingHandler
+{
+    public const string HeaderName = "X-Lettra-Csrf";
+
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        request.Headers.Remove(HeaderName);
+        request.Headers.Add(HeaderName, "1");
+        return base.SendAsync(request, cancellationToken);
+    }
+}
+
 public static class DependencyInjection
 {
     public static IServiceCollection AddHttpGateways(this IServiceCollection services, Uri apiBaseAddress)
     {
         services.AddTransient<DossierHeaderHandler>();
+        services.AddTransient<CsrfHeaderHandler>();
         services.AddHttpClient<ICustomersGateway, HttpCustomersGateway>(client => client.BaseAddress = apiBaseAddress)
+            .AddHttpMessageHandler<CsrfHeaderHandler>()
             .AddHttpMessageHandler<DossierHeaderHandler>();
         return services;
     }

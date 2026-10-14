@@ -1,5 +1,6 @@
 using Lettra.Api.Endpoints;
 using Lettra.Api.Infrastructure;
+using Lettra.Api.Security;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Bootstrap;
 using Lettra.Contracts.Serialization;
@@ -7,13 +8,14 @@ using Lettra.Contracts.Serialization;
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 DeploymentMode mode = builder.Configuration.GetDeploymentMode();
-if (mode == DeploymentMode.LocalNetwork && !builder.Environment.IsDevelopment())
+if (mode == DeploymentMode.IsolatedDesktop)
 {
-    // Phase 0 : identité locale à utilisateur unique. Les comptes locaux (mode 2) et Keycloak arrivent en phase 2.
-    throw new InvalidOperationException("L'identité locale à utilisateur unique est réservée au développement en phase 0.");
+    // Le poste isolé n'expose pas d'API : il passe par la gateway in-process et le compte local.
+    throw new InvalidOperationException("L'API sert les modes 2 à 5 ; le mode 1 est l'application MAUI seule.");
 }
 
 builder.Services.AddLettra(builder.Configuration);
+builder.Services.AddLettraApiAuthentication(builder.Configuration);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IRequestedDossierSource, HeaderDossierSource>();
 builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.TypeInfoResolverChain.Insert(0, ContractsJsonContext.Default));
@@ -36,10 +38,17 @@ if (app.Environment.IsDevelopment())
 
 app.UseBlazorFrameworkFiles();
 app.UseStaticFiles();
+app.UseAuthentication();
+app.UseAuthorization();
 
-RouteGroupBuilder api = app.MapGroup("/api/v1").AddEndpointFilter<TenantEndpointFilter>();
+// Authentifié (MFA prouvée), puis anti-CSRF pour le cookie du BFF, puis dossier ; la permission vient par route.
+RouteGroupBuilder api = app.MapGroup("/api/v1")
+    .RequireAuthorization(LettraPolicies.User)
+    .AddEndpointFilter<CsrfEndpointFilter>()
+    .AddEndpointFilter<TenantEndpointFilter>();
 api.MapCustomers();
 
+app.MapLettraBff();
 app.MapHealthChecks("/health");
 app.MapFallbackToFile("index.html");
 
