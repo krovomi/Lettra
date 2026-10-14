@@ -110,6 +110,7 @@ public sealed class CatalogPageTests : BunitContext
         requete.UnitPriceExclTax.Should().Be(1234.50m);
         requete.Reference.Should().Be("DEV-01");
         requete.Designation.Should().Be("Développement");
+        requete.Description.Should().Be("Descriptif DEV-01", "la description, absente de la grille, ne doit pas être effacée");
         requete.UnitCode.Should().Be("HUR");
         requete.VatRateCode.Should().Be("FR-20");
         page.WaitForAssertion(() => page.Find(".lg-row[data-r='0'] .lg-calc").TextContent.Should().Be(Fr(1481.40m)));

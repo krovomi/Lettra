@@ -11,6 +11,7 @@ public sealed record CatalogRow(
     Guid? Id,
     string Reference,
     string Designation,
+    string? Description,
     CatalogItemKindDto Kind,
     string UnitCode,
     decimal UnitPriceExclTax,
@@ -21,14 +22,14 @@ public sealed record CatalogRow(
     public static CatalogRow From(CatalogItemSummary item)
     {
         ArgumentNullException.ThrowIfNull(item);
-        return new(item.Id, item.Id, item.Reference, item.Designation, item.Kind, item.UnitCode, item.UnitPriceExclTax,
+        return new(item.Id, item.Id, item.Reference, item.Designation, item.Description, item.Kind, item.UnitCode, item.UnitPriceExclTax,
             item.VatRateCode, item.VatRatePercent, item.IsArchived);
     }
 
     public static CatalogRow From(CatalogItemResponse item, Guid key)
     {
         ArgumentNullException.ThrowIfNull(item);
-        return new(key, item.Id, item.Reference, item.Designation, item.Kind, item.UnitCode, item.UnitPriceExclTax,
+        return new(key, item.Id, item.Reference, item.Designation, item.Description, item.Kind, item.UnitCode, item.UnitPriceExclTax,
             item.VatRateCode, item.VatRatePercent, item.IsArchived);
     }
 
@@ -36,16 +37,19 @@ public sealed record CatalogRow(
     public static CatalogRow New(string unitCode, VatRateOption vatRate)
     {
         ArgumentNullException.ThrowIfNull(vatRate);
-        return new(Guid.NewGuid(), null, string.Empty, string.Empty, CatalogItemKindDto.Service, unitCode, 0m,
+        return new(Guid.NewGuid(), null, string.Empty, string.Empty, null, CatalogItemKindDto.Service, unitCode, 0m,
             vatRate.Code, vatRate.Percent, false);
     }
 
-    /// <summary>Requête complète d'enregistrement (création ou modification).</summary>
-    public SaveCatalogItemRequest ToRequest(string? description) => new()
+    /// <summary>
+    /// Requête complète d'enregistrement (création ou modification). La description, absente de la grille,
+    /// est renvoyée telle quelle pour ne pas l'effacer.
+    /// </summary>
+    public SaveCatalogItemRequest ToRequest() => new()
     {
         Reference = Reference.Trim(),
         Designation = Designation.Trim(),
-        Description = description,
+        Description = Description,
         Kind = Kind,
         UnitCode = UnitCode,
         UnitPriceExclTax = UnitPriceExclTax,

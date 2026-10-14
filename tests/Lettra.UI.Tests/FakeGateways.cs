@@ -68,7 +68,7 @@ internal sealed class FakeCatalogGateway : ICatalogGateway
         List<CatalogItemSummary> items = Items
             .Where(i => includeArchived || !i.IsArchived)
             .Where(i => search is null || i.Reference.Contains(search, StringComparison.OrdinalIgnoreCase) || i.Designation.Contains(search, StringComparison.OrdinalIgnoreCase))
-            .Select(i => new CatalogItemSummary(i.Id, i.Reference, i.Designation, i.Kind, i.UnitCode, i.UnitPriceExclTax, i.VatRateCode, i.VatRatePercent, i.IsArchived))
+            .Select(i => new CatalogItemSummary(i.Id, i.Reference, i.Designation, i.Description, i.Kind, i.UnitCode, i.UnitPriceExclTax, i.VatRateCode, i.VatRatePercent, i.IsArchived))
             .ToList();
         return Task.FromResult(OperationResult<PagedResponse<CatalogItemSummary>>.Success(new PagedResponse<CatalogItemSummary>(items, page, pageSize, items.Count)));
     }

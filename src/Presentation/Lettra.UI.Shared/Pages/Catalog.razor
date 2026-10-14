@@ -75,7 +75,6 @@
 
     private static readonly VatRateOption FallbackVatRate = new("FR-20", 20m);
 
-    private readonly Dictionary<Guid, string?> _descriptions = [];
     private List<CatalogRow> _rows = [];
     private IReadOnlyList<GridColumn<CatalogRow>> _columns = [];
     private CatalogReferenceData _reference = new(["C62"], [FallbackVatRate]);
@@ -198,11 +197,11 @@
                 return row;   // ligne en cours de saisie : créée quand référence et désignation seront remplies
             }
 
-            result = await Gateway.CreateAsync(row.ToRequest(null), CancellationToken.None);
+            result = await Gateway.CreateAsync(row.ToRequest(), CancellationToken.None);
         }
         else
         {
-            result = await Gateway.UpdateAsync(id, row.ToRequest(_descriptions.GetValueOrDefault(id)), CancellationToken.None);
+            result = await Gateway.UpdateAsync(id, row.ToRequest(), CancellationToken.None);
         }
 
         if (!result.IsSuccess || result.Value is null)
@@ -212,7 +211,6 @@
             return null;
         }
 
-        _descriptions[result.Value.Id] = result.Value.Description;
         _status = string.Format(Culture, L[row.Id is null ? "Catalog.Created" : "Catalog.Saved"], result.Value.Reference);
         StateHasChanged();
         return CatalogRow.From(result.Value, row.Key);

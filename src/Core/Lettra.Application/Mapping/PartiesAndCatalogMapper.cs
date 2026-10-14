@@ -96,6 +96,7 @@ public static class PartiesAndCatalogMapper
             item.Id.Value,
             item.Reference,
             item.Designation,
+            item.Description,
             (CatalogItemKindDto)(int)item.Kind,
             item.Unit.Code,
             item.UnitPriceExclTax,

@@ -64,6 +64,7 @@ public sealed record CatalogItemSummary(
     Guid Id,
     string Reference,
     string Designation,
+    string? Description,
     CatalogItemKindDto Kind,
     string UnitCode,
     decimal UnitPriceExclTax,
