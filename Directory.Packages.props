@@ -65,8 +65,6 @@
   <ItemGroup Condition="'$(LettraIsPoc)' != 'true'" Label="IA (annexe B)">
     <!-- SDK officiel C# d'Anthropic (MIT), utilisé seulement par Lettra.Ai.Claude. -->
     <PackageVersion Include="Anthropic" Version="12.56.0" />
-    <!-- Configuration en mémoire des tests de la couche IA. -->
-    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="$(MicrosoftVersion)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(LettraIsPoc)' != 'true'" Label="Correctifs de sécurité transitifs (épinglés)">

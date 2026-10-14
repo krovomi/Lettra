@@ -1,11 +1,13 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Lettra.Contracts.Assistant;
+using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Customers;
 using Lettra.Contracts.Identity;
 using Lettra.Contracts.Directory;
+using Lettra.Contracts.Pricing;
 using Lettra.Contracts.Suppliers;
 
 namespace Lettra.Contracts.Serialization;
@@ -30,6 +32,23 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(CatalogItemResponse))]
 [JsonSerializable(typeof(PagedResponse<CatalogItemSummary>))]
 [JsonSerializable(typeof(CatalogReferenceData))]
+[JsonSerializable(typeof(BillingReferenceData))]
+[JsonSerializable(typeof(SaveQuoteRequest))]
+[JsonSerializable(typeof(QuoteResponse))]
+[JsonSerializable(typeof(PagedResponse<QuoteSummary>))]
+[JsonSerializable(typeof(SetQuoteOutcomeRequest))]
+[JsonSerializable(typeof(CreateDownPaymentRequest))]
+[JsonSerializable(typeof(SaveInvoiceRequest))]
+[JsonSerializable(typeof(InvoiceResponse))]
+[JsonSerializable(typeof(PagedResponse<InvoiceSummary>))]
+[JsonSerializable(typeof(CreateCreditNoteRequest))]
+[JsonSerializable(typeof(ComplianceReportResponse))]
+[JsonSerializable(typeof(SaveCompanyProfileRequest))]
+[JsonSerializable(typeof(CompanyProfileResponse))]
+[JsonSerializable(typeof(SavePriceListRequest))]
+[JsonSerializable(typeof(PriceListResponse))]
+[JsonSerializable(typeof(PagedResponse<PriceListSummary>))]
+[JsonSerializable(typeof(IReadOnlyList<ResolvedPrice>))]
 [JsonSerializable(typeof(CompanySearchResponse))]
 [JsonSerializable(typeof(VatNumberCheckResponse))]
 [JsonSerializable(typeof(AskAssistantRequest))]
