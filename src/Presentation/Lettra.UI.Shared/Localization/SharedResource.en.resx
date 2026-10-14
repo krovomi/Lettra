@@ -129,6 +129,31 @@
   <data name="Error.Dossier.ProvisioningFailed" xml:space="preserve"><value>The client file could not be created. It will be retried automatically.</value></data>
   <data name="Error.Numbering.SeriesNotFound" xml:space="preserve"><value>This numbering series does not exist in the client file.</value></data>
   <data name="Error.Numbering.Contention" xml:space="preserve"><value>Too many documents are being validated in this client file at once. Try again.</value></data>
+  <data name="Session.Title" xml:space="preserve"><value>Session</value></data>
+  <data name="Session.SignedInAs" xml:space="preserve"><value>Signed in as {0}.</value></data>
+  <data name="Session.Continue" xml:space="preserve"><value>Continue</value></data>
+  <data name="Session.SignInIntro" xml:space="preserve"><value>Sign in with your firm account. You will be asked for a second factor.</value></data>
+  <data name="Session.SignIn" xml:space="preserve"><value>Sign in</value></data>
+  <data name="Session.SignInFailed" xml:space="preserve"><value>Sign-in did not complete. Please try again.</value></data>
+  <data name="Session.Create.Title" xml:space="preserve"><value>Create this computer's account</value></data>
+  <data name="Session.Create.Intro" xml:space="preserve"><value>This computer works without a server. Choose a passphrase of at least 12 characters: it protects your files and cannot be recovered.</value></data>
+  <data name="Session.Create.Submit" xml:space="preserve"><value>Create account</value></data>
+  <data name="Session.Unlock.Title" xml:space="preserve"><value>Unlock this computer</value></data>
+  <data name="Session.Unlock.Submit" xml:space="preserve"><value>Unlock</value></data>
+  <data name="Session.Field.DisplayName" xml:space="preserve"><value>Your name</value></data>
+  <data name="Session.Field.Passphrase" xml:space="preserve"><value>Passphrase</value></data>
+  <data name="Session.Field.Confirmation" xml:space="preserve"><value>Confirm the passphrase</value></data>
+  <data name="Session.SignOut" xml:space="preserve"><value>Sign out</value></data>
+  <data name="Session.Lock" xml:space="preserve"><value>Lock</value></data>
+  <data name="Error.Security.MfaRequired" xml:space="preserve"><value>A second authentication factor is required. Please sign in again.</value></data>
+  <data name="Error.Security.CsrfHeaderMissing" xml:space="preserve"><value>Request blocked for security reasons. Reload the page.</value></data>
+  <data name="Error.LocalAccount.AlreadyExists" xml:space="preserve"><value>This computer's account already exists.</value></data>
+  <data name="Error.LocalAccount.NotFound" xml:space="preserve"><value>No account has been created on this computer yet.</value></data>
+  <data name="Error.LocalAccount.InvalidPassphrase" xml:space="preserve"><value>Incorrect passphrase.</value></data>
+  <data name="Error.LocalAccount.LockedOut" xml:space="preserve"><value>Too many attempts. This computer is locked for a few minutes.</value></data>
+  <data name="Error.LocalAccount.PassphraseTooShort" xml:space="preserve"><value>The passphrase must be at least 12 characters long.</value></data>
+  <data name="Error.LocalAccount.PassphraseMismatch" xml:space="preserve"><value>The two passphrases do not match.</value></data>
+  <data name="Error.LocalAccount.NotSupported" xml:space="preserve"><value>This action is only available on a standalone computer.</value></data>
   <data name="Suppliers.Create.Done" xml:space="preserve"><value>Supplier “{0}” created.</value></data>
   <data name="Suppliers.Create.Submit" xml:space="preserve"><value>Create supplier</value></data>
   <data name="Suppliers.Create.Title" xml:space="preserve"><value>New supplier</value></data>

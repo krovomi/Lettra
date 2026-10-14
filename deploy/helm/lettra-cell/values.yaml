@@ -1,0 +1,60 @@
+# Valeurs communes à toutes les cellules. La taille vient de values-taille-<S|M|L|XL>.yaml, l'identité de la cellule
+# de deploy/cells/<cellule>/values.yaml.
+cell: local
+environment: development
+
+lettra-api:
+  cell: local
+  existingSecret: lettra-api
+lettra-worker:
+  enabled: true
+  cell: local
+  existingSecret: lettra-worker
+
+# Bases des dossiers : une base par dossier, hébergée sur des clusters PostgreSQL (CloudNativePG) derrière PgBouncer.
+postgres:
+  enabled: true
+  image: ghcr.io/cloudnative-pg/postgresql:16.10
+  storageClass: ""
+  # Règle de dimensionnement issue du POC « base par dossier » (ADR-0009, amendement) : PgBouncer garde un pool par
+  # couple (base, utilisateur) et ne partage rien entre bases. Le budget de connexions serveur doit donc couvrir le
+  # nombre de dossiers ACTIFS au même moment (pas le nombre de bases, ni d'utilisateurs).
+  # 2 500 bases inactives coûtent < 1 % de CPU ; au-delà du budget, la latence décroche (5 s à 2 500 actifs pour 120).
+  clusters:
+    - name: pg-a
+      instances: 2
+      storage: 20Gi
+      # Dossiers actifs simultanément que ce cluster doit servir sans attente.
+      activeDossierBudget: 60
+  # Connexions gardées hors du budget (superutilisateur, réplication, migrations du Worker, supervision).
+  reservedConnections: 25
+  # Au-delà, il faut un cluster de plus : le catalogue répartit les dossiers selon leur activité.
+  maxActiveDossiersPerCluster: 600
+  pooler:
+    instances: 2
+    # Mesures du POC : pool minuscule par dossier, éviction rapide des connexions inactives.
+    defaultPoolSize: 2
+    serverIdleTimeout: 10
+    maxClientConn: 10000
+    maxPreparedStatements: 200
+  backup:
+    enabled: false
+    # Stockage objet de la même région (verrou d'objet), identifiants dans le secret indiqué.
+    destinationPath: ""
+    endpointURL: ""
+    credentialsSecret: lettra-sauvegardes
+    schedule: "0 0 2 * * *"
+    retention: 30d
+
+# Redis de la cellule (annexe E §2) : cache distribué (HybridCache), sessions du BFF et trousseau Data Protection
+# partagé entre les instances de l'API (chantier Identité). L'API reçoit ConnectionStrings__Redis depuis le secret.
+# Phase 2 : une instance persistante ; la haute disponibilité (Sentinel ou opérateur) arrive avec la production.
+redis:
+  enabled: true
+  image: valkey/valkey:8.1-alpine
+  storage: 2Gi
+  # Secret existant (créé par OpenTofu, module cell-bootstrap) : clés « password » et « connection-string ».
+  existingSecret: lettra-redis
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { memory: 512Mi }

@@ -80,7 +80,7 @@ internal sealed class TenantHarness : IAsyncDisposable
 
     private sealed class AllPermissions : IPermissionService
     {
-        public ValueTask<IReadOnlySet<Permission>> GetEffectiveAsync(Guid userId, DossierId dossier, CancellationToken cancellationToken) =>
+        public ValueTask<IReadOnlySet<Permission>> GetEffectiveAsync(Guid userId, AuthorizationScope scope, CancellationToken cancellationToken) =>
             ValueTask.FromResult<IReadOnlySet<Permission>>(Enum.GetValues<Permission>().ToHashSet());
     }
 }

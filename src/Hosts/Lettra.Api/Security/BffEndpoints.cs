@@ -1,0 +1,75 @@
+using System.Security.Cryptography;
+using Lettra.Api.Infrastructure;
+using Lettra.Application.Abstractions.Identity;
+using Lettra.Contracts.Identity;
+using Lettra.Infrastructure.Identity.Oidc;
+using Microsoft.AspNetCore.Authentication;
+
+namespace Lettra.Api.Security;
+
+/// <summary>
+/// Backend for frontend du navigateur (annexe F §2) : connexion OIDC côté serveur, session par cookie
+/// <c>HttpOnly</c>, <c>Secure</c>, <c>SameSite=Strict</c>. Aucun jeton ne descend dans le navigateur.
+/// </summary>
+public static class BffEndpoints
+{
+    internal const string SignOutTokenKey = "lettra.signout";
+
+    public static IEndpointRouteBuilder MapLettraBff(this IEndpointRouteBuilder app)
+    {
+        RouteGroupBuilder bff = app.MapGroup("/bff").ExcludeFromDescription();
+
+        // Navigation pleine page : Keycloak (SSO du cabinet, MFA), puis retour sur une adresse locale seulement.
+        bff.MapGet("/login", (string? returnUrl) =>
+            Results.Challenge(new AuthenticationProperties { RedirectUri = LocalOnly(returnUrl) }, [LettraAuthSchemes.Oidc]));
+
+        bff.MapGet("/user", async (HttpContext context) =>
+        {
+            AuthenticateResult session = await context.AuthenticateAsync(LettraAuthSchemes.Cookie).ConfigureAwait(false);
+            if (!session.Succeeded || session.Principal is null)
+            {
+                return new[] { SecurityErrors.Unauthenticated }.ToProblem();
+            }
+
+            string? token = SignOutToken(session);
+            return TypedResults.Ok(new SessionResponse(
+                IsAuthenticated: true,
+                SessionModeDto.Oidc,
+                OidcClaims.DisplayName(session.Principal),
+                LocalAccountExists: false,
+                SignOutUrl: token is null ? null : $"/bff/logout?jeton={Uri.EscapeDataString(token)}"));
+        });
+
+        // Déconnexion par navigation, protégée contre le CSRF par un jeton propre à la session (donné par /bff/user).
+        bff.MapGet("/logout", async (HttpContext context, string? jeton) =>
+        {
+            AuthenticateResult session = await context.AuthenticateAsync(LettraAuthSchemes.Cookie).ConfigureAwait(false);
+            if (!session.Succeeded)
+            {
+                return Results.LocalRedirect("/");
+            }
+
+            string? expected = SignOutToken(session);
+            if (expected is null || jeton is null || !CryptographicOperations.FixedTimeEquals(
+                    System.Text.Encoding.UTF8.GetBytes(expected), System.Text.Encoding.UTF8.GetBytes(jeton)))
+            {
+                return new[] { SecurityErrors.Forbidden }.ToProblem();
+            }
+
+            return Results.SignOut(new AuthenticationProperties { RedirectUri = "/" }, [LettraAuthSchemes.Cookie, LettraAuthSchemes.Oidc]);
+        });
+
+        return app;
+    }
+
+    private static string? SignOutToken(AuthenticateResult session) =>
+        session.Properties?.Items.TryGetValue(SignOutTokenKey, out string? token) == true ? token : null;
+
+    internal static string NewSignOutToken() => Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
+
+    /// <summary>Seulement un chemin local (<c>/…</c>, ni <c>//</c> ni <c>/\</c>) : pas de redirection ouverte.</summary>
+    internal static string LocalOnly(string? returnUrl) =>
+        !string.IsNullOrEmpty(returnUrl) && returnUrl[0] == '/' && (returnUrl.Length == 1 || (returnUrl[1] != '/' && returnUrl[1] != '\\'))
+            ? returnUrl
+            : "/";
+}

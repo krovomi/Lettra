@@ -1,0 +1,25 @@
+image:
+  repository: ghcr.io/krovomi/lettra-worker
+  tag: ""
+  pullPolicy: IfNotPresent
+
+cell: local
+environment: development
+
+settings:
+  Lettra__DeploymentMode: HostedSaaS
+  Lettra__Observability__ServiceName: lettra-worker
+
+existingSecret: ""
+
+otel:
+  endpoint: http://lettra-otel-collector.lettra-observabilite:4317
+  protocol: grpc
+
+# Un seul Worker actif par cellule en phase 2 : les vagues de migration prennent un bail par dossier dans le catalogue
+# (POC base par dossier), plusieurs Workers sont donc possibles plus tard (KEDA sur la file, ADR-0009).
+replicas: 1
+
+resources:
+  requests: { cpu: 100m, memory: 256Mi }
+  limits: { memory: 512Mi }

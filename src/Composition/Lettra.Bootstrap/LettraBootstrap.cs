@@ -61,7 +61,7 @@ public static class LettraBootstrap
                 .AddPostgreSqlProvider()
                 .AddSqlServerProvider()
                 .AddCatalogDatabase(configuration, CatalogDatabase(configuration))
-                .AddLocalIdentity(configuration)
+                .AddOidcIdentity(configuration)
                 .AddSupervision(configuration),
 
             // PostgreSQL dédié (mode 3) ou cellule SaaS (mode 5) : une base par dossier, derrière PgBouncer en SaaS.

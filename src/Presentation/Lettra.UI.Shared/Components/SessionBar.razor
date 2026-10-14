@@ -1,0 +1,66 @@
+@* Qui est connecté, et verrouiller / se déconnecter. Sans session, renvoie vers l'écran de session. *@
+@implements IDisposable
+@inject ISessionGateway Sessions
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+
+@if (_session is { IsAuthenticated: true })
+{
+    <span class="lettra-user">@_session.DisplayName</span>
+    @if (_session.SignOutUrl is string signOut)
+    {
+        <a href="@signOut" data-sign-out>@L["Session.SignOut"]</a>
+    }
+    else if (_session.Mode == SessionModeDto.Local)
+    {
+        <button type="button" class="lettra-link" @onclick="LockAsync">@L["Session.Lock"]</button>
+    }
+}
+
+@code {
+    private SessionResponse? _session;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Navigation.LocationChanged += OnLocationChanged;
+        await RefreshAsync();
+    }
+
+    private async Task RefreshAsync()
+    {
+        OperationResult<SessionResponse> result = await Sessions.GetAsync(CancellationToken.None);
+        _session = result.Value;
+        if (result.IsSuccess && _session is { IsAuthenticated: false } && !OnSessionPage())
+        {
+            Navigation.NavigateTo("session");
+        }
+    }
+
+    private async Task LockAsync()
+    {
+        await Sessions.LockAsync(CancellationToken.None);
+        _session = null;
+        Navigation.NavigateTo("session");
+    }
+
+    private bool OnSessionPage() =>
+        Navigation.ToBaseRelativePath(Navigation.Uri).StartsWith("session", StringComparison.OrdinalIgnoreCase);
+
+    private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        try
+        {
+            await InvokeAsync(async () =>
+            {
+                await RefreshAsync();
+                StateHasChanged();
+            });
+        }
+        catch (ObjectDisposedException)
+        {
+            // Composant retiré pendant la navigation : rien à rafraîchir.
+        }
+    }
+
+    public void Dispose() => Navigation.LocationChanged -= OnLocationChanged;
+}

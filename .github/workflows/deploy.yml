@@ -1,0 +1,73 @@
+name: Déploiement (validation)
+
+# Valide tout ce que deploy/ décrit, sans identifiant cloud : règles d'alerte et pannes injectées (promtool),
+# routage (amtool), collecteur, charts Helm de chaque taille contre les schémas Kubernetes et CRD, OpenTofu.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PROMETHEUS_VERSION: 3.6.0
+  ALERTMANAGER_VERSION: 0.28.1
+  KUBECONFORM_VERSION: 0.7.0
+
+jobs:
+  valider:
+    name: IaC, règles et routage des alertes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.19.0
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: 1.10.6
+          tofu_wrapper: false
+      - name: Outils Prometheus et kubeconform
+        run: |
+          mkdir -p "$HOME/bin"
+          curl -fsSL "https://github.com/prometheus/prometheus/releases/download/v${PROMETHEUS_VERSION}/prometheus-${PROMETHEUS_VERSION}.linux-amd64.tar.gz" \
+            | tar xz --strip-components=1 -C "$HOME/bin" "prometheus-${PROMETHEUS_VERSION}.linux-amd64/promtool"
+          curl -fsSL "https://github.com/prometheus/alertmanager/releases/download/v${ALERTMANAGER_VERSION}/alertmanager-${ALERTMANAGER_VERSION}.linux-amd64.tar.gz" \
+            | tar xz --strip-components=1 -C "$HOME/bin" "alertmanager-${ALERTMANAGER_VERSION}.linux-amd64/amtool"
+          curl -fsSL "https://github.com/yannh/kubeconform/releases/download/v${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz" \
+            | tar xz -C "$HOME/bin" kubeconform
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+      - name: Valider deploy/
+        run: deploy/tests/valider.sh
+
+  essai-panne:
+    name: Panne injectée (API arrêtée → appel S1)
+    runs-on: ubuntu-latest
+    needs: valider
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Prometheus et Alertmanager
+        run: |
+          mkdir -p "$HOME/bin"
+          curl -fsSL "https://github.com/prometheus/prometheus/releases/download/v${PROMETHEUS_VERSION}/prometheus-${PROMETHEUS_VERSION}.linux-amd64.tar.gz" \
+            | tar xz --strip-components=1 -C "$HOME/bin" "prometheus-${PROMETHEUS_VERSION}.linux-amd64/prometheus"
+          curl -fsSL "https://github.com/prometheus/alertmanager/releases/download/v${ALERTMANAGER_VERSION}/alertmanager-${ALERTMANAGER_VERSION}.linux-amd64.tar.gz" \
+            | tar xz --strip-components=1 -C "$HOME/bin" "alertmanager-${ALERTMANAGER_VERSION}.linux-amd64/alertmanager" "alertmanager-${ALERTMANAGER_VERSION}.linux-amd64/amtool"
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+      - name: Essai de bout en bout
+        run: deploy/local/essai-panne.sh
+      - name: Journaux de l'essai
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: essai-panne
+          path: deploy/local/.run/*.log

@@ -1,0 +1,15 @@
+# Keycloak de développement, realm Lettra importé au démarrage. Production : Helm de la cellule (chantier IaC).
+#   LETTRA_BFF_CLIENT_SECRET=... docker compose -f deploy/keycloak/docker-compose.yml up
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4
+    command: ["start-dev", "--import-realm", "--features=organization"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Définissez KEYCLOAK_ADMIN_PASSWORD}
+      LETTRA_BFF_CLIENT_SECRET: ${LETTRA_BFF_CLIENT_SECRET:?Définissez LETTRA_BFF_CLIENT_SECRET}
+      LETTRA_PUBLIC_URL: ${LETTRA_PUBLIC_URL:-https://localhost:7180}
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./realm-lettra.json:/opt/keycloak/data/import/realm-lettra.json:ro

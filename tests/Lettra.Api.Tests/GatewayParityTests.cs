@@ -1,3 +1,5 @@
+using System.Net.Http.Headers;
+using Lettra.Application.Abstractions.Identity;
 using Lettra.Bootstrap;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
@@ -25,8 +27,11 @@ public sealed class GatewayParityTests(LettraApiFactory factory) : IClassFixture
         ServiceCollection services = new();
         services.AddSingleton<IDossierSelection>(new FixedDossierSelection(dossier));
         services.AddHttpGateways(new Uri("http://localhost/"));
-        services.ConfigureAll<HttpClientFactoryOptions>(o =>
-            o.HttpMessageHandlerBuilderActions.Add(b => b.PrimaryHandler = factory.Server.CreateHandler()));
+        services.ConfigureAll<HttpClientFactoryOptions>(o => o.HttpMessageHandlerBuilderActions.Add(b =>
+        {
+            b.PrimaryHandler = factory.Server.CreateHandler();
+            b.AdditionalHandlers.Insert(0, new BearerHandler(LettraApiFactory.TokenFor(LettraApiFactory.ManagerId)));
+        }));
         return services.BuildServiceProvider();
     }
 
@@ -37,6 +42,8 @@ public sealed class GatewayParityTests(LettraApiFactory factory) : IClassFixture
         {
             [LettraBootstrap.DeploymentModeKey] = "IsolatedDesktop",
             [LettraBootstrap.LocalDataDirectoryKey] = _folder,
+            ["Lettra:LocalIdentity:StorePath"] = Path.Combine(_folder, "compte-local.json"),
+            ["Lettra:LocalIdentity:Pbkdf2Iterations"] = "1000",
         }).Build();
 
         ServiceCollection services = new();
@@ -46,6 +53,18 @@ public sealed class GatewayParityTests(LettraApiFactory factory) : IClassFixture
         services.AddSingleton<IDossierSelection>(sp => new FixedDossierSelection(dossier ?? sp.GetRequiredService<LocalDossierRegistry>().ActiveDossierId));
         services.AddInProcessGateways();
         ServiceProvider provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
+
+        // Le poste isolé n'ouvre rien avant le déverrouillage : on crée le compte local, ce qui ouvre la session.
+        ILocalAccounts accounts = provider.GetRequiredService<ILocalAccounts>();
+        if (!accounts.GetStatusAsync(default).AsTask().GetAwaiter().GetResult().Exists)
+        {
+            accounts.CreateAsync("Poste de test", "phrase secrète de test", default).AsTask().GetAwaiter().GetResult().IsSuccess.Should().BeTrue();
+        }
+        else
+        {
+            accounts.UnlockAsync("phrase secrète de test", default).AsTask().GetAwaiter().GetResult().IsSuccess.Should().BeTrue();
+        }
+
         provider.InitializeLettraAsync(configuration, CancellationToken.None).GetAwaiter().GetResult();
         return provider;
     }
@@ -105,5 +124,14 @@ public sealed class GatewayParityTests(LettraApiFactory factory) : IClassFixture
     {
         Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
         Directory.Delete(_folder, recursive: true);
+    }
+
+    private sealed class BearerHandler(string token) : DelegatingHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            return base.SendAsync(request, cancellationToken);
+        }
     }
 }

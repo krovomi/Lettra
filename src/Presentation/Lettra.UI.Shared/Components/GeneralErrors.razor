@@ -1,0 +1,11 @@
+@* Erreurs sans champ (droits, verrouillage, serveur injoignable), traduites. *@
+@inject IStringLocalizer<SharedResource> L
+
+@foreach (ErrorDetail error in Errors.Where(e => e.Target is null))
+{
+    <p class="validation-message" role="alert">@L.Error(error.Code)</p>
+}
+
+@code {
+    [Parameter] public IReadOnlyList<ErrorDetail> Errors { get; set; } = [];
+}

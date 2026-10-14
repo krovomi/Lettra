@@ -1,0 +1,28 @@
+# Identifiant de la cellule : porté par chaque alerte (étiquette cell) et lu par le module Supervision.
+cell: local
+
+collector:
+  image: otel/opentelemetry-collector-contrib:0.136.0
+  replicas: 2
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { memory: 512Mi }
+  # Points d'export de la même cellule (jamais hors de la région).
+  prometheusOtlp: http://kube-prometheus-stack-prometheus.lettra-observabilite:9090/api/v1/otlp
+  lokiOtlp: http://loki-gateway.lettra-observabilite/otlp
+  tempoOtlp: tempo.lettra-observabilite:4317
+
+rules:
+  # Étiquette attendue par le Prometheus de kube-prometheus-stack (ruleSelector).
+  release: kube-prometheus-stack
+
+alertmanager:
+  # Secret lu par kube-prometheus-stack (alertmanager.alertmanagerSpec.configSecret).
+  configSecretName: alertmanager-lettra
+  # Secret existant, fourni par le coffre de la cellule, monté dans /etc/alertmanager/secrets/lettra-alerting/ :
+  # battement-url, supervision-url, supervision-token, astreinte-appel-url, astreinte-ticket-url.
+  secretsName: lettra-alerting
+
+dashboards:
+  # Étiquette surveillée par le sidecar de Grafana.
+  label: grafana_dashboard

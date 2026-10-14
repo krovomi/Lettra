@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Identité OIDC (modes 3 à 5) : Keycloak, Entra ID, Auth0 (ADR-0010). Squelette phase 2,
-       rempli par le chantier « Identité et autorisations ». -->
+  <!-- Identité serveur (modes 2, 3 et 5, ADR-0010) : lecture des claims Keycloak, registre des droits,
+       cache des permissions invalidé par DroitsModifies. Sans ASP.NET Core : la composition root est aussi
+       chargée par l'application MAUI. L'authentification HTTP (JWT, BFF) vit dans l'hôte Lettra.Api. -->
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Lettra.Application\Lettra.Application.csproj" />
   </ItemGroup>
@@ -9,6 +10,12 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lettra.Identity.Tests" />
   </ItemGroup>
 
 </Project>

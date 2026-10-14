@@ -1,0 +1,4 @@
+bucket = "lettra-etat-iac"
+endpoints = {
+  s3 = "https://s3.gra.io.cloud.ovh.net"
+}

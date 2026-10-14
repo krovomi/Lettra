@@ -1,0 +1,80 @@
+# Consommation du budget d'erreur : une panne franche réveille l'astreinte (S1), une dégradation lente ouvre une S2,
+# une erreur isolée ne réveille personne.
+rule_files:
+  - ../rules/slo.rules.yml
+evaluation_interval: 30s
+
+tests:
+  - name: 20 % d'erreurs pendant une heure → S1
+    interval: 1m
+    external_labels:
+      cell: mut-fr-01
+    input_series:
+      - series: 'http_server_request_duration_seconds_count{job="lettra/lettra-api",http_response_status_code="200"}'
+        values: '0+80x90'
+      - series: 'http_server_request_duration_seconds_count{job="lettra/lettra-api",http_response_status_code="503"}'
+        values: '0+20x90'
+    alert_rule_test:
+      - eval_time: 70m
+        alertname: LettraBudgetErreurConsommeVite
+        exp_alerts:
+          - exp_labels: { severity: S1, category: availability, scope: cell, cell: mut-fr-01 }
+            exp_annotations:
+              title: Budget d'erreur de l'API consommé très vite
+              runbook_url: https://github.com/krovomi/Lettra/blob/main/deploy/runbooks/budget-erreur.md
+
+  - name: 1 % d'erreurs pendant sept heures → S2, pas S1
+    interval: 5m
+    external_labels:
+      cell: mut-fr-01
+    input_series:
+      - series: 'http_server_request_duration_seconds_count{job="lettra/lettra-api",http_response_status_code="200"}'
+        values: '0+990x100'
+      - series: 'http_server_request_duration_seconds_count{job="lettra/lettra-api",http_response_status_code="500"}'
+        values: '0+10x100'
+    alert_rule_test:
+      - eval_time: 7h
+        alertname: LettraBudgetErreurConsommeLentement
+        exp_alerts:
+          - exp_labels: { severity: S2, category: availability, scope: cell, cell: mut-fr-01 }
+            exp_annotations:
+              title: Budget d'erreur de l'API consommé trop vite
+              runbook_url: https://github.com/krovomi/Lettra/blob/main/deploy/runbooks/budget-erreur.md
+      - eval_time: 7h
+        alertname: LettraBudgetErreurConsommeVite
+        exp_alerts: []
+
+  - name: 0,05 % d'erreurs → personne n'est réveillé
+    interval: 5m
+    external_labels:
+      cell: mut-fr-01
+    input_series:
+      - series: 'http_server_request_duration_seconds_count{job="lettra/lettra-api",http_response_status_code="200"}'
+        values: '0+9995x100'
+      - series: 'http_server_request_duration_seconds_count{job="lettra/lettra-api",http_response_status_code="500"}'
+        values: '0+5x100'
+    alert_rule_test:
+      - eval_time: 7h
+        alertname: LettraBudgetErreurConsommeLentement
+        exp_alerts: []
+      - eval_time: 7h
+        alertname: LettraBudgetErreurConsommeVite
+        exp_alerts: []
+
+  - name: 40 % des lectures au-delà de 300 ms pendant sept heures → S2
+    interval: 5m
+    external_labels:
+      cell: mut-fr-01
+    input_series:
+      - series: 'http_server_request_duration_seconds_bucket{job="lettra/lettra-api",http_request_method="GET",le="0.3"}'
+        values: '0+60x100'
+      - series: 'http_server_request_duration_seconds_count{job="lettra/lettra-api",http_request_method="GET",http_response_status_code="200"}'
+        values: '0+100x100'
+    alert_rule_test:
+      - eval_time: 7h
+        alertname: LettraLecturesLentes
+        exp_alerts:
+          - exp_labels: { severity: S2, category: performance, scope: cell, cell: mut-fr-01 }
+            exp_annotations:
+              title: Les lectures dépassent 300 ms trop souvent
+              runbook_url: https://github.com/krovomi/Lettra/blob/main/deploy/runbooks/latence.md

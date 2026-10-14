@@ -1,0 +1,134 @@
+# Pannes injectées : chaque règle S1 et S2 est vérifiée (gravité, catégorie, portée, cellule).
+rule_files:
+  - ../rules/infra.rules.yml
+evaluation_interval: 30s
+
+tests:
+  - name: L'API s'arrête de pousser ses métriques
+    interval: 1m
+    external_labels:
+      cell: mut-fr-01
+    input_series:
+      - series: 'target_info{job="lettra/lettra-api",instance="api-0"}'
+        values: '1x5 _x10'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: LettraApiIndisponible
+        exp_alerts: []
+      - eval_time: 12m
+        alertname: LettraApiIndisponible
+        exp_alerts:
+          - exp_labels: { severity: S1, category: availability, scope: cell, cell: mut-fr-01, job: lettra/lettra-api }
+            exp_annotations:
+              title: L'API Lettra ne répond plus dans la cellule
+              runbook_url: https://github.com/krovomi/Lettra/blob/main/deploy/runbooks/api-indisponible.md
+
+  - name: Plus aucun réplica de l'API
+    interval: 1m
+    external_labels:
+      cell: mut-fr-01
+    input_series:
+      - series: 'kube_deployment_status_replicas_available{deployment="lettra-api",namespace="lettra"}'
+        values: '2 2 0 0 0 0'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: LettraApiSansReplica
+        exp_alerts:
+          - exp_labels: { severity: S1, category: availability, scope: cell, cell: mut-fr-01, deployment: lettra-api, namespace: lettra }
+            exp_annotations:
+              title: Aucun réplica de l'API n'est disponible
+              runbook_url: https://github.com/krovomi/Lettra/blob/main/deploy/runbooks/api-indisponible.md
+
+  - name: Des dossiers actifs attendent une connexion PgBouncer
+    interval: 1m
+    external_labels:
+      cell: mut-fr-01
+    input_series:
+      - series: 'cnpg_pgbouncer_pools_cl_waiting{namespace="lettra",database="d_1"}'
+        values: '0 3 3 3 3 3 3 3'
+      - series: 'cnpg_pgbouncer_pools_cl_waiting{namespace="lettra",database="d_2"}'
+        values: '0 1 1 1 1 1 1 1'
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: DossiersActifsAuDelaDuBudget
+        exp_alerts: []
+      - eval_time: 7m
+        alertname: DossiersActifsAuDelaDuBudget
+        exp_alerts:
+          - exp_labels: { severity: S2, category: performance, scope: cell, cell: mut-fr-01, namespace: lettra }
+            exp_annotations:
+              title: Des requêtes attendent une connexion PgBouncer (dossiers actifs au-delà du budget)
+              runbook_url: https://github.com/krovomi/Lettra/blob/main/deploy/runbooks/budget-connexions.md
+
+  - name: PostgreSQL ne répond plus
+    interval: 1m
+    external_labels:
+      cell: mut-fr-01
+    input_series:
+      - series: 'cnpg_collector_up{namespace="lettra",pod="pg-a-1",cluster="pg-a"}'
+        values: '1 0 0 0 0'
+    alert_rule_test:
+      - eval_time: 4m
+        alertname: PostgreSqlIndisponible
+        exp_alerts:
+          - exp_labels: { severity: S1, category: availability, scope: cell, cell: mut-fr-01, namespace: lettra, pod: pg-a-1, cluster: pg-a }
+            exp_annotations:
+              title: Un cluster PostgreSQL de la cellule ne répond plus
+              runbook_url: https://github.com/krovomi/Lettra/blob/main/deploy/runbooks/postgresql.md
+
+  - name: Une puis deux sauvegardes manquées
+    interval: 5m
+    external_labels:
+      cell: mut-fr-01
+    input_series:
+      - series: 'cnpg_collector_last_available_backup_timestamp{namespace="lettra",pod="pg-a-1"}'
+        values: '0x700'
+    alert_rule_test:
+      - eval_time: 30h
+        alertname: SauvegardeManquee
+        exp_alerts:
+          - exp_labels: { severity: S2, category: availability, scope: cell, cell: mut-fr-01, namespace: lettra, pod: pg-a-1 }
+            exp_annotations:
+              title: La sauvegarde de la nuit est manquante
+              runbook_url: https://github.com/krovomi/Lettra/blob/main/deploy/runbooks/sauvegarde.md
+      - eval_time: 30h
+        alertname: DeuxSauvegardesManquees
+        exp_alerts: []
+      - eval_time: 52h
+        alertname: DeuxSauvegardesManquees
+        exp_alerts:
+          - exp_labels: { severity: S1, category: availability, scope: cell, cell: mut-fr-01, namespace: lettra, pod: pg-a-1 }
+            exp_annotations:
+              title: Deux sauvegardes consécutives sont manquantes
+              runbook_url: https://github.com/krovomi/Lettra/blob/main/deploy/runbooks/sauvegarde.md
+
+  - name: Disque des bases sous 10 %
+    interval: 1m
+    external_labels:
+      cell: mut-fr-01
+    input_series:
+      - series: 'kubelet_volume_stats_available_bytes{namespace="lettra",persistentvolumeclaim="pg-a-1"}'
+        values: '5x20'
+      - series: 'kubelet_volume_stats_capacity_bytes{namespace="lettra",persistentvolumeclaim="pg-a-1"}'
+        values: '100x20'
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: DisqueBasesPresquePlein
+        exp_alerts:
+          - exp_labels: { severity: S2, category: availability, scope: cell, cell: mut-fr-01, namespace: lettra, persistentvolumeclaim: pg-a-1 }
+            exp_annotations:
+              title: Moins de 10 % de disque libre pour les bases de dossiers
+              runbook_url: https://github.com/krovomi/Lettra/blob/main/deploy/runbooks/disque.md
+
+  - name: Le battement de la chaîne d'alerte est toujours là
+    interval: 1m
+    external_labels:
+      cell: mut-fr-01
+    input_series: []
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: Watchdog
+        exp_alerts:
+          - exp_labels: { severity: none, scope: cell, cell: mut-fr-01 }
+            exp_annotations:
+              title: Battement de la chaîne d'alerte de la cellule

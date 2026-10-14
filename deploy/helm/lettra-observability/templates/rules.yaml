@@ -1,0 +1,12 @@
+{{- range $path, $_ := .Files.Glob "files/rules/*.yml" }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: lettra-{{ base $path | trimSuffix ".rules.yml" }}
+  labels:
+    {{- include "lettra-observability.labels" $ | nindent 4 }}
+    release: {{ $.Values.rules.release }}
+spec:
+{{ $.Files.Get $path | indent 2 }}
+{{- end }}

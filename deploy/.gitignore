@@ -1,0 +1,6 @@
+helm/*/charts/
+.terraform/
+*.tfstate*
+.terraform.lock.hcl.bak
+local/.run/
+.terraform.lock.hcl

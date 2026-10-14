@@ -1,0 +1,14 @@
+apiVersion: v2
+name: lettra-cell
+description: Une cellule Lettra (ADR-0009, annexe E) - API, Worker et clusters PostgreSQL des dossiers derrière PgBouncer, paramétrée par taille (S, M, L, XL). Même chart pour le SaaS et le sur site.
+type: application
+version: 0.1.0
+appVersion: "phase-2"
+dependencies:
+  - name: lettra-api
+    version: 0.1.0
+    repository: file://../lettra-api
+  - name: lettra-worker
+    version: 0.1.0
+    repository: file://../lettra-worker
+    condition: lettra-worker.enabled
