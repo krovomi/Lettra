@@ -1,0 +1,69 @@
+@typeparam TItem
+@implements IDisposable
+@* Une ligne de grille. Ne se re-rend que si son élément immuable, son index ou son état change ;
+   après une saisie, la grille la met à jour seule (Update) sans re-rendre les autres lignes. *@
+<div class="lg-row @CssClass" role="row" aria-rowindex="@(Index + 2)" data-r="@Index">
+    @for (var c = 0; c < Columns.Count; c++)
+    {
+        var column = Columns[c];
+        <div class="lg-cell @(column.Numeric ? "lg-num" : null) @(column.Wide ? "lg-wide" : null)" role="gridcell" data-label="@column.Label">
+            @if (column.IsEditable)
+            {
+                <input class="lg-input" data-r="@Index" data-c="@c" value="@column.Display(_item)"
+                       readonly="@ReadOnly" aria-label="@($"{column.Label}, ligne {Index + 1}")"
+                       autocomplete="off" spellcheck="false" inputmode="@(column.Numeric ? "decimal" : "text")" />
+            }
+            else
+            {
+                <span class="lg-calc">@column.Display(_item)</span>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public TItem Item { get; set; } = default!;
+    [Parameter, EditorRequired] public int Index { get; set; }
+    [Parameter, EditorRequired] public IReadOnlyList<GridColumn<TItem>> Columns { get; set; } = default!;
+    [Parameter, EditorRequired] public object RowKey { get; set; } = default!;
+    [Parameter] public bool ReadOnly { get; set; }
+    [Parameter] public string? CssClass { get; set; }
+    [CascadingParameter] public IGridRowRegistry<TItem>? Registry { get; set; }
+
+    private TItem _item = default!;
+    private TItem? _renderedItem;
+    private int _renderedIndex = -1;
+    private bool _renderedReadOnly;
+    private string? _renderedCss;
+    private IReadOnlyList<GridColumn<TItem>>? _renderedColumns;
+
+    /// <summary>Nombre de rendus effectifs (instrumentation du POC, lu par les tests).</summary>
+    public static int RenderCount;
+
+    protected override void OnInitialized() => Registry?.Attach(RowKey, this);
+
+    protected override void OnParametersSet() => _item = Item;
+
+    /// <summary>Remplace l'élément affiché et ne re-rend que cette ligne.</summary>
+    public void Update(TItem item)
+    {
+        _item = item;
+        StateHasChanged();
+    }
+
+    protected override bool ShouldRender() =>
+        !ReferenceEquals(_renderedItem, _item) || _renderedIndex != Index || _renderedReadOnly != ReadOnly
+        || _renderedCss != CssClass || !ReferenceEquals(_renderedColumns, Columns);
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        _renderedItem = _item;
+        _renderedIndex = Index;
+        _renderedReadOnly = ReadOnly;
+        _renderedCss = CssClass;
+        _renderedColumns = Columns;
+        Interlocked.Increment(ref RenderCount);
+    }
+
+    public void Dispose() => Registry?.Detach(RowKey, this);
+}

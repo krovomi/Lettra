@@ -1,0 +1,199 @@
+@typeparam TItem
+@implements IGridContext
+@implements IGridRowRegistry<TItem>
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+@inject ShortcutRegistry Registry
+
+<div class="lg-grid @Density.CssClass()" @ref="_root" role="grid" aria-label="@AriaLabel"
+     aria-rowcount="@(Items.Count + 1)" aria-colcount="@Columns.Count" style="--lg-cols: @_template">
+    <div class="lg-viewport">
+        <div class="lg-row lg-header" role="row" aria-rowindex="1">
+            @foreach (var column in Columns)
+            {
+                <div class="lg-cell lg-head @(column.Numeric ? "lg-num" : null)" role="columnheader">@column.Label</div>
+            }
+        </div>
+        <CascadingValue TValue="IGridRowRegistry<TItem>" Value="this" IsFixed="true">
+            <Virtualize Items="_slots" ItemSize="@Density.RowHeight()" OverscanCount="12" Context="slot">
+                @{ var key = KeySelector(slot.Item); }
+                <GridRow TItem="TItem" @key="key" RowKey="key" Item="slot.Item" Index="slot.Index" Columns="Columns"
+                         ReadOnly="@(IsReadOnly?.Invoke(slot.Item) ?? false)" CssClass="@RowClass?.Invoke(slot.Item)" />
+            </Virtualize>
+        </CascadingValue>
+    </div>
+    @if (ShowPerformance)
+    {
+        <div class="lg-perf" aria-live="off"></div>
+    }
+</div>
+
+@code {
+    /// <summary>Lignes saisies ; la grille les remplace par de nouveaux enregistrements à chaque saisie.</summary>
+    [Parameter, EditorRequired] public IList<TItem> Items { get; set; } = default!;
+    [Parameter, EditorRequired] public IReadOnlyList<GridColumn<TItem>> Columns { get; set; } = default!;
+    /// <summary>Clé stable d'une ligne (son identifiant) : sans elle, une saisie recréerait la ligne et perdrait le focus.</summary>
+    [Parameter, EditorRequired] public Func<TItem, object> KeySelector { get; set; } = default!;
+    /// <summary>Commandes de la grille (F3, F4, F9…), confiées au module JS puis au registre.</summary>
+    [Parameter] public KeyboardScope? Scope { get; set; }
+    [Parameter] public Func<TItem, bool>? IsReadOnly { get; set; }
+    [Parameter] public Func<TItem, string?>? RowClass { get; set; }
+    /// <summary>Appelé après chaque saisie acceptée (ex. mise à jour incrémentale des totaux).</summary>
+    [Parameter] public EventCallback<GridItemChange<TItem>> OnItemChanged { get; set; }
+    /// <summary>Entrée ou Tab sur la dernière cellule : la page ajoute une ligne ; la grille y place le curseur.</summary>
+    [Parameter] public EventCallback EndReached { get; set; }
+    [Parameter] public bool ShowPerformance { get; set; }
+    [Parameter] public string AriaLabel { get; set; } = "Grille de saisie";
+    [CascadingParameter] public UiDensity Density { get; set; } = UiDensity.Expert;
+
+    private ElementReference _root;
+    private IJSObjectReference? _module;
+    private IJSObjectReference? _handle;
+    private DotNetObjectReference<DataEntryGrid<TItem>>? _self;
+    private IDisposable? _scopeRegistration;
+    private List<RowSlot> _slots = new();
+    private string _template = "";
+    private FocusTarget? _requestedFocus;
+    private bool _inJsCall;
+    private readonly Dictionary<object, GridRow<TItem>> _renderedRows = new();
+
+    public readonly record struct RowSlot(int Index, TItem Item);
+
+    protected override void OnInitialized()
+    {
+        if (Scope is not null) _scopeRegistration = Registry.PushScope(Scope);
+    }
+
+    protected override void OnParametersSet()
+    {
+        _template = string.Join(' ', Columns.Select(c => c.Width));
+        RebuildSlots();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        _module = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/Lettra.Poc.Grille.Ui/grid-keyboard.js");
+        _self = DotNetObjectReference.Create(this);
+        var editable = Enumerable.Range(0, Columns.Count).Where(i => Columns[i].IsEditable).ToArray();
+        var commandKeys = Scope is null ? Array.Empty<string>() : ShortcutRegistry.KeysOf(Scope);
+        _handle = await _module.InvokeAsync<IJSObjectReference>("attachGrid", _root, _self,
+            new { commandKeys, editableColumns = editable });
+    }
+
+    /// <summary>À appeler quand la page a ajouté, inséré ou supprimé des lignes.</summary>
+    public void Refresh()
+    {
+        RebuildSlots();
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Place le curseur sur une cellule. Pendant une commande clavier, la cible est renvoyée au module JS
+    /// (pas d'appel supplémentaire) ; sinon (clic, liste de choix fermée) on appelle le module.
+    /// </summary>
+    public async Task FocusCellAsync(int row, string columnKey)
+    {
+        var target = new FocusTarget(row, ColumnIndex(columnKey));
+        if (_inJsCall) { _requestedFocus = target; return; }
+        if (_handle is not null) await _handle.InvokeVoidAsync("focusCell", target.Row, target.Col);
+    }
+
+    public async Task<CommandContext> GetActiveCellAsync()
+    {
+        if (_handle is null) return CommandContext.None;
+        await _handle.InvokeVoidAsync("flush");
+        var cell = await _handle.InvokeAsync<FocusTarget>("activeCell");
+        return ToContext(cell.Row, cell.Col);
+    }
+
+    [JSInvokable]
+    public async Task<CellCommitResult> OnCellCommitted(int row, int col, string text)
+    {
+        var column = Columns[col];
+        if (row < 0 || row >= Items.Count || column.Parse is null) return new CellCommitResult(text, false);
+        var current = Items[row];
+        TItem updated;
+        try
+        {
+            updated = column.Parse(current, text);
+        }
+        catch (FormatException)
+        {
+            return new CellCommitResult(column.Display(current), false);
+        }
+        if (!EqualityComparer<TItem>.Default.Equals(current, updated))
+        {
+            Items[row] = updated;
+            _slots[row] = new RowSlot(row, updated);
+            // Seule la ligne modifiée est re-rendue ; la grille et les autres lignes ne bougent pas.
+            if (_renderedRows.TryGetValue(KeySelector(updated), out var rendered)) rendered.Update(updated);
+            await OnItemChanged.InvokeAsync(new GridItemChange<TItem>(row, current, updated));
+        }
+        return new CellCommitResult(column.Display(updated), true);
+    }
+
+    [JSInvokable]
+    public async Task<FocusTarget?> OnCommand(string chord, int row, int col)
+    {
+        return await RunFromJs(() => Registry.TryHandleAsync(KeyChord.Parse(chord), ToContext(row, col)));
+    }
+
+    [JSInvokable]
+    public async Task<FocusTarget?> OnEndReached(int col)
+    {
+        var target = await RunFromJs(() => EndReached.InvokeAsync());
+        if (target is null && Items.Count > 0)
+            target = new FocusTarget(Items.Count - 1, Enumerable.Range(0, Columns.Count).First(i => Columns[i].IsEditable));
+        return target;
+    }
+
+    private async Task<FocusTarget?> RunFromJs(Func<Task> action)
+    {
+        _inJsCall = true;
+        _requestedFocus = null;
+        try
+        {
+            await action();
+            return _requestedFocus;
+        }
+        finally
+        {
+            _inJsCall = false;
+        }
+    }
+
+    void IGridRowRegistry<TItem>.Attach(object key, GridRow<TItem> row) => _renderedRows[key] = row;
+
+    void IGridRowRegistry<TItem>.Detach(object key, GridRow<TItem> row)
+    {
+        if (_renderedRows.TryGetValue(key, out var current) && ReferenceEquals(current, row)) _renderedRows.Remove(key);
+    }
+
+    private CommandContext ToContext(int row, int col) => new(row, col >= 0 && col < Columns.Count ? Columns[col].Key : "");
+
+    private int ColumnIndex(string key)
+    {
+        for (var i = 0; i < Columns.Count; i++)
+            if (Columns[i].Key == key) return i;
+        throw new ArgumentException($"Colonne inconnue : {key}", nameof(key));
+    }
+
+    private void RebuildSlots()
+    {
+        _slots = new List<RowSlot>(Items.Count);
+        for (var i = 0; i < Items.Count; i++) _slots.Add(new RowSlot(i, Items[i]));
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _scopeRegistration?.Dispose();
+        try
+        {
+            if (_handle is not null) { await _handle.InvokeVoidAsync("dispose"); await _handle.DisposeAsync(); }
+            if (_module is not null) await _module.DisposeAsync();
+        }
+        catch (JSDisconnectedException) { }
+        _self?.Dispose();
+    }
+}

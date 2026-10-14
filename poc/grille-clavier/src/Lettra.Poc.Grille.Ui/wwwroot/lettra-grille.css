@@ -1,0 +1,235 @@
+/* Grille de saisie Lettra : densités Expert / Confort et disposition carte sur écran étroit. */
+
+:root {
+  --lg-bg: #ffffff;
+  --lg-fg: #1c2330;
+  --lg-muted: #5b6577;
+  --lg-line: #e3e7ee;
+  --lg-head-bg: #f3f5f9;
+  --lg-accent: #2459d6;
+  --lg-focus-bg: #eef3ff;
+  --lg-active-row: #f7f9fd;
+  --lg-validated: #eef8f1;
+  --lg-error-bg: #fde8e8;
+  --lg-error: #c62828;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --lg-bg: #151a22;
+    --lg-fg: #e6e9ef;
+    --lg-muted: #9aa4b5;
+    --lg-line: #2a3240;
+    --lg-head-bg: #1d2430;
+    --lg-accent: #7aa2ff;
+    --lg-focus-bg: #1f2b45;
+    --lg-active-row: #1a2029;
+    --lg-validated: #15291d;
+    --lg-error-bg: #3d1c1c;
+    --lg-error: #ff8a80;
+  }
+}
+
+.density-expert {
+  --lg-row-h: 24px;
+  --lg-font: 13px;
+  --lg-pad-x: 4px;
+}
+
+.density-confort {
+  --lg-row-h: 40px;
+  --lg-font: 15px;
+  --lg-pad-x: 10px;
+}
+
+.lg-grid {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  font-size: var(--lg-font);
+  color: var(--lg-fg);
+  background: var(--lg-bg);
+  border: 1px solid var(--lg-line);
+}
+
+.lg-viewport {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: var(--lg-bg);   /* fond opaque : défilement composité, sans repeindre la grille */
+  will-change: transform;
+}
+
+.lg-row {
+  display: grid;
+  grid-template-columns: var(--lg-cols);
+  box-sizing: border-box;
+  height: var(--lg-row-h);
+  min-width: max-content;
+  border-bottom: 1px solid var(--lg-line);
+  /* Mesuré au POC : divise par 7 le temps de peinture en défilement (une ligne ne repeint qu'elle-même). */
+  contain: layout paint style;
+}
+
+.lg-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--lg-head-bg);
+  font-weight: 600;
+  color: var(--lg-muted);
+}
+
+.lg-cell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  border-right: 1px solid var(--lg-line);
+}
+
+.lg-head {
+  padding: 0 var(--lg-pad-x);
+  white-space: nowrap;
+}
+
+.lg-num { justify-content: flex-end; }
+
+.lg-input,
+.lg-calc {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: 0 var(--lg-pad-x);
+  font: inherit;
+  color: inherit;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lg-calc { display: flex; align-items: center; justify-content: flex-end; font-variant-numeric: tabular-nums; }
+
+.lg-input {
+  border: 0;
+  background: transparent;
+  outline: none;
+}
+
+.lg-num .lg-input { text-align: right; font-variant-numeric: tabular-nums; }
+
+.lg-input:focus {
+  outline: 2px solid var(--lg-accent);
+  outline-offset: -2px;
+  background: var(--lg-focus-bg);
+}
+
+.lg-input[readonly] { color: var(--lg-muted); }
+.lg-row.lg-active { background: var(--lg-active-row); }
+.lg-row.lg-validee { background: var(--lg-validated); }
+.lg-input.lg-error { background: var(--lg-error-bg); outline-color: var(--lg-error); }
+
+.lg-perf {
+  padding: 4px 8px;
+  border-top: 1px solid var(--lg-line);
+  font: 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: var(--lg-muted);
+}
+
+/* Écran étroit (téléphone, tablette en portrait) : chaque ligne devient une carte, mêmes cellules,
+   même ordre de navigation. Virtualize mesure la hauteur réelle, la carte peut donc être plus haute. */
+@container (max-width: 720px) {
+  .lg-header { display: none; }
+  .lg-row {
+    grid-template-columns: 1fr 1fr;
+    height: auto;
+    min-width: 0;
+    gap: 6px 12px;
+    padding: 10px 12px;
+    border-bottom: 6px solid var(--lg-head-bg);
+  }
+  .lg-cell {
+    flex-direction: column;
+    align-items: stretch;
+    border-right: 0;
+  }
+  .lg-cell::before {
+    content: attr(data-label);
+    font-size: 12px;
+    color: var(--lg-muted);
+  }
+  .lg-wide { grid-column: 1 / -1; }
+  .lg-input, .lg-calc { height: 44px; border: 1px solid var(--lg-line); border-radius: 6px; }
+  .lg-calc { border-style: dashed; }
+  .lg-num .lg-input, .lg-calc { text-align: right; }
+}
+
+/* Barre de touches de fonction */
+.lg-fkeys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  background: var(--lg-head-bg);
+  border: 1px solid var(--lg-line);
+  border-bottom: 0;
+}
+
+.lg-fkey {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 2px 8px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--lg-fg);
+  background: var(--lg-bg);
+  border: 1px solid var(--lg-line);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.lg-fkey:hover { border-color: var(--lg-accent); }
+.lg-fkey kbd { font: 600 12px ui-monospace, Menlo, Consolas, monospace; color: var(--lg-accent); }
+.density-confort .lg-fkey { min-height: 44px; font-size: 15px; }
+
+/* Liste de choix (F4) et recherche (F3) */
+.lg-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: start center;
+  padding: 10vh 16px 16px;
+  background: rgb(0 0 0 / 0.25);
+}
+
+.lg-dialog {
+  width: min(640px, 100%);
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--lg-bg);
+  color: var(--lg-fg);
+  border: 1px solid var(--lg-line);
+  border-radius: 8px;
+  box-shadow: 0 12px 40px rgb(0 0 0 / 0.25);
+}
+
+.lg-dialog h2 { margin: 0; padding: 10px 12px 4px; font-size: 15px; }
+.lg-dialog input {
+  margin: 6px 12px;
+  padding: 6px 8px;
+  font: inherit;
+  color: inherit;
+  background: var(--lg-bg);
+  border: 1px solid var(--lg-line);
+  border-radius: 4px;
+}
+.lg-options { margin: 0; padding: 4px 0; overflow: auto; list-style: none; }
+.lg-options li { padding: 4px 12px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lg-options li[aria-selected="true"] { background: var(--lg-focus-bg); outline: 1px solid var(--lg-accent); outline-offset: -1px; }
+.lg-dialog .lg-hint { padding: 6px 12px 10px; font-size: 12px; color: var(--lg-muted); }
