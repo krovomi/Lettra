@@ -1,0 +1,150 @@
+@* Recherche dans l'annuaire SIRENE pour pré-remplir un client ou un fournisseur. Appelée seulement à la
+   demande ; hors ligne ou annuaire indisponible, un message s'affiche et la saisie manuelle reste possible. *@
+@inject IDirectoryGateway DirectoryGateway
+@inject IStringLocalizer<SharedResource> L
+
+<div class="lettra-lookup" role="search">
+    <label for="@($"{Id}-query")">@L["CompanyLookup.Label"]</label>
+    <div class="lettra-lookup-row">
+        <input id="@($"{Id}-query")" type="search" value="@_query" autocomplete="off"
+               @oninput="OnInput" @onkeydown="OnKeyDownAsync"
+               role="combobox" aria-expanded="@(_results.Count > 0 ? "true" : "false")" aria-controls="@($"{Id}-results")"
+               aria-activedescendant="@(_highlight >= 0 && _highlight < _results.Count ? $"{Id}-result-{_highlight}" : null)" />
+        <button type="button" class="lettra-lookup-search" @onclick="SearchAsync" disabled="@_busy">@L["CompanyLookup.Search"]</button>
+    </div>
+    <p class="lettra-muted">@L["CompanyLookup.Hint"]</p>
+
+    @if (_error is not null)
+    {
+        <p class="validation-message lettra-lookup-error" role="alert">@L.Error(_error)</p>
+    }
+    else if (_searched && _results.Count == 0)
+    {
+        <p role="status">@L["CompanyLookup.NoResult"]</p>
+    }
+
+    @if (_results.Count > 0)
+    {
+        <ul id="@($"{Id}-results")" role="listbox" aria-label="@L["CompanyLookup.Results"]">
+            @for (int i = 0; i < _results.Count; i++)
+            {
+                int index = i;
+                CompanySearchResult company = _results[i];
+                <li id="@($"{Id}-result-{i}")" role="option" aria-selected="@(i == _highlight ? "true" : "false")"
+                    @onclick="() => SelectAsync(index)">
+                    <strong>@company.Name</strong>
+                    · @string.Format(CultureInfo.CurrentCulture, L["CompanyLookup.Siren"], company.Siren)
+                    @if (!string.IsNullOrEmpty(company.City))
+                    {
+                        <text> · @company.PostalCode @company.City</text>
+                    }
+                    @if (!company.IsActive)
+                    {
+                        <span class="lettra-badge">@L["CompanyLookup.Ceased"]</span>
+                    }
+                </li>
+            }
+        </ul>
+    }
+</div>
+
+@code {
+    /// <summary>Préfixe des identifiants HTML (une recherche par formulaire).</summary>
+    [Parameter] public string Id { get; set; } = "company-lookup";
+
+    /// <summary>Entreprise choisie : la page pré-remplit son formulaire, l'utilisateur relit et valide.</summary>
+    [Parameter] public EventCallback<CompanySearchResult> OnSelected { get; set; }
+
+    private const int MinLength = 3;
+    private const int MaxResults = 10;
+
+    private string _query = string.Empty;
+    private IReadOnlyList<CompanySearchResult> _results = [];
+    private string? _error;
+    private int _highlight = -1;
+    private bool _busy;
+    private bool _searched;
+
+    private void OnInput(ChangeEventArgs e) => _query = e.Value?.ToString() ?? string.Empty;
+
+    private async Task OnKeyDownAsync(KeyboardEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case "ArrowDown":
+                _highlight = Math.Min(_highlight + 1, _results.Count - 1);
+                break;
+            case "ArrowUp":
+                _highlight = Math.Max(_highlight - 1, _results.Count > 0 ? 0 : -1);
+                break;
+            case "Enter":
+                if (_highlight >= 0 && _highlight < _results.Count)
+                {
+                    await SelectAsync(_highlight);
+                }
+                else
+                {
+                    await SearchAsync();
+                }
+
+                break;
+            case "Escape":
+                Clear();
+                break;
+        }
+    }
+
+    private async Task SearchAsync()
+    {
+        _error = null;
+        _searched = false;
+        _results = [];
+        _highlight = -1;
+        string query = _query.Trim();
+        if (query.Length < MinLength)
+        {
+            _error = ErrorCodes.Directory.QueryTooShort;
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            OperationResult<CompanySearchResponse> result = await DirectoryGateway.SearchCompaniesAsync(query, MaxResults, CancellationToken.None);
+            if (result.IsSuccess)
+            {
+                _results = result.Value!.Items;
+                _highlight = _results.Count > 0 ? 0 : -1;
+                _searched = true;
+            }
+            else
+            {
+                _error = result.Errors[0].Code;
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task SelectAsync(int index)
+    {
+        if (index < 0 || index >= _results.Count)
+        {
+            return;
+        }
+
+        CompanySearchResult company = _results[index];
+        Clear();
+        await OnSelected.InvokeAsync(company);
+    }
+
+    private void Clear()
+    {
+        _results = [];
+        _highlight = -1;
+        _searched = false;
+        _error = null;
+    }
+}

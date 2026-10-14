@@ -1,8 +1,11 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Lettra.Contracts.Common;
+using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Customers;
 using Lettra.Contracts.Identity;
+using Lettra.Contracts.Directory;
+using Lettra.Contracts.Suppliers;
 
 namespace Lettra.Contracts.Serialization;
 
@@ -18,4 +21,14 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(SessionResponse))]
 [JsonSerializable(typeof(CreateLocalAccountRequest))]
 [JsonSerializable(typeof(UnlockLocalSessionRequest))]
+[JsonSerializable(typeof(CreateSupplierRequest))]
+[JsonSerializable(typeof(SupplierResponse))]
+[JsonSerializable(typeof(PagedResponse<SupplierSummary>))]
+[JsonSerializable(typeof(SaveCatalogItemRequest))]
+[JsonSerializable(typeof(SetCatalogItemArchivedRequest))]
+[JsonSerializable(typeof(CatalogItemResponse))]
+[JsonSerializable(typeof(PagedResponse<CatalogItemSummary>))]
+[JsonSerializable(typeof(CatalogReferenceData))]
+[JsonSerializable(typeof(CompanySearchResponse))]
+[JsonSerializable(typeof(VatNumberCheckResponse))]
 public sealed partial class ContractsJsonContext : JsonSerializerContext;

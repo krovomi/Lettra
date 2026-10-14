@@ -98,27 +98,15 @@ public sealed class Customer : AggregateRoot<CustomerId>
             errors.Add(CustomerErrors.NameTooLong);
         }
 
-        Siren? siren = Optional(draft.Siren, SharedKernel.Siren.Create, nameof(Siren), errors);
-        Siret? siret = Optional(draft.Siret, SharedKernel.Siret.Create, nameof(Siret), errors);
-        VatNumber? vat = Optional(draft.VatNumber, SharedKernel.VatNumber.Create, nameof(VatNumber), errors);
-        Email? email = Optional(draft.Email, SharedKernel.Email.Create, nameof(Email), errors);
+        PartyIdentification ids = PartyIdentification.Read(draft.Siren, draft.Siret, draft.VatNumber, CustomerErrors.SiretSirenMismatch, errors);
+        Siren? siren = ids.Siren;
+        Siret? siret = ids.Siret;
+        VatNumber? vat = ids.VatNumber;
+        Email? email = PartyIdentification.Optional(draft.Email, SharedKernel.Email.Create, nameof(Email), errors);
 
         Result<PostalAddress> address = PostalAddress.Create(
             draft.AddressLine1, draft.AddressLine2, draft.PostalCode, draft.City, draft.CountryCode);
         errors.AddRange(address.Errors);
-
-        // Le SIRET porte le SIREN : on le déduit, ou on vérifie la cohérence.
-        if (siret is not null)
-        {
-            if (siren is null)
-            {
-                siren = siret.Siren;
-            }
-            else if (siren != siret.Siren)
-            {
-                errors.Add(CustomerErrors.SiretSirenMismatch);
-            }
-        }
 
         if (draft.Kind == CustomerKind.Individual && (siren is not null || vat is not null))
         {
@@ -128,7 +116,7 @@ public sealed class Customer : AggregateRoot<CustomerId>
         // Le pays se lit indépendamment du reste de l'adresse : un code postal faux ne doit pas masquer l'absence de SIREN.
         Result<CountryCode> country = CountryCode.Create(string.IsNullOrWhiteSpace(draft.CountryCode) ? CountryCode.France.Value : draft.CountryCode);
         bool isFrench = country.IsSuccess && country.Value.IsFrance;
-        if (draft.Kind == CustomerKind.Company && isFrench && siren is null && !HasError(errors, nameof(Siren), nameof(Siret)))
+        if (draft.Kind == CustomerKind.Company && isFrench && siren is null && !PartyIdentification.HasIdentificationError(errors))
         {
             errors.Add(CustomerErrors.SirenRequired);
         }
@@ -142,25 +130,4 @@ public sealed class Customer : AggregateRoot<CustomerId>
         customer.Raise(new CustomerCreated(id, now));
         return customer;
     }
-
-    private static T? Optional<T>(string? raw, Func<string?, Result<T>> factory, string target, List<Error> errors)
-        where T : class
-    {
-        if (string.IsNullOrWhiteSpace(raw))
-        {
-            return null;
-        }
-
-        Result<T> result = factory(raw);
-        if (result.IsSuccess)
-        {
-            return result.Value;
-        }
-
-        errors.AddRange(result.Errors.Select(e => e.For(target)));
-        return null;
-    }
-
-    private static bool HasError(List<Error> errors, params string[] targets) =>
-        errors.Exists(e => e.Target is not null && targets.Contains(e.Target));
 }

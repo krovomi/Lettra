@@ -40,24 +40,10 @@ internal sealed class InProcessCustomersGateway(IServiceScopeFactory scopes) : I
             return result.ToOperationResult();
         }, cancellationToken);
 
-    private async Task<OperationResult<T>> RunAsync<T>(
+    private Task<OperationResult<T>> RunAsync<T>(
         Func<IServiceProvider, DossierId, CancellationToken, Task<OperationResult<T>>> operation,
-        CancellationToken cancellationToken)
-    {
-        AsyncServiceScope scope = scopes.CreateAsyncScope();
-        await using (scope.ConfigureAwait(false))
-        {
-            Result initialized = await scope.ServiceProvider.GetRequiredService<ITenantInitializer>()
-                .InitializeAsync(cancellationToken).ConfigureAwait(false);
-            if (initialized.IsFailure)
-            {
-                return OperationResult<T>.Failure(initialized.Errors.ToErrorDetails());
-            }
-
-            DossierId dossier = scope.ServiceProvider.GetRequiredService<ITenantContext>().Current.DossierId;
-            return await operation(scope.ServiceProvider, dossier, cancellationToken).ConfigureAwait(false);
-        }
-    }
+        CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, operation, cancellationToken);
 }
 
 /// <summary>Le dossier demandé est celui ouvert dans l'application.</summary>
@@ -74,6 +60,9 @@ public static class DependencyInjection
         services.AddScoped<IRequestedDossierSource, SelectionDossierSource>();
         services.AddSingleton<ICustomersGateway, InProcessCustomersGateway>();
         services.AddSingleton<ISessionGateway, InProcessSessionGateway>();
+        services.AddSingleton<ISuppliersGateway, InProcessSuppliersGateway>();
+        services.AddSingleton<ICatalogGateway, InProcessCatalogGateway>();
+        services.AddSingleton<IDirectoryGateway, InProcessDirectoryGateway>();
         return services;
     }
 }

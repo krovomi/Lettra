@@ -19,6 +19,8 @@ public static class ContractMapper
         [nameof(PostalAddress.Line1)] = nameof(CreateCustomerRequest.AddressLine1),
         [nameof(PostalAddress.Line2)] = nameof(CreateCustomerRequest.AddressLine2),
         [nameof(PostalAddress.Country)] = nameof(CreateCustomerRequest.CountryCode),
+        ["VatRate"] = "VatRateCode",
+        ["Unit"] = "UnitCode",
     };
 
     public static CreateCustomerCommand ToCommand(this CreateCustomerRequest request, DossierId dossier)

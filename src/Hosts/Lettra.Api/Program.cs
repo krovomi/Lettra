@@ -47,6 +47,9 @@ RouteGroupBuilder api = app.MapGroup("/api/v1")
     .AddEndpointFilter<CsrfEndpointFilter>()
     .AddEndpointFilter<TenantEndpointFilter>();
 api.MapCustomers();
+api.MapSuppliers();
+api.MapCatalog();
+api.MapDirectory();
 
 app.MapLettraBff();
 app.MapHealthChecks("/health");
