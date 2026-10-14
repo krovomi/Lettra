@@ -1,0 +1,8 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Lettra.Ai.Abstractions\Lettra.Ai.Abstractions.csproj" />
+    <ProjectReference Include="..\Lettra.Ai.Privacy\Lettra.Ai.Privacy.csproj" />
+  </ItemGroup>
+
+</Project>

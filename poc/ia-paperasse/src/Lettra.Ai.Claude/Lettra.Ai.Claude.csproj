@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Anthropic" Version="12.56.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Lettra.Ai.Abstractions\Lettra.Ai.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

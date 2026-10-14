@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Lettra.Compliance\Lettra.Compliance.csproj" />
+    <ProjectReference Include="..\..\src\Lettra.Ai.Abstractions\Lettra.Ai.Abstractions.csproj" />
+    <ProjectReference Include="..\..\src\Lettra.Ai.Skills\Lettra.Ai.Skills.csproj" />
+    <ProjectReference Include="..\..\src\Lettra.Ai.Privacy\Lettra.Ai.Privacy.csproj" />
+    <ProjectReference Include="..\..\src\Lettra.Poc.Application\Lettra.Poc.Application.csproj" />
+    <ProjectReference Include="..\..\src\Lettra.Ai.Tools\Lettra.Ai.Tools.csproj" />
+    <ProjectReference Include="..\..\src\Lettra.Ai.Orchestration\Lettra.Ai.Orchestration.csproj" />
+    <ProjectReference Include="..\..\src\Lettra.Ai.Claude\Lettra.Ai.Claude.csproj" />
+    <ProjectReference Include="..\..\src\Lettra.Ai.Local\Lettra.Ai.Local.csproj" />
+    <ProjectReference Include="..\..\src\Lettra.Ai.Stub\Lettra.Ai.Stub.csproj" />
+    <ProjectReference Include="..\..\src\Lettra.Ai.Evals\Lettra.Ai.Evals.csproj" />
+    <ProjectReference Include="..\..\src\Lettra.Ai.PocApi\Lettra.Ai.PocApi.csproj" />
+    <ProjectReference Include="..\..\src\Lettra.Ai.Composition\Lettra.Ai.Composition.csproj" />
+  </ItemGroup>
+
+</Project>

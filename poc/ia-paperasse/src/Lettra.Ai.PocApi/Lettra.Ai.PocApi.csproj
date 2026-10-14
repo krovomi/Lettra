@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Lettra.Ai.Composition\Lettra.Ai.Composition.csproj" />
+  </ItemGroup>
+
+</Project>

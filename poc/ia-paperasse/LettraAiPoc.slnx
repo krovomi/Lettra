@@ -1,0 +1,21 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Lettra.Ai.Abstractions/Lettra.Ai.Abstractions.csproj" />
+    <Project Path="src/Lettra.Ai.Claude/Lettra.Ai.Claude.csproj" />
+    <Project Path="src/Lettra.Ai.Composition/Lettra.Ai.Composition.csproj" />
+    <Project Path="src/Lettra.Ai.Evals/Lettra.Ai.Evals.csproj" />
+    <Project Path="src/Lettra.Ai.Local/Lettra.Ai.Local.csproj" />
+    <Project Path="src/Lettra.Ai.Orchestration/Lettra.Ai.Orchestration.csproj" />
+    <Project Path="src/Lettra.Ai.PocApi/Lettra.Ai.PocApi.csproj" />
+    <Project Path="src/Lettra.Ai.Privacy/Lettra.Ai.Privacy.csproj" />
+    <Project Path="src/Lettra.Ai.Skills/Lettra.Ai.Skills.csproj" />
+    <Project Path="src/Lettra.Ai.Stub/Lettra.Ai.Stub.csproj" />
+    <Project Path="src/Lettra.Ai.Tools/Lettra.Ai.Tools.csproj" />
+    <Project Path="src/Lettra.Compliance/Lettra.Compliance.csproj" />
+    <Project Path="src/Lettra.Poc.Application/Lettra.Poc.Application.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Lettra.Ai.Tests/Lettra.Ai.Tests.csproj" />
+    <Project Path="tests/Lettra.Compliance.Tests/Lettra.Compliance.Tests.csproj" />
+  </Folder>
+</Solution>
