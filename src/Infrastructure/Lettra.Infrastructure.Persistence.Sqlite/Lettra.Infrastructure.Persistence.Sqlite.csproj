@@ -1,12 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Provider Sqlite : configurateur et migrations propres à ce provider. -->
+  <!-- Provider Sqlite : configurateur, migrations, chiffrement (SQLite3 Multiple Ciphers) et registre
+       local des dossiers du poste (modes 1 et 4). -->
   <ItemGroup>
     <ProjectReference Include="..\Lettra.Infrastructure.Persistence\Lettra.Infrastructure.Persistence.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <!-- SQLite3 Multiple Ciphers (MIT) à la place du SQLite non chiffré : base de dossier chiffrée par sa DEK. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.Core" />
+    <PackageReference Include="SQLite3MC.PCLRaw.bundle" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
   </ItemGroup>
 

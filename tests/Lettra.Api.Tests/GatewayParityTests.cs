@@ -3,6 +3,8 @@ using Lettra.Application.Abstractions.Identity;
 using Lettra.Bootstrap;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
+using Lettra.Infrastructure.Persistence.Security;
+using Lettra.Infrastructure.Persistence.Sqlite.Local;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Gateway.Http;
 using Lettra.UI.Gateway.InProcess;
@@ -33,18 +35,22 @@ public sealed class GatewayParityTests(LettraApiFactory factory) : IClassFixture
         return services.BuildServiceProvider();
     }
 
-    private ServiceProvider InProcessGateway(Guid dossier)
+    /// <summary>Le poste isolé (mode 1) : registre local, premier dossier créé au démarrage, base SQLite chiffrée.</summary>
+    private ServiceProvider InProcessGateway(Guid? dossier)
     {
-        Dictionary<string, string?> settings = LettraApiFactory.DossierSettings(Path.Combine(_folder, "poste.db"));
-        settings[LettraBootstrap.DeploymentModeKey] = "IsolatedDesktop";
-        settings["Lettra:LocalIdentity:StorePath"] = Path.Combine(_folder, "compte-local.json");
-        settings["Lettra:LocalIdentity:Pbkdf2Iterations"] = "1000";
-        IConfiguration configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
+        IConfiguration configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            [LettraBootstrap.DeploymentModeKey] = "IsolatedDesktop",
+            [LettraBootstrap.LocalDataDirectoryKey] = _folder,
+            ["Lettra:LocalIdentity:StorePath"] = Path.Combine(_folder, "compte-local.json"),
+            ["Lettra:LocalIdentity:Pbkdf2Iterations"] = "1000",
+        }).Build();
 
         ServiceCollection services = new();
         services.AddLogging();
         services.AddLettra(configuration);
-        services.AddSingleton<IDossierSelection>(new FixedDossierSelection(dossier));
+        services.AddSingleton<IKekStore, InMemoryKekStore>();
+        services.AddSingleton<IDossierSelection>(sp => new FixedDossierSelection(dossier ?? sp.GetRequiredService<LocalDossierRegistry>().ActiveDossierId));
         services.AddInProcessGateways();
         ServiceProvider provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
 
@@ -59,6 +65,7 @@ public sealed class GatewayParityTests(LettraApiFactory factory) : IClassFixture
             accounts.UnlockAsync("phrase secrète de test", default).AsTask().GetAwaiter().GetResult().IsSuccess.Should().BeTrue();
         }
 
+        provider.InitializeLettraAsync(configuration, CancellationToken.None).GetAwaiter().GetResult();
         return provider;
     }
 
@@ -67,7 +74,7 @@ public sealed class GatewayParityTests(LettraApiFactory factory) : IClassFixture
     private ServiceProvider Gateway(string transport, Guid? dossier = null) =>
         transport == "http"
             ? HttpGateway(dossier ?? LettraApiFactory.DossierId)
-            : InProcessGateway(dossier ?? LettraApiFactory.DossierId);
+            : InProcessGateway(dossier);
 
     [Theory]
     [MemberData(nameof(Transports))]

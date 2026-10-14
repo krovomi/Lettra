@@ -40,6 +40,7 @@ public sealed class LettraApiFactory : WebApplicationFactory<Program>
 
     public static Dictionary<string, string?> DossierSettings(string database) => new()
     {
+        ["ConnectionStrings:Catalog"] = $"Data Source={database}.catalog;Pooling=False",
         ["Lettra:Dossiers:0:Id"] = DossierId.ToString(),
         ["Lettra:Dossiers:0:OrganisationId"] = CabinetId.ToString(),
         ["Lettra:Dossiers:0:Provider"] = "Sqlite",

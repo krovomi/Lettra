@@ -2,6 +2,7 @@ using Lettra.Application.Abstractions.Persistence;
 using Lettra.Application.Mapping;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
+using Lettra.Domain.Common;
 using Lettra.Domain.Parties;
 using Lettra.Domain.SharedKernel;
 using Lettra.Infrastructure.Persistence.Tenancy;
@@ -65,9 +66,9 @@ internal sealed class UnitOfWork(TenantDbSession session) : IUnitOfWork
 
         // Phase 0 : pas encore d'outbox, les événements sont simplement vidés après écriture.
         // L'outbox (faits et intentions, ADR-0007) arrive avec la synchronisation.
-        foreach (Customer customer in db.ChangeTracker.Entries<Customer>().Select(e => e.Entity))
+        foreach (IHasDomainEvents aggregate in db.ChangeTracker.Entries<IHasDomainEvents>().Select(e => e.Entity))
         {
-            customer.ClearDomainEvents();
+            aggregate.ClearDomainEvents();
         }
 
         return written;

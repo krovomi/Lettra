@@ -1,0 +1,12 @@
+# Image de Lettra.Worker (migrations des bases de dossiers par vagues, jobs de fond). Construite et signée par la CI.
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+COPY . .
+RUN dotnet publish src/Hosts/Lettra.Worker/Lettra.Worker.csproj -c Release -o /app /p:CI=true
+
+# Image d'exécution minimale (chiseled, avec ICU pour les formats français) : sans shell, utilisateur non root.
+FROM mcr.microsoft.com/dotnet/runtime:10.0-noble-chiseled-extra AS runtime
+WORKDIR /app
+COPY --from=build /app .
+USER $APP_UID
+ENTRYPOINT ["dotnet", "Lettra.Worker.dll"]

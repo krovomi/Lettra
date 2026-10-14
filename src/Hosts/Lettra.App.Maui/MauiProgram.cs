@@ -1,11 +1,14 @@
 using System.Globalization;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Bootstrap;
+using Lettra.Infrastructure.Persistence.Security;
+using Lettra.Infrastructure.Persistence.Sqlite.Local;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Gateway.InProcess;
 using Lettra.UI.Shared;
 using Lettra.UI.Shared.Localization;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Hosting;
 using Microsoft.Maui.Storage;
@@ -13,14 +16,12 @@ using Microsoft.Maui.Storage;
 namespace Lettra.App.Maui;
 
 /// <summary>
-/// Composition du poste isolé (mode 1). Phase 0 : un dossier local de démonstration, base SQLite dans
-/// le dossier de données de l'application. Le registre local des dossiers (fichier .lettra, clé dans
-/// le coffre de l'OS, SQLCipher) arrive en phase 2.
+/// Composition du poste isolé (mode 1) : registre local des dossiers dans le dossier de données de l'application,
+/// une base SQLite chiffrée (SQLite3 Multiple Ciphers) par dossier, clé du cabinet dans le coffre de l'OS.
+/// Au premier lancement, le cabinet local et un premier dossier sont créés.
 /// </summary>
 public static class MauiProgram
 {
-    private static readonly Guid DemoDossierId = new("0199e3a0-0000-7000-8000-00000000d051");
-
     public static MauiApp CreateMauiApp()
     {
         MauiAppBuilder builder = MauiApp.CreateBuilder();
@@ -29,18 +30,15 @@ public static class MauiProgram
 
         LettraCultures.Apply(LettraCultures.Resolve(CultureInfo.InstalledUICulture.Name));
 
-        string database = Path.Combine(FileSystem.AppDataDirectory, $"dossier-{DemoDossierId}.db");
         builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
         {
             [LettraBootstrap.DeploymentModeKey] = nameof(DeploymentMode.IsolatedDesktop),
-            ["Lettra:Dossiers:0:Id"] = DemoDossierId.ToString(),
-            ["Lettra:Dossiers:0:Provider"] = nameof(DatabaseProvider.Sqlite),
-            ["Lettra:Dossiers:0:ConnectionSecretRef"] = "config:LocalDossier",
-            ["ConnectionStrings:LocalDossier"] = $"Data Source={database}",
+            [LettraBootstrap.LocalDataDirectoryKey] = Path.Combine(FileSystem.AppDataDirectory, "dossiers"),
         });
 
         builder.Services.AddLettra(builder.Configuration);
-        builder.Services.AddSingleton<IDossierSelection>(new FixedDossierSelection(DemoDossierId));
+        builder.Services.AddSingleton<IKekStore, SecureStorageKekStore>();
+        builder.Services.AddSingleton<IDossierSelection, ActiveDossierSelection>();
         builder.Services.AddInProcessGateways();
         builder.Services.AddLettraUi();
 
@@ -49,6 +47,15 @@ public static class MauiProgram
         builder.Logging.AddDebug();
 #endif
 
-        return builder.Build();
+        MauiApp app = builder.Build();
+        // Avant le premier écran : cabinet local, premier dossier, dossier ouvert.
+        app.Services.InitializeLettraAsync(builder.Configuration, CancellationToken.None).GetAwaiter().GetResult();
+        return app;
+    }
+
+    /// <summary>Le dossier ouvert sur le poste, tenu par le registre local.</summary>
+    private sealed class ActiveDossierSelection(LocalDossierRegistry registry) : IDossierSelection
+    {
+        public Guid? CurrentDossierId => registry.ActiveDossierId;
     }
 }

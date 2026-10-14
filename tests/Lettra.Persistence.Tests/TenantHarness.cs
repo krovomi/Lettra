@@ -30,10 +30,12 @@ internal sealed class TenantHarness : IAsyncDisposable
         _root = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
     }
 
-    public DossierId AddDossier(DatabaseProvider provider, string connectionString)
+    public IServiceProvider Services => _root;
+
+    public DossierId AddDossier(DatabaseProvider provider, string connectionString, string? schema = null)
     {
         DossierId id = new(Guid.CreateVersion7());
-        _dossiers[id] = (new TenantDescriptor(id, new OrganisationId(Guid.CreateVersion7()), provider, $"test:{id}"), connectionString);
+        _dossiers[id] = (new TenantDescriptor(id, new OrganisationId(Guid.CreateVersion7()), provider, $"test:{id}", schema), connectionString);
         return id;
     }
 

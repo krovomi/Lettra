@@ -119,6 +119,13 @@ jobs:
       contents: read
       packages: write
       id-token: write # signature sans clé (Sigstore, OIDC GitHub)
+    strategy:
+      matrix:
+        include:
+          - image: lettra-api
+            dockerfile: Dockerfile
+          - image: lettra-worker
+            dockerfile: Dockerfile.worker
     steps:
       - uses: actions/checkout@v5
       - uses: docker/setup-buildx-action@v3
@@ -127,8 +134,9 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: ${{ matrix.dockerfile }}
           push: false
-          tags: lettra-api:ci
+          tags: ${{ matrix.image }}:ci
       - uses: docker/login-action@v3
         if: github.event_name == 'push'
         with:
@@ -141,12 +149,13 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: ${{ matrix.dockerfile }}
           push: true
           sbom: true
           provenance: mode=max
-          tags: ghcr.io/${{ github.repository_owner }}/lettra-api:${{ github.sha }}
+          tags: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:${{ github.sha }}
       - uses: sigstore/cosign-installer@v3
         if: github.event_name == 'push'
       - name: Signature de l'image
         if: github.event_name == 'push'
-        run: cosign sign --yes ghcr.io/${{ github.repository_owner }}/lettra-api@${{ steps.push.outputs.digest }}
+        run: cosign sign --yes ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}@${{ steps.push.outputs.digest }}
