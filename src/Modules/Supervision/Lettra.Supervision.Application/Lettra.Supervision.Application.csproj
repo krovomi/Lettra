@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Cas d'usage du module Supervision (PrendreEnCharge, Resoudre…) et ses ports
-       (IAlertSource, INotificationChannel, IOnCallSchedule, IAlertTriageAgent). -->
+  <!-- Cas d'usage du module Supervision (prendre en charge, changer la gravité, résoudre), ingestion des
+       signaux, routage par rôles et escalade ; ports : IAlertStore, INotificationChannel, IOnCallSchedule,
+       IRoleDirectory, IAlertTriageAgent (Vigie). -->
   <ItemGroup>
     <ProjectReference Include="..\..\..\Core\Lettra.Application\Lettra.Application.csproj" />
     <ProjectReference Include="..\Lettra.Supervision.Domain\Lettra.Supervision.Domain.csproj" />
@@ -9,6 +10,11 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lettra.Supervision.Tests" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Values.alertmanager.configSecretName }}
+  labels:
+    {{- include "lettra-observability.labels" . | nindent 4 }}
+type: Opaque
+stringData:
+  alertmanager.yaml: |-
+{{ .Files.Get "files/alertmanager.yml" | indent 4 }}

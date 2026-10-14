@@ -1,0 +1,28 @@
+{
+  "title": "Lettra · Objectifs de service de la cellule",
+  "uid": "lettra-slo",
+  "schemaVersion": 39,
+  "tags": ["lettra", "slo"],
+  "time": { "from": "now-24h", "to": "now" },
+  "panels": [
+    { "type": "stat", "title": "Disponibilité (30 j, cible 99,9 %)", "gridPos": { "x": 0, "y": 0, "w": 6, "h": 5 },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "decimals": 3 } },
+      "targets": [{ "expr": "1 - (sum(increase(http_server_request_duration_seconds_count{job=\"lettra/lettra-api\",http_response_status_code=~\"5..\"}[30d])) / clamp_min(sum(increase(http_server_request_duration_seconds_count{job=\"lettra/lettra-api\"}[30d])), 1))" }] },
+    { "type": "stat", "title": "Budget d'erreur restant (30 j)", "gridPos": { "x": 6, "y": 0, "w": 6, "h": 5 },
+      "fieldConfig": { "defaults": { "unit": "percentunit" } },
+      "targets": [{ "expr": "1 - (sum(increase(http_server_request_duration_seconds_count{job=\"lettra/lettra-api\",http_response_status_code=~\"5..\"}[30d])) / clamp_min(sum(increase(http_server_request_duration_seconds_count{job=\"lettra/lettra-api\"}[30d])), 1)) / 0.001" }] },
+    { "type": "timeseries", "title": "Taux d'erreur 5xx (5 min et 1 h)", "gridPos": { "x": 0, "y": 5, "w": 12, "h": 8 },
+      "fieldConfig": { "defaults": { "unit": "percentunit" } },
+      "targets": [{ "expr": "lettra:api_erreurs:ratio_rate5m", "legendFormat": "5 min" }, { "expr": "lettra:api_erreurs:ratio_rate1h", "legendFormat": "1 h" }] },
+    { "type": "timeseries", "title": "Latence p95 des lectures (cible 300 ms)", "gridPos": { "x": 12, "y": 0, "w": 12, "h": 7 },
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "targets": [{ "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{job=\"lettra/lettra-api\",http_request_method=\"GET\"}[5m])))", "legendFormat": "p95" }] },
+    { "type": "timeseries", "title": "Cas d'usage par issue", "gridPos": { "x": 12, "y": 7, "w": 12, "h": 6 },
+      "targets": [{ "expr": "sum by (lettra_use_case, lettra_outcome) (rate(lettra_use_case_count_total[5m]))", "legendFormat": "{{lettra_use_case}} · {{lettra_outcome}}" }] },
+    { "type": "timeseries", "title": "PgBouncer : clients en attente (dossiers actifs au-delà du budget)", "gridPos": { "x": 0, "y": 13, "w": 12, "h": 7 },
+      "targets": [{ "expr": "sum by (namespace) (cnpg_pgbouncer_pools_cl_waiting)", "legendFormat": "{{namespace}}" }] },
+    { "type": "timeseries", "title": "Connexions PostgreSQL utilisées / max_connections", "gridPos": { "x": 12, "y": 13, "w": 12, "h": 7 },
+      "fieldConfig": { "defaults": { "unit": "percentunit" } },
+      "targets": [{ "expr": "max by (pod) (cnpg_backends_total) / on (pod) max by (pod) (cnpg_pg_settings_setting{name=\"max_connections\"})", "legendFormat": "{{pod}}" }] }
+  ]
+}

@@ -1,0 +1,96 @@
+{{- if .Values.postgres.enabled }}
+{{- range $cluster := .Values.postgres.clusters }}
+{{- if gt (int $cluster.activeDossierBudget) (int $.Values.postgres.maxActiveDossiersPerCluster) }}
+{{- fail (printf "%s : %d dossiers actifs dépassent le maximum par cluster (%d). Ajouter un cluster." $cluster.name (int $cluster.activeDossierBudget) (int $.Values.postgres.maxActiveDossiersPerCluster)) }}
+{{- end }}
+{{- $perPooler := include "lettra-cell.perPoolerBudget" (dict "cluster" $cluster "root" $) | int }}
+{{- $maxConnections := add (mul $perPooler (int $.Values.postgres.pooler.instances)) (int $.Values.postgres.reservedConnections) }}
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: {{ $cluster.name }}
+  labels:
+    {{- include "lettra-cell.labels" $ | nindent 4 }}
+  annotations:
+    lettra.fr/active-dossier-budget: {{ $cluster.activeDossierBudget | quote }}
+spec:
+  instances: {{ $cluster.instances }}
+  imageName: {{ $.Values.postgres.image }}
+  primaryUpdateStrategy: unsupervised
+  postgresql:
+    parameters:
+      # Budget des dossiers actifs servis par PgBouncer + connexions réservées.
+      max_connections: {{ $maxConnections | quote }}
+      shared_buffers: 512MB
+      log_min_duration_statement: "1000"
+      # Aucune valeur de paramètre dans les journaux (données de dossier).
+      log_parameter_max_length: "0"
+      log_parameter_max_length_on_error: "0"
+  storage:
+    size: {{ $cluster.storage }}
+    {{- with $.Values.postgres.storageClass }}
+    storageClass: {{ . }}
+    {{- end }}
+  monitoring:
+    enablePodMonitor: true
+  affinity:
+    topologyKey: topology.kubernetes.io/zone
+  {{- if $.Values.postgres.backup.enabled }}
+  backup:
+    retentionPolicy: {{ $.Values.postgres.backup.retention | quote }}
+    barmanObjectStore:
+      destinationPath: {{ printf "%s/%s" $.Values.postgres.backup.destinationPath $cluster.name | quote }}
+      endpointURL: {{ $.Values.postgres.backup.endpointURL | quote }}
+      s3Credentials:
+        accessKeyId: { name: {{ $.Values.postgres.backup.credentialsSecret }}, key: ACCESS_KEY_ID }
+        secretAccessKey: { name: {{ $.Values.postgres.backup.credentialsSecret }}, key: ACCESS_SECRET_KEY }
+      wal:
+        compression: gzip
+        encryption: AES256
+      data:
+        compression: gzip
+        encryption: AES256
+  {{- end }}
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Pooler
+metadata:
+  name: {{ $cluster.name }}-rw
+  labels:
+    {{- include "lettra-cell.labels" $ | nindent 4 }}
+spec:
+  cluster:
+    name: {{ $cluster.name }}
+  instances: {{ $.Values.postgres.pooler.instances }}
+  type: rw
+  monitoring:
+    enablePodMonitor: true
+  pgbouncer:
+    poolMode: transaction
+    parameters:
+      max_client_conn: {{ $.Values.postgres.pooler.maxClientConn | quote }}
+      default_pool_size: {{ $.Values.postgres.pooler.defaultPoolSize | quote }}
+      min_pool_size: "0"
+      reserve_pool_size: "0"
+      # Plafond de connexions serveur de cette instance, partagé par tous les dossiers du cluster.
+      max_user_connections: {{ $perPooler | quote }}
+      server_idle_timeout: {{ $.Values.postgres.pooler.serverIdleTimeout | quote }}
+      max_prepared_statements: {{ $.Values.postgres.pooler.maxPreparedStatements | quote }}
+      ignore_startup_parameters: extra_float_digits
+{{- if $.Values.postgres.backup.enabled }}
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: {{ $cluster.name }}-quotidienne
+  labels:
+    {{- include "lettra-cell.labels" $ | nindent 4 }}
+spec:
+  schedule: {{ $.Values.postgres.backup.schedule | quote }}
+  backupOwnerReference: self
+  cluster:
+    name: {{ $cluster.name }}
+{{- end }}
+{{- end }}
+{{- end }}

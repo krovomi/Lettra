@@ -1,0 +1,5 @@
+apiVersion: v2
+name: lettra-racine
+description: Application racine Argo CD d'une cellule (GitOps, ADR-0009) - déclare tout ce que la cellule exécute, dans l'ordre (opérateurs, pile d'observabilité, Lettra).
+type: application
+version: 0.1.0

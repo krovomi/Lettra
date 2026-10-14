@@ -1,0 +1,33 @@
+# Environnement éphémère d'une pull request (annexe E §4 et §7) : créé quand la PR porte l'étiquette env:pr,
+# détruit à sa fermeture. Données synthétiques seulement.
+# Tant que la base Catalog et le mode 5 ne sont pas livrés (chantier Persistance et tenancy), l'API tourne comme en
+# développement : mode 2, un dossier de démonstration SQLite dans un volume éphémère.
+environment: pr
+lettra-api:
+  environment: pr
+  existingSecret: ""
+  secretEnv:
+    ConnectionStrings__Redis: { secret: "" }  # pas de Redis dans un environnement de PR
+  aspnetcoreEnvironment: Development
+  autoscaling: { enabled: false }
+  replicas: 1
+  podDisruptionBudget: { enabled: false }
+  networkPolicy: { enabled: false }
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { memory: 512Mi }
+  settings:
+    Lettra__DeploymentMode: LocalNetwork
+    Lettra__Observability__ServiceName: lettra-api
+    ConnectionStrings__DossierDemo: Data Source=/data/lettra-dossier-demo.db
+  extraVolumes:
+    - name: data
+      emptyDir: { sizeLimit: 1Gi }
+  extraVolumeMounts:
+    - { name: data, mountPath: /data }
+lettra-worker:
+  enabled: false
+postgres:
+  enabled: false
+redis:
+  enabled: false

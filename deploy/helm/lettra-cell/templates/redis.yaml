@@ -1,0 +1,66 @@
+{{- if .Values.redis.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  labels:
+    {{- include "lettra-cell.labels" . | nindent 4 }}
+    app.kubernetes.io/name: redis
+spec:
+  serviceName: redis
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: redis
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: redis
+        app.kubernetes.io/part-of: lettra
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        fsGroup: 999
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: redis
+          image: {{ .Values.redis.image }}
+          args: ["--requirepass", "$(REDIS_PASSWORD)", "--appendonly", "yes", "--dir", "/data"]
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom: { secretKeyRef: { name: {{ .Values.redis.existingSecret }}, key: password } }
+          ports:
+            - { name: redis, containerPort: 6379 }
+          readinessProbe:
+            tcpSocket: { port: redis }
+          resources:
+            {{- toYaml .Values.redis.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }
+          volumeMounts:
+            - { name: data, mountPath: /data }
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests:
+            storage: {{ .Values.redis.storage }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  labels:
+    {{- include "lettra-cell.labels" . | nindent 4 }}
+spec:
+  selector:
+    app.kubernetes.io/name: redis
+  ports:
+    - { name: redis, port: 6379, targetPort: redis }
+{{- end }}

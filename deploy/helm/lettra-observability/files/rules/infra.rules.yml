@@ -1,0 +1,153 @@
+# Alertes d'infrastructure de la cellule (annexe G §4 et §5). Chaque règle porte les étiquettes lues par le module
+# Supervision : severity (S1 à S4), category, scope, cell. Le titre est celui de la règle : jamais une donnée de dossier.
+# Chaque règle a un test (tests/*.test.yml) qui injecte la panne et vérifie la gravité.
+groups:
+  - name: lettra-disponibilite
+    rules:
+      # L'API pousse ses métriques en OTLP toutes les 60 s : plus aucun target_info, plus aucune instance vivante.
+      - alert: LettraApiIndisponible
+        expr: absent_over_time(target_info{job="lettra/lettra-api"}[3m])
+        for: 1m
+        labels:
+          severity: S1
+          category: availability
+          scope: cell
+          cell: "{{ $externalLabels.cell }}"
+        annotations:
+          title: L'API Lettra ne répond plus dans la cellule
+          runbook_url: https://github.com/krovomi/Lettra/blob/main/deploy/runbooks/api-indisponible.md
+      - alert: LettraApiSansReplica
+        expr: kube_deployment_status_replicas_available{deployment="lettra-api"} == 0
+        for: 2m
+        labels:
+          severity: S1
+          category: availability
+          scope: cell
+          cell: "{{ $externalLabels.cell }}"
+        annotations:
+          title: Aucun réplica de l'API n'est disponible
+          runbook_url: https://github.com/krovomi/Lettra/blob/main/deploy/runbooks/api-indisponible.md
+      - alert: LettraWorkerIndisponible
+        expr: absent_over_time(target_info{job="lettra/lettra-worker"}[10m])
+        for: 5m
+        labels:
+          severity: S2
+          category: availability
+          scope: cell
+          cell: "{{ $externalLabels.cell }}"
+        annotations:
+          title: Le Worker de la cellule ne tourne plus (migrations, relances)
+          runbook_url: https://github.com/krovomi/Lettra/blob/main/deploy/runbooks/worker-indisponible.md
+
+  # Bases des dossiers (POC « base par dossier ») : la limite d'un cluster est le nombre de dossiers actifs au même
+  # moment, comparé au budget de connexions serveur de PgBouncer, pas le nombre de bases.
+  - name: lettra-bases-de-dossiers
+    rules:
+      - alert: PostgreSqlIndisponible
+        expr: cnpg_collector_up == 0
+        for: 2m
+        labels:
+          severity: S1
+          category: availability
+          scope: cell
+          cell: "{{ $externalLabels.cell }}"
+        annotations:
+          title: Un cluster PostgreSQL de la cellule ne répond plus
+          runbook_url: https://github.com/krovomi/Lettra/blob/main/deploy/runbooks/postgresql.md
+      - alert: DossiersActifsAuDelaDuBudget
+        expr: sum by (namespace) (cnpg_pgbouncer_pools_cl_waiting) > 0
+        for: 5m
+        labels:
+          severity: S2
+          category: performance
+          scope: cell
+          cell: "{{ $externalLabels.cell }}"
+        annotations:
+          title: Des requêtes attendent une connexion PgBouncer (dossiers actifs au-delà du budget)
+          runbook_url: https://github.com/krovomi/Lettra/blob/main/deploy/runbooks/budget-connexions.md
+      - alert: BudgetConnexionsPresqueAtteint
+        expr: |
+          max by (namespace, pod) (cnpg_backends_total)
+          / on (namespace, pod) max by (namespace, pod) (cnpg_pg_settings_setting{name="max_connections"}) > 0.8
+        for: 15m
+        labels:
+          severity: S3
+          category: performance
+          scope: cell
+          cell: "{{ $externalLabels.cell }}"
+        annotations:
+          title: Plus de 80 % des connexions PostgreSQL sont utilisées
+          runbook_url: https://github.com/krovomi/Lettra/blob/main/deploy/runbooks/budget-connexions.md
+      # 7,6 Mo par base vide : le disque se remplit avec le nombre de dossiers, avant même la première facture.
+      - alert: DisqueBasesPresquePlein
+        expr: |
+          kubelet_volume_stats_available_bytes{namespace=~"lettra.*"} / kubelet_volume_stats_capacity_bytes{namespace=~"lettra.*"} < 0.10
+        for: 10m
+        labels:
+          severity: S2
+          category: availability
+          scope: cell
+          cell: "{{ $externalLabels.cell }}"
+        annotations:
+          title: Moins de 10 % de disque libre pour les bases de dossiers
+          runbook_url: https://github.com/krovomi/Lettra/blob/main/deploy/runbooks/disque.md
+      - alert: DisqueBasesSeRemplit
+        expr: |
+          kubelet_volume_stats_available_bytes{namespace=~"lettra.*"} / kubelet_volume_stats_capacity_bytes{namespace=~"lettra.*"} < 0.20
+        for: 30m
+        labels:
+          severity: S3
+          category: availability
+          scope: cell
+          cell: "{{ $externalLabels.cell }}"
+        annotations:
+          title: Moins de 20 % de disque libre pour les bases de dossiers
+          runbook_url: https://github.com/krovomi/Lettra/blob/main/deploy/runbooks/disque.md
+      # Sauvegarde quotidienne : une manquée → S2 ; deux manquées → S1 (annexe G §5).
+      - alert: SauvegardeManquee
+        expr: time() - cnpg_collector_last_available_backup_timestamp > 26 * 3600
+        for: 10m
+        labels:
+          severity: S2
+          category: availability
+          scope: cell
+          cell: "{{ $externalLabels.cell }}"
+        annotations:
+          title: La sauvegarde de la nuit est manquante
+          runbook_url: https://github.com/krovomi/Lettra/blob/main/deploy/runbooks/sauvegarde.md
+      - alert: DeuxSauvegardesManquees
+        expr: time() - cnpg_collector_last_available_backup_timestamp > 50 * 3600
+        for: 10m
+        labels:
+          severity: S1
+          category: availability
+          scope: cell
+          cell: "{{ $externalLabels.cell }}"
+        annotations:
+          title: Deux sauvegardes consécutives sont manquantes
+          runbook_url: https://github.com/krovomi/Lettra/blob/main/deploy/runbooks/sauvegarde.md
+
+  - name: lettra-chaine-de-supervision
+    rules:
+      - alert: CollecteurPerdDesSignaux
+        expr: |
+          sum(rate(otelcol_exporter_send_failed_spans_total[10m])) + sum(rate(otelcol_exporter_send_failed_metric_points_total[10m]))
+          + sum(rate(otelcol_exporter_send_failed_log_records_total[10m])) > 0
+        for: 15m
+        labels:
+          severity: S3
+          category: availability
+          scope: cell
+          cell: "{{ $externalLabels.cell }}"
+        annotations:
+          title: Le collecteur OpenTelemetry n'arrive plus à exporter une partie des signaux
+          runbook_url: https://github.com/krovomi/Lettra/blob/main/deploy/runbooks/collecteur.md
+      # Toujours vraie : l'outil d'astreinte crie si ce battement s'arrête (la chaîne d'alerte elle-même est en panne).
+      - alert: Watchdog
+        expr: vector(1)
+        labels:
+          severity: none
+          scope: cell
+          cell: "{{ $externalLabels.cell }}"
+        annotations:
+          title: Battement de la chaîne d'alerte de la cellule

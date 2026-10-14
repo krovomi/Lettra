@@ -3,6 +3,7 @@ using Lettra.Api.Infrastructure;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Bootstrap;
 using Lettra.Contracts.Serialization;
+using Lettra.Supervision.Infrastructure;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +42,9 @@ RouteGroupBuilder api = app.MapGroup("/api/v1").AddEndpointFilter<TenantEndpoint
 api.MapCustomers();
 
 app.MapHealthChecks("/health");
+
+// Webhook de l'Alertmanager de la cellule (annexe G §4) : exposé seulement si un jeton est configuré.
+app.MapSupervisionWebhooks();
 app.MapFallbackToFile("index.html");
 
 await app.RunAsync().ConfigureAwait(false);

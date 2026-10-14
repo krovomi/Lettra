@@ -1,0 +1,52 @@
+name: Environnement de PR
+
+# Construit l'image d'une pull request étiquetée « env:pr » ; l'ApplicationSet Argo CD de la cellule de recette
+# (deploy/argocd/pr-environnements.yaml) la déploie dans lettra-pr-<numéro> et la détruit à la fermeture de la PR.
+on:
+  pull_request:
+    types: [labeled, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-env-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  image:
+    name: Image de l'environnement éphémère
+    # Jamais pour une PR venant d'un fork : pas d'accès en écriture au registre.
+    if: >-
+      contains(github.event.pull_request.labels.*.name, 'env:pr') &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+      - name: Étiquette de l'image
+        id: tag
+        run: echo "tag=pr-${{ github.event.pull_request.number }}-$(git rev-parse --short=8 HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build et publication
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/lettra-api:${{ steps.tag.outputs.tag }}
+      - uses: sigstore/cosign-installer@v3
+      - name: Signature
+        run: cosign sign --yes ghcr.io/${{ github.repository_owner }}/lettra-api@${{ steps.push.outputs.digest }}
+      - name: Résumé
+        run: |
+          echo "Image \`ghcr.io/${{ github.repository_owner }}/lettra-api:${{ steps.tag.outputs.tag }}\` publiée." >> "$GITHUB_STEP_SUMMARY"
+          echo "Argo CD la déploie dans \`lettra-pr-${{ github.event.pull_request.number }}\` (cellule de recette)." >> "$GITHUB_STEP_SUMMARY"

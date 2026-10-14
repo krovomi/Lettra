@@ -1,0 +1,57 @@
+# Pile Prometheus de chaque cellule (annexe G §3). Durées de conservation proposées, à valider avec le DPO :
+# métriques 13 mois, journaux techniques 30 jours, traces 7 jours.
+prometheus:
+  prometheusSpec:
+    retention: 395d
+    retentionSize: 180GB
+    # Les applications poussent en OTLP via le collecteur filtrant (lettra-observability).
+    enableOTLPReceiver: true
+    otlp:
+      promoteResourceAttributes: [lettra.cell, lettra.deployment.mode, deployment.environment.name, service.instance.id]
+      translationStrategy: UnderscoreEscapingWithSuffixes
+    # Les règles et moniteurs de Lettra portent l'étiquette release=kube-prometheus-stack.
+    ruleSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          resources:
+            requests:
+              storage: 200Gi
+
+alertmanager:
+  alertmanagerSpec:
+    # Configuration rendue par lettra-observability (files/alertmanager.yml).
+    configSecret: alertmanager-lettra
+    # Adresses de l'astreinte et jeton du webhook Supervision, fournis par le coffre de la cellule.
+    secrets: [lettra-alerting]
+    replicas: 2
+
+grafana:
+  # Grafana reste l'outil d'enquête de l'éditeur ; le tri se fait dans le centre d'alertes (annexe G §8).
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      searchNamespace: lettra-observabilite
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      url: http://loki-gateway.lettra-observabilite
+    - name: Tempo
+      type: tempo
+      url: http://tempo.lettra-observabilite:3200
+  # Authentification par Keycloak (organisation de l'éditeur) branchée par le chantier Identité.
+  grafana.ini:
+    auth:
+      disable_login_form: false
+    analytics:
+      reporting_enabled: false
+      check_for_updates: false
+
+# Composants inutiles sur un Kubernetes managé (plan de contrôle opéré par l'hébergeur).
+kubeControllerManager: { enabled: false }
+kubeScheduler: { enabled: false }
+kubeEtcd: { enabled: false }
+kubeProxy: { enabled: false }
