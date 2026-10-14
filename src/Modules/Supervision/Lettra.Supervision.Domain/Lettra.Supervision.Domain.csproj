@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Module Supervision (annexe G §9) : Alerte, Incident, Gravite, Portee, RegleDeRoutage.
+       Pur, comme Lettra.Domain : aucune dépendance de framework. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Core\Lettra.Domain\Lettra.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,12 +1,15 @@
 using Lettra.Application;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Infrastructure.Catalog;
+using Lettra.Infrastructure.External;
 using Lettra.Infrastructure.Identity.Local;
+using Lettra.Infrastructure.Observability;
 using Lettra.Infrastructure.Persistence;
 using Lettra.Infrastructure.Persistence.PostgreSql;
 using Lettra.Infrastructure.Persistence.Sqlite;
 using Lettra.Infrastructure.Persistence.SqlServer;
 using Lettra.Infrastructure.Persistence.Tenancy;
+using Lettra.Supervision.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -30,8 +33,11 @@ public static class LettraBootstrap
         ArgumentNullException.ThrowIfNull(configuration);
         DeploymentMode mode = configuration.GetDeploymentMode();
 
+        // Communs à tous les modes. Chaque chantier remplit son AddXxx ; la composition root ne change pas.
         services.AddApplication();
         services.AddPersistenceCore();
+        services.AddExternalServices(configuration);
+        services.AddLettraObservability(configuration, mode);
 
         return mode switch
         {
@@ -45,10 +51,12 @@ public static class LettraBootstrap
                 .AddSingleton<IDbProviderConfigurator, PostgreSqlConfigurator>()
                 .AddSingleton<IDbProviderConfigurator, SqlServerConfigurator>()
                 .AddConfigurationCatalog(configuration)
-                .AddLocalIdentity(configuration),
+                .AddLocalIdentity(configuration)
+                .AddSupervision(configuration),
 
+            // Phase 2 en cours : la base Catalog arrive avec le chantier « Persistance et tenancy ».
             DeploymentMode.OnPremRemote or DeploymentMode.HostedSaaS => throw new NotSupportedException(
-                $"Mode {mode} : nécessite la base Catalog et Keycloak (phase 2)."),
+                $"Mode {mode} : nécessite la base Catalog (phase 2, en cours)."),
 
             DeploymentMode.HybridCloud => throw new NotSupportedException(
                 $"Mode {mode} : nécessite la synchronisation (phase 4)."),

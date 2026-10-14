@@ -9,6 +9,10 @@
     <ProjectReference Include="..\..\Infrastructure\Lettra.Infrastructure.Persistence.SqlServer\Lettra.Infrastructure.Persistence.SqlServer.csproj" />
     <ProjectReference Include="..\..\Infrastructure\Lettra.Infrastructure.Catalog\Lettra.Infrastructure.Catalog.csproj" />
     <ProjectReference Include="..\..\Infrastructure\Lettra.Infrastructure.Identity.Local\Lettra.Infrastructure.Identity.Local.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Lettra.Infrastructure.Identity.Oidc\Lettra.Infrastructure.Identity.Oidc.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Lettra.Infrastructure.External\Lettra.Infrastructure.External.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Lettra.Infrastructure.Observability\Lettra.Infrastructure.Observability.csproj" />
+    <ProjectReference Include="..\..\Modules\Supervision\Lettra.Supervision.Infrastructure\Lettra.Supervision.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

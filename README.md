@@ -28,10 +28,11 @@ L'application MAUI (`src/Hosts/Lettra.App.Maui`) se construit sous Windows avec 
 src/
   Core/            Calculations (arrondi unique), Contracts (API publique), Domain (0 dépendance), Application (cas d'usage, ports)
   Infrastructure/  Persistence (EF Core) + un projet de migrations par provider (Sqlite, PostgreSql, SqlServer),
-                   Catalog (registre des dossiers), Identity.Local
+                   Catalog (registre des dossiers), Identity.Local, Identity.Oidc, External (SIRENE, VIES), Observability
+  Modules/         Supervision (Domain, Application, Infrastructure) : alertes et centre d'alertes (annexe G)
   Composition/     Bootstrap : AddLettra(), le seul endroit qui connaît le mode de déploiement
   Presentation/    UI.Abstractions (ports), UI.Shared (toute l'UI, RCL), UI.Gateway.Http, UI.Gateway.InProcess
-  Hosts/           Api (Minimal APIs, sert le WASM), Web (WASM), App.Maui (Blazor Hybrid)
+  Hosts/           Api (Minimal APIs, sert le WASM), Web (WASM), App.Maui (Blazor Hybrid), Worker (jobs SaaS)
 tests/             Domain, Application, Architecture, Persistence (3 providers), Api (bout en bout), UI (bUnit)
 ```
 

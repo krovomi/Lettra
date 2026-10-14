@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Services externes : API Recherche d'entreprises (SIRENE), VIES. Squelette phase 2,
+       rempli par le chantier « Modules métier Tiers et Catalogue ». -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Lettra.Application\Lettra.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
+  </ItemGroup>
+
+</Project>
