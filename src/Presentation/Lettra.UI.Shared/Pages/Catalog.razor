@@ -1,4 +1,5 @@
 @page "/catalog"
+@using Lettra.UI.Abstractions.Concurrency
 @inject ICatalogGateway Gateway
 @inject IStringLocalizer<SharedResource> L
 
@@ -201,7 +202,11 @@
         }
         else
         {
-            result = await Gateway.UpdateAsync(id, row.ToRequest(), CancellationToken.None);
+            result = await Gateway.UpdateAsync(id, row.Version, row.ToRequest(), CancellationToken.None);
+            if (result is { IsStale: true, Current: { } current })
+            {
+                return await MergeAsync(change, id, current);
+            }
         }
 
         if (!result.IsSuccess || result.Value is null)
@@ -214,6 +219,31 @@
         _status = string.Format(Culture, L[row.Id is null ? "Catalog.Created" : "Catalog.Saved"], result.Value.Reference);
         StateHasChanged();
         return CatalogRow.From(result.Value, row.Key);
+    }
+
+    /// <summary>
+    /// Un collègue a modifié l'article pendant la saisie (ADR-0013). Champs différents : la saisie est fusionnée
+    /// avec sa version et renvoyée une fois. Même champ : on affiche sa version et on prévient, sans rien écraser.
+    /// </summary>
+    private async Task<CatalogRow?> MergeAsync(GridItemChange<CatalogRow> change, Guid id, CatalogItemResponse current)
+    {
+        MergeResult<SaveCatalogItemRequest> merge = CatalogRow.Merge.Merge(change.Before.ToRequest(), change.After.ToRequest(), CatalogRow.From(current, change.After.Key).ToRequest());
+        if (!merge.HasConflicts)
+        {
+            OperationResult<CatalogItemResponse> retried = await Gateway.UpdateAsync(id, current.Version, merge.Merged, CancellationToken.None);
+            if (retried is { IsSuccess: true, Value: { } saved })
+            {
+                _status = string.Format(Culture, L["Catalog.Merged"], saved.Reference);
+                StateHasChanged();
+                return CatalogRow.From(saved, change.After.Key);
+            }
+
+            current = retried.Current ?? current;
+        }
+
+        _errors = [new ErrorDetail(ErrorCodes.Concurrency.VersionMismatch)];
+        StateHasChanged();
+        return CatalogRow.From(current, change.After.Key);
     }
 
     // ---------- lignes ----------
@@ -248,7 +278,17 @@
         }
         else
         {
-            OperationResult<CatalogItemResponse> result = await Gateway.SetArchivedAsync(id, !row.IsArchived, CancellationToken.None);
+            OperationResult<CatalogItemResponse> result = await Gateway.SetArchivedAsync(id, row.Version, !row.IsArchived, CancellationToken.None);
+            if (result is { IsStale: true, Current: { } current })
+            {
+                // Modifié entre-temps : on montre l'article à jour, l'utilisateur relance s'il le souhaite.
+                _rows[context.Row] = CatalogRow.From(current, row.Key);
+                _errors = result.Errors;
+                _grid?.Refresh();
+                StateHasChanged();
+                return;
+            }
+
             if (!result.IsSuccess || result.Value is null)
             {
                 _errors = result.Errors;

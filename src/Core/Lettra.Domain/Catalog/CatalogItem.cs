@@ -18,7 +18,7 @@ namespace Lettra.Domain.Catalog;
 /// Le catalogue ne fait que proposer : une ligne de document copie l'article au moment de la saisie,
 /// et une modification ultérieure ne touche jamais un document déjà émis.
 /// </summary>
-public sealed class CatalogItem : AggregateRoot<CatalogItemId>
+public sealed class CatalogItem : AggregateRoot<CatalogItemId>, IVersioned
 {
     public const int MaxReferenceLength = 50;
     public const int MaxDesignationLength = 200;
@@ -66,6 +66,9 @@ public sealed class CatalogItem : AggregateRoot<CatalogItemId>
     public DateTimeOffset CreatedAt { get; private set; }
 
     public DateTimeOffset UpdatedAt { get; private set; }
+
+    /// <summary>Version de concurrence optimiste (ADR-0013), avancée par la persistance à chaque écriture.</summary>
+    public long Version { get; private set; }
 
     /// <summary>Données brutes d'un article, telles que saisies (création comme modification).</summary>
     public sealed record Draft(

@@ -132,9 +132,27 @@ public static class ErrorCodes
         public const string SkillPackStale = "Ai.SkillPackStale";
     }
 
+    /// <summary>Concurrence optimiste (ADR-0013) : <c>ETag</c>, <c>If-Match</c>, 412 et 428.</summary>
+    public static class Concurrency
+    {
+        public const string VersionMismatch = "Concurrency.VersionMismatch";
+        public const string PreconditionRequired = "Concurrency.PreconditionRequired";
+    }
+
+    /// <summary>Séparation des tâches, option du cabinet (annexe F §3.2).</summary>
+    public static class SegregationOfDuties
+    {
+        public const string EnteredByIssuer = "SegregationOfDuties.EnteredByIssuer";
+        public const string ManagerApprovalRequired = "SegregationOfDuties.ManagerApprovalRequired";
+        public const string ApproverIsCreator = "SegregationOfDuties.ApproverIsCreator";
+        public const string ThresholdInvalid = "SegregationOfDuties.ThresholdInvalid";
+        public const string NotAvailable = "SegregationOfDuties.NotAvailable";
+    }
+
     public static class Api
     {
         public const string IdempotencyKeyReused = "Api.IdempotencyKeyReused";
+        public const string TooManyRequests = "Api.TooManyRequests";
         public const string Unexpected = "Api.Unexpected";
         public const string Unreachable = "Api.Unreachable";
     }

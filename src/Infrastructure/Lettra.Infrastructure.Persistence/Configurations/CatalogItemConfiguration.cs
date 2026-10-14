@@ -1,5 +1,6 @@
 using Lettra.Domain.Catalog;
 using Lettra.Domain.SharedKernel;
+using Lettra.Infrastructure.Persistence.Concurrency;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -22,6 +23,8 @@ internal sealed class CatalogItemConfiguration : IEntityTypeConfiguration<Catalo
         builder.Property(i => i.VatRate).HasConversion(r => r.Code, code => VatRate.FromCode(code).Value).HasMaxLength(10).IsRequired();
         builder.Property(i => i.CreatedAt).IsRequired();
         builder.Property(i => i.UpdatedAt).IsRequired();
+
+        builder.IsVersioned();
 
         // Unicité sans tenir compte de la casse, identique sur SQLite, PostgreSQL et SQL Server.
         builder.HasIndex(i => i.ReferenceKey).IsUnique();

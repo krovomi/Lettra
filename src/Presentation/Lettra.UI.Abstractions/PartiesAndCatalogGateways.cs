@@ -22,9 +22,13 @@ public interface ICatalogGateway
 
     Task<OperationResult<CatalogItemResponse>> CreateAsync(SaveCatalogItemRequest request, CancellationToken cancellationToken);
 
-    Task<OperationResult<CatalogItemResponse>> UpdateAsync(Guid id, SaveCatalogItemRequest request, CancellationToken cancellationToken);
+    /// <summary>
+    /// Modifie un article à partir de la version lue (ADR-0013). Si quelqu'un l'a modifié entre-temps : échec
+    /// <c>Concurrency.VersionMismatch</c> avec l'article actuel dans <see cref="OperationResult{T}.Current"/>.
+    /// </summary>
+    Task<OperationResult<CatalogItemResponse>> UpdateAsync(Guid id, long expectedVersion, SaveCatalogItemRequest request, CancellationToken cancellationToken);
 
-    Task<OperationResult<CatalogItemResponse>> SetArchivedAsync(Guid id, bool isArchived, CancellationToken cancellationToken);
+    Task<OperationResult<CatalogItemResponse>> SetArchivedAsync(Guid id, long expectedVersion, bool isArchived, CancellationToken cancellationToken);
 }
 
 /// <summary>

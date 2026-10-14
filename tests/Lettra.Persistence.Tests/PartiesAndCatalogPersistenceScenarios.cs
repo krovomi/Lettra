@@ -129,4 +129,45 @@ internal static class PartiesAndCatalogPersistenceScenarios
             await save.Should().ThrowAsync<DbUpdateException>();
         }
     }
+
+    /// <summary>
+    /// Concurrence optimiste (ADR-0013) : la version avance à chaque écriture, et une écriture partie d'une
+    /// lecture devenue périmée n'écrase rien, qu'elle soit vue par le handler ou seulement à l'enregistrement.
+    /// </summary>
+    public static async Task OptimisticConcurrencyAsync(TenantHarness harness, DatabaseProvider provider, string connectionString)
+    {
+        DossierId dossier = harness.AddDossier(provider, connectionString);
+        CatalogItemId id;
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            id = (await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>()
+                .SendAsync(new CreateCatalogItemCommand(dossier, Item("CONC-01", "Heure de conseil")), default)).Value;
+        }
+
+        await using AsyncServiceScope lent = await harness.OpenAsync(dossier);
+        CatalogItem lu = (await lent.ServiceProvider.GetRequiredService<ICatalogItemRepository>().FindAsync(id, default))!;
+        lu.Version.Should().Be(1);
+
+        await using (AsyncServiceScope rapide = await harness.OpenAsync(dossier))
+        {
+            ICommandDispatcher commands = rapide.ServiceProvider.GetRequiredService<ICommandDispatcher>();
+            (await commands.SendAsync(new UpdateCatalogItemCommand(dossier, id, Item("CONC-01", "Heure d'audit"), ExpectedVersion: 1), default))
+                .IsSuccess.Should().BeTrue();
+            Result perime = await commands.SendAsync(new UpdateCatalogItemCommand(dossier, id, Item("CONC-01", "Autre"), ExpectedVersion: 1), default);
+            perime.Errors.Should().ContainSingle().Which.Code.Should().Be(ConcurrencyErrors.VersionMismatchCode);
+        }
+
+        // Lu en version 1 avant l'écriture du collègue : l'UPDATE conditionné par la version ne touche aucune ligne.
+        lu.Update(Item("CONC-01", "Heure de formation", price: 1m), DateTimeOffset.UnixEpoch).IsSuccess.Should().BeTrue();
+        Func<Task> enregistrer = () => lent.ServiceProvider.GetRequiredService<IUnitOfWork>().SaveChangesAsync(default);
+        await enregistrer.Should().ThrowAsync<ConcurrencyConflictException>();
+
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            CatalogItemResponse relu = (await scope.ServiceProvider.GetRequiredService<IQueryDispatcher>()
+                .QueryAsync(new GetCatalogItemQuery(dossier, id), default)).Value;
+            relu.Designation.Should().Be("Heure d'audit");
+            relu.Version.Should().Be(2);
+        }
+    }
 }

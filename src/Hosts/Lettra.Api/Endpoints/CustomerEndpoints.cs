@@ -37,6 +37,14 @@ internal static class CustomerEndpoints
             .Produces<CustomerResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        group.MapPut("/{id:guid}", UpdateAsync)
+            .RequirePermission(Permission.TiersModifier)
+            .WithName("UpdateCustomer")
+            .Produces<CustomerResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .RequireIfMatch();
+
         return group;
     }
 
@@ -56,7 +64,7 @@ internal static class CustomerEndpoints
 
         Result<CustomerResponse> read = await queries.QueryAsync(new GetCustomerQuery(dossier, created.Value), cancellationToken).ConfigureAwait(false);
         return read.IsSuccess
-            ? TypedResults.Created($"/api/v1/customers/{read.Value.Id}", read.Value)
+            ? TypedResults.Created($"/api/v1/customers/{read.Value.Id}", read.Value).WithETag(read.Value.Version)
             : read.Errors.ToProblem();
     }
 
@@ -82,6 +90,31 @@ internal static class CustomerEndpoints
         Result<CustomerResponse> result = await queries
             .QueryAsync(new GetCustomerQuery(tenant.Current.DossierId, new CustomerId(id)), cancellationToken)
             .ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return result.IsSuccess ? TypedResults.Ok(result.Value).WithETag(result.Value.Version) : result.Errors.ToProblem();
+    }
+
+    /// <summary>Modification : même contrat qu'à la création, version lue en <c>If-Match</c> (ADR-0013).</summary>
+    private static async Task<IResult> UpdateAsync(
+        Guid id,
+        CreateCustomerRequest request,
+        HttpContext http,
+        ITenantContext tenant,
+        ICommandDispatcher commands,
+        IQueryDispatcher queries,
+        CancellationToken cancellationToken)
+    {
+        DossierId dossier = tenant.Current.DossierId;
+        CustomerId customerId = new(id);
+        Result updated = await commands
+            .SendAsync(request.ToUpdateCommand(dossier, customerId, http.IfMatchVersion()), cancellationToken)
+            .ConfigureAwait(false);
+        Task<Result<CustomerResponse>> Read() => queries.QueryAsync(new GetCustomerQuery(dossier, customerId), cancellationToken);
+        if (updated.IsFailure)
+        {
+            return await ConcurrencyResults.WriteFailureAsync(updated.Errors, Read, r => r.Version).ConfigureAwait(false);
+        }
+
+        Result<CustomerResponse> read = await Read().ConfigureAwait(false);
+        return read.IsSuccess ? TypedResults.Ok(read.Value).WithETag(read.Value.Version) : read.Errors.ToProblem();
     }
 }

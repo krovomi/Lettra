@@ -43,6 +43,13 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Concurrence_optimiste_sur_le_catalogue()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await PartiesAndCatalogPersistenceScenarios.OptimisticConcurrencyAsync(harness, DatabaseProvider.Sqlite, Database("conc"));
+    }
+
+    [Fact]
     public async Task Recherche_et_unicite_du_catalogue()
     {
         await using TenantHarness harness = new(new SqliteConfigurator());
@@ -166,6 +173,14 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     }
 
     [SkippableFact]
+    public async Task Concurrence_optimiste_sur_le_catalogue()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new PostgreSqlConfigurator());
+        await PartiesAndCatalogPersistenceScenarios.OptimisticConcurrencyAsync(harness, DatabaseProvider.PostgreSql, Database("conc"));
+    }
+
+    [SkippableFact]
     public async Task Recherche_et_unicite_du_catalogue()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
@@ -276,6 +291,14 @@ public sealed class SqlServerTests : IAsyncLifetime
         Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new SqlServerConfigurator());
         await PartiesAndCatalogPersistenceScenarios.CatalogRoundTripAsync(harness, DatabaseProvider.SqlServer, Database("g"));
+    }
+
+    [SkippableFact]
+    public async Task Concurrence_optimiste_sur_le_catalogue()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new SqlServerConfigurator());
+        await PartiesAndCatalogPersistenceScenarios.OptimisticConcurrencyAsync(harness, DatabaseProvider.SqlServer, Database("conc"));
     }
 
     [SkippableFact]

@@ -79,6 +79,15 @@
   <data name="Error.Api.IdempotencyKeyReused" xml:space="preserve"><value>Cette opération a déjà été envoyée avec un contenu différent.</value></data>
   <data name="Error.Api.Unexpected" xml:space="preserve"><value>Une erreur inattendue est survenue. Réessayez.</value></data>
   <data name="Error.Api.Unreachable" xml:space="preserve"><value>Le serveur est injoignable. Vérifiez la connexion.</value></data>
+  <data name="Error.Api.TooManyRequests" xml:space="preserve"><value>Trop de demandes pour votre cabinet en ce moment. Patientez quelques secondes puis réessayez.</value></data>
+  <data name="Error.Concurrency.VersionMismatch" xml:space="preserve"><value>Ce document a été modifié par quelqu'un d'autre pendant votre saisie. Ses changements sont affichés : vérifiez puis enregistrez à nouveau.</value></data>
+  <data name="Error.Concurrency.PreconditionRequired" xml:space="preserve"><value>La version du document lue n'a pas été envoyée (en-tête If-Match manquant).</value></data>
+  <data name="Error.SegregationOfDuties.EnteredByIssuer" xml:space="preserve"><value>La séparation des tâches est active : la personne qui a saisi la facture ne peut pas l'émettre.</value></data>
+  <data name="Error.SegregationOfDuties.ManagerApprovalRequired" xml:space="preserve"><value>Cet avoir dépasse le seuil du cabinet : il doit être approuvé par un manager.</value></data>
+  <data name="Error.SegregationOfDuties.ApproverIsCreator" xml:space="preserve"><value>La séparation des tâches est active : l'auteur de l'avoir ne peut pas l'approuver lui-même.</value></data>
+  <data name="Error.SegregationOfDuties.ThresholdInvalid" xml:space="preserve"><value>Le seuil d'approbation des avoirs doit être un montant positif.</value></data>
+  <data name="Error.SegregationOfDuties.NotAvailable" xml:space="preserve"><value>La séparation des tâches n'est pas disponible sur un poste isolé à utilisateur unique.</value></data>
+  <data name="Catalog.Merged" xml:space="preserve"><value>Article « {0} » enregistré : vos changements ont été fusionnés avec ceux d'un collègue.</value></data>
   <data name="Error.CatalogItem.Archived" xml:space="preserve"><value>Cet article est archivé : réactivez-le pour le modifier ou l'utiliser.</value></data>
   <data name="Error.CatalogItem.DescriptionTooLong" xml:space="preserve"><value>Le descriptif ne doit pas dépasser 2 000 caractères.</value></data>
   <data name="Error.CatalogItem.DesignationRequired" xml:space="preserve"><value>La désignation de l'article est obligatoire.</value></data>

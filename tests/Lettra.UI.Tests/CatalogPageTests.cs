@@ -133,6 +133,38 @@ public sealed class CatalogPageTests : BunitContext
     }
 
     [Fact]
+    public async Task Un_collegue_a_modifie_un_autre_champ_la_saisie_est_fusionnee_et_enregistree()
+    {
+        CatalogItemResponse item = _gateway.Add("DEV-01", "Développement", 1000m);
+        IRenderedComponent<Catalog> page = Render<Catalog>();
+        _gateway.EditedByColleague(item.Id, i => i with { Designation = "Développement spécifique" });
+
+        CellCommitResult resultat = await Saisir(page, 0, PrixHt, "1200");
+
+        resultat.Ok.Should().BeTrue();
+        _gateway.Items[0].UnitPriceExclTax.Should().Be(1200m, "ma saisie est gardée");
+        _gateway.Items[0].Designation.Should().Be("Développement spécifique", "celle du collègue aussi");
+        _gateway.Items[0].Version.Should().Be(3);
+        page.WaitForAssertion(() => Cellule(page, 0, Designation).Should().Be("Développement spécifique"));
+        page.Find("[role=status]").TextContent.Should().Contain("fusionnés");
+    }
+
+    [Fact]
+    public async Task Un_collegue_a_modifie_le_meme_champ_sa_valeur_s_affiche_et_rien_n_est_ecrase()
+    {
+        CatalogItemResponse item = _gateway.Add("DEV-01", "Développement", 1000m);
+        IRenderedComponent<Catalog> page = Render<Catalog>();
+        _gateway.EditedByColleague(item.Id, i => i with { UnitPriceExclTax = 1100m });
+
+        await Saisir(page, 0, PrixHt, "1200");
+
+        _gateway.Items[0].UnitPriceExclTax.Should().Be(1100m);
+        _gateway.Updates.Should().ContainSingle("pas de nouvel envoi quand le même champ est en conflit");
+        page.WaitForAssertion(() => page.Find("[role=alert]").TextContent.Should().Contain("modifié par quelqu'un d'autre"));
+        page.WaitForAssertion(() => Cellule(page, 0, PrixHt).Should().Be(Fr(1100m)));
+    }
+
+    [Fact]
     public async Task Une_saisie_illisible_est_refusee_sans_appeler_le_serveur()
     {
         _gateway.Add("DEV-01", "Développement", 100m);

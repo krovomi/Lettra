@@ -13,7 +13,7 @@ namespace Lettra.Domain.Parties;
 /// <item>un particulier n'a ni SIREN, ni SIRET, ni numéro de TVA.</item>
 /// </list>
 /// </summary>
-public sealed class Customer : AggregateRoot<CustomerId>
+public sealed class Customer : AggregateRoot<CustomerId>, IVersioned
 {
     public const int MaxNameLength = 200;
 
@@ -63,7 +63,10 @@ public sealed class Customer : AggregateRoot<CustomerId>
 
     public DateTimeOffset CreatedAt { get; private set; }
 
-    /// <summary>Données brutes de création, telles que saisies. Les objets-valeurs sont construits et validés ici.</summary>
+    /// <summary>Version de concurrence optimiste (ADR-0013), avancée par la persistance à chaque écriture.</summary>
+    public long Version { get; private set; }
+
+    /// <summary>Données brutes de création ou de modification, telles que saisies. Les objets-valeurs sont construits et validés ici.</summary>
     public sealed record Draft(
         CustomerKind Kind,
         string? Name,
@@ -79,6 +82,41 @@ public sealed class Customer : AggregateRoot<CustomerId>
 
     /// <summary>Crée un client en accumulant <b>toutes</b> les erreurs de saisie (l'écran les affiche ensemble).</summary>
     public static Result<Customer> Create(CustomerId id, Draft draft, DateTimeOffset now)
+    {
+        Result<Values> values = Read(draft);
+        if (values.IsFailure)
+        {
+            return Result<Customer>.Failure(values.Errors);
+        }
+
+        Values v = values.Value;
+        Customer customer = new(id, v.Kind, v.Name, v.Siren, v.Siret, v.VatNumber, v.Email, v.Address, now);
+        customer.Raise(new CustomerCreated(id, now));
+        return customer;
+    }
+
+    /// <summary>Remplace les données du client, avec les mêmes règles qu'à la création. Rien n'est modifié si une erreur est trouvée.</summary>
+    public Result Update(Draft draft, DateTimeOffset now)
+    {
+        Result<Values> values = Read(draft);
+        if (values.IsFailure)
+        {
+            return Result.Failure(values.Errors);
+        }
+
+        Values v = values.Value;
+        Kind = v.Kind;
+        Name = v.Name;
+        Siren = v.Siren;
+        Siret = v.Siret;
+        VatNumber = v.VatNumber;
+        Email = v.Email;
+        BillingAddress = v.Address;
+        Raise(new CustomerUpdated(Id, now));
+        return Result.Success();
+    }
+
+    private static Result<Values> Read(Draft draft)
     {
         ArgumentNullException.ThrowIfNull(draft);
         List<Error> errors = [];
@@ -121,13 +159,11 @@ public sealed class Customer : AggregateRoot<CustomerId>
             errors.Add(CustomerErrors.SirenRequired);
         }
 
-        if (errors.Count > 0)
-        {
-            return Result<Customer>.Failure(errors);
-        }
-
-        Customer customer = new(id, draft.Kind, name, siren, siret, vat, email, address.Value, now);
-        customer.Raise(new CustomerCreated(id, now));
-        return customer;
+        return errors.Count > 0
+            ? Result<Values>.Failure(errors)
+            : new Values(draft.Kind, name, siren, siret, vat, email, address.Value);
     }
+
+    private sealed record Values(
+        CustomerKind Kind, string Name, Siren? Siren, Siret? Siret, VatNumber? VatNumber, Email? Email, PostalAddress Address);
 }

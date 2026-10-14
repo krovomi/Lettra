@@ -79,6 +79,15 @@
   <data name="Error.Api.IdempotencyKeyReused" xml:space="preserve"><value>This operation was already sent with different content.</value></data>
   <data name="Error.Api.Unexpected" xml:space="preserve"><value>An unexpected error occurred. Please try again.</value></data>
   <data name="Error.Api.Unreachable" xml:space="preserve"><value>The server cannot be reached. Check the connection.</value></data>
+  <data name="Error.Api.TooManyRequests" xml:space="preserve"><value>Too many requests for your firm right now. Wait a few seconds and try again.</value></data>
+  <data name="Error.Concurrency.VersionMismatch" xml:space="preserve"><value>Someone else changed this document while you were editing it. Their changes are shown: check them, then save again.</value></data>
+  <data name="Error.Concurrency.PreconditionRequired" xml:space="preserve"><value>The version of the document that was read was not sent (If-Match header missing).</value></data>
+  <data name="Error.SegregationOfDuties.EnteredByIssuer" xml:space="preserve"><value>Segregation of duties is on: the person who entered the invoice cannot issue it.</value></data>
+  <data name="Error.SegregationOfDuties.ManagerApprovalRequired" xml:space="preserve"><value>This credit note is above the firm's threshold: a manager must approve it.</value></data>
+  <data name="Error.SegregationOfDuties.ApproverIsCreator" xml:space="preserve"><value>Segregation of duties is on: the author of the credit note cannot approve it.</value></data>
+  <data name="Error.SegregationOfDuties.ThresholdInvalid" xml:space="preserve"><value>The credit note approval threshold must be a positive amount.</value></data>
+  <data name="Error.SegregationOfDuties.NotAvailable" xml:space="preserve"><value>Segregation of duties is not available on a single-user standalone workstation.</value></data>
+  <data name="Catalog.Merged" xml:space="preserve"><value>Item “{0}” saved: your changes were merged with a colleague's.</value></data>
   <data name="Error.CatalogItem.Archived" xml:space="preserve"><value>This item is archived: reactivate it to change or use it.</value></data>
   <data name="Error.CatalogItem.DescriptionTooLong" xml:space="preserve"><value>The long description must not exceed 2,000 characters.</value></data>
   <data name="Error.CatalogItem.DesignationRequired" xml:space="preserve"><value>The item description is required.</value></data>

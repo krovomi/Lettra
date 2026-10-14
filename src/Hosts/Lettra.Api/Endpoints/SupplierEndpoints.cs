@@ -38,6 +38,14 @@ internal static class SupplierEndpoints
             .Produces<SupplierResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        group.MapPut("/{id:guid}", UpdateAsync)
+            .RequirePermission(Permission.TiersModifier)
+            .WithName("UpdateSupplier")
+            .Produces<SupplierResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .RequireIfMatch();
+
         return group;
     }
 
@@ -57,7 +65,7 @@ internal static class SupplierEndpoints
 
         Result<SupplierResponse> read = await queries.QueryAsync(new GetSupplierQuery(dossier, created.Value), cancellationToken).ConfigureAwait(false);
         return read.IsSuccess
-            ? TypedResults.Created($"/api/v1/suppliers/{read.Value.Id}", read.Value)
+            ? TypedResults.Created($"/api/v1/suppliers/{read.Value.Id}", read.Value).WithETag(read.Value.Version)
             : read.Errors.ToProblem();
     }
 
@@ -79,6 +87,31 @@ internal static class SupplierEndpoints
         Result<SupplierResponse> result = await queries
             .QueryAsync(new GetSupplierQuery(tenant.Current.DossierId, new SupplierId(id)), cancellationToken)
             .ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return result.IsSuccess ? TypedResults.Ok(result.Value).WithETag(result.Value.Version) : result.Errors.ToProblem();
+    }
+
+    /// <summary>Modification : même contrat qu'à la création, version lue en <c>If-Match</c> (ADR-0013).</summary>
+    private static async Task<IResult> UpdateAsync(
+        Guid id,
+        CreateSupplierRequest request,
+        HttpContext http,
+        ITenantContext tenant,
+        ICommandDispatcher commands,
+        IQueryDispatcher queries,
+        CancellationToken cancellationToken)
+    {
+        DossierId dossier = tenant.Current.DossierId;
+        SupplierId supplierId = new(id);
+        Result updated = await commands
+            .SendAsync(request.ToUpdateCommand(dossier, supplierId, http.IfMatchVersion()), cancellationToken)
+            .ConfigureAwait(false);
+        Task<Result<SupplierResponse>> Read() => queries.QueryAsync(new GetSupplierQuery(dossier, supplierId), cancellationToken);
+        if (updated.IsFailure)
+        {
+            return await ConcurrencyResults.WriteFailureAsync(updated.Errors, Read, r => r.Version).ConfigureAwait(false);
+        }
+
+        Result<SupplierResponse> read = await Read().ConfigureAwait(false);
+        return read.IsSuccess ? TypedResults.Ok(read.Value).WithETag(read.Value.Version) : read.Errors.ToProblem();
     }
 }

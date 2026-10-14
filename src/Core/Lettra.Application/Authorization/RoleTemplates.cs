@@ -25,7 +25,7 @@ public static class RoleTemplates
 
     private static readonly Permission[] Production =
     [
-        Permission.TiersConsulter, Permission.TiersCreer, Permission.DossierLire, Permission.CatalogueConsulter, Permission.DevisCreer,
+        Permission.TiersConsulter, Permission.TiersCreer, Permission.TiersModifier, Permission.DossierLire, Permission.CatalogueConsulter, Permission.DevisCreer,
         Permission.FactureSaisir, Permission.IaUtiliser, Permission.AlertesLire,
     ];
 
@@ -36,8 +36,8 @@ public static class RoleTemplates
             Permission.CabinetAdministrer, Permission.UtilisateursGerer, Permission.GroupeGerer, Permission.DossierAdministrer, Permission.DossiersCreer,
             Permission.AlertesLire, Permission.AlertesConfigurer), ScopeKind.Cabinet),
         new(Manager, Set([.. Production,
-            Permission.CatalogueGerer, Permission.FactureValider, Permission.FactureEmettre, Permission.AvoirCreer, Permission.FecExporter,
-            Permission.DelegationsApprouver, Permission.AlertesTraiter]), ScopeKind.Cabinet),
+            Permission.CatalogueGerer, Permission.FactureValider, Permission.FactureEmettre, Permission.AvoirCreer, Permission.AvoirApprouver,
+            Permission.FecExporter, Permission.DelegationsApprouver, Permission.AlertesTraiter]), ScopeKind.Cabinet),
         new(AdministrateurGroupe, Set(Permission.GroupeGerer, Permission.DossierAdministrer), ScopeKind.Groupe),
         new(CollaborateurEtendu, Set([.. Production, Permission.FactureValider, Permission.FactureEmettre]), ScopeKind.Groupe),
         new(Collaborateur, Set(Production), ScopeKind.Groupe),
