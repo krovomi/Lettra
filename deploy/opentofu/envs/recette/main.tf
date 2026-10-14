@@ -73,5 +73,6 @@ module "bootstrap" {
   git_revision        = var.git_revision
   image_tag           = var.image_tag
   alerting            = var.alerting
+  bff_client_secret   = var.bff_client_secret
   storage_credentials = module.cluster.storage_credentials
 }

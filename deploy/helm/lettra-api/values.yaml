@@ -12,6 +12,12 @@ settings:
   Lettra__Observability__ServiceName: lettra-api
   Lettra__Supervision__PublicBaseAddress: https://app.lettra.fr/
 
+# Fournisseur d'identité (Keycloak, realm lettra) : obligatoire dès le mode 2 (ADR-0010). Le secret du client BFF
+# (Lettra__Identity__Oidc__BffClientSecret) est dans existingSecret.
+oidc:
+  authority: ""
+  requireHttpsMetadata: true
+
 # Secret existant (coffre de la cellule) chargé en variables d'environnement : chaînes de connexion des clusters,
 # jeton du webhook Alertmanager (Lettra__Supervision__WebhookToken), clés.
 existingSecret: ""

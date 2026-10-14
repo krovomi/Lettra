@@ -1,4 +1,5 @@
 {{- if not .Values.image.tag }}{{ fail "image.tag est obligatoire : on déploie une image signée par son SHA, jamais latest" }}{{ end -}}
+{{- if not .Values.oidc.authority }}{{ fail "oidc.authority est obligatoire : l'API refuse de démarrer sans realm Keycloak" }}{{ end -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -49,6 +50,8 @@ spec:
               valueFrom: { fieldRef: { fieldPath: metadata.name } }
             - name: POD_NAMESPACE
               valueFrom: { fieldRef: { fieldPath: metadata.namespace } }
+            - { name: Lettra__Identity__Oidc__Authority, value: {{ .Values.oidc.authority | quote }} }
+            - { name: Lettra__Identity__Oidc__RequireHttpsMetadata, value: {{ .Values.oidc.requireHttpsMetadata | quote }} }
             {{- range $key, $value := .Values.settings }}
             - { name: {{ $key }}, value: {{ $value | quote }} }
             {{- end }}

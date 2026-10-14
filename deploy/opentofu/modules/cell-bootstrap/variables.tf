@@ -41,6 +41,13 @@ variable "alerting" {
   sensitive = true
 }
 
+variable "bff_client_secret" {
+  description = "Secret du client BFF dans Keycloak (Lettra__Identity__Oidc__BffClientSecret), null s'il n'est pas encore créé."
+  type        = string
+  default     = null
+  sensitive   = true
+}
+
 variable "storage_credentials" {
   description = "Clés S3 des sauvegardes (null en local)."
   type = object({
