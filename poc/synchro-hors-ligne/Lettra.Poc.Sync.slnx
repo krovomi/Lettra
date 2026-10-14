@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Lettra.Poc.Sync.Client/Lettra.Poc.Sync.Client.csproj" />
+    <Project Path="src/Lettra.Poc.Sync.Contracts/Lettra.Poc.Sync.Contracts.csproj" />
+    <Project Path="src/Lettra.Poc.Sync.Demo/Lettra.Poc.Sync.Demo.csproj" />
+    <Project Path="src/Lettra.Poc.Sync.Domain/Lettra.Poc.Sync.Domain.csproj" />
+    <Project Path="src/Lettra.Poc.Sync.Server/Lettra.Poc.Sync.Server.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Lettra.Poc.Sync.Tests/Lettra.Poc.Sync.Tests.csproj" />
+  </Folder>
+</Solution>
