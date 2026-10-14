@@ -3,13 +3,18 @@
   <!-- Gestion centralisée des versions (Central Package Management). Aucun
        .csproj ne porte de version. Les versions Microsoft.* suivent le runtime
        .NET 10 de la CI. -->
+  <!-- Les POC (poc/<nom>/) sont autonomes et gèrent leurs propres versions : ce fichier ne s'applique pas à eux. -->
   <PropertyGroup>
+    <LettraIsPoc>$([System.String]::Copy('$(MSBuildProjectDirectory)').Replace('\','/').Contains('/poc/'))</LettraIsPoc>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(LettraIsPoc)' != 'true'">
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
     <MicrosoftVersion>10.0.13</MicrosoftVersion>
   </PropertyGroup>
 
-  <ItemGroup Label="Persistance">
+  <ItemGroup Condition="'$(LettraIsPoc)' != 'true'" Label="Persistance">
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="$(MicrosoftVersion)" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="$(MicrosoftVersion)" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(MicrosoftVersion)" />
@@ -18,7 +23,7 @@
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
   </ItemGroup>
 
-  <ItemGroup Label="Hôtes et UI">
+  <ItemGroup Condition="'$(LettraIsPoc)' != 'true'" Label="Hôtes et UI">
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="$(MicrosoftVersion)" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="$(MicrosoftVersion)" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="$(MicrosoftVersion)" />
@@ -39,12 +44,12 @@
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="10.0.110" />
   </ItemGroup>
 
-  <ItemGroup Label="Correctifs de sécurité transitifs (épinglés)">
+  <ItemGroup Condition="'$(LettraIsPoc)' != 'true'" Label="Correctifs de sécurité transitifs (épinglés)">
     <!-- Tiré par Microsoft.Data.SqlClient en 9.0.11, vulnérable (GHSA-846f-f764-76mx, GHSA-2fmv-rv2c-59x7). -->
     <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="$(MicrosoftVersion)" />
   </ItemGroup>
 
-  <ItemGroup Label="Tests">
+  <ItemGroup Condition="'$(LettraIsPoc)' != 'true'" Label="Tests">
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
