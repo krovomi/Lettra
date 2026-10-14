@@ -26,12 +26,19 @@ internal static class Assemblies
     public static readonly Assembly UiShared = typeof(UI.Shared.Routes).Assembly;
     public static readonly Assembly UiGatewayHttp = typeof(UI.Gateway.Http.DependencyInjection).Assembly;
     public static readonly Assembly UiGatewayInProcess = typeof(UI.Gateway.InProcess.DependencyInjection).Assembly;
+    public static readonly Assembly AiSkills = typeof(Ai.Skills.SkillCatalog).Assembly;
+    public static readonly Assembly AiPrivacy = typeof(Ai.Privacy.PseudonymizationSession).Assembly;
+    public static readonly Assembly AiTools = typeof(Ai.Tools.DependencyInjection).Assembly;
+    public static readonly Assembly AiOrchestration = typeof(Ai.Orchestration.AiOptions).Assembly;
+    public static readonly Assembly AiClaude = typeof(Ai.Claude.ClaudeEngine).Assembly;
+    public static readonly Assembly AiLocal = typeof(Ai.Local.LocalModelEngine).Assembly;
 
     public static IEnumerable<Assembly> All =>
     [
         Calculations, Contracts, Domain, Application, Persistence, PersistenceSqlite, PersistencePostgreSql,
         PersistenceSqlServer, Catalog, IdentityLocal, IdentityOidc, External, Observability, SupervisionDomain,
         SupervisionApplication, SupervisionInfrastructure, Bootstrap, UiAbstractions, UiShared, UiGatewayHttp, UiGatewayInProcess,
+        AiSkills, AiPrivacy, AiTools, AiOrchestration, AiClaude, AiLocal,
     ];
 
     public static IEnumerable<string> LettraReferencesOf(Assembly assembly) =>

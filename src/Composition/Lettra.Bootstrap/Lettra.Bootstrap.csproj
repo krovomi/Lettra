@@ -12,6 +12,11 @@
     <ProjectReference Include="..\..\Infrastructure\Lettra.Infrastructure.Identity.Oidc\Lettra.Infrastructure.Identity.Oidc.csproj" />
     <ProjectReference Include="..\..\Infrastructure\Lettra.Infrastructure.External\Lettra.Infrastructure.External.csproj" />
     <ProjectReference Include="..\..\Infrastructure\Lettra.Infrastructure.Observability\Lettra.Infrastructure.Observability.csproj" />
+    <ProjectReference Include="..\..\Ai\Lettra.Ai.Skills\Lettra.Ai.Skills.csproj" />
+    <ProjectReference Include="..\..\Ai\Lettra.Ai.Tools\Lettra.Ai.Tools.csproj" />
+    <ProjectReference Include="..\..\Ai\Lettra.Ai.Orchestration\Lettra.Ai.Orchestration.csproj" />
+    <ProjectReference Include="..\..\Ai\Lettra.Ai.Claude\Lettra.Ai.Claude.csproj" />
+    <ProjectReference Include="..\..\Ai\Lettra.Ai.Local\Lettra.Ai.Local.csproj" />
     <ProjectReference Include="..\..\Modules\Supervision\Lettra.Supervision.Infrastructure\Lettra.Supervision.Infrastructure.csproj" />
   </ItemGroup>
 

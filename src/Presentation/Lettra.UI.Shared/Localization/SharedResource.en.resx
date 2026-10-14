@@ -65,6 +65,17 @@
   <data name="Error.Address.CityRequired" xml:space="preserve"><value>The city is required.</value></data>
   <data name="Error.Address.LineRequired" xml:space="preserve"><value>The address is required.</value></data>
   <data name="Error.Address.PostalCodeInvalid" xml:space="preserve"><value>This postal code is not valid (5 digits in France).</value></data>
+  <data name="Error.Ai.Disabled" xml:space="preserve"><value>The AI assistant is turned off for this firm. The firm's administrator can turn it on.</value></data>
+  <data name="Error.Ai.DossierExcluded" xml:space="preserve"><value>The firm has excluded this client file from the AI assistant.</value></data>
+  <data name="Error.Ai.EngineUnavailable" xml:space="preserve"><value>No AI engine is available for this firm. Compliance checks remain active.</value></data>
+  <data name="Error.Ai.FeatureDisabled" xml:space="preserve"><value>The firm has not turned on this assistant feature.</value></data>
+  <data name="Error.Ai.Refused" xml:space="preserve"><value>The assistant declined to answer this request. Rephrase it or handle it without the assistant.</value></data>
+  <data name="Error.Ai.SkillPackStale" xml:space="preserve"><value>The assistant's reference material is more than six months old: check thresholds and rates on official websites.</value></data>
+  <data name="Error.Ai.ToolRejected" xml:space="preserve"><value>The assistant asked for an action that is not available, and it was refused.</value></data>
+  <data name="Error.Ai.ToolRoundsExceeded" xml:space="preserve"><value>The assistant reached the maximum number of steps without concluding.</value></data>
+  <data name="Error.Ai.Truncated" xml:space="preserve"><value>The answer was cut short.</value></data>
+  <data name="Error.Ai.UngroundedAmounts" xml:space="preserve"><value>These amounts do not come from a Lettra calculation: check them before using them.</value></data>
+  <data name="Error.Ai.UnknownReferences" xml:space="preserve"><value>The answer cites unknown references: check them.</value></data>
   <data name="Error.Api.IdempotencyKeyReused" xml:space="preserve"><value>This operation was already sent with different content.</value></data>
   <data name="Error.Api.Unexpected" xml:space="preserve"><value>An unexpected error occurred. Please try again.</value></data>
   <data name="Error.Api.Unreachable" xml:space="preserve"><value>The server cannot be reached. Check the connection.</value></data>

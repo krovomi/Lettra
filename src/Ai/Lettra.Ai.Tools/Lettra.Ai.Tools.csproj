@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Outils exposés au modèle (annexe B §4.1). Ils passent par les dispatchers de Lettra.Application :
+       mêmes droits, même validation, même audit que l'UI. Aucun n'écrit hors d'un brouillon. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Lettra.Application\Lettra.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Http" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lettra.Ai.Tests" />
+  </ItemGroup>
+
+</Project>

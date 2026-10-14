@@ -54,6 +54,7 @@ api.MapCustomers();
 api.MapSuppliers();
 api.MapCatalog();
 api.MapDirectory();
+api.MapAssistant();
 
 app.MapLettraBff();
 app.MapHealthChecks("/health");

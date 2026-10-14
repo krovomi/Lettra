@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Lettra.Contracts.Assistant;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Customers;
@@ -31,4 +32,7 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(CatalogReferenceData))]
 [JsonSerializable(typeof(CompanySearchResponse))]
 [JsonSerializable(typeof(VatNumberCheckResponse))]
+[JsonSerializable(typeof(AskAssistantRequest))]
+[JsonSerializable(typeof(AssistantEvent))]
+[JsonSerializable(typeof(IReadOnlyList<AssistantJournalEntry>))]
 public sealed partial class ContractsJsonContext : JsonSerializerContext;
