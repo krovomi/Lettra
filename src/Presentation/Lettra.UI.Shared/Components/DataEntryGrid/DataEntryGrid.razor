@@ -1,0 +1,333 @@
+@typeparam TItem where TItem : class
+@implements IGridContext
+@implements IGridRowRegistry<TItem>
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+@inject ShortcutRegistry Registry
+@inject IStringLocalizer<SharedResource> L
+@* Grille de saisie au clavier (annexe A §4.2). La navigation est entièrement traitée par grid-keyboard.js,
+   sans appel .NET ; .NET n'est appelé que pour valider une cellule modifiée, exécuter une commande du
+   registre (F4, Insert, Ctrl+Suppr…) ou créer une ligne en fin de grille. *@
+
+<div class="lg-grid @Density.CssClass()" @ref="_root" role="grid" aria-label="@(AriaLabel ?? L["Grid.DefaultLabel"])"
+     aria-rowcount="@(Items.Count + 1)" aria-colcount="@Columns.Count" style="--lg-cols: @_template">
+    <div class="lg-viewport">
+        <div class="lg-row lg-header" role="row" aria-rowindex="1">
+            @foreach (GridColumn<TItem> column in Columns)
+            {
+                <div class="lg-cell lg-head @(column.Numeric ? "lg-num" : null)" role="columnheader">@column.Label</div>
+            }
+        </div>
+        <CascadingValue TValue="IGridRowRegistry<TItem>" Value="this" IsFixed="true">
+            <Virtualize Items="_slots" ItemSize="@Density.RowHeight()" OverscanCount="12" Context="slot">
+                @{ object key = KeySelector(slot.Item); }
+                <GridRow TItem="TItem" @key="key" RowKey="key" Item="slot.Item" Index="slot.Index" Columns="Columns"
+                         CellLabelFormat="@_cellLabelFormat"
+                         ReadOnly="@(IsReadOnly?.Invoke(slot.Item) ?? false)" CssClass="@RowClass?.Invoke(slot.Item)" />
+            </Virtualize>
+        </CascadingValue>
+    </div>
+</div>
+
+@code {
+    /// <summary>Lignes saisies ; la grille les remplace par de nouveaux enregistrements à chaque saisie.</summary>
+    [Parameter, EditorRequired] public IList<TItem> Items { get; set; } = default!;
+
+    [Parameter, EditorRequired] public IReadOnlyList<GridColumn<TItem>> Columns { get; set; } = default!;
+
+    /// <summary>Clé stable d'une ligne : sans elle, une saisie recréerait la ligne et perdrait le focus.</summary>
+    [Parameter, EditorRequired] public Func<TItem, object> KeySelector { get; set; } = default!;
+
+    /// <summary>Commandes de la grille (F4, Insert…), confiées au module JS puis au registre.</summary>
+    [Parameter] public KeyboardScope? Scope { get; set; }
+
+    [Parameter] public Func<TItem, bool>? IsReadOnly { get; set; }
+
+    [Parameter] public Func<TItem, string?>? RowClass { get; set; }
+
+    /// <summary>
+    /// Enregistrement d'une saisie (serveur) avant de l'accepter : renvoie l'élément retenu, ou <c>null</c>
+    /// pour la refuser (la cellule reprend son ancienne valeur). Sans ce paramètre, toute saisie analysée est acceptée.
+    /// </summary>
+    [Parameter] public Func<GridItemChange<TItem>, Task<TItem?>>? SaveItem { get; set; }
+
+    /// <summary>Appelé après chaque saisie acceptée (ex. mise à jour incrémentale des totaux).</summary>
+    [Parameter] public EventCallback<GridItemChange<TItem>> OnItemChanged { get; set; }
+
+    /// <summary>Entrée ou Tab sur la dernière cellule : la page ajoute une ligne ; la grille y place le curseur.</summary>
+    [Parameter] public EventCallback EndReached { get; set; }
+
+    /// <summary>Libellé accessible de la grille, déjà traduit.</summary>
+    [Parameter] public string? AriaLabel { get; set; }
+
+    [CascadingParameter] public UiDensity Density { get; set; } = UiDensity.Expert;
+
+    private readonly Dictionary<object, GridRow<TItem>> _renderedRows = [];
+    private ElementReference _root;
+    private IJSObjectReference? _module;
+    private IJSObjectReference? _handle;
+    private DotNetObjectReference<DataEntryGrid<TItem>>? _self;
+    private IDisposable? _scopeRegistration;
+    private List<RowSlot> _slots = [];
+    private string _template = string.Empty;
+    private string _cellLabelFormat = "{0} {1}";
+    private FocusTarget? _requestedFocus;
+    private bool _inJsCall;
+
+    public readonly record struct RowSlot(int Index, TItem Item);
+
+    protected override void OnInitialized()
+    {
+        if (Scope is not null)
+        {
+            _scopeRegistration = Registry.PushScope(Scope);
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        _template = string.Join(' ', Columns.Select(c => c.Width));
+        _cellLabelFormat = L["Grid.CellLabel"];
+        RebuildSlots();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        _module = await JS.InvokeAsync<IJSObjectReference>("import", GridKeyboardModule.Path);
+        _self = DotNetObjectReference.Create(this);
+        int[] editable = Enumerable.Range(0, Columns.Count).Where(i => Columns[i].IsEditable).ToArray();
+        string[] commandKeys = Scope is null ? [] : ShortcutRegistry.KeysOf(Scope);
+        if (_module is not null)
+        {
+            _handle = await _module.InvokeAsync<IJSObjectReference>("attachGrid", _root, _self,
+                new GridKeyboardOptions(commandKeys, editable));
+        }
+    }
+
+    /// <summary>À appeler quand la page a ajouté, inséré ou supprimé des lignes.</summary>
+    public void Refresh()
+    {
+        RebuildSlots();
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Place le curseur sur une cellule. Pendant une commande clavier, la cible est renvoyée au module JS
+    /// (pas d'appel supplémentaire) ; sinon (clic, liste de choix fermée) on appelle le module.
+    /// </summary>
+    public async Task FocusCellAsync(int row, string columnKey)
+    {
+        FocusTarget target = new(row, ColumnIndex(columnKey));
+        if (_inJsCall)
+        {
+            _requestedFocus = target;
+            return;
+        }
+
+        if (_handle is not null)
+        {
+            await _handle.InvokeVoidAsync("focusCell", target.Row, target.Col);
+        }
+    }
+
+    public async Task<CommandContext> GetActiveCellAsync()
+    {
+        if (_handle is null)
+        {
+            return CommandContext.None;
+        }
+
+        await _handle.InvokeVoidAsync("flush");
+        FocusTarget? cell = await _handle.InvokeAsync<FocusTarget?>("activeCell");
+        return cell is null ? CommandContext.None : ToContext(cell.Row, cell.Col);
+    }
+
+    /// <summary>Saisit une valeur dans une cellule depuis .NET (ex. choix dans une liste F4), par le même chemin que le clavier.</summary>
+    public Task<CellCommitResult> CommitCellAsync(int row, string columnKey, string text) =>
+        CommitAsync(row, ColumnIndex(columnKey), text);
+
+    [JSInvokable]
+    public Task<CellCommitResult> OnCellCommitted(int row, int col, string text) =>
+        OnDispatcher(() => CommitAsync(row, col, text));
+
+    [JSInvokable]
+    public Task<FocusTarget?> OnCommand(string chord, int row, int col) =>
+        OnDispatcher(() => RunFromJs(() => Registry.TryHandleAsync(KeyChord.Parse(chord), ToContext(row, col))));
+
+    [JSInvokable]
+    public Task<FocusTarget?> OnEndReached(int col) =>
+        OnDispatcher(async () =>
+        {
+            FocusTarget? target = await RunFromJs(() => EndReached.InvokeAsync());
+            if (target is null && Items.Count > 0)
+            {
+                target = new FocusTarget(Items.Count - 1, Enumerable.Range(0, Columns.Count).First(i => Columns[i].IsEditable));
+            }
+
+            return target;
+        });
+
+    /// <summary>Les appels JS arrivent hors du dispatcher du rendu en MAUI Hybrid : on s'y replace.</summary>
+    private async Task<T> OnDispatcher<T>(Func<Task<T>> action)
+    {
+        T result = default!;
+        await InvokeAsync(async () => result = await action());
+        return result;
+    }
+
+    private async Task<CellCommitResult> CommitAsync(int row, int col, string text)
+    {
+        if (col < 0 || col >= Columns.Count || row < 0 || row >= Items.Count || Columns[col].Parse is null)
+        {
+            return new CellCommitResult(text, false);
+        }
+
+        GridColumn<TItem> column = Columns[col];
+        TItem current = Items[row];
+        if (IsReadOnly?.Invoke(current) == true)
+        {
+            return new CellCommitResult(column.Display(current), false);
+        }
+
+        TItem updated;
+        try
+        {
+            updated = column.Parse!(current, text);
+        }
+        catch (FormatException)
+        {
+            return new CellCommitResult(column.Display(current), false);
+        }
+
+        if (EqualityComparer<TItem>.Default.Equals(current, updated))
+        {
+            return new CellCommitResult(column.Display(current), true);
+        }
+
+        object key = KeySelector(current);
+        if (SaveItem is not null)
+        {
+            TItem? saved = await SaveItem(new GridItemChange<TItem>(row, current, updated));
+            if (saved is null)
+            {
+                return new CellCommitResult(column.Display(current), false);
+            }
+
+            updated = saved;
+        }
+
+        // La liste a pu bouger pendant l'enregistrement : on retrouve la ligne par sa clé.
+        int index = IndexOfKey(key, row);
+        if (index < 0)
+        {
+            return new CellCommitResult(column.Display(updated), true);
+        }
+
+        Items[index] = updated;
+        _slots[index] = new RowSlot(index, updated);
+        // Seule la ligne modifiée est re-rendue ; la grille et les autres lignes ne bougent pas.
+        if (_renderedRows.TryGetValue(key, out GridRow<TItem>? rendered))
+        {
+            rendered.Update(updated);
+        }
+
+        await OnItemChanged.InvokeAsync(new GridItemChange<TItem>(index, current, updated));
+        return new CellCommitResult(column.Display(updated), true);
+    }
+
+    private int IndexOfKey(object key, int hint)
+    {
+        if (hint < Items.Count && Equals(KeySelector(Items[hint]), key))
+        {
+            return hint;
+        }
+
+        for (int i = 0; i < Items.Count; i++)
+        {
+            if (Equals(KeySelector(Items[i]), key))
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private async Task<FocusTarget?> RunFromJs(Func<Task> action)
+    {
+        _inJsCall = true;
+        _requestedFocus = null;
+        try
+        {
+            await action();
+            return _requestedFocus;
+        }
+        finally
+        {
+            _inJsCall = false;
+        }
+    }
+
+    void IGridRowRegistry<TItem>.Attach(object key, GridRow<TItem> row) => _renderedRows[key] = row;
+
+    void IGridRowRegistry<TItem>.Detach(object key, GridRow<TItem> row)
+    {
+        if (_renderedRows.TryGetValue(key, out GridRow<TItem>? current) && ReferenceEquals(current, row))
+        {
+            _renderedRows.Remove(key);
+        }
+    }
+
+    private CommandContext ToContext(int row, int col) => new(row, col >= 0 && col < Columns.Count ? Columns[col].Key : string.Empty);
+
+    private int ColumnIndex(string key)
+    {
+        for (int i = 0; i < Columns.Count; i++)
+        {
+            if (Columns[i].Key == key)
+            {
+                return i;
+            }
+        }
+
+        throw new ArgumentException($"Colonne inconnue : {key}", nameof(key));
+    }
+
+    private void RebuildSlots()
+    {
+        _slots = new List<RowSlot>(Items.Count);
+        for (int i = 0; i < Items.Count; i++)
+        {
+            _slots.Add(new RowSlot(i, Items[i]));
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _scopeRegistration?.Dispose();
+        try
+        {
+            if (_handle is not null)
+            {
+                await _handle.InvokeVoidAsync("dispose");
+                await _handle.DisposeAsync();
+            }
+
+            if (_module is not null)
+            {
+                await _module.DisposeAsync();
+            }
+        }
+        catch (JSDisconnectedException)
+        {
+            // Hôte fermé : plus rien à détacher.
+        }
+
+        _self?.Dispose();
+    }
+}

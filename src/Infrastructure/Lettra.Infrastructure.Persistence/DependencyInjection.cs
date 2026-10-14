@@ -20,6 +20,7 @@ public static class DependencyInjection
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<ICustomerReadStore, CustomerReadStore>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddPartiesAndCatalogStores();
         return services;
     }
 }

@@ -4,6 +4,45 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Catalog.ArchivedDone" xml:space="preserve"><value>Article « {0} » archivé.</value></data>
+  <data name="Catalog.Choice.Kind" xml:space="preserve"><value>Nature de l'article (F4)</value></data>
+  <data name="Catalog.Choice.Unit" xml:space="preserve"><value>Unité (F4)</value></data>
+  <data name="Catalog.Choice.Vat" xml:space="preserve"><value>Taux de TVA (F4)</value></data>
+  <data name="Catalog.Column.Designation" xml:space="preserve"><value>Désignation</value></data>
+  <data name="Catalog.Column.Kind" xml:space="preserve"><value>Nature</value></data>
+  <data name="Catalog.Column.PriceExclTax" xml:space="preserve"><value>PU HT</value></data>
+  <data name="Catalog.Column.PriceInclTax" xml:space="preserve"><value>PU TTC</value></data>
+  <data name="Catalog.Column.Reference" xml:space="preserve"><value>Référence</value></data>
+  <data name="Catalog.Column.Unit" xml:space="preserve"><value>Unité</value></data>
+  <data name="Catalog.Column.Vat" xml:space="preserve"><value>TVA</value></data>
+  <data name="Catalog.Command.Archive" xml:space="preserve"><value>Archiver / réactiver</value></data>
+  <data name="Catalog.Command.ChoiceList" xml:space="preserve"><value>Liste de choix</value></data>
+  <data name="Catalog.Command.Density" xml:space="preserve"><value>Densité</value></data>
+  <data name="Catalog.Command.New" xml:space="preserve"><value>Nouvel article</value></data>
+  <data name="Catalog.Command.Search" xml:space="preserve"><value>Rechercher</value></data>
+  <data name="Catalog.Created" xml:space="preserve"><value>Article « {0} » créé.</value></data>
+  <data name="Catalog.Grid" xml:space="preserve"><value>Articles du catalogue</value></data>
+  <data name="Catalog.Hint" xml:space="preserve"><value>Entrée ou Tab : cellule suivante (une nouvelle ligne en fin de grille) · F2 : modifier · Échap : annuler · F4 : liste de choix · Ctrl+Suppr : archiver.</value></data>
+  <data name="Catalog.List.Empty" xml:space="preserve"><value>Aucun article pour l'instant.</value></data>
+  <data name="Catalog.List.Title" xml:space="preserve"><value>Articles du dossier</value></data>
+  <data name="Catalog.New" xml:space="preserve"><value>Nouvel article</value></data>
+  <data name="Catalog.Reactivated" xml:space="preserve"><value>Article « {0} » réactivé.</value></data>
+  <data name="Catalog.Saved" xml:space="preserve"><value>Article « {0} » enregistré.</value></data>
+  <data name="Catalog.Search" xml:space="preserve"><value>Rechercher</value></data>
+  <data name="Catalog.ShowArchived" xml:space="preserve"><value>Afficher les articles archivés</value></data>
+  <data name="Catalog.Title" xml:space="preserve"><value>Catalogue</value></data>
+  <data name="Catalog.VatPercent" xml:space="preserve"><value>{0} %</value></data>
+  <data name="CatalogItemKind.Good" xml:space="preserve"><value>Bien</value></data>
+  <data name="CatalogItemKind.Service" xml:space="preserve"><value>Service</value></data>
+  <data name="ChoiceList.Filter" xml:space="preserve"><value>Filtrer la liste</value></data>
+  <data name="ChoiceList.Hint" xml:space="preserve"><value>↑ ↓ pour choisir · Entrée pour valider · Échap pour annuler · {0} résultat(s)</value></data>
+  <data name="CompanyLookup.Ceased" xml:space="preserve"><value>cessée</value></data>
+  <data name="CompanyLookup.Hint" xml:space="preserve"><value>Au moins 3 caractères : nom, SIREN ou SIRET. Vous pouvez aussi tout saisir à la main.</value></data>
+  <data name="CompanyLookup.Label" xml:space="preserve"><value>Rechercher l'entreprise (annuaire SIRENE)</value></data>
+  <data name="CompanyLookup.NoResult" xml:space="preserve"><value>Aucune entreprise trouvée.</value></data>
+  <data name="CompanyLookup.Results" xml:space="preserve"><value>Entreprises trouvées</value></data>
+  <data name="CompanyLookup.Search" xml:space="preserve"><value>Rechercher dans l'annuaire</value></data>
+  <data name="CompanyLookup.Siren" xml:space="preserve"><value>SIREN {0}</value></data>
   <data name="Customers.Create.Done" xml:space="preserve"><value>Client « {0} » créé.</value></data>
   <data name="Customers.Create.Submit" xml:space="preserve"><value>Créer le client</value></data>
   <data name="Customers.Create.Title" xml:space="preserve"><value>Nouveau client</value></data>
@@ -29,6 +68,19 @@
   <data name="Error.Api.IdempotencyKeyReused" xml:space="preserve"><value>Cette opération a déjà été envoyée avec un contenu différent.</value></data>
   <data name="Error.Api.Unexpected" xml:space="preserve"><value>Une erreur inattendue est survenue. Réessayez.</value></data>
   <data name="Error.Api.Unreachable" xml:space="preserve"><value>Le serveur est injoignable. Vérifiez la connexion.</value></data>
+  <data name="Error.CatalogItem.Archived" xml:space="preserve"><value>Cet article est archivé : réactivez-le pour le modifier ou l'utiliser.</value></data>
+  <data name="Error.CatalogItem.DescriptionTooLong" xml:space="preserve"><value>Le descriptif ne doit pas dépasser 2 000 caractères.</value></data>
+  <data name="Error.CatalogItem.DesignationRequired" xml:space="preserve"><value>La désignation de l'article est obligatoire.</value></data>
+  <data name="Error.CatalogItem.DesignationTooLong" xml:space="preserve"><value>La désignation ne doit pas dépasser 200 caractères.</value></data>
+  <data name="Error.CatalogItem.KindInvalid" xml:space="preserve"><value>Choisissez la nature de l'article : bien ou service.</value></data>
+  <data name="Error.CatalogItem.NotFound" xml:space="preserve"><value>Cet article est introuvable.</value></data>
+  <data name="Error.CatalogItem.PriceNegative" xml:space="preserve"><value>Le prix ne peut pas être négatif.</value></data>
+  <data name="Error.CatalogItem.PriceTooLarge" xml:space="preserve"><value>Ce prix est trop élevé.</value></data>
+  <data name="Error.CatalogItem.ReferenceAlreadyUsed" xml:space="preserve"><value>Cette référence est déjà utilisée par un autre article.</value></data>
+  <data name="Error.CatalogItem.ReferenceInvalid" xml:space="preserve"><value>La référence contient des caractères non autorisés.</value></data>
+  <data name="Error.CatalogItem.ReferenceRequired" xml:space="preserve"><value>La référence de l'article est obligatoire.</value></data>
+  <data name="Error.CatalogItem.ReferenceTooLong" xml:space="preserve"><value>La référence ne doit pas dépasser 50 caractères.</value></data>
+  <data name="Error.CatalogItem.UnitUnknown" xml:space="preserve"><value>Cette unité n'est pas reconnue.</value></data>
   <data name="Error.CountryCode.Invalid" xml:space="preserve"><value>Indiquez un code pays à 2 lettres (FR, BE…).</value></data>
   <data name="Error.Customer.IndividualCannotHaveCompanyIds" xml:space="preserve"><value>Un particulier n'a ni SIREN ni numéro de TVA.</value></data>
   <data name="Error.Customer.KindInvalid" xml:space="preserve"><value>Choisissez le type de client.</value></data>
@@ -37,22 +89,58 @@
   <data name="Error.Customer.NotFound" xml:space="preserve"><value>Ce client est introuvable.</value></data>
   <data name="Error.Customer.SirenRequired" xml:space="preserve"><value>Une entreprise française doit avoir un SIREN (ou un SIRET).</value></data>
   <data name="Error.Customer.SiretSirenMismatch" xml:space="preserve"><value>Ce SIRET n'appartient pas au SIREN indiqué.</value></data>
+  <data name="Error.Directory.QueryTooShort" xml:space="preserve"><value>Saisissez au moins 3 caractères pour rechercher.</value></data>
+  <data name="Error.Directory.Unavailable" xml:space="preserve"><value>L'annuaire est indisponible pour le moment. Vous pouvez saisir les informations à la main.</value></data>
+  <data name="Error.Directory.VatCountryNotSupported" xml:space="preserve"><value>La vérification VIES ne couvre que les numéros de TVA des pays de l'Union européenne.</value></data>
   <data name="Error.Dossier.Mismatch" xml:space="preserve"><value>Cette action vise un autre dossier que celui ouvert.</value></data>
   <data name="Error.Dossier.NotFound" xml:space="preserve"><value>Ce dossier est introuvable ou vous n'y avez pas accès.</value></data>
   <data name="Error.Dossier.Required" xml:space="preserve"><value>Ouvrez d'abord un dossier.</value></data>
   <data name="Error.Email.Invalid" xml:space="preserve"><value>Cette adresse e-mail n'est pas valide.</value></data>
+  <data name="Error.Iban.Invalid" xml:space="preserve"><value>Cet IBAN n'est pas valide (vérifiez le pays, la longueur et la clé).</value></data>
   <data name="Error.Money.CurrencyMismatch" xml:space="preserve"><value>Les montants sont dans des devises différentes.</value></data>
+  <data name="Error.Party.VatNumberSirenMismatch" xml:space="preserve"><value>Ce numéro de TVA ne correspond pas au SIREN indiqué.</value></data>
   <data name="Error.Security.Forbidden" xml:space="preserve"><value>Vous n'avez pas les droits pour cette action dans ce dossier.</value></data>
   <data name="Error.Security.Unauthenticated" xml:space="preserve"><value>Votre session a expiré, reconnectez-vous.</value></data>
   <data name="Error.Siren.Invalid" xml:space="preserve"><value>Le SIREN doit compter 9 chiffres et avoir une clé valide.</value></data>
   <data name="Error.Siret.Invalid" xml:space="preserve"><value>Le SIRET doit compter 14 chiffres et avoir une clé valide.</value></data>
+  <data name="Error.Supplier.NameRequired" xml:space="preserve"><value>Le nom du fournisseur est obligatoire.</value></data>
+  <data name="Error.Supplier.NameTooLong" xml:space="preserve"><value>Le nom ne doit pas dépasser 200 caractères.</value></data>
+  <data name="Error.Supplier.NotFound" xml:space="preserve"><value>Ce fournisseur est introuvable.</value></data>
+  <data name="Error.Supplier.SirenRequired" xml:space="preserve"><value>Un fournisseur français doit avoir un SIREN (ou un SIRET).</value></data>
+  <data name="Error.Supplier.SiretSirenMismatch" xml:space="preserve"><value>Ce SIRET n'appartient pas au SIREN indiqué.</value></data>
   <data name="Error.Validation.Invalid" xml:space="preserve"><value>Cette valeur n'est pas valide.</value></data>
   <data name="Error.Validation.Required" xml:space="preserve"><value>Ce champ est obligatoire.</value></data>
   <data name="Error.Validation.TooLong" xml:space="preserve"><value>Ce texte est trop long.</value></data>
   <data name="Error.VatNumber.Invalid" xml:space="preserve"><value>Ce numéro de TVA intracommunautaire n'est pas valide.</value></data>
   <data name="Error.VatRate.Unknown" xml:space="preserve"><value>Ce taux de TVA n'est pas reconnu.</value></data>
+  <data name="Grid.CellLabel" xml:space="preserve"><value>{0}, ligne {1}</value></data>
+  <data name="Grid.DefaultLabel" xml:space="preserve"><value>Grille de saisie</value></data>
+  <data name="Keyboard.FunctionKeys" xml:space="preserve"><value>Touches de fonction</value></data>
   <data name="Loading" xml:space="preserve"><value>Chargement…</value></data>
+  <data name="Nav.Catalog" xml:space="preserve"><value>Catalogue</value></data>
   <data name="Nav.Customers" xml:space="preserve"><value>Clients</value></data>
   <data name="Nav.Label" xml:space="preserve"><value>Navigation principale</value></data>
+  <data name="Nav.Suppliers" xml:space="preserve"><value>Fournisseurs</value></data>
   <data name="NotFound" xml:space="preserve"><value>Cette page n'existe pas.</value></data>
+  <data name="Suppliers.Create.Done" xml:space="preserve"><value>Fournisseur « {0} » créé.</value></data>
+  <data name="Suppliers.Create.Submit" xml:space="preserve"><value>Créer le fournisseur</value></data>
+  <data name="Suppliers.Create.Title" xml:space="preserve"><value>Nouveau fournisseur</value></data>
+  <data name="Suppliers.Field.Iban" xml:space="preserve"><value>IBAN</value></data>
+  <data name="Suppliers.List.Empty" xml:space="preserve"><value>Aucun fournisseur pour l'instant.</value></data>
+  <data name="Suppliers.List.Title" xml:space="preserve"><value>Fournisseurs du dossier</value></data>
+  <data name="Suppliers.Title" xml:space="preserve"><value>Fournisseurs</value></data>
+  <data name="Unit.C62" xml:space="preserve"><value>Unité</value></data>
+  <data name="Unit.DAY" xml:space="preserve"><value>Jour</value></data>
+  <data name="Unit.HUR" xml:space="preserve"><value>Heure</value></data>
+  <data name="Unit.KGM" xml:space="preserve"><value>Kilogramme</value></data>
+  <data name="Unit.KMT" xml:space="preserve"><value>Kilomètre</value></data>
+  <data name="Unit.LS" xml:space="preserve"><value>Forfait</value></data>
+  <data name="Unit.LTR" xml:space="preserve"><value>Litre</value></data>
+  <data name="Unit.MON" xml:space="preserve"><value>Mois</value></data>
+  <data name="Unit.MTK" xml:space="preserve"><value>Mètre carré</value></data>
+  <data name="Unit.MTQ" xml:space="preserve"><value>Mètre cube</value></data>
+  <data name="Unit.MTR" xml:space="preserve"><value>Mètre</value></data>
+  <data name="Vies.Check" xml:space="preserve"><value>Vérifier (VIES)</value></data>
+  <data name="Vies.Invalid" xml:space="preserve"><value>Numéro inconnu de VIES ou inactif</value></data>
+  <data name="Vies.Valid" xml:space="preserve"><value>Numéro valide</value></data>
 </root>

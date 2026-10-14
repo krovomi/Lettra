@@ -1,0 +1,172 @@
+@page "/suppliers"
+@inject ISuppliersGateway Gateway
+@inject IStringLocalizer<SharedResource> L
+
+<PageTitle>@L["Suppliers.Title"] · Lettra</PageTitle>
+
+<h1 tabindex="-1">@L["Suppliers.Title"]</h1>
+
+<section aria-labelledby="create-title" class="lettra-card">
+    <h2 id="create-title">@L["Suppliers.Create.Title"]</h2>
+
+    <CompanyLookup Id="supplier-lookup" OnSelected="Prefill" />
+
+    <EditForm Model="_request" OnValidSubmit="CreateAsync" FormName="create-supplier">
+        <DataAnnotationsValidator />
+
+        <label for="name">@L["Customers.Field.Name"]</label>
+        <InputText id="name" @bind-Value="_request.Name" autocomplete="organization" />
+        <FieldErrors Field="@nameof(CreateSupplierRequest.Name)" ServerErrors="_errors" />
+
+        <label for="siret">@L["Customers.Field.Siret"]</label>
+        <InputText id="siret" @bind-Value="_request.Siret" inputmode="numeric" />
+        <FieldErrors Field="@nameof(CreateSupplierRequest.Siret)" ServerErrors="_errors" />
+
+        <label for="siren">@L["Customers.Field.Siren"]</label>
+        <InputText id="siren" @bind-Value="_request.Siren" inputmode="numeric" />
+        <FieldErrors Field="@nameof(CreateSupplierRequest.Siren)" ServerErrors="_errors" />
+
+        <label for="vat">@L["Customers.Field.VatNumber"]</label>
+        <div class="lettra-inline">
+            <InputText id="vat" @bind-Value="_request.VatNumber" />
+            <VatNumberCheck VatNumber="@_request.VatNumber" />
+        </div>
+        <FieldErrors Field="@nameof(CreateSupplierRequest.VatNumber)" ServerErrors="_errors" />
+
+        <label for="email">@L["Customers.Field.Email"]</label>
+        <InputText id="email" type="email" @bind-Value="_request.Email" autocomplete="email" />
+        <FieldErrors Field="@nameof(CreateSupplierRequest.Email)" ServerErrors="_errors" />
+
+        <label for="iban">@L["Suppliers.Field.Iban"]</label>
+        <InputText id="iban" @bind-Value="_request.Iban" autocomplete="off" spellcheck="false" />
+        <FieldErrors Field="@nameof(CreateSupplierRequest.Iban)" ServerErrors="_errors" />
+
+        <label for="line1">@L["Customers.Field.AddressLine1"]</label>
+        <InputText id="line1" @bind-Value="_request.AddressLine1" autocomplete="address-line1" />
+        <FieldErrors Field="@nameof(CreateSupplierRequest.AddressLine1)" ServerErrors="_errors" />
+
+        <label for="line2">@L["Customers.Field.AddressLine2"]</label>
+        <InputText id="line2" @bind-Value="_request.AddressLine2" autocomplete="address-line2" />
+
+        <label for="zip">@L["Customers.Field.PostalCode"]</label>
+        <InputText id="zip" @bind-Value="_request.PostalCode" autocomplete="postal-code" />
+        <FieldErrors Field="@nameof(CreateSupplierRequest.PostalCode)" ServerErrors="_errors" />
+
+        <label for="city">@L["Customers.Field.City"]</label>
+        <InputText id="city" @bind-Value="_request.City" autocomplete="address-level2" />
+        <FieldErrors Field="@nameof(CreateSupplierRequest.City)" ServerErrors="_errors" />
+
+        <label for="country">@L["Customers.Field.CountryCode"]</label>
+        <InputText id="country" @bind-Value="_request.CountryCode" maxlength="2" autocomplete="country" />
+        <FieldErrors Field="@nameof(CreateSupplierRequest.CountryCode)" ServerErrors="_errors" />
+
+        @foreach (ErrorDetail error in _errors.Where(e => e.Target is null))
+        {
+            <p class="validation-message" role="alert">@L.Error(error.Code)</p>
+        }
+
+        <button type="submit" disabled="@_busy">@L["Suppliers.Create.Submit"]</button>
+
+        @if (_created is not null)
+        {
+            <p role="status" class="lettra-success">@string.Format(CultureInfo.CurrentCulture, L["Suppliers.Create.Done"], _created.Name)</p>
+        }
+    </EditForm>
+</section>
+
+<section aria-labelledby="list-title" class="lettra-card">
+    <h2 id="list-title">@L["Suppliers.List.Title"]</h2>
+    @if (_page is null)
+    {
+        <p>@L["Loading"]</p>
+    }
+    else if (_page.TotalCount == 0)
+    {
+        <p>@L["Suppliers.List.Empty"]</p>
+    }
+    else
+    {
+        <table class="lettra-table">
+            <thead>
+                <tr>
+                    <th scope="col">@L["Customers.Field.Name"]</th>
+                    <th scope="col">@L["Customers.Field.Siren"]</th>
+                    <th scope="col">@L["Customers.Field.City"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (SupplierSummary supplier in _page.Items)
+                {
+                    <tr>
+                        <td>@supplier.Name</td>
+                        <td>@supplier.Siren</td>
+                        <td>@supplier.City</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
+
+@code {
+    private CreateSupplierRequest _request = new();
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private PagedResponse<SupplierSummary>? _page;
+    private SupplierResponse? _created;
+    private bool _busy;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    /// <summary>Pré-remplit le formulaire depuis l'annuaire ; l'utilisateur relit avant de créer.</summary>
+    private void Prefill(CompanySearchResult company)
+    {
+        _request.Name = company.Name;
+        _request.Siren = company.Siren;
+        _request.Siret = company.Siret;
+        _request.VatNumber = company.VatNumber;
+        _request.AddressLine1 = company.AddressLine1 ?? string.Empty;
+        _request.AddressLine2 = company.AddressLine2;
+        _request.PostalCode = company.PostalCode ?? string.Empty;
+        _request.City = company.City ?? string.Empty;
+        _request.CountryCode = company.CountryCode;
+    }
+
+    private async Task CreateAsync()
+    {
+        _busy = true;
+        _created = null;
+        try
+        {
+            OperationResult<SupplierResponse> result = await Gateway.CreateAsync(_request, CancellationToken.None);
+            if (result.IsSuccess)
+            {
+                _created = result.Value;
+                _errors = [];
+                _request = new CreateSupplierRequest();
+                await LoadAsync();
+            }
+            else
+            {
+                _errors = result.Errors;
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        OperationResult<PagedResponse<SupplierSummary>> result = await Gateway.ListAsync(1, 50, CancellationToken.None);
+        if (result.IsSuccess)
+        {
+            _page = result.Value;
+        }
+        else
+        {
+            _errors = result.Errors;
+            _page = new PagedResponse<SupplierSummary>([], 1, 50, 0);
+        }
+    }
+}

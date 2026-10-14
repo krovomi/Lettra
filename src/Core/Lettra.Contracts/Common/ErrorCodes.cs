@@ -27,6 +27,7 @@ public static class ErrorCodes
         public const string CityRequired = "Address.CityRequired";
         public const string CurrencyMismatch = "Money.CurrencyMismatch";
         public const string VatRateUnknown = "VatRate.Unknown";
+        public const string IbanInvalid = "Iban.Invalid";
     }
 
     public static class Customer
@@ -38,6 +39,45 @@ public static class ErrorCodes
         public const string IndividualCannotHaveCompanyIds = "Customer.IndividualCannotHaveCompanyIds";
         public const string KindInvalid = "Customer.KindInvalid";
         public const string NotFound = "Customer.NotFound";
+    }
+
+    public static class Party
+    {
+        public const string VatNumberSirenMismatch = "Party.VatNumberSirenMismatch";
+    }
+
+    public static class Supplier
+    {
+        public const string NameRequired = "Supplier.NameRequired";
+        public const string NameTooLong = "Supplier.NameTooLong";
+        public const string SirenRequired = "Supplier.SirenRequired";
+        public const string SiretSirenMismatch = "Supplier.SiretSirenMismatch";
+        public const string NotFound = "Supplier.NotFound";
+    }
+
+    public static class CatalogItem
+    {
+        public const string ReferenceRequired = "CatalogItem.ReferenceRequired";
+        public const string ReferenceTooLong = "CatalogItem.ReferenceTooLong";
+        public const string ReferenceInvalid = "CatalogItem.ReferenceInvalid";
+        public const string ReferenceAlreadyUsed = "CatalogItem.ReferenceAlreadyUsed";
+        public const string DesignationRequired = "CatalogItem.DesignationRequired";
+        public const string DesignationTooLong = "CatalogItem.DesignationTooLong";
+        public const string DescriptionTooLong = "CatalogItem.DescriptionTooLong";
+        public const string KindInvalid = "CatalogItem.KindInvalid";
+        public const string UnitUnknown = "CatalogItem.UnitUnknown";
+        public const string PriceNegative = "CatalogItem.PriceNegative";
+        public const string PriceTooLarge = "CatalogItem.PriceTooLarge";
+        public const string Archived = "CatalogItem.Archived";
+        public const string NotFound = "CatalogItem.NotFound";
+    }
+
+    /// <summary>Annuaires publics consultés depuis Lettra (SIRENE, VIES).</summary>
+    public static class Directory
+    {
+        public const string QueryTooShort = "Directory.QueryTooShort";
+        public const string Unavailable = "Directory.Unavailable";
+        public const string VatCountryNotSupported = "Directory.VatCountryNotSupported";
     }
 
     public static class Security

@@ -29,3 +29,20 @@ body { margin: 0; }
 .lettra-success { color: var(--lettra-success); }
 .lettra-table { width: 100%; border-collapse: collapse; }
 .lettra-table th, .lettra-table td { text-align: left; padding: 0.35rem 0.5rem; border-bottom: 1px solid #e3e6eb; }
+
+/* Catalogue (grille clavier), recherche dans l'annuaire, vérification VIES. */
+.lettra-toolbar { display: flex; flex-wrap: wrap; gap: var(--lettra-gap); align-items: center; margin-bottom: var(--lettra-gap); }
+.lettra-toolbar input[type=search] { padding: 0.4rem; border: 1px solid #c3c8d1; border-radius: 4px; min-width: 16rem; }
+.lettra-toolbar button { padding: 0.4rem 1rem; background: var(--lettra-accent); color: #fff; border: 0; border-radius: 4px; }
+.lettra-grid-host { height: 60vh; min-height: 16rem; }
+.lettra-lookup { display: grid; gap: 0.35rem; margin-bottom: var(--lettra-gap); }
+.lettra-lookup-row { display: flex; gap: 0.5rem; }
+.lettra-lookup-row input { flex: 1; padding: 0.4rem; border: 1px solid #c3c8d1; border-radius: 4px; }
+.lettra-lookup-row button, .lettra-inline button { margin-top: 0; }
+.lettra-lookup ul { list-style: none; margin: 0; padding: 0; border: 1px solid #e3e6eb; border-radius: 4px; }
+.lettra-lookup li { padding: 0.35rem 0.5rem; cursor: pointer; }
+.lettra-lookup li[aria-selected="true"] { background: #eef3ff; outline: 1px solid var(--lettra-accent); outline-offset: -1px; }
+.lettra-badge { display: inline-block; margin-left: 0.5rem; padding: 0 0.4rem; border-radius: 4px; font-size: 0.8em; background: #fde8e8; color: var(--lettra-danger); }
+.lettra-muted { color: #5b6577; }
+.lettra-inline { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+.lettra-inline input { flex: 1; }

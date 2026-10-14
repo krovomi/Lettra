@@ -17,6 +17,9 @@ public sealed record VatNumber
 
     public string CountryPrefix => Value[..2];
 
+    /// <summary>SIREN contenu dans un numéro de TVA français (<c>FR</c> + clé + SIREN), sinon <c>null</c>.</summary>
+    public string? FrenchSiren => CountryPrefix == "FR" ? Value[4..] : null;
+
     public static Result<VatNumber> Create(string? raw)
     {
         if (string.IsNullOrWhiteSpace(raw))

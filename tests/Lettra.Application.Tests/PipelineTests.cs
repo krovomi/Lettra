@@ -40,6 +40,7 @@ public sealed class PipelineTests : IAsyncLifetime
         services.AddSingleton<ICustomerRepository>(_customers);
         services.AddSingleton<ICustomerReadStore>(_customers);
         services.AddSingleton<IUnitOfWork>(_customers);
+        services.AddPartiesAndCatalogFakes(new InMemoryPartiesAndCatalog(), new FakeDirectories());
         _root = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
         _scope = _root.CreateAsyncScope();
         return Task.CompletedTask;

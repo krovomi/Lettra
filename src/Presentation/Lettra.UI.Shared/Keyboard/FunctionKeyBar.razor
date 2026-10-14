@@ -1,0 +1,31 @@
+@implements IDisposable
+@inject ShortcutRegistry Registry
+@inject IStringLocalizer<SharedResource> L
+@* Barre F1…F12 façon client lourd. Au clic ou au toucher, la commande s'applique à la cellule active
+   de la grille : la barre sert aussi en densité Confort, sur tablette, sans clavier physique. *@
+<nav class="lg-fkeys" aria-label="@L["Keyboard.FunctionKeys"]">
+    @foreach (ShortcutBinding binding in Registry.VisibleBindings)
+    {
+        <button type="button" class="lg-fkey" title="@($"{binding.Label} ({binding.Chord})")"
+                @onmousedown:preventDefault @onclick="() => RunAsync(binding)">
+            <kbd>@binding.Chord</kbd><span>@binding.Label</span>
+        </button>
+    }
+</nav>
+
+@code {
+    /// <summary>Grille dont la cellule active sert de contexte ; null pour des commandes hors grille.</summary>
+    [Parameter] public IGridContext? Grid { get; set; }
+
+    protected override void OnInitialized() => Registry.Changed += OnRegistryChanged;
+
+    private void OnRegistryChanged(object? sender, EventArgs e) => _ = InvokeAsync(StateHasChanged);
+
+    private async Task RunAsync(ShortcutBinding binding)
+    {
+        CommandContext context = Grid is null ? CommandContext.None : await Grid.GetActiveCellAsync();
+        await Registry.TryHandleAsync(binding.Chord, context);
+    }
+
+    public void Dispose() => Registry.Changed -= OnRegistryChanged;
+}

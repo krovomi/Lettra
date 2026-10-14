@@ -23,6 +23,66 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Lettra.Domain.Catalog.CatalogItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Designation")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ReferenceKey")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
+                    b.Property<decimal>("UnitPriceExclTax")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("VatRate")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Designation");
+
+                    b.HasIndex("ReferenceKey")
+                        .IsUnique();
+
+                    b.ToTable("CatalogItems", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Domain.Parties.Customer", b =>
                 {
                     b.Property<Guid>("Id")
@@ -96,6 +156,82 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.HasIndex("Siren");
 
                     b.ToTable("Customers", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Parties.Supplier", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(254)
+                        .HasColumnType("nvarchar(254)");
+
+                    b.Property<string>("Iban")
+                        .HasMaxLength(34)
+                        .HasColumnType("nvarchar(34)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Siren")
+                        .HasMaxLength(9)
+                        .HasColumnType("nvarchar(9)");
+
+                    b.Property<string>("Siret")
+                        .HasMaxLength(14)
+                        .HasColumnType("nvarchar(14)");
+
+                    b.Property<string>("VatNumber")
+                        .HasMaxLength(15)
+                        .HasColumnType("nvarchar(15)");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Address", "Lettra.Domain.Parties.Supplier.Address#PostalAddress", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("nvarchar(200)")
+                                .HasColumnName("City");
+
+                            b1.Property<string>("Country")
+                                .IsRequired()
+                                .HasMaxLength(2)
+                                .HasColumnType("nvarchar(2)")
+                                .HasColumnName("Country");
+
+                            b1.Property<string>("Line1")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("nvarchar(200)")
+                                .HasColumnName("AddressLine1");
+
+                            b1.Property<string>("Line2")
+                                .HasMaxLength(200)
+                                .HasColumnType("nvarchar(200)")
+                                .HasColumnName("AddressLine2");
+
+                            b1.Property<string>("PostalCode")
+                                .IsRequired()
+                                .HasMaxLength(16)
+                                .HasColumnType("nvarchar(16)")
+                                .HasColumnName("PostalCode");
+                        });
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name");
+
+                    b.HasIndex("Siren");
+
+                    b.ToTable("Suppliers", (string)null);
                 });
 #pragma warning restore 612, 618
         }
