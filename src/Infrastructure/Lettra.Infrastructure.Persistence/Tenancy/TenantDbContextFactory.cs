@@ -1,77 +1,94 @@
 using System.Collections.Concurrent;
 using System.Collections.Frozen;
 using Lettra.Application.Abstractions.Tenancy;
-using Lettra.Domain.SharedKernel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Lettra.Infrastructure.Persistence.Tenancy;
 
-/// <summary>Fabrique le <see cref="LettraDbContext"/> du dossier courant, avec le provider et la chaîne de connexion de ce dossier.</summary>
+/// <summary>Fabrique le <see cref="LettraDbContext"/> du dossier courant, vérifié par son estampille.</summary>
 public interface ITenantDbContextFactory
 {
     ValueTask<LettraDbContext> CreateAsync(CancellationToken cancellationToken);
 }
 
-internal sealed class TenantDbContextFactory(
-    ITenantContext tenant,
+/// <summary>
+/// Fabrique utilisable hors d'une portée de dossier (Worker, création de dossier) : le descripteur est
+/// passé explicitement.
+/// </summary>
+public interface IDossierDbContextFactory
+{
+    /// <remarks><c>verifyStamp</c> :
+    /// <c>false</c> seulement pour le migrateur, qui vérifie lui-même l'estampille d'une base déjà initialisée.
+    /// </remarks>
+    ValueTask<LettraDbContext> CreateAsync(TenantDescriptor tenant, bool verifyStamp, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Dernière migration compilée pour ce provider, sans ouvrir de connexion. Les trois assemblies de migrations
+    /// portent les mêmes identifiants, ce qui permet au Worker de comparer les versions d'un provider à l'autre.
+    /// </summary>
+    string? LatestMigration(DatabaseProvider provider);
+}
+
+internal sealed class DossierDbContextFactory(
     ISecretStore secrets,
     IEnumerable<IDbProviderConfigurator> configurators,
-    ILoggerFactory loggerFactory) : ITenantDbContextFactory
+    ILoggerFactory loggerFactory) : IDossierDbContextFactory
 {
     private readonly FrozenDictionary<DatabaseProvider, IDbProviderConfigurator> _byProvider =
         configurators.ToFrozenDictionary(c => c.Provider);
 
-    public async ValueTask<LettraDbContext> CreateAsync(CancellationToken cancellationToken)
-    {
-        TenantDescriptor descriptor = tenant.Current;
-        if (!_byProvider.TryGetValue(descriptor.Provider, out IDbProviderConfigurator? configurator))
-        {
-            throw new InvalidOperationException($"Provider {descriptor.Provider} non enregistré dans ce mode de déploiement.");
-        }
+    private readonly ConcurrentDictionary<DatabaseProvider, string?> _latest = new();
 
-        string connectionString = await secrets.GetConnectionStringAsync(descriptor.ConnectionSecretRef, cancellationToken).ConfigureAwait(false);
+    public async ValueTask<LettraDbContext> CreateAsync(TenantDescriptor tenant, bool verifyStamp, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(tenant);
+        IDbProviderConfigurator configurator = ConfiguratorFor(tenant.Provider);
+        string connectionString = await secrets.GetConnectionStringAsync(tenant.ConnectionSecretRef, cancellationToken).ConfigureAwait(false);
+
         DbContextOptionsBuilder<LettraDbContext> builder = new DbContextOptionsBuilder<LettraDbContext>()
             .UseLoggerFactory(loggerFactory);
-        configurator.Configure(builder, connectionString, descriptor);
-        return new LettraDbContext(builder.Options, descriptor);
-    }
-}
-
-/// <summary>
-/// Applique les migrations d'un dossier une seule fois par processus. Suffisant pour le poste isolé et le
-/// serveur de cabinet ; en SaaS, <c>Lettra.Worker</c> migrera les bases en amont (phase 2).
-/// </summary>
-public sealed class TenantMigrator
-{
-    private readonly ConcurrentDictionary<DossierId, Lazy<Task>> _migrated = new();
-
-    public Task EnsureMigratedAsync(LettraDbContext context, CancellationToken cancellationToken)
-    {
-        ArgumentNullException.ThrowIfNull(context);
-        Lazy<Task> migration = _migrated.GetOrAdd(
-            context.Tenant.DossierId,
-            _ => new Lazy<Task>(() => context.Database.MigrateAsync(CancellationToken.None)));
-        return migration.Value.WaitAsync(cancellationToken);
-    }
-}
-
-/// <summary>Session de base du dossier courant pour la durée du scope : un seul DbContext, créé à la demande.</summary>
-internal sealed class TenantDbSession(ITenantDbContextFactory factory, TenantMigrator migrator) : IAsyncDisposable
-{
-    private LettraDbContext? _context;
-
-    public async ValueTask<LettraDbContext> GetAsync(CancellationToken cancellationToken)
-    {
-        if (_context is null)
+        configurator.Configure(builder, connectionString, tenant);
+        LettraDbContext context = new(builder.Options, tenant);
+        if (!verifyStamp)
         {
-            LettraDbContext context = await factory.CreateAsync(cancellationToken).ConfigureAwait(false);
-            await migrator.EnsureMigratedAsync(context, cancellationToken).ConfigureAwait(false);
-            _context = context;
+            return context;
         }
 
-        return _context;
+        try
+        {
+            await DossierGuard.EnsureBelongsToAsync(context, tenant, cancellationToken).ConfigureAwait(false);
+            return context;
+        }
+        catch
+        {
+            await context.DisposeAsync().ConfigureAwait(false);
+            throw;
+        }
     }
 
-    public ValueTask DisposeAsync() => _context?.DisposeAsync() ?? ValueTask.CompletedTask;
+    public string? LatestMigration(DatabaseProvider provider) => _latest.GetOrAdd(provider, p =>
+    {
+        if (!_byProvider.TryGetValue(p, out IDbProviderConfigurator? configurator))
+        {
+            return null;
+        }
+
+        TenantDescriptor probe = new(default, default, p, "probe");
+        DbContextOptionsBuilder<LettraDbContext> builder = new();
+        configurator.Configure(builder, configurator.ProbeConnectionString, probe);
+        using LettraDbContext context = new(builder.Options, probe);
+        return context.Database.GetMigrations().LastOrDefault();
+    });
+
+    private IDbProviderConfigurator ConfiguratorFor(DatabaseProvider provider) =>
+        _byProvider.TryGetValue(provider, out IDbProviderConfigurator? configurator)
+            ? configurator
+            : throw new InvalidOperationException($"Provider {provider} non enregistré dans ce mode de déploiement.");
+}
+
+internal sealed class TenantDbContextFactory(ITenantContext tenant, IDossierDbContextFactory factory) : ITenantDbContextFactory
+{
+    public ValueTask<LettraDbContext> CreateAsync(CancellationToken cancellationToken) =>
+        factory.CreateAsync(tenant.Current, verifyStamp: true, cancellationToken);
 }
