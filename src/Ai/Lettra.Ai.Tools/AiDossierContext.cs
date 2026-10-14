@@ -2,8 +2,10 @@ using System.Text.Json;
 using Lettra.Application.Abstractions.Ai;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Features.Customers;
+using Lettra.Application.Features.Parties;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
+using Lettra.Contracts.Suppliers;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
 
@@ -11,12 +13,12 @@ namespace Lettra.Ai.Tools;
 
 /// <summary>
 /// Contexte du dossier pour l'assistant, lu par les requêtes de l'application (donc avec les droits de l'utilisateur).
-/// Les identités servent uniquement à la pseudonymisation : elles ne partent jamais vers le moteur.
+/// Clients et fournisseurs : les identités servent uniquement à la pseudonymisation : elles ne partent jamais vers le moteur.
 /// </summary>
 internal sealed class AiDossierContext(IQueryDispatcher queries) : IAiDossierContext
 {
     /// <summary>Au-delà, les noms restants sont encore couverts par les détecteurs (SIREN, IBAN, e-mails…), pas par leur nom.</summary>
-    private const int MaxCustomerPages = 10;
+    private const int MaxPages = 10;
 
     public Task<string> GetCompanyJsonAsync(DossierId dossier, CancellationToken cancellationToken)
     {
@@ -32,32 +34,51 @@ internal sealed class AiDossierContext(IQueryDispatcher queries) : IAiDossierCon
     public async Task<IReadOnlyList<KnownIdentity>> GetKnownIdentitiesAsync(DossierId dossier, CancellationToken cancellationToken)
     {
         List<KnownIdentity> identities = [];
-        for (int page = 1; page <= MaxCustomerPages; page++)
+        await CollectAsync(
+            page => new ListCustomersQuery(dossier, page, ListCustomersQuery.MaxPageSize),
+            ListCustomersQuery.MaxPageSize,
+            (CustomerSummary c) => Identities(c.Kind == CustomerKindDto.Individual ? IdentityKind.Person : IdentityKind.Client, c.Name, c.Siren),
+            identities,
+            cancellationToken).ConfigureAwait(false);
+        await CollectAsync(
+            page => new ListSuppliersQuery(dossier, page, ListSuppliersQuery.MaxPageSize),
+            ListSuppliersQuery.MaxPageSize,
+            (SupplierSummary s) => Identities(IdentityKind.Client, s.Name, s.Siren),
+            identities,
+            cancellationToken).ConfigureAwait(false);
+        return identities;
+    }
+
+    private static IEnumerable<KnownIdentity> Identities(IdentityKind kind, string name, string? siren)
+    {
+        yield return new KnownIdentity(kind, name);
+        if (siren is { Length: > 0 })
         {
-            Result<PagedResponse<CustomerSummary>> result = await queries
-                .QueryAsync(new ListCustomersQuery(dossier, page, ListCustomersQuery.MaxPageSize), cancellationToken)
-                .ConfigureAwait(false);
+            yield return new KnownIdentity(IdentityKind.Siren, siren);
+        }
+    }
+
+    private async Task CollectAsync<TItem>(
+        Func<int, IQuery<Result<PagedResponse<TItem>>>> query,
+        int pageSize,
+        Func<TItem, IEnumerable<KnownIdentity>> map,
+        List<KnownIdentity> identities,
+        CancellationToken cancellationToken)
+    {
+        for (int page = 1; page <= MaxPages; page++)
+        {
+            Result<PagedResponse<TItem>> result = await queries.QueryAsync(query(page), cancellationToken).ConfigureAwait(false);
             if (result.IsFailure)
             {
-                // Sans droit de lecture des tiers, l'assistant ne peut pas lire les clients : seuls les détecteurs s'appliquent.
-                break;
+                // Sans droit de lecture des tiers, l'assistant ne peut pas les lire : seuls les détecteurs s'appliquent.
+                return;
             }
 
-            foreach (CustomerSummary customer in result.Value.Items)
+            identities.AddRange(result.Value.Items.SelectMany(map));
+            if (page * pageSize >= result.Value.TotalCount)
             {
-                identities.Add(new KnownIdentity(customer.Kind == CustomerKindDto.Individual ? IdentityKind.Person : IdentityKind.Client, customer.Name));
-                if (customer.Siren is { Length: > 0 } siren)
-                {
-                    identities.Add(new KnownIdentity(IdentityKind.Siren, siren));
-                }
-            }
-
-            if (page * ListCustomersQuery.MaxPageSize >= result.Value.TotalCount)
-            {
-                break;
+                return;
             }
         }
-
-        return identities;
     }
 }
