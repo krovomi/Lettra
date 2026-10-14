@@ -32,6 +32,7 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IDocumentNumbering, DocumentNumbering>();
         services.AddSingleton<IDossierKeyring, AesGcmDossierKeyring>();
+        services.AddPartiesAndCatalogStores();
         return services;
     }
 }

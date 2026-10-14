@@ -18,6 +18,66 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.13");
 
+            modelBuilder.Entity("Lettra.Domain.Catalog.CatalogItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Designation")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReferenceKey")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("UnitPriceExclTax")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("VatRate")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Designation");
+
+                    b.HasIndex("ReferenceKey")
+                        .IsUnique();
+
+                    b.ToTable("CatalogItems", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Domain.Parties.Customer", b =>
                 {
                     b.Property<Guid>("Id")
@@ -91,6 +151,82 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.HasIndex("Siren");
 
                     b.ToTable("Customers", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Parties.Supplier", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(254)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Iban")
+                        .HasMaxLength(34)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Siren")
+                        .HasMaxLength(9)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Siret")
+                        .HasMaxLength(14)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("VatNumber")
+                        .HasMaxLength(15)
+                        .HasColumnType("TEXT");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Address", "Lettra.Domain.Parties.Supplier.Address#PostalAddress", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("City");
+
+                            b1.Property<string>("Country")
+                                .IsRequired()
+                                .HasMaxLength(2)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("Country");
+
+                            b1.Property<string>("Line1")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("AddressLine1");
+
+                            b1.Property<string>("Line2")
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("AddressLine2");
+
+                            b1.Property<string>("PostalCode")
+                                .IsRequired()
+                                .HasMaxLength(16)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("PostalCode");
+                        });
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name");
+
+                    b.HasIndex("Siren");
+
+                    b.ToTable("Suppliers", (string)null);
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Numbering.NumberSeries", b =>

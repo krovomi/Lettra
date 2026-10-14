@@ -1,0 +1,111 @@
+using Lettra.Application.Abstractions.Messaging;
+using Lettra.Application.Abstractions.Tenancy;
+using Lettra.Application.Features.Catalog;
+using Lettra.Application.Features.Parties;
+using Lettra.Application.Mapping;
+using Lettra.Contracts.Catalog;
+using Lettra.Contracts.Common;
+using Lettra.Contracts.Directory;
+using Lettra.Contracts.Suppliers;
+using Lettra.Domain.Catalog;
+using Lettra.Domain.Common;
+using Lettra.Domain.Parties;
+using Lettra.Domain.SharedKernel;
+using Lettra.UI.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Lettra.UI.Gateway.InProcess;
+
+/// <summary>Un appel = un scope, comme une requête HTTP : dossier résolu, puis même pipeline et même handler que l'API.</summary>
+internal static class InProcessScope
+{
+    public static async Task<OperationResult<T>> RunAsync<T>(
+        IServiceScopeFactory scopes,
+        Func<IServiceProvider, DossierId, CancellationToken, Task<OperationResult<T>>> operation,
+        CancellationToken cancellationToken)
+    {
+        AsyncServiceScope scope = scopes.CreateAsyncScope();
+        await using (scope.ConfigureAwait(false))
+        {
+            Result initialized = await scope.ServiceProvider.GetRequiredService<ITenantInitializer>()
+                .InitializeAsync(cancellationToken).ConfigureAwait(false);
+            if (initialized.IsFailure)
+            {
+                return OperationResult<T>.Failure(initialized.Errors.ToErrorDetails());
+            }
+
+            DossierId dossier = scope.ServiceProvider.GetRequiredService<ITenantContext>().Current.DossierId;
+            return await operation(scope.ServiceProvider, dossier, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    public static async Task<OperationResult<T>> QueryAsync<T>(IServiceProvider services, IQuery<Result<T>> query, CancellationToken cancellationToken)
+    {
+        Result<T> result = await services.GetRequiredService<IQueryDispatcher>().QueryAsync(query, cancellationToken).ConfigureAwait(false);
+        return result.ToOperationResult();
+    }
+}
+
+internal sealed class InProcessSuppliersGateway(IServiceScopeFactory scopes) : ISuppliersGateway
+{
+    public Task<OperationResult<SupplierResponse>> CreateAsync(CreateSupplierRequest request, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, async (sp, dossier, ct) =>
+        {
+            Result<SupplierId> created = await sp.GetRequiredService<ICommandDispatcher>()
+                .SendAsync(request.ToCommand(dossier), ct).ConfigureAwait(false);
+            return created.IsFailure
+                ? OperationResult<SupplierResponse>.Failure(created.Errors.ToErrorDetails())
+                : await InProcessScope.QueryAsync(sp, new GetSupplierQuery(dossier, created.Value), ct).ConfigureAwait(false);
+        }, cancellationToken);
+
+    public Task<OperationResult<PagedResponse<SupplierSummary>>> ListAsync(int page, int pageSize, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new ListSuppliersQuery(dossier, page, pageSize), ct), cancellationToken);
+}
+
+internal sealed class InProcessCatalogGateway(IServiceScopeFactory scopes) : ICatalogGateway
+{
+    public Task<OperationResult<CatalogReferenceData>> GetReferenceDataAsync(CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetCatalogReferenceDataQuery(dossier), ct), cancellationToken);
+
+    public Task<OperationResult<PagedResponse<CatalogItemSummary>>> ListAsync(string? search, bool includeArchived, int page, int pageSize, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(
+            scopes,
+            (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new ListCatalogItemsQuery(dossier, search, includeArchived, page, pageSize), ct),
+            cancellationToken);
+
+    public Task<OperationResult<CatalogItemResponse>> CreateAsync(SaveCatalogItemRequest request, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, async (sp, dossier, ct) =>
+        {
+            Result<CatalogItemId> created = await sp.GetRequiredService<ICommandDispatcher>()
+                .SendAsync(request.ToCreateCommand(dossier), ct).ConfigureAwait(false);
+            return created.IsFailure
+                ? OperationResult<CatalogItemResponse>.Failure(created.Errors.ToErrorDetails())
+                : await InProcessScope.QueryAsync(sp, new GetCatalogItemQuery(dossier, created.Value), ct).ConfigureAwait(false);
+        }, cancellationToken);
+
+    public Task<OperationResult<CatalogItemResponse>> UpdateAsync(Guid id, SaveCatalogItemRequest request, CancellationToken cancellationToken) =>
+        WriteThenReadAsync(id, (dossier, itemId) => request.ToUpdateCommand(dossier, itemId), cancellationToken);
+
+    public Task<OperationResult<CatalogItemResponse>> SetArchivedAsync(Guid id, bool isArchived, CancellationToken cancellationToken) =>
+        WriteThenReadAsync(id, (dossier, itemId) => new SetCatalogItemArchivedCommand(dossier, itemId, isArchived), cancellationToken);
+
+    private Task<OperationResult<CatalogItemResponse>> WriteThenReadAsync(
+        Guid id, Func<DossierId, CatalogItemId, ICommand<Result>> command, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, async (sp, dossier, ct) =>
+        {
+            CatalogItemId itemId = new(id);
+            Result written = await sp.GetRequiredService<ICommandDispatcher>().SendAsync(command(dossier, itemId), ct).ConfigureAwait(false);
+            return written.IsFailure
+                ? OperationResult<CatalogItemResponse>.Failure(written.Errors.ToErrorDetails())
+                : await InProcessScope.QueryAsync(sp, new GetCatalogItemQuery(dossier, itemId), ct).ConfigureAwait(false);
+        }, cancellationToken);
+}
+
+internal sealed class InProcessDirectoryGateway(IServiceScopeFactory scopes) : IDirectoryGateway
+{
+    public Task<OperationResult<CompanySearchResponse>> SearchCompaniesAsync(string query, int maxResults, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new SearchCompaniesQuery(dossier, query, maxResults), ct), cancellationToken);
+
+    public Task<OperationResult<VatNumberCheckResponse>> CheckVatNumberAsync(string vatNumber, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new CheckVatNumberQuery(dossier, vatNumber), ct), cancellationToken);
+}

@@ -1,3 +1,4 @@
+using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Bootstrap;
 using Lettra.Worker;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,6 +9,8 @@ using Microsoft.Extensions.Hosting;
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddLettra(builder.Configuration);
+builder.Services.AddScoped<JobDossierSource>();
+builder.Services.AddScoped<IRequestedDossierSource>(sp => sp.GetRequiredService<JobDossierSource>());
 builder.Services.AddOptions<DossierMigrationJobOptions>().Bind(builder.Configuration.GetSection(DossierMigrationJobOptions.SectionName));
 builder.Services.AddHostedService<DossierMigrationJob>();
 

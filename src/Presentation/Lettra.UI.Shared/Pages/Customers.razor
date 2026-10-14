@@ -10,6 +10,11 @@
 <section aria-labelledby="create-title" class="lettra-card">
     <h2 id="create-title">@L["Customers.Create.Title"]</h2>
 
+    @if (_request.Kind == CustomerKindDto.Company)
+    {
+        <CompanyLookup Id="customer-lookup" OnSelected="Prefill" />
+    }
+
     <EditForm Model="_request" OnValidSubmit="CreateAsync" FormName="create-customer">
         <DataAnnotationsValidator />
 
@@ -36,7 +41,10 @@
             <FieldErrors Field="@nameof(CreateCustomerRequest.Siren)" ServerErrors="_errors" />
 
             <label for="vat">@L["Customers.Field.VatNumber"]</label>
-            <InputText id="vat" @bind-Value="_request.VatNumber" />
+            <div class="lettra-inline">
+                <InputText id="vat" @bind-Value="_request.VatNumber" />
+                <VatNumberCheck VatNumber="@_request.VatNumber" />
+            </div>
             <FieldErrors Field="@nameof(CreateCustomerRequest.VatNumber)" ServerErrors="_errors" />
         }
 
@@ -119,6 +127,21 @@
     private bool _busy;
 
     protected override Task OnInitializedAsync() => LoadAsync();
+
+    /// <summary>Pré-remplit le formulaire depuis l'annuaire ; l'utilisateur relit avant de créer.</summary>
+    private void Prefill(CompanySearchResult company)
+    {
+        _request.Kind = CustomerKindDto.Company;
+        _request.Name = company.Name;
+        _request.Siren = company.Siren;
+        _request.Siret = company.Siret;
+        _request.VatNumber = company.VatNumber;
+        _request.AddressLine1 = company.AddressLine1 ?? string.Empty;
+        _request.AddressLine2 = company.AddressLine2;
+        _request.PostalCode = company.PostalCode ?? string.Empty;
+        _request.City = company.City ?? string.Empty;
+        _request.CountryCode = company.CountryCode;
+    }
 
     private async Task CreateAsync()
     {

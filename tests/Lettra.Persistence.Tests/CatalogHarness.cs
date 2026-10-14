@@ -1,7 +1,9 @@
 using System.Security.Cryptography;
 using Lettra.Application;
+using Lettra.Application.Abstractions.External;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Tenancy;
+using Lettra.Contracts.Directory;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
 using Lettra.Infrastructure.Catalog;
@@ -53,6 +55,9 @@ internal sealed class CatalogHarness : IAsyncDisposable
         services.AddSingleton<ICurrentUser, AnyUser>();
         services.AddSingleton<IPermissionService, NoPermissions>();
         services.AddScoped<IRequestedDossierSource, NoRequestedDossier>();
+        services.AddSingleton<OfflineDirectories>();
+        services.AddSingleton<ICompanyDirectory>(sp => sp.GetRequiredService<OfflineDirectories>());
+        services.AddSingleton<IVatNumberChecker>(sp => sp.GetRequiredService<OfflineDirectories>());
         _root = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
     }
 
@@ -79,6 +84,16 @@ internal sealed class CatalogHarness : IAsyncDisposable
         public bool IsAuthenticated => true;
 
         public Guid UserId { get; } = Guid.CreateVersion7();
+    }
+
+    /// <summary>Annuaires externes hors sujet ici : toujours indisponibles.</summary>
+    private sealed class OfflineDirectories : ICompanyDirectory, IVatNumberChecker
+    {
+        public Task<Result<CompanySearchResponse>> SearchAsync(string query, int maxResults, CancellationToken cancellationToken) =>
+            Task.FromResult(Result<CompanySearchResponse>.Failure(DirectoryErrors.Unavailable));
+
+        public Task<Result<VatNumberCheckResponse>> CheckAsync(VatNumber vatNumber, CancellationToken cancellationToken) =>
+            Task.FromResult(Result<VatNumberCheckResponse>.Failure(DirectoryErrors.Unavailable));
     }
 
     private sealed class NoPermissions : IPermissionService
