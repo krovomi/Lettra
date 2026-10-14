@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Identité locale (modes 1 et 2). Phase 0 : l'utilisateur du poste, avec tous les droits
-       sur ses dossiers. Les comptes locaux hachés (Argon2) et Keycloak arrivent en phase 2. -->
+  <!-- Identité du poste isolé (mode 1) : compte local à phrase secrète (PBKDF2-SHA512), session verrouillée
+       après inactivité, attributions du propriétaire du poste (annexe F §2). -->
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Lettra.Application\Lettra.Application.csproj" />
   </ItemGroup>
@@ -9,6 +9,10 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lettra.Identity.Tests" />
   </ItemGroup>
 
 </Project>

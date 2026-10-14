@@ -1,0 +1,115 @@
+@page "/session"
+@inject ISessionGateway Sessions
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+
+<PageTitle>@L["Session.Title"] · Lettra</PageTitle>
+
+<h1 tabindex="-1">@L["Session.Title"]</h1>
+
+<section class="lettra-card">
+    @if (_session is null)
+    {
+        <p>@L["Loading"]</p>
+    }
+    else if (_session.IsAuthenticated)
+    {
+        <p role="status">@string.Format(CultureInfo.CurrentCulture, L["Session.SignedInAs"], _session.DisplayName)</p>
+        <a href="">@L["Session.Continue"]</a>
+    }
+    else if (Sessions.SignInPath is string signIn)
+    {
+        @* Navigateur : la connexion (SSO du cabinet, MFA) se fait chez Keycloak, par le BFF. *@
+        @if (Erreur is not null)
+        {
+            <p class="validation-message" role="alert">@L["Session.SignInFailed"]</p>
+        }
+        <p>@L["Session.SignInIntro"]</p>
+        <a class="lettra-button" href="@signIn" data-sign-in>@L["Session.SignIn"]</a>
+    }
+    else if (!_session.LocalAccountExists)
+    {
+        <h2>@L["Session.Create.Title"]</h2>
+        <p>@L["Session.Create.Intro"]</p>
+        <EditForm Model="_create" OnValidSubmit="CreateAsync" FormName="create-local-account">
+            <DataAnnotationsValidator />
+
+            <label for="display-name">@L["Session.Field.DisplayName"]</label>
+            <InputText id="display-name" @bind-Value="_create.DisplayName" autocomplete="name" />
+            <FieldErrors Field="@nameof(CreateLocalAccountRequest.DisplayName)" ServerErrors="_errors" />
+
+            <label for="passphrase">@L["Session.Field.Passphrase"]</label>
+            <InputText id="passphrase" type="password" @bind-Value="_create.Passphrase" autocomplete="new-password" />
+            <FieldErrors Field="@nameof(CreateLocalAccountRequest.Passphrase)" ServerErrors="_errors" />
+
+            <label for="confirmation">@L["Session.Field.Confirmation"]</label>
+            <InputText id="confirmation" type="password" @bind-Value="_create.PassphraseConfirmation" autocomplete="new-password" />
+            <FieldErrors Field="@nameof(CreateLocalAccountRequest.PassphraseConfirmation)" ServerErrors="_errors" />
+
+            <GeneralErrors Errors="_errors" />
+            <button type="submit" disabled="@_busy">@L["Session.Create.Submit"]</button>
+        </EditForm>
+    }
+    else
+    {
+        <h2>@L["Session.Unlock.Title"]</h2>
+        <EditForm Model="_unlock" OnValidSubmit="UnlockAsync" FormName="unlock-local-session">
+            <DataAnnotationsValidator />
+
+            <label for="passphrase">@L["Session.Field.Passphrase"]</label>
+            <InputText id="passphrase" type="password" @bind-Value="_unlock.Passphrase" autocomplete="current-password" />
+            <FieldErrors Field="@nameof(UnlockLocalSessionRequest.Passphrase)" ServerErrors="_errors" />
+
+            <GeneralErrors Errors="_errors" />
+            <button type="submit" disabled="@_busy">@L["Session.Unlock.Submit"]</button>
+        </EditForm>
+    }
+</section>
+
+@code {
+    [SupplyParameterFromQuery(Name = "erreur")] public string? Erreur { get; set; }
+
+    private SessionResponse? _session;
+    private CreateLocalAccountRequest _create = new();
+    private UnlockLocalSessionRequest _unlock = new();
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private bool _busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        OperationResult<SessionResponse> result = await Sessions.GetAsync(CancellationToken.None);
+        _session = result.Value ?? new SessionResponse(false, SessionModeDto.Oidc, null, false);
+        _errors = result.Errors;
+    }
+
+    private Task CreateAsync() => RunAsync(() => Sessions.CreateLocalAccountAsync(_create, CancellationToken.None));
+
+    private Task UnlockAsync() => RunAsync(() => Sessions.UnlockAsync(_unlock, CancellationToken.None));
+
+    private async Task RunAsync(Func<Task<OperationResult<SessionResponse>>> action)
+    {
+        _busy = true;
+        try
+        {
+            OperationResult<SessionResponse> result = await action();
+            if (result.IsSuccess)
+            {
+                // Les phrases secrètes ne restent pas en mémoire du composant.
+                _create = new();
+                _unlock = new();
+                _errors = [];
+                _session = result.Value;
+                Navigation.NavigateTo("");
+            }
+            else
+            {
+                _unlock = new();
+                _errors = result.Errors;
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

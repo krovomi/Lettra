@@ -1,4 +1,6 @@
 using Lettra.Api.Infrastructure;
+using Lettra.Api.Security;
+using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Features.Parties;
@@ -19,16 +21,19 @@ internal static class SupplierEndpoints
         RouteGroupBuilder group = api.MapGroup("/suppliers").WithTags("Suppliers");
 
         group.MapPost("/", CreateAsync)
+            .RequirePermission(Permission.TiersCreer)
             .WithName("CreateSupplier")
             .Produces<SupplierResponse>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status403Forbidden);
 
         group.MapGet("/", ListAsync)
+            .RequirePermission(Permission.TiersConsulter)
             .WithName("ListSuppliers")
             .Produces<PagedResponse<SupplierSummary>>();
 
         group.MapGet("/{id:guid}", GetAsync)
+            .RequirePermission(Permission.TiersConsulter)
             .WithName("GetSupplier")
             .Produces<SupplierResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound);
