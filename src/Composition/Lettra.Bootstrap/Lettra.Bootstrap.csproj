@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Composition root : le SEUL endroit qui connaît le mode de déploiement et choisit les adapters. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Lettra.Application\Lettra.Application.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Lettra.Infrastructure.Persistence\Lettra.Infrastructure.Persistence.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Lettra.Infrastructure.Persistence.Sqlite\Lettra.Infrastructure.Persistence.Sqlite.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Lettra.Infrastructure.Persistence.PostgreSql\Lettra.Infrastructure.Persistence.PostgreSql.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Lettra.Infrastructure.Persistence.SqlServer\Lettra.Infrastructure.Persistence.SqlServer.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Lettra.Infrastructure.Catalog\Lettra.Infrastructure.Catalog.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Lettra.Infrastructure.Identity.Local\Lettra.Infrastructure.Identity.Local.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Fonctions pures partagées serveur ↔ WASM (ADR-0005) : une seule règle
+       d'arrondi pour l'affichage optimiste et le calcul qui fait foi.
+       Aucune dépendance, compatible trimming. -->
+  <PropertyGroup>
+    <IsTrimmable>true</IsTrimmable>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+</Project>

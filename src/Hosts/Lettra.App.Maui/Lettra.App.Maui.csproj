@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <!-- Blazor Hybrid (.NET MAUI). Phase 0 : Windows, mode 1 (poste isolé, gateway in-process, SQLite local).
+       macOS, iOS et Android s'ajoutent à TargetFramework(s) ensuite (V1 : Windows et macOS).
+       Ne se construit que sous Windows avec la charge de travail maui (job CI dédié). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <OutputType>WinExe</OutputType>
+    <UseMaui>true</UseMaui>
+    <SingleProject>true</SingleProject>
+    <EnableDefaultCssItems>false</EnableDefaultCssItems>
+    <RootNamespace>Lettra.App.Maui</RootNamespace>
+    <ApplicationTitle>Lettra</ApplicationTitle>
+    <ApplicationId>fr.lettra.app</ApplicationId>
+    <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+    <ApplicationVersion>1</ApplicationVersion>
+    <WindowsPackageType>None</WindowsPackageType>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <!-- Le code généré par MAUI/WinUI ne respecte pas tous nos analyseurs : avertissements visibles, non bloquants ici. -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);CA1515;CA1848</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Composition\Lettra.Bootstrap\Lettra.Bootstrap.csproj" />
+    <ProjectReference Include="..\..\Presentation\Lettra.UI.Shared\Lettra.UI.Shared.csproj" />
+    <ProjectReference Include="..\..\Presentation\Lettra.UI.Gateway.InProcess\Lettra.UI.Gateway.InProcess.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Maui.Controls" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Condition="'$(Configuration)' == 'Debug'" />
+  </ItemGroup>
+
+</Project>

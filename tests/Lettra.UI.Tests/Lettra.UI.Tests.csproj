@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <!-- Composants Blazor (bUnit) : textes en ressources FR/EN, erreurs traduites, gateway simulée. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Presentation\Lettra.UI.Shared\Lettra.UI.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="bunit" />
+  </ItemGroup>
+
+</Project>

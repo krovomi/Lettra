@@ -1,0 +1,30 @@
+{
+  "solution": {
+    "path": "Lettra.slnx",
+    "projects": [
+      "src\\Core\\Lettra.Application\\Lettra.Application.csproj",
+      "src\\Core\\Lettra.Calculations\\Lettra.Calculations.csproj",
+      "src\\Core\\Lettra.Contracts\\Lettra.Contracts.csproj",
+      "src\\Core\\Lettra.Domain\\Lettra.Domain.csproj",
+      "src\\Infrastructure\\Lettra.Infrastructure.Catalog\\Lettra.Infrastructure.Catalog.csproj",
+      "src\\Infrastructure\\Lettra.Infrastructure.Identity.Local\\Lettra.Infrastructure.Identity.Local.csproj",
+      "src\\Infrastructure\\Lettra.Infrastructure.Persistence.PostgreSql\\Lettra.Infrastructure.Persistence.PostgreSql.csproj",
+      "src\\Infrastructure\\Lettra.Infrastructure.Persistence.SqlServer\\Lettra.Infrastructure.Persistence.SqlServer.csproj",
+      "src\\Infrastructure\\Lettra.Infrastructure.Persistence.Sqlite\\Lettra.Infrastructure.Persistence.Sqlite.csproj",
+      "src\\Infrastructure\\Lettra.Infrastructure.Persistence\\Lettra.Infrastructure.Persistence.csproj",
+      "src\\Composition\\Lettra.Bootstrap\\Lettra.Bootstrap.csproj",
+      "src\\Presentation\\Lettra.UI.Abstractions\\Lettra.UI.Abstractions.csproj",
+      "src\\Presentation\\Lettra.UI.Gateway.Http\\Lettra.UI.Gateway.Http.csproj",
+      "src\\Presentation\\Lettra.UI.Gateway.InProcess\\Lettra.UI.Gateway.InProcess.csproj",
+      "src\\Presentation\\Lettra.UI.Shared\\Lettra.UI.Shared.csproj",
+      "src\\Hosts\\Lettra.Api\\Lettra.Api.csproj",
+      "src\\Hosts\\Lettra.Web\\Lettra.Web.csproj",
+      "tests\\Lettra.Api.Tests\\Lettra.Api.Tests.csproj",
+      "tests\\Lettra.Application.Tests\\Lettra.Application.Tests.csproj",
+      "tests\\Lettra.Architecture.Tests\\Lettra.Architecture.Tests.csproj",
+      "tests\\Lettra.Domain.Tests\\Lettra.Domain.Tests.csproj",
+      "tests\\Lettra.Persistence.Tests\\Lettra.Persistence.Tests.csproj",
+      "tests\\Lettra.UI.Tests\\Lettra.UI.Tests.csproj"
+    ]
+  }
+}

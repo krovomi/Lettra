@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Gateway in-process : l'UI appelle directement la couche Application, sans sérialisation
+       ni réseau (MAUI hors ligne, modes 1 et 4). -->
+  <ItemGroup>
+    <ProjectReference Include="..\Lettra.UI.Abstractions\Lettra.UI.Abstractions.csproj" />
+    <ProjectReference Include="..\..\Core\Lettra.Application\Lettra.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+  </ItemGroup>
+
+</Project>

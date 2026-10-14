@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Handlers et pipeline avec des fakes des ports : pas de base, pas de réseau. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Core\Lettra.Application\Lettra.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+</Project>

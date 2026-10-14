@@ -1,0 +1,14 @@
+@inherits LayoutComponentBase
+@inject IStringLocalizer<SharedResource> L
+
+<div class="lettra-shell">
+    <header class="lettra-header">
+        <span class="lettra-brand">Lettra</span>
+        <nav aria-label="@L["Nav.Label"]">
+            <NavLink href="customers" Match="NavLinkMatch.Prefix">@L["Nav.Customers"]</NavLink>
+        </nav>
+    </header>
+    <main class="lettra-main">
+        @Body
+    </main>
+</div>

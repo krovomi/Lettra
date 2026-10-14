@@ -1,0 +1,14 @@
+@* Routeur partagé par les hôtes WASM et MAUI. *@
+@inject IStringLocalizer<SharedResource> L
+
+<Router AppAssembly="typeof(Routes).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)" />
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <LayoutView Layout="typeof(MainLayout)">
+            <p role="alert">@L["NotFound"]</p>
+        </LayoutView>
+    </NotFound>
+</Router>

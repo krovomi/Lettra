@@ -1,0 +1,31 @@
+/* Variables de densité : le mode « expert » (grille clavier) les resserrera (POC grille). */
+:root {
+    --lettra-gap: 0.75rem;
+    --lettra-radius: 6px;
+    --lettra-fg: #1d2330;
+    --lettra-bg: #f6f7f9;
+    --lettra-card: #ffffff;
+    --lettra-accent: #23527c;
+    --lettra-danger: #b42318;
+    --lettra-success: #146c43;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--lettra-fg);
+    background: var(--lettra-bg);
+}
+
+body { margin: 0; }
+.lettra-header { display: flex; gap: 2rem; align-items: center; padding: 0.75rem 1.5rem; background: var(--lettra-accent); color: #fff; }
+.lettra-header a { color: #fff; }
+.lettra-brand { font-weight: 700; letter-spacing: 0.02em; }
+.lettra-main { max-width: 960px; margin: 0 auto; padding: 1.5rem; }
+.lettra-card { background: var(--lettra-card); border-radius: var(--lettra-radius); padding: 1rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 2px rgb(0 0 0 / 8%); }
+.lettra-card form { display: grid; gap: 0.35rem; }
+.lettra-card label { font-weight: 600; margin-top: var(--lettra-gap); }
+.lettra-card fieldset { border: 0; padding: 0; }
+.lettra-card fieldset label { font-weight: 400; margin-right: 1rem; }
+.lettra-card input[type=text], .lettra-card input:not([type]), .lettra-card input[type=email] { padding: 0.4rem; border: 1px solid #c3c8d1; border-radius: 4px; }
+.lettra-card button { margin-top: 1rem; justify-self: start; padding: 0.5rem 1.25rem; background: var(--lettra-accent); color: #fff; border: 0; border-radius: 4px; }
+.validation-message { color: var(--lettra-danger); }
+.lettra-success { color: var(--lettra-success); }
+.lettra-table { width: 100%; border-collapse: collapse; }
+.lettra-table th, .lettra-table td { text-align: left; padding: 0.35rem 0.5rem; border-bottom: 1px solid #e3e6eb; }

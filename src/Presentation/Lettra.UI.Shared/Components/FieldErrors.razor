@@ -1,0 +1,53 @@
+@* Messages de validation d'un champ, traduits : les annotations des contrats et le serveur ne renvoient que des codes. *@
+@implements IDisposable
+@inject IStringLocalizer<SharedResource> L
+
+@foreach (string message in Messages())
+{
+    <div class="validation-message" role="alert">@L.Error(message)</div>
+}
+
+@code {
+    [CascadingParameter] private EditContext? EditContext { get; set; }
+
+    [Parameter, EditorRequired] public string Field { get; set; } = string.Empty;
+
+    /// <summary>Erreurs renvoyées par le serveur ou le domaine pour ce champ.</summary>
+    [Parameter] public IReadOnlyList<ErrorDetail> ServerErrors { get; set; } = [];
+
+    private EditContext? _subscribed;
+
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(_subscribed, EditContext))
+        {
+            Unsubscribe();
+            _subscribed = EditContext;
+            if (_subscribed is not null)
+            {
+                _subscribed.OnValidationStateChanged += OnValidationStateChanged;
+            }
+        }
+    }
+
+    private IEnumerable<string> Messages()
+    {
+        IEnumerable<string> client = EditContext is null
+            ? []
+            : EditContext.GetValidationMessages(EditContext.Field(Field));
+        IEnumerable<string> server = ServerErrors.Where(e => e.Target == Field).Select(e => e.Code);
+        return client.Concat(server).Distinct();
+    }
+
+    private void OnValidationStateChanged(object? sender, ValidationStateChangedEventArgs e) => StateHasChanged();
+
+    private void Unsubscribe()
+    {
+        if (_subscribed is not null)
+        {
+            _subscribed.OnValidationStateChanged -= OnValidationStateChanged;
+        }
+    }
+
+    public void Dispose() => Unsubscribe();
+}

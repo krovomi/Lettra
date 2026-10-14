@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Le domaine ne connaît rien : aucune dépendance NuGet, seulement les calculs
+       purs partagés. Règle vérifiée par Lettra.Architecture.Tests. -->
+  <ItemGroup>
+    <ProjectReference Include="..\Lettra.Calculations\Lettra.Calculations.csproj" />
+  </ItemGroup>
+
+</Project>

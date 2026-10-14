@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Provider Sqlite : configurateur et migrations propres à ce provider. -->
+  <ItemGroup>
+    <ProjectReference Include="..\Lettra.Infrastructure.Persistence\Lettra.Infrastructure.Persistence.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Domaine et calculs : purs, sans infrastructure, ultra rapides. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Core\Lettra.Domain\Lettra.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
