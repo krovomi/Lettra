@@ -59,6 +59,7 @@ dotnet build "$ROOT/src/Hosts/Lettra.Api" -c Release -v quiet -nologo > "$RUN/bu
   OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4317 OTEL_METRIC_EXPORT_INTERVAL=5000 \
   Lettra__Observability__ServiceName=lettra-api Lettra__Observability__Cell=locale \
   Lettra__Supervision__WebhookToken=$TOKEN Lettra__Supervision__PublicBaseAddress=http://127.0.0.1:5080/ \
+  Lettra__Identity__Oidc__Authority=http://127.0.0.1:8080/realms/lettra Lettra__Identity__Oidc__RequireHttpsMetadata=false \
   exec dotnet bin/Release/net10.0/Lettra.Api.dll > "$RUN/api.log" 2>&1) & API_PID=$!; PIDS+=($API_PID)
 wait_for "API prête" 120 curl -fs $API/health
 for _ in $(seq 20); do curl -s -o /dev/null -H "X-Dossier: 0199e3a0-0000-7000-8000-00000000d051" $API/api/v1/customers; done

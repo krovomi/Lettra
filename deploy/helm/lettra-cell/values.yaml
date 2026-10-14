@@ -6,6 +6,8 @@ environment: development
 lettra-api:
   cell: local
   existingSecret: lettra-api
+  oidc:
+    authority: https://auth.lettra.fr/realms/lettra
 lettra-worker:
   enabled: true
   cell: local
