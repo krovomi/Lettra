@@ -1,0 +1,27 @@
+# Projet Argo CD : la cellule ne déploie que depuis ce dépôt et les dépôts de charts épinglés, et seulement chez elle.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: {{ .Values.project }}
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+spec:
+  description: Cellule Lettra {{ .Values.cell }}
+  sourceRepos:
+    - {{ .Values.repoURL }}
+    {{- range .Values.charts }}
+    - {{ .repoURL }}
+    {{- end }}
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: "lettra*"
+    - server: https://kubernetes.default.svc
+      namespace: {{ .Values.namespaces.operateurs }}
+  clusterResourceWhitelist:
+    - { group: "", kind: Namespace }
+    - { group: apiextensions.k8s.io, kind: CustomResourceDefinition }
+    - { group: rbac.authorization.k8s.io, kind: ClusterRole }
+    - { group: rbac.authorization.k8s.io, kind: ClusterRoleBinding }
+    - { group: admissionregistration.k8s.io, kind: MutatingWebhookConfiguration }
+    - { group: admissionregistration.k8s.io, kind: ValidatingWebhookConfiguration }

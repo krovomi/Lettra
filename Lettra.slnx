@@ -60,8 +60,11 @@
     <Project Path="tests/Lettra.Application.Tests/Lettra.Application.Tests.csproj" />
     <Project Path="tests/Lettra.Architecture.Tests/Lettra.Architecture.Tests.csproj" />
     <Project Path="tests/Lettra.Domain.Tests/Lettra.Domain.Tests.csproj" />
+    <Project Path="tests/Lettra.Identity.Tests/Lettra.Identity.Tests.csproj" />
     <Project Path="tests/Lettra.External.Tests/Lettra.External.Tests.csproj" />
+    <Project Path="tests/Lettra.Observability.Tests/Lettra.Observability.Tests.csproj" />
     <Project Path="tests/Lettra.Persistence.Tests/Lettra.Persistence.Tests.csproj" />
+    <Project Path="tests/Lettra.Supervision.Tests/Lettra.Supervision.Tests.csproj" />
     <Project Path="tests/Lettra.UI.Tests/Lettra.UI.Tests.csproj" />
   </Folder>
 </Solution>

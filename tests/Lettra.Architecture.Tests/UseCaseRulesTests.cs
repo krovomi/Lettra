@@ -19,7 +19,7 @@ public sealed class UseCaseRulesTests
     [Fact]
     public void Chaque_cas_d_usage_declare_une_permission_ou_est_explicitement_public() =>
         UseCases()
-            .Where(t => !typeof(IRequirePermission).IsAssignableFrom(t) && !Attribute.IsDefined(t, typeof(PublicUseCaseAttribute)))
+            .Where(t => !typeof(ISecuredUseCase).IsAssignableFrom(t) && !Attribute.IsDefined(t, typeof(PublicUseCaseAttribute)))
             .Select(t => t.Name)
             .Should().BeEmpty();
 

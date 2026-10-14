@@ -1,0 +1,9 @@
+# Cellule XL (souvent dédiée à un gros cabinet) : ~20 000 dossiers, ~1 000 actifs simultanés sur quatre clusters.
+lettra-api:
+  autoscaling: { minReplicas: 4, maxReplicas: 30 }
+postgres:
+  clusters:
+    - { name: pg-a, instances: 3, storage: 300Gi, activeDossierBudget: 250 }
+    - { name: pg-b, instances: 3, storage: 300Gi, activeDossierBudget: 250 }
+    - { name: pg-c, instances: 3, storage: 300Gi, activeDossierBudget: 250 }
+    - { name: pg-d, instances: 3, storage: 300Gi, activeDossierBudget: 250 }

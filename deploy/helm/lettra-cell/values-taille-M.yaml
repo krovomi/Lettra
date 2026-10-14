@@ -1,0 +1,6 @@
+# Cellule M : jusqu'à ~5 000 dossiers, ~150 actifs simultanés.
+lettra-api:
+  autoscaling: { minReplicas: 2, maxReplicas: 8 }
+postgres:
+  clusters:
+    - { name: pg-a, instances: 3, storage: 100Gi, activeDossierBudget: 150 }

@@ -1,0 +1,7 @@
+# Cellule L : jusqu'à ~10 000 dossiers (76 Go de socle à vide), ~400 actifs simultanés sur deux clusters.
+lettra-api:
+  autoscaling: { minReplicas: 3, maxReplicas: 16 }
+postgres:
+  clusters:
+    - { name: pg-a, instances: 3, storage: 200Gi, activeDossierBudget: 200 }
+    - { name: pg-b, instances: 3, storage: 200Gi, activeDossierBudget: 200 }

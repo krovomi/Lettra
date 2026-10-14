@@ -1,4 +1,6 @@
 using Lettra.Api.Infrastructure;
+using Lettra.Api.Security;
+using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Features.Parties;
@@ -15,12 +17,14 @@ internal static class DirectoryEndpoints
         RouteGroupBuilder group = api.MapGroup("/directory").WithTags("Directory");
 
         group.MapGet("/companies", SearchAsync)
+            .RequirePermission(Permission.TiersCreer)
             .WithName("SearchCompanies")
             .Produces<CompanySearchResponse>()
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
         group.MapGet("/vat-numbers/{vatNumber}", CheckVatAsync)
+            .RequirePermission(Permission.TiersCreer)
             .WithName("CheckVatNumber")
             .Produces<VatNumberCheckResponse>()
             .ProducesProblem(StatusCodes.Status400BadRequest)

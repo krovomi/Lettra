@@ -1,4 +1,6 @@
 using Lettra.Api.Infrastructure;
+using Lettra.Api.Security;
+using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Features.Customers;
@@ -19,16 +21,19 @@ internal static class CustomerEndpoints
 
         group.MapPost("/", CreateAsync)
             .WithName("CreateCustomer")
+            .RequirePermission(Permission.TiersCreer)
             .Produces<CustomerResponse>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status403Forbidden);
 
         group.MapGet("/", ListAsync)
             .WithName("ListCustomers")
+            .RequirePermission(Permission.TiersConsulter)
             .Produces<PagedResponse<CustomerSummary>>();
 
         group.MapGet("/{id:guid}", GetAsync)
             .WithName("GetCustomer")
+            .RequirePermission(Permission.TiersConsulter)
             .Produces<CustomerResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound);
 

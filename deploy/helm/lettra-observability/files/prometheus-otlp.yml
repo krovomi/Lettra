@@ -1,0 +1,9 @@
+# Réglages OTLP de Prometheus repris par la pile (kube-prometheus-stack) et par l'essai local (deploy/local).
+# Les attributs de ressource utiles au routage deviennent des étiquettes ; aucun n'identifie une personne ou un client.
+otlp:
+  promote_resource_attributes:
+    - lettra.cell
+    - lettra.deployment.mode
+    - deployment.environment.name
+    - service.instance.id
+  translation_strategy: UnderscoreEscapingWithSuffixes

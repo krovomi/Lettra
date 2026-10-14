@@ -30,6 +30,10 @@ body { margin: 0; }
 .lettra-table { width: 100%; border-collapse: collapse; }
 .lettra-table th, .lettra-table td { text-align: left; padding: 0.35rem 0.5rem; border-bottom: 1px solid #e3e6eb; }
 
+/* Session : utilisateur connecté et verrouillage, dans l'en-tête. */
+.lettra-session { margin-left: auto; display: flex; gap: .75rem; align-items: center; }
+.lettra-link { background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; cursor: pointer; font: inherit; }
+.lettra-button { display: inline-block; padding: .5rem 1rem; border-radius: .25rem; background: #1d4ed8; color: #fff; text-decoration: none; }
 /* Catalogue (grille clavier), recherche dans l'annuaire, vérification VIES. */
 .lettra-toolbar { display: flex; flex-wrap: wrap; gap: var(--lettra-gap); align-items: center; margin-bottom: var(--lettra-gap); }
 .lettra-toolbar input[type=search] { padding: 0.4rem; border: 1px solid #c3c8d1; border-radius: 4px; min-width: 16rem; }

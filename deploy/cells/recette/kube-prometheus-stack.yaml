@@ -1,0 +1,13 @@
+prometheus:
+  prometheusSpec:
+    retention: 30d
+    retentionSize: 18GB
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          resources:
+            requests:
+              storage: 20Gi
+alertmanager:
+  alertmanagerSpec:
+    replicas: 1

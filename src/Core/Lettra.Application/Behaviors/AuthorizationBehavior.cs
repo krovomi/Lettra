@@ -5,9 +5,9 @@ using Lettra.Application.Messaging;
 namespace Lettra.Application.Behaviors;
 
 /// <summary>
-/// Applique la permission déclarée par chaque cas d'usage, quelle que soit son origine (UI, API, synchro, IA).
-/// Une requête sans <see cref="IRequirePermission"/> doit porter <see cref="PublicUseCaseAttribute"/>
-/// (vérifié par les tests d'architecture) ; à défaut elle est refusée.
+/// Applique la permission déclarée par chaque cas d'usage, quelle que soit son origine (UI, API, synchro, IA),
+/// sur sa portée : dossier, groupe ou cabinet. Une requête sans <see cref="ISecuredUseCase"/> doit porter
+/// <see cref="PublicUseCaseAttribute"/> (vérifié par les tests d'architecture) ; à défaut elle est refusée.
 /// </summary>
 internal sealed class AuthorizationBehavior<TRequest, TResult>(
     ICurrentUser user,
@@ -17,7 +17,7 @@ internal sealed class AuthorizationBehavior<TRequest, TResult>(
     public async Task<TResult> HandleAsync(TRequest request, RequestHandlerDelegate<TResult> next, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(next);
-        if (request is not IRequirePermission secured)
+        if (request is not ISecuredUseCase secured)
         {
             return Attribute.IsDefined(request.GetType(), typeof(PublicUseCaseAttribute))
                 ? await next().ConfigureAwait(false)
@@ -29,8 +29,20 @@ internal sealed class AuthorizationBehavior<TRequest, TResult>(
             return ResultFactory.Failure<TResult>(SecurityErrors.Unauthenticated);
         }
 
+        AuthorizationScope? scope = secured switch
+        {
+            IRequirePermission dossier => AuthorizationScope.ForDossier(dossier.Dossier),
+            IRequireGroupPermission group => AuthorizationScope.ForGroup(group.Group),
+            IRequireOrganisationPermission organisation => AuthorizationScope.ForCabinet(organisation.Organisation),
+            _ => null,
+        };
+        if (scope is null)
+        {
+            return ResultFactory.Failure<TResult>(SecurityErrors.Forbidden);
+        }
+
         IReadOnlySet<Permission> granted = await permissions
-            .GetEffectiveAsync(user.UserId, secured.Dossier, cancellationToken)
+            .GetEffectiveAsync(user.UserId, scope.Value, cancellationToken)
             .ConfigureAwait(false);
 
         return granted.Contains(secured.Permission)

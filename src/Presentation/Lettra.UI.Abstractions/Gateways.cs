@@ -25,3 +25,22 @@ public sealed class FixedDossierSelection(Guid? dossierId) : IDossierSelection
 {
     public Guid? CurrentDossierId { get; } = dossierId;
 }
+
+/// <summary>
+/// Session de l'utilisateur. In-process (MAUI, mode 1) : compte local à phrase secrète. HTTP (navigateur) : session du
+/// BFF, la connexion et la déconnexion se font par navigation pleine page vers <see cref="SignInPath"/> et
+/// <see cref="Contracts.Identity.SessionResponse.SignOutUrl"/>.
+/// </summary>
+public interface ISessionGateway
+{
+    /// <summary>Adresse de connexion par navigation (BFF) ; <c>null</c> pour le compte local.</summary>
+    string? SignInPath { get; }
+
+    Task<OperationResult<Contracts.Identity.SessionResponse>> GetAsync(CancellationToken cancellationToken);
+
+    Task<OperationResult<Contracts.Identity.SessionResponse>> CreateLocalAccountAsync(Contracts.Identity.CreateLocalAccountRequest request, CancellationToken cancellationToken);
+
+    Task<OperationResult<Contracts.Identity.SessionResponse>> UnlockAsync(Contracts.Identity.UnlockLocalSessionRequest request, CancellationToken cancellationToken);
+
+    Task<OperationResult<Contracts.Identity.SessionResponse>> LockAsync(CancellationToken cancellationToken);
+}

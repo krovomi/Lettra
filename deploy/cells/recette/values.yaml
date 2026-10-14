@@ -1,0 +1,17 @@
+# Cellule de recette (phase 2) : recréée de zéro par la pipeline, données synthétiques seulement (annexe E §7).
+environment: recette
+lettra-api:
+  environment: recette
+  settings:
+    Lettra__DeploymentMode: HostedSaaS
+    Lettra__Observability__ServiceName: lettra-api
+    Lettra__Supervision__PublicBaseAddress: https://recette.lettra.fr/
+lettra-worker:
+  environment: recette
+postgres:
+  clusters:
+    - { name: pg-a, instances: 2, storage: 40Gi, activeDossierBudget: 60 }
+  backup:
+    enabled: true
+    destinationPath: s3://lettra-recette-sauvegardes
+    endpointURL: https://s3.gra.io.cloud.ovh.net

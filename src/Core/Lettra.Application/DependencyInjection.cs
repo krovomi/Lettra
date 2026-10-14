@@ -1,5 +1,7 @@
 using Lettra.Application.Abstractions.Ai;
+using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Messaging;
+using Lettra.Application.Authorization;
 using Lettra.Application.Behaviors;
 using Lettra.Application.Messaging;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +22,9 @@ public static class DependencyInjection
         services.TryAddScoped<IAccountingAssistant, UnavailableAccountingAssistant>();
         services.AddScoped<ICommandDispatcher, CommandDispatcher>();
         services.AddScoped<IQueryDispatcher, QueryDispatcher>();
+
+        // Hors du mode 1, les cas d'usage de session locale répondent « non pris en charge ».
+        services.TryAddSingleton<ILocalAccounts, NoLocalAccounts>();
 
         // Ordre = de l'extérieur vers l'intérieur : on trace tout, puis on vérifie le dossier,
         // puis les droits, puis la saisie. Un refus de droits ne révèle donc rien de la validation.

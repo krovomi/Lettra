@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Module Supervision : cycle de vie, gravité, escalade, routage, ingestion Alertmanager. Sans base ni réseau. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Modules\Supervision\Lettra.Supervision.Infrastructure\Lettra.Supervision.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+</Project>

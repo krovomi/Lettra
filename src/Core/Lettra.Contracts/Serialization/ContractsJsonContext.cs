@@ -4,6 +4,7 @@ using Lettra.Contracts.Assistant;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Customers;
+using Lettra.Contracts.Identity;
 using Lettra.Contracts.Directory;
 using Lettra.Contracts.Suppliers;
 
@@ -18,6 +19,9 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(CustomerResponse))]
 [JsonSerializable(typeof(PagedResponse<CustomerSummary>))]
 [JsonSerializable(typeof(ProblemResponse))]
+[JsonSerializable(typeof(SessionResponse))]
+[JsonSerializable(typeof(CreateLocalAccountRequest))]
+[JsonSerializable(typeof(UnlockLocalSessionRequest))]
 [JsonSerializable(typeof(CreateSupplierRequest))]
 [JsonSerializable(typeof(SupplierResponse))]
 [JsonSerializable(typeof(PagedResponse<SupplierSummary>))]

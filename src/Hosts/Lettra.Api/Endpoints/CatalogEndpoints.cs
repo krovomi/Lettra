@@ -1,4 +1,6 @@
 using Lettra.Api.Infrastructure;
+using Lettra.Api.Security;
+using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Features.Catalog;
@@ -19,25 +21,30 @@ internal static class CatalogEndpoints
         RouteGroupBuilder group = api.MapGroup("/catalog").WithTags("Catalog");
 
         group.MapGet("/reference-data", ReferenceDataAsync)
+            .RequirePermission(Permission.CatalogueConsulter)
             .WithName("GetCatalogReferenceData")
             .Produces<CatalogReferenceData>();
 
         group.MapGet("/items", ListAsync)
+            .RequirePermission(Permission.CatalogueConsulter)
             .WithName("ListCatalogItems")
             .Produces<PagedResponse<CatalogItemSummary>>();
 
         group.MapGet("/items/{id:guid}", GetAsync)
+            .RequirePermission(Permission.CatalogueConsulter)
             .WithName("GetCatalogItem")
             .Produces<CatalogItemResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapPost("/items", CreateAsync)
+            .RequirePermission(Permission.CatalogueGerer)
             .WithName("CreateCatalogItem")
             .Produces<CatalogItemResponse>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status409Conflict);
 
         group.MapPut("/items/{id:guid}", UpdateAsync)
+            .RequirePermission(Permission.CatalogueGerer)
             .WithName("UpdateCatalogItem")
             .Produces<CatalogItemResponse>()
             .ProducesProblem(StatusCodes.Status400BadRequest)
@@ -45,6 +52,7 @@ internal static class CatalogEndpoints
             .ProducesProblem(StatusCodes.Status409Conflict);
 
         group.MapPut("/items/{id:guid}/archived", SetArchivedAsync)
+            .RequirePermission(Permission.CatalogueGerer)
             .WithName("SetCatalogItemArchived")
             .Produces<CatalogItemResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound);

@@ -3,6 +3,7 @@ using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Infrastructure.Catalog;
 using Lettra.Infrastructure.External;
 using Lettra.Infrastructure.Identity.Local;
+using Lettra.Infrastructure.Identity.Oidc;
 using Lettra.Infrastructure.Observability;
 using Lettra.Infrastructure.Persistence;
 using Lettra.Infrastructure.Persistence.PostgreSql;
@@ -52,7 +53,7 @@ public static class LettraBootstrap
                 .AddSingleton<IDbProviderConfigurator, PostgreSqlConfigurator>()
                 .AddSingleton<IDbProviderConfigurator, SqlServerConfigurator>()
                 .AddConfigurationCatalog(configuration)
-                .AddLocalIdentity(configuration)
+                .AddOidcIdentity(configuration)
                 .AddSupervision(configuration),
 
             // Phase 2 en cours : la base Catalog arrive avec le chantier « Persistance et tenancy ».

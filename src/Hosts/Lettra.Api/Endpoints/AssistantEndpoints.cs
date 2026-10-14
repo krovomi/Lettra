@@ -1,5 +1,7 @@
 using System.Text.Json;
 using Lettra.Api.Infrastructure;
+using Lettra.Api.Security;
+using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Features.Assistant;
@@ -23,12 +25,14 @@ internal static class AssistantEndpoints
 
         group.MapPost("/", AskAsync)
             .WithName("AskAssistant")
+            .RequirePermission(Permission.IaUtiliser)
             .Produces<AssistantEvent>(StatusCodes.Status200OK, NdjsonContentType)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status403Forbidden);
 
         group.MapGet("/journal", JournalAsync)
             .WithName("GetAssistantJournal")
+            .RequirePermission(Permission.IaUtiliser)
             .Produces<IReadOnlyList<AssistantJournalEntry>>()
             .ProducesProblem(StatusCodes.Status403Forbidden);
 

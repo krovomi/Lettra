@@ -1,0 +1,72 @@
+{{- if not .Values.imageTag }}{{ fail "imageTag est obligatoire (SHA de l'image signée)" }}{{ end -}}
+{{- $v := .Values -}}
+{{- $ns := .Values.namespaces -}}
+{{- $lettraSource := dict "repoURL" $v.repoURL "targetRevision" $v.revision "ref" "lettra" -}}
+# Vague -2 : opérateur PostgreSQL (CloudNativePG).
+{{ include "racine.app" (dict "root" . "name" "cloudnative-pg" "namespace" $ns.operateurs "wave" -2) }}
+  sources:
+    - repoURL: {{ $v.charts.cloudnativePg.repoURL }}
+      chart: {{ $v.charts.cloudnativePg.chart }}
+      targetRevision: {{ $v.charts.cloudnativePg.version }}
+---
+# Vague -1 : pile d'observabilité de la cellule (Prometheus, Alertmanager, Grafana ; Loki ; Tempo), dans la même région.
+{{ include "racine.app" (dict "root" . "name" "kube-prometheus-stack" "namespace" $ns.observabilite "wave" -1) }}
+  sources:
+    - repoURL: {{ $v.charts.kubePrometheusStack.repoURL }}
+      chart: {{ $v.charts.kubePrometheusStack.chart }}
+      targetRevision: {{ $v.charts.kubePrometheusStack.version }}
+      helm:
+        releaseName: kube-prometheus-stack
+        valueFiles:
+          {{- include "racine.values" (dict "root" . "file" "kube-prometheus-stack.yaml") | nindent 10 }}
+        valuesObject:
+          prometheus:
+            prometheusSpec:
+              externalLabels:
+                cell: {{ $v.cell }}
+    - {{ toYaml $lettraSource | nindent 6 | trim }}
+---
+{{ include "racine.app" (dict "root" . "name" "loki" "namespace" $ns.observabilite "wave" -1) }}
+  sources:
+    - repoURL: {{ $v.charts.loki.repoURL }}
+      chart: {{ $v.charts.loki.chart }}
+      targetRevision: {{ $v.charts.loki.version }}
+      helm:
+        valueFiles:
+          {{- include "racine.values" (dict "root" . "file" "loki.yaml") | nindent 10 }}
+    - {{ toYaml $lettraSource | nindent 6 | trim }}
+---
+{{ include "racine.app" (dict "root" . "name" "tempo" "namespace" $ns.observabilite "wave" -1) }}
+  sources:
+    - repoURL: {{ $v.charts.tempo.repoURL }}
+      chart: {{ $v.charts.tempo.chart }}
+      targetRevision: {{ $v.charts.tempo.version }}
+      helm:
+        valueFiles:
+          {{- include "racine.values" (dict "root" . "file" "tempo.yaml") | nindent 10 }}
+    - {{ toYaml $lettraSource | nindent 6 | trim }}
+---
+# Vague 0 : ce que Lettra ajoute (collecteur filtrant, règles, routage des alertes, tableaux de bord).
+{{ include "racine.app" (dict "root" . "name" "observabilite" "namespace" $ns.observabilite "wave" 0) }}
+  source:
+    repoURL: {{ $v.repoURL }}
+    targetRevision: {{ $v.revision }}
+    path: deploy/helm/lettra-observability
+    helm:
+      valuesObject:
+        cell: {{ $v.cell }}
+---
+# Vague 1 : la cellule (API, Worker, clusters PostgreSQL et PgBouncer), à sa taille.
+{{ include "racine.app" (dict "root" . "name" "cellule" "namespace" $ns.lettra "wave" 1) }}
+  source:
+    repoURL: {{ $v.repoURL }}
+    targetRevision: {{ $v.revision }}
+    path: deploy/helm/lettra-cell
+    helm:
+      valueFiles:
+        - values-taille-{{ $v.size }}.yaml
+        - ../../cells/{{ $v.cell }}/values.yaml
+      valuesObject:
+        cell: {{ $v.cell }}
+        lettra-api: { cell: {{ $v.cell }}, image: { tag: {{ $v.imageTag | quote }} } }
+        lettra-worker: { cell: {{ $v.cell }}, image: { tag: {{ $v.imageTag | quote }} } }
