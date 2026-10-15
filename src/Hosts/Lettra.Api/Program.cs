@@ -1,5 +1,6 @@
 using Lettra.Api.Endpoints;
 using Lettra.Api.Infrastructure;
+using Lettra.Api.Presence;
 using Lettra.Api.Security;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Bootstrap;
@@ -18,6 +19,7 @@ if (mode == DeploymentMode.IsolatedDesktop)
 builder.Services.AddLettra(builder.Configuration);
 builder.Services.AddLettraApiAuthentication(builder.Configuration);
 builder.Services.AddLettraRateLimiting(builder.Configuration);
+builder.Services.AddLettraPresence();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IRequestedDossierSource, HeaderDossierSource>();
 builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.TypeInfoResolverChain.Insert(0, ContractsJsonContext.Default));
@@ -65,6 +67,7 @@ RouteGroupBuilder cabinet = app.MapGroup($"/api/v1/cabinets/{{{CabinetPermission
 cabinet.MapDossiers();
 cabinet.MapCabinetPolicies();
 
+app.MapLettraPresence();
 app.MapLettraBff();
 app.MapHealthChecks("/health");
 
