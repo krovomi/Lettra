@@ -1,0 +1,99 @@
+@inject ICustomersGateway Customers
+@inject IStringLocalizer<SharedResource> L
+@* Choix du client d'une pièce : bouton (ou F4 sur le bouton) qui ouvre la liste filtrable des clients. *@
+<div class="lettra-field">
+    <span class="lettra-label" id="customer-label">@L["Billing.Field.Customer"]</span>
+    <button type="button" id="customer" @ref="_button" class="lettra-picker" aria-labelledby="customer-label customer"
+            disabled="@ReadOnly" @onclick="OpenAsync" @onkeydown="OnKeyDownAsync">
+        @(SelectedName ?? _resolvedName ?? L["Billing.Customer.Choose"])
+    </button>
+</div>
+
+@if (_options is not null)
+{
+    <ChoiceListDialog TItem="CustomerSummary" Title="@L["Billing.Customer.Choose"]" Items="_options" Matches="Matches"
+                      ItemText="Text" OnSelected="SelectedAsync" OnCancel="CancelAsync" />
+}
+
+@code {
+    private const int PageSize = 500;
+
+    [Parameter] public Guid? CustomerId { get; set; }
+
+    /// <summary>Nom affiché (copie du client sur la pièce, ou client choisi).</summary>
+    [Parameter] public string? SelectedName { get; set; }
+
+    [Parameter] public bool ReadOnly { get; set; }
+
+    [Parameter] public EventCallback<CustomerSummary> OnSelected { get; set; }
+
+    private IReadOnlyList<CustomerSummary>? _options;
+    private Guid? _resolvedFor;
+    private string? _resolvedName;
+    private ElementReference _button;
+
+    /// <summary>Client imposé sans nom (lien « nouvelle facture pour… ») : le nom est retrouvé pour l'affichage.</summary>
+    protected override async Task OnParametersSetAsync()
+    {
+        if (SelectedName is null && CustomerId is { } id && id != Guid.Empty && id != _resolvedFor)
+        {
+            _resolvedFor = id;
+            _resolvedName = (await FindAsync(id))?.Name;
+        }
+    }
+
+    public async Task FocusAsync()
+    {
+        try
+        {
+            await _button.FocusAsync();
+        }
+        catch (InvalidOperationException)
+        {
+            // Rendu sans navigateur (tests).
+        }
+    }
+
+    /// <summary>Client à partir de son identifiant (lien « nouvelle facture pour… »).</summary>
+    public async Task<CustomerSummary?> FindAsync(Guid id)
+    {
+        OperationResult<PagedResponse<CustomerSummary>> result = await Customers.ListAsync(1, PageSize, CancellationToken.None);
+        return result.Value?.Items.FirstOrDefault(c => c.Id == id);
+    }
+
+    private async Task OpenAsync()
+    {
+        OperationResult<PagedResponse<CustomerSummary>> result = await Customers.ListAsync(1, PageSize, CancellationToken.None);
+        _options = result.Value?.Items ?? [];
+    }
+
+    private async Task OnKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "F4" && !ReadOnly)
+        {
+            await OpenAsync();
+        }
+    }
+
+    private async Task SelectedAsync(CustomerSummary customer)
+    {
+        _options = null;
+        await OnSelected.InvokeAsync(customer);
+        await FocusAsync();
+    }
+
+    private async Task CancelAsync()
+    {
+        _options = null;
+        await FocusAsync();
+    }
+
+    private static bool Matches(CustomerSummary customer, string filter) =>
+        filter.Length == 0
+        || customer.Name.Contains(filter, StringComparison.CurrentCultureIgnoreCase)
+        || (customer.Siren?.Contains(filter, StringComparison.Ordinal) ?? false)
+        || customer.City.Contains(filter, StringComparison.CurrentCultureIgnoreCase);
+
+    private static string Text(CustomerSummary customer) =>
+        string.IsNullOrEmpty(customer.City) ? customer.Name : $"{customer.Name} · {customer.City}";
+}

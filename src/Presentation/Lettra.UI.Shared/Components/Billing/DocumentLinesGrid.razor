@@ -1,0 +1,353 @@
+@using Lettra.UI.Shared.Pages
+@implements IDisposable
+@inject ICatalogGateway Catalog
+@inject IStringLocalizer<SharedResource> L
+@* Lignes d'un devis ou d'une facture sur la grille clavier : F4 ouvre l'article, l'unité ou la TVA ; Insert ajoute une
+   ligne, Ctrl+Suppr la retire ; Entrée sur la dernière cellule crée la ligne suivante. Les totaux sont tenus ligne par
+   ligne ; la pièce est enregistrée par la page (brouillon), pas à chaque cellule. *@
+
+<FunctionKeyBar Grid="_grid" />
+<div class="lettra-grid-host lettra-lines-host">
+    <DataEntryGrid TItem="DocumentLineRow" @ref="_grid" Items="Lines" Columns="_columns" KeySelector="RowKey"
+                   Scope="_scope" IsReadOnly="_ => ReadOnly" OnItemChanged="OnItemChangedAsync" EndReached="AddLineAtEndAsync"
+                   AriaLabel="@L["Lines.Grid"]" />
+</div>
+
+@if (_choice is { } choice)
+{
+    <ChoiceListDialog TItem="ChoiceOption" Title="@choice.Title" Items="choice.Options" Matches="OptionMatches"
+                      ItemText="OptionText" OnSelected="ChoiceSelectedAsync" OnCancel="ChoiceCancelledAsync" />
+}
+
+@code {
+    /// <summary>Clés des colonnes (commandes, focus, checklist).</summary>
+    public static class Column
+    {
+        public const string Reference = "reference";
+        public const string Designation = "designation";
+        public const string Quantity = "quantity";
+        public const string Unit = "unit";
+        public const string Price = "price";
+        public const string Discount = "discount";
+        public const string Vat = "vat";
+        public const string Total = "total";
+    }
+
+    private const int CatalogPageSize = 500;
+    private static readonly VatRateOption FallbackRate = new("FR-20", 20m);
+
+    /// <summary>Lignes de la pièce ; la grille les remplace par de nouveaux enregistrements à chaque saisie.</summary>
+    [Parameter, EditorRequired] public List<DocumentLineRow> Lines { get; set; } = default!;
+
+    [Parameter, EditorRequired] public BillingReferenceData ReferenceData { get; set; } = default!;
+
+    [Parameter] public VatRegimeDto Regime { get; set; } = VatRegimeDto.Standard;
+
+    /// <summary>Pièce validée ou lignes issues d'une autre pièce : lecture seule.</summary>
+    [Parameter] public bool ReadOnly { get; set; }
+
+    /// <summary>Prix du client pour un article (grille tarifaire), s'il y en a un.</summary>
+    [Parameter] public Func<Guid, Task<ResolvedPrice?>>? ResolvePrice { get; set; }
+
+    /// <summary>Une ligne a changé, a été ajoutée ou retirée : la page planifie l'enregistrement du brouillon.</summary>
+    [Parameter] public EventCallback OnLinesChanged { get; set; }
+
+    [Parameter] public EventCallback<DocumentTotals> OnTotalsChanged { get; set; }
+
+    private readonly RunningTotals _totals = new();
+    private IReadOnlyList<GridColumn<DocumentLineRow>> _columns = [];
+    private IReadOnlyList<CatalogItemSummary> _catalog = [];
+    private DataEntryGrid<DocumentLineRow>? _grid;
+    private KeyboardScope _scope = default!;
+    private ChoiceState? _choice;
+    private VatRegimeDto _totalsRegime;
+    private List<DocumentLineRow>? _totalsLines;
+
+    private sealed record ChoiceState(int Row, string Column, string Title, IReadOnlyList<ChoiceOption> Options);
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private static object RowKey(DocumentLineRow row) => row.Key;
+
+    public DocumentTotals Totals => _totals.Totals;
+
+    protected override void OnInitialized()
+    {
+        _columns =
+        [
+            new() { Key = Column.Reference, Label = L["Lines.Column.Reference"], Width = "7rem",
+                    Display = r => r.Reference ?? string.Empty, Parse = ParseReference },
+            new() { Key = Column.Designation, Label = L["Lines.Column.Designation"], Width = "minmax(12rem, 3fr)", Wide = true,
+                    Display = r => r.Designation, Parse = (r, t) => r with { Designation = t.Trim() } },
+            new() { Key = Column.Quantity, Label = L["Lines.Column.Quantity"], Width = "5rem", Numeric = true,
+                    Display = r => r.Quantity.ToString("#,##0.###", Culture), Parse = ParseQuantity },
+            new() { Key = Column.Unit, Label = L["Lines.Column.Unit"], Width = "6rem",
+                    Display = r => UnitLabel(r.UnitCode), Parse = ParseUnit },
+            new() { Key = Column.Price, Label = L["Lines.Column.UnitPrice"], Width = "7rem", Numeric = true,
+                    Display = r => GridNumber.FormatPrice(r.UnitPriceExclTax, Culture), Parse = ParsePrice },
+            new() { Key = Column.Discount, Label = L["Lines.Column.Discount"], Width = "5rem", Numeric = true,
+                    Display = r => r.DiscountPercent == 0m ? string.Empty : r.DiscountPercent.ToString("0.##", Culture), Parse = ParseDiscount },
+            new() { Key = Column.Vat, Label = L["Lines.Column.Vat"], Width = "6rem", Numeric = true,
+                    Display = VatLabel, Parse = ParseVat },
+            new() { Key = Column.Total, Label = L["Lines.Column.Total"], Width = "7rem", Numeric = true,
+                    Display = r => GridNumber.FormatAmount(r.TotalExclTax, Culture) },
+        ];
+
+        _scope = new KeyboardScope(KeyboardScope.GridScopeName)
+            .Bind("F4", L["Lines.Command.ChoiceList"], OpenChoice, CanOpenChoice)
+            .Bind("Insert", L["Lines.Command.New"], _ => AddLineAsync(), _ => !ReadOnly)
+            .Bind("Ctrl+Delete", L["Lines.Command.Delete"], DeleteLineAsync, ctx => !ReadOnly && ctx.Row >= 0 && ctx.Row < Lines.Count);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        OperationResult<PagedResponse<CatalogItemSummary>> catalog = await Catalog.ListAsync(null, false, 1, CatalogPageSize, CancellationToken.None);
+        _catalog = catalog.Value?.Items ?? [];
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Nouvelle liste (chargement, rechargement) ou nouveau régime : on repart des lignes.
+        if (!ReferenceEquals(_totalsLines, Lines) || _totalsRegime != Regime)
+        {
+            _totalsLines = Lines;
+            _totalsRegime = Regime;
+            _totals.Reset(Lines.Select(l => l.ToInput(Regime)));
+            _grid?.Refresh();
+            await OnTotalsChanged.InvokeAsync(_totals.Totals);
+        }
+    }
+
+    /// <summary>Place le curseur sur une ligne (constat de la checklist).</summary>
+    public Task FocusLineAsync(int index, string column = Column.Designation) =>
+        _grid is null || Lines.Count == 0 ? Task.CompletedTask : _grid.FocusCellAsync(Math.Clamp(index, 0, Lines.Count - 1), column);
+
+    // ---------- saisie ----------
+
+    private async Task OnItemChangedAsync(GridItemChange<DocumentLineRow> change)
+    {
+        _totals.Replace(change.Before.ToInput(Regime), change.After.ToInput(Regime));
+        await OnTotalsChanged.InvokeAsync(_totals.Totals);
+        if (change.After.CatalogItemId is not null && change.After.CatalogItemId != change.Before.CatalogItemId)
+        {
+            await ApplyCustomerPriceAsync(change.Row);
+        }
+
+        await OnLinesChanged.InvokeAsync();
+    }
+
+    private async Task AddLineAsync()
+    {
+        VatRateOption rate = ReferenceData.VatRates.FirstOrDefault(r => r.Code == FallbackRate.Code) ?? ReferenceData.VatRates.FirstOrDefault() ?? FallbackRate;
+        DocumentLineRow line = DocumentLineRow.New(rate);
+        Lines.Add(line);
+        _totals.Add(line.ToInput(Regime));
+        _grid?.Refresh();
+        StateHasChanged();
+        await OnTotalsChanged.InvokeAsync(_totals.Totals);
+        if (_grid is not null)
+        {
+            await _grid.FocusCellAsync(Lines.Count - 1, Column.Reference);
+        }
+    }
+
+    private Task AddLineAtEndAsync() => ReadOnly ? Task.CompletedTask : AddLineAsync();
+
+    private async Task DeleteLineAsync(CommandContext context)
+    {
+        DocumentLineRow line = Lines[context.Row];
+        Lines.RemoveAt(context.Row);
+        _totals.Remove(line.ToInput(Regime));
+        _grid?.Refresh();
+        StateHasChanged();
+        await OnTotalsChanged.InvokeAsync(_totals.Totals);
+        await OnLinesChanged.InvokeAsync();
+        if (_grid is not null && Lines.Count > 0)
+        {
+            await _grid.FocusCellAsync(Math.Min(context.Row, Lines.Count - 1), Column.Designation);
+        }
+    }
+
+    /// <summary>Après un choix d'article (F4 ou référence saisie), applique le tarif du client s'il en a un.</summary>
+    private async Task<DocumentLineRow> WithCustomerPriceAsync(DocumentLineRow line)
+    {
+        if (ResolvePrice is null || line.CatalogItemId is not { } itemId)
+        {
+            return line;
+        }
+
+        ResolvedPrice? price = await ResolvePrice(itemId);
+        if (price is null)
+        {
+            return line;
+        }
+
+        VatRateOption? rate = ReferenceData.VatRates.FirstOrDefault(r => r.Code == price.VatRateCode);
+        return line with
+        {
+            UnitPriceExclTax = price.UnitPriceExclTax,
+            DiscountPercent = price.DiscountPercent,
+            VatRateCode = rate?.Code ?? line.VatRateCode,
+            VatRatePercent = rate?.Percent ?? line.VatRatePercent,
+        };
+    }
+
+    // ---------- listes de choix (F4) ----------
+
+    private bool CanOpenChoice(CommandContext context) =>
+        !ReadOnly && context.Row >= 0 && context.Row < Lines.Count && context.Column is Column.Reference or Column.Unit or Column.Vat;
+
+    private void OpenChoice(CommandContext context)
+    {
+        (string title, IReadOnlyList<ChoiceOption> options) = context.Column switch
+        {
+            Column.Reference => (L["Lines.Choice.Item"].Value, ItemOptions()),
+            Column.Unit => (L["Catalog.Choice.Unit"].Value, UnitOptions()),
+            _ => (L["Lines.Choice.Vat"].Value, VatOptions()),
+        };
+        _choice = new ChoiceState(context.Row, context.Column, title, options);
+        StateHasChanged();
+    }
+
+    private async Task ChoiceSelectedAsync(ChoiceOption option)
+    {
+        ChoiceState? choice = _choice;
+        _choice = null;
+        if (choice is null || _grid is null)
+        {
+            return;
+        }
+
+        await _grid.CommitCellAsync(choice.Row, choice.Column, option.Code);
+        await _grid.FocusCellAsync(choice.Row, choice.Column == Column.Reference ? Column.Quantity : choice.Column);
+    }
+
+    private async Task ApplyCustomerPriceAsync(int row)
+    {
+        DocumentLineRow before = Lines[row];
+        DocumentLineRow after = await WithCustomerPriceAsync(before);
+        if (after != before && _grid is not null)
+        {
+            await _grid.CommitCellAsync(row, Column.Price, GridNumber.FormatPrice(after.UnitPriceExclTax, Culture));
+            if (after.DiscountPercent != before.DiscountPercent)
+            {
+                await _grid.CommitCellAsync(row, Column.Discount, after.DiscountPercent.ToString("0.##", Culture));
+            }
+        }
+    }
+
+    private async Task ChoiceCancelledAsync()
+    {
+        ChoiceState? choice = _choice;
+        _choice = null;
+        if (choice is not null && _grid is not null)
+        {
+            await _grid.FocusCellAsync(choice.Row, choice.Column);
+        }
+    }
+
+    private static bool OptionMatches(ChoiceOption option, string filter) =>
+        filter.Length == 0
+        || option.Label.Contains(filter, StringComparison.CurrentCultureIgnoreCase)
+        || option.Code.Contains(filter, StringComparison.OrdinalIgnoreCase);
+
+    private static string OptionText(ChoiceOption option) => option.Label;
+
+    private List<ChoiceOption> ItemOptions() =>
+        [.. _catalog.Select(i => new ChoiceOption(i.Reference,
+            $"{i.Reference} · {i.Designation} · {GridNumber.FormatPrice(i.UnitPriceExclTax, Culture)}"))];
+
+    private List<ChoiceOption> UnitOptions() =>
+        [.. _catalog.Select(i => i.UnitCode).Append("C62").Append("HUR").Append("DAY").Append("LS").Distinct()
+            .Select(u => new ChoiceOption(u, $"{UnitLabel(u)} ({u})"))];
+
+    private List<ChoiceOption> VatOptions()
+    {
+        List<ChoiceOption> options = [.. ReferenceData.VatRates.Select(v => new ChoiceOption(v.Code, PercentLabel(v.Percent)))];
+        if (Regime == VatRegimeDto.Standard)
+        {
+            options.AddRange(ReferenceData.ExemptionReasons.Select(e => new ChoiceOption(e.Code, $"{L["Lines.Exempt"]} · {e.LegalText}")));
+        }
+
+        return options;
+    }
+
+    // ---------- affichage et lecture des cellules ----------
+
+    private string UnitLabel(string code)
+    {
+        LocalizedString label = L[$"Unit.{code}"];
+        return label.ResourceNotFound ? code : label.Value;
+    }
+
+    private string PercentLabel(decimal percent) => string.Format(Culture, L["Catalog.VatPercent"], percent.ToString("0.##", Culture));
+
+    private string VatLabel(DocumentLineRow row) =>
+        Regime != VatRegimeDto.Standard ? L[$"VatRegime.Short.{Regime}"]
+        : row.VatExemptionCode is not null ? L["Lines.Exempt"]
+        : PercentLabel(row.VatRatePercent);
+
+    /// <summary>Référence : un article du catalogue est recopié (désignation, unité, prix, TVA) ; sinon texte libre.</summary>
+    private DocumentLineRow ParseReference(DocumentLineRow row, string text)
+    {
+        string value = text.Trim();
+        CatalogItemSummary? item = _catalog.FirstOrDefault(i => i.Reference.Equals(value, StringComparison.OrdinalIgnoreCase));
+        if (item is not null)
+        {
+            return row.WithCatalogItem(item);
+        }
+
+        return row with { Reference = value.Length == 0 ? null : value, CatalogItemId = value.Length == 0 ? null : row.CatalogItemId };
+    }
+
+    private static DocumentLineRow ParseQuantity(DocumentLineRow row, string text) =>
+        GridNumber.TryParse(text, Culture, out decimal quantity) ? row with { Quantity = quantity } : throw new FormatException(text);
+
+    private static DocumentLineRow ParsePrice(DocumentLineRow row, string text) =>
+        GridNumber.TryParse(text, Culture, out decimal price) && price >= 0m ? row with { UnitPriceExclTax = price } : throw new FormatException(text);
+
+    private static DocumentLineRow ParseDiscount(DocumentLineRow row, string text)
+    {
+        string value = text.Replace("%", string.Empty, StringComparison.Ordinal).Trim();
+        if (value.Length == 0)
+        {
+            return row with { DiscountPercent = 0m };
+        }
+
+        return GridNumber.TryParse(value, Culture, out decimal discount) && discount is >= 0m and <= 100m
+            ? row with { DiscountPercent = discount }
+            : throw new FormatException(text);
+    }
+
+    /// <summary>Unité : code CEE-ONU (« HUR ») ou libellé traduit (« Heure »).</summary>
+    private DocumentLineRow ParseUnit(DocumentLineRow row, string text)
+    {
+        string value = text.Trim();
+        ChoiceOption? match = UnitOptions().FirstOrDefault(o => o.Code.Equals(value, StringComparison.OrdinalIgnoreCase)
+            || UnitLabel(o.Code).Equals(value, StringComparison.CurrentCultureIgnoreCase));
+        return match is null ? throw new FormatException(value) : row with { UnitCode = match.Code };
+    }
+
+    /// <summary>TVA : code (« FR-5.5 »), taux (« 5,5 », « 20 % ») ou motif d'exonération (« VATEX-EU-132 »).</summary>
+    private DocumentLineRow ParseVat(DocumentLineRow row, string text)
+    {
+        string value = text.Trim();
+        VatExemptionReasonOption? exemption = ReferenceData.ExemptionReasons.FirstOrDefault(e => e.Code.Equals(value, StringComparison.OrdinalIgnoreCase));
+        if (exemption is not null)
+        {
+            return Regime == VatRegimeDto.Standard ? row with { VatExemptionCode = exemption.Code } : throw new FormatException(value);
+        }
+
+        VatRateOption? rate = ReferenceData.VatRates.FirstOrDefault(v => v.Code.Equals(value, StringComparison.OrdinalIgnoreCase));
+        if (rate is null && GridNumber.TryParse(value.Replace("%", string.Empty, StringComparison.Ordinal), Culture, out decimal percent))
+        {
+            rate = ReferenceData.VatRates.FirstOrDefault(v => v.Percent == percent);
+        }
+
+        return rate is null
+            ? throw new FormatException(value)
+            : row with { VatRateCode = rate.Code, VatRatePercent = rate.Percent, VatExemptionCode = null };
+    }
+
+    public void Dispose() => _choice = null;
+}

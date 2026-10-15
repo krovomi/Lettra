@@ -43,6 +43,7 @@
     <Project Path="src/Composition/Lettra.Bootstrap/Lettra.Bootstrap.csproj" />
   </Folder>
   <Folder Name="/src/Presentation/">
+    <Project Path="src/Presentation/Lettra.Printing/Lettra.Printing.csproj" />
     <Project Path="src/Presentation/Lettra.UI.Abstractions/Lettra.UI.Abstractions.csproj" />
     <Project Path="src/Presentation/Lettra.UI.Gateway.Http/Lettra.UI.Gateway.Http.csproj" />
     <Project Path="src/Presentation/Lettra.UI.Gateway.InProcess/Lettra.UI.Gateway.InProcess.csproj" />

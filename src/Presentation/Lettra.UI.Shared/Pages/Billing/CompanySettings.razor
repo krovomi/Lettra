@@ -1,0 +1,202 @@
+@page "/settings/company"
+@inject IBillingSettingsGateway Gateway
+@inject IStringLocalizer<SharedResource> L
+@* Fiche entreprise du dossier : identité légale et conditions de paiement, reprises sur chaque pièce (mentions
+   obligatoires, art. 242 nonies A annexe II du CGI et L441-9 C.com). La checklist de conformité y renvoie. *@
+
+<PageTitle>@L["Company.Title"] · Lettra</PageTitle>
+
+<h1 tabindex="-1">@L["Company.Title"]</h1>
+<p class="lettra-muted">@L["Company.Intro"]</p>
+
+@if (!_loaded)
+{
+    <p>@L["Loading"]</p>
+}
+else
+{
+    <EditForm Model="_request" OnValidSubmit="SaveAsync" FormName="company-profile" class="lettra-card lettra-form-grid">
+        <DataAnnotationsValidator />
+
+        <fieldset>
+            <legend>@L["Company.Identity"]</legend>
+
+            <label for="company-name">@L["Customers.Field.Name"]</label>
+            <InputText id="company-name" @bind-Value="_request.Name" autocomplete="organization" />
+            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.Name)" ServerErrors="_errors" />
+
+            <label for="company-form">@L["Company.Field.LegalForm"]</label>
+            <InputText id="company-form" @bind-Value="_request.LegalForm" />
+            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.LegalForm)" ServerErrors="_errors" />
+
+            <label for="company-capital">@L["Company.Field.ShareCapital"]</label>
+            <InputNumber id="company-capital" @bind-Value="_request.ShareCapital" inputmode="decimal" />
+            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.ShareCapital)" ServerErrors="_errors" />
+
+            <label for="company-siren">@L["Customers.Field.Siren"]</label>
+            <InputText id="company-siren" @bind-Value="_request.Siren" inputmode="numeric" />
+            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.Siren)" ServerErrors="_errors" />
+
+            <label for="company-siret">@L["Customers.Field.Siret"]</label>
+            <InputText id="company-siret" @bind-Value="_request.Siret" inputmode="numeric" />
+            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.Siret)" ServerErrors="_errors" />
+
+            <label for="company-rcs">@L["Company.Field.Rcs"]</label>
+            <InputText id="company-rcs" @bind-Value="_request.Rcs" />
+            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.Rcs)" ServerErrors="_errors" />
+
+            <label for="company-vat">@L["Customers.Field.VatNumber"]</label>
+            <div class="lettra-inline">
+                <InputText id="company-vat" @bind-Value="_request.VatNumber" />
+                <VatNumberCheck VatNumber="@_request.VatNumber" />
+            </div>
+            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.VatNumber)" ServerErrors="_errors" />
+        </fieldset>
+
+        <fieldset>
+            <legend>@L["Company.Address"]</legend>
+
+            <label for="company-line1">@L["Customers.Field.AddressLine1"]</label>
+            <InputText id="company-line1" @bind-Value="_request.AddressLine1" autocomplete="address-line1" />
+            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.AddressLine1)" ServerErrors="_errors" />
+
+            <label for="company-line2">@L["Customers.Field.AddressLine2"]</label>
+            <InputText id="company-line2" @bind-Value="_request.AddressLine2" autocomplete="address-line2" />
+
+            <label for="company-zip">@L["Customers.Field.PostalCode"]</label>
+            <InputText id="company-zip" @bind-Value="_request.PostalCode" autocomplete="postal-code" />
+            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.PostalCode)" ServerErrors="_errors" />
+
+            <label for="company-city">@L["Customers.Field.City"]</label>
+            <InputText id="company-city" @bind-Value="_request.City" autocomplete="address-level2" />
+            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.City)" ServerErrors="_errors" />
+
+            <label for="company-country">@L["Customers.Field.CountryCode"]</label>
+            <InputText id="company-country" @bind-Value="_request.CountryCode" maxlength="2" autocomplete="country" />
+            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.CountryCode)" ServerErrors="_errors" />
+        </fieldset>
+
+        <fieldset>
+            <legend>@L["Company.Vat"]</legend>
+            <label class="lettra-check"><InputCheckbox id="company-franchise" @bind-Value="_request.VatFranchise" /> @L["Company.Field.VatFranchise"]</label>
+            <label class="lettra-check"><InputCheckbox id="company-debits" @bind-Value="_request.VatOnDebits" /> @L["Company.Field.VatOnDebits"]</label>
+        </fieldset>
+
+        <fieldset>
+            <legend>@L["Company.Payment"]</legend>
+
+            <label for="company-days">@L["Company.Field.PaymentDays"]</label>
+            <InputNumber id="company-days" @bind-Value="_request.PaymentDays" inputmode="numeric" />
+            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.PaymentDays)" ServerErrors="_errors" />
+
+            <label for="company-terms">@L["Invoice.Field.PaymentTerms"]</label>
+            <InputTextArea id="company-terms" @bind-Value="_request.PaymentTerms" rows="2" />
+            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.PaymentTerms)" ServerErrors="_errors" />
+
+            <label for="company-penalty">@L["Company.Field.LatePenaltyRate"]</label>
+            <InputNumber id="company-penalty" @bind-Value="_request.LatePenaltyRate" inputmode="decimal" />
+            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.LatePenaltyRate)" ServerErrors="_errors" />
+
+            <label for="company-discount">@L["Company.Field.EarlyPaymentDiscount"]</label>
+            <InputText id="company-discount" @bind-Value="_request.EarlyPaymentDiscount" />
+            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.EarlyPaymentDiscount)" ServerErrors="_errors" />
+
+            <label for="company-iban">@L["Suppliers.Field.Iban"]</label>
+            <InputText id="company-iban" @bind-Value="_request.Iban" autocomplete="off" spellcheck="false" />
+            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.Iban)" ServerErrors="_errors" />
+
+            <label for="company-bic">@L["Company.Field.Bic"]</label>
+            <InputText id="company-bic" @bind-Value="_request.Bic" autocomplete="off" spellcheck="false" />
+            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.Bic)" ServerErrors="_errors" />
+        </fieldset>
+
+        @foreach (ErrorDetail error in _errors.Where(e => e.Target is null))
+        {
+            <p class="validation-message" role="alert">@L.Error(error.Code)</p>
+        }
+
+        <button type="submit" disabled="@_busy">@L["Billing.Command.Save"]</button>
+
+        @if (_saved)
+        {
+            <p role="status" class="lettra-success">@L["Company.Saved"]</p>
+        }
+    </EditForm>
+}
+
+@code {
+    private SaveCompanyProfileRequest _request = new();
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private long? _version;
+    private bool _loaded;
+    private bool _busy;
+    private bool _saved;
+
+    protected override async Task OnInitializedAsync()
+    {
+        OperationResult<CompanyProfileResponse> result = await Gateway.GetCompanyProfileAsync(CancellationToken.None);
+        if (result.IsSuccess && result.Value is { } profile)
+        {
+            Apply(profile);
+        }
+        else if (result.Errors.Any(e => e.Code != ErrorCodes.CompanyProfile.NotFound))
+        {
+            // Fiche absente : formulaire vide. Toute autre erreur s'affiche.
+            _errors = result.Errors;
+        }
+
+        _loaded = true;
+    }
+
+    private async Task SaveAsync()
+    {
+        _busy = true;
+        _saved = false;
+        try
+        {
+            OperationResult<CompanyProfileResponse> result = await Gateway.SaveCompanyProfileAsync(_request, _version, CancellationToken.None);
+            if (result.IsSuccess && result.Value is { } profile)
+            {
+                Apply(profile);
+                _errors = [];
+                _saved = true;
+            }
+            else
+            {
+                _errors = result.Errors;
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void Apply(CompanyProfileResponse profile)
+    {
+        _version = profile.Version;
+        _request = new SaveCompanyProfileRequest
+        {
+            Name = profile.Name,
+            LegalForm = profile.LegalForm,
+            ShareCapital = profile.ShareCapital,
+            Siren = profile.Siren,
+            Siret = profile.Siret,
+            Rcs = profile.Rcs,
+            VatNumber = profile.VatNumber,
+            AddressLine1 = profile.AddressLine1,
+            AddressLine2 = profile.AddressLine2,
+            PostalCode = profile.PostalCode,
+            City = profile.City,
+            CountryCode = profile.CountryCode,
+            VatFranchise = profile.VatFranchise,
+            VatOnDebits = profile.VatOnDebits,
+            PaymentDays = profile.PaymentDays,
+            PaymentTerms = profile.PaymentTerms,
+            LatePenaltyRate = profile.LatePenaltyRate,
+            EarlyPaymentDiscount = profile.EarlyPaymentDiscount,
+            Iban = profile.Iban,
+            Bic = profile.Bic,
+        };
+    }
+}
