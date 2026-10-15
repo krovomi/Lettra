@@ -69,7 +69,7 @@ internal sealed class InMemoryCustomers : ICustomerRepository, ICustomerReadStor
         return Task.FromResult(count);
     }
 
-    public Task<PagedResponse<CustomerSummary>> ListAsync(int page, int pageSize, CancellationToken cancellationToken)
+    public Task<PagedResponse<CustomerSummary>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken)
     {
         List<CustomerSummary> items = Saved.Values
             .OrderBy(c => c.Name, StringComparer.Ordinal)
@@ -121,4 +121,20 @@ internal sealed class RecordingDossierProvisioner : IDossierProvisioner
         Created.Add((organisation, name));
         return Task.FromResult<Result<DossierId>>(new DossierId(Guid.CreateVersion7()));
     }
+}
+
+/// <summary>Registre des droits vide : ni utilisateur, ni portée connus.</summary>
+internal sealed class EmptyAuthorizationDirectory : IAuthorizationDirectory
+{
+    public ValueTask<UserAuthorizationProfile?> FindUserAsync(Guid userId, CancellationToken cancellationToken) =>
+        ValueTask.FromResult<UserAuthorizationProfile?>(null);
+
+    public ValueTask<ScopePath?> GetScopePathAsync(AuthorizationScope scope, CancellationToken cancellationToken) =>
+        ValueTask.FromResult<ScopePath?>(null);
+}
+
+internal sealed class EmptyDossierDirectory : IDossierDirectory
+{
+    public Task<IReadOnlyList<Lettra.Contracts.Dossiers.DossierSummary>> ListAsync(OrganisationId organisation, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<Lettra.Contracts.Dossiers.DossierSummary>>([]);
 }

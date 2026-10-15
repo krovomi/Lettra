@@ -9,10 +9,12 @@ using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Application.Features.Customers;
 
-/// <summary>Lister les clients du dossier, par page.</summary>
-public sealed record ListCustomersQuery(DossierId Dossier, int Page = 1, int PageSize = 50)
+/// <summary>Lister les clients du dossier, par page, filtrés sur le nom (sans accents ni casse).</summary>
+public sealed record ListCustomersQuery(DossierId Dossier, int Page = 1, int PageSize = 50, string? Search = null)
     : IQuery<Result<PagedResponse<CustomerSummary>>>, IRequirePermission
 {
+    public const int MaxSearchLength = 100;
+
     public const int MaxPageSize = 200;
 
     public Permission Permission => Permission.TiersConsulter;
@@ -41,6 +43,11 @@ internal sealed class ListCustomersValidator : IValidator<ListCustomersQuery>
             errors.Add(Error.Validation(ErrorCodes.Validation.Invalid, nameof(instance.PageSize)));
         }
 
+        if (instance.Search is { Length: > ListCustomersQuery.MaxSearchLength })
+        {
+            errors.Add(Error.Validation(ErrorCodes.Validation.TooLong, nameof(instance.Search)));
+        }
+
         return errors;
     }
 }
@@ -51,7 +58,7 @@ internal sealed class ListCustomersHandler(ICustomerReadStore store)
     public async Task<Result<PagedResponse<CustomerSummary>>> HandleAsync(ListCustomersQuery query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
-        return await store.ListAsync(query.Page, query.PageSize, cancellationToken).ConfigureAwait(false);
+        return await store.ListAsync(query.Search, query.Page, query.PageSize, cancellationToken).ConfigureAwait(false);
     }
 }
 
