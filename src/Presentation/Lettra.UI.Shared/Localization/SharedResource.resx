@@ -159,6 +159,7 @@
   <data name="Error.Billing.PaymentTermsTooLong" xml:space="preserve"><value>Les conditions de paiement dépassent 500 caractères.</value></data>
   <data name="Error.Billing.DeliveryAddressTooLong" xml:space="preserve"><value>L'adresse de livraison dépasse 500 caractères.</value></data>
   <data name="Error.Billing.CreditReasonTooLong" xml:space="preserve"><value>Le motif de l'avoir dépasse 500 caractères.</value></data>
+  <data name="Error.Billing.PurchaseOrderReferenceTooLong" xml:space="preserve"><value>La référence du bon de commande dépasse 100 caractères.</value></data>
   <data name="Error.Billing.DueDateBeforeIssueDate" xml:space="preserve"><value>L'échéance ne peut pas précéder la date d'émission.</value></data>
   <data name="Error.Billing.NotDraft" xml:space="preserve"><value>Cette pièce est validée : elle ne se modifie plus.</value></data>
   <data name="Error.Billing.VersionMismatch" xml:space="preserve"><value>Quelqu'un a modifié cette pièce entre-temps. Rechargez-la.</value></data>

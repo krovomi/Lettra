@@ -159,6 +159,7 @@
   <data name="Error.Billing.PaymentTermsTooLong" xml:space="preserve"><value>The payment terms exceed 500 characters.</value></data>
   <data name="Error.Billing.DeliveryAddressTooLong" xml:space="preserve"><value>The delivery address exceeds 500 characters.</value></data>
   <data name="Error.Billing.CreditReasonTooLong" xml:space="preserve"><value>The credit note reason exceeds 500 characters.</value></data>
+  <data name="Error.Billing.PurchaseOrderReferenceTooLong" xml:space="preserve"><value>The purchase order reference exceeds 100 characters.</value></data>
   <data name="Error.Billing.DueDateBeforeIssueDate" xml:space="preserve"><value>The due date cannot be before the issue date.</value></data>
   <data name="Error.Billing.NotDraft" xml:space="preserve"><value>This document is validated and can no longer be changed.</value></data>
   <data name="Error.Billing.VersionMismatch" xml:space="preserve"><value>Someone changed this document in the meantime. Reload it.</value></data>

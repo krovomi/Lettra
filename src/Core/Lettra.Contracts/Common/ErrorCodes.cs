@@ -139,6 +139,7 @@ public static class ErrorCodes
         public const string PaymentTermsTooLong = "Billing.PaymentTermsTooLong";
         public const string DeliveryAddressTooLong = "Billing.DeliveryAddressTooLong";
         public const string CreditReasonTooLong = "Billing.CreditReasonTooLong";
+        public const string PurchaseOrderReferenceTooLong = "Billing.PurchaseOrderReferenceTooLong";
         public const string DueDateBeforeIssueDate = "Billing.DueDateBeforeIssueDate";
         public const string NotDraft = "Billing.NotDraft";
         public const string VersionMismatch = "Billing.VersionMismatch";
