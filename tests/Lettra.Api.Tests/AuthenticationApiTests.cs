@@ -150,6 +150,12 @@ public sealed class AuthenticationApiTests(LettraApiFactory factory) : IClassFix
     public void Le_retour_apres_connexion_reste_local(string? returnUrl, string expected) =>
         BffEndpoints.LocalOnly(returnUrl).Should().Be(expected);
 
+    [Theory]
+    [InlineData("/factures", "/bff/login?returnUrl=%2Ffactures&reauthentification=true")]
+    [InlineData("https://evil.example/", "/bff/login?returnUrl=%2F&reauthentification=true")]
+    public void La_nouvelle_authentification_sans_second_facteur_revient_sur_une_adresse_locale(string returnUrl, string expected) =>
+        BffEndpoints.ReauthenticationPath(returnUrl).Should().Be(expected);
+
     [Fact]
     public async Task Le_bff_sans_session_repond_401()
     {

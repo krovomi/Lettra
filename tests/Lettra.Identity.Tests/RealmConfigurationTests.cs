@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -69,6 +70,33 @@ public sealed class RealmConfigurationTests
         Realm.GetProperty("requiredActions").EnumerateArray()
             .Single(a => a.GetProperty("alias").GetString() == "CONFIGURE_TOTP")
             .GetProperty("defaultAction").GetBoolean().Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData("lettra-second-factor")]
+    [InlineData("lettra-second-factor-broker")]
+    public void Sans_facteur_enrole_le_formulaire_TOTP_obligatoire_impose_l_enrolement(string alias)
+    {
+        // Des alternatives seules échouent pour un utilisateur sans facteur : Keycloak n'enrôle que sur une étape REQUIRED.
+        Requirement(Flow(alias), $"{alias}-enrole").Should().Be("CONDITIONAL");
+        Requirement(Flow(alias), $"{alias}-enrolement").Should().Be("CONDITIONAL");
+        Requirement(Flow($"{alias}-enrole"), "conditional-user-configured").Should().Be("REQUIRED");
+        Requirement(Flow($"{alias}-enrole"), "auth-otp-form").Should().Be("ALTERNATIVE");
+        Requirement(Flow($"{alias}-enrole"), "webauthn-authenticator").Should().Be("ALTERNATIVE");
+        Requirement(Flow($"{alias}-enrolement"), "conditional-credential").Should().Be("REQUIRED");
+        Requirement(Flow($"{alias}-enrolement"), "auth-otp-form").Should().Be("REQUIRED");
+    }
+
+    [Fact]
+    public void Les_valeurs_amr_restent_valables_toute_la_session()
+    {
+        // Sans maxAge, Keycloak n'émet une valeur amr que dans la seconde de l'authentification : l'API refuserait tout jeton.
+        int session = Realm.GetProperty("ssoSessionMaxLifespan").GetInt32();
+        IEnumerable<JsonElement> amr = Realm.GetProperty("authenticatorConfig").EnumerateArray()
+            .Where(c => c.GetProperty("config").TryGetProperty("default.reference.value", out _));
+
+        amr.Should().HaveCount(3).And.OnlyContain(c =>
+            int.Parse(c.GetProperty("config").GetProperty("default.reference.maxAge").GetString()!, CultureInfo.InvariantCulture) >= session);
     }
 
     [Theory]

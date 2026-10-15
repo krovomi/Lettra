@@ -1,0 +1,39 @@
+# Profil réseau local : la démonstration en HTTPS sur le Wi-Fi, pour un téléphone (navigateur et PWA installée).
+# Le cookie de session et le service worker exigent un contexte sécurisé, hors de localhost.
+#
+#   1. Renseigner LETTRA_DEMO_HOST dans .env (adresse IP ou nom du poste sur le réseau local).
+#   2. docker compose -f deploy/demo/compose.yaml -f deploy/demo/compose.lan.yaml up -d --build --wait
+#   3. Sur le téléphone : installer et approuver http://<hôte>:8079/lettra-demo-ca.crt, puis ouvrir https://<hôte>:8443/
+#
+# Caddy termine le TLS avec sa propre autorité locale (certificats de démonstration). En HTTPS, l'adresse
+# https://<hôte>:8443/ sert aussi sur le poste ; http://localhost:8080/ n'est plus l'adresse de retour de Keycloak.
+services:
+  keycloak:
+    environment:
+      KC_HOSTNAME: https://${LETTRA_DEMO_HOST:?renseigner LETTRA_DEMO_HOST dans deploy/demo/.env}:8444
+      KC_PROXY_HEADERS: xforwarded
+      LETTRA_PUBLIC_URL: https://${LETTRA_DEMO_HOST}:8443
+
+  api:
+    environment:
+      # Schéma et hôte d'origine transmis par Caddy : URL de retour https://<hôte>:8443/bff/signin-oidc.
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      LETTRA_DEMO_EMETTEUR: https://${LETTRA_DEMO_HOST}:8444/realms/lettra
+
+  proxy:
+    image: caddy:2.10.2
+    depends_on:
+      - api
+      - keycloak
+    environment:
+      LETTRA_DEMO_HOST: ${LETTRA_DEMO_HOST}
+    ports:
+      - "8443:8443"
+      - "8444:8444"
+      - "8079:8079"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-donnees:/data
+
+volumes:
+  caddy-donnees:

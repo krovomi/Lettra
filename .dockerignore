@@ -4,3 +4,4 @@
 .git/
 .vs/
 *.db
+**/node_modules/
