@@ -109,7 +109,8 @@ else
         {
             SyncFieldChoice[] choices = [.. group.Select(d => new SyncFieldChoice(d.Id, _choices[d.Id]))];
             OperationResult<bool> resolved = await _sync!.ResolveAsync(choices, CancellationToken.None);
-            _errors = resolved.Errors;
+            // Un refus peut viser un champ du conflit : il s'affiche en tête, l'écran n'a pas de champ de saisie.
+            _errors = [.. resolved.Errors.Select(e => e with { Target = null })];
             if (resolved.IsSuccess)
             {
                 _done = L["Sync.Conflicts.Applied"];

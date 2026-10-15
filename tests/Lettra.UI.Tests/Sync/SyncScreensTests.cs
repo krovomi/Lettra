@@ -70,7 +70,7 @@ internal sealed class FakeSyncCenter : ISyncCenter
     {
         if (ResolveError is { } code)
         {
-            return Task.FromResult(OperationResult<bool>.Failure(code));
+            return Task.FromResult(OperationResult<bool>.Failure([new ErrorDetail(code, "Designation")]));
         }
 
         Resolutions.Add(choices);
