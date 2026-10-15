@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Lettra.Contracts.Billing;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
@@ -23,14 +24,16 @@ namespace Lettra.Contracts.Sync;
 [JsonDerivedType(typeof(CreateCatalogItemIntent), "catalog-item.create")]
 [JsonDerivedType(typeof(UpdateCatalogItemIntent), "catalog-item.update")]
 [JsonDerivedType(typeof(SetCatalogItemArchivedIntent), "catalog-item.archive")]
+[JsonDerivedType(typeof(ValidatedInvoiceFact), "invoice.validated")]
 public abstract record SyncIntent(Guid IdempotencyKey, Guid EntityId, DateTimeOffset RecordedAt);
 
-/// <summary>Éléments synchronisés. Phase 4.1 : les tiers et le catalogue.</summary>
+/// <summary>Éléments synchronisés. Phase 4.1 : les tiers et le catalogue ; 4.2 : les factures validées hors ligne.</summary>
 public enum SyncEntityKind
 {
     Customer = 1,
     Supplier = 2,
     CatalogItem = 3,
+    Invoice = 4,
 }
 
 /// <summary>Création d'un client avec l'identifiant choisi sur le poste : le serveur crée le même.</summary>
@@ -99,14 +102,16 @@ public sealed record PushSyncIntentsResponse(IReadOnlyList<SyncIntentResult> Res
 /// <summary>
 /// Changements du serveur depuis un jeton opaque (absent : instantané complet, par pages). Un élément n'y figure
 /// qu'une fois, dans son état actuel. Le poste garde <see cref="Token"/> et redemande tant que <see cref="HasMore"/>.
-/// Les éléments que l'utilisateur n'a pas le droit de lire sont absents (tiers ou catalogue).
+/// Les éléments que l'utilisateur n'a pas le droit de lire sont absents (tiers ou catalogue). La dernière page porte
+/// la fiche entreprise du dossier, dont le poste a besoin pour valider une facture hors ligne (une ligne, toujours à jour).
 /// </summary>
 public sealed record SyncChangesResponse(
     string Token,
     bool HasMore,
     IReadOnlyList<CustomerResponse> Customers,
     IReadOnlyList<SupplierResponse> Suppliers,
-    IReadOnlyList<CatalogItemResponse> CatalogItems)
+    IReadOnlyList<CatalogItemResponse> CatalogItems,
+    CompanyProfileResponse? CompanyProfile = null)
 {
     [JsonIgnore]
     public int Count => Customers.Count + Suppliers.Count + CatalogItems.Count;
@@ -120,9 +125,48 @@ public static class SyncIntents
         CreateCustomerIntent or UpdateCustomerIntent => SyncEntityKind.Customer,
         CreateSupplierIntent or UpdateSupplierIntent => SyncEntityKind.Supplier,
         CreateCatalogItemIntent or UpdateCatalogItemIntent or SetCatalogItemArchivedIntent => SyncEntityKind.CatalogItem,
+        ValidatedInvoiceFact => SyncEntityKind.Invoice,
         _ => throw new ArgumentOutOfRangeException(nameof(intent), intent?.GetType().Name, "Intention inconnue."),
     };
 }
+
+/// <summary>
+/// Fait : une facture, un acompte ou un avoir validé hors ligne, numéroté dans la série du poste (ADR-0007). Il part tel
+/// qu'il a été remis au client ; le serveur le revérifie (suite des numéros, totaux, mentions, empreinte) et ne le
+/// fusionne jamais : un fait n'est pas en conflit (ADR-0008). Les saisies du brouillon ne partent pas, le fait les couvre.
+/// </summary>
+/// <param name="IdempotencyKey">Clé du fait, tirée à la validation sur le poste.</param>
+/// <param name="EntityId">Identifiant de la pièce.</param>
+/// <param name="RecordedAt">Moment de la validation sur le poste.</param>
+/// <param name="Document">La pièce figée, avec sa série, son numéro et son empreinte.</param>
+/// <param name="DownPaymentPositions">Lignes comptées en acompte reçu (4191) : la nature ne se déduit pas du reste.</param>
+/// <param name="CustomerIsBusiness">Le client était une entreprise (mentions B2B) : la copie du client ne le dit pas.</param>
+/// <param name="LatePenaltyRate">Taux des pénalités de retard figé à la validation (absent de la réponse de lecture).</param>
+/// <param name="EarlyPaymentDiscount">Escompte figé à la validation (absent de la réponse de lecture).</param>
+public sealed record ValidatedInvoiceFact(
+    Guid IdempotencyKey,
+    Guid EntityId,
+    DateTimeOffset RecordedAt,
+    InvoiceResponse Document,
+    IReadOnlyList<int> DownPaymentPositions,
+    bool CustomerIsBusiness,
+    decimal? LatePenaltyRate,
+    string? EarlyPaymentDiscount)
+    : SyncIntent(IdempotencyKey, EntityId, RecordedAt);
+
+/// <summary>Demande des séries de numérotation d'un poste : une par série du dossier qui se valide hors ligne.</summary>
+/// <param name="DeviceId">Identifiant du poste, tiré au premier lancement (le même que celui de l'instantané de droits).</param>
+public sealed record OpenDeviceSeriesRequest(Guid DeviceId);
+
+/// <summary>Une série de poste : <c>FAC-P01</c> tient lieu de <c>FAC</c> sur ce poste, numéros <c>FAC-P01-000001</c>.</summary>
+/// <param name="BaseSeries">Série du dossier remplacée sur le poste.</param>
+/// <param name="SeriesCode">Code de la série du poste.</param>
+/// <param name="Prefix">Préfixe des numéros.</param>
+/// <param name="Next">Prochain numéro attendu par le serveur.</param>
+public sealed record DeviceSeriesResponse(string BaseSeries, string SeriesCode, string Prefix, long Next);
+
+/// <summary>Les séries ouvertes pour le poste.</summary>
+public sealed record OpenDeviceSeriesResponse(IReadOnlyList<DeviceSeriesResponse> Series);
 
 public static class SyncHttp
 {
@@ -131,6 +175,9 @@ public static class SyncHttp
 
     /// <summary>Route de réception des changements (<c>?token=…&amp;limit=…</c>).</summary>
     public const string ChangesPath = "/api/v1/sync/changes";
+
+    /// <summary>Route d'ouverture des séries de numérotation du poste (ADR-0007).</summary>
+    public const string DeviceSeriesPath = "/api/v1/sync/device-series";
 
     /// <summary>Taille maximale d'un lot d'intentions accepté par le serveur.</summary>
     public const int MaxBatch = 200;

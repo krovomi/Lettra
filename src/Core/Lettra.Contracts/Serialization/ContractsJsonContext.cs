@@ -88,4 +88,6 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(PushSyncIntentsRequest))]
 [JsonSerializable(typeof(PushSyncIntentsResponse))]
 [JsonSerializable(typeof(SyncChangesResponse))]
+[JsonSerializable(typeof(OpenDeviceSeriesRequest))]
+[JsonSerializable(typeof(OpenDeviceSeriesResponse))]
 public sealed partial class ContractsJsonContext : JsonSerializerContext;

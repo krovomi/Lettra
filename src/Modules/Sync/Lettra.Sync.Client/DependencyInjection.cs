@@ -1,4 +1,5 @@
 using Lettra.Application.Abstractions.Messaging;
+using Lettra.Application.Abstractions.Sync;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -23,6 +24,7 @@ public static class DependencyInjection
 
         // Ajouté après les comportements de l'application : le plus interne, juste autour du handler.
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(SyncOutboxBehavior<,>));
+        services.Replace(ServiceDescriptor.Scoped<IDeviceNumbering, ReplicaDeviceNumbering>());
         services.AddSingleton(options);
         services.TryAddSingleton(TimeProvider.System);
         services.TryAddSingleton<ISyncConsentPrompt, AskEveryTimeLater>();

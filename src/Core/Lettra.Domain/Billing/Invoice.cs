@@ -44,6 +44,44 @@ public sealed record SellerTerms(
     string? EarlyPaymentDiscount);
 
 /// <summary>
+/// Une pièce validée hors ligne sur un poste, telle qu'elle a été figée et remise au client (ADR-0007). Le serveur la
+/// reconstruit avec <see cref="Invoice.Replicate"/>, puis en recalcule l'empreinte pour la comparer à celle du poste.
+/// </summary>
+public sealed record InvoiceReplica(
+    InvoiceId Id,
+    InvoiceKind Kind,
+    InvoiceStatus Status,
+    string SeriesCode,
+    Guid? DeviceId,
+    string Number,
+    CustomerId CustomerId,
+    PartySnapshot Customer,
+    PartySnapshot Seller,
+    InvoiceHeader Header,
+    DateOnly IssueDate,
+    decimal? LatePenaltyRate,
+    string? EarlyPaymentDiscount,
+    IReadOnlyList<string> LegalMentions,
+    QuoteId? QuoteId,
+    string? QuoteNumber,
+    InvoiceId? CreditedInvoiceId,
+    string? CreditedInvoiceNumber,
+    string? CreditReason,
+    IReadOnlyList<LineDraft> Lines,
+    IReadOnlySet<int> DownPaymentPositions,
+    decimal TotalExclTax,
+    decimal TotalVat,
+    decimal TotalInclTax,
+    Guid CreatedBy,
+    DateTimeOffset CreatedAt,
+    Guid ValidatedBy,
+    DateTimeOffset ValidatedAt,
+    Guid? IssuedBy,
+    DateTimeOffset? IssuedAt,
+    Guid? CreditApprovedBy,
+    DateTimeOffset? CreditApprovedAt);
+
+/// <summary>
 /// Facture, facture d'acompte ou avoir : les trois partagent la série FAC (numérotation chronologique continue).
 /// Invariants :
 /// <list type="bullet">
@@ -274,6 +312,106 @@ public sealed class Invoice : BillingDocument<InvoiceId>
 
         credit.Created(userId, now);
         return credit;
+    }
+
+    /// <summary>
+    /// Reconstruit une pièce validée ailleurs (un poste hors ligne) à partir de son état figé. Les lignes repassent par
+    /// les mêmes contrôles que la saisie et les totaux sont recalculés par la règle unique : s'ils diffèrent de ceux
+    /// transmis, la pièce est refusée. L'empreinte n'est pas reprise : l'appelant la recalcule avec <see cref="Seal"/>.
+    /// </summary>
+    public static Result<Invoice> Replicate(InvoiceReplica replica)
+    {
+        ArgumentNullException.ThrowIfNull(replica);
+        ArgumentException.ThrowIfNullOrWhiteSpace(replica.Number);
+        if (replica.Status is not (InvoiceStatus.Validated or InvoiceStatus.Issued) || !Enum.IsDefined(replica.Kind)
+            || (replica.Status == InvoiceStatus.Issued) != (replica.IssuedBy is not null && replica.IssuedAt is not null)
+            || (replica.Kind == InvoiceKind.CreditNote) != (replica.CreditedInvoiceId is not null))
+        {
+            return BillingErrors.ReplicaMismatch;
+        }
+
+        string? reason = Clean(replica.CreditReason);
+        if (reason is { Length: > MaxCreditReasonLength })
+        {
+            return BillingErrors.CreditReasonTooLong;
+        }
+
+        Invoice invoice = new(replica.Id)
+        {
+            Kind = replica.Kind,
+            Status = InvoiceStatus.Draft,
+            SeriesCode = replica.SeriesCode,
+            DeviceId = replica.DeviceId,
+            QuoteId = replica.QuoteId,
+            QuoteNumber = replica.QuoteNumber,
+            CreditedInvoiceId = replica.CreditedInvoiceId,
+            CreditedInvoiceNumber = replica.CreditedInvoiceNumber,
+            CreditReason = reason,
+        };
+        Result applied = invoice.Apply(
+            replica.CustomerId,
+            replica.Customer,
+            replica.Header,
+            replica.Lines,
+            i => replica.DownPaymentPositions.Contains(i + 1) ? RevenueNature.DownPayment : null);
+        if (applied.IsFailure)
+        {
+            return Result<Invoice>.Failure(applied.Errors);
+        }
+
+        if (invoice.TotalExclTax != replica.TotalExclTax || invoice.TotalVat != replica.TotalVat || invoice.TotalInclTax != replica.TotalInclTax
+            || replica.DownPaymentPositions.Any(p => invoice.Lines.All(l => l.Position != p)))
+        {
+            return BillingErrors.ReplicaMismatch;
+        }
+
+        if (invoice.DueDate < replica.IssueDate)
+        {
+            return BillingErrors.DueDateBeforeIssueDate;
+        }
+
+        invoice.Seller = replica.Seller;
+        invoice.Number = replica.Number;
+        invoice.IssueDate = replica.IssueDate;
+        invoice.LatePenaltyRate = replica.LatePenaltyRate;
+        invoice.EarlyPaymentDiscount = replica.EarlyPaymentDiscount;
+        invoice.LegalMentions = string.Join('\n', replica.LegalMentions);
+        invoice.Status = replica.Status;
+        invoice.ValidatedBy = replica.ValidatedBy;
+        invoice.ValidatedAt = replica.ValidatedAt;
+        invoice.IssuedBy = replica.IssuedBy;
+        invoice.IssuedAt = replica.IssuedAt;
+        invoice.CreditApprovedBy = replica.CreditApprovedBy;
+        invoice.CreditApprovedAt = replica.CreditApprovedAt;
+        invoice.Replicated(
+            replica.CreatedBy,
+            replica.CreatedAt,
+            replica.IssuedBy ?? replica.ValidatedBy,
+            replica.IssuedAt ?? replica.ValidatedAt);
+        return invoice;
+    }
+
+    /// <summary>
+    /// Sur un poste hors ligne : la pièce sera numérotée dans la série du poste (<c>FAC-P01</c>) et non dans
+    /// <see cref="Series"/> (ADR-0007). À appeler sur le brouillon, juste avant <see cref="Validate"/>.
+    /// </summary>
+    public Result NumberOnDevice(string seriesCode, Guid deviceId, Guid userId, DateTimeOffset now)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(seriesCode);
+        if (deviceId == Guid.Empty || !seriesCode.StartsWith(Series + "-", StringComparison.Ordinal))
+        {
+            throw new ArgumentException("Une série de poste dérive de la série FAC et nomme son poste.", nameof(seriesCode));
+        }
+
+        if (!IsDraft)
+        {
+            return BillingErrors.NotDraft;
+        }
+
+        SeriesCode = seriesCode;
+        DeviceId = deviceId;
+        Touch(userId, now);
+        return Result.Success();
     }
 
     /// <summary>Modifie une facture brouillon. Les lignes d'un acompte ou d'un avoir ne se saisissent pas.</summary>
