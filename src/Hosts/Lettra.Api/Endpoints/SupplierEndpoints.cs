@@ -66,10 +66,11 @@ internal static class SupplierEndpoints
         IQueryDispatcher queries,
         CancellationToken cancellationToken,
         int page = 1,
-        int pageSize = 50)
+        int pageSize = 50,
+        string? search = null)
     {
         Result<PagedResponse<SupplierSummary>> result = await queries
-            .QueryAsync(new ListSuppliersQuery(tenant.Current.DossierId, page, pageSize), cancellationToken)
+            .QueryAsync(new ListSuppliersQuery(tenant.Current.DossierId, page, pageSize, string.IsNullOrWhiteSpace(search) ? null : search.Trim()), cancellationToken)
             .ConfigureAwait(false);
         return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
     }
