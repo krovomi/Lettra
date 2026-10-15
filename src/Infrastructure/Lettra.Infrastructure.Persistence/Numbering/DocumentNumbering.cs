@@ -82,7 +82,16 @@ internal sealed class DocumentNumbering(TenantDbSession session) : IDocumentNumb
             return new Attempt<T>(result, LostRace: false);
         }
 
-        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            // La pièce numérotée a changé depuis sa lecture (ADR-0013) : le pipeline en fait un échec 412.
+            throw new ConcurrencyConflictException("Écriture concurrente détectée à l'enregistrement.", ex);
+        }
+
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
         return new Attempt<T>(result, LostRace: false);
     }

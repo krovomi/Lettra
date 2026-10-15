@@ -42,7 +42,13 @@ public sealed class IntegrityAlertApiTests(LettraApiFactory factory) : IClassFix
     {
         RecordingChannel channel = new();
         using WebApplicationFactory<Program> host = factory.WithWebHostBuilder(builder =>
-            builder.ConfigureTestServices(services => services.AddSingleton<INotificationChannel>(channel)));
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddSingleton<INotificationChannel>(channel);
+
+                // Factures fictives, sans pièce en base : seule la chaîne est contrôlée ici.
+                services.AddScoped<IJournaledDocumentReader, SyntheticDocuments>();
+            }));
         using HttpClient manager = InDossier(host.CreateClient());
 
         // Trois factures validées comme le fera le module des pièces : numéro réservé, puis entrée au journal.
@@ -163,5 +169,13 @@ public sealed class IntegrityAlertApiTests(LettraApiFactory factory) : IClassFix
             _sent.Enqueue((notification, recipients));
             return Task.CompletedTask;
         }
+    }
+
+    private sealed class SyntheticDocuments : IJournaledDocumentReader
+    {
+        public bool IsConnected => false;
+
+        public Task<IReadOnlyDictionary<Guid, string>> ComputeContentHashesAsync(IReadOnlyCollection<Guid> documentIds, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, string>>(new Dictionary<Guid, string>());
     }
 }

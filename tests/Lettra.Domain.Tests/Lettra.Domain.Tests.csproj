@@ -5,4 +5,10 @@
     <ProjectReference Include="..\..\src\Core\Lettra.Domain\Lettra.Domain.csproj" />
   </ItemGroup>
 
+  <!-- Banc de parité du POC IA (résultats de validate-facture.js, Paperasse f2e15c4) : une seule copie dans le dépôt. -->
+  <ItemGroup>
+    <None Include="..\..\poc\ia-paperasse\tests\parity\golden\validate-facture.json" Link="parity\validate-facture.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Ai\Lettra.Ai.Skills\vendor\paperasse\comptable\data\facturation\mentions-obligatoires.json" Link="parity\mentions-obligatoires.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

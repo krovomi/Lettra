@@ -3,6 +3,7 @@ using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Persistence;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Infrastructure.Persistence.Ai;
+using Lettra.Infrastructure.Persistence.Billing;
 using Lettra.Infrastructure.Persistence.Integrity;
 using Lettra.Infrastructure.Persistence.Numbering;
 using Lettra.Infrastructure.Persistence.Repositories;
@@ -41,6 +42,7 @@ public static class DependencyInjection
         services.AddScoped<IIntegrityStore, EfIntegrityStore>();
         services.AddScoped<ISealedArchiveBuilder, EfSealedArchiveBuilder>();
         services.AddPartiesAndCatalogStores();
+        services.AddBillingStores();
 
         // Journal IA dans la base du dossier (remplace le journal vide enregistré par l'application).
         services.Replace(ServiceDescriptor.Scoped<IAiAuditLog, DossierAiAuditLog>());
