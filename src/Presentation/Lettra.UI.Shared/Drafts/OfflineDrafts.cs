@@ -24,13 +24,15 @@ public sealed record OfflineDraftSyncReport(int Sent, int Kept, bool Offline);
 /// échoue faute de réseau, l'éditeur garde la saisie ici ; elle survit au rechargement et part au retour du réseau.
 /// L'empreinte SHA-256 du contenu est revérifiée avant l'envoi (une copie altérée n'est pas envoyée) et comparée après
 /// (une saisie reprise pendant l'envoi reste pour le tour suivant). Un conflit de version garde la copie et le signale :
-/// l'éditeur le résout comme en ligne.
+/// l'éditeur le résout comme en ligne. Chaque brouillon porte son dossier et ne part que vers lui ; le stockage est
+/// propre à l'utilisateur et au dossier, et la déconnexion l'efface (<see cref="ClearAsync"/>).
 /// </summary>
 public sealed class OfflineDrafts(IOfflineDraftStore store, IServiceProvider services, TimeProvider clock) : IDisposable
 {
     public const string ReferenceDataKey = "billing.reference";
     public const string CompanyProfileKey = "billing.company";
     public const string CorruptedCode = "Drafts.Corrupted";
+    public const string OtherDossierCode = "Drafts.OtherDossier";
 
     private readonly SemaphoreSlim _sync = new(1, 1);
     private readonly Dictionary<Guid, Guid> _synced = [];
@@ -59,17 +61,27 @@ public sealed class OfflineDrafts(IOfflineDraftStore store, IServiceProvider ser
         return drafts.FirstOrDefault(d => d.Kind == kind && ((localId is not null && d.LocalId == localId) || (serverId is not null && d.ServerId == serverId)));
     }
 
-    public Task<Guid> KeepQuoteAsync(Guid? localId, QuoteResponse? quote, SaveQuoteRequest request, string? title, CancellationToken cancellationToken) =>
+    /// <summary>Garde la saisie sur l'appareil ; <c>null</c> si le stockage est indisponible (session ou dossier inconnu).</summary>
+    public Task<Guid?> KeepQuoteAsync(Guid? localId, QuoteResponse? quote, SaveQuoteRequest request, string? title, CancellationToken cancellationToken) =>
         KeepAsync(OfflineDraftKind.Quote, localId, quote?.Id, quote?.Version, title,
             JsonSerializer.Serialize(request, ContractsJsonContext.Default.SaveQuoteRequest), cancellationToken);
 
-    public Task<Guid> KeepInvoiceAsync(Guid? localId, InvoiceResponse? invoice, SaveInvoiceRequest request, string? title, CancellationToken cancellationToken) =>
+    /// <summary>Garde la saisie sur l'appareil ; <c>null</c> si le stockage est indisponible (session ou dossier inconnu).</summary>
+    public Task<Guid?> KeepInvoiceAsync(Guid? localId, InvoiceResponse? invoice, SaveInvoiceRequest request, string? title, CancellationToken cancellationToken) =>
         KeepAsync(OfflineDraftKind.Invoice, localId, invoice?.Id, invoice?.Version, title,
             JsonSerializer.Serialize(request, ContractsJsonContext.Default.SaveInvoiceRequest), cancellationToken);
 
     public static SaveQuoteRequest? QuoteRequestOf(OfflineDraft draft) => Read(draft, ContractsJsonContext.Default.SaveQuoteRequest);
 
     public static SaveInvoiceRequest? InvoiceRequestOf(OfflineDraft draft) => Read(draft, ContractsJsonContext.Default.SaveInvoiceRequest);
+
+    /// <summary>Déconnexion : les brouillons et le cache de l'utilisateur et du dossier quittent l'appareil.</summary>
+    public async Task ClearAsync(CancellationToken cancellationToken)
+    {
+        await store.ClearAsync(cancellationToken).ConfigureAwait(false);
+        _synced.Clear();
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
 
     /// <summary>L'éditeur a enregistré en ligne : la copie de l'appareil n'a plus lieu d'être.</summary>
     public async Task ForgetAsync(Guid localId, CancellationToken cancellationToken)
@@ -171,9 +183,14 @@ public sealed class OfflineDrafts(IOfflineDraftStore store, IServiceProvider ser
         return new OfflineDraftSyncReport(sent, kept, offline);
     }
 
-    private async Task<Guid> KeepAsync(
+    private async Task<Guid?> KeepAsync(
         OfflineDraftKind kind, Guid? localId, Guid? serverId, long? version, string? title, string payload, CancellationToken cancellationToken)
     {
+        if (CurrentDossier is not Guid dossier || !await store.IsAvailableAsync(cancellationToken).ConfigureAwait(false))
+        {
+            return null;
+        }
+
         OfflineDraft? existing = await FindAsync(kind, serverId, localId, cancellationToken).ConfigureAwait(false);
         OfflineDraft draft = new(
             existing?.LocalId ?? localId ?? Guid.NewGuid(),
@@ -184,7 +201,8 @@ public sealed class OfflineDrafts(IOfflineDraftStore store, IServiceProvider ser
             title ?? existing?.Title,
             payload,
             HashOf(payload),
-            clock.GetUtcNow());
+            clock.GetUtcNow(),
+            DossierId: dossier);
         await store.SaveAsync(draft, cancellationToken).ConfigureAwait(false);
         Changed?.Invoke(this, EventArgs.Empty);
         return draft.LocalId;
@@ -195,6 +213,11 @@ public sealed class OfflineDrafts(IOfflineDraftStore store, IServiceProvider ser
         if (HashOf(draft.Payload) != draft.ContentHash)
         {
             return new Outcome(false, CorruptedCode, null, null);
+        }
+
+        if (draft.DossierId is null || draft.DossierId != CurrentDossier)
+        {
+            return new Outcome(false, OtherDossierCode, null, null);   // jamais vers un autre dossier que celui de la saisie
         }
 
         switch (draft.Kind)
@@ -221,6 +244,8 @@ public sealed class OfflineDrafts(IOfflineDraftStore store, IServiceProvider ser
                 return new Outcome(false, CorruptedCode, null, null);
         }
     }
+
+    private Guid? CurrentDossier => services.GetService<IDossierSelection>()?.CurrentDossierId;
 
     private static Outcome Of<T>(OperationResult<T> result, Guid? id, long? version) =>
         IsUnreachable(result) ? new Outcome(true, null, null, null)
