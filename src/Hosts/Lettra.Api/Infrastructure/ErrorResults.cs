@@ -1,4 +1,5 @@
 using Lettra.Application.Abstractions.External;
+using Lettra.Application.Abstractions.Persistence;
 using Lettra.Application.Mapping;
 using Lettra.Contracts.Common;
 using Lettra.Domain.Common;
@@ -15,14 +16,15 @@ internal static class ErrorResults
     {
         ArgumentNullException.ThrowIfNull(errors);
         Error first = errors[0];
-        // Version périmée d'une pièce envoyée en If-Match : 412, le client relit puis fusionne.
-        int status = first.Code == ErrorCodes.Billing.VersionMismatch ? StatusCodes.Status412PreconditionFailed : first.Kind switch
+        int status = first.Kind switch
         {
             ErrorKind.Validation => StatusCodes.Status400BadRequest,
             ErrorKind.NotFound => StatusCodes.Status404NotFound,
             ErrorKind.Conflict => StatusCodes.Status409Conflict,
             ErrorKind.Forbidden => StatusCodes.Status403Forbidden,
             ErrorKind.Unauthorized => StatusCodes.Status401Unauthorized,
+            ErrorKind.PreconditionFailed when first.Code == ConcurrencyErrors.PreconditionRequiredCode => StatusCodes.Status428PreconditionRequired,
+            ErrorKind.PreconditionFailed => StatusCodes.Status412PreconditionFailed,
             _ when first.Code == DirectoryErrors.UnavailableCode => StatusCodes.Status503ServiceUnavailable,
             _ => StatusCodes.Status500InternalServerError,
         };

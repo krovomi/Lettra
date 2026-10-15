@@ -54,28 +54,28 @@ public sealed record CreateQuoteCommand(DossierId Dossier, SaveQuoteRequest Data
 
 /// <summary>Modifier un devis brouillon.</summary>
 public sealed record UpdateQuoteCommand(DossierId Dossier, QuoteId QuoteId, SaveQuoteRequest Data, long? ExpectedVersion)
-    : ICommand<Result>, IRequirePermission
+    : ICommand<Result>, IRequirePermission, IVersionedCommand
 {
     public Permission Permission => Permission.DevisCreer;
 }
 
 /// <summary>Supprimer un devis brouillon (un devis numéroté ne se supprime pas).</summary>
 public sealed record DeleteQuoteCommand(DossierId Dossier, QuoteId QuoteId, long? ExpectedVersion)
-    : ICommand<Result>, IRequirePermission
+    : ICommand<Result>, IRequirePermission, IVersionedCommand
 {
     public Permission Permission => Permission.DevisCreer;
 }
 
 /// <summary>Valider un devis : numéro de la série DEV, copie du client, inscription au journal d'intégrité.</summary>
 public sealed record ValidateQuoteCommand(DossierId Dossier, QuoteId QuoteId, long? ExpectedVersion)
-    : ICommand<Result>, IRequirePermission
+    : ICommand<Result>, IRequirePermission, IVersionedCommand
 {
     public Permission Permission => Permission.DevisCreer;
 }
 
 /// <summary>Enregistrer la réponse du client (acceptation ou refus) sur un devis validé.</summary>
 public sealed record SetQuoteOutcomeCommand(DossierId Dossier, QuoteId QuoteId, bool Accepted, long? ExpectedVersion)
-    : ICommand<Result>, IRequirePermission
+    : ICommand<Result>, IRequirePermission, IVersionedCommand
 {
     public Permission Permission => Permission.DevisCreer;
 }
@@ -198,7 +198,7 @@ internal sealed class UpdateQuoteHandler(
             return QuoteErrors.NotFound;
         }
 
-        Result version = quote.EnsureVersion(command.ExpectedVersion);
+        Result version = Concurrency.Check(quote, command.ExpectedVersion);
         if (version.IsFailure)
         {
             return version;
@@ -233,7 +233,7 @@ internal sealed class DeleteQuoteHandler(IQuoteRepository quotes, IUnitOfWork un
             return QuoteErrors.NotFound;
         }
 
-        Result version = quote.EnsureVersion(command.ExpectedVersion);
+        Result version = Concurrency.Check(quote, command.ExpectedVersion);
         if (version.IsFailure)
         {
             return version;
@@ -322,7 +322,7 @@ internal sealed class ValidateQuoteHandler(
             return QuoteErrors.NotFound;
         }
 
-        Result version = quote.EnsureVersion(command.ExpectedVersion);
+        Result version = Concurrency.Check(quote, command.ExpectedVersion);
         if (version.IsFailure)
         {
             return Result<Quote>.Failure(version.Errors);
@@ -347,7 +347,7 @@ internal sealed class SetQuoteOutcomeHandler(
             return QuoteErrors.NotFound;
         }
 
-        Result result = quote.EnsureVersion(command.ExpectedVersion);
+        Result result = Concurrency.Check(quote, command.ExpectedVersion);
         if (result.IsFailure)
         {
             return result;

@@ -68,13 +68,15 @@ public sealed class BillingDomainTests
     }
 
     [Fact]
-    public void Une_version_perimee_est_refusee()
+    public void La_version_avance_a_chaque_modification()
     {
         Quote quote = Quote.Create(QuoteId.New(), new QuoteDraft(Client, Martin, null, VatRegime.Standard, null, null, [Service(1, 10m)]), User, Now).Value;
+        quote.Should().BeAssignableTo<IVersioned>();
+        quote.Version.Should().Be(1);
 
-        quote.EnsureVersion(1).IsSuccess.Should().BeTrue();
-        quote.EnsureVersion(null).IsSuccess.Should().BeTrue();
-        quote.EnsureVersion(7).Errors.Single().Code.Should().Be(BillingErrors.VersionMismatchCode);
+        quote.Update(new QuoteDraft(Client, Martin, null, VatRegime.Standard, null, null, [Service(1, 12m)]), User, Now).IsSuccess.Should().BeTrue();
+
+        quote.Version.Should().Be(2);
     }
 
     [Fact]

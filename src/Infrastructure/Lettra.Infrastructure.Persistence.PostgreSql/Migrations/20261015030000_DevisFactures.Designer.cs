@@ -13,7 +13,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
 {
     [DbContext(typeof(LettraDbContext))]
-    [Migration("20261015020000_DevisFactures")]
+    [Migration("20261015030000_DevisFactures")]
     partial class DevisFactures
     {
         /// <inheritdoc />
@@ -667,6 +667,10 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
 
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Designation");
@@ -871,6 +875,10 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .HasMaxLength(15)
                         .HasColumnType("character varying(15)");
 
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
                     b.ComplexProperty(typeof(Dictionary<string, object>), "BillingAddress", "Lettra.Domain.Parties.Customer.BillingAddress#PostalAddress", b1 =>
                         {
                             b1.IsRequired();
@@ -955,6 +963,10 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.Property<string>("VatNumber")
                         .HasMaxLength(15)
                         .HasColumnType("character varying(15)");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Address", "Lettra.Domain.Parties.Supplier.Address#PostalAddress", b1 =>
                         {

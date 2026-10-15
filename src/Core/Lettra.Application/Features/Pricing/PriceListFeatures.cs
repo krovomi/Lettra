@@ -49,7 +49,7 @@ public sealed record CreatePriceListCommand(DossierId Dossier, SavePriceListRequ
 
 /// <summary>Modifier une grille tarifaire.</summary>
 public sealed record UpdatePriceListCommand(DossierId Dossier, PriceListId PriceListId, SavePriceListRequest Data, long? ExpectedVersion)
-    : ICommand<Result>, IRequirePermission
+    : ICommand<Result>, IRequirePermission, IVersionedCommand
 {
     public Permission Permission => Permission.CatalogueGerer;
 }
@@ -178,14 +178,20 @@ internal sealed class UpdatePriceListHandler(
             return PriceListErrors.NotFound;
         }
 
-        Result result = await PriceListReferences.CheckAsync(references, command.Data, cancellationToken).ConfigureAwait(false);
+        Result result = Concurrency.Check(list, command.ExpectedVersion);
+        if (result.IsFailure)
+        {
+            return result;
+        }
+
+        result = await PriceListReferences.CheckAsync(references, command.Data, cancellationToken).ConfigureAwait(false);
         if (result.IsFailure)
         {
             return result;
         }
 
         DateTimeOffset now = clock.GetUtcNow();
-        result = list.Update(command.Data.Name, command.Data.Entries.ToDrafts(), command.Data.CustomerIds, command.ExpectedVersion, now);
+        result = list.Update(command.Data.Name, command.Data.Entries.ToDrafts(), command.Data.CustomerIds, now);
         if (result.IsFailure)
         {
             return result;

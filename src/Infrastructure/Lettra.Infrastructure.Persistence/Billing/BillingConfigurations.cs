@@ -1,6 +1,7 @@
 using Lettra.Domain.Billing;
 using Lettra.Domain.Pricing;
 using Lettra.Domain.SharedKernel;
+using Lettra.Infrastructure.Persistence.Concurrency;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -8,7 +9,7 @@ namespace Lettra.Infrastructure.Persistence.Billing;
 
 /// <summary>
 /// Colonnes communes des devis et factures : copies des tiers à plat, lignes et récapitulatif de TVA dans leurs tables
-/// (clé = pièce + rang), version domaine comme jeton de concurrence (<c>UPDATE ... WHERE Version = @lue</c>).
+/// (clé = pièce + rang), version (ADR-0013) comme jeton de concurrence (<c>UPDATE ... WHERE Version = @lue</c>).
 /// </summary>
 internal static class BillingDocumentMapping
 {
@@ -29,7 +30,7 @@ internal static class BillingDocumentMapping
         builder.Property(d => d.Subject).HasMaxLength(BillingDocument<TId>.MaxSubjectLength);
         builder.Property(d => d.Notes).HasMaxLength(BillingDocument<TId>.MaxNotesLength);
         builder.Property(d => d.LegalMentions).HasMaxLength(4000).IsRequired();
-        builder.Property(d => d.Version).IsConcurrencyToken();
+        builder.IsVersioned();
         builder.Ignore(d => d.LegalMentionList);
         builder.Ignore(d => d.OperationCategory);
         builder.Ignore(d => d.IsDraft);
@@ -146,7 +147,7 @@ internal sealed class CompanyProfileConfiguration : IEntityTypeConfiguration<Com
         builder.Property(p => p.EarlyPaymentDiscount).HasMaxLength(500);
         builder.Property(p => p.Iban).HasConversion(v => v!.Value, v => Iban.Create(v).Value).HasMaxLength(34);
         builder.Property(p => p.Bic).HasMaxLength(11);
-        builder.Property(p => p.Version).IsConcurrencyToken();
+        builder.IsVersioned();
         builder.ComplexProperty(p => p.Address, address =>
         {
             address.Property(a => a.Line1).HasColumnName("AddressLine1").HasMaxLength(PostalAddress.MaxLineLength).IsRequired();
@@ -171,7 +172,7 @@ internal sealed class PriceListConfiguration : IEntityTypeConfiguration<PriceLis
         builder.HasKey(l => l.Id);
         builder.Property(l => l.Id).HasConversion(id => id.Value, value => new PriceListId(value)).ValueGeneratedNever();
         builder.Property(l => l.Name).HasMaxLength(PriceList.MaxNameLength).IsRequired();
-        builder.Property(l => l.Version).IsConcurrencyToken();
+        builder.IsVersioned();
         builder.Ignore(l => l.DomainEvents);
 
         builder.OwnsMany(l => l.Entries, entry =>

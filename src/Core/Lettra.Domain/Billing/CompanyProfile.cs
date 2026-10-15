@@ -24,7 +24,7 @@ public static class CompanyProfileErrors
 /// copiées sur chaque pièce à la validation. Invariants : une dénomination, une adresse valide, un SIRET qui
 /// appartient au SIREN, un délai de paiement de 0 à 60 jours (art. L441-10 C.com).
 /// </summary>
-public sealed class CompanyProfile : AggregateRoot<Guid>
+public sealed class CompanyProfile : AggregateRoot<Guid>, IVersioned
 {
     /// <summary>Identifiant fixe : la fiche est unique dans la base du dossier.</summary>
     public static readonly Guid SingletonId = new("6c657474-7261-0000-0000-70726f66696c");
@@ -106,8 +106,7 @@ public sealed class CompanyProfile : AggregateRoot<Guid>
         return applied.IsSuccess ? profile : Result<CompanyProfile>.Failure(applied.Errors);
     }
 
-    public Result Update(Draft draft, long? expectedVersion, DateTimeOffset now) =>
-        expectedVersion is not null && expectedVersion != Version ? BillingErrors.VersionMismatch : Apply(draft, now);
+    public Result Update(Draft draft, DateTimeOffset now) => Apply(draft, now);
 
     /// <summary>Copie de l'émetteur et de ses conditions, posée sur une pièce à sa validation.</summary>
     public SellerTerms ToSellerTerms() => new(

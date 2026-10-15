@@ -1,5 +1,6 @@
 using Lettra.Api.Endpoints;
 using Lettra.Api.Infrastructure;
+using Lettra.Api.Presence;
 using Lettra.Api.Security;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Bootstrap;
@@ -17,6 +18,8 @@ if (mode == DeploymentMode.IsolatedDesktop)
 
 builder.Services.AddLettra(builder.Configuration);
 builder.Services.AddLettraApiAuthentication(builder.Configuration);
+builder.Services.AddLettraRateLimiting(builder.Configuration);
+builder.Services.AddLettraPresence();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IRequestedDossierSource, HeaderDossierSource>();
 builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.TypeInfoResolverChain.Insert(0, ContractsJsonContext.Default));
@@ -44,6 +47,7 @@ app.UseBlazorFrameworkFiles();
 app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 // Authentifié (MFA prouvée), puis anti-CSRF pour le cookie du BFF, puis dossier ; la permission vient par route.
 RouteGroupBuilder api = app.MapGroup("/api/v1")
@@ -67,6 +71,7 @@ cabinet.MapDossiers();
 cabinet.MapCabinetRights();
 cabinet.MapCabinetAlerts();
 cabinet.MapAssistantSettings();
+cabinet.MapCabinetPolicies();
 
 // Membres et dossiers d'un groupe : la permission porte sur le groupe de la route.
 app.MapGroup($"/api/v1/groupes/{{{GroupPermissionEndpointFilter.RouteKey}:guid}}")
@@ -83,6 +88,7 @@ app.MapGroup("/api/v1/dossiers")
 // Instantané de droits signé pour le hors ligne (annexe F §4) et ses clés publiques.
 app.MapRightsSnapshot();
 
+app.MapLettraPresence();
 app.MapLettraBff();
 app.MapHealthChecks("/health");
 

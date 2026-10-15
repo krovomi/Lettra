@@ -15,6 +15,9 @@ public enum Permission
     [PermissionCategory(PermissionKind.DossierData)] TiersConsulter = 1,
     [PermissionCategory(PermissionKind.DossierData)] TiersCreer = 2,
 
+    /// <summary>Modifier un client ou un fournisseur existant (phase 3, concurrence optimiste).</summary>
+    [PermissionCategory(PermissionKind.DossierData)] TiersModifier = 3,
+
     // 10-19 : dossier.
     [PermissionCategory(PermissionKind.DossierData)] DossierLire = 10,
 
@@ -45,6 +48,11 @@ public enum Permission
     [PermissionCategory(PermissionKind.DossierData)] FactureValider = 41,
     [PermissionCategory(PermissionKind.DossierData)] FactureEmettre = 42,
     [PermissionCategory(PermissionKind.DossierData)] AvoirCreer = 43,
+
+    /// <summary>
+    /// Approuver un avoir au-delà du seuil de la séparation des tâches (annexe F §3.2). Réservée au manager.
+    /// </summary>
+    [PermissionCategory(PermissionKind.DossierData)] AvoirApprouver = 44,
 
     // 50-59 : exports.
     [PermissionCategory(PermissionKind.DossierData)] FecExporter = 50,

@@ -410,7 +410,16 @@ internal sealed class BillingTransaction(TenantDbSession session) : IBillingTran
                     return result;
                 }
 
-                await state.db.SaveChangesAsync(token).ConfigureAwait(false);
+                try
+                {
+                    await state.db.SaveChangesAsync(token).ConfigureAwait(false);
+                }
+                catch (DbUpdateConcurrencyException ex)
+                {
+                    // La pièce a changé depuis sa lecture (ADR-0013) : le pipeline en fait un échec 412.
+                    throw new ConcurrencyConflictException("Écriture concurrente détectée à l'enregistrement.", ex);
+                }
+
                 await transaction.CommitAsync(token).ConfigureAwait(false);
                 return result;
             },

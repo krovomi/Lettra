@@ -152,7 +152,7 @@ internal sealed class ValidateInvoiceHandler(
             return InvoiceErrors.NotFound;
         }
 
-        Result version = invoice.EnsureVersion(command.ExpectedVersion);
+        Result version = Concurrency.Check(invoice, command.ExpectedVersion);
         if (version.IsFailure)
         {
             return Result<(Invoice, CompanyProfile)>.Failure(version.Errors);

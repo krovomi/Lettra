@@ -143,7 +143,7 @@ internal sealed class FakeQuotesGateway : IQuotesGateway
         Updates.Add((id, request with { Lines = [.. request.Lines] }, expectedVersion));
         if (TakeMismatch() || Quotes[id].Version != expectedVersion)
         {
-            return Fail<QuoteResponse>(ErrorCodes.Billing.VersionMismatch);
+            return Fail<QuoteResponse>(ErrorCodes.Concurrency.VersionMismatch);
         }
 
         Quotes[id] = Apply(Quotes[id], request, Quotes[id].Version + 1);
@@ -164,7 +164,7 @@ internal sealed class FakeQuotesGateway : IQuotesGateway
         Validations.Add(id);
         if (TakeMismatch())
         {
-            return Fail<QuoteResponse>(ErrorCodes.Billing.VersionMismatch);
+            return Fail<QuoteResponse>(ErrorCodes.Concurrency.VersionMismatch);
         }
 
         Quotes[id] = Quotes[id] with { Status = QuoteStatusDto.Validated, Number = "DEV-2026-0007", IssueDate = new DateOnly(2026, 10, 15), Version = Quotes[id].Version + 1 };

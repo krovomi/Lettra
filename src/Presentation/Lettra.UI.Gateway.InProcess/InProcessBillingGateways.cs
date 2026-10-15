@@ -1,4 +1,5 @@
 using Lettra.Application.Abstractions.Messaging;
+using Lettra.Application.Abstractions.Persistence;
 using Lettra.Application.Features.Billing;
 using Lettra.Application.Features.Pricing;
 using Lettra.Application.Mapping;
@@ -21,9 +22,22 @@ internal static class InProcessCommands
         IServiceProvider services, ICommand<Result> command, IQuery<Result<T>> read, CancellationToken cancellationToken)
     {
         Result done = await services.GetRequiredService<ICommandDispatcher>().SendAsync(command, cancellationToken).ConfigureAwait(false);
-        return done.IsFailure
-            ? OperationResult<T>.Failure(done.Errors.ToErrorDetails())
-            : await InProcessScope.QueryAsync(services, read, cancellationToken).ConfigureAwait(false);
+        if (done.IsSuccess)
+        {
+            return await InProcessScope.QueryAsync(services, read, cancellationToken).ConfigureAwait(false);
+        }
+
+        // Même contrat que le 412 de l'API : la pièce actuelle accompagne le refus, pour la fusion.
+        if (done.Errors[0].Code == ConcurrencyErrors.VersionMismatchCode)
+        {
+            OperationResult<T> current = await InProcessScope.QueryAsync(services, read, cancellationToken).ConfigureAwait(false);
+            if (current is { IsSuccess: true, Value: { } value })
+            {
+                return OperationResult<T>.Stale(value);
+            }
+        }
+
+        return OperationResult<T>.Failure(done.Errors.ToErrorDetails());
     }
 
     public static async Task<OperationResult<T>> CreateThenReadAsync<TId, T>(

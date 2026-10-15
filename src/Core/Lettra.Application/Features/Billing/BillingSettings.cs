@@ -30,7 +30,7 @@ public sealed record GetCompanyProfileQuery(DossierId Dossier)
 /// l'instant : on reprend celle du catalogue.
 /// </summary>
 public sealed record SaveCompanyProfileCommand(DossierId Dossier, CompanyProfile.Draft Data, long? ExpectedVersion)
-    : ICommand<Result>, IRequirePermission
+    : ICommand<Result>, IRequirePermission, IVersionedCommand
 {
     public Permission Permission => Permission.CatalogueGerer;
 }
@@ -85,7 +85,12 @@ internal sealed class SaveCompanyProfileHandler(
         }
         else
         {
-            Result updated = profile.Update(command.Data, command.ExpectedVersion, clock.GetUtcNow());
+            Result updated = Concurrency.Check(profile, command.ExpectedVersion);
+            if (updated.IsSuccess)
+            {
+                updated = profile.Update(command.Data, clock.GetUtcNow());
+            }
+
             if (updated.IsFailure)
             {
                 return updated;

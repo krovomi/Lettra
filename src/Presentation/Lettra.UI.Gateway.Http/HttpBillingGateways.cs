@@ -10,7 +10,7 @@ using Lettra.UI.Abstractions;
 
 namespace Lettra.UI.Gateway.Http;
 
-/// <summary>Requêtes des pièces versionnées : la version lue part en <c>If-Match</c>.</summary>
+/// <summary>Requêtes des pièces versionnées : la version lue part en <c>If-Match</c> (412 avec la pièce actuelle si elle a changé).</summary>
 internal static class VersionedCalls
 {
     public static Task<OperationResult<T>> SendAsync<T>(
@@ -63,12 +63,10 @@ internal static class VersionedCalls
 
     private static HttpRequestMessage Build(HttpMethod method, Uri uri, long? expectedVersion, HttpContent? content)
     {
+        // If-Match est obligatoire sur ces routes (428 sinon) : sans version lue (première fiche entreprise), « * ».
         HttpRequestMessage request = new(method, uri) { Content = content };
-        if (expectedVersion is { } version)
-        {
-            request.Headers.TryAddWithoutValidation("If-Match", string.Create(CultureInfo.InvariantCulture, $"\"{version}\""));
-        }
-
+        request.Headers.TryAddWithoutValidation(
+            "If-Match", expectedVersion is { } version ? string.Create(CultureInfo.InvariantCulture, $"\"{version}\"") : "*");
         return request;
     }
 }

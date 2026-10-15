@@ -197,7 +197,7 @@ internal static class BillingPersistenceScenarios
         (await commands.SendAsync(new UpdateInvoiceCommand(dossier, id, request, 1), default)).IsSuccess.Should().BeTrue();
 
         Result stale = await commands.SendAsync(new UpdateInvoiceCommand(dossier, id, request, 1), default);
-        stale.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Billing.VersionMismatch);
+        stale.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Concurrency.VersionMismatch);
         (await commands.SendAsync(new ValidateInvoiceCommand(dossier, id, 2), default)).Errors[0].Code
             .Should().Be(ErrorCodes.Billing.CompanyProfileMissing);
     }

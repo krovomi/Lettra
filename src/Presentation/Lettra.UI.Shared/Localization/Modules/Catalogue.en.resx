@@ -58,4 +58,7 @@
   <data name="Unit.MTK" xml:space="preserve"><value>Square metre</value></data>
   <data name="Unit.MTQ" xml:space="preserve"><value>Cubic metre</value></data>
   <data name="Unit.MTR" xml:space="preserve"><value>Metre</value></data>
+  <data name="Catalog.Merged" xml:space="preserve">
+    <value>Item “{0}” saved: your changes were merged with a colleague's.</value>
+  </data>
 </root>

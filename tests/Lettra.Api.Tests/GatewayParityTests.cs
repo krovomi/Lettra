@@ -153,7 +153,8 @@ public sealed class GatewayParityTests(LettraApiFactory factory) : IClassFixture
         OperationResult<InvoiceResponse> credit = await invoices.CreateCreditNoteAsync(
             draft.Id, new CreateCreditNoteRequest { Reason = "Une heure offerte", Lines = [new CreditNoteLineRequest(1, 1m)] }, default);
 
-        stale.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Billing.VersionMismatch);
+        stale.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Concurrency.VersionMismatch);
+        stale.Current!.Version.Should().Be(draft.Version, "le refus porte la pièce actuelle, sur les deux transports");
         validated.Value.Number.Should().StartWith("FAC-");
         validated.Value.ContentHash.Should().Be(CanonicalDocument.ComputeHash(validated.Value));
         issued.Value!.Status.Should().Be(InvoiceStatusDto.Issued);

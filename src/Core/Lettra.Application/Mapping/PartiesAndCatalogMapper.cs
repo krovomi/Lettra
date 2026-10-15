@@ -14,12 +14,17 @@ namespace Lettra.Application.Mapping;
 /// </summary>
 public static class PartiesAndCatalogMapper
 {
-    public static CreateSupplierCommand ToCommand(this CreateSupplierRequest request, DossierId dossier)
+    public static CreateSupplierCommand ToCommand(this CreateSupplierRequest request, DossierId dossier) =>
+        new(dossier, request.ToDraft());
+
+    /// <summary>Modification : même contrat qu'à la création, plus la version lue (<c>If-Match</c>).</summary>
+    public static UpdateSupplierCommand ToUpdateCommand(this CreateSupplierRequest request, DossierId dossier, SupplierId id, long? expectedVersion) =>
+        new(dossier, id, request.ToDraft(), expectedVersion);
+
+    public static Supplier.Draft ToDraft(this CreateSupplierRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return new CreateSupplierCommand(
-            dossier,
-            new Supplier.Draft(
+        return new Supplier.Draft(
                 request.Name,
                 request.Siren,
                 request.Siret,
@@ -30,7 +35,7 @@ public static class PartiesAndCatalogMapper
                 request.AddressLine2,
                 request.PostalCode,
                 request.City,
-                request.CountryCode));
+                request.CountryCode);
     }
 
     public static SupplierResponse ToResponse(this Supplier supplier)
@@ -49,7 +54,10 @@ public static class PartiesAndCatalogMapper
             supplier.Address.PostalCode,
             supplier.Address.City,
             supplier.Address.Country.Value,
-            supplier.CreatedAt);
+            supplier.CreatedAt)
+        {
+            Version = supplier.Version,
+        };
     }
 
     public static CatalogItem.Draft ToDraft(this SaveCatalogItemRequest request)
@@ -68,8 +76,9 @@ public static class PartiesAndCatalogMapper
     public static CreateCatalogItemCommand ToCreateCommand(this SaveCatalogItemRequest request, DossierId dossier) =>
         new(dossier, request.ToDraft());
 
-    public static UpdateCatalogItemCommand ToUpdateCommand(this SaveCatalogItemRequest request, DossierId dossier, CatalogItemId id) =>
-        new(dossier, id, request.ToDraft());
+    public static UpdateCatalogItemCommand ToUpdateCommand(
+        this SaveCatalogItemRequest request, DossierId dossier, CatalogItemId id, long? expectedVersion = null) =>
+        new(dossier, id, request.ToDraft(), expectedVersion);
 
     public static CatalogItemResponse ToResponse(this CatalogItem item)
     {
@@ -86,7 +95,10 @@ public static class PartiesAndCatalogMapper
             item.VatRate.Percent,
             item.IsArchived,
             item.CreatedAt,
-            item.UpdatedAt);
+            item.UpdatedAt)
+        {
+            Version = item.Version,
+        };
     }
 
     public static CatalogItemSummary ToSummary(this CatalogItem item)
@@ -102,6 +114,9 @@ public static class PartiesAndCatalogMapper
             item.UnitPriceExclTax,
             item.VatRate.Code,
             item.VatRate.Percent,
-            item.IsArchived);
+            item.IsArchived)
+        {
+            Version = item.Version,
+        };
     }
 }

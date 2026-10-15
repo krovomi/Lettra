@@ -56,7 +56,7 @@ public sealed record CreateInvoiceCommand(DossierId Dossier, SaveInvoiceRequest 
 
 /// <summary>Modifier une facture brouillon.</summary>
 public sealed record UpdateInvoiceCommand(DossierId Dossier, InvoiceId InvoiceId, SaveInvoiceRequest Data, long? ExpectedVersion)
-    : ICommand<Result>, IRequirePermission, IInvoiceLifecycleCommand
+    : ICommand<Result>, IRequirePermission, IInvoiceLifecycleCommand, IVersionedCommand
 {
     public Permission Permission => Permission.FactureSaisir;
 
@@ -65,7 +65,7 @@ public sealed record UpdateInvoiceCommand(DossierId Dossier, InvoiceId InvoiceId
 
 /// <summary>Supprimer une pièce brouillon (une pièce numérotée ne se supprime jamais : on l'annule par avoir).</summary>
 public sealed record DeleteInvoiceCommand(DossierId Dossier, InvoiceId InvoiceId, long? ExpectedVersion)
-    : ICommand<Result>, IRequirePermission, IInvoiceLifecycleCommand
+    : ICommand<Result>, IRequirePermission, IInvoiceLifecycleCommand, IVersionedCommand
 {
     public Permission Permission => Permission.FactureSaisir;
 
@@ -74,7 +74,7 @@ public sealed record DeleteInvoiceCommand(DossierId Dossier, InvoiceId InvoiceId
 
 /// <summary>Valider une pièce : numéro, gel, empreinte, journal d'intégrité et écriture de vente en une transaction.</summary>
 public sealed record ValidateInvoiceCommand(DossierId Dossier, InvoiceId InvoiceId, long? ExpectedVersion)
-    : ICommand<Result>, IRequirePermission, IInvoiceLifecycleCommand
+    : ICommand<Result>, IRequirePermission, IInvoiceLifecycleCommand, IVersionedCommand
 {
     public Permission Permission => Permission.FactureValider;
 
@@ -83,7 +83,7 @@ public sealed record ValidateInvoiceCommand(DossierId Dossier, InvoiceId Invoice
 
 /// <summary>Marquer une pièce validée comme émise (envoyée au client).</summary>
 public sealed record IssueInvoiceCommand(DossierId Dossier, InvoiceId InvoiceId, long? ExpectedVersion)
-    : ICommand<Result>, IRequirePermission, IInvoiceLifecycleCommand
+    : ICommand<Result>, IRequirePermission, IInvoiceLifecycleCommand, IVersionedCommand
 {
     public Permission Permission => Permission.FactureEmettre;
 
@@ -220,7 +220,7 @@ internal sealed class UpdateInvoiceHandler(
             return InvoiceErrors.NotFound;
         }
 
-        Result result = invoice.EnsureVersion(command.ExpectedVersion);
+        Result result = Concurrency.Check(invoice, command.ExpectedVersion);
         if (result.IsFailure)
         {
             return result;
@@ -265,7 +265,7 @@ internal sealed class DeleteInvoiceHandler(
             return InvoiceErrors.NotFound;
         }
 
-        Result version = invoice.EnsureVersion(command.ExpectedVersion);
+        Result version = Concurrency.Check(invoice, command.ExpectedVersion);
         if (version.IsFailure)
         {
             return version;
@@ -312,7 +312,7 @@ internal sealed class IssueInvoiceHandler(
             return InvoiceErrors.NotFound;
         }
 
-        Result result = invoice.EnsureVersion(command.ExpectedVersion);
+        Result result = Concurrency.Check(invoice, command.ExpectedVersion);
         if (result.IsFailure)
         {
             return result;

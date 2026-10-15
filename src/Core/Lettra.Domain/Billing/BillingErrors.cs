@@ -27,7 +27,6 @@ public static class BillingErrors
     public const string PurchaseOrderReferenceTooLongCode = "Billing.PurchaseOrderReferenceTooLong";
     public const string DueDateBeforeIssueDateCode = "Billing.DueDateBeforeIssueDate";
     public const string NotDraftCode = "Billing.NotDraft";
-    public const string VersionMismatchCode = "Billing.VersionMismatch";
     public const string NotCompliantCode = "Billing.NotCompliant";
     public const string CompanyProfileMissingCode = "Billing.CompanyProfileMissing";
     public const string DownPaymentInvalidCode = "Billing.DownPaymentInvalid";
@@ -46,9 +45,6 @@ public static class BillingErrors
 
     /// <summary>Une pièce validée est figée : elle ne se corrige que par un avoir.</summary>
     public static Error NotDraft => Error.Conflict(NotDraftCode);
-
-    /// <summary>La version lue n'est plus la version en base (HTTP 412 avec <c>If-Match</c>).</summary>
-    public static Error VersionMismatch => Error.Conflict(VersionMismatchCode);
 
     public static Error NotCompliant => Error.Validation(NotCompliantCode);
 

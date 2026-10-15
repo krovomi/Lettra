@@ -23,12 +23,17 @@ public static class ContractMapper
         ["Unit"] = "UnitCode",
     };
 
-    public static CreateCustomerCommand ToCommand(this CreateCustomerRequest request, DossierId dossier)
+    public static CreateCustomerCommand ToCommand(this CreateCustomerRequest request, DossierId dossier) =>
+        new(dossier, request.ToDraft());
+
+    /// <summary>Modification : même contrat qu'à la création, plus la version lue (<c>If-Match</c>).</summary>
+    public static UpdateCustomerCommand ToUpdateCommand(this CreateCustomerRequest request, DossierId dossier, CustomerId id, long? expectedVersion) =>
+        new(dossier, id, request.ToDraft(), expectedVersion);
+
+    public static Customer.Draft ToDraft(this CreateCustomerRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return new CreateCustomerCommand(
-            dossier,
-            new Customer.Draft(
+        return new Customer.Draft(
                 (CustomerKind)(int)request.Kind,
                 request.Name,
                 request.Siren,
@@ -39,7 +44,7 @@ public static class ContractMapper
                 request.AddressLine2,
                 request.PostalCode,
                 request.City,
-                request.CountryCode));
+                request.CountryCode);
     }
 
     public static CustomerResponse ToResponse(this Customer customer)
@@ -58,7 +63,10 @@ public static class ContractMapper
             customer.BillingAddress.PostalCode,
             customer.BillingAddress.City,
             customer.BillingAddress.Country.Value,
-            customer.CreatedAt);
+            customer.CreatedAt)
+        {
+            Version = customer.Version,
+        };
     }
 
     public static IReadOnlyList<ErrorDetail> ToErrorDetails(this IEnumerable<Error> errors) =>

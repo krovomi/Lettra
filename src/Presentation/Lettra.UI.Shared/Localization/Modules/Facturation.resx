@@ -26,7 +26,6 @@
   <data name="Error.Billing.PurchaseOrderReferenceTooLong" xml:space="preserve"><value>La référence du bon de commande dépasse 100 caractères.</value></data>
   <data name="Error.Billing.DueDateBeforeIssueDate" xml:space="preserve"><value>L'échéance ne peut pas précéder la date d'émission.</value></data>
   <data name="Error.Billing.NotDraft" xml:space="preserve"><value>Cette pièce est validée : elle ne se modifie plus.</value></data>
-  <data name="Error.Billing.VersionMismatch" xml:space="preserve"><value>Quelqu'un a modifié cette pièce entre-temps. Rechargez-la.</value></data>
   <data name="Error.Billing.NotCompliant" xml:space="preserve"><value>Des mentions obligatoires manquent : la pièce ne peut pas être validée.</value></data>
   <data name="Error.Billing.CompanyProfileMissing" xml:space="preserve"><value>Remplissez d'abord la fiche de l'entreprise émettrice.</value></data>
   <data name="Error.Billing.DownPaymentInvalid" xml:space="preserve"><value>Indiquez un pourcentage ou un montant d'acompte, pas les deux.</value></data>
@@ -127,6 +126,7 @@
   <data name="Billing.AllStatuses" xml:space="preserve"><value>Tous les statuts</value></data>
   <data name="Billing.Search" xml:space="preserve"><value>Chercher</value></data>
   <data name="Billing.ListHint" xml:space="preserve"><value>F3 pour chercher, Inser pour créer, Entrée pour ouvrir.</value></data>
+  <data name="Billing.Conflict" xml:space="preserve"><value>Quelqu'un a modifié cette pièce entre-temps. Rechargez-la.</value></data>
   <data name="Billing.Reload" xml:space="preserve"><value>Recharger</value></data>
   <data name="Billing.Column.Number" xml:space="preserve"><value>Numéro</value></data>
   <data name="Billing.Column.Date" xml:space="preserve"><value>Date</value></data>

@@ -11,7 +11,7 @@ public sealed record VatSummary(string Category, decimal RatePercent, decimal Ba
 /// Ce que les devis et les factures ont en commun : client, régime de TVA, lignes, totaux, version et auteurs.
 /// Les totaux sont recalculés à chaque modification du brouillon et figés à la validation.
 /// </summary>
-public abstract class BillingDocument<TId> : AggregateRoot<TId>
+public abstract class BillingDocument<TId> : AggregateRoot<TId>, IVersioned
     where TId : struct, IEquatable<TId>
 {
     public const int MaxLines = 500;
@@ -89,7 +89,10 @@ public abstract class BillingDocument<TId> : AggregateRoot<TId>
 
     public IReadOnlyList<string> LegalMentionList => LegalMentions.Length == 0 ? [] : LegalMentions.Split('\n');
 
-    /// <summary>Version de l'agrégat, augmentée à chaque modification : concurrence optimiste (<c>ETag</c>).</summary>
+    /// <summary>
+    /// Version de concurrence optimiste (ADR-0013), exposée en <c>ETag</c>. Avancée ici à chaque modification, car
+    /// une ligne seule peut changer sans toucher l'en-tête ; la persistance la laisse alors telle quelle.
+    /// </summary>
     public long Version { get; private set; }
 
     public Guid CreatedBy { get; private set; }
@@ -117,10 +120,6 @@ public abstract class BillingDocument<TId> : AggregateRoot<TId>
 
     /// <summary>Totaux tels que les calcule la règle unique, pour les écritures comptables et les contrôles.</summary>
     public DocumentTotals ComputeTotals() => DocumentCalculator.Compute(_lines.Select(l => l.ToInput()));
-
-    /// <summary>Refuse l'écriture si la version lue par l'appelant n'est plus la version courante.</summary>
-    public Result EnsureVersion(long? expectedVersion) =>
-        expectedVersion is null || expectedVersion == Version ? Result.Success() : BillingErrors.VersionMismatch;
 
     protected void Created(Guid userId, DateTimeOffset now)
     {

@@ -65,6 +65,13 @@ internal static class HttpResponseExtensions
             // Corps illisible (proxy, page d'erreur HTML) : erreur générique ci-dessous.
         }
 
+        // 412 (ADR-0013) : le serveur joint le document actuel, pour la fusion à l'écran.
+        if (problem?.Code == ErrorCodes.Concurrency.VersionMismatch && problem.Current is JsonElement current
+            && current.ValueKind == JsonValueKind.Object && current.Deserialize(typeInfo) is T currentValue)
+        {
+            return OperationResult<T>.Stale(currentValue);
+        }
+
         List<ErrorDetail> errors = [];
         foreach ((string field, string[] codes) in problem?.Errors ?? new Dictionary<string, string[]>())
         {

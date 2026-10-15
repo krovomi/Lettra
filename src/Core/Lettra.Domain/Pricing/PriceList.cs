@@ -47,7 +47,7 @@ public sealed record PriceListEntryDraft(Guid CatalogItemId, decimal? UnitPriceE
 /// est garanti par un index unique et par le cas d'usage, qui le retire de son ancienne grille.
 /// La grille ne fait que proposer : la ligne de pièce copie le prix au moment de la saisie.
 /// </summary>
-public sealed class PriceList : AggregateRoot<PriceListId>
+public sealed class PriceList : AggregateRoot<PriceListId>, IVersioned
 {
     public const int MaxNameLength = 100;
 
@@ -78,10 +78,8 @@ public sealed class PriceList : AggregateRoot<PriceListId>
         return applied.IsSuccess ? list : Result<PriceList>.Failure(applied.Errors);
     }
 
-    public Result Update(string? name, IReadOnlyList<PriceListEntryDraft> entries, IReadOnlyList<Guid> customers, long? expectedVersion, DateTimeOffset now) =>
-        expectedVersion is not null && expectedVersion != Version
-            ? Billing.BillingErrors.VersionMismatch
-            : Apply(name, entries, customers, now);
+    public Result Update(string? name, IReadOnlyList<PriceListEntryDraft> entries, IReadOnlyList<Guid> customers, DateTimeOffset now) =>
+        Apply(name, entries, customers, now);
 
     /// <summary>Retire un client (rattaché à une autre grille).</summary>
     public void RemoveCustomer(CustomerId customerId, DateTimeOffset now)
