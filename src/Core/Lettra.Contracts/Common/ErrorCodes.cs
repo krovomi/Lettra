@@ -88,6 +88,17 @@ public static class ErrorCodes
         public const string CsrfHeaderMissing = "Security.CsrfHeaderMissing";
     }
 
+    /// <summary>Instantané de droits signé pour le hors ligne (annexe F §4).</summary>
+    public static class RightsSnapshot
+    {
+        public const string DeviceRequired = "RightsSnapshot.DeviceRequired";
+        public const string TooManyDossiers = "RightsSnapshot.TooManyDossiers";
+        public const string Unavailable = "RightsSnapshot.Unavailable";
+        public const string Invalid = "RightsSnapshot.Invalid";
+        public const string Expired = "RightsSnapshot.Expired";
+        public const string OtherDevice = "RightsSnapshot.OtherDevice";
+    }
+
     public static class LocalAccount
     {
         public const string AlreadyExists = "LocalAccount.AlreadyExists";
