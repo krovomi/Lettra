@@ -1,3 +1,4 @@
+using Lettra.Ai.Tools.Company;
 using Lettra.Ai.Tools.Tools;
 using Lettra.Application.Abstractions.Ai;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,6 +11,7 @@ public static class DependencyInjection
     public static IServiceCollection AddAiTools(this IServiceCollection services)
     {
         services.AddScoped<IAiDossierContext, AiDossierContext>();
+        services.AddScoped<ICompanyFactsSource, NoCompanyFacts>();
         services.AddSingleton<IAiTool, ReadReferenceTool>();
         services.AddSingleton<IAiTool, ListReferencesTool>();
         services.AddSingleton<IAiTool, CalculateTool>();
