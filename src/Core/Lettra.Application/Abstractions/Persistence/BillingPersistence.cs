@@ -24,7 +24,7 @@ public interface IQuoteRepository
 
     Task<Quote?> FindAsync(QuoteId id, CancellationToken cancellationToken);
 
-    void Remove(Quote quote);
+    Task RemoveAsync(Quote quote, CancellationToken cancellationToken);
 }
 
 public interface IQuoteReadStore
@@ -41,7 +41,7 @@ public interface IInvoiceRepository
     /// <summary>Factures d'acompte d'un devis (brouillons compris).</summary>
     Task<IReadOnlyList<Invoice>> ListDownPaymentsAsync(QuoteId quote, CancellationToken cancellationToken);
 
-    void Remove(Invoice invoice);
+    Task RemoveAsync(Invoice invoice, CancellationToken cancellationToken);
 }
 
 public interface IInvoiceReadStore
@@ -82,7 +82,7 @@ public interface IPriceListRepository
 
     Task<PriceList?> FindForCustomerAsync(CustomerId customer, CancellationToken cancellationToken);
 
-    void Remove(PriceList list);
+    Task RemoveAsync(PriceList list, CancellationToken cancellationToken);
 }
 
 public interface IPriceListReadStore

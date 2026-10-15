@@ -244,7 +244,7 @@ internal sealed class DeleteQuoteHandler(IQuoteRepository quotes, IUnitOfWork un
             return BillingErrors.NotDraft;
         }
 
-        quotes.Remove(quote);
+        await quotes.RemoveAsync(quote, cancellationToken).ConfigureAwait(false);
         await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return Result.Success();
     }

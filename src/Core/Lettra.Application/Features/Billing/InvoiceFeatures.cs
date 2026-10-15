@@ -283,7 +283,7 @@ internal sealed class DeleteInvoiceHandler(
             quote.DetachFinalInvoice(invoice.Id, user.UserId, clock.GetUtcNow());
         }
 
-        invoices.Remove(invoice);
+        await invoices.RemoveAsync(invoice, cancellationToken).ConfigureAwait(false);
         await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return Result.Success();
     }

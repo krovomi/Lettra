@@ -209,7 +209,7 @@ internal sealed class DeletePriceListHandler(IPriceListRepository lists, IUnitOf
             return PriceListErrors.NotFound;
         }
 
-        lists.Remove(list);
+        await lists.RemoveAsync(list, cancellationToken).ConfigureAwait(false);
         await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return Result.Success();
     }

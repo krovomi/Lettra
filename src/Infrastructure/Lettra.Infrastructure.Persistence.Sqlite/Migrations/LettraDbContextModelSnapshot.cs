@@ -18,6 +18,370 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.13");
 
+            modelBuilder.Entity("Lettra.Domain.Billing.CompanyProfile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Bic")
+                        .HasMaxLength(11)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EarlyPaymentDiscount")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Iban")
+                        .HasMaxLength(34)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("LatePenaltyRate")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LegalForm")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PaymentDays")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PaymentTerms")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Rcs")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("ShareCapital")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Siren")
+                        .HasMaxLength(9)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Siret")
+                        .HasMaxLength(14)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("VatFranchise")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("VatNumber")
+                        .HasMaxLength(15)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("VatOnDebits")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Address", "Lettra.Domain.Billing.CompanyProfile.Address#PostalAddress", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("City");
+
+                            b1.Property<string>("Country")
+                                .IsRequired()
+                                .HasMaxLength(2)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("Country");
+
+                            b1.Property<string>("Line1")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("AddressLine1");
+
+                            b1.Property<string>("Line2")
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("AddressLine2");
+
+                            b1.Property<string>("PostalCode")
+                                .IsRequired()
+                                .HasMaxLength(16)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("PostalCode");
+                        });
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CompanyProfile", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Billing.Invoice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ContentHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreditReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("CreditedInclTax")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreditedInvoiceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreditedInvoiceNumber")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DeliveryAddress")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("DeliveryDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DeviceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("DueDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EarlyPaymentDiscount")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("IssueDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("IssuedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("IssuedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("LastModifiedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("LatePenaltyRate")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LegalMentions")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Number")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PaymentTerms")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PurchaseOrderReference")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("QuoteId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("QuoteNumber")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SeriesCode")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Subject")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TotalExclTax")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TotalInclTax")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TotalVat")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("ValidatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ValidatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("VatRegime")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreditedInvoiceId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("IssueDate");
+
+                    b.HasIndex("QuoteId");
+
+                    b.HasIndex("Kind", "Status");
+
+                    b.HasIndex("SeriesCode", "Number")
+                        .IsUnique();
+
+                    b.ToTable("Invoices", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Billing.Quote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DeviceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("DownPaymentsInclTax")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("FinalInvoiceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("IssueDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("LastModifiedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LegalMentions")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Number")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SeriesCode")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Subject")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TotalExclTax")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TotalInclTax")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TotalVat")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("ValidUntil")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("ValidatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ValidatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("VatRegime")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("IssueDate");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("SeriesCode", "Number")
+                        .IsUnique();
+
+                    b.ToTable("Quotes", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Domain.Catalog.CatalogItem", b =>
                 {
                     b.Property<Guid>("Id")
@@ -229,6 +593,92 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.ToTable("Suppliers", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Domain.Pricing.PriceList", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PriceLists", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Billing.SalesJournalLineRecord", b =>
+                {
+                    b.Property<Guid>("EntryId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("LineNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Account")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Credit")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Debit")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("VatRatePercent")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("EntryId", "LineNumber");
+
+                    b.ToTable("SalesJournalLines", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Billing.SalesJournalRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CustomerName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("InvoiceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PieceNumber")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Date");
+
+                    b.HasIndex("InvoiceId")
+                        .IsUnique();
+
+                    b.ToTable("SalesJournalEntries", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Numbering.NumberSeries", b =>
                 {
                     b.Property<string>("Code")
@@ -269,6 +719,552 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("DossierStamp", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Billing.Invoice", b =>
+                {
+                    b.OwnsMany("Lettra.Domain.Billing.DocumentLine", "Lines", b1 =>
+                        {
+                            b1.Property<Guid>("DocumentId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<int>("Position")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<Guid?>("CatalogItemId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Description")
+                                .HasMaxLength(2000)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Designation")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal>("DiscountPercent")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<int>("Nature")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<decimal>("Quantity")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Reference")
+                                .HasMaxLength(50)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal>("TotalExclTax")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("UnitCode")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal>("UnitPriceExclTax")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("VatCategory")
+                                .IsRequired()
+                                .HasMaxLength(2)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("VatExemptionCode")
+                                .HasMaxLength(30)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("VatRateCode")
+                                .IsRequired()
+                                .HasMaxLength(10)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal>("VatRatePercent")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("DocumentId", "Position");
+
+                            b1.ToTable("InvoiceLines", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("DocumentId");
+                        });
+
+                    b.OwnsMany("Lettra.Domain.Billing.VatSummary", "VatSummaries", b1 =>
+                        {
+                            b1.Property<Guid>("DocumentId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Category")
+                                .HasMaxLength(2)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal>("RatePercent")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal>("BaseExclTax")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("ExemptionCode")
+                                .HasMaxLength(30)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal>("VatAmount")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("DocumentId", "Category", "RatePercent");
+
+                            b1.ToTable("InvoiceVatSummaries", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("DocumentId");
+                        });
+
+                    b.OwnsOne("Lettra.Domain.Billing.PartySnapshot", "Customer", b1 =>
+                        {
+                            b1.Property<Guid>("InvoiceId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("AddressLine1")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("CustomerAddressLine1");
+
+                            b1.Property<string>("AddressLine2")
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("CustomerAddressLine2");
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("CustomerCity");
+
+                            b1.Property<string>("CountryCode")
+                                .IsRequired()
+                                .HasMaxLength(2)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("CustomerCountry");
+
+                            b1.Property<bool>("IsBusiness")
+                                .HasColumnType("INTEGER")
+                                .HasColumnName("CustomerIsBusiness");
+
+                            b1.Property<string>("LegalForm")
+                                .HasMaxLength(100)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("CustomerLegalForm");
+
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("CustomerName");
+
+                            b1.Property<string>("PostalCode")
+                                .IsRequired()
+                                .HasMaxLength(16)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("CustomerPostalCode");
+
+                            b1.Property<string>("Rcs")
+                                .HasMaxLength(100)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("CustomerRcs");
+
+                            b1.Property<decimal?>("ShareCapital")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("CustomerShareCapital");
+
+                            b1.Property<string>("Siren")
+                                .HasMaxLength(9)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("CustomerSiren");
+
+                            b1.Property<string>("Siret")
+                                .HasMaxLength(14)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("CustomerSiret");
+
+                            b1.Property<string>("VatNumber")
+                                .HasMaxLength(15)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("CustomerVatNumber");
+
+                            b1.HasKey("InvoiceId");
+
+                            b1.ToTable("Invoices");
+
+                            b1.WithOwner()
+                                .HasForeignKey("InvoiceId");
+                        });
+
+                    b.OwnsOne("Lettra.Domain.Billing.PartySnapshot", "Seller", b1 =>
+                        {
+                            b1.Property<Guid>("InvoiceId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("AddressLine1")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("SellerAddressLine1");
+
+                            b1.Property<string>("AddressLine2")
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("SellerAddressLine2");
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("SellerCity");
+
+                            b1.Property<string>("CountryCode")
+                                .IsRequired()
+                                .HasMaxLength(2)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("SellerCountry");
+
+                            b1.Property<bool>("IsBusiness")
+                                .HasColumnType("INTEGER")
+                                .HasColumnName("SellerIsBusiness");
+
+                            b1.Property<string>("LegalForm")
+                                .HasMaxLength(100)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("SellerLegalForm");
+
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("SellerName");
+
+                            b1.Property<string>("PostalCode")
+                                .IsRequired()
+                                .HasMaxLength(16)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("SellerPostalCode");
+
+                            b1.Property<string>("Rcs")
+                                .HasMaxLength(100)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("SellerRcs");
+
+                            b1.Property<decimal?>("ShareCapital")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("SellerShareCapital");
+
+                            b1.Property<string>("Siren")
+                                .HasMaxLength(9)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("SellerSiren");
+
+                            b1.Property<string>("Siret")
+                                .HasMaxLength(14)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("SellerSiret");
+
+                            b1.Property<string>("VatNumber")
+                                .HasMaxLength(15)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("SellerVatNumber");
+
+                            b1.HasKey("InvoiceId");
+
+                            b1.ToTable("Invoices");
+
+                            b1.WithOwner()
+                                .HasForeignKey("InvoiceId");
+                        });
+
+                    b.Navigation("Customer")
+                        .IsRequired();
+
+                    b.Navigation("Lines");
+
+                    b.Navigation("Seller");
+
+                    b.Navigation("VatSummaries");
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Billing.Quote", b =>
+                {
+                    b.OwnsMany("Lettra.Domain.Billing.DocumentLine", "Lines", b1 =>
+                        {
+                            b1.Property<Guid>("DocumentId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<int>("Position")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<Guid?>("CatalogItemId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Description")
+                                .HasMaxLength(2000)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Designation")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal>("DiscountPercent")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<int>("Nature")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<decimal>("Quantity")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Reference")
+                                .HasMaxLength(50)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal>("TotalExclTax")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("UnitCode")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal>("UnitPriceExclTax")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("VatCategory")
+                                .IsRequired()
+                                .HasMaxLength(2)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("VatExemptionCode")
+                                .HasMaxLength(30)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("VatRateCode")
+                                .IsRequired()
+                                .HasMaxLength(10)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal>("VatRatePercent")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("DocumentId", "Position");
+
+                            b1.ToTable("QuoteLines", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("DocumentId");
+                        });
+
+                    b.OwnsMany("Lettra.Domain.Billing.VatSummary", "VatSummaries", b1 =>
+                        {
+                            b1.Property<Guid>("DocumentId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Category")
+                                .HasMaxLength(2)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal>("RatePercent")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal>("BaseExclTax")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("ExemptionCode")
+                                .HasMaxLength(30)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal>("VatAmount")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("DocumentId", "Category", "RatePercent");
+
+                            b1.ToTable("QuoteVatSummaries", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("DocumentId");
+                        });
+
+                    b.OwnsOne("Lettra.Domain.Billing.PartySnapshot", "Customer", b1 =>
+                        {
+                            b1.Property<Guid>("QuoteId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("AddressLine1")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("CustomerAddressLine1");
+
+                            b1.Property<string>("AddressLine2")
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("CustomerAddressLine2");
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("CustomerCity");
+
+                            b1.Property<string>("CountryCode")
+                                .IsRequired()
+                                .HasMaxLength(2)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("CustomerCountry");
+
+                            b1.Property<bool>("IsBusiness")
+                                .HasColumnType("INTEGER")
+                                .HasColumnName("CustomerIsBusiness");
+
+                            b1.Property<string>("LegalForm")
+                                .HasMaxLength(100)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("CustomerLegalForm");
+
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("CustomerName");
+
+                            b1.Property<string>("PostalCode")
+                                .IsRequired()
+                                .HasMaxLength(16)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("CustomerPostalCode");
+
+                            b1.Property<string>("Rcs")
+                                .HasMaxLength(100)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("CustomerRcs");
+
+                            b1.Property<decimal?>("ShareCapital")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("CustomerShareCapital");
+
+                            b1.Property<string>("Siren")
+                                .HasMaxLength(9)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("CustomerSiren");
+
+                            b1.Property<string>("Siret")
+                                .HasMaxLength(14)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("CustomerSiret");
+
+                            b1.Property<string>("VatNumber")
+                                .HasMaxLength(15)
+                                .HasColumnType("TEXT")
+                                .HasColumnName("CustomerVatNumber");
+
+                            b1.HasKey("QuoteId");
+
+                            b1.ToTable("Quotes");
+
+                            b1.WithOwner()
+                                .HasForeignKey("QuoteId");
+                        });
+
+                    b.Navigation("Customer")
+                        .IsRequired();
+
+                    b.Navigation("Lines");
+
+                    b.Navigation("VatSummaries");
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Pricing.PriceList", b =>
+                {
+                    b.OwnsMany("Lettra.Domain.Pricing.PriceListCustomer", "Customers", b1 =>
+                        {
+                            b1.Property<Guid>("PriceListId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<Guid>("CustomerId")
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("PriceListId", "CustomerId");
+
+                            b1.HasIndex("CustomerId")
+                                .IsUnique();
+
+                            b1.ToTable("PriceListCustomers", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("PriceListId");
+                        });
+
+                    b.OwnsMany("Lettra.Domain.Pricing.PriceListEntry", "Entries", b1 =>
+                        {
+                            b1.Property<Guid>("PriceListId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<Guid>("CatalogItemId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal?>("DiscountPercent")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal?>("UnitPriceExclTax")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("PriceListId", "CatalogItemId");
+
+                            b1.ToTable("PriceListEntries", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("PriceListId");
+                        });
+
+                    b.Navigation("Customers");
+
+                    b.Navigation("Entries");
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Billing.SalesJournalLineRecord", b =>
+                {
+                    b.HasOne("Lettra.Infrastructure.Persistence.Billing.SalesJournalRecord", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("EntryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Billing.SalesJournalRecord", b =>
+                {
+                    b.Navigation("Lines");
                 });
 #pragma warning restore 612, 618
         }
