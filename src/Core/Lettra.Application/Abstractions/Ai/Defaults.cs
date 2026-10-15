@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using Lettra.Contracts.Assistant;
 using Lettra.Contracts.Common;
+using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Application.Abstractions.Ai;
@@ -13,6 +14,22 @@ internal sealed class DisabledAiUsagePolicy : IAiUsagePolicy
 {
     public ValueTask<AiSettings> GetSettingsAsync(OrganisationId organisation, CancellationToken cancellationToken) =>
         ValueTask.FromResult(AiSettings.Disabled);
+}
+
+internal sealed class NoAiSettingsStore : IAiSettingsStore
+{
+    public bool IsAvailable => false;
+
+    public ValueTask<StoredAiSettings?> FindAsync(OrganisationId organisation, CancellationToken cancellationToken) =>
+        ValueTask.FromResult<StoredAiSettings?>(null);
+
+    public ValueTask<Result<StoredAiSettings>> SaveAsync(
+        OrganisationId organisation,
+        AiSettings settings,
+        long? expectedVersion,
+        Guid updatedBy,
+        CancellationToken cancellationToken) =>
+        ValueTask.FromResult<Result<StoredAiSettings>>(new Error(ErrorCodes.Ai.SettingsUnavailable, ErrorKind.Validation));
 }
 
 internal sealed class EmptyAiAuditLog : IAiAuditLog

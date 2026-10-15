@@ -8,6 +8,7 @@ using Lettra.Application.Features.Assistant;
 using Lettra.Contracts.Assistant;
 using Lettra.Contracts.Serialization;
 using Lettra.Domain.Common;
+using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Api.Endpoints;
 
@@ -37,6 +38,46 @@ internal static class AssistantEndpoints
             .ProducesProblem(StatusCodes.Status403Forbidden);
 
         return group;
+    }
+
+    /// <summary>Réglages IA du cabinet (administrateur du cabinet), hors de tout dossier.</summary>
+    public static RouteGroupBuilder MapAssistantSettings(this RouteGroupBuilder cabinet)
+    {
+        RouteGroupBuilder group = cabinet.MapGroup("/assistant/reglages").WithTags("Assistant");
+
+        group.MapGet("/", GetSettingsAsync)
+            .RequireCabinetPermission(Permission.CabinetAdministrer)
+            .WithName("GetAssistantSettings")
+            .Produces<AiSettingsResponse>()
+            .ProducesProblem(StatusCodes.Status403Forbidden);
+
+        group.MapPut("/", SaveSettingsAsync)
+            .RequireCabinetPermission(Permission.CabinetAdministrer)
+            .WithName("SaveAssistantSettings")
+            .Produces<AiSettingsResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
+        return group;
+    }
+
+    private static async Task<IResult> GetSettingsAsync(Guid cabinetId, IQueryDispatcher queries, CancellationToken cancellationToken)
+    {
+        Result<AiSettingsResponse> result = await queries
+            .QueryAsync(new GetAiSettingsQuery(new OrganisationId(cabinetId)), cancellationToken).ConfigureAwait(false);
+        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+    }
+
+    private static async Task<IResult> SaveSettingsAsync(
+        Guid cabinetId,
+        SaveAiSettingsRequest request,
+        ICommandDispatcher commands,
+        CancellationToken cancellationToken)
+    {
+        Result<AiSettingsResponse> result = await commands
+            .SendAsync(new SaveAiSettingsCommand(new OrganisationId(cabinetId), request), cancellationToken).ConfigureAwait(false);
+        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
     }
 
     private static async Task<IResult> AskAsync(
