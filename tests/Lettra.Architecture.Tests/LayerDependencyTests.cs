@@ -38,7 +38,7 @@ public sealed class LayerDependencyTests
         // Rendu PDF (phase 3) : ne voit que les calculs partagés, ni les contrats ni le domaine.
         { "Lettra.Printing", ["Lettra.Calculations"] },
         { "Lettra.UI.Gateway.Http", ["Lettra.Contracts", "Lettra.UI.Abstractions"] },
-        { "Lettra.UI.Gateway.InProcess", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain", "Lettra.Supervision.Application", "Lettra.Supervision.Domain", "Lettra.UI.Abstractions"] },
+        { "Lettra.UI.Gateway.InProcess", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain", "Lettra.Exports.Application", "Lettra.Supervision.Application", "Lettra.Supervision.Domain", "Lettra.UI.Abstractions"] },
 
         // Couche IA (annexe B §4.1) : des adapters des ports de l'application, sans accès direct aux bases.
         { "Lettra.Ai.Skills", ["Lettra.Application"] },

@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using Bunit;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
@@ -20,6 +21,7 @@ public sealed class InvoiceEditorTests : BunitContext
 {
     private readonly FakeInvoicesGateway _invoices = new();
     private readonly FakeBillingSettingsGateway _settings = new();
+    private readonly FakeFileDownloader _files = new();
 
     private static readonly DocumentLineRequest Conseil = new() { Designation = "Conseil", UnitCode = "HUR", Quantity = 2m, UnitPriceExclTax = 100m };
 
@@ -31,7 +33,7 @@ public sealed class InvoiceEditorTests : BunitContext
         Services.AddSingleton<IBillingSettingsGateway>(_settings);
         Services.AddSingleton<ICatalogGateway>(new FakeCatalogGateway());
         Services.AddSingleton<ICustomersGateway>(new FakeCustomersGateway());
-        Services.AddSingleton<IFileDownloader>(new FakeFileDownloader());
+        Services.AddSingleton<IFileDownloader>(_files);
         LettraCultures.Apply(CultureInfo.GetCultureInfo("fr-FR"));
     }
 
@@ -123,6 +125,52 @@ public sealed class InvoiceEditorTests : BunitContext
         page.WaitForAssertion(() => page.Markup.Should().Contain("La séparation des tâches est active : l'auteur de l'avoir ne peut pas l'approuver lui-même."));
         _invoices.Invoices[avoir.Id].CreditApprovedBy.Should().BeNull();
         page.Find("#approve-credit").Should().NotBeNull("un manager peut encore l'approuver");
+    }
+
+    [Fact]
+    public void Une_facture_validee_se_telecharge_en_Factur_X_et_en_UBL()
+    {
+        InvoiceResponse facture = _invoices.Add(InvoiceKindDto.Invoice, InvoiceStatusDto.Validated, "FAC-2026-0042", Conseil);
+        IRenderedComponent<InvoiceEditor> page = Ouvrir(facture.Id);
+
+        page.Find("#facturx").Click();
+        page.WaitForAssertion(() => _files.Files.Should().ContainSingle());
+        page.Find("#ubl").Click();
+        page.WaitForAssertion(() => _files.Files.Should().HaveCount(2));
+
+        (string nomPdf, string typePdf, byte[] pdf) = _files.Files[0];
+        nomPdf.Should().Be("FAC-2026-0042-factur-x.pdf");
+        typePdf.Should().Be("application/pdf");
+        Encoding.Latin1.GetString(pdf).Should().Contain("<fx:DocumentFileName>factur-x.xml</fx:DocumentFileName>").And.Contain("(factur-x.xml)");
+        (string nomXml, string typeXml, byte[] xml) = _files.Files[1];
+        nomXml.Should().Be("FAC-2026-0042-ubl.xml");
+        typeXml.Should().Be("application/xml");
+        Encoding.UTF8.GetString(xml).Should().Contain("urn:oasis:names:specification:ubl:schema:xsd:Invoice-2").And.Contain("FAC-2026-0042");
+    }
+
+    [Fact]
+    public void Un_brouillon_n_a_pas_de_facture_electronique()
+    {
+        InvoiceResponse brouillon = _invoices.Add(InvoiceKindDto.Invoice, InvoiceStatusDto.Draft, null, Conseil);
+
+        IRenderedComponent<InvoiceEditor> page = Ouvrir(brouillon.Id);
+
+        page.FindAll("#facturx").Should().BeEmpty();
+        page.FindAll("#ubl").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Un_echec_de_la_facture_electronique_s_affiche_sans_telecharger()
+    {
+        _invoices.EInvoiceError = ErrorCodes.Api.Unreachable;
+        InvoiceResponse facture = _invoices.Add(InvoiceKindDto.Invoice, InvoiceStatusDto.Validated, "FAC-2026-0042", Conseil);
+        IRenderedComponent<InvoiceEditor> page = Ouvrir(facture.Id);
+
+        page.Find("#facturx").Click();
+
+        page.WaitForAssertion(() => page.Find("p.validation-message").TextContent.Should().Be("Le serveur est injoignable. Vérifiez la connexion."));
+        _files.Files.Should().BeEmpty();
+        page.Find("#facturx").HasAttribute("disabled").Should().BeFalse("le téléchargement peut être relancé");
     }
 }
 

@@ -59,6 +59,7 @@ dotnet build "$ROOT/src/Hosts/Lettra.Api" -c Release -v quiet -nologo > "$RUN/bu
   OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4317 OTEL_METRIC_EXPORT_INTERVAL=5000 \
   Lettra__Observability__ServiceName=lettra-api Lettra__Observability__Cell=locale \
   Lettra__Supervision__WebhookToken=$TOKEN Lettra__Supervision__PublicBaseAddress=http://127.0.0.1:5080/ \
+  ConnectionStrings__Catalog="Data Source=$RUN/catalog.db" ConnectionStrings__DossierDemo="Data Source=$RUN/dossier.db" \
   Lettra__Identity__Oidc__Authority=http://127.0.0.1:8080/realms/lettra Lettra__Identity__Oidc__RequireHttpsMetadata=false \
   exec dotnet bin/Release/net10.0/Lettra.Api.dll > "$RUN/api.log" 2>&1) & API_PID=$!; PIDS+=($API_PID)
 wait_for "API prête" 120 curl -fs $API/health
@@ -66,6 +67,17 @@ for _ in $(seq 20); do curl -s -o /dev/null -H "X-Dossier: 0199e3a0-0000-7000-80
 has_series() { curl -fs "http://127.0.0.1:9090/api/v1/query" --data-urlencode "query=$1" | grep -q '"result":\[{'; }
 wait_for "métriques de l'API reçues par Prometheus" 120 has_series 'target_info{job="lettra/lettra-api"}'
 wait_for "histogramme HTTP avec la borne SLO de 300 ms" 60 has_series 'http_server_request_duration_seconds_bucket{job="lettra/lettra-api",le="0.3"}'
+
+# Pendant la compilation, l'API n'exporte rien : LettraApiIndisponible se déclenche avant même l'essai. Tant qu'elle
+# est active, la règle d'inhibition (S1 disponibilité ⇒ S2 muettes) retient l'alerte S2 de l'étape 1, et l'appel S1
+# de l'étape 2 serait déjà dans le journal avant l'arrêt. On part donc d'une cellule sans alerte S1 active.
+no_active_s1() {
+  ! has_series 'ALERTS{alertname="LettraApiIndisponible"}' &&
+    [ -z "$(amtool alert query alertname=LettraApiIndisponible -q --alertmanager.url=http://127.0.0.1:9093)" ]
+}
+sleep 20 # au moins une évaluation des règles (15 s) après l'arrivée des métriques
+wait_for "aucune alerte S1 de démarrage encore active" 180 no_active_s1
+[ -f "$RUN/astreinte/appel.jsonl" ] && mv "$RUN/astreinte/appel.jsonl" "$RUN/astreinte/appel-demarrage.jsonl"
 
 step "1) Alerte S2 synthétique : Alertmanager → Supervision (API) et ticket d'astreinte"
 amtool alert add EssaiFonctionnel severity=S2 category=functional scope=cell cell=locale \
@@ -75,7 +87,8 @@ wait_for "alerte ingérée et notifiée par le module Supervision" 60 grep -q "N
 
 step "2) Panne injectée : arrêt de l'API"
 kill "$API_PID"; date -u +"   arrêt à %H:%M:%S"
-wait_for "astreinte appelée en S1 pour LettraApiIndisponible" 600 grep -q LettraApiIndisponible "$RUN/astreinte/appel.jsonl"
+s1_called() { grep -q '"status": "firing".*LettraApiIndisponible' "$RUN/astreinte/appel.jsonl"; }
+wait_for "astreinte appelée en S1 pour LettraApiIndisponible" 600 s1_called
 date -u +"   appel reçu à %H:%M:%S"
 
 step "Contrôles"

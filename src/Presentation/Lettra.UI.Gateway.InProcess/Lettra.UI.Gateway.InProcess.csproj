@@ -5,6 +5,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Lettra.UI.Abstractions\Lettra.UI.Abstractions.csproj" />
     <ProjectReference Include="..\..\Core\Lettra.Application\Lettra.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\Exports\Lettra.Exports.Application\Lettra.Exports.Application.csproj" />
     <ProjectReference Include="..\..\Modules\Supervision\Lettra.Supervision.Application\Lettra.Supervision.Application.csproj" />
   </ItemGroup>
 

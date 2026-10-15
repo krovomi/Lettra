@@ -2,7 +2,9 @@ using Lettra.Calculations;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Common;
+using Lettra.Contracts.Exports;
 using Lettra.Contracts.Pricing;
+using Lettra.Exports.Application.EInvoicing;
 using Lettra.UI.Abstractions;
 
 namespace Lettra.UI.Tests.Billing;
@@ -319,6 +321,18 @@ internal sealed class FakeInvoicesGateway : IInvoicesGateway
             CreditApprovedBy = Guid.CreateVersion7(), CreditApprovedAt = new DateTimeOffset(2026, 10, 15, 9, 30, 0, TimeSpan.Zero), Version = Invoices[id].Version + 1,
         };
         return Task.FromResult(OperationResult<InvoiceResponse>.Success(Invoices[id]));
+    }
+
+    /// <summary>Erreur renvoyée par la facture électronique (coupure réseau…), sinon le XML écrit par le module Exports.</summary>
+    public string? EInvoiceError { get; set; }
+
+    public Task<OperationResult<byte[]>> GetEInvoiceAsync(Guid id, EInvoiceFormatDto format, CancellationToken cancellationToken)
+    {
+        InvoiceResponse invoice = Invoices[id];
+        string? error = EInvoiceError ?? (invoice.Number is null ? ErrorCodes.EInvoice.NotValidated : null);
+        return Task.FromResult(error is null
+            ? OperationResult<byte[]>.Success(EInvoiceSerializer.Write(invoice, BillingFixtures.Company(), format))
+            : OperationResult<byte[]>.Failure(error));
     }
 }
 
