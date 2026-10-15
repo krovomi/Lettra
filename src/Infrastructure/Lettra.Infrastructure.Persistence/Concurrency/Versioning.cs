@@ -27,7 +27,8 @@ public static class VersioningConfiguration
 
 /// <summary>
 /// Avance la version des agrégats écrits : 1 à l'insertion, +1 à chaque modification. EF ajoute alors
-/// <c>WHERE Version = @lue</c> à l'UPDATE : une ligne modifiée entre-temps n'est pas écrasée.
+/// <c>WHERE Version = @lue</c> à l'UPDATE : une ligne modifiée entre-temps n'est pas écrasée. Un agrégat qui
+/// avance déjà sa version dans le domaine (valeur posée à l'insertion, ou différente de la valeur lue) est laissé tel quel.
 /// </summary>
 internal sealed class VersionInterceptor : SaveChangesInterceptor
 {
@@ -58,10 +59,10 @@ internal sealed class VersionInterceptor : SaveChangesInterceptor
             PropertyEntry<IVersioned, long> version = entry.Property(e => e.Version);
             switch (entry.State)
             {
-                case EntityState.Added:
+                case EntityState.Added when version.CurrentValue == 0:
                     version.CurrentValue = 1;
                     break;
-                case EntityState.Modified:
+                case EntityState.Modified when version.CurrentValue == version.OriginalValue:
                     version.CurrentValue = version.OriginalValue + 1;
                     break;
             }
