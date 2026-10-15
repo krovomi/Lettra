@@ -2,6 +2,7 @@ using Lettra.Application.Abstractions.Ai;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Messaging;
+using Lettra.Application.Abstractions.Sync;
 using Lettra.Application.Authorization;
 using Lettra.Application.Behaviors;
 using Lettra.Application.Features.Integrity;
@@ -31,6 +32,8 @@ public static class DependencyInjection
         services.TryAddSingleton(ClosingSchedule.Paris);
         services.TryAddScoped<IJournaledDocumentReader, NotConnectedDocumentReader>();
         services.TryAddScoped<IDossierAlertPublisher, NoDossierAlertPublisher>();
+        services.TryAddScoped<IDeviceNumbering, NoDeviceNumbering>();
+        services.TryAddScoped<IDeviceSeriesRegistry, NoDeviceSeriesRegistry>();
         services.AddScoped<DossierIntegrityService>();
 
         // Hors du mode 1, les cas d'usage de session locale répondent « non pris en charge ».

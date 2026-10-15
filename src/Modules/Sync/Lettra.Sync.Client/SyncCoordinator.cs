@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using Lettra.Application.Abstractions.Persistence;
 using Lettra.Application.Abstractions.Sync;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Contracts.Serialization;
@@ -34,10 +35,10 @@ public enum SyncConsent
     ShowDetail = 3,
 }
 
-/// <summary>Ce qui partirait, pour la demande à l'utilisateur (« 2 créations, 5 modifications »).</summary>
-public sealed record SyncSummary(int Creations, int Changes, long EstimatedBytes)
+/// <summary>Ce qui partirait, pour la demande à l'utilisateur (« 2 factures validées, 2 créations, 5 modifications »).</summary>
+public sealed record SyncSummary(int Creations, int Changes, long EstimatedBytes, int Validations = 0)
 {
-    public bool IsEmpty => Creations + Changes == 0;
+    public bool IsEmpty => Creations + Changes + Validations == 0;
 }
 
 /// <summary>
@@ -84,6 +85,9 @@ public interface ISyncTransport
     Task<PushSyncIntentsResponse> PushAsync(Guid dossierId, PushSyncIntentsRequest request, CancellationToken cancellationToken);
 
     Task<SyncChangesResponse> PullAsync(Guid dossierId, string? token, int limit, CancellationToken cancellationToken);
+
+    /// <summary>Ouvre ou rend les séries de numérotation du poste (refusé à qui ne valide pas de factures).</summary>
+    Task<OpenDeviceSeriesResponse> OpenDeviceSeriesAsync(Guid dossierId, OpenDeviceSeriesRequest request, CancellationToken cancellationToken);
 }
 
 /// <summary>Le serveur a refusé la synchronisation (session expirée, droits retirés) ; rien n'est perdu sur le poste.</summary>
@@ -131,6 +135,21 @@ public enum SyncState
     ResolvingConflicts = 5,
     UpToDate = 6,
     Failed = 7,
+}
+
+/// <summary>
+/// Rappel croissant quand des factures validées sur le poste attendent d'être envoyées (ADR-0008) : elles ne partent à
+/// la plateforme agréée qu'après la synchronisation.
+/// </summary>
+public enum SyncReminder
+{
+    None = 0,
+
+    /// <summary>Une facture attend depuis plus de 24 h.</summary>
+    Day = 1,
+
+    /// <summary>Une facture attend depuis plus de 72 h.</summary>
+    ThreeDays = 2,
 }
 
 public enum SyncFailure
@@ -298,7 +317,10 @@ public sealed class SyncCoordinator(
                 more = changes.HasMore;
             }
 
-            // 5. Conflits : les champs sans conflit sont appliqués, le reste attend l'écran de résolution.
+            // 5. Série du poste (ADR-0007), au premier passage en ligne : elle permet ensuite de valider hors ligne.
+            await EnsureDeviceSeriesAsync(dossier, replica, ct).ConfigureAwait(false);
+
+            // 6. Conflits : les champs sans conflit sont appliqués, le reste attend l'écran de résolution.
             int open = (await outbox.ListConflictsAsync(ct).ConfigureAwait(false)).Count;
             Enter(open > 0 ? SyncState.ResolvingConflicts : SyncState.UpToDate);
             return Report();
@@ -315,10 +337,56 @@ public sealed class SyncCoordinator(
         }
     }
 
+    /// <summary>Le rappel à montrer maintenant, d'après la plus ancienne facture validée sur le poste et pas encore envoyée.</summary>
+    public async Task<SyncReminder> ReminderAsync(CancellationToken cancellationToken = default)
+    {
+        AsyncServiceScope scope = scopes.CreateAsyncScope();
+        await using (scope.ConfigureAwait(false))
+        {
+            if ((await scope.ServiceProvider.GetRequiredService<ITenantInitializer>().InitializeAsync(cancellationToken).ConfigureAwait(false)).IsFailure)
+            {
+                return SyncReminder.None;
+            }
+
+            IReadOnlyList<SyncOutboxItem> pending = await scope.ServiceProvider.GetRequiredService<ISyncOutbox>()
+                .ListAsync(SyncOutboxStatus.Pending, cancellationToken).ConfigureAwait(false);
+            DateTimeOffset? oldest = pending.Where(i => i.Intent is ValidatedInvoiceFact).Select(i => (DateTimeOffset?)i.Intent.RecordedAt).Min();
+            TimeSpan waiting = oldest is { } since ? clock.GetUtcNow() - since : TimeSpan.Zero;
+            return waiting >= TimeSpan.FromHours(72) ? SyncReminder.ThreeDays
+                : waiting >= TimeSpan.FromHours(24) ? SyncReminder.Day
+                : SyncReminder.None;
+        }
+    }
+
+    private async Task EnsureDeviceSeriesAsync(Guid dossier, ISyncReplica replica, CancellationToken ct)
+    {
+        if (await replica.FindDeviceSeriesAsync(NumberSeriesCodes.Invoices, ct).ConfigureAwait(false) is not null)
+        {
+            return;
+        }
+
+        OpenDeviceSeriesResponse opened;
+        try
+        {
+            opened = await transport.OpenDeviceSeriesAsync(dossier, new OpenDeviceSeriesRequest(options.DeviceId), ct).ConfigureAwait(false);
+        }
+        catch (SyncRefusedException refused) when (refused.Reason == SyncFailure.Forbidden)
+        {
+            // L'utilisateur ne valide pas de factures : pas de série, la synchronisation reste réussie.
+            return;
+        }
+
+        foreach (DeviceSeriesResponse series in opened.Series)
+        {
+            await replica.SaveDeviceSeriesAsync(new DeviceSeries(series.BaseSeries, series.SeriesCode, series.Prefix, options.DeviceId, series.Next), ct).ConfigureAwait(false);
+        }
+    }
+
     private static SyncSummary Summarize(IReadOnlyList<SyncOutboxItem> pending) => new(
         Creations: pending.Count(i => i.Intent is CreateCustomerIntent or CreateSupplierIntent or CreateCatalogItemIntent),
-        Changes: pending.Count(i => i.Intent is not (CreateCustomerIntent or CreateSupplierIntent or CreateCatalogItemIntent)),
-        EstimatedBytes: pending.Sum(i => (long)Encoding.UTF8.GetByteCount(JsonSerializer.Serialize(i.Intent, ContractsJsonContext.Default.SyncIntent))));
+        Changes: pending.Count(i => i.Intent is not (CreateCustomerIntent or CreateSupplierIntent or CreateCatalogItemIntent or ValidatedInvoiceFact)),
+        EstimatedBytes: pending.Sum(i => (long)Encoding.UTF8.GetByteCount(JsonSerializer.Serialize(i.Intent, ContractsJsonContext.Default.SyncIntent))),
+        Validations: pending.Count(i => i.Intent is ValidatedInvoiceFact));
 
     public void Dispose() => _gate.Dispose();
 

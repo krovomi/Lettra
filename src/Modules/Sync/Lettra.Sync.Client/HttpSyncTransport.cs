@@ -40,6 +40,18 @@ public sealed class HttpSyncTransport(HttpClient http) : ISyncTransport
         return (await response.Content.ReadFromJsonAsync(ContractsJsonContext.Default.SyncChangesResponse, cancellationToken).ConfigureAwait(false))!;
     }
 
+    public async Task<OpenDeviceSeriesResponse> OpenDeviceSeriesAsync(Guid dossierId, OpenDeviceSeriesRequest request, CancellationToken cancellationToken)
+    {
+        using HttpRequestMessage message = new(HttpMethod.Post, new Uri(SyncHttp.DeviceSeriesPath, UriKind.Relative))
+        {
+            Content = JsonContent.Create(request, ContractsJsonContext.Default.OpenDeviceSeriesRequest),
+        };
+        message.Headers.Add(LettraHeaders.Dossier, dossierId.ToString());
+        using HttpResponseMessage response = await http.SendAsync(message, cancellationToken).ConfigureAwait(false);
+        Ensure(response);
+        return (await response.Content.ReadFromJsonAsync(ContractsJsonContext.Default.OpenDeviceSeriesResponse, cancellationToken).ConfigureAwait(false))!;
+    }
+
     private static void Ensure(HttpResponseMessage response)
     {
         switch (response.StatusCode)

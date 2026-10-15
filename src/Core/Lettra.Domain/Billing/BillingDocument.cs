@@ -130,6 +130,16 @@ public abstract class BillingDocument<TId> : AggregateRoot<TId>, IVersioned
         Version = 1;
     }
 
+    /// <summary>Auteurs et dates d'une pièce reconstruite telle qu'elle a été figée ailleurs ; version initiale.</summary>
+    protected void Replicated(Guid createdBy, DateTimeOffset createdAt, Guid lastModifiedBy, DateTimeOffset updatedAt)
+    {
+        CreatedBy = createdBy;
+        LastModifiedBy = lastModifiedBy;
+        CreatedAt = createdAt;
+        UpdatedAt = updatedAt;
+        Version = 1;
+    }
+
     protected void Touch(Guid userId, DateTimeOffset now)
     {
         LastModifiedBy = userId;

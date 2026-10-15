@@ -203,4 +203,5 @@
   <data name="Quotes.List" xml:space="preserve"><value>Quote list</value></data>
   <data name="Quotes.New" xml:space="preserve"><value>New quote</value></data>
   <data name="Quotes.Empty" xml:space="preserve"><value>No quotes yet.</value></data>
+  <data name="Error.Billing.ReplicaMismatch" xml:space="preserve"><value>This document validated on a device does not match its content: it is not accepted.</value></data>
 </root>

@@ -60,7 +60,9 @@ internal abstract class DossierNode : IAsyncDisposable
         services.AddSingleton<ISecretStore>(new Secrets($"Data Source={file};Pooling=False"));
         services.AddSingleton<ICurrentUser>(new User());
         services.AddSingleton<IPermissionService>(Permissions);
-        services.AddSingleton<IKekStore>(new InMemoryKekStore());
+        InMemoryKekStore keks = new();
+        _ = keks.GetOrCreateAsync(descriptor.OrganisationId, default).AsTask().Result;
+        services.AddSingleton<IKekStore>(keks);
         services.AddSingleton<IRequestedDossierSource>(new FixedDossier(dossier));
         configure(services);
         _root = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
@@ -170,6 +172,21 @@ internal sealed class InMemoryTransport(ServerNode server) : ISyncTransport
         return RoundTrip(result.Value, ContractsJsonContext.Default.SyncChangesResponse);
     }
 
+    public int SeriesRequests { get; private set; }
+
+    public async Task<OpenDeviceSeriesResponse> OpenDeviceSeriesAsync(Guid dossierId, OpenDeviceSeriesRequest request, CancellationToken cancellationToken)
+    {
+        SeriesRequests++;
+        OpenDeviceSeriesRequest received = RoundTrip(request, ContractsJsonContext.Default.OpenDeviceSeriesRequest);
+        Result<OpenDeviceSeriesResponse> result = await server.RunAsync(sp => sp.GetRequiredService<SyncServer>().OpenDeviceSeriesAsync(received, cancellationToken));
+        if (result.IsFailure)
+        {
+            throw new SyncRefusedException(SyncFailure.Forbidden);
+        }
+
+        return RoundTrip(result.Value, ContractsJsonContext.Default.OpenDeviceSeriesResponse);
+    }
+
     private void Lose(Cut step)
     {
         if (CutNext == step)
@@ -247,6 +264,7 @@ internal sealed class DeviceNode : DossierNode
         services.AddSingleton<INetworkProbe, TestProbe>();
         services.AddSingleton<ISyncPreferences, TestPreference>();
         services.AddSingleton<ISyncTransport>(transport);
+        services.AddSyncDevice();
         services.AddSyncClient(o =>
         {
             o.DeviceId = Guid.CreateVersion7();

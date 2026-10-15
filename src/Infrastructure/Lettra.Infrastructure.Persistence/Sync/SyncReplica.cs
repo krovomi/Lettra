@@ -1,9 +1,11 @@
 using Lettra.Application.Abstractions.Sync;
 using Lettra.Application.Mapping;
+using Lettra.Contracts.Billing;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Customers;
 using Lettra.Contracts.Suppliers;
 using Lettra.Contracts.Sync;
+using Lettra.Domain.Billing;
 using Lettra.Domain.Catalog;
 using Lettra.Domain.Common;
 using Lettra.Domain.Parties;
@@ -85,6 +87,28 @@ internal sealed class EfSyncOutbox(TenantDbSession session) : ISyncOutbox
 /// </summary>
 internal sealed class EfSyncReplica(TenantDbSession session, TimeProvider clock) : ISyncReplica
 {
+    public async Task<DeviceSeries?> FindDeviceSeriesAsync(string baseSeries, CancellationToken cancellationToken)
+    {
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        return await DeviceSeriesStore.FindOpenAsync(db, deviceId: null, baseSeries, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task SaveDeviceSeriesAsync(DeviceSeries series, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(series);
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        if (await db.Set<DeviceSeriesRecord>().AsNoTracking().AnyAsync(r => r.Code == series.Code, cancellationToken).ConfigureAwait(false))
+        {
+            // Le poste est en avance sur le serveur (pièces pas encore envoyées) : son compteur fait foi.
+            return;
+        }
+
+        db.ChangeTracker.Clear();
+        await DeviceSeriesStore.AddAsync(db, new DeviceSeriesRecord(series.Code, series.BaseSeries, series.DeviceId, clock.GetUtcNow()), series.Prefix, series.Next, cancellationToken)
+            .ConfigureAwait(false);
+        db.ChangeTracker.Clear();
+    }
+
     public async Task<string?> GetTokenAsync(CancellationToken cancellationToken)
     {
         LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
@@ -152,6 +176,11 @@ internal sealed class EfSyncReplica(TenantDbSession session, TimeProvider clock)
             foreach (CatalogItemResponse i in changes.CatalogItems)
             {
                 await Apply(SyncEntityKind.CatalogItem, i.Id, () => UpsertCatalogItemAsync(db, i, cancellationToken)).ConfigureAwait(false);
+            }
+
+            if (changes.CompanyProfile is { } profile)
+            {
+                await UpsertCompanyProfileAsync(db, profile, cancellationToken).ConfigureAwait(false);
             }
 
             SyncStateRecord? token = await db.Set<SyncStateRecord>().AsTracking()
@@ -277,5 +306,34 @@ internal sealed class EfSyncReplica(TenantDbSession session, TimeProvider clock)
             .ExecuteUpdateAsync(s => s.SetProperty(e => e.Version, server.Version).SetProperty(e => e.UpdatedAt, server.UpdatedAt), ct)
             .ConfigureAwait(false);
         return true;
+    }
+
+    /// <summary>La fiche entreprise du serveur fait foi sur le poste : elle ne s'y saisit pas hors ligne.</summary>
+    private async Task UpsertCompanyProfileAsync(LettraDbContext db, CompanyProfileResponse server, CancellationToken ct)
+    {
+        CompanyProfile.Draft draft = new(
+            server.Name, server.LegalForm, server.ShareCapital, server.Siren, server.Siret, server.Rcs, server.VatNumber,
+            server.AddressLine1, server.AddressLine2, server.PostalCode, server.City, server.CountryCode,
+            server.VatFranchise, server.VatOnDebits, server.PaymentDays, server.PaymentTerms, server.LatePenaltyRate,
+            server.EarlyPaymentDiscount, server.Iban, server.Bic);
+        CompanyProfile? local = await db.Set<CompanyProfile>().AsTracking().FirstOrDefaultAsync(ct).ConfigureAwait(false);
+        if (local is null)
+        {
+            Result<CompanyProfile> created = CompanyProfile.Create(draft, server.UpdatedAt);
+            if (created.IsFailure)
+            {
+                return;
+            }
+
+            db.Set<CompanyProfile>().Add(created.Value);
+        }
+        else if (local.Version == server.Version || local.Update(draft, clock.GetUtcNow()).IsFailure)
+        {
+            return;
+        }
+
+        await db.SaveChangesAsync(ct).ConfigureAwait(false);
+        await db.Set<CompanyProfile>().ExecuteUpdateAsync(s => s.SetProperty(e => e.Version, server.Version).SetProperty(e => e.UpdatedAt, server.UpdatedAt), ct)
+            .ConfigureAwait(false);
     }
 }
