@@ -29,16 +29,21 @@ for (const sub of ['vendor', 'overlays']) {
   }
 }
 
-const skillMd = fs.readFileSync(path.join(ROOT, 'vendor/paperasse/comptable/SKILL.md'), 'utf8');
-const lastUpdated = (skillMd.match(/last_updated:\s*(\d{4}-\d{2}-\d{2})/) || [])[1];
+const skills = ['comptable', 'controleur-fiscal', 'commissaire-aux-comptes'];
+const skillsLastUpdated = Object.fromEntries(skills.map(skill => {
+  const skillMd = fs.readFileSync(path.join(ROOT, 'vendor/paperasse', skill, 'SKILL.md'), 'utf8');
+  const lastUpdated = (skillMd.match(/last_updated:\s*(\d{4}-\d{2}-\d{2})/) || [])[1];
+  if (!lastUpdated) throw new Error(`last_updated absent du SKILL.md de ${skill}`);
+  return [skill, lastUpdated];
+}));
 
 const manifest = {
   source: 'https://github.com/romainsimon/paperasse',
   commit: 'f2e15c43112ddda9b80f53822185a21b6ad3b099',
   commitDate: '2026-08-10',
   license: 'MIT (c) 2026 Romain Simon ; données sous Licence Ouverte Etalab 2.0',
-  skills: ['comptable', 'controleur-fiscal', 'commissaire-aux-comptes'],
-  skillLastUpdated: lastUpdated,
+  skills,
+  skillsLastUpdated,
   reviewedOn: arg('--reviewed-on') ?? previous.reviewedOn ?? null,
   reviewedBy: arg('--reviewed-by') ?? previous.reviewedBy ?? null,
   files,
