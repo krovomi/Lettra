@@ -23,8 +23,8 @@ installer et sans connexion Internet.
 présent d'office sous Windows 11 et sur un Windows 10 à jour, suffit ; rien d'autre n'est à installer.
 
 1. **Télécharger.** Sur GitHub, ouvrez l'onglet [Actions](https://github.com/krovomi/Lettra/actions/workflows/ci.yml?query=branch%3Amain+is%3Asuccess),
-   cliquez sur l'exécution la plus récente de la branche `main` (coche verte), puis, en bas de la page, sur
-   l'artefact **`lettra-windows`**. Il faut être connecté à GitHub. Vous obtenez `lettra-windows.zip` (environ 160 Mo).
+   cliquez sur l'exécution **CI** la plus récente de la branche `main` (coche verte ; pas « Déploiement »), puis,
+   tout en bas de sa page, dans la section **Artifacts**, sur **`lettra-windows`**. Il faut être connecté à GitHub. Vous obtenez `lettra-windows.zip` (environ 160 Mo).
 2. **Débloquer** (une seule fois). Clic droit sur le fichier zip, **Propriétés**, cochez **Débloquer** en bas de
    l'onglet Général, puis **OK**. Sans cela, Windows bloque les fichiers extraits un par un.
 3. **Extraire.** Clic droit sur le zip, **Extraire tout…**, vers un dossier de votre choix (par exemple
@@ -46,11 +46,11 @@ C'est prêt. Lettra a créé un cabinet local et un premier dossier chiffré, «
 
 ## Premier usage, pas à pas
 
-Le parcours va de la fiche de l'entreprise à l'encaissement, en une quinzaine de minutes. Les noms et numéros
+Le parcours va de la fiche de l'entreprise au FEC, en une quinzaine de minutes. Les noms et numéros
 proposés sont **fictifs** et acceptés par les contrôles de Lettra ; copiez-les tels quels.
 
-Le menu, à gauche : **Devis**, **Factures**, **Avoirs**, **Clients**, **Fournisseurs**, **Catalogue**, **Alertes**,
-**Entreprise**. À tout moment, **Ctrl+K** ouvre la palette de commandes (« Nouveau devis », « Nouvelle facture »).
+Le menu, à gauche : **Devis**, **Factures**, **Avoirs**, **Clients**, **Fournisseurs**, **Catalogue**, **FEC**,
+**Alertes**, **Entreprise**. À tout moment, **Ctrl+K** ouvre la palette de commandes (« Nouveau devis », « Nouvelle facture »).
 
 ### 1. La fiche de votre entreprise
 
@@ -124,6 +124,19 @@ transmise, mais l'historique des statuts repart de zéro.
 Sur la facture émise, saisissez un **Motif de l'avoir** (*Geste commercial*), puis **Avoir**. L'avoir reprend toute
 la facture et s'ouvre en brouillon : **Valider** lui donne son numéro. Il se retrouve dans le menu **Avoirs**.
 
+### 7. Le FEC de l'exercice
+
+Menu **FEC** : l'exercice est l'année civile en cours (modifiable, 24 mois au plus).
+
+1. **Exporter le FEC** : le fichier `900000019FEC20261231.txt` (SIREN, « FEC », date de clôture) est téléchargé avec
+   les écritures de vente de la facture et de l'avoir.
+2. Le **Rapport du validateur** s'affiche : « Fichier conforme. », le nombre de lignes et d'écritures, les totaux
+   débit et crédit, égaux.
+3. **Contrôler un fichier** passe au même validateur un FEC venu d'un autre logiciel ; chaque constat indique la
+   ligne, la colonne et l'écriture concernées.
+
+Sans SIREN dans la fiche entreprise, l'export le demande au lieu de produire un fichier.
+
 ### Et ensuite
 
 - **Catalogue** : les articles et prestations, saisis au clavier dans une grille ; facultatif, une ligne de facture
@@ -140,7 +153,6 @@ la facture et s'ouvre en brouillon : **Valider** lui donne son numéro. Il se re
 
 | Fonction | État |
 |---|---|
-| Export FEC | Prêt côté serveur (`GET /api/v1/exports/fec`), **pas d'écran** dans l'application. |
 | Assistant IA | Désactivé par défaut, sans écran ; il ne valide ni n'émet jamais rien. |
 | Vraie plateforme agréée | En attente d'un partenaire ; la démo utilise la plateforme simulée. |
 | Version web et serveur du cabinet | Construites et testées, mais leur installation demande Keycloak : réservée aux développeurs (voir plus bas). |
