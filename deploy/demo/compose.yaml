@@ -53,6 +53,8 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       Lettra__DeploymentMode: LocalNetwork
       Lettra__EInvoicing__Platform: Simulated
+      # Pas de Worker dans la démonstration : l'API reprend les envois mis en file pendant une panne de la plateforme.
+      Lettra__Outbox__Job__HostedByApi: "true"
       Lettra__Identity__Oidc__Authority: http://keycloak:8080/realms/lettra
       Lettra__Identity__Oidc__RequireHttpsMetadata: "false"
       Lettra__Identity__Oidc__BffClientSecret: ${LETTRA_BFF_CLIENT_SECRET}
