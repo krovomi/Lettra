@@ -221,4 +221,39 @@ public sealed class ChainVerificationTests
     [Fact]
     public void La_premiere_entree_part_d_une_empreinte_propre_au_dossier() =>
         JournalEntry.GenesisHash(Dossier).Should().NotBe(JournalEntry.GenesisHash(new DossierId(Guid.CreateVersion7()))).And.HaveLength(64);
+
+    [Fact]
+    public void L_historique_d_une_transmission_a_la_plateforme_est_compare_au_journal()
+    {
+        Guid transmission = Guid.CreateVersion7();
+        string deposited = PlatformEventFingerprint.Compute(transmission, 0, "PA simulée", "PAS-000001", 1, 1, 200, At, null, null);
+        string collected = PlatformEventFingerprint.Compute(transmission, 1, "PA simulée", "PAS-000001", 1, 1, 212, At.AddDays(3), null, 120m);
+        List<JournalEntry> entries = Chain(1);
+        foreach ((JournalEntryKind kind, string hash, decimal amount) in new[] { (JournalEntryKind.PlatformTransmitted, deposited, 0m), (JournalEntryKind.PlatformPaymentReported, collected, 120m) })
+        {
+            Append(entries, K1, (sequence, previous) => JournalEntry.ForDocument(
+                Invoice(1) with { Kind = kind, TotalExclTax = 0m, TotalVat = 0m, TotalInclTax = amount, ContentHash = hash, RelatedDocumentId = transmission },
+                sequence, previous, At.AddMinutes(sequence)).Value);
+        }
+
+        IntegrityReport Check(IReadOnlyDictionary<Guid, IReadOnlyList<string>> stored)
+        {
+            IntegrityVerification verification = new(Dossier, [], new FakeKeys());
+            entries.ForEach(verification.Check);
+            return verification.Complete(new Dictionary<string, long> { ["FA"] = 2 }, new Dictionary<Guid, string>(), false, At.AddDays(4), stored);
+        }
+
+        Check(new Dictionary<Guid, IReadOnlyList<string>> { [transmission] = [deposited, collected] }).IsIntact.Should().BeTrue();
+        string tampered = PlatformEventFingerprint.Compute(transmission, 1, "PA simulée", "PAS-000001", 1, 1, 212, At.AddDays(3), null, 1200m);
+        IntegrityReport altered = Check(new Dictionary<Guid, IReadOnlyList<string>> { [transmission] = [deposited, tampered] });
+        altered.Findings.Should().ContainSingle().Which.Should().Be(new IntegrityFinding(IntegrityFindingKind.PlatformHistoryAltered, entries[2].Sequence));
+        altered.ChainCompromised.Should().BeTrue();
+        Check(new Dictionary<Guid, IReadOnlyList<string>> { [transmission] = [deposited] }).Findings.Select(f => f.Kind)
+            .Should().Equal(IntegrityFindingKind.PlatformHistoryAltered);
+        Check(new Dictionary<Guid, IReadOnlyList<string>> { [transmission] = [deposited, collected], [Guid.CreateVersion7()] = [deposited] })
+            .Findings.Select(f => f.Kind).Should().Equal(IntegrityFindingKind.PlatformHistoryAltered);
+        RevenueOf(entries).Should().Be(120m, "seule la facture compte dans le chiffre d'affaires");
+    }
+
+    private static decimal RevenueOf(IEnumerable<JournalEntry> entries) => entries.Sum(e => e.RevenueContribution().InclTax);
 }

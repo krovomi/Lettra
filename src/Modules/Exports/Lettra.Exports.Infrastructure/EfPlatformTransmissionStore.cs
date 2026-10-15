@@ -1,4 +1,6 @@
+using Lettra.Application.Abstractions.Integrity;
 using Lettra.Contracts.Exports;
+using Lettra.Domain.Integrity;
 using Lettra.Exports.Application.EInvoicing.Platform;
 using Lettra.Infrastructure.Persistence;
 using Lettra.Infrastructure.Persistence.EInvoicing;
@@ -38,7 +40,7 @@ internal sealed class EfPlatformTransmissionStore(TenantDbSession session) : IPl
                 (PlatformStatusDto)e.Status, DateTimeOffset.FromUnixTimeMilliseconds(e.AtMs), e.Reason, e.Amount)));
     }
 
-    public async Task SaveAsync(PlatformTransmission transmission, CancellationToken cancellationToken)
+    public async Task StageAsync(PlatformTransmission transmission, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(transmission);
         LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
@@ -82,7 +84,35 @@ internal sealed class EfPlatformTransmissionStore(TenantDbSession session) : IPl
                 Amount = status.Amount,
             });
         }
+    }
+}
 
-        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+/// <summary>
+/// L'empreinte de chaque statut de chaque transmission du dossier, recalculée depuis la base pour le contrôle
+/// d'intégrité (comparée au journal inaltérable).
+/// </summary>
+internal sealed class EfPlatformHistoryReader(TenantDbSession session) : IPlatformHistoryReader
+{
+    public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<string>>> ComputeFingerprintsAsync(CancellationToken cancellationToken)
+    {
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        List<PlatformTransmissionRecord> records = await db.Set<PlatformTransmissionRecord>()
+            .AsNoTracking()
+            .Include(r => r.Events)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return records.ToDictionary(
+            r => r.Id,
+            r => (IReadOnlyList<string>)[.. r.Events.OrderBy(e => e.Sequence).Select(e => PlatformEventFingerprint.Compute(
+                r.Id,
+                e.Sequence,
+                r.Platform,
+                r.Reference,
+                r.Channel,
+                r.Format,
+                e.Status,
+                DateTimeOffset.FromUnixTimeMilliseconds(e.AtMs),
+                e.Reason,
+                e.Amount))]);
     }
 }

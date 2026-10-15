@@ -30,11 +30,14 @@ internal static class UblWriter
                 new XElement(Cbc + "IssueDate", EInvoice.IsoDate(invoice.IssueDate)),
                 !credit && invoice.DueDate is { } due ? new XElement(Cbc + "DueDate", EInvoice.IsoDate(due)) : null,
                 new XElement(Cbc + (credit ? "CreditNoteTypeCode" : "InvoiceTypeCode"), invoice.TypeCode),
-                invoice.Notes.Select(n => new XElement(Cbc + "Note", n)),
+                // En UBL, le code sujet précède le texte : « #PMT#… » (convention EN 16931 reprise par la XP Z12-012).
+                invoice.Notes.Select(n => new XElement(Cbc + "Note", n.SubjectCode is { } code ? $"#{code}#{n.Content}" : n.Content)),
                 new XElement(Cbc + "DocumentCurrencyCode", invoice.Currency),
                 invoice.PurchaseOrderReference is { } order ? new XElement(Cac + "OrderReference", new XElement(Cbc + "ID", order)) : null,
                 invoice.PrecedingInvoiceNumber is { } preceding
-                    ? new XElement(Cac + "BillingReference", new XElement(Cac + "InvoiceDocumentReference", new XElement(Cbc + "ID", preceding)))
+                    ? new XElement(Cac + "BillingReference", new XElement(Cac + "InvoiceDocumentReference",
+                        new XElement(Cbc + "ID", preceding),
+                        invoice.PrecedingInvoiceDate is { } issued ? new XElement(Cbc + "IssueDate", EInvoice.IsoDate(issued)) : null))
                     : null,
                 new XElement(Cac + "AccountingSupplierParty", Party(invoice.Seller, invoice.OmitVatIdentifiers)),
                 new XElement(Cac + "AccountingCustomerParty", Party(invoice.Buyer, invoice.OmitVatIdentifiers)),
