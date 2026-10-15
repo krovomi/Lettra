@@ -1,4 +1,4 @@
-using System.Text.Json;
+using Lettra.Ai.Tools.Company;
 using Lettra.Application.Abstractions.Ai;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Features.Customers;
@@ -12,28 +12,26 @@ using Lettra.Domain.SharedKernel;
 namespace Lettra.Ai.Tools;
 
 /// <summary>
-/// Contexte du dossier pour l'assistant, lu par les requêtes de l'application (donc avec les droits de l'utilisateur).
+/// Contexte du dossier pour l'assistant, lu par les requêtes de l'application (donc avec les droits de l'utilisateur) :
+/// company.json virtuel construit depuis les paramètres du dossier, et identités à pseudonymiser.
 /// Clients et fournisseurs : les identités servent uniquement à la pseudonymisation : elles ne partent jamais vers le moteur.
 /// </summary>
-internal sealed class AiDossierContext(IQueryDispatcher queries) : IAiDossierContext
+internal sealed class AiDossierContext(IQueryDispatcher queries, ICompanyFactsSource company) : IAiDossierContext
 {
     /// <summary>Au-delà, les noms restants sont encore couverts par les détecteurs (SIREN, IBAN, e-mails…), pas par leur nom.</summary>
     private const int MaxPages = 10;
 
-    public Task<string> GetCompanyJsonAsync(DossierId dossier, CancellationToken cancellationToken)
+    public async Task<string> GetCompanyJsonAsync(DossierId dossier, CancellationToken cancellationToken)
     {
-        // Les paramètres de l'entreprise du dossier (forme, régime de TVA, exercice) arrivent avec la base Catalog
-        // et le module Dossier ; d'ici là, l'assistant le sait et demande ce qui lui manque.
-        string json = JsonSerializer.Serialize(new Dictionary<string, string>(StringComparer.Ordinal)
-        {
-            ["_note"] = "Paramètres de l'entreprise non encore renseignés dans Lettra : demander à l'utilisateur ce qui manque.",
-        }, AiToolResult.JsonOptions);
-        return Task.FromResult(json);
+        CompanyFacts? facts = await company.GetAsync(dossier, cancellationToken).ConfigureAwait(false);
+        return CompanyJsonBuilder.Build(facts).ToJsonString(AiToolResult.JsonOptions);
     }
 
     public async Task<IReadOnlyList<KnownIdentity>> GetKnownIdentitiesAsync(DossierId dossier, CancellationToken cancellationToken)
     {
-        List<KnownIdentity> identities = [];
+        // L'entreprise du dossier d'abord : son nom, son adresse et ses identifiants figurent dans company.json.
+        CompanyFacts? facts = await company.GetAsync(dossier, cancellationToken).ConfigureAwait(false);
+        List<KnownIdentity> identities = [.. facts?.Identities() ?? []];
         await CollectAsync(
             page => new ListCustomersQuery(dossier, page, ListCustomersQuery.MaxPageSize),
             ListCustomersQuery.MaxPageSize,

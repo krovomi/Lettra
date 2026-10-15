@@ -48,4 +48,6 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(AskAssistantRequest))]
 [JsonSerializable(typeof(AssistantEvent))]
 [JsonSerializable(typeof(IReadOnlyList<AssistantJournalEntry>))]
+[JsonSerializable(typeof(SaveAiSettingsRequest))]
+[JsonSerializable(typeof(AiSettingsResponse))]
 public sealed partial class ContractsJsonContext : JsonSerializerContext;
