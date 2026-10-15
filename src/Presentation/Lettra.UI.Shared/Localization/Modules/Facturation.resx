@@ -189,6 +189,9 @@
   <data name="Invoice.CreditNoteHint" xml:space="preserve"><value>Indiquez le motif puis créez l'avoir.</value></data>
   <data name="Invoice.Validated" xml:space="preserve"><value>Facture validée sous le numéro {0}.</value></data>
   <data name="Invoice.IssuedDone" xml:space="preserve"><value>Pièce {0} marquée émise.</value></data>
+  <data name="Invoice.Command.ApproveCredit" xml:space="preserve"><value>Approuver l'avoir</value></data>
+  <data name="Invoice.CreditApproved" xml:space="preserve"><value>Avoir approuvé par un manager le {0}.</value></data>
+  <data name="Invoice.CreditApprovedDone" xml:space="preserve"><value>Avoir approuvé : il peut maintenant être validé.</value></data>
   <data name="Invoices.Title" xml:space="preserve"><value>Factures</value></data>
   <data name="Invoices.TitleCreditNotes" xml:space="preserve"><value>Avoirs</value></data>
   <data name="Invoices.TitleDownPayments" xml:space="preserve"><value>Factures d'acompte</value></data>

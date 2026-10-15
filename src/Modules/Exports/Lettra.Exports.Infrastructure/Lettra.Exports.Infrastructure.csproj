@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Adapters du module Exports : lecture du journal des ventes dans la base du dossier, dépôt des fichiers sur
+       disque et export en masse par le Worker (une passe sur tous les dossiers actifs, avec reprise). -->
+  <ItemGroup>
+    <ProjectReference Include="..\Lettra.Exports.Application\Lettra.Exports.Application.csproj" />
+    <ProjectReference Include="..\..\..\Infrastructure\Lettra.Infrastructure.Persistence\Lettra.Infrastructure.Persistence.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lettra.Exports.Tests" />
+    <InternalsVisibleTo Include="Lettra.Persistence.Tests" />
+  </ItemGroup>
+
+</Project>

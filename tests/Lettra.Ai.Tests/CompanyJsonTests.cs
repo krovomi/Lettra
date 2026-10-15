@@ -4,7 +4,9 @@ using Lettra.Ai.Tools;
 using Lettra.Ai.Tools.Company;
 using Lettra.Application.Abstractions.Ai;
 using Lettra.Application.Abstractions.Messaging;
+using Lettra.Application.Features.Billing;
 using Lettra.Application.Features.Customers;
+using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
 using Lettra.Contracts.Suppliers;
@@ -115,6 +117,48 @@ public sealed class CompanyJsonTests
 
         sent.Should().Contain("reel_normal").And.Contain("net_30", because: "les choix fiscaux et les délais restent lisibles");
         privacy.Restore(sent).Should().Contain("WebCraft");
+    }
+
+    [Fact]
+    public async Task La_fiche_entreprise_du_dossier_remplit_le_company_json_avec_les_series_de_numerotation()
+    {
+        CompanyProfileResponse profile = new(
+            3, "WebCraft", "SAS", 1000m, "912345678", "91234567800014", "RCS Lyon", "FR40912345678",
+            "12 rue du Commerce", null, "69003", "Lyon", "FR", VatFranchise: false, VatOnDebits: true, PaymentDays: 45,
+            PaymentTerms: null, LatePenaltyRate: null, EarlyPaymentDiscount: null, "FR7630006000011234567890189", "AGRIFRPP",
+            DateTimeOffset.UnixEpoch);
+        DossierCompanyFacts source = new(new ProfileQueries(Result<CompanyProfileResponse>.Success(profile)));
+
+        CompanyFacts? facts = await source.GetAsync(AssistantHarness.Dossier, CancellationToken.None);
+        JsonObject json = CompanyJsonBuilder.Build(facts);
+
+        json["name"]!.GetValue<string>().Should().Be("WebCraft");
+        json["address"]!.GetValue<string>().Should().Be("12 rue du Commerce, 69003 Lyon");
+        json["payment"]!["default_terms"]!.GetValue<string>().Should().Be("net_45");
+        json["invoicing"]!["prefix"]!.GetValue<string>().Should().Be("FAC");
+        json["invoicing"]!["avoir_prefix"]!.GetValue<string>().Should().Be("FAC", because: "les avoirs suivent la série des factures");
+        json["invoicing"]!["devis_prefix"]!.GetValue<string>().Should().Be("DEV");
+        json["_a_completer"]!.AsArray().Select(n => n!.GetValue<string>()).Should().Equal(
+            ["tax.regime_tva"], because: "la fiche ne porte pas encore le régime de TVA : le moteur le demande");
+    }
+
+    [Theory]
+    [InlineData(ErrorKind.NotFound)]
+    [InlineData(ErrorKind.Forbidden)]
+    public async Task Sans_fiche_lisible_rien_n_est_renseigne(ErrorKind kind)
+    {
+        DossierCompanyFacts source = new(new ProfileQueries(Result<CompanyProfileResponse>.Failure(new Error("x", kind))));
+
+        (await source.GetAsync(AssistantHarness.Dossier, CancellationToken.None)).Should().BeNull();
+    }
+
+    private sealed class ProfileQueries(Result<CompanyProfileResponse> result) : IQueryDispatcher
+    {
+        public Task<TResult> QueryAsync<TResult>(IQuery<TResult> query, CancellationToken cancellationToken)
+        {
+            query.Should().BeOfType<GetCompanyProfileQuery>().Which.Dossier.Should().Be(AssistantHarness.Dossier);
+            return Task.FromResult((TResult)(object)result);
+        }
     }
 
     private sealed class FixedFacts(CompanyFacts facts) : ICompanyFactsSource

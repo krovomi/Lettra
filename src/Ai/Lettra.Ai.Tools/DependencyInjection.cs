@@ -11,7 +11,7 @@ public static class DependencyInjection
     public static IServiceCollection AddAiTools(this IServiceCollection services)
     {
         services.AddScoped<IAiDossierContext, AiDossierContext>();
-        services.AddScoped<ICompanyFactsSource, NoCompanyFacts>();
+        services.AddScoped<ICompanyFactsSource, DossierCompanyFacts>();
         services.AddSingleton<IAiTool, ReadReferenceTool>();
         services.AddSingleton<IAiTool, ListReferencesTool>();
         services.AddSingleton<IAiTool, CalculateTool>();

@@ -61,6 +61,7 @@ api.MapBilling();
 api.MapDirectory();
 api.MapAssistant();
 api.MapIntegrity();
+api.MapExports();
 api.MapDossierAlerts();
 api.MapSync();
 

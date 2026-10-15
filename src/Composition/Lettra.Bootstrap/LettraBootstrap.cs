@@ -1,5 +1,6 @@
 using Lettra.Application;
 using Lettra.Application.Abstractions.Tenancy;
+using Lettra.Exports.Infrastructure;
 using Lettra.Infrastructure.Catalog;
 using Lettra.Infrastructure.External;
 using Lettra.Infrastructure.Identity.Local;
@@ -49,6 +50,7 @@ public static class LettraBootstrap
         services.AddExternalServices(configuration);
         services.AddLettraObservability(configuration, mode);
         services.AddLettraAi(configuration);
+        services.AddExports();
 
         return mode switch
         {

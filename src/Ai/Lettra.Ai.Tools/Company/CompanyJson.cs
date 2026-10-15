@@ -117,10 +117,7 @@ internal interface ICompanyFactsSource
     Task<CompanyFacts?> GetAsync(DossierId dossier, CancellationToken cancellationToken);
 }
 
-/// <summary>
-/// Tant que la fiche entreprise du dossier (phase 3, module Facturation) n'est pas fusionnée, rien n'est renseigné :
-/// l'assistant le sait et demande ce qui lui manque.
-/// </summary>
+/// <summary>Aucun paramètre renseigné : l'assistant le sait et demande ce qui lui manque (tests, hôtes sans module Facturation).</summary>
 internal sealed class NoCompanyFacts : ICompanyFactsSource
 {
     public Task<CompanyFacts?> GetAsync(DossierId dossier, CancellationToken cancellationToken) => Task.FromResult<CompanyFacts?>(null);

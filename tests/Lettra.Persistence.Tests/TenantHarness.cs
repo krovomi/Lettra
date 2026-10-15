@@ -3,6 +3,7 @@ using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Domain.SharedKernel;
+using Lettra.Exports.Infrastructure;
 using Lettra.Infrastructure.Persistence;
 using Lettra.Infrastructure.Persistence.Security;
 using Lettra.Infrastructure.Persistence.Sync;
@@ -33,6 +34,7 @@ internal sealed class TenantHarness : IAsyncDisposable
 
         services.AddApplication();
         services.AddPersistenceCore();
+        services.AddExports();
         services.AddSingleton(configurator);
         services.AddSingleton<ITenantCatalog>(new Catalog(_dossiers));
         services.AddSingleton<ISecretStore>(new Secrets(_dossiers));

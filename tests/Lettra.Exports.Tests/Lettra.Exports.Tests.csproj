@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Module Exports : FEC (golden file, validateur), formats de facture. Les scénarios sur les trois bases sont dans
+       Lettra.Persistence.Tests. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Modules\Exports\Lettra.Exports.Infrastructure\Lettra.Exports.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Golden\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

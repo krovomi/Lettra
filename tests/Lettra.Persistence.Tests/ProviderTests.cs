@@ -92,6 +92,20 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Fec_des_pieces_validees()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await ExportScenarios.FecOfValidatedInvoicesAsync(harness, DatabaseProvider.Sqlite, Database("fec"));
+    }
+
+    [Fact]
+    public async Task Export_fec_en_masse_avec_reprise()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await ExportScenarios.BulkExportAsync(harness, DatabaseProvider.Sqlite, Database("fec-a"), Database("fec-b"));
+    }
+
+    [Fact]
     public async Task Validations_concurrentes_sans_trou_ni_doublon()
     {
         await using TenantHarness harness = new(new SqliteConfigurator());
@@ -352,6 +366,22 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     }
 
     [SkippableFact]
+    public async Task Fec_des_pieces_validees()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new PostgreSqlConfigurator());
+        await ExportScenarios.FecOfValidatedInvoicesAsync(harness, DatabaseProvider.PostgreSql, Database("fec"));
+    }
+
+    [SkippableFact]
+    public async Task Export_fec_en_masse_avec_reprise()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new PostgreSqlConfigurator());
+        await ExportScenarios.BulkExportAsync(harness, DatabaseProvider.PostgreSql, Database("fec_a"), Database("fec_b"));
+    }
+
+    [SkippableFact]
     public async Task Validations_concurrentes_sans_trou_ni_doublon()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
@@ -564,6 +594,22 @@ public sealed class SqlServerTests : IAsyncLifetime
         Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new SqlServerConfigurator());
         await BillingPersistenceScenarios.LifecycleAsync(harness, DatabaseProvider.SqlServer, Database("devis"));
+    }
+
+    [SkippableFact]
+    public async Task Fec_des_pieces_validees()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new SqlServerConfigurator());
+        await ExportScenarios.FecOfValidatedInvoicesAsync(harness, DatabaseProvider.SqlServer, Database("fec"));
+    }
+
+    [SkippableFact]
+    public async Task Export_fec_en_masse_avec_reprise()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new SqlServerConfigurator());
+        await ExportScenarios.BulkExportAsync(harness, DatabaseProvider.SqlServer, Database("fec_a"), Database("fec_b"));
     }
 
     [SkippableFact]

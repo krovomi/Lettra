@@ -164,6 +164,9 @@ internal sealed class InProcessInvoicesGateway(IServiceScopeFactory scopes) : II
                 sp, new CreateCreditNoteCommand(dossier, new InvoiceId(id), request), credit => new GetInvoiceQuery(dossier, credit), ct),
             cancellationToken);
 
+    public Task<OperationResult<InvoiceResponse>> ApproveCreditAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken) =>
+        Lifecycle(id, (dossier, invoice) => new ApproveCreditNoteCommand(dossier, invoice, expectedVersion), cancellationToken);
+
     private Task<OperationResult<InvoiceResponse>> Lifecycle(Guid id, Func<DossierId, InvoiceId, ICommand<Result>> command, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(
             scopes,

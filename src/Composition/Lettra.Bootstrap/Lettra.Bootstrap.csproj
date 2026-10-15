@@ -17,6 +17,7 @@
     <ProjectReference Include="..\..\Ai\Lettra.Ai.Orchestration\Lettra.Ai.Orchestration.csproj" />
     <ProjectReference Include="..\..\Ai\Lettra.Ai.Claude\Lettra.Ai.Claude.csproj" />
     <ProjectReference Include="..\..\Ai\Lettra.Ai.Local\Lettra.Ai.Local.csproj" />
+    <ProjectReference Include="..\..\Modules\Exports\Lettra.Exports.Infrastructure\Lettra.Exports.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Supervision\Lettra.Supervision.Infrastructure\Lettra.Supervision.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Sync\Lettra.Sync.Server\Lettra.Sync.Server.csproj" />
   </ItemGroup>
