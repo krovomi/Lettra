@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="ChoiceList.Filter" xml:space="preserve"><value>Filter the list</value></data>
+  <data name="ChoiceList.Hint" xml:space="preserve"><value>↑ ↓ to choose · Enter to confirm · Esc to cancel · {0} result(s)</value></data>
+  <data name="Error.Address.CityRequired" xml:space="preserve"><value>The city is required.</value></data>
+  <data name="Error.Address.LineRequired" xml:space="preserve"><value>The address is required.</value></data>
+  <data name="Error.Address.PostalCodeInvalid" xml:space="preserve"><value>This postal code is not valid (5 digits in France).</value></data>
+  <data name="Error.Api.IdempotencyKeyReused" xml:space="preserve"><value>This operation was already sent with different content.</value></data>
+  <data name="Error.Api.Unexpected" xml:space="preserve"><value>An unexpected error occurred. Please try again.</value></data>
+  <data name="Error.Api.Unreachable" xml:space="preserve"><value>The server cannot be reached. Check the connection.</value></data>
+  <data name="Error.CountryCode.Invalid" xml:space="preserve"><value>Enter a 2-letter country code (FR, BE…).</value></data>
+  <data name="Error.Email.Invalid" xml:space="preserve"><value>This email address is not valid.</value></data>
+  <data name="Error.Iban.Invalid" xml:space="preserve"><value>This IBAN is not valid (check the country, length and check digits).</value></data>
+  <data name="Error.Money.CurrencyMismatch" xml:space="preserve"><value>The amounts are in different currencies.</value></data>
+  <data name="Error.Siren.Invalid" xml:space="preserve"><value>The SIREN must have 9 digits and a valid check digit.</value></data>
+  <data name="Error.Siret.Invalid" xml:space="preserve"><value>The SIRET must have 14 digits and a valid check digit.</value></data>
+  <data name="Error.Validation.Invalid" xml:space="preserve"><value>This value is not valid.</value></data>
+  <data name="Error.Validation.Required" xml:space="preserve"><value>This field is required.</value></data>
+  <data name="Error.Validation.TooLong" xml:space="preserve"><value>This text is too long.</value></data>
+  <data name="Error.VatNumber.Invalid" xml:space="preserve"><value>This EU VAT number is not valid.</value></data>
+  <data name="Error.VatRate.Unknown" xml:space="preserve"><value>This VAT rate is not recognised.</value></data>
+  <data name="Grid.CellLabel" xml:space="preserve"><value>{0}, row {1}</value></data>
+  <data name="Grid.DefaultLabel" xml:space="preserve"><value>Data entry grid</value></data>
+  <data name="Keyboard.FunctionKeys" xml:space="preserve"><value>Function keys</value></data>
+  <data name="Loading" xml:space="preserve"><value>Loading…</value></data>
+  <data name="Nav.Alerts" xml:space="preserve"><value>Alerts</value></data>
+  <data name="Nav.Catalog" xml:space="preserve"><value>Catalogue</value></data>
+  <data name="Nav.Customers" xml:space="preserve"><value>Customers</value></data>
+  <data name="Nav.Label" xml:space="preserve"><value>Main navigation</value></data>
+  <data name="Nav.Suppliers" xml:space="preserve"><value>Suppliers</value></data>
+  <data name="NotFound" xml:space="preserve"><value>This page does not exist.</value></data>
+  <data name="Nav.Quotes" xml:space="preserve"><value>Quotes</value></data>
+  <data name="Nav.Invoices" xml:space="preserve"><value>Invoices</value></data>
+  <data name="Nav.CreditNotes" xml:space="preserve"><value>Credit notes</value></data>
+  <data name="Command.Density" xml:space="preserve"><value>Switch density</value></data>
+  <data name="Palette.Title" xml:space="preserve"><value>Command palette</value></data>
+  <data name="Palette.Open" xml:space="preserve"><value>Commands</value></data>
+  <data name="Palette.Placeholder" xml:space="preserve"><value>Search an action, a screen, a document, a customer…</value></data>
+  <data name="Palette.NoResult" xml:space="preserve"><value>No results.</value></data>
+  <data name="Palette.Group.Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Palette.Group.Screens" xml:space="preserve"><value>Screens</value></data>
+  <data name="Palette.Group.Page" xml:space="preserve"><value>This page</value></data>
+  <data name="Palette.Group.Customers" xml:space="preserve"><value>Customers</value></data>
+  <data name="Palette.Group.Documents" xml:space="preserve"><value>Documents</value></data>
+  <data name="Palette.NewQuote" xml:space="preserve"><value>New quote</value></data>
+  <data name="Palette.NewInvoice" xml:space="preserve"><value>New invoice</value></data>
+  <data name="Palette.NewQuoteFor" xml:space="preserve"><value>New quote for {0}</value></data>
+  <data name="Palette.NewInvoiceFor" xml:space="preserve"><value>New invoice for {0}</value></data>
+  <data name="Palette.OpenQuote" xml:space="preserve"><value>Quote {0} · {1}</value></data>
+  <data name="Palette.OpenInvoice" xml:space="preserve"><value>Invoice {0} · {1}</value></data>
+  <data name="Palette.OpenDownPayment" xml:space="preserve"><value>Down payment invoice {0} · {1}</value></data>
+  <data name="Palette.OpenCreditNote" xml:space="preserve"><value>Credit note {0} · {1}</value></data>
+  <data name="Palette.CreditNoteOn" xml:space="preserve"><value>Credit note on {0} · {1}</value></data>
+  <data name="Palette.ToggleDensity" xml:space="preserve"><value>Switch between Comfort and Expert density</value></data>
+  <data name="Nav.Company" xml:space="preserve"><value>Company</value></data>
+</root>

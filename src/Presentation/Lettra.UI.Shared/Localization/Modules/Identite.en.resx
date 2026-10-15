@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Error.Security.Forbidden" xml:space="preserve"><value>You do not have permission for this action in this file.</value></data>
+  <data name="Error.Security.Unauthenticated" xml:space="preserve"><value>Your session has expired, please sign in again.</value></data>
+  <data name="Error.Rights.NotSupported" xml:space="preserve"><value>Rights administration is not available on this device.</value></data>
+  <data name="Error.Rights.UserNotFound" xml:space="preserve"><value>This user could not be found in the firm.</value></data>
+  <data name="Error.Rights.GroupNotFound" xml:space="preserve"><value>This group could not be found in the firm.</value></data>
+  <data name="Error.Rights.GroupNameRequired" xml:space="preserve"><value>The group name is required.</value></data>
+  <data name="Error.Rights.GroupNameTooLong" xml:space="preserve"><value>The group name is too long.</value></data>
+  <data name="Error.Rights.SubjectNotFound" xml:space="preserve"><value>The user or group could not be found in the firm.</value></data>
+  <data name="Error.Rights.RoleUnknown" xml:space="preserve"><value>This role does not exist.</value></data>
+  <data name="Error.Rights.ScopeNotFound" xml:space="preserve"><value>The selected scope could not be found in the firm.</value></data>
+  <data name="Error.Rights.ScopeTooWide" xml:space="preserve"><value>This role cannot be assigned on such a wide scope.</value></data>
+  <data name="Error.Rights.ExpiryRequired" xml:space="preserve"><value>This role requires an expiry date.</value></data>
+  <data name="Error.Rights.ExpiryInPast" xml:space="preserve"><value>The expiry date has already passed.</value></data>
+  <data name="Error.Rights.AssignmentNotFound" xml:space="preserve"><value>This assignment could not be found in the firm.</value></data>
+  <data name="Error.Rights.StateInvalid" xml:space="preserve"><value>This account state is not valid.</value></data>
+  <data name="Session.Title" xml:space="preserve"><value>Session</value></data>
+  <data name="Session.SignedInAs" xml:space="preserve"><value>Signed in as {0}.</value></data>
+  <data name="Session.Continue" xml:space="preserve"><value>Continue</value></data>
+  <data name="Session.SignInIntro" xml:space="preserve"><value>Sign in with your firm account. You will be asked for a second factor.</value></data>
+  <data name="Session.SignIn" xml:space="preserve"><value>Sign in</value></data>
+  <data name="Session.SignInFailed" xml:space="preserve"><value>Sign-in did not complete. Please try again.</value></data>
+  <data name="Session.Create.Title" xml:space="preserve"><value>Create this computer's account</value></data>
+  <data name="Session.Create.Intro" xml:space="preserve"><value>This computer works without a server. Choose a passphrase of at least 12 characters: it protects your files and cannot be recovered.</value></data>
+  <data name="Session.Create.Submit" xml:space="preserve"><value>Create account</value></data>
+  <data name="Session.Unlock.Title" xml:space="preserve"><value>Unlock this computer</value></data>
+  <data name="Session.Unlock.Submit" xml:space="preserve"><value>Unlock</value></data>
+  <data name="Session.Field.DisplayName" xml:space="preserve"><value>Your name</value></data>
+  <data name="Session.Field.Passphrase" xml:space="preserve"><value>Passphrase</value></data>
+  <data name="Session.Field.Confirmation" xml:space="preserve"><value>Confirm the passphrase</value></data>
+  <data name="Session.SignOut" xml:space="preserve"><value>Sign out</value></data>
+  <data name="Session.Lock" xml:space="preserve"><value>Lock</value></data>
+  <data name="Error.Security.MfaRequired" xml:space="preserve"><value>A second authentication factor is required. Please sign in again.</value></data>
+  <data name="Error.Security.CsrfHeaderMissing" xml:space="preserve"><value>Request blocked for security reasons. Reload the page.</value></data>
+  <data name="Error.LocalAccount.AlreadyExists" xml:space="preserve"><value>This computer's account already exists.</value></data>
+  <data name="Error.LocalAccount.NotFound" xml:space="preserve"><value>No account has been created on this computer yet.</value></data>
+  <data name="Error.LocalAccount.InvalidPassphrase" xml:space="preserve"><value>Incorrect passphrase.</value></data>
+  <data name="Error.LocalAccount.LockedOut" xml:space="preserve"><value>Too many attempts. This computer is locked for a few minutes.</value></data>
+  <data name="Error.LocalAccount.PassphraseTooShort" xml:space="preserve"><value>The passphrase must be at least 12 characters long.</value></data>
+  <data name="Error.LocalAccount.PassphraseMismatch" xml:space="preserve"><value>The two passphrases do not match.</value></data>
+  <data name="Error.LocalAccount.NotSupported" xml:space="preserve"><value>This action is only available on a standalone computer.</value></data>
+  <data name="Error.RightsSnapshot.DeviceRequired" xml:space="preserve"><value>This device has no identifier: restart the application.</value></data>
+  <data name="Error.RightsSnapshot.TooManyDossiers" xml:space="preserve"><value>Too many client files on this device for a single rights snapshot.</value></data>
+  <data name="Error.RightsSnapshot.Unavailable" xml:space="preserve"><value>Offline work is not available on this server (no signing key).</value></data>
+  <data name="Error.RightsSnapshot.Invalid" xml:space="preserve"><value>This device's offline rights are invalid: reconnect to the network.</value></data>
+  <data name="Error.RightsSnapshot.Expired" xml:space="preserve"><value>This device's offline rights have expired: reconnect to the network to renew them.</value></data>
+  <data name="Error.RightsSnapshot.OtherDevice" xml:space="preserve"><value>These offline rights belong to another device.</value></data>
+  <data name="Session.SigningIn" xml:space="preserve"><value>Signing in: finish in the browser window that has just opened.</value></data>
+  <data name="Session.SigningOut" xml:space="preserve"><value>Signing out…</value></data>
+</root>
