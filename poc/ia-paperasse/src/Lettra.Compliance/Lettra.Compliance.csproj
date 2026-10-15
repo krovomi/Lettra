@@ -10,4 +10,9 @@
                       LogicalName="Lettra.Compliance.mentions-obligatoires.json" />
   </ItemGroup>
 
+  <!-- Règle d'arrondi et totaux : la même assemblée que le produit, pas une copie. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\src\Core\Lettra.Calculations\Lettra.Calculations.csproj" />
+  </ItemGroup>
+
 </Project>
