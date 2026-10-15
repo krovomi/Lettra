@@ -56,7 +56,8 @@
       valuesObject:
         cell: {{ $v.cell }}
 ---
-# Vague 1 : la cellule (API, Worker, clusters PostgreSQL et PgBouncer), à sa taille.
+# Vague 1 : la cellule (API, Worker, Keycloak et sa base, clusters PostgreSQL et PgBouncer), à sa taille.
+# Le realm de Keycloak vient du même commit (deploy/keycloak/realm-lettra.json, lié dans le chart lettra-keycloak).
 {{ include "racine.app" (dict "root" . "name" "cellule" "namespace" $ns.lettra "wave" 1) }}
   source:
     repoURL: {{ $v.repoURL }}
@@ -70,3 +71,4 @@
         cell: {{ $v.cell }}
         lettra-api: { cell: {{ $v.cell }}, image: { tag: {{ $v.imageTag | quote }} } }
         lettra-worker: { cell: {{ $v.cell }}, image: { tag: {{ $v.imageTag | quote }} } }
+        lettra-keycloak: { cell: {{ $v.cell }}, image: { tag: {{ $v.keycloakVersion | quote }} } }

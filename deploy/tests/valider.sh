@@ -43,6 +43,35 @@ for size in S M L XL; do
   helm template c lettra-cell -f lettra-cell/values-taille-$size.yaml --set lettra-api.image.tag=ci --set lettra-worker.image.tag=ci | kubeconform_ -
 done
 helm template pr lettra-cell -f lettra-cell/values-pr.yaml --set lettra-api.image.tag=ci | kubeconform_ -
+helm template c lettra-cell -f ../tests/kind/valeurs-ci.yaml | kubeconform_ -
+
+step "Keycloak de la cellule (lettra-keycloak)"
+KC_REQUIS=(--set hostname=https://auth.example.test --set publicUrl=https://app.example.test)
+helm lint lettra-keycloak "${KC_REQUIS[@]}" --quiet
+helm template k lettra-keycloak "${KC_REQUIS[@]}" | kubeconform_ -
+helm template k lettra-keycloak "${KC_REQUIS[@]}" --set database.cnpg.enabled=false \
+  --set database.host=pg.example.test --set database.existingSecret=keycloak-base | kubeconform_ -
+# Le realm importé est exactement le realm versionné (lien files/realm-lettra.json → deploy/keycloak/).
+helm template k lettra-keycloak "${KC_REQUIS[@]}" --show-only templates/realm.yaml \
+  | sed -n '/realm-lettra.json: |/,$p' | tail -n +2 \
+  | python3 -c 'import json, sys; sys.exit(json.load(sys.stdin) != json.load(open(sys.argv[1])))' "$ROOT/deploy/keycloak/realm-lettra.json" \
+  || { echo "le ConfigMap du realm diffère de deploy/keycloak/realm-lettra.json" >&2; exit 1; }
+echo "   realm importé = deploy/keycloak/realm-lettra.json"
+# Recette : l'API vérifie les jetons auprès du Keycloak de la cellule ; l'émetteur reste l'adresse publique.
+recette=$(helm template c lettra-cell -f lettra-cell/values-taille-S.yaml -f ../cells/recette/values.yaml \
+  --set lettra-api.image.tag=ci --set lettra-worker.image.tag=ci)
+kubeconform_ - <<<"$recette"
+grep -q 'name: Lettra__Identity__Oidc__Authority, value: "http://keycloak:8080/realms/lettra"' <<<"$recette" \
+  || { echo "recette : l'API ne pointe pas sur le Keycloak de la cellule" >&2; exit 1; }
+grep -q 'name: KC_HOSTNAME, value: "https://auth.recette.lettra.fr"' <<<"$recette" \
+  || { echo "recette : adresse publique de Keycloak absente" >&2; exit 1; }
+echo "   recette : API → http://keycloak:8080/realms/lettra, émetteur https://auth.recette.lettra.fr"
+for manque in hostname publicUrl existingSecret; do
+  if helm template k lettra-keycloak "${KC_REQUIS[@]}" --set "$manque=" >/dev/null 2>&1; then
+    echo "un Keycloak sans $manque doit être refusé" >&2; exit 1
+  fi
+done
+echo "   adresse publique, URL de l'API et secret du coffre obligatoires : refus vérifiés"
 helm lint lettra-observability --quiet && helm template o lettra-observability | kubeconform_ -
 helm lint ../argocd/lettra-racine --set imageTag=ci --quiet && helm template r ../argocd/lettra-racine --set imageTag=ci | kubeconform_ -
 kubeconform_ ../argocd/pr-environnements.yaml

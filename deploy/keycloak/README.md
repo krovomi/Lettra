@@ -13,6 +13,7 @@ les rôles et leurs portées (cabinet, groupe, dossier) sont dans le catalogue L
 |---|---|
 | `realm-lettra.json` | Realm versionné : organisations, MFA obligatoire, jetons, clients, mappers. Vérifié par `RealmConfigurationTests`. |
 | `docker-compose.yml` | Keycloak de développement qui importe le realm au démarrage. |
+| `ajouter-cabinet.sh` | Crée l'organisation Keycloak d'un cabinet et affiche son identifiant (voir « Ajouter un cabinet »). |
 
 ## Démarrer en développement
 
@@ -54,7 +55,7 @@ rafraîchit sans que le navigateur ne voie jamais un jeton.
 | Client | Type | Usage |
 |---|---|---|
 | `lettra-bff` | Confidentiel, code + PKCE S256 | Navigateur via le BFF de l'API : cookie `__Host-lettra`, jetons gardés côté serveur. |
-| `lettra-maui` | Public, code + PKCE S256 | Application MAUI (modes 2 à 5), redirection par schéma `fr.lettra.app://` ou boucle locale. Branché côté application en phase suivante. |
+| `lettra-maui` | Public, code + PKCE S256 | Application MAUI (modes 2 à 5), redirection par schéma `fr.lettra.app://` ou boucle locale `http://127.0.0.1/callback` (RFC 8252 §7.3). Le poste écoute sur un port libre tiré à chaque connexion (`LoopbackAuthorizationBrowser`) : Keycloak ignore le port d'une adresse de bouclage, l'URL enregistrée n'en porte donc pas. |
 | `lettra-api` | Bearer only | Audience des jetons ; l'API la vérifie. |
 
 Aucun client n'autorise le flux implicite ni le mot de passe direct (`directAccessGrantsEnabled: false`).
@@ -77,10 +78,24 @@ Chaque jeton porte `amr` (niveau d'authentification), `organization` (cabinet) e
 
 ## Ajouter un cabinet
 
-1. Créer une **organisation** Keycloak par cabinet ; son identifiant est l'`OrganisationId` du cabinet dans le catalogue.
-2. Inviter les membres depuis l'organisation (pas d'inscription libre).
-3. Un utilisateur appartient à **une seule** organisation : un jeton qui en porte plusieurs n'ouvre aucun cabinet.
-4. Attribuer les rôles dans Lettra (catalogue), pas dans Keycloak.
+**Une organisation Keycloak par cabinet**, dans le realm `lettra` du Keycloak de la cellule. Les organisations ne sont
+jamais dans `realm-lettra.json` (le fichier est le même pour toutes les cellules) : elles vivent dans la base de Keycloak.
+
+1. Créer l'organisation du cabinet. Avec `ajouter-cabinet.sh` (curl et jq), qui affiche l'identifiant créé :
+
+   ```bash
+   KEYCLOAK_URL=https://auth.recette.lettra.fr KEYCLOAK_TOKEN="$(…jeton d'un administrateur du realm…)" \
+     deploy/keycloak/ajouter-cabinet.sh cabinet-exemple "Cabinet Exemple" cabinet-exemple.example
+   ```
+
+   Ou depuis la console d'administration (*Organizations → Create organization*) : alias stable, nom affiché, domaine
+   e-mail du cabinet. Le script est celui qu'exerce le job CI `keycloak-kind` sur un cabinet fictif.
+2. Déclarer le cabinet dans le catalogue Lettra avec **cet identifiant** comme `OrganisationId` : c'est la valeur que
+   porte le claim `organization` des jetons (`{"alias": {"id": "…"}}`) et que l'API lit (`OidcClaims.Cabinet`).
+3. Inviter les membres depuis l'organisation (*Members → Invite member*, ou `POST /organizations/{id}/members/invite-user`) :
+   pas d'inscription libre. À la première connexion, chaque membre enrôle son second facteur (TOTP imposé).
+4. Un utilisateur appartient à **une seule** organisation : un jeton qui en porte plusieurs n'ouvre aucun cabinet.
+5. Attribuer les rôles dans Lettra (catalogue), pas dans Keycloak.
 
 ## SSO du cabinet (Entra ID, Google Workspace…)
 
@@ -92,8 +107,23 @@ Chaque jeton porte `amr` (niveau d'authentification), `organization` (cabinet) e
 
 ## Production
 
-Le déploiement passe par le Helm de la cellule (chantier IaC et observabilité). Points d'attention :
+Keycloak tourne **dans la cellule** : chart `deploy/helm/lettra-keycloak` (voir son README), dépendance de `lettra-cell`,
+déployé par l'application Argo CD « cellule ». En bref :
 
-- Base PostgreSQL dédiée à Keycloak, `start` (jamais `start-dev`), TLS de bout en bout.
+- `kc.sh start --import-realm` (jamais `start-dev`), image officielle `quay.io/keycloak/keycloak:26.4` ; le realm importé
+  est ce fichier (lien `files/realm-lettra.json` du chart, comparaison vérifiée par `deploy/tests/valider.sh`).
+- Base PostgreSQL dédiée (cluster CloudNativePG `keycloak-db`), sauvegardée comme les clusters de dossiers.
+- Adresse publique (`lettra-keycloak.hostname`, TLS à la passerelle) = émetteur des jetons. L'API joint Keycloak par le
+  Service interne (`Lettra:Identity:Oidc:Authority` = `http://keycloak:8080/realms/lettra`), en HTTP borné à la cellule
+  par une NetworkPolicy ; la découverte lue par l'API garde l'émetteur public.
+- Secrets (`lettra-keycloak` : compte d'amorçage et secret du BFF) créés par OpenTofu (`cell-bootstrap`), jamais dans Git ;
+  le secret du BFF est le même dans `lettra-api`.
 - Les clés DataProtection de l'API doivent être partagées entre ses instances (Redis) pour que les cookies du BFF restent lisibles.
-- Le test `KeycloakRealmImportTests` importe ce realm dans un vrai Keycloak 26 à chaque CI.
+
+Vérifications en CI :
+
+- `KeycloakRealmImportTests` (CI .NET) importe ce realm dans un vrai Keycloak 26 : découverte, offline_access, boucle
+  locale du client MAUI sur un port quelconque, PKCE exigé.
+- Job `keycloak-kind` (`.github/workflows/deploy.yml`, script `deploy/tests/kind/essai-keycloak.sh`) : la cellule dans un
+  cluster kind jetable (valeurs **CI seulement**, secrets tirés au hasard), découverte et émetteur, `/health` et connexion
+  BFF de l'API pointée sur le Keycloak de la cellule, MFA imposé, ajout d'un cabinet fictif.
