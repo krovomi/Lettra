@@ -324,6 +324,7 @@ public sealed class Invoice : BillingDocument<InvoiceId>
         ArgumentNullException.ThrowIfNull(replica);
         ArgumentException.ThrowIfNullOrWhiteSpace(replica.Number);
         if (replica.Status is not (InvoiceStatus.Validated or InvoiceStatus.Issued) || !Enum.IsDefined(replica.Kind)
+            || replica.DeviceId is null || !replica.SeriesCode.StartsWith(Series + "-", StringComparison.Ordinal)
             || (replica.Status == InvoiceStatus.Issued) != (replica.IssuedBy is not null && replica.IssuedAt is not null)
             || (replica.Kind == InvoiceKind.CreditNote) != (replica.CreditedInvoiceId is not null))
         {
