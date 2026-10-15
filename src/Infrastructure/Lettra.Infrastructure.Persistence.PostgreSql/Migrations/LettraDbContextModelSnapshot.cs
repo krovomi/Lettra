@@ -269,6 +269,152 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("bigint");
 
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Customer", "Lettra.Domain.Billing.Invoice.Customer#PartySnapshot", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("AddressLine1")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("CustomerAddressLine1");
+
+                            b1.Property<string>("AddressLine2")
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("CustomerAddressLine2");
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("CustomerCity");
+
+                            b1.Property<string>("CountryCode")
+                                .IsRequired()
+                                .HasMaxLength(2)
+                                .HasColumnType("character varying(2)")
+                                .HasColumnName("CustomerCountry");
+
+                            b1.Property<bool>("IsBusiness")
+                                .HasColumnType("boolean")
+                                .HasColumnName("CustomerIsBusiness");
+
+                            b1.Property<string>("LegalForm")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("CustomerLegalForm");
+
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("CustomerName");
+
+                            b1.Property<string>("PostalCode")
+                                .IsRequired()
+                                .HasMaxLength(16)
+                                .HasColumnType("character varying(16)")
+                                .HasColumnName("CustomerPostalCode");
+
+                            b1.Property<string>("Rcs")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("CustomerRcs");
+
+                            b1.Property<decimal?>("ShareCapital")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("numeric(18,4)")
+                                .HasColumnName("CustomerShareCapital");
+
+                            b1.Property<string>("Siren")
+                                .HasMaxLength(9)
+                                .HasColumnType("character varying(9)")
+                                .HasColumnName("CustomerSiren");
+
+                            b1.Property<string>("Siret")
+                                .HasMaxLength(14)
+                                .HasColumnType("character varying(14)")
+                                .HasColumnName("CustomerSiret");
+
+                            b1.Property<string>("VatNumber")
+                                .HasMaxLength(15)
+                                .HasColumnType("character varying(15)")
+                                .HasColumnName("CustomerVatNumber");
+                        });
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Seller", "Lettra.Domain.Billing.Invoice.Seller#PartySnapshot", b1 =>
+                        {
+                            b1.Property<string>("AddressLine1")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("SellerAddressLine1");
+
+                            b1.Property<string>("AddressLine2")
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("SellerAddressLine2");
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("SellerCity");
+
+                            b1.Property<string>("CountryCode")
+                                .IsRequired()
+                                .HasMaxLength(2)
+                                .HasColumnType("character varying(2)")
+                                .HasColumnName("SellerCountry");
+
+                            b1.Property<bool>("IsBusiness")
+                                .HasColumnType("boolean")
+                                .HasColumnName("SellerIsBusiness");
+
+                            b1.Property<string>("LegalForm")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("SellerLegalForm");
+
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("SellerName");
+
+                            b1.Property<string>("PostalCode")
+                                .IsRequired()
+                                .HasMaxLength(16)
+                                .HasColumnType("character varying(16)")
+                                .HasColumnName("SellerPostalCode");
+
+                            b1.Property<string>("Rcs")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("SellerRcs");
+
+                            b1.Property<decimal?>("ShareCapital")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("numeric(18,4)")
+                                .HasColumnName("SellerShareCapital");
+
+                            b1.Property<string>("Siren")
+                                .HasMaxLength(9)
+                                .HasColumnType("character varying(9)")
+                                .HasColumnName("SellerSiren");
+
+                            b1.Property<string>("Siret")
+                                .HasMaxLength(14)
+                                .HasColumnType("character varying(14)")
+                                .HasColumnName("SellerSiret");
+
+                            b1.Property<string>("VatNumber")
+                                .HasMaxLength(15)
+                                .HasColumnType("character varying(15)")
+                                .HasColumnName("SellerVatNumber");
+                        });
+
                     b.HasKey("Id");
 
                     b.HasIndex("CreditedInvoiceId");
@@ -372,6 +518,80 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
                         .HasColumnType("bigint");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Customer", "Lettra.Domain.Billing.Quote.Customer#PartySnapshot", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("AddressLine1")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("CustomerAddressLine1");
+
+                            b1.Property<string>("AddressLine2")
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("CustomerAddressLine2");
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("CustomerCity");
+
+                            b1.Property<string>("CountryCode")
+                                .IsRequired()
+                                .HasMaxLength(2)
+                                .HasColumnType("character varying(2)")
+                                .HasColumnName("CustomerCountry");
+
+                            b1.Property<bool>("IsBusiness")
+                                .HasColumnType("boolean")
+                                .HasColumnName("CustomerIsBusiness");
+
+                            b1.Property<string>("LegalForm")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("CustomerLegalForm");
+
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("CustomerName");
+
+                            b1.Property<string>("PostalCode")
+                                .IsRequired()
+                                .HasMaxLength(16)
+                                .HasColumnType("character varying(16)")
+                                .HasColumnName("CustomerPostalCode");
+
+                            b1.Property<string>("Rcs")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("CustomerRcs");
+
+                            b1.Property<decimal?>("ShareCapital")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("numeric(18,4)")
+                                .HasColumnName("CustomerShareCapital");
+
+                            b1.Property<string>("Siren")
+                                .HasMaxLength(9)
+                                .HasColumnType("character varying(9)")
+                                .HasColumnName("CustomerSiren");
+
+                            b1.Property<string>("Siret")
+                                .HasMaxLength(14)
+                                .HasColumnType("character varying(14)")
+                                .HasColumnName("CustomerSiret");
+
+                            b1.Property<string>("VatNumber")
+                                .HasMaxLength(15)
+                                .HasColumnType("character varying(15)")
+                                .HasColumnName("CustomerVatNumber");
+                        });
 
                     b.HasKey("Id");
 
@@ -835,176 +1055,7 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                                 .HasForeignKey("DocumentId");
                         });
 
-                    b.OwnsOne("Lettra.Domain.Billing.PartySnapshot", "Customer", b1 =>
-                        {
-                            b1.Property<Guid>("InvoiceId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("AddressLine1")
-                                .IsRequired()
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
-                                .HasColumnName("CustomerAddressLine1");
-
-                            b1.Property<string>("AddressLine2")
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
-                                .HasColumnName("CustomerAddressLine2");
-
-                            b1.Property<string>("City")
-                                .IsRequired()
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
-                                .HasColumnName("CustomerCity");
-
-                            b1.Property<string>("CountryCode")
-                                .IsRequired()
-                                .HasMaxLength(2)
-                                .HasColumnType("character varying(2)")
-                                .HasColumnName("CustomerCountry");
-
-                            b1.Property<bool>("IsBusiness")
-                                .HasColumnType("boolean")
-                                .HasColumnName("CustomerIsBusiness");
-
-                            b1.Property<string>("LegalForm")
-                                .HasMaxLength(100)
-                                .HasColumnType("character varying(100)")
-                                .HasColumnName("CustomerLegalForm");
-
-                            b1.Property<string>("Name")
-                                .IsRequired()
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
-                                .HasColumnName("CustomerName");
-
-                            b1.Property<string>("PostalCode")
-                                .IsRequired()
-                                .HasMaxLength(16)
-                                .HasColumnType("character varying(16)")
-                                .HasColumnName("CustomerPostalCode");
-
-                            b1.Property<string>("Rcs")
-                                .HasMaxLength(100)
-                                .HasColumnType("character varying(100)")
-                                .HasColumnName("CustomerRcs");
-
-                            b1.Property<decimal?>("ShareCapital")
-                                .HasPrecision(18, 4)
-                                .HasColumnType("numeric(18,4)")
-                                .HasColumnName("CustomerShareCapital");
-
-                            b1.Property<string>("Siren")
-                                .HasMaxLength(9)
-                                .HasColumnType("character varying(9)")
-                                .HasColumnName("CustomerSiren");
-
-                            b1.Property<string>("Siret")
-                                .HasMaxLength(14)
-                                .HasColumnType("character varying(14)")
-                                .HasColumnName("CustomerSiret");
-
-                            b1.Property<string>("VatNumber")
-                                .HasMaxLength(15)
-                                .HasColumnType("character varying(15)")
-                                .HasColumnName("CustomerVatNumber");
-
-                            b1.HasKey("InvoiceId");
-
-                            b1.ToTable("Invoices");
-
-                            b1.WithOwner()
-                                .HasForeignKey("InvoiceId");
-                        });
-
-                    b.OwnsOne("Lettra.Domain.Billing.PartySnapshot", "Seller", b1 =>
-                        {
-                            b1.Property<Guid>("InvoiceId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("AddressLine1")
-                                .IsRequired()
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
-                                .HasColumnName("SellerAddressLine1");
-
-                            b1.Property<string>("AddressLine2")
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
-                                .HasColumnName("SellerAddressLine2");
-
-                            b1.Property<string>("City")
-                                .IsRequired()
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
-                                .HasColumnName("SellerCity");
-
-                            b1.Property<string>("CountryCode")
-                                .IsRequired()
-                                .HasMaxLength(2)
-                                .HasColumnType("character varying(2)")
-                                .HasColumnName("SellerCountry");
-
-                            b1.Property<bool>("IsBusiness")
-                                .HasColumnType("boolean")
-                                .HasColumnName("SellerIsBusiness");
-
-                            b1.Property<string>("LegalForm")
-                                .HasMaxLength(100)
-                                .HasColumnType("character varying(100)")
-                                .HasColumnName("SellerLegalForm");
-
-                            b1.Property<string>("Name")
-                                .IsRequired()
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
-                                .HasColumnName("SellerName");
-
-                            b1.Property<string>("PostalCode")
-                                .IsRequired()
-                                .HasMaxLength(16)
-                                .HasColumnType("character varying(16)")
-                                .HasColumnName("SellerPostalCode");
-
-                            b1.Property<string>("Rcs")
-                                .HasMaxLength(100)
-                                .HasColumnType("character varying(100)")
-                                .HasColumnName("SellerRcs");
-
-                            b1.Property<decimal?>("ShareCapital")
-                                .HasPrecision(18, 4)
-                                .HasColumnType("numeric(18,4)")
-                                .HasColumnName("SellerShareCapital");
-
-                            b1.Property<string>("Siren")
-                                .HasMaxLength(9)
-                                .HasColumnType("character varying(9)")
-                                .HasColumnName("SellerSiren");
-
-                            b1.Property<string>("Siret")
-                                .HasMaxLength(14)
-                                .HasColumnType("character varying(14)")
-                                .HasColumnName("SellerSiret");
-
-                            b1.Property<string>("VatNumber")
-                                .HasMaxLength(15)
-                                .HasColumnType("character varying(15)")
-                                .HasColumnName("SellerVatNumber");
-
-                            b1.HasKey("InvoiceId");
-
-                            b1.ToTable("Invoices");
-
-                            b1.WithOwner()
-                                .HasForeignKey("InvoiceId");
-                        });
-
-                    b.Navigation("Customer")
-                        .IsRequired();
-
                     b.Navigation("Lines");
-
-                    b.Navigation("Seller");
 
                     b.Navigation("VatSummaries");
                 });
@@ -1117,91 +1168,6 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                             b1.WithOwner()
                                 .HasForeignKey("DocumentId");
                         });
-
-                    b.OwnsOne("Lettra.Domain.Billing.PartySnapshot", "Customer", b1 =>
-                        {
-                            b1.Property<Guid>("QuoteId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("AddressLine1")
-                                .IsRequired()
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
-                                .HasColumnName("CustomerAddressLine1");
-
-                            b1.Property<string>("AddressLine2")
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
-                                .HasColumnName("CustomerAddressLine2");
-
-                            b1.Property<string>("City")
-                                .IsRequired()
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
-                                .HasColumnName("CustomerCity");
-
-                            b1.Property<string>("CountryCode")
-                                .IsRequired()
-                                .HasMaxLength(2)
-                                .HasColumnType("character varying(2)")
-                                .HasColumnName("CustomerCountry");
-
-                            b1.Property<bool>("IsBusiness")
-                                .HasColumnType("boolean")
-                                .HasColumnName("CustomerIsBusiness");
-
-                            b1.Property<string>("LegalForm")
-                                .HasMaxLength(100)
-                                .HasColumnType("character varying(100)")
-                                .HasColumnName("CustomerLegalForm");
-
-                            b1.Property<string>("Name")
-                                .IsRequired()
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
-                                .HasColumnName("CustomerName");
-
-                            b1.Property<string>("PostalCode")
-                                .IsRequired()
-                                .HasMaxLength(16)
-                                .HasColumnType("character varying(16)")
-                                .HasColumnName("CustomerPostalCode");
-
-                            b1.Property<string>("Rcs")
-                                .HasMaxLength(100)
-                                .HasColumnType("character varying(100)")
-                                .HasColumnName("CustomerRcs");
-
-                            b1.Property<decimal?>("ShareCapital")
-                                .HasPrecision(18, 4)
-                                .HasColumnType("numeric(18,4)")
-                                .HasColumnName("CustomerShareCapital");
-
-                            b1.Property<string>("Siren")
-                                .HasMaxLength(9)
-                                .HasColumnType("character varying(9)")
-                                .HasColumnName("CustomerSiren");
-
-                            b1.Property<string>("Siret")
-                                .HasMaxLength(14)
-                                .HasColumnType("character varying(14)")
-                                .HasColumnName("CustomerSiret");
-
-                            b1.Property<string>("VatNumber")
-                                .HasMaxLength(15)
-                                .HasColumnType("character varying(15)")
-                                .HasColumnName("CustomerVatNumber");
-
-                            b1.HasKey("QuoteId");
-
-                            b1.ToTable("Quotes");
-
-                            b1.WithOwner()
-                                .HasForeignKey("QuoteId");
-                        });
-
-                    b.Navigation("Customer")
-                        .IsRequired();
 
                     b.Navigation("Lines");
 

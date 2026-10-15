@@ -57,6 +57,27 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Cycle_de_vie_devis_acompte_facture_finale_et_avoir()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await BillingPersistenceScenarios.LifecycleAsync(harness, DatabaseProvider.Sqlite, Database("devis"));
+    }
+
+    [Fact]
+    public async Task Validations_concurrentes_sans_trou_ni_doublon()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await BillingPersistenceScenarios.ConcurrentValidationsAsync(harness, DatabaseProvider.Sqlite, Database("valid"));
+    }
+
+    [Fact]
+    public async Task Une_version_perimee_n_ecrase_pas_la_piece()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await BillingPersistenceScenarios.StaleVersionAsync(harness, DatabaseProvider.Sqlite, Database("version"));
+    }
+
+    [Fact]
     public async Task Une_base_d_un_autre_dossier_est_refusee()
     {
         await using TenantHarness harness = new(new SqliteConfigurator());
@@ -182,6 +203,27 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     }
 
     [SkippableFact]
+    public async Task Cycle_de_vie_devis_acompte_facture_finale_et_avoir()
+    {
+        await using TenantHarness harness = new(new PostgreSqlConfigurator());
+        await BillingPersistenceScenarios.LifecycleAsync(harness, DatabaseProvider.PostgreSql, Database("devis"));
+    }
+
+    [SkippableFact]
+    public async Task Validations_concurrentes_sans_trou_ni_doublon()
+    {
+        await using TenantHarness harness = new(new PostgreSqlConfigurator());
+        await BillingPersistenceScenarios.ConcurrentValidationsAsync(harness, DatabaseProvider.PostgreSql, Database("valid"));
+    }
+
+    [SkippableFact]
+    public async Task Une_version_perimee_n_ecrase_pas_la_piece()
+    {
+        await using TenantHarness harness = new(new PostgreSqlConfigurator());
+        await BillingPersistenceScenarios.StaleVersionAsync(harness, DatabaseProvider.PostgreSql, Database("version"));
+    }
+
+    [SkippableFact]
     public async Task Une_base_d_un_autre_dossier_est_refusee()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
@@ -292,6 +334,27 @@ public sealed class SqlServerTests : IAsyncLifetime
         Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new SqlServerConfigurator());
         await TenancyScenarios.NumberingAsync(harness, DatabaseProvider.SqlServer, Database("num"));
+    }
+
+    [SkippableFact]
+    public async Task Cycle_de_vie_devis_acompte_facture_finale_et_avoir()
+    {
+        await using TenantHarness harness = new(new SqlServerConfigurator());
+        await BillingPersistenceScenarios.LifecycleAsync(harness, DatabaseProvider.SqlServer, Database("devis"));
+    }
+
+    [SkippableFact]
+    public async Task Validations_concurrentes_sans_trou_ni_doublon()
+    {
+        await using TenantHarness harness = new(new SqlServerConfigurator());
+        await BillingPersistenceScenarios.ConcurrentValidationsAsync(harness, DatabaseProvider.SqlServer, Database("valid"));
+    }
+
+    [SkippableFact]
+    public async Task Une_version_perimee_n_ecrase_pas_la_piece()
+    {
+        await using TenantHarness harness = new(new SqlServerConfigurator());
+        await BillingPersistenceScenarios.StaleVersionAsync(harness, DatabaseProvider.SqlServer, Database("version"));
     }
 
     [SkippableFact]

@@ -35,8 +35,8 @@ internal static class BillingDocumentMapping
         builder.Ignore(d => d.IsDraft);
         builder.Ignore(d => d.DomainEvents);
 
-        builder.OwnsOne(d => d.Customer, party => MapParty(party, "Customer"));
-        builder.Navigation(d => d.Customer).IsRequired();
+        // Type complexe (valeur) et non entité possédée : une copie peut passer d'une pièce à l'autre (devis → facture).
+        builder.ComplexProperty(d => d.Customer, party => MapParty(party, "Customer"));
 
         builder.OwnsMany(d => d.Lines, line =>
         {
@@ -72,8 +72,7 @@ internal static class BillingDocumentMapping
         builder.HasIndex(d => d.IssueDate);
     }
 
-    public static void MapParty<TOwner>(OwnedNavigationBuilder<TOwner, PartySnapshot> party, string prefix)
-        where TOwner : class
+    public static void MapParty(ComplexPropertyBuilder<PartySnapshot> party, string prefix)
     {
         party.Property(p => p.Name).HasColumnName(prefix + "Name").HasMaxLength(200).IsRequired();
         party.Property(p => p.AddressLine1).HasColumnName(prefix + "AddressLine1").HasMaxLength(PostalAddress.MaxLineLength).IsRequired();
@@ -123,7 +122,7 @@ internal sealed class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder.Ignore(i => i.IsDerived);
         builder.Ignore(i => i.CreditableBalance);
         builder.Ignore(i => i.RevenueLines);
-        builder.OwnsOne(i => i.Seller, party => BillingDocumentMapping.MapParty(party, "Seller"));
+        builder.ComplexProperty(i => i.Seller, party => BillingDocumentMapping.MapParty(party, "Seller"));
         builder.HasIndex(i => i.QuoteId);
         builder.HasIndex(i => i.CreditedInvoiceId);
         builder.HasIndex(i => new { i.Kind, i.Status });
