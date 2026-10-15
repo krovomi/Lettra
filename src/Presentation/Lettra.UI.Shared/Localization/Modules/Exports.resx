@@ -81,4 +81,34 @@
   <data name="Platform.Status.PaymentSent" xml:space="preserve"><value>Paiement transmis</value></data>
   <data name="Platform.Status.Collected" xml:space="preserve"><value>Encaissée</value></data>
   <data name="Platform.Status.Rejected" xml:space="preserve"><value>Rejetée</value></data>
+  <!-- Écran FEC -->
+  <data name="Nav.Fec" xml:space="preserve"><value>FEC</value></data>
+  <data name="Fec.Title" xml:space="preserve"><value>Fichier des écritures comptables (FEC)</value></data>
+  <data name="Fec.Intro" xml:space="preserve"><value>Exportez le FEC d'un exercice, tel que l'administration fiscale le demande, et lisez le rapport du validateur intégré.</value></data>
+  <data name="Fec.Period.Title" xml:space="preserve"><value>Exercice</value></data>
+  <data name="Fec.Period.From" xml:space="preserve"><value>Du</value></data>
+  <data name="Fec.Period.To" xml:space="preserve"><value>au</value></data>
+  <data name="Fec.Export" xml:space="preserve"><value>Exporter le FEC</value></data>
+  <data name="Fec.Check.Title" xml:space="preserve"><value>Contrôler un fichier</value></data>
+  <data name="Fec.Check.Hint" xml:space="preserve"><value>Le FEC d'un autre logiciel ou un fichier déjà exporté, contrôlé sur l'exercice ci-dessus (64 Mo au plus).</value></data>
+  <data name="Fec.Working" xml:space="preserve"><value>Contrôle en cours…</value></data>
+  <data name="Fec.Report.Title" xml:space="preserve"><value>Rapport du validateur</value></data>
+  <data name="Fec.Report.Exported" xml:space="preserve"><value>Fichier {0} enregistré.</value></data>
+  <data name="Fec.Report.File" xml:space="preserve"><value>Fichier</value></data>
+  <data name="Fec.Report.Lines" xml:space="preserve"><value>Lignes</value></data>
+  <data name="Fec.Report.Entries" xml:space="preserve"><value>Écritures</value></data>
+  <data name="Fec.Report.Debit" xml:space="preserve"><value>Total débit</value></data>
+  <data name="Fec.Report.Credit" xml:space="preserve"><value>Total crédit</value></data>
+  <data name="Fec.Verdict.Valid" xml:space="preserve"><value>Fichier conforme.</value></data>
+  <data name="Fec.Verdict.ValidWithWarnings" xml:space="preserve"><value>Fichier conforme, {0} point(s) à vérifier.</value></data>
+  <data name="Fec.Verdict.Invalid" xml:space="preserve"><value>Fichier non conforme : {0} erreur(s) à corriger.</value></data>
+  <data name="Fec.Findings" xml:space="preserve"><value>Constats du validateur</value></data>
+  <data name="Fec.Findings.Severity" xml:space="preserve"><value>Gravité</value></data>
+  <data name="Fec.Findings.Line" xml:space="preserve"><value>Ligne</value></data>
+  <data name="Fec.Findings.Column" xml:space="preserve"><value>Colonne</value></data>
+  <data name="Fec.Findings.Entry" xml:space="preserve"><value>Écriture</value></data>
+  <data name="Fec.Findings.Text" xml:space="preserve"><value>Constat</value></data>
+  <data name="Fec.Findings.Truncated" xml:space="preserve"><value>Seuls les premiers constats sont affichés : corrigez-les, puis contrôlez de nouveau.</value></data>
+  <data name="Fec.Severity.Error" xml:space="preserve"><value>Erreur</value></data>
+  <data name="Fec.Severity.Warning" xml:space="preserve"><value>À vérifier</value></data>
 </root>
