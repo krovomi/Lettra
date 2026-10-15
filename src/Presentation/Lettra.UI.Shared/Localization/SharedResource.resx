@@ -4,6 +4,53 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Alerts.Acknowledge" xml:space="preserve"><value>Prendre en charge</value></data>
+  <data name="Alerts.Actor.AgentVigie" xml:space="preserve"><value>proposé par Vigie</value></data>
+  <data name="Alerts.Actor.Human" xml:space="preserve"><value>par une personne</value></data>
+  <data name="Alerts.Actor.Rule" xml:space="preserve"><value>par une règle</value></data>
+  <data name="Alerts.CabinetWide" xml:space="preserve"><value>Tout le cabinet</value></data>
+  <data name="Alerts.Counters.OldestUnacknowledged" xml:space="preserve"><value>non prise en charge depuis le {0}</value></data>
+  <data name="Alerts.Counters.Open" xml:space="preserve"><value>{0} ouverte(s)</value></data>
+  <data name="Alerts.Counters.Title" xml:space="preserve"><value>Par gravité</value></data>
+  <data name="Alerts.Event.Acknowledged" xml:space="preserve"><value>Prise en charge</value></data>
+  <data name="Alerts.Event.Closed" xml:space="preserve"><value>Close</value></data>
+  <data name="Alerts.Event.Escalated" xml:space="preserve"><value>Escaladée au niveau</value></data>
+  <data name="Alerts.Event.Raised" xml:space="preserve"><value>Déclenchée</value></data>
+  <data name="Alerts.Event.Reopened" xml:space="preserve"><value>Rouverte</value></data>
+  <data name="Alerts.Event.Resolved" xml:space="preserve"><value>Résolue</value></data>
+  <data name="Alerts.Event.SeverityChanged" xml:space="preserve"><value>Gravité changée</value></data>
+  <data name="Alerts.Event.WithValue" xml:space="preserve"><value>{0} : {1}</value></data>
+  <data name="Alerts.Field.AcknowledgedBy" xml:space="preserve"><value>Prise en charge par</value></data>
+  <data name="Alerts.Field.LastSeen" xml:space="preserve"><value>Dernière occurrence</value></data>
+  <data name="Alerts.Field.Occurrences" xml:space="preserve"><value>Occurrences</value></data>
+  <data name="Alerts.Field.OpenedAt" xml:space="preserve"><value>Ouverte le</value></data>
+  <data name="Alerts.Field.Scope" xml:space="preserve"><value>Portée</value></data>
+  <data name="Alerts.Field.Severity" xml:space="preserve"><value>Gravité</value></data>
+  <data name="Alerts.Field.State" xml:space="preserve"><value>État</value></data>
+  <data name="Alerts.Field.TakeoverDue" xml:space="preserve"><value>À prendre en charge avant le</value></data>
+  <data name="Alerts.Field.Title" xml:space="preserve"><value>Alerte</value></data>
+  <data name="Alerts.Filters" xml:space="preserve"><value>Filtres du centre d'alertes</value></data>
+  <data name="Alerts.IncludeClosed" xml:space="preserve"><value>Afficher les alertes closes</value></data>
+  <data name="Alerts.List.Empty" xml:space="preserve"><value>Aucune alerte.</value></data>
+  <data name="Alerts.List.Title" xml:space="preserve"><value>Alertes</value></data>
+  <data name="Alerts.Resolve" xml:space="preserve"><value>Marquer résolue</value></data>
+  <data name="Alerts.Rule.integrite-chaine" xml:space="preserve"><value>Chaîne anti-fraude d'un dossier compromise</value></data>
+  <data name="Alerts.Rule.integrite-numerotation" xml:space="preserve"><value>Trou de numérotation dans un dossier</value></data>
+  <data name="Alerts.Scope.Cabinet" xml:space="preserve"><value>Cabinet</value></data>
+  <data name="Alerts.Scope.Cell" xml:space="preserve"><value>Cellule</value></data>
+  <data name="Alerts.Scope.Device" xml:space="preserve"><value>Poste</value></data>
+  <data name="Alerts.Scope.Dossier" xml:space="preserve"><value>Dossier</value></data>
+  <data name="Alerts.Scope.Group" xml:space="preserve"><value>Groupe</value></data>
+  <data name="Alerts.Scope.Platform" xml:space="preserve"><value>Plateforme</value></data>
+  <data name="Alerts.Severity.New" xml:space="preserve"><value>Nouvelle gravité</value></data>
+  <data name="Alerts.Severity.Reason" xml:space="preserve"><value>Motif du changement</value></data>
+  <data name="Alerts.Severity.Submit" xml:space="preserve"><value>Changer la gravité</value></data>
+  <data name="Alerts.State.Acknowledged" xml:space="preserve"><value>Prise en charge</value></data>
+  <data name="Alerts.State.Closed" xml:space="preserve"><value>Close</value></data>
+  <data name="Alerts.State.New" xml:space="preserve"><value>Nouvelle</value></data>
+  <data name="Alerts.State.Resolved" xml:space="preserve"><value>Résolue</value></data>
+  <data name="Alerts.Timeline.Title" xml:space="preserve"><value>Chronologie</value></data>
+  <data name="Alerts.Title" xml:space="preserve"><value>Centre d'alertes</value></data>
   <data name="Catalog.ArchivedDone" xml:space="preserve"><value>Article « {0} » archivé.</value></data>
   <data name="Catalog.Choice.Kind" xml:space="preserve"><value>Nature de l'article (F4)</value></data>
   <data name="Catalog.Choice.Unit" xml:space="preserve"><value>Unité (F4)</value></data>
@@ -139,6 +186,7 @@
   <data name="Grid.DefaultLabel" xml:space="preserve"><value>Grille de saisie</value></data>
   <data name="Keyboard.FunctionKeys" xml:space="preserve"><value>Touches de fonction</value></data>
   <data name="Loading" xml:space="preserve"><value>Chargement…</value></data>
+  <data name="Nav.Alerts" xml:space="preserve"><value>Alertes</value></data>
   <data name="Nav.Catalog" xml:space="preserve"><value>Catalogue</value></data>
   <data name="Nav.Customers" xml:space="preserve"><value>Clients</value></data>
   <data name="Nav.Label" xml:space="preserve"><value>Navigation principale</value></data>

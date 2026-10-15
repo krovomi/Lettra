@@ -18,26 +18,52 @@ namespace Lettra.Api.Endpoints;
 /// </summary>
 internal static class AlertEndpoints
 {
-    /// <summary>Routes du dossier de la requête : lecture seule.</summary>
+    /// <summary>
+    /// Routes du dossier de la requête. <c>cabinet=true</c> élargit la vue au cabinet de ce dossier ; les actions portent
+    /// toujours sur le cabinet du dossier : le pipeline y exige <c>AlertesTraiter</c>, que seul un rôle de cabinet donne.
+    /// </summary>
     public static RouteGroupBuilder MapDossierAlerts(this RouteGroupBuilder api)
     {
         RouteGroupBuilder group = api.MapGroup("/alerts").WithTags("Alerts");
 
-        group.MapGet("/", (ITenantContext tenant, IQueryDispatcher queries, CancellationToken ct, bool includeClosed = false) =>
-                ListAsync(AuthorizationScope.ForDossier(tenant.Current.DossierId), includeClosed, queries, ct))
+        group.MapGet("/", (ITenantContext tenant, IQueryDispatcher queries, CancellationToken ct, bool cabinet = false, bool includeClosed = false) =>
+                ListAsync(Within(tenant, cabinet), includeClosed, queries, ct))
             .RequirePermission(Permission.AlertesLire)
             .WithName("ListDossierAlerts")
             .Produces<AlertCentreResponse>();
 
-        group.MapGet("/{id:guid}", (Guid id, ITenantContext tenant, IQueryDispatcher queries, CancellationToken ct) =>
-                GetAsync(id, AuthorizationScope.ForDossier(tenant.Current.DossierId), queries, ct))
+        group.MapGet("/{id:guid}", (Guid id, ITenantContext tenant, IQueryDispatcher queries, CancellationToken ct, bool cabinet = false) =>
+                GetAsync(id, Within(tenant, cabinet), queries, ct))
             .RequirePermission(Permission.AlertesLire)
             .WithName("GetDossierAlert")
             .Produces<AlertDetailResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        group.MapPost("/{id:guid}/acknowledge", (Guid id, ITenantContext tenant, ICommandDispatcher commands, CancellationToken ct) =>
+                ActAsync(new AcknowledgeAlertCommand(new AlertId(id), Within(tenant, cabinet: true)), commands, ct))
+            .RequirePermission(Permission.AlertesTraiter)
+            .WithName("AcknowledgeDossierAlert")
+            .Produces(StatusCodes.Status204NoContent);
+
+        group.MapPost("/{id:guid}/resolve", (Guid id, ITenantContext tenant, ICommandDispatcher commands, CancellationToken ct) =>
+                ActAsync(new ResolveAlertCommand(new AlertId(id), Within(tenant, cabinet: true)), commands, ct))
+            .RequirePermission(Permission.AlertesTraiter)
+            .WithName("ResolveDossierAlert")
+            .Produces(StatusCodes.Status204NoContent);
+
+        group.MapPost("/{id:guid}/severity", (Guid id, ChangeAlertSeverityRequest request, ITenantContext tenant, ICommandDispatcher commands, CancellationToken ct) =>
+                ActAsync(new ChangeAlertSeverityCommand(new AlertId(id), (Severity)request.Severity, request.Reason, Within(tenant, cabinet: true)), commands, ct))
+            .RequirePermission(Permission.AlertesTraiter)
+            .WithName("ChangeDossierAlertSeverity")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status400BadRequest);
+
         return group;
     }
+
+    private static AuthorizationScope Within(ITenantContext tenant, bool cabinet) => cabinet
+        ? AuthorizationScope.ForCabinet(tenant.Current.OrganisationId)
+        : AuthorizationScope.ForDossier(tenant.Current.DossierId);
 
     /// <summary>Routes du cabinet (<c>/api/v1/cabinets/{cabinetId}/alerts</c>) : lecture et traitement.</summary>
     public static RouteGroupBuilder MapCabinetAlerts(this RouteGroupBuilder cabinet)
