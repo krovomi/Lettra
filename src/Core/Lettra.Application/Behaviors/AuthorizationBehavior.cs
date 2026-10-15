@@ -6,7 +6,7 @@ namespace Lettra.Application.Behaviors;
 
 /// <summary>
 /// Applique la permission déclarée par chaque cas d'usage, quelle que soit son origine (UI, API, synchro, IA),
-/// sur sa portée : dossier, groupe ou cabinet. Une requête sans <see cref="ISecuredUseCase"/> doit porter
+/// sur sa portée : dossier, groupe, cabinet, ou celle de l'objet visé (alerte). Une requête sans <see cref="ISecuredUseCase"/> doit porter
 /// <see cref="PublicUseCaseAttribute"/> (vérifié par les tests d'architecture) ; à défaut elle est refusée.
 /// </summary>
 internal sealed class AuthorizationBehavior<TRequest, TResult>(
@@ -34,6 +34,7 @@ internal sealed class AuthorizationBehavior<TRequest, TResult>(
             IRequirePermission dossier => AuthorizationScope.ForDossier(dossier.Dossier),
             IRequireGroupPermission group => AuthorizationScope.ForGroup(group.Group),
             IRequireOrganisationPermission organisation => AuthorizationScope.ForCabinet(organisation.Organisation),
+            IRequireScopedPermission scoped => scoped.Scope,
             _ => null,
         };
         if (scope is null)

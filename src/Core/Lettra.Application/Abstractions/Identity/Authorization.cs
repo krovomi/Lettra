@@ -92,3 +92,13 @@ public interface IAuthorizationDirectory
     /// <summary>Situe une portée dans la hiérarchie ; <c>null</c> si elle n'existe pas.</summary>
     ValueTask<ScopePath?> GetScopePathAsync(AuthorizationScope scope, CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// Qui peut être concerné par une portée : les utilisateurs actifs qui ont une attribution, directe ou par un groupe,
+/// sur l'une des portées du chemin (le dossier, ses groupes, son cabinet, la plateforme). Sert au routage des alertes
+/// (annexe G §6) : la liste est ensuite filtrée par <see cref="IPermissionService"/>, le même calcul que pour l'accès.
+/// </summary>
+public interface IScopeMemberDirectory
+{
+    ValueTask<IReadOnlyCollection<Guid>> ListCandidatesAsync(ScopePath path, CancellationToken cancellationToken);
+}

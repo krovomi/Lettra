@@ -24,6 +24,15 @@ public enum Permission
     /// <summary>Créer un dossier (provisionner sa base) dans le cabinet. Portée cabinet.</summary>
     [PermissionCategory(PermissionKind.Administration)] DossiersCreer = 12,
 
+    /// <summary>Lancer le contrôle d'intégrité de la chaîne anti-fraude et lire les clôtures.</summary>
+    [PermissionCategory(PermissionKind.DossierData)] IntegriteVerifier = 13,
+
+    /// <summary>Clôturer les périodes écoulées (le Worker le fait aussi chaque nuit).</summary>
+    [PermissionCategory(PermissionKind.DossierData)] ClotureEffectuer = 14,
+
+    /// <summary>Télécharger l'archive scellée d'une clôture (contrôle fiscal, auditeur).</summary>
+    [PermissionCategory(PermissionKind.DossierData)] ArchivesExporter = 15,
+
     // 20-29 : Catalogue (module Catalogue).
     [PermissionCategory(PermissionKind.DossierData)] CatalogueConsulter = 20,
     [PermissionCategory(PermissionKind.DossierData)] CatalogueGerer = 21,

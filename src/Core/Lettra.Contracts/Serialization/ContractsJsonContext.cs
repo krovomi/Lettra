@@ -1,10 +1,12 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Lettra.Contracts.Alerts;
 using Lettra.Contracts.Assistant;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Customers;
 using Lettra.Contracts.Identity;
+using Lettra.Contracts.Integrity;
 using Lettra.Contracts.Directory;
 using Lettra.Contracts.Dossiers;
 using Lettra.Contracts.Suppliers;
@@ -38,4 +40,9 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(AskAssistantRequest))]
 [JsonSerializable(typeof(AssistantEvent))]
 [JsonSerializable(typeof(IReadOnlyList<AssistantJournalEntry>))]
+[JsonSerializable(typeof(IntegrityReportResponse))]
+[JsonSerializable(typeof(IReadOnlyList<ClosingSummary>))]
+[JsonSerializable(typeof(AlertCentreResponse))]
+[JsonSerializable(typeof(AlertDetailResponse))]
+[JsonSerializable(typeof(ChangeAlertSeverityRequest))]
 public sealed partial class ContractsJsonContext : JsonSerializerContext;

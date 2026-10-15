@@ -76,6 +76,14 @@
   <data name="Error.Ai.Truncated" xml:space="preserve"><value>The answer was cut short.</value></data>
   <data name="Error.Ai.UngroundedAmounts" xml:space="preserve"><value>These amounts do not come from a Lettra calculation: check them before using them.</value></data>
   <data name="Error.Ai.UnknownReferences" xml:space="preserve"><value>The answer cites unknown references: check them.</value></data>
+  <data name="Error.Alert.AgentNotAllowed" xml:space="preserve"><value>An agent cannot take this action on an alert.</value></data>
+  <data name="Error.Alert.HumanRequired" xml:space="preserve"><value>This action must be taken by a person.</value></data>
+  <data name="Error.Alert.InvalidTransition" xml:space="preserve"><value>This alert cannot move to that state.</value></data>
+  <data name="Error.Alert.NotFound" xml:space="preserve"><value>This alert does not exist or is not visible to you.</value></data>
+  <data name="Error.Alert.ReasonRequired" xml:space="preserve"><value>Please give a reason.</value></data>
+  <data name="Error.Alert.RuleRequired" xml:space="preserve"><value>The alert rule is required.</value></data>
+  <data name="Error.Alert.SameSeverity" xml:space="preserve"><value>The alert already has this severity.</value></data>
+  <data name="Error.Alert.ScopeIncomplete" xml:space="preserve"><value>The alert scope is incomplete.</value></data>
   <data name="Error.Api.IdempotencyKeyReused" xml:space="preserve"><value>This operation was already sent with different content.</value></data>
   <data name="Error.Api.Unexpected" xml:space="preserve"><value>An unexpected error occurred. Please try again.</value></data>
   <data name="Error.Api.Unreachable" xml:space="preserve"><value>The server cannot be reached. Check the connection.</value></data>
@@ -108,6 +116,9 @@
   <data name="Error.Dossier.Required" xml:space="preserve"><value>Open a client file first.</value></data>
   <data name="Error.Email.Invalid" xml:space="preserve"><value>This email address is not valid.</value></data>
   <data name="Error.Iban.Invalid" xml:space="preserve"><value>This IBAN is not valid (check the country, length and check digits).</value></data>
+  <data name="Error.Integrity.ClosingNotFound" xml:space="preserve"><value>This closing does not exist.</value></data>
+  <data name="Error.Integrity.EventInvalid" xml:space="preserve"><value>The event to record in the tamper-evident journal is incomplete.</value></data>
+  <data name="Error.Integrity.KeyUnavailable" xml:space="preserve"><value>The firm's integrity key is unavailable.</value></data>
   <data name="Error.Money.CurrencyMismatch" xml:space="preserve"><value>The amounts are in different currencies.</value></data>
   <data name="Error.Party.VatNumberSirenMismatch" xml:space="preserve"><value>This VAT number does not match the SIREN entered.</value></data>
   <data name="Error.Security.Forbidden" xml:space="preserve"><value>You do not have permission for this action in this file.</value></data>

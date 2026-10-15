@@ -44,6 +44,7 @@ public sealed class PartiesAndCatalogTests : IAsyncLifetime
         services.AddSingleton<ICustomerReadStore>(_unitOfWork);
         services.AddSingleton<IUnitOfWork>(_unitOfWork);
         services.AddPartiesAndCatalogFakes(_store, _directories);
+        services.AddIntegrityFakes(new InMemoryIntegrity(Dossier));
         services.AddSingleton<Lettra.Application.Abstractions.Tenancy.IDossierProvisioner>(new RecordingDossierProvisioner());
         _root = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
         _scope = _root.CreateAsyncScope();

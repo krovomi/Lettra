@@ -1,5 +1,7 @@
 using Lettra.Application.Abstractions.Tenancy;
+using Lettra.Domain.Integrity;
 using Lettra.Domain.Parties;
+using Lettra.Infrastructure.Persistence.Integrity;
 using Lettra.Infrastructure.Persistence.Numbering;
 using Lettra.Infrastructure.Persistence.Tenancy;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +23,12 @@ public sealed class LettraDbContext(DbContextOptions<LettraDbContext> options, T
     internal DbSet<DossierStamp> DossierStamp => Set<DossierStamp>();
 
     internal DbSet<NumberSeries> NumberSeries => Set<NumberSeries>();
+
+    internal DbSet<JournalEntry> IntegrityJournal => Set<JournalEntry>();
+
+    internal DbSet<PeriodClosing> IntegrityClosings => Set<PeriodClosing>();
+
+    internal DbSet<IntegrityChainHead> IntegrityChainHead => Set<IntegrityChainHead>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

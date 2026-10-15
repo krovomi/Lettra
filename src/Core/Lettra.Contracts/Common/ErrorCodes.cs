@@ -117,6 +117,27 @@ public static class ErrorCodes
         public const string Contention = "Numbering.Contention";
     }
 
+    /// <summary>Chaîne anti-fraude (journal chaîné, clôtures, archives scellées).</summary>
+    public static class Integrity
+    {
+        public const string EventInvalid = "Integrity.EventInvalid";
+        public const string ClosingNotFound = "Integrity.ClosingNotFound";
+        public const string KeyUnavailable = "Integrity.KeyUnavailable";
+    }
+
+    /// <summary>Centre d'alertes (module Supervision).</summary>
+    public static class Alerts
+    {
+        public const string ScopeIncomplete = "Alert.ScopeIncomplete";
+        public const string RuleRequired = "Alert.RuleRequired";
+        public const string ReasonRequired = "Alert.ReasonRequired";
+        public const string AgentNotAllowed = "Alert.AgentNotAllowed";
+        public const string HumanRequired = "Alert.HumanRequired";
+        public const string InvalidTransition = "Alert.InvalidTransition";
+        public const string SameSeverity = "Alert.SameSeverity";
+        public const string NotFound = "Alert.NotFound";
+    }
+
     public static class Ai
     {
         public const string Disabled = "Ai.Disabled";

@@ -69,6 +69,15 @@ public interface IRequireGroupPermission : ISecuredUseCase
     GroupId Group { get; }
 }
 
+/// <summary>
+/// Cas d'usage dont la portée est donnée par l'objet visé (une alerte de cabinet, de groupe, de dossier ou de la
+/// plateforme), sans ouvrir de base de dossier. Le module qui le déclare traduit sa portée en <see cref="AuthorizationScope"/>.
+/// </summary>
+public interface IRequireScopedPermission : ISecuredUseCase
+{
+    AuthorizationScope Scope { get; }
+}
+
 /// <summary>Marque explicitement un cas d'usage accessible sans permission (rare, revu en commission).</summary>
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 public sealed class PublicUseCaseAttribute : Attribute;

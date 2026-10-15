@@ -64,6 +64,28 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Validations_concurrentes_dans_la_chaine()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await IntegrityScenarios.ConcurrentValidationsAsync(harness, DatabaseProvider.Sqlite, Database("chaine"));
+    }
+
+    [Fact]
+    public async Task Une_ligne_modifiee_en_base_est_detectee()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await IntegrityScenarios.TamperDetectedAsync(harness, DatabaseProvider.Sqlite, Database("alteration"));
+    }
+
+    [Fact]
+    public async Task Clotures_signees_et_archive_scellee()
+    {
+        ManualClock clock = new(DateTimeOffset.UtcNow);
+        await using TenantHarness harness = new(new SqliteConfigurator(), clock);
+        await IntegrityScenarios.ClosingsAndSealedArchiveAsync(harness, clock, DatabaseProvider.Sqlite, Database("clotures"));
+    }
+
+    [Fact]
     public async Task Creation_de_dossier_et_vagues_de_migration_par_le_catalogue()
     {
         await using CatalogHarness harness = new(
@@ -132,6 +154,31 @@ public sealed class PostgreSqlTests : IAsyncLifetime
 
     private string Database(string name) =>
         new Npgsql.NpgsqlConnectionStringBuilder(_container!.GetConnectionString()) { Database = $"dossier_{name}" }.ConnectionString;
+
+    [SkippableFact]
+    public async Task Validations_concurrentes_dans_la_chaine()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new PostgreSqlConfigurator());
+        await IntegrityScenarios.ConcurrentValidationsAsync(harness, DatabaseProvider.PostgreSql, Database("chaine"));
+    }
+
+    [SkippableFact]
+    public async Task Une_ligne_modifiee_en_base_est_detectee()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new PostgreSqlConfigurator());
+        await IntegrityScenarios.TamperDetectedAsync(harness, DatabaseProvider.PostgreSql, Database("alteration"));
+    }
+
+    [SkippableFact]
+    public async Task Clotures_signees_et_archive_scellee()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        ManualClock clock = new(DateTimeOffset.UtcNow);
+        await using TenantHarness harness = new(new PostgreSqlConfigurator(), clock);
+        await IntegrityScenarios.ClosingsAndSealedArchiveAsync(harness, clock, DatabaseProvider.PostgreSql, Database("clotures"));
+    }
 
     [SkippableFact]
     public async Task Aller_retour_d_un_client()
@@ -245,6 +292,31 @@ public sealed class SqlServerTests : IAsyncLifetime
 
     private string Database(string name) =>
         new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(_container!.GetConnectionString()) { InitialCatalog = $"dossier_{name}" }.ConnectionString;
+
+    [SkippableFact]
+    public async Task Validations_concurrentes_dans_la_chaine()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new SqlServerConfigurator());
+        await IntegrityScenarios.ConcurrentValidationsAsync(harness, DatabaseProvider.SqlServer, Database("chaine"));
+    }
+
+    [SkippableFact]
+    public async Task Une_ligne_modifiee_en_base_est_detectee()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new SqlServerConfigurator());
+        await IntegrityScenarios.TamperDetectedAsync(harness, DatabaseProvider.SqlServer, Database("alteration"));
+    }
+
+    [SkippableFact]
+    public async Task Clotures_signees_et_archive_scellee()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        ManualClock clock = new(DateTimeOffset.UtcNow);
+        await using TenantHarness harness = new(new SqlServerConfigurator(), clock);
+        await IntegrityScenarios.ClosingsAndSealedArchiveAsync(harness, clock, DatabaseProvider.SqlServer, Database("clotures"));
+    }
 
     [SkippableFact]
     public async Task Aller_retour_d_un_client()

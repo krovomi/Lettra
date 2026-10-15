@@ -76,6 +76,14 @@
   <data name="Error.Ai.Truncated" xml:space="preserve"><value>La réponse a été tronquée.</value></data>
   <data name="Error.Ai.UngroundedAmounts" xml:space="preserve"><value>Ces montants ne viennent pas d'un calcul de Lettra : vérifiez-les avant de les utiliser.</value></data>
   <data name="Error.Ai.UnknownReferences" xml:space="preserve"><value>La réponse cite des références inconnues : vérifiez-les.</value></data>
+  <data name="Error.Alert.AgentNotAllowed" xml:space="preserve"><value>Un agent ne peut pas faire cette action sur une alerte.</value></data>
+  <data name="Error.Alert.HumanRequired" xml:space="preserve"><value>Cette action doit être faite par une personne.</value></data>
+  <data name="Error.Alert.InvalidTransition" xml:space="preserve"><value>Cette alerte ne peut pas passer à cet état.</value></data>
+  <data name="Error.Alert.NotFound" xml:space="preserve"><value>Cette alerte n'existe pas ou n'est pas visible pour vous.</value></data>
+  <data name="Error.Alert.ReasonRequired" xml:space="preserve"><value>Indiquez un motif.</value></data>
+  <data name="Error.Alert.RuleRequired" xml:space="preserve"><value>La règle de l'alerte est obligatoire.</value></data>
+  <data name="Error.Alert.SameSeverity" xml:space="preserve"><value>L'alerte a déjà cette sévérité.</value></data>
+  <data name="Error.Alert.ScopeIncomplete" xml:space="preserve"><value>La portée de l'alerte est incomplète.</value></data>
   <data name="Error.Api.IdempotencyKeyReused" xml:space="preserve"><value>Cette opération a déjà été envoyée avec un contenu différent.</value></data>
   <data name="Error.Api.Unexpected" xml:space="preserve"><value>Une erreur inattendue est survenue. Réessayez.</value></data>
   <data name="Error.Api.Unreachable" xml:space="preserve"><value>Le serveur est injoignable. Vérifiez la connexion.</value></data>
@@ -108,6 +116,9 @@
   <data name="Error.Dossier.Required" xml:space="preserve"><value>Ouvrez d'abord un dossier.</value></data>
   <data name="Error.Email.Invalid" xml:space="preserve"><value>Cette adresse e-mail n'est pas valide.</value></data>
   <data name="Error.Iban.Invalid" xml:space="preserve"><value>Cet IBAN n'est pas valide (vérifiez le pays, la longueur et la clé).</value></data>
+  <data name="Error.Integrity.ClosingNotFound" xml:space="preserve"><value>Cette clôture n'existe pas.</value></data>
+  <data name="Error.Integrity.EventInvalid" xml:space="preserve"><value>L'événement à inscrire au journal inaltérable est incomplet.</value></data>
+  <data name="Error.Integrity.KeyUnavailable" xml:space="preserve"><value>La clé d'intégrité du cabinet est indisponible.</value></data>
   <data name="Error.Money.CurrencyMismatch" xml:space="preserve"><value>Les montants sont dans des devises différentes.</value></data>
   <data name="Error.Party.VatNumberSirenMismatch" xml:space="preserve"><value>Ce numéro de TVA ne correspond pas au SIREN indiqué.</value></data>
   <data name="Error.Security.Forbidden" xml:space="preserve"><value>Vous n'avez pas les droits pour cette action dans ce dossier.</value></data>
