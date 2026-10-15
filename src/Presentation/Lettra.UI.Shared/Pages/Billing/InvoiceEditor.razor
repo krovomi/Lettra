@@ -1,5 +1,8 @@
 @page "/invoices/new"
 @page "/invoices/{Id:guid}"
+@page "/invoices/draft/{LocalId:guid}"
+@using Lettra.Contracts.Serialization
+@using Microsoft.Extensions.DependencyInjection
 @implements IDisposable
 @inject IInvoicesGateway Invoices
 @inject IBillingSettingsGateway Settings
@@ -178,6 +181,9 @@ else
 @code {
     [Parameter] public Guid? Id { get; set; }
 
+    /// <summary>Brouillon gardé sur l'appareil faute de réseau, pas encore arrivé sur le serveur (étape 4.5).</summary>
+    [Parameter] public Guid? LocalId { get; set; }
+
     [SupplyParameterFromQuery(Name = "customer")] public Guid? CustomerFromQuery { get; set; }
 
     /// <summary><c>credit-note</c> : la palette (« avoir sur F-… ») prépare l'avoir dès l'ouverture.</summary>
@@ -210,6 +216,8 @@ else
     private ElementReference _dueDate;
     private ElementReference _deliveryAddress;
     private Guid? _loadedId;
+    private OfflineDrafts? _drafts;
+    private Guid? _localId;
 
     private bool IsDraft => _invoice is null || _invoice.Status == InvoiceStatusDto.Draft;
 
@@ -242,16 +250,21 @@ else
             .Bind("Ctrl+S", L["Billing.Command.Save"], _ => SaveNowAsync(), _ => IsDraft)
             .Bind("Ctrl+Enter", L["Billing.Command.Validate"], _ => ValidateAsync(), _ => CanValidate)
             .Bind("Ctrl+P", L["Billing.Command.Pdf"], _ => DownloadPdfAsync(), _ => _invoice is not null);
+        _drafts = Services.GetService<OfflineDrafts>();
+        if (_drafts is not null)
+        {
+            _drafts.Synced += DraftSynced;
+        }
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        if (_loadedId == Id && !_loading)
+        if (_loadedId == (Id ?? LocalId) && !_loading)
         {
             return;
         }
 
-        _loadedId = Id;
+        _loadedId = Id ?? LocalId;
         await LoadAsync();
     }
 
@@ -262,11 +275,16 @@ else
         _approvalRequested = false;
         _conflict = false;
         _autosave.Discard();
+        _localId = null;
+        _status = null;
 
         OperationResult<BillingReferenceData> reference = await Settings.GetReferenceDataAsync(CancellationToken.None);
-        _reference = reference.Value ?? _reference;
+        _reference = (_drafts is null ? reference.Value
+            : await _drafts.CachedAsync(OfflineDrafts.ReferenceDataKey, reference, ContractsJsonContext.Default.BillingReferenceData, CancellationToken.None))
+            ?? _reference;
         OperationResult<CompanyProfileResponse> company = await Settings.GetCompanyProfileAsync(CancellationToken.None);
-        _company = company.Value;
+        _company = _drafts is null ? company.Value
+            : await _drafts.CachedAsync(OfflineDrafts.CompanyProfileKey, company, ContractsJsonContext.Default.CompanyProfileResponse, CancellationToken.None);
 
         if (Id is { } id)
         {
@@ -279,10 +297,26 @@ else
             }
 
             Show(loaded.Value);
+            await RestoreAsync(serverId: id, localId: null);
             await CheckAsync();
             if (Action == "credit-note")
             {
                 _status = L["Invoice.CreditNoteHint"];
+            }
+        }
+        else if (LocalId is { } localId)
+        {
+            if (_drafts?.SyncedServerId(localId) is { } sent)
+            {
+                Navigation.NavigateTo($"invoices/{sent}", new NavigationOptions { ReplaceHistoryEntry = true });
+                return;
+            }
+
+            _invoice = null;
+            _compliance = null;
+            if (!await RestoreAsync(serverId: null, localId))
+            {
+                _status = L["Drafts.NotFound"];
             }
         }
         else
@@ -300,6 +334,51 @@ else
 
         await PreselectPdfLanguageAsync();
         _loading = false;
+    }
+
+    /// <summary>
+    /// Reprend la saisie gardée sur l'appareil : pour une pièce du serveur, seulement si elle s'appuie sur sa version
+    /// actuelle (sinon l'envoi signalera le conflit) ; le prochain enregistrement en ligne la retire de l'appareil.
+    /// </summary>
+    private async Task<bool> RestoreAsync(Guid? serverId, Guid? localId)
+    {
+        if (_drafts is null
+            || await _drafts.FindAsync(OfflineDraftKind.Invoice, serverId, localId, CancellationToken.None) is not { } draft
+            || (_invoice is not null && draft.BaseVersion != _invoice.Version)
+            || OfflineDrafts.InvoiceRequestOf(draft) is not { } request)
+        {
+            return false;
+        }
+
+        _localId = draft.LocalId;
+        _request = request;
+        _customerName = draft.Title ?? _customerName;
+        _lines = [.. request.Lines.Select(l => DocumentLineRow.From(l,
+            _reference.VatRates.FirstOrDefault(r => r.Code == l.VatRateCode)?.Percent ?? 0m))];
+        _status = L["Drafts.Restored"];
+        return true;
+    }
+
+    private void DraftSynced(object? sender, OfflineDraftSynced synced)
+    {
+        if (synced.Kind != OfflineDraftKind.Invoice || synced.LocalId != _localId)
+        {
+            return;
+        }
+
+        _ = InvokeAsync(async () =>
+        {
+            _localId = null;
+            if (_invoice?.Id == synced.ServerId)
+            {
+                await ReloadAsync();
+                StateHasChanged();
+            }
+            else
+            {
+                Navigation.NavigateTo($"invoices/{synced.ServerId}", new NavigationOptions { ReplaceHistoryEntry = true });
+            }
+        });
     }
 
     private void Show(InvoiceResponse invoice)
@@ -401,9 +480,27 @@ else
             return;   // pas de pièce vide : elle naît avec sa première ligne complète
         }
 
+        if (_invoice is null && _localId is { } pending && _drafts?.SyncedServerId(pending) is { } sent)
+        {
+            Navigation.NavigateTo($"invoices/{sent}", new NavigationOptions { ReplaceHistoryEntry = true });
+            return;   // déjà partie avec l'envoi des brouillons : pas de seconde facture
+        }
+
         OperationResult<InvoiceResponse> result = _invoice is null
             ? await Invoices.CreateAsync(_request, CancellationToken.None)
             : await Invoices.UpdateAsync(_invoice.Id, _request, _invoice.Version, CancellationToken.None);
+        if (_drafts is not null && OfflineDrafts.IsUnreachable(result))
+        {
+            await KeepOnDeviceAsync(_drafts);
+            return;
+        }
+
+        if (result.IsSuccess && _localId is { } local)
+        {
+            _localId = null;
+            await _drafts!.ForgetAsync(local, CancellationToken.None);
+        }
+
         if (result.Value is null)
         {
             _errors = result.Errors;
@@ -427,6 +524,22 @@ else
         {
             _loadedId = result.Value.Id;
             Navigation.NavigateTo($"invoices/{result.Value.Id}", new NavigationOptions { ReplaceHistoryEntry = true });
+        }
+
+        StateHasChanged();
+    }
+
+    /// <summary>Pas de réseau : la saisie reste sur l'appareil et partira à son retour (étape 4.5).</summary>
+    private async Task KeepOnDeviceAsync(OfflineDrafts drafts)
+    {
+        bool created = _localId is null && _invoice is null;
+        _localId = await drafts.KeepInvoiceAsync(_localId, _invoice, _request, _customerName ?? _customerPicker?.DisplayedName, CancellationToken.None);
+        _errors = [];
+        _status = L["Drafts.KeptOnDevice"];
+        if (created)
+        {
+            _loadedId = _localId;
+            Navigation.NavigateTo($"invoices/draft/{_localId}", new NavigationOptions { ReplaceHistoryEntry = true });
         }
 
         StateHasChanged();
@@ -641,5 +754,12 @@ else
         }
     }
 
-    public void Dispose() => _autosave.Dispose();
+    public void Dispose()
+    {
+        _autosave.Dispose();
+        if (_drafts is not null)
+        {
+            _drafts.Synced -= DraftSynced;
+        }
+    }
 }
