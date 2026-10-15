@@ -72,6 +72,7 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(RoleAssignmentSummary))]
 [JsonSerializable(typeof(AskAssistantRequest))]
 [JsonSerializable(typeof(AssistantEvent))]
+[JsonSerializable(typeof(AssistantStatusResponse))]
 [JsonSerializable(typeof(IReadOnlyList<AssistantJournalEntry>))]
 [JsonSerializable(typeof(IntegrityReportResponse))]
 [JsonSerializable(typeof(FecValidationResponse))]

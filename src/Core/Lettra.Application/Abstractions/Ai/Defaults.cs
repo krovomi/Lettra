@@ -16,6 +16,11 @@ internal sealed class DisabledAiUsagePolicy : IAiUsagePolicy
         ValueTask.FromResult(AiSettings.Disabled);
 }
 
+internal sealed class NoAiEngineFactory : IAiEngineFactory
+{
+    public IAiEngine? Resolve(AiEngineKind kind) => null;
+}
+
 internal sealed class NoAiSettingsStore : IAiSettingsStore
 {
     public bool IsAvailable => false;

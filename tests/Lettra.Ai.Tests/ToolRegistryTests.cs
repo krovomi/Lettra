@@ -45,14 +45,22 @@ public sealed class ToolRegistryTests
     }
 
     [Fact]
-    public async Task Les_outils_du_produit_sont_tous_en_lecture_seule_et_la_consultation_web_suit_le_reglage_du_cabinet()
+    public async Task Les_outils_du_produit_lisent_ou_creent_un_brouillon_et_la_consultation_web_suit_le_reglage_du_cabinet()
     {
         await using AssistantHarness h = new(new ScriptedTurnsEngine(_ => ScriptedTurnsEngine.Say("ok")));
         await using AsyncServiceScope scope = h.Get<IServiceProvider>().CreateAsyncScope();
         ToolRegistry registry = scope.ServiceProvider.GetRequiredService<ToolRegistry>();
 
-        registry.All.Select(t => t.Name).Should().BeEquivalentTo("calculer", "consulter_site_officiel", "lire_reference", "lister_references");
-        registry.All.Should().OnlyContain(t => t.Risk == AssistantToolRisk.ReadOnly);
+        registry.All.Select(t => t.Name).Should().BeEquivalentTo(
+            "calculer", "chercher_article", "chercher_client", "consulter_site_officiel", "controler_document_ouvert",
+            "creer_brouillon_devis", "lire_reference", "lister_references");
+
+        // Un seul outil écrit, et seulement un brouillon, avec la permission de l'utilisateur et pour le point 1.
+        IAiTool draft = registry.All.Single(t => t.Risk != AssistantToolRisk.ReadOnly);
+        draft.Name.Should().Be(CreateQuoteDraftTool.ToolName);
+        draft.Risk.Should().Be(AssistantToolRisk.CreatesDraft);
+        draft.RequiredPermission.Should().Be(Permission.DevisCreer);
+        draft.Features.Should().Equal(AssistantFeature.DraftFromText);
         registry.All.Single(t => t.Name == OfficialWebLookupTool.ToolName).ReceivesRealValues.Should().BeFalse();
 
         registry.For(AssistantFeature.RegulatoryQuestions, AssistantHarness.AllPermissions, new AiSettings { Enabled = true })

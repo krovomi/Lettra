@@ -19,7 +19,7 @@ public static class DependencyInjection
         // Remplace les implémentations « IA désactivée » enregistrées par l'application.
         services.Replace(ServiceDescriptor.Singleton<IAiUsagePolicy, CabinetAiUsagePolicy>());
         services.Replace(ServiceDescriptor.Scoped<IAccountingAssistant, AccountingAssistant>());
-        services.TryAddSingleton<IAiEngineFactory, KeyedAiEngineFactory>();
+        services.Replace(ServiceDescriptor.Singleton<IAiEngineFactory, KeyedAiEngineFactory>());
 
         // Par requête : le client HTTP de la consultation web vient de la fabrique à chaque fois (rotation DNS).
         services.AddScoped(sp => new ToolRegistry(sp.GetServices<IAiTool>()));
