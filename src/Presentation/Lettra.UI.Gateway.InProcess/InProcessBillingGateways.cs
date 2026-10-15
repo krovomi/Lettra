@@ -5,11 +5,13 @@ using Lettra.Application.Features.Pricing;
 using Lettra.Application.Mapping;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
+using Lettra.Contracts.Exports;
 using Lettra.Contracts.Pricing;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Common;
 using Lettra.Domain.Pricing;
 using Lettra.Domain.SharedKernel;
+using Lettra.Exports.Application.EInvoicing;
 using Lettra.UI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -166,6 +168,15 @@ internal sealed class InProcessInvoicesGateway(IServiceScopeFactory scopes) : II
 
     public Task<OperationResult<InvoiceResponse>> ApproveCreditAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken) =>
         Lifecycle(id, (dossier, invoice) => new ApproveCreditNoteCommand(dossier, invoice, expectedVersion), cancellationToken);
+
+    public Task<OperationResult<byte[]>> GetEInvoiceAsync(Guid id, EInvoiceFormatDto format, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, async (sp, dossier, ct) =>
+        {
+            OperationResult<EInvoiceFile> file = await InProcessScope.QueryAsync(sp, new GetEInvoiceQuery(dossier, new InvoiceId(id), format), ct).ConfigureAwait(false);
+            return file is { IsSuccess: true, Value: { } value }
+                ? OperationResult<byte[]>.Success(value.Content)
+                : OperationResult<byte[]>.Failure(file.Errors);
+        }, cancellationToken);
 
     private Task<OperationResult<InvoiceResponse>> Lifecycle(Guid id, Func<DossierId, InvoiceId, ICommand<Result>> command, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(

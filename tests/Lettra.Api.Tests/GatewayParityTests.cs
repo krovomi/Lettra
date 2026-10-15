@@ -5,6 +5,7 @@ using Lettra.Contracts.Billing;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
+using Lettra.Contracts.Exports;
 using Lettra.Infrastructure.Persistence.Security;
 using Lettra.Infrastructure.Persistence.Sqlite.Local;
 using Lettra.UI.Abstractions;
@@ -160,6 +161,13 @@ public sealed class GatewayParityTests(LettraApiFactory factory) : IClassFixture
         issued.Value!.Status.Should().Be(InvoiceStatusDto.Issued);
         credit.Value!.Kind.Should().Be(InvoiceKindDto.CreditNote);
         credit.Value.Totals.TotalInclTax.Should().Be(120m);
+
+        // Facture électronique : même XML sur les deux transports, refus identique pour un brouillon.
+        OperationResult<byte[]> cii = await invoices.GetEInvoiceAsync(draft.Id, EInvoiceFormatDto.Cii, default);
+        cii.IsSuccess.Should().BeTrue(string.Join(", ", cii.Errors.Select(e => e.Code)));
+        System.Text.Encoding.UTF8.GetString(cii.Value!).Should().Contain("CrossIndustryInvoice").And.Contain(validated.Value.Number);
+        (await invoices.GetEInvoiceAsync(credit.Value.Id, EInvoiceFormatDto.Ubl, default)).Errors
+            .Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.EInvoice.NotValidated);
         (await invoices.DeleteAsync(credit.Value.Id, credit.Value.Version, default)).Value.Should().BeTrue();
         (await invoices.DeleteAsync(draft.Id, null, default)).Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Billing.NotDraft);
     }
