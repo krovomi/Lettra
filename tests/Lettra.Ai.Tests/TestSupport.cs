@@ -7,6 +7,7 @@ using Lettra.Ai.Tools;
 using Lettra.Ai.Tools.Company;
 using Lettra.Application.Abstractions.Ai;
 using Lettra.Application.Abstractions.Identity;
+using Lettra.Application.Abstractions.Messaging;
 using Lettra.Contracts.Assistant;
 using Lettra.Domain.SharedKernel;
 using Microsoft.Extensions.Configuration;
@@ -114,6 +115,11 @@ internal sealed class AssistantHarness : IAsyncDisposable
         services.AddAiTools();
         services.RemoveAll<IAiDossierContext>().AddScoped<IAiDossierContext, FakeDossierContext>();
         services.RemoveAll<ICompanyFactsSource>();
+
+        // Pas de pipeline ici : les outils de la facturation parlent à un faux dispatcher qui enregistre chaque demande.
+        services.AddSingleton(Dispatcher);
+        services.AddSingleton<IQueryDispatcher>(Dispatcher);
+        services.AddSingleton<ICommandDispatcher>(Dispatcher);
         services.AddSingleton<IAiAuditLog, InMemoryAiAuditLog>();
         services.AddSingleton<IAiSettingsStore>(Settings);
         services.AddAiOrchestration(configuration);
@@ -127,6 +133,9 @@ internal sealed class AssistantHarness : IAsyncDisposable
     }
 
     public ScriptedTurnsEngine Engine { get; }
+
+    /// <summary>Faux dispatcher de l'application : ce que les outils ont demandé, et les réponses à leur faire.</summary>
+    public RecordingDispatcher Dispatcher { get; } = new();
 
     /// <summary>Réglages enregistrés par cabinet (la base Catalog en production) ; vide par défaut.</summary>
     public InMemoryAiSettingsStore Settings { get; } = new();
@@ -162,9 +171,11 @@ internal sealed class AssistantHarness : IAsyncDisposable
         AssistantFeature feature,
         string question,
         string? imported = null,
-        IReadOnlySet<Permission>? permissions = null)
+        IReadOnlySet<Permission>? permissions = null,
+        Guid? openDocumentId = null)
     {
-        AssistantRequest request = new(Organisation, Dossier, UserId, permissions ?? AllPermissions, feature, question, ImportedContent: imported);
+        AssistantRequest request = new(
+            Organisation, Dossier, UserId, permissions ?? AllPermissions, feature, question, OpenDocumentId: openDocumentId, ImportedContent: imported);
         await using AsyncServiceScope scope = _services.CreateAsyncScope();
         List<AssistantEvent> events = [];
         await foreach (AssistantEvent e in scope.ServiceProvider.GetRequiredService<IAccountingAssistant>().AskAsync(request, CancellationToken.None))
@@ -176,6 +187,36 @@ internal sealed class AssistantHarness : IAsyncDisposable
     }
 
     public ValueTask DisposeAsync() => _services.DisposeAsync();
+}
+
+/// <summary>
+/// Faux <see cref="IQueryDispatcher"/> et <see cref="ICommandDispatcher"/> : chaque demande est enregistrée, et la réponse
+/// vient de la fonction déclarée pour son type. Une demande sans réponse déclarée fait échouer le test.
+/// </summary>
+internal sealed class RecordingDispatcher : IQueryDispatcher, ICommandDispatcher
+{
+    private readonly Dictionary<Type, Func<object, object>> _answers = [];
+
+    public List<object> Sent { get; } = [];
+
+    public RecordingDispatcher On<TRequest, TResult>(Func<TRequest, TResult> answer)
+        where TResult : notnull
+    {
+        _answers[typeof(TRequest)] = request => answer((TRequest)request);
+        return this;
+    }
+
+    public Task<TResult> QueryAsync<TResult>(IQuery<TResult> query, CancellationToken cancellationToken) => Answer<TResult>(query);
+
+    public Task<TResult> SendAsync<TResult>(ICommand<TResult> command, CancellationToken cancellationToken) => Answer<TResult>(command);
+
+    private Task<TResult> Answer<TResult>(object request)
+    {
+        Sent.Add(request);
+        return _answers.TryGetValue(request.GetType(), out Func<object, object>? answer)
+            ? Task.FromResult((TResult)answer(request))
+            : throw new InvalidOperationException($"Demande inattendue : {request.GetType().Name}");
+    }
 }
 
 /// <summary>Journal IA en mémoire : en production, c'est la table <c>AiJournal</c> de la base du dossier.</summary>

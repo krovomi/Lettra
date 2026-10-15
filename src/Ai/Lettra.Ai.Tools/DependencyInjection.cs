@@ -15,6 +15,12 @@ public static class DependencyInjection
         services.AddSingleton<IAiTool, ReadReferenceTool>();
         services.AddSingleton<IAiTool, ListReferencesTool>();
         services.AddSingleton<IAiTool, CalculateTool>();
+
+        // Outils de la facturation : par requête, car ils passent par les dispatchers (droits de l'utilisateur).
+        services.AddScoped<IAiTool, FindCustomerTool>();
+        services.AddScoped<IAiTool, FindCatalogItemTool>();
+        services.AddScoped<IAiTool, CreateQuoteDraftTool>();
+        services.AddScoped<IAiTool, CheckOpenDocumentTool>();
         services.AddHttpClient<OfficialWebLookupTool>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(15);

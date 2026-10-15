@@ -1,6 +1,7 @@
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Messaging;
+using Lettra.Application.Abstractions.Outbox;
 using Lettra.Application.Abstractions.Persistence;
 using Lettra.Application.Features.Billing;
 using Lettra.Application.Mapping;
@@ -48,14 +49,13 @@ public sealed record GetPlatformTransmissionQuery(DossierId Dossier, InvoiceId I
 
 internal sealed class TransmitInvoiceHandler(
     IInvoiceRepository invoices,
-    ICompanyProfileRepository profiles,
     IPlatformTransmissionStore transmissions,
     IAccreditedPlatformClient platform,
     ISegregationOfDuties duties,
-    IBillingTransaction transaction,
-    IIntegrityJournal journal,
-    ICommandDispatcher commands,
-    TimeProvider clock) : ICommandHandler<TransmitInvoiceCommand, Result<PlatformTransmissionResponse>>
+    IOutbox outbox,
+    IOutboxDispatcher dispatcher,
+    IUnitOfWork unitOfWork,
+    ICommandDispatcher commands) : ICommandHandler<TransmitInvoiceCommand, Result<PlatformTransmissionResponse>>
 {
     public async Task<Result<PlatformTransmissionResponse>> HandleAsync(TransmitInvoiceCommand command, CancellationToken cancellationToken)
     {
@@ -97,46 +97,26 @@ internal sealed class TransmitInvoiceHandler(
             }
         }
 
-        CompanyProfile? profile = await profiles.FindAsync(cancellationToken).ConfigureAwait(false);
-        InvoiceResponse piece = invoice.ToResponse();
-        bool eInvoice = IsDomesticBusiness(invoice.Customer);
-        DateOnly? preceding = eInvoice
-            ? await EInvoiceSerializer.PrecedingInvoiceDateAsync(invoices, invoice, cancellationToken).ConfigureAwait(false)
-            : null;
-        Result<PlatformReceipt> receipt = eInvoice
-            ? await platform.SubmitInvoiceAsync(
-                new PlatformInvoiceSubmission(
-                    invoice.Seller.Siren,
-                    invoice.Customer.Siren!,
-                    invoice.Number,
-                    command.Format,
-                    EInvoiceSerializer.FileNameOf(invoice.Number, command.Format),
-                    EInvoiceSerializer.Write(piece, profile?.ToResponse(), command.Format, preceding)),
-                cancellationToken).ConfigureAwait(false)
-            : await platform.ReportTransactionAsync(TransactionOf(invoice.Seller.Siren, piece, invoice.Customer), cancellationToken).ConfigureAwait(false);
-        if (receipt.IsFailure)
+        if (platform is UnconfiguredPlatformClient)
         {
-            return Result<PlatformTransmissionResponse>.Failure(receipt.Errors);
+            return PlatformErrors.NotConfigured;
         }
 
-        PlatformTransmission transmission = new(
-            Guid.CreateVersion7(),
-            invoice.Id.Value,
-            invoice.Number,
-            eInvoice ? PlatformChannelDto.EInvoice : PlatformChannelDto.EReporting,
-            eInvoice ? command.Format : null,
-            platform.Name,
-            receipt.Value.Reference,
-            piece.Totals.TotalInclTax,
-            clock.GetUtcNow(),
-            [receipt.Value.Status]);
-        Result recorded = await RecordAsync(transmissions, transaction, journal, invoice, transmission, 0, cancellationToken).ConfigureAwait(false);
-        if (recorded.IsFailure)
-        {
-            return Result<PlatformTransmissionResponse>.Failure(recorded.Errors);
-        }
+        // Le dépôt passe par l'outbox (étape 5.4) : écrit ici, envoyé tout de suite par PlatformDepositHandler (qui
+        // enregistre l'accusé et le journalise), repris par le Worker si la plateforme ne répond pas. Une pièce déposée
+        // par le Worker s'émet à sa prochaine transmission demandée (premier test de la commande).
+        Guid message = await outbox.EnqueueAsync(
+            PlatformOutbox.DepositKind,
+            PlatformOutbox.DepositKey(invoice.Id.Value, current?.Id),
+            PlatformOutbox.Write(new PlatformDepositOrder(invoice.Id.Value, command.Format, current?.Id)),
+            cancellationToken).ConfigureAwait(false);
+        await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        OutboxOutcome? outcome = await PlatformOutbox.SendNowAsync(dispatcher, message, cancellationToken).ConfigureAwait(false);
 
-        return await IssuedAsync(command, invoice, transmission, cancellationToken).ConfigureAwait(false);
+        PlatformTransmission? sent = await transmissions.FindLatestAsync(invoice.Id.Value, cancellationToken).ConfigureAwait(false);
+        return sent is null || sent.Id == current?.Id
+            ? PlatformOutbox.NotSent(outcome)
+            : await IssuedAsync(command, invoice, sent, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -181,7 +161,7 @@ internal sealed class TransmitInvoiceHandler(
         && string.Equals(customer.CountryCode, "FR", StringComparison.OrdinalIgnoreCase)
         && !string.IsNullOrWhiteSpace(customer.Siren);
 
-    private static PlatformTransactionReport TransactionOf(string sellerSiren, InvoiceResponse piece, PartySnapshot customer)
+    internal static PlatformTransactionReport TransactionOf(string sellerSiren, InvoiceResponse piece, PartySnapshot customer)
     {
         EInvoice model = EInvoice.From(piece, null);
         return new PlatformTransactionReport(
@@ -267,9 +247,10 @@ internal sealed partial class RefreshPlatformStatusHandler(
 internal sealed class ReportPaymentHandler(
     IInvoiceRepository invoices,
     IPlatformTransmissionStore transmissions,
-    IBillingTransaction transaction,
-    IIntegrityJournal journal,
-    IAccreditedPlatformClient platform) : ICommandHandler<ReportPaymentCommand, Result<PlatformTransmissionResponse>>
+    IAccreditedPlatformClient platform,
+    IOutbox outbox,
+    IOutboxDispatcher dispatcher,
+    IUnitOfWork unitOfWork) : ICommandHandler<ReportPaymentCommand, Result<PlatformTransmissionResponse>>
 {
     public async Task<Result<PlatformTransmissionResponse>> HandleAsync(ReportPaymentCommand command, CancellationToken cancellationToken)
     {
@@ -301,26 +282,27 @@ internal sealed class ReportPaymentHandler(
             return PlatformErrors.PaymentDateInvalid;
         }
 
-        Result<PlatformStatusEvent> collected = await platform.ReportPaymentAsync(
-            new PlatformPaymentReport(invoice.Seller?.Siren ?? string.Empty, transmission.InvoiceNumber, transmission.Reference, transmission.Channel, command.Date, command.Amount),
-            cancellationToken).ConfigureAwait(false);
-        if (collected.IsFailure)
+        if (platform is UnconfiguredPlatformClient)
         {
-            return Result<PlatformTransmissionResponse>.Failure(collected.Errors);
+            return PlatformErrors.NotConfigured;
         }
 
+        // La déclaration passe par l'outbox (étape 5.4) : PlatformPaymentHandler l'envoie et l'enregistre au journal.
         int known = transmission.History.Count;
-        if (transmission.TryApply(collected.Value))
+        Guid message = await outbox.EnqueueAsync(
+            PlatformOutbox.PaymentKind,
+            PlatformOutbox.PaymentKey(transmission.Id, known, command.Date, command.Amount),
+            PlatformOutbox.Write(new PlatformPaymentOrder(invoice.Id.Value, transmission.Id, command.Date, command.Amount, known)),
+            cancellationToken).ConfigureAwait(false);
+        await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        OutboxOutcome? outcome = await PlatformOutbox.SendNowAsync(dispatcher, message, cancellationToken).ConfigureAwait(false);
+        if (outcome is not { Result: OutboxResult.Delivered })
         {
-            Result recorded = await TransmitInvoiceHandler.RecordAsync(transmissions, transaction, journal, invoice, transmission, known, cancellationToken)
-                .ConfigureAwait(false);
-            if (recorded.IsFailure)
-            {
-                return Result<PlatformTransmissionResponse>.Failure(recorded.Errors);
-            }
+            return PlatformOutbox.NotSent(outcome);
         }
 
-        return transmission.ToResponse();
+        PlatformTransmission? recorded = await transmissions.FindLatestAsync(invoice.Id.Value, cancellationToken).ConfigureAwait(false);
+        return recorded!.ToResponse();
     }
 }
 

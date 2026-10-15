@@ -3,14 +3,19 @@ using Lettra.Domain.Common;
 
 namespace Lettra.Exports.Application.EInvoicing.Platform;
 
-/// <summary>Une facture électronique déposée à la plateforme du vendeur.</summary>
+/// <summary>
+/// Une facture électronique déposée à la plateforme du vendeur. <c>IdempotencyKey</c> est la clé de l'envoi (outbox,
+/// étape 5.4) : la plateforme rend l'accusé du premier dépôt fait sous cette clé au lieu de traiter un doublon. Même rôle
+/// sur les autres appels.
+/// </summary>
 public sealed record PlatformInvoiceSubmission(
     string SellerSiren,
     string BuyerSiren,
     string InvoiceNumber,
     EInvoiceFormatDto Format,
     string FileName,
-    ReadOnlyMemory<byte> Content);
+    ReadOnlyMemory<byte> Content,
+    string? IdempotencyKey = null);
 
 /// <summary>Nature d'une transaction déclarée en e-reporting.</summary>
 public enum PlatformTransactionKind
@@ -40,7 +45,8 @@ public sealed record PlatformTransactionReport(
     IReadOnlyList<PlatformVatAmount> Vat,
     decimal TotalExclTax,
     decimal TotalVat,
-    decimal TotalInclTax);
+    decimal TotalInclTax,
+    string? IdempotencyKey = null);
 
 /// <summary>Un encaissement : statut Encaissée d'une facture électronique, ou e-reporting du paiement d'une transaction.</summary>
 public sealed record PlatformPaymentReport(
@@ -49,7 +55,8 @@ public sealed record PlatformPaymentReport(
     string Reference,
     PlatformChannelDto Channel,
     DateOnly Date,
-    decimal Amount);
+    decimal Amount,
+    string? IdempotencyKey = null);
 
 /// <summary>Un statut du cycle de vie, tel que la plateforme le restitue.</summary>
 public sealed record PlatformStatusEvent(PlatformStatusDto Status, DateTimeOffset At, string? Reason = null, decimal? Amount = null);
@@ -101,6 +108,9 @@ public static class PlatformErrors
     public static Error PaymentDateInvalid => Error.Validation(Contracts.Common.ErrorCodes.Platform.PaymentDateInvalid, "Date");
 
     public static Error ReferenceUnknown => Error.NotFound(Contracts.Common.ErrorCodes.Platform.ReferenceUnknown);
+
+    /// <summary>L'envoi est en file : le Worker l'enverra (envoi immédiat désactivé, ou repris après un incident).</summary>
+    public static Error Queued => Error.Conflict(Contracts.Common.ErrorCodes.Platform.Queued);
 }
 
 /// <summary>Aucune plateforme configurée (par défaut) : tout échoue, rien ne part.</summary>

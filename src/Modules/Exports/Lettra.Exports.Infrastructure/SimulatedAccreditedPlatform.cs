@@ -29,6 +29,10 @@ public sealed class SimulatedAccreditedPlatform(TimeProvider clock) : IAccredite
     private readonly Lock _lock = new();
     private readonly Dictionary<string, Deposit> _deposits = [];
     private readonly HashSet<string> _unregistered = [];
+
+    // Envois déjà traités, par clé d'idempotence : un envoi repris rend la réponse du premier.
+    private readonly Dictionary<string, PlatformReceipt> _receiptsByKey = [];
+    private readonly Dictionary<string, PlatformStatusEvent> _paymentsByKey = [];
     private int _sequence;
 
     public string Name => PlatformName;
@@ -64,13 +68,18 @@ public sealed class SimulatedAccreditedPlatform(TimeProvider clock) : IAccredite
         string? rejection = Check(submission);
         lock (_lock)
         {
+            if (submission.IdempotencyKey is string key && _receiptsByKey.TryGetValue(key, out PlatformReceipt? known))
+            {
+                return Task.FromResult<Result<PlatformReceipt>>(known);
+            }
+
             if (rejection is null && _deposits.Values.Any(d => d.Accepted && d.SellerSiren == submission.SellerSiren && d.InvoiceNumber == submission.InvoiceNumber))
             {
                 rejection = "Doublon : une facture de ce numéro a déjà été déposée par ce vendeur.";
             }
 
             Deposit deposit = Add(submission.SellerSiren, submission.InvoiceNumber, rejection is null, rejection is null, rejection);
-            return Task.FromResult<Result<PlatformReceipt>>(new PlatformReceipt(deposit.Reference, deposit.History[0]));
+            return Task.FromResult<Result<PlatformReceipt>>(Remember(submission.IdempotencyKey, new PlatformReceipt(deposit.Reference, deposit.History[0])));
         }
     }
 
@@ -87,8 +96,13 @@ public sealed class SimulatedAccreditedPlatform(TimeProvider clock) : IAccredite
             : null;
         lock (_lock)
         {
+            if (report.IdempotencyKey is string key && _receiptsByKey.TryGetValue(key, out PlatformReceipt? known))
+            {
+                return Task.FromResult<Result<PlatformReceipt>>(known);
+            }
+
             Deposit deposit = Add(report.SellerSiren, report.InvoiceNumber, rejection is null, routed: false, rejection);
-            return Task.FromResult<Result<PlatformReceipt>>(new PlatformReceipt(deposit.Reference, deposit.History[0]));
+            return Task.FromResult<Result<PlatformReceipt>>(Remember(report.IdempotencyKey, new PlatformReceipt(deposit.Reference, deposit.History[0])));
         }
     }
 
@@ -128,6 +142,11 @@ public sealed class SimulatedAccreditedPlatform(TimeProvider clock) : IAccredite
 
         lock (_lock)
         {
+            if (payment.IdempotencyKey is string key && _paymentsByKey.TryGetValue(key, out PlatformStatusEvent? known))
+            {
+                return Task.FromResult<Result<PlatformStatusEvent>>(known);
+            }
+
             if (!_deposits.TryGetValue(payment.Reference, out Deposit? deposit) || !deposit.Accepted)
             {
                 return Task.FromResult<Result<PlatformStatusEvent>>(PlatformErrors.ReferenceUnknown);
@@ -135,6 +154,11 @@ public sealed class SimulatedAccreditedPlatform(TimeProvider clock) : IAccredite
 
             PlatformStatusEvent collected = new(PlatformStatusDto.Collected, Now(), null, payment.Amount);
             deposit.History.Add(collected);
+            if (payment.IdempotencyKey is string paid)
+            {
+                _paymentsByKey[paid] = collected;
+            }
+
             return Task.FromResult<Result<PlatformStatusEvent>>(collected);
         }
     }
@@ -159,6 +183,28 @@ public sealed class SimulatedAccreditedPlatform(TimeProvider clock) : IAccredite
             deposit.History.Add(added);
             return added;
         }
+    }
+
+    /// <summary>Dépôts reçus (acceptés ou rejetés), doublons compris : pour vérifier qu'un envoi repris n'en crée pas.</summary>
+    public int DepositCount
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _deposits.Count;
+            }
+        }
+    }
+
+    private PlatformReceipt Remember(string? key, PlatformReceipt receipt)
+    {
+        if (key is not null)
+        {
+            _receiptsByKey[key] = receipt;
+        }
+
+        return receipt;
     }
 
     private string? Check(PlatformInvoiceSubmission submission)

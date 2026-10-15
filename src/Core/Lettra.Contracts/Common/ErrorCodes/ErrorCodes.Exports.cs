@@ -52,5 +52,6 @@ public static partial class ErrorCodes
         public const string PaymentAmountInvalid = "Platform.PaymentAmountInvalid";
         public const string PaymentDateInvalid = "Platform.PaymentDateInvalid";
         public const string ReferenceUnknown = "Platform.ReferenceUnknown";
+        public const string Queued = "Platform.Queued";
     }
 }

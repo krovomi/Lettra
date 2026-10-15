@@ -1,4 +1,5 @@
 using Lettra.Application.Abstractions.Messaging;
+using Lettra.Application.Abstractions.Outbox;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Features.Billing;
 using Lettra.Application.Features.Customers;
@@ -175,16 +176,29 @@ internal static class PlatformScenarios
             (await StatusOfAsync(scope, dossier, abroad)).Should().Be(InvoiceStatusDto.Issued);
         }
 
-        // Plateforme injoignable : rien n'est enregistré, la pièce reste validée.
+        // Plateforme injoignable : rien n'est enregistré, la pièce reste validée, le dépôt attend dans l'outbox (5.4).
         await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
         {
             ICommandDispatcher commands = scope.ServiceProvider.GetRequiredService<ICommandDispatcher>();
             platform.IsUnavailable = true;
-            Codes(await commands.SendAsync(new TransmitInvoiceCommand(dossier, outage), default)).Should().Equal(ErrorCodes.Platform.Unavailable);
+            Codes(await commands.SendAsync(new TransmitInvoiceCommand(dossier, outage), default)).Should().Equal(ErrorCodes.Platform.Queued);
             platform.IsUnavailable = false;
             (await StatusOfAsync(scope, dossier, outage)).Should().Be(InvoiceStatusDto.Validated);
             Codes(await scope.ServiceProvider.GetRequiredService<IQueryDispatcher>().QueryAsync(new GetPlatformTransmissionQuery(dossier, outage), default))
                 .Should().Equal(ErrorCodes.Platform.NotTransmitted);
+        }
+
+        // Plateforme revenue : redemander la transmission renvoie le dépôt en attente tout de suite, sans en créer un second.
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            ICommandDispatcher commands = scope.ServiceProvider.GetRequiredService<ICommandDispatcher>();
+            Succeeded(await commands.SendAsync(new TransmitInvoiceCommand(dossier, outage), default)).Status.Should().Be(PlatformStatusDto.Deposited);
+            (await StatusOfAsync(scope, dossier, outage)).Should().Be(InvoiceStatusDto.Issued);
+        }
+
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            ICommandDispatcher commands = scope.ServiceProvider.GetRequiredService<ICommandDispatcher>();
 
             // Un brouillon ne se transmet pas.
             InvoiceId draft = (await commands.SendAsync(new CreateInvoiceCommand(dossier, Request(durand, 10m, VatRegimeDto.Standard)), default)).Value;
@@ -203,7 +217,7 @@ internal static class PlatformScenarios
                 JournalEntryKind.PlatformPaymentReported, JournalEntryKind.PlatformPaymentReported);
             entries.Single(e => e.Kind == JournalEntryKind.PlatformTransmitted).Number.Should().NotBeNullOrWhiteSpace();
             entries.Where(e => e.Kind == JournalEntryKind.PlatformPaymentReported).Sum(e => e.TotalInclTax).Should().BeGreaterThan(0m);
-            (await db.Set<JournalEntry>().AsNoTracking().CountAsync(e => e.Kind == JournalEntryKind.PlatformTransmitted)).Should().Be(5, "deux envois de la pièce rejetée, trois autres pièces");
+            (await db.Set<JournalEntry>().AsNoTracking().CountAsync(e => e.Kind == JournalEntryKind.PlatformTransmitted)).Should().Be(6, "deux envois de la pièce rejetée, quatre autres pièces");
 
             IntegrityReport intact = (await scope.ServiceProvider.GetRequiredService<DossierIntegrityService>().VerifyAsync(default)).Value;
             intact.Findings.Should().BeEmpty();
@@ -250,6 +264,77 @@ internal static class PlatformScenarios
         (await StatusOfAsync(scope, dossier, invoice)).Should().Be(InvoiceStatusDto.Validated);
     }
 
+    /// <summary>
+    /// Envois par l'outbox (étape 5.4). Plateforme injoignable : le dépôt attend et le Worker l'envoie au retour de la
+    /// plateforme, puis la pièce s'émet à sa prochaine transmission demandée, sans second dépôt. Réponse perdue après
+    /// l'acceptation (arrêt, coupure) : la reprise, sous la même clé, rend le même accusé ; dépôt et encaissement ne sont
+    /// enregistrés et journalisés qu'une fois, et le contrôle d'intégrité reste sans constat.
+    /// </summary>
+    public static async Task OutboxAsync(TenantHarness harness, ManualClock clock, DatabaseProvider provider, string connectionString)
+    {
+        DossierId dossier = harness.AddDossier(provider, connectionString);
+        SimulatedAccreditedPlatform platform = harness.Services.GetRequiredService<SimulatedAccreditedPlatform>();
+        LosingPlatform network = harness.Services.GetRequiredService<LosingPlatform>();
+        InvoiceId waiting, lost;
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            ICommandDispatcher commands = scope.ServiceProvider.GetRequiredService<ICommandDispatcher>();
+            (await commands.SendAsync(new SaveCompanyProfileCommand(dossier, Cabinet, null), default)).IsSuccess.Should().BeTrue();
+            Guid durand = (await commands.SendAsync(new CreateCustomerCommand(dossier, Durand), default)).Value.Value;
+            waiting = await ValidatedAsync(commands, dossier, durand, 200m);
+            lost = await ValidatedAsync(commands, dossier, durand, 100m);
+
+            platform.IsUnavailable = true;
+            Codes(await commands.SendAsync(new TransmitInvoiceCommand(dossier, waiting), default)).Should().Equal(ErrorCodes.Platform.Queued);
+            platform.IsUnavailable = false;
+
+            network.LoseNextResponse = true;
+            Codes(await commands.SendAsync(new TransmitInvoiceCommand(dossier, lost), default)).Should().Equal(ErrorCodes.Platform.Queued);
+            platform.DepositCount.Should().Be(1, "la plateforme a reçu le dépôt, sa réponse s'est perdue");
+        }
+
+        clock.Now = clock.Now.AddSeconds(30);
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            (await scope.ServiceProvider.GetRequiredService<IOutboxDispatcher>().DispatchDueAsync(default)).Should().Be(new OutboxPass(2, 0, 0));
+            platform.DepositCount.Should().Be(2, "la reprise sous la même clé rend le premier accusé");
+            IQueryDispatcher queries = scope.ServiceProvider.GetRequiredService<IQueryDispatcher>();
+            Succeeded(await queries.QueryAsync(new GetPlatformTransmissionQuery(dossier, waiting), default)).Status.Should().Be(PlatformStatusDto.Deposited);
+            Succeeded(await queries.QueryAsync(new GetPlatformTransmissionQuery(dossier, lost), default)).Status.Should().Be(PlatformStatusDto.Deposited);
+            (await StatusOfAsync(scope, dossier, waiting)).Should().Be(InvoiceStatusDto.Validated, "l'émission reste à la commande de l'utilisateur");
+        }
+
+        Guid transmission;
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            ICommandDispatcher commands = scope.ServiceProvider.GetRequiredService<ICommandDispatcher>();
+            transmission = Succeeded(await commands.SendAsync(new TransmitInvoiceCommand(dossier, waiting), default)).Id;
+            (await StatusOfAsync(scope, dossier, waiting)).Should().Be(InvoiceStatusDto.Issued);
+            platform.DepositCount.Should().Be(2);
+            Succeeded(await commands.SendAsync(new TransmitInvoiceCommand(dossier, lost), default));
+
+            network.LoseNextResponse = true;
+            Codes(await commands.SendAsync(new ReportPaymentCommand(dossier, waiting, new DateOnly(2026, 11, 2), 50m), default))
+                .Should().Equal(ErrorCodes.Platform.Queued);
+        }
+
+        clock.Now = clock.Now.AddMinutes(1);
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            (await scope.ServiceProvider.GetRequiredService<IOutboxDispatcher>().DispatchDueAsync(default)).Should().Be(new OutboxPass(1, 0, 0));
+            PlatformTransmissionResponse paid = Succeeded(await scope.ServiceProvider.GetRequiredService<IQueryDispatcher>()
+                .QueryAsync(new GetPlatformTransmissionQuery(dossier, waiting), default));
+            paid.Id.Should().Be(transmission);
+            paid.CollectedAmount.Should().Be(50m, "un seul encaissement enregistré");
+
+            LettraDbContext db = await scope.ServiceProvider.GetRequiredService<TenantDbSession>().GetAsync(default);
+            List<JournalEntry> entries = await db.Set<JournalEntry>().AsNoTracking().Where(e => e.DocumentId == waiting.Value || e.DocumentId == lost.Value).ToListAsync();
+            entries.Count(e => e.Kind == JournalEntryKind.PlatformTransmitted).Should().Be(2);
+            entries.Count(e => e.Kind == JournalEntryKind.PlatformPaymentReported).Should().Be(1);
+            (await scope.ServiceProvider.GetRequiredService<DossierIntegrityService>().VerifyAsync(default)).Value.Findings.Should().BeEmpty();
+        }
+    }
+
     private static async Task<InvoiceId> ValidatedAsync(ICommandDispatcher commands, DossierId dossier, Guid customer, decimal price, VatRegimeDto regime = VatRegimeDto.Standard)
     {
         Result<InvoiceId> created = await commands.SendAsync(new CreateInvoiceCommand(dossier, Request(customer, price, regime)), default);
@@ -276,4 +361,36 @@ internal static class PlatformScenarios
     }
 
     private static IEnumerable<string> Codes(Result<PlatformTransmissionResponse> result) => result.Errors.Select(e => e.Code);
+}
+
+/// <summary>Réseau qui perd la réponse : la plateforme a traité l'appel, l'appelant ne le sait pas.</summary>
+internal sealed class LosingPlatform(SimulatedAccreditedPlatform inner) : IAccreditedPlatformClient
+{
+    public bool LoseNextResponse { get; set; }
+
+    public string Name => inner.Name;
+
+    public Task<Result<PlatformReceipt>> SubmitInvoiceAsync(PlatformInvoiceSubmission submission, CancellationToken cancellationToken) =>
+        LoseAsync(inner.SubmitInvoiceAsync(submission, cancellationToken));
+
+    public Task<Result<PlatformReceipt>> ReportTransactionAsync(PlatformTransactionReport report, CancellationToken cancellationToken) =>
+        LoseAsync(inner.ReportTransactionAsync(report, cancellationToken));
+
+    public Task<Result<IReadOnlyList<PlatformStatusEvent>>> GetStatusEventsAsync(string reference, CancellationToken cancellationToken) =>
+        inner.GetStatusEventsAsync(reference, cancellationToken);
+
+    public Task<Result<PlatformStatusEvent>> ReportPaymentAsync(PlatformPaymentReport payment, CancellationToken cancellationToken) =>
+        LoseAsync(inner.ReportPaymentAsync(payment, cancellationToken));
+
+    private async Task<T> LoseAsync<T>(Task<T> call)
+    {
+        T result = await call.ConfigureAwait(false);
+        if (LoseNextResponse)
+        {
+            LoseNextResponse = false;
+            throw new HttpRequestException("Connexion coupée avant la réponse.");
+        }
+
+        return result;
+    }
 }

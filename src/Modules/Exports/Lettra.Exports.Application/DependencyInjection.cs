@@ -1,4 +1,5 @@
 using Lettra.Application.Abstractions.Messaging;
+using Lettra.Application.Abstractions.Outbox;
 using Lettra.Contracts.Exports;
 using Lettra.Domain.Common;
 using Lettra.Exports.Application.EInvoicing;
@@ -24,6 +25,10 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<RefreshPlatformStatusCommand, Result<PlatformTransmissionResponse>>, RefreshPlatformStatusHandler>();
         services.AddScoped<ICommandHandler<ReportPaymentCommand, Result<PlatformTransmissionResponse>>, ReportPaymentHandler>();
         services.AddScoped<IQueryHandler<GetPlatformTransmissionQuery, Result<PlatformTransmissionResponse>>, GetPlatformTransmissionHandler>();
+
+        // Envois à la plateforme par l'outbox du serveur (étape 5.4).
+        services.AddScoped<IOutboxHandler, PlatformDepositHandler>();
+        services.AddScoped<IOutboxHandler, PlatformPaymentHandler>();
         return services;
     }
 }

@@ -148,6 +148,22 @@ body { margin: 0; }
 .lettra-status.is-platform-suspended { background: #fff4e5; color: #8a4b00; }
 .lettra-platform .lettra-status { font-size: 0.85em; margin-left: 0; }
 
+/* Panneau assistant IA (annexe B §4.2) : à droite, au-dessus du contenu ; la suggestion de l'IA se distingue des règles. */
+.lettra-assistant { position: fixed; top: 4rem; right: 1rem; bottom: 1rem; width: min(28rem, calc(100vw - 2rem)); overflow-y: auto; display: grid; align-content: start; gap: var(--lettra-gap); padding: 1rem; background: var(--lettra-card); border-radius: var(--lettra-radius); box-shadow: 0 4px 16px rgb(0 0 0 / 18%); z-index: 20; }
+.lettra-assistant header { display: flex; justify-content: space-between; align-items: center; }
+.lettra-assistant h2 { margin: 0; font-size: 1.1rem; }
+.lettra-assistant form { display: grid; gap: 0.35rem; }
+.lettra-assistant textarea { font: inherit; }
+.lettra-assistant-events { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+.lettra-assistant-events li { padding: 0.4rem 0.6rem; border-left: 3px solid #d0d5dd; }
+.lettra-assistant-events .is-error { border-color: var(--lettra-danger); color: var(--lettra-danger); }
+.lettra-assistant-events .is-warning { border-color: #b54708; }
+.lettra-assistant-events .is-rule, .lettra-assistant-events .is-draft { border-color: var(--lettra-success); }
+.lettra-assistant-events .is-suggestion { border-color: var(--lettra-accent); background: #eef3ff; }
+.lettra-assistant-events pre { white-space: pre-wrap; font-size: 0.85em; }
+.lettra-assistant-label { display: block; font-size: 0.8em; font-weight: 600; color: var(--lettra-accent); }
+.lettra-assistant-text { white-space: pre-wrap; }
+.lettra-why { margin-left: 0.5rem; font-size: 0.85em; }
 /* Écran FEC (phase 5) */
 .lettra-banner.is-success { background: #e7f5ee; border: 1px solid var(--lettra-success); }
 .lettra-fec h3 { font-size: 1rem; margin-top: 1.25rem; }

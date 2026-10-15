@@ -39,6 +39,14 @@ public sealed record DocumentLineRow(
             line.Quantity, line.UnitPriceExclTax, line.DiscountPercent, line.VatRateCode, line.VatRatePercent, line.VatExemptionCode);
     }
 
+    /// <summary>Ligne d'un brouillon gardé sur l'appareil (étape 4.5) ; le taux affiché vient des données de référence.</summary>
+    public static DocumentLineRow From(DocumentLineRequest line, decimal vatRatePercent)
+    {
+        ArgumentNullException.ThrowIfNull(line);
+        return new(Guid.NewGuid(), line.CatalogItemId, line.Reference, line.Designation, line.Description, line.Kind, line.UnitCode,
+            line.Quantity, line.UnitPriceExclTax, line.DiscountPercent, line.VatRateCode, vatRatePercent, line.VatExemptionCode);
+    }
+
     /// <summary>Copie d'un article du catalogue (F4 sur la référence) : la ligne garde ses quantité et remise.</summary>
     public DocumentLineRow WithCatalogItem(CatalogItemSummary item)
     {
