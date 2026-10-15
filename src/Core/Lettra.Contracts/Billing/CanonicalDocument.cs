@@ -41,6 +41,33 @@ public static class CanonicalDocument
     public static string ComputeHash(InvoiceResponse invoice) =>
         Convert.ToHexStringLower(SHA256.HashData(ToCanonicalBytes(invoice)));
 
+    /// <summary>Octets canoniques (v1) d'un devis validé : mêmes règles, champs propres au devis.</summary>
+    public static byte[] ToCanonicalBytes(QuoteResponse quote)
+    {
+        ArgumentNullException.ThrowIfNull(quote);
+        using MemoryStream buffer = new();
+        using (Utf8JsonWriter writer = new(buffer, new JsonWriterOptions { Indented = false }))
+        {
+            writer.WriteStartObject();
+            writer.WriteNumber("v", 1);
+            writer.WriteString("id", Id(quote.Id));
+            writer.WriteString("kind", "Quote");
+            writer.WriteString("number", quote.Number);
+            writer.WriteString("issueDate", Date(quote.IssueDate));
+            writer.WriteString("validUntil", Date(quote.ValidUntil));
+            writer.WriteString("vatRegime", quote.VatRegime.ToString());
+            writer.WriteString("customerId", Id(quote.CustomerId));
+            WriteParty(writer, "customer", quote.Customer);
+            WriteBody(writer, quote.Lines, quote.Totals, quote.LegalMentions);
+            writer.WriteEndObject();
+        }
+
+        return buffer.ToArray();
+    }
+
+    public static string ComputeHash(QuoteResponse quote) =>
+        Convert.ToHexStringLower(SHA256.HashData(ToCanonicalBytes(quote)));
+
     private static void WriteV1(Utf8JsonWriter w, InvoiceResponse i)
     {
         w.WriteStartObject();
@@ -64,8 +91,14 @@ public static class CanonicalDocument
         WriteParty(w, "seller", i.Seller);
         WriteParty(w, "customer", i.Customer);
 
+        WriteBody(w, i.Lines, i.Totals, i.LegalMentions);
+        w.WriteEndObject();
+    }
+
+    private static void WriteBody(Utf8JsonWriter w, IReadOnlyList<DocumentLineResponse> lines, DocumentTotalsResponse totals, IReadOnlyList<string> legalMentions)
+    {
         w.WriteStartArray("lines");
-        foreach (DocumentLineResponse line in i.Lines.OrderBy(l => l.Position))
+        foreach (DocumentLineResponse line in lines.OrderBy(l => l.Position))
         {
             w.WriteStartObject();
             w.WriteNumber("position", line.Position);
@@ -89,7 +122,7 @@ public static class CanonicalDocument
         w.WriteEndArray();
 
         w.WriteStartArray("vat");
-        foreach (VatBreakdownResponse b in i.Totals.Breakdown)
+        foreach (VatBreakdownResponse b in totals.Breakdown)
         {
             w.WriteStartObject();
             w.WriteString("category", b.VatCategory.ToString());
@@ -101,18 +134,17 @@ public static class CanonicalDocument
         }
 
         w.WriteEndArray();
-        w.WriteString("totalExclTax", Two(i.Totals.TotalExclTax));
-        w.WriteString("totalVat", Two(i.Totals.TotalVat));
-        w.WriteString("totalInclTax", Two(i.Totals.TotalInclTax));
+        w.WriteString("totalExclTax", Two(totals.TotalExclTax));
+        w.WriteString("totalVat", Two(totals.TotalVat));
+        w.WriteString("totalInclTax", Two(totals.TotalInclTax));
 
         w.WriteStartArray("legalMentions");
-        foreach (string mention in i.LegalMentions)
+        foreach (string mention in legalMentions)
         {
             w.WriteStringValue(mention);
         }
 
         w.WriteEndArray();
-        w.WriteEndObject();
     }
 
     private static void WriteParty(Utf8JsonWriter w, string name, PartySnapshotResponse? party)
