@@ -171,9 +171,26 @@ export function rafale() {
     });
 }
 
+// En CI : une annotation récapitulative (mesures des seuils), lisible sans télécharger les rapports.
+function annotation(data) {
+    const m = data.metrics;
+    const v = (name, stat) => (m[name] && m[name].values[stat] !== undefined ? m[name].values[stat] : null);
+    const ms = x => (x === null ? 'n/a' : `${x.toFixed(1)} ms`);
+    const pct = x => (x === null ? 'n/a' : `${(x * 100).toFixed(2)} %`);
+    const lines = [
+        `requêtes : ${v('http_reqs', 'count')} (${(v('http_reqs', 'rate') || 0).toFixed(1)}/s)`,
+        `p95 anonyme : ${ms(v('http_req_duration{profil:anonyme}', 'p(95)'))}`,
+        `p95 lectures : ${ms(v('http_req_duration{profil:lectures}', 'p(95)'))}`,
+        `échecs : ${pct(v('http_req_failed', 'rate'))} ; lectures : ${pct(v('http_req_failed{profil:lectures}', 'rate'))}`,
+        `rafale : ${v('lettra_admises_rafale', 'count')} admises puis ${v('lettra_429_rafale', 'count')} × 429`,
+        `checks : ${pct(v('checks', 'rate'))}`,
+    ];
+    return __ENV.GITHUB_ACTIONS ? `::notice title=k6 (fumée)::${lines.join('%0A')}\n` : '';
+}
+
 export function handleSummary(data) {
     return {
-        stdout: textSummary(data, { indent: ' ', enableColors: true }),
+        stdout: textSummary(data, { indent: ' ', enableColors: true }) + '\n' + annotation(data),
         [`${OUT}/resume.txt`]: textSummary(data, { indent: ' ', enableColors: false }),
         [`${OUT}/resume.json`]: JSON.stringify(data, null, 2),
     };
