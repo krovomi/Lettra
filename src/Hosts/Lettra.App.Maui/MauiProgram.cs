@@ -41,6 +41,14 @@ public static class MauiProgram
             }
             : ConnectedDevice.Configuration(server));
 
+        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            // Pas encore de plateforme agréée partenaire (étape 5.5) : la plateforme simulée, en mémoire, sur données fictives.
+            ["Lettra:EInvoicing:Platform"] = "Simulated",
+            // Le compte du poste dans le dossier de données de l'application, pas dans le dossier courant (celui du raccourci).
+            ["Lettra:LocalIdentity:StorePath"] = Path.Combine(FileSystem.AppDataDirectory, "compte-local.json"),
+        });
+
         builder.Services.AddLettra(builder.Configuration);
         builder.Services.AddSingleton<IKekStore, SecureStorageKekStore>();
         builder.Services.AddSingleton<IDossierSelection, ActiveDossierSelection>();
