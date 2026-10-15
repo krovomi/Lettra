@@ -1143,6 +1143,75 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.ToTable("SalesJournalEntries", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.EInvoicing.PlatformStatusEventRecord", b =>
+                {
+                    b.Property<Guid>("TransmissionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("Amount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<long>("AtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.HasKey("TransmissionId", "Sequence");
+
+                    b.ToTable("PlatformStatusEvents", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.EInvoicing.PlatformTransmissionRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Channel")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Format")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("InvoiceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("InvoiceNumber")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<long>("SubmittedAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("TotalInclTax")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InvoiceId");
+
+                    b.ToTable("PlatformTransmissions", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Integrity.IntegrityChainHead", b =>
                 {
                     b.Property<int>("Id")
@@ -1714,9 +1783,23 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.EInvoicing.PlatformStatusEventRecord", b =>
+                {
+                    b.HasOne("Lettra.Infrastructure.Persistence.EInvoicing.PlatformTransmissionRecord", null)
+                        .WithMany("Events")
+                        .HasForeignKey("TransmissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Billing.SalesJournalRecord", b =>
                 {
                     b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.EInvoicing.PlatformTransmissionRecord", b =>
+                {
+                    b.Navigation("Events");
                 });
 #pragma warning restore 612, 618
         }
