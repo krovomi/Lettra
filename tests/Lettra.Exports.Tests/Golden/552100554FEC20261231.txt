@@ -1,0 +1,16 @@
+JournalCode	JournalLib	EcritureNum	EcritureDate	CompteNum	CompteLib	CompAuxNum	CompAuxLib	PieceRef	PieceDate	EcritureLib	Debit	Credit	EcritureLet	DateLet	ValidDate	Montantdevise	Idevise
+VE	Journal des ventes	1	20260115	411	Clients	C000000A001	Atelier Durand	FAC-000001	20260115	Facture FAC-000001 Atelier Durand	381,10	0,00			20260115		
+VE	Journal des ventes	1	20260115	706	Prestations de services			FAC-000001	20260115	Facture FAC-000001 Atelier Durand	0,00	300,00			20260115		
+VE	Journal des ventes	1	20260115	707	Ventes de marchandises			FAC-000001	20260115	Facture FAC-000001 Atelier Durand	0,00	20,00			20260115		
+VE	Journal des ventes	1	20260115	44571	TVA collectée			FAC-000001	20260115	Facture FAC-000001 Atelier Durand	0,00	60,00			20260115		
+VE	Journal des ventes	1	20260115	44571	TVA collectée			FAC-000001	20260115	Facture FAC-000001 Atelier Durand	0,00	1,10			20260115		
+VE	Journal des ventes	2	20260203	411	Clients	C000000B002	Boulangerie « Martin » & Fils	FAC-000002	20260203	Facture d'acompte FAC-000002 Boulangerie « Martin » & Fils	180,00	0,00			20260203		
+VE	Journal des ventes	2	20260203	4191	Clients - Avances et acomptes reçus sur commandes			FAC-000002	20260203	Facture d'acompte FAC-000002 Boulangerie « Martin » & Fils	0,00	150,00			20260203		
+VE	Journal des ventes	2	20260203	44571	TVA collectée			FAC-000002	20260203	Facture d'acompte FAC-000002 Boulangerie « Martin » & Fils	0,00	30,00			20260203		
+VE	Journal des ventes	3	20260331	411	Clients	C000000B002	Boulangerie « Martin » & Fils	FAC-000003	20260331	Facture FAC-000003 Boulangerie « Martin » & Fils	420,00	0,00			20260331		
+VE	Journal des ventes	3	20260331	4191	Clients - Avances et acomptes reçus sur commandes			FAC-000003	20260331	Facture FAC-000003 Boulangerie « Martin » & Fils	150,00	0,00			20260331		
+VE	Journal des ventes	3	20260331	706	Prestations de services			FAC-000003	20260331	Facture FAC-000003 Boulangerie « Martin » & Fils	0,00	500,00			20260331		
+VE	Journal des ventes	3	20260331	44571	TVA collectée			FAC-000003	20260331	Facture FAC-000003 Boulangerie « Martin » & Fils	0,00	70,00			20260331		
+VE	Journal des ventes	4	20260402	411	Clients	C000000B002	Boulangerie « Martin » & Fils	FAC-000004	20260402	Avoir FAC-000004 Boulangerie « Martin » & Fils	0,00	120,00			20260402		
+VE	Journal des ventes	4	20260402	706	Prestations de services			FAC-000004	20260402	Avoir FAC-000004 Boulangerie « Martin » & Fils	100,00	0,00			20260402		
+VE	Journal des ventes	4	20260402	44571	TVA collectée			FAC-000004	20260402	Avoir FAC-000004 Boulangerie « Martin » & Fils	20,00	0,00			20260402		

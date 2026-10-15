@@ -61,6 +61,7 @@ api.MapBilling();
 api.MapDirectory();
 api.MapAssistant();
 api.MapIntegrity();
+api.MapExports();
 api.MapDossierAlerts();
 
 // Administration du cabinet : même authentification et anti-CSRF, sans dossier ; la permission porte sur le cabinet.

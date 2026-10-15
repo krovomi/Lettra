@@ -39,6 +39,10 @@
     <Project Path="src/Modules/Supervision/Lettra.Supervision.Domain/Lettra.Supervision.Domain.csproj" />
     <Project Path="src/Modules/Supervision/Lettra.Supervision.Infrastructure/Lettra.Supervision.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/src/Modules/Exports/">
+    <Project Path="src/Modules/Exports/Lettra.Exports.Application/Lettra.Exports.Application.csproj" />
+    <Project Path="src/Modules/Exports/Lettra.Exports.Infrastructure/Lettra.Exports.Infrastructure.csproj" />
+  </Folder>
   <Folder Name="/src/Composition/">
     <Project Path="src/Composition/Lettra.Bootstrap/Lettra.Bootstrap.csproj" />
   </Folder>
@@ -62,6 +66,7 @@
     <Project Path="tests/Lettra.Architecture.Tests/Lettra.Architecture.Tests.csproj" />
     <Project Path="tests/Lettra.Domain.Tests/Lettra.Domain.Tests.csproj" />
     <Project Path="tests/Lettra.Identity.Tests/Lettra.Identity.Tests.csproj" />
+    <Project Path="tests/Lettra.Exports.Tests/Lettra.Exports.Tests.csproj" />
     <Project Path="tests/Lettra.External.Tests/Lettra.External.Tests.csproj" />
     <Project Path="tests/Lettra.Observability.Tests/Lettra.Observability.Tests.csproj" />
     <Project Path="tests/Lettra.Persistence.Tests/Lettra.Persistence.Tests.csproj" />

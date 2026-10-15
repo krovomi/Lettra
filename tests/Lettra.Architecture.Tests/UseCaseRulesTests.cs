@@ -8,7 +8,7 @@ namespace Lettra.Architecture.Tests;
 public sealed class UseCaseRulesTests
 {
     private static IEnumerable<Type> UseCases() =>
-        Assemblies.Application.GetTypes().Where(t => t is { IsAbstract: false, IsInterface: false } && t.GetInterfaces().Any(IsUseCase));
+        new[] { Assemblies.Application, Assemblies.ExportsApplication }.SelectMany(a => a.GetTypes()).Where(t => t is { IsAbstract: false, IsInterface: false } && t.GetInterfaces().Any(IsUseCase));
 
     private static bool IsUseCase(Type i) =>
         i.IsGenericType && (i.GetGenericTypeDefinition() == typeof(ICommand<>) || i.GetGenericTypeDefinition() == typeof(IQuery<>));
