@@ -1,3 +1,4 @@
+using Lettra.Application.Abstractions.Ai;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Infrastructure.Persistence.Catalog;
@@ -39,6 +40,8 @@ public static class DependencyInjection
         services.AddSingleton<IAuthorizationDirectory, CatalogAuthorizationDirectory>();
         services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<IAuthorizationAdministration, CatalogAuthorizationAdministration>();
+        // Réglages IA par cabinet (remplace le magasin « indisponible » enregistré par l'application).
+        services.Replace(ServiceDescriptor.Singleton<IAiSettingsStore, CatalogAiSettingsStore>());
 
         // Remplace la politique « aucune » du mode 1 enregistrée par AddApplication.
         services.AddSingleton<IOrganisationPolicyStore, CatalogOrganisationPolicyStore>();

@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Lettra.Infrastructure.Persistence.Sqlite.CatalogMigrations
 {
     [DbContext(typeof(CatalogDbContext))]
-    [Migration("20261014230001_PolitiquesCabinet")]
+    [Migration("20261015010001_PolitiquesCabinet")]
     partial class PolitiquesCabinet
     {
         /// <inheritdoc />
@@ -19,6 +19,47 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.CatalogMigrations
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.13");
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogAiSettings", b =>
+                {
+                    b.Property<Guid>("OrganisationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Engine")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ExcludedDossiers")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Features")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("MaxToolRounds")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("OfficialWebLookup")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("OrganisationId");
+
+                    b.ToTable("AiSettings", (string)null);
+                });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogCluster", b =>
                 {
@@ -303,6 +344,15 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.CatalogMigrations
                     b.HasIndex("OrganisationId");
 
                     b.ToTable("UserAccounts", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogAiSettings", b =>
+                {
+                    b.HasOne("Lettra.Infrastructure.Persistence.Catalog.CatalogOrganisation", null)
+                        .WithMany()
+                        .HasForeignKey("OrganisationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogCustomRolePermission", b =>

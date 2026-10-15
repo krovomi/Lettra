@@ -66,6 +66,7 @@ RouteGroupBuilder cabinet = app.MapGroup($"/api/v1/cabinets/{{{CabinetPermission
     .AddEndpointFilter<CsrfEndpointFilter>();
 cabinet.MapDossiers();
 cabinet.MapCabinetRights();
+cabinet.MapAssistantSettings();
 cabinet.MapCabinetPolicies();
 
 // Membres et dossiers d'un groupe : la permission porte sur le groupe de la route.

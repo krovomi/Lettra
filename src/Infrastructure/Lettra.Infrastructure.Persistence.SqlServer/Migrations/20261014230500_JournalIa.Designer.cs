@@ -13,8 +13,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
 {
     [DbContext(typeof(LettraDbContext))]
-    [Migration("20261015000000_VersionsConcurrence")]
-    partial class VersionsConcurrence
+    [Migration("20261014230500_JournalIa")]
+    partial class JournalIa
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -59,13 +59,6 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("SearchKey")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(400)
-                        .HasColumnType("nvarchar(400)")
-                        .HasDefaultValue("");
-
                     b.Property<string>("Unit")
                         .IsRequired()
                         .HasMaxLength(3)
@@ -83,10 +76,6 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
-                    b.Property<long>("Version")
-                        .IsConcurrencyToken()
-                        .HasColumnType("bigint");
-
                     b.HasKey("Id");
 
                     b.HasIndex("Designation");
@@ -95,8 +84,6 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                         .IsUnique();
 
                     b.ToTable("CatalogItems", (string)null);
-
-                    b.HasAnnotation("Lettra:SearchKeySource", "Designation");
                 });
 
             modelBuilder.Entity("Lettra.Domain.Parties.Customer", b =>
@@ -119,13 +106,6 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<string>("SearchKey")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(400)
-                        .HasColumnType("nvarchar(400)")
-                        .HasDefaultValue("");
-
                     b.Property<string>("Siren")
                         .HasMaxLength(9)
                         .HasColumnType("nvarchar(9)");
@@ -137,10 +117,6 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.Property<string>("VatNumber")
                         .HasMaxLength(15)
                         .HasColumnType("nvarchar(15)");
-
-                    b.Property<long>("Version")
-                        .IsConcurrencyToken()
-                        .HasColumnType("bigint");
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "BillingAddress", "Lettra.Domain.Parties.Customer.BillingAddress#PostalAddress", b1 =>
                         {
@@ -183,8 +159,6 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.HasIndex("Siren");
 
                     b.ToTable("Customers", (string)null);
-
-                    b.HasAnnotation("Lettra:SearchKeySource", "Name");
                 });
 
             modelBuilder.Entity("Lettra.Domain.Parties.Supplier", b =>
@@ -208,13 +182,6 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<string>("SearchKey")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(400)
-                        .HasColumnType("nvarchar(400)")
-                        .HasDefaultValue("");
-
                     b.Property<string>("Siren")
                         .HasMaxLength(9)
                         .HasColumnType("nvarchar(9)");
@@ -226,10 +193,6 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.Property<string>("VatNumber")
                         .HasMaxLength(15)
                         .HasColumnType("nvarchar(15)");
-
-                    b.Property<long>("Version")
-                        .IsConcurrencyToken()
-                        .HasColumnType("bigint");
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Address", "Lettra.Domain.Parties.Supplier.Address#PostalAddress", b1 =>
                         {
@@ -272,8 +235,36 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.HasIndex("Siren");
 
                     b.ToTable("Suppliers", (string)null);
+                });
 
-                    b.HasAnnotation("Lettra:SearchKeySource", "Name");
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Ai.AiJournalRecord", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("At")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Detail")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Engine")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AiJournal", (string)null);
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Numbering.NumberSeries", b =>

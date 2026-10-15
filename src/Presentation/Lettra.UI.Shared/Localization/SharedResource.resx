@@ -76,6 +76,9 @@
   <data name="Error.Ai.Truncated" xml:space="preserve"><value>La réponse a été tronquée.</value></data>
   <data name="Error.Ai.UngroundedAmounts" xml:space="preserve"><value>Ces montants ne viennent pas d'un calcul de Lettra : vérifiez-les avant de les utiliser.</value></data>
   <data name="Error.Ai.UnknownReferences" xml:space="preserve"><value>La réponse cite des références inconnues : vérifiez-les.</value></data>
+  <data name="Error.Ai.SettingsUnavailable" xml:space="preserve"><value>Sur ce poste, les réglages de l'assistant IA se font dans le fichier de configuration.</value></data>
+  <data name="Error.Ai.EngineRequired" xml:space="preserve"><value>Choisissez un moteur d'IA pour activer l'assistant.</value></data>
+  <data name="Error.Ai.SettingsConflict" xml:space="preserve"><value>Les réglages de l'assistant ont été modifiés entre-temps : rechargez-les puis recommencez.</value></data>
   <data name="Error.Api.IdempotencyKeyReused" xml:space="preserve"><value>Cette opération a déjà été envoyée avec un contenu différent.</value></data>
   <data name="Error.Api.Unexpected" xml:space="preserve"><value>Une erreur inattendue est survenue. Réessayez.</value></data>
   <data name="Error.Api.Unreachable" xml:space="preserve"><value>Le serveur est injoignable. Vérifiez la connexion.</value></data>

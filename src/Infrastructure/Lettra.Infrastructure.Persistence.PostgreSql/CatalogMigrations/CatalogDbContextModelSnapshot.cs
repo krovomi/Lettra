@@ -23,6 +23,47 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.CatalogMigrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogAiSettings", b =>
+                {
+                    b.Property<Guid>("OrganisationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Engine")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ExcludedDossiers")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Features")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("MaxToolRounds")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("OfficialWebLookup")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.HasKey("OrganisationId");
+
+                    b.ToTable("AiSettings", "catalog");
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogCluster", b =>
                 {
                     b.Property<string>("Id")
@@ -306,6 +347,15 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.CatalogMigrations
                     b.HasIndex("OrganisationId");
 
                     b.ToTable("UserAccounts", "catalog");
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogAiSettings", b =>
+                {
+                    b.HasOne("Lettra.Infrastructure.Persistence.Catalog.CatalogOrganisation", null)
+                        .WithMany()
+                        .HasForeignKey("OrganisationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogCustomRolePermission", b =>

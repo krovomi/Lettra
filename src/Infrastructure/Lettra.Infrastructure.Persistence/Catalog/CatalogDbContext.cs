@@ -4,7 +4,7 @@ namespace Lettra.Infrastructure.Persistence.Catalog;
 
 /// <summary>
 /// Base « Catalog » du plan de contrôle (modes 2, 3 et 5) : cabinets, serveurs de bases, dossiers, et le registre
-/// des droits (comptes, groupes, rôles à portée) lu par <c>IAuthorizationDirectory</c>.
+/// des droits (comptes, groupes, rôles à portée) lu par <c>IAuthorizationDirectory</c>, et les réglages IA des cabinets.
 /// Ses migrations vivent, comme celles des dossiers, dans les trois assemblies de providers.
 /// </summary>
 public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options) : DbContext(options)
@@ -31,6 +31,7 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
 
     public DbSet<CatalogCustomRolePermission> CustomRolePermissions => Set<CatalogCustomRolePermission>();
 
+    public DbSet<CatalogAiSettings> AiSettings => Set<CatalogAiSettings>();
     public DbSet<CatalogOrganisationPolicy> OrganisationPolicies => Set<CatalogOrganisationPolicy>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -140,6 +141,8 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
             e.Property(x => x.Permission).HasConversion<int>();
             e.HasOne<CatalogCustomRole>().WithMany().HasForeignKey(x => new { x.OrganisationId, x.RoleKey }).OnDelete(DeleteBehavior.Cascade);
         });
+
+        CatalogAiSettings.Configure(modelBuilder);
 
         modelBuilder.Entity<CatalogOrganisationPolicy>(e =>
         {

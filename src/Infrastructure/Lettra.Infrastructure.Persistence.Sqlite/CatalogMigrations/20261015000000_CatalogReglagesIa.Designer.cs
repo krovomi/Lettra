@@ -5,150 +5,185 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Lettra.Infrastructure.Persistence.PostgreSql.CatalogMigrations
+namespace Lettra.Infrastructure.Persistence.Sqlite.CatalogMigrations
 {
     [DbContext(typeof(CatalogDbContext))]
-    [Migration("20261014230001_PolitiquesCabinet")]
-    partial class PolitiquesCabinet
+    [Migration("20261015000000_CatalogReglagesIa")]
+    partial class CatalogReglagesIa
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder
-                .HasDefaultSchema("catalog")
-                .HasAnnotation("ProductVersion", "10.0.13")
-                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.13");
 
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogAiSettings", b =>
+                {
+                    b.Property<Guid>("OrganisationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Engine")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ExcludedDossiers")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Features")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("MaxToolRounds")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("OfficialWebLookup")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("OrganisationId");
+
+                    b.ToTable("AiSettings", (string)null);
+                });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogCluster", b =>
                 {
                     b.Property<string>("Id")
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("AcceptsNewDossiers")
-                        .HasColumnType("boolean");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("CellId")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("MaxDatabases")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Provider")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Clusters", "catalog");
+                    b.ToTable("Clusters", (string)null);
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogCustomRole", b =>
                 {
                     b.Property<Guid>("OrganisationId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Key")
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("RequiresExpiry")
-                        .HasColumnType("boolean");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("WidestScope")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("OrganisationId", "Key");
 
-                    b.ToTable("CustomRoles", "catalog");
+                    b.ToTable("CustomRoles", (string)null);
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogCustomRolePermission", b =>
                 {
                     b.Property<Guid>("OrganisationId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("RoleKey")
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Permission")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("OrganisationId", "RoleKey", "Permission");
 
-                    b.ToTable("CustomRolePermissions", "catalog");
+                    b.ToTable("CustomRolePermissions", (string)null);
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogDossier", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ClusterId")
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ConnectionSecretRef")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("DatabaseName")
                         .HasMaxLength(63)
-                        .HasColumnType("character varying(63)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("LastError")
                         .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("LeaseOwner")
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("LeaseUntil")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("OrganisationId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Provider")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Schema")
                         .HasMaxLength(63)
-                        .HasColumnType("character varying(63)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("SchemaVersion")
                         .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("State")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<byte[]>("WrappedDek")
                         .IsRequired()
                         .HasMaxLength(60)
-                        .HasColumnType("bytea");
+                        .HasColumnType("BLOB");
 
                     b.HasKey("Id");
 
@@ -159,156 +194,142 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.CatalogMigrations
 
                     b.HasIndex("State", "SchemaVersion");
 
-                    b.ToTable("Dossiers", "catalog");
+                    b.ToTable("Dossiers", (string)null);
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogGroup", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("OrganisationId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
                     b.HasIndex("OrganisationId");
 
-                    b.ToTable("Groups", "catalog");
+                    b.ToTable("Groups", (string)null);
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogGroupDossier", b =>
                 {
                     b.Property<Guid>("GroupId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("DossierId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("GroupId", "DossierId");
 
                     b.HasIndex("DossierId");
 
-                    b.ToTable("GroupDossiers", "catalog");
+                    b.ToTable("GroupDossiers", (string)null);
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogGroupMember", b =>
                 {
                     b.Property<Guid>("GroupId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("GroupId", "UserId");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("GroupMembers", "catalog");
+                    b.ToTable("GroupMembers", (string)null);
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogOrganisation", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("CellId")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Organisations", "catalog");
-                });
-
-            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogOrganisationPolicy", b =>
-                {
-                    b.Property<Guid>("OrganisationId")
-                        .HasColumnType("uuid");
-
-                    b.Property<decimal?>("CreditNoteApprovalThresholdInclTax")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<bool>("SegregationOfDutiesEnabled")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UpdatedBy")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("OrganisationId");
-
-                    b.ToTable("OrganisationPolicies", "catalog");
+                    b.ToTable("Organisations", (string)null);
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogRoleAssignment", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset?>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("RoleKey")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("ScopeId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("ScopeKind")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<Guid>("SubjectId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("SubjectKind")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
                     b.HasIndex("SubjectKind", "SubjectId");
 
-                    b.ToTable("RoleAssignments", "catalog");
+                    b.ToTable("RoleAssignments", (string)null);
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogUserAccount", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid?>("OrganisationId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("State")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
                     b.HasIndex("OrganisationId");
 
-                    b.ToTable("UserAccounts", "catalog");
+                    b.ToTable("UserAccounts", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogAiSettings", b =>
+                {
+                    b.HasOne("Lettra.Infrastructure.Persistence.Catalog.CatalogOrganisation", null)
+                        .WithMany()
+                        .HasForeignKey("OrganisationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogCustomRolePermission", b =>
@@ -347,15 +368,6 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.CatalogMigrations
                     b.HasOne("Lettra.Infrastructure.Persistence.Catalog.CatalogGroup", null)
                         .WithMany()
                         .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogOrganisationPolicy", b =>
-                {
-                    b.HasOne("Lettra.Infrastructure.Persistence.Catalog.CatalogOrganisation", null)
-                        .WithOne()
-                        .HasForeignKey("Lettra.Infrastructure.Persistence.Catalog.CatalogOrganisationPolicy", "OrganisationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
