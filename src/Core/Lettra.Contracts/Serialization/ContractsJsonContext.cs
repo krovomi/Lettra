@@ -55,4 +55,6 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(AlertCentreResponse))]
 [JsonSerializable(typeof(AlertDetailResponse))]
 [JsonSerializable(typeof(ChangeAlertSeverityRequest))]
+[JsonSerializable(typeof(SaveAiSettingsRequest))]
+[JsonSerializable(typeof(AiSettingsResponse))]
 public sealed partial class ContractsJsonContext : JsonSerializerContext;

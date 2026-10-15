@@ -123,6 +123,9 @@
   <data name="Error.Ai.Truncated" xml:space="preserve"><value>La réponse a été tronquée.</value></data>
   <data name="Error.Ai.UngroundedAmounts" xml:space="preserve"><value>Ces montants ne viennent pas d'un calcul de Lettra : vérifiez-les avant de les utiliser.</value></data>
   <data name="Error.Ai.UnknownReferences" xml:space="preserve"><value>La réponse cite des références inconnues : vérifiez-les.</value></data>
+  <data name="Error.Ai.SettingsUnavailable" xml:space="preserve"><value>Sur ce poste, les réglages de l'assistant IA se font dans le fichier de configuration.</value></data>
+  <data name="Error.Ai.EngineRequired" xml:space="preserve"><value>Choisissez un moteur d'IA pour activer l'assistant.</value></data>
+  <data name="Error.Ai.SettingsConflict" xml:space="preserve"><value>Les réglages de l'assistant ont été modifiés entre-temps : rechargez-les puis recommencez.</value></data>
   <data name="Error.Alert.AgentNotAllowed" xml:space="preserve"><value>Un agent ne peut pas faire cette action sur une alerte.</value></data>
   <data name="Error.Alert.HumanRequired" xml:space="preserve"><value>Cette action doit être faite par une personne.</value></data>
   <data name="Error.Alert.InvalidTransition" xml:space="preserve"><value>Cette alerte ne peut pas passer à cet état.</value></data>

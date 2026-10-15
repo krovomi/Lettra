@@ -179,6 +179,9 @@ public static class ErrorCodes
         public const string UngroundedAmounts = "Ai.UngroundedAmounts";
         public const string UnknownReferences = "Ai.UnknownReferences";
         public const string SkillPackStale = "Ai.SkillPackStale";
+        public const string SettingsUnavailable = "Ai.SettingsUnavailable";
+        public const string EngineRequired = "Ai.EngineRequired";
+        public const string SettingsConflict = "Ai.SettingsConflict";
     }
 
     public static class Api

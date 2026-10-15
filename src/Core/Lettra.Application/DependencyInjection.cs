@@ -22,6 +22,7 @@ public static class DependencyInjection
         // Assistant IA désactivé tant que la couche IA (Lettra.Ai.*) n'est pas composée.
         services.TryAddSingleton<IAiUsagePolicy, DisabledAiUsagePolicy>();
         services.TryAddSingleton<IAiAuditLog, EmptyAiAuditLog>();
+        services.TryAddSingleton<IAiSettingsStore, NoAiSettingsStore>();
         services.TryAddScoped<IAccountingAssistant, UnavailableAccountingAssistant>();
         services.AddScoped<ICommandDispatcher, CommandDispatcher>();
         services.AddScoped<IQueryDispatcher, QueryDispatcher>();
