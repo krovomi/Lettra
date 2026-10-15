@@ -22,6 +22,17 @@
     <NoWarn>$(NoWarn);CA1515;CA1848</NoWarn>
   </PropertyGroup>
 
+  <!-- Version de mesure de la grille (critère J1) : dotnet publish -p:LettraGridBenchmark=true. Elle s'ouvre sur
+       /mesure-grille et lance la mesure ; autonome (runtime .NET et Windows App SDK embarqués), elle se lance sans
+       installation sur un poste du cabinet. -->
+  <PropertyGroup Condition="'$(LettraGridBenchmark)' == 'true'">
+    <DefineConstants>$(DefineConstants);LETTRA_GRID_BENCHMARK</DefineConstants>
+    <ApplicationTitle>Lettra · mesure de la grille</ApplicationTitle>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\Composition\Lettra.Bootstrap\Lettra.Bootstrap.csproj" />
     <ProjectReference Include="..\..\Presentation\Lettra.UI.Shared\Lettra.UI.Shared.csproj" />
