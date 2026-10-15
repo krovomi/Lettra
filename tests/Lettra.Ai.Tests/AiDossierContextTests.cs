@@ -1,4 +1,5 @@
 using Lettra.Ai.Tools;
+using Lettra.Ai.Tools.Company;
 using Lettra.Application.Abstractions.Ai;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Messaging;
@@ -19,7 +20,7 @@ public sealed class AiDossierContextTests
     {
         FakeQueries queries = new(allowed: true);
 
-        IReadOnlyList<KnownIdentity> identities = await new AiDossierContext(queries).GetKnownIdentitiesAsync(AssistantHarness.Dossier, CancellationToken.None);
+        IReadOnlyList<KnownIdentity> identities = await new AiDossierContext(queries, new NoCompanyFacts()).GetKnownIdentitiesAsync(AssistantHarness.Dossier, CancellationToken.None);
 
         identities.Should().BeEquivalentTo(new KnownIdentity[]
         {
@@ -34,7 +35,7 @@ public sealed class AiDossierContextTests
     [Fact]
     public async Task Sans_droit_de_lecture_des_tiers_seuls_les_detecteurs_s_appliquent()
     {
-        IReadOnlyList<KnownIdentity> identities = await new AiDossierContext(new FakeQueries(allowed: false))
+        IReadOnlyList<KnownIdentity> identities = await new AiDossierContext(new FakeQueries(allowed: false), new NoCompanyFacts())
             .GetKnownIdentitiesAsync(AssistantHarness.Dossier, CancellationToken.None);
 
         identities.Should().BeEmpty();
