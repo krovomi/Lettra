@@ -4,6 +4,8 @@
        SyncCoordinator (sonde, demande à l'utilisateur, envoi, réception), transport HTTP. -->
   <ItemGroup>
     <ProjectReference Include="..\..\..\Core\Lettra.Application\Lettra.Application.csproj" />
+    <!-- Contrat des écrans de synchronisation (ISyncCenter), comme une gateway : rien d'autre de l'UI. -->
+    <ProjectReference Include="..\..\..\Presentation\Lettra.UI.Abstractions\Lettra.UI.Abstractions.csproj" />
   </ItemGroup>
 
   <ItemGroup>

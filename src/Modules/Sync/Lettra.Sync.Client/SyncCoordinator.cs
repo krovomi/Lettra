@@ -454,7 +454,7 @@ public sealed class SyncCoordinator(
         }
     }
 
-    private static SyncSummary Summarize(IReadOnlyList<SyncOutboxItem> pending) => new(
+    internal static SyncSummary Summarize(IReadOnlyList<SyncOutboxItem> pending) => new(
         Creations: pending.Count(i => i.Intent is CreateCustomerIntent or CreateSupplierIntent or CreateCatalogItemIntent),
         Changes: pending.Count(i => i.Intent is not (CreateCustomerIntent or CreateSupplierIntent or CreateCatalogItemIntent or ValidatedInvoiceFact)),
         EstimatedBytes: pending.Sum(i => (long)Encoding.UTF8.GetByteCount(JsonSerializer.Serialize(i.Intent, ContractsJsonContext.Default.SyncIntent))),
