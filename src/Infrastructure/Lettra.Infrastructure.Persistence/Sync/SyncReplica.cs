@@ -78,6 +78,12 @@ internal sealed class EfSyncOutbox(TenantDbSession session) : ISyncOutbox
         List<SyncConflictRow> rows = await db.Set<SyncConflictRow>().AsNoTracking().OrderBy(r => r.Id).ToListAsync(cancellationToken).ConfigureAwait(false);
         return [.. rows.Select(r => r.ToRecord())];
     }
+
+    public async Task<bool> RemoveConflictAsync(long id, CancellationToken cancellationToken)
+    {
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        return await db.Set<SyncConflictRow>().Where(r => r.Id == id).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false) > 0;
+    }
 }
 
 /// <summary>
@@ -109,12 +115,39 @@ internal sealed class EfSyncReplica(TenantDbSession session, TimeProvider clock)
         db.ChangeTracker.Clear();
     }
 
-    public async Task<string?> GetTokenAsync(CancellationToken cancellationToken)
+    public Task<string?> GetTokenAsync(CancellationToken cancellationToken) => GetSettingAsync(SyncStateRecord.TokenKey, cancellationToken);
+
+    public async Task<string?> GetSettingAsync(string key, CancellationToken cancellationToken)
     {
         LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
         return await db.Set<SyncStateRecord>().AsNoTracking()
-            .Where(r => r.Key == SyncStateRecord.TokenKey).Select(r => r.Value)
+            .Where(r => r.Key == key).Select(r => r.Value)
             .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task SaveSettingAsync(string key, string value, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
+        ArgumentNullException.ThrowIfNull(value);
+        if (key == SyncStateRecord.TokenKey)
+        {
+            throw new ArgumentException("Le jeton de réception ne s'écrit qu'avec sa page de changements.", nameof(key));
+        }
+
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        db.ChangeTracker.Clear();
+        SyncStateRecord? row = await db.Set<SyncStateRecord>().AsTracking().FirstOrDefaultAsync(r => r.Key == key, cancellationToken).ConfigureAwait(false);
+        if (row is null)
+        {
+            db.Set<SyncStateRecord>().Add(new SyncStateRecord(key, value));
+        }
+        else
+        {
+            row.Set(value);
+        }
+
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        db.ChangeTracker.Clear();
     }
 
     public async Task<SyncApplyReport> ApplyAsync(SyncChangesResponse changes, CancellationToken cancellationToken)

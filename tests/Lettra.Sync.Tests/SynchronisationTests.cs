@@ -60,17 +60,17 @@ public sealed class SynchronisationTests : IAsyncLifetime
         VatRateCode = "FR-20",
     };
 
-    private static async Task<CustomerId> CreateAsync(DossierNode node, CreateCustomerRequest request)
+    internal static async Task<CustomerId> CreateAsync(DossierNode node, CreateCustomerRequest request)
     {
         Result<CustomerId> created = await node.SendAsync(request.ToCommand(node.Dossier));
         created.IsSuccess.Should().BeTrue(string.Join(", ", created.Errors.Select(e => e.Code)));
         return created.Value;
     }
 
-    private static async Task<CustomerResponse?> CustomerAsync(DossierNode node, CustomerId id) =>
+    internal static async Task<CustomerResponse?> CustomerAsync(DossierNode node, CustomerId id) =>
         (await node.QueryAsync(new GetCustomerQuery(node.Dossier, id))) is { IsSuccess: true } r ? r.Value : null;
 
-    private static async Task UpdateAsync(DossierNode node, CustomerId id, Func<CreateCustomerRequest, CreateCustomerRequest> change)
+    internal static async Task UpdateAsync(DossierNode node, CustomerId id, Func<CreateCustomerRequest, CreateCustomerRequest> change)
     {
         CustomerResponse current = (await CustomerAsync(node, id))!;
         Result updated = await node.SendAsync(change(current.ToRequest()).ToUpdateCommand(node.Dossier, id, current.Version));
@@ -167,7 +167,7 @@ public sealed class SynchronisationTests : IAsyncLifetime
     {
         DeviceNode poste = _world.Device();
         CustomerId id = await CreateAsync(poste, Martin());
-        poste.Preference.Current = preference;
+        await poste.Preference.SetAsync(preference, default);
         poste.Probe.Status = new NetworkStatus(true, network);
 
         await poste.SyncAsync();

@@ -73,10 +73,22 @@ public enum SyncPreference
     NeverOnCellular = 3,
 }
 
-/// <summary>Préférence de l'utilisateur, réglée à l'étape 4.3.</summary>
+/// <summary>Préférence de l'utilisateur, réglée depuis l'écran des réglages et gardée sur le poste.</summary>
 public interface ISyncPreferences
 {
-    SyncPreference Current { get; }
+    Task<SyncPreference> GetAsync(CancellationToken cancellationToken);
+
+    Task SetAsync(SyncPreference preference, CancellationToken cancellationToken);
+}
+
+/// <summary>Résolution d'un champ disputé, depuis l'écran des conflits.</summary>
+public enum SyncResolution
+{
+    /// <summary>Garder la saisie du poste : elle repart comme une nouvelle modification, sur la version du cabinet.</summary>
+    KeepMine = 1,
+
+    /// <summary>Prendre la valeur du cabinet, déjà gardée par le serveur : rien ne repart.</summary>
+    TakeServer = 2,
 }
 
 /// <summary>Accès au serveur : HTTP (<see cref="HttpSyncTransport"/>), ou direct pour les tests.</summary>
@@ -204,22 +216,82 @@ public sealed class SyncCoordinator(
     /// <summary>États traversés au dernier cycle (pour l'UI et les tests).</summary>
     public IReadOnlyList<SyncState> History => _history;
 
-    /// <summary>À appeler au retour du réseau, au démarrage, ou quand l'utilisateur demande « synchroniser ».</summary>
+    /// <summary>Compte rendu du dernier cycle terminé, <c>null</c> avant le premier.</summary>
+    public SyncReport? LastReport { get; private set; }
+
+    /// <summary>L'état a changé, ou un cycle s'est terminé (pastille de la barre, écrans de synchronisation).</summary>
+    public event EventHandler? Changed;
+
+    /// <summary>Quand l'utilisateur demande « synchroniser », ou au démarrage : attend un cycle en cours, puis le sien.</summary>
     public async Task<SyncReport> RunAsync(CancellationToken cancellationToken = default)
     {
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        return await RunHeldAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Au retour du réseau (évènement du système) : lance un cycle, sauf si un cycle tourne déjà, qui le couvre. La sonde
+    /// du cycle vérifie que le serveur répond vraiment.
+    /// </summary>
+    public async Task<SyncReport?> NetworkAvailableAsync(CancellationToken cancellationToken = default)
+    {
+        if (!await _gate.WaitAsync(0, cancellationToken).ConfigureAwait(false))
+        {
+            return null;
+        }
+
+        return await RunHeldAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Résout un champ disputé (écran des conflits). <see cref="SyncResolution.KeepMine"/> remet la saisie du poste par
+    /// la commande de modification habituelle : elle part au cycle suivant, sur la version du cabinet reçue entre-temps.
+    /// </summary>
+    public async Task<Result> ResolveConflictAsync(long conflictId, SyncResolution resolution, CancellationToken cancellationToken = default)
+    {
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            AsyncServiceScope scope = scopes.CreateAsyncScope();
+            await using (scope.ConfigureAwait(false))
+            {
+                Result opened = await scope.ServiceProvider.GetRequiredService<ITenantInitializer>().InitializeAsync(cancellationToken).ConfigureAwait(false);
+                Result resolved = opened.IsFailure
+                    ? opened
+                    : await SyncConflictResolver.ResolveAsync(scope.ServiceProvider, conflictId, resolution, cancellationToken).ConfigureAwait(false);
+                if (resolved.IsSuccess && State == SyncState.ResolvingConflicts
+                    && (await scope.ServiceProvider.GetRequiredService<ISyncOutbox>().ListConflictsAsync(cancellationToken).ConfigureAwait(false)).Count == 0)
+                {
+                    // Plus rien à trancher : la saisie gardée attend le prochain envoi.
+                    Enter(SyncState.UpToDate);
+                }
+
+                return resolved;
+            }
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    private async Task<SyncReport> RunHeldAsync(CancellationToken cancellationToken)
+    {
         try
         {
             _history.Clear();
             AsyncServiceScope scope = scopes.CreateAsyncScope();
             await using (scope.ConfigureAwait(false))
             {
-                return await RunInDossierAsync(scope.ServiceProvider, cancellationToken).ConfigureAwait(false);
+                SyncReport report = await RunInDossierAsync(scope.ServiceProvider, cancellationToken).ConfigureAwait(false);
+                LastReport = report;
+                return report;
             }
         }
         finally
         {
             _gate.Release();
+            Changed?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -254,7 +326,7 @@ public sealed class SyncCoordinator(
         // 2. Demande à l'utilisateur, seulement si quelque chose part (confirmé par le PO le 14/10/2026).
         if (!summary.IsEmpty)
         {
-            SyncPreference preference = preferences.Current;
+            SyncPreference preference = await preferences.GetAsync(ct).ConfigureAwait(false);
             if (preference == SyncPreference.NeverOnCellular && network.Kind == NetworkKind.Cellular)
             {
                 Enter(SyncState.PendingConsent);
@@ -394,5 +466,6 @@ public sealed class SyncCoordinator(
     {
         State = state;
         _history.Add(state);
+        Changed?.Invoke(this, EventArgs.Empty);
     }
 }

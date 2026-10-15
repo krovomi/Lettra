@@ -56,7 +56,14 @@ public enum SyncOutboxStatus
 public sealed record SyncOutboxItem(long Sequence, SyncIntent Intent, SyncOutboxStatus Status, string? Detail);
 
 /// <summary>Un champ disputé gardé sur le poste jusqu'à sa résolution (écran de l'étape 4.3).</summary>
+/// <param name="Id">Identifiant local du champ disputé, pour le résoudre.</param>
+/// <param name="IdempotencyKey">L'intention qui l'a fait naître.</param>
+/// <param name="Entity">Type d'élément.</param>
+/// <param name="EntityId">L'élément.</param>
+/// <param name="Conflict">Le champ, avec les valeurs de départ, du poste et du serveur.</param>
+/// <param name="DetectedAt">Réponse du serveur qui l'a signalé.</param>
 public sealed record SyncConflictRecord(
+    long Id,
     Guid IdempotencyKey,
     SyncEntityKind Entity,
     Guid EntityId,
@@ -83,6 +90,9 @@ public interface ISyncOutbox
 
     /// <summary>Champs disputés en attente de résolution.</summary>
     Task<IReadOnlyList<SyncConflictRecord>> ListConflictsAsync(CancellationToken cancellationToken);
+
+    /// <summary>Le champ disputé est résolu ; faux s'il ne l'était déjà plus.</summary>
+    Task<bool> RemoveConflictAsync(long id, CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -91,6 +101,11 @@ public interface ISyncOutbox
 /// </summary>
 public interface ISyncReplica
 {
+    /// <summary>Réglage de synchronisation gardé sur le poste (préférence de l'utilisateur), <c>null</c> s'il n'est pas réglé.</summary>
+    Task<string?> GetSettingAsync(string key, CancellationToken cancellationToken);
+
+    Task SaveSettingAsync(string key, string value, CancellationToken cancellationToken);
+
     /// <summary>Jeton de la dernière réception, <c>null</c> avant la première (le serveur envoie alors un instantané).</summary>
     Task<string?> GetTokenAsync(CancellationToken cancellationToken);
 
@@ -145,6 +160,8 @@ public static class SyncErrors
     public static Error DeviceSeriesUnknown => new(Contracts.Common.ErrorCodes.Sync.DeviceSeriesUnknown, ErrorKind.Forbidden);
 
     public static Error NumberOutOfOrder => new(Contracts.Common.ErrorCodes.Sync.NumberOutOfOrder, ErrorKind.Conflict);
+
+    public static Error ConflictAwaitingRefresh => new(Contracts.Common.ErrorCodes.Sync.ConflictAwaitingRefresh, ErrorKind.Conflict);
 }
 
 /// <summary>
