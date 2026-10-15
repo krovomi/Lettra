@@ -56,6 +56,13 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("SearchKey")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)")
+                        .HasDefaultValue("");
+
                     b.Property<string>("Unit")
                         .IsRequired()
                         .HasMaxLength(3)
@@ -85,6 +92,8 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                         .IsUnique();
 
                     b.ToTable("CatalogItems", (string)null);
+
+                    b.HasAnnotation("Lettra:SearchKeySource", "Designation");
                 });
 
             modelBuilder.Entity("Lettra.Domain.Parties.Customer", b =>
@@ -106,6 +115,13 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("SearchKey")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)")
+                        .HasDefaultValue("");
 
                     b.Property<string>("Siren")
                         .HasMaxLength(9)
@@ -164,6 +180,8 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.HasIndex("Siren");
 
                     b.ToTable("Customers", (string)null);
+
+                    b.HasAnnotation("Lettra:SearchKeySource", "Name");
                 });
 
             modelBuilder.Entity("Lettra.Domain.Parties.Supplier", b =>
@@ -186,6 +204,13 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("SearchKey")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)")
+                        .HasDefaultValue("");
 
                     b.Property<string>("Siren")
                         .HasMaxLength(9)
@@ -244,6 +269,8 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.HasIndex("Siren");
 
                     b.ToTable("Suppliers", (string)null);
+
+                    b.HasAnnotation("Lettra:SearchKeySource", "Name");
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Numbering.NumberSeries", b =>

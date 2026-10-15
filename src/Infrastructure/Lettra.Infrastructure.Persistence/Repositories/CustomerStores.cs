@@ -5,6 +5,7 @@ using Lettra.Contracts.Customers;
 using Lettra.Domain.Common;
 using Lettra.Domain.Parties;
 using Lettra.Domain.SharedKernel;
+using Lettra.Infrastructure.Persistence.Search;
 using Lettra.Infrastructure.Persistence.Tenancy;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,10 +28,10 @@ internal sealed class CustomerRepository(TenantDbSession session) : ICustomerRep
 
 internal sealed class CustomerReadStore(TenantDbSession session) : ICustomerReadStore
 {
-    public async Task<PagedResponse<CustomerSummary>> ListAsync(int page, int pageSize, CancellationToken cancellationToken)
+    public async Task<PagedResponse<CustomerSummary>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken)
     {
         LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
-        IQueryable<Customer> query = db.Customers.AsNoTracking();
+        IQueryable<Customer> query = db.Customers.AsNoTracking().WhereSearchKeyContains(search);
         int total = await query.CountAsync(cancellationToken).ConfigureAwait(false);
 
         // Les objets-valeurs convertis (Siren) sont projetés tels quels puis aplatis en mémoire.

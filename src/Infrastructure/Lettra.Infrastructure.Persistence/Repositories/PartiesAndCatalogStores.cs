@@ -5,6 +5,7 @@ using Lettra.Contracts.Common;
 using Lettra.Contracts.Suppliers;
 using Lettra.Domain.Catalog;
 using Lettra.Domain.Parties;
+using Lettra.Infrastructure.Persistence.Search;
 using Lettra.Infrastructure.Persistence.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,10 +29,10 @@ internal sealed class SupplierRepository(TenantDbSession session) : ISupplierRep
 
 internal sealed class SupplierReadStore(TenantDbSession session) : ISupplierReadStore
 {
-    public async Task<PagedResponse<SupplierSummary>> ListAsync(int page, int pageSize, CancellationToken cancellationToken)
+    public async Task<PagedResponse<SupplierSummary>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken)
     {
         LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
-        IQueryable<Supplier> query = db.Set<Supplier>().AsNoTracking();
+        IQueryable<Supplier> query = db.Set<Supplier>().AsNoTracking().WhereSearchKeyContains(search);
         int total = await query.CountAsync(cancellationToken).ConfigureAwait(false);
         var rows = await query
             .OrderBy(s => s.Name)
@@ -95,11 +96,11 @@ internal sealed class CatalogItemReadStore(TenantDbSession session) : ICatalogIt
 
         if (filter.Search is { Length: > 0 } search)
         {
-            // ToUpper est traduit à l'identique par les trois providers ; ReferenceKey est déjà en majuscules.
-            string term = search.ToUpperInvariant();
-#pragma warning disable CA1304, CA1311, CA1862 // Arbre d'expression traduit en UPPER(...) SQL : jamais exécuté en .NET.
-            query = query.Where(i => i.ReferenceKey.Contains(term) || i.Designation.ToUpper().Contains(term));
-#pragma warning restore CA1304, CA1311, CA1862
+            // La désignation est cherchée sur sa forme normalisée (sans accents, en majuscules), identique sur les
+            // trois providers ; ReferenceKey est déjà en majuscules.
+            string reference = search.ToUpperInvariant();
+            string designation = SearchText.Normalize(search);
+            query = query.Where(i => i.ReferenceKey.Contains(reference) || EF.Property<string>(i, SearchKey.PropertyName).Contains(designation));
         }
 
         int total = await query.CountAsync(cancellationToken).ConfigureAwait(false);

@@ -15,7 +15,8 @@ public interface ISupplierRepository
 /// <summary>Lecture des fournisseurs : projection directe en contrats.</summary>
 public interface ISupplierReadStore
 {
-    Task<PagedResponse<SupplierSummary>> ListAsync(int page, int pageSize, CancellationToken cancellationToken);
+    /// <summary>Fournisseurs dont le nom contient <paramref name="search"/>, sans tenir compte des accents ni de la casse.</summary>
+    Task<PagedResponse<SupplierSummary>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken);
 
     Task<SupplierResponse?> GetAsync(SupplierId id, CancellationToken cancellationToken);
 }

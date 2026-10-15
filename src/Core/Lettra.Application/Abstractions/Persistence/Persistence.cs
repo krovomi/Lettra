@@ -22,7 +22,8 @@ public interface ICustomerRepository
 /// <summary>Lecture des clients (côté Q de CQRS) : projection directe en contrats, sans passer par l'agrégat.</summary>
 public interface ICustomerReadStore
 {
-    Task<PagedResponse<CustomerSummary>> ListAsync(int page, int pageSize, CancellationToken cancellationToken);
+    /// <summary>Clients dont le nom contient <paramref name="search"/>, sans tenir compte des accents ni de la casse.</summary>
+    Task<PagedResponse<CustomerSummary>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken);
 
     Task<CustomerResponse?> GetAsync(CustomerId id, CancellationToken cancellationToken);
 }

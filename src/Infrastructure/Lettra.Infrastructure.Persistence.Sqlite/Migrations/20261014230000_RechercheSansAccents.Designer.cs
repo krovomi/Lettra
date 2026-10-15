@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
 {
     [DbContext(typeof(LettraDbContext))]
-    [Migration("20261014230000_VersionsConcurrence")]
-    partial class VersionsConcurrence
+    [Migration("20261014230000_RechercheSansAccents")]
+    partial class RechercheSansAccents
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -54,6 +54,13 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("SearchKey")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(400)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
                     b.Property<string>("Unit")
                         .IsRequired()
                         .HasMaxLength(3)
@@ -71,10 +78,6 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("TEXT");
 
-                    b.Property<long>("Version")
-                        .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
-
                     b.HasKey("Id");
 
                     b.HasIndex("Designation");
@@ -83,6 +86,8 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                         .IsUnique();
 
                     b.ToTable("CatalogItems", (string)null);
+
+                    b.HasAnnotation("Lettra:SearchKeySource", "Designation");
                 });
 
             modelBuilder.Entity("Lettra.Domain.Parties.Customer", b =>
@@ -105,6 +110,13 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("SearchKey")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(400)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
                     b.Property<string>("Siren")
                         .HasMaxLength(9)
                         .HasColumnType("TEXT");
@@ -116,10 +128,6 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.Property<string>("VatNumber")
                         .HasMaxLength(15)
                         .HasColumnType("TEXT");
-
-                    b.Property<long>("Version")
-                        .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "BillingAddress", "Lettra.Domain.Parties.Customer.BillingAddress#PostalAddress", b1 =>
                         {
@@ -162,6 +170,8 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.HasIndex("Siren");
 
                     b.ToTable("Customers", (string)null);
+
+                    b.HasAnnotation("Lettra:SearchKeySource", "Name");
                 });
 
             modelBuilder.Entity("Lettra.Domain.Parties.Supplier", b =>
@@ -185,6 +195,13 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("SearchKey")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(400)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
                     b.Property<string>("Siren")
                         .HasMaxLength(9)
                         .HasColumnType("TEXT");
@@ -196,10 +213,6 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.Property<string>("VatNumber")
                         .HasMaxLength(15)
                         .HasColumnType("TEXT");
-
-                    b.Property<long>("Version")
-                        .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Address", "Lettra.Domain.Parties.Supplier.Address#PostalAddress", b1 =>
                         {
@@ -242,6 +255,8 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.HasIndex("Siren");
 
                     b.ToTable("Suppliers", (string)null);
+
+                    b.HasAnnotation("Lettra:SearchKeySource", "Name");
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Numbering.NumberSeries", b =>
