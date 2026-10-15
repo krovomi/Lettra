@@ -88,6 +88,17 @@ public static class ErrorCodes
         public const string CsrfHeaderMissing = "Security.CsrfHeaderMissing";
     }
 
+    /// <summary>Instantané de droits signé pour le hors ligne (annexe F §4).</summary>
+    public static class RightsSnapshot
+    {
+        public const string DeviceRequired = "RightsSnapshot.DeviceRequired";
+        public const string TooManyDossiers = "RightsSnapshot.TooManyDossiers";
+        public const string Unavailable = "RightsSnapshot.Unavailable";
+        public const string Invalid = "RightsSnapshot.Invalid";
+        public const string Expired = "RightsSnapshot.Expired";
+        public const string OtherDevice = "RightsSnapshot.OtherDevice";
+    }
+
     public static class LocalAccount
     {
         public const string AlreadyExists = "LocalAccount.AlreadyExists";
@@ -109,6 +120,23 @@ public static class ErrorCodes
         public const string OrganisationNotFound = "Organisation.NotFound";
         public const string NoCapacity = "Dossier.NoCapacity";
         public const string ProvisioningFailed = "Dossier.ProvisioningFailed";
+    }
+
+    public static class Rights
+    {
+        public const string NotSupported = "Rights.NotSupported";
+        public const string UserNotFound = "Rights.UserNotFound";
+        public const string GroupNotFound = "Rights.GroupNotFound";
+        public const string GroupNameRequired = "Rights.GroupNameRequired";
+        public const string GroupNameTooLong = "Rights.GroupNameTooLong";
+        public const string SubjectNotFound = "Rights.SubjectNotFound";
+        public const string RoleUnknown = "Rights.RoleUnknown";
+        public const string ScopeNotFound = "Rights.ScopeNotFound";
+        public const string ScopeTooWide = "Rights.ScopeTooWide";
+        public const string ExpiryRequired = "Rights.ExpiryRequired";
+        public const string ExpiryInPast = "Rights.ExpiryInPast";
+        public const string AssignmentNotFound = "Rights.AssignmentNotFound";
+        public const string StateInvalid = "Rights.StateInvalid";
     }
 
     public static class Numbering

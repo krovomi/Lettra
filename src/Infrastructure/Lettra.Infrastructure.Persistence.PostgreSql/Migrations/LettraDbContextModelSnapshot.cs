@@ -640,6 +640,13 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<string>("SearchKey")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(400)
+                        .HasColumnType("character varying(400)")
+                        .HasDefaultValue("");
+
                     b.Property<string>("Unit")
                         .IsRequired()
                         .HasMaxLength(3)
@@ -665,6 +672,8 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .IsUnique();
 
                     b.ToTable("CatalogItems", (string)null);
+
+                    b.HasAnnotation("Lettra:SearchKeySource", "Designation");
                 });
 
             modelBuilder.Entity("Lettra.Domain.Parties.Customer", b =>
@@ -686,6 +695,13 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<string>("SearchKey")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(400)
+                        .HasColumnType("character varying(400)")
+                        .HasDefaultValue("");
 
                     b.Property<string>("Siren")
                         .HasMaxLength(9)
@@ -740,6 +756,8 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.HasIndex("Siren");
 
                     b.ToTable("Customers", (string)null);
+
+                    b.HasAnnotation("Lettra:SearchKeySource", "Name");
                 });
 
             modelBuilder.Entity("Lettra.Domain.Parties.Supplier", b =>
@@ -762,6 +780,13 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<string>("SearchKey")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(400)
+                        .HasColumnType("character varying(400)")
+                        .HasDefaultValue("");
 
                     b.Property<string>("Siren")
                         .HasMaxLength(9)
@@ -816,6 +841,8 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.HasIndex("Siren");
 
                     b.ToTable("Suppliers", (string)null);
+
+                    b.HasAnnotation("Lettra:SearchKeySource", "Name");
                 });
 
             modelBuilder.Entity("Lettra.Domain.Pricing.PriceList", b =>

@@ -93,3 +93,54 @@ public static class CabinetPermissionEndpointExtensions
             .WithMetadata(new RequiredPermissionMetadata(permission));
     }
 }
+
+/// <summary>Même contrôle pour les routes d'un groupe (<c>/api/v1/groupes/{groupId}/…</c>) : la permission porte sur le groupe.</summary>
+internal sealed class GroupPermissionEndpointFilter(Permission permission) : IEndpointFilter
+{
+    public const string RouteKey = "groupId";
+
+    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(next);
+        IServiceProvider services = context.HttpContext.RequestServices;
+        ICurrentUser user = services.GetRequiredService<ICurrentUser>();
+        if (!user.IsAuthenticated)
+        {
+            return new[] { SecurityErrors.Unauthenticated }.ToProblem();
+        }
+
+        if (!Guid.TryParse(context.HttpContext.GetRouteValue(RouteKey) as string, out Guid group))
+        {
+            return new[] { SecurityErrors.Forbidden }.ToProblem();
+        }
+
+        IReadOnlySet<Permission> granted = await services.GetRequiredService<IPermissionService>()
+            .GetEffectiveAsync(user.UserId, AuthorizationScope.ForGroup(new GroupId(group)), context.HttpContext.RequestAborted)
+            .ConfigureAwait(false);
+        return granted.Contains(permission)
+            ? await next(context).ConfigureAwait(false)
+            : new[] { SecurityErrors.Forbidden }.ToProblem();
+    }
+}
+
+public static class GroupPermissionEndpointExtensions
+{
+    /// <summary>Exige <paramref name="permission"/> sur le groupe de la route avant d'appeler le cas d'usage.</summary>
+    public static RouteHandlerBuilder RequireGroupPermission(this RouteHandlerBuilder builder, Permission permission)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        return builder.AddEndpointFilter(new GroupPermissionEndpointFilter(permission))
+            .WithMetadata(new RequiredPermissionMetadata(permission));
+    }
+
+    /// <summary>
+    /// Route qui ne rend que les éléments où l'utilisateur a <paramref name="permission"/> (liste des dossiers
+    /// accessibles) : l'authentification suffit à l'entrée, le cas d'usage filtre.
+    /// </summary>
+    public static RouteHandlerBuilder FilterByPermission(this RouteHandlerBuilder builder, Permission permission)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        return builder.WithMetadata(new RequiredPermissionMetadata(permission));
+    }
+}
