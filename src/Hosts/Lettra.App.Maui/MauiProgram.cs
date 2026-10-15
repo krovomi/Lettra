@@ -41,6 +41,10 @@ public static class MauiProgram
             }
             : ConnectedDevice.Configuration(server));
 
+        // Pas encore de plateforme agréée partenaire (étape 5.5) : la transmission va à la plateforme simulée, en mémoire,
+        // pour la démonstration sur données fictives.
+        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["Lettra:EInvoicing:Platform"] = "Simulated" });
+
         builder.Services.AddLettra(builder.Configuration);
         builder.Services.AddSingleton<IKekStore, SecureStorageKekStore>();
         builder.Services.AddSingleton<IDossierSelection, ActiveDossierSelection>();

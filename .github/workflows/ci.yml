@@ -74,6 +74,31 @@ jobs:
         run: dotnet workload install maui-windows
       - name: Build Lettra.App.Maui
         run: dotnet build src/Hosts/Lettra.App.Maui/Lettra.App.Maui.csproj -c Release
+      # Version de démonstration : autonome (runtime .NET et Windows App SDK embarqués), sans installation. Le dossier
+      # téléchargé se décompresse et Lettra.App.Maui.exe se lance tel quel (README, « Démarrer la démo »).
+      - name: Version de démonstration
+        run: dotnet publish src/Hosts/Lettra.App.Maui/Lettra.App.Maui.csproj -c Release -f net10.0-windows10.0.19041.0 -r win-x64 --self-contained -p:WindowsAppSDKSelfContained=true -o artifacts/lettra-windows
+      # Premier lancement réel : cabinet local et premier dossier chiffré créés, fenêtre ouverte, sans arrêt.
+      - name: Premier lancement de la démonstration
+        shell: pwsh
+        run: |
+          $app = Start-Process artifacts/lettra-windows/Lettra.App.Maui.exe -PassThru
+          $deadline = (Get-Date).AddSeconds(90)
+          do { Start-Sleep 5; $app.Refresh() } until ($app.HasExited -or $app.MainWindowHandle -ne 0 -or (Get-Date) -gt $deadline)
+          if ($app.HasExited) { throw "Lettra s'est arrêté au démarrage (code $($app.ExitCode))." }
+          if ($app.MainWindowHandle -eq 0) { throw "Aucune fenêtre après 90 s." }
+          Start-Sleep 10
+          if ($app.HasExited) { throw "Lettra s'est arrêté après l'ouverture de la fenêtre (code $($app.ExitCode))." }
+          $dossiers = Get-ChildItem $env:LOCALAPPDATA -Recurse -Filter *.lettra -ErrorAction SilentlyContinue
+          if (-not $dossiers) { throw "Aucun dossier local créé sous $env:LOCALAPPDATA." }
+          "Fenêtre : $($app.MainWindowTitle)"
+          "Dossiers locaux : $($dossiers.DirectoryName | Sort-Object -Unique)"
+          Stop-Process $app
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lettra-windows
+          path: artifacts/lettra-windows
+          retention-days: 90
       # Version de mesure de la grille (critère J1) : exécutable autonome, à lancer sur un poste du cabinet.
       - name: Version de mesure de la grille
         run: dotnet publish src/Hosts/Lettra.App.Maui/Lettra.App.Maui.csproj -c Release -f net10.0-windows10.0.19041.0 -p:LettraGridBenchmark=true -o artifacts/mesure-grille
