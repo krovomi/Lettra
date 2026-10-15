@@ -117,6 +117,73 @@ public interface ISyncReplica
 
     /// <summary>Installe la série reçue du serveur ; sans effet si le poste l'a déjà (son compteur local fait foi).</summary>
     Task SaveDeviceSeriesAsync(DeviceSeries series, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Efface toutes les données de la réplique, outbox comprise (poste révoqué, étape 4.4). Le fichier garde son schéma ;
+    /// les pages libérées sont réécrites, pour qu'aucune donnée ne reste lisible sur le disque.
+    /// </summary>
+    Task WipeAsync(CancellationToken cancellationToken);
+}
+
+/// <summary>Réglages gardés dans la réplique du poste (table <c>SyncState</c>) pour la sécurité du poste (étape 4.4).</summary>
+public static class DeviceSettings
+{
+    /// <summary>Dernier contact réussi avec le serveur (millisecondes Unix).</summary>
+    public const string LastContactKey = "client.last-contact";
+
+    /// <summary>Durée maximale hors ligne reçue du cabinet, en heures.</summary>
+    public const string MaxOfflineHoursKey = "client.max-offline-hours";
+
+    /// <summary>Le serveur a révoqué ce poste (millisecondes Unix) : plus aucune synchronisation, plus aucune validation.</summary>
+    public const string RevokedKey = "client.revoked";
+}
+
+/// <summary>Durée maximale hors ligne d'un poste, réglée par le cabinet pour le dossier.</summary>
+public static class OfflinePolicy
+{
+    /// <summary>Sans réglage : 7 jours, comme l'instantané de droits (annexe F §4).</summary>
+    public const int DefaultMaxOfflineHours = 7 * 24;
+
+    public const int MinMaxOfflineHours = 1;
+
+    /// <summary>30 jours au plus.</summary>
+    public const int MaxMaxOfflineHours = 30 * 24;
+
+    public static bool IsValid(int hours) => hours is >= MinMaxOfflineHours and <= MaxMaxOfflineHours;
+}
+
+/// <summary>
+/// Registre des postes du dossier, côté serveur (étape 4.4) : chaque contact de synchronisation y inscrit le poste ;
+/// un poste révoqué est refusé, et apprend sa révocation à son prochain contact (il efface alors sa réplique).
+/// </summary>
+public interface ISyncDeviceRegistry
+{
+    /// <summary>Inscrit le contact du poste ; <see cref="SyncErrors.DeviceRevoked"/> si le cabinet l'a révoqué.</summary>
+    Task<Result> TouchAsync(Guid deviceId, Guid userId, DateTimeOffset now, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<SyncDeviceResponse>> ListAsync(CancellationToken cancellationToken);
+
+    /// <summary>Révoque le poste ; faux s'il n'est pas connu du dossier. Révoquer deux fois ne change rien.</summary>
+    Task<bool> RevokeAsync(Guid deviceId, Guid revokedBy, DateTimeOffset now, CancellationToken cancellationToken);
+
+    /// <summary>Durée maximale hors ligne du dossier, en heures (<see cref="OfflinePolicy.DefaultMaxOfflineHours"/> sans réglage).</summary>
+    Task<int> GetMaxOfflineHoursAsync(CancellationToken cancellationToken);
+
+    Task SaveMaxOfflineHoursAsync(int hours, CancellationToken cancellationToken);
+}
+
+/// <summary>Par défaut (poste, navigateur) : pas de registre, aucun poste refusé.</summary>
+internal sealed class NoSyncDeviceRegistry : ISyncDeviceRegistry
+{
+    public Task<Result> TouchAsync(Guid deviceId, Guid userId, DateTimeOffset now, CancellationToken cancellationToken) => Task.FromResult(Result.Success());
+
+    public Task<IReadOnlyList<SyncDeviceResponse>> ListAsync(CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<SyncDeviceResponse>>([]);
+
+    public Task<bool> RevokeAsync(Guid deviceId, Guid revokedBy, DateTimeOffset now, CancellationToken cancellationToken) => Task.FromResult(false);
+
+    public Task<int> GetMaxOfflineHoursAsync(CancellationToken cancellationToken) => Task.FromResult(OfflinePolicy.DefaultMaxOfflineHours);
+
+    public Task SaveMaxOfflineHoursAsync(int hours, CancellationToken cancellationToken) => Task.CompletedTask;
 }
 
 /// <summary>Réponse gardée par le serveur pour une clé d'idempotence.</summary>
@@ -162,6 +229,14 @@ public static class SyncErrors
     public static Error NumberOutOfOrder => new(Contracts.Common.ErrorCodes.Sync.NumberOutOfOrder, ErrorKind.Conflict);
 
     public static Error ConflictAwaitingRefresh => new(Contracts.Common.ErrorCodes.Sync.ConflictAwaitingRefresh, ErrorKind.Conflict);
+
+    public static Error DeviceRevoked => new(Contracts.Common.ErrorCodes.Sync.DeviceRevoked, ErrorKind.Forbidden);
+
+    public static Error OfflineTooLong => new(Contracts.Common.ErrorCodes.Sync.OfflineTooLong, ErrorKind.Forbidden);
+
+    public static Error PolicyInvalid => Error.Validation(Contracts.Common.ErrorCodes.Sync.PolicyInvalid, "MaxOfflineHours");
+
+    public static Error DeviceUnknown => new(Contracts.Common.ErrorCodes.Sync.DeviceUnknown, ErrorKind.NotFound);
 }
 
 /// <summary>
@@ -186,17 +261,18 @@ public sealed record DeviceSeries(string BaseSeries, string Code, string Prefix,
 
 /// <summary>
 /// La série à utiliser pour valider sur ce poste. <c>null</c> sur le serveur, et sur un poste tant qu'il n'a pas reçu
-/// de série : il ne valide alors pas hors ligne.
+/// de série : il ne valide alors pas hors ligne. Un refus quand le poste ne doit plus valider (étape 4.4) : révoqué, ou
+/// hors ligne depuis plus longtemps que le cabinet ne le permet.
 /// </summary>
 public interface IDeviceNumbering
 {
-    Task<DeviceSeries?> FindAsync(string baseSeries, CancellationToken cancellationToken);
+    Task<Result<DeviceSeries?>> FindAsync(string baseSeries, CancellationToken cancellationToken);
 }
 
 /// <summary>Par défaut (serveur, navigateur) : aucune série de poste, la validation numérote dans la série du dossier.</summary>
 internal sealed class NoDeviceNumbering : IDeviceNumbering
 {
-    public Task<DeviceSeries?> FindAsync(string baseSeries, CancellationToken cancellationToken) => Task.FromResult<DeviceSeries?>(null);
+    public Task<Result<DeviceSeries?>> FindAsync(string baseSeries, CancellationToken cancellationToken) => Task.FromResult(Result<DeviceSeries?>.Success(null));
 }
 
 /// <summary>Les séries de poste du dossier, côté serveur.</summary>

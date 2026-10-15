@@ -25,5 +25,17 @@ public static partial class ErrorCodes
 
         /// <summary>La version du cabinet n'est pas encore arrivée sur le poste : synchroniser avant de garder sa saisie.</summary>
         public const string ConflictAwaitingRefresh = "Sync.ConflictAwaitingRefresh";
+
+        /// <summary>Le cabinet a révoqué ce poste : il est refusé, et sa réplique est effacée (étape 4.4).</summary>
+        public const string DeviceRevoked = "Sync.DeviceRevoked";
+
+        /// <summary>Le poste est resté hors ligne plus longtemps que le cabinet ne le permet : il ne valide plus.</summary>
+        public const string OfflineTooLong = "Sync.OfflineTooLong";
+
+        /// <summary>Durée maximale hors ligne hors des bornes (de 1 heure à 30 jours).</summary>
+        public const string PolicyInvalid = "Sync.PolicyInvalid";
+
+        /// <summary>Ce poste n'est pas connu du dossier.</summary>
+        public const string DeviceUnknown = "Sync.DeviceUnknown";
     }
 }
