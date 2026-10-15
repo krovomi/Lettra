@@ -193,10 +193,10 @@ jobs:
         with:
           global-json-file: global.json
       - name: Xcodes disponibles
-        run: ls -d /Applications/Xcode*
+        run: echo "::notice::$(ls -d /Applications/Xcode* | tr '\n' ' ')"
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: latest-stable
+          xcode-version: latest
       - name: Charge de travail MAUI (iOS, Mac Catalyst, Android)
         run: dotnet workload install maui-ios maui-maccatalyst maui-android
       - name: Build iOS (simulateur)
