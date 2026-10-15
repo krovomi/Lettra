@@ -147,6 +147,7 @@ internal sealed class CompanyProfileConfiguration : IEntityTypeConfiguration<Com
         builder.Property(p => p.EarlyPaymentDiscount).HasMaxLength(500);
         builder.Property(p => p.Iban).HasConversion(v => v!.Value, v => Iban.Create(v).Value).HasMaxLength(34);
         builder.Property(p => p.Bic).HasMaxLength(11);
+        builder.Property(p => p.VatDeclarationRegime).HasConversion<int?>();
         builder.IsVersioned();
         builder.ComplexProperty(p => p.Address, address =>
         {

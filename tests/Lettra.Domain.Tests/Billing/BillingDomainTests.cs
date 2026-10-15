@@ -180,4 +180,20 @@ public sealed class BillingDomainTests
 
     private static InvoiceHeader Header(VatRegime regime = VatRegime.Standard) =>
         new(null, null, null, null, null, regime, "Mission", null);
+
+    [Fact]
+    public void Le_regime_de_declaration_de_tva_est_sans_objet_en_franchise()
+    {
+        CompanyProfile.Draft draft = new(
+            "Conseil Lettra", "SAS", null, "552100554", null, null, "FR96552100554", "10 avenue de l'Opéra", null, "75001", "Paris", "FR",
+            VatFranchise: false, VatOnDebits: false, PaymentDays: 30, null, null, null, null, null, VatDeclarationRegime.MiniReal);
+        CompanyProfile profile = CompanyProfile.Create(draft, Now).Value;
+        profile.VatDeclarationRegime.Should().Be(VatDeclarationRegime.MiniReal);
+
+        profile.Update(draft with { VatFranchise = true, VatNumber = null }, Now).IsSuccess.Should().BeTrue();
+        profile.VatDeclarationRegime.Should().BeNull();
+
+        profile.Update(draft with { VatDeclarationRegime = (VatDeclarationRegime)9 }, Now)
+            .Errors.Should().ContainSingle().Which.Target.Should().Be(nameof(CompanyProfile.VatDeclarationRegime));
+    }
 }

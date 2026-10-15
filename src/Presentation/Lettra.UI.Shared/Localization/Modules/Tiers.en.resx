@@ -18,6 +18,7 @@
   <data name="Customers.Field.AddressLine2" xml:space="preserve"><value>Address line 2</value></data>
   <data name="Customers.Field.City" xml:space="preserve"><value>City</value></data>
   <data name="Customers.Field.CountryCode" xml:space="preserve"><value>Country (ISO code, e.g. FR)</value></data>
+  <data name="Customers.Field.PreferredLanguage" xml:space="preserve"><value>Language of printed quotes and invoices</value></data>
   <data name="Customers.Field.Email" xml:space="preserve"><value>Email</value></data>
   <data name="Customers.Field.Kind" xml:space="preserve"><value>Customer type</value></data>
   <data name="Customers.Field.Name" xml:space="preserve"><value>Name or company name</value></data>

@@ -32,7 +32,7 @@ internal static class BillingPersistenceScenarios
         "Conseil Lettra", "SAS", 10_000m, "552100554", "55210055400013", "RCS Paris 552 100 554", "FR96552100554",
         "10 avenue de l'Opéra", null, "75001", "Paris", "FR", VatFranchise: false, VatOnDebits: false, PaymentDays: 30,
         PaymentTerms: "Virement à 30 jours", LatePenaltyRate: 10m, EarlyPaymentDiscount: "Pas d'escompte pour paiement anticipé",
-        Iban: "FR7630006000011234567890189", Bic: "AGRIFRPP");
+        Iban: "FR7630006000011234567890189", Bic: "AGRIFRPP", VatDeclarationRegime: VatDeclarationRegime.RealSimplified);
 
     private static DocumentLineRequest Line(string designation, decimal quantity, decimal price, string vat = "FR-20", CatalogItemKindDto kind = CatalogItemKindDto.Service) =>
         new() { Designation = designation, Quantity = quantity, UnitPriceExclTax = price, VatRateCode = vat, Kind = kind, UnitCode = kind == CatalogItemKindDto.Service ? "HUR" : "C62" };
@@ -69,6 +69,8 @@ internal static class BillingPersistenceScenarios
         {
             ICommandDispatcher commands = scope.ServiceProvider.GetRequiredService<ICommandDispatcher>();
             IQueryDispatcher queries = scope.ServiceProvider.GetRequiredService<IQueryDispatcher>();
+            (await queries.QueryAsync(new GetCompanyProfileQuery(dossier), default)).Value.VatDeclarationRegime
+                .Should().Be(VatDeclarationRegimeDto.RealSimplified);
             QuoteResponse draft = (await queries.QueryAsync(new GetQuoteQuery(dossier, quote), default)).Value;
             draft.Lines.Should().HaveCount(3);
             draft.Totals.TotalExclTax.Should().Be(489.98m);

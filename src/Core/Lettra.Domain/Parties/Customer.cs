@@ -34,6 +34,7 @@ public sealed class Customer : AggregateRoot<CustomerId>, IVersioned
         VatNumber? vatNumber,
         Email? email,
         PostalAddress billingAddress,
+        string? preferredLanguage,
         DateTimeOffset createdAt)
         : base(id)
     {
@@ -44,6 +45,7 @@ public sealed class Customer : AggregateRoot<CustomerId>, IVersioned
         VatNumber = vatNumber;
         Email = email;
         BillingAddress = billingAddress;
+        PreferredLanguage = preferredLanguage;
         CreatedAt = createdAt;
     }
 
@@ -60,6 +62,9 @@ public sealed class Customer : AggregateRoot<CustomerId>, IVersioned
     public Email? Email { get; private set; }
 
     public PostalAddress BillingAddress { get; private set; }
+
+    /// <summary>Langue de ses pièces imprimées (<see cref="DocumentLanguages"/>) ; <c>null</c> : le français.</summary>
+    public string? PreferredLanguage { get; private set; }
 
     public DateTimeOffset CreatedAt { get; private set; }
 
@@ -78,7 +83,8 @@ public sealed class Customer : AggregateRoot<CustomerId>, IVersioned
         string? AddressLine2,
         string? PostalCode,
         string? City,
-        string? CountryCode);
+        string? CountryCode,
+        string? PreferredLanguage = null);
 
     /// <summary>Crée un client en accumulant <b>toutes</b> les erreurs de saisie (l'écran les affiche ensemble).</summary>
     public static Result<Customer> Create(CustomerId id, Draft draft, DateTimeOffset now)
@@ -90,7 +96,7 @@ public sealed class Customer : AggregateRoot<CustomerId>, IVersioned
         }
 
         Values v = values.Value;
-        Customer customer = new(id, v.Kind, v.Name, v.Siren, v.Siret, v.VatNumber, v.Email, v.Address, now);
+        Customer customer = new(id, v.Kind, v.Name, v.Siren, v.Siret, v.VatNumber, v.Email, v.Address, v.PreferredLanguage, now);
         customer.Raise(new CustomerCreated(id, now));
         return customer;
     }
@@ -112,6 +118,7 @@ public sealed class Customer : AggregateRoot<CustomerId>, IVersioned
         VatNumber = v.VatNumber;
         Email = v.Email;
         BillingAddress = v.Address;
+        PreferredLanguage = v.PreferredLanguage;
         Raise(new CustomerUpdated(Id, now));
         return Result.Success();
     }
@@ -146,6 +153,12 @@ public sealed class Customer : AggregateRoot<CustomerId>, IVersioned
             draft.AddressLine1, draft.AddressLine2, draft.PostalCode, draft.City, draft.CountryCode);
         errors.AddRange(address.Errors);
 
+        string? language = DocumentLanguages.Normalize(draft.PreferredLanguage);
+        if (language is null && !string.IsNullOrWhiteSpace(draft.PreferredLanguage))
+        {
+            errors.Add(CustomerErrors.PreferredLanguageInvalid);
+        }
+
         if (draft.Kind == CustomerKind.Individual && (siren is not null || vat is not null))
         {
             errors.Add(CustomerErrors.IndividualCannotHaveCompanyIds);
@@ -161,9 +174,9 @@ public sealed class Customer : AggregateRoot<CustomerId>, IVersioned
 
         return errors.Count > 0
             ? Result<Values>.Failure(errors)
-            : new Values(draft.Kind, name, siren, siret, vat, email, address.Value);
+            : new Values(draft.Kind, name, siren, siret, vat, email, address.Value, language);
     }
 
     private sealed record Values(
-        CustomerKind Kind, string Name, Siren? Siren, Siret? Siret, VatNumber? VatNumber, Email? Email, PostalAddress Address);
+        CustomerKind Kind, string Name, Siren? Siren, Siret? Siret, VatNumber? VatNumber, Email? Email, PostalAddress Address, string? PreferredLanguage);
 }

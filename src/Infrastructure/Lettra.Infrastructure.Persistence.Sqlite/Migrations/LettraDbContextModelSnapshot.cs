@@ -74,6 +74,9 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("VatDeclarationRegime")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("VatFranchise")
                         .HasColumnType("INTEGER");
 
@@ -856,6 +859,10 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PreferredLanguage")
+                        .HasMaxLength(10)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("SearchKey")
