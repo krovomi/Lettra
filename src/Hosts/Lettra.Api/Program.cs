@@ -62,6 +62,9 @@ app.MapGroup($"/api/v1/cabinets/{{{CabinetPermissionEndpointFilter.RouteKey}:gui
     .AddEndpointFilter<CsrfEndpointFilter>()
     .MapDossiers();
 
+// Instantané de droits signé pour le hors ligne (annexe F §4) et ses clés publiques.
+app.MapRightsSnapshot();
+
 app.MapLettraBff();
 app.MapHealthChecks("/health");
 
