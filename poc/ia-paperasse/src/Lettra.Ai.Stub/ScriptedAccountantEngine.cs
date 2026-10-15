@@ -32,12 +32,12 @@ public sealed partial class ScriptedAccountantEngine : IAiEngine
 
     private static EngineTurn ExplainCompliance(ConversationState s)
     {
-        if (s.InvoiceId is { } id && s.Result("valider_facture") is null)
-            return s.Call("valider_facture", new { facture_id = id });
+        if (s.InvoiceId is { } id && s.Result("verifier_facture") is null)
+            return s.Call("verifier_facture", new { facture_id = id });
         if (s.Result("lire_reference") is null)
             return s.Call("lire_reference", new { skill = "comptable", chemin = "facturation/mentions-obligatoires.md" });
 
-        var check = s.Result("valider_facture");
+        var check = s.Result("verifier_facture");
         if (check is null || check.Value.IsError)
             return Answer("**Faits** : je n'ai pas pu lire la facture ouverte (" + (check?.Content ?? "aucune facture ouverte") + ").\n\n**Limites** : ouvrez la facture concernée puis relancez la question.");
 

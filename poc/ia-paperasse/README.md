@@ -34,7 +34,7 @@ LETTRA_LOCAL_MODEL_URL=http://serveur:8000/v1/chat/completions LETTRA_LOCAL_MODE
 | `Lettra.Ai.Abstractions` | Ports : `IAiTool` (pouvoir `ReadOnly` ou `CreatesDraft`, rien d'autre n'est exprimable), `IAiEngine`, `IAccountingAssistant`, `IAiUsagePolicy`, `IAiAuditLog`. |
 | `Lettra.Ai.Skills` | Skill pack Paperasse épinglé sur `f2e15c4`, embarqué, vérifié fichier par fichier par SHA-256 au démarrage ; surcouche Lettra ; lecture des fiches en liste blanche. |
 | `Lettra.Ai.Privacy` | Pseudonymisation : identités connues du dossier et détecteurs (SIREN, SIRET, TVA, IBAN, e-mail, téléphone), ré-identification côté serveur. |
-| `Lettra.Ai.Tools` | 8 outils : `lire_reference`, `lister_references`, `contexte_dossier`, `valider_facture`, `calculer`, `rechercher_client`, `brouillon_devis` (seul outil qui crée quelque chose : un brouillon), `consulter_site_officiel`. |
+| `Lettra.Ai.Tools` | 8 outils : `lire_reference`, `lister_references`, `contexte_dossier`, `verifier_facture`, `calculer`, `rechercher_client`, `brouillon_devis` (seul outil qui crée quelque chose : un brouillon), `consulter_site_officiel`. |
 | `Lettra.Ai.Orchestration` | Orchestrateur côté serveur : politique du cabinet, droits, minimisation, boucle d'outils, validation des entrées, contrôle de la réponse, journal. |
 | `Lettra.Ai.Claude` | Adapter Claude (SDK officiel C#, `claude-opus-5-5`, effort `medium`, prompt stable en cache, outils stricts). |
 | `Lettra.Ai.Local` | Adapter modèle à poids ouverts (API compatible chat completions : vLLM, Ollama…). |
@@ -93,7 +93,7 @@ Points à reporter dans les documents d'architecture (propriété du thread « P
 4. **Écarts du référentiel `validate-facture.js` à arbitrer avec l'expert** (conservés pour la parité, listés dans `InvoiceComplianceValidator.KnownReferenceQuirks`) : conditions émetteur non évaluées (RCS exigé d'un entrepreneur individuel), condition de date de livraison évaluée sur l'adresse, indemnité de 40 EUR non contrôlée, B2B deviné par le nom, montants non recontrôlés.
 5. **Fraîcheur du skill `comptable`** : il date du 18/04/2026 et demande lui-même une vérification au-delà de six mois, soit à partir du 19/10/2026. La première relecture par l'expert est donc due avant toute démonstration en commission.
 6. **Pseudonymisation, limite connue** : les noms de personnes ou d'entreprises absents du dossier (un tiers cité dans un e-mail) ne sont pas détectés ; seuls les identités du dossier et les identifiants structurés le sont. À inscrire dans l'AIPD, ou à compléter par une détection d'entités nommées.
-7. **Nom d'outil** : « valider_facture » (annexe B §5.3) évoque une validation. Le registre le tolère en lecture seule, mais « verifier_facture » serait plus clair pour le modèle comme pour le journal.
+7. **Nom d'outil** : l'outil de conformité s'appelait « valider_facture » (annexe B §5.3), ce qui évoquait une validation. Il est renommé « verifier_facture » ; le registre refuse désormais tout nom contenant « valider ».
 8. **Refus du moteur** : le repli automatique sur un autre modèle n'est pas activé, car il enverrait les données à un moteur que le cabinet n'a pas choisi, et il n'existe pas sur Bedrock ni Vertex. Le refus est affiché et journalisé.
 9. **Évals Paperasse** : leurs assertions sont en langage naturel et demandent un juge (modèle ou expert). Cinq des dix évals `comptable` (configuration, clôture) sont hors du périmètre de Lettra ; les évals 6, 9 et 10 sont reprises sous forme vérifiable dans notre banc.
 

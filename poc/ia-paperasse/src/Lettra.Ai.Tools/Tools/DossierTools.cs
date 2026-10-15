@@ -24,7 +24,7 @@ public sealed class DossierContextTool(IDossierContextProvider provider) : IAiTo
 /// <summary>Contrôle déterministe des mentions obligatoires de la facture ouverte (même code que l'écran).</summary>
 public sealed class ValidateInvoiceTool(DossierUseCases useCases) : IAiTool
 {
-    public string Name => "valider_facture";
+    public string Name => "verifier_facture";
     public string Description =>
         "Vérifie les mentions obligatoires de la facture ouverte à l'écran (CGI art. 242 nonies A, C. com. L441-9, réforme 2026) " +
         "et calcule ses totaux. Le résultat vient des règles de Lettra : il fait foi. Ne modifie rien.";

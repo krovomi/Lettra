@@ -22,7 +22,7 @@ public sealed class EngineAdapterTests
         "SURCOUCHE + SKILL.md",
         "Date du jour : 2026-10-14",
         messages.Length > 0 ? messages : [EngineMessage.UserText("Pourquoi ?")],
-        [new EngineToolDefinition("valider_facture", "Vérifie la facture", Schema)]);
+        [new EngineToolDefinition("verifier_facture", "Vérifie la facture", Schema)]);
 
     private const string ClaudeToolUseResponse = """
     {
@@ -30,7 +30,7 @@ public sealed class EngineAdapterTests
       "content": [
         { "type": "thinking", "thinking": "", "signature": "sig-123" },
         { "type": "text", "text": "Je vérifie." },
-        { "type": "tool_use", "id": "toolu_01", "name": "valider_facture", "input": { "facture_id": "abc" } }
+        { "type": "tool_use", "id": "toolu_01", "name": "verifier_facture", "input": { "facture_id": "abc" } }
       ],
       "stop_reason": "tool_use", "stop_sequence": null,
       "usage": { "input_tokens": 120, "output_tokens": 30, "cache_read_input_tokens": 4000, "cache_creation_input_tokens": 0 }
@@ -76,7 +76,7 @@ public sealed class EngineAdapterTests
 
         Assert.Equal(EngineStopReason.ToolUse, turn.StopReason);
         var call = Assert.Single(turn.ToolCalls);
-        Assert.Equal(("toolu_01", "valider_facture", "abc"), (call.Id, call.Name, call.Input.GetProperty("facture_id").GetString()));
+        Assert.Equal(("toolu_01", "verifier_facture", "abc"), (call.Id, call.Name, call.Input.GetProperty("facture_id").GetString()));
         Assert.Equal("Je vérifie.", turn.Text);
         Assert.Equal("sig-123", turn.Parts.OfType<OpaquePart>().Single().Payload.GetProperty("signature").GetString());
         Assert.Equal(4000, turn.Usage!.CacheReadTokens);
@@ -119,8 +119,8 @@ public sealed class EngineAdapterTests
     {
         var handler = new RecordingHandler(_ => RecordingHandler.Json("""
         { "choices": [ { "finish_reason": "tool_calls", "message": { "role": "assistant", "content": null,
-          "tool_calls": [ { "id": "call_1", "type": "function", "function": { "name": "valider_facture", "arguments": "{\"facture_id\":\"abc\"}" } },
-                          { "id": "call_2", "type": "function", "function": { "name": "valider_facture", "arguments": "{pas du json" } } ] } } ],
+          "tool_calls": [ { "id": "call_1", "type": "function", "function": { "name": "verifier_facture", "arguments": "{\"facture_id\":\"abc\"}" } },
+                          { "id": "call_2", "type": "function", "function": { "name": "verifier_facture", "arguments": "{pas du json" } } ] } } ],
           "usage": { "prompt_tokens": 50, "completion_tokens": 10 } }
         """));
         var engine = new LocalModelEngine(new HttpClient(handler), new LocalModelOptions { Endpoint = new Uri("http://modele.local/v1/chat/completions") });
@@ -129,7 +129,7 @@ public sealed class EngineAdapterTests
 
         using var body = JsonDocument.Parse(Assert.Single(handler.Requests).Body);
         Assert.Equal("system", body.RootElement.GetProperty("messages")[0].GetProperty("role").GetString());
-        Assert.Equal("valider_facture", body.RootElement.GetProperty("tools")[0].GetProperty("function").GetProperty("name").GetString());
+        Assert.Equal("verifier_facture", body.RootElement.GetProperty("tools")[0].GetProperty("function").GetProperty("name").GetString());
         Assert.Equal(EngineStopReason.ToolUse, turn.StopReason);
         var calls = turn.ToolCalls.ToList();
         Assert.Equal("abc", calls[0].Input.GetProperty("facture_id").GetString());

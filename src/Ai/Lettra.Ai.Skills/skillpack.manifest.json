@@ -8,7 +8,11 @@
     "controleur-fiscal",
     "commissaire-aux-comptes"
   ],
-  "skillLastUpdated": "2026-04-18",
+  "skillsLastUpdated": {
+    "comptable": "2026-04-18",
+    "controleur-fiscal": "2026-03-23",
+    "commissaire-aux-comptes": "2026-03-23"
+  },
   "reviewedOn": null,
   "reviewedBy": null,
   "files": {
