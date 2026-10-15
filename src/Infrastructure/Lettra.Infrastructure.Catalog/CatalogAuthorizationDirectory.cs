@@ -126,4 +126,35 @@ internal sealed class CatalogAuthorizationDirectory(IDbContextFactory<CatalogDbC
                 return null;
         }
     }
+
+    /// <summary>Deux requêtes pour tout le cabinet : ses dossiers actifs, puis leurs placements dans ses groupes.</summary>
+    public async ValueTask<IReadOnlyList<ScopePath>> GetDossierPathsAsync(
+        OrganisationId cabinet, IReadOnlyCollection<DossierId> dossiers, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(dossiers);
+        HashSet<Guid> wanted = dossiers.Select(d => d.Value).ToHashSet();
+        CatalogDbContext db = await factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        await using (db.ConfigureAwait(false))
+        {
+            List<Guid> active = await db.Dossiers
+                .Where(d => d.OrganisationId == cabinet.Value && d.State == DossierState.Active)
+                .Select(d => d.Id)
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
+            ILookup<Guid, Guid> placements = (await (
+                    from placement in db.GroupDossiers
+                    join g in db.Groups on placement.GroupId equals g.Id
+                    where g.OrganisationId == cabinet.Value
+                    select new { placement.DossierId, placement.GroupId })
+                .ToListAsync(cancellationToken).ConfigureAwait(false))
+                .ToLookup(p => p.DossierId, p => p.GroupId);
+
+            AuthorizationScope cabinetScope = AuthorizationScope.ForCabinet(cabinet);
+            return active.Where(wanted.Contains)
+                .Select(id => new ScopePath(
+                    new AuthorizationScope(ScopeKind.Dossier, id),
+                    cabinet,
+                    [new AuthorizationScope(ScopeKind.Dossier, id), .. placements[id].Select(g => AuthorizationScope.ForGroup(new GroupId(g))), cabinetScope, AuthorizationScope.Plateforme]))
+                .ToArray();
+        }
+    }
 }

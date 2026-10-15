@@ -122,3 +122,19 @@ internal sealed class RecordingDossierProvisioner : IDossierProvisioner
         return Task.FromResult<Result<DossierId>>(new DossierId(Guid.CreateVersion7()));
     }
 }
+
+/// <summary>Registre des droits vide : ni utilisateur, ni portée connus.</summary>
+internal sealed class EmptyAuthorizationDirectory : IAuthorizationDirectory
+{
+    public ValueTask<UserAuthorizationProfile?> FindUserAsync(Guid userId, CancellationToken cancellationToken) =>
+        ValueTask.FromResult<UserAuthorizationProfile?>(null);
+
+    public ValueTask<ScopePath?> GetScopePathAsync(AuthorizationScope scope, CancellationToken cancellationToken) =>
+        ValueTask.FromResult<ScopePath?>(null);
+}
+
+internal sealed class EmptyDossierDirectory : IDossierDirectory
+{
+    public Task<IReadOnlyList<Lettra.Contracts.Dossiers.DossierSummary>> ListAsync(OrganisationId organisation, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<Lettra.Contracts.Dossiers.DossierSummary>>([]);
+}

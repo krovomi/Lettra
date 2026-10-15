@@ -57,10 +57,23 @@ api.MapDirectory();
 api.MapAssistant();
 
 // Administration du cabinet : même authentification et anti-CSRF, sans dossier ; la permission porte sur le cabinet.
-app.MapGroup($"/api/v1/cabinets/{{{CabinetPermissionEndpointFilter.RouteKey}:guid}}")
+RouteGroupBuilder cabinet = app.MapGroup($"/api/v1/cabinets/{{{CabinetPermissionEndpointFilter.RouteKey}:guid}}")
+    .RequireAuthorization(LettraPolicies.User)
+    .AddEndpointFilter<CsrfEndpointFilter>();
+cabinet.MapDossiers();
+cabinet.MapCabinetRights();
+
+// Membres et dossiers d'un groupe : la permission porte sur le groupe de la route.
+app.MapGroup($"/api/v1/groupes/{{{GroupPermissionEndpointFilter.RouteKey}:guid}}")
     .RequireAuthorization(LettraPolicies.User)
     .AddEndpointFilter<CsrfEndpointFilter>()
-    .MapDossiers();
+    .MapGroupRights();
+
+// Les dossiers que l'utilisateur peut ouvrir (sélecteur de dossier) : pas encore de dossier choisi.
+app.MapGroup("/api/v1/dossiers")
+    .RequireAuthorization(LettraPolicies.User)
+    .AddEndpointFilter<CsrfEndpointFilter>()
+    .MapAccessibleDossiers();
 
 app.MapLettraBff();
 app.MapHealthChecks("/health");

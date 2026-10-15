@@ -24,7 +24,7 @@ public static class DependencyInjection
         services.AddHybridCache();
         services.AddScoped<CachingPermissionService>();
         services.Replace(ServiceDescriptor.Scoped<IPermissionService>(sp => sp.GetRequiredService<CachingPermissionService>()));
-        services.TryAddScoped<IPermissionCacheInvalidator>(sp => sp.GetRequiredService<CachingPermissionService>());
+        services.Replace(ServiceDescriptor.Scoped<IPermissionCacheInvalidator>(sp => sp.GetRequiredService<CachingPermissionService>()));
 
         // Hors requête HTTP (Worker, tâches de fond), personne n'est authentifié tant qu'un hôte ne dit pas qui agit.
         services.TryAddScoped<ICurrentUser, AnonymousUser>();
