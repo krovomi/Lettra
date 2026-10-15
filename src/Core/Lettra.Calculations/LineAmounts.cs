@@ -5,11 +5,13 @@ namespace Lettra.Calculations;
 /// <param name="UnitPriceExclTax">Prix unitaire hors taxes.</param>
 /// <param name="VatRatePercent">Taux de TVA en pourcentage (20, 10, 5.5, 2.1, 0).</param>
 /// <param name="DiscountPercent">Remise en pourcentage appliquée à la ligne (0 à 100).</param>
+/// <param name="VatCategory">Catégorie de TVA EN 16931 (<see cref="VatCategoryCodes"/>) ; la ventilation groupe par catégorie et taux.</param>
 public readonly record struct LineInput(
     decimal Quantity,
     decimal UnitPriceExclTax,
     decimal VatRatePercent,
-    decimal DiscountPercent = 0m);
+    decimal DiscountPercent = 0m,
+    string VatCategory = VatCategoryCodes.Standard);
 
 /// <summary>Montant HT d'une ligne, arrondi au centime.</summary>
 public static class LineAmounts

@@ -1,7 +1,10 @@
 using System.Globalization;
 using System.Xml.Linq;
 using Bunit;
+using Lettra.Contracts.Identity;
+using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
+using Lettra.UI.Shared.Components;
 using Lettra.UI.Shared.Diagnostics;
 using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Pages.Diagnostics;
@@ -112,5 +115,32 @@ public sealed class GridBenchmarkPageTests : BunitContext
             .And.Contain("8 cœurs, fenêtre 1920×1080 @1.25")
             .And.Contain("Sans réponse : 1");
         page.Markup.Should().Contain("1 frappe(s) sans réponse");
+    }
+
+    [Fact]
+    public void Une_erreur_de_la_mesure_s_affiche_sans_arreter_l_application()
+    {
+        BunitJSModuleInterop module = JSInterop.SetupModule("./_content/Lettra.UI.Shared/grid-benchmark.js");
+        module.Setup<GridBenchmarkRun>("run", _ => true).SetException(new InvalidOperationException("grille absente"));
+        Services.GetRequiredService<NavigationManager>().NavigateTo("mesure-grille?auto=1");
+
+        IRenderedComponent<GridBenchmark> page = Render<GridBenchmark>();
+
+        page.WaitForAssertion(() => page.Find("p[role=alert]").TextContent.Should().Contain("InvalidOperationException : grille absente"), TimeSpan.FromSeconds(5));
+        page.Find("#bench-start").HasAttribute("disabled").Should().BeFalse("la mesure peut être relancée");
+    }
+
+    [Fact]
+    public void Sans_compte_local_la_mesure_reste_affichee()
+    {
+        Services.AddSingleton<ISessionGateway>(new FakeSessionGateway(new SessionResponse(false, SessionModeDto.Local, null, LocalAccountExists: false)));
+        NavigationManager navigation = Services.GetRequiredService<NavigationManager>();
+        navigation.NavigateTo("mesure-grille?auto=1");
+
+        Render<SessionBar>();
+
+        navigation.Uri.Should().Be("http://localhost/mesure-grille?auto=1", "la version de mesure s'ouvre avant tout compte local");
+        navigation.NavigateTo("quotes");
+        navigation.Uri.Should().Be("http://localhost/session");
     }
 }

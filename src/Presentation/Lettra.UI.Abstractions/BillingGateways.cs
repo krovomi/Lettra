@@ -18,7 +18,7 @@ public sealed record BillingListQuery(
 
 /// <summary>
 /// Écrans Devis. <c>expectedVersion</c> est la <c>Version</c> lue : l'écriture échoue avec
-/// <c>Billing.VersionMismatch</c> si quelqu'un a modifié le devis entre-temps (HTTP : <c>If-Match</c>, 412).
+/// <c>Concurrency.VersionMismatch</c> si quelqu'un a modifié le devis entre-temps (HTTP : <c>If-Match</c>, 412).
 /// </summary>
 public interface IQuotesGateway
 {

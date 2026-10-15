@@ -143,7 +143,7 @@ internal sealed class FakeQuotesGateway : IQuotesGateway
         Updates.Add((id, request with { Lines = [.. request.Lines] }, expectedVersion));
         if (TakeMismatch() || Quotes[id].Version != expectedVersion)
         {
-            return Fail<QuoteResponse>(ErrorCodes.Billing.VersionMismatch);
+            return Fail<QuoteResponse>(ErrorCodes.Concurrency.VersionMismatch);
         }
 
         Quotes[id] = Apply(Quotes[id], request, Quotes[id].Version + 1);
@@ -164,7 +164,7 @@ internal sealed class FakeQuotesGateway : IQuotesGateway
         Validations.Add(id);
         if (TakeMismatch())
         {
-            return Fail<QuoteResponse>(ErrorCodes.Billing.VersionMismatch);
+            return Fail<QuoteResponse>(ErrorCodes.Concurrency.VersionMismatch);
         }
 
         Quotes[id] = Quotes[id] with { Status = QuoteStatusDto.Validated, Number = "DEV-2026-0007", IssueDate = new DateOnly(2026, 10, 15), Version = Quotes[id].Version + 1 };
@@ -222,8 +222,8 @@ internal sealed class FakeInvoicesGateway : IInvoicesGateway
         return new InvoiceResponse(Guid.CreateVersion7(), 1, kind, status, number, kind == InvoiceKindDto.CreditNote ? "AV" : "FAC",
             BillingFixtures.DupontId, BillingFixtures.Dupont, status == InvoiceStatusDto.Draft ? null : BillingFixtures.Cabinet,
             number is null ? null : new DateOnly(2026, 10, 15), new DateOnly(2026, 10, 15), new DateOnly(2026, 11, 14), "30 jours", null,
-            VatRegimeDto.Standard, OperationCategoryDto.Services, null, null, null, null, null, null, null, computed, totals, [], 0m,
-            Guid.Empty, null, null, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, null, null);
+            VatRegimeDto.Standard, OperationCategoryDto.Services, null, null, null, null, null, null, null, null, computed, totals, [], 0m,
+            null, Guid.Empty, null, null, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, null, null);
     }
 
     public InvoiceResponse Add(InvoiceKindDto kind, InvoiceStatusDto status, string? number, params DocumentLineRequest[] lines)

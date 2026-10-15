@@ -78,6 +78,27 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Cycle_de_vie_devis_acompte_facture_finale_et_avoir()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await BillingPersistenceScenarios.LifecycleAsync(harness, DatabaseProvider.Sqlite, Database("devis"));
+    }
+
+    [Fact]
+    public async Task Validations_concurrentes_sans_trou_ni_doublon()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await BillingPersistenceScenarios.ConcurrentValidationsAsync(harness, DatabaseProvider.Sqlite, Database("valid"));
+    }
+
+    [Fact]
+    public async Task Une_version_perimee_n_ecrase_pas_la_piece()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await BillingPersistenceScenarios.StaleVersionAsync(harness, DatabaseProvider.Sqlite, Database("version"));
+    }
+
+    [Fact]
     public async Task Une_base_d_un_autre_dossier_est_refusee()
     {
         await using TenantHarness harness = new(new SqliteConfigurator());
@@ -87,14 +108,14 @@ public sealed class SqliteTests : IDisposable
     [Fact]
     public async Task Validations_concurrentes_dans_la_chaine()
     {
-        await using TenantHarness harness = new(new SqliteConfigurator());
+        await using TenantHarness harness = new(new SqliteConfigurator(), syntheticDocuments: true);
         await IntegrityScenarios.ConcurrentValidationsAsync(harness, DatabaseProvider.Sqlite, Database("chaine"));
     }
 
     [Fact]
     public async Task Une_ligne_modifiee_en_base_est_detectee()
     {
-        await using TenantHarness harness = new(new SqliteConfigurator());
+        await using TenantHarness harness = new(new SqliteConfigurator(), syntheticDocuments: true);
         await IntegrityScenarios.TamperDetectedAsync(harness, DatabaseProvider.Sqlite, Database("alteration"));
     }
 
@@ -102,7 +123,7 @@ public sealed class SqliteTests : IDisposable
     public async Task Clotures_signees_et_archive_scellee()
     {
         ManualClock clock = new(DateTimeOffset.UtcNow);
-        await using TenantHarness harness = new(new SqliteConfigurator(), clock);
+        await using TenantHarness harness = new(new SqliteConfigurator(), clock, syntheticDocuments: true);
         await IntegrityScenarios.ClosingsAndSealedArchiveAsync(harness, clock, DatabaseProvider.Sqlite, Database("clotures"));
     }
 
@@ -205,7 +226,7 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     public async Task Validations_concurrentes_dans_la_chaine()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
-        await using TenantHarness harness = new(new PostgreSqlConfigurator());
+        await using TenantHarness harness = new(new PostgreSqlConfigurator(), syntheticDocuments: true);
         await IntegrityScenarios.ConcurrentValidationsAsync(harness, DatabaseProvider.PostgreSql, Database("chaine"));
     }
 
@@ -213,7 +234,7 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     public async Task Une_ligne_modifiee_en_base_est_detectee()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
-        await using TenantHarness harness = new(new PostgreSqlConfigurator());
+        await using TenantHarness harness = new(new PostgreSqlConfigurator(), syntheticDocuments: true);
         await IntegrityScenarios.TamperDetectedAsync(harness, DatabaseProvider.PostgreSql, Database("alteration"));
     }
 
@@ -222,7 +243,7 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     {
         Skip.IfNot(Docker.Available, "Docker absent");
         ManualClock clock = new(DateTimeOffset.UtcNow);
-        await using TenantHarness harness = new(new PostgreSqlConfigurator(), clock);
+        await using TenantHarness harness = new(new PostgreSqlConfigurator(), clock, syntheticDocuments: true);
         await IntegrityScenarios.ClosingsAndSealedArchiveAsync(harness, clock, DatabaseProvider.PostgreSql, Database("clotures"));
     }
 
@@ -308,6 +329,30 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     }
 
     [SkippableFact]
+    public async Task Cycle_de_vie_devis_acompte_facture_finale_et_avoir()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new PostgreSqlConfigurator());
+        await BillingPersistenceScenarios.LifecycleAsync(harness, DatabaseProvider.PostgreSql, Database("devis"));
+    }
+
+    [SkippableFact]
+    public async Task Validations_concurrentes_sans_trou_ni_doublon()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new PostgreSqlConfigurator());
+        await BillingPersistenceScenarios.ConcurrentValidationsAsync(harness, DatabaseProvider.PostgreSql, Database("valid"));
+    }
+
+    [SkippableFact]
+    public async Task Une_version_perimee_n_ecrase_pas_la_piece()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new PostgreSqlConfigurator());
+        await BillingPersistenceScenarios.StaleVersionAsync(harness, DatabaseProvider.PostgreSql, Database("version"));
+    }
+
+    [SkippableFact]
     public async Task Une_base_d_un_autre_dossier_est_refusee()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
@@ -388,7 +433,7 @@ public sealed class SqlServerTests : IAsyncLifetime
     public async Task Validations_concurrentes_dans_la_chaine()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
-        await using TenantHarness harness = new(new SqlServerConfigurator());
+        await using TenantHarness harness = new(new SqlServerConfigurator(), syntheticDocuments: true);
         await IntegrityScenarios.ConcurrentValidationsAsync(harness, DatabaseProvider.SqlServer, Database("chaine"));
     }
 
@@ -396,7 +441,7 @@ public sealed class SqlServerTests : IAsyncLifetime
     public async Task Une_ligne_modifiee_en_base_est_detectee()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
-        await using TenantHarness harness = new(new SqlServerConfigurator());
+        await using TenantHarness harness = new(new SqlServerConfigurator(), syntheticDocuments: true);
         await IntegrityScenarios.TamperDetectedAsync(harness, DatabaseProvider.SqlServer, Database("alteration"));
     }
 
@@ -405,7 +450,7 @@ public sealed class SqlServerTests : IAsyncLifetime
     {
         Skip.IfNot(Docker.Available, "Docker absent");
         ManualClock clock = new(DateTimeOffset.UtcNow);
-        await using TenantHarness harness = new(new SqlServerConfigurator(), clock);
+        await using TenantHarness harness = new(new SqlServerConfigurator(), clock, syntheticDocuments: true);
         await IntegrityScenarios.ClosingsAndSealedArchiveAsync(harness, clock, DatabaseProvider.SqlServer, Database("clotures"));
     }
 
@@ -488,6 +533,30 @@ public sealed class SqlServerTests : IAsyncLifetime
         Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new SqlServerConfigurator());
         await TenancyScenarios.NumberingAsync(harness, DatabaseProvider.SqlServer, Database("num"));
+    }
+
+    [SkippableFact]
+    public async Task Cycle_de_vie_devis_acompte_facture_finale_et_avoir()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new SqlServerConfigurator());
+        await BillingPersistenceScenarios.LifecycleAsync(harness, DatabaseProvider.SqlServer, Database("devis"));
+    }
+
+    [SkippableFact]
+    public async Task Validations_concurrentes_sans_trou_ni_doublon()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new SqlServerConfigurator());
+        await BillingPersistenceScenarios.ConcurrentValidationsAsync(harness, DatabaseProvider.SqlServer, Database("valid"));
+    }
+
+    [SkippableFact]
+    public async Task Une_version_perimee_n_ecrase_pas_la_piece()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new SqlServerConfigurator());
+        await BillingPersistenceScenarios.StaleVersionAsync(harness, DatabaseProvider.SqlServer, Database("version"));
     }
 
     [SkippableFact]

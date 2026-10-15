@@ -54,6 +54,10 @@ public sealed record SaveInvoiceRequest
 
     public VatRegimeDto VatRegime { get; set; } = VatRegimeDto.Standard;
 
+    /// <summary>Référence du bon de commande du client (EN 16931 BT-13).</summary>
+    [StringLength(100, ErrorMessage = ErrorCodes.Billing.PurchaseOrderReferenceTooLong)]
+    public string? PurchaseOrderReference { get; set; }
+
     [StringLength(200, ErrorMessage = ErrorCodes.Billing.SubjectTooLong)]
     public string? Subject { get; set; }
 
@@ -63,7 +67,11 @@ public sealed record SaveInvoiceRequest
     public List<DocumentLineRequest> Lines { get; set; } = [];
 }
 
-/// <summary>Facture, acompte ou avoir tel qu'affiché. <paramref name="Version"/> sert à la concurrence optimiste.</summary>
+/// <summary>
+/// Facture, acompte ou avoir tel qu'affiché. <paramref name="Version"/> sert à la concurrence optimiste ;
+/// <paramref name="ContentHash"/> est l'empreinte SHA-256 de la forme canonique (<see cref="CanonicalDocument"/>),
+/// figée à la validation et inscrite au journal inaltérable.
+/// </summary>
 public sealed record InvoiceResponse(
     Guid Id,
     long Version,
@@ -81,6 +89,7 @@ public sealed record InvoiceResponse(
     string? DeliveryAddress,
     VatRegimeDto VatRegime,
     OperationCategoryDto OperationCategory,
+    string? PurchaseOrderReference,
     string? Subject,
     string? Notes,
     Guid? QuoteId,
@@ -92,6 +101,7 @@ public sealed record InvoiceResponse(
     DocumentTotalsResponse Totals,
     IReadOnlyList<string> LegalMentions,
     decimal CreditedInclTax,
+    string? ContentHash,
     Guid CreatedBy,
     Guid? ValidatedBy,
     Guid? IssuedBy,
@@ -117,7 +127,8 @@ public sealed record InvoiceSummary(
 public sealed record CreditNoteLineRequest(int Position, decimal Quantity);
 
 /// <summary>
-/// Avoir sur une facture validée. Sans lignes, l'avoir reprend la totalité du solde non encore crédité.
+/// Avoir sur une facture validée. Sans lignes, l'avoir reprend toute la facture (refusé si elle est déjà en partie créditée) ;
+/// avec des lignes, il crédite les quantités données (rang de ligne, quantité positive), dans la limite du solde.
 /// L'avoir est créé en brouillon ; sa validation le numérote dans la série des factures.
 /// </summary>
 public sealed record CreateCreditNoteRequest
