@@ -1,4 +1,5 @@
 using Lettra.Calculations;
+using Lettra.Calculations.Compliance;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
 
@@ -203,6 +204,31 @@ public sealed class Quote : BillingDocument<QuoteId>
                 g.Key.VatCategory == VatCategoryCodes.Exempt ? g.Key.VatExemptionCode : null))
             .Where(l => l.UnitPriceExclTax > 0m)
             .ToList();
+
+    /// <summary>Vue du devis pour le contrôle des mentions (identité des parties, lignes, totaux, textes de TVA).</summary>
+    public ComplianceDocument ToComplianceDocument(SellerTerms? terms)
+    {
+        PartySnapshot? seller = terms?.Seller;
+        IReadOnlyList<string> mentions = IsDraft ? [.. VatLegalTexts()] : LegalMentionList;
+        return new ComplianceDocument(
+            CompliancePieceKind.Quote,
+            IsDraft,
+            seller is null ? new ComplianceParty(null, null, null, null, null, null) : Invoice.ToParty(seller),
+            Invoice.ToParty(Customer),
+            VatRegime == VatRegime.Franchise,
+            terms?.VatOnDebits ?? false,
+            Number,
+            IssueDate,
+            null,
+            null,
+            OperationCategory.ToString(),
+            null,
+            null,
+            null,
+            null,
+            [.. Lines.Select(l => new ComplianceLine(l.Designation, l.Quantity, l.UnitPriceExclTax, l.VatCategory))],
+            mentions);
+    }
 
     private Result Apply(QuoteDraft draft)
     {
