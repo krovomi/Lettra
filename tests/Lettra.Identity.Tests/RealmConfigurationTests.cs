@@ -87,6 +87,19 @@ public sealed class RealmConfigurationTests
     }
 
     [Fact]
+    public void L_application_de_bureau_peut_demander_un_jeton_hors_ligne()
+    {
+        JsonElement maui = Client("lettra-maui");
+
+        Bool(maui, "publicClient").Should().BeTrue();
+        maui.GetProperty("optionalClientScopes").EnumerateArray().Select(s => s.GetString()).Should().Contain("offline_access");
+        Realm.GetProperty("scopeMappings").EnumerateArray()
+            .Single(m => m.GetProperty("client").GetString() == "lettra-maui")
+            .GetProperty("roles").EnumerateArray().Select(r => r.GetString())
+            .Should().Contain("offline_access", "sans portée complète, le rôle offline_access doit être explicitement permis au client");
+    }
+
+    [Fact]
     public void Le_BFF_est_confidentiel_et_son_secret_vient_de_l_environnement()
     {
         JsonElement bff = Client("lettra-bff");
@@ -168,5 +181,18 @@ public sealed class KeycloakRealmImportTests
         realm.GetProperty("organizationsEnabled").GetBoolean().Should().BeTrue();
         realm.GetProperty("refreshTokenMaxReuse").GetInt32().Should().Be(1);
         realm.GetProperty("browserFlow").GetString().Should().Be("lettra-browser-mfa");
+
+        // Le client de bureau peut demander offline_access (jeton de rafraîchissement qui survit à la session SSO).
+        using var clients = new HttpRequestMessage(HttpMethod.Get, new Uri("/admin/realms/lettra/clients?clientId=lettra-maui", UriKind.Relative));
+        clients.Headers.Authorization = new("Bearer", token.GetProperty("access_token").GetString());
+        using HttpResponseMessage clientsResponse = await http.SendAsync(clients);
+        clientsResponse.EnsureSuccessStatusCode();
+        string mauiId = (await clientsResponse.Content.ReadFromJsonAsync<JsonElement>())[0].GetProperty("id").GetString()!;
+        using var scopes = new HttpRequestMessage(HttpMethod.Get, new Uri($"/admin/realms/lettra/clients/{mauiId}/optional-client-scopes", UriKind.Relative));
+        scopes.Headers.Authorization = new("Bearer", token.GetProperty("access_token").GetString());
+        using HttpResponseMessage scopesResponse = await http.SendAsync(scopes);
+        scopesResponse.EnsureSuccessStatusCode();
+        (await scopesResponse.Content.ReadFromJsonAsync<JsonElement>()).EnumerateArray()
+            .Select(scope => scope.GetProperty("name").GetString()).Should().Contain("offline_access");
     }
 }

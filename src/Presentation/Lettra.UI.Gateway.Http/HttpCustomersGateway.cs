@@ -7,6 +7,7 @@ using Lettra.Contracts.Customers;
 using Lettra.Contracts.Serialization;
 using Lettra.UI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Lettra.UI.Gateway.Http;
 
@@ -119,25 +120,52 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddHttpGateways(this IServiceCollection services, Uri apiBaseAddress)
     {
-        services.AddTransient<DossierHeaderHandler>();
         services.AddTransient<CsrfHeaderHandler>();
-        services.AddHttpClient<ICustomersGateway, HttpCustomersGateway>(client => client.BaseAddress = apiBaseAddress)
-            .AddHttpMessageHandler<CsrfHeaderHandler>()
-            .AddHttpMessageHandler<DossierHeaderHandler>();
         services.AddHttpClient<ISessionGateway, HttpSessionGateway>(client => client.BaseAddress = apiBaseAddress)
             .AddHttpMessageHandler<CsrfHeaderHandler>();
-        services.AddHttpClient<ISuppliersGateway, HttpSuppliersGateway>(client => client.BaseAddress = apiBaseAddress)
-            .AddHttpMessageHandler<CsrfHeaderHandler>()
-            .AddHttpMessageHandler<DossierHeaderHandler>();
-        services.AddHttpClient<ICatalogGateway, HttpCatalogGateway>(client => client.BaseAddress = apiBaseAddress)
-            .AddHttpMessageHandler<CsrfHeaderHandler>()
-            .AddHttpMessageHandler<DossierHeaderHandler>();
-        services.AddHttpClient<IDirectoryGateway, HttpDirectoryGateway>(client => client.BaseAddress = apiBaseAddress)
-            .AddHttpMessageHandler<CsrfHeaderHandler>()
-            .AddHttpMessageHandler<DossierHeaderHandler>();
-        services.AddHttpClient<IAlertsGateway, HttpAlertsGateway>(client => client.BaseAddress = apiBaseAddress)
-            .AddHttpMessageHandler<CsrfHeaderHandler>()
-            .AddHttpMessageHandler<DossierHeaderHandler>();
+        return services.AddApiGateways(apiBaseAddress, builder => builder.AddHttpMessageHandler<CsrfHeaderHandler>());
+    }
+
+    /// <summary>
+    /// Application de bureau reliée à un serveur (modes 2, 3 et 5) : mêmes gateways HTTP, authentifiées par le jeton
+    /// d'accès du poste (PKCE) au lieu du cookie du BFF. L'hôte fournit <see cref="Device.IAuthorizationBrowser"/> et
+    /// <see cref="Device.ITokenVault"/>.
+    /// </summary>
+    public static IServiceCollection AddDeviceHttpGateways(this IServiceCollection services, Device.DeviceSignInOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        Uri apiBaseAddress = options.BaseAddress ?? throw new InvalidOperationException($"{Device.DeviceSignInOptions.SectionName}:BaseAddress est obligatoire.");
+        services.AddSingleton(options);
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddHttpClient(nameof(Device.OidcPkceClient));
+        // Un seul client OIDC (et un seul rafraîchissement à la fois) pour toute l'application.
+        services.AddSingleton(sp => new Device.OidcPkceClient(
+            sp.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(Device.OidcPkceClient)),
+            options,
+            sp.GetRequiredService<Device.ITokenVault>(),
+            sp.GetRequiredService<Device.IAuthorizationBrowser>(),
+            sp.GetRequiredService<TimeProvider>()));
+        services.AddSingleton<Device.DeviceSessionGateway>();
+        services.AddSingleton<ISessionGateway>(sp => sp.GetRequiredService<Device.DeviceSessionGateway>());
+        services.AddSingleton<IInteractiveSignIn>(sp => sp.GetRequiredService<Device.DeviceSessionGateway>());
+        services.AddTransient<Device.BearerTokenHandler>();
+        return services.AddApiGateways(apiBaseAddress, builder => builder.AddHttpMessageHandler<Device.BearerTokenHandler>());
+    }
+
+    private static IServiceCollection AddApiGateways(this IServiceCollection services, Uri apiBaseAddress, Action<IHttpClientBuilder> authenticate)
+    {
+        services.AddTransient<DossierHeaderHandler>();
+        void Configure(IHttpClientBuilder builder)
+        {
+            authenticate(builder);
+            builder.AddHttpMessageHandler<DossierHeaderHandler>();
+        }
+
+        Configure(services.AddHttpClient<ICustomersGateway, HttpCustomersGateway>(client => client.BaseAddress = apiBaseAddress));
+        Configure(services.AddHttpClient<ISuppliersGateway, HttpSuppliersGateway>(client => client.BaseAddress = apiBaseAddress));
+        Configure(services.AddHttpClient<ICatalogGateway, HttpCatalogGateway>(client => client.BaseAddress = apiBaseAddress));
+        Configure(services.AddHttpClient<IDirectoryGateway, HttpDirectoryGateway>(client => client.BaseAddress = apiBaseAddress));
+        Configure(services.AddHttpClient<IAlertsGateway, HttpAlertsGateway>(client => client.BaseAddress = apiBaseAddress));
         return services;
     }
 }
