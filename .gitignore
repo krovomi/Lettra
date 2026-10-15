@@ -14,3 +14,5 @@ build/verapdf/lib/
 pdf-samples/
 build/einvoice/lib/
 build/einvoice/rules/
+node_modules/
+deploy/demo/e2e/sortie/

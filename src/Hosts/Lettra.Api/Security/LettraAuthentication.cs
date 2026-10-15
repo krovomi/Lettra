@@ -90,7 +90,17 @@ public static class LettraAuthentication
                     OidcOptions current = context.HttpContext.RequestServices.GetRequiredService<IOptions<OidcOptions>>().Value;
                     if (current.RequireMfa && (context.Principal is null || !OidcClaims.HasStrongAuthentication(context.Principal, current)))
                     {
-                        context.Fail("Second facteur absent.");
+                        // Session Keycloak sans second facteur prouvé (cas de l'enrôlement TOTP, action requise que Keycloak
+                        // ne compte pas dans amr) : une seule nouvelle authentification complète, puis refus.
+                        if (context.Properties?.Items.ContainsKey(BffEndpoints.ReauthenticationKey) == true)
+                        {
+                            context.Fail("Second facteur absent.");
+                        }
+                        else
+                        {
+                            context.HandleResponse();
+                            context.Response.Redirect(BffEndpoints.ReauthenticationPath(context.Properties?.RedirectUri));
+                        }
                     }
 
                     return Task.CompletedTask;

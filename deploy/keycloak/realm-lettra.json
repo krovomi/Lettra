@@ -103,19 +103,29 @@
     {
       "alias": "lettra-amr-pwd",
       "config": {
-        "default.reference.value": "pwd"
+        "default.reference.value": "pwd",
+        "default.reference.maxAge": "36000"
       }
     },
     {
       "alias": "lettra-amr-otp",
       "config": {
-        "default.reference.value": "otp"
+        "default.reference.value": "otp",
+        "default.reference.maxAge": "36000"
       }
     },
     {
       "alias": "lettra-amr-hwk",
       "config": {
-        "default.reference.value": "hwk"
+        "default.reference.value": "hwk",
+        "default.reference.maxAge": "36000"
+      }
+    },
+    {
+      "alias": "lettra-sans-second-facteur",
+      "config": {
+        "credentials": "otp##webauthn",
+        "included": "false"
       }
     }
   ],
@@ -176,15 +186,45 @@
     },
     {
       "alias": "lettra-second-factor",
-      "description": "TOTP ou clé de sécurité (WebAuthn). Sans facteur enrôlé, l'enrôlement TOTP est imposé.",
+      "description": "Second facteur : le facteur enrôlé (TOTP ou clé de sécurité), sinon l'enrôlement TOTP imposé.",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticatorFlow": true,
+          "requirement": "CONDITIONAL",
+          "priority": 10,
+          "userSetupAllowed": false,
+          "flowAlias": "lettra-second-factor-enrole"
+        },
+        {
+          "authenticatorFlow": true,
+          "requirement": "CONDITIONAL",
+          "priority": 20,
+          "userSetupAllowed": false,
+          "flowAlias": "lettra-second-factor-enrolement"
+        }
+      ]
+    },
+    {
+      "alias": "lettra-second-factor-enrole",
+      "description": "Utilisateur déjà enrôlé : TOTP ou clé de sécurité (WebAuthn), au choix.",
       "providerId": "basic-flow",
       "topLevel": false,
       "builtIn": false,
       "authenticationExecutions": [
         {
           "authenticatorFlow": false,
-          "requirement": "ALTERNATIVE",
+          "requirement": "REQUIRED",
           "priority": 10,
+          "userSetupAllowed": false,
+          "authenticator": "conditional-user-configured"
+        },
+        {
+          "authenticatorFlow": false,
+          "requirement": "ALTERNATIVE",
+          "priority": 20,
           "userSetupAllowed": false,
           "authenticator": "auth-otp-form",
           "authenticatorConfig": "lettra-amr-otp"
@@ -192,10 +232,35 @@
         {
           "authenticatorFlow": false,
           "requirement": "ALTERNATIVE",
-          "priority": 20,
+          "priority": 30,
           "userSetupAllowed": false,
           "authenticator": "webauthn-authenticator",
           "authenticatorConfig": "lettra-amr-hwk"
+        }
+      ]
+    },
+    {
+      "alias": "lettra-second-factor-enrolement",
+      "description": "Aucun second facteur utilisé (donc aucun enrôlé) : formulaire TOTP obligatoire, qui impose l'enrôlement.",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "userSetupAllowed": false,
+          "authenticator": "conditional-credential",
+          "authenticatorConfig": "lettra-sans-second-facteur"
+        },
+        {
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "userSetupAllowed": false,
+          "authenticator": "auth-otp-form",
+          "authenticatorConfig": "lettra-amr-otp"
         }
       ]
     },
@@ -217,15 +282,45 @@
     },
     {
       "alias": "lettra-second-factor-broker",
-      "description": "Second facteur après fédération.",
+      "description": "Second facteur après fédération : le facteur enrôlé (TOTP ou clé de sécurité), sinon l'enrôlement TOTP imposé.",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticatorFlow": true,
+          "requirement": "CONDITIONAL",
+          "priority": 10,
+          "userSetupAllowed": false,
+          "flowAlias": "lettra-second-factor-broker-enrole"
+        },
+        {
+          "authenticatorFlow": true,
+          "requirement": "CONDITIONAL",
+          "priority": 20,
+          "userSetupAllowed": false,
+          "flowAlias": "lettra-second-factor-broker-enrolement"
+        }
+      ]
+    },
+    {
+      "alias": "lettra-second-factor-broker-enrole",
+      "description": "Utilisateur déjà enrôlé : TOTP ou clé de sécurité (WebAuthn), au choix.",
       "providerId": "basic-flow",
       "topLevel": false,
       "builtIn": false,
       "authenticationExecutions": [
         {
           "authenticatorFlow": false,
-          "requirement": "ALTERNATIVE",
+          "requirement": "REQUIRED",
           "priority": 10,
+          "userSetupAllowed": false,
+          "authenticator": "conditional-user-configured"
+        },
+        {
+          "authenticatorFlow": false,
+          "requirement": "ALTERNATIVE",
+          "priority": 20,
           "userSetupAllowed": false,
           "authenticator": "auth-otp-form",
           "authenticatorConfig": "lettra-amr-otp"
@@ -233,10 +328,35 @@
         {
           "authenticatorFlow": false,
           "requirement": "ALTERNATIVE",
-          "priority": 20,
+          "priority": 30,
           "userSetupAllowed": false,
           "authenticator": "webauthn-authenticator",
           "authenticatorConfig": "lettra-amr-hwk"
+        }
+      ]
+    },
+    {
+      "alias": "lettra-second-factor-broker-enrolement",
+      "description": "Aucun second facteur utilisé (donc aucun enrôlé) : formulaire TOTP obligatoire, qui impose l'enrôlement.",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "userSetupAllowed": false,
+          "authenticator": "conditional-credential",
+          "authenticatorConfig": "lettra-sans-second-facteur"
+        },
+        {
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "userSetupAllowed": false,
+          "authenticator": "auth-otp-form",
+          "authenticatorConfig": "lettra-amr-otp"
         }
       ]
     }
