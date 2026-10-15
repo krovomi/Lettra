@@ -147,6 +147,12 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTimeOffset?>("CreditApprovedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreditApprovedBy")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("CreditReason")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
