@@ -314,6 +314,26 @@ internal static class CatalogScenarios
         (await directory.GetScopePathAsync(AuthorizationScope.ForDossier(dossier), default))!.Ancestors.Should().NotContain(AuthorizationScope.ForGroup(group));
     }
 
+    /// <summary>Séparation des tâches (annexe F §3.2) : inactive par défaut, réglée puis modifiée par l'administrateur.</summary>
+    public static async Task OrganisationPoliciesAsync(CatalogHarness harness)
+    {
+        await harness.Services.InitializeCatalogAsync(migrate: true, default);
+        IOrganisationPolicyStore store = harness.Services.GetRequiredService<IOrganisationPolicyStore>();
+        store.SupportsSegregationOfDuties.Should().BeTrue();
+        (await store.GetSegregationOfDutiesAsync(CatalogHarness.Organisation, default)).Should().Be(SegregationOfDutiesPolicy.Disabled);
+
+        Guid admin = Guid.CreateVersion7();
+        await store.SaveSegregationOfDutiesAsync(CatalogHarness.Organisation, new SegregationOfDutiesPolicy(true, 1500.50m), admin, default);
+        (await store.GetSegregationOfDutiesAsync(CatalogHarness.Organisation, default)).Should().Be(new SegregationOfDutiesPolicy(true, 1500.50m));
+
+        await store.SaveSegregationOfDutiesAsync(CatalogHarness.Organisation, new SegregationOfDutiesPolicy(true, null), admin, default);
+        (await store.GetSegregationOfDutiesAsync(CatalogHarness.Organisation, default)).Should().Be(new SegregationOfDutiesPolicy(true, null));
+
+        await using CatalogDbContext db = await harness.Services.GetRequiredService<IDbContextFactory<CatalogDbContext>>().CreateDbContextAsync();
+        CatalogOrganisationPolicy row = await db.OrganisationPolicies.SingleAsync();
+        row.UpdatedBy.Should().Be(admin);
+    }
+
     public static async Task UnknownOrganisationAsync(CatalogHarness harness)
     {
         await harness.Services.InitializeCatalogAsync(migrate: true, default);

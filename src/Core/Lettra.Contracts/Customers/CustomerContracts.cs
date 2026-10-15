@@ -72,7 +72,11 @@ public sealed record CustomerResponse(
     string PostalCode,
     string City,
     string CountryCode,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt)
+{
+    /// <summary>Version de concurrence optimiste, renvoyée aussi en <c>ETag</c> ; à renvoyer en <c>If-Match</c> pour modifier.</summary>
+    public long Version { get; init; }
+}
 
 /// <summary>Ligne de la liste des clients.</summary>
 public sealed record CustomerSummary(Guid Id, CustomerKindDto Kind, string Name, string? Siren, string City);

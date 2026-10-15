@@ -10,13 +10,20 @@ public sealed record ErrorDetail(string Code, string? Target = null);
 /// </summary>
 public sealed record OperationResult<T>
 {
-    private OperationResult(T? value, IReadOnlyList<ErrorDetail> errors)
+    private OperationResult(T? value, IReadOnlyList<ErrorDetail> errors, T? current = default)
     {
         Value = value;
         Errors = errors;
+        Current = current;
     }
 
     public T? Value { get; }
+
+    /// <summary>
+    /// Sur un refus <c>Concurrency.VersionMismatch</c> : le document tel qu'il est maintenant sur le serveur, pour
+    /// proposer la fusion champ par champ (ADR-0013). <c>null</c> dans tous les autres cas.
+    /// </summary>
+    public T? Current { get; }
 
     public IReadOnlyList<ErrorDetail> Errors { get; }
 
@@ -33,4 +40,11 @@ public sealed record OperationResult<T>
     }
 
     public static OperationResult<T> Failure(string code) => Failure([new ErrorDetail(code)]);
+
+    /// <summary>Écriture refusée parce que le document a changé depuis sa lecture ; <paramref name="current"/> est sa version actuelle.</summary>
+    public static OperationResult<T> Stale(T current) =>
+        new(default, [new ErrorDetail(ErrorCodes.Concurrency.VersionMismatch)], current);
+
+    /// <summary>Vrai si l'écriture a été refusée pour cause de version périmée.</summary>
+    public bool IsStale => Errors.Any(e => e.Code == ErrorCodes.Concurrency.VersionMismatch);
 }

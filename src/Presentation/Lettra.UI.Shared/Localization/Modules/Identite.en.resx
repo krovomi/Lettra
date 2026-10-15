@@ -52,4 +52,19 @@
   <data name="Error.RightsSnapshot.OtherDevice" xml:space="preserve"><value>These offline rights belong to another device.</value></data>
   <data name="Session.SigningIn" xml:space="preserve"><value>Signing in: finish in the browser window that has just opened.</value></data>
   <data name="Session.SigningOut" xml:space="preserve"><value>Signing out…</value></data>
+  <data name="Error.SegregationOfDuties.EnteredByIssuer" xml:space="preserve">
+    <value>Segregation of duties is on: the person who entered the invoice cannot issue it.</value>
+  </data>
+  <data name="Error.SegregationOfDuties.ManagerApprovalRequired" xml:space="preserve">
+    <value>This credit note is above the firm's threshold: a manager must approve it.</value>
+  </data>
+  <data name="Error.SegregationOfDuties.ApproverIsCreator" xml:space="preserve">
+    <value>Segregation of duties is on: the author of the credit note cannot approve it.</value>
+  </data>
+  <data name="Error.SegregationOfDuties.ThresholdInvalid" xml:space="preserve">
+    <value>The credit note approval threshold must be a positive amount.</value>
+  </data>
+  <data name="Error.SegregationOfDuties.NotAvailable" xml:space="preserve">
+    <value>Segregation of duties is not available on a single-user standalone workstation.</value>
+  </data>
 </root>

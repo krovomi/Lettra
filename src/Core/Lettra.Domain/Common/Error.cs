@@ -9,6 +9,9 @@ public enum ErrorKind
     Forbidden,
     Unauthorized,
     Unexpected,
+
+    /// <summary>L'écriture part d'une version périmée du document (HTTP 412, ADR-0013).</summary>
+    PreconditionFailed,
 }
 
 /// <summary>

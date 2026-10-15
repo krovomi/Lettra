@@ -63,7 +63,11 @@ public sealed record SupplierResponse(
     string PostalCode,
     string City,
     string CountryCode,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt)
+{
+    /// <summary>Version de concurrence optimiste, renvoyée aussi en <c>ETag</c> ; à renvoyer en <c>If-Match</c> pour modifier.</summary>
+    public long Version { get; init; }
+}
 
 /// <summary>Ligne de la liste des fournisseurs.</summary>
 public sealed record SupplierSummary(Guid Id, string Name, string? Siren, string City);

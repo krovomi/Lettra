@@ -40,12 +40,18 @@ public static class DependencyInjection
         services.TryAddSingleton<IAuthorizationAdministration, NoAuthorizationAdministration>();
         services.TryAddSingleton<IPermissionCacheInvalidator, NoPermissionCache>();
 
+        // Séparation des tâches (annexe F §3.2) : la politique vient de la base Catalog hors du mode 1.
+        services.TryAddSingleton<IOrganisationPolicyStore, NoOrganisationPolicies>();
+        services.AddScoped<ISegregationOfDuties, SegregationOfDutiesService>();
+
         // Ordre = de l'extérieur vers l'intérieur : on trace tout, puis on vérifie le dossier,
         // puis les droits, puis la saisie. Un refus de droits ne révèle donc rien de la validation.
+        // Au plus près du handler, l'écriture concurrente détectée à l'enregistrement devient un échec (ADR-0013).
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(TenantGuardBehavior<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(AuthorizationBehavior<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ConcurrencyBehavior<,>));
 
         RegisterImplementations(services, typeof(ICommandHandler<,>));
         RegisterImplementations(services, typeof(IQueryHandler<,>));
