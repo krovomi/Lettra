@@ -58,6 +58,8 @@ public sealed class BillingTests : IAsyncLifetime
         services.AddSingleton<IUnitOfWork>(_customers);
         services.AddPartiesAndCatalogFakes(_catalog, new FakeDirectories(), _billing);
         services.AddSingleton<IDossierProvisioner>(new RecordingDossierProvisioner());
+        services.AddSingleton<IAuthorizationDirectory>(new EmptyAuthorizationDirectory());
+        services.AddSingleton<IDossierDirectory>(new EmptyDossierDirectory());
         _root = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
         _scope = _root.CreateAsyncScope();
         return Task.CompletedTask;
