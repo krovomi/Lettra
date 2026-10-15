@@ -1,5 +1,5 @@
 // Parcours de la démonstration dans Chromium : connexion Keycloak (mot de passe + TOTP), écran des clients,
-// création d'un client, manifeste et service worker de la PWA. Données fictives uniquement.
+// création d'un client, manifeste et service worker de la PWA, rechargement hors ligne. Données fictives uniquement.
 //
 //   node parcours.mjs premier     enrôlement TOTP à la première connexion, puis seconde connexion (mot de passe + code)
 //   node parcours.mjs suivant     connexion d'un utilisateur déjà enrôlé (secret lu dans $SORTIE/totp-secret.txt)
@@ -218,6 +218,31 @@ async function checkPwa(page) {
     if (leaked.length) fail(`le service worker a mis en cache des données : ${leaked.join(', ')}`);
     if (!cached.some(u => u.endsWith('/index.html'))) fail(`enveloppe absente du cache (${cached.length} entrées)`);
     log(`cache du service worker : ${cached.length} fichiers statiques, aucun /api/ ni /bff/`);
+    await checkOffline(page, cached);
+}
+
+// Hors ligne (étape 4.5) : l'application se recharge depuis le cache du service worker, et le module des brouillons
+// écrit et relit IndexedDB sans réseau. L'envoi des brouillons au retour du réseau est couvert par les tests bUnit.
+async function checkOffline(page, cached) {
+    const draftsScript = `${baseUrl}/_content/Lettra.UI.Shared/lettra-drafts.js`;
+    if (!cached.includes(draftsScript)) fail(`module des brouillons absent du cache : ${draftsScript}`);
+    await page.context().setOffline(true);
+    try {
+        await page.reload();
+        await page.locator('#list-title, a[data-sign-in], .lettra-user').first().waitFor({ timeout: 60_000 });
+        await shot(page, 'hors-ligne');
+        const kept = await page.evaluate(async url => {
+            const drafts = await import(url);
+            await drafts.putDraft('parcours-e2e', JSON.stringify({ essai: 'parcours-e2e' }));
+            const listed = await drafts.listDrafts();
+            await drafts.deleteDraft('parcours-e2e');
+            return { online: drafts.isOnline(), listed: JSON.stringify(listed).includes('parcours-e2e') };
+        }, draftsScript);
+        if (kept.online || !kept.listed) fail(`brouillons hors ligne inattendus : ${JSON.stringify(kept)}`);
+        log('hors ligne : application rechargée depuis le cache, brouillon écrit puis relu dans IndexedDB');
+    } finally {
+        await page.context().setOffline(false);
+    }
 }
 
 try {
