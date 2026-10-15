@@ -7,6 +7,7 @@ using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Customers;
 using Lettra.Contracts.Identity;
 using Lettra.Contracts.Directory;
+using Lettra.Contracts.Dossiers;
 using Lettra.Contracts.Pricing;
 using Lettra.Contracts.Suppliers;
 
@@ -51,6 +52,8 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(IReadOnlyList<ResolvedPrice>))]
 [JsonSerializable(typeof(CompanySearchResponse))]
 [JsonSerializable(typeof(VatNumberCheckResponse))]
+[JsonSerializable(typeof(CreateDossierRequest))]
+[JsonSerializable(typeof(DossierSummary))]
 [JsonSerializable(typeof(AskAssistantRequest))]
 [JsonSerializable(typeof(AssistantEvent))]
 [JsonSerializable(typeof(IReadOnlyList<AssistantJournalEntry>))]

@@ -1,3 +1,4 @@
+using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Tenancy;
 
 namespace Lettra.Infrastructure.Catalog;
@@ -20,6 +21,9 @@ public sealed class CatalogOptions
     public IList<DossierEntry> Dossiers { get; init; } = [];
 
     public CatalogDatabaseOptions Catalog { get; init; } = new();
+
+    /// <summary>Comptes, groupes et rôles déclarés (section <c>Lettra:Authorization</c>, même forme qu'en mode 2 sans catalogue).</summary>
+    public AuthorizationEntries Authorization { get; init; } = new();
 }
 
 public sealed class CatalogDatabaseOptions
@@ -80,4 +84,68 @@ public sealed class DossierEntry
     public string ConnectionSecretRef { get; set; } = string.Empty;
 
     public string? Schema { get; set; }
+}
+
+/// <summary>
+/// Registre des droits déclaré en configuration (démonstration, tests, amorçage d'un cabinet). L'import ajoute et met
+/// à jour ; il ne retire ni membre, ni placement, ni attribution.
+/// </summary>
+public sealed class AuthorizationEntries
+{
+    public IList<AccountEntry> Users { get; init; } = [];
+
+    public IList<GroupEntry> Groups { get; init; } = [];
+
+    public IList<CustomRoleEntry> Roles { get; init; } = [];
+}
+
+public sealed class AssignmentEntry
+{
+    public string Role { get; set; } = string.Empty;
+
+    public ScopeKind Scope { get; set; } = ScopeKind.Dossier;
+
+    /// <summary>Cabinet, groupe ou dossier (ignoré pour la plateforme).</summary>
+    public Guid ScopeId { get; set; }
+
+    public DateTimeOffset? ExpiresAt { get; set; }
+}
+
+public sealed class AccountEntry
+{
+    public Guid Id { get; set; }
+
+    public AccountState State { get; set; } = AccountState.Active;
+
+    public Guid? Cabinet { get; set; }
+
+    public IList<Guid> Groups { get; init; } = [];
+
+    public IList<AssignmentEntry> Assignments { get; init; } = [];
+}
+
+public sealed class GroupEntry
+{
+    public Guid Id { get; set; }
+
+    public Guid Cabinet { get; set; }
+
+    public string Name { get; set; } = "Groupe";
+
+    public IList<Guid> Dossiers { get; init; } = [];
+
+    public IList<AssignmentEntry> Assignments { get; init; } = [];
+}
+
+public sealed class CustomRoleEntry
+{
+    public Guid Cabinet { get; set; }
+
+    public string Key { get; set; } = string.Empty;
+
+    public IList<Permission> Permissions { get; init; } = [];
+
+    public ScopeKind WidestScope { get; set; } = ScopeKind.Dossier;
+
+    public bool RequiresExpiry { get; set; }
 }

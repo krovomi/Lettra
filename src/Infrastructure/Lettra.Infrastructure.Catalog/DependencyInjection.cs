@@ -1,3 +1,4 @@
+using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Infrastructure.Persistence.Catalog;
 using Lettra.Infrastructure.Persistence.Security;
@@ -33,6 +34,8 @@ public static class DependencyInjection
         services.AddSingleton<IDossierDirectory>(sp => sp.GetRequiredService<CatalogTenantCatalog>());
         services.AddSingleton<CatalogDossierProvisioner>();
         services.AddSingleton<IDossierProvisioner>(sp => sp.GetRequiredService<CatalogDossierProvisioner>());
+        // Avant l'identité serveur, qui n'enregistre son registre lu en configuration qu'à défaut (TryAdd).
+        services.AddSingleton<IAuthorizationDirectory, CatalogAuthorizationDirectory>();
         services.AddSingleton<CatalogInitializer>();
         services.AddSingleton<DossierMigrationOrchestrator>();
         return services;

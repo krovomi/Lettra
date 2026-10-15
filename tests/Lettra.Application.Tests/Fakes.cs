@@ -5,6 +5,7 @@ using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Mapping;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
+using Lettra.Domain.Common;
 using Lettra.Domain.Parties;
 using Lettra.Domain.SharedKernel;
 using Microsoft.Extensions.Logging;
@@ -107,5 +108,17 @@ internal sealed class CapturingLoggerProvider : ILoggerProvider
                 : string.Empty;
             owner.Entries.Enqueue($"{formatter(state, exception)} {values} {exception}");
         }
+    }
+}
+
+/// <summary>Faux provisionneur : enregistre les créations demandées.</summary>
+internal sealed class RecordingDossierProvisioner : IDossierProvisioner
+{
+    public List<(OrganisationId Organisation, string Name)> Created { get; } = [];
+
+    public Task<Result<DossierId>> CreateAsync(OrganisationId organisation, string name, CancellationToken cancellationToken)
+    {
+        Created.Add((organisation, name));
+        return Task.FromResult<Result<DossierId>>(new DossierId(Guid.CreateVersion7()));
     }
 }

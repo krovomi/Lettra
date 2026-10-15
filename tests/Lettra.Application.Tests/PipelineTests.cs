@@ -3,8 +3,10 @@ using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Persistence;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Features.Customers;
+using Lettra.Application.Features.Dossiers;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
+using Lettra.Contracts.Dossiers;
 using Lettra.Domain.Common;
 using Lettra.Domain.Parties;
 using Lettra.Domain.SharedKernel;
@@ -25,6 +27,7 @@ public sealed class PipelineTests : IAsyncLifetime
     private readonly FakeUser _user = new();
     private readonly FakePermissions _permissions = new();
     private readonly InMemoryCustomers _customers = new();
+    private readonly RecordingDossierProvisioner _provisioner = new();
     private readonly CapturingLoggerProvider _logs = new();
     private ServiceProvider _root = null!;
     private AsyncServiceScope _scope;
@@ -41,6 +44,7 @@ public sealed class PipelineTests : IAsyncLifetime
         services.AddSingleton<ICustomerReadStore>(_customers);
         services.AddSingleton<IUnitOfWork>(_customers);
         services.AddPartiesAndCatalogFakes(new InMemoryPartiesAndCatalog(), new FakeDirectories());
+        services.AddSingleton<IDossierProvisioner>(_provisioner);
         _root = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
         _scope = _root.CreateAsyncScope();
         return Task.CompletedTask;
@@ -90,6 +94,43 @@ public sealed class PipelineTests : IAsyncLifetime
 
         created.Errors.Should().ContainSingle().Which.Code.Should().Be(SecurityErrors.ForbiddenCode);
         _customers.Saved.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Creer_un_dossier_se_verifie_sur_le_cabinet_et_nettoie_le_nom()
+    {
+        OrganisationId cabinet = new(Guid.CreateVersion7());
+
+        Result<DossierSummary> created = await Commands.SendAsync(new CreateDossierCommand(cabinet, "  Garage Martin  "), default);
+
+        created.IsSuccess.Should().BeTrue();
+        created.Value.Name.Should().Be("Garage Martin");
+        _provisioner.Created.Should().Equal((cabinet, "Garage Martin"));
+        _permissions.Asked.Should().Contain(AuthorizationScope.ForCabinet(cabinet));
+    }
+
+    [Fact]
+    public async Task Sans_DossiersCreer_aucun_dossier_n_est_cree()
+    {
+        _permissions.Granted.Remove(Permission.DossiersCreer);
+
+        Result<DossierSummary> created = await Commands.SendAsync(new CreateDossierCommand(new OrganisationId(Guid.CreateVersion7()), "Garage"), default);
+
+        created.Errors.Should().ContainSingle().Which.Code.Should().Be(SecurityErrors.ForbiddenCode);
+        _provisioner.Created.Should().BeEmpty();
+    }
+
+    [Theory]
+    [InlineData("   ", DossierErrors.NameRequiredCode)]
+    [InlineData(null, DossierErrors.NameTooLongCode)]
+    public async Task Un_nom_invalide_ne_cree_rien(string? name, string code)
+    {
+        name ??= new string('x', CreateDossierRequest.MaxNameLength + 1);
+
+        Result<DossierSummary> created = await Commands.SendAsync(new CreateDossierCommand(new OrganisationId(Guid.CreateVersion7()), name), default);
+
+        created.Errors.Should().ContainSingle().Which.Code.Should().Be(code);
+        _provisioner.Created.Should().BeEmpty();
     }
 
     [Fact]
