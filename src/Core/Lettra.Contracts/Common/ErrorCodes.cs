@@ -111,6 +111,23 @@ public static class ErrorCodes
         public const string ProvisioningFailed = "Dossier.ProvisioningFailed";
     }
 
+    public static class Rights
+    {
+        public const string NotSupported = "Rights.NotSupported";
+        public const string UserNotFound = "Rights.UserNotFound";
+        public const string GroupNotFound = "Rights.GroupNotFound";
+        public const string GroupNameRequired = "Rights.GroupNameRequired";
+        public const string GroupNameTooLong = "Rights.GroupNameTooLong";
+        public const string SubjectNotFound = "Rights.SubjectNotFound";
+        public const string RoleUnknown = "Rights.RoleUnknown";
+        public const string ScopeNotFound = "Rights.ScopeNotFound";
+        public const string ScopeTooWide = "Rights.ScopeTooWide";
+        public const string ExpiryRequired = "Rights.ExpiryRequired";
+        public const string ExpiryInPast = "Rights.ExpiryInPast";
+        public const string AssignmentNotFound = "Rights.AssignmentNotFound";
+        public const string StateInvalid = "Rights.StateInvalid";
+    }
+
     public static class Numbering
     {
         public const string SeriesNotFound = "Numbering.SeriesNotFound";

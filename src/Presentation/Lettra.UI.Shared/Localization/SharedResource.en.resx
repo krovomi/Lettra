@@ -138,6 +138,19 @@
   <data name="Error.Organisation.NotFound" xml:space="preserve"><value>This firm could not be found.</value></data>
   <data name="Error.Dossier.NoCapacity" xml:space="preserve"><value>No server can take a new client file right now. Contact support.</value></data>
   <data name="Error.Dossier.ProvisioningFailed" xml:space="preserve"><value>The client file could not be created. It will be retried automatically.</value></data>
+  <data name="Error.Rights.NotSupported" xml:space="preserve"><value>Rights administration is not available on this device.</value></data>
+  <data name="Error.Rights.UserNotFound" xml:space="preserve"><value>This user could not be found in the firm.</value></data>
+  <data name="Error.Rights.GroupNotFound" xml:space="preserve"><value>This group could not be found in the firm.</value></data>
+  <data name="Error.Rights.GroupNameRequired" xml:space="preserve"><value>The group name is required.</value></data>
+  <data name="Error.Rights.GroupNameTooLong" xml:space="preserve"><value>The group name is too long.</value></data>
+  <data name="Error.Rights.SubjectNotFound" xml:space="preserve"><value>The user or group could not be found in the firm.</value></data>
+  <data name="Error.Rights.RoleUnknown" xml:space="preserve"><value>This role does not exist.</value></data>
+  <data name="Error.Rights.ScopeNotFound" xml:space="preserve"><value>The selected scope could not be found in the firm.</value></data>
+  <data name="Error.Rights.ScopeTooWide" xml:space="preserve"><value>This role cannot be assigned on such a wide scope.</value></data>
+  <data name="Error.Rights.ExpiryRequired" xml:space="preserve"><value>This role requires an expiry date.</value></data>
+  <data name="Error.Rights.ExpiryInPast" xml:space="preserve"><value>The expiry date has already passed.</value></data>
+  <data name="Error.Rights.AssignmentNotFound" xml:space="preserve"><value>This assignment could not be found in the firm.</value></data>
+  <data name="Error.Rights.StateInvalid" xml:space="preserve"><value>This account state is not valid.</value></data>
   <data name="Error.Numbering.SeriesNotFound" xml:space="preserve"><value>This numbering series does not exist in the client file.</value></data>
   <data name="Error.Numbering.Contention" xml:space="preserve"><value>Too many documents are being validated in this client file at once. Try again.</value></data>
   <data name="Session.Title" xml:space="preserve"><value>Session</value></data>

@@ -69,6 +69,12 @@ public interface IRequireGroupPermission : ISecuredUseCase
     GroupId Group { get; }
 }
 
+/// <summary>
+/// Cas d'usage qui parcourt plusieurs portées et ne rend que celles où l'utilisateur a la permission (liste des
+/// dossiers qu'il peut ouvrir) : le pipeline exige seulement l'authentification, le handler filtre chaque élément.
+/// </summary>
+public interface IFilterByPermission : ISecuredUseCase;
+
 /// <summary>Marque explicitement un cas d'usage accessible sans permission (rare, revu en commission).</summary>
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 public sealed class PublicUseCaseAttribute : Attribute;

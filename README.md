@@ -107,13 +107,22 @@ signée (cosign, sans clé) sur `main`.
 - Registre des droits (modes 2, 3 et 5) : comptes, groupes, placements des dossiers, attributions et rôles du cabinet
   dans la base Catalog ; `Lettra:Authorization` y est importé au démarrage, sans rien retirer.
 - Création d'un dossier : `POST /api/v1/cabinets/{cabinetId}/dossiers` (permission `DossiersCreer` sur le cabinet).
+- Administration des droits, chaque écriture invalidant aussitôt le cache des permissions :
+  `PUT /api/v1/cabinets/{cabinetId}/utilisateurs/{userId}` (compte et état), `POST …/groupes`, `POST …/attributions`,
+  `DELETE …/attributions/{id}` (permissions `UtilisateursGerer` ou `GroupeGerer` sur le cabinet) ;
+  `PUT|DELETE /api/v1/groupes/{groupId}/membres/{userId}` et `…/dossiers/{dossierId}` (`GroupeGerer` sur le groupe,
+  plus `DossierAdministrer` sur le dossier pour le placer). Une attribution respecte la portée la plus large du rôle et
+  son échéance obligatoire ; un cabinet n'attribue jamais un rôle de la plateforme.
+- Dossiers que l'utilisateur peut ouvrir : `GET /api/v1/dossiers` (sans en-tête de dossier, filtrés sur `DossierLire`).
+- Le Worker agit sous un compte de service (`Lettra:Worker:Identity:UserId`, le `sub` du compte de service Keycloak),
+  déclaré au registre des droits comme tout utilisateur ; sans lui, tout cas d'usage protégé lui est refusé.
 - En SaaS, l'API ne migre jamais une base : elle vérifie l'estampille et laisse la migration au Worker.
 
 ## Pas encore dans ce socle
 
-- Cas d'usage d'administration des droits (inviter, rattacher à un groupe, attribuer un rôle) et liste des dossiers
-  accessibles à l'utilisateur.
-- Identité système du Worker pour exécuter des cas d'usage protégés (compte de service Keycloak, principal interne en mode 1).
+- Invitation par e-mail (API d'administration Keycloak), lecture du registre pour l'écran d'administration, rôles
+  personnalisés créés depuis l'API (aujourd'hui par la configuration).
+- Rôle dédié au compte de service du Worker, à décider quand le premier cas d'usage protégé y tournera.
 - Registre d'alertes persistant : en attendant, chaque processus a le sien, et le Worker n'escalade que ses propres alertes.
 - Bases SQLite chiffrées côté serveur (mode 2) et chiffrement de champs en PostgreSQL : la DEK existe déjà par dossier.
 - Outbox, synchronisation, `Idempotency-Key`, `ETag` : POC synchronisation puis phase 4.
