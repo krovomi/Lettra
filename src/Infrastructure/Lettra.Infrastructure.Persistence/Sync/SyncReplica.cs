@@ -117,6 +117,45 @@ internal sealed class EfSyncReplica(TenantDbSession session, TimeProvider clock)
 
     public Task<string?> GetTokenAsync(CancellationToken cancellationToken) => GetSettingAsync(SyncStateRecord.TokenKey, cancellationToken);
 
+    public async Task WipeAsync(CancellationToken cancellationToken)
+    {
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        if (!string.Equals(db.Database.ProviderName, "Microsoft.EntityFrameworkCore.Sqlite", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("Seule la réplique SQLite d'un poste s'efface.");
+        }
+
+        db.ChangeTracker.Clear();
+        // Le tampon du dossier reste : la réplique vide s'ouvre encore, et dit au poste qu'il est révoqué.
+        string[] tables = [.. db.Model.GetEntityTypes()
+            .Where(t => t.GetViewName() is null && t.ClrType != typeof(DossierStamp))
+            .Select(t => t.GetTableName())
+            .OfType<string>()
+            .Distinct(StringComparer.Ordinal)];
+
+        // Une seule connexion : la désactivation des clés étrangères ne vaut que pour elle.
+        await db.Database.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await db.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = OFF;", cancellationToken).ConfigureAwait(false);
+            foreach (string table in tables)
+            {
+#pragma warning disable EF1002 // Noms de tables tirés du modèle, jamais d'une saisie.
+                await db.Database.ExecuteSqlRawAsync($"DELETE FROM \"{table.Replace("\"", "\"\"", StringComparison.Ordinal)}\";", cancellationToken).ConfigureAwait(false);
+#pragma warning restore EF1002
+            }
+
+            await db.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = ON;", cancellationToken).ConfigureAwait(false);
+
+            // Réécrit le fichier : les pages libérées ne gardent rien de lisible.
+            await db.Database.ExecuteSqlRawAsync("VACUUM;", cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            await db.Database.CloseConnectionAsync().ConfigureAwait(false);
+        }
+    }
+
     public async Task<string?> GetSettingAsync(string key, CancellationToken cancellationToken)
     {
         LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);

@@ -44,6 +44,7 @@ public sealed class SyncServer(
     ICurrentUser user,
     IPermissionService permissions,
     IDeviceSeriesRegistry deviceSeries,
+    ISyncDeviceRegistry devices,
     TimeProvider clock)
 {
     /// <summary>Les séries du dossier qui se numérotent sur un poste hors ligne (les devis restent au serveur).</summary>
@@ -60,6 +61,12 @@ public sealed class SyncServer(
             return SyncErrors.BatchInvalid;
         }
 
+        Result known = await TouchAsync(request.DeviceId, cancellationToken).ConfigureAwait(false);
+        if (known.IsFailure)
+        {
+            return Result<PushSyncIntentsResponse>.Failure(known.Errors);
+        }
+
         List<SyncIntentResult> results = [];
         foreach (SyncIntent intent in request.Intents)
         {
@@ -69,11 +76,24 @@ public sealed class SyncServer(
         return new PushSyncIntentsResponse(results);
     }
 
-    public async Task<Result<SyncChangesResponse>> PullAsync(string? token, int limit, CancellationToken cancellationToken)
+    /// <summary>
+    /// Changements depuis <paramref name="token"/>. Avec <paramref name="deviceId"/> (en-tête du poste), le contact est
+    /// inscrit au registre et la règle du cabinet part avec la dernière page.
+    /// </summary>
+    public async Task<Result<SyncChangesResponse>> PullAsync(string? token, int limit, CancellationToken cancellationToken, Guid? deviceId = null)
     {
         if (!user.IsAuthenticated)
         {
             return SecurityErrors.Unauthenticated;
+        }
+
+        if (deviceId is Guid device)
+        {
+            Result known = await TouchAsync(device, cancellationToken).ConfigureAwait(false);
+            if (known.IsFailure)
+            {
+                return Result<SyncChangesResponse>.Failure(known.Errors);
+            }
         }
 
         IReadOnlySet<Permission> granted = await permissions
@@ -85,7 +105,14 @@ public sealed class SyncServer(
             return SecurityErrors.Forbidden;
         }
 
-        return await feed.ReadAsync(token, limit, scope, cancellationToken).ConfigureAwait(false);
+        Result<SyncChangesResponse> changes = await feed.ReadAsync(token, limit, scope, cancellationToken).ConfigureAwait(false);
+        if (changes.IsFailure || changes.Value.HasMore)
+        {
+            return changes;
+        }
+
+        int hours = await devices.GetMaxOfflineHoursAsync(cancellationToken).ConfigureAwait(false);
+        return changes.Value with { Policy = new SyncPolicyResponse(hours) };
     }
 
     /// <summary>
@@ -105,6 +132,12 @@ public sealed class SyncServer(
             return RightsSnapshotErrors.DeviceRequired;
         }
 
+        Result known = await TouchAsync(request.DeviceId, cancellationToken).ConfigureAwait(false);
+        if (known.IsFailure)
+        {
+            return Result<OpenDeviceSeriesResponse>.Failure(known.Errors);
+        }
+
         IReadOnlySet<Permission> granted = await permissions
             .GetEffectiveAsync(user.UserId, AuthorizationScope.ForDossier(tenant.Current.DossierId), cancellationToken)
             .ConfigureAwait(false);
@@ -122,6 +155,10 @@ public sealed class SyncServer(
 
         return new OpenDeviceSeriesResponse(opened);
     }
+
+    /// <summary>Un poste révoqué est refusé, quel que soit l'utilisateur connecté (étape 4.4).</summary>
+    private Task<Result> TouchAsync(Guid deviceId, CancellationToken cancellationToken) =>
+        devices.TouchAsync(deviceId, user.UserId, clock.GetUtcNow(), cancellationToken);
 
     private async Task<SyncIntentResult> PushOneAsync(Guid deviceId, SyncIntent intent, CancellationToken cancellationToken)
     {

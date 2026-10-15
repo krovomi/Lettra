@@ -175,12 +175,16 @@ internal sealed class InMemoryTransport(ServerNode server) : ISyncTransport
 
     public int Pulls { get; private set; }
 
+    /// <summary>Le poste qui appelle (en-tête <see cref="SyncHttp.DeviceHeader"/> du transport HTTP).</summary>
+    public Guid DeviceId { get; set; }
+
     public async Task<PushSyncIntentsResponse> PushAsync(Guid dossierId, PushSyncIntentsRequest request, CancellationToken cancellationToken)
     {
         Pushes++;
         Lose(Cut.PushRequest);
         PushSyncIntentsRequest received = RoundTrip(request, ContractsJsonContext.Default.PushSyncIntentsRequest);
         Result<PushSyncIntentsResponse> result = await server.RunAsync(sp => sp.GetRequiredService<SyncServer>().PushAsync(received, cancellationToken));
+        Refuse(result);
         result.IsSuccess.Should().BeTrue(string.Join(", ", result.Errors.Select(e => e.Code)));
         Lose(Cut.PushResponse);
         return RoundTrip(result.Value, ContractsJsonContext.Default.PushSyncIntentsResponse);
@@ -190,11 +194,8 @@ internal sealed class InMemoryTransport(ServerNode server) : ISyncTransport
     {
         Pulls++;
         Lose(Cut.PullRequest);
-        Result<SyncChangesResponse> result = await server.RunAsync(sp => sp.GetRequiredService<SyncServer>().PullAsync(token, limit, cancellationToken));
-        if (result.IsFailure)
-        {
-            throw new SyncRefusedException(SyncFailure.Forbidden);
-        }
+        Result<SyncChangesResponse> result = await server.RunAsync(sp => sp.GetRequiredService<SyncServer>().PullAsync(token, limit, cancellationToken, DeviceId));
+        Refuse(result);
 
         Lose(Cut.PullResponse);
         return RoundTrip(result.Value, ContractsJsonContext.Default.SyncChangesResponse);
@@ -207,12 +208,22 @@ internal sealed class InMemoryTransport(ServerNode server) : ISyncTransport
         SeriesRequests++;
         OpenDeviceSeriesRequest received = RoundTrip(request, ContractsJsonContext.Default.OpenDeviceSeriesRequest);
         Result<OpenDeviceSeriesResponse> result = await server.RunAsync(sp => sp.GetRequiredService<SyncServer>().OpenDeviceSeriesAsync(received, cancellationToken));
-        if (result.IsFailure)
-        {
-            throw new SyncRefusedException(SyncFailure.Forbidden);
-        }
+        Refuse(result);
 
         return RoundTrip(result.Value, ContractsJsonContext.Default.OpenDeviceSeriesResponse);
+    }
+
+    /// <summary>Comme le transport HTTP : un poste révoqué (403 et son code) ou un autre refus.</summary>
+    private static void Refuse<T>(Result<T> result)
+    {
+        if (result.IsSuccess)
+        {
+            return;
+        }
+
+        throw new SyncRefusedException(result.Errors.Any(e => e.Code == Contracts.Common.ErrorCodes.Sync.DeviceRevoked)
+            ? SyncFailure.DeviceRevoked
+            : SyncFailure.Forbidden);
     }
 
     private void Lose(Cut step)
@@ -261,6 +272,7 @@ internal sealed class DeviceNode : DossierNode
         : base(dossier, file, clock, services => Configure(services, transport, pageSize, center))
     {
         Transport = transport;
+        transport.DeviceId = Services.GetRequiredService<SyncClientOptions>().DeviceId;
     }
 
     public InMemoryTransport Transport { get; }

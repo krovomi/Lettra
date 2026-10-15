@@ -31,7 +31,7 @@ public sealed class ClaudeEngine(IAnthropicClient client, ClaudeEngineOptions op
         ArgumentNullException.ThrowIfNull(request);
         return new MessageCreateParams
         {
-            Model = options.Model,
+            Model = options.ProviderModel,
             MaxTokens = options.MaxTokens,
             OutputConfig = new OutputConfig { Effort = options.Effort },
             System = new List<TextBlockParam>

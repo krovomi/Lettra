@@ -34,6 +34,7 @@ public static class DependencyInjection
         services.TryAddScoped<IDossierAlertPublisher, NoDossierAlertPublisher>();
         services.TryAddScoped<IDeviceNumbering, NoDeviceNumbering>();
         services.TryAddScoped<IDeviceSeriesRegistry, NoDeviceSeriesRegistry>();
+        services.TryAddScoped<ISyncDeviceRegistry, NoSyncDeviceRegistry>();
         services.AddScoped<DossierIntegrityService>();
 
         // Hors du mode 1, les cas d'usage de session locale répondent « non pris en charge ».

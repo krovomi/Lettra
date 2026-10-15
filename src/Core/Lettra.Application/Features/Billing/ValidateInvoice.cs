@@ -69,7 +69,14 @@ internal sealed class ValidateInvoiceHandler(
         }
 
         // Sur un poste hors ligne, la pièce se numérote dans la série du poste (ADR-0007) ; null sur le serveur.
-        DeviceSeries? device = await deviceNumbering.FindAsync(precheck.Value.Invoice.SeriesCode, cancellationToken).ConfigureAwait(false);
+        // Un poste révoqué, ou resté hors ligne au-delà de ce que le cabinet permet (étape 4.4), ne valide plus.
+        Result<DeviceSeries?> onDevice = await deviceNumbering.FindAsync(precheck.Value.Invoice.SeriesCode, cancellationToken).ConfigureAwait(false);
+        if (onDevice.IsFailure)
+        {
+            return Result.Failure(onDevice.Errors);
+        }
+
+        DeviceSeries? device = onDevice.Value;
         Result<bool> done = await numbering.ExecuteWithNextNumberAsync(
             device?.Code ?? precheck.Value.Invoice.SeriesCode,
             (number, ct) => ValidateWithNumberAsync(command, number, approvesCredit.Value, device, ct),

@@ -114,6 +114,18 @@ public sealed class DemoWalkthroughTests : IDisposable
         OperationResult<InvoiceResponse> creditValidated = await invoices.ValidateAsync(credit.Value.Id, credit.Value.Version, default);
         creditValidated.IsSuccess.Should().BeTrue(Codes(creditValidated.Errors));
         creditValidated.Value!.Number.Should().NotBeNullOrEmpty();
+
+        // 8. « FEC » : l'exercice civil en cours, exporté puis passé au validateur intégré.
+        IFecGateway fec = services.GetRequiredService<IFecGateway>();
+        int year = invoice.Value.IssueDate!.Value.Year;
+        OperationResult<FecDocument> export = await fec.ExportAsync(new DateOnly(year, 1, 1), new DateOnly(year, 12, 31), default);
+        export.IsSuccess.Should().BeTrue(Codes(export.Errors));
+        export.Value!.FileName.Should().Be($"900000019FEC{year}1231.txt");
+        OperationResult<FecValidationResponse> report = await fec.ValidateAsync(export.Value.FileName, export.Value.Content, null, null, default);
+        report.IsSuccess.Should().BeTrue(Codes(report.Errors));
+        report.Value!.IsValid.Should().BeTrue();
+        report.Value.EntryCount.Should().BeGreaterThanOrEqualTo(2, "la facture et l'avoir");
+        report.Value.TotalDebit.Should().Be(report.Value.TotalCredit);
     }
 
     public void Dispose()

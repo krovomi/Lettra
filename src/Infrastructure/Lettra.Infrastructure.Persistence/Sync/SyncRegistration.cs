@@ -33,6 +33,7 @@ public static class SyncRegistration
         services.AddScoped<ISyncReceipts, EfSyncReceipts>();
         services.AddScoped<ISyncChangeFeed, EfSyncChangeFeed>();
         services.AddScoped<IDeviceSeriesRegistry, EfDeviceSeriesRegistry>();
+        services.AddScoped<ISyncDeviceRegistry, EfSyncDeviceRegistry>();
         services.AddScoped<IDossierWorkScope, IsolatedDossierScope>();
         return services;
     }
