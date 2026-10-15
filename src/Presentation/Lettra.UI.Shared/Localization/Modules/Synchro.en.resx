@@ -77,4 +77,9 @@
   <data name="Sync.Conflicts.EmptyValue" xml:space="preserve"><value>(empty)</value></data>
   <data name="Sync.NotSynchronized" xml:space="preserve"><value>This device does not synchronise: everything is saved directly.</value></data>
   <data name="Sync.Back" xml:space="preserve"><value>Back to synchronisation</value></data>
+  <data name="Sync.Failure.DeviceRevoked" xml:space="preserve"><value>The firm has removed this device: its data has been erased. Contact the firm's administrator.</value></data>
+  <data name="Error.Sync.DeviceRevoked" xml:space="preserve"><value>The firm has removed this device: it can no longer sync or validate.</value></data>
+  <data name="Error.Sync.OfflineTooLong" xml:space="preserve"><value>This device has been offline longer than the firm allows: sync before validating.</value></data>
+  <data name="Error.Sync.PolicyInvalid" xml:space="preserve"><value>The maximum offline duration ranges from 1 hour to 30 days.</value></data>
+  <data name="Error.Sync.DeviceUnknown" xml:space="preserve"><value>This device has never synced with this dossier.</value></data>
 </root>

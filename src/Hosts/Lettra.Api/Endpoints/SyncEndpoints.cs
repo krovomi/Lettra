@@ -1,6 +1,9 @@
 using Lettra.Api.Infrastructure;
 using Lettra.Api.Security;
 using Lettra.Application.Abstractions.Identity;
+using Lettra.Application.Abstractions.Messaging;
+using Lettra.Application.Abstractions.Tenancy;
+using Lettra.Application.Features.Sync;
 using Lettra.Contracts.Sync;
 using Lettra.Domain.Common;
 using Lettra.Sync.Server;
@@ -36,8 +39,59 @@ internal static class SyncEndpoints
             .Produces<OpenDeviceSeriesResponse>()
             .ProducesProblem(StatusCodes.Status400BadRequest);
 
+        // Postes du dossier (étape 4.4) : registre, révocation, durée maximale hors ligne.
+        group.MapGet("/devices", ListDevicesAsync)
+            .WithName("ListSyncDevices")
+            .RequirePermission(Permission.PostesGerer)
+            .Produces<IReadOnlyList<SyncDeviceResponse>>();
+
+        group.MapPost("/devices/{deviceId:guid}/revocation", RevokeDeviceAsync)
+            .WithName("RevokeSyncDevice")
+            .RequirePermission(Permission.PostesGerer)
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        group.MapGet("/policy", GetPolicyAsync)
+            .WithName("GetSyncPolicy")
+            .RequirePermission(Permission.PostesGerer)
+            .Produces<SyncPolicyResponse>();
+
+        group.MapPut("/policy", SavePolicyAsync)
+            .WithName("SaveSyncPolicy")
+            .RequirePermission(Permission.PostesGerer)
+            .Produces<SyncPolicyResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest);
+
         return group;
     }
+
+    private static async Task<IResult> ListDevicesAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken)
+    {
+        Result<IReadOnlyList<SyncDeviceResponse>> result = await queries.QueryAsync(new ListSyncDevicesQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false);
+        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+    }
+
+    private static async Task<IResult> RevokeDeviceAsync(Guid deviceId, ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken)
+    {
+        Result result = await commands.SendAsync(new RevokeSyncDeviceCommand(tenant.Current.DossierId, deviceId), cancellationToken).ConfigureAwait(false);
+        return result.IsSuccess ? TypedResults.NoContent() : result.Errors.ToProblem();
+    }
+
+    private static async Task<IResult> GetPolicyAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken)
+    {
+        Result<SyncPolicyResponse> result = await queries.QueryAsync(new GetSyncPolicyQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false);
+        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+    }
+
+    private static async Task<IResult> SavePolicyAsync(SaveSyncPolicyRequest request, ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken)
+    {
+        Result<SyncPolicyResponse> result = await commands.SendAsync(new SaveSyncPolicyCommand(tenant.Current.DossierId, request), cancellationToken).ConfigureAwait(false);
+        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+    }
+
+    /// <summary>Le poste qui appelle (en-tête <see cref="SyncHttp.DeviceHeader"/>), s'il se nomme.</summary>
+    private static Guid? DeviceOf(HttpContext http) =>
+        Guid.TryParse(http.Request.Headers[SyncHttp.DeviceHeader].ToString(), out Guid id) && id != Guid.Empty ? id : null;
 
     private static async Task<IResult> OpenDeviceSeriesAsync(OpenDeviceSeriesRequest request, SyncServer sync, CancellationToken cancellationToken)
     {
@@ -51,9 +105,9 @@ internal static class SyncEndpoints
         return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
     }
 
-    private static async Task<IResult> PullAsync(SyncServer sync, CancellationToken cancellationToken, string? token = null, int limit = 500)
+    private static async Task<IResult> PullAsync(HttpContext http, SyncServer sync, CancellationToken cancellationToken, string? token = null, int limit = 500)
     {
-        Result<SyncChangesResponse> result = await sync.PullAsync(token, limit, cancellationToken).ConfigureAwait(false);
+        Result<SyncChangesResponse> result = await sync.PullAsync(token, limit, cancellationToken, DeviceOf(http)).ConfigureAwait(false);
         return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
     }
 }

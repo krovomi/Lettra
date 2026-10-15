@@ -1368,6 +1368,34 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.ToTable("SyncConflicts", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.SyncDeviceRecord", b =>
+                {
+                    b.Property<Guid>("DeviceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("FirstSeenAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("LastSeenAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid?>("LastUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<long?>("RevokedAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid?>("RevokedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<long?>("WipedAtMs")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("DeviceId");
+
+                    b.ToTable("SyncDevices", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.SyncJournalRecord", b =>
                 {
                     b.Property<long>("Sequence")
