@@ -150,6 +150,12 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTimeOffset?>("CreditApprovedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreditApprovedBy")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("CreditReason")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");

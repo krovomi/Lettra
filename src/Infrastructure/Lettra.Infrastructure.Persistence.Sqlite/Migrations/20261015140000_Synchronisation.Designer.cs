@@ -145,6 +145,12 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTimeOffset?>("CreditApprovedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreditApprovedBy")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("CreditReason")
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
