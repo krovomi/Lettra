@@ -29,7 +29,7 @@ internal sealed class FakeSyncCenter : ISyncCenter
 
     public List<SyncRejectedItem> Rejected { get; } = [];
 
-    public List<(Guid Key, IReadOnlyList<SyncFieldChoice> Choices)> Resolutions { get; } = [];
+    public List<IReadOnlyList<SyncFieldChoice>> Resolutions { get; } = [];
 
     public void Publish(SyncSnapshot snapshot)
     {
@@ -63,10 +63,18 @@ internal sealed class FakeSyncCenter : ISyncCenter
     public Task<IReadOnlyList<SyncRejectedItem>> ListRejectedAsync(CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<SyncRejectedItem>>([.. Rejected]);
 
-    public Task<OperationResult<bool>> ResolveAsync(Guid idempotencyKey, IReadOnlyList<SyncFieldChoice> choices, CancellationToken cancellationToken)
+    /// <summary>Refus à renvoyer (ex. version du cabinet pas encore reçue), sinon les conflits sont résolus.</summary>
+    public string? ResolveError { get; set; }
+
+    public Task<OperationResult<bool>> ResolveAsync(IReadOnlyList<SyncFieldChoice> choices, CancellationToken cancellationToken)
     {
-        Resolutions.Add((idempotencyKey, choices));
-        Conflicts.RemoveAll(c => c.IdempotencyKey == idempotencyKey);
+        if (ResolveError is { } code)
+        {
+            return Task.FromResult(OperationResult<bool>.Failure(code));
+        }
+
+        Resolutions.Add(choices);
+        Conflicts.RemoveAll(c => choices.Any(choice => choice.ConflictId == c.Id));
         return Task.FromResult(OperationResult<bool>.Success(true));
     }
 }
@@ -233,8 +241,9 @@ public sealed class SyncScreensTests : BunitContext
         AvecSynchro();
         Guid cle = Guid.CreateVersion7();
         Guid client = Guid.CreateVersion7();
-        _sync.Conflicts.Add(new SyncFieldDispute(cle, SyncItemKind.Customer, client, "Dupont SARL", "Email", "a@dupont.fr", "b@dupont.fr", "c@dupont.fr", Midi));
-        _sync.Conflicts.Add(new SyncFieldDispute(cle, SyncItemKind.Customer, client, "Dupont SARL", "City", "Paris", "Lyon", null, Midi));
+        Guid email = Guid.CreateVersion7(), ville = Guid.CreateVersion7();
+        _sync.Conflicts.Add(new SyncFieldDispute(email, cle, SyncItemKind.Customer, client, "Dupont SARL", "Email", "a@dupont.fr", "b@dupont.fr", "c@dupont.fr", Midi));
+        _sync.Conflicts.Add(new SyncFieldDispute(ville, cle, SyncItemKind.Customer, client, "Dupont SARL", "City", "Paris", "Lyon", null, Midi));
 
         IRenderedComponent<SyncConflicts> page = Render<SyncConflicts>();
 
@@ -249,8 +258,24 @@ public sealed class SyncScreensTests : BunitContext
         page.Find("button.apply").Click();
 
         page.WaitForAssertion(() => page.Find("[role=status].lettra-success").TextContent.Should().Be("Conflit résolu."));
-        _sync.Resolutions.Should().ContainSingle().Which.Should().BeEquivalentTo((cle, new[] { new SyncFieldChoice("Email", true), new SyncFieldChoice("City", false) }));
+        _sync.Resolutions.Should().ContainSingle().Which.Should().BeEquivalentTo(new[] { new SyncFieldChoice(email, true), new SyncFieldChoice(ville, false) });
         page.Find("#sync-conflicts-empty").Should().NotBeNull();
+    }
+
+    [Fact]
+    public void Un_refus_de_resolution_s_affiche_et_garde_le_conflit()
+    {
+        AvecSynchro();
+        _sync.ResolveError = ErrorCodes.Sync.EntityNotFound;
+        _sync.Conflicts.Add(new SyncFieldDispute(Guid.CreateVersion7(), Guid.CreateVersion7(), SyncItemKind.CatalogItem, Guid.CreateVersion7(), "Conseil", "Designation", "Conseil", "Conseil fiscal", "Conseil juridique", Midi));
+        IRenderedComponent<SyncConflicts> page = Render<SyncConflicts>();
+
+        page.Find("input.take-server").Change(true);
+        page.Find("button.apply").Click();
+
+        page.WaitForAssertion(() => page.Find("p.validation-message").TextContent.Should().Be("L'élément modifié sur ce poste n'existe pas sur le serveur."));
+        page.FindAll("section.lettra-sync-conflict").Should().ContainSingle();
+        page.FindAll("[role=status].lettra-success").Should().BeEmpty();
     }
 
     [Fact]

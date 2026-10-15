@@ -104,11 +104,13 @@ public enum SyncChangeKind
 public sealed record SyncPendingItem(long Sequence, SyncItemKind Item, SyncChangeKind Change, Guid EntityId, string? Label, DateTimeOffset RecordedAt);
 
 /// <summary>
-/// Un champ modifié à la fois sur le poste et au cabinet, porté par l'intention <c>IdempotencyKey</c>. <c>Field</c>
+/// Un champ modifié à la fois sur le poste et au cabinet. <c>Id</c> identifie le conflit (une intention,
+/// <c>IdempotencyKey</c>, peut en porter plusieurs, un par champ). <c>Field</c>
 /// est le nom de la propriété du contrat (ex. <c>Email</c>) ; <c>Base</c>, <c>Mine</c> et <c>Server</c> sont la valeur
 /// d'avant, la saisie du poste et celle du cabinet, prêtes à afficher.
 /// </summary>
 public sealed record SyncFieldDispute(
+    Guid Id,
     Guid IdempotencyKey,
     SyncItemKind Item,
     Guid EntityId,
@@ -153,8 +155,8 @@ public sealed record SyncSnapshot(
     public static SyncSnapshot Initial { get; } = new(SyncStatus.Offline, SyncPendingSummary.Empty, SyncReminderLevel.None, 0, 0, null);
 }
 
-/// <summary>Choix pour un champ disputé : la saisie du poste, ou la valeur du cabinet.</summary>
-public sealed record SyncFieldChoice(string Field, bool KeepMine);
+/// <summary>Choix pour un conflit (un champ) : la saisie du poste, ou la valeur du cabinet.</summary>
+public sealed record SyncFieldChoice(Guid ConflictId, bool KeepMine);
 
 /// <summary>
 /// Synchronisation du poste pour l'UI. Implémentée par l'adaptateur de <c>SyncCoordinator</c> ; absente du conteneur
@@ -181,10 +183,11 @@ public interface ISyncCenter
     Task<IReadOnlyList<SyncRejectedItem>> ListRejectedAsync(CancellationToken cancellationToken);
 
     /// <summary>
-    /// Résout les champs disputés d'une intention. Tout « cabinet » abandonne l'intention puis relit le serveur ; un
-    /// « poste » au moins renvoie ces valeurs dans une nouvelle modification, sur la version du cabinet.
+    /// Résout des conflits, un choix par champ (l'écran envoie ensemble ceux d'une même saisie). « Poste » renvoie la
+    /// saisie dans une nouvelle modification sur la version du cabinet ; « cabinet » la laisse. Refus possibles :
+    /// <c>Sync.EntityNotFound</c>, <c>Sync.ConflictAwaitingRefresh</c> (synchroniser d'abord).
     /// </summary>
-    Task<OperationResult<bool>> ResolveAsync(Guid idempotencyKey, IReadOnlyList<SyncFieldChoice> choices, CancellationToken cancellationToken);
+    Task<OperationResult<bool>> ResolveAsync(IReadOnlyList<SyncFieldChoice> choices, CancellationToken cancellationToken);
 }
 
 /// <summary>

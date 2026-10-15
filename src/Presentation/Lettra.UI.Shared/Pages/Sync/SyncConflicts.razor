@@ -44,21 +44,21 @@ else
                 <tbody>
                     @foreach (SyncFieldDispute dispute in group)
                     {
-                        string name = $"choice-{group.Key}-{dispute.Field}";
+                        string name = $"choice-{dispute.Id}";
                         <tr data-field="@dispute.Field">
                             <th scope="row">@SyncText.FieldName(L, dispute.Item, dispute.Field)</th>
                             <td>@Value(dispute.Base)</td>
                             <td>
                                 <label>
-                                    <input type="radio" name="@name" class="keep-mine" checked="@(Choice(group.Key, dispute.Field) == true)"
-                                           @onchange="() => Choose(group.Key, dispute.Field, keepMine: true)" />
+                                    <input type="radio" name="@name" class="keep-mine" checked="@(Choice(dispute.Id) == true)"
+                                           @onchange="() => Choose(dispute.Id, keepMine: true)" />
                                     @Value(dispute.Mine)
                                 </label>
                             </td>
                             <td>
                                 <label>
-                                    <input type="radio" name="@name" class="take-server" checked="@(Choice(group.Key, dispute.Field) == false)"
-                                           @onchange="() => Choose(group.Key, dispute.Field, keepMine: false)" />
+                                    <input type="radio" name="@name" class="take-server" checked="@(Choice(dispute.Id) == false)"
+                                           @onchange="() => Choose(dispute.Id, keepMine: false)" />
                                     @Value(dispute.Server)
                                 </label>
                             </td>
@@ -74,7 +74,7 @@ else
 @code {
     private ISyncCenter? _sync;
     private List<IGrouping<Guid, SyncFieldDispute>> _groups = [];
-    private readonly Dictionary<(Guid Key, string Field), bool> _choices = [];
+    private readonly Dictionary<Guid, bool> _choices = [];
     private IReadOnlyList<ErrorDetail> _errors = [];
     private string? _done;
     private bool _busy;
@@ -94,12 +94,12 @@ else
         _groups = [.. disputes.OrderBy(d => d.DetectedAt).GroupBy(d => d.IdempotencyKey)];
     }
 
-    private bool? Choice(Guid key, string field) => _choices.TryGetValue((key, field), out bool keepMine) ? keepMine : null;
+    private bool? Choice(Guid conflict) => _choices.TryGetValue(conflict, out bool keepMine) ? keepMine : null;
 
-    private void Choose(Guid key, string field, bool keepMine) => _choices[(key, field)] = keepMine;
+    private void Choose(Guid conflict, bool keepMine) => _choices[conflict] = keepMine;
 
     // Aucun choix par défaut : chaque champ disputé est tranché par l'utilisateur.
-    private bool Complete(IGrouping<Guid, SyncFieldDispute> group) => group.All(d => _choices.ContainsKey((group.Key, d.Field)));
+    private bool Complete(IGrouping<Guid, SyncFieldDispute> group) => group.All(d => _choices.ContainsKey(d.Id));
 
     private async Task ApplyAsync(IGrouping<Guid, SyncFieldDispute> group)
     {
@@ -107,8 +107,8 @@ else
         _done = null;
         try
         {
-            SyncFieldChoice[] choices = [.. group.Select(d => new SyncFieldChoice(d.Field, _choices[(group.Key, d.Field)]))];
-            OperationResult<bool> resolved = await _sync!.ResolveAsync(group.Key, choices, CancellationToken.None);
+            SyncFieldChoice[] choices = [.. group.Select(d => new SyncFieldChoice(d.Id, _choices[d.Id]))];
+            OperationResult<bool> resolved = await _sync!.ResolveAsync(choices, CancellationToken.None);
             _errors = resolved.Errors;
             if (resolved.IsSuccess)
             {
