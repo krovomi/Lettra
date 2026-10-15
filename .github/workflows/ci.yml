@@ -236,15 +236,17 @@ jobs:
           name: lettra-ios-simulator
           path: artifacts/lettra-ios-simulator
           retention-days: 90
+      # Apple Silicon seulement (la version universelle, avec Intel, double un build déjà long).
       - name: Build macOS (Mac Catalyst)
-        run: dotnet build src/Hosts/Lettra.App.Maui/Lettra.App.Maui.csproj -c Release -f net10.0-maccatalyst
+        run: dotnet build src/Hosts/Lettra.App.Maui/Lettra.App.Maui.csproj -c Release -f net10.0-maccatalyst -r maccatalyst-arm64
       # Application non signée : au premier lancement, macOS demande de l'ouvrir par clic droit > Ouvrir.
       - name: Premier lancement sous macOS
         run: |
           set -euo pipefail
           mkdir -p artifacts/macos-run artifacts/lettra-macos
-          app=$(find src/Hosts/Lettra.App.Maui/bin/Release/net10.0-maccatalyst -maxdepth 3 -name 'Lettra.App.Maui.app' -type d | head -n 1)
+          app=$(find src/Hosts/Lettra.App.Maui/bin/Release/net10.0-maccatalyst -maxdepth 4 -name 'Lettra.App.Maui.app' -type d | head -n 1)
           echo "Application : $app"
+          test -n "$app"
           ditto -c -k --keepParent "$app" artifacts/lettra-macos/Lettra-macos.zip
           "$app/Contents/MacOS/Lettra.App.Maui" > artifacts/macos-run/sortie.txt 2>&1 &
           pid=$!
