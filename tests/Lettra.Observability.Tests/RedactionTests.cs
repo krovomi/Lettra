@@ -34,6 +34,17 @@ public sealed class RedactionTests
         DossierDataScrubber.Scrub(value).Should().Be(value);
 
     [Fact]
+    public void Un_long_texte_sans_donnee_reste_lisible_et_ne_depasse_pas_le_delai()
+    {
+        // Ce que journalise une migration : de longues suites d'identifiants SQL, sans « @ ».
+        string sql = string.Concat(Enumerable.Repeat("UPDATE \"Customers\" SET \"SearchKey\" = REPLACE(UPPER(\"Name\"), 'É', 'E'); ", 200))
+            + new string('a', 20_000);
+
+        DossierDataScrubber.Scrub(sql).Should().Be(sql);
+        DossierDataScrubber.LooksSensitive(sql).Should().BeFalse();
+    }
+
+    [Fact]
     public void Un_delai_depasse_masque_toute_la_valeur_sans_lever_d_exception()
     {
         // Retour arrière catastrophique : le délai d'une milliseconde expire à coup sûr.
