@@ -1290,6 +1290,60 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.ToTable("NumberSeries", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Outbox.OutboxRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("DeliveredAtMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("EnqueuedAtMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("LeaseOwner")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("LeaseUntilMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("NextAttemptAtMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("ParkedAtMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique();
+
+                    b.HasIndex("DeliveredAtMs", "ParkedAtMs", "NextAttemptAtMs");
+
+                    b.ToTable("OutboxMessages", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.DeviceSeriesRecord", b =>
                 {
                     b.Property<string>("Code")

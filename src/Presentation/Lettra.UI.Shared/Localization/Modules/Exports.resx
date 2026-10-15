@@ -39,6 +39,7 @@
   <data name="Error.Platform.PaymentDateInvalid" xml:space="preserve"><value>La date d'encaissement ne peut précéder la date de la pièce.</value></data>
   <data name="Error.Platform.ReferenceUnknown" xml:space="preserve"><value>La plateforme agréée ne connaît pas cette transmission.</value></data>
   <data name="Error.Platform.SellerSirenMissing" xml:space="preserve"><value>Renseignez le SIREN de l'entreprise : la plateforme agréée identifie le vendeur par son SIREN.</value></data>
+  <data name="Error.Platform.Queued" xml:space="preserve"><value>L'envoi à la plateforme agréée est en file (plateforme injoignable, ou envoi confié au Worker) : rien n'est encore transmis, il partira tout seul.</value></data>
   <data name="Error.Platform.Unavailable" xml:space="preserve"><value>La plateforme agréée ne répond pas. Réessayez plus tard : rien n'a été transmis.</value></data>
   <data name="Platform.Title" xml:space="preserve"><value>Plateforme agréée</value></data>
   <data name="Platform.NotConfigured" xml:space="preserve"><value>Aucune plateforme agréée n'est configurée pour ce cabinet : la pièce ne peut pas être transmise. L'administrateur du cabinet choisit la plateforme dans le paramétrage (Lettra:EInvoicing:Platform).</value></data>

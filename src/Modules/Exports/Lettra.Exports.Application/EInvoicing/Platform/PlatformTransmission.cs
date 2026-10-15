@@ -85,6 +85,13 @@ public sealed class PlatformTransmission
         return true;
     }
 
+    /// <summary>Le statut est déjà dans l'historique (même code, même instant, même montant).</summary>
+    public bool Knows(PlatformStatusEvent status)
+    {
+        ArgumentNullException.ThrowIfNull(status);
+        return _history.Any(known => IsSame(known, status));
+    }
+
     private static bool IsSame(PlatformStatusEvent known, PlatformStatusEvent status) =>
         known.Status == status.Status
         && known.At.ToUnixTimeMilliseconds() == status.At.ToUnixTimeMilliseconds()

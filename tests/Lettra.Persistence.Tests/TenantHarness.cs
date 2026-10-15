@@ -24,8 +24,14 @@ internal sealed class TenantHarness : IAsyncDisposable
     /// </param>
     /// <param name="syncJournal">Vrai pour tenir le journal de synchronisation, comme le serveur (phase 4).</param>
     /// <param name="simulatedPlatform">Vrai pour transmettre à la plateforme agréée simulée (phase 5.3) ; sinon aucune.</param>
+    /// <param name="configure">Services propres au scénario (gestionnaires de l'outbox, réglages).</param>
     public TenantHarness(
-        IDbProviderConfigurator configurator, TimeProvider? clock = null, bool syntheticDocuments = false, bool syncJournal = false, bool simulatedPlatform = false)
+        IDbProviderConfigurator configurator,
+        TimeProvider? clock = null,
+        bool syntheticDocuments = false,
+        bool syncJournal = false,
+        bool simulatedPlatform = false,
+        Action<IServiceCollection>? configure = null)
     {
         ServiceCollection services = new();
         services.AddLogging();
@@ -61,6 +67,7 @@ internal sealed class TenantHarness : IAsyncDisposable
             services.AddScoped<IJournaledDocumentReader, SyntheticDocuments>();
         }
 
+        configure?.Invoke(services);
         _root = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
     }
 
