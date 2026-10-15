@@ -22,5 +22,8 @@ public static partial class ErrorCodes
 
         /// <summary>Le numéro n'est pas le suivant de la série du poste : une pièce précédente manque ou a été refusée.</summary>
         public const string NumberOutOfOrder = "Sync.NumberOutOfOrder";
+
+        /// <summary>La version du cabinet n'est pas encore arrivée sur le poste : synchroniser avant de garder sa saisie.</summary>
+        public const string ConflictAwaitingRefresh = "Sync.ConflictAwaitingRefresh";
     }
 }

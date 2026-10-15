@@ -254,11 +254,6 @@ internal sealed class TestProbe : INetworkProbe
     public Task<NetworkStatus> ProbeAsync(CancellationToken cancellationToken) => Task.FromResult(Status);
 }
 
-internal sealed class TestPreference : ISyncPreferences
-{
-    public SyncPreference Current { get; set; } = SyncPreference.AlwaysAsk;
-}
-
 /// <summary>Un poste MAUI : réplique SQLite, outbox, coordinateur de synchronisation.</summary>
 internal sealed class DeviceNode : DossierNode
 {
@@ -274,7 +269,8 @@ internal sealed class DeviceNode : DossierNode
 
     public TestProbe Probe => (TestProbe)Services.GetRequiredService<INetworkProbe>();
 
-    public TestPreference Preference => (TestPreference)Services.GetRequiredService<ISyncPreferences>();
+    /// <summary>La préférence réelle du poste, gardée dans sa réplique.</summary>
+    public ISyncPreferences Preference => Services.GetRequiredService<ISyncPreferences>();
 
     public SyncCoordinator Coordinator => Services.GetRequiredService<SyncCoordinator>();
 
@@ -290,7 +286,6 @@ internal sealed class DeviceNode : DossierNode
     {
         services.AddSingleton<ISyncConsentPrompt, ScriptedConsent>();
         services.AddSingleton<INetworkProbe, TestProbe>();
-        services.AddSingleton<ISyncPreferences, TestPreference>();
         services.AddSingleton<ISyncTransport>(transport);
         services.AddSyncDevice();
         services.AddSyncClient(o =>
