@@ -22,6 +22,7 @@ namespace Lettra.Sync.Client;
 /// </summary>
 internal sealed class SyncOutboxBehavior<TRequest, TResult>(
     SyncOutboxStaging staging,
+    SyncOutboxSignal signal,
     ICustomerReadStore customers,
     ISupplierReadStore suppliers,
     ICatalogItemReadStore items,
@@ -44,6 +45,11 @@ internal sealed class SyncOutboxBehavior<TRequest, TResult>(
             if (result is Result { IsFailure: true } or Result<CustomerId> { IsFailure: true } or Result<SupplierId> { IsFailure: true } or Result<CatalogItemId> { IsFailure: true })
             {
                 staging.Discard();
+            }
+            else
+            {
+                // La commande est enregistrée avec son intention : le résumé en attente a changé.
+                signal.Notify();
             }
 
             return result;

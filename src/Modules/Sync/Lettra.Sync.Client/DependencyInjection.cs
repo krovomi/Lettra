@@ -1,5 +1,6 @@
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Sync;
+using Lettra.UI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -26,10 +27,24 @@ public static class DependencyInjection
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(SyncOutboxBehavior<,>));
         services.Replace(ServiceDescriptor.Scoped<IDeviceNumbering, ReplicaDeviceNumbering>());
         services.AddSingleton(options);
+        services.TryAddSingleton<SyncOutboxSignal>();
         services.TryAddSingleton(TimeProvider.System);
         services.TryAddSingleton<ISyncConsentPrompt, AskEveryTimeLater>();
         services.TryAddSingleton<ISyncPreferences, ReplicaSyncPreferences>();
         services.AddSingleton<SyncCoordinator>();
+        return services;
+    }
+
+    /// <summary>
+    /// Écrans de synchronisation (étape 4.3) : <see cref="ISyncCenter"/> pour la pastille et les écrans, et la demande du
+    /// coordinateur posée par le dialogue de l'UI. À appeler après <see cref="AddSyncClient"/> et l'enregistrement de l'UI
+    /// (qui fournit <see cref="ISyncConsentDialog"/>).
+    /// </summary>
+    public static IServiceCollection AddSyncCenter(this IServiceCollection services)
+    {
+        services.Replace(ServiceDescriptor.Singleton<ISyncConsentPrompt, DialogConsentPrompt>());
+        services.AddSingleton<SyncCenter>();
+        services.AddSingleton<ISyncCenter>(sp => sp.GetRequiredService<SyncCenter>());
         return services;
     }
 }

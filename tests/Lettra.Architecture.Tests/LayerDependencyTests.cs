@@ -29,7 +29,7 @@ public sealed class LayerDependencyTests
         { "Lettra.Supervision.Infrastructure", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain", "Lettra.Infrastructure.Persistence", "Lettra.Supervision.Application", "Lettra.Supervision.Domain"] },
         // Synchronisation (phase 4) : des cas d'usage autour des ports de l'application, sans accès direct aux bases.
         { "Lettra.Sync.Server", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain"] },
-        { "Lettra.Sync.Client", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain"] },
+        { "Lettra.Sync.Client", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain", "Lettra.UI.Abstractions"] },
         // Module Exports (phase 5) : FEC et formats de facture lus depuis les pièces et les écritures, sans les modifier.
         { "Lettra.Exports.Application", ["Lettra.Application", "Lettra.Calculations", "Lettra.Contracts", "Lettra.Domain"] },
         { "Lettra.Exports.Infrastructure", ["Lettra.Application", "Lettra.Calculations", "Lettra.Contracts", "Lettra.Domain", "Lettra.Exports.Application", "Lettra.Infrastructure.Persistence"] },
@@ -134,8 +134,9 @@ public sealed class LayerDependencyTests
     {
         foreach (Assembly assembly in new[] { Assemblies.SyncServer, Assemblies.SyncClient })
         {
+            // Le client adapte le contrat des écrans (Lettra.UI.Abstractions, étape 4.3), comme une gateway : rien d'autre de l'UI.
             Types.InAssembly(assembly)
-                .ShouldNot().HaveDependencyOnAny("Microsoft.EntityFrameworkCore", "Microsoft.AspNetCore", "Lettra.Infrastructure", "Lettra.UI")
+                .ShouldNot().HaveDependencyOnAny("Microsoft.EntityFrameworkCore", "Microsoft.AspNetCore", "Lettra.Infrastructure", "Lettra.UI.Shared", "Lettra.UI.Gateway", "Lettra.App")
                 .GetResult().FailingTypeNames.Should().BeNullOrEmpty(because: $"{assembly.GetName().Name} : une intention est rejouée par son cas d'usage, avec les droits du moment (ADR-0008)");
         }
     }

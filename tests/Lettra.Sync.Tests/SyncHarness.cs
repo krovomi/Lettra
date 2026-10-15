@@ -257,8 +257,8 @@ internal sealed class TestProbe : INetworkProbe
 /// <summary>Un poste MAUI : réplique SQLite, outbox, coordinateur de synchronisation.</summary>
 internal sealed class DeviceNode : DossierNode
 {
-    public DeviceNode(DossierId dossier, string file, TestClock clock, InMemoryTransport transport, int pageSize = 500)
-        : base(dossier, file, clock, services => Configure(services, transport, pageSize))
+    public DeviceNode(DossierId dossier, string file, TestClock clock, InMemoryTransport transport, int pageSize = 500, bool center = false)
+        : base(dossier, file, clock, services => Configure(services, transport, pageSize, center))
     {
         Transport = transport;
     }
@@ -282,7 +282,12 @@ internal sealed class DeviceNode : DossierNode
     public Task<IReadOnlyList<SyncConflictRecord>> ConflictsAsync() =>
         RunAsync(sp => sp.GetRequiredService<ISyncOutbox>().ListConflictsAsync(default));
 
-    private static void Configure(IServiceCollection services, InMemoryTransport transport, int pageSize)
+    /// <summary>Les écrans de synchronisation (avec <c>center</c>) : l'adaptateur et le dialogue joué par le test.</summary>
+    public Lettra.UI.Abstractions.ISyncCenter Center => Services.GetRequiredService<Lettra.UI.Abstractions.ISyncCenter>();
+
+    public ScriptedDialog Dialog => (ScriptedDialog)Services.GetRequiredService<Lettra.UI.Abstractions.ISyncConsentDialog>();
+
+    private static void Configure(IServiceCollection services, InMemoryTransport transport, int pageSize, bool center)
     {
         services.AddSingleton<ISyncConsentPrompt, ScriptedConsent>();
         services.AddSingleton<INetworkProbe, TestProbe>();
@@ -294,6 +299,11 @@ internal sealed class DeviceNode : DossierNode
             o.BatchSize = 3;
             o.PageSize = pageSize;
         });
+        if (center)
+        {
+            services.AddSingleton<Lettra.UI.Abstractions.ISyncConsentDialog, ScriptedDialog>();
+            services.AddSyncCenter();
+        }
     }
 }
 
@@ -314,9 +324,9 @@ internal sealed class SyncWorld : IAsyncDisposable
 
     public ServerNode Server { get; }
 
-    public DeviceNode Device(int pageSize = 500)
+    public DeviceNode Device(int pageSize = 500, bool center = false)
     {
-        DeviceNode device = new(Dossier, Path.Combine(_folder, $"poste-{_devices.Count + 1}.db"), Clock, new InMemoryTransport(Server), pageSize);
+        DeviceNode device = new(Dossier, Path.Combine(_folder, $"poste-{_devices.Count + 1}.db"), Clock, new InMemoryTransport(Server), pageSize, center);
         _devices.Add(device);
         return device;
     }
@@ -338,4 +348,24 @@ internal sealed class SyncWorld : IAsyncDisposable
         {
         }
     }
+}
+
+/// <summary>Le dialogue de l'UI joué par le test (fil « Écrans ») : réponse choisie, et ce qui lui a été montré.</summary>
+internal sealed class ScriptedDialog : Lettra.UI.Abstractions.ISyncConsentDialog
+{
+    public Lettra.UI.Abstractions.SyncAnswer Answer { get; set; } = Lettra.UI.Abstractions.SyncAnswer.Now;
+
+    public Lettra.UI.Abstractions.SyncPendingSummary? LastSummary { get; private set; }
+
+    public Lettra.UI.Abstractions.SyncNetwork? LastNetwork { get; private set; }
+
+    public Task<Lettra.UI.Abstractions.SyncAnswer> AskAsync(
+        Lettra.UI.Abstractions.SyncPendingSummary summary, Lettra.UI.Abstractions.SyncNetwork network, CancellationToken cancellationToken)
+    {
+        LastSummary = summary;
+        LastNetwork = network;
+        return Task.FromResult(Answer);
+    }
+
+    public Task ShowDetailAsync(IReadOnlyList<Lettra.UI.Abstractions.SyncPendingItem> pending, CancellationToken cancellationToken) => Task.CompletedTask;
 }
