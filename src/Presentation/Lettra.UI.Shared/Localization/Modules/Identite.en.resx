@@ -50,4 +50,6 @@
   <data name="Error.RightsSnapshot.Invalid" xml:space="preserve"><value>This device's offline rights are invalid: reconnect to the network.</value></data>
   <data name="Error.RightsSnapshot.Expired" xml:space="preserve"><value>This device's offline rights have expired: reconnect to the network to renew them.</value></data>
   <data name="Error.RightsSnapshot.OtherDevice" xml:space="preserve"><value>These offline rights belong to another device.</value></data>
+  <data name="Session.SigningIn" xml:space="preserve"><value>Signing in: finish in the browser window that has just opened.</value></data>
+  <data name="Session.SigningOut" xml:space="preserve"><value>Signing out…</value></data>
 </root>

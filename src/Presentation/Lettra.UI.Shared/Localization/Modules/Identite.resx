@@ -50,4 +50,6 @@
   <data name="Error.RightsSnapshot.Invalid" xml:space="preserve"><value>Les droits hors ligne de ce poste sont invalides : reconnectez-vous au réseau.</value></data>
   <data name="Error.RightsSnapshot.Expired" xml:space="preserve"><value>Les droits hors ligne de ce poste ont expiré : reconnectez-vous au réseau pour les renouveler.</value></data>
   <data name="Error.RightsSnapshot.OtherDevice" xml:space="preserve"><value>Ces droits hors ligne appartiennent à un autre poste.</value></data>
+  <data name="Session.SigningIn" xml:space="preserve"><value>Connexion en cours : terminez-la dans la fenêtre du navigateur qui vient de s'ouvrir.</value></data>
+  <data name="Session.SigningOut" xml:space="preserve"><value>Déconnexion en cours…</value></data>
 </root>
