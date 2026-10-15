@@ -1,0 +1,61 @@
+@* Écran de déverrouillage (étape 4.4) : tant que le poste est verrouillé, il remplace toute l'application. *@
+@implements IDisposable
+@inject DeviceLock Lock
+@inject IStringLocalizer<SharedResource> L
+
+@if (!Lock.IsLoaded)
+{
+    @* Coffre pas encore lu : rien ne s'affiche avant de savoir s'il faut le code. *@
+}
+else if (Lock.IsLocked)
+{
+    <main class="lettra-lock" id="device-lock">
+        <h1 tabindex="-1">@L["Lock.Title"]</h1>
+        <form @onsubmit="UnlockAsync">
+            <label for="device-lock-pin">@L["Lock.Pin"]</label>
+            <input id="device-lock-pin" type="password" inputmode="numeric" autocomplete="off" maxlength="@DeviceLock.MaxLength"
+                   @bind="_pin" disabled="@(Lock.BlockedUntil is not null)" />
+            <button type="submit" id="device-lock-unlock" class="lettra-button" disabled="@(_busy || Lock.BlockedUntil is not null)">@L["Lock.Unlock"]</button>
+        </form>
+        @if (Lock.BlockedUntil is { } until)
+        {
+            <p id="device-lock-message" class="validation-message" role="alert">@string.Format(CultureInfo.CurrentCulture, L["Lock.Blocked"], until.ToLocalTime().ToString("t", CultureInfo.CurrentCulture))</p>
+        }
+        else if (_wrong)
+        {
+            <p id="device-lock-message" class="validation-message" role="alert">@L["Lock.Wrong"]</p>
+        }
+    </main>
+}
+else
+{
+    @ChildContent
+}
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private string _pin = string.Empty;
+    private bool _wrong;
+    private bool _busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Lock.Changed += OnChanged;
+        await Lock.LoadAsync(CancellationToken.None);
+    }
+
+    private async Task UnlockAsync()
+    {
+        _busy = true;
+        PinCheck check = await Lock.UnlockAsync(_pin, CancellationToken.None);
+        _pin = string.Empty;
+        _wrong = check == PinCheck.WrongPin;
+        _busy = false;
+    }
+
+    private void OnChanged(object? sender, EventArgs e) => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Lock.Changed -= OnChanged;
+}

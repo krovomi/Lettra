@@ -2,6 +2,7 @@ using System.Globalization;
 using Lettra.Application.Abstractions.Sync;
 using Lettra.Contracts.Sync;
 using Lettra.Domain.Common;
+using Lettra.Infrastructure.Persistence.Numbering;
 using Lettra.Infrastructure.Persistence.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -69,6 +70,53 @@ internal sealed class SyncDeviceRecordConfiguration : IEntityTypeConfiguration<S
         builder.ToTable("SyncDevices");
         builder.HasKey(r => r.DeviceId);
         builder.Property(r => r.DeviceId).ValueGeneratedNever();
+    }
+}
+
+/// <summary>
+/// Déblocage d'une série de poste (étape 4.4) : le numéro attendu sera reçu sous l'autorité de qui l'a débloqué. Une
+/// ligne par numéro débloqué, gardée après usage comme trace.
+/// </summary>
+internal sealed class SyncSeriesReleaseRecord
+{
+    private SyncSeriesReleaseRecord()
+    {
+    }
+
+    public SyncSeriesReleaseRecord(string number, string seriesCode, Guid deviceId, Guid releasedBy, DateTimeOffset now)
+    {
+        Number = number;
+        SeriesCode = seriesCode;
+        DeviceId = deviceId;
+        ReleasedBy = releasedBy;
+        ReleasedAtMs = now.ToUnixTimeMilliseconds();
+    }
+
+    public string Number { get; private set; } = string.Empty;
+
+    public string SeriesCode { get; private set; } = string.Empty;
+
+    public Guid DeviceId { get; private set; }
+
+    public Guid ReleasedBy { get; private set; }
+
+    public long ReleasedAtMs { get; private set; }
+
+    /// <summary>La pièce débloquée est reçue.</summary>
+    public long? ConsumedAtMs { get; private set; }
+
+    public void Consume(DateTimeOffset now) => ConsumedAtMs ??= now.ToUnixTimeMilliseconds();
+}
+
+internal sealed class SyncSeriesReleaseRecordConfiguration : IEntityTypeConfiguration<SyncSeriesReleaseRecord>
+{
+    public void Configure(EntityTypeBuilder<SyncSeriesReleaseRecord> builder)
+    {
+        builder.ToTable("SyncSeriesReleases");
+        builder.HasKey(r => r.Number);
+        builder.Property(r => r.Number).HasMaxLength(32);
+        builder.Property(r => r.SeriesCode).HasMaxLength(16).IsRequired();
+        builder.HasIndex(r => r.DeviceId);
     }
 }
 
@@ -141,6 +189,75 @@ internal sealed class EfSyncDeviceRegistry(TenantDbSession session) : ISyncDevic
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         db.ChangeTracker.Clear();
         return true;
+    }
+
+    public async Task<Result<ReleaseDeviceSeriesResponse>> ReleaseNextAsync(Guid deviceId, Guid releasedBy, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        db.ChangeTracker.Clear();
+        if (!await db.Set<SyncDeviceRecord>().AsNoTracking().AnyAsync(r => r.DeviceId == deviceId, cancellationToken).ConfigureAwait(false))
+        {
+            return SyncErrors.DeviceUnknown;
+        }
+
+        // Le numéro attendu est le suivant du compteur de la série au serveur : celui de la pièce qui bloque.
+        var open = await db.Set<DeviceSeriesRecord>().AsNoTracking()
+            .Where(r => r.DeviceId == deviceId && r.ClosedAtMs == null)
+            .Join(db.NumberSeries.AsNoTracking(), r => r.Code, s => s.Code, (r, s) => new { r.Code, s.Prefix, s.Next })
+            .OrderBy(x => x.Code)
+            .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+        if (open is null)
+        {
+            return SyncErrors.NothingToRelease;
+        }
+
+        string number = NumberSeries.Format(open.Prefix, open.Next);
+        if (!await db.Set<SyncSeriesReleaseRecord>().AsNoTracking().AnyAsync(r => r.Number == number, cancellationToken).ConfigureAwait(false))
+        {
+            db.Set<SyncSeriesReleaseRecord>().Add(new SyncSeriesReleaseRecord(number, open.Code, deviceId, releasedBy, now));
+            try
+            {
+                await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (DbUpdateException)
+            {
+                // Débloqué en même temps par un autre manager : un seul déblocage compte.
+            }
+            finally
+            {
+                db.ChangeTracker.Clear();
+            }
+        }
+
+        return new ReleaseDeviceSeriesResponse(open.Code, number);
+    }
+
+    public async Task<Guid?> FindReleaseAsync(Guid deviceId, string number, CancellationToken cancellationToken)
+    {
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        return await db.Set<SyncSeriesReleaseRecord>().AsNoTracking()
+            .Where(r => r.Number == number && r.DeviceId == deviceId && r.ConsumedAtMs == null)
+            .Select(r => (Guid?)r.ReleasedBy)
+            .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task ConsumeReleaseAsync(Guid deviceId, string number, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        long at = now.ToUnixTimeMilliseconds();
+        await db.Set<SyncSeriesReleaseRecord>()
+            .Where(r => r.Number == number && r.DeviceId == deviceId && r.ConsumedAtMs == null)
+            .ExecuteUpdateAsync(s => s.SetProperty(r => r.ConsumedAtMs, at), cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<IReadOnlyList<string>> ListReleasesAsync(Guid deviceId, CancellationToken cancellationToken)
+    {
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        return await db.Set<SyncSeriesReleaseRecord>().AsNoTracking()
+            .Where(r => r.DeviceId == deviceId && r.ConsumedAtMs == null)
+            .OrderBy(r => r.Number)
+            .Select(r => r.Number)
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<int> GetMaxOfflineHoursAsync(CancellationToken cancellationToken)

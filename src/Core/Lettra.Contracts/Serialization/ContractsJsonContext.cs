@@ -95,6 +95,7 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(OpenDeviceSeriesRequest))]
 [JsonSerializable(typeof(OpenDeviceSeriesResponse))]
 [JsonSerializable(typeof(SyncPolicyResponse))]
+[JsonSerializable(typeof(ReleaseDeviceSeriesResponse))]
 [JsonSerializable(typeof(SaveSyncPolicyRequest))]
 [JsonSerializable(typeof(SyncDeviceResponse))]
 [JsonSerializable(typeof(IReadOnlyList<SyncDeviceResponse>))]

@@ -4,6 +4,7 @@ using Lettra.Application.Abstractions.Identity;
 using Lettra.Contracts.Identity;
 using Lettra.Infrastructure.Identity.Oidc;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace Lettra.Api.Security;
 
@@ -14,14 +15,25 @@ namespace Lettra.Api.Security;
 public static class BffEndpoints
 {
     internal const string SignOutTokenKey = "lettra.signout";
+    internal const string ReauthenticationKey = "lettra.reauthentification";
 
     public static IEndpointRouteBuilder MapLettraBff(this IEndpointRouteBuilder app)
     {
         RouteGroupBuilder bff = app.MapGroup("/bff").ExcludeFromDescription();
 
         // Navigation pleine page : Keycloak (SSO du cabinet, MFA), puis retour sur une adresse locale seulement.
-        bff.MapGet("/login", (string? returnUrl) =>
-            Results.Challenge(new AuthenticationProperties { RedirectUri = LocalOnly(returnUrl) }, [LettraAuthSchemes.Oidc]));
+        // Nouvelle authentification : prompt=login, Keycloak redemande mot de passe et second facteur.
+        bff.MapGet("/login", (string? returnUrl, bool? reauthentification) =>
+        {
+            AuthenticationProperties properties = new() { RedirectUri = LocalOnly(returnUrl) };
+            if (reauthentification == true)
+            {
+                properties.Items[ReauthenticationKey] = "1";
+                properties.SetParameter(OpenIdConnectParameterNames.Prompt, "login");
+            }
+
+            return Results.Challenge(properties, [LettraAuthSchemes.Oidc]);
+        });
 
         bff.MapGet("/user", async (HttpContext context) =>
         {
@@ -66,6 +78,9 @@ public static class BffEndpoints
         session.Properties?.Items.TryGetValue(SignOutTokenKey, out string? token) == true ? token : null;
 
     internal static string NewSignOutToken() => Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
+
+    internal static string ReauthenticationPath(string? returnUrl) =>
+        $"/bff/login?returnUrl={Uri.EscapeDataString(LocalOnly(returnUrl))}&reauthentification=true";
 
     /// <summary>Seulement un chemin local (<c>/…</c>, ni <c>//</c> ni <c>/\</c>) : pas de redirection ouverte.</summary>
     internal static string LocalOnly(string? returnUrl) =>

@@ -1489,6 +1489,36 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.ToTable("SyncReceipts", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.SyncSeriesReleaseRecord", b =>
+                {
+                    b.Property<string>("Number")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<long?>("ConsumedAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("DeviceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("ReleasedAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("ReleasedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SeriesCode")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.HasKey("Number");
+
+                    b.HasIndex("DeviceId");
+
+                    b.ToTable("SyncSeriesReleases", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.SyncStateRecord", b =>
                 {
                     b.Property<string>("Key")

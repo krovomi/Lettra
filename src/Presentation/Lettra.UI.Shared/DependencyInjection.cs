@@ -1,6 +1,7 @@
 using Lettra.Printing;
 using Lettra.UI.Shared.Components.Palette;
 using Lettra.UI.Shared.Keyboard;
+using Lettra.UI.Shared.Security;
 using Lettra.UI.Shared.Services;
 using Lettra.UI.Shared.Sync;
 using Lettra.UI.Abstractions;
@@ -30,6 +31,8 @@ public static class DependencyInjection
         // ajoute son ISyncCenter et relie ISyncConsentDialog au SyncCoordinator.
         services.TryAddSingleton<SyncConsentDialog>();
         services.TryAddSingleton<ISyncConsentDialog>(sp => sp.GetRequiredService<SyncConsentDialog>());
+        // Code PIN du poste : seul l'hôte qui a un coffre (MAUI) ajoute son IDeviceLockStore ; sans lui, pas de verrou.
+        services.TryAddSingleton(sp => new DeviceLock(sp.GetService<IDeviceLockStore>(), sp.GetService<TimeProvider>() ?? TimeProvider.System));
         return services;
     }
 }

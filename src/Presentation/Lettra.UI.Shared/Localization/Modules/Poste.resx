@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Lock.Title" xml:space="preserve"><value>Lettra est verrouillé</value></data>
+  <data name="Lock.Pin" xml:space="preserve"><value>Code PIN du poste</value></data>
+  <data name="Lock.Unlock" xml:space="preserve"><value>Déverrouiller</value></data>
+  <data name="Lock.Wrong" xml:space="preserve"><value>Code incorrect.</value></data>
+  <data name="Lock.Blocked" xml:space="preserve"><value>Trop d'essais manqués : réessayez à {0}.</value></data>
+  <data name="Pin.Title" xml:space="preserve"><value>Code PIN du poste</value></data>
+  <data name="Pin.Unavailable" xml:space="preserve"><value>Le code PIN se règle dans l'application installée sur le poste ; dans le navigateur, c'est la connexion du cabinet qui protège l'accès.</value></data>
+  <data name="Pin.State.On" xml:space="preserve"><value>Un code PIN protège ce poste : l'application démarre verrouillée et se verrouille quand vous la quittez.</value></data>
+  <data name="Pin.State.Off" xml:space="preserve"><value>Aucun code PIN : l'application s'ouvre sans code sur ce poste.</value></data>
+  <data name="Pin.Current" xml:space="preserve"><value>Code actuel</value></data>
+  <data name="Pin.New" xml:space="preserve"><value>Nouveau code</value></data>
+  <data name="Pin.Confirm" xml:space="preserve"><value>Confirmer le nouveau code</value></data>
+  <data name="Pin.Set" xml:space="preserve"><value>Définir le code</value></data>
+  <data name="Pin.Change" xml:space="preserve"><value>Changer le code</value></data>
+  <data name="Pin.Remove" xml:space="preserve"><value>Retirer le code</value></data>
+  <data name="Pin.LockNow" xml:space="preserve"><value>Verrouiller le poste</value></data>
+  <data name="Pin.Mismatch" xml:space="preserve"><value>Les deux saisies du nouveau code ne sont pas identiques.</value></data>
+  <data name="Pin.Invalid" xml:space="preserve"><value>Le code doit compter de {0} à {1} chiffres.</value></data>
+  <data name="Pin.Blocked" xml:space="preserve"><value>Trop d'essais manqués : attendez avant de réessayer.</value></data>
+  <data name="Pin.Saved" xml:space="preserve"><value>Code défini : l'application se verrouillera désormais.</value></data>
+  <data name="Pin.Changed" xml:space="preserve"><value>Code changé.</value></data>
+  <data name="Pin.Removed" xml:space="preserve"><value>Code retiré : l'application ne se verrouille plus.</value></data>
+</root>
