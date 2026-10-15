@@ -5,12 +5,17 @@ using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Contracts.Exports;
 using Lettra.Domain.Common;
+using Lettra.Domain.Billing;
+using Lettra.Exports.Application.EInvoicing;
 using Lettra.Exports.Application.Fec;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Lettra.Api.Endpoints;
 
-/// <summary>Exports du dossier (module Exports, phase 5) : FEC des écritures de vente et validateur intégré.</summary>
+/// <summary>
+/// Exports du dossier (module Exports, phase 5) : FEC des écritures de vente et validateur intégré, facture électronique
+/// EN 16931 (CII ou UBL) d'une pièce validée.
+/// </summary>
 internal static class ExportEndpoints
 {
     public static RouteGroupBuilder MapExports(this RouteGroupBuilder api)
@@ -32,6 +37,16 @@ internal static class ExportEndpoints
             .WithMetadata(new RequestSizeLimitAttribute(ValidateFecQuery.MaxContentLength))
             .Produces<FecValidationResponse>()
             .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        // Le XML CII est aussi celui que le client joint au PDF pour en faire un Factur-X.
+        api.MapGet("/invoices/{id:guid}/e-invoice", GetEInvoiceAsync)
+            .WithTags("Exports")
+            .RequirePermission(Permission.DossierLire)
+            .WithName("GetEInvoice")
+            .Produces(StatusCodes.Status200OK, contentType: "application/xml")
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
 
         return group;
     }
@@ -55,5 +70,16 @@ internal static class ExportEndpoints
             .QueryAsync(new ValidateFecQuery(tenant.Current.DossierId, fileName, content.GetBuffer().AsMemory(0, (int)content.Length), from, to), cancellationToken)
             .ConfigureAwait(false);
         return report.IsSuccess ? TypedResults.Ok(report.Value) : report.Errors.ToProblem();
+    }
+
+    private static async Task<IResult> GetEInvoiceAsync(
+        Guid id, EInvoiceFormatDto format, ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken)
+    {
+        Result<EInvoiceFile> file = await queries
+            .QueryAsync(new GetEInvoiceQuery(tenant.Current.DossierId, new InvoiceId(id), format), cancellationToken)
+            .ConfigureAwait(false);
+        return file.IsSuccess
+            ? TypedResults.File(file.Value.Content, file.Value.ContentType, file.Value.FileName)
+            : file.Errors.ToProblem();
     }
 }

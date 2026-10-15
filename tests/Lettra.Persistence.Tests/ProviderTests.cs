@@ -106,6 +106,13 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Factures_electroniques_CII_et_UBL_des_pieces_validees()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await EInvoiceScenarios.SamplesAsync(harness, DatabaseProvider.Sqlite, Database("einvoice"), Database("einvoice-franchise"));
+    }
+
+    [Fact]
     public async Task Validations_concurrentes_sans_trou_ni_doublon()
     {
         await using TenantHarness harness = new(new SqliteConfigurator());
