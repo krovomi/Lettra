@@ -1,6 +1,6 @@
 namespace Lettra.Contracts.Common;
 
-/// <summary>Codes d'erreur : exports (module Exports, phase 5) ; le FEC et son validateur intégré.</summary>
+/// <summary>Codes d'erreur : exports (module Exports, phase 5) ; le FEC, son validateur intégré et la facture électronique.</summary>
 public static partial class ErrorCodes
 {
     public static class Fec
@@ -34,5 +34,11 @@ public static partial class ErrorCodes
         public const string ValidationBeforeEntry = "Fec.ValidationBeforeEntry";
         public const string DateOutsidePeriod = "Fec.DateOutsidePeriod";
         public const string NoEntries = "Fec.NoEntries";
+    }
+
+    public static class EInvoice
+    {
+        public const string NotValidated = "EInvoice.NotValidated";
+        public const string FormatUnknown = "EInvoice.FormatUnknown";
     }
 }

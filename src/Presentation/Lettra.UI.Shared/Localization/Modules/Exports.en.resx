@@ -4,6 +4,8 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Error.EInvoice.FormatUnknown" xml:space="preserve"><value>Unknown e-invoice format: choose CII or UBL.</value></data>
+  <data name="Error.EInvoice.NotValidated" xml:space="preserve"><value>Only a validated invoice can be exported as an e-invoice.</value></data>
   <data name="Error.Fec.AccountInvalid" xml:space="preserve"><value>The account number must start with class 1 to 8 and have at least three characters.</value></data>
   <data name="Error.Fec.AmountInvalid" xml:space="preserve"><value>The amount must use a decimal comma, no thousands separator, and be positive.</value></data>
   <data name="Error.Fec.AuxiliaryIncomplete" xml:space="preserve"><value>The subsidiary account and its label go together.</value></data>

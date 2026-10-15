@@ -3,6 +3,8 @@
   <!-- Composants Blazor (bUnit) : textes en ressources FR/EN, erreurs traduites, gateway simulée. -->
   <ItemGroup>
     <ProjectReference Include="..\..\src\Presentation\Lettra.UI.Shared\Lettra.UI.Shared.csproj" />
+    <!-- Le XML CII du serveur, pour produire de vrais Factur-X (FacturXTests). -->
+    <ProjectReference Include="..\..\src\Modules\Exports\Lettra.Exports.Application\Lettra.Exports.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>
