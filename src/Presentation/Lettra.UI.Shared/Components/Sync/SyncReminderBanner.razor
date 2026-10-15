@@ -1,0 +1,50 @@
+@* Rappel croissant (ADR-0008) : une facture validée sur le poste ne part à la plateforme agréée qu'après la synchronisation. *@
+@implements IDisposable
+@inject IServiceProvider Services
+@inject IStringLocalizer<SharedResource> L
+
+@if (_sync?.Current.Reminder is { } reminder && reminder != SyncReminderLevel.None)
+{
+    <div id="sync-reminder" class="lettra-banner @(reminder == SyncReminderLevel.ThreeDays ? "is-danger" : "is-warning")"
+         role="@(reminder == SyncReminderLevel.ThreeDays ? "alert" : "status")">
+        @L[$"Sync.Reminder.{reminder}"]
+        <button type="button" class="lettra-button" disabled="@_busy" @onclick="SyncNowAsync">@L["Sync.Now"]</button>
+    </div>
+}
+
+@code {
+    private ISyncCenter? _sync;
+    private bool _busy;
+
+    protected override void OnInitialized()
+    {
+        _sync = Services.GetService(typeof(ISyncCenter)) as ISyncCenter;
+        if (_sync is not null)
+        {
+            _sync.Changed += OnChanged;
+        }
+    }
+
+    private async Task SyncNowAsync()
+    {
+        _busy = true;
+        try
+        {
+            await _sync!.SyncNowAsync(CancellationToken.None);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void OnChanged(object? sender, EventArgs e) => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        if (_sync is not null)
+        {
+            _sync.Changed -= OnChanged;
+        }
+    }
+}
