@@ -3,6 +3,7 @@ using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Bootstrap;
 using Lettra.Infrastructure.Persistence.Security;
 using Lettra.Infrastructure.Persistence.Sqlite.Local;
+using Lettra.Sync.Client;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Gateway.InProcess;
 using Lettra.UI.Shared;
@@ -50,6 +51,11 @@ public static class MauiProgram
         }
 
         builder.Services.AddLettraUi();
+        if (server is not null)
+        {
+            // Après l'UI : la demande « Maintenant / Plus tard / Détail » passe par son dialogue.
+            builder.Services.AddSyncCenter();
+        }
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();
@@ -59,6 +65,11 @@ public static class MauiProgram
         MauiApp app = builder.Build();
         // Avant le premier écran : cabinet local, premier dossier (ou réplique du dossier du serveur), dossier ouvert.
         app.Services.InitializeLettraAsync(builder.Configuration, CancellationToken.None).GetAwaiter().GetResult();
+        if (server is not null)
+        {
+            ConnectedDevice.StartSyncTriggers(app.Services);
+        }
+
         return app;
     }
 
