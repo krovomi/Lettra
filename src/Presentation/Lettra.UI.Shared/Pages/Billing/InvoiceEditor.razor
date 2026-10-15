@@ -152,6 +152,13 @@ else
                     <button type="button" id="pdf" class="lettra-button is-secondary" disabled="@(_invoice is null)" @onclick="DownloadPdfAsync"
                             title="@L["Billing.Command.Pdf"] (Ctrl+P)">@L["Billing.Command.Pdf"]</button>
                 </div>
+                @if (_invoice is { Status: not InvoiceStatusDto.Draft, Number: not null })
+                {
+                    <div class="lettra-inline">
+                        <button type="button" id="facturx" class="lettra-button is-secondary" disabled="@_busy" @onclick="DownloadFacturXAsync">@L["Invoice.Command.FacturX"]</button>
+                        <button type="button" id="ubl" class="lettra-button is-secondary" disabled="@_busy" @onclick="DownloadUblAsync">@L["Invoice.Command.Ubl"]</button>
+                    </div>
+                }
                 @if (IsDraft && _invoice is not null)
                 {
                     <button type="button" class="lettra-link is-danger" @onclick="DeleteAsync">@L["Billing.Command.Delete"]</button>
@@ -541,6 +548,43 @@ else
         byte[] pdf = Pdf.Render(PrintableMapper.FromInvoice(_invoice, _company, culture));
         string name = _invoice.Number ?? L[$"InvoiceKind.{Kind}.FileDraft"];
         await Files.DownloadAsync($"{name}.pdf", "application/pdf", pdf, CancellationToken.None);
+    }
+
+    // Facture électronique (phase 5) : le XML EN 16931 vient du serveur ou de la base locale ; le Factur-X est le PDF/A-3
+    // de la pièce rendu ici, avec ce XML CII joint.
+    private async Task DownloadFacturXAsync()
+    {
+        if (_invoice is not { Number: { } number } invoice || await EInvoiceAsync(invoice.Id, EInvoiceFormatDto.Cii) is not { } cii)
+        {
+            return;
+        }
+
+        CultureInfo culture = CultureInfo.GetCultureInfo(_pdfCulture);
+        byte[] pdf = Pdf.Render(PrintableMapper.FromInvoice(invoice, _company, culture), [PdfAttachment.FacturX(cii)]);
+        await Files.DownloadAsync($"{number}-factur-x.pdf", "application/pdf", pdf, CancellationToken.None);
+    }
+
+    private async Task DownloadUblAsync()
+    {
+        if (_invoice is { Number: { } number } invoice && await EInvoiceAsync(invoice.Id, EInvoiceFormatDto.Ubl) is { } ubl)
+        {
+            await Files.DownloadAsync($"{number}-ubl.xml", "application/xml", ubl, CancellationToken.None);
+        }
+    }
+
+    private async Task<byte[]?> EInvoiceAsync(Guid id, EInvoiceFormatDto format)
+    {
+        _busy = true;
+        try
+        {
+            OperationResult<byte[]> xml = await Invoices.GetEInvoiceAsync(id, format, CancellationToken.None);
+            _errors = xml.Errors;
+            return xml.Value;
+        }
+        finally
+        {
+            _busy = false;
+        }
     }
 
     // ---------- checklist → champ fautif ----------

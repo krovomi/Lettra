@@ -190,6 +190,8 @@
   <data name="Invoice.Validated" xml:space="preserve"><value>Invoice validated as {0}.</value></data>
   <data name="Invoice.IssuedDone" xml:space="preserve"><value>Document {0} marked issued.</value></data>
   <data name="Invoice.Command.ApproveCredit" xml:space="preserve"><value>Approve credit note</value></data>
+  <data name="Invoice.Command.FacturX" xml:space="preserve"><value>Download Factur-X</value></data>
+  <data name="Invoice.Command.Ubl" xml:space="preserve"><value>UBL XML</value></data>
   <data name="Invoice.CreditApproved" xml:space="preserve"><value>Credit note approved by a manager on {0}.</value></data>
   <data name="Invoice.CreditApprovedDone" xml:space="preserve"><value>Credit note approved: it can now be validated.</value></data>
   <data name="Invoices.Title" xml:space="preserve"><value>Invoices</value></data>

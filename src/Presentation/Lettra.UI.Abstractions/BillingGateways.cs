@@ -1,5 +1,6 @@
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
+using Lettra.Contracts.Exports;
 using Lettra.Contracts.Pricing;
 
 namespace Lettra.UI.Abstractions;
@@ -76,6 +77,12 @@ public interface IInvoicesGateway
     /// tâches du cabinet au-delà de son seuil ; l'auteur de l'avoir ne peut pas l'approuver.
     /// </summary>
     Task<OperationResult<InvoiceResponse>> ApproveCreditAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Facture électronique EN 16931 d'une pièce validée (XML UTF-8) : CII, que l'écran joint au PDF pour en faire un
+    /// Factur-X, ou UBL. Un brouillon est refusé avec <c>EInvoice.NotValidated</c>.
+    /// </summary>
+    Task<OperationResult<byte[]>> GetEInvoiceAsync(Guid id, EInvoiceFormatDto format, CancellationToken cancellationToken);
 }
 
 /// <summary>Listes fermées de la facturation et fiche de l'entreprise émettrice.</summary>

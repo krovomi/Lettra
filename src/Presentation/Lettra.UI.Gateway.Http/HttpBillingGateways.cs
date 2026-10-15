@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json.Serialization.Metadata;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
+using Lettra.Contracts.Exports;
 using Lettra.Contracts.Pricing;
 using Lettra.Contracts.Serialization;
 using Lettra.UI.Abstractions;
@@ -174,6 +175,28 @@ internal sealed class HttpInvoicesGateway(HttpClient http) : IInvoicesGateway
     public Task<OperationResult<InvoiceResponse>> ApproveCreditAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken) =>
         VersionedCalls.SendAsync(
             http, HttpMethod.Post, HttpCalls.Relative($"api/v1/invoices/{id}/approve-credit"), expectedVersion, null, ContractsJsonContext.Default.InvoiceResponse, cancellationToken);
+
+    public async Task<OperationResult<byte[]>> GetEInvoiceAsync(Guid id, EInvoiceFormatDto format, CancellationToken cancellationToken)
+    {
+        try
+        {
+            using HttpResponseMessage response = await http.GetAsync(HttpCalls.Relative($"api/v1/invoices/{id}/e-invoice?format={format}"), cancellationToken)
+                .ConfigureAwait(false);
+            if (response.IsSuccessStatusCode)
+            {
+                return OperationResult<byte[]>.Success(await response.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false));
+            }
+
+            // Corps d'erreur : le ProblemResponse habituel, lu par la traduction commune.
+            OperationResult<ProblemResponse> problem = await response.ToOperationResultAsync(ContractsJsonContext.Default.ProblemResponse, cancellationToken)
+                .ConfigureAwait(false);
+            return OperationResult<byte[]>.Failure(problem.Errors);
+        }
+        catch (HttpRequestException)
+        {
+            return OperationResult<byte[]>.Failure(ErrorCodes.Api.Unreachable);
+        }
+    }
 }
 
 internal sealed class HttpBillingSettingsGateway(HttpClient http) : IBillingSettingsGateway
