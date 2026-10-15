@@ -23,9 +23,9 @@
   <data name="Error.Billing.PaymentTermsTooLong" xml:space="preserve"><value>The payment terms exceed 500 characters.</value></data>
   <data name="Error.Billing.DeliveryAddressTooLong" xml:space="preserve"><value>The delivery address exceeds 500 characters.</value></data>
   <data name="Error.Billing.CreditReasonTooLong" xml:space="preserve"><value>The credit note reason exceeds 500 characters.</value></data>
+  <data name="Error.Billing.PurchaseOrderReferenceTooLong" xml:space="preserve"><value>The purchase order reference exceeds 100 characters.</value></data>
   <data name="Error.Billing.DueDateBeforeIssueDate" xml:space="preserve"><value>The due date cannot be before the issue date.</value></data>
   <data name="Error.Billing.NotDraft" xml:space="preserve"><value>This document is validated and can no longer be changed.</value></data>
-  <data name="Error.Billing.VersionMismatch" xml:space="preserve"><value>Someone changed this document in the meantime. Reload it.</value></data>
   <data name="Error.Billing.NotCompliant" xml:space="preserve"><value>Mandatory information is missing: the document cannot be validated.</value></data>
   <data name="Error.Billing.CompanyProfileMissing" xml:space="preserve"><value>Fill in the issuing company profile first.</value></data>
   <data name="Error.Billing.DownPaymentInvalid" xml:space="preserve"><value>Enter a down payment percentage or amount, not both.</value></data>
@@ -126,6 +126,7 @@
   <data name="Billing.AllStatuses" xml:space="preserve"><value>All statuses</value></data>
   <data name="Billing.Search" xml:space="preserve"><value>Search</value></data>
   <data name="Billing.ListHint" xml:space="preserve"><value>F3 to search, Insert to create, Enter to open.</value></data>
+  <data name="Billing.Conflict" xml:space="preserve"><value>Someone changed this document in the meantime. Reload it.</value></data>
   <data name="Billing.Reload" xml:space="preserve"><value>Reload</value></data>
   <data name="Billing.Column.Number" xml:space="preserve"><value>Number</value></data>
   <data name="Billing.Column.Date" xml:space="preserve"><value>Date</value></data>

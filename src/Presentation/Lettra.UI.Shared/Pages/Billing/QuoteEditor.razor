@@ -18,7 +18,7 @@
 @if (_conflict)
 {
     <div class="lettra-banner is-warning" role="alert">
-        @L["Error.Billing.VersionMismatch"]
+        @L["Billing.Conflict"]
         <button type="button" class="lettra-button" @onclick="ReloadAsync">@L["Billing.Reload"]</button>
     </div>
 }
@@ -336,7 +336,7 @@ else
         if (result.Value is null)
         {
             _errors = result.Errors;
-            _conflict = result.Errors.Any(e => e.Code == ErrorCodes.Billing.VersionMismatch);
+            _conflict = result.Errors.Any(e => e.Code == ErrorCodes.Concurrency.VersionMismatch);
             StateHasChanged();
             return;
         }
@@ -406,7 +406,7 @@ else
             if (result.Value is null)
             {
                 _errors = result.Errors;
-                _conflict = result.Errors.Any(e => e.Code == ErrorCodes.Billing.VersionMismatch);
+                _conflict = result.Errors.Any(e => e.Code == ErrorCodes.Concurrency.VersionMismatch);
                 return;
             }
 

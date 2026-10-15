@@ -6,6 +6,7 @@ using System.Text.Json.Serialization.Metadata;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
+using Lettra.Contracts.Pricing;
 using Lettra.Contracts.Serialization;
 using Lettra.Contracts.Suppliers;
 
@@ -101,6 +102,30 @@ public sealed class ConcurrencyApiTests(LettraApiFactory factory) : IClassFixtur
             current.Designation.Should().Be("Heure de conseil", "la seconde écriture n'a rien écrasé");
             current.Version.Should().Be(2);
         }
+    }
+
+    [Fact]
+    public async Task Une_grille_tarifaire_suit_le_meme_contrat_428_puis_412_avec_la_grille_actuelle()
+    {
+        using HttpClient client = Client();
+        using HttpResponseMessage created = await client.PostAsJsonAsync(
+            "/api/v1/price-lists", new SavePriceListRequest { Name = "Grille " + Guid.NewGuid().ToString("N")[..8] }, ContractsJsonContext.Default.SavePriceListRequest);
+        created.StatusCode.Should().Be(HttpStatusCode.Created, await created.Content.ReadAsStringAsync());
+        PriceListResponse list = (await created.Content.ReadFromJsonAsync(ContractsJsonContext.Default.PriceListResponse))!;
+        string etag = created.Headers.ETag!.Tag;
+        string uri = $"/api/v1/price-lists/{list.Id}";
+
+        using HttpResponseMessage missing = await client.PutAsJsonAsync(uri, new SavePriceListRequest { Name = "Sans version" }, ContractsJsonContext.Default.SavePriceListRequest);
+        using HttpResponseMessage ok = await client.PutVersionedAsync(uri, etag, new SavePriceListRequest { Name = "Premier" }, ContractsJsonContext.Default.SavePriceListRequest);
+        using HttpResponseMessage stale = await client.PutVersionedAsync(uri, etag, new SavePriceListRequest { Name = "Second" }, ContractsJsonContext.Default.SavePriceListRequest);
+
+        missing.StatusCode.Should().Be(HttpStatusCode.PreconditionRequired);
+        ok.StatusCode.Should().Be(HttpStatusCode.OK);
+        stale.StatusCode.Should().Be(HttpStatusCode.PreconditionFailed);
+        stale.Headers.ETag!.Tag.Should().Be(ok.Headers.ETag!.Tag);
+        ProblemResponse problem = (await stale.Content.ReadFromJsonAsync(ContractsJsonContext.Default.ProblemResponse))!;
+        problem.Code.Should().Be(ErrorCodes.Concurrency.VersionMismatch);
+        problem.Current!.Value.Deserialize(ContractsJsonContext.Default.PriceListResponse)!.Name.Should().Be("Premier");
     }
 
     [Fact]
