@@ -5,6 +5,8 @@ using Lettra.Api.Security;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Bootstrap;
 using Lettra.Contracts.Serialization;
+using Lettra.Infrastructure.Catalog;
+using Lettra.Infrastructure.Persistence.Outbox;
 using Lettra.Supervision.Infrastructure;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -27,6 +29,13 @@ builder.Services.AddProblemDetails();
 builder.Services.AddValidation();
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
+
+// Installation sans Worker (démonstration navigateur, petit réseau local) : l'API reprend elle-même les envois à la
+// plateforme agréée mis en file pendant une panne. Ailleurs, c'est le Worker qui s'en charge.
+if (bool.TryParse(builder.Configuration[OutboxApiHosting.Key], out bool outboxInApi) && outboxInApi)
+{
+    builder.Services.AddOutboxDispatch(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
+}
 
 WebApplication app = builder.Build();
 
@@ -102,3 +111,9 @@ await app.RunAsync().ConfigureAwait(false);
 
 /// <summary>Point d'entrée, exposé aux tests d'intégration.</summary>
 public partial class Program;
+
+/// <summary>Réglage qui confie la passe de l'outbox à l'API, pour une installation sans Worker.</summary>
+internal static class OutboxApiHosting
+{
+    public const string Key = "Lettra:Outbox:Job:HostedByApi";
+}
