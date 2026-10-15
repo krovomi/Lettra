@@ -8,4 +8,6 @@
   <data name="Error.Sync.TokenInvalid" xml:space="preserve"><value>Le poste ne reconnaît plus le serveur : une réception complète est nécessaire.</value></data>
   <data name="Error.Sync.BatchInvalid" xml:space="preserve"><value>L'envoi de la synchronisation est incomplet ou trop gros.</value></data>
   <data name="Error.Sync.EntityNotFound" xml:space="preserve"><value>L'élément modifié sur ce poste n'existe pas sur le serveur.</value></data>
+  <data name="Error.Sync.DeviceSeriesUnknown" xml:space="preserve"><value>Cette série de numérotation n'appartient pas à ce poste : la pièce n'est pas reçue.</value></data>
+  <data name="Error.Sync.NumberOutOfOrder" xml:space="preserve"><value>Une pièce précédente de ce poste manque ou a été refusée : celle-ci attend.</value></data>
 </root>

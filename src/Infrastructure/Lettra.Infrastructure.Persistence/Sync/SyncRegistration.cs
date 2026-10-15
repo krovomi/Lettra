@@ -32,6 +32,7 @@ public static class SyncRegistration
         services.AddScoped<ISyncReplica, EfSyncReplica>();
         services.AddScoped<ISyncReceipts, EfSyncReceipts>();
         services.AddScoped<ISyncChangeFeed, EfSyncChangeFeed>();
+        services.AddScoped<IDeviceSeriesRegistry, EfDeviceSeriesRegistry>();
         services.AddScoped<IDossierWorkScope, IsolatedDossierScope>();
         return services;
     }
@@ -43,6 +44,16 @@ public static class SyncRegistration
     public static IServiceCollection AddSyncJournal(this IServiceCollection services)
     {
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IDossierInterceptor, SyncJournalInterceptor>());
+        return services;
+    }
+
+    /// <summary>
+    /// Côté poste seulement : les pièces validées dans la série du poste partent dans l'outbox avec leur validation
+    /// (ADR-0007). À appeler par la composition d'un poste qui synchronise, avec <c>AddSyncClient</c>.
+    /// </summary>
+    public static IServiceCollection AddSyncDevice(this IServiceCollection services)
+    {
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IDossierInterceptor, SyncFactInterceptor>());
         return services;
     }
 }

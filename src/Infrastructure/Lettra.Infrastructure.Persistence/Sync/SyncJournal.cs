@@ -1,10 +1,12 @@
 using System.Globalization;
 using Lettra.Application.Abstractions.Sync;
 using Lettra.Application.Mapping;
+using Lettra.Contracts.Billing;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Customers;
 using Lettra.Contracts.Suppliers;
 using Lettra.Contracts.Sync;
+using Lettra.Domain.Billing;
 using Lettra.Domain.Catalog;
 using Lettra.Domain.Common;
 using Lettra.Domain.Parties;
@@ -169,7 +171,7 @@ internal sealed class EfSyncChangeFeed(TenantDbSession session, TimeProvider clo
         string next = done
             ? Journal(watermark)
             : string.Create(CultureInfo.InvariantCulture, $"s:{watermark}:{kindIndex}:{offset}");
-        return new SyncChangesResponse(next, !done, customers, suppliers, items);
+        return new SyncChangesResponse(next, !done, customers, suppliers, items, done ? await ProfileAsync(db, ct).ConfigureAwait(false) : null);
     }
 
     private async Task<Result<SyncChangesResponse>> JournalAsync(LettraDbContext db, long since, int limit, SyncFeedScope scope, CancellationToken ct)
@@ -228,8 +230,11 @@ internal sealed class EfSyncChangeFeed(TenantDbSession session, TimeProvider clo
         }
 
         bool hasMore = !blocked && rows.Count > limit;
-        return new SyncChangesResponse(Journal(accepted), hasMore, customers, suppliers, items);
+        return new SyncChangesResponse(Journal(accepted), hasMore, customers, suppliers, items, hasMore ? null : await ProfileAsync(db, ct).ConfigureAwait(false));
     }
+
+    private static async Task<CompanyProfileResponse?> ProfileAsync(LettraDbContext db, CancellationToken ct) =>
+        (await db.Set<CompanyProfile>().AsNoTracking().FirstOrDefaultAsync(ct).ConfigureAwait(false))?.ToResponse();
 
     /// <summary>Plus haute séquence au-dessous de laquelle plus rien ne peut se valider : point de départ d'un instantané.</summary>
     private async Task<long> SafeWatermarkAsync(LettraDbContext db, CancellationToken ct)

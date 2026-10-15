@@ -7,7 +7,7 @@ using Lettra.Contracts.Serialization;
 
 namespace Lettra.Api.Tests;
 
-/// <summary>FEC par l'API réelle (mode 2, SQLite) : validateur intégré et permission d'export.</summary>
+/// <summary>FEC et facture électronique par l'API réelle (mode 2, SQLite) : validateur intégré, permissions, erreurs.</summary>
 public sealed class ExportApiTests(LettraApiFactory factory) : IClassFixture<LettraApiFactory>
 {
     private const string Header =
@@ -57,5 +57,26 @@ public sealed class ExportApiTests(LettraApiFactory factory) : IClassFixture<Let
         using HttpClient collaborator = InDossier(factory.ClientFor(LettraApiFactory.CollaborateurId));
 
         (await collaborator.GetAsync(Api("/api/v1/exports/fec?from=2026-01-01&to=2026-12-31"))).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task La_facture_electronique_d_une_piece_inconnue_est_introuvable()
+    {
+        using HttpClient manager = InDossier(factory.CreateClient());
+
+        HttpResponseMessage response = await manager.GetAsync(Api($"/api/v1/invoices/{Guid.CreateVersion7()}/e-invoice?format=Cii"));
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound, await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task Un_format_de_facture_electronique_inconnu_est_refuse()
+    {
+        using HttpClient manager = InDossier(factory.CreateClient());
+
+        HttpResponseMessage response = await manager.GetAsync(Api($"/api/v1/invoices/{Guid.CreateVersion7()}/e-invoice?format=9"));
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await response.Content.ReadAsStringAsync()).Should().Contain(ErrorCodes.EInvoice.FormatUnknown);
     }
 }

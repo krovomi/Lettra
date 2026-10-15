@@ -1221,6 +1221,33 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.ToTable("NumberSeries", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.DeviceSeriesRecord", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BaseSeries")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("ClosedAtMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("DeviceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("OpenedAtMs")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Code");
+
+                    b.HasIndex("DeviceId", "BaseSeries");
+
+                    b.ToTable("DeviceSeries", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.SyncConflictRow", b =>
                 {
                     b.Property<long>("Id")

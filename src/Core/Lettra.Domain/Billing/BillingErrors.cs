@@ -30,6 +30,7 @@ public static class BillingErrors
     public const string NotCompliantCode = "Billing.NotCompliant";
     public const string CompanyProfileMissingCode = "Billing.CompanyProfileMissing";
     public const string DownPaymentInvalidCode = "Billing.DownPaymentInvalid";
+    public const string ReplicaMismatchCode = "Billing.ReplicaMismatch";
 
     public static Error CustomerRequired => Error.Validation(CustomerRequiredCode, "CustomerId");
     public static Error LinesRequired => Error.Validation(LinesRequiredCode, "Lines");
@@ -47,6 +48,9 @@ public static class BillingErrors
     public static Error NotDraft => Error.Conflict(NotDraftCode);
 
     public static Error NotCompliant => Error.Validation(NotCompliantCode);
+
+    /// <summary>Une pièce validée ailleurs (poste hors ligne) ne se reconstruit pas à l'identique : totaux ou état divergents.</summary>
+    public static Error ReplicaMismatch => Error.Validation(ReplicaMismatchCode);
 
     public static Error CompanyProfileMissing => Error.Conflict(CompanyProfileMissingCode);
 

@@ -96,6 +96,12 @@ public interface ISyncReplica
 
     /// <summary>Applique une page de changements et garde son jeton, en une transaction : une coupure fait seulement rejouer la page.</summary>
     Task<SyncApplyReport> ApplyAsync(SyncChangesResponse changes, CancellationToken cancellationToken);
+
+    /// <summary>La série ouverte de ce poste pour <paramref name="baseSeries"/>, avec son prochain numéro local.</summary>
+    Task<DeviceSeries?> FindDeviceSeriesAsync(string baseSeries, CancellationToken cancellationToken);
+
+    /// <summary>Installe la série reçue du serveur ; sans effet si le poste l'a déjà (son compteur local fait foi).</summary>
+    Task SaveDeviceSeriesAsync(DeviceSeries series, CancellationToken cancellationToken);
 }
 
 /// <summary>Réponse gardée par le serveur pour une clé d'idempotence.</summary>
@@ -135,6 +141,10 @@ public static class SyncErrors
     public static Error BatchInvalid => Error.Validation(Contracts.Common.ErrorCodes.Sync.BatchInvalid, "Intents");
 
     public static Error EntityNotFound => new(Contracts.Common.ErrorCodes.Sync.EntityNotFound, ErrorKind.NotFound);
+
+    public static Error DeviceSeriesUnknown => new(Contracts.Common.ErrorCodes.Sync.DeviceSeriesUnknown, ErrorKind.Forbidden);
+
+    public static Error NumberOutOfOrder => new(Contracts.Common.ErrorCodes.Sync.NumberOutOfOrder, ErrorKind.Conflict);
 }
 
 /// <summary>
@@ -144,4 +154,60 @@ public static class SyncErrors
 public interface IDossierWorkScope
 {
     Task<T> RunAsync<T>(Func<IServiceProvider, CancellationToken, Task<T>> work, CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// Série de numérotation d'un poste (ADR-0007) : <c>FAC-P01</c> pour la série <c>FAC</c>, numéros <c>FAC-P01-000001</c>.
+/// Le serveur l'ouvre au premier passage en ligne du poste ; seul ce poste y numérote.
+/// </summary>
+/// <param name="BaseSeries">Série du dossier dont elle tient lieu sur le poste (<c>FAC</c>).</param>
+/// <param name="Code">Code de la série du poste, unique dans le dossier.</param>
+/// <param name="Prefix">Préfixe des numéros.</param>
+/// <param name="DeviceId">Le poste qui numérote dans cette série.</param>
+/// <param name="Next">Prochain numéro connu de celui qui répond.</param>
+public sealed record DeviceSeries(string BaseSeries, string Code, string Prefix, Guid DeviceId, long Next);
+
+/// <summary>
+/// La série à utiliser pour valider sur ce poste. <c>null</c> sur le serveur, et sur un poste tant qu'il n'a pas reçu
+/// de série : il ne valide alors pas hors ligne.
+/// </summary>
+public interface IDeviceNumbering
+{
+    Task<DeviceSeries?> FindAsync(string baseSeries, CancellationToken cancellationToken);
+}
+
+/// <summary>Par défaut (serveur, navigateur) : aucune série de poste, la validation numérote dans la série du dossier.</summary>
+internal sealed class NoDeviceNumbering : IDeviceNumbering
+{
+    public Task<DeviceSeries?> FindAsync(string baseSeries, CancellationToken cancellationToken) => Task.FromResult<DeviceSeries?>(null);
+}
+
+/// <summary>Les séries de poste du dossier, côté serveur.</summary>
+public interface IDeviceSeriesRegistry
+{
+    /// <summary>La série ouverte du poste pour <paramref name="baseSeries"/>, créée au premier appel (rejouable).</summary>
+    Task<DeviceSeries> OpenAsync(Guid deviceId, string baseSeries, DateTimeOffset now, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Vérifie que <paramref name="number"/> est exactement le suivant de la série du poste, l'y consomme puis exécute
+    /// <paramref name="work"/>, le tout dans une seule transaction : un numéro manquant, en double ou d'un autre poste
+    /// est refusé, et rien n'est enregistré si <paramref name="work"/> échoue.
+    /// </summary>
+    Task<Result<T>> ExecuteWithDeviceNumberAsync<T>(
+        string seriesCode,
+        Guid deviceId,
+        string number,
+        Func<CancellationToken, Task<Result<T>>> work,
+        CancellationToken cancellationToken);
+}
+
+/// <summary>Sans persistance de synchronisation (tests de l'application) : aucune série de poste n'existe.</summary>
+internal sealed class NoDeviceSeriesRegistry : IDeviceSeriesRegistry
+{
+    public Task<DeviceSeries> OpenAsync(Guid deviceId, string baseSeries, DateTimeOffset now, CancellationToken cancellationToken) =>
+        throw new InvalidOperationException("Aucun registre de séries de poste n'est enregistré.");
+
+    public Task<Result<T>> ExecuteWithDeviceNumberAsync<T>(
+        string seriesCode, Guid deviceId, string number, Func<CancellationToken, Task<Result<T>>> work, CancellationToken cancellationToken) =>
+        Task.FromResult<Result<T>>(SyncErrors.DeviceSeriesUnknown);
 }

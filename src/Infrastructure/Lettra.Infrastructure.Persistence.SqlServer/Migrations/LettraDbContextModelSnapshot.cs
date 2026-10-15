@@ -1230,6 +1230,33 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.ToTable("NumberSeries", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.DeviceSeriesRecord", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<string>("BaseSeries")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<long?>("ClosedAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("DeviceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("OpenedAtMs")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Code");
+
+                    b.HasIndex("DeviceId", "BaseSeries");
+
+                    b.ToTable("DeviceSeries", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.SyncConflictRow", b =>
                 {
                     b.Property<long>("Id")

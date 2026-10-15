@@ -2,6 +2,7 @@ using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Persistence;
+using Lettra.Application.Abstractions.Sync;
 using Lettra.Application.Mapping;
 using Lettra.Calculations;
 using Lettra.Calculations.Compliance;
@@ -39,6 +40,7 @@ internal sealed class ValidateInvoiceHandler(
     IIntegrityJournal journal,
     ISalesJournal salesJournal,
     ISegregationOfDuties duties,
+    IDeviceNumbering deviceNumbering,
     ICurrentUser user,
     TimeProvider clock) : ICommandHandler<ValidateInvoiceCommand, Result>
 {
@@ -66,14 +68,17 @@ internal sealed class ValidateInvoiceHandler(
             return Blocked(draftReport);
         }
 
+        // Sur un poste hors ligne, la pièce se numérote dans la série du poste (ADR-0007) ; null sur le serveur.
+        DeviceSeries? device = await deviceNumbering.FindAsync(precheck.Value.Invoice.SeriesCode, cancellationToken).ConfigureAwait(false);
         Result<bool> done = await numbering.ExecuteWithNextNumberAsync(
-            precheck.Value.Invoice.SeriesCode,
-            (number, ct) => ValidateWithNumberAsync(command, number, approvesCredit.Value, ct),
+            device?.Code ?? precheck.Value.Invoice.SeriesCode,
+            (number, ct) => ValidateWithNumberAsync(command, number, approvesCredit.Value, device, ct),
             cancellationToken).ConfigureAwait(false);
         return done.IsFailure ? Result.Failure(done.Errors) : Result.Success();
     }
 
-    private async Task<Result<bool>> ValidateWithNumberAsync(ValidateInvoiceCommand command, string number, bool approvesCredit, CancellationToken cancellationToken)
+    private async Task<Result<bool>> ValidateWithNumberAsync(
+        ValidateInvoiceCommand command, string number, bool approvesCredit, DeviceSeries? device, CancellationToken cancellationToken)
     {
         // Rejouable : tout est relu, le suivi des entités ayant été vidé par la numérotation.
         Result<(Invoice Invoice, CompanyProfile Profile)> loaded = await LoadAsync(command, cancellationToken).ConfigureAwait(false);
@@ -91,6 +96,15 @@ internal sealed class ValidateInvoiceHandler(
             invoice.ApproveCredit(user.UserId, now);
         }
 
+        if (device is not null)
+        {
+            Result onDevice = invoice.NumberOnDevice(device.Code, device.DeviceId, user.UserId, now);
+            if (onDevice.IsFailure)
+            {
+                return Result<bool>.Failure(onDevice.Errors);
+            }
+        }
+
         Result result = invoice.Validate(number, today, customer, profile.ToSellerTerms(), user.UserId, now);
         if (result.IsFailure)
         {
@@ -103,7 +117,7 @@ internal sealed class ValidateInvoiceHandler(
             return Result<bool>.Failure(Blocked(report).Errors);
         }
 
-        result = await ApplyToRelatedDocumentsAsync(invoice, now, cancellationToken).ConfigureAwait(false);
+        result = await InvoiceValidationEffects.ApplyToRelatedDocumentsAsync(invoice, invoices, quotes, user.UserId, now, cancellationToken).ConfigureAwait(false);
         if (result.IsFailure)
         {
             return Result<bool>.Failure(result.Errors);
@@ -118,47 +132,8 @@ internal sealed class ValidateInvoiceHandler(
             return Result<bool>.Failure(journaled.Errors);
         }
 
-        IReadOnlyList<AccountingEntryLine> entry = SalesEntryCalculator.Compute(
-            invoice.Kind switch
-            {
-                InvoiceKind.DownPayment => AccountingDocumentKind.DownPayment,
-                InvoiceKind.CreditNote => AccountingDocumentKind.CreditNote,
-                _ => AccountingDocumentKind.Invoice,
-            },
-            invoice.RevenueLines,
-            invoice.ComputeTotals());
-        await salesJournal.AddAsync(
-            new SalesJournalEntry(invoice.Id, number, today, invoice.CustomerId, invoice.Customer.Name, entry),
-            cancellationToken).ConfigureAwait(false);
+        await salesJournal.AddAsync(InvoiceValidationEffects.SalesEntryOf(invoice), cancellationToken).ConfigureAwait(false);
         return true;
-    }
-
-    private async Task<Result> ApplyToRelatedDocumentsAsync(Invoice invoice, DateTimeOffset now, CancellationToken cancellationToken)
-    {
-        if (invoice.Kind == InvoiceKind.CreditNote && invoice.CreditedInvoiceId is { } originalId)
-        {
-            Invoice? original = await invoices.FindAsync(originalId, cancellationToken).ConfigureAwait(false);
-            return original is null ? InvoiceErrors.NotFound : original.RegisterCredit(invoice.TotalInclTax, user.UserId, now);
-        }
-
-        if (invoice.Kind == InvoiceKind.DownPayment && invoice.QuoteId is { } quoteId)
-        {
-            Quote? quote = await quotes.FindAsync(quoteId, cancellationToken).ConfigureAwait(false);
-            if (quote is null)
-            {
-                return QuoteErrors.NotFound;
-            }
-
-            Result allowed = quote.CanTakeDownPayment(invoice.TotalInclTax);
-            if (allowed.IsFailure)
-            {
-                return allowed;
-            }
-
-            quote.RegisterDownPayment(invoice.TotalInclTax, user.UserId, now);
-        }
-
-        return Result.Success();
     }
 
     /// <summary>
@@ -216,6 +191,58 @@ internal sealed class ValidateInvoiceHandler(
             BillingErrors.NotCompliant,
             .. report.Errors.Select(f => Error.Validation(f.Code, f.Line is { } line ? $"Lines[{line - 1}]" : null)),
         ]);
+}
+
+/// <summary>
+/// Ce que la validation d'une pièce change ailleurs, partagé par la validation et par la réception au serveur d'une
+/// pièce validée hors ligne. Rien n'est enregistré ici : tout s'exécute dans la transaction de l'appelant.
+/// </summary>
+internal static class InvoiceValidationEffects
+{
+    /// <summary>Solde créditable de la facture d'origine d'un avoir ; acomptes reçus sur le devis d'un acompte.</summary>
+    public static async Task<Result> ApplyToRelatedDocumentsAsync(
+        Invoice invoice, IInvoiceRepository invoices, IQuoteRepository quotes, Guid userId, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        if (invoice.Kind == InvoiceKind.CreditNote && invoice.CreditedInvoiceId is { } originalId)
+        {
+            Invoice? original = await invoices.FindAsync(originalId, cancellationToken).ConfigureAwait(false);
+            return original is null ? InvoiceErrors.NotFound : original.RegisterCredit(invoice.TotalInclTax, userId, now);
+        }
+
+        if (invoice.Kind == InvoiceKind.DownPayment && invoice.QuoteId is { } quoteId)
+        {
+            Quote? quote = await quotes.FindAsync(quoteId, cancellationToken).ConfigureAwait(false);
+            if (quote is null)
+            {
+                return QuoteErrors.NotFound;
+            }
+
+            Result allowed = quote.CanTakeDownPayment(invoice.TotalInclTax);
+            if (allowed.IsFailure)
+            {
+                return allowed;
+            }
+
+            quote.RegisterDownPayment(invoice.TotalInclTax, userId, now);
+        }
+
+        return Result.Success();
+    }
+
+    /// <summary>L'écriture de vente de la pièce validée, calculée par la règle unique (<see cref="SalesEntryCalculator"/>).</summary>
+    public static SalesJournalEntry SalesEntryOf(Invoice invoice)
+    {
+        IReadOnlyList<AccountingEntryLine> entry = SalesEntryCalculator.Compute(
+            invoice.Kind switch
+            {
+                InvoiceKind.DownPayment => AccountingDocumentKind.DownPayment,
+                InvoiceKind.CreditNote => AccountingDocumentKind.CreditNote,
+                _ => AccountingDocumentKind.Invoice,
+            },
+            invoice.RevenueLines,
+            invoice.ComputeTotals());
+        return new SalesJournalEntry(invoice.Id, invoice.Number!, invoice.IssueDate!.Value, invoice.CustomerId, invoice.Customer.Name, entry);
+    }
 }
 
 /// <summary>Inscription d'une pièce au journal d'intégrité, au format convenu avec la chaîne anti-fraude.</summary>

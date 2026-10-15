@@ -30,7 +30,19 @@ internal static class SyncEndpoints
             .Produces<SyncChangesResponse>()
             .ProducesProblem(StatusCodes.Status400BadRequest);
 
+        group.MapPost("/device-series", OpenDeviceSeriesAsync)
+            .WithName("OpenDeviceSeries")
+            .RequirePermission(Permission.FactureValider)
+            .Produces<OpenDeviceSeriesResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest);
+
         return group;
+    }
+
+    private static async Task<IResult> OpenDeviceSeriesAsync(OpenDeviceSeriesRequest request, SyncServer sync, CancellationToken cancellationToken)
+    {
+        Result<OpenDeviceSeriesResponse> result = await sync.OpenDeviceSeriesAsync(request, cancellationToken).ConfigureAwait(false);
+        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
     }
 
     private static async Task<IResult> PushAsync(PushSyncIntentsRequest request, SyncServer sync, CancellationToken cancellationToken)

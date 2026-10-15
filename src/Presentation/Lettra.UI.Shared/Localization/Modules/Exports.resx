@@ -4,6 +4,8 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Error.EInvoice.FormatUnknown" xml:space="preserve"><value>Format de facture électronique inconnu : choisissez CII ou UBL.</value></data>
+  <data name="Error.EInvoice.NotValidated" xml:space="preserve"><value>Seule une facture validée peut être exportée en facture électronique.</value></data>
   <data name="Error.Fec.AccountInvalid" xml:space="preserve"><value>Le numéro de compte doit commencer par la classe 1 à 8 et compter au moins trois caractères.</value></data>
   <data name="Error.Fec.AmountInvalid" xml:space="preserve"><value>Le montant doit s'écrire avec une virgule décimale, sans séparateur de milliers, et être positif.</value></data>
   <data name="Error.Fec.AuxiliaryIncomplete" xml:space="preserve"><value>Le compte auxiliaire et son libellé vont ensemble.</value></data>

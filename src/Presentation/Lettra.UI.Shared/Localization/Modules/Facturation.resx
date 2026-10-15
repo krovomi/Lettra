@@ -203,4 +203,5 @@
   <data name="Quotes.List" xml:space="preserve"><value>Liste des devis</value></data>
   <data name="Quotes.New" xml:space="preserve"><value>Nouveau devis</value></data>
   <data name="Quotes.Empty" xml:space="preserve"><value>Aucun devis pour l'instant.</value></data>
+  <data name="Error.Billing.ReplicaMismatch" xml:space="preserve"><value>Cette pièce validée sur un poste ne correspond pas à son contenu : elle n'est pas reçue.</value></data>
 </root>
