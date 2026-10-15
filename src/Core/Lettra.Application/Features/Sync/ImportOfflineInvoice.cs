@@ -37,6 +37,7 @@ internal sealed class ImportOfflineInvoiceHandler(
     IQuoteRepository quotes,
     ICustomerRepository customers,
     IDeviceSeriesRegistry deviceSeries,
+    ISegregationOfDuties duties,
     IIntegrityJournal journal,
     ISalesJournal salesJournal,
     ICurrentUser user,
@@ -46,7 +47,9 @@ internal sealed class ImportOfflineInvoiceHandler(
     {
         ArgumentNullException.ThrowIfNull(command);
         InvoiceResponse document = command.Fact.Document;
+        // Donnée venue du poste : une pièce incomplète est refusée, jamais une exception.
         if (document.Id != command.Fact.EntityId || document.Number is null || document.ContentHash is null
+            || document.Seller is null || document.IssueDate is null || document.ValidatedBy is null || document.ValidatedAt is null
             || !document.SeriesCode.StartsWith(Invoice.Series + "-", StringComparison.Ordinal))
         {
             return BillingErrors.ReplicaMismatch;
@@ -63,6 +66,13 @@ internal sealed class ImportOfflineInvoiceHandler(
         if (await customers.FindAsync(new CustomerId(document.CustomerId), cancellationToken).ConfigureAwait(false) is null)
         {
             return SyncErrors.EntityNotFound;
+        }
+
+        // Séparation des tâches revérifiée avec la politique du moment (#33) : le seuil connu du poste a pu changer.
+        if (document.Kind == InvoiceKindDto.CreditNote && document.CreditApprovedBy is null
+            && await duties.EvaluateCreditNoteAsync(document.Totals.TotalInclTax, cancellationToken).ConfigureAwait(false) == CreditNoteApproval.ManagerApprovalRequired)
+        {
+            return SegregationOfDutiesErrors.ManagerApprovalRequired;
         }
 
         return await deviceSeries.ExecuteWithDeviceNumberAsync(
@@ -135,9 +145,9 @@ internal sealed class ImportOfflineInvoiceHandler(
             d.Number!,
             new CustomerId(d.CustomerId),
             Snapshot(d.Customer, fact.CustomerIsBusiness),
-            d.Seller is { } seller ? Snapshot(seller, isBusiness: true) : throw new ArgumentException("Pièce validée sans émetteur.", nameof(fact)),
+            Snapshot(d.Seller!, isBusiness: true),
             new InvoiceHeader(d.DeliveryDate, d.DueDate, d.PaymentTerms, d.DeliveryAddress, d.PurchaseOrderReference, (VatRegime)(int)d.VatRegime, d.Subject, d.Notes),
-            d.IssueDate ?? throw new ArgumentException("Pièce validée sans date.", nameof(fact)),
+            d.IssueDate!.Value,
             fact.LatePenaltyRate,
             fact.EarlyPaymentDiscount,
             d.LegalMentions,
@@ -153,8 +163,8 @@ internal sealed class ImportOfflineInvoiceHandler(
             d.Totals.TotalInclTax,
             d.CreatedBy,
             d.CreatedAt,
-            d.ValidatedBy ?? throw new ArgumentException("Pièce validée sans auteur de la validation.", nameof(fact)),
-            d.ValidatedAt ?? throw new ArgumentException("Pièce validée sans date de validation.", nameof(fact)),
+            d.ValidatedBy!.Value,
+            d.ValidatedAt!.Value,
             d.IssuedBy,
             d.IssuedAt,
             d.CreditApprovedBy,

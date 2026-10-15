@@ -26,6 +26,7 @@ public static class SyncRequests
             PostalCode = customer.PostalCode,
             City = customer.City,
             CountryCode = customer.CountryCode,
+            PreferredLanguage = customer.PreferredLanguage,
         };
     }
 

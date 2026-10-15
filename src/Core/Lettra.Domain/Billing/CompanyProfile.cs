@@ -60,6 +60,9 @@ public sealed class CompanyProfile : AggregateRoot<Guid>, IVersioned
 
     public bool VatOnDebits { get; private set; }
 
+    /// <summary>Régime de déclaration de la TVA ; toujours <c>null</c> en franchise en base, et tant qu'il n'est pas renseigné.</summary>
+    public VatDeclarationRegime? VatDeclarationRegime { get; private set; }
+
     public int PaymentDays { get; private set; }
 
     public string? PaymentTerms { get; private set; }
@@ -97,7 +100,8 @@ public sealed class CompanyProfile : AggregateRoot<Guid>, IVersioned
         decimal? LatePenaltyRate,
         string? EarlyPaymentDiscount,
         string? Iban,
-        string? Bic);
+        string? Bic,
+        VatDeclarationRegime? VatDeclarationRegime = null);
 
     public static Result<CompanyProfile> Create(Draft draft, DateTimeOffset now)
     {
@@ -140,6 +144,11 @@ public sealed class CompanyProfile : AggregateRoot<Guid>, IVersioned
             errors.Add(CompanyProfileErrors.PaymentDaysInvalid);
         }
 
+        if (draft.VatDeclarationRegime is { } regime && !Enum.IsDefined(regime))
+        {
+            errors.Add(CompanyProfileErrors.Invalid(nameof(VatDeclarationRegime)));
+        }
+
         if (draft.ShareCapital is < 0m || draft.LatePenaltyRate is < 0m or > 100m)
         {
             errors.Add(CompanyProfileErrors.Invalid(draft.ShareCapital is < 0m ? nameof(ShareCapital) : nameof(LatePenaltyRate)));
@@ -166,6 +175,7 @@ public sealed class CompanyProfile : AggregateRoot<Guid>, IVersioned
         Address = address.Value;
         VatFranchise = draft.VatFranchise;
         VatOnDebits = draft.VatOnDebits;
+        VatDeclarationRegime = draft.VatFranchise ? null : draft.VatDeclarationRegime;
         PaymentDays = draft.PaymentDays;
         PaymentTerms = terms;
         LatePenaltyRate = draft.LatePenaltyRate;

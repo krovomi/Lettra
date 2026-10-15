@@ -72,6 +72,17 @@ public sealed class QuoteEditorTests : BunitContext
     private static string Texte(IRenderedComponent<QuoteEditor> page, string selector) => page.Find(selector).TextContent.Trim();
 
     [Fact]
+    public void Le_pdf_est_propose_dans_la_langue_du_client()
+    {
+        QuoteResponse devis = _quotes.Add(QuoteStatusDto.Draft, null, Conseil);
+        _customers.Languages[BillingFixtures.DupontId] = "en-US";
+
+        IRenderedComponent<QuoteEditor> page = Ouvrir(devis.Id);
+
+        page.WaitForAssertion(() => page.Find("#pdf-language").GetAttribute("value").Should().Be("en-US"));
+    }
+
+    [Fact]
     public void Un_brouillon_s_ouvre_avec_ses_lignes_ses_totaux_et_sa_checklist()
     {
         QuoteResponse devis = _quotes.Add(QuoteStatusDto.Draft, null, Conseil, Livre);

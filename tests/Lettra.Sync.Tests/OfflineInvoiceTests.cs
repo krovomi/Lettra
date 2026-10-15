@@ -120,6 +120,26 @@ public sealed class OfflineInvoiceTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Un_avoir_au_dessus_du_seuil_sans_approbation_est_refuse_a_la_reception()
+    {
+        DeviceNode device = await OfflineDeviceAsync();
+        InvoiceResponse invoice = await ValidateAsync(device, 100m);
+        Result<InvoiceId> credit = await device.SendAsync(new CreateCreditNoteCommand(device.Dossier, new InvoiceId(invoice.Id), new CreateCreditNoteRequest { Reason = "Geste commercial" }));
+        (await device.SendAsync(new ValidateInvoiceCommand(device.Dossier, credit.Value, null))).IsSuccess.Should().BeTrue("le poste ne connaît pas le seuil du cabinet");
+
+        // Pendant ce temps, le cabinet impose l'approbation d'un manager au-delà de 100 € TTC.
+        _world.Server.Policies.Policy = new SegregationOfDutiesPolicy(true, 100m);
+        _world.Server.Permissions.Granted.Remove(Permission.AvoirApprouver);
+        device.Probe.Status = new NetworkStatus(true, NetworkKind.Wifi);
+
+        SyncReport report = await device.SyncAsync();
+        report.Sent.Should().Be(1, "la facture passe");
+        report.Rejected.Should().Be(1, "l'avoir attend un manager");
+        (await ServerInvoiceAsync(credit.Value.Value)).IsFailure.Should().BeTrue();
+        (await VerifyAsync()).Findings.Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task Une_reponse_perdue_ne_fait_pas_recevoir_deux_fois_la_piece()
     {
         DeviceNode device = await OfflineDeviceAsync();
