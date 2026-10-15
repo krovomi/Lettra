@@ -154,6 +154,8 @@
   <data name="Session.Field.DisplayName" xml:space="preserve"><value>Votre nom</value></data>
   <data name="Session.Field.Passphrase" xml:space="preserve"><value>Phrase secrète</value></data>
   <data name="Session.Field.Confirmation" xml:space="preserve"><value>Confirmez la phrase secrète</value></data>
+  <data name="Session.SigningIn" xml:space="preserve"><value>Connexion en cours : terminez-la dans la fenêtre du navigateur qui vient de s'ouvrir.</value></data>
+  <data name="Session.SigningOut" xml:space="preserve"><value>Déconnexion en cours…</value></data>
   <data name="Session.SignOut" xml:space="preserve"><value>Se déconnecter</value></data>
   <data name="Session.Lock" xml:space="preserve"><value>Verrouiller</value></data>
   <data name="Error.Security.MfaRequired" xml:space="preserve"><value>Un second facteur d'authentification est exigé. Reconnectez-vous.</value></data>

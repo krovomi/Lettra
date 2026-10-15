@@ -154,6 +154,8 @@
   <data name="Session.Field.DisplayName" xml:space="preserve"><value>Your name</value></data>
   <data name="Session.Field.Passphrase" xml:space="preserve"><value>Passphrase</value></data>
   <data name="Session.Field.Confirmation" xml:space="preserve"><value>Confirm the passphrase</value></data>
+  <data name="Session.SigningIn" xml:space="preserve"><value>Signing in: finish in the browser window that has just opened.</value></data>
+  <data name="Session.SigningOut" xml:space="preserve"><value>Signing out…</value></data>
   <data name="Session.SignOut" xml:space="preserve"><value>Sign out</value></data>
   <data name="Session.Lock" xml:space="preserve"><value>Lock</value></data>
   <data name="Error.Security.MfaRequired" xml:space="preserve"><value>A second authentication factor is required. Please sign in again.</value></data>
