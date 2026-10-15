@@ -32,6 +32,7 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
     public DbSet<CatalogCustomRolePermission> CustomRolePermissions => Set<CatalogCustomRolePermission>();
 
     public DbSet<CatalogAiSettings> AiSettings => Set<CatalogAiSettings>();
+    public DbSet<CatalogOrganisationPolicy> OrganisationPolicies => Set<CatalogOrganisationPolicy>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -142,5 +143,13 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
         });
 
         CatalogAiSettings.Configure(modelBuilder);
+
+        modelBuilder.Entity<CatalogOrganisationPolicy>(e =>
+        {
+            e.ToTable("OrganisationPolicies");
+            e.HasKey(x => x.OrganisationId);
+            e.Property(x => x.CreditNoteApprovalThresholdInclTax).HasPrecision(18, 2);
+            e.HasOne<CatalogOrganisation>().WithOne().HasForeignKey<CatalogOrganisationPolicy>(x => x.OrganisationId).OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }

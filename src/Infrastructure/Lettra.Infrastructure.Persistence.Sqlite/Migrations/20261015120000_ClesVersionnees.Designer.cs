@@ -78,6 +78,10 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("TEXT");
 
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Designation");
@@ -286,6 +290,10 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                         .HasMaxLength(15)
                         .HasColumnType("TEXT");
 
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
                     b.ComplexProperty(typeof(Dictionary<string, object>), "BillingAddress", "Lettra.Domain.Parties.Customer.BillingAddress#PostalAddress", b1 =>
                         {
                             b1.IsRequired();
@@ -370,6 +378,10 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.Property<string>("VatNumber")
                         .HasMaxLength(15)
                         .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Address", "Lettra.Domain.Parties.Supplier.Address#PostalAddress", b1 =>
                         {

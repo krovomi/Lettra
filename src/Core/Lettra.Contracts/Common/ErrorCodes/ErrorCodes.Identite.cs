@@ -49,4 +49,14 @@ public static partial class ErrorCodes
         public const string Expired = "RightsSnapshot.Expired";
         public const string OtherDevice = "RightsSnapshot.OtherDevice";
     }
+
+    /// <summary>Séparation des tâches du cabinet (annexe F §3.2).</summary>
+    public static class SegregationOfDuties
+    {
+        public const string EnteredByIssuer = "SegregationOfDuties.EnteredByIssuer";
+        public const string ManagerApprovalRequired = "SegregationOfDuties.ManagerApprovalRequired";
+        public const string ApproverIsCreator = "SegregationOfDuties.ApproverIsCreator";
+        public const string ThresholdInvalid = "SegregationOfDuties.ThresholdInvalid";
+        public const string NotAvailable = "SegregationOfDuties.NotAvailable";
+    }
 }

@@ -63,7 +63,16 @@ internal sealed class UnitOfWork(TenantDbSession session) : IUnitOfWork
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
         LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
-        int written = await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        int written;
+        try
+        {
+            written = await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            // La ligne a changé depuis sa lecture (ADR-0013) : le pipeline en fait un échec 412.
+            throw new ConcurrencyConflictException("Écriture concurrente détectée à l'enregistrement.", ex);
+        }
 
         // Phase 0 : pas encore d'outbox, les événements sont simplement vidés après écriture.
         // L'outbox (faits et intentions, ADR-0007) arrive avec la synchronisation.

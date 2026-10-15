@@ -13,7 +13,10 @@ using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Api.Endpoints;
 
-/// <summary>Routes du module Catalogue. Les écritures renvoient l'article relu, comme le fait la gateway in-process.</summary>
+/// <summary>
+/// Routes du module Catalogue. Les écritures renvoient l'article relu, comme le fait la gateway in-process.
+/// Chaque article porte son <c>ETag</c> ; une modification exige <c>If-Match</c> (ADR-0013).
+/// </summary>
 internal static class CatalogEndpoints
 {
     public static RouteGroupBuilder MapCatalog(this RouteGroupBuilder api)
@@ -49,13 +52,15 @@ internal static class CatalogEndpoints
             .Produces<CatalogItemResponse>()
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .RequireIfMatch();
 
         group.MapPut("/items/{id:guid}/archived", SetArchivedAsync)
             .RequirePermission(Permission.CatalogueGerer)
             .WithName("SetCatalogItemArchived")
             .Produces<CatalogItemResponse>()
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .RequireIfMatch();
 
         return group;
     }
@@ -84,9 +89,7 @@ internal static class CatalogEndpoints
 
     private static async Task<IResult> GetAsync(Guid id, ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken)
     {
-        Result<CatalogItemResponse> result = await queries
-            .QueryAsync(new GetCatalogItemQuery(tenant.Current.DossierId, new CatalogItemId(id)), cancellationToken).ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return await ReadAsync(queries, tenant.Current.DossierId, new CatalogItemId(id), cancellationToken).ConfigureAwait(false);
     }
 
     private static async Task<IResult> CreateAsync(
@@ -105,13 +108,14 @@ internal static class CatalogEndpoints
 
         Result<CatalogItemResponse> read = await queries.QueryAsync(new GetCatalogItemQuery(dossier, created.Value), cancellationToken).ConfigureAwait(false);
         return read.IsSuccess
-            ? TypedResults.Created($"/api/v1/catalog/items/{read.Value.Id}", read.Value)
+            ? TypedResults.Created($"/api/v1/catalog/items/{read.Value.Id}", read.Value).WithETag(read.Value.Version)
             : read.Errors.ToProblem();
     }
 
     private static async Task<IResult> UpdateAsync(
         Guid id,
         SaveCatalogItemRequest request,
+        HttpContext http,
         ITenantContext tenant,
         ICommandDispatcher commands,
         IQueryDispatcher queries,
@@ -119,13 +123,16 @@ internal static class CatalogEndpoints
     {
         DossierId dossier = tenant.Current.DossierId;
         CatalogItemId itemId = new(id);
-        Result updated = await commands.SendAsync(request.ToUpdateCommand(dossier, itemId), cancellationToken).ConfigureAwait(false);
-        return updated.IsFailure ? updated.Errors.ToProblem() : await ReadAsync(queries, dossier, itemId, cancellationToken).ConfigureAwait(false);
+        Result updated = await commands.SendAsync(request.ToUpdateCommand(dossier, itemId, http.IfMatchVersion()), cancellationToken).ConfigureAwait(false);
+        return updated.IsFailure
+            ? await WriteFailureAsync(updated.Errors, queries, dossier, itemId, cancellationToken).ConfigureAwait(false)
+            : await ReadAsync(queries, dossier, itemId, cancellationToken).ConfigureAwait(false);
     }
 
     private static async Task<IResult> SetArchivedAsync(
         Guid id,
         SetCatalogItemArchivedRequest request,
+        HttpContext http,
         ITenantContext tenant,
         ICommandDispatcher commands,
         IQueryDispatcher queries,
@@ -133,13 +140,22 @@ internal static class CatalogEndpoints
     {
         DossierId dossier = tenant.Current.DossierId;
         CatalogItemId itemId = new(id);
-        Result changed = await commands.SendAsync(new SetCatalogItemArchivedCommand(dossier, itemId, request.IsArchived), cancellationToken).ConfigureAwait(false);
-        return changed.IsFailure ? changed.Errors.ToProblem() : await ReadAsync(queries, dossier, itemId, cancellationToken).ConfigureAwait(false);
+        Result changed = await commands
+            .SendAsync(new SetCatalogItemArchivedCommand(dossier, itemId, request.IsArchived, http.IfMatchVersion()), cancellationToken)
+            .ConfigureAwait(false);
+        return changed.IsFailure
+            ? await WriteFailureAsync(changed.Errors, queries, dossier, itemId, cancellationToken).ConfigureAwait(false)
+            : await ReadAsync(queries, dossier, itemId, cancellationToken).ConfigureAwait(false);
     }
 
     private static async Task<IResult> ReadAsync(IQueryDispatcher queries, DossierId dossier, CatalogItemId id, CancellationToken cancellationToken)
     {
         Result<CatalogItemResponse> read = await queries.QueryAsync(new GetCatalogItemQuery(dossier, id), cancellationToken).ConfigureAwait(false);
-        return read.IsSuccess ? TypedResults.Ok(read.Value) : read.Errors.ToProblem();
+        return read.IsSuccess ? TypedResults.Ok(read.Value).WithETag(read.Value.Version) : read.Errors.ToProblem();
     }
+
+    private static Task<IResult> WriteFailureAsync(
+        IReadOnlyList<Error> errors, IQueryDispatcher queries, DossierId dossier, CatalogItemId id, CancellationToken cancellationToken) =>
+        ConcurrencyResults.WriteFailureAsync(
+            errors, () => queries.QueryAsync(new GetCatalogItemQuery(dossier, id), cancellationToken), item => item.Version);
 }

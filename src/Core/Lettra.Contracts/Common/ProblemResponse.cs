@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Lettra.Contracts.Common;
@@ -12,7 +13,12 @@ public sealed record ProblemResponse(
     [property: JsonPropertyName("status")] int? Status,
     [property: JsonPropertyName("code")] string? Code,
     [property: JsonPropertyName("errors")] IReadOnlyDictionary<string, string[]>? Errors,
-    [property: JsonPropertyName("traceId")] string? TraceId);
+    [property: JsonPropertyName("traceId")] string? TraceId)
+{
+    /// <summary>Sur un 412 (ADR-0013) : le document tel qu'il est sur le serveur, pour la fusion.</summary>
+    [JsonPropertyName("current")]
+    public JsonElement? Current { get; init; }
+}
 
 /// <summary>Noms d'en-têtes HTTP propres à Lettra.</summary>
 public static class LettraHeaders

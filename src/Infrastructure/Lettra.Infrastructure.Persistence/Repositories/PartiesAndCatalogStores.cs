@@ -19,6 +19,12 @@ internal sealed class SupplierRepository(TenantDbSession session) : ISupplierRep
         LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
         await db.Set<Supplier>().AddAsync(supplier, cancellationToken).ConfigureAwait(false);
     }
+
+    public async Task<Supplier?> FindAsync(SupplierId id, CancellationToken cancellationToken)
+    {
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        return await db.Set<Supplier>().AsTracking().FirstOrDefaultAsync(s => s.Id == id, cancellationToken).ConfigureAwait(false);
+    }
 }
 
 internal sealed class SupplierReadStore(TenantDbSession session) : ISupplierReadStore

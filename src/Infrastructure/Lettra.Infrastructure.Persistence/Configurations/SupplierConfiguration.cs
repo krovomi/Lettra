@@ -1,5 +1,6 @@
 using Lettra.Domain.Parties;
 using Lettra.Domain.SharedKernel;
+using Lettra.Infrastructure.Persistence.Concurrency;
 using Lettra.Infrastructure.Persistence.Search;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -33,6 +34,8 @@ internal sealed class SupplierConfiguration : IEntityTypeConfiguration<Supplier>
                 .HasMaxLength(2)
                 .IsRequired();
         });
+
+        builder.IsVersioned();
 
         builder.HasIndex(s => s.Name);
         builder.HasSearchKey(s => s.Name);

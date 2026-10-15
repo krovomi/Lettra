@@ -100,11 +100,15 @@ public sealed class PartiesAndCatalogApiTests(LettraApiFactory factory) : IClass
 
         SaveCatalogItemRequest change = Conseil(reference);
         change.UnitPriceExclTax = 99.5m;
-        using HttpResponseMessage updated = await client.PutAsJsonAsync($"/api/v1/catalog/items/{item.Id}", change, ContractsJsonContext.Default.SaveCatalogItemRequest);
-        (await updated.Content.ReadFromJsonAsync(ContractsJsonContext.Default.CatalogItemResponse))!.UnitPriceExclTax.Should().Be(99.5m);
+        using HttpResponseMessage updated = await client.PutVersionedAsync(
+            $"/api/v1/catalog/items/{item.Id}", created.Headers.ETag!.Tag, change, ContractsJsonContext.Default.SaveCatalogItemRequest);
+        CatalogItemResponse afterUpdate = (await updated.Content.ReadFromJsonAsync(ContractsJsonContext.Default.CatalogItemResponse))!;
+        afterUpdate.UnitPriceExclTax.Should().Be(99.5m);
+        afterUpdate.Version.Should().Be(2);
 
-        using HttpResponseMessage archived = await client.PutAsJsonAsync(
-            $"/api/v1/catalog/items/{item.Id}/archived", new SetCatalogItemArchivedRequest(true), ContractsJsonContext.Default.SetCatalogItemArchivedRequest);
+        using HttpResponseMessage archived = await client.PutVersionedAsync(
+            $"/api/v1/catalog/items/{item.Id}/archived", updated.Headers.ETag!.Tag, new SetCatalogItemArchivedRequest(true),
+            ContractsJsonContext.Default.SetCatalogItemArchivedRequest);
         (await archived.Content.ReadFromJsonAsync(ContractsJsonContext.Default.CatalogItemResponse))!.IsArchived.Should().BeTrue();
 
         PagedResponse<CatalogItemSummary> active = (await client.GetFromJsonAsync(

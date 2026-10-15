@@ -43,6 +43,13 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Concurrence_optimiste_sur_le_catalogue()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await PartiesAndCatalogPersistenceScenarios.OptimisticConcurrencyAsync(harness, DatabaseProvider.Sqlite, Database("conc"));
+    }
+
+    [Fact]
     public async Task Recherche_et_unicite_du_catalogue()
     {
         await using TenantHarness harness = new(new SqliteConfigurator());
@@ -132,6 +139,16 @@ public sealed class SqliteTests : IDisposable
             b => SqliteConfigurator.ConfigureCatalog(b, Database("catalog-droits")),
             new Dictionary<string, string?> { ["Provider"] = "Sqlite", ["Directory"] = Path.Combine(_folder, "srv-droits") });
         await CatalogScenarios.AuthorizationDirectoryAsync(harness);
+    }
+
+    [Fact]
+    public async Task Politiques_du_cabinet_dans_le_catalogue()
+    {
+        await using CatalogHarness harness = new(
+            s => s.AddSqliteProvider(),
+            b => SqliteConfigurator.ConfigureCatalog(b, Database("catalog-politiques")),
+            new Dictionary<string, string?> { ["Provider"] = "Sqlite", ["Directory"] = Path.Combine(_folder, "srv-politiques") });
+        await CatalogScenarios.OrganisationPoliciesAsync(harness);
     }
 
     [Fact]
@@ -251,6 +268,14 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     }
 
     [SkippableFact]
+    public async Task Concurrence_optimiste_sur_le_catalogue()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new PostgreSqlConfigurator());
+        await PartiesAndCatalogPersistenceScenarios.OptimisticConcurrencyAsync(harness, DatabaseProvider.PostgreSql, Database("conc"));
+    }
+
+    [SkippableFact]
     public async Task Recherche_et_unicite_du_catalogue()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
@@ -320,6 +345,18 @@ public sealed class PostgreSqlTests : IAsyncLifetime
             b => PostgreSqlConfigurator.ConfigureCatalog(b, Database("catalog_droits")),
             new Dictionary<string, string?> { ["Provider"] = "PostgreSql", ["ConnectionString"] = server });
         await CatalogScenarios.AuthorizationDirectoryAsync(harness);
+    }
+
+    [SkippableFact]
+    public async Task Politiques_du_cabinet_dans_le_catalogue()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        string server = new Npgsql.NpgsqlConnectionStringBuilder(_container!.GetConnectionString()) { Database = null }.ConnectionString;
+        await using CatalogHarness harness = new(
+            s => s.AddPostgreSqlProvider(),
+            b => PostgreSqlConfigurator.ConfigureCatalog(b, Database("catalog_politiques")),
+            new Dictionary<string, string?> { ["Provider"] = "PostgreSql", ["ConnectionString"] = server });
+        await CatalogScenarios.OrganisationPoliciesAsync(harness);
     }
 }
 
@@ -414,6 +451,14 @@ public sealed class SqlServerTests : IAsyncLifetime
     }
 
     [SkippableFact]
+    public async Task Concurrence_optimiste_sur_le_catalogue()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new SqlServerConfigurator());
+        await PartiesAndCatalogPersistenceScenarios.OptimisticConcurrencyAsync(harness, DatabaseProvider.SqlServer, Database("conc"));
+    }
+
+    [SkippableFact]
     public async Task Recherche_et_unicite_du_catalogue()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
@@ -479,5 +524,19 @@ public sealed class SqlServerTests : IAsyncLifetime
             b => SqlServerConfigurator.ConfigureCatalog(b, Database("catalog_droits")),
             new Dictionary<string, string?> { ["Provider"] = "SqlServer", ["ConnectionString"] = server.ConnectionString });
         await CatalogScenarios.AuthorizationDirectoryAsync(harness);
+    }
+
+    [SkippableFact]
+    public async Task Politiques_du_cabinet_dans_le_catalogue()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        Microsoft.Data.SqlClient.SqlConnectionStringBuilder server = new(_container!.GetConnectionString());
+        server.Remove("Initial Catalog");
+        server.Remove("Database");
+        await using CatalogHarness harness = new(
+            s => s.AddSqlServerProvider(),
+            b => SqlServerConfigurator.ConfigureCatalog(b, Database("catalog_politiques")),
+            new Dictionary<string, string?> { ["Provider"] = "SqlServer", ["ConnectionString"] = server.ConnectionString });
+        await CatalogScenarios.OrganisationPoliciesAsync(harness);
     }
 }

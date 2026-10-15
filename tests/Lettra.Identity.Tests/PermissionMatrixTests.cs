@@ -20,17 +20,17 @@ public sealed class PermissionMatrixTests
         [RoleTemplates.AdministrateurCabinet] = [CabinetAdministrer, UtilisateursGerer, GroupeGerer, DossierAdministrer, DossiersCreer, AlertesLire, AlertesConfigurer],
         [RoleTemplates.Manager] =
         [
-            TiersConsulter, TiersCreer, DossierLire, CatalogueConsulter, CatalogueGerer, DevisCreer, FactureSaisir, FactureValider,
-            FactureEmettre, AvoirCreer, FecExporter, IaUtiliser, DelegationsApprouver, AlertesLire, AlertesTraiter,
+            TiersConsulter, TiersCreer, TiersModifier, DossierLire, CatalogueConsulter, CatalogueGerer, DevisCreer, FactureSaisir, FactureValider,
+            FactureEmettre, AvoirCreer, AvoirApprouver, FecExporter, IaUtiliser, DelegationsApprouver, AlertesLire, AlertesTraiter,
             IntegriteVerifier, ClotureEffectuer, ArchivesExporter, IntegriteClesGerer,
         ],
         [RoleTemplates.AdministrateurGroupe] = [GroupeGerer, DossierAdministrer],
         [RoleTemplates.CollaborateurEtendu] =
         [
-            TiersConsulter, TiersCreer, DossierLire, CatalogueConsulter, DevisCreer, FactureSaisir, FactureValider, FactureEmettre,
+            TiersConsulter, TiersCreer, TiersModifier, DossierLire, CatalogueConsulter, DevisCreer, FactureSaisir, FactureValider, FactureEmettre,
             IaUtiliser, AlertesLire,
         ],
-        [RoleTemplates.Collaborateur] = [TiersConsulter, TiersCreer, DossierLire, CatalogueConsulter, DevisCreer, FactureSaisir, IaUtiliser, AlertesLire],
+        [RoleTemplates.Collaborateur] = [TiersConsulter, TiersCreer, TiersModifier, DossierLire, CatalogueConsulter, DevisCreer, FactureSaisir, IaUtiliser, AlertesLire],
         [RoleTemplates.Auditeur] = [TiersConsulter, CatalogueConsulter, DossierLire, FecExporter, IntegriteVerifier, ArchivesExporter],
         [RoleTemplates.ClientPortail] = [PortailConsulter, DevisAccepter, PiecesDeposer],
         [RoleTemplates.ExploitantSurSite] = [AlertesLire, AlertesTraiter],

@@ -14,7 +14,7 @@ namespace Lettra.Domain.Parties;
 /// <item>un IBAN, s'il est donné, a une clé valide.</item>
 /// </list>
 /// </summary>
-public sealed class Supplier : AggregateRoot<SupplierId>
+public sealed class Supplier : AggregateRoot<SupplierId>, IVersioned
 {
     public const int MaxNameLength = 200;
 
@@ -55,7 +55,10 @@ public sealed class Supplier : AggregateRoot<SupplierId>
 
     public DateTimeOffset CreatedAt { get; private set; }
 
-    /// <summary>Données brutes de création, telles que saisies ou reprises de l'annuaire SIRENE.</summary>
+    /// <summary>Version de concurrence optimiste (ADR-0013), avancée par la persistance à chaque écriture.</summary>
+    public long Version { get; private set; }
+
+    /// <summary>Données brutes de création ou de modification, telles que saisies ou reprises de l'annuaire SIRENE.</summary>
     public sealed record Draft(
         string? Name,
         string? Siren,
@@ -71,6 +74,41 @@ public sealed class Supplier : AggregateRoot<SupplierId>
 
     /// <summary>Crée un fournisseur en accumulant toutes les erreurs de saisie.</summary>
     public static Result<Supplier> Create(SupplierId id, Draft draft, DateTimeOffset now)
+    {
+        Result<Values> values = Read(draft);
+        if (values.IsFailure)
+        {
+            return Result<Supplier>.Failure(values.Errors);
+        }
+
+        Values v = values.Value;
+        Supplier supplier = new(id, v.Name, v.Ids, v.Email, v.Iban, v.Address, now);
+        supplier.Raise(new SupplierCreated(id, now));
+        return supplier;
+    }
+
+    /// <summary>Remplace les données du fournisseur, avec les mêmes règles qu'à la création. Rien n'est modifié si une erreur est trouvée.</summary>
+    public Result Update(Draft draft, DateTimeOffset now)
+    {
+        Result<Values> values = Read(draft);
+        if (values.IsFailure)
+        {
+            return Result.Failure(values.Errors);
+        }
+
+        Values v = values.Value;
+        Name = v.Name;
+        Siren = v.Ids.Siren;
+        Siret = v.Ids.Siret;
+        VatNumber = v.Ids.VatNumber;
+        Email = v.Email;
+        Iban = v.Iban;
+        Address = v.Address;
+        Raise(new SupplierUpdated(Id, now));
+        return Result.Success();
+    }
+
+    private static Result<Values> Read(Draft draft)
     {
         ArgumentNullException.ThrowIfNull(draft);
         List<Error> errors = [];
@@ -99,13 +137,10 @@ public sealed class Supplier : AggregateRoot<SupplierId>
             errors.Add(SupplierErrors.SirenRequired);
         }
 
-        if (errors.Count > 0)
-        {
-            return Result<Supplier>.Failure(errors);
-        }
-
-        Supplier supplier = new(id, name, ids, email, iban, address.Value, now);
-        supplier.Raise(new SupplierCreated(id, now));
-        return supplier;
+        return errors.Count > 0
+            ? Result<Values>.Failure(errors)
+            : new Values(name, ids, email, iban, address.Value);
     }
+
+    private sealed record Values(string Name, PartyIdentification Ids, Email? Email, Iban? Iban, PostalAddress Address);
 }
