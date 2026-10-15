@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="CompanyLookup.Ceased" xml:space="preserve"><value>cessée</value></data>
+  <data name="CompanyLookup.Hint" xml:space="preserve"><value>Au moins 3 caractères : nom, SIREN ou SIRET. Vous pouvez aussi tout saisir à la main.</value></data>
+  <data name="CompanyLookup.Label" xml:space="preserve"><value>Rechercher l'entreprise (annuaire SIRENE)</value></data>
+  <data name="CompanyLookup.NoResult" xml:space="preserve"><value>Aucune entreprise trouvée.</value></data>
+  <data name="CompanyLookup.Results" xml:space="preserve"><value>Entreprises trouvées</value></data>
+  <data name="CompanyLookup.Search" xml:space="preserve"><value>Rechercher dans l'annuaire</value></data>
+  <data name="CompanyLookup.Siren" xml:space="preserve"><value>SIREN {0}</value></data>
+  <data name="Customers.Create.Done" xml:space="preserve"><value>Client « {0} » créé.</value></data>
+  <data name="Customers.Create.Submit" xml:space="preserve"><value>Créer le client</value></data>
+  <data name="Customers.Create.Title" xml:space="preserve"><value>Nouveau client</value></data>
+  <data name="Customers.Field.AddressLine1" xml:space="preserve"><value>Adresse</value></data>
+  <data name="Customers.Field.AddressLine2" xml:space="preserve"><value>Complément d'adresse</value></data>
+  <data name="Customers.Field.City" xml:space="preserve"><value>Ville</value></data>
+  <data name="Customers.Field.CountryCode" xml:space="preserve"><value>Pays (code ISO, ex. FR)</value></data>
+  <data name="Customers.Field.Email" xml:space="preserve"><value>E-mail</value></data>
+  <data name="Customers.Field.Kind" xml:space="preserve"><value>Type de client</value></data>
+  <data name="Customers.Field.Name" xml:space="preserve"><value>Nom ou raison sociale</value></data>
+  <data name="Customers.Field.PostalCode" xml:space="preserve"><value>Code postal</value></data>
+  <data name="Customers.Field.Siren" xml:space="preserve"><value>SIREN</value></data>
+  <data name="Customers.Field.Siret" xml:space="preserve"><value>SIRET</value></data>
+  <data name="Customers.Field.VatNumber" xml:space="preserve"><value>N° de TVA intracommunautaire</value></data>
+  <data name="Customers.Kind.Company" xml:space="preserve"><value>Entreprise</value></data>
+  <data name="Customers.Kind.Individual" xml:space="preserve"><value>Particulier</value></data>
+  <data name="Customers.List.Empty" xml:space="preserve"><value>Aucun client pour l'instant.</value></data>
+  <data name="Customers.List.Title" xml:space="preserve"><value>Clients du dossier</value></data>
+  <data name="Customers.Title" xml:space="preserve"><value>Clients</value></data>
+  <data name="Error.Customer.IndividualCannotHaveCompanyIds" xml:space="preserve"><value>Un particulier n'a ni SIREN ni numéro de TVA.</value></data>
+  <data name="Error.Customer.KindInvalid" xml:space="preserve"><value>Choisissez le type de client.</value></data>
+  <data name="Error.Customer.NameRequired" xml:space="preserve"><value>Le nom du client est obligatoire.</value></data>
+  <data name="Error.Customer.NameTooLong" xml:space="preserve"><value>Le nom ne doit pas dépasser 200 caractères.</value></data>
+  <data name="Error.Customer.NotFound" xml:space="preserve"><value>Ce client est introuvable.</value></data>
+  <data name="Error.Customer.SirenRequired" xml:space="preserve"><value>Une entreprise française doit avoir un SIREN (ou un SIRET).</value></data>
+  <data name="Error.Customer.SiretSirenMismatch" xml:space="preserve"><value>Ce SIRET n'appartient pas au SIREN indiqué.</value></data>
+  <data name="Error.Directory.QueryTooShort" xml:space="preserve"><value>Saisissez au moins 3 caractères pour rechercher.</value></data>
+  <data name="Error.Directory.Unavailable" xml:space="preserve"><value>L'annuaire est indisponible pour le moment. Vous pouvez saisir les informations à la main.</value></data>
+  <data name="Error.Directory.VatCountryNotSupported" xml:space="preserve"><value>La vérification VIES ne couvre que les numéros de TVA des pays de l'Union européenne.</value></data>
+  <data name="Error.Party.VatNumberSirenMismatch" xml:space="preserve"><value>Ce numéro de TVA ne correspond pas au SIREN indiqué.</value></data>
+  <data name="Error.Supplier.NameRequired" xml:space="preserve"><value>Le nom du fournisseur est obligatoire.</value></data>
+  <data name="Error.Supplier.NameTooLong" xml:space="preserve"><value>Le nom ne doit pas dépasser 200 caractères.</value></data>
+  <data name="Error.Supplier.NotFound" xml:space="preserve"><value>Ce fournisseur est introuvable.</value></data>
+  <data name="Error.Supplier.SirenRequired" xml:space="preserve"><value>Un fournisseur français doit avoir un SIREN (ou un SIRET).</value></data>
+  <data name="Error.Supplier.SiretSirenMismatch" xml:space="preserve"><value>Ce SIRET n'appartient pas au SIREN indiqué.</value></data>
+  <data name="Suppliers.Create.Done" xml:space="preserve"><value>Fournisseur « {0} » créé.</value></data>
+  <data name="Suppliers.Create.Submit" xml:space="preserve"><value>Créer le fournisseur</value></data>
+  <data name="Suppliers.Create.Title" xml:space="preserve"><value>Nouveau fournisseur</value></data>
+  <data name="Suppliers.Field.Iban" xml:space="preserve"><value>IBAN</value></data>
+  <data name="Suppliers.List.Empty" xml:space="preserve"><value>Aucun fournisseur pour l'instant.</value></data>
+  <data name="Suppliers.List.Title" xml:space="preserve"><value>Fournisseurs du dossier</value></data>
+  <data name="Suppliers.Title" xml:space="preserve"><value>Fournisseurs</value></data>
+  <data name="Vies.Check" xml:space="preserve"><value>Vérifier (VIES)</value></data>
+  <data name="Vies.Invalid" xml:space="preserve"><value>Numéro inconnu de VIES ou inactif</value></data>
+  <data name="Vies.Valid" xml:space="preserve"><value>Numéro valide</value></data>
+</root>

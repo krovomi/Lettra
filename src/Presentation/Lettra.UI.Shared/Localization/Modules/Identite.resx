@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Error.Security.Forbidden" xml:space="preserve"><value>Vous n'avez pas les droits pour cette action dans ce dossier.</value></data>
+  <data name="Error.Security.Unauthenticated" xml:space="preserve"><value>Votre session a expiré, reconnectez-vous.</value></data>
+  <data name="Error.Rights.NotSupported" xml:space="preserve"><value>L'administration des droits n'est pas disponible sur ce poste.</value></data>
+  <data name="Error.Rights.UserNotFound" xml:space="preserve"><value>Cet utilisateur est introuvable dans le cabinet.</value></data>
+  <data name="Error.Rights.GroupNotFound" xml:space="preserve"><value>Ce groupe est introuvable dans le cabinet.</value></data>
+  <data name="Error.Rights.GroupNameRequired" xml:space="preserve"><value>Le nom du groupe est obligatoire.</value></data>
+  <data name="Error.Rights.GroupNameTooLong" xml:space="preserve"><value>Le nom du groupe est trop long.</value></data>
+  <data name="Error.Rights.SubjectNotFound" xml:space="preserve"><value>L'utilisateur ou le groupe est introuvable dans le cabinet.</value></data>
+  <data name="Error.Rights.RoleUnknown" xml:space="preserve"><value>Ce rôle n'existe pas.</value></data>
+  <data name="Error.Rights.ScopeNotFound" xml:space="preserve"><value>La portée choisie est introuvable dans le cabinet.</value></data>
+  <data name="Error.Rights.ScopeTooWide" xml:space="preserve"><value>Ce rôle ne peut pas être attribué sur une portée aussi large.</value></data>
+  <data name="Error.Rights.ExpiryRequired" xml:space="preserve"><value>Ce rôle exige une date d'échéance.</value></data>
+  <data name="Error.Rights.ExpiryInPast" xml:space="preserve"><value>La date d'échéance est déjà passée.</value></data>
+  <data name="Error.Rights.AssignmentNotFound" xml:space="preserve"><value>Cette attribution est introuvable dans le cabinet.</value></data>
+  <data name="Error.Rights.StateInvalid" xml:space="preserve"><value>Cet état de compte n'est pas valide.</value></data>
+  <data name="Session.Title" xml:space="preserve"><value>Session</value></data>
+  <data name="Session.SignedInAs" xml:space="preserve"><value>Connecté en tant que {0}.</value></data>
+  <data name="Session.Continue" xml:space="preserve"><value>Continuer</value></data>
+  <data name="Session.SignInIntro" xml:space="preserve"><value>Connectez-vous avec le compte de votre cabinet. Un second facteur vous sera demandé.</value></data>
+  <data name="Session.SignIn" xml:space="preserve"><value>Se connecter</value></data>
+  <data name="Session.SignInFailed" xml:space="preserve"><value>La connexion n'a pas abouti. Réessayez.</value></data>
+  <data name="Session.Create.Title" xml:space="preserve"><value>Créer le compte de ce poste</value></data>
+  <data name="Session.Create.Intro" xml:space="preserve"><value>Ce poste fonctionne sans serveur. Choisissez une phrase secrète d'au moins 12 caractères : elle protège vos dossiers et ne peut pas être récupérée.</value></data>
+  <data name="Session.Create.Submit" xml:space="preserve"><value>Créer le compte</value></data>
+  <data name="Session.Unlock.Title" xml:space="preserve"><value>Déverrouiller le poste</value></data>
+  <data name="Session.Unlock.Submit" xml:space="preserve"><value>Déverrouiller</value></data>
+  <data name="Session.Field.DisplayName" xml:space="preserve"><value>Votre nom</value></data>
+  <data name="Session.Field.Passphrase" xml:space="preserve"><value>Phrase secrète</value></data>
+  <data name="Session.Field.Confirmation" xml:space="preserve"><value>Confirmez la phrase secrète</value></data>
+  <data name="Session.SignOut" xml:space="preserve"><value>Se déconnecter</value></data>
+  <data name="Session.Lock" xml:space="preserve"><value>Verrouiller</value></data>
+  <data name="Error.Security.MfaRequired" xml:space="preserve"><value>Un second facteur d'authentification est exigé. Reconnectez-vous.</value></data>
+  <data name="Error.Security.CsrfHeaderMissing" xml:space="preserve"><value>Requête refusée par sécurité. Rechargez la page.</value></data>
+  <data name="Error.LocalAccount.AlreadyExists" xml:space="preserve"><value>Le compte de ce poste existe déjà.</value></data>
+  <data name="Error.LocalAccount.NotFound" xml:space="preserve"><value>Aucun compte n'a encore été créé sur ce poste.</value></data>
+  <data name="Error.LocalAccount.InvalidPassphrase" xml:space="preserve"><value>Phrase secrète incorrecte.</value></data>
+  <data name="Error.LocalAccount.LockedOut" xml:space="preserve"><value>Trop d'essais. Le poste est verrouillé quelques minutes.</value></data>
+  <data name="Error.LocalAccount.PassphraseTooShort" xml:space="preserve"><value>La phrase secrète doit compter au moins 12 caractères.</value></data>
+  <data name="Error.LocalAccount.PassphraseMismatch" xml:space="preserve"><value>Les deux phrases secrètes ne sont pas identiques.</value></data>
+  <data name="Error.LocalAccount.NotSupported" xml:space="preserve"><value>Cette action n'existe que sur un poste isolé.</value></data>
+</root>

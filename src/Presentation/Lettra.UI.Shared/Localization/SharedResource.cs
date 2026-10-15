@@ -1,8 +1,8 @@
 namespace Lettra.UI.Shared.Localization;
 
 /// <summary>
-/// Marqueur des ressources partagées de l'UI. Le fichier neutre (<c>SharedResource.resx</c>) est en
-/// français, langue par défaut ; <c>SharedResource.en.resx</c> porte l'anglais.
+/// Marqueur des ressources partagées de l'UI, écrites par module dans <c>Modules/&lt;Module&gt;.resx</c> (français,
+/// langue par défaut) et <c>Modules/&lt;Module&gt;.en.resx</c> (anglais), puis fusionnées à la compilation.
 /// Les erreurs se traduisent par la clé <c>Error.&lt;code&gt;</c>.
 /// </summary>
 #pragma warning disable CA1052 // Type marqueur pour IStringLocalizer<T>, jamais instancié.

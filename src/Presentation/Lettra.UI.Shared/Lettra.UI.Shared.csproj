@@ -17,4 +17,68 @@
     <PackageReference Include="Microsoft.Extensions.Localization" />
   </ItemGroup>
 
+  <!-- Ressources de l'UI : un fragment par module (Localization/Modules/<Module>[.en].resx), fusionnés à la compilation
+       en une seule ressource SharedResource. Un nouveau module ajoute ses fichiers au lieu de modifier un fichier partagé ;
+       une même clé dans deux fragments fait échouer la compilation. -->
+  <ItemGroup>
+    <EmbeddedResource Remove="Localization\Modules\**" />
+    <LettraResxFragment Include="Localization\Modules\*.resx" Exclude="Localization\Modules\*.*.resx" />
+    <LettraResxFragmentEn Include="Localization\Modules\*.en.resx" />
+  </ItemGroup>
+
+  <UsingTask TaskName="LettraMergeResx" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <Fragments ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+      <OutputFile ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.Linq" />
+      <Using Namespace="System.Xml.Linq" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        var root = new XElement("root");
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        foreach (ITaskItem fragment in Fragments.OrderBy(f => f.ItemSpec, StringComparer.Ordinal))
+        {
+            XDocument document = XDocument.Load(fragment.ItemSpec, LoadOptions.PreserveWhitespace);
+            if (!root.HasElements)
+            {
+                root.Add(document.Root.Elements("resheader"));
+            }
+
+            foreach (XElement data in document.Root.Elements("data"))
+            {
+                string name = (string)data.Attribute("name");
+                if (!seen.Add(name))
+                {
+                    Log.LogError("Ressource « {0} » déclarée deux fois (dernière occurrence : {1}).", name, fragment.ItemSpec);
+                }
+
+                root.Add(data);
+            }
+        }
+
+        string content = new XDocument(new XDeclaration("1.0", "utf-8", null), root).ToString();
+        if (!File.Exists(OutputFile) || File.ReadAllText(OutputFile) != content)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(OutputFile));
+            File.WriteAllText(OutputFile, content);
+        }
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="LettraMergeResources" BeforeTargets="SplitResourcesByCulture">
+    <PropertyGroup>
+      <!-- Dans la cible : IntermediateOutputPath n'est défini qu'après le corps du projet. -->
+      <LettraMergedResxDir>$(IntermediateOutputPath)Localization\</LettraMergedResxDir>
+    </PropertyGroup>
+    <LettraMergeResx Fragments="@(LettraResxFragment)" OutputFile="$(LettraMergedResxDir)SharedResource.resx" />
+    <LettraMergeResx Fragments="@(LettraResxFragmentEn)" OutputFile="$(LettraMergedResxDir)SharedResource.en.resx" />
+    <ItemGroup>
+      <EmbeddedResource Include="$(LettraMergedResxDir)SharedResource.resx" LogicalName="Lettra.UI.Shared.Localization.SharedResource.resources" />
+      <EmbeddedResource Include="$(LettraMergedResxDir)SharedResource.en.resx" LogicalName="Lettra.UI.Shared.Localization.SharedResource.en.resources" />
+      <FileWrites Include="$(LettraMergedResxDir)SharedResource.resx;$(LettraMergedResxDir)SharedResource.en.resx" />
+    </ItemGroup>
+  </Target>
+
 </Project>

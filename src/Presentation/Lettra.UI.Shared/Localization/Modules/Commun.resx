@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="ChoiceList.Filter" xml:space="preserve"><value>Filtrer la liste</value></data>
+  <data name="ChoiceList.Hint" xml:space="preserve"><value>↑ ↓ pour choisir · Entrée pour valider · Échap pour annuler · {0} résultat(s)</value></data>
+  <data name="Error.Address.CityRequired" xml:space="preserve"><value>La ville est obligatoire.</value></data>
+  <data name="Error.Address.LineRequired" xml:space="preserve"><value>L'adresse est obligatoire.</value></data>
+  <data name="Error.Address.PostalCodeInvalid" xml:space="preserve"><value>Ce code postal n'est pas valide (5 chiffres en France).</value></data>
+  <data name="Error.Api.IdempotencyKeyReused" xml:space="preserve"><value>Cette opération a déjà été envoyée avec un contenu différent.</value></data>
+  <data name="Error.Api.Unexpected" xml:space="preserve"><value>Une erreur inattendue est survenue. Réessayez.</value></data>
+  <data name="Error.Api.Unreachable" xml:space="preserve"><value>Le serveur est injoignable. Vérifiez la connexion.</value></data>
+  <data name="Error.CountryCode.Invalid" xml:space="preserve"><value>Indiquez un code pays à 2 lettres (FR, BE…).</value></data>
+  <data name="Error.Email.Invalid" xml:space="preserve"><value>Cette adresse e-mail n'est pas valide.</value></data>
+  <data name="Error.Iban.Invalid" xml:space="preserve"><value>Cet IBAN n'est pas valide (vérifiez le pays, la longueur et la clé).</value></data>
+  <data name="Error.Money.CurrencyMismatch" xml:space="preserve"><value>Les montants sont dans des devises différentes.</value></data>
+  <data name="Error.Siren.Invalid" xml:space="preserve"><value>Le SIREN doit compter 9 chiffres et avoir une clé valide.</value></data>
+  <data name="Error.Siret.Invalid" xml:space="preserve"><value>Le SIRET doit compter 14 chiffres et avoir une clé valide.</value></data>
+  <data name="Error.Validation.Invalid" xml:space="preserve"><value>Cette valeur n'est pas valide.</value></data>
+  <data name="Error.Validation.Required" xml:space="preserve"><value>Ce champ est obligatoire.</value></data>
+  <data name="Error.Validation.TooLong" xml:space="preserve"><value>Ce texte est trop long.</value></data>
+  <data name="Error.VatNumber.Invalid" xml:space="preserve"><value>Ce numéro de TVA intracommunautaire n'est pas valide.</value></data>
+  <data name="Error.VatRate.Unknown" xml:space="preserve"><value>Ce taux de TVA n'est pas reconnu.</value></data>
+  <data name="Grid.CellLabel" xml:space="preserve"><value>{0}, ligne {1}</value></data>
+  <data name="Grid.DefaultLabel" xml:space="preserve"><value>Grille de saisie</value></data>
+  <data name="Keyboard.FunctionKeys" xml:space="preserve"><value>Touches de fonction</value></data>
+  <data name="Loading" xml:space="preserve"><value>Chargement…</value></data>
+  <data name="Nav.Catalog" xml:space="preserve"><value>Catalogue</value></data>
+  <data name="Nav.Customers" xml:space="preserve"><value>Clients</value></data>
+  <data name="Nav.Label" xml:space="preserve"><value>Navigation principale</value></data>
+  <data name="Nav.Suppliers" xml:space="preserve"><value>Fournisseurs</value></data>
+  <data name="NotFound" xml:space="preserve"><value>Cette page n'existe pas.</value></data>
+</root>
