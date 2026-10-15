@@ -51,6 +51,8 @@ public static class MauiProgram
 
         builder.Services.AddLettra(builder.Configuration);
         builder.Services.AddSingleton<IKekStore, SecureStorageKekStore>();
+        // Code PIN du poste (étape 4.4) : avant AddLettraUi, qui ne crée le verrou qu'avec un coffre.
+        builder.Services.AddSingleton<IDeviceLockStore, SecureStorageDeviceLockStore>();
         builder.Services.AddSingleton<IDossierSelection, ActiveDossierSelection>();
         builder.Services.AddInProcessGateways();
         if (server is not null)
