@@ -4,6 +4,7 @@ using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Domain.Common;
 using Lettra.Domain.Integrity;
 using Lettra.Infrastructure.Persistence.Numbering;
+using Lettra.Infrastructure.Persistence.Security;
 using Lettra.Infrastructure.Persistence.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -16,43 +17,37 @@ namespace Lettra.Infrastructure.Persistence.Integrity;
 /// ne se chevauchent pas. Dans la transaction de validation, ce verrou est pris après celui de la série : pas
 /// d'interblocage possible.
 /// </summary>
-internal sealed class EfIntegrityJournal(TenantDbSession session, ITenantContext tenant, IIntegrityKeyring keyring, TimeProvider clock)
+internal sealed class EfIntegrityJournal(TenantDbSession session, ITenantContext tenant, EnvelopedIntegrityKeyring keyring, TimeProvider clock)
     : IIntegrityJournal
 {
     public async Task<Result<long>> AppendAsync(DocumentLifecycleEvent @event, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(@event);
         LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
-        Result<IIntegrityKeys> keys = await keyring.GetAsync(tenant.Current.OrganisationId, cancellationToken).ConfigureAwait(false);
-        if (keys.IsFailure)
-        {
-            return Result<long>.Failure(keys.Errors);
-        }
-
         if (db.Database.CurrentTransaction is not null)
         {
             // Dans la transaction de l'appelant : c'est lui qui enregistre, avec sa pièce.
             Result<JournalEntry> appended = await ChainWriter.AppendAsync(
-                db, tenant.Current, keys.Value, clock, (sequence, previous, at) => JournalEntry.ForDocument(@event, sequence, previous, at), cancellationToken).ConfigureAwait(false);
+                db, tenant.Current, keyring, clock, (sequence, previous, at) => JournalEntry.ForDocument(@event, sequence, previous, at), cancellationToken).ConfigureAwait(false);
             return appended.Map(e => e.Sequence);
         }
 
         IExecutionStrategy strategy = db.Database.CreateExecutionStrategy();
         return await strategy.ExecuteAsync(
-            (db, keys: keys.Value),
-            async (_, state, token) =>
+            db,
+            async (_, db, token) =>
             {
-                state.db.ChangeTracker.Clear();
-                await using IDbContextTransaction transaction = await state.db.Database.BeginTransactionAsync(token).ConfigureAwait(false);
+                db.ChangeTracker.Clear();
+                await using IDbContextTransaction transaction = await db.Database.BeginTransactionAsync(token).ConfigureAwait(false);
                 Result<JournalEntry> appended = await ChainWriter.AppendAsync(
-                    state.db, tenant.Current, state.keys, clock, (sequence, previous, at) => JournalEntry.ForDocument(@event, sequence, previous, at), token).ConfigureAwait(false);
+                    db, tenant.Current, keyring, clock, (sequence, previous, at) => JournalEntry.ForDocument(@event, sequence, previous, at), token).ConfigureAwait(false);
                 if (appended.IsFailure)
                 {
                     await transaction.RollbackAsync(token).ConfigureAwait(false);
                     return Result<long>.Failure(appended.Errors);
                 }
 
-                await state.db.SaveChangesAsync(token).ConfigureAwait(false);
+                await db.SaveChangesAsync(token).ConfigureAwait(false);
                 await transaction.CommitAsync(token).ConfigureAwait(false);
                 return Result<long>.Success(appended.Value.Sequence);
             },
@@ -61,18 +56,27 @@ internal sealed class EfIntegrityJournal(TenantDbSession session, ITenantContext
     }
 }
 
-/// <summary>Écriture en tête de chaîne, sous le verrou de la tête, dans la transaction ouverte.</summary>
+/// <summary>
+/// Écriture en tête de chaîne, sous le verrou de la tête, dans la transaction ouverte. La clé en vigueur est lue sous
+/// ce verrou : une rotation concurrente passe avant ou après, jamais au milieu.
+/// </summary>
 internal static class ChainWriter
 {
     public static async Task<Result<JournalEntry>> AppendAsync(
         LettraDbContext db,
         TenantDescriptor tenant,
-        IIntegrityKeys keys,
+        EnvelopedIntegrityKeyring keyring,
         TimeProvider clock,
         Func<long, string, DateTimeOffset, Result<JournalEntry>> build,
         CancellationToken cancellationToken)
     {
         await LockHeadAsync(db, cancellationToken).ConfigureAwait(false);
+        Result<IntegrityKeyMaterial> keys = await keyring.CurrentAsync(db, cancellationToken).ConfigureAwait(false);
+        if (keys.IsFailure)
+        {
+            return Result<JournalEntry>.Failure(keys.Errors);
+        }
+
         var head = await db.IntegrityChainHead.AsNoTracking()
             .Where(h => h.Id == IntegrityChainHead.SingletonId)
             .Select(h => new { h.LastSequence, h.LastHash })
@@ -86,7 +90,7 @@ internal static class ChainWriter
         }
 
         JournalEntry entry = built.Value;
-        entry.ApplySeal(keys.Seal(entry.Hash));
+        entry.ApplySeal(keys.Value.KeyId, keys.Value.Seal(entry.Hash));
         db.IntegrityJournal.Add(entry);
         await db.IntegrityChainHead
             .Where(h => h.Id == IntegrityChainHead.SingletonId)
@@ -109,7 +113,7 @@ internal static class ChainWriter
 }
 
 /// <summary>Lecture du journal et des clôtures, et clôture d'une période.</summary>
-internal sealed class EfIntegrityStore(TenantDbSession session, ITenantContext tenant, IIntegrityKeyring keyring, TimeProvider clock)
+internal sealed class EfIntegrityStore(TenantDbSession session, ITenantContext tenant, EnvelopedIntegrityKeyring keyring, TimeProvider clock)
     : IIntegrityStore
 {
     internal const int BatchSize = 1000;
@@ -163,25 +167,66 @@ internal sealed class EfIntegrityStore(TenantDbSession session, ITenantContext t
     {
         ArgumentNullException.ThrowIfNull(period);
         LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
-        Result<IIntegrityKeys> keys = await keyring.GetAsync(tenant.Current.OrganisationId, cancellationToken).ConfigureAwait(false);
-        if (keys.IsFailure)
-        {
-            return Result<PeriodClosing>.Failure(keys.Errors);
-        }
-
         IExecutionStrategy strategy = db.Database.CreateExecutionStrategy();
         return await strategy.ExecuteAsync(
-            (db, keys: keys.Value, period),
-            (_, state, token) => CloseOnceAsync(state.db, state.keys, state.period, token),
+            (db, period),
+            (_, state, token) => CloseOnceAsync(state.db, state.period, token),
             verifySucceeded: null,
             cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<Result<PeriodClosing>> CloseOnceAsync(LettraDbContext db, IIntegrityKeys keys, ClosingPeriod period, CancellationToken cancellationToken)
+    public async Task<Result<IntegrityKeyVersion>> RotateKeysAsync(CancellationToken cancellationToken)
+    {
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        IExecutionStrategy strategy = db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(
+            db,
+            (_, db, token) => RotateOnceAsync(db, token),
+            verifySucceeded: null,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<Result<IntegrityKeyVersion>> RotateOnceAsync(LettraDbContext db, CancellationToken cancellationToken)
     {
         db.ChangeTracker.Clear();
         await using IDbContextTransaction transaction = await db.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
         await ChainWriter.LockHeadAsync(db, cancellationToken).ConfigureAwait(false);
+
+        // La version en vigueur (créée ici si le dossier n'en a pas encore) scelle l'annonce de la suivante.
+        Result<IntegrityKeyMaterial> current = await keyring.CurrentAsync(db, cancellationToken).ConfigureAwait(false);
+        Result<(IntegrityKeyMaterial Keys, StoredIntegrityKey Row)> next = current.IsFailure
+            ? Result<(IntegrityKeyMaterial, StoredIntegrityKey)>.Failure(current.Errors)
+            : await keyring.PrepareNextAsync(db, cancellationToken).ConfigureAwait(false);
+        Result<JournalEntry> announced = next.IsFailure
+            ? Result<JournalEntry>.Failure(next.Errors)
+            : await ChainWriter.AppendAsync(
+                db, tenant.Current, keyring, clock,
+                (sequence, previousHash, at) => JournalEntry.ForKeyRotation(next.Value.Keys.KeyId, next.Value.Keys.PublicKey, sequence, previousHash, at),
+                cancellationToken).ConfigureAwait(false);
+        if (announced.IsFailure)
+        {
+            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            return Result<IntegrityKeyVersion>.Failure(announced.Errors);
+        }
+
+        StoredIntegrityKey row = next.Value.Row;
+        db.IntegrityKeys.Add(row);
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return new IntegrityKeyVersion(row.Version, row.KeyId, row.PublicKey, row.CreatedAt, null);
+    }
+
+    private async Task<Result<PeriodClosing>> CloseOnceAsync(LettraDbContext db, ClosingPeriod period, CancellationToken cancellationToken)
+    {
+        db.ChangeTracker.Clear();
+        await using IDbContextTransaction transaction = await db.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        await ChainWriter.LockHeadAsync(db, cancellationToken).ConfigureAwait(false);
+        Result<IntegrityKeyMaterial> keys = await keyring.CurrentAsync(db, cancellationToken).ConfigureAwait(false);
+        if (keys.IsFailure)
+        {
+            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            return Result<PeriodClosing>.Failure(keys.Errors);
+        }
 
         PeriodClosing? previous = await db.IntegrityClosings.AsNoTracking()
             .OrderByDescending(c => c.Number).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
@@ -212,12 +257,12 @@ internal sealed class EfIntegrityStore(TenantDbSession session, ITenantContext t
 
         string lastKnownHash = previous?.LastEntryHash ?? JournalEntry.GenesisHash(tenant.Current.DossierId);
         PeriodClosing closing = PeriodClosing.Prepare(
-            tenant.Current.DossierId, previous, period.Kind, period.Start, period.End, covered, lastKnownHash, clock.GetUtcNow(), keys.KeyId, keys.PublicKey);
-        closing.ApplySignature(keys.Sign(closing.Hash));
+            tenant.Current.DossierId, previous, period.Kind, period.Start, period.End, covered, lastKnownHash, clock.GetUtcNow(), keys.Value.KeyId, keys.Value.PublicKey);
+        closing.ApplySignature(keys.Value.Sign(closing.Hash));
         db.IntegrityClosings.Add(closing);
 
         Result<JournalEntry> recorded = await ChainWriter.AppendAsync(
-            db, tenant.Current, keys, clock, (sequence, previousHash, at) => JournalEntry.ForClosing(closing, sequence, previousHash, at), cancellationToken).ConfigureAwait(false);
+            db, tenant.Current, keyring, clock, (sequence, previousHash, at) => JournalEntry.ForClosing(closing, sequence, previousHash, at), cancellationToken).ConfigureAwait(false);
         if (recorded.IsFailure)
         {
             await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);

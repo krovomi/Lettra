@@ -36,6 +36,9 @@ public enum Permission
     /// <summary>Télécharger l'archive scellée d'une clôture (contrôle fiscal, auditeur).</summary>
     [PermissionCategory(PermissionKind.DossierData)] ArchivesExporter = 15,
 
+    /// <summary>Faire tourner les clés de la chaîne du dossier (le Worker le fait aussi, chaque année par défaut).</summary>
+    [PermissionCategory(PermissionKind.DossierData)] IntegriteClesGerer = 16,
+
     // 20-29 : Catalogue (module Catalogue).
     [PermissionCategory(PermissionKind.DossierData)] CatalogueConsulter = 20,
     [PermissionCategory(PermissionKind.DossierData)] CatalogueGerer = 21,

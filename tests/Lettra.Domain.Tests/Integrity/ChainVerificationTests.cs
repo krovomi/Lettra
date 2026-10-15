@@ -10,12 +10,25 @@ public sealed class ChainVerificationTests
     private const int MaxEntries = IntegrityVerification.MaxFindings + 10;
     private static readonly DateTimeOffset At = new(2026, 10, 15, 8, 0, 0, TimeSpan.Zero);
 
-    /// <summary>Sceau factice : le domaine ne connaît que le port, la vraie clé est dans l'infrastructure.</summary>
-    private sealed class FakeKeys : IIntegrityKeyVerifier
-    {
-        public static string Seal(string hash) => "seal:" + hash;
+    private const string K1 = "k1";
+    private const string K2 = "k2";
 
-        public bool VerifySeal(string entryHash, string seal) => seal == Seal(entryHash);
+    /// <summary>Registre factice : le domaine ne connaît que le port, les vraies clés sont dans l'infrastructure.</summary>
+    private sealed class FakeKeys(params string[] registry) : IIntegrityKeyVerifier
+    {
+        private readonly string[] _registry = registry.Length == 0 ? [K1] : registry;
+
+        public string? InitialKeyId => _registry[0];
+
+        public string? CurrentKeyId => _registry[^1];
+
+        public static string Seal(string keyId, string hash) => $"seal:{keyId}:{hash}";
+
+        public static string PublicKey(string keyId) => "pub:" + keyId;
+
+        public string? PublicKeyOf(string keyId) => _registry.Contains(keyId) ? PublicKey(keyId) : null;
+
+        public bool VerifySeal(string keyId, string entryHash, string seal) => _registry.Contains(keyId) && seal == Seal(keyId, entryHash);
 
         public bool VerifyClosingSignature(string keyId, string publicKey, string closingHash, string signature) => true;
     }
@@ -27,15 +40,29 @@ public sealed class ChainVerificationTests
     private static List<JournalEntry> Chain(int count)
     {
         List<JournalEntry> entries = [];
-        string previous = JournalEntry.GenesisHash(Dossier);
         for (int i = 1; i <= count; i++)
         {
-            JournalEntry entry = JournalEntry.ForDocument(Invoice(i), i, previous, At.AddMinutes(i)).Value;
-            entry.ApplySeal(FakeKeys.Seal(entry.Hash));
-            entries.Add(entry);
-            previous = entry.Hash;
+            Append(entries, K1, (sequence, previous) => JournalEntry.ForDocument(Invoice(i), sequence, previous, At.AddMinutes(sequence)).Value);
         }
 
+        return entries;
+    }
+
+    private static JournalEntry Append(List<JournalEntry> entries, string sealedWith, Func<long, string, JournalEntry> build)
+    {
+        JournalEntry entry = build(entries.Count + 1, entries.Count == 0 ? JournalEntry.GenesisHash(Dossier) : entries[^1].Hash);
+        entry.ApplySeal(sealedWith, FakeKeys.Seal(sealedWith, entry.Hash));
+        entries.Add(entry);
+        return entry;
+    }
+
+    /// <summary>Deux factures sous K1, la rotation vers K2 (scellée par K1), puis deux factures sous K2.</summary>
+    private static List<JournalEntry> RotatedChain(string announcedPublicKey = "pub:k2")
+    {
+        List<JournalEntry> entries = Chain(2);
+        Append(entries, K1, (sequence, previous) => JournalEntry.ForKeyRotation(K2, announcedPublicKey, sequence, previous, At.AddHours(1)));
+        Append(entries, K2, (sequence, previous) => JournalEntry.ForDocument(Invoice(3), sequence, previous, At.AddHours(2)).Value);
+        Append(entries, K2, (sequence, previous) => JournalEntry.ForDocument(Invoice(4), sequence, previous, At.AddHours(3)).Value);
         return entries;
     }
 
@@ -43,11 +70,12 @@ public sealed class ChainVerificationTests
     private static JournalEntry Tampered(JournalEntry e, decimal? ttc = null, long? sequence = null, (string, string, string)? chain = null) =>
         JournalEntry.Restore(sequence ?? e.Sequence, e.OccurredAt, e.Kind, e.DocumentKind, e.DocumentId, e.SeriesCode, e.Number, e.IssueDate,
             e.CustomerId, (e.TotalExclTax, e.TotalVat, ttc ?? e.TotalInclTax), e.Currency, e.ContentHash, e.RelatedDocumentId,
-            chain ?? (e.PreviousHash, e.Hash, e.Seal));
+            chain ?? (e.PreviousHash, e.Hash, e.Seal), e.KeyId);
 
-    private static IntegrityReport Verify(IEnumerable<JournalEntry> entries, long nextNumber, IReadOnlyDictionary<Guid, string>? documents = null)
+    private static IntegrityReport Verify(
+        IEnumerable<JournalEntry> entries, long nextNumber, IReadOnlyDictionary<Guid, string>? documents = null, FakeKeys? keys = null)
     {
-        IntegrityVerification verification = new(Dossier, [], new FakeKeys());
+        IntegrityVerification verification = new(Dossier, [], keys ?? new FakeKeys());
         foreach (JournalEntry entry in entries)
         {
             verification.Check(entry);
@@ -138,6 +166,47 @@ public sealed class ChainVerificationTests
         report.FindingsTruncated.Should().BeTrue();
     }
 
+
+    [Fact]
+    public void Apres_une_rotation_tout_l_historique_se_verifie_avec_les_cles_retirees() =>
+        Verify(RotatedChain(), nextNumber: 5, keys: new FakeKeys(K1, K2)).IsIntact.Should().BeTrue();
+
+    [Fact]
+    public void Les_entrees_d_avant_le_versionnage_relevent_de_la_premiere_cle()
+    {
+        List<JournalEntry> legacy = [.. Chain(2).Select(e => JournalEntry.Restore(e.Sequence, e.OccurredAt, e.Kind, e.DocumentKind, e.DocumentId,
+            e.SeriesCode, e.Number, e.IssueDate, e.CustomerId, (e.TotalExclTax, e.TotalVat, e.TotalInclTax), e.Currency, e.ContentHash,
+            e.RelatedDocumentId, (e.PreviousHash, e.Hash, e.Seal), keyId: null))];
+
+        Verify(legacy, nextNumber: 3).IsIntact.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Une_cle_retiree_reutilisee_apres_la_rotation_est_signalee()
+    {
+        List<JournalEntry> entries = RotatedChain();
+        JournalEntry last = entries[^1];
+        last.ApplySeal(K1, FakeKeys.Seal(K1, last.Hash));
+
+        Verify(entries, nextNumber: 5, keys: new FakeKeys(K1, K2)).Findings.Should().ContainSingle()
+            .Which.Should().Be(new IntegrityFinding(IntegrityFindingKind.KeyInvalid, 5));
+    }
+
+    [Fact]
+    public void Une_rotation_vers_une_cle_absente_du_registre_ou_differente_est_signalee()
+    {
+        Verify(RotatedChain(announcedPublicKey: "pub:autre"), nextNumber: 5, keys: new FakeKeys(K1, K2)).Findings
+            .Should().ContainSingle().Which.Should().Be(new IntegrityFinding(IntegrityFindingKind.KeyInvalid, 3));
+
+        // K2 retirée du registre : l'annonce et les entrées qu'elle aurait scellées tombent.
+        Verify(RotatedChain(), nextNumber: 5, keys: new FakeKeys(K1)).Findings.Select(f => f.Kind).Should().BeEquivalentTo(
+            [IntegrityFindingKind.KeyInvalid, IntegrityFindingKind.SealInvalid, IntegrityFindingKind.SealInvalid, IntegrityFindingKind.KeyInvalid]);
+    }
+
+    [Fact]
+    public void Une_version_ajoutee_au_registre_sans_annonce_dans_la_chaine_est_signalee() =>
+        Verify(Chain(2), nextNumber: 3, keys: new FakeKeys(K1, K2)).Findings.Should().ContainSingle()
+            .Which.Should().Be(new IntegrityFinding(IntegrityFindingKind.KeyInvalid));
 
     [Theory]
     [InlineData("")]

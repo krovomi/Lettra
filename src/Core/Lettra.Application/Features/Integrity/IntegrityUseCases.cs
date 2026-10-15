@@ -37,11 +37,27 @@ public sealed record GetSealedArchiveQuery(DossierId Dossier, int ClosingNumber)
     public Permission Permission => Permission.ArchivesExporter;
 }
 
-internal sealed class IntegrityHandlers(DossierIntegrityService integrity, IIntegrityStore store, ISealedArchiveBuilder archives) :
+/// <summary>Registre des clés publiques du dossier : ce qu'un auditeur compare aux clés des archives.</summary>
+public sealed record ListIntegrityKeysQuery(DossierId Dossier)
+    : IQuery<Result<IReadOnlyList<IntegrityKeySummary>>>, IRequirePermission
+{
+    public Permission Permission => Permission.IntegriteVerifier;
+}
+
+/// <summary>Faire tourner maintenant les clés de la chaîne du dossier (soupçon de fuite, départ d'un administrateur).</summary>
+public sealed record RotateIntegrityKeysCommand(DossierId Dossier)
+    : ICommand<Result<IReadOnlyList<IntegrityKeySummary>>>, IRequirePermission
+{
+    public Permission Permission => Permission.IntegriteClesGerer;
+}
+
+internal sealed class IntegrityHandlers(DossierIntegrityService integrity, IIntegrityStore store, IIntegrityKeyring keyring, ISealedArchiveBuilder archives) :
     ICommandHandler<VerifyDossierIntegrityCommand, Result<IntegrityReportResponse>>,
     ICommandHandler<CloseDuePeriodsCommand, Result<IReadOnlyList<ClosingSummary>>>,
     IQueryHandler<ListClosingsQuery, Result<IReadOnlyList<ClosingSummary>>>,
-    IQueryHandler<GetSealedArchiveQuery, Result<SealedArchive>>
+    IQueryHandler<GetSealedArchiveQuery, Result<SealedArchive>>,
+    IQueryHandler<ListIntegrityKeysQuery, Result<IReadOnlyList<IntegrityKeySummary>>>,
+    ICommandHandler<RotateIntegrityKeysCommand, Result<IReadOnlyList<IntegrityKeySummary>>>
 {
     public async Task<Result<IntegrityReportResponse>> HandleAsync(VerifyDossierIntegrityCommand command, CancellationToken cancellationToken) =>
         (await integrity.VerifyAsync(cancellationToken).ConfigureAwait(false)).Map(IntegrityMapper.ToResponse);
@@ -58,5 +74,16 @@ internal sealed class IntegrityHandlers(DossierIntegrityService integrity, IInte
         return query.ClosingNumber < 1
             ? Task.FromResult<Result<SealedArchive>>(IntegrityErrors.ClosingNotFound)
             : archives.BuildAsync(query.ClosingNumber, cancellationToken);
+    }
+
+    public async Task<Result<IReadOnlyList<IntegrityKeySummary>>> HandleAsync(ListIntegrityKeysQuery query, CancellationToken cancellationToken) =>
+        Result<IReadOnlyList<IntegrityKeySummary>>.Success(IntegrityMapper.ToSummaries(await keyring.ListAsync(cancellationToken).ConfigureAwait(false)));
+
+    public async Task<Result<IReadOnlyList<IntegrityKeySummary>>> HandleAsync(RotateIntegrityKeysCommand command, CancellationToken cancellationToken)
+    {
+        Result<IntegrityKeyVersion> rotated = await store.RotateKeysAsync(cancellationToken).ConfigureAwait(false);
+        return rotated.IsFailure
+            ? Result<IReadOnlyList<IntegrityKeySummary>>.Failure(rotated.Errors)
+            : Result<IReadOnlyList<IntegrityKeySummary>>.Success(IntegrityMapper.ToSummaries(await keyring.ListAsync(cancellationToken).ConfigureAwait(false)));
     }
 }

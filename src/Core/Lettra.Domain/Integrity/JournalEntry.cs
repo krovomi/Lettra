@@ -15,6 +15,12 @@ public enum JournalEntryKind
 
     /// <summary>Une clôture périodique signée : elle entre elle-même dans la chaîne.</summary>
     PeriodClosed = 100,
+
+    /// <summary>
+    /// Rotation des clés : la nouvelle clé (identifiant et empreinte de sa clé publique) est annoncée par une entrée
+    /// scellée avec l'ancienne. Les entrées suivantes sont scellées avec la nouvelle.
+    /// </summary>
+    KeyRotated = 101,
 }
 
 /// <summary>Nature de la pièce journalisée. Ajout seulement.</summary>
@@ -51,14 +57,15 @@ public sealed record DocumentLifecycleEvent(
 /// <summary>
 /// Une entrée du journal append-only d'un dossier (phase 3, chaîne anti-fraude). Chaque entrée porte l'empreinte
 /// SHA-256 de son contenu et de l'empreinte précédente : modifier, insérer ou supprimer une ligne casse la chaîne.
-/// Le sceau (HMAC par une clé dérivée de la clé du cabinet, qui n'est pas en base) empêche de recalculer la chaîne
-/// après coup sans la clé.
+/// Le sceau (HMAC par la clé du dossier en vigueur, enveloppée par la clé du cabinet) empêche de recalculer la chaîne
+/// après coup sans la clé. <see cref="KeyId"/> dit quelle version de clé a scellé l'entrée.
 /// </summary>
 public sealed class JournalEntry
 {
     public const int MaxSeriesLength = 16;
     public const int MaxNumberLength = 40;
     public const int HashLength = 64;
+    public const int MaxKeyIdLength = 32;
 
     private JournalEntry()
     {
@@ -100,6 +107,12 @@ public sealed class JournalEntry
     public string Hash { get; private set; } = string.Empty;
 
     public string Seal { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// Version de clé qui a scellé l'entrée. Hors de l'empreinte : le sceau la lie déjà (un sceau fait avec une autre
+    /// clé ne se vérifie pas). <c>null</c> pour les entrées écrites avant le versionnage : la première clé du dossier.
+    /// </summary>
+    public string? KeyId { get; private set; }
 
     /// <summary>Empreinte de départ, propre au dossier : une chaîne ne peut pas être recollée sur un autre dossier.</summary>
     public static string GenesisHash(DossierId dossier) => IntegrityHash.Of("lettra-journal-v1", IntegrityHash.Field(dossier.Value));
@@ -153,6 +166,30 @@ public sealed class JournalEntry
         }, sequence, previousHash, at).Value;
     }
 
+    /// <summary>
+    /// L'entrée qui annonce une nouvelle clé : <see cref="Number"/> porte son identifiant et <see cref="ContentHash"/>
+    /// l'empreinte de sa clé publique. Elle est scellée avec la clé sortante, ce qui rattache la nouvelle à la chaîne.
+    /// </summary>
+    public static JournalEntry ForKeyRotation(string keyId, string publicKey, long sequence, string previousHash, DateTimeOffset at)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(keyId);
+        ArgumentException.ThrowIfNullOrEmpty(publicKey);
+        if (keyId.Length > MaxKeyIdLength)
+        {
+            throw new ArgumentException("Identifiant de clé trop long.", nameof(keyId));
+        }
+
+        return Chain(new JournalEntry
+        {
+            Kind = JournalEntryKind.KeyRotated,
+            Number = keyId,
+            ContentHash = KeyFingerprint(keyId, publicKey),
+        }, sequence, previousHash, at).Value;
+    }
+
+    /// <summary>Empreinte d'une clé annoncée dans la chaîne : son identifiant et sa clé publique.</summary>
+    public static string KeyFingerprint(string keyId, string publicKey) => IntegrityHash.Of("integrity-key-v1", keyId, publicKey);
+
     /// <summary>Reconstitue une entrée telle qu'elle a été lue (archive scellée) : rien n'est recalculé.</summary>
     public static JournalEntry Restore(
         long sequence,
@@ -168,7 +205,8 @@ public sealed class JournalEntry
         string? currency,
         string contentHash,
         Guid? relatedDocumentId,
-        (string Previous, string Hash, string Seal) chain) => new()
+        (string Previous, string Hash, string Seal) chain,
+        string? keyId = null) => new()
         {
             Sequence = sequence,
             OccurredAt = occurredAt,
@@ -188,6 +226,7 @@ public sealed class JournalEntry
             PreviousHash = chain.Previous,
             Hash = chain.Hash,
             Seal = chain.Seal,
+            KeyId = keyId,
         };
 
     /// <summary>Recalcule l'empreinte à partir des champs tels qu'ils sont (en base, dans une archive).</summary>
@@ -221,9 +260,11 @@ public sealed class JournalEntry
     /// <summary>Vrai si l'entrée consomme un numéro de série (validation d'une pièce).</summary>
     public bool AssignsNumber => Kind is JournalEntryKind.QuoteValidated or JournalEntryKind.InvoiceValidated or JournalEntryKind.CreditNoteValidated;
 
-    public void ApplySeal(string seal)
+    public void ApplySeal(string keyId, string seal)
     {
+        ArgumentException.ThrowIfNullOrEmpty(keyId);
         ArgumentException.ThrowIfNullOrEmpty(seal);
+        KeyId = keyId;
         Seal = seal;
     }
 

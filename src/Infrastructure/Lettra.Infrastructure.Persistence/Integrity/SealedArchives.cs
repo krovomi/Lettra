@@ -17,11 +17,13 @@ namespace Lettra.Infrastructure.Persistence.Integrity;
 /// <summary>
 /// Archive scellée d'une clôture : un ZIP autoportant (journal de la période, clôture, manifeste des empreintes,
 /// signature du manifeste et clé publique). Elle se vérifie hors de Lettra : recalculer la chaîne, les empreintes
-/// des fichiers, puis la signature avec la clé publique, dont l'identifiant est celui de la clé du cabinet.
+/// des fichiers, puis la signature avec la clé publique, dont l'identifiant figure au registre des clés du dossier.
+/// Le manifeste est signé avec la version de clé qui a signé la clôture, même retirée depuis : l'archive ne porte
+/// qu'une clé publique, et une rotation ne change pas l'archive d'une clôture ancienne.
 /// Toujours régénérée à l'identique depuis la base : rien à stocker, et une base altérée produit une archive qui
 /// ne se vérifie plus.
 /// </summary>
-internal sealed class EfSealedArchiveBuilder(TenantDbSession session, ITenantContext tenant, IIntegrityKeyring keyring) : ISealedArchiveBuilder
+internal sealed class EfSealedArchiveBuilder(TenantDbSession session, ITenantContext tenant, EnvelopedIntegrityKeyring keyring) : ISealedArchiveBuilder
 {
     public async Task<Result<SealedArchive>> BuildAsync(int closingNumber, CancellationToken cancellationToken)
     {
@@ -33,7 +35,7 @@ internal sealed class EfSealedArchiveBuilder(TenantDbSession session, ITenantCon
             return IntegrityErrors.ClosingNotFound;
         }
 
-        Result<IIntegrityKeys> keys = await keyring.GetAsync(tenant.Current.OrganisationId, cancellationToken).ConfigureAwait(false);
+        Result<IntegrityKeyMaterial> keys = await keyring.FindAsync(db, closing.KeyId, cancellationToken).ConfigureAwait(false);
         if (keys.IsFailure)
         {
             return Result<SealedArchive>.Failure(keys.Errors);
@@ -69,7 +71,7 @@ public static class SealedArchiveFormat
         WriteIndented = false,
     };
 
-    internal static byte[] Write(Guid dossier, PeriodClosing closing, IReadOnlyList<JournalEntry> entries, IIntegrityKeys keys)
+    internal static byte[] Write(Guid dossier, PeriodClosing closing, IReadOnlyList<JournalEntry> entries, IntegrityKeyMaterial keys)
     {
         StringBuilder journal = new();
         foreach (JournalEntry entry in entries)
@@ -112,8 +114,8 @@ public static class SealedArchiveFormat
     }
 
     /// <summary>
-    /// Vérifie une archive avec la seule clé publique qu'elle contient, et l'identifiant de clé attendu (celui du
-    /// cabinet) : signature du manifeste, empreinte de chaque fichier, chaîne des entrées et empreinte de la clôture.
+    /// Vérifie une archive avec la seule clé publique qu'elle contient, et l'identifiant de clé attendu (celui que le
+    /// registre des clés du dossier donne pour cette clôture) : signature du manifeste, empreinte de chaque fichier, chaîne des entrées et empreinte de la clôture.
     /// </summary>
     public static bool Verify(byte[] archive, string expectedKeyId, out string? failure)
     {
@@ -126,14 +128,14 @@ public static class SealedArchiveFormat
             ArchivedClosing closing = JsonSerializer.Deserialize<ArchivedClosing>(files[ClosingFile], Json)!;
 
             if (manifest.Format != Version || manifest.KeyId != expectedKeyId || closing.KeyId != expectedKeyId
-                || CabinetIntegrityKeys.KeyIdOf(Convert.FromBase64String(closing.PublicKey)) != expectedKeyId)
+                || IntegrityKeyMaterial.KeyIdOf(Convert.FromBase64String(closing.PublicKey)) != expectedKeyId)
             {
                 failure = "clé";
                 return false;
             }
 
             string signature = Encoding.ASCII.GetString(files[SignatureFile]);
-            if (!CabinetIntegrityKeys.VerifyWithPublicKey(closing.PublicKey, Sha256(files[ManifestFile]), signature))
+            if (!IntegrityKeyMaterial.VerifyWithPublicKey(closing.PublicKey, Sha256(files[ManifestFile]), signature))
             {
                 failure = "signature";
                 return false;
@@ -151,7 +153,7 @@ public static class SealedArchiveFormat
             PeriodClosing restored = closing.ToClosing();
             Domain.SharedKernel.DossierId dossier = new(manifest.Dossier);
             if (restored.ComputeHash(dossier) != manifest.ClosingHash || closing.Hash != manifest.ClosingHash
-                || !CabinetIntegrityKeys.VerifyWithPublicKey(closing.PublicKey, closing.Hash, closing.Signature))
+                || !IntegrityKeyMaterial.VerifyWithPublicKey(closing.PublicKey, closing.Hash, closing.Signature))
             {
                 failure = ClosingFile;
                 return false;
@@ -215,7 +217,7 @@ public static class SealedArchiveFormat
         - cle-publique.pem : la clé publique de signature du cabinet.
 
         Vérifier : 1) l'identifiant de clé (p256- suivi des 16 premiers caractères hexadécimaux du SHA-256 de la clé
-        publique) est celui que le cabinet a communiqué ; 2) la signature du manifeste ; 3) l'empreinte de chaque
+        publique) figure au registre des clés du dossier que le cabinet a communiqué (les clés retirées y restent) ; 2) la signature du manifeste ; 3) l'empreinte de chaque
         fichier ; 4) chaque entrée : son empreinte recalculée et le lien vers l'entrée précédente ; 5) la dernière
         empreinte est celle de la clôture.
         """;

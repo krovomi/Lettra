@@ -7,6 +7,7 @@ using Lettra.Domain.Integrity;
 using Lettra.Domain.SharedKernel;
 using Lettra.Infrastructure.Persistence;
 using Lettra.Infrastructure.Persistence.Integrity;
+using Lettra.Infrastructure.Persistence.Security;
 using Lettra.Infrastructure.Persistence.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -174,20 +175,161 @@ internal static class IntegrityScenarios
             report.Value.ClosingsChecked.Should().Be(2);
             report.Value.EntriesChecked.Should().Be(6);
 
-            Result<IIntegrityKeys> keys = await scope.ServiceProvider.GetRequiredService<IIntegrityKeyring>()
-                .GetAsync(harness.Descriptor(dossier).OrganisationId, default);
+            string keyId = (await scope.ServiceProvider.GetRequiredService<IIntegrityKeyring>().ListAsync(default)).Should().ContainSingle().Subject.KeyId;
             Result<SealedArchive> archive = await scope.ServiceProvider.GetRequiredService<ISealedArchiveBuilder>().BuildAsync(1, default);
-            SealedArchiveFormat.Verify(archive.Value.Content, keys.Value.KeyId, out string? failure).Should().BeTrue(failure);
+            SealedArchiveFormat.Verify(archive.Value.Content, keyId, out string? failure).Should().BeTrue(failure);
             SealedArchiveFormat.Verify(archive.Value.Content, "p256-0000000000000000", out _).Should().BeFalse("une autre clé n'est pas celle du cabinet");
 
             // L'archive est régénérée avec le même contenu ; seule la signature ECDSA, aléatoire, change.
             Result<SealedArchive> again = await scope.ServiceProvider.GetRequiredService<ISealedArchiveBuilder>().BuildAsync(1, default);
             ReadEntry(again.Value.Content, SealedArchiveFormat.ManifestFile).Should().Be(ReadEntry(archive.Value.Content, SealedArchiveFormat.ManifestFile));
-            SealedArchiveFormat.Verify(again.Value.Content, keys.Value.KeyId, out failure).Should().BeTrue(failure);
+            SealedArchiveFormat.Verify(again.Value.Content, keyId, out failure).Should().BeTrue(failure);
             (await scope.ServiceProvider.GetRequiredService<ISealedArchiveBuilder>().BuildAsync(9, default)).Errors
                 .Should().ContainSingle().Which.Code.Should().Be(IntegrityErrors.ClosingNotFoundCode);
         }
     }
+
+    /// <summary>
+    /// Rotation : deux rotations entre des validations et des clôtures ; tout l'historique se vérifie avec les versions
+    /// retirées, l'archive d'une clôture ancienne aussi, avec la clé de son époque. Le registre est en ajout seul, et
+    /// une version fabriquée sans la KEK est signalée et bloque les validations au lieu d'être utilisée.
+    /// </summary>
+    public static async Task KeyRotationAsync(TenantHarness harness, ManualClock clock, DatabaseProvider provider, string connectionString)
+    {
+        DossierId dossier = harness.AddDossier(provider, connectionString);
+        clock.Now = new DateTimeOffset(2026, 8, 10, 9, 0, 0, TimeSpan.Zero);
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            (await scope.ServiceProvider.GetRequiredService<IIntegrityKeyring>().ListAsync(default)).Should().BeEmpty("la clé naît avec la première entrée");
+            await ValidateAsync(scope.ServiceProvider, 120m);
+            await ValidateAsync(scope.ServiceProvider, 240m);
+        }
+
+        clock.Now = new DateTimeOffset(2026, 9, 2, 9, 0, 0, TimeSpan.Zero);
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            (await scope.ServiceProvider.GetRequiredService<DossierIntegrityService>().CloseDuePeriodsAsync(default)).Value.Should().ContainSingle();
+            (await scope.ServiceProvider.GetRequiredService<IIntegrityStore>().RotateKeysAsync(default)).Value.Version.Should().Be(2);
+            await ValidateAsync(scope.ServiceProvider, 360m);
+        }
+
+        clock.Now = new DateTimeOffset(2026, 9, 20, 9, 0, 0, TimeSpan.Zero);
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            // La passe de nuit ne fait tourner que des clés trop anciennes.
+            DossierIntegrityService integrity = scope.ServiceProvider.GetRequiredService<DossierIntegrityService>();
+            (await integrity.RotateKeysIfDueAsync(TimeSpan.FromDays(365), default)).Value.Should().BeNull();
+            (await integrity.RotateKeysIfDueAsync(TimeSpan.FromDays(10), default)).Value!.Version.Should().Be(3);
+            await ValidateAsync(scope.ServiceProvider, 480m);
+        }
+
+        clock.Now = new DateTimeOffset(2026, 10, 2, 9, 0, 0, TimeSpan.Zero);
+        IReadOnlyList<IntegrityKeyVersion> versions;
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            (await scope.ServiceProvider.GetRequiredService<DossierIntegrityService>().CloseDuePeriodsAsync(default)).Value.Should().ContainSingle();
+            Result<IntegrityReport> report = await scope.ServiceProvider.GetRequiredService<DossierIntegrityService>().VerifyAsync(default);
+            report.Value.Findings.Should().BeEmpty();
+            report.Value.EntriesChecked.Should().Be(8, "4 pièces, 2 rotations, 2 clôtures");
+
+            versions = await scope.ServiceProvider.GetRequiredService<IIntegrityKeyring>().ListAsync(default);
+            versions.Select(v => v.Version).Should().Equal(1, 2, 3);
+            versions.Select(v => v.KeyId).Should().OnlyHaveUniqueItems();
+            versions[0].RetiredAt.Should().Be(versions[1].CreatedAt);
+            versions[2].RetiredAt.Should().BeNull();
+
+            IReadOnlyList<PeriodClosing> closings = await scope.ServiceProvider.GetRequiredService<IIntegrityStore>().ListClosingsAsync(default);
+            closings.Select(c => c.KeyId).Should().Equal(versions[0].KeyId, versions[2].KeyId);
+
+            // L'archive d'août est signée avec la clé d'août, retirée depuis, et se vérifie avec elle seule.
+            Result<SealedArchive> august = await scope.ServiceProvider.GetRequiredService<ISealedArchiveBuilder>().BuildAsync(1, default);
+            SealedArchiveFormat.Verify(august.Value.Content, versions[0].KeyId, out string? failure).Should().BeTrue(failure);
+            SealedArchiveFormat.Verify(august.Value.Content, versions[2].KeyId, out _).Should().BeFalse();
+        }
+
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            LettraDbContext db = await scope.ServiceProvider.GetRequiredService<ITenantDbContextFactory>().CreateAsync(default);
+            await using (db)
+            {
+                // Registre en ajout seul : ni clé publique remplacée, ni version supprimée.
+                Func<Task> replace = () => db.Database.ExecuteSqlRawAsync(KeySql(provider, "UPDATE {0} SET {1} = 'AAAA' WHERE {2} = 1", "PublicKey"));
+                await replace.Should().ThrowAsync<Exception>();
+                Func<Task> delete = () => db.Database.ExecuteSqlRawAsync(KeySql(provider, "DELETE FROM {0} WHERE {2} = 1", "PublicKey"));
+                await delete.Should().ThrowAsync<Exception>();
+
+                // Une version fabriquée sans la KEK : la ligne s'ajoute, mais son enveloppe ne s'ouvre pas.
+                IntegrityKeyMaterial forged = IntegrityKeyMaterial.Generate();
+                db.IntegrityKeys.Add(new StoredIntegrityKey(4, forged.KeyId, forged.PublicKey, new byte[92], clock.GetUtcNow()));
+                await db.SaveChangesAsync();
+            }
+        }
+
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            Result<IntegrityReport> report = await scope.ServiceProvider.GetRequiredService<DossierIntegrityService>().VerifyAsync(default);
+            report.Value.Findings.Should().ContainSingle().Which.Kind.Should().Be(IntegrityFindingKind.KeyInvalid);
+            harness.Alerts.Signals.Should().Contain(s => s.Dossier == dossier && s.Rule == DossierAlertRule.IntegrityChainCompromised && s.Firing);
+
+            Result<long> refused = await scope.ServiceProvider.GetRequiredService<IIntegrityJournal>().AppendAsync(Invoice("FA-X", 1m), default);
+            refused.Errors.Should().ContainSingle().Which.Code.Should().Be(IntegrityErrors.KeyUnavailableCode);
+        }
+    }
+
+    /// <summary>
+    /// Un dossier journalisé avant le versionnage (entrées sans identifiant de clé, scellées par la clé dérivée de la
+    /// KEK) : il se vérifie tel quel, la clé dérivée devient la version 1 à la première écriture, puis tourne.
+    /// </summary>
+    public static async Task LegacyChainAdoptedAsync(TenantHarness harness, DatabaseProvider provider, string connectionString)
+    {
+        DossierId dossier = harness.AddDossier(provider, connectionString);
+        TenantDescriptor descriptor = harness.Descriptor(dossier);
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            await scope.ServiceProvider.GetRequiredService<IIntegrityStore>().ListClosingsAsync(default);
+            IntegrityKeyMaterial legacy = LegacyIntegrityKeys.Derive(
+                await harness.Keks.GetOrCreateAsync(descriptor.OrganisationId, default), descriptor.OrganisationId);
+            LettraDbContext db = await scope.ServiceProvider.GetRequiredService<ITenantDbContextFactory>().CreateAsync(default);
+            await using (db)
+            {
+                string previous = JournalEntry.GenesisHash(dossier);
+                for (int sequence = 1; sequence <= 2; sequence++)
+                {
+                    JournalEntry e = JournalEntry.ForDocument(Invoice($"FA-{sequence}", 100m), sequence, previous, DateTimeOffset.UtcNow).Value;
+                    db.IntegrityJournal.Add(JournalEntry.Restore(e.Sequence, e.OccurredAt, e.Kind, e.DocumentKind, e.DocumentId, e.SeriesCode, e.Number,
+                        e.IssueDate, e.CustomerId, (e.TotalExclTax, e.TotalVat, e.TotalInclTax), e.Currency, e.ContentHash, e.RelatedDocumentId,
+                        (e.PreviousHash, e.Hash, legacy.Seal(e.Hash)), keyId: null));
+                    previous = e.Hash;
+                }
+
+                await db.SaveChangesAsync();
+                await db.IntegrityChainHead.ExecuteUpdateAsync(s => s.SetProperty(h => h.LastSequence, 2L).SetProperty(h => h.LastHash, previous));
+            }
+
+            (await scope.ServiceProvider.GetRequiredService<DossierIntegrityService>().VerifyAsync(default)).Value.Findings
+                .Where(f => f.Kind != IntegrityFindingKind.NumberingGap).Should().BeEmpty();
+        }
+
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            await ValidateAsync(scope.ServiceProvider, 120m);
+            IntegrityKeyVersion adopted = (await scope.ServiceProvider.GetRequiredService<IIntegrityKeyring>().ListAsync(default)).Should().ContainSingle().Subject;
+            adopted.KeyId.Should().Be(LegacyIntegrityKeys.Derive(
+                (await harness.Keks.FindAsync(descriptor.OrganisationId, default))!, descriptor.OrganisationId).KeyId);
+
+            (await scope.ServiceProvider.GetRequiredService<IIntegrityStore>().RotateKeysAsync(default)).IsSuccess.Should().BeTrue();
+            await ValidateAsync(scope.ServiceProvider, 120m);
+        }
+
+        await using AsyncServiceScope check = await harness.OpenAsync(dossier);
+        IntegrityReport final = (await check.ServiceProvider.GetRequiredService<DossierIntegrityService>().VerifyAsync(default)).Value;
+        final.EntriesChecked.Should().Be(5);
+        final.Findings.Where(f => f.Kind != IntegrityFindingKind.NumberingGap).Should().BeEmpty("les numéros FA-1 et FA-2 ont été écrits sans la série");
+    }
+
+    private static string KeySql(DatabaseProvider provider, string template, string column) => provider == DatabaseProvider.SqlServer
+        ? string.Format(System.Globalization.CultureInfo.InvariantCulture, template, "[IntegrityKeys]", $"[{column}]", "[Version]")
+        : string.Format(System.Globalization.CultureInfo.InvariantCulture, template, "\"IntegrityKeys\"", $"\"{column}\"", "\"Version\"");
 
     private static string ReadEntry(byte[] archive, string name)
     {

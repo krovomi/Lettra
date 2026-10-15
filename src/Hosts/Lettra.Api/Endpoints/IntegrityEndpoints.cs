@@ -10,7 +10,7 @@ using Lettra.Domain.Common;
 
 namespace Lettra.Api.Endpoints;
 
-/// <summary>Chaîne anti-fraude du dossier : contrôle à la demande, clôtures signées et archives scellées.</summary>
+/// <summary>Chaîne anti-fraude du dossier : contrôle à la demande, clôtures signées, archives scellées et registre des clés.</summary>
 internal static class IntegrityEndpoints
 {
     public static RouteGroupBuilder MapIntegrity(this RouteGroupBuilder api)
@@ -38,7 +38,31 @@ internal static class IntegrityEndpoints
             .Produces(StatusCodes.Status200OK, contentType: "application/zip")
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        group.MapGet("/keys", ListKeysAsync)
+            .RequirePermission(Permission.IntegriteVerifier)
+            .WithName("ListIntegrityKeys")
+            .Produces<IReadOnlyList<IntegrityKeySummary>>();
+
+        group.MapPost("/keys/rotation", RotateKeysAsync)
+            .RequirePermission(Permission.IntegriteClesGerer)
+            .WithName("RotateIntegrityKeys")
+            .Produces<IReadOnlyList<IntegrityKeySummary>>();
+
         return group;
+    }
+
+    private static async Task<IResult> ListKeysAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken)
+    {
+        Result<IReadOnlyList<IntegrityKeySummary>> keys = await queries
+            .QueryAsync(new ListIntegrityKeysQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false);
+        return keys.IsSuccess ? TypedResults.Ok(keys.Value) : keys.Errors.ToProblem();
+    }
+
+    private static async Task<IResult> RotateKeysAsync(ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken)
+    {
+        Result<IReadOnlyList<IntegrityKeySummary>> keys = await commands
+            .SendAsync(new RotateIntegrityKeysCommand(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false);
+        return keys.IsSuccess ? TypedResults.Ok(keys.Value) : keys.Errors.ToProblem();
     }
 
     private static async Task<IResult> VerifyAsync(ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken)
