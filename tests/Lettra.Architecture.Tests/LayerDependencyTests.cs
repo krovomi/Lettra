@@ -28,7 +28,9 @@ public sealed class LayerDependencyTests
         { "Lettra.Supervision.Application", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain", "Lettra.Supervision.Domain"] },
         { "Lettra.Supervision.Infrastructure", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain", "Lettra.Infrastructure.Persistence", "Lettra.Supervision.Application", "Lettra.Supervision.Domain"] },
         { "Lettra.UI.Abstractions", ["Lettra.Contracts"] },
-        { "Lettra.UI.Shared", ["Lettra.Calculations", "Lettra.Contracts", "Lettra.UI.Abstractions"] },
+        { "Lettra.UI.Shared", ["Lettra.Calculations", "Lettra.Contracts", "Lettra.Printing", "Lettra.UI.Abstractions"] },
+        // Rendu PDF (phase 3) : ne voit que les calculs partagés, ni les contrats ni le domaine.
+        { "Lettra.Printing", ["Lettra.Calculations"] },
         { "Lettra.UI.Gateway.Http", ["Lettra.Contracts", "Lettra.UI.Abstractions"] },
         { "Lettra.UI.Gateway.InProcess", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain", "Lettra.Supervision.Application", "Lettra.Supervision.Domain", "Lettra.UI.Abstractions"] },
 

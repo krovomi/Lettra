@@ -39,6 +39,12 @@ jobs:
       # SQL Server (Testcontainers) ; test « aucune donnée de dossier dans les journaux ».
       - name: Tests
         run: dotnet test Lettra.Ci.slnf -c Release --no-build --logger "trx;LogFilePrefix=lettra" --results-directory TestResults
+        env:
+          LETTRA_PDF_SAMPLES: ${{ github.workspace }}/pdf-samples
+
+      # Les PDF des devis et factures (Lettra.Printing) doivent être PDF/A-3b : base du Factur-X (phase 5).
+      - name: Conformité PDF/A-3b (veraPDF)
+        run: build/verapdf/validate.sh pdf-samples
 
       - name: Résultats de tests
         if: always()

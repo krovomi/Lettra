@@ -1,18 +1,60 @@
 @inherits LayoutComponentBase
+@implements IDisposable
 @inject IStringLocalizer<SharedResource> L
+@inject UiPreferences Preferences
 
-<div class="lettra-shell">
-    <header class="lettra-header">
-        <span class="lettra-brand">Lettra</span>
-        <nav aria-label="@L["Nav.Label"]">
-            <NavLink href="customers" Match="NavLinkMatch.Prefix">@L["Nav.Customers"]</NavLink>
-            <NavLink href="suppliers" Match="NavLinkMatch.Prefix">@L["Nav.Suppliers"]</NavLink>
-            <NavLink href="catalog" Match="NavLinkMatch.Prefix">@L["Nav.Catalog"]</NavLink>
-            <NavLink href="alerts" Match="NavLinkMatch.Prefix">@L["Nav.Alerts"]</NavLink>
-        </nav>
-        <div class="lettra-session"><SessionBar /></div>
-    </header>
-    <main class="lettra-main">
-        @Body
-    </main>
-</div>
+<CascadingValue Value="Preferences.Density">
+    <div class="lettra-shell @Preferences.Density.CssClass()">
+        <header class="lettra-header">
+            <span class="lettra-brand">Lettra</span>
+            <nav aria-label="@L["Nav.Label"]">
+                <NavLink href="quotes" Match="NavLinkMatch.Prefix">@L["Nav.Quotes"]</NavLink>
+                <NavLink href="invoices" Match="NavLinkMatch.Prefix">@L["Nav.Invoices"]</NavLink>
+                <NavLink href="credit-notes" Match="NavLinkMatch.Prefix">@L["Nav.CreditNotes"]</NavLink>
+                <NavLink href="customers" Match="NavLinkMatch.Prefix">@L["Nav.Customers"]</NavLink>
+                <NavLink href="suppliers" Match="NavLinkMatch.Prefix">@L["Nav.Suppliers"]</NavLink>
+                <NavLink href="catalog" Match="NavLinkMatch.Prefix">@L["Nav.Catalog"]</NavLink>
+                <NavLink href="alerts" Match="NavLinkMatch.Prefix">@L["Nav.Alerts"]</NavLink>
+                <NavLink href="settings/company">@L["Nav.Company"]</NavLink>
+            </nav>
+            <button type="button" class="lettra-palette-button" @onclick="OpenPaletteAsync" title="@L["Palette.Title"] (Ctrl+K)">
+                @L["Palette.Open"] <kbd>Ctrl+K</kbd>
+            </button>
+            <div class="lettra-session"><SessionBar /></div>
+        </header>
+        <main class="lettra-main">
+            @Body
+        </main>
+    </div>
+</CascadingValue>
+
+<GlobalShortcuts Scope="_globalScope" />
+<CommandPalette @ref="_palette" />
+
+@code {
+    private KeyboardScope _globalScope = default!;
+    private CommandPalette? _palette;
+
+    protected override void OnInitialized()
+    {
+        // Portée globale : la plus générale, les pages l'enrichissent ou la masquent.
+        _globalScope = new KeyboardScope("global")
+            .Bind(CommandPalette.Shortcut.ToString(), L["Palette.Title"], _ => OpenPaletteAsync(), showInBar: false)
+            .Bind("Ctrl+Shift+D", L["Command.Density"], _ => Preferences.ToggleDensityAsync(), showInBar: false);
+        Preferences.Changed += OnPreferencesChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Preferences.LoadAsync();
+        }
+    }
+
+    private Task OpenPaletteAsync() => _palette?.OpenAsync() ?? Task.CompletedTask;
+
+    private void OnPreferencesChanged(object? sender, EventArgs e) => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Preferences.Changed -= OnPreferencesChanged;
+}
