@@ -67,4 +67,7 @@
   <data name="Error.SegregationOfDuties.NotAvailable" xml:space="preserve">
     <value>Segregation of duties is not available on a single-user standalone workstation.</value>
   </data>
+  <data name="Error.SegregationOfDuties.NotACreditNote" xml:space="preserve">
+    <value>Only a credit note can be approved: this document is not one.</value>
+  </data>
 </root>

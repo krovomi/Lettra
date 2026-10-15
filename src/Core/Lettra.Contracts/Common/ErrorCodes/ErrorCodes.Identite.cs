@@ -58,5 +58,6 @@ public static partial class ErrorCodes
         public const string ApproverIsCreator = "SegregationOfDuties.ApproverIsCreator";
         public const string ThresholdInvalid = "SegregationOfDuties.ThresholdInvalid";
         public const string NotAvailable = "SegregationOfDuties.NotAvailable";
+        public const string NotACreditNote = "SegregationOfDuties.NotACreditNote";
     }
 }
