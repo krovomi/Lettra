@@ -18,10 +18,15 @@ public sealed class ClaudeEngineOptions
     public string? ApiKey { get; set; }
 
     /// <summary>
-    /// Point d'accès choisi par le cabinet. Vide : API directe d'Anthropic, qui n'offre pas de résidence des données dans
-    /// l'UE ; une résidence européenne passe par un fournisseur cloud en région UE (Amazon Bedrock, Google Vertex AI).
+    /// Point d'accès en région UE (Amazon Bedrock, Google Vertex AI). Obligatoire : l'API directe d'Anthropic n'offre pas
+    /// de résidence des données dans l'UE, et Lettra refuse de démarrer plutôt que d'y envoyer des données (ADR-0012).
     /// </summary>
     public Uri? BaseUrl { get; set; }
+
+    /// <summary>
+    /// Autorise l'API directe d'Anthropic, hors UE. Réservé aux évaluations sur données fictives ; jamais en production.
+    /// </summary>
+    public bool AllowNonEuEndpoint { get; set; }
 
     /// <summary>Modèle Claude. À régler par fonction après mesure sur le banc d'évals (annexe B §5.4).</summary>
     public string Model { get; set; } = "claude-opus-5-5";
@@ -34,7 +39,10 @@ public sealed class ClaudeEngineOptions
 
 public static class DependencyInjection
 {
-    /// <summary>Enregistre le moteur Claude, seulement si une clé d'API est configurée sur ce déploiement.</summary>
+    /// <summary>
+    /// Enregistre le moteur Claude, seulement si une clé d'API est configurée sur ce déploiement. Échec fermé : avec une
+    /// clé mais sans point d'accès en région UE, le démarrage échoue au lieu de basculer vers l'API directe, hors UE.
+    /// </summary>
     public static IServiceCollection AddClaudeEngine(this IServiceCollection services, IConfiguration configuration)
     {
         ArgumentNullException.ThrowIfNull(configuration);
@@ -43,6 +51,13 @@ public static class DependencyInjection
         if (string.IsNullOrWhiteSpace(options.ApiKey))
         {
             return services;
+        }
+
+        if (!options.AllowNonEuEndpoint && !IsEuCloudEndpoint(options.BaseUrl))
+        {
+            throw new InvalidOperationException(
+                $"Moteur Claude refusé : {ClaudeEngineOptions.SectionName}:BaseUrl doit désigner un point d'accès en région UE " +
+                "(Amazon Bedrock, Google Vertex AI). L'API directe d'Anthropic n'offre pas de résidence des données dans l'UE.");
         }
 
         services.AddKeyedSingleton<IAiEngine>(AiEngineKind.ClaudeEu, (_, _) =>
@@ -54,4 +69,11 @@ public static class DependencyInjection
         });
         return services;
     }
+
+    /// <summary>Un point d'accès https explicite, autre que l'API directe d'Anthropic.</summary>
+    private static bool IsEuCloudEndpoint(Uri? baseUrl) =>
+        baseUrl is { IsAbsoluteUri: true } url
+        && url.Scheme == Uri.UriSchemeHttps
+        && !url.Host.Equals("anthropic.com", StringComparison.OrdinalIgnoreCase)
+        && !url.Host.EndsWith(".anthropic.com", StringComparison.OrdinalIgnoreCase);
 }
