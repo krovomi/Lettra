@@ -15,7 +15,12 @@ public sealed class SkillPackTests
 
         catalog.Info.Commit.Should().StartWith("f2e15c4");
         catalog.Info.License.Should().Contain("MIT");
-        catalog.Info.SkillLastUpdated.Should().Be(new DateOnly(2026, 4, 18));
+        catalog.Info.SkillsLastUpdated.Should().BeEquivalentTo(new Dictionary<AiSkill, DateOnly>
+        {
+            [AiSkill.Comptable] = new(2026, 4, 18),
+            [AiSkill.ControleurFiscal] = new(2026, 3, 23),
+            [AiSkill.CommissaireAuxComptes] = new(2026, 3, 23),
+        });
         catalog.GetSkillInstructions(AiSkill.Comptable).Should().Contain("Expert-Comptable IA");
         catalog.GetOverlay().Should().Contain("ne **valides**").And.Contain("N'utilise que les outils qui te sont proposés");
         catalog.ListReferences(AiSkill.Comptable).Should().Contain("facturation/mentions-obligatoires.md");
@@ -67,8 +72,24 @@ public sealed class SkillPackTests
     {
         SkillPackInfo info = SkillCatalog.LoadEmbedded().Info;
 
-        info.IsStale(new DateOnly(2026, 10, 14)).Should().BeFalse();
-        info.IsStale(new DateOnly(2026, 10, 19)).Should().BeTrue();
+        info.IsStale(AiSkill.Comptable, new DateOnly(2026, 10, 14)).Should().BeFalse();
+        info.IsStale(AiSkill.Comptable, new DateOnly(2026, 10, 19)).Should().BeTrue();
+        info.IsStale(AiSkill.ControleurFiscal, new DateOnly(2026, 9, 23)).Should().BeFalse();
+        info.IsStale(AiSkill.ControleurFiscal, new DateOnly(2026, 9, 24)).Should().BeTrue();
+        info.IsStale(AiSkill.CommissaireAuxComptes, new DateOnly(2026, 9, 24)).Should().BeTrue();
+    }
+
+    [Fact]
+    public void Une_relecture_par_l_expert_inscrite_au_registre_repart_pour_six_mois()
+    {
+        Dictionary<string, byte[]> files = EmbeddedFiles(out string manifest);
+        string reviewed = manifest.Replace("\"reviewedOn\": null", "\"reviewedOn\": \"2026-10-01\"", StringComparison.Ordinal);
+        SkillPackInfo info = SkillCatalog.FromFiles(files, reviewed).Info;
+
+        info.FreshAsOf(AiSkill.ControleurFiscal).Should().Be(new DateOnly(2026, 10, 1));
+        info.IsStale(AiSkill.ControleurFiscal, new DateOnly(2026, 10, 15)).Should().BeFalse();
+        info.IsStale(AiSkill.Comptable, new DateOnly(2027, 4, 1)).Should().BeFalse();
+        info.IsStale(AiSkill.Comptable, new DateOnly(2027, 4, 2)).Should().BeTrue();
     }
 
     private static Dictionary<string, byte[]> EmbeddedFiles(out string manifest)

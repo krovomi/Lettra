@@ -70,8 +70,11 @@ L'IA explique et rédige ; elle ne valide, n'émet ni ne supprime rien, et ne vo
 ```
 
 La clé d'API n'est jamais dans un fichier versionné : `Lettra__Ai__Claude__ApiKey` ou `ANTHROPIC_API_KEY`. Sans clé (ou
-sans point d'accès local), le moteur n'existe pas et l'assistant répond `Ai.EngineUnavailable`. Le manifeste du skill pack
-se régénère avec `node src/Ai/tools/update-skillpack-manifest.js`.
+sans point d'accès local), le moteur n'existe pas et l'assistant répond `Ai.EngineUnavailable`. `BaseUrl` vide vise l'API
+directe d'Anthropic, qui n'offre pas de résidence des données dans l'UE : pour `ClaudeEu`, le point d'accès doit être un
+fournisseur cloud en région UE (Amazon Bedrock, Google Vertex AI). Le manifeste du skill pack se régénère avec
+`node src/Ai/tools/update-skillpack-manifest.js`. Chaque skill est signalé comme ancien six mois après la plus récente de
+sa date `last_updated` et de la date de revue du registre (`reviewedOn`).
 
 ## Conventions
 

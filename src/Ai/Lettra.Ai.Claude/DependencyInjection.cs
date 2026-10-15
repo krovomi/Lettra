@@ -17,7 +17,10 @@ public sealed class ClaudeEngineOptions
     /// </summary>
     public string? ApiKey { get; set; }
 
-    /// <summary>Point d'accès choisi par le cabinet (résidence des données en Europe). Vide : point d'accès par défaut du SDK.</summary>
+    /// <summary>
+    /// Point d'accès choisi par le cabinet. Vide : API directe d'Anthropic, qui n'offre pas de résidence des données dans
+    /// l'UE ; une résidence européenne passe par un fournisseur cloud en région UE (Amazon Bedrock, Google Vertex AI).
+    /// </summary>
     public Uri? BaseUrl { get; set; }
 
     /// <summary>Modèle Claude. À régler par fonction après mesure sur le banc d'évals (annexe B §5.4).</summary>

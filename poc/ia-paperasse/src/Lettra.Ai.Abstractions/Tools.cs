@@ -5,7 +5,7 @@ namespace Lettra.Ai.Abstractions;
 /// <summary>Contrat d'un outil exposé au modèle. Un outil appelle un cas d'usage de l'application, avec les droits de l'utilisateur.</summary>
 public interface IAiTool
 {
-    /// <summary>Nom vu par le modèle (ex. « valider_facture »).</summary>
+    /// <summary>Nom vu par le modèle (ex. « verifier_facture »).</summary>
     string Name { get; }
     /// <summary>Description en français, lue par le modèle.</summary>
     string Description { get; }

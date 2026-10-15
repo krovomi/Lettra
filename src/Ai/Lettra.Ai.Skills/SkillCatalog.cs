@@ -57,7 +57,9 @@ public sealed partial class SkillCatalog : IAiSkillCatalog
             manifest.Source,
             manifest.Commit,
             manifest.License,
-            DateOnly.Parse(manifest.SkillLastUpdated, CultureInfo.InvariantCulture),
+            manifest.SkillsLastUpdated.ToDictionary(
+                kv => AiSkillNames.TryParse(kv.Key, out AiSkill skill) ? skill : throw new SkillPackIntegrityException($"Skill inconnu dans le registre : {kv.Key}"),
+                kv => DateOnly.Parse(kv.Value, CultureInfo.InvariantCulture)),
             manifest.ReviewedOn is { } reviewed ? DateOnly.Parse(reviewed, CultureInfo.InvariantCulture) : null,
             manifest.ReviewedBy);
     }
@@ -129,7 +131,7 @@ public sealed partial class SkillCatalog : IAiSkillCatalog
         [property: JsonPropertyName("source")] string Source,
         [property: JsonPropertyName("commit")] string Commit,
         [property: JsonPropertyName("license")] string License,
-        [property: JsonPropertyName("skillLastUpdated")] string SkillLastUpdated,
+        [property: JsonPropertyName("skillsLastUpdated")] Dictionary<string, string> SkillsLastUpdated,
         [property: JsonPropertyName("reviewedOn")] string? ReviewedOn,
         [property: JsonPropertyName("reviewedBy")] string? ReviewedBy,
         [property: JsonPropertyName("files")] Dictionary<string, string> Files);
