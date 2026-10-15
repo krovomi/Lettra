@@ -111,6 +111,9 @@ public interface IPlatformTransmissionStore
     /// <summary>La dernière transmission de la pièce, ou rien si elle n'a jamais été transmise.</summary>
     Task<PlatformTransmission?> FindLatestAsync(Guid invoiceId, CancellationToken cancellationToken);
 
-    /// <summary>Enregistre une nouvelle transmission, ou les statuts ajoutés à une transmission existante.</summary>
-    Task SaveAsync(PlatformTransmission transmission, CancellationToken cancellationToken);
+    /// <summary>
+    /// Ajoute une nouvelle transmission, ou les statuts ajoutés à une transmission existante, dans la transaction de
+    /// l'appelant (<c>IBillingTransaction</c>) : ils s'enregistrent avec leurs entrées au journal inaltérable.
+    /// </summary>
+    Task StageAsync(PlatformTransmission transmission, CancellationToken cancellationToken);
 }

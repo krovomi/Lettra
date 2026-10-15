@@ -38,6 +38,12 @@ public enum IntegrityFindingKind
     /// clé absente du registre ou différente de celle du registre, ou la dernière clé du registre n'est pas annoncée.
     /// </summary>
     KeyInvalid = 10,
+
+    /// <summary>
+    /// L'historique d'une transmission à la plateforme agréée ne correspond plus au journal : statut modifié, supprimé,
+    /// ajouté en base sans entrée, ou transmission absente du journal.
+    /// </summary>
+    PlatformHistoryAltered = 11,
 }
 
 /// <summary>
@@ -106,6 +112,7 @@ public sealed class IntegrityVerification
     private readonly Dictionary<int, PeriodClosing> _closingsByNumber = [];
     private readonly HashSet<int> _closingsInChain = [];
     private readonly Dictionary<Guid, string> _documentHashes = [];
+    private readonly Dictionary<Guid, List<(long Sequence, string Hash)>> _platformHistories = [];
     private readonly Dictionary<string, HashSet<long>> _numbers = new(StringComparer.Ordinal);
     private long _expectedSequence = 1;
     private string _previousHash;
@@ -193,6 +200,16 @@ public sealed class IntegrityVerification
         {
             CheckKeyRotation(entry);
         }
+        else if (entry.IsPlatformEvent)
+        {
+            Guid transmission = entry.RelatedDocumentId ?? Guid.Empty;
+            if (!_platformHistories.TryGetValue(transmission, out List<(long, string)>? history))
+            {
+                _platformHistories[transmission] = history = [];
+            }
+
+            history.Add((entry.Sequence, entry.ContentHash));
+        }
         else
         {
             if (entry.DocumentId is Guid document)
@@ -228,12 +245,15 @@ public sealed class IntegrityVerification
     /// Termine le contrôle : séries (prochain numéro de chaque série) et empreintes des pièces recalculées depuis la base.
     /// Une pièce absente de <paramref name="currentDocumentHashes"/> est réputée supprimée, sauf si
     /// <paramref name="documentsAvailable"/> est faux (le module des pièces n'est pas encore branché).
+    /// <paramref name="currentPlatformHistories"/> : toutes les transmissions à la plateforme agréée en base, avec
+    /// l'empreinte de chaque statut dans l'ordre ; <c>null</c> si le module Exports n'est pas branché.
     /// </summary>
     public IntegrityReport Complete(
         IReadOnlyDictionary<string, long> nextNumberBySeries,
         IReadOnlyDictionary<Guid, string> currentDocumentHashes,
         bool documentsAvailable,
-        DateTimeOffset checkedAt)
+        DateTimeOffset checkedAt,
+        IReadOnlyDictionary<Guid, IReadOnlyList<string>>? currentPlatformHistories = null)
     {
         ArgumentNullException.ThrowIfNull(nextNumberBySeries);
         ArgumentNullException.ThrowIfNull(currentDocumentHashes);
@@ -284,7 +304,36 @@ public sealed class IntegrityVerification
             }
         }
 
+        if (currentPlatformHistories is not null)
+        {
+            CheckPlatformHistories(currentPlatformHistories);
+        }
+
         return new IntegrityReport(_dossier, checkedAt, EntriesChecked, _closingsChecked, documentsChecked, [.. _findings], _truncated);
+    }
+
+    /// <summary>
+    /// Chaque transmission en base doit avoir, statut par statut et dans l'ordre, les empreintes journalisées ; et chaque
+    /// transmission journalisée doit être en base. Le constat porte le numéro de la première entrée en cause.
+    /// </summary>
+    private void CheckPlatformHistories(IReadOnlyDictionary<Guid, IReadOnlyList<string>> current)
+    {
+        foreach ((Guid transmission, List<(long Sequence, string Hash)> journaled) in _platformHistories)
+        {
+            IReadOnlyList<string> stored = current.GetValueOrDefault(transmission) ?? [];
+            int differs = Enumerable.Range(0, Math.Max(journaled.Count, stored.Count))
+                .FirstOrDefault(i => i >= journaled.Count || i >= stored.Count || !string.Equals(journaled[i].Hash, stored[i], StringComparison.Ordinal), -1);
+            if (differs >= 0)
+            {
+                Add(new(IntegrityFindingKind.PlatformHistoryAltered, journaled[Math.Min(differs, journaled.Count - 1)].Sequence));
+            }
+        }
+
+        int unjournaled = current.Keys.Count(t => !_platformHistories.ContainsKey(t));
+        for (int i = 0; i < unjournaled; i++)
+        {
+            Add(new(IntegrityFindingKind.PlatformHistoryAltered));
+        }
     }
 
     private void CheckClosingEntry(JournalEntry entry)

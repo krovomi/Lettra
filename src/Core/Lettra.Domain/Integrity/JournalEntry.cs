@@ -13,6 +13,15 @@ public enum JournalEntryKind
     CreditNoteIssued = 5,
     DocumentCancelled = 6,
 
+    /// <summary>
+    /// Plateforme agréée (phase 5.3) : dépôt d'une pièce (accusé Déposée ou Rejetée), statut reçu de la plateforme,
+    /// encaissement déclaré. <see cref="JournalEntry.ContentHash"/> est l'empreinte du statut
+    /// (<see cref="PlatformEventFingerprint"/>), <see cref="JournalEntry.RelatedDocumentId"/> la transmission.
+    /// </summary>
+    PlatformTransmitted = 7,
+    PlatformStatusReceived = 8,
+    PlatformPaymentReported = 9,
+
     /// <summary>Une clôture périodique signée : elle entre elle-même dans la chaîne.</summary>
     PeriodClosed = 100,
 
@@ -257,6 +266,9 @@ public sealed class JournalEntry
         _ => (0m, 0m, 0m),
     };
 
+    /// <summary>Vrai pour une entrée de la plateforme agréée : elle porte l'empreinte d'un statut, pas celle de la pièce.</summary>
+    public bool IsPlatformEvent => Kind is JournalEntryKind.PlatformTransmitted or JournalEntryKind.PlatformStatusReceived or JournalEntryKind.PlatformPaymentReported;
+
     /// <summary>Vrai si l'entrée consomme un numéro de série (validation d'une pièce).</summary>
     public bool AssignsNumber => Kind is JournalEntryKind.QuoteValidated or JournalEntryKind.InvoiceValidated or JournalEntryKind.CreditNoteValidated;
 
@@ -276,4 +288,34 @@ public sealed class JournalEntry
         entry.Hash = entry.ComputeHash();
         return entry;
     }
+}
+
+/// <summary>
+/// Empreinte d'un statut d'une transmission à la plateforme agréée, à son rang dans l'historique (à partir de 0) :
+/// ce que le journal inaltérable fige et que le contrôle d'intégrité recalcule depuis la base.
+/// </summary>
+public static class PlatformEventFingerprint
+{
+    public static string Compute(
+        Guid transmissionId,
+        int position,
+        string platform,
+        string? reference,
+        int channel,
+        int? format,
+        int status,
+        DateTimeOffset at,
+        string? reason,
+        decimal? amount) => IntegrityHash.Of(
+            "platform-event-v1",
+            IntegrityHash.Field(transmissionId),
+            IntegrityHash.Field(position),
+            platform,
+            reference,
+            IntegrityHash.Field(channel),
+            format is int f ? IntegrityHash.Field(f) : null,
+            IntegrityHash.Field(status),
+            IntegrityHash.Field(at),
+            reason,
+            IntegrityHash.Field(amount));
 }

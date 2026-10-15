@@ -1,4 +1,5 @@
 using Lettra.Application.Abstractions.Identity;
+using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Persistence;
 using Lettra.Application.Features.Billing;
@@ -51,6 +52,8 @@ internal sealed class TransmitInvoiceHandler(
     IPlatformTransmissionStore transmissions,
     IAccreditedPlatformClient platform,
     ISegregationOfDuties duties,
+    IBillingTransaction transaction,
+    IIntegrityJournal journal,
     ICommandDispatcher commands,
     TimeProvider clock) : ICommandHandler<TransmitInvoiceCommand, Result<PlatformTransmissionResponse>>
 {
@@ -97,6 +100,9 @@ internal sealed class TransmitInvoiceHandler(
         CompanyProfile? profile = await profiles.FindAsync(cancellationToken).ConfigureAwait(false);
         InvoiceResponse piece = invoice.ToResponse();
         bool eInvoice = IsDomesticBusiness(invoice.Customer);
+        DateOnly? preceding = eInvoice
+            ? await EInvoiceSerializer.PrecedingInvoiceDateAsync(invoices, invoice, cancellationToken).ConfigureAwait(false)
+            : null;
         Result<PlatformReceipt> receipt = eInvoice
             ? await platform.SubmitInvoiceAsync(
                 new PlatformInvoiceSubmission(
@@ -105,7 +111,7 @@ internal sealed class TransmitInvoiceHandler(
                     invoice.Number,
                     command.Format,
                     EInvoiceSerializer.FileNameOf(invoice.Number, command.Format),
-                    EInvoiceSerializer.Write(piece, profile?.ToResponse(), command.Format)),
+                    EInvoiceSerializer.Write(piece, profile?.ToResponse(), command.Format, preceding)),
                 cancellationToken).ConfigureAwait(false)
             : await platform.ReportTransactionAsync(TransactionOf(invoice.Seller.Siren, piece, invoice.Customer), cancellationToken).ConfigureAwait(false);
         if (receipt.IsFailure)
@@ -124,9 +130,34 @@ internal sealed class TransmitInvoiceHandler(
             piece.Totals.TotalInclTax,
             clock.GetUtcNow(),
             [receipt.Value.Status]);
-        await transmissions.SaveAsync(transmission, cancellationToken).ConfigureAwait(false);
+        Result recorded = await RecordAsync(transmissions, transaction, journal, invoice, transmission, 0, cancellationToken).ConfigureAwait(false);
+        if (recorded.IsFailure)
+        {
+            return Result<PlatformTransmissionResponse>.Failure(recorded.Errors);
+        }
+
         return await IssuedAsync(command, invoice, transmission, cancellationToken).ConfigureAwait(false);
     }
+
+    /// <summary>
+    /// Enregistre la transmission (ou ses nouveaux statuts, à partir de <paramref name="from"/>) et une entrée par statut
+    /// au journal inaltérable, en une seule transaction.
+    /// </summary>
+    internal static Task<Result> RecordAsync(
+        IPlatformTransmissionStore transmissions,
+        IBillingTransaction transaction,
+        IIntegrityJournal journal,
+        Invoice invoice,
+        PlatformTransmission transmission,
+        int from,
+        CancellationToken cancellationToken) =>
+        transaction.ExecuteAsync(
+            async token =>
+            {
+                await transmissions.StageAsync(transmission, token).ConfigureAwait(false);
+                return await PlatformJournal.AppendAsync(journal, invoice, transmission, from, token).ConfigureAwait(false);
+            },
+            cancellationToken);
 
     /// <summary>Une pièce déposée (non rejetée) est émise ; l'émission garde ses propres contrôles et son journal.</summary>
     private async Task<Result<PlatformTransmissionResponse>> IssuedAsync(
@@ -169,7 +200,10 @@ internal sealed class TransmitInvoiceHandler(
 }
 
 internal sealed partial class RefreshPlatformStatusHandler(
+    IInvoiceRepository invoices,
     IPlatformTransmissionStore transmissions,
+    IBillingTransaction transaction,
+    IIntegrityJournal journal,
     IAccreditedPlatformClient platform,
     ILogger<RefreshPlatformStatusHandler> logger) : ICommandHandler<RefreshPlatformStatusCommand, Result<PlatformTransmissionResponse>>
 {
@@ -193,6 +227,7 @@ internal sealed partial class RefreshPlatformStatusHandler(
             return Result<PlatformTransmissionResponse>.Failure(events.Errors);
         }
 
+        int known = transmission.History.Count;
         bool changed = false;
         foreach (PlatformStatusEvent status in events.Value.OrderBy(e => e.At))
         {
@@ -208,7 +243,18 @@ internal sealed partial class RefreshPlatformStatusHandler(
 
         if (changed)
         {
-            await transmissions.SaveAsync(transmission, cancellationToken).ConfigureAwait(false);
+            Invoice? invoice = await invoices.FindAsync(command.InvoiceId, cancellationToken).ConfigureAwait(false);
+            if (invoice is null)
+            {
+                return InvoiceErrors.NotFound;
+            }
+
+            Result recorded = await TransmitInvoiceHandler.RecordAsync(transmissions, transaction, journal, invoice, transmission, known, cancellationToken)
+                .ConfigureAwait(false);
+            if (recorded.IsFailure)
+            {
+                return Result<PlatformTransmissionResponse>.Failure(recorded.Errors);
+            }
         }
 
         return transmission.ToResponse();
@@ -221,6 +267,8 @@ internal sealed partial class RefreshPlatformStatusHandler(
 internal sealed class ReportPaymentHandler(
     IInvoiceRepository invoices,
     IPlatformTransmissionStore transmissions,
+    IBillingTransaction transaction,
+    IIntegrityJournal journal,
     IAccreditedPlatformClient platform) : ICommandHandler<ReportPaymentCommand, Result<PlatformTransmissionResponse>>
 {
     public async Task<Result<PlatformTransmissionResponse>> HandleAsync(ReportPaymentCommand command, CancellationToken cancellationToken)
@@ -261,9 +309,15 @@ internal sealed class ReportPaymentHandler(
             return Result<PlatformTransmissionResponse>.Failure(collected.Errors);
         }
 
+        int known = transmission.History.Count;
         if (transmission.TryApply(collected.Value))
         {
-            await transmissions.SaveAsync(transmission, cancellationToken).ConfigureAwait(false);
+            Result recorded = await TransmitInvoiceHandler.RecordAsync(transmissions, transaction, journal, invoice, transmission, known, cancellationToken)
+                .ConfigureAwait(false);
+            if (recorded.IsFailure)
+            {
+                return Result<PlatformTransmissionResponse>.Failure(recorded.Errors);
+            }
         }
 
         return transmission.ToResponse();
