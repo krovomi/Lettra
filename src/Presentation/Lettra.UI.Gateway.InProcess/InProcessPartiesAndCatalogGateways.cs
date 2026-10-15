@@ -1,4 +1,5 @@
 using Lettra.Application.Abstractions.Messaging;
+using Lettra.Application.Abstractions.Persistence;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Features.Catalog;
 using Lettra.Application.Features.Parties;
@@ -83,11 +84,11 @@ internal sealed class InProcessCatalogGateway(IServiceScopeFactory scopes) : ICa
                 : await InProcessScope.QueryAsync(sp, new GetCatalogItemQuery(dossier, created.Value), ct).ConfigureAwait(false);
         }, cancellationToken);
 
-    public Task<OperationResult<CatalogItemResponse>> UpdateAsync(Guid id, SaveCatalogItemRequest request, CancellationToken cancellationToken) =>
-        WriteThenReadAsync(id, (dossier, itemId) => request.ToUpdateCommand(dossier, itemId), cancellationToken);
+    public Task<OperationResult<CatalogItemResponse>> UpdateAsync(Guid id, long expectedVersion, SaveCatalogItemRequest request, CancellationToken cancellationToken) =>
+        WriteThenReadAsync(id, (dossier, itemId) => request.ToUpdateCommand(dossier, itemId, expectedVersion), cancellationToken);
 
-    public Task<OperationResult<CatalogItemResponse>> SetArchivedAsync(Guid id, bool isArchived, CancellationToken cancellationToken) =>
-        WriteThenReadAsync(id, (dossier, itemId) => new SetCatalogItemArchivedCommand(dossier, itemId, isArchived), cancellationToken);
+    public Task<OperationResult<CatalogItemResponse>> SetArchivedAsync(Guid id, long expectedVersion, bool isArchived, CancellationToken cancellationToken) =>
+        WriteThenReadAsync(id, (dossier, itemId) => new SetCatalogItemArchivedCommand(dossier, itemId, isArchived, expectedVersion), cancellationToken);
 
     private Task<OperationResult<CatalogItemResponse>> WriteThenReadAsync(
         Guid id, Func<DossierId, CatalogItemId, ICommand<Result>> command, CancellationToken cancellationToken) =>
@@ -95,9 +96,22 @@ internal sealed class InProcessCatalogGateway(IServiceScopeFactory scopes) : ICa
         {
             CatalogItemId itemId = new(id);
             Result written = await sp.GetRequiredService<ICommandDispatcher>().SendAsync(command(dossier, itemId), ct).ConfigureAwait(false);
-            return written.IsFailure
-                ? OperationResult<CatalogItemResponse>.Failure(written.Errors.ToErrorDetails())
-                : await InProcessScope.QueryAsync(sp, new GetCatalogItemQuery(dossier, itemId), ct).ConfigureAwait(false);
+            if (written.IsSuccess)
+            {
+                return await InProcessScope.QueryAsync(sp, new GetCatalogItemQuery(dossier, itemId), ct).ConfigureAwait(false);
+            }
+
+            // Même contrat que le 412 de l'API : l'article actuel accompagne le refus, pour la fusion.
+            if (written.Errors[0].Code == ConcurrencyErrors.VersionMismatchCode)
+            {
+                OperationResult<CatalogItemResponse> current = await InProcessScope.QueryAsync(sp, new GetCatalogItemQuery(dossier, itemId), ct).ConfigureAwait(false);
+                if (current is { IsSuccess: true, Value: { } value })
+                {
+                    return OperationResult<CatalogItemResponse>.Stale(value);
+                }
+            }
+
+            return OperationResult<CatalogItemResponse>.Failure(written.Errors.ToErrorDetails());
         }, cancellationToken);
 }
 

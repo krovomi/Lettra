@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization.Metadata;
 using Lettra.Contracts.Catalog;
@@ -28,6 +29,23 @@ internal static class HttpCalls
     }
 
     public static Uri Relative(FormattableString uri) => new(string.Create(CultureInfo.InvariantCulture, $"{uri}"), UriKind.Relative);
+
+    /// <summary>PUT d'une modification avec la version lue en <c>If-Match</c> (ADR-0013).</summary>
+    public static Task<HttpResponseMessage> PutVersionedAsync<TBody>(
+        this HttpClient http, Uri uri, long expectedVersion, TBody body, JsonTypeInfo<TBody> typeInfo, CancellationToken cancellationToken)
+    {
+        HttpRequestMessage request = new(HttpMethod.Put, uri) { Content = JsonContent.Create(body, typeInfo) };
+        request.Headers.IfMatch.Add(new EntityTagHeaderValue(string.Create(CultureInfo.InvariantCulture, $"\"{expectedVersion}\"")));
+        return SendAndDisposeAsync(http, request, cancellationToken);
+    }
+
+    private static async Task<HttpResponseMessage> SendAndDisposeAsync(HttpClient http, HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        using (request)
+        {
+            return await http.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+    }
 }
 
 internal sealed class HttpSuppliersGateway(HttpClient http) : ISuppliersGateway
@@ -69,16 +87,18 @@ internal sealed class HttpCatalogGateway(HttpClient http) : ICatalogGateway
             ContractsJsonContext.Default.CatalogItemResponse,
             cancellationToken);
 
-    public Task<OperationResult<CatalogItemResponse>> UpdateAsync(Guid id, SaveCatalogItemRequest request, CancellationToken cancellationToken) =>
+    public Task<OperationResult<CatalogItemResponse>> UpdateAsync(Guid id, long expectedVersion, SaveCatalogItemRequest request, CancellationToken cancellationToken) =>
         HttpCalls.SendAsync(
-            ct => http.PutAsJsonAsync(HttpCalls.Relative($"api/v1/catalog/items/{id}"), request, ContractsJsonContext.Default.SaveCatalogItemRequest, ct),
+            ct => http.PutVersionedAsync(
+                HttpCalls.Relative($"api/v1/catalog/items/{id}"), expectedVersion, request, ContractsJsonContext.Default.SaveCatalogItemRequest, ct),
             ContractsJsonContext.Default.CatalogItemResponse,
             cancellationToken);
 
-    public Task<OperationResult<CatalogItemResponse>> SetArchivedAsync(Guid id, bool isArchived, CancellationToken cancellationToken) =>
+    public Task<OperationResult<CatalogItemResponse>> SetArchivedAsync(Guid id, long expectedVersion, bool isArchived, CancellationToken cancellationToken) =>
         HttpCalls.SendAsync(
-            ct => http.PutAsJsonAsync(
+            ct => http.PutVersionedAsync(
                 HttpCalls.Relative($"api/v1/catalog/items/{id}/archived"),
+                expectedVersion,
                 new SetCatalogItemArchivedRequest(isArchived),
                 ContractsJsonContext.Default.SetCatalogItemArchivedRequest,
                 ct),

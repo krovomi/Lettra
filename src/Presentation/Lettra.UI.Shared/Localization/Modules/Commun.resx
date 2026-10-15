@@ -57,4 +57,13 @@
   <data name="Palette.CreditNoteOn" xml:space="preserve"><value>Avoir sur {0} · {1}</value></data>
   <data name="Palette.ToggleDensity" xml:space="preserve"><value>Passer en densité Confort ou Expert</value></data>
   <data name="Nav.Company" xml:space="preserve"><value>Entreprise</value></data>
+  <data name="Error.Api.TooManyRequests" xml:space="preserve">
+    <value>Trop de demandes pour votre cabinet en ce moment. Patientez quelques secondes puis réessayez.</value>
+  </data>
+  <data name="Error.Concurrency.VersionMismatch" xml:space="preserve">
+    <value>Ce document a été modifié par quelqu'un d'autre pendant votre saisie. Ses changements sont affichés : vérifiez puis enregistrez à nouveau.</value>
+  </data>
+  <data name="Error.Concurrency.PreconditionRequired" xml:space="preserve">
+    <value>La version du document lue n'a pas été envoyée (en-tête If-Match manquant).</value>
+  </data>
 </root>

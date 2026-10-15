@@ -54,7 +54,10 @@ internal sealed class FakeCatalogGateway : ICatalogGateway
     {
         VatRateOption rate = Reference.VatRates.Single(v => v.Code == vatCode);
         CatalogItemResponse item = new(Guid.CreateVersion7(), reference, designation, "Descriptif " + reference, CatalogItemKindDto.Service, unit, price,
-            rate.Code, rate.Percent, archived, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch);
+            rate.Code, rate.Percent, archived, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch)
+        {
+            Version = 1,
+        };
         Items.Add(item);
         return item;
     }
@@ -68,7 +71,10 @@ internal sealed class FakeCatalogGateway : ICatalogGateway
         List<CatalogItemSummary> items = Items
             .Where(i => includeArchived || !i.IsArchived)
             .Where(i => search is null || i.Reference.Contains(search, StringComparison.OrdinalIgnoreCase) || i.Designation.Contains(search, StringComparison.OrdinalIgnoreCase))
-            .Select(i => new CatalogItemSummary(i.Id, i.Reference, i.Designation, i.Description, i.Kind, i.UnitCode, i.UnitPriceExclTax, i.VatRateCode, i.VatRatePercent, i.IsArchived))
+            .Select(i => new CatalogItemSummary(i.Id, i.Reference, i.Designation, i.Description, i.Kind, i.UnitCode, i.UnitPriceExclTax, i.VatRateCode, i.VatRatePercent, i.IsArchived)
+            {
+                Version = i.Version,
+            })
             .ToList();
         return Task.FromResult(OperationResult<PagedResponse<CatalogItemSummary>>.Success(new PagedResponse<CatalogItemSummary>(items, page, pageSize, items.Count)));
     }
@@ -83,12 +89,15 @@ internal sealed class FakeCatalogGateway : ICatalogGateway
 
         VatRateOption rate = Reference.VatRates.Single(v => v.Code == request.VatRateCode);
         CatalogItemResponse item = new(Guid.CreateVersion7(), request.Reference, request.Designation, request.Description, request.Kind, request.UnitCode,
-            request.UnitPriceExclTax, rate.Code, rate.Percent, false, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch);
+            request.UnitPriceExclTax, rate.Code, rate.Percent, false, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch)
+        {
+            Version = 1,
+        };
         Items.Add(item);
         return Task.FromResult(OperationResult<CatalogItemResponse>.Success(item));
     }
 
-    public Task<OperationResult<CatalogItemResponse>> UpdateAsync(Guid id, SaveCatalogItemRequest request, CancellationToken cancellationToken)
+    public Task<OperationResult<CatalogItemResponse>> UpdateAsync(Guid id, long expectedVersion, SaveCatalogItemRequest request, CancellationToken cancellationToken)
     {
         Updates.Add((id, request with { }));
         if (Failure() is { } failure)
@@ -97,6 +106,11 @@ internal sealed class FakeCatalogGateway : ICatalogGateway
         }
 
         int index = Items.FindIndex(i => i.Id == id);
+        if (Items[index].Version != expectedVersion)
+        {
+            return Task.FromResult(OperationResult<CatalogItemResponse>.Stale(Items[index]));
+        }
+
         VatRateOption rate = Reference.VatRates.Single(v => v.Code == request.VatRateCode);
         CatalogItemResponse item = Items[index] with
         {
@@ -108,12 +122,13 @@ internal sealed class FakeCatalogGateway : ICatalogGateway
             UnitPriceExclTax = request.UnitPriceExclTax,
             VatRateCode = rate.Code,
             VatRatePercent = rate.Percent,
+            Version = Items[index].Version + 1,
         };
         Items[index] = item;
         return Task.FromResult(OperationResult<CatalogItemResponse>.Success(item));
     }
 
-    public Task<OperationResult<CatalogItemResponse>> SetArchivedAsync(Guid id, bool isArchived, CancellationToken cancellationToken)
+    public Task<OperationResult<CatalogItemResponse>> SetArchivedAsync(Guid id, long expectedVersion, bool isArchived, CancellationToken cancellationToken)
     {
         ArchiveCalls.Add((id, isArchived));
         if (Failure() is { } failure)
@@ -122,8 +137,20 @@ internal sealed class FakeCatalogGateway : ICatalogGateway
         }
 
         int index = Items.FindIndex(i => i.Id == id);
-        Items[index] = Items[index] with { IsArchived = isArchived };
+        if (Items[index].Version != expectedVersion)
+        {
+            return Task.FromResult(OperationResult<CatalogItemResponse>.Stale(Items[index]));
+        }
+
+        Items[index] = Items[index] with { IsArchived = isArchived, Version = Items[index].Version + 1 };
         return Task.FromResult(OperationResult<CatalogItemResponse>.Success(Items[index]));
+    }
+
+    /// <summary>Un collègue modifie l'article pendant la saisie (ADR-0013) : la version du serveur avance.</summary>
+    public void EditedByColleague(Guid id, Func<CatalogItemResponse, CatalogItemResponse> edit)
+    {
+        int index = Items.FindIndex(i => i.Id == id);
+        Items[index] = edit(Items[index]) with { Version = Items[index].Version + 1 };
     }
 
     private OperationResult<CatalogItemResponse>? Failure()

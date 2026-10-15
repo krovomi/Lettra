@@ -8,6 +8,8 @@ using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Customers;
 using Lettra.Contracts.Identity;
 using Lettra.Contracts.Integrity;
+using Lettra.Contracts.Policies;
+using Lettra.Contracts.Presence;
 using Lettra.Contracts.Directory;
 using Lettra.Contracts.Dossiers;
 using Lettra.Contracts.Pricing;
@@ -76,4 +78,6 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(ChangeAlertSeverityRequest))]
 [JsonSerializable(typeof(SaveAiSettingsRequest))]
 [JsonSerializable(typeof(AiSettingsResponse))]
+[JsonSerializable(typeof(SegregationOfDutiesSettings))]
+[JsonSerializable(typeof(DocumentPresence))]
 public sealed partial class ContractsJsonContext : JsonSerializerContext;

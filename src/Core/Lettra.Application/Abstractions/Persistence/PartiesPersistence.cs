@@ -8,6 +8,8 @@ namespace Lettra.Application.Abstractions.Persistence;
 public interface ISupplierRepository
 {
     Task AddAsync(Supplier supplier, CancellationToken cancellationToken);
+
+    Task<Supplier?> FindAsync(SupplierId id, CancellationToken cancellationToken);
 }
 
 /// <summary>Lecture des fournisseurs : projection directe en contrats.</summary>

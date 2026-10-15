@@ -57,7 +57,11 @@ public sealed record CatalogItemResponse(
     decimal VatRatePercent,
     bool IsArchived,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt)
+{
+    /// <summary>Version de concurrence optimiste, renvoyée aussi en <c>ETag</c> ; à renvoyer en <c>If-Match</c> pour modifier.</summary>
+    public long Version { get; init; }
+}
 
 /// <summary>Ligne de la liste des articles, et choix proposés par la liste F4 des devis et factures.</summary>
 public sealed record CatalogItemSummary(
@@ -70,7 +74,11 @@ public sealed record CatalogItemSummary(
     decimal UnitPriceExclTax,
     string VatRateCode,
     decimal VatRatePercent,
-    bool IsArchived);
+    bool IsArchived)
+{
+    /// <summary>Version de concurrence optimiste : la grille modifie l'article sans le relire d'abord.</summary>
+    public long Version { get; init; }
+}
 
 /// <summary>Archive (<c>true</c>) ou réactive (<c>false</c>) un article.</summary>
 public sealed record SetCatalogItemArchivedRequest(bool IsArchived);
