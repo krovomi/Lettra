@@ -67,6 +67,9 @@
   <ItemGroup Condition="'$(LettraIsPoc)' != 'true'" Label="IA (annexe B)">
     <!-- SDK officiel C# d'Anthropic (MIT), utilisé seulement par Lettra.Ai.Claude. -->
     <PackageVersion Include="Anthropic" Version="12.56.0" />
+    <!-- Clients Claude en région UE (Amazon Bedrock, Google Vertex AI), seulement par Lettra.Ai.Claude. -->
+    <PackageVersion Include="Anthropic.Bedrock" Version="0.13.7" />
+    <PackageVersion Include="Anthropic.Vertex" Version="0.5.3" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(LettraIsPoc)' != 'true'" Label="Correctifs de sécurité transitifs (épinglés)">
