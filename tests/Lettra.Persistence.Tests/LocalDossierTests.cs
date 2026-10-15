@@ -67,6 +67,59 @@ public sealed class LocalDossierTests : IDisposable
     }
 
     [Fact]
+    public async Task Poste_relie_cree_la_replique_du_dossier_du_serveur_avec_son_identifiant()
+    {
+        Guid serveur = Guid.CreateVersion7();
+        IConfiguration configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            [LettraBootstrap.DeploymentModeKey] = "HybridCloud",
+            [LettraBootstrap.LocalDataDirectoryKey] = _folder,
+            [LettraBootstrap.ReplicaDossierIdKey] = serveur.ToString(),
+        }).Build();
+        ServiceCollection services = new();
+        services.AddLogging();
+        services.AddLettra(configuration);
+        services.AddSingleton<IKekStore>(_keys);
+        services.AddScoped<IRequestedDossierSource, NoRequestedDossier>();
+        await using ServiceProvider poste = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
+
+        await poste.InitializeLettraAsync(configuration, default);
+        LocalDossierRegistry registry = poste.GetRequiredService<LocalDossierRegistry>();
+
+        // Seulement la réplique, sous l'identifiant du serveur, chiffrée comme en mode 1 et ouverte.
+        LocalDossierManifest replique = (await registry.ListAsync(default)).Should().ContainSingle().Subject;
+        replique.DossierId.Should().Be(serveur);
+        replique.Name.Should().Be(LocalDossierStartup.ReplicaName);
+        registry.ActiveDossierId.Should().Be(serveur);
+        string connectionString = await poste.GetRequiredService<ISecretStore>()
+            .GetConnectionStringAsync(LocalDossierRegistry.SecretRef(serveur), default);
+        SqliteEncryption.CipherOf(connectionString).Should().Be("chacha20");
+
+        // Second lancement : la même réplique est rouverte, rien n'est recréé.
+        await poste.InitializeLettraAsync(configuration, default);
+        (await registry.ListAsync(default)).Should().ContainSingle().Which.WrappedDek.Should().Equal(replique.WrappedDek);
+    }
+
+    [Fact]
+    public async Task Poste_relie_sans_dossier_du_serveur_ne_demarre_pas()
+    {
+        IConfiguration configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            [LettraBootstrap.DeploymentModeKey] = "HybridCloud",
+            [LettraBootstrap.LocalDataDirectoryKey] = _folder,
+        }).Build();
+        ServiceCollection services = new();
+        services.AddLogging();
+        services.AddLettra(configuration);
+        services.AddSingleton<IKekStore>(_keys);
+        services.AddScoped<IRequestedDossierSource, NoRequestedDossier>();
+        await using ServiceProvider poste = services.BuildServiceProvider();
+
+        Func<Task> start = () => poste.InitializeLettraAsync(configuration, default);
+        await start.Should().ThrowAsync<InvalidOperationException>().WithMessage($"*{LettraBootstrap.ReplicaDossierIdKey}*");
+    }
+
+    [Fact]
     public async Task Detruire_la_cle_rend_le_dossier_illisible()
     {
         await using ServiceProvider poste = Poste();

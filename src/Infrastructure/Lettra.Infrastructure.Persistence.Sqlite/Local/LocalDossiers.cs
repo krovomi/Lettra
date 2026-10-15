@@ -64,9 +64,15 @@ internal sealed class LocalDossierProvisioner(
     TenantMigrator migrator,
     TimeProvider clock) : IDossierProvisioner
 {
-    public async Task<Result<DossierId>> CreateAsync(OrganisationId organisation, string name, CancellationToken cancellationToken)
+    public Task<Result<DossierId>> CreateAsync(OrganisationId organisation, string name, CancellationToken cancellationToken) =>
+        CreateAsync(organisation, new DossierId(Guid.CreateVersion7()), name, cancellationToken);
+
+    /// <summary>
+    /// Réplique d'un dossier du serveur sur un poste relié : même identifiant que sur le serveur, pour que la
+    /// synchronisation désigne le même dossier des deux côtés.
+    /// </summary>
+    public async Task<Result<DossierId>> CreateAsync(OrganisationId organisation, DossierId id, string name, CancellationToken cancellationToken)
     {
-        DossierId id = new(Guid.CreateVersion7());
         byte[] wrapped = await keyring.CreateWrappedDekAsync(organisation, id, cancellationToken).ConfigureAwait(false);
         LocalDossierManifest manifest = new(id.Value, organisation.Value, name, registry.DatabasePath(id.Value), wrapped, clock.GetUtcNow());
         await registry.SaveAsync(manifest, cancellationToken).ConfigureAwait(false);

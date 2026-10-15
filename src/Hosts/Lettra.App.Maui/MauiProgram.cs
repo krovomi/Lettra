@@ -16,7 +16,7 @@ using Microsoft.Maui.Storage;
 namespace Lettra.App.Maui;
 
 /// <summary>
-/// Composition du poste isolé (mode 1, par défaut ; relié à un serveur, voir <see cref="ConnectedDevice"/>) : registre local des dossiers dans le dossier de données de l'application,
+/// Composition du poste isolé (mode 1, par défaut ; relié à un serveur, voir <see cref="ConnectedDevice"/>, même composition sur une réplique) : registre local des dossiers dans le dossier de données de l'application,
 /// une base SQLite chiffrée (SQLite3 Multiple Ciphers) par dossier, clé du cabinet dans le coffre de l'OS.
 /// Au premier lancement, le cabinet local et un premier dossier sont créés.
 /// </summary>
@@ -30,22 +30,25 @@ public static class MauiProgram
 
         LettraCultures.Apply(LettraCultures.Resolve(CultureInfo.InstalledUICulture.Name));
 
-        // Relié à un serveur (lettra.json) : connexion PKCE au Keycloak du cabinet et gateways HTTP authentifiées.
-        if (ConnectedDevice.TryConfigure(builder))
-        {
-            return builder.Build();
-        }
-
-        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
-        {
-            [LettraBootstrap.DeploymentModeKey] = nameof(DeploymentMode.IsolatedDesktop),
-            [LettraBootstrap.LocalDataDirectoryKey] = Path.Combine(FileSystem.AppDataDirectory, "dossiers"),
-        });
+        // Relié à un serveur (lettra.json) : réplique du dossier du serveur, synchronisée ; sinon poste isolé.
+        ConnectedDevice.Settings? server = ConnectedDevice.Read();
+        builder.Configuration.AddInMemoryCollection(server is null
+            ? new Dictionary<string, string?>
+            {
+                [LettraBootstrap.DeploymentModeKey] = nameof(DeploymentMode.IsolatedDesktop),
+                [LettraBootstrap.LocalDataDirectoryKey] = Path.Combine(FileSystem.AppDataDirectory, "dossiers"),
+            }
+            : ConnectedDevice.Configuration(server));
 
         builder.Services.AddLettra(builder.Configuration);
         builder.Services.AddSingleton<IKekStore, SecureStorageKekStore>();
         builder.Services.AddSingleton<IDossierSelection, ActiveDossierSelection>();
         builder.Services.AddInProcessGateways();
+        if (server is not null)
+        {
+            builder.Services.AddSync(server);
+        }
+
         builder.Services.AddLettraUi();
 
 #if DEBUG
@@ -54,7 +57,7 @@ public static class MauiProgram
 #endif
 
         MauiApp app = builder.Build();
-        // Avant le premier écran : cabinet local, premier dossier, dossier ouvert.
+        // Avant le premier écran : cabinet local, premier dossier (ou réplique du dossier du serveur), dossier ouvert.
         app.Services.InitializeLettraAsync(builder.Configuration, CancellationToken.None).GetAwaiter().GetResult();
         return app;
     }
