@@ -68,6 +68,14 @@ jobs:
         run: dotnet workload install maui-windows
       - name: Build Lettra.App.Maui
         run: dotnet build src/Hosts/Lettra.App.Maui/Lettra.App.Maui.csproj -c Release
+      # Version de mesure de la grille (critère J1) : exécutable autonome, à lancer sur un poste du cabinet.
+      - name: Version de mesure de la grille
+        run: dotnet publish src/Hosts/Lettra.App.Maui/Lettra.App.Maui.csproj -c Release -f net10.0-windows10.0.19041.0 -p:LettraGridBenchmark=true -o artifacts/mesure-grille
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lettra-mesure-grille-windows
+          path: artifacts/mesure-grille
+          retention-days: 30
 
   secrets:
     name: Détection de secrets

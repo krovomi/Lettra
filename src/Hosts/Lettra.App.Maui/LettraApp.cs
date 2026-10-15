@@ -17,6 +17,10 @@ public sealed class MainPage : ContentPage
     public MainPage()
     {
         BlazorWebView webView = new() { HostPage = "wwwroot/index.html" };
+#if LETTRA_GRID_BENCHMARK
+        // Version de mesure (artefact CI) : s'ouvre sur la mesure de la grille et la lance aussitôt.
+        webView.StartPath = "/mesure-grille?auto=1";
+#endif
         webView.RootComponents.Add(new RootComponent { Selector = "#app", ComponentType = typeof(Routes) });
         Content = webView;
     }
