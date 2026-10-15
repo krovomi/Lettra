@@ -100,6 +100,18 @@ public sealed record CreateCreditNoteCommand(DossierId Dossier, InvoiceId Invoic
 }
 
 /// <summary>
+/// Approuver un avoir brouillon qui dépasse le seuil de la séparation des tâches du cabinet (manager seulement) :
+/// sans cette approbation, sa validation est refusée.
+/// </summary>
+public sealed record ApproveCreditNoteCommand(DossierId Dossier, InvoiceId InvoiceId, long? ExpectedVersion)
+    : ICommand<Result>, IRequirePermission, IInvoiceLifecycleCommand, IVersionedCommand
+{
+    public Permission Permission => Permission.AvoirApprouver;
+
+    InvoiceId IInvoiceLifecycleCommand.Invoice => InvoiceId;
+}
+
+/// <summary>
 /// Commande qui fait avancer une pièce : point d'accroche des contrôles transverses (séparation des tâches,
 /// verrou optimiste) sans connaître chaque commande.
 /// </summary>
@@ -293,6 +305,7 @@ internal sealed class IssueInvoiceHandler(
     IInvoiceRepository invoices,
     Abstractions.Integrity.IIntegrityJournal journal,
     IBillingTransaction transaction,
+    ISegregationOfDuties duties,
     ICurrentUser user,
     TimeProvider clock) : ICommandHandler<IssueInvoiceCommand, Result>
 {
@@ -313,6 +326,13 @@ internal sealed class IssueInvoiceHandler(
         }
 
         Result result = Concurrency.Check(invoice, command.ExpectedVersion);
+        if (result.IsFailure)
+        {
+            return result;
+        }
+
+        // Séparation des tâches : l'auteur de la saisie n'émet pas (la validation a déjà écarté ses modificateurs).
+        result = await duties.EnsureCanIssueAsync([invoice.CreatedBy], cancellationToken).ConfigureAwait(false);
         if (result.IsFailure)
         {
             return result;
@@ -368,5 +388,49 @@ internal sealed class CreateCreditNoteHandler(
         await invoices.AddAsync(created.Value, cancellationToken).ConfigureAwait(false);
         await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return created.Value.Id;
+    }
+}
+
+internal sealed class ApproveCreditNoteHandler(
+    IInvoiceRepository invoices,
+    ISegregationOfDuties duties,
+    ICurrentUser user,
+    IUnitOfWork unitOfWork,
+    TimeProvider clock) : ICommandHandler<ApproveCreditNoteCommand, Result>
+{
+    public async Task<Result> HandleAsync(ApproveCreditNoteCommand command, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        Invoice? invoice = await invoices.FindAsync(command.InvoiceId, cancellationToken).ConfigureAwait(false);
+        if (invoice is null)
+        {
+            return InvoiceErrors.NotFound;
+        }
+
+        Result result = Concurrency.Check(invoice, command.ExpectedVersion);
+        if (result.IsFailure)
+        {
+            return result;
+        }
+
+        if (invoice.Kind != InvoiceKind.CreditNote)
+        {
+            return SegregationOfDutiesErrors.NotACreditNote;
+        }
+
+        result = await duties.EnsureCanApproveCreditNoteAsync(invoice.CreatedBy, cancellationToken).ConfigureAwait(false);
+        if (result.IsFailure)
+        {
+            return result;
+        }
+
+        result = invoice.ApproveCredit(user.UserId, clock.GetUtcNow());
+        if (result.IsFailure)
+        {
+            return result;
+        }
+
+        await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return Result.Success();
     }
 }

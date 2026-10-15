@@ -89,6 +89,8 @@ internal static class BillingEndpoints
             .RequireIfMatch();
         group.MapPost("/{id:guid}/issue", IssueInvoiceAsync).RequirePermission(Permission.FactureEmettre).WithName("IssueInvoice")
             .Produces<InvoiceResponse>().ProducesProblem(StatusCodes.Status409Conflict).RequireIfMatch();
+        group.MapPost("/{id:guid}/approve-credit", ApproveCreditNoteAsync).RequirePermission(Permission.AvoirApprouver).WithName("ApproveCreditNote")
+            .Produces<InvoiceResponse>().ProducesProblem(StatusCodes.Status403Forbidden).ProducesProblem(StatusCodes.Status409Conflict).RequireIfMatch();
         group.MapPost("/{id:guid}/credit-notes", CreateCreditNoteAsync).RequirePermission(Permission.AvoirCreer).WithName("CreateCreditNote")
             .Produces<InvoiceResponse>(StatusCodes.Status201Created).ProducesProblem(StatusCodes.Status409Conflict);
     }
@@ -273,6 +275,10 @@ internal static class BillingEndpoints
     private static Task<IResult> IssueInvoiceAsync(
         Guid id, HttpContext http, ITenantContext tenant, ICommandDispatcher commands, IQueryDispatcher queries, CancellationToken cancellationToken) =>
         InvoiceCommandAsync(new IssueInvoiceCommand(tenant.Current.DossierId, new InvoiceId(id), http.IfMatchVersion()), commands, queries, cancellationToken);
+
+    private static Task<IResult> ApproveCreditNoteAsync(
+        Guid id, HttpContext http, ITenantContext tenant, ICommandDispatcher commands, IQueryDispatcher queries, CancellationToken cancellationToken) =>
+        InvoiceCommandAsync(new ApproveCreditNoteCommand(tenant.Current.DossierId, new InvoiceId(id), http.IfMatchVersion()), commands, queries, cancellationToken);
 
     private static async Task<IResult> CreateCreditNoteAsync(
         Guid id, CreateCreditNoteRequest request, ITenantContext tenant, ICommandDispatcher commands, IQueryDispatcher queries, CancellationToken cancellationToken)
