@@ -1,7 +1,25 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using Lettra.Contracts.Common;
 
 namespace Lettra.Contracts.Billing;
+
+/// <summary>
+/// Régime de déclaration de la TVA de l'entreprise (CA3 ou CA12) ; il fixe aussi le rythme de l'e-reporting.
+/// Sans objet en franchise en base.
+/// </summary>
+[JsonConverter(typeof(JsonStringEnumConverter<VatDeclarationRegimeDto>))]
+public enum VatDeclarationRegimeDto
+{
+    /// <summary>Réel normal : CA3 mensuelle (ou trimestrielle sous 4 000 € de TVA par an).</summary>
+    RealNormal = 1,
+
+    /// <summary>Réel simplifié : CA12 annuelle et deux acomptes.</summary>
+    RealSimplified = 2,
+
+    /// <summary>Mini-réel : TVA au réel normal, bénéfices au réel simplifié.</summary>
+    MiniReal = 3,
+}
 
 /// <summary>
 /// Fiche de l'entreprise du dossier : l'émetteur des devis et factures. Ses mentions sont copiées sur chaque
@@ -57,6 +75,9 @@ public sealed record SaveCompanyProfileRequest
     /// <summary>Option pour le paiement de la TVA d'après les débits (mention 2026).</summary>
     public bool VatOnDebits { get; set; }
 
+    /// <summary>Régime de déclaration de la TVA ; ignoré en franchise en base.</summary>
+    public VatDeclarationRegimeDto? VatDeclarationRegime { get; set; }
+
     /// <summary>Délai de paiement par défaut, en jours après l'émission (60 au plus, art. L441-10 C.com).</summary>
     [Range(0, 60, ErrorMessage = ErrorCodes.CompanyProfile.PaymentDaysInvalid)]
     public int PaymentDays { get; set; } = 30;
@@ -102,4 +123,5 @@ public sealed record CompanyProfileResponse(
     string? EarlyPaymentDiscount,
     string? Iban,
     string? Bic,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    VatDeclarationRegimeDto? VatDeclarationRegime = null);

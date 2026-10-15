@@ -45,7 +45,8 @@ public static class ContractMapper
                 request.AddressLine2,
                 request.PostalCode,
                 request.City,
-                request.CountryCode);
+                request.CountryCode,
+                request.PreferredLanguage);
     }
 
     public static CustomerResponse ToResponse(this Customer customer)
@@ -67,6 +68,7 @@ public static class ContractMapper
             customer.CreatedAt)
         {
             Version = customer.Version,
+            PreferredLanguage = customer.PreferredLanguage,
         };
     }
 

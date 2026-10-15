@@ -12,6 +12,8 @@ public interface ICustomersGateway
     Task<OperationResult<CustomerResponse>> CreateAsync(CreateCustomerRequest request, CancellationToken cancellationToken);
 
     Task<OperationResult<PagedResponse<CustomerSummary>>> ListAsync(int page, int pageSize, CancellationToken cancellationToken);
+
+    Task<OperationResult<CustomerResponse>> GetAsync(Guid id, CancellationToken cancellationToken);
 }
 
 /// <summary>Dossier sur lequel l'utilisateur travaille. Phase 0 : fixé par la configuration ; le sélecteur de dossier arrive en phase 2.</summary>

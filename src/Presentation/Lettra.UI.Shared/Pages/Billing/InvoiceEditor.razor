@@ -286,6 +286,7 @@ else
             }
         }
 
+        await PreselectPdfLanguageAsync();
         _loading = false;
     }
 
@@ -314,7 +315,20 @@ else
     {
         _request.CustomerId = customer.Id;
         _customerName = customer.Name;
+        await PreselectPdfLanguageAsync();
         await ScheduleSaveAsync();
+    }
+
+    /// <summary>Langue du PDF proposée : celle du client, le français sinon (elle reste modifiable).</summary>
+    private async Task PreselectPdfLanguageAsync()
+    {
+        if (_request.CustomerId == Guid.Empty || Services.GetService(typeof(ICustomersGateway)) is not ICustomersGateway customers)
+        {
+            return;
+        }
+
+        OperationResult<CustomerResponse> customer = await customers.GetAsync(_request.CustomerId, CancellationToken.None);
+        _pdfCulture = customer.Value?.PreferredLanguage ?? "fr-FR";
     }
 
     private async Task DateChangedAsync(ChangeEventArgs e, Action<DateOnly?> set)

@@ -70,7 +70,8 @@ public static class BillingMapper
             request.LatePenaltyRate,
             request.EarlyPaymentDiscount,
             request.Iban,
-            request.Bic);
+            request.Bic,
+            (VatDeclarationRegime?)(int?)request.VatDeclarationRegime);
     }
 
     public static IReadOnlyList<PriceListEntryDraft> ToDrafts(this IEnumerable<PriceListEntryRequest>? entries) =>
@@ -223,7 +224,8 @@ public static class BillingMapper
             profile.EarlyPaymentDiscount,
             profile.Iban?.Value,
             profile.Bic,
-            profile.UpdatedAt);
+            profile.UpdatedAt,
+            (VatDeclarationRegimeDto?)(int?)profile.VatDeclarationRegime);
     }
 
     public static ComplianceReportResponse ToResponse(this Calculations.Compliance.ComplianceReport report)

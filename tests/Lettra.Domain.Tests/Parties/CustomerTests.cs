@@ -70,4 +70,22 @@ public sealed class CustomerTests
 
         Customer.Create(CustomerId.New(), draft, Now).Errors.Should().ContainSingle().Which.Should().Be(CustomerErrors.NameTooLong);
     }
+
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData(" ", null)]
+    [InlineData("en-us", "en-US")]
+    [InlineData("fr-FR", "fr-FR")]
+    public void La_langue_d_impression_est_lue_sous_sa_forme_canonique(string? saisie, string? attendue) =>
+        Customer.Create(CustomerId.New(), Company() with { PreferredLanguage = saisie }, Now).Value.PreferredLanguage.Should().Be(attendue);
+
+    [Fact]
+    public void Une_langue_non_prise_en_charge_est_refusee()
+    {
+        Customer customer = Customer.Create(CustomerId.New(), Company() with { PreferredLanguage = "en-US" }, Now).Value;
+
+        customer.Update(Company() with { PreferredLanguage = "de-DE" }, Now)
+            .Errors.Should().ContainSingle().Which.Target.Should().Be(nameof(Customer.PreferredLanguage));
+        customer.PreferredLanguage.Should().Be("en-US", "rien n'est modifié quand la saisie est refusée");
+    }
 }

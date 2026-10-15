@@ -15,7 +15,7 @@ internal static class CustomerPersistenceScenarios
 {
     private static readonly Customer.Draft Martin = new(
         CustomerKind.Company, "Boulangerie Martin", null, "73282932000074", "FR44732829320", "compta@martin.fr",
-        "1 rue de la Paix", "Bâtiment B", "75002", "Paris", "FR");
+        "1 rue de la Paix", "Bâtiment B", "75002", "Paris", "FR", PreferredLanguage: "en-us");
 
     private static readonly Customer.Draft Dupont = new(
         CustomerKind.Individual, "Jeanne Dupont", null, null, null, null, "Rue Neuve 1", null, "1000", "Bruxelles", "BE");
@@ -52,6 +52,7 @@ internal static class CustomerPersistenceScenarios
                 PostalCode = "75002",
                 City = "Paris",
                 CountryCode = "FR",
+                PreferredLanguage = "en-US",
             });
         }
     }

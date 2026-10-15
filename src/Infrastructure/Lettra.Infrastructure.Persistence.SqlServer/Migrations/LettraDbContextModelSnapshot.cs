@@ -79,6 +79,9 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<int?>("VatDeclarationRegime")
+                        .HasColumnType("int");
+
                     b.Property<bool>("VatFranchise")
                         .HasColumnType("bit");
 
@@ -864,6 +867,10 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("PreferredLanguage")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<string>("SearchKey")
                         .IsRequired()
