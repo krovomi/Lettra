@@ -79,7 +79,7 @@ internal sealed class FakeDirectories : ICompanyDirectory, IVatNumberChecker
 
 internal static class PartiesAndCatalogFakesRegistration
 {
-    public static IServiceCollection AddPartiesAndCatalogFakes(this IServiceCollection services, InMemoryPartiesAndCatalog store, FakeDirectories directories)
+    public static IServiceCollection AddPartiesAndCatalogFakes(this IServiceCollection services, InMemoryPartiesAndCatalog store, FakeDirectories directories, InMemoryBilling? billing = null)
     {
         services.AddSingleton<ISupplierRepository>(store);
         services.AddSingleton<ISupplierReadStore>(store);
@@ -87,6 +87,7 @@ internal static class PartiesAndCatalogFakesRegistration
         services.AddSingleton<ICatalogItemReadStore>(store);
         services.AddSingleton<ICompanyDirectory>(directories);
         services.AddSingleton<IVatNumberChecker>(directories);
+        services.AddBillingFakes(billing ?? new InMemoryBilling());
         return services;
     }
 }
