@@ -42,6 +42,7 @@
   <Folder Name="/src/Modules/Sync/">
     <Project Path="src/Modules/Sync/Lettra.Sync.Client/Lettra.Sync.Client.csproj" />
     <Project Path="src/Modules/Sync/Lettra.Sync.Server/Lettra.Sync.Server.csproj" />
+  </Folder>
   <Folder Name="/src/Modules/Exports/">
     <Project Path="src/Modules/Exports/Lettra.Exports.Application/Lettra.Exports.Application.csproj" />
     <Project Path="src/Modules/Exports/Lettra.Exports.Infrastructure/Lettra.Exports.Infrastructure.csproj" />
