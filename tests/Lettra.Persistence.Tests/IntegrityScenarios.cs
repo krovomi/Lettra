@@ -18,7 +18,8 @@ internal sealed class ManualClock(DateTimeOffset start) : TimeProvider
 {
     public DateTimeOffset Now { get; set; } = start;
 
-    public override DateTimeOffset GetUtcNow() => Now;
+    /// <summary>Comme un vrai <see cref="TimeProvider"/> : toujours en UTC (PostgreSQL refuse un autre décalage).</summary>
+    public override DateTimeOffset GetUtcNow() => Now.ToUniversalTime();
 }
 
 /// <summary>Chaîne anti-fraude : scénarios joués à l'identique sur chaque provider.</summary>
