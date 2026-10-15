@@ -38,6 +38,7 @@
     <ProjectReference Include="..\..\Presentation\Lettra.UI.Shared\Lettra.UI.Shared.csproj" />
     <ProjectReference Include="..\..\Presentation\Lettra.UI.Gateway.InProcess\Lettra.UI.Gateway.InProcess.csproj" />
     <ProjectReference Include="..\..\Presentation\Lettra.UI.Gateway.Http\Lettra.UI.Gateway.Http.csproj" />
+    <ProjectReference Include="..\..\Modules\Sync\Lettra.Sync.Client\Lettra.Sync.Client.csproj" />
   </ItemGroup>
 
   <ItemGroup>

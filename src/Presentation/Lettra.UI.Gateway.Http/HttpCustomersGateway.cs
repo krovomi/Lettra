@@ -155,6 +155,19 @@ public static class DependencyInjection
     {
         ArgumentNullException.ThrowIfNull(options);
         Uri apiBaseAddress = options.BaseAddress ?? throw new InvalidOperationException($"{Device.DeviceSignInOptions.SectionName}:BaseAddress est obligatoire.");
+        services.AddDeviceSignIn(options);
+        services.AddSingleton<ISessionGateway>(sp => sp.GetRequiredService<Device.DeviceSessionGateway>());
+        return services.AddApiGateways(apiBaseAddress, builder => builder.AddHttpMessageHandler<Device.BearerTokenHandler>());
+    }
+
+    /// <summary>
+    /// Connexion du poste au Keycloak du cabinet (PKCE) et <see cref="Device.BearerTokenHandler"/>, sans les gateways
+    /// HTTP ni la session de l'UI : le poste relié travaille sur sa réplique (session locale) et ne se connecte au
+    /// serveur que pour se synchroniser.
+    /// </summary>
+    public static IServiceCollection AddDeviceSignIn(this IServiceCollection services, Device.DeviceSignInOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
         services.AddSingleton(options);
         services.TryAddSingleton(TimeProvider.System);
         services.AddHttpClient(nameof(Device.OidcPkceClient));
@@ -166,10 +179,9 @@ public static class DependencyInjection
             sp.GetRequiredService<Device.IAuthorizationBrowser>(),
             sp.GetRequiredService<TimeProvider>()));
         services.AddSingleton<Device.DeviceSessionGateway>();
-        services.AddSingleton<ISessionGateway>(sp => sp.GetRequiredService<Device.DeviceSessionGateway>());
         services.AddSingleton<IInteractiveSignIn>(sp => sp.GetRequiredService<Device.DeviceSessionGateway>());
         services.AddTransient<Device.BearerTokenHandler>();
-        return services.AddApiGateways(apiBaseAddress, builder => builder.AddHttpMessageHandler<Device.BearerTokenHandler>());
+        return services;
     }
 
     private static IServiceCollection AddApiGateways(this IServiceCollection services, Uri apiBaseAddress, Action<IHttpClientBuilder> authenticate)
