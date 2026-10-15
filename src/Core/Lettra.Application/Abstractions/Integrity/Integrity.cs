@@ -29,6 +29,16 @@ public interface IJournaledDocumentReader
     Task<IReadOnlyDictionary<Guid, string>> ComputeContentHashesAsync(IReadOnlyCollection<Guid> documentIds, CancellationToken cancellationToken);
 }
 
+/// <summary>
+/// Fourni par le module Exports : l'empreinte (<see cref="PlatformEventFingerprint"/>) de chaque statut de chaque
+/// transmission à la plateforme agréée enregistrée dans le dossier, dans l'ordre. Le contrôle d'intégrité la compare
+/// au journal.
+/// </summary>
+public interface IPlatformHistoryReader
+{
+    Task<IReadOnlyDictionary<Guid, IReadOnlyList<string>>> ComputeFingerprintsAsync(CancellationToken cancellationToken);
+}
+
 /// <summary>Lecture du journal et des clôtures du dossier courant, et clôture d'une période.</summary>
 public interface IIntegrityStore
 {

@@ -7,11 +7,17 @@ using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Exports;
 using Lettra.Domain.Billing;
+using Lettra.Application.Features.Integrity;
 using Lettra.Domain.Common;
+using Lettra.Domain.Integrity;
 using Lettra.Domain.Parties;
 using Lettra.Domain.SharedKernel;
 using Lettra.Exports.Application.EInvoicing.Platform;
 using Lettra.Exports.Infrastructure;
+using Lettra.Infrastructure.Persistence;
+using Lettra.Infrastructure.Persistence.EInvoicing;
+using Lettra.Infrastructure.Persistence.Tenancy;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.Persistence.Tests;
@@ -183,6 +189,50 @@ internal static class PlatformScenarios
             // Un brouillon ne se transmet pas.
             InvoiceId draft = (await commands.SendAsync(new CreateInvoiceCommand(dossier, Request(durand, 10m, VatRegimeDto.Standard)), default)).Value;
             Codes(await commands.SendAsync(new TransmitInvoiceCommand(dossier, draft), default)).Should().Equal(ErrorCodes.EInvoice.NotValidated);
+        }
+
+        // Chaque statut est une entrée chaînée et scellée du journal ; le contrôle d'intégrité les compare à la base.
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            LettraDbContext db = await scope.ServiceProvider.GetRequiredService<TenantDbSession>().GetAsync(default);
+            List<JournalEntry> entries = await db.Set<JournalEntry>().AsNoTracking().Where(e => e.DocumentId == approved.Value).ToListAsync();
+            entries.Where(e => e.IsPlatformEvent).OrderBy(e => e.Sequence).Select(e => e.Kind).Should().Equal(
+                JournalEntryKind.PlatformTransmitted,
+                JournalEntryKind.PlatformStatusReceived, JournalEntryKind.PlatformStatusReceived, JournalEntryKind.PlatformStatusReceived,
+                JournalEntryKind.PlatformStatusReceived,
+                JournalEntryKind.PlatformPaymentReported, JournalEntryKind.PlatformPaymentReported);
+            entries.Single(e => e.Kind == JournalEntryKind.PlatformTransmitted).Number.Should().NotBeNullOrWhiteSpace();
+            entries.Where(e => e.Kind == JournalEntryKind.PlatformPaymentReported).Sum(e => e.TotalInclTax).Should().BeGreaterThan(0m);
+            (await db.Set<JournalEntry>().AsNoTracking().CountAsync(e => e.Kind == JournalEntryKind.PlatformTransmitted)).Should().Be(5, "deux envois de la pièce rejetée, trois autres pièces");
+
+            IntegrityReport intact = (await scope.ServiceProvider.GetRequiredService<DossierIntegrityService>().VerifyAsync(default)).Value;
+            intact.Findings.Should().BeEmpty();
+        }
+
+        // Un motif retouché en base, puis un statut ajouté sans entrée au journal : l'historique ne correspond plus.
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            LettraDbContext db = await scope.ServiceProvider.GetRequiredService<TenantDbSession>().GetAsync(default);
+            Guid refusal = (await db.Set<PlatformTransmissionRecord>().AsNoTracking().SingleAsync(t => t.InvoiceId == refused.Value)).Id;
+            await db.Set<PlatformStatusEventRecord>()
+                .Where(e => e.TransmissionId == refusal && e.Status == (int)PlatformStatusDto.Refused)
+                .ExecuteUpdateAsync(u => u.SetProperty(e => e.Reason, "Accepté"));
+            IntegrityReport altered = (await scope.ServiceProvider.GetRequiredService<DossierIntegrityService>().VerifyAsync(default)).Value;
+            altered.Findings.Select(f => f.Kind).Should().Equal(IntegrityFindingKind.PlatformHistoryAltered);
+            altered.ChainCompromised.Should().BeTrue();
+            await db.Set<PlatformStatusEventRecord>()
+                .Where(e => e.TransmissionId == refusal && e.Status == (int)PlatformStatusDto.Refused)
+                .ExecuteUpdateAsync(u => u.SetProperty(e => e.Reason, "Prestation non commandée"));
+            (await scope.ServiceProvider.GetRequiredService<DossierIntegrityService>().VerifyAsync(default)).Value.Findings.Should().BeEmpty();
+
+            Guid abroadTransmission = (await db.Set<PlatformTransmissionRecord>().AsNoTracking().SingleAsync(t => t.InvoiceId == abroad.Value)).Id;
+            db.Add(new PlatformStatusEventRecord
+            {
+                TransmissionId = abroadTransmission, Sequence = 1, Status = (int)PlatformStatusDto.Collected, AtMs = 1, Amount = 1m,
+            });
+            await db.SaveChangesAsync();
+            (await scope.ServiceProvider.GetRequiredService<DossierIntegrityService>().VerifyAsync(default)).Value
+                .Findings.Select(f => f.Kind).Should().Equal(IntegrityFindingKind.PlatformHistoryAltered);
         }
     }
 

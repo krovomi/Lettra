@@ -1,3 +1,4 @@
+using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Exports.Application;
 using Lettra.Exports.Application.EInvoicing.Platform;
@@ -21,6 +22,7 @@ public static class DependencyInjection
     {
         services.AddScoped<ISalesJournalReader, EfSalesJournalReader>();
         services.AddScoped<IPlatformTransmissionStore, EfPlatformTransmissionStore>();
+        services.AddScoped<IPlatformHistoryReader, EfPlatformHistoryReader>();
         string platform = configuration?[PlatformKey] ?? "None";
         switch (platform)
         {
