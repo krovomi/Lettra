@@ -190,6 +190,8 @@
   <data name="Invoice.Validated" xml:space="preserve"><value>Facture validée sous le numéro {0}.</value></data>
   <data name="Invoice.IssuedDone" xml:space="preserve"><value>Pièce {0} marquée émise.</value></data>
   <data name="Invoice.Command.ApproveCredit" xml:space="preserve"><value>Approuver l'avoir</value></data>
+  <data name="Invoice.Command.FacturX" xml:space="preserve"><value>Télécharger le Factur-X</value></data>
+  <data name="Invoice.Command.Ubl" xml:space="preserve"><value>XML UBL</value></data>
   <data name="Invoice.CreditApproved" xml:space="preserve"><value>Avoir approuvé par un manager le {0}.</value></data>
   <data name="Invoice.CreditApprovedDone" xml:space="preserve"><value>Avoir approuvé : il peut maintenant être validé.</value></data>
   <data name="Invoices.Title" xml:space="preserve"><value>Factures</value></data>
@@ -203,4 +205,5 @@
   <data name="Quotes.List" xml:space="preserve"><value>Liste des devis</value></data>
   <data name="Quotes.New" xml:space="preserve"><value>Nouveau devis</value></data>
   <data name="Quotes.Empty" xml:space="preserve"><value>Aucun devis pour l'instant.</value></data>
+  <data name="Error.Billing.ReplicaMismatch" xml:space="preserve"><value>Cette pièce validée sur un poste ne correspond pas à son contenu : elle n'est pas reçue.</value></data>
 </root>

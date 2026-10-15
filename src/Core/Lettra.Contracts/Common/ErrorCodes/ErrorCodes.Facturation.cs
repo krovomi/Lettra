@@ -31,6 +31,9 @@ public static partial class ErrorCodes
         public const string NotCompliant = "Billing.NotCompliant";
         public const string CompanyProfileMissing = "Billing.CompanyProfileMissing";
         public const string DownPaymentInvalid = "Billing.DownPaymentInvalid";
+
+        /// <summary>Une pièce validée hors ligne ne se reconstruit pas à l'identique au serveur (totaux, état).</summary>
+        public const string ReplicaMismatch = "Billing.ReplicaMismatch";
     }
 
     public static class Quote

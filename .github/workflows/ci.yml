@@ -41,10 +41,16 @@ jobs:
         run: dotnet test Lettra.Ci.slnf -c Release --no-build --logger "trx;LogFilePrefix=lettra" --results-directory TestResults
         env:
           LETTRA_PDF_SAMPLES: ${{ github.workspace }}/pdf-samples
+          LETTRA_EINVOICE_SAMPLES: ${{ github.workspace }}/einvoice-samples
 
       # Les PDF des devis et factures (Lettra.Printing) doivent être PDF/A-3b : base du Factur-X (phase 5).
       - name: Conformité PDF/A-3b (veraPDF)
         run: build/verapdf/validate.sh pdf-samples
+
+      # Factures électroniques (module Exports, phase 5) : CII et UBL au Schematron EN 16931 officiel, puis Mustang
+      # (schémas XSD, Factur-X et PDF/A-3 des Factur-X).
+      - name: Conformité EN 16931 et Factur-X
+        run: build/einvoice/validate.sh einvoice-samples pdf-samples
 
       - name: Résultats de tests
         if: always()

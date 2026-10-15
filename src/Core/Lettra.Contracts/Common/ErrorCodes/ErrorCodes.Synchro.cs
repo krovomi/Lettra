@@ -16,5 +16,11 @@ public static partial class ErrorCodes
 
         /// <summary>L'élément visé par une modification n'existe pas sur le serveur.</summary>
         public const string EntityNotFound = "Sync.EntityNotFound";
+
+        /// <summary>La série n'est pas une série ouverte de ce poste (ADR-0007) : la pièce n'est pas reçue.</summary>
+        public const string DeviceSeriesUnknown = "Sync.DeviceSeriesUnknown";
+
+        /// <summary>Le numéro n'est pas le suivant de la série du poste : une pièce précédente manque ou a été refusée.</summary>
+        public const string NumberOutOfOrder = "Sync.NumberOutOfOrder";
     }
 }

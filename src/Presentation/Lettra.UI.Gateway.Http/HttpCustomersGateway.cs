@@ -41,6 +41,19 @@ internal sealed class HttpCustomersGateway(HttpClient http) : ICustomersGateway
             return OperationResult<PagedResponse<CustomerSummary>>.Failure(ErrorCodes.Api.Unreachable);
         }
     }
+
+    public async Task<OperationResult<CustomerResponse>> GetAsync(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            using HttpResponseMessage response = await http.GetAsync(new Uri($"api/v1/customers/{id}", UriKind.Relative), cancellationToken).ConfigureAwait(false);
+            return await response.ToOperationResultAsync(ContractsJsonContext.Default.CustomerResponse, cancellationToken).ConfigureAwait(false);
+        }
+        catch (HttpRequestException)
+        {
+            return OperationResult<CustomerResponse>.Failure(ErrorCodes.Api.Unreachable);
+        }
+    }
 }
 
 /// <summary>Traduit une réponse HTTP en <see cref="OperationResult{T}"/> : corps typé, ou codes d'erreur du <c>ProblemResponse</c>.</summary>

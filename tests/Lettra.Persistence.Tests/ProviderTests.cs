@@ -29,6 +29,13 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Series_de_poste_ouvertes_recues_dans_l_ordre_et_installees_sur_le_poste()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await SyncPersistenceScenarios.DeviceSeriesAsync(harness, DatabaseProvider.Sqlite, Database("serie"), Database("serie-poste"));
+    }
+
+    [Fact]
     public async Task Une_base_par_dossier()
     {
         await using TenantHarness harness = new(new SqliteConfigurator());
@@ -103,6 +110,13 @@ public sealed class SqliteTests : IDisposable
     {
         await using TenantHarness harness = new(new SqliteConfigurator());
         await ExportScenarios.BulkExportAsync(harness, DatabaseProvider.Sqlite, Database("fec-a"), Database("fec-b"));
+    }
+
+    [Fact]
+    public async Task Factures_electroniques_CII_et_UBL_des_pieces_validees()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await EInvoiceScenarios.SamplesAsync(harness, DatabaseProvider.Sqlite, Database("einvoice"), Database("einvoice-franchise"));
     }
 
     [Fact]
@@ -249,6 +263,14 @@ public sealed class PostgreSqlTests : IAsyncLifetime
         Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new PostgreSqlConfigurator(), syncJournal: true);
         await SyncPersistenceScenarios.JournalFeedOutboxAndReceiptsAsync(harness, DatabaseProvider.PostgreSql, Database("sync"));
+    }
+
+    [SkippableFact]
+    public async Task Series_de_poste_ouvertes_recues_dans_l_ordre_et_installees_sur_le_poste()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new PostgreSqlConfigurator());
+        await SyncPersistenceScenarios.DeviceSeriesAsync(harness, DatabaseProvider.PostgreSql, Database("serie"), Database("serie-poste"));
     }
 
     [SkippableFact]
@@ -480,6 +502,14 @@ public sealed class SqlServerTests : IAsyncLifetime
         Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new SqlServerConfigurator(), syncJournal: true);
         await SyncPersistenceScenarios.JournalFeedOutboxAndReceiptsAsync(harness, DatabaseProvider.SqlServer, Database("sync"));
+    }
+
+    [SkippableFact]
+    public async Task Series_de_poste_ouvertes_recues_dans_l_ordre_et_installees_sur_le_poste()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new SqlServerConfigurator());
+        await SyncPersistenceScenarios.DeviceSeriesAsync(harness, DatabaseProvider.SqlServer, Database("serie"), Database("serie-poste"));
     }
 
     [SkippableFact]

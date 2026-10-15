@@ -79,6 +79,9 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<int?>("VatDeclarationRegime")
+                        .HasColumnType("int");
+
                     b.Property<bool>("VatFranchise")
                         .HasColumnType("bit");
 
@@ -865,6 +868,10 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<string>("PreferredLanguage")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
                     b.Property<string>("SearchKey")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -1221,6 +1228,33 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.HasKey("Code");
 
                     b.ToTable("NumberSeries", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.DeviceSeriesRecord", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<string>("BaseSeries")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<long?>("ClosedAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("DeviceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("OpenedAtMs")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Code");
+
+                    b.HasIndex("DeviceId", "BaseSeries");
+
+                    b.ToTable("DeviceSeries", (string)null);
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.SyncConflictRow", b =>

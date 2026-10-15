@@ -18,6 +18,7 @@
   <data name="Customers.Field.AddressLine2" xml:space="preserve"><value>Complément d'adresse</value></data>
   <data name="Customers.Field.City" xml:space="preserve"><value>Ville</value></data>
   <data name="Customers.Field.CountryCode" xml:space="preserve"><value>Pays (code ISO, ex. FR)</value></data>
+  <data name="Customers.Field.PreferredLanguage" xml:space="preserve"><value>Langue des devis et factures imprimés</value></data>
   <data name="Customers.Field.Email" xml:space="preserve"><value>E-mail</value></data>
   <data name="Customers.Field.Kind" xml:space="preserve"><value>Type de client</value></data>
   <data name="Customers.Field.Name" xml:space="preserve"><value>Nom ou raison sociale</value></data>

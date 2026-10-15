@@ -99,4 +99,36 @@ internal static class SyncPersistenceScenarios
             (await receipts.FindAsync(intent.IdempotencyKey, default)).Should().BeEquivalentTo(receipt, o => o.Excluding(r => r.ReceivedAt));
         }
     }
+
+    /// <summary>Séries de poste (ADR-0007) : ouverture rejouable, réception dans l'ordre exact, installation sur le poste.</summary>
+    public static async Task DeviceSeriesAsync(TenantHarness harness, DatabaseProvider provider, string connectionString, string replicaConnectionString)
+    {
+        DossierId dossier = harness.AddDossier(provider, connectionString);
+        Guid first = Guid.CreateVersion7(), second = Guid.CreateVersion7();
+        DateTimeOffset now = new(2026, 10, 15, 9, 0, 0, TimeSpan.Zero);
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            IDeviceSeriesRegistry registry = scope.ServiceProvider.GetRequiredService<IDeviceSeriesRegistry>();
+            (await registry.OpenAsync(first, "FAC", now, default)).Should().BeEquivalentTo(new DeviceSeries("FAC", "FAC-P01", "FAC-P01-", first, 1));
+            (await registry.OpenAsync(second, "FAC", now, default)).Code.Should().Be("FAC-P02");
+            (await registry.OpenAsync(first, "FAC", now, default)).Code.Should().Be("FAC-P01");
+
+            Task<Result<bool>> Receive(string number) =>
+                registry.ExecuteWithDeviceNumberAsync("FAC-P01", first, number, _ => Task.FromResult<Result<bool>>(true), default);
+            (await Receive("FAC-P01-000002")).Errors.Should().ContainSingle(e => e.Code == ErrorCodes.Sync.NumberOutOfOrder);
+            (await Receive("FAC-P01-000001")).IsSuccess.Should().BeTrue();
+            (await Receive("FAC-P01-000002")).IsSuccess.Should().BeTrue();
+            (await registry.OpenAsync(first, "FAC", now, default)).Next.Should().Be(3);
+        }
+
+        DossierId device = harness.AddDossier(provider, replicaConnectionString);
+        await using (AsyncServiceScope scope = await harness.OpenAsync(device))
+        {
+            ISyncReplica replica = scope.ServiceProvider.GetRequiredService<ISyncReplica>();
+            (await replica.FindDeviceSeriesAsync("FAC", default)).Should().BeNull();
+            await replica.SaveDeviceSeriesAsync(new DeviceSeries("FAC", "FAC-P02", "FAC-P02-", second, 5), default);
+            await replica.SaveDeviceSeriesAsync(new DeviceSeries("FAC", "FAC-P02", "FAC-P02-", second, 1), default);
+            (await replica.FindDeviceSeriesAsync("FAC", default)).Should().BeEquivalentTo(new DeviceSeries("FAC", "FAC-P02", "FAC-P02-", second, 5));
+        }
+    }
 }

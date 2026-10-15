@@ -40,6 +40,14 @@ internal sealed class InProcessCustomersGateway(IServiceScopeFactory scopes) : I
             return result.ToOperationResult();
         }, cancellationToken);
 
+    public Task<OperationResult<CustomerResponse>> GetAsync(Guid id, CancellationToken cancellationToken) =>
+        RunAsync(async (sp, dossier, ct) =>
+        {
+            Result<CustomerResponse> result = await sp.GetRequiredService<IQueryDispatcher>()
+                .QueryAsync(new GetCustomerQuery(dossier, new CustomerId(id)), ct).ConfigureAwait(false);
+            return result.ToOperationResult();
+        }, cancellationToken);
+
     private Task<OperationResult<T>> RunAsync<T>(
         Func<IServiceProvider, DossierId, CancellationToken, Task<OperationResult<T>>> operation,
         CancellationToken cancellationToken) =>

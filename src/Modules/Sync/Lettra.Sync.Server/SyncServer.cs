@@ -9,6 +9,7 @@ using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Features.Catalog;
 using Lettra.Application.Features.Customers;
 using Lettra.Application.Features.Parties;
+using Lettra.Application.Features.Sync;
 using Lettra.Application.Mapping;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Common;
@@ -42,8 +43,12 @@ public sealed class SyncServer(
     ITenantContext tenant,
     ICurrentUser user,
     IPermissionService permissions,
+    IDeviceSeriesRegistry deviceSeries,
     TimeProvider clock)
 {
+    /// <summary>Les séries du dossier qui se numérotent sur un poste hors ligne (les devis restent au serveur).</summary>
+    private static readonly string[] OfflineSeries = [NumberSeriesCodes.Invoices];
+
     /// <summary>Nouvelles tentatives si un collègue écrit le même élément pendant la fusion.</summary>
     private const int MergeAttempts = 3;
 
@@ -83,6 +88,41 @@ public sealed class SyncServer(
         return await feed.ReadAsync(token, limit, scope, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Ouvre, ou rend, les séries du poste (ADR-0007). Réservé à qui peut valider une facture : les autres ne
+    /// numérotent pas hors ligne.
+    /// </summary>
+    public async Task<Result<OpenDeviceSeriesResponse>> OpenDeviceSeriesAsync(OpenDeviceSeriesRequest request, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (!user.IsAuthenticated)
+        {
+            return SecurityErrors.Unauthenticated;
+        }
+
+        if (request.DeviceId == Guid.Empty)
+        {
+            return RightsSnapshotErrors.DeviceRequired;
+        }
+
+        IReadOnlySet<Permission> granted = await permissions
+            .GetEffectiveAsync(user.UserId, AuthorizationScope.ForDossier(tenant.Current.DossierId), cancellationToken)
+            .ConfigureAwait(false);
+        if (!granted.Contains(Permission.FactureValider))
+        {
+            return SecurityErrors.Forbidden;
+        }
+
+        List<DeviceSeriesResponse> opened = [];
+        foreach (string series in OfflineSeries)
+        {
+            DeviceSeries open = await deviceSeries.OpenAsync(request.DeviceId, series, clock.GetUtcNow(), cancellationToken).ConfigureAwait(false);
+            opened.Add(new DeviceSeriesResponse(open.BaseSeries, open.Code, open.Prefix, open.Next));
+        }
+
+        return new OpenDeviceSeriesResponse(opened);
+    }
+
     private async Task<SyncIntentResult> PushOneAsync(Guid deviceId, SyncIntent intent, CancellationToken cancellationToken)
     {
         string hash = Hash(intent);
@@ -94,7 +134,7 @@ public sealed class SyncServer(
                 : Rejected(intent, SyncErrors.IdempotencyKeyReused);
         }
 
-        SyncIntentResult result = await work.RunAsync((sp, ct) => IntentReplay.ReplayAsync(sp, intent, ct), cancellationToken).ConfigureAwait(false);
+        SyncIntentResult result = await work.RunAsync((sp, ct) => IntentReplay.ReplayAsync(sp, intent, deviceId, ct), cancellationToken).ConfigureAwait(false);
         await receipts.SaveAsync(new SyncReceipt(intent.IdempotencyKey, deviceId, hash, result, clock.GetUtcNow()), cancellationToken).ConfigureAwait(false);
         return result;
     }
@@ -109,14 +149,15 @@ public sealed class SyncServer(
     /// <summary>Le rejeu d'une intention, dans une portée neuve sur le dossier.</summary>
     private static class IntentReplay
     {
-        public static Task<SyncIntentResult> ReplayAsync(IServiceProvider services, SyncIntent intent, CancellationToken ct)
+        public static Task<SyncIntentResult> ReplayAsync(IServiceProvider services, SyncIntent intent, Guid deviceId, CancellationToken ct)
         {
             Replayer replayer = new(
                 services.GetRequiredService<ICommandDispatcher>(),
                 services.GetRequiredService<ICustomerReadStore>(),
                 services.GetRequiredService<ISupplierReadStore>(),
                 services.GetRequiredService<ICatalogItemReadStore>(),
-                services.GetRequiredService<ITenantContext>().Current.DossierId);
+                services.GetRequiredService<ITenantContext>().Current.DossierId,
+                deviceId);
             return replayer.ReplayAsync(intent, ct);
         }
     }
@@ -126,7 +167,8 @@ public sealed class SyncServer(
         ICustomerReadStore customers,
         ISupplierReadStore suppliers,
         ICatalogItemReadStore items,
-        DossierId dossier)
+        DossierId dossier,
+        Guid deviceId)
     {
         public Task<SyncIntentResult> ReplayAsync(SyncIntent intent, CancellationToken ct) => intent switch
         {
@@ -155,8 +197,18 @@ public sealed class SyncServer(
                 async () => await items.GetAsync(new CatalogItemId(u.EntityId), ct).ConfigureAwait(false) is { } s ? (s.ToRequest(), s.Version) : null,
                 (merged, version) => commands.SendAsync(merged.ToUpdateCommand(dossier, new CatalogItemId(u.EntityId), version), ct)),
             SetCatalogItemArchivedIntent a => ArchiveAsync(a, ct),
+            ValidatedInvoiceFact f => ImportAsync(f, ct),
             _ => Task.FromResult(Rejected(intent, SyncErrors.BatchInvalid)),
         };
+
+        /// <summary>Un fait : reçu tel quel après revérification, ou refusé ; jamais fusionné ni en conflit.</summary>
+        private async Task<SyncIntentResult> ImportAsync(ValidatedInvoiceFact fact, CancellationToken ct)
+        {
+            Result<SyncIntentOutcome> imported = await commands.SendAsync(new ImportOfflineInvoiceCommand(dossier, deviceId, fact), ct).ConfigureAwait(false);
+            return imported.IsSuccess
+                ? new SyncIntentResult(fact.IdempotencyKey, fact.EntityId, imported.Value, null, [], [])
+                : Rejected(fact, imported.Errors);
+        }
 
         private static async Task<long?> Version<T>(Task<T?> read)
             where T : class

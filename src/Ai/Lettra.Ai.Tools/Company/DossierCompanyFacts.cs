@@ -37,6 +37,7 @@ internal sealed class DossierCompanyFacts(IQueryDispatcher queries) : ICompanyFa
         CountryCode = profile.CountryCode,
         VatFranchise = profile.VatFranchise,
         VatOnDebits = profile.VatOnDebits,
+        VatRegime = ToPaperasse(profile.VatDeclarationRegime),
         PaymentDays = profile.PaymentDays,
         PaymentTerms = profile.PaymentTerms,
         LatePenaltyRate = profile.LatePenaltyRate,
@@ -48,5 +49,14 @@ internal sealed class DossierCompanyFacts(IQueryDispatcher queries) : ICompanyFa
         InvoicePrefix = NumberSeriesCodes.Invoices,
         CreditNotePrefix = NumberSeriesCodes.Invoices,
         QuotePrefix = NumberSeriesCodes.Quotes,
+    };
+
+    /// <summary>Régime de déclaration au format de <c>tax.regime_tva</c> de Paperasse.</summary>
+    internal static string? ToPaperasse(VatDeclarationRegimeDto? regime) => regime switch
+    {
+        VatDeclarationRegimeDto.RealNormal => "reel_normal",
+        VatDeclarationRegimeDto.RealSimplified => "reel_simplifie",
+        VatDeclarationRegimeDto.MiniReal => "mini_reel",
+        _ => null,
     };
 }

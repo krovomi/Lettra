@@ -1,0 +1,18 @@
+<!--
+  Outils de contrôle des factures électroniques pour la CI ; rien n'est livré avec Lettra.
+  Mustang (Apache 2.0) : schémas XSD CII et UBL, Schematron Factur-X et EN 16931, PDF/A-3 (veraPDF) d'un Factur-X.
+  Il apporte Saxon-HE (MPL 2.0), qui exécute aussi le Schematron EN 16931 officiel de la Commission européenne.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>lettra.build</groupId>
+  <artifactId>einvoice-runner</artifactId>
+  <version>1</version>
+  <dependencies>
+    <dependency>
+      <groupId>org.mustangproject</groupId>
+      <artifactId>validator</artifactId>
+      <version>2.26.0</version>
+    </dependency>
+  </dependencies>
+</project>

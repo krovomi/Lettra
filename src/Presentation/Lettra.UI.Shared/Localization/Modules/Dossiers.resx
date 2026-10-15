@@ -29,6 +29,11 @@
   <data name="Company.Field.Rcs" xml:space="preserve"><value>Immatriculation (RCS ou RM)</value></data>
   <data name="Company.Field.VatFranchise" xml:space="preserve"><value>Franchise en base de TVA (art. 293 B du CGI)</value></data>
   <data name="Company.Field.VatOnDebits" xml:space="preserve"><value>Option pour le paiement de la TVA d'après les débits</value></data>
+  <data name="Company.Field.VatDeclarationRegime" xml:space="preserve"><value>Régime de déclaration de la TVA</value></data>
+  <data name="Company.VatDeclarationRegime.None" xml:space="preserve"><value>Non renseigné</value></data>
+  <data name="Company.VatDeclarationRegime.RealNormal" xml:space="preserve"><value>Réel normal (CA3)</value></data>
+  <data name="Company.VatDeclarationRegime.RealSimplified" xml:space="preserve"><value>Réel simplifié (CA12)</value></data>
+  <data name="Company.VatDeclarationRegime.MiniReal" xml:space="preserve"><value>Mini-réel</value></data>
   <data name="Company.Field.PaymentDays" xml:space="preserve"><value>Délai de paiement (jours)</value></data>
   <data name="Company.Field.LatePenaltyRate" xml:space="preserve"><value>Taux des pénalités de retard (%)</value></data>
   <data name="Company.Field.EarlyPaymentDiscount" xml:space="preserve"><value>Escompte pour paiement anticipé</value></data>

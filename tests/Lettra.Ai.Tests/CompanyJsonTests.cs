@@ -139,7 +139,26 @@ public sealed class CompanyJsonTests
         json["invoicing"]!["avoir_prefix"]!.GetValue<string>().Should().Be("FAC", because: "les avoirs suivent la série des factures");
         json["invoicing"]!["devis_prefix"]!.GetValue<string>().Should().Be("DEV");
         json["_a_completer"]!.AsArray().Select(n => n!.GetValue<string>()).Should().Equal(
-            ["tax.regime_tva"], because: "la fiche ne porte pas encore le régime de TVA : le moteur le demande");
+            ["tax.regime_tva"], because: "le régime de TVA n'est pas renseigné sur la fiche : le moteur le demande");
+    }
+
+    [Theory]
+    [InlineData(VatDeclarationRegimeDto.RealNormal, "reel_normal")]
+    [InlineData(VatDeclarationRegimeDto.RealSimplified, "reel_simplifie")]
+    [InlineData(VatDeclarationRegimeDto.MiniReal, "mini_reel")]
+    public async Task Le_regime_de_declaration_de_la_fiche_remplit_regime_tva(VatDeclarationRegimeDto regime, string expected)
+    {
+        CompanyProfileResponse profile = new(
+            3, "WebCraft", "SAS", 1000m, "912345678", "91234567800014", "RCS Lyon", "FR40912345678",
+            "12 rue du Commerce", null, "69003", "Lyon", "FR", VatFranchise: false, VatOnDebits: true, PaymentDays: 45,
+            PaymentTerms: null, LatePenaltyRate: null, EarlyPaymentDiscount: null, "FR7630006000011234567890189", "AGRIFRPP",
+            DateTimeOffset.UnixEpoch, regime);
+        DossierCompanyFacts source = new(new ProfileQueries(Result<CompanyProfileResponse>.Success(profile)));
+
+        JsonObject json = CompanyJsonBuilder.Build(await source.GetAsync(AssistantHarness.Dossier, CancellationToken.None));
+
+        json["tax"]!["regime_tva"]!.GetValue<string>().Should().Be(expected);
+        json["_a_completer"].Should().BeNull("plus rien n'est à demander");
     }
 
     [Theory]

@@ -14,6 +14,9 @@ internal sealed class FakeCustomersGateway : ICustomersGateway
 {
     public List<CustomerSummary> Customers { get; } = [];
 
+    /// <summary>Langue d'impression des clients qui en ont une.</summary>
+    public Dictionary<Guid, string> Languages { get; } = [];
+
     public IReadOnlyList<ErrorDetail>? NextErrors { get; set; }
 
     public CreateCustomerRequest? LastRequest { get; private set; }
@@ -27,13 +30,33 @@ internal sealed class FakeCustomersGateway : ICustomersGateway
         }
 
         CustomerResponse created = new(Guid.CreateVersion7(), request.Kind, request.Name, "732829320", request.Siret, null, null,
-            request.AddressLine1, null, request.PostalCode, request.City, request.CountryCode, DateTimeOffset.UnixEpoch);
+            request.AddressLine1, null, request.PostalCode, request.City, request.CountryCode, DateTimeOffset.UnixEpoch)
+        {
+            PreferredLanguage = request.PreferredLanguage,
+        };
+        if (request.PreferredLanguage is { } language)
+        {
+            Languages[created.Id] = language;
+        }
+
         Customers.Add(new CustomerSummary(created.Id, created.Kind, created.Name, created.Siren, created.City));
         return Task.FromResult(OperationResult<CustomerResponse>.Success(created));
     }
 
     public Task<OperationResult<PagedResponse<CustomerSummary>>> ListAsync(int page, int pageSize, CancellationToken cancellationToken) =>
         Task.FromResult(OperationResult<PagedResponse<CustomerSummary>>.Success(new PagedResponse<CustomerSummary>([.. Customers], page, pageSize, Customers.Count)));
+
+    public Task<OperationResult<CustomerResponse>> GetAsync(Guid id, CancellationToken cancellationToken)
+    {
+        CustomerSummary? summary = Customers.Find(c => c.Id == id);
+        return Task.FromResult(summary is null
+            ? OperationResult<CustomerResponse>.Failure(ErrorCodes.Customer.NotFound)
+            : OperationResult<CustomerResponse>.Success(new CustomerResponse(
+                summary.Id, summary.Kind, summary.Name, summary.Siren, null, null, null, "1 rue de la Paix", null, "69001", summary.City, "FR", DateTimeOffset.UnixEpoch)
+            {
+                PreferredLanguage = Languages.GetValueOrDefault(id),
+            }));
+    }
 }
 
 /// <summary>Les tests changent la culture du thread : on les sérialise.</summary>
@@ -111,6 +134,24 @@ public sealed class CustomersPageTests : BunitContext
 
         page.WaitForAssertion(() => page.Find("[role=status]").TextContent.Should().Be("Client « Boulangerie Martin » créé."));
         page.Find("tbody").TextContent.Should().Contain("Boulangerie Martin").And.Contain("732829320");
+        _gateway.LastRequest!.PreferredLanguage.Should().BeNullOrEmpty("le français est la langue par défaut");
+    }
+
+    [Fact]
+    public void La_langue_des_pieces_imprimees_part_avec_le_client()
+    {
+        UseCulture("fr-FR");
+        IRenderedComponent<Customers> page = Render<Customers>();
+
+        Fill(page, "name", "Acme Ltd");
+        Fill(page, "line1", "1 Main Street");
+        Fill(page, "zip", "SW1A 1AA");
+        Fill(page, "city", "London");
+        Fill(page, "country", "GB");
+        page.Find("#language").Change("en-US");
+        page.Find("form").Submit();
+
+        page.WaitForAssertion(() => _gateway.LastRequest!.PreferredLanguage.Should().Be("en-US"));
     }
 
     [Fact]

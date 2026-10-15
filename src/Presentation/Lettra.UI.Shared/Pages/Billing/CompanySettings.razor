@@ -80,6 +80,16 @@ else
             <legend>@L["Company.Vat"]</legend>
             <label class="lettra-check"><InputCheckbox id="company-franchise" @bind-Value="_request.VatFranchise" /> @L["Company.Field.VatFranchise"]</label>
             <label class="lettra-check"><InputCheckbox id="company-debits" @bind-Value="_request.VatOnDebits" /> @L["Company.Field.VatOnDebits"]</label>
+
+            <label for="company-regime">@L["Company.Field.VatDeclarationRegime"]</label>
+            <InputSelect id="company-regime" @bind-Value="_request.VatDeclarationRegime" disabled="@_request.VatFranchise">
+                <option value="">@L["Company.VatDeclarationRegime.None"]</option>
+                @foreach (VatDeclarationRegimeDto regime in Enum.GetValues<VatDeclarationRegimeDto>())
+                {
+                    <option value="@regime">@L[$"Company.VatDeclarationRegime.{regime}"]</option>
+                }
+            </InputSelect>
+            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.VatDeclarationRegime)" ServerErrors="_errors" />
         </fieldset>
 
         <fieldset>
@@ -191,6 +201,7 @@ else
             CountryCode = profile.CountryCode,
             VatFranchise = profile.VatFranchise,
             VatOnDebits = profile.VatOnDebits,
+            VatDeclarationRegime = profile.VatDeclarationRegime,
             PaymentDays = profile.PaymentDays,
             PaymentTerms = profile.PaymentTerms,
             LatePenaltyRate = profile.LatePenaltyRate,

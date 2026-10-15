@@ -8,4 +8,6 @@
   <data name="Error.Sync.TokenInvalid" xml:space="preserve"><value>This device no longer recognises the server: a full download is needed.</value></data>
   <data name="Error.Sync.BatchInvalid" xml:space="preserve"><value>The synchronisation upload is incomplete or too large.</value></data>
   <data name="Error.Sync.EntityNotFound" xml:space="preserve"><value>The item changed on this device does not exist on the server.</value></data>
+  <data name="Error.Sync.DeviceSeriesUnknown" xml:space="preserve"><value>This numbering series does not belong to this device: the document is not accepted.</value></data>
+  <data name="Error.Sync.NumberOutOfOrder" xml:space="preserve"><value>An earlier document from this device is missing or was rejected: this one is on hold.</value></data>
 </root>

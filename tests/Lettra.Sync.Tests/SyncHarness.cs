@@ -60,7 +60,9 @@ internal abstract class DossierNode : IAsyncDisposable
         services.AddSingleton<ISecretStore>(new Secrets($"Data Source={file};Pooling=False"));
         services.AddSingleton<ICurrentUser>(new User());
         services.AddSingleton<IPermissionService>(Permissions);
-        services.AddSingleton<IKekStore>(new InMemoryKekStore());
+        InMemoryKekStore keks = new();
+        _ = keks.GetOrCreateAsync(descriptor.OrganisationId, default).AsTask().Result;
+        services.AddSingleton<IKekStore>(keks);
         services.AddSingleton<IRequestedDossierSource>(new FixedDossier(dossier));
         configure(services);
         _root = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
@@ -120,9 +122,37 @@ internal abstract class DossierNode : IAsyncDisposable
     }
 }
 
-/// <summary>Le serveur : journal de synchronisation tenu, rejeu des intentions.</summary>
-internal sealed class ServerNode(DossierId dossier, string file, TestClock clock)
-    : DossierNode(dossier, file, clock, services => services.AddSyncServer().AddSyncJournal());
+/// <summary>Politique de séparation des tâches du cabinet, réglable par scénario.</summary>
+internal sealed class TestPolicies : IOrganisationPolicyStore
+{
+    public SegregationOfDutiesPolicy Policy { get; set; } = SegregationOfDutiesPolicy.Disabled;
+
+    public bool SupportsSegregationOfDuties => true;
+
+    public Task<SegregationOfDutiesPolicy> GetSegregationOfDutiesAsync(OrganisationId organisation, CancellationToken cancellationToken) =>
+        Task.FromResult(Policy);
+
+    public Task SaveSegregationOfDutiesAsync(OrganisationId organisation, SegregationOfDutiesPolicy policy, Guid changedBy, CancellationToken cancellationToken)
+    {
+        Policy = policy;
+        return Task.CompletedTask;
+    }
+}
+
+/// <summary>Le serveur : journal de synchronisation tenu, rejeu des intentions, politique du cabinet.</summary>
+internal sealed class ServerNode : DossierNode
+{
+    public ServerNode(DossierId dossier, string file, TestClock clock)
+        : this(dossier, file, clock, new TestPolicies())
+    {
+    }
+
+    private ServerNode(DossierId dossier, string file, TestClock clock, TestPolicies policies)
+        : base(dossier, file, clock, services => services.AddSyncServer().AddSyncJournal().AddSingleton<IOrganisationPolicyStore>(policies)) =>
+        Policies = policies;
+
+    public TestPolicies Policies { get; }
+}
 
 /// <summary>Où couper l'échange : la requête n'arrive pas, ou la réponse se perd après traitement.</summary>
 public enum Cut
@@ -168,6 +198,21 @@ internal sealed class InMemoryTransport(ServerNode server) : ISyncTransport
 
         Lose(Cut.PullResponse);
         return RoundTrip(result.Value, ContractsJsonContext.Default.SyncChangesResponse);
+    }
+
+    public int SeriesRequests { get; private set; }
+
+    public async Task<OpenDeviceSeriesResponse> OpenDeviceSeriesAsync(Guid dossierId, OpenDeviceSeriesRequest request, CancellationToken cancellationToken)
+    {
+        SeriesRequests++;
+        OpenDeviceSeriesRequest received = RoundTrip(request, ContractsJsonContext.Default.OpenDeviceSeriesRequest);
+        Result<OpenDeviceSeriesResponse> result = await server.RunAsync(sp => sp.GetRequiredService<SyncServer>().OpenDeviceSeriesAsync(received, cancellationToken));
+        if (result.IsFailure)
+        {
+            throw new SyncRefusedException(SyncFailure.Forbidden);
+        }
+
+        return RoundTrip(result.Value, ContractsJsonContext.Default.OpenDeviceSeriesResponse);
     }
 
     private void Lose(Cut step)
@@ -247,6 +292,7 @@ internal sealed class DeviceNode : DossierNode
         services.AddSingleton<INetworkProbe, TestProbe>();
         services.AddSingleton<ISyncPreferences, TestPreference>();
         services.AddSingleton<ISyncTransport>(transport);
+        services.AddSyncDevice();
         services.AddSyncClient(o =>
         {
             o.DeviceId = Guid.CreateVersion7();
