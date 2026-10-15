@@ -157,6 +157,19 @@ public sealed class AuthenticationApiTests(LettraApiFactory factory) : IClassFix
         BffEndpoints.ReauthenticationPath(returnUrl).Should().Be(expected);
 
     [Fact]
+    public void La_cle_des_brouillons_du_navigateur_est_stable_propre_a_l_utilisateur_et_ne_le_nomme_pas()
+    {
+        Guid camille = Guid.Parse("0199e3a1-0000-7000-8000-000000000001");
+
+        string cle = Security.BffEndpoints.DeviceStorageKeyOf(camille);
+
+        cle.Should().HaveLength(32).And.MatchRegex("^[0-9a-f]+$");
+        cle.Should().Be(Security.BffEndpoints.DeviceStorageKeyOf(camille));
+        cle.Should().NotBe(Security.BffEndpoints.DeviceStorageKeyOf(Guid.Parse("0199e3a1-0000-7000-8000-000000000002")));
+        cle.Should().NotContain(camille.ToString("N"));
+    }
+
+    [Fact]
     public async Task Le_bff_sans_session_repond_401()
     {
         using HttpClient client = factory.CreateClient();

@@ -1,7 +1,11 @@
 # Collecteur OpenTelemetry de la cellule (annexe G §2 et §3). Second filet après le filtrage dans les applications
-# (Lettra.Infrastructure.Observability) : attributs interdits supprimés, valeurs qui ressemblent à une donnée de dossier
-# masquées (e-mail, IBAN, TVA, SIREN, SIRET), puis export vers Prometheus, Loki et Tempo de la même cellule.
-# Les adresses viennent de l'environnement : PROMETHEUS_OTLP, LOKI_OTLP, TEMPO_OTLP.
+# (Lettra.Infrastructure.Observability) : attributs interdits supprimés, exceptions réduites à leur type, valeurs qui
+# ressemblent à une donnée de dossier masquées (e-mail, IBAN, TVA, SIREN, SIRET).
+#
+# Configuration de base, complète et valide seule : métriques vers le Prometheus de la cellule (récepteur OTLP, adresse
+# dans PROMETHEUS_OTLP) ; traces et journaux vers l'exportateur debug seulement (un résumé par lot dans le journal du
+# collecteur, jamais le contenu). Les destinations des traces et des journaux (Tempo, Loki, fournisseur hébergé en
+# France) s'ajoutent par un second fichier, rendu par le chart depuis values.yaml (backends.yaml, voir README.md).
 receivers:
   otlp:
     protocols:
@@ -16,7 +20,7 @@ processors:
     limit_percentage: 80
     spike_limit_percentage: 20
 
-  # Attributs qui peuvent porter une saisie : ils ne sortent jamais du collecteur.
+  # Attributs qui peuvent porter une saisie : ils ne sortent jamais du collecteur (spans, points de métriques, journaux).
   attributes/interdits:
     actions:
       - { key: url.query, action: delete }
@@ -25,8 +29,15 @@ processors:
       - { key: db.query.text, action: delete }
       - { key: exception.message, action: delete }
       - { key: exception.stacktrace, action: delete }
+      - { key: http.request.body, action: delete }
+      - { key: http.response.body, action: delete }
       - { key: enduser.id, action: delete }
+      - { key: user.email, action: delete }
+      - { key: user.full_name, action: delete }
+      - { key: user.name, action: delete }
+      - { key: client.address, action: delete }
       - { pattern: ^http\.(request|response)\.header\..*, action: delete }
+      - { pattern: ^db\.query\.parameter\..*, action: delete }
 
   redaction/donnees-de-dossier:
     allow_all_keys: true
@@ -37,14 +48,22 @@ processors:
       - '\b\d{3}\s?\d{3}\s?\d{3}(?:\s?\d{5})?\b'
     summary: silent
 
-  # Le corps des journaux n'est pas couvert par « redaction » : même masquage par OTTL.
-  transform/corps-des-journaux:
+  # Ce que ni « attributes » ni « redaction » ne couvrent : les attributs des événements de span (exceptions) et le
+  # corps des journaux. Même règle par OTTL.
+  transform/evenements-et-corps:
     error_mode: ignore
+    trace_statements:
+      - context: spanevent
+        statements:
+          - delete_key(attributes, "exception.message")
+          - delete_key(attributes, "exception.stacktrace")
+          - delete_matching_keys(attributes, "^db\\.query\\.parameter\\..*")
     log_statements:
       - context: log
         statements:
           - replace_pattern(body, "[A-Za-z0-9._%+\\-]+@[A-Za-z0-9.\\-]+\\.[A-Za-z]{2,}", "***")
           - replace_pattern(body, "\\b[A-Z]{2}\\d{2}(?:\\s?[A-Z0-9]{4}){2,7}(?:\\s?[A-Z0-9]{1,4})?\\b", "***")
+          - replace_pattern(body, "\\bFR\\s?[0-9A-Z]{2}\\s?\\d{9}\\b", "***")
           - replace_pattern(body, "\\b\\d{3}\\s?\\d{3}\\s?\\d{3}(?:\\s?\\d{5})?\\b", "***")
 
   batch:
@@ -56,14 +75,12 @@ exporters:
     endpoint: ${env:PROMETHEUS_OTLP}
     tls:
       insecure: true
-  otlphttp/loki:
-    endpoint: ${env:LOKI_OTLP}
-    tls:
-      insecure: true
-  otlp/tempo:
-    endpoint: ${env:TEMPO_OTLP}
-    tls:
-      insecure: true
+  # Résumé de chaque lot (nombre de spans, de points, de journaux) dans le journal du collecteur : la preuve que les
+  # signaux arrivent, sans en recopier le contenu. Ne jamais passer en « detailed » dans une cellule.
+  debug:
+    verbosity: basic
+    sampling_initial: 5
+    sampling_thereafter: 200
 
 extensions:
   health_check:
@@ -82,13 +99,13 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [memory_limiter, attributes/interdits, redaction/donnees-de-dossier, batch]
-      exporters: [otlp/tempo]
+      processors: [memory_limiter, attributes/interdits, redaction/donnees-de-dossier, transform/evenements-et-corps, batch]
+      exporters: [debug]
     metrics:
       receivers: [otlp]
       processors: [memory_limiter, attributes/interdits, redaction/donnees-de-dossier, batch]
-      exporters: [otlphttp/prometheus]
+      exporters: [otlphttp/prometheus, debug]
     logs:
       receivers: [otlp]
-      processors: [memory_limiter, attributes/interdits, redaction/donnees-de-dossier, transform/corps-des-journaux, batch]
-      exporters: [otlphttp/loki]
+      processors: [memory_limiter, attributes/interdits, redaction/donnees-de-dossier, transform/evenements-et-corps, batch]
+      exporters: [debug]

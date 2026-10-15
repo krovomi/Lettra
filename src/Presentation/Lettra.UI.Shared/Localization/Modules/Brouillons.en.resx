@@ -12,6 +12,8 @@
   <data name="Drafts.StillOffline" xml:space="preserve"><value>The server is still unreachable.</value></data>
   <data name="Drafts.Error.Drafts_Corrupted" xml:space="preserve"><value>the copy on this device is altered: it is not sent.</value></data>
   <data name="Drafts.Error.Concurrency_VersionMismatch" xml:space="preserve"><value>changed at the firm in the meantime: open it to choose.</value></data>
+  <data name="Drafts.Error.Drafts_OtherDossier" xml:space="preserve"><value>entered in another file: it is not sent to this one.</value></data>
+  <data name="Drafts.SignOutPending" xml:space="preserve"><value>{0} draft(s) could not be sent and will be erased from this device when you sign out. Sign out anyway?</value></data>
   <data name="Drafts.Error.Other" xml:space="preserve"><value>refused by the server: open it to fix.</value></data>
   <data name="Drafts.KeptOnDevice" xml:space="preserve"><value>No network: draft saved on this device. It will be sent when the network is back.</value></data>
   <data name="Drafts.Restored" xml:space="preserve"><value>Draft restored from this device: it will be sent at the next save.</value></data>

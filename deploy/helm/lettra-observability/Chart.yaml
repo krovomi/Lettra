@@ -2,5 +2,5 @@ apiVersion: v2
 name: lettra-observability
 description: Ce que Lettra ajoute à la pile d'observabilité de la cellule (annexe G) - collecteur OpenTelemetry filtrant, règles SLO et d'infrastructure, routage Alertmanager, tableaux de bord.
 type: application
-version: 0.1.0
+version: 0.2.0
 appVersion: "phase-2"
