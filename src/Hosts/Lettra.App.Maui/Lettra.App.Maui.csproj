@@ -3,14 +3,14 @@
   <!-- Blazor Hybrid (.NET MAUI), mode 1 (poste isolé, gateway in-process, SQLite local) : Windows, macOS (Mac Catalyst),
        iOS et Android, une seule application. Chaque plateforme se construit là où sa chaîne d'outils existe : Android
        partout, iOS et Mac Catalyst sous macOS (Xcode), Windows sous Windows. Sous Windows, Android s'ajoute dès que la
-       charge de travail est installée (Visual Studio avec MAUI) ; le job CI Windows n'installe que maui-windows.
+       charge de travail est installée (Visual Studio avec MAUI), sauf pour une publication Windows (-r win-x64).
        Chaque plateforme a son job CI (build, premier lancement, artefact). -->
   <PropertyGroup>
     <TargetFramework />
     <TargetFrameworks>net10.0-android</TargetFrameworks>
     <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('osx'))">$(TargetFrameworks);net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
     <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">net10.0-windows10.0.19041.0</TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows')) And Exists('$(NetCoreTargetingPackRoot)\Microsoft.Android.Sdk.Windows')">$(TargetFrameworks);net10.0-android</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows')) And Exists('$(NetCoreTargetingPackRoot)\Microsoft.Android.Sdk.Windows') And '$(RuntimeIdentifier)' == ''">$(TargetFrameworks);net10.0-android</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <UseMaui>true</UseMaui>
     <SingleProject>true</SingleProject>

@@ -185,20 +185,21 @@ jobs:
 
   maui-apple:
     name: MAUI iOS (simulateur) et macOS (Mac Catalyst)
-    # Les SDK iOS et Mac Catalyst de .NET 10 suivent le dernier Xcode : image macOS la plus récente.
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
-      - name: Xcodes disponibles
-        run: echo "::notice::$(ls -d /Applications/Xcode* | tr '\n' ' ')"
+      # Chaque version du SDK iOS de .NET exige sa version de Xcode : jeu de charges de travail épinglé (iOS et Mac
+      # Catalyst 26.5) et Xcode 26.5 de l'image. À relever ensemble quand l'image aura le Xcode du SDK suivant.
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: latest
+          xcode-version: '26.5'
       - name: Charge de travail MAUI (iOS, Mac Catalyst, Android)
-        run: dotnet workload install maui-ios maui-maccatalyst maui-android
+        run: |
+          dotnet --version
+          dotnet workload install maui-ios maui-maccatalyst maui-android --version 10.401.0
       - name: Build iOS (simulateur)
         run: dotnet build src/Hosts/Lettra.App.Maui/Lettra.App.Maui.csproj -c Release -f net10.0-ios -r iossimulator-arm64
       # Premier lancement dans le simulateur : application vivante, premier dossier chiffré créé dans le dossier de
