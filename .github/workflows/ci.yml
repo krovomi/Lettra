@@ -89,8 +89,9 @@ jobs:
           if ($app.MainWindowHandle -eq 0) { throw "Aucune fenêtre après 90 s." }
           Start-Sleep 10
           if ($app.HasExited) { throw "Lettra s'est arrêté après l'ouverture de la fenêtre (code $($app.ExitCode))." }
-          $dossiers = Get-ChildItem $env:LOCALAPPDATA -Recurse -Filter *.lettra -ErrorAction SilentlyContinue
-          if (-not $dossiers) { throw "Aucun dossier local créé sous $env:LOCALAPPDATA." }
+          # Emplacement documenté dans le README (« Où sont les données »).
+          $dossiers = Get-ChildItem "$env:LOCALAPPDATA\Lettra\Lettra.App.Maui\Data\dossiers" -Filter *.lettra -ErrorAction SilentlyContinue
+          if (-not $dossiers) { throw "Aucun dossier local créé sous $env:LOCALAPPDATA\Lettra\Lettra.App.Maui\Data." }
           "Fenêtre : $($app.MainWindowTitle)"
           "Dossiers locaux : $($dossiers.DirectoryName | Sort-Object -Unique)"
           Stop-Process $app

@@ -106,11 +106,14 @@ public sealed class DemoWalkthroughTests : IDisposable
         paid.IsSuccess.Should().BeTrue(Codes(paid.Errors));
         paid.Value!.CollectedAmount.Should().Be(900m);
 
-        // 7. Avoir sur la facture émise.
+        // 7. « Avoir » sur la facture émise, comme l'écran (motif seul : avoir total), puis validé comme une facture.
         OperationResult<InvoiceResponse> credit = await invoices.CreateCreditNoteAsync(
-            invoice.Value.Id, new CreateCreditNoteRequest { Reason = "Geste commercial", Lines = [new CreditNoteLineRequest(1, 1m)] }, default);
+            invoice.Value.Id, new CreateCreditNoteRequest { Reason = "Geste commercial" }, default);
         credit.IsSuccess.Should().BeTrue(Codes(credit.Errors));
         credit.Value!.Kind.Should().Be(InvoiceKindDto.CreditNote);
+        OperationResult<InvoiceResponse> creditValidated = await invoices.ValidateAsync(credit.Value.Id, credit.Value.Version, default);
+        creditValidated.IsSuccess.Should().BeTrue(Codes(creditValidated.Errors));
+        creditValidated.Value!.Number.Should().NotBeNullOrEmpty();
     }
 
     public void Dispose()
