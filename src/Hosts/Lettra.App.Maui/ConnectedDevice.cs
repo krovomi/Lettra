@@ -1,41 +1,84 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Lettra.UI.Abstractions;
+using Lettra.Application.Abstractions.Tenancy;
+using Lettra.Bootstrap;
+using Lettra.Sync.Client;
 using Lettra.UI.Gateway.Http;
 using Lettra.UI.Gateway.Http.Device;
-using Lettra.UI.Shared;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.ApplicationModel;
-using Microsoft.Maui.Hosting;
+using Microsoft.Maui.Networking;
 using Microsoft.Maui.Storage;
 
 namespace Lettra.App.Maui;
 
 /// <summary>
-/// Poste relié au serveur du cabinet ou à la cellule SaaS (modes 2, 3 et 5) : connexion au Keycloak du cabinet par le
-/// navigateur système (PKCE, client <c>lettra-maui</c>), jetons dans le coffre de l'OS, gateways HTTP authentifiées.
-/// Le réglage vient de <c>lettra.json</c> dans le dossier de données de l'application (écrit par l'installeur) :
+/// Poste relié au serveur du cabinet ou à la cellule SaaS (modes 2, 3 et 5 vus du poste, mode 4 pour la composition) :
+/// le poste travaille sur une réplique chiffrée du dossier du serveur, comme un poste isolé, et l'envoie au serveur par la
+/// synchronisation (ADR-0008). La connexion au Keycloak du cabinet (PKCE, client <c>lettra-maui</c>, jetons dans le
+/// coffre de l'OS) ne sert qu'à se synchroniser. Le réglage vient de <c>lettra.json</c> dans le dossier de données de
+/// l'application (écrit par l'installeur) :
 /// <code>{ "Lettra": { "Server": { "BaseAddress": "https://…", "Authority": "https://…/realms/lettra", "DossierId": "…" } } }</code>
-/// Sans ce fichier, le poste reste isolé (mode 1). Le travail hors ligne de ces modes arrive avec la synchronisation (phase 4).
+/// Sans ce fichier, le poste reste isolé (mode 1).
 /// </summary>
 internal static class ConnectedDevice
 {
     public const string SettingsFile = "lettra.json";
 
-    public static bool TryConfigure(MauiAppBuilder builder)
+    /// <summary>Identifiant du poste : il porte la série de factures du poste sur le serveur, il n'est jamais régénéré.</summary>
+    private const string DeviceIdPreference = "lettra.sync.device-id";
+
+    public sealed record Settings(DeviceSignInOptions SignIn, Guid DossierId);
+
+    /// <summary>Le réglage du poste relié, ou <c>null</c> pour un poste isolé.</summary>
+    public static Settings? Read()
     {
         (DeviceSignInOptions options, Guid? dossier) = Read(Path.Combine(FileSystem.AppDataDirectory, SettingsFile));
         if (!options.IsConfigured)
         {
-            return false;
+            return null;
         }
 
-        builder.Services.AddSingleton<ITokenVault, SecureStorageTokenVault>();
-        builder.Services.AddSingleton<IAuthorizationBrowser>(_ => new LoopbackAuthorizationBrowser(uri => Launcher.Default.OpenAsync(uri)));
-        builder.Services.AddSingleton<IDossierSelection>(new FixedDossierSelection(dossier));
-        builder.Services.AddDeviceHttpGateways(options);
-        builder.Services.AddLettraUi();
-        return true;
+        return dossier is Guid id
+            ? new Settings(options, id)
+            : throw new InvalidOperationException($"{SettingsFile} : Lettra:Server:DossierId est obligatoire sur un poste relié.");
+    }
+
+    /// <summary>Configuration de la composition : réplique du dossier du serveur dans le dossier de données du poste.</summary>
+    public static Dictionary<string, string?> Configuration(Settings settings) => new()
+    {
+        [LettraBootstrap.DeploymentModeKey] = nameof(DeploymentMode.HybridCloud),
+        [LettraBootstrap.LocalDataDirectoryKey] = Path.Combine(FileSystem.AppDataDirectory, "replique"),
+        [LettraBootstrap.ReplicaDossierIdKey] = settings.DossierId.ToString(),
+    };
+
+    /// <summary>Après <c>AddLettra</c> : connexion au serveur, transport authentifié et client de synchronisation.</summary>
+    public static IServiceCollection AddSync(this IServiceCollection services, Settings settings)
+    {
+        services.AddSingleton<ITokenVault, SecureStorageTokenVault>();
+        services.AddSingleton<IAuthorizationBrowser>(_ => new LoopbackAuthorizationBrowser(uri => Launcher.Default.OpenAsync(uri)));
+        services.AddDeviceSignIn(settings.SignIn);
+        services.AddHttpClient<ISyncTransport, HttpSyncTransport>(client => client.BaseAddress = settings.SignIn.BaseAddress)
+            .AddHttpMessageHandler<BearerTokenHandler>();
+        services.AddHttpClient<INetworkProbe, ConnectivityNetworkProbe>(client =>
+        {
+            client.BaseAddress = settings.SignIn.BaseAddress;
+            client.Timeout = TimeSpan.FromSeconds(5);
+        });
+        services.AddSyncClient(o => o.DeviceId = DeviceId());
+        return services;
+    }
+
+    private static Guid DeviceId()
+    {
+        if (Guid.TryParse(Preferences.Default.Get(DeviceIdPreference, string.Empty), out Guid id) && id != Guid.Empty)
+        {
+            return id;
+        }
+
+        id = Guid.CreateVersion7();
+        Preferences.Default.Set(DeviceIdPreference, id.ToString());
+        return id;
     }
 
     private static (DeviceSignInOptions Options, Guid? Dossier) Read(string path)
@@ -60,6 +103,47 @@ internal static class ConnectedDevice
 
     private static Uri? Absolute(JsonElement section, string name) =>
         section.TryGetProperty(name, out JsonElement value) && Uri.TryCreate(value.GetString(), UriKind.Absolute, out Uri? uri) ? uri : null;
+}
+
+/// <summary>
+/// Sonde du poste : le type de réseau vient de l'OS (MAUI <see cref="Connectivity"/>), et le serveur doit répondre à
+/// <c>/health</c> (un réseau « revenu » derrière un portail captif ne suffit pas).
+/// </summary>
+internal sealed class ConnectivityNetworkProbe(HttpClient http) : INetworkProbe
+{
+    public async Task<NetworkStatus> ProbeAsync(CancellationToken cancellationToken)
+    {
+        NetworkKind kind = Kind(Connectivity.Current);
+        if (kind == NetworkKind.None)
+        {
+            return new NetworkStatus(false, kind);
+        }
+
+        try
+        {
+            using HttpResponseMessage response = await http.GetAsync(new Uri("health", UriKind.Relative), cancellationToken).ConfigureAwait(false);
+            return new NetworkStatus(response.IsSuccessStatusCode, kind);
+        }
+        catch (Exception e) when (e is HttpRequestException or TaskCanceledException && !cancellationToken.IsCancellationRequested)
+        {
+            return new NetworkStatus(false, kind);
+        }
+    }
+
+    private static NetworkKind Kind(IConnectivity connectivity)
+    {
+        if (connectivity.NetworkAccess is not (NetworkAccess.Internet or NetworkAccess.ConstrainedInternet or NetworkAccess.Local))
+        {
+            return NetworkKind.None;
+        }
+
+        // L'OS passe par le filaire ou le Wi-Fi quand ils sont là, avant le modem mobile.
+        IEnumerable<ConnectionProfile> profiles = connectivity.ConnectionProfiles;
+        return profiles.Contains(ConnectionProfile.Ethernet) ? NetworkKind.Ethernet
+            : profiles.Contains(ConnectionProfile.WiFi) ? NetworkKind.Wifi
+            : profiles.Contains(ConnectionProfile.Cellular) ? NetworkKind.Cellular
+            : NetworkKind.Ethernet;
+    }
 }
 
 /// <summary>Jetons du poste dans le coffre de l'OS (MAUI <see cref="SecureStorage"/> : DPAPI sous Windows).</summary>

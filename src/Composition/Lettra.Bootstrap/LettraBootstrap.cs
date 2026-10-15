@@ -1,5 +1,6 @@
 using Lettra.Application;
 using Lettra.Application.Abstractions.Tenancy;
+using Lettra.Domain.SharedKernel;
 using Lettra.Exports.Infrastructure;
 using Lettra.Infrastructure.Catalog;
 using Lettra.Infrastructure.External;
@@ -33,6 +34,9 @@ public static class LettraBootstrap
 
     /// <summary>Répertoire des dossiers du poste (modes 1 et 4).</summary>
     public const string LocalDataDirectoryKey = "Lettra:Local:DataDirectory";
+
+    /// <summary>Poste relié (mode 4) : identifiant, sur le serveur, du dossier dont le poste tient la réplique.</summary>
+    public const string ReplicaDossierIdKey = "Lettra:Local:ReplicaDossierId";
 
     public static DeploymentMode GetDeploymentMode(this IConfiguration configuration) =>
         configuration.GetValue<DeploymentMode?>(DeploymentModeKey)
@@ -83,8 +87,16 @@ public static class LettraBootstrap
                 .AddSyncServer()
                 .AddSyncJournal(),
 
-            DeploymentMode.HybridCloud => throw new NotSupportedException(
-                $"Mode {mode} : nécessite la synchronisation (phase 4)."),
+            // Poste relié à un serveur (modes 2, 3 et 5 vus du poste) : réplique chiffrée du dossier du serveur, travail
+            // hors ligne comme en mode 1, pièces validées dans la série du poste envoyées par la synchronisation
+            // (ADR-0008). L'hôte ajoute AddSyncClient, le transport et la sonde réseau.
+            DeploymentMode.HybridCloud => services
+                .AddLocalDossiers(LocalDataDirectory(configuration, mode))
+                .AddLocalIdentity(configuration)
+                .AddSupervision(configuration)
+                .AddSupervisionDatabase(b => SqliteConfigurator.ConfigureSupervision(
+                    b, $"Data Source={Path.Combine(LocalDataDirectory(configuration, mode), "supervision.db")}"))
+                .AddSyncDevice(),
 
             _ => throw new NotSupportedException($"Mode {mode} inconnu."),
         };
@@ -103,6 +115,11 @@ public static class LettraBootstrap
                 await services.GetRequiredService<LocalDossierStartup>().EnsureReadyAsync(cancellationToken).ConfigureAwait(false);
                 await services.MigrateSupervisionAsync(cancellationToken).ConfigureAwait(false);
                 break;
+            case DeploymentMode.HybridCloud:
+                await services.GetRequiredService<LocalDossierStartup>()
+                    .EnsureReplicaReadyAsync(new DossierId(ReplicaDossierId(configuration)), cancellationToken).ConfigureAwait(false);
+                await services.MigrateSupervisionAsync(cancellationToken).ConfigureAwait(false);
+                break;
             case DeploymentMode.LocalNetwork or DeploymentMode.OnPremRemote or DeploymentMode.HostedSaaS:
                 bool migrate = configuration.GetValue("Lettra:Catalog:MigrateOnStartup", configuration.GetDeploymentMode() != DeploymentMode.HostedSaaS);
                 await services.InitializeCatalogAsync(migrate, cancellationToken).ConfigureAwait(false);
@@ -114,6 +131,11 @@ public static class LettraBootstrap
                 break;
         }
     }
+
+    private static Guid ReplicaDossierId(IConfiguration configuration) =>
+        configuration.GetValue<Guid?>(ReplicaDossierIdKey) is Guid id && id != Guid.Empty
+            ? id
+            : throw new InvalidOperationException($"{ReplicaDossierIdKey} est obligatoire en mode {DeploymentMode.HybridCloud}.");
 
     private static string LocalDataDirectory(IConfiguration configuration, DeploymentMode mode) =>
         configuration[LocalDataDirectoryKey] ?? throw new InvalidOperationException($"{LocalDataDirectoryKey} est obligatoire en mode {mode}.");
