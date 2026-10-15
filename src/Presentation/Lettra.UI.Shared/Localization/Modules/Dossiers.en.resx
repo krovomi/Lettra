@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Error.Dossier.Mismatch" xml:space="preserve"><value>This action targets a different client file than the one open.</value></data>
+  <data name="Error.Dossier.NotFound" xml:space="preserve"><value>This client file could not be found or you do not have access to it.</value></data>
+  <data name="Error.Dossier.Required" xml:space="preserve"><value>Open a client file first.</value></data>
+  <data name="Error.Dossier.NameRequired" xml:space="preserve"><value>Enter the client file name.</value></data>
+  <data name="Error.Dossier.NameTooLong" xml:space="preserve"><value>The client file name is too long.</value></data>
+  <data name="Error.Organisation.NotFound" xml:space="preserve"><value>This firm could not be found.</value></data>
+  <data name="Error.Dossier.NoCapacity" xml:space="preserve"><value>No server can take a new client file right now. Contact support.</value></data>
+  <data name="Error.Dossier.ProvisioningFailed" xml:space="preserve"><value>The client file could not be created. It will be retried automatically.</value></data>
+  <data name="Error.Numbering.SeriesNotFound" xml:space="preserve"><value>This numbering series does not exist in the client file.</value></data>
+  <data name="Error.Numbering.Contention" xml:space="preserve"><value>Too many documents are being validated in this client file at once. Try again.</value></data>
+  <data name="Error.CompanyProfile.NameRequired" xml:space="preserve"><value>Enter the company name.</value></data>
+  <data name="Error.CompanyProfile.NameTooLong" xml:space="preserve"><value>The company name exceeds 200 characters.</value></data>
+  <data name="Error.CompanyProfile.PaymentDaysInvalid" xml:space="preserve"><value>The payment period is 0 to 60 days.</value></data>
+  <data name="Error.CompanyProfile.NotFound" xml:space="preserve"><value>The company profile has not been filled in yet.</value></data>
+  <data name="Company.Title" xml:space="preserve"><value>Company profile</value></data>
+  <data name="Company.Intro" xml:space="preserve"><value>This information appears on every quote and invoice of the file.</value></data>
+  <data name="Company.Identity" xml:space="preserve"><value>Legal identity</value></data>
+  <data name="Company.Address" xml:space="preserve"><value>Registered address</value></data>
+  <data name="Company.Vat" xml:space="preserve"><value>VAT</value></data>
+  <data name="Company.Payment" xml:space="preserve"><value>Payment</value></data>
+  <data name="Company.Field.LegalForm" xml:space="preserve"><value>Legal form</value></data>
+  <data name="Company.Field.ShareCapital" xml:space="preserve"><value>Share capital (€)</value></data>
+  <data name="Company.Field.Rcs" xml:space="preserve"><value>Registration (RCS or RM)</value></data>
+  <data name="Company.Field.VatFranchise" xml:space="preserve"><value>VAT exemption threshold (art. 293 B CGI)</value></data>
+  <data name="Company.Field.VatOnDebits" xml:space="preserve"><value>VAT paid on debits option</value></data>
+  <data name="Company.Field.PaymentDays" xml:space="preserve"><value>Payment period (days)</value></data>
+  <data name="Company.Field.LatePenaltyRate" xml:space="preserve"><value>Late payment penalty rate (%)</value></data>
+  <data name="Company.Field.EarlyPaymentDiscount" xml:space="preserve"><value>Early payment discount</value></data>
+  <data name="Company.Field.Bic" xml:space="preserve"><value>BIC</value></data>
+  <data name="Company.Saved" xml:space="preserve"><value>Company profile saved.</value></data>
+</root>
