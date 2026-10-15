@@ -69,7 +69,7 @@ internal sealed class InMemoryCustomers : ICustomerRepository, ICustomerReadStor
         return Task.FromResult(count);
     }
 
-    public Task<PagedResponse<CustomerSummary>> ListAsync(int page, int pageSize, CancellationToken cancellationToken)
+    public Task<PagedResponse<CustomerSummary>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken)
     {
         List<CustomerSummary> items = Saved.Values
             .OrderBy(c => c.Name, StringComparer.Ordinal)
