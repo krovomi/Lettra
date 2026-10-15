@@ -19,6 +19,7 @@ public enum OfflineDraftKind
 /// <param name="ContentHash">SHA-256 de <paramref name="Payload"/>, en hexadécimal.</param>
 /// <param name="SavedAt">Dernier enregistrement sur l'appareil.</param>
 /// <param name="LastError">Code du dernier refus du serveur (conflit de version, contenu altéré…), sinon rien.</param>
+/// <param name="DossierId">Dossier dans lequel la saisie a été faite : le brouillon ne part que vers lui.</param>
 public sealed record OfflineDraft(
     Guid LocalId,
     OfflineDraftKind Kind,
@@ -28,14 +29,22 @@ public sealed record OfflineDraft(
     string Payload,
     string ContentHash,
     DateTimeOffset SavedAt,
-    string? LastError = null);
+    string? LastError = null,
+    Guid? DossierId = null);
 
 /// <summary>
 /// Stockage de l'appareil (navigateur : IndexedDB) : les brouillons en attente, et un cache des données de référence
-/// pour rouvrir un brouillon sans réseau.
+/// pour rouvrir un brouillon sans réseau. Il est propre à l'utilisateur connecté et au dossier ouvert : sans eux (session
+/// inconnue, aucun dossier), il est indisponible, ne liste rien et n'enregistre rien.
 /// </summary>
 public interface IOfflineDraftStore
 {
+    /// <summary>L'utilisateur et le dossier sont connus : le stockage qui leur est propre peut servir.</summary>
+    Task<bool> IsAvailableAsync(CancellationToken cancellationToken);
+
+    /// <summary>Efface les brouillons et le cache de l'utilisateur et du dossier (déconnexion).</summary>
+    Task ClearAsync(CancellationToken cancellationToken);
+
     Task<IReadOnlyList<OfflineDraft>> ListAsync(CancellationToken cancellationToken);
 
     Task SaveAsync(OfflineDraft draft, CancellationToken cancellationToken);

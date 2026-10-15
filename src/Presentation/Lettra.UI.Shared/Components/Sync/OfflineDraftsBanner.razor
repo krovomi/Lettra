@@ -115,7 +115,7 @@
     };
 
     private static bool KnownError(string code) =>
-        code is OfflineDrafts.CorruptedCode or ErrorCodes.Concurrency.VersionMismatch;
+        code is OfflineDrafts.CorruptedCode or OfflineDrafts.OtherDossierCode or ErrorCodes.Concurrency.VersionMismatch;
 
     private void OnChanged(object? sender, EventArgs e) => _ = InvokeAsync(async () =>
     {

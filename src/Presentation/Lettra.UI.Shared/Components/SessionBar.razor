@@ -1,6 +1,9 @@
 @* Qui est connecté, et verrouiller / se déconnecter. Sans session, renvoie vers l'écran de session. *@
 @implements IDisposable
+@using Microsoft.Extensions.DependencyInjection
 @inject ISessionGateway Sessions
+@inject IServiceProvider Services
+@inject IJSRuntime JS
 @inject NavigationManager Navigation
 @inject IStringLocalizer<SharedResource> L
 @inject DeviceLock DeviceLock
@@ -14,7 +17,7 @@
     <span class="lettra-user">@_session.DisplayName</span>
     @if (_session.SignOutUrl is string signOut)
     {
-        <a href="@signOut" data-sign-out>@L["Session.SignOut"]</a>
+        <a href="@signOut" data-sign-out @onclick="() => SignOutAsync(signOut)" @onclick:preventDefault>@L["Session.SignOut"]</a>
     }
     else if (_session.Mode == SessionModeDto.Local)
     {
@@ -39,6 +42,28 @@
         {
             Navigation.NavigateTo("session");
         }
+    }
+
+    /// <summary>
+    /// Déconnexion du navigateur : les brouillons hors ligne partent d'abord (la déconnexion demande le réseau), puis
+    /// ceux de l'utilisateur et du dossier sont effacés de l'appareil, avec le cache, pour la personne suivante sur le
+    /// poste. S'il en reste qui n'ont pas pu partir, l'utilisateur confirme avant de les perdre.
+    /// </summary>
+    private async Task SignOutAsync(string signOut)
+    {
+        if (Services.GetService<OfflineDrafts>() is { } drafts)
+        {
+            await drafts.SyncAsync(CancellationToken.None);
+            int left = (await drafts.ListAsync(CancellationToken.None)).Count;
+            if (left > 0 && !await JS.InvokeAsync<bool>("confirm", string.Format(CultureInfo.CurrentCulture, L["Drafts.SignOutPending"], left)))
+            {
+                return;
+            }
+
+            await drafts.ClearAsync(CancellationToken.None);
+        }
+
+        Navigation.NavigateTo(signOut, forceLoad: true);
     }
 
     private async Task LockAsync()
