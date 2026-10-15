@@ -1,0 +1,172 @@
+@implements IDisposable
+@inject IEnumerable<ICommandPaletteProvider> Providers
+@inject IStringLocalizer<SharedResource> L
+@* Palette de commandes (Ctrl+K, annexe A §7 point 3) : actions, écrans, commandes de la page, pièces et clients,
+   par recherche floue. Au clavier : flèches, Entrée, Échap. *@
+
+@if (_open)
+{
+    <div class="lettra-palette-backdrop" @onclick="Close">
+        <div class="lettra-palette" role="dialog" aria-modal="true" aria-labelledby="palette-title" @onclick:stopPropagation>
+            <h2 id="palette-title" class="lettra-visually-hidden">@L["Palette.Title"]</h2>
+            <input @ref="_input" id="palette-input" value="@_query" @oninput="OnInputAsync" @onkeydown="OnKeyDownAsync"
+                   role="combobox" aria-expanded="true" aria-controls="palette-options" autocomplete="off" spellcheck="false"
+                   placeholder="@L["Palette.Placeholder"]" aria-label="@L["Palette.Placeholder"]"
+                   aria-activedescendant="@(_items.Count > 0 ? $"palette-opt-{_highlight}" : null)" />
+            <ul id="palette-options" class="lettra-palette-options" role="listbox">
+                @{ string? group = null; }
+                @for (int i = 0; i < _items.Count; i++)
+                {
+                    int index = i;
+                    PaletteItem item = _items[i];
+                    if (item.Group != group)
+                    {
+                        group = item.Group;
+                        <li class="lettra-palette-group" role="presentation">@group</li>
+                    }
+
+                    <li id="@($"palette-opt-{i}")" role="option" aria-selected="@(i == _highlight ? "true" : "false")"
+                        @onclick="() => RunAsync(index)">
+                        <span>@item.Label</span>
+                        @if (item.Hint is not null)
+                        {
+                            <kbd>@item.Hint</kbd>
+                        }
+                    </li>
+                }
+            </ul>
+            @if (_items.Count == 0)
+            {
+                <p class="lettra-muted" role="status">@L["Palette.NoResult"]</p>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>Raccourci d'ouverture, identique en français et en anglais.</summary>
+    public static readonly KeyChord Shortcut = KeyChord.Parse("Ctrl+K");
+
+    private const int MaxItems = 30;
+
+    /// <summary>Délai avant d'interroger les sources (frappe continue) ; 0 dans les tests.</summary>
+    [Parameter] public TimeSpan SearchDelay { get; set; } = TimeSpan.FromMilliseconds(120);
+
+    private bool _open;
+    private bool _focusPending;
+    private string _query = string.Empty;
+    private List<PaletteItem> _items = [];
+    private int _highlight;
+    private ElementReference _input;
+    private CancellationTokenSource? _search;
+
+    public bool IsOpen => _open;
+
+    public async Task OpenAsync()
+    {
+        _open = true;
+        _focusPending = true;
+        _query = string.Empty;
+        await SearchAsync(string.Empty, CancellationToken.None);
+    }
+
+    public void Close()
+    {
+        _search?.Cancel();
+        _open = false;
+        StateHasChanged();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_open && _focusPending)
+        {
+            _focusPending = false;
+            try
+            {
+                await _input.FocusAsync();
+            }
+            catch (InvalidOperationException)
+            {
+                // Rendu sans navigateur (tests).
+            }
+        }
+    }
+
+    private async Task OnInputAsync(ChangeEventArgs e)
+    {
+        _query = e.Value?.ToString() ?? string.Empty;
+        _search?.Cancel();
+        _search?.Dispose();
+        _search = new CancellationTokenSource();
+        CancellationToken token = _search.Token;
+        try
+        {
+            if (SearchDelay > TimeSpan.Zero)
+            {
+                await Task.Delay(SearchDelay, token);
+            }
+
+            await SearchAsync(_query, token);
+        }
+        catch (OperationCanceledException)
+        {
+            // Une frappe plus récente a pris le relais.
+        }
+    }
+
+    private async Task SearchAsync(string query, CancellationToken cancellationToken)
+    {
+        IReadOnlyList<PaletteItem>[] results = await Task.WhenAll(Providers.Select(p => p.SearchAsync(query, cancellationToken)));
+        cancellationToken.ThrowIfCancellationRequested();
+        _items = results.SelectMany(r => r)
+            .Select((item, order) => (item, order, score: PaletteMatcher.Score(item.Label, query)))
+            .OrderByDescending(x => string.IsNullOrWhiteSpace(query) ? 0 : x.score)
+            .ThenBy(x => x.order)
+            .Take(MaxItems)
+            .Select(x => x.item)
+            .ToList();
+        // Les groupes restent contigus : on garde l'ordre de première apparition de chaque groupe.
+        List<string> groups = _items.Select(i => i.Group).Distinct().ToList();
+        _items = _items.OrderBy(i => groups.IndexOf(i.Group)).ToList();
+        _highlight = 0;
+        StateHasChanged();
+    }
+
+    private async Task OnKeyDownAsync(KeyboardEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case "ArrowDown":
+                _highlight = _items.Count == 0 ? 0 : (_highlight + 1) % _items.Count;
+                break;
+            case "ArrowUp":
+                _highlight = _items.Count == 0 ? 0 : (_highlight - 1 + _items.Count) % _items.Count;
+                break;
+            case "Enter":
+                await RunAsync(_highlight);
+                break;
+            case "Escape":
+                Close();
+                break;
+        }
+    }
+
+    private async Task RunAsync(int index)
+    {
+        if (index < 0 || index >= _items.Count)
+        {
+            return;
+        }
+
+        PaletteItem item = _items[index];
+        Close();
+        await item.Run();
+    }
+
+    public void Dispose()
+    {
+        _search?.Cancel();
+        _search?.Dispose();
+    }
+}

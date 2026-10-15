@@ -50,3 +50,74 @@ body { margin: 0; }
 .lettra-muted { color: #5b6577; }
 .lettra-inline { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
 .lettra-inline input { flex: 1; }
+
+/* Densités (phase 3) : Confort par défaut sur écran tactile, Expert resserre marges et espacements. */
+.lettra-shell.density-expert { --lettra-gap: 0.4rem; font-size: 14px; }
+.lettra-shell.density-expert .lettra-card { padding: 0.6rem 1rem; margin-bottom: 0.75rem; }
+.lettra-shell.density-comfort button, .lettra-shell.density-comfort input, .lettra-shell.density-comfort select { min-height: 40px; }
+.lettra-visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* Pièces : en-tête, lignes, colonne latérale (totaux et checklist). */
+.lettra-main:has(.lettra-document) { max-width: 1400px; }
+.lettra-document { display: grid; grid-template-columns: minmax(0, 1fr) 20rem; gap: var(--lettra-gap); align-items: start; }
+.lettra-document-main { min-width: 0; }
+.lettra-document-side { position: sticky; top: var(--lettra-gap); display: grid; gap: var(--lettra-gap); }
+.lettra-document-header { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: var(--lettra-gap); }
+.lettra-field { display: grid; gap: 0.2rem; align-content: start; }
+.lettra-field-wide { grid-column: 1 / -1; }
+.lettra-field input, .lettra-field select, .lettra-field textarea, .lettra-documents select, .lettra-documents input { padding: 0.35rem; border: 1px solid #c3c8d1; border-radius: 4px; font: inherit; }
+.lettra-label { font-weight: 600; }
+.lettra-lines-host { margin-top: var(--lettra-gap); }
+.lettra-picker { display: flex; gap: 0.4rem; align-items: center; }
+.lettra-picker input { flex: 1; }
+.lettra-check { display: flex; gap: 0.5rem; align-items: center; font-weight: 400; }
+.lettra-form-grid fieldset { display: grid; gap: 0.35rem; margin: 0 0 var(--lettra-gap); }
+.lettra-form-grid legend { font-weight: 700; margin-bottom: 0.25rem; }
+.lettra-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.lettra-button.is-secondary { background: #fff; color: var(--lettra-accent); border: 1px solid var(--lettra-accent); }
+.lettra-link.is-danger { color: var(--lettra-danger); }
+.lettra-banner { padding: 0.6rem 1rem; border-radius: var(--lettra-radius); margin-bottom: var(--lettra-gap); }
+.lettra-banner.is-warning { background: #fff4e5; border: 1px solid #f0b252; }
+.lettra-documents { width: 100%; }
+@media (max-width: 960px) {
+    .lettra-document { grid-template-columns: 1fr; }
+    .lettra-document-side { position: static; }
+}
+
+/* Totaux : montants alignés à droite, chiffres tabulaires. */
+.lettra-totals table, .lettra-vat { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.lettra-vat th, .lettra-vat td { text-align: right; padding: 0.15rem 0.25rem; }
+.lettra-vat th:first-child, .lettra-vat td:first-child { text-align: left; }
+.lettra-sums { display: grid; grid-template-columns: 1fr auto; gap: 0.2rem 1rem; margin: 0.5rem 0 0; font-variant-numeric: tabular-nums; }
+.lettra-sums dd { margin: 0; text-align: right; }
+.lettra-sums .is-strong { font-weight: 700; font-size: 1.1em; }
+
+/* Checklist de conformité en direct. */
+.lettra-checklist ul { list-style: none; margin: 0.5rem 0 0; padding: 0; display: grid; gap: 0.3rem; }
+.lettra-checklist-summary { font-weight: 600; color: var(--lettra-success); }
+.lettra-checklist-summary.is-blocking { color: var(--lettra-danger); }
+.lettra-finding { display: grid; grid-template-columns: auto 1fr; gap: 0 0.4rem; }
+.lettra-finding button { all: unset; cursor: pointer; text-decoration: underline; }
+.lettra-finding button:focus-visible { outline: 2px solid var(--lettra-accent); }
+.lettra-finding-mark { font-size: 0.75em; font-weight: 700; padding: 0 0.3rem; border-radius: 3px; align-self: start; }
+.lettra-finding.is-error .lettra-finding-mark { background: #fde8e8; color: var(--lettra-danger); }
+.lettra-finding.is-warning .lettra-finding-mark { background: #fff4e5; color: #8a4b00; }
+.lettra-finding.is-ok .lettra-finding-mark { background: #e7f5ee; color: var(--lettra-success); }
+.lettra-finding-basis { grid-column: 2; font-size: 0.85em; color: #5b6475; }
+
+/* Statuts des pièces. */
+.lettra-status { display: inline-block; margin-left: 0.5rem; padding: 0.05rem 0.5rem; border-radius: 999px; font-size: 0.6em; vertical-align: middle; background: #eceff3; color: #3d4555; }
+.lettra-status.is-validated, .lettra-status.is-accepted { background: #e7f0fb; color: var(--lettra-accent); }
+.lettra-status.is-issued, .lettra-status.is-invoiced { background: #e7f5ee; color: var(--lettra-success); }
+.lettra-status.is-refused, .lettra-status.is-expired { background: #fde8e8; color: var(--lettra-danger); }
+
+/* Palette de commandes. */
+.lettra-palette-button { margin-left: auto; background: transparent; color: #fff; border: 1px solid rgb(255 255 255 / 50%); border-radius: 4px; padding: 0.3rem 0.6rem; }
+.lettra-palette-button kbd { font-size: 0.8em; opacity: 0.8; }
+.lettra-palette-backdrop { position: fixed; inset: 0; background: rgb(0 0 0 / 30%); display: flex; justify-content: center; align-items: flex-start; padding-top: 12vh; z-index: 100; }
+.lettra-palette { width: min(40rem, 92vw); background: var(--lettra-card); border-radius: var(--lettra-radius); box-shadow: 0 8px 32px rgb(0 0 0 / 25%); padding: 0.5rem; }
+.lettra-palette input { width: 100%; box-sizing: border-box; padding: 0.6rem; font-size: 1.05em; border: 1px solid #c3c8d1; border-radius: 4px; }
+.lettra-palette-options { list-style: none; margin: 0.4rem 0 0; padding: 0; max-height: 55vh; overflow-y: auto; }
+.lettra-palette-options li[role=option] { display: flex; justify-content: space-between; gap: 1rem; padding: 0.35rem 0.6rem; border-radius: 4px; cursor: pointer; }
+.lettra-palette-options li[aria-selected="true"] { background: #eef3ff; outline: 1px solid var(--lettra-accent); outline-offset: -1px; }
+.lettra-palette-group { padding: 0.4rem 0.6rem 0.1rem; font-size: 0.8em; font-weight: 700; text-transform: uppercase; color: #5b6475; }

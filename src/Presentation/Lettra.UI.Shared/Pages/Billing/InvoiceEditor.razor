@@ -1,0 +1,556 @@
+@page "/invoices/new"
+@page "/invoices/{Id:guid}"
+@implements IDisposable
+@inject IInvoicesGateway Invoices
+@inject IBillingSettingsGateway Settings
+@inject IServiceProvider Services
+@inject IDocumentPdfRenderer Pdf
+@inject IFileDownloader Files
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+@* Facture, facture d'acompte et avoir : même écran. Les lignes d'un acompte, d'un avoir ou d'une facture finale
+   viennent d'une autre pièce et ne se saisissent pas ; l'en-tête (dates, conditions) reste modifiable en brouillon. *@
+
+<PageTitle>@Title · Lettra</PageTitle>
+
+<h1 tabindex="-1">@Title <DocumentStatusBadge Text="@StatusText" Kind="@StatusKind" /></h1>
+
+<GlobalShortcuts Scope="_pageScope" />
+
+@if (_conflict)
+{
+    <div class="lettra-banner is-warning" role="alert">
+        @L["Error.Billing.VersionMismatch"]
+        <button type="button" class="lettra-button" @onclick="ReloadAsync">@L["Billing.Reload"]</button>
+    </div>
+}
+
+<div id="document-status" aria-live="polite">
+    <GeneralErrors Errors="_errors" />
+    @if (_status is not null)
+    {
+        <p class="lettra-success" role="status">@_status</p>
+    }
+</div>
+
+@if (_loading)
+{
+    <p>@L["Loading"]</p>
+}
+else
+{
+    <div class="lettra-document">
+        <div class="lettra-document-main">
+            <section class="lettra-card lettra-document-header" aria-label="@L["Billing.Header"]">
+                <CustomerPicker @ref="_customerPicker" CustomerId="_request.CustomerId" SelectedName="@_customerName"
+                                ReadOnly="@(IsReadOnly || LinesLocked)" OnSelected="CustomerSelectedAsync" />
+
+                @if (_invoice?.QuoteNumber is { } quoteNumber)
+                {
+                    <p class="lettra-field lettra-muted">@string.Format(CultureInfo.CurrentCulture, L["Invoice.FromQuote"], quoteNumber)</p>
+                }
+                @if (_invoice?.CreditedInvoiceNumber is { } credited)
+                {
+                    <p class="lettra-field lettra-muted">@string.Format(CultureInfo.CurrentCulture, L["Invoice.CreditOf"], credited)</p>
+                }
+
+                <div class="lettra-field">
+                    <label for="delivery-date">@L["Invoice.Field.DeliveryDate"]</label>
+                    <input id="delivery-date" type="date" @ref="_deliveryDate" disabled="@IsReadOnly"
+                           value="@Iso(_request.DeliveryDate)" @onchange="e => DateChangedAsync(e, d => _request.DeliveryDate = d)" />
+                </div>
+
+                <div class="lettra-field">
+                    <label for="due-date">@L["Invoice.Field.DueDate"]</label>
+                    <input id="due-date" type="date" @ref="_dueDate" disabled="@IsReadOnly"
+                           value="@Iso(_request.DueDate)" @onchange="e => DateChangedAsync(e, d => _request.DueDate = d)" />
+                </div>
+
+                <div class="lettra-field">
+                    <label for="vat-regime">@L["Billing.Field.VatRegime"]</label>
+                    <select id="vat-regime" disabled="@(IsReadOnly || LinesLocked)" value="@_request.VatRegime" @onchange="RegimeChangedAsync">
+                        @foreach (VatRegimeOption regime in _reference.VatRegimes)
+                        {
+                            <option value="@regime.Regime">@L[$"VatRegime.{regime.Regime}"]</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="lettra-field lettra-field-wide">
+                    <label for="payment-terms">@L["Invoice.Field.PaymentTerms"]</label>
+                    <input id="payment-terms" disabled="@IsReadOnly" value="@_request.PaymentTerms" maxlength="500"
+                           placeholder="@_company?.PaymentTerms" @onchange="e => TextChangedAsync(e, v => _request.PaymentTerms = v)" />
+                </div>
+
+                <div class="lettra-field lettra-field-wide">
+                    <label for="delivery-address">@L["Invoice.Field.DeliveryAddress"]</label>
+                    <textarea id="delivery-address" @ref="_deliveryAddress" rows="2" disabled="@IsReadOnly" maxlength="500"
+                              value="@_request.DeliveryAddress" @onchange="e => TextChangedAsync(e, v => _request.DeliveryAddress = v)"></textarea>
+                </div>
+
+                <div class="lettra-field lettra-field-wide">
+                    <label for="subject">@L["Billing.Field.Subject"]</label>
+                    <input id="subject" disabled="@IsReadOnly" value="@_request.Subject" maxlength="200"
+                           @onchange="e => TextChangedAsync(e, v => _request.Subject = v)" />
+                </div>
+            </section>
+
+            <section class="lettra-card" aria-labelledby="lines-title">
+                <h2 id="lines-title">@L["Lines.Title"]</h2>
+                @if (LinesLocked && IsDraft)
+                {
+                    <p class="lettra-muted">@L["Error.Invoice.DerivedDocumentLocked"]</p>
+                }
+                <DocumentLinesGrid @ref="_linesGrid" Lines="_lines" ReferenceData="_reference" Regime="_request.VatRegime"
+                                   ReadOnly="@(IsReadOnly || LinesLocked)" ResolvePrice="ResolvePriceAsync"
+                                   OnLinesChanged="ScheduleSaveAsync" OnTotalsChanged="TotalsChanged" />
+            </section>
+
+            <section class="lettra-card">
+                <label for="notes">@L["Billing.Field.Notes"]</label>
+                <textarea id="notes" rows="3" disabled="@IsReadOnly" value="@_request.Notes" maxlength="4000"
+                          @onchange="e => TextChangedAsync(e, v => _request.Notes = v)"></textarea>
+            </section>
+        </div>
+
+        <aside class="lettra-document-side">
+            <DocumentTotalsPanel Totals="_totals" />
+
+            <div class="lettra-actions">
+                @if (IsDraft)
+                {
+                    <button type="button" id="validate" class="lettra-button" disabled="@(!CanValidate)" @onclick="ValidateAsync"
+                            title="@L["Billing.Command.Validate"] (Ctrl+Enter)">@L["Billing.Command.Validate"]</button>
+                    <button type="button" class="lettra-button is-secondary" disabled="@(_invoice is null)" @onclick="SaveNowAsync">@L["Billing.Command.Save"]</button>
+                }
+                @if (_invoice?.Status == InvoiceStatusDto.Validated)
+                {
+                    <button type="button" id="issue" class="lettra-button" @onclick="IssueAsync">@L["Invoice.Command.Issue"]</button>
+                }
+                @if (_invoice is { Status: not InvoiceStatusDto.Draft, Kind: not InvoiceKindDto.CreditNote })
+                {
+                    <div class="lettra-inline">
+                        <label for="credit-reason">@L["Invoice.Field.CreditReason"]</label>
+                        <input id="credit-reason" @bind="_creditReason" maxlength="500" />
+                        <button type="button" id="credit-note" class="lettra-button is-secondary" @onclick="CreateCreditNoteAsync">@L["Invoice.Command.CreditNote"]</button>
+                    </div>
+                }
+                <div class="lettra-inline">
+                    <label for="pdf-language">@L["Billing.Field.PdfLanguage"]</label>
+                    <select id="pdf-language" @bind="_pdfCulture">
+                        <option value="fr-FR">Français</option>
+                        <option value="en-US">English</option>
+                    </select>
+                    <button type="button" id="pdf" class="lettra-button is-secondary" disabled="@(_invoice is null)" @onclick="DownloadPdfAsync"
+                            title="@L["Billing.Command.Pdf"] (Ctrl+P)">@L["Billing.Command.Pdf"]</button>
+                </div>
+                @if (IsDraft && _invoice is not null)
+                {
+                    <button type="button" class="lettra-link is-danger" @onclick="DeleteAsync">@L["Billing.Command.Delete"]</button>
+                }
+            </div>
+
+            <ComplianceChecklist Report="_compliance" OnFindingSelected="FocusFindingAsync" />
+        </aside>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid? Id { get; set; }
+
+    [SupplyParameterFromQuery(Name = "customer")] public Guid? CustomerFromQuery { get; set; }
+
+    /// <summary><c>credit-note</c> : la palette (« avoir sur F-… ») prépare l'avoir dès l'ouverture.</summary>
+    [SupplyParameterFromQuery(Name = "action")] public string? Action { get; set; }
+
+    /// <summary>Pause de saisie avant l'enregistrement du brouillon ; 0 dans les tests.</summary>
+    [Parameter] public TimeSpan AutosaveDelay { get; set; } = TimeSpan.FromMilliseconds(800);
+
+    private SaveInvoiceRequest _request = new();
+    private InvoiceResponse? _invoice;
+    private List<DocumentLineRow> _lines = [];
+    private BillingReferenceData _reference = new([], [], []);
+    private DocumentTotals _totals = new([], 0m, 0m, 0m);
+    private ComplianceReportResponse? _compliance;
+    private CompanyProfileResponse? _company;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private string? _status;
+    private string? _customerName;
+    private string? _creditReason;
+    private bool _loading = true;
+    private bool _conflict;
+    private bool _busy;
+    private string _pdfCulture = "fr-FR";
+    private DraftAutosave _autosave = default!;
+    private KeyboardScope _pageScope = default!;
+    private CustomerPicker? _customerPicker;
+    private DocumentLinesGrid? _linesGrid;
+    private ElementReference _deliveryDate;
+    private ElementReference _dueDate;
+    private ElementReference _deliveryAddress;
+    private Guid? _loadedId;
+
+    private bool IsDraft => _invoice is null || _invoice.Status == InvoiceStatusDto.Draft;
+
+    private bool IsReadOnly => !IsDraft || _busy;
+
+    /// <summary>Lignes venues d'une autre pièce (acompte, avoir, facture finale d'un devis).</summary>
+    private bool LinesLocked => _invoice is not null && (_invoice.Kind != InvoiceKindDto.Invoice || _invoice.QuoteId is not null);
+
+    private bool CanValidate => _invoice is not null && !_busy && !_conflict && _compliance is { BlocksValidation: false };
+
+    private InvoiceKindDto Kind => _invoice?.Kind ?? InvoiceKindDto.Invoice;
+
+    private string Title => _invoice?.Number is { } number
+        ? string.Format(CultureInfo.CurrentCulture, L[$"InvoiceKind.{Kind}.TitleNumber"], number)
+        : L[_invoice is null ? "InvoiceKind.Invoice.TitleNew" : $"InvoiceKind.{Kind}.TitleDraft"];
+
+    private string StatusText => L[$"InvoiceStatus.{_invoice?.Status ?? InvoiceStatusDto.Draft}"];
+
+    private string StatusKind => (_invoice?.Status ?? InvoiceStatusDto.Draft).ToString().ToLowerInvariant();
+
+    private static string? Iso(DateOnly? date) => date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+    protected override void OnInitialized()
+    {
+        _autosave = new DraftAutosave(SaveAsync, AutosaveDelay);
+        _pageScope = new KeyboardScope("page")
+            .Bind("Ctrl+S", L["Billing.Command.Save"], _ => SaveNowAsync(), _ => IsDraft)
+            .Bind("Ctrl+Enter", L["Billing.Command.Validate"], _ => ValidateAsync(), _ => CanValidate)
+            .Bind("Ctrl+P", L["Billing.Command.Pdf"], _ => DownloadPdfAsync(), _ => _invoice is not null);
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_loadedId == Id && !_loading)
+        {
+            return;
+        }
+
+        _loadedId = Id;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _errors = [];
+        _conflict = false;
+        _autosave.Discard();
+
+        OperationResult<BillingReferenceData> reference = await Settings.GetReferenceDataAsync(CancellationToken.None);
+        _reference = reference.Value ?? _reference;
+        OperationResult<CompanyProfileResponse> company = await Settings.GetCompanyProfileAsync(CancellationToken.None);
+        _company = company.Value;
+
+        if (Id is { } id)
+        {
+            OperationResult<InvoiceResponse> loaded = await Invoices.GetAsync(id, CancellationToken.None);
+            if (loaded.Value is null)
+            {
+                _errors = loaded.Errors;
+                _loading = false;
+                return;
+            }
+
+            Show(loaded.Value);
+            await CheckAsync();
+            if (Action == "credit-note")
+            {
+                _status = L["Invoice.CreditNoteHint"];
+            }
+        }
+        else
+        {
+            _invoice = null;
+            _request = new SaveInvoiceRequest { VatRegime = _company?.VatFranchise == true ? VatRegimeDto.Franchise : VatRegimeDto.Standard };
+            _lines = [];
+            _compliance = null;
+            _customerName = null;
+            if (CustomerFromQuery is { } customerId)
+            {
+                _request.CustomerId = customerId;
+            }
+        }
+
+        _loading = false;
+    }
+
+    private void Show(InvoiceResponse invoice)
+    {
+        _invoice = invoice;
+        _customerName = invoice.Customer.Name;
+        _request = new SaveInvoiceRequest
+        {
+            CustomerId = invoice.CustomerId,
+            DeliveryDate = invoice.DeliveryDate,
+            DueDate = invoice.DueDate,
+            PaymentTerms = invoice.PaymentTerms,
+            DeliveryAddress = invoice.DeliveryAddress,
+            VatRegime = invoice.VatRegime,
+            Subject = invoice.Subject,
+            Notes = invoice.Notes,
+        };
+        _lines = [.. invoice.Lines.OrderBy(l => l.Position).Select(DocumentLineRow.From)];
+        _totals = QuoteEditor.ToTotals(invoice.Totals);
+    }
+
+    // ---------- saisie de l'en-tête ----------
+
+    private async Task CustomerSelectedAsync(CustomerSummary customer)
+    {
+        _request.CustomerId = customer.Id;
+        _customerName = customer.Name;
+        await ScheduleSaveAsync();
+    }
+
+    private async Task DateChangedAsync(ChangeEventArgs e, Action<DateOnly?> set)
+    {
+        set(DateOnly.TryParse(e.Value?.ToString(), CultureInfo.InvariantCulture, out DateOnly date) ? date : null);
+        await ScheduleSaveAsync();
+    }
+
+    private async Task TextChangedAsync(ChangeEventArgs e, Action<string?> set)
+    {
+        string? text = e.Value?.ToString();
+        set(string.IsNullOrWhiteSpace(text) ? null : text.Trim());
+        await ScheduleSaveAsync();
+    }
+
+    private async Task RegimeChangedAsync(ChangeEventArgs e)
+    {
+        if (Enum.TryParse(e.Value?.ToString(), out VatRegimeDto regime))
+        {
+            _request.VatRegime = regime;
+            await ScheduleSaveAsync();
+        }
+    }
+
+    private void TotalsChanged(DocumentTotals totals) => _totals = totals;
+
+    private async Task<ResolvedPrice?> ResolvePriceAsync(Guid catalogItemId)
+    {
+        if (_request.CustomerId == Guid.Empty || Services.GetService(typeof(IPriceListsGateway)) is not IPriceListsGateway prices)
+        {
+            return null;
+        }
+
+        OperationResult<IReadOnlyList<ResolvedPrice>> result = await prices.ResolveAsync(_request.CustomerId, [catalogItemId], CancellationToken.None);
+        return result.Value?.FirstOrDefault();
+    }
+
+    // ---------- enregistrement du brouillon et checklist ----------
+
+    private Task ScheduleSaveAsync() => IsDraft && !_conflict ? _autosave.ScheduleAsync() : Task.CompletedTask;
+
+    private async Task SaveNowAsync()
+    {
+        await ScheduleSaveAsync();
+        await _autosave.FlushAsync();
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_request.CustomerId == Guid.Empty)
+        {
+            return;   // un brouillon naît avec son client
+        }
+
+        _request.Lines = [.. _lines.Where(l => !l.IsIncomplete).Select(l => l.ToRequest())];
+        if (_invoice is null && _request.Lines.Count == 0)
+        {
+            return;   // pas de pièce vide : elle naît avec sa première ligne complète
+        }
+
+        OperationResult<InvoiceResponse> result = _invoice is null
+            ? await Invoices.CreateAsync(_request, CancellationToken.None)
+            : await Invoices.UpdateAsync(_invoice.Id, _request, _invoice.Version, CancellationToken.None);
+        if (result.Value is null)
+        {
+            _errors = result.Errors;
+            _conflict = result.Errors.Any(e => e.Code == ErrorCodes.Billing.VersionMismatch);
+            StateHasChanged();
+            return;
+        }
+
+        bool created = _invoice is null;
+        _errors = [];
+        _invoice = result.Value;
+        _customerName = result.Value.Customer.Name;
+        // Totaux du serveur, sauf si une saisie attend ou qu'une ligne incomplète (non envoyée) compte à l'écran.
+        if (!_autosave.IsDirty && !_lines.Any(l => l.IsIncomplete))
+        {
+            _totals = QuoteEditor.ToTotals(result.Value.Totals);
+        }
+
+        await CheckAsync();
+        if (created)
+        {
+            _loadedId = result.Value.Id;
+            Navigation.NavigateTo($"invoices/{result.Value.Id}", new NavigationOptions { ReplaceHistoryEntry = true });
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task CheckAsync()
+    {
+        if (_invoice is null || _invoice.Status != InvoiceStatusDto.Draft)
+        {
+            _compliance = null;
+            return;
+        }
+
+        OperationResult<ComplianceReportResponse> report = await Invoices.CheckAsync(_invoice.Id, CancellationToken.None);
+        _compliance = report.Value;
+    }
+
+    private async Task ReloadAsync()
+    {
+        _loadedId = null;
+        await OnParametersSetAsync();
+    }
+
+    // ---------- actions ----------
+
+    private async Task ValidateAsync()
+    {
+        await _autosave.FlushAsync();
+        if (!CanValidate || _invoice is null)
+        {
+            return;
+        }
+
+        await RunAsync(() => Invoices.ValidateAsync(_invoice.Id, _invoice.Version, CancellationToken.None), "Invoice.Validated");
+    }
+
+    private Task IssueAsync() =>
+        _invoice is null ? Task.CompletedTask
+            : RunAsync(() => Invoices.IssueAsync(_invoice.Id, _invoice.Version, CancellationToken.None), "Invoice.IssuedDone");
+
+    private async Task RunAsync(Func<Task<OperationResult<InvoiceResponse>>> action, string successKey)
+    {
+        _busy = true;
+        _status = null;
+        try
+        {
+            OperationResult<InvoiceResponse> result = await action();
+            if (result.Value is null)
+            {
+                _errors = result.Errors;
+                _conflict = result.Errors.Any(e => e.Code == ErrorCodes.Billing.VersionMismatch);
+                return;
+            }
+
+            _errors = [];
+            Show(result.Value);
+            _compliance = null;
+            _status = string.Format(CultureInfo.CurrentCulture, L[successKey], result.Value.Number);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task CreateCreditNoteAsync()
+    {
+        if (_invoice is null)
+        {
+            return;
+        }
+
+        OperationResult<InvoiceResponse> credit = await Invoices.CreateCreditNoteAsync(_invoice.Id,
+            new CreateCreditNoteRequest { Reason = string.IsNullOrWhiteSpace(_creditReason) ? null : _creditReason.Trim() }, CancellationToken.None);
+        if (credit.Value is null)
+        {
+            _errors = credit.Errors;
+            return;
+        }
+
+        Navigation.NavigateTo($"invoices/{credit.Value.Id}");
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (_invoice is null)
+        {
+            return;
+        }
+
+        _autosave.Discard();
+        OperationResult<bool> deleted = await Invoices.DeleteAsync(_invoice.Id, _invoice.Version, CancellationToken.None);
+        if (!deleted.IsSuccess)
+        {
+            _errors = deleted.Errors;
+            return;
+        }
+
+        Navigation.NavigateTo(Kind == InvoiceKindDto.CreditNote ? "credit-notes" : "invoices");
+    }
+
+    private async Task DownloadPdfAsync()
+    {
+        await _autosave.FlushAsync();
+        if (_invoice is null)
+        {
+            return;
+        }
+
+        CultureInfo culture = CultureInfo.GetCultureInfo(_pdfCulture);
+        byte[] pdf = Pdf.Render(PrintableMapper.FromInvoice(_invoice, _company, culture));
+        string name = _invoice.Number ?? L[$"InvoiceKind.{Kind}.FileDraft"];
+        await Files.DownloadAsync($"{name}.pdf", "application/pdf", pdf, CancellationToken.None);
+    }
+
+    // ---------- checklist → champ fautif ----------
+
+    private async Task FocusFindingAsync(ComplianceFindingResponse finding)
+    {
+        switch (finding.Code)
+        {
+            case var code when code.StartsWith("Mention.Customer", StringComparison.Ordinal):
+                if (_customerPicker is not null)
+                {
+                    await _customerPicker.FocusAsync();
+                }
+
+                break;
+            case var code when code.StartsWith("Mention.Seller", StringComparison.Ordinal)
+                || code is ErrorCodes.Mention.LatePenalties or ErrorCodes.Mention.RecoveryIndemnity
+                    or ErrorCodes.Mention.EarlyPaymentDiscount or ErrorCodes.Mention.VatOnDebits:
+                Navigation.NavigateTo("settings/company");
+                break;
+            case ErrorCodes.Mention.DeliveryDate:
+                await FocusAsync(_deliveryDate);
+                break;
+            case ErrorCodes.Mention.DueDate:
+                await FocusAsync(_dueDate);
+                break;
+            case ErrorCodes.Mention.DeliveryAddress:
+                await FocusAsync(_deliveryAddress);
+                break;
+            default:
+                if (_linesGrid is not null)
+                {
+                    await _linesGrid.FocusLineAsync((finding.Line ?? 1) - 1);
+                }
+
+                break;
+        }
+    }
+
+    private static async Task FocusAsync(ElementReference element)
+    {
+        try
+        {
+            await element.FocusAsync();
+        }
+        catch (InvalidOperationException)
+        {
+            // Rendu sans navigateur (tests).
+        }
+    }
+
+    public void Dispose() => _autosave.Dispose();
+}
