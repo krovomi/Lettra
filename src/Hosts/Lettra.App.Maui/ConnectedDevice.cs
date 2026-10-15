@@ -6,6 +6,7 @@ using Lettra.Sync.Client;
 using Lettra.UI.Gateway.Http;
 using Lettra.UI.Gateway.Http.Device;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Networking;
 using Microsoft.Maui.Storage;
@@ -21,7 +22,7 @@ namespace Lettra.App.Maui;
 /// <code>{ "Lettra": { "Server": { "BaseAddress": "https://…", "Authority": "https://…/realms/lettra", "DossierId": "…" } } }</code>
 /// Sans ce fichier, le poste reste isolé (mode 1).
 /// </summary>
-internal static class ConnectedDevice
+internal static partial class ConnectedDevice
 {
     public const string SettingsFile = "lettra.json";
 
@@ -68,6 +69,36 @@ internal static class ConnectedDevice
         services.AddSyncClient(o => o.DeviceId = DeviceId());
         return services;
     }
+
+    /// <summary>
+    /// Relance la synchronisation au démarrage et à chaque changement de réseau signalé par l'OS. La sonde vérifie que le
+    /// serveur répond ; un cycle déjà en cours fait ignorer l'appel, et la préférence décide s'il faut demander.
+    /// </summary>
+    public static void StartSyncTriggers(IServiceProvider services)
+    {
+        SyncCoordinator coordinator = services.GetRequiredService<SyncCoordinator>();
+        ILogger logger = services.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(ConnectedDevice));
+        Connectivity.Current.ConnectivityChanged += (_, _) => Trigger(coordinator, logger);
+        Trigger(coordinator, logger);
+    }
+
+    private static void Trigger(SyncCoordinator coordinator, ILogger logger) =>
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await coordinator.NetworkAvailableAsync().ConfigureAwait(false);
+            }
+#pragma warning disable CA1031 // Un cycle raté ne doit pas faire tomber l'application : le suivant reprendra l'outbox.
+            catch (Exception e)
+#pragma warning restore CA1031
+            {
+                LogSyncFailed(logger, e);
+            }
+        });
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Synchronisation au retour du réseau impossible.")]
+    private static partial void LogSyncFailed(ILogger logger, Exception exception);
 
     private static Guid DeviceId()
     {
