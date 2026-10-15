@@ -122,9 +122,37 @@ internal abstract class DossierNode : IAsyncDisposable
     }
 }
 
-/// <summary>Le serveur : journal de synchronisation tenu, rejeu des intentions.</summary>
-internal sealed class ServerNode(DossierId dossier, string file, TestClock clock)
-    : DossierNode(dossier, file, clock, services => services.AddSyncServer().AddSyncJournal());
+/// <summary>Politique de séparation des tâches du cabinet, réglable par scénario.</summary>
+internal sealed class TestPolicies : IOrganisationPolicyStore
+{
+    public SegregationOfDutiesPolicy Policy { get; set; } = SegregationOfDutiesPolicy.Disabled;
+
+    public bool SupportsSegregationOfDuties => true;
+
+    public Task<SegregationOfDutiesPolicy> GetSegregationOfDutiesAsync(OrganisationId organisation, CancellationToken cancellationToken) =>
+        Task.FromResult(Policy);
+
+    public Task SaveSegregationOfDutiesAsync(OrganisationId organisation, SegregationOfDutiesPolicy policy, Guid changedBy, CancellationToken cancellationToken)
+    {
+        Policy = policy;
+        return Task.CompletedTask;
+    }
+}
+
+/// <summary>Le serveur : journal de synchronisation tenu, rejeu des intentions, politique du cabinet.</summary>
+internal sealed class ServerNode : DossierNode
+{
+    public ServerNode(DossierId dossier, string file, TestClock clock)
+        : this(dossier, file, clock, new TestPolicies())
+    {
+    }
+
+    private ServerNode(DossierId dossier, string file, TestClock clock, TestPolicies policies)
+        : base(dossier, file, clock, services => services.AddSyncServer().AddSyncJournal().AddSingleton<IOrganisationPolicyStore>(policies)) =>
+        Policies = policies;
+
+    public TestPolicies Policies { get; }
+}
 
 /// <summary>Où couper l'échange : la requête n'arrive pas, ou la réponse se perd après traitement.</summary>
 public enum Cut
