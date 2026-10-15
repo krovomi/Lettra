@@ -33,6 +33,8 @@
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="$(MicrosoftVersion)" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="$(MicrosoftVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Localization" Version="$(MicrosoftVersion)" />
+    <!-- Rendu PDF des documents (MIT), managé pur : WASM, MAUI hors ligne et serveur. -->
+    <PackageVersion Include="PDFsharp-MigraDoc" Version="6.2.4" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="$(MicrosoftVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="$(MicrosoftVersion)" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(MicrosoftVersion)" />

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Column.Designation" xml:space="preserve"><value>Description</value></data>
+  <data name="Column.Discount" xml:space="preserve"><value>Discount</value></data>
+  <data name="Column.Quantity" xml:space="preserve"><value>Qty</value></data>
+  <data name="Column.Reference" xml:space="preserve"><value>Ref.</value></data>
+  <data name="Column.Total" xml:space="preserve"><value>Total excl. VAT</value></data>
+  <data name="Column.Unit" xml:space="preserve"><value>Unit</value></data>
+  <data name="Column.UnitPrice" xml:space="preserve"><value>Unit price excl. VAT</value></data>
+  <data name="Column.Vat" xml:space="preserve"><value>VAT</value></data>
+  <data name="Draft.Notice" xml:space="preserve"><value>Working document with no number and no accounting value.</value></data>
+  <data name="Draft.Watermark" xml:space="preserve"><value>DRAFT</value></data>
+  <data name="Footer.Of" xml:space="preserve"><value>of</value></data>
+  <data name="Footer.Page" xml:space="preserve"><value>Page</value></data>
+  <data name="Footer.ShareCapital" xml:space="preserve"><value>with a share capital of {0}</value></data>
+  <data name="Header.DeliveryDate" xml:space="preserve"><value>Date of sale or service</value></data>
+  <data name="Header.DueDate" xml:space="preserve"><value>Due date</value></data>
+  <data name="Header.IssueDate" xml:space="preserve"><value>Issue date</value></data>
+  <data name="Header.Number" xml:space="preserve"><value>No. {0}</value></data>
+  <data name="Header.ValidUntil" xml:space="preserve"><value>Valid until</value></data>
+  <data name="Party.Buyer" xml:space="preserve"><value>Customer</value></data>
+  <data name="Party.DeliveryAddress" xml:space="preserve"><value>Delivery address</value></data>
+  <data name="Party.Email" xml:space="preserve"><value>Email {0}</value></data>
+  <data name="Party.Phone" xml:space="preserve"><value>Phone {0}</value></data>
+  <data name="Party.Siren" xml:space="preserve"><value>SIREN {0}</value></data>
+  <data name="Party.VatNumber" xml:space="preserve"><value>EU VAT number {0}</value></data>
+  <data name="Payment.Bic" xml:space="preserve"><value>BIC {0}</value></data>
+  <data name="Payment.Iban" xml:space="preserve"><value>IBAN {0}</value></data>
+  <data name="Payment.Terms" xml:space="preserve"><value>Payment terms</value></data>
+  <data name="Quote.Acceptance" xml:space="preserve"><value>Accepted: date, name and customer signature</value></data>
+  <data name="Related.CreditNote" xml:space="preserve"><value>Credit note for invoice no. {0}</value></data>
+  <data name="Related.DownPaymentInvoice" xml:space="preserve"><value>Down payment on quote no. {0}</value></data>
+  <data name="Related.Invoice" xml:space="preserve"><value>As per quote no. {0}</value></data>
+  <data name="Related.Quote" xml:space="preserve"><value>Reference {0}</value></data>
+  <data name="Title.CreditNote" xml:space="preserve"><value>Credit note</value></data>
+  <data name="Title.DownPaymentInvoice" xml:space="preserve"><value>Down payment invoice</value></data>
+  <data name="Title.Invoice" xml:space="preserve"><value>Invoice</value></data>
+  <data name="Title.Quote" xml:space="preserve"><value>Quote</value></data>
+  <data name="Total.Deduction" xml:space="preserve"><value>Down payment no. {0} of {1}</value></data>
+  <data name="Total.ExclTax" xml:space="preserve"><value>Total excl. VAT</value></data>
+  <data name="Total.InclTax" xml:space="preserve"><value>Total incl. VAT</value></data>
+  <data name="Total.NetToPay" xml:space="preserve"><value>Amount due</value></data>
+  <data name="Total.Vat" xml:space="preserve"><value>Total VAT</value></data>
+  <data name="Vat.Amount" xml:space="preserve"><value>VAT amount</value></data>
+  <data name="Vat.Base" xml:space="preserve"><value>Taxable amount</value></data>
+  <data name="Vat.Rate" xml:space="preserve"><value>VAT rate</value></data>
+</root>

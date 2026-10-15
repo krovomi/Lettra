@@ -1,0 +1,14 @@
+<!-- Récupère veraPDF (validateur PDF/A de référence, MPL 2.0 / GPL 3) pour la CI ; rien n'est livré avec Lettra. -->
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>lettra.build</groupId>
+  <artifactId>verapdf-runner</artifactId>
+  <version>1</version>
+  <dependencies>
+    <dependency>
+      <groupId>org.verapdf.apps</groupId>
+      <artifactId>greenfield-apps</artifactId>
+      <version>1.28.2</version>
+    </dependency>
+  </dependencies>
+</project>

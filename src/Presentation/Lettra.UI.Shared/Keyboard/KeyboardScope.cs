@@ -3,6 +3,9 @@ namespace Lettra.UI.Shared.Keyboard;
 /// <summary>Portée de raccourcis : « global », « page », « grille ». La plus récente gagne.</summary>
 public sealed class KeyboardScope(string name)
 {
+    /// <summary>Nom des portées de grille : leurs commandes s'appliquent à la cellule active.</summary>
+    public const string GridScopeName = "grid";
+
     private readonly Dictionary<KeyChord, ShortcutBinding> _bindings = [];
 
     public string Name { get; } = name;

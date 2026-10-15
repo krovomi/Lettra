@@ -9,8 +9,7 @@
 
 <GlobalShortcuts Scope="_pageScope" />
 
-<CascadingValue Value="_density">
-    <section class="lettra-card @_density.CssClass()" aria-labelledby="catalog-list-title">
+<section class="lettra-card" aria-labelledby="catalog-list-title">
         <h2 id="catalog-list-title">@L["Catalog.List.Title"]</h2>
 
         <div class="lettra-toolbar">
@@ -51,7 +50,6 @@
                            EndReached="AddRowAtEndAsync" AriaLabel="@L["Catalog.Grid"]" />
         </div>
     </section>
-</CascadingValue>
 
 @if (_choice is { } choice)
 {
@@ -84,7 +82,6 @@
     private string? _search;
     private bool _includeArchived;
     private bool _loading = true;
-    private UiDensity _density = UiDensity.Expert;
     private DataEntryGrid<CatalogRow>? _grid;
     private ElementReference _searchInput;
     private KeyboardScope _gridScope = default!;
@@ -122,18 +119,13 @@
         ];
 
         // Commandes de la grille : les seules touches que le module JS remonte à .NET.
-        _gridScope = new KeyboardScope("grid")
+        _gridScope = new KeyboardScope(KeyboardScope.GridScopeName)
             .Bind("F4", L["Catalog.Command.ChoiceList"], OpenChoice, CanOpenChoice)
             .Bind("Insert", L["Catalog.Command.New"], ctx => AddRowAsync())
             .Bind("Ctrl+Delete", L["Catalog.Command.Archive"], ToggleArchiveAsync, ctx => ctx.Row >= 0 && ctx.Row < _rows.Count);
 
         _pageScope = new KeyboardScope("page")
-            .Bind("F3", L["Catalog.Command.Search"], async _ => await _searchInput.FocusAsync())
-            .Bind("Ctrl+Shift+D", L["Catalog.Command.Density"], _ =>
-            {
-                _density = _density == UiDensity.Expert ? UiDensity.Comfort : UiDensity.Expert;
-                StateHasChanged();
-            });
+            .Bind("F3", L["Catalog.Command.Search"], async _ => await _searchInput.FocusAsync());
     }
 
     protected override async Task OnInitializedAsync()
