@@ -18,6 +18,14 @@ public abstract class BillingDocument<TId> : AggregateRoot<TId>
     public const int MaxSubjectLength = 200;
     public const int MaxNotesLength = 4000;
 
+    private static readonly Comparison<DocumentLine> LineOrder = (a, b) => a.Position.CompareTo(b.Position);
+
+    private static readonly Comparison<VatSummary> VatSummaryOrder = (a, b) =>
+    {
+        int byRate = b.RatePercent.CompareTo(a.RatePercent);
+        return byRate != 0 ? byRate : string.CompareOrdinal(a.Category, b.Category);
+    };
+
     private readonly List<DocumentLine> _lines = [];
     private readonly List<VatSummary> _vatSummaries = [];
 
@@ -50,9 +58,25 @@ public abstract class BillingDocument<TId> : AggregateRoot<TId>
 
     public DateOnly? IssueDate { get; protected set; }
 
-    public IReadOnlyList<DocumentLine> Lines => _lines;
+    /// <summary>Lignes dans l'ordre de leur position, quel que soit l'ordre rendu par la base.</summary>
+    public IReadOnlyList<DocumentLine> Lines
+    {
+        get
+        {
+            EnsureOrdered(_lines, LineOrder);
+            return _lines;
+        }
+    }
 
-    public IReadOnlyList<VatSummary> VatSummaries => _vatSummaries;
+    /// <summary>Récapitulatif de TVA dans l'ordre du calcul (taux décroissant, puis catégorie), quel que soit l'ordre rendu par la base.</summary>
+    public IReadOnlyList<VatSummary> VatSummaries
+    {
+        get
+        {
+            EnsureOrdered(_vatSummaries, VatSummaryOrder);
+            return _vatSummaries;
+        }
+    }
 
     public decimal TotalExclTax { get; private set; }
 
@@ -200,7 +224,7 @@ public abstract class BillingDocument<TId> : AggregateRoot<TId>
             b.VatAmount,
             VatCategoryCodes.IsTaxed(b.VatCategory)
                 ? null
-                : _lines.First(l => l.VatCategory == b.VatCategory).VatExemptionCode)));
+                : Lines.First(l => l.VatCategory == b.VatCategory).VatExemptionCode)));
         TotalExclTax = totals.TotalExclTax;
         TotalVat = totals.TotalVat;
         TotalInclTax = totals.TotalInclTax;
@@ -208,12 +232,26 @@ public abstract class BillingDocument<TId> : AggregateRoot<TId>
 
     /// <summary>Textes légaux de TVA de la pièce (un par motif d'exonération ou d'autoliquidation), sans doublon.</summary>
     protected IEnumerable<string> VatLegalTexts() =>
-        _vatSummaries
+        VatSummaries
             .Select(v => VatTreatment.LegalTextOf(VatRegime, v.ExemptionCode))
             .OfType<string>()
             .Distinct(StringComparer.Ordinal);
 
     protected static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    // PostgreSQL et SQL Server ne garantissent pas l'ordre des collections possédées : on le rétablit à la lecture.
+    // Les clés (position ; catégorie et taux) sont uniques, le tri est donc déterministe.
+    private static void EnsureOrdered<T>(List<T> items, Comparison<T> order)
+    {
+        for (int i = 1; i < items.Count; i++)
+        {
+            if (order(items[i - 1], items[i]) > 0)
+            {
+                items.Sort(order);
+                return;
+            }
+        }
+    }
 }
 
 /// <summary>Catégorie d'opération (valeurs identiques à <c>OperationCategoryDto</c>).</summary>

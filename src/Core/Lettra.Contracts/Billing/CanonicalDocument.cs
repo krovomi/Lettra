@@ -15,6 +15,7 @@ namespace Lettra.Contracts.Billing;
 /// (une valeur absente s'écrit <c>null</c>) ;</item>
 /// <item>montants (totaux, bases, TVA, montant HT des lignes) en chaîne invariante à exactement 2 décimales ;
 /// quantités, prix unitaires, remises et taux à exactement 4 décimales ;</item>
+/// <item>lignes triées par position ; récapitulatif de TVA trié par taux décroissant puis par nom de catégorie (ordinal) ;</item>
 /// <item>dates en <c>yyyy-MM-dd</c> ; identifiants en Guid minuscule avec tirets ; énumérations par leur nom ;</item>
 /// <item>empreinte : SHA-256 des octets UTF-8, en hexadécimal minuscule (64 caractères).</item>
 /// </list>
@@ -122,7 +123,7 @@ public static class CanonicalDocument
         w.WriteEndArray();
 
         w.WriteStartArray("vat");
-        foreach (VatBreakdownResponse b in totals.Breakdown)
+        foreach (VatBreakdownResponse b in totals.Breakdown.OrderByDescending(b => b.VatRatePercent).ThenBy(b => b.VatCategory.ToString(), StringComparer.Ordinal))
         {
             w.WriteStartObject();
             w.WriteString("category", b.VatCategory.ToString());
