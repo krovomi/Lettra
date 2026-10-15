@@ -1,0 +1,179 @@
+@using Lettra.Contracts.Assistant
+@implements IDisposable
+@inject AssistantPanelState State
+@inject IStringLocalizer<SharedResource> L
+@inject NavigationManager Navigation
+@* Panneau assistant (annexe B §4.2, annexe A §7). Absent tant que le cabinet n'a pas activé l'IA. Tout passe par
+   l'orchestrateur : le texte de l'IA est une suggestion, les règles de Lettra sont affichées comme certaines, et un
+   brouillon s'ouvre dans son écran pour être relu et validé par l'utilisateur. Aucun bouton ne valide ni n'émet. *@
+@if (State.IsAvailable && State.IsOpen)
+{
+    <aside class="lettra-assistant" aria-labelledby="assistant-title">
+        <header>
+            <h2 id="assistant-title">@L["Assistant.Title"]</h2>
+            <button type="button" class="lettra-link" id="assistant-close" @onclick="State.Close">@L["Assistant.Close"]</button>
+        </header>
+        <p class="lettra-muted">@L["Assistant.Disclaimer"]</p>
+
+        <form @onsubmit="AskAsync" @onsubmit:preventDefault>
+            <label for="assistant-feature">@L["Assistant.Feature"]</label>
+            <select id="assistant-feature" value="@State.Feature" @onchange="OnFeatureChanged" disabled="@_running">
+                @foreach (AssistantFeature feature in State.Features)
+                {
+                    <option value="@feature">@L[$"Assistant.Feature.{feature}"]</option>
+                }
+            </select>
+            <label for="assistant-question">@L[$"Assistant.Prompt.{State.Feature}"]</label>
+            <textarea id="assistant-question" rows="4" maxlength="@AskAssistantRequest.MaxQuestionLength"
+                      @bind="_question" @bind:event="oninput" disabled="@_running"
+                      placeholder="@L[$"Assistant.Placeholder.{State.Feature}"]"></textarea>
+            @if (_running)
+            {
+                <button type="button" id="assistant-stop" class="lettra-button is-secondary" @onclick="Stop">@L["Assistant.Stop"]</button>
+            }
+            else
+            {
+                <button type="submit" id="assistant-ask" class="lettra-button" disabled="@string.IsNullOrWhiteSpace(_question)">@L["Assistant.Ask"]</button>
+            }
+        </form>
+
+        <ol class="lettra-assistant-events" aria-live="polite">
+            @foreach (AssistantEvent item in _events)
+            {
+                @switch (item)
+                {
+                    case AssistantUnavailableEvent unavailable:
+                        <li class="is-error" role="alert">@L.Error(unavailable.Code)</li>
+                        break;
+                    case AssistantRefusedEvent refused:
+                        <li class="is-error" role="alert">@L.Error(refused.Code)</li>
+                        break;
+                    case AssistantWarningEvent warning:
+                        <li class="is-warning">@L.Error(warning.Code)@(warning.Detail is null ? null : " · " + warning.Detail)</li>
+                        break;
+                    case AssistantToolUsedEvent tool:
+                        <li class="is-step">@string.Format(CultureInfo.CurrentCulture, L[tool.Succeeded ? "Assistant.Step" : "Assistant.StepFailed"], ToolLabel(tool.Tool))</li>
+                        break;
+                    case AssistantRuleResultEvent rule:
+                        <li class="is-rule">
+                            <details>
+                                <summary>@string.Format(CultureInfo.CurrentCulture, L["Assistant.Rule"], ToolLabel(rule.Tool))</summary>
+                                <pre>@rule.Content</pre>
+                            </details>
+                        </li>
+                        break;
+                    case AssistantCitationEvent citation:
+                        <li class="is-citation">@string.Format(CultureInfo.CurrentCulture, L["Assistant.Source"], citation.Reference)</li>
+                        break;
+                    case AssistantDraftProposedEvent draft:
+                        <li class="is-draft">
+                            <strong>@L[$"Assistant.Draft.{draft.Kind}"]</strong> @draft.Summary
+                            <button type="button" class="lettra-button is-secondary assistant-open-draft" @onclick="() => OpenDraft(draft)">@L["Assistant.OpenDraft"]</button>
+                        </li>
+                        break;
+                    case AssistantTextEvent text:
+                        <li class="is-suggestion">
+                            <span class="lettra-assistant-label">@L["Assistant.Suggestion"]</span>
+                            <div class="lettra-assistant-text">@text.Text</div>
+                        </li>
+                        break;
+                    case AssistantCompletedEvent completed:
+                        <li class="is-completed lettra-muted">@string.Format(CultureInfo.CurrentCulture, L["Assistant.Completed"], completed.Engine, completed.SkillPackCommit)</li>
+                        break;
+                }
+            }
+        </ol>
+    </aside>
+}
+
+@code {
+    private readonly List<AssistantEvent> _events = [];
+    private string? _question;
+    private bool _running;
+    private CancellationTokenSource? _cancel;
+
+    protected override void OnInitialized() => State.Changed += OnStateChanged;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await State.LoadAsync();
+        }
+
+        if (State.IsOpen && !_running && State.TakePendingQuestion() is { } pending)
+        {
+            _question = pending;
+            await AskAsync();
+        }
+    }
+
+    private void OnFeatureChanged(ChangeEventArgs e)
+    {
+        if (Enum.TryParse(e.Value?.ToString(), out AssistantFeature feature))
+        {
+            State.SelectFeature(feature);
+        }
+    }
+
+    private async Task AskAsync()
+    {
+        if (_running || string.IsNullOrWhiteSpace(_question) || State.Gateway is not { } gateway)
+        {
+            return;
+        }
+
+        _running = true;
+        _events.Clear();
+        _cancel = new CancellationTokenSource();
+        AssistantFeature feature = State.Feature;
+        AskAssistantRequest request = new()
+        {
+            Feature = feature,
+            Question = _question.Trim(),
+
+            // Seuls les points qui lisent un document reçoivent celui ouvert à l'écran (minimisation).
+            OpenDocumentId = feature is AssistantFeature.ExplainCompliance or AssistantFeature.EInvoicingDiagnosis ? State.DocumentId : null,
+        };
+        StateHasChanged();
+        try
+        {
+            await foreach (AssistantEvent item in gateway.AskAsync(request, _cancel.Token))
+            {
+                _events.Add(item);
+                StateHasChanged();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Arrêt demandé par l'utilisateur : les étapes déjà reçues restent affichées.
+        }
+        finally
+        {
+            _running = false;
+            _cancel.Dispose();
+            _cancel = null;
+            StateHasChanged();
+        }
+    }
+
+    private void Stop() => _cancel?.Cancel();
+
+    private void OpenDraft(AssistantDraftProposedEvent draft) =>
+        Navigation.NavigateTo(draft.Kind == "quote" ? $"quotes/{draft.DraftId}" : $"invoices/{draft.DraftId}");
+
+    private string ToolLabel(string tool)
+    {
+        LocalizedString label = L[$"Assistant.Tool.{tool}"];
+        return label.ResourceNotFound ? tool : label.Value;
+    }
+
+    private void OnStateChanged(object? sender, EventArgs e) => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        State.Changed -= OnStateChanged;
+        _cancel?.Cancel();
+        _cancel?.Dispose();
+    }
+}
