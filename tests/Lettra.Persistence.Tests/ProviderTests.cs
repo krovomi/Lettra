@@ -50,6 +50,20 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Recherche_sans_accents_sur_les_tiers_et_le_catalogue()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await AccentInsensitiveSearchScenarios.SearchIgnoresAccentsAndCaseAsync(harness, DatabaseProvider.Sqlite, Database("rsa"));
+    }
+
+    [Fact]
+    public async Task Le_remplissage_de_la_migration_donne_la_meme_recherche()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await AccentInsensitiveSearchScenarios.BackfillMatchesTheCSharpFormAsync(harness, DatabaseProvider.Sqlite, Database("rsb"));
+    }
+
+    [Fact]
     public async Task Numerotation_continue_sous_concurrence()
     {
         await using TenantHarness harness = new(new SqliteConfigurator());
@@ -174,6 +188,22 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     }
 
     [SkippableFact]
+    public async Task Recherche_sans_accents_sur_les_tiers_et_le_catalogue()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new PostgreSqlConfigurator());
+        await AccentInsensitiveSearchScenarios.SearchIgnoresAccentsAndCaseAsync(harness, DatabaseProvider.PostgreSql, Database("rsa"));
+    }
+
+    [SkippableFact]
+    public async Task Le_remplissage_de_la_migration_donne_la_meme_recherche()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new PostgreSqlConfigurator());
+        await AccentInsensitiveSearchScenarios.BackfillMatchesTheCSharpFormAsync(harness, DatabaseProvider.PostgreSql, Database("rsb"));
+    }
+
+    [SkippableFact]
     public async Task Numerotation_continue_sous_concurrence()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
@@ -284,6 +314,22 @@ public sealed class SqlServerTests : IAsyncLifetime
         Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new SqlServerConfigurator());
         await PartiesAndCatalogPersistenceScenarios.CatalogSearchAndUniquenessAsync(harness, DatabaseProvider.SqlServer, Database("h"));
+    }
+
+    [SkippableFact]
+    public async Task Recherche_sans_accents_sur_les_tiers_et_le_catalogue()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new SqlServerConfigurator());
+        await AccentInsensitiveSearchScenarios.SearchIgnoresAccentsAndCaseAsync(harness, DatabaseProvider.SqlServer, Database("rsa"));
+    }
+
+    [SkippableFact]
+    public async Task Le_remplissage_de_la_migration_donne_la_meme_recherche()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new SqlServerConfigurator());
+        await AccentInsensitiveSearchScenarios.BackfillMatchesTheCSharpFormAsync(harness, DatabaseProvider.SqlServer, Database("rsb"));
     }
 
     [SkippableFact]

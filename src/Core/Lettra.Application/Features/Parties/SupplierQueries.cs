@@ -9,10 +9,12 @@ using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Application.Features.Parties;
 
-/// <summary>Lister les fournisseurs du dossier, par page.</summary>
-public sealed record ListSuppliersQuery(DossierId Dossier, int Page = 1, int PageSize = 50)
+/// <summary>Lister les fournisseurs du dossier, par page, filtrés sur le nom (sans accents ni casse).</summary>
+public sealed record ListSuppliersQuery(DossierId Dossier, int Page = 1, int PageSize = 50, string? Search = null)
     : IQuery<Result<PagedResponse<SupplierSummary>>>, IRequirePermission
 {
+    public const int MaxSearchLength = 100;
+
     public const int MaxPageSize = 200;
 
     public Permission Permission => Permission.TiersConsulter;
@@ -30,7 +32,13 @@ internal sealed class ListSuppliersValidator : IValidator<ListSuppliersQuery>
     public IReadOnlyList<Error> Validate(ListSuppliersQuery instance)
     {
         ArgumentNullException.ThrowIfNull(instance);
-        return Paging.Validate(instance.Page, instance.PageSize, ListSuppliersQuery.MaxPageSize);
+        List<Error> errors = [.. Paging.Validate(instance.Page, instance.PageSize, ListSuppliersQuery.MaxPageSize)];
+        if (instance.Search is { Length: > ListSuppliersQuery.MaxSearchLength })
+        {
+            errors.Add(Error.Validation(ErrorCodes.Validation.TooLong, nameof(instance.Search)));
+        }
+
+        return errors;
     }
 }
 
@@ -40,7 +48,7 @@ internal sealed class ListSuppliersHandler(ISupplierReadStore store)
     public async Task<Result<PagedResponse<SupplierSummary>>> HandleAsync(ListSuppliersQuery query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
-        return await store.ListAsync(query.Page, query.PageSize, cancellationToken).ConfigureAwait(false);
+        return await store.ListAsync(query.Search, query.Page, query.PageSize, cancellationToken).ConfigureAwait(false);
     }
 }
 
