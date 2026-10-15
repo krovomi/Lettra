@@ -33,6 +33,17 @@ public sealed class RedactionTests
         DossierDataScrubber.Scrub(value).Should().Be(value);
 
     [Fact]
+    public void Un_long_texte_sans_donnee_reste_lisible_et_ne_depasse_pas_le_delai()
+    {
+        // Ce que journalise une migration : de longues suites d'identifiants SQL, sans « @ ».
+        string sql = string.Concat(Enumerable.Repeat("UPDATE \"Customers\" SET \"SearchKey\" = REPLACE(UPPER(\"Name\"), 'É', 'E'); ", 2_000))
+            + new string('a', 200_000);
+
+        DossierDataScrubber.Scrub(sql).Should().Be(sql);
+        DossierDataScrubber.LooksSensitive(sql).Should().BeFalse();
+    }
+
+    [Fact]
     public void Les_attributs_interdits_et_les_valeurs_sensibles_ne_sortent_pas_des_traces()
     {
         List<Activity> exported = [];

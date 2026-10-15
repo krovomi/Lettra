@@ -28,16 +28,50 @@ internal static partial class DossierDataScrubber
         || key.StartsWith("http.request.header.", StringComparison.Ordinal)
         || key.StartsWith("http.response.header.", StringComparison.Ordinal);
 
-    public static string Scrub(string value) =>
-        string.IsNullOrEmpty(value) ? value : SensitivePattern().Replace(value, Mask);
+    /// <remarks>
+    /// Ne lève jamais : une exception remonterait dans le journal appelant (une migration, une requête). Si
+    /// l'expression dépasse son délai, la valeur entière est masquée.
+    /// </remarks>
+    public static string Scrub(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return value;
+        }
 
-    public static bool LooksSensitive(string value) =>
-        !string.IsNullOrEmpty(value) && SensitivePattern().IsMatch(value);
+        try
+        {
+            return SensitivePattern().Replace(value, Mask);
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            return Mask;
+        }
+    }
+
+    public static bool LooksSensitive(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return false;
+        }
+
+        try
+        {
+            return SensitivePattern().IsMatch(value);
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            return true;
+        }
+    }
 
     // E-mail ; IBAN (2 lettres, 2 chiffres, 11 à 30 alphanumériques) ; TVA intracommunautaire française ;
     // suites de 9 (SIREN) ou 14 (SIRET) chiffres isolées, éventuellement groupées par espaces.
+    // L'e-mail ne s'essaie qu'en début de mot : sinon un long texte sans « @ » (SQL de migration) coûte
+    // un temps quadratique et dépasse le délai.
     [GeneratedRegex(
-        @"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}"
+        @"(?<![A-Za-z0-9._%+\-])[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}"
         + @"|\b[A-Z]{2}\d{2}(?:\s?[A-Z0-9]{4}){2,7}(?:\s?[A-Z0-9]{1,4})?\b"
         + @"|\bFR\s?[0-9A-Z]{2}\s?\d{9}\b"
         + @"|(?<![\d-])\d{3}\s?\d{3}\s?\d{3}(?:\s?\d{5})?(?![\d-])",
