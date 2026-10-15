@@ -128,6 +128,27 @@ public sealed class RealmConfigurationTests
     }
 
     [Fact]
+    public void L_application_de_bureau_est_un_client_public_PKCE_avec_retour_par_la_boucle_locale()
+    {
+        // LoopbackAuthorizationBrowser (Lettra.UI.Gateway.Http) écoute sur http://127.0.0.1:{port libre}/callback
+        // (RFC 8252 §7.3). Keycloak ignore le port d'une adresse de bouclage : l'URL enregistrée n'en porte pas, et
+        // ni joker ni « localhost » (résolution DNS détournable, RFC 8252 §8.3).
+        JsonElement maui = Client("lettra-maui");
+
+        Bool(maui, "publicClient").Should().BeTrue("une application installée ne peut pas garder de secret");
+        maui.TryGetProperty("secret", out _).Should().BeFalse();
+        Bool(maui, "standardFlowEnabled").Should().BeTrue();
+        maui.GetProperty("attributes").GetProperty("pkce.code.challenge.method").GetString().Should().Be("S256");
+
+        string[] redirects = maui.GetProperty("redirectUris").EnumerateArray().Select(u => u.GetString()!).ToArray();
+        redirects.Should().Contain("http://127.0.0.1/callback");
+        redirects.Where(u => u.StartsWith("http:", StringComparison.Ordinal)).Should().OnlyContain(u =>
+            new Uri(u).IsLoopback && new Uri(u).Host == "127.0.0.1" && new Uri(u).IsDefaultPort && new Uri(u).AbsolutePath == "/callback");
+        redirects.Should().NotContain(u => u.StartsWith("https:", StringComparison.Ordinal),
+            "le client public ne revient jamais vers un site web");
+    }
+
+    [Fact]
     public void Le_BFF_est_confidentiel_et_son_secret_vient_de_l_environnement()
     {
         JsonElement bff = Client("lettra-bff");
@@ -188,6 +209,17 @@ public sealed class KeycloakRealmImportTests
         using HttpResponseMessage discovery = await http.GetAsync(new Uri("/realms/lettra/.well-known/openid-configuration", UriKind.Relative));
         discovery.StatusCode.Should().Be(HttpStatusCode.OK);
 
+        // Application de bureau : retour par la boucle locale sur un port tiré au hasard, PKCE S256 exigé.
+        using var handler = new HttpClientHandler { AllowAutoRedirect = false };
+        using var browser = new HttpClient(handler, disposeHandler: false) { BaseAddress = http.BaseAddress };
+        using HttpResponseMessage loopback = await browser.GetAsync(MauiAuthorize("http://127.0.0.1:49731/callback", pkce: true));
+        loopback.StatusCode.Should().Be(HttpStatusCode.OK, "Keycloak ignore le port d'une adresse de bouclage (RFC 8252 §7.3)");
+        using HttpResponseMessage otherHost = await browser.GetAsync(MauiAuthorize("http://127.0.0.2:49731/callback", pkce: true));
+        otherHost.StatusCode.Should().Be(HttpStatusCode.BadRequest, "seule la boucle locale enregistrée est acceptée");
+        using HttpResponseMessage withoutPkce = await browser.GetAsync(MauiAuthorize("http://127.0.0.1:49731/callback", pkce: false));
+        withoutPkce.StatusCode.Should().NotBe(HttpStatusCode.OK, "sans code_challenge, pas de page de connexion");
+        (withoutPkce.Headers.Location?.Query ?? string.Empty).Should().NotContain("code=");
+
         using HttpResponseMessage tokenResponse = await http.PostAsync(
             new Uri("/realms/master/protocol/openid-connect/token", UriKind.Relative),
             new FormUrlEncodedContent(new Dictionary<string, string>
@@ -223,4 +255,10 @@ public sealed class KeycloakRealmImportTests
         (await scopesResponse.Content.ReadFromJsonAsync<JsonElement>()).EnumerateArray()
             .Select(scope => scope.GetProperty("name").GetString()).Should().Contain("offline_access");
     }
+
+    private static Uri MauiAuthorize(string redirectUri, bool pkce) => new(
+        "/realms/lettra/protocol/openid-connect/auth?client_id=lettra-maui&response_type=code&scope=openid"
+        + "&redirect_uri=" + Uri.EscapeDataString(redirectUri)
+        + (pkce ? "&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256" : string.Empty),
+        UriKind.Relative);
 }

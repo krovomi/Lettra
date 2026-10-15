@@ -5,5 +5,8 @@ dependencies:
 - name: lettra-worker
   repository: file://../lettra-worker
   version: 0.1.0
-digest: sha256:55321ddf7be2863bdcda8c887c0476c835a7ed0da6f386e8f27e108d7c3d26a4
-generated: "2026-10-14T21:03:50.500938476Z"
+- name: lettra-keycloak
+  repository: file://../lettra-keycloak
+  version: 0.1.0
+digest: sha256:5fe8e39eb2cb1785df8b608cbca197c3f7f56767c2fe3fb52ea30d957d22e40a
+generated: "2026-10-15T18:15:00.000000000Z"

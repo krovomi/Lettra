@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+  labels:
+    {{- include "lettra-keycloak.labels" . | nindent 4 }}
+spec:
+  selector:
+    {{- include "lettra-keycloak.selector" . | nindent 4 }}
+  ports:
+    - { name: http, port: {{ .Values.service.port }}, targetPort: http }
+    - { name: management, port: 9000, targetPort: management }
+{{- if and .Values.podDisruptionBudget.enabled (gt (int .Values.replicas) 1) }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: keycloak
+  labels:
+    {{- include "lettra-keycloak.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "lettra-keycloak.selector" . | nindent 6 }}
+{{- end }}

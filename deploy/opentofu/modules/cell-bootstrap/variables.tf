@@ -42,7 +42,7 @@ variable "alerting" {
 }
 
 variable "bff_client_secret" {
-  description = "Secret du client BFF dans Keycloak (Lettra__Identity__Oidc__BffClientSecret), null s'il n'est pas encore créé."
+  description = "Secret du client lettra-bff, partagé par Keycloak et l'API (Lettra__Identity__Oidc__BffClientSecret) ; null : tiré au hasard."
   type        = string
   default     = null
   sensitive   = true

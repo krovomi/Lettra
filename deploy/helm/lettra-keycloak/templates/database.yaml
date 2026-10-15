@@ -1,0 +1,60 @@
+{{- with .Values.database.cnpg }}
+{{- if .enabled }}
+# Base dédiée à Keycloak (comptes, organisations, facteurs enrôlés) : un cluster CloudNativePG à part, hors du budget
+# des dossiers. L'opérateur crée le secret {{ .name }}-app (utilisateur et mot de passe), jamais versionné.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: {{ .name }}
+  labels:
+    {{- include "lettra-keycloak.labels" $ | nindent 4 }}
+spec:
+  instances: {{ .instances }}
+  imageName: {{ .image }}
+  primaryUpdateStrategy: unsupervised
+  bootstrap:
+    initdb:
+      database: {{ $.Values.database.name }}
+      owner: keycloak
+  postgresql:
+    parameters:
+      # Aucune valeur de paramètre dans les journaux (identifiants, adresses e-mail).
+      log_parameter_max_length: "0"
+      log_parameter_max_length_on_error: "0"
+  storage:
+    size: {{ .storage }}
+    {{- with .storageClass }}
+    storageClass: {{ . }}
+    {{- end }}
+  monitoring:
+    enablePodMonitor: {{ .monitoring }}
+  {{- if .backup.enabled }}
+  backup:
+    retentionPolicy: {{ .backup.retention | quote }}
+    barmanObjectStore:
+      destinationPath: {{ printf "%s/%s" .backup.destinationPath .name | quote }}
+      endpointURL: {{ .backup.endpointURL | quote }}
+      s3Credentials:
+        accessKeyId: { name: {{ .backup.credentialsSecret }}, key: ACCESS_KEY_ID }
+        secretAccessKey: { name: {{ .backup.credentialsSecret }}, key: ACCESS_SECRET_KEY }
+      wal:
+        compression: gzip
+        encryption: AES256
+      data:
+        compression: gzip
+        encryption: AES256
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: {{ .name }}-quotidienne
+  labels:
+    {{- include "lettra-keycloak.labels" $ | nindent 4 }}
+spec:
+  schedule: {{ .backup.schedule | quote }}
+  backupOwnerReference: self
+  cluster:
+    name: {{ .name }}
+  {{- end }}
+{{- end }}
+{{- end }}
