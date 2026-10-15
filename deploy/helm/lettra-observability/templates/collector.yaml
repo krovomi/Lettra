@@ -7,6 +7,8 @@ metadata:
 data:
   collector.yaml: |-
 {{ .Files.Get "files/collector.yaml" | indent 4 }}
+  backends.yaml: |-
+{{ include "lettra-observability.collectorBackends" . | indent 4 }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -25,7 +27,7 @@ spec:
       labels:
         app.kubernetes.io/name: lettra-otel-collector
       annotations:
-        checksum/config: {{ .Files.Get "files/collector.yaml" | sha256sum }}
+        checksum/config: {{ print (.Files.Get "files/collector.yaml") (include "lettra-observability.collectorBackends" .) | sha256sum }}
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -35,11 +37,17 @@ spec:
       containers:
         - name: collector
           image: {{ .Values.collector.image }}
-          args: ["--config=/conf/collector.yaml"]
+          # Base commune (files/collector.yaml), puis destinations de la cellule (backends.yaml) : le second complète le premier.
+          args: ["--config=/conf/collector.yaml", "--config=/conf/backends.yaml"]
           env:
             - { name: PROMETHEUS_OTLP, value: {{ .Values.collector.prometheusOtlp | quote }} }
-            - { name: LOKI_OTLP, value: {{ .Values.collector.lokiOtlp | quote }} }
-            - { name: TEMPO_OTLP, value: {{ .Values.collector.tempoOtlp | quote }} }
+            {{- with .Values.collector.fournisseur }}
+            {{- if and .enabled .authSecret }}
+            - name: FOURNISSEUR_AUTORISATION
+              valueFrom:
+                secretKeyRef: { name: {{ .authSecret | quote }}, key: authorization }
+            {{- end }}
+            {{- end }}
           ports:
             - { name: otlp-grpc, containerPort: 4317 }
             - { name: otlp-http, containerPort: 4318 }

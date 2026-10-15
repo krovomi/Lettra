@@ -1,0 +1,43 @@
+# Règles du scan ZAP de base (zap-baseline.py -c) sur la démonstration : identifiant<TAB>niveau<TAB>nom.
+# Niveaux : FAIL (le scan échoue), WARN (signalé, accepté), INFO, IGNORE (accepté, non signalé).
+#
+# Toute alerte de risque faible ou plus dont la règle n'est pas listée ici fait échouer le job (verifier.sh) :
+# une nouvelle constatation est corrigée dans l'API, ou acceptée ici avec sa justification.
+#
+# --- Durcissements en place : toute régression échoue (SecurityHeaders.cs, LettraAuthentication.cs) ---
+# CSP servie sur toutes les réponses, compatible Blazor WebAssembly ('wasm-unsafe-eval', aucun script en ligne).
+10038	FAIL	(Content Security Policy (CSP) Header Not Set)
+# Affichage dans un cadre refusé (X-Frame-Options DENY et frame-ancestors 'none').
+10020	FAIL	(Missing Anti-clickjacking Header)
+10021	FAIL	(X-Content-Type-Options Header Missing)
+10063	FAIL	(Permissions Policy Header Not Set)
+# Isolation d'origine : COOP, CORP et COEP posés sur toutes les réponses.
+90004	FAIL	(Insufficient Site Isolation Against Spectre Vulnerability)
+# Kestrel n'annonce plus sa version (AddServerHeader = false).
+10036	FAIL	(Server Leaks Version Information via "Server" HTTP Response Header Field)
+10037	FAIL	(Server Leaks Information via "X-Powered-By" HTTP Response Header Field(s))
+# Cookie de session : __Host-, HttpOnly, Secure, SameSite=Strict.
+10010	FAIL	(Cookie No HttpOnly Flag)
+10011	FAIL	(Cookie Without Secure Flag)
+10054	FAIL	(Cookie without SameSite Attribute)
+10098	FAIL	(Cross-Domain Misconfiguration)
+10017	FAIL	(Cross-Domain JavaScript Source File Inclusion)
+10023	FAIL	(Information Disclosure - Debug Error Messages)
+#
+# Directives de la CSP (unsafe-inline, jokers, directives sans repli) : aucune constatation à ce jour.
+# style-src-attr 'unsafe-inline' reste admis pour les attributs style des composants Blazor ; les scripts et les
+# feuilles de style sont limités à l'origine.
+10055	FAIL	(CSP)
+#
+# --- Constatations relevées et acceptées, avec leur justification ---
+# Commentaires dans les scripts du framework .NET (blazor.webassembly.js, dotnet.js) : code tiers publié, sans secret.
+10027	IGNORE	(Information Disclosure - Suspicious Comments)
+# Application monopage (Blazor) : constat informatif ; le scan de base suit les liens statiques, l'application est
+# couverte par le parcours Playwright de la démonstration.
+10109	IGNORE	(Modern Web Application)
+# Fichiers statiques de l'enveloppe (publics, empreintés) : leur mise en cache est voulue (PWA hors ligne). Les
+# réponses de l'API et du BFF portent Cache-Control: no-store (la seule réponse « non cacheable » relevée).
+10049	IGNORE	(Storable and Cacheable Content)
+# Version de ZAP figée dans le workflow (ZAP_IMAGE) pour des résultats reproductibles : la montée de version est un
+# changement délibéré. Laissé en avertissement pour rester visible dans les rapports.
+10116	WARN	(ZAP is Out of Date)

@@ -25,6 +25,18 @@ internal sealed class InMemoryDraftStore : IOfflineDraftStore
 
     public Dictionary<string, string> Cache { get; } = [];
 
+    /// <summary>Utilisateur et dossier connus (sinon le stockage du navigateur est indisponible).</summary>
+    public bool Available { get; set; } = true;
+
+    public Task<bool> IsAvailableAsync(CancellationToken cancellationToken) => Task.FromResult(Available);
+
+    public Task ClearAsync(CancellationToken cancellationToken)
+    {
+        Drafts.Clear();
+        Cache.Clear();
+        return Task.CompletedTask;
+    }
+
     public Task<IReadOnlyList<OfflineDraft>> ListAsync(CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<OfflineDraft>>([.. Drafts.Values]);
 
@@ -50,13 +62,23 @@ internal sealed class InMemoryDraftStore : IOfflineDraftStore
     }
 }
 
+/// <summary>Dossier ouvert, que le test change.</summary>
+internal sealed class MutableDossierSelection(Guid? dossierId) : IDossierSelection
+{
+    public Guid? CurrentDossierId { get; set; } = dossierId;
+}
+
 public sealed class OfflineDraftsTests : IDisposable
 {
+    private static readonly Guid DossierA = Guid.Parse("0199e3a1-0000-7000-8000-00000000000a");
+    private static readonly Guid DossierB = Guid.Parse("0199e3a1-0000-7000-8000-00000000000b");
+
     private static readonly DocumentLineRequest Conseil = new() { Designation = "Conseil", UnitCode = "HUR", Quantity = 2m, UnitPriceExclTax = 100m };
 
     private readonly InMemoryDraftStore _store = new();
     private readonly FakeQuotesGateway _quotes = new();
     private readonly FakeInvoicesGateway _invoices = new();
+    private readonly MutableDossierSelection _dossier = new(DossierA);
     private readonly ServiceProvider _services;
     private OfflineDrafts _drafts;
     private DateTimeOffset _now = new(2026, 10, 15, 9, 0, 0, TimeSpan.Zero);
@@ -66,6 +88,7 @@ public sealed class OfflineDraftsTests : IDisposable
         _services = new ServiceCollection()
             .AddSingleton<IQuotesGateway>(_quotes)
             .AddSingleton<IInvoicesGateway>(_invoices)
+            .AddSingleton<IDossierSelection>(_dossier)
             .BuildServiceProvider();
         _drafts = Recharger();
     }
@@ -99,7 +122,7 @@ public sealed class OfflineDraftsTests : IDisposable
     [Fact]
     public async Task Une_copie_alteree_sur_l_appareil_n_est_pas_envoyee()
     {
-        Guid id = await _drafts.KeepQuoteAsync(null, null, Devis(Conseil), "Dupont SARL", CancellationToken.None);
+        Guid id = (await _drafts.KeepQuoteAsync(null, null, Devis(Conseil), "Dupont SARL", CancellationToken.None)).GetValueOrDefault();
         _store.Drafts[id] = _store.Drafts[id] with { Payload = _store.Drafts[id].Payload.Replace("100", "1", StringComparison.Ordinal) };
 
         OfflineDraftSyncReport bilan = await _drafts.SyncAsync(CancellationToken.None);
@@ -126,7 +149,7 @@ public sealed class OfflineDraftsTests : IDisposable
     public async Task Une_piece_modifiee_au_cabinet_entre_temps_reste_sur_l_appareil_avec_le_conflit()
     {
         QuoteResponse devis = _quotes.Add(QuoteStatusDto.Draft, null, Conseil);
-        Guid id = await _drafts.KeepQuoteAsync(null, devis, Devis(Conseil with { Quantity = 3m }), "Dupont SARL", CancellationToken.None);
+        Guid id = (await _drafts.KeepQuoteAsync(null, devis, Devis(Conseil with { Quantity = 3m }), "Dupont SARL", CancellationToken.None)).GetValueOrDefault();
         // Seconde saisie hors ligne : la version de base reste celle de la première.
         await _drafts.KeepQuoteAsync(id, devis with { Version = 7 }, Devis(Conseil with { Quantity = 4m }), null, CancellationToken.None);
         _store.Drafts[id].BaseVersion.Should().Be(1);
@@ -170,6 +193,49 @@ public sealed class OfflineDraftsTests : IDisposable
         refuse.Should().BeNull("seul un serveur injoignable rend la copie gardée");
     }
 
+    [Fact]
+    public async Task Un_brouillon_ne_part_que_vers_le_dossier_de_sa_saisie()
+    {
+        Guid id = (await _drafts.KeepQuoteAsync(null, null, Devis(Conseil), "Dupont SARL", CancellationToken.None))!.Value;
+        _store.Drafts[id].DossierId.Should().Be(DossierA);
+        _dossier.CurrentDossierId = DossierB;
+
+        OfflineDraftSyncReport bilan = await _drafts.SyncAsync(CancellationToken.None);
+
+        bilan.Should().Be(new OfflineDraftSyncReport(0, 1, false));
+        _quotes.Creations.Should().BeEmpty();
+        _store.Drafts[id].LastError.Should().Be(OfflineDrafts.OtherDossierCode);
+
+        _dossier.CurrentDossierId = DossierA;
+        (await _drafts.SyncAsync(CancellationToken.None)).Sent.Should().Be(1);
+        _quotes.Creations.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task Sans_utilisateur_ni_dossier_connus_rien_n_est_garde_sur_l_appareil()
+    {
+        _store.Available = false;
+        (await _drafts.KeepQuoteAsync(null, null, Devis(Conseil), null, CancellationToken.None)).Should().BeNull();
+
+        _store.Available = true;
+        _dossier.CurrentDossierId = null;
+        (await _drafts.KeepQuoteAsync(null, null, Devis(Conseil), null, CancellationToken.None)).Should().BeNull();
+
+        _store.Drafts.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task La_deconnexion_efface_les_brouillons_et_le_cache_de_l_appareil()
+    {
+        await _drafts.KeepQuoteAsync(null, null, Devis(Conseil), "Dupont SARL", CancellationToken.None);
+        _store.Cache["billing.reference"] = "{}";
+
+        await _drafts.ClearAsync(CancellationToken.None);
+
+        _store.Drafts.Should().BeEmpty();
+        _store.Cache.Should().BeEmpty();
+    }
+
     public void Dispose()
     {
         _drafts.Dispose();
@@ -199,6 +265,7 @@ public sealed class OfflineDraftEditorTests : BunitContext
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddLettraUi();
         Services.AddSingleton<IOfflineDraftStore>(_store);
+        Services.AddSingleton<IDossierSelection>(new FixedDossierSelection(Guid.Parse("0199e3a1-0000-7000-8000-00000000000a")));
         Services.AddOfflineDrafts();
         Services.AddSingleton<IQuotesGateway>(_quotes);
         Services.AddSingleton<IInvoicesGateway>(_invoices);

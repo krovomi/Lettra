@@ -21,7 +21,12 @@ public enum SessionModeDto
 /// <param name="DisplayName">Nom affiché de l'utilisateur, s'il est connecté.</param>
 /// <param name="LocalAccountExists">Mode local : le compte du poste a déjà été créé (sinon l'UI propose de le créer).</param>
 /// <param name="SignOutUrl">Navigateur : adresse de déconnexion du BFF, protégée par un jeton propre à la session.</param>
-public sealed record SessionResponse(bool IsAuthenticated, SessionModeDto Mode, string? DisplayName, bool LocalAccountExists, string? SignOutUrl = null);
+/// <param name="DeviceStorageKey">
+/// Navigateur : clé opaque et stable de l'utilisateur (empreinte de son identifiant), qui range ses brouillons hors ligne
+/// à part de ceux des autres utilisateurs du même navigateur. Elle ne révèle pas qui il est.
+/// </param>
+public sealed record SessionResponse(
+    bool IsAuthenticated, SessionModeDto Mode, string? DisplayName, bool LocalAccountExists, string? SignOutUrl = null, string? DeviceStorageKey = null);
 
 /// <summary>Création du compte local du poste, au premier lancement. Propriétés modifiables pour <c>EditForm</c>.</summary>
 public sealed record CreateLocalAccountRequest : IValidatableObject

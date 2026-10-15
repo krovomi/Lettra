@@ -7,6 +7,7 @@ lettra-api:
   environment: pr
   oidc:
     authority: https://auth.recette.lettra.fr/realms/lettra  # Keycloak de la recette, partagé par les PR
+    requireHttpsMetadata: true  # hors de la cellule de l'environnement : par son adresse publique, en HTTPS
   existingSecret: ""
   secretEnv:
     ConnectionStrings__Redis: { secret: "" }  # pas de Redis dans un environnement de PR
@@ -29,6 +30,8 @@ lettra-api:
     - { name: data, mountPath: /data }
 lettra-worker:
   enabled: false
+lettra-keycloak:
+  enabled: false  # Keycloak de la recette
 postgres:
   enabled: false
 redis:

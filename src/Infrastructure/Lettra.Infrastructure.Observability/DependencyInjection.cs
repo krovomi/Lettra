@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry;
+using OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -28,6 +29,15 @@ public static class DependencyInjection
 
     /// <summary>Variable standard OpenTelemetry : sa présence active l'export.</summary>
     public const string OtlpEndpointVariable = "OTEL_EXPORTER_OTLP_ENDPOINT";
+
+    /// <summary>
+    /// Environnement, sous le nom des conventions sémantiques actuelles (repris par Prometheus) et sous l'ancien nom,
+    /// encore attendu par une partie des outils (Grafana, Tempo).
+    /// </summary>
+    public const string EnvironmentAttribute = "deployment.environment.name";
+
+    /// <summary>Ancien nom de l'attribut d'environnement, émis en double.</summary>
+    public const string LegacyEnvironmentAttribute = "deployment.environment";
 
     private static readonly string[] UnobservedPaths = ["/health", "/metrics"];
 
@@ -54,7 +64,8 @@ public static class DependencyInjection
                 .AddAttributes(
                 [
                     new(CellAttribute, options.Cell),
-                    new("deployment.environment.name", options.Environment),
+                    new(EnvironmentAttribute, options.Environment),
+                    new(LegacyEnvironmentAttribute, options.Environment),
                     new(LettraTelemetry.Attributes.DeploymentMode, (int)mode),
                 ]))
             .WithTracing(tracing => tracing
@@ -74,16 +85,47 @@ public static class DependencyInjection
                     Boundaries = [.. SloBuckets.HttpServerDuration],
                 }));
 
-        if (IsExportEnabled(configuration, options))
+        // Un seul exportateur OTLP pour les trois signaux, ajouté après les processeurs de filtrage : il ne voit que
+        // des signaux déjà nettoyés. Les variables OTEL_EXPORTER_OTLP_* (charts Helm) l'emportent sur Lettra:Observability:Otlp.
+        switch (ExportSourceOf(configuration, options))
         {
-            otel.UseOtlpExporter();
+            case OtlpExportSource.Environment:
+                otel.UseOtlpExporter();
+                break;
+            case OtlpExportSource.Configuration:
+                otel.UseOtlpExporter(ProtocolOf(options.Otlp.Protocol), options.Otlp.Endpoint!);
+                break;
         }
 
         return services;
     }
 
     internal static bool IsExportEnabled(IConfiguration configuration, ObservabilityOptions options) =>
-        options.ExportEnabled || !string.IsNullOrWhiteSpace(configuration[OtlpEndpointVariable]);
+        ExportSourceOf(configuration, options) != OtlpExportSource.None;
+
+    internal static OtlpExportSource ExportSourceOf(IConfiguration configuration, ObservabilityOptions options)
+    {
+        if (!string.IsNullOrWhiteSpace(configuration[OtlpEndpointVariable]))
+        {
+            return OtlpExportSource.Environment;
+        }
+
+        if (options.Otlp.Endpoint is not null)
+        {
+            return OtlpExportSource.Configuration;
+        }
+
+        // ExportEnabled seul : adresse par défaut d'OpenTelemetry (collecteur local, localhost:4317).
+        return options.ExportEnabled ? OtlpExportSource.Environment : OtlpExportSource.None;
+    }
+
+    internal static OtlpExportProtocol ProtocolOf(string protocol) => protocol.Trim().ToLowerInvariant() switch
+    {
+        "grpc" => OtlpExportProtocol.Grpc,
+        "http/protobuf" or "http" => OtlpExportProtocol.HttpProtobuf,
+        _ => throw new InvalidOperationException(
+            $"{ObservabilityOptions.SectionName}:Otlp:Protocol : « {protocol} » inconnu (grpc ou http/protobuf)."),
+    };
 
     private static bool IsObserved(HttpContext context) => IsObserved(context.Request.Path);
 
@@ -92,4 +134,17 @@ public static class DependencyInjection
 
     private static string VersionOf(Assembly? assembly) =>
         assembly?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "0.0.0";
+}
+
+/// <summary>Origine du point de collecte OTLP.</summary>
+internal enum OtlpExportSource
+{
+    /// <summary>Aucun : rien ne sort du processus.</summary>
+    None,
+
+    /// <summary>Variables standard <c>OTEL_EXPORTER_OTLP_*</c> (ou leurs valeurs par défaut).</summary>
+    Environment,
+
+    /// <summary>Sous-section <c>Lettra:Observability:Otlp</c>.</summary>
+    Configuration,
 }

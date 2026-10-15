@@ -4,3 +4,4 @@ helm/*/charts/
 .terraform.lock.hcl.bak
 local/.run/
 .terraform.lock.hcl
+tests/kind/.run/

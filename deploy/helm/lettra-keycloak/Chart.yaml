@@ -1,0 +1,6 @@
+apiVersion: v2
+name: lettra-keycloak
+description: Keycloak de la cellule (ADR-0010, annexe F §2) - realm lettra versionné, une organisation par cabinet, MFA obligatoire, base PostgreSQL dédiée (CloudNativePG). Image officielle quay.io/keycloak/keycloak.
+type: application
+version: 0.1.0
+appVersion: "26.4"

@@ -1,0 +1,129 @@
+{{- if not .Values.hostname }}{{ fail "hostname est obligatoire : adresse publique de Keycloak, émetteur des jetons (ex. https://auth.lettra.fr)" }}{{ end -}}
+{{- if and .Values.realm.import (not .Values.publicUrl) }}{{ fail "publicUrl est obligatoire : origine publique de l'API, seule URL de retour du client lettra-bff" }}{{ end -}}
+{{- if not .Values.existingSecret }}{{ fail "existingSecret est obligatoire : mot de passe d'amorçage et secret du client BFF viennent du coffre, jamais de Git" }}{{ end -}}
+{{- if and (not .Values.database.cnpg.enabled) (or (not .Values.database.host) (not .Values.database.existingSecret)) }}{{ fail "database.host et database.existingSecret sont obligatoires sans cluster CloudNativePG" }}{{ end -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  labels:
+    {{- include "lettra-keycloak.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicas }}
+  revisionHistoryLimit: 5
+  strategy:
+    rollingUpdate: { maxUnavailable: 0, maxSurge: 1 }
+  selector:
+    matchLabels:
+      {{- include "lettra-keycloak.selector" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "lettra-keycloak.labels" . | nindent 8 }}
+      annotations:
+        # Un realm modifié redémarre Keycloak (l'import ne réécrit pas un realm existant : voir README).
+        checksum/realm: {{ .Files.Get "files/realm-lettra.json" | sha256sum }}
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+        # Utilisateur de l'image officielle.
+        runAsUser: 1000
+        runAsGroup: 0
+        seccompProfile: { type: RuntimeDefault }
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              {{- include "lettra-keycloak.selector" . | nindent 14 }}
+      initContainers:
+        # Attend la base (bash pur : l'image n'a ni curl ni nc) plutôt que de redémarrer en boucle au premier déploiement.
+        - name: attente-base
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              for i in $(seq 1 150); do
+                (exec 3<>"/dev/tcp/$DB_HOST/$DB_PORT") 2>/dev/null && exit 0
+                echo "base $DB_HOST:$DB_PORT injoignable, nouvel essai dans 2 s"; sleep 2
+              done
+              exit 1
+          env:
+            - { name: DB_HOST, value: {{ include "lettra-keycloak.dbHost" . | quote }} }
+            - { name: DB_PORT, value: {{ .Values.database.port | quote }} }
+          resources:
+            requests: { cpu: 10m, memory: 16Mi }
+            limits: { memory: 64Mi }
+          securityContext:
+            {{- include "lettra-keycloak.securityContext" . | nindent 12 }}
+            readOnlyRootFilesystem: true
+      containers:
+        - name: keycloak
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          # Mode production (jamais start-dev). L'import ignore un realm déjà présent en base.
+          args:
+            - start
+            {{- if .Values.realm.import }}
+            - --import-realm
+            {{- end }}
+          env:
+            - { name: KC_HOSTNAME, value: {{ .Values.hostname | quote }} }
+            - { name: KC_HOSTNAME_BACKCHANNEL_DYNAMIC, value: "true" }
+            # TLS terminé à la passerelle de la cellule ; HTTP seulement dans la cellule (NetworkPolicy ci-dessous).
+            - { name: KC_HTTP_ENABLED, value: "true" }
+            - { name: KC_PROXY_HEADERS, value: xforwarded }
+            - { name: KC_HEALTH_ENABLED, value: "true" }
+            - { name: KC_METRICS_ENABLED, value: "true" }
+            - { name: KC_FEATURES, value: organization }
+            - { name: KC_DB, value: postgres }
+            - { name: KC_DB_URL_HOST, value: {{ include "lettra-keycloak.dbHost" . | quote }} }
+            - { name: KC_DB_URL_PORT, value: {{ .Values.database.port | quote }} }
+            - { name: KC_DB_URL_DATABASE, value: {{ .Values.database.name | quote }} }
+            - name: KC_DB_USERNAME
+              valueFrom: { secretKeyRef: { name: {{ include "lettra-keycloak.dbSecret" . }}, key: username } }
+            - name: KC_DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: {{ include "lettra-keycloak.dbSecret" . }}, key: password } }
+            # Compte d'amorçage temporaire (master) : à remplacer par un administrateur nominatif avec MFA.
+            - { name: KC_BOOTSTRAP_ADMIN_USERNAME, value: {{ .Values.adminUsername | quote }} }
+            - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+              valueFrom: { secretKeyRef: { name: {{ .Values.existingSecret }}, key: admin-password } }
+            # Variables substituées à l'import du realm (deploy/keycloak/README.md).
+            - { name: LETTRA_PUBLIC_URL, value: {{ .Values.publicUrl | quote }} }
+            - name: LETTRA_BFF_CLIENT_SECRET
+              valueFrom: { secretKeyRef: { name: {{ .Values.existingSecret }}, key: bff-client-secret } }
+          ports:
+            - { name: http, containerPort: 8080 }
+            - { name: management, containerPort: 9000 }
+            # Cache distribué entre instances (JGroups, découverte par la base : jdbc-ping).
+            - { name: jgroups, containerPort: 7800 }
+          startupProbe:
+            httpGet: { path: /health/started, port: management }
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet: { path: /health/ready, port: management }
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /health/live, port: management }
+            periodSeconds: 15
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            {{- include "lettra-keycloak.securityContext" . | nindent 12 }}
+            # Système de fichiers inscriptible : Keycloak reconstruit son optimisation (lib/quarkus) au démarrage.
+            readOnlyRootFilesystem: false
+          {{- if .Values.realm.import }}
+          volumeMounts:
+            - { name: realm, mountPath: /opt/keycloak/data/import, readOnly: true }
+          {{- end }}
+      {{- if .Values.realm.import }}
+      volumes:
+        - name: realm
+          configMap:
+            name: keycloak-realm
+      {{- end }}

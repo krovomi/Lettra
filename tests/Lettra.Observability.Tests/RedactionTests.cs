@@ -70,16 +70,47 @@ public sealed class RedactionTests
             activity!.SetTag("url.query", "?email=secret@quenelle.fr");
             activity.SetTag("db.statement", "INSERT INTO customers VALUES ('Fromagerie Quenelle')");
             activity.SetTag("http.request.header.x-dossier", "abc");
+            activity.SetTag("db.query.parameter.name", "Fromagerie Quenelle");
+            activity.SetTag("client.address", "203.0.113.7");
+            activity.SetTag("url.full", "https://annuaire.test/v1/entreprises?nom=Fromagerie%20Quenelle#haut");
             activity.SetTag("lettra.error.code", "Customer.SirenRequired");
             activity.SetTag("note", "contact secret@quenelle.fr");
             activity.SetStatus(ActivityStatusCode.Error, "SIREN 552100554 refusé");
         }
 
         Activity span = exported.Should().ContainSingle().Subject;
-        span.TagObjects.Select(t => t.Key).Should().NotContain(["url.query", "db.statement", "http.request.header.x-dossier"]);
+        span.TagObjects.Select(t => t.Key).Should()
+            .NotContain(["url.query", "db.statement", "http.request.header.x-dossier", "db.query.parameter.name", "client.address"]);
+        span.GetTagItem("url.full").Should().Be("https://annuaire.test/v1/entreprises");
         span.GetTagItem("lettra.error.code").Should().Be("Customer.SirenRequired");
         span.GetTagItem("note").Should().Be("contact ***");
         span.StatusDescription.Should().Be("SIREN *** refusé");
+    }
+
+    [Fact]
+    public void Une_exception_tracee_ne_garde_que_son_type()
+    {
+        List<Activity> exported = [];
+        using ActivitySource source = new("Lettra.Tests.Redaction.Exception");
+        using (TracerProvider tracer = Sdk.CreateTracerProviderBuilder()
+            .AddSource(source.Name)
+            .AddProcessor(new ActivityRedactionProcessor())
+            .AddInMemoryExporter(exported)
+            .Build())
+        {
+            using Activity? activity = source.StartActivity("INSERT");
+            activity!.AddException(
+                new InvalidOperationException("violation d'unicité pour 'secret@quenelle.fr'"),
+                new TagList { { "lettra.error.code", "Customer.Duplicate" }, { "db.query.parameter.email", "secret@quenelle.fr" } });
+        }
+
+        ActivityEvent exception = exported.Should().ContainSingle().Subject.Events.Should().ContainSingle().Subject;
+        Dictionary<string, object?> tags = exception.Tags.ToDictionary(t => t.Key, t => t.Value);
+        tags.Should().Contain("exception.type", typeof(InvalidOperationException).FullName)
+            .And.Contain("exception.message", DossierDataScrubber.Mask)
+            .And.Contain("exception.stacktrace", DossierDataScrubber.Mask)
+            .And.Contain("lettra.error.code", "Customer.Duplicate")
+            .And.NotContainKey("db.query.parameter.email");
     }
 
     [Fact]

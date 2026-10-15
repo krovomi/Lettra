@@ -18,6 +18,9 @@ if (mode == DeploymentMode.IsolatedDesktop)
     throw new InvalidOperationException("L'API sert les modes 2 à 5 ; le mode 1 est l'application MAUI seule.");
 }
 
+// Pas d'en-tête Server : la pile technique n'a pas à être annoncée.
+builder.WebHost.ConfigureKestrel(o => o.AddServerHeader = false);
+
 builder.Services.AddLettra(builder.Configuration);
 builder.Services.AddLettraApiAuthentication(builder.Configuration);
 builder.Services.AddLettraRateLimiting(builder.Configuration);
@@ -41,6 +44,9 @@ WebApplication app = builder.Build();
 
 // Catalogue : migration (sauf en SaaS, où le Worker migre) et import des déclarations de la configuration.
 await app.Services.InitializeLettraAsync(app.Configuration, CancellationToken.None).ConfigureAwait(false);
+
+// En-têtes de sécurité (CSP, cadres, isolation d'origine) et pas de cache pour l'API et le BFF : avant tout le reste.
+app.UseLettraSecurityHeaders(app.Environment);
 
 // Aucune exception ni pile d'appel ne sort : un code générique, le détail reste dans la trace technique.
 app.UseExceptionHandler(errorApp => errorApp.Run(context => ErrorResults.Unexpected().ExecuteAsync(context)));

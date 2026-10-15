@@ -20,6 +20,10 @@ charts:
 # Image des applications Lettra : SHA du commit signé par la CI (cosign), jamais latest.
 imageTag: ""
 
+# Image officielle de Keycloak (quay.io/keycloak/keycloak), montée par PR comme les charts tiers. Même version que
+# le test d'import du realm (tests/Lettra.Identity.Tests) et la démonstration (deploy/demo).
+keycloakVersion: "26.4"
+
 syncPolicy:
   automated:
     prune: true

@@ -1,0 +1,75 @@
+# Keycloak de la cellule : fournisseur d'identité des modes 2 à 5 (ADR-0010). Voir README.md.
+image:
+  repository: quay.io/keycloak/keycloak
+  tag: "26.4"
+  pullPolicy: IfNotPresent
+
+cell: local
+environment: development
+
+# Adresse publique de Keycloak (servie par la passerelle de la cellule, TLS terminé à la passerelle) : elle fixe
+# l'émetteur (iss) des jetons et les pages vues par le navigateur. Les appels serveur à serveur (API → Keycloak, dans
+# la cellule) suivent l'adresse de la requête (hostname-backchannel-dynamic) : l'API passe par le Service interne.
+hostname: ""
+
+# Origine publique de l'API : donne la seule URL de retour du client lettra-bff (${LETTRA_PUBLIC_URL} du realm).
+publicUrl: ""
+
+# Secret existant (coffre de la cellule, créé par OpenTofu, module cell-bootstrap). Jamais de valeur dans Git.
+#   admin-password      mot de passe du compte d'amorçage (temporaire, à remplacer par un administrateur nominatif)
+#   bff-client-secret   secret du client confidentiel lettra-bff (même valeur que Lettra__Identity__Oidc__BffClientSecret de l'API)
+existingSecret: lettra-keycloak
+adminUsername: lettra-amorcage
+
+# Realm importé au premier démarrage (files/realm-lettra.json, lien vers deploy/keycloak/realm-lettra.json).
+# Un realm déjà présent en base n'est pas réécrit : les évolutions passent ensuite par l'administration (voir README).
+realm:
+  import: true
+
+replicas: 2
+
+# Base PostgreSQL dédiée à Keycloak (jamais la base d'un dossier ni le catalogue).
+database:
+  # Cluster CloudNativePG propre à Keycloak ; l'opérateur crée le secret <nom>-app (utilisateur et mot de passe).
+  cnpg:
+    enabled: true
+    name: keycloak-db
+    instances: 2
+    image: ghcr.io/cloudnative-pg/postgresql:16.10
+    storage: 5Gi
+    storageClass: ""
+    monitoring: true
+    backup:
+      enabled: false
+      # Stockage objet de la même région (verrou d'objet), identifiants dans le secret indiqué.
+      destinationPath: ""
+      endpointURL: ""
+      credentialsSecret: lettra-sauvegardes
+      schedule: "0 30 2 * * *"
+      retention: 30d
+  # Base externe (sur site, base managée) quand cnpg.enabled est faux : secret avec les clés username et password.
+  host: ""
+  port: 5432
+  name: keycloak
+  existingSecret: ""
+
+resources:
+  requests: { cpu: 250m, memory: 768Mi }
+  limits: { memory: 1536Mi }
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+networkPolicy:
+  enabled: true
+  # Espaces de noms autorisés à joindre Keycloak : passerelle de la cellule (navigateurs, applications).
+  ingressNamespaces: [lettra-passerelle]
+  # Pods du même espace de noms autorisés (l'API vérifie les jetons et sert le BFF).
+  ingressPods:
+    - { app.kubernetes.io/name: lettra-api }
+  # Supervision (métriques et santé sur le port de gestion).
+  monitoringNamespaces: [lettra-observabilite]
+
+service:
+  port: 8080

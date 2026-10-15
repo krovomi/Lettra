@@ -2,14 +2,24 @@
 environment: recette
 lettra-api:
   environment: recette
-  oidc:
-    authority: https://auth.recette.lettra.fr/realms/lettra
+  # Keycloak de la cellule par son Service interne (valeurs communes de lettra-cell) ; émetteur des jetons :
+  # https://auth.recette.lettra.fr/realms/lettra (lettra-keycloak.hostname).
   settings:
     Lettra__DeploymentMode: HostedSaaS
     Lettra__Observability__ServiceName: lettra-api
     Lettra__Supervision__PublicBaseAddress: https://recette.lettra.fr/
 lettra-worker:
   environment: recette
+lettra-keycloak:
+  environment: recette
+  hostname: https://auth.recette.lettra.fr
+  publicUrl: https://recette.lettra.fr
+  database:
+    cnpg:
+      backup:
+        enabled: true
+        destinationPath: s3://lettra-recette-sauvegardes
+        endpointURL: https://s3.gra.io.cloud.ovh.net
 postgres:
   clusters:
     - { name: pg-a, instances: 2, storage: 40Gi, activeDossierBudget: 60 }

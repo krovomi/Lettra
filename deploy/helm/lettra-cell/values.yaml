@@ -6,12 +6,26 @@ environment: development
 lettra-api:
   cell: local
   existingSecret: lettra-api
+  # Keycloak de la cellule (lettra-keycloak), joint par son Service interne. L'émetteur des jetons reste l'adresse
+  # publique (lettra-keycloak.hostname) : Keycloak la publie dans sa découverte et l'API la vérifie dans chaque jeton.
+  # HTTP sans TLS seulement dans la cellule, borné par la NetworkPolicy de Keycloak.
   oidc:
-    authority: https://auth.lettra.fr/realms/lettra
+    authority: http://keycloak:8080/realms/lettra
+    requireHttpsMetadata: false
 lettra-worker:
   enabled: true
   cell: local
   existingSecret: lettra-worker
+
+# Keycloak de la cellule (chart lettra-keycloak) : realm lettra versionné, une organisation par cabinet, MFA
+# obligatoire, base PostgreSQL dédiée. Adresses publiques renseignées par cellule (deploy/cells/<cellule>/values.yaml).
+lettra-keycloak:
+  enabled: true
+  cell: local
+  hostname: https://auth.lettra.fr
+  publicUrl: https://app.lettra.fr
+  # Secret existant (créé par OpenTofu, module cell-bootstrap) : clés « admin-password » et « bff-client-secret ».
+  existingSecret: lettra-keycloak
 
 # Bases des dossiers : une base par dossier, hébergée sur des clusters PostgreSQL (CloudNativePG) derrière PgBouncer.
 postgres:

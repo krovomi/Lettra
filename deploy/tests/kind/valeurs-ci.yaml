@@ -1,0 +1,59 @@
+# CI SEULEMENT (deploy/tests/kind/essai-keycloak.sh, job « keycloak-kind » de .github/workflows/deploy.yml).
+# Cellule réduite dans un cluster kind jetable : Keycloak (realm versionné, base CloudNativePG) et l'API qui le vérifie.
+# Ne jamais utiliser pour une vraie cellule : adresses localhost, une instance, ni Worker ni clusters de dossiers.
+# Aucun secret ici : le script tire au hasard ceux de lettra-keycloak et lettra-api à chaque essai.
+cell: ci-kind
+environment: ci
+
+lettra-api:
+  cell: ci-kind
+  environment: ci
+  image:
+    repository: ghcr.io/krovomi/lettra-api
+    tag: ci-kind  # construite par le job puis chargée dans kind
+  # oidc.authority : valeur commune de lettra-cell, http://keycloak:8080/realms/lettra (Keycloak de la cellule).
+  secretEnv:
+    ConnectionStrings__Redis: { secret: "" }
+  aspnetcoreEnvironment: Production
+  autoscaling: { enabled: false }
+  replicas: 1
+  podDisruptionBudget: { enabled: false }
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { memory: 768Mi }
+  # Comme un environnement de PR : mode 2, catalogue et dossier SQLite dans un volume éphémère.
+  settings:
+    Lettra__DeploymentMode: LocalNetwork
+    Lettra__Observability__ServiceName: lettra-api
+    ConnectionStrings__Catalog: Data Source=/data/lettra-catalogue.db
+    ConnectionStrings__DossierDemo: Data Source=/data/lettra-dossier-demo.db
+    # Clés DataProtection (état OIDC du BFF) dans le volume : le système de fichiers de l'image est en lecture seule.
+    HOME: /data
+  extraVolumes:
+    - name: data
+      emptyDir: { sizeLimit: 1Gi }
+  extraVolumeMounts:
+    - { name: data, mountPath: /data }
+
+lettra-worker:
+  enabled: false
+postgres:
+  enabled: false
+redis:
+  enabled: false
+
+lettra-keycloak:
+  cell: ci-kind
+  environment: ci
+  # Émetteur vu depuis le poste de la CI (redirection de port) ; l'API, elle, passe par le Service interne.
+  hostname: http://localhost:8080
+  publicUrl: http://localhost:8081
+  replicas: 1
+  resources:
+    requests: { cpu: 250m, memory: 768Mi }
+    limits: { memory: 1536Mi }
+  database:
+    cnpg:
+      instances: 1
+      storage: 1Gi
+      monitoring: false  # pas de Prometheus Operator dans kind

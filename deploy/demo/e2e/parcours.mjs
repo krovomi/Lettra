@@ -1,12 +1,14 @@
 // Parcours de la démonstration dans Chromium : connexion Keycloak (mot de passe + TOTP), écran des clients,
-// création d'un client, manifeste et service worker de la PWA. Données fictives uniquement.
+// création d'un client, manifeste et service worker de la PWA, rechargement hors ligne. Données fictives uniquement.
 //
 //   node parcours.mjs premier     enrôlement TOTP à la première connexion, puis seconde connexion (mot de passe + code)
 //   node parcours.mjs suivant     connexion d'un utilisateur déjà enrôlé (secret lu dans $SORTIE/totp-secret.txt)
+//   node parcours.mjs session     connexion (enrôlement si besoin) puis export du cookie de session pour k6
+//                                 ($SORTIE/session-cookie.txt, en-tête Cookie prêt à l'emploi ; deploy/tests/k6)
 //
 // Variables : LETTRA_URL (http://localhost:8080), LETTRA_DEMO_USER (demo), LETTRA_DEMO_PASSWORD, SORTIE (./sortie).
 import { createHmac } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
 
@@ -49,7 +51,10 @@ function totp(secret, step) {
 }
 
 const currentStep = () => Math.floor(Date.now() / 30_000);
-let lastStep = -1;
+// Dernière période utilisée, gardée entre deux exécutions : deux connexions successives dans la même période de
+// 30 s présenteraient le même code, que Keycloak refuse.
+const stepFile = join(out, 'totp-periode.txt');
+let lastStep = existsSync(stepFile) ? Number(readFileSync(stepFile, 'utf8')) : -1;
 
 // Keycloak refuse un code déjà utilisé : on attend la période suivante si besoin, et pas en fin de période.
 async function freshCode(secret) {
@@ -58,6 +63,7 @@ async function freshCode(secret) {
         const left = 30 - (Math.floor(Date.now() / 1000) % 30);
         if (step > lastStep && left > 5) {
             lastStep = step;
+            writeFileSync(stepFile, String(step));
             return totp(secret, step);
         }
         await new Promise(r => setTimeout(r, 1000));
@@ -212,6 +218,31 @@ async function checkPwa(page) {
     if (leaked.length) fail(`le service worker a mis en cache des données : ${leaked.join(', ')}`);
     if (!cached.some(u => u.endsWith('/index.html'))) fail(`enveloppe absente du cache (${cached.length} entrées)`);
     log(`cache du service worker : ${cached.length} fichiers statiques, aucun /api/ ni /bff/`);
+    await checkOffline(page, cached);
+}
+
+// Hors ligne (étape 4.5) : l'application se recharge depuis le cache du service worker, et le module des brouillons
+// écrit et relit IndexedDB sans réseau. L'envoi des brouillons au retour du réseau est couvert par les tests bUnit.
+async function checkOffline(page, cached) {
+    const draftsScript = `${baseUrl}/_content/Lettra.UI.Shared/lettra-drafts.js`;
+    if (!cached.includes(draftsScript)) fail(`module des brouillons absent du cache : ${draftsScript}`);
+    await page.context().setOffline(true);
+    try {
+        await page.reload();
+        await page.locator('#list-title, a[data-sign-in], .lettra-user').first().waitFor({ timeout: 60_000 });
+        await shot(page, 'hors-ligne');
+        const kept = await page.evaluate(async url => {
+            const drafts = await import(url);
+            await drafts.putDraft('parcours-e2e', JSON.stringify({ essai: 'parcours-e2e' }));
+            const listed = await drafts.listDrafts();
+            await drafts.deleteDraft('parcours-e2e');
+            return { online: drafts.isOnline(), listed: JSON.stringify(listed).includes('parcours-e2e') };
+        }, draftsScript);
+        if (kept.online || !kept.listed) fail(`brouillons hors ligne inattendus : ${JSON.stringify(kept)}`);
+        log('hors ligne : application rechargée depuis le cache, brouillon écrit puis relu dans IndexedDB');
+    } finally {
+        await page.context().setOffline(false);
+    }
 }
 
 try {
@@ -244,6 +275,23 @@ try {
             await page.locator('table.lettra-table td', { hasText: name }).first().waitFor({ timeout: 30_000 });
             log(`après redémarrage : le client « ${name} » est toujours là`);
             await checkPwa(page);
+        });
+    } else if (mode === 'session') {
+        // Session du BFF pour le test de charge : connexion complète (mot de passe + TOTP, MFA prouvée comme pour
+        // tout utilisateur), puis export du cookie __Host-lettra. Aucun réglage de Keycloak n'est assoupli.
+        await session('session-k6', async page => {
+            await signIn(page, 'session-k6');
+            if (existsSync(secretFile)) {
+                await secondFactor(page, readFileSync(secretFile, 'utf8').trim());
+            } else {
+                await reauthenticate(page, await enrol(page));
+            }
+            await landed(page, 'session-k6');
+            await createCustomer(page, `Client charge ${Date.now()}`);
+            const cookies = await page.context().cookies(baseUrl);
+            if (!cookies.some(c => c.name === '__Host-lettra')) fail('cookie de session __Host-lettra absent');
+            writeFileSync(join(out, 'session-cookie.txt'), cookies.map(c => `${c.name}=${c.value}`).join('; '), { mode: 0o600 });
+            log(`session exportée : ${cookies.length} cookie(s) pour ${baseUrl}`);
         });
     } else {
         fail(`mode inconnu : ${mode}`);
