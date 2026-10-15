@@ -1,5 +1,6 @@
 using Lettra.Domain.Parties;
 using Lettra.Domain.SharedKernel;
+using Lettra.Infrastructure.Persistence.Search;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -34,6 +35,7 @@ internal sealed class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         });
 
         builder.HasIndex(c => c.Name);
+        builder.HasSearchKey(c => c.Name);
         builder.HasIndex(c => c.Siren);
         builder.Ignore(c => c.DomainEvents);
     }

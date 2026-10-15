@@ -6,6 +6,7 @@ using Lettra.Infrastructure.Persistence.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Lettra.Infrastructure.Catalog;
 
@@ -38,6 +39,8 @@ public static class DependencyInjection
         services.AddSingleton<CatalogAuthorizationDirectory>();
         services.AddSingleton<IAuthorizationDirectory>(sp => sp.GetRequiredService<CatalogAuthorizationDirectory>());
         services.AddSingleton<IScopeMemberDirectory>(sp => sp.GetRequiredService<CatalogAuthorizationDirectory>());
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddSingleton<IAuthorizationAdministration, CatalogAuthorizationAdministration>();
         services.AddSingleton<CatalogInitializer>();
         services.AddSingleton<DossierMigrationOrchestrator>();
         return services;

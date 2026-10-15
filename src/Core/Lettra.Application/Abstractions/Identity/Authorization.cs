@@ -91,6 +91,27 @@ public interface IAuthorizationDirectory
 
     /// <summary>Situe une portée dans la hiérarchie ; <c>null</c> si elle n'existe pas.</summary>
     ValueTask<ScopePath?> GetScopePathAsync(AuthorizationScope scope, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Situe d'un coup plusieurs dossiers d'un cabinet (liste des dossiers accessibles). Par défaut, un dossier à la
+    /// fois ; la base Catalog le fait en une requête. Les dossiers introuvables ou d'un autre cabinet sont omis.
+    /// </summary>
+    async ValueTask<IReadOnlyList<ScopePath>> GetDossierPathsAsync(
+        OrganisationId cabinet, IReadOnlyCollection<DossierId> dossiers, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(dossiers);
+        List<ScopePath> paths = new(dossiers.Count);
+        foreach (DossierId dossier in dossiers)
+        {
+            ScopePath? path = await GetScopePathAsync(AuthorizationScope.ForDossier(dossier), cancellationToken).ConfigureAwait(false);
+            if (path is not null && path.Cabinet == cabinet)
+            {
+                paths.Add(path);
+            }
+        }
+
+        return paths;
+    }
 }
 
 /// <summary>

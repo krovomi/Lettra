@@ -43,6 +43,8 @@ public sealed class IntegrityUseCaseTests : IAsyncLifetime
         services.AddPartiesAndCatalogFakes(new InMemoryPartiesAndCatalog(), new FakeDirectories());
         services.AddIntegrityFakes(_integrity);
         services.AddSingleton<IDossierProvisioner>(new RecordingDossierProvisioner());
+        services.AddSingleton<IAuthorizationDirectory>(new EmptyAuthorizationDirectory());
+        services.AddSingleton<IDossierDirectory>(new EmptyDossierDirectory());
         _root = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
         _scope = _root.CreateAsyncScope();
         return Task.CompletedTask;

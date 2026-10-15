@@ -46,6 +46,8 @@ public sealed class PipelineTests : IAsyncLifetime
         services.AddPartiesAndCatalogFakes(new InMemoryPartiesAndCatalog(), new FakeDirectories());
         services.AddIntegrityFakes(new InMemoryIntegrity(Dossier));
         services.AddSingleton<IDossierProvisioner>(_provisioner);
+        services.AddSingleton<Lettra.Application.Abstractions.Identity.IAuthorizationDirectory>(new EmptyAuthorizationDirectory());
+        services.AddSingleton<Lettra.Application.Abstractions.Tenancy.IDossierDirectory>(new EmptyDossierDirectory());
         _root = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
         _scope = _root.CreateAsyncScope();
         return Task.CompletedTask;

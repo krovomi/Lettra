@@ -29,6 +29,12 @@ internal sealed class AuthorizationBehavior<TRequest, TResult>(
             return ResultFactory.Failure<TResult>(SecurityErrors.Unauthenticated);
         }
 
+        // Le handler ne rend que les éléments autorisés : rien d'autre à vérifier ici.
+        if (secured is IFilterByPermission)
+        {
+            return await next().ConfigureAwait(false);
+        }
+
         AuthorizationScope? scope = secured switch
         {
             IRequirePermission dossier => AuthorizationScope.ForDossier(dossier.Dossier),

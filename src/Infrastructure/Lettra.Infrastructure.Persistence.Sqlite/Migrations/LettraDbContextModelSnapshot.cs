@@ -51,6 +51,13 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("SearchKey")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(400)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
                     b.Property<string>("Unit")
                         .IsRequired()
                         .HasMaxLength(3)
@@ -76,6 +83,8 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                         .IsUnique();
 
                     b.ToTable("CatalogItems", (string)null);
+
+                    b.HasAnnotation("Lettra:SearchKeySource", "Designation");
                 });
 
             modelBuilder.Entity("Lettra.Domain.Integrity.JournalEntry", b =>
@@ -251,6 +260,13 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("SearchKey")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(400)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
                     b.Property<string>("Siren")
                         .HasMaxLength(9)
                         .HasColumnType("TEXT");
@@ -304,6 +320,8 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.HasIndex("Siren");
 
                     b.ToTable("Customers", (string)null);
+
+                    b.HasAnnotation("Lettra:SearchKeySource", "Name");
                 });
 
             modelBuilder.Entity("Lettra.Domain.Parties.Supplier", b =>
@@ -326,6 +344,13 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
+
+                    b.Property<string>("SearchKey")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(400)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
 
                     b.Property<string>("Siren")
                         .HasMaxLength(9)
@@ -380,6 +405,8 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.HasIndex("Siren");
 
                     b.ToTable("Suppliers", (string)null);
+
+                    b.HasAnnotation("Lettra:SearchKeySource", "Name");
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Integrity.IntegrityChainHead", b =>

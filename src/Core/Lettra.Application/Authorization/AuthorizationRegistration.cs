@@ -18,3 +18,11 @@ public static class AuthorizationRegistration
         return services;
     }
 }
+
+/// <summary>Sans cache (poste isolé), il n'y a rien à invalider ; l'adapter serveur remplace ce service.</summary>
+internal sealed class NoPermissionCache : IPermissionCacheInvalidator
+{
+    public ValueTask InvalidateUserAsync(Guid userId, CancellationToken cancellationToken) => ValueTask.CompletedTask;
+
+    public ValueTask InvalidateAllAsync(CancellationToken cancellationToken) => ValueTask.CompletedTask;
+}

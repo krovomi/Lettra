@@ -65,10 +65,11 @@ internal static class CustomerEndpoints
         IQueryDispatcher queries,
         CancellationToken cancellationToken,
         int page = 1,
-        int pageSize = 50)
+        int pageSize = 50,
+        string? search = null)
     {
         Result<PagedResponse<CustomerSummary>> result = await queries
-            .QueryAsync(new ListCustomersQuery(tenant.Current.DossierId, page, pageSize), cancellationToken)
+            .QueryAsync(new ListCustomersQuery(tenant.Current.DossierId, page, pageSize, string.IsNullOrWhiteSpace(search) ? null : search.Trim()), cancellationToken)
             .ConfigureAwait(false);
         return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
     }
