@@ -88,6 +88,26 @@ donc à refaire la première fois sur chaque adresse) ; les données Lettra sont
 `down -v` (avec les mêmes fichiers `-f` qu'au démarrage) supprime ces volumes : au prochain démarrage, le realm est
 réimporté et l'enrôlement TOTP est à refaire.
 
+## Option : télémétrie OpenTelemetry
+
+La démonstration seule n'exporte rien. Pour voir ce que l'API enverrait au collecteur d'une cellule, ajouter
+`compose.otel.yaml` aux mêmes commandes :
+
+```bash
+docker compose -f deploy/demo/compose.yaml -f deploy/demo/compose.otel.yaml up -d --build --wait
+docker compose -f deploy/demo/compose.yaml -f deploy/demo/compose.otel.yaml logs -f otel-collector
+curl -s http://localhost:8889/metrics | grep lettra_use_case
+```
+
+- L'API exporte traces, métriques et journaux en OTLP (gRPC) vers `otel-collector`, qui applique la configuration de
+  base d'une cellule (`deploy/helm/lettra-observability/files/collector.yaml`) : attributs interdits supprimés,
+  exceptions réduites à leur type, e-mail, IBAN, TVA, SIREN et SIRET masqués.
+- `otel/collecteur-demo.yaml` y ajoute seulement deux sorties locales : les métriques au format Prometheus sur
+  `http://localhost:8889/metrics`, et le détail de chaque signal filtré dans le journal du collecteur. Ce détail est
+  réservé à la démonstration (données fictives) ; une cellule n'en écrit qu'un résumé.
+- Ports publiés sur `127.0.0.1` seulement : 4317 (OTLP gRPC), 4318 (OTLP HTTP), 8889 (métriques). Variables
+  `LETTRA_DEMO_OTLP_GRPC_PORT`, `LETTRA_DEMO_OTLP_HTTP_PORT` et `LETTRA_DEMO_METRIQUES_PORT` en cas de conflit.
+
 ## Comment c'est monté
 
 - `keycloak/start.sh` complète le realm versionné (`deploy/keycloak/realm-lettra.json`) du cabinet et de

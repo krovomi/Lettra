@@ -2,7 +2,8 @@ namespace Lettra.Infrastructure.Observability;
 
 /// <summary>
 /// Réglages d'observabilité (section <c>Lettra:Observability</c>). Le point de collecte suit la convention
-/// OpenTelemetry (<c>OTEL_EXPORTER_OTLP_ENDPOINT</c>) : sans lui, rien n'est exporté (poste isolé, tests).
+/// OpenTelemetry (<c>OTEL_EXPORTER_OTLP_ENDPOINT</c>, <c>OTEL_EXPORTER_OTLP_PROTOCOL</c>) ou, à défaut, la sous-section
+/// <c>Otlp</c> : sans l'un ni l'autre, rien n'est exporté (poste isolé, tests).
 /// </summary>
 public sealed class ObservabilityOptions
 {
@@ -19,4 +20,20 @@ public sealed class ObservabilityOptions
 
     /// <summary>Force l'export même sans variable <c>OTEL_EXPORTER_OTLP_ENDPOINT</c> (vers le collecteur local par défaut).</summary>
     public bool ExportEnabled { get; set; }
+
+    /// <summary>Point de collecte écrit dans la configuration de Lettra plutôt que dans les variables OpenTelemetry.</summary>
+    public OtlpOptions Otlp { get; set; } = new();
+}
+
+/// <summary>
+/// Sous-section <c>Lettra:Observability:Otlp</c>. Les variables standard <c>OTEL_EXPORTER_OTLP_*</c> l'emportent :
+/// c'est par elles que les charts Helm désignent le collecteur de la cellule.
+/// </summary>
+public sealed class OtlpOptions
+{
+    /// <summary>Adresse du collecteur (<c>http://lettra-otel-collector:4317</c>) ; vide : pas d'export par cette voie.</summary>
+    public Uri? Endpoint { get; set; }
+
+    /// <summary><c>grpc</c> (port 4317, par défaut) ou <c>http/protobuf</c> (port 4318).</summary>
+    public string Protocol { get; set; } = "grpc";
 }

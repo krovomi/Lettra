@@ -1,0 +1,18 @@
+# Démonstration seulement (compose.otel.yaml) : complète la base de la cellule
+# (deploy/helm/lettra-observability/files/collector.yaml), dont le filtrage s'applique tel quel.
+# Pas de Prometheus, de Tempo ni de Loki ici : les métriques sont exposées au format Prometheus sur
+# http://localhost:8889/metrics, et tout ce qui sort du filtrage est écrit en détail dans le journal du collecteur
+# (docker compose logs otel-collector) pour vérifier qu'aucune donnée de dossier n'y figure. Le mode « detailed » est
+# réservé à cette démonstration aux données fictives : jamais dans une cellule.
+exporters:
+  prometheus:
+    endpoint: 0.0.0.0:8889
+    resource_to_telemetry_conversion:
+      enabled: true
+  debug:
+    verbosity: detailed
+
+service:
+  pipelines:
+    metrics:
+      exporters: [prometheus, debug]
