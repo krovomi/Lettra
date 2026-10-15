@@ -364,32 +364,41 @@ public sealed class SyncCoordinator(
         {
             // 3. Envoi, par lots, dans l'ordre de saisie. Acquittement local seulement après la réponse.
             Enter(SyncState.Pushing);
-            foreach (SyncOutboxItem[] batch in pending.Chunk(Math.Max(1, options.BatchSize)))
+            async Task PushAsync(IReadOnlyList<SyncOutboxItem> items)
             {
-                PushSyncIntentsResponse response = await transport.PushAsync(
-                    dossier, new PushSyncIntentsRequest(options.DeviceId, [.. batch.Select(i => i.Intent)]), ct).ConfigureAwait(false);
-                await outbox.AcknowledgeAsync(response.Results, clock.GetUtcNow(), ct).ConfigureAwait(false);
-                foreach (SyncIntentResult result in response.Results)
+                foreach (SyncOutboxItem[] batch in items.Chunk(Math.Max(1, options.BatchSize)))
                 {
-                    switch (result.Outcome)
+                    PushSyncIntentsResponse response = await transport.PushAsync(
+                        dossier, new PushSyncIntentsRequest(options.DeviceId, [.. batch.Select(i => i.Intent)]), ct).ConfigureAwait(false);
+                    await outbox.AcknowledgeAsync(response.Results, clock.GetUtcNow(), ct).ConfigureAwait(false);
+                    foreach (SyncIntentResult result in response.Results)
                     {
-                        case SyncIntentOutcome.Rejected:
-                            rejected++;
-                            break;
-                        case SyncIntentOutcome.Conflict:
-                            conflicts++;
-                            break;
-                        default:
-                            sent++;
-                            break;
+                        switch (result.Outcome)
+                        {
+                            // Une pièce qui attend la précédente de sa série reste en attente, sans être comptée refusée.
+                            case SyncIntentOutcome.Rejected when result.IsWaiting():
+                                break;
+                            case SyncIntentOutcome.Rejected:
+                                rejected++;
+                                break;
+                            case SyncIntentOutcome.Conflict:
+                                conflicts++;
+                                break;
+                            default:
+                                sent++;
+                                break;
+                        }
                     }
                 }
             }
+
+            await PushAsync(pending).ConfigureAwait(false);
 
             // 4. Réception par pages ; chaque page et son jeton sont appliqués ensemble.
             Enter(SyncState.Pulling);
             bool more = true;
             SyncPolicyResponse? policy = null;
+            IReadOnlyList<string> released = [];
             while (more)
             {
                 string? token = await replica.GetTokenAsync(ct).ConfigureAwait(false);
@@ -399,10 +408,18 @@ public sealed class SyncCoordinator(
                 kept += applied.KeptLocal;
                 more = changes.HasMore;
                 policy = changes.Policy ?? policy;
+                released = changes.Released ?? released;
             }
 
             // Contact réussi : le compte de la durée hors ligne repart d'ici, avec la règle du cabinet reçue (étape 4.4).
             await RecordContactAsync(replica, policy, ct).ConfigureAwait(false);
+
+            // Série débloquée par le cabinet (étape 4.4) : les pièces refusées repartent tout de suite, puis celles qui les attendaient.
+            if (await outbox.RequeueAsync(released, ct).ConfigureAwait(false) > 0)
+            {
+                Enter(SyncState.Pushing);
+                await PushAsync(await outbox.ListAsync(SyncOutboxStatus.Pending, ct).ConfigureAwait(false)).ConfigureAwait(false);
+            }
 
             // 5. Série du poste (ADR-0007), au premier passage en ligne : elle permet ensuite de valider hors ligne.
             await EnsureDeviceSeriesAsync(dossier, replica, ct).ConfigureAwait(false);

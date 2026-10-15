@@ -33,6 +33,16 @@ public sealed record SaveSyncPolicyCommand(DossierId Dossier, SaveSyncPolicyRequ
     public Permission Permission => Permission.PostesGerer;
 }
 
+/// <summary>
+/// Débloquer la série d'un poste : la pièce attendue sous son prochain numéro, refusée à la réception (avoir sans
+/// approbation, droit retiré, règle changée), sera reçue à son prochain envoi sous l'autorité de qui débloque. Les
+/// pièces suivantes, qui l'attendaient, suivent. Une pièce altérée reste refusée : l'empreinte est toujours revérifiée.
+/// </summary>
+public sealed record ReleaseDeviceSeriesCommand(DossierId Dossier, Guid DeviceId) : ICommand<Result<ReleaseDeviceSeriesResponse>>, IRequirePermission
+{
+    public Permission Permission => Permission.PostesGerer;
+}
+
 internal sealed class SaveSyncPolicyValidator : IValidator<SaveSyncPolicyCommand>
 {
     public IReadOnlyList<Error> Validate(SaveSyncPolicyCommand instance)
@@ -46,8 +56,15 @@ internal sealed class SyncDeviceHandlers(ISyncDeviceRegistry devices, ICurrentUs
     IQueryHandler<ListSyncDevicesQuery, Result<IReadOnlyList<SyncDeviceResponse>>>,
     ICommandHandler<RevokeSyncDeviceCommand, Result>,
     IQueryHandler<GetSyncPolicyQuery, Result<SyncPolicyResponse>>,
-    ICommandHandler<SaveSyncPolicyCommand, Result<SyncPolicyResponse>>
+    ICommandHandler<SaveSyncPolicyCommand, Result<SyncPolicyResponse>>,
+    ICommandHandler<ReleaseDeviceSeriesCommand, Result<ReleaseDeviceSeriesResponse>>
 {
+    public Task<Result<ReleaseDeviceSeriesResponse>> HandleAsync(ReleaseDeviceSeriesCommand command, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        return devices.ReleaseNextAsync(command.DeviceId, user.UserId, clock.GetUtcNow(), cancellationToken);
+    }
+
     public async Task<Result<IReadOnlyList<SyncDeviceResponse>>> HandleAsync(ListSyncDevicesQuery query, CancellationToken cancellationToken) =>
         Result<IReadOnlyList<SyncDeviceResponse>>.Success(await devices.ListAsync(cancellationToken).ConfigureAwait(false));
 

@@ -82,4 +82,5 @@
   <data name="Error.Sync.OfflineTooLong" xml:space="preserve"><value>This device has been offline longer than the firm allows: sync before validating.</value></data>
   <data name="Error.Sync.PolicyInvalid" xml:space="preserve"><value>The maximum offline duration ranges from 1 hour to 30 days.</value></data>
   <data name="Error.Sync.DeviceUnknown" xml:space="preserve"><value>This device has never synced with this dossier.</value></data>
+  <data name="Error.Sync.NothingToRelease" xml:space="preserve"><value>This device has no open series in this dossier: nothing to release.</value></data>
 </root>

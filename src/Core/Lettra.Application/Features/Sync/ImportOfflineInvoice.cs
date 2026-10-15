@@ -25,11 +25,19 @@ namespace Lettra.Application.Features.Sync;
 /// <param name="Dossier">Le dossier synchronisé.</param>
 /// <param name="Fact">La pièce figée, telle que le poste l'a validée.</param>
 /// <param name="DeviceId">Le poste qui envoie : seul le poste de la série peut y faire recevoir une pièce.</param>
-public sealed record ImportOfflineInvoiceCommand(DossierId Dossier, Guid DeviceId, ValidatedInvoiceFact Fact)
+/// <param name="ReleasedBy">
+/// Le manager qui a débloqué la série du poste pour ce numéro (étape 4.4) : la pièce est reçue sous son autorité, sans
+/// revérifier le droit de valider, l'approbation de l'avoir ni les mentions. Suite des numéros, poste et empreinte restent
+/// vérifiés.
+/// </param>
+public sealed record ImportOfflineInvoiceCommand(DossierId Dossier, Guid DeviceId, ValidatedInvoiceFact Fact, Guid? ReleasedBy = null)
     : ICommand<Result<SyncIntentOutcome>>, IRequirePermission
 {
-    /// <summary>Les droits du moment de la synchronisation : qui ne valide plus ne fait plus recevoir de pièce.</summary>
-    public Permission Permission => Permission.FactureValider;
+    /// <summary>
+    /// Les droits du moment de la synchronisation : qui ne valide plus ne fait plus recevoir de pièce, sauf déblocage par
+    /// un manager (qui avait <see cref="Permission.PostesGerer"/>).
+    /// </summary>
+    public Permission Permission => ReleasedBy is null ? Permission.FactureValider : Permission.DossierLire;
 }
 
 internal sealed class ImportOfflineInvoiceHandler(
@@ -69,7 +77,7 @@ internal sealed class ImportOfflineInvoiceHandler(
         }
 
         // Séparation des tâches revérifiée avec la politique du moment (#33) : le seuil connu du poste a pu changer.
-        if (document.Kind == InvoiceKindDto.CreditNote && document.CreditApprovedBy is null
+        if (command.ReleasedBy is null && document.Kind == InvoiceKindDto.CreditNote && document.CreditApprovedBy is null
             && await duties.EvaluateCreditNoteAsync(document.Totals.TotalInclTax, cancellationToken).ConfigureAwait(false) == CreditNoteApproval.ManagerApprovalRequired)
         {
             return SegregationOfDutiesErrors.ManagerApprovalRequired;
@@ -79,11 +87,11 @@ internal sealed class ImportOfflineInvoiceHandler(
             document.SeriesCode,
             command.DeviceId,
             document.Number,
-            ct => ImportAsync(command.Fact, command.DeviceId, ct),
+            ct => ImportAsync(command.Fact, command.DeviceId, released: command.ReleasedBy is not null, ct),
             cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<Result<SyncIntentOutcome>> ImportAsync(ValidatedInvoiceFact fact, Guid deviceId, CancellationToken cancellationToken)
+    private async Task<Result<SyncIntentOutcome>> ImportAsync(ValidatedInvoiceFact fact, Guid deviceId, bool released, CancellationToken cancellationToken)
     {
         Result<Invoice> replicated = Invoice.Replicate(ToReplica(fact, deviceId));
         if (replicated.IsFailure)
@@ -93,7 +101,8 @@ internal sealed class ImportOfflineInvoiceHandler(
 
         Invoice invoice = replicated.Value;
         ComplianceReport report = ComplianceChecker.Check(invoice.ToComplianceDocument(null), invoice.IssueDate!.Value);
-        if (report.BlocksValidation)
+        // Une pièce débloquée a été remise au client telle quelle : elle se corrige par un avoir, pas en la refusant.
+        if (report.BlocksValidation && !released)
         {
             return Result<SyncIntentOutcome>.Failure(
             [

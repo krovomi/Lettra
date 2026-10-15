@@ -37,5 +37,8 @@ public static partial class ErrorCodes
 
         /// <summary>Ce poste n'est pas connu du dossier.</summary>
         public const string DeviceUnknown = "Sync.DeviceUnknown";
+
+        /// <summary>Le poste n'a pas de série ouverte dans ce dossier : rien à débloquer.</summary>
+        public const string NothingToRelease = "Sync.NothingToRelease";
     }
 }

@@ -299,5 +299,14 @@ internal sealed class EfSyncReceipts(
         }
     }
 
+    public async Task ReplaceAsync(SyncReceipt receipt, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(receipt);
+        LettraDbContext db = await _session.GetAsync(cancellationToken).ConfigureAwait(false);
+        await db.Set<SyncReceiptRecord>().Where(r => r.IdempotencyKey == receipt.IdempotencyKey)
+            .ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
+        await SaveAsync(receipt, cancellationToken).ConfigureAwait(false);
+    }
+
     public ValueTask DisposeAsync() => _session.DisposeAsync();
 }
