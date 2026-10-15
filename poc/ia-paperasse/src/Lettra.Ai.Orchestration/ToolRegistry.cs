@@ -20,12 +20,12 @@ public sealed class ToolRegistry
         {
             if (!Enum.IsDefined(tool.Risk) || tool.Risk is not (AiToolRisk.ReadOnly or AiToolRisk.CreatesDraft))
                 throw new InvalidOperationException($"Outil « {tool.Name} » refusé : pouvoir non autorisé.");
-            // « valider_facture » vérifie sans rien valider : c'est le seul nom toléré, et il est en lecture seule.
             var lower = tool.Name.ToLowerInvariant();
-            if (lower != "valider_facture" && ForbiddenVerbs.Any(v => lower.Contains(v)))
+            if (ForbiddenVerbs.Any(v => lower.Contains(v)))
                 throw new InvalidOperationException($"Outil « {tool.Name} » refusé : son nom évoque une action réservée à un humain.");
-            if (lower == "valider_facture" && tool.Risk != AiToolRisk.ReadOnly)
-                throw new InvalidOperationException("« valider_facture » doit rester en lecture seule.");
+            // L'outil de conformité ne fait que vérifier : il reste en lecture seule.
+            if (lower == "verifier_facture" && tool.Risk != AiToolRisk.ReadOnly)
+                throw new InvalidOperationException("« verifier_facture » doit rester en lecture seule.");
             if (!_tools.TryAdd(tool.Name, tool))
                 throw new InvalidOperationException($"Outil « {tool.Name} » déclaré deux fois.");
         }

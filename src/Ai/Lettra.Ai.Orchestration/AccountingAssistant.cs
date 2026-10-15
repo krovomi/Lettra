@@ -49,11 +49,10 @@ internal sealed class AccountingAssistant(
         }
 
         DateOnly today = DateOnly.FromDateTime(time.GetUtcNow().UtcDateTime);
-        if (skills.Info.IsStale(today))
+        HashSet<AiSkill> staleSignalled = [];
+        if (StaleWarning(request.Skill, today, staleSignalled) is { } stale)
         {
-            yield return new AssistantWarningEvent(
-                ErrorCodes.Ai.SkillPackStale,
-                skills.Info.SkillLastUpdated.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+            yield return stale;
         }
 
         // 2. Minimisation et pseudonymisation : rien ne part en clair, pas même dans le journal.
@@ -116,6 +115,14 @@ internal sealed class AccountingAssistant(
                 foreach (AssistantEvent toolEvent in events)
                 {
                     yield return toolEvent;
+
+                    // Une fiche lue dans un autre skill (contrôleur fiscal, CAC) a sa propre fraîcheur.
+                    if (toolEvent is AssistantCitationEvent { Reference: var reference }
+                        && AiSkillNames.TryParse(reference.Split('/')[0], out AiSkill cited)
+                        && StaleWarning(cited, today, staleSignalled) is { } citedStale)
+                    {
+                        yield return citedStale;
+                    }
                 }
 
                 if (!result.IsError)
@@ -130,6 +137,14 @@ internal sealed class AccountingAssistant(
             messages.Add(new EngineMessage(EngineRole.User, results));
         }
     }
+
+    /// <summary>Signale une fois par réponse un skill dont la mise à jour et la relecture ont plus de six mois.</summary>
+    private AssistantWarningEvent? StaleWarning(AiSkill skill, DateOnly today, HashSet<AiSkill> signalled) =>
+        skills.Info.IsStale(skill, today) && signalled.Add(skill)
+            ? new AssistantWarningEvent(
+                ErrorCodes.Ai.SkillPackStale,
+                $"{AiSkillNames.Name(skill)} {skills.Info.FreshAsOf(skill).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}")
+            : null;
 
     private static IEnumerable<AssistantEvent> FinalAnswer(EngineTurn turn, PseudonymizationSession privacy, List<string> trustedSources)
     {

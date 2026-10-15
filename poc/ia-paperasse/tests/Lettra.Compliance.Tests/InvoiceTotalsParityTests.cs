@@ -9,7 +9,7 @@ namespace Lettra.Compliance.Tests;
 /// </summary>
 public sealed class InvoiceTotalsParityTests(ITestOutputHelper output)
 {
-    private enum Outcome { Identique, ArrondiFlottantReference, TvaSurHtArrondi, TauxZeroReference, Inexplique }
+    private enum Outcome { Identique, ArrondiFlottantReference, ArrondiParLigne, TvaSurHtArrondi, TauxZeroReference, Inexplique }
 
     [Fact]
     public void Chaque_ecart_avec_la_reference_est_un_ecart_connu()
@@ -56,7 +56,8 @@ public sealed class InvoiceTotalsParityTests(ITestOutputHelper output)
             return midpoints ? Outcome.ArrondiFlottantReference : Outcome.Inexplique;
         }
 
-        // Référence exacte : l'écart vient de la règle Lettra (TVA calculée sur le HT arrondi au centime).
+        // Référence exacte : l'écart vient des règles Lettra (lignes arrondies avant la somme, TVA sur le HT arrondi).
+        if (invoice.Lines!.Sum(l => R(l.Quantity!.Value * l.UnitPrice!.Value)) != R(ht)) return Outcome.ArrondiParLigne;
         return ht != R(ht) ? Outcome.TvaSurHtArrondi : Outcome.Inexplique;
     }
 

@@ -1,3 +1,5 @@
+using Lettra.Calculations;
+
 namespace Lettra.Compliance.Invoices;
 
 public sealed record VatBreakdown(decimal Rate, decimal TaxableAmount, decimal VatAmount);
@@ -21,6 +23,7 @@ public static class InvoiceTotalsCalculator
 
     public static readonly IReadOnlyList<string> KnownDifferencesWithReference =
     [
+        "Lignes : Lettra arrondit chaque ligne au centime avant de les additionner (Lettra.Calculations, comme le produit) ; la référence additionne les lignes non arrondies.",
         "Arrondi : Lettra arrondit au centime en décimal exact (demi-centime vers le haut) ; la référence arrondit des nombres flottants avec toFixed(2), ce qui peut perdre le demi-centime (5,005 → 5,00).",
         "Cohérence : Lettra calcule TTC = HT arrondi + TVA arrondie ; la référence arrondit séparément trois flottants, si bien que HT + TVA peut différer du TTC affiché d'un centime.",
         "Taux à 0 : la référence remplace un tva_rate de 0 par 20 % (« || 0.20 ») ; Lettra garde 0 %.",
@@ -33,22 +36,23 @@ public static class InvoiceTotalsCalculator
         var companyRate = company.Tax?.TvaRate ?? DefaultVatRate;
         var lines = invoice.Lines ?? [];
 
-        var lineTotals = lines.Select(l => (l.Quantity ?? 0m) * (l.UnitPrice ?? 0m)).ToList();
-        var byRate = lines
-            .Select((l, i) => (Rate: franchise ? 0m : l.VatRate ?? companyRate, Total: lineTotals[i]))
-            .GroupBy(x => x.Rate)
-            .OrderByDescending(g => g.Key)
-            .Select(g =>
-            {
-                var taxable = RoundCents(g.Sum(x => x.Total));
-                return new VatBreakdown(g.Key, taxable, RoundCents(taxable * g.Key));
-            })
+        // Même calcul que le produit (Lettra.Calculations) : lignes arrondies, puis TVA par taux sur leur somme.
+        var inputs = lines
+            .Select(l => new LineInput(l.Quantity ?? 0m, l.UnitPrice ?? 0m, (franchise ? 0m : l.VatRate ?? companyRate) * 100m))
+            .ToList();
+        var totals = DocumentCalculator.Compute(inputs);
+        var byRate = totals.Breakdown
+            .Select(b => new VatBreakdown(b.VatRatePercent / 100m, b.BaseExclTax, b.VatAmount))
             .ToList();
 
-        var ht = byRate.Sum(b => b.TaxableAmount);
-        var tva = byRate.Sum(b => b.VatAmount);
-        return new InvoiceTotals(lineTotals, byRate, ht, tva, ht + tva, franchise);
+        return new InvoiceTotals(
+            [.. inputs.Select(LineAmounts.TotalExclTax)],
+            byRate,
+            totals.TotalExclTax,
+            totals.TotalVat,
+            totals.TotalInclTax,
+            franchise);
     }
 
-    public static decimal RoundCents(decimal amount) => Math.Round(amount, 2, MidpointRounding.AwayFromZero);
+    public static decimal RoundCents(decimal amount) => Rounding.ToCents(amount);
 }
