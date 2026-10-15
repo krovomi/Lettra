@@ -28,11 +28,45 @@ internal static partial class DossierDataScrubber
         || key.StartsWith("http.request.header.", StringComparison.Ordinal)
         || key.StartsWith("http.response.header.", StringComparison.Ordinal);
 
-    public static string Scrub(string value) =>
-        string.IsNullOrEmpty(value) ? value : SensitivePattern().Replace(value, Mask);
+    public static string Scrub(string value) => Scrub(value, SensitivePattern());
 
-    public static bool LooksSensitive(string value) =>
-        !string.IsNullOrEmpty(value) && SensitivePattern().IsMatch(value);
+    public static bool LooksSensitive(string value) => LooksSensitive(value, SensitivePattern());
+
+    // Délai dépassé (runner chargé, très longue valeur) : on masque tout plutôt que de laisser passer la valeur ou
+    // de faire échouer l'appelant (une migration qui journalise son SQL, par exemple).
+    internal static string Scrub(string value, Regex pattern)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return value;
+        }
+
+        try
+        {
+            return pattern.Replace(value, Mask);
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            return Mask;
+        }
+    }
+
+    internal static bool LooksSensitive(string value, Regex pattern)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return false;
+        }
+
+        try
+        {
+            return pattern.IsMatch(value);
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            return true;
+        }
+    }
 
     // E-mail ; IBAN (2 lettres, 2 chiffres, 11 à 30 alphanumériques) ; TVA intracommunautaire française ;
     // suites de 9 (SIREN) ou 14 (SIRET) chiffres isolées, éventuellement groupées par espaces.

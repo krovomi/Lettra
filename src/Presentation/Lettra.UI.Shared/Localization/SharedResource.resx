@@ -288,4 +288,166 @@
   <data name="Vies.Check" xml:space="preserve"><value>Vérifier (VIES)</value></data>
   <data name="Vies.Invalid" xml:space="preserve"><value>Numéro inconnu de VIES ou inactif</value></data>
   <data name="Vies.Valid" xml:space="preserve"><value>Numéro valide</value></data>
+  <data name="Nav.Quotes" xml:space="preserve"><value>Devis</value></data>
+  <data name="Nav.Invoices" xml:space="preserve"><value>Factures</value></data>
+  <data name="Nav.CreditNotes" xml:space="preserve"><value>Avoirs</value></data>
+  <data name="Command.Density" xml:space="preserve"><value>Changer de densité</value></data>
+  <data name="Palette.Title" xml:space="preserve"><value>Palette de commandes</value></data>
+  <data name="Palette.Open" xml:space="preserve"><value>Commandes</value></data>
+  <data name="Palette.Placeholder" xml:space="preserve"><value>Chercher une action, un écran, une pièce, un client…</value></data>
+  <data name="Palette.NoResult" xml:space="preserve"><value>Aucun résultat.</value></data>
+  <data name="Palette.Group.Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Palette.Group.Screens" xml:space="preserve"><value>Écrans</value></data>
+  <data name="Palette.Group.Page" xml:space="preserve"><value>Cette page</value></data>
+  <data name="Palette.Group.Customers" xml:space="preserve"><value>Clients</value></data>
+  <data name="Palette.Group.Documents" xml:space="preserve"><value>Pièces</value></data>
+  <data name="Palette.NewQuote" xml:space="preserve"><value>Nouveau devis</value></data>
+  <data name="Palette.NewInvoice" xml:space="preserve"><value>Nouvelle facture</value></data>
+  <data name="Palette.NewQuoteFor" xml:space="preserve"><value>Nouveau devis pour {0}</value></data>
+  <data name="Palette.NewInvoiceFor" xml:space="preserve"><value>Nouvelle facture pour {0}</value></data>
+  <data name="Palette.OpenQuote" xml:space="preserve"><value>Devis {0} · {1}</value></data>
+  <data name="Palette.OpenInvoice" xml:space="preserve"><value>Facture {0} · {1}</value></data>
+  <data name="Palette.OpenDownPayment" xml:space="preserve"><value>Facture d'acompte {0} · {1}</value></data>
+  <data name="Palette.OpenCreditNote" xml:space="preserve"><value>Avoir {0} · {1}</value></data>
+  <data name="Palette.CreditNoteOn" xml:space="preserve"><value>Avoir sur {0} · {1}</value></data>
+  <data name="Palette.ToggleDensity" xml:space="preserve"><value>Passer en densité Confort ou Expert</value></data>
+  <data name="Checklist.Title" xml:space="preserve"><value>Conformité de la pièce</value></data>
+  <data name="Checklist.Pending" xml:space="preserve"><value>La vérification s'affiche après l'enregistrement du brouillon.</value></data>
+  <data name="Checklist.Ready" xml:space="preserve"><value>Prête à valider : toutes les mentions obligatoires sont là.</value></data>
+  <data name="Checklist.Blocking" xml:space="preserve"><value>{0} point(s) bloquent la validation.</value></data>
+  <data name="Checklist.Line" xml:space="preserve"><value>ligne {0}</value></data>
+  <data name="Checklist.Severity.Error" xml:space="preserve"><value>Bloquant</value></data>
+  <data name="Checklist.Severity.Warning" xml:space="preserve"><value>À vérifier</value></data>
+  <data name="Checklist.Severity.Ok" xml:space="preserve"><value>Présent</value></data>
+  <data name="Totals.Title" xml:space="preserve"><value>Totaux</value></data>
+  <data name="Totals.VatRate" xml:space="preserve"><value>Taux</value></data>
+  <data name="Totals.Base" xml:space="preserve"><value>Base HT</value></data>
+  <data name="Totals.Vat" xml:space="preserve"><value>TVA</value></data>
+  <data name="Totals.ExclTax" xml:space="preserve"><value>Total HT</value></data>
+  <data name="Totals.TotalVat" xml:space="preserve"><value>Total TVA</value></data>
+  <data name="Totals.InclTax" xml:space="preserve"><value>Total TTC</value></data>
+  <data name="Lines.Title" xml:space="preserve"><value>Lignes</value></data>
+  <data name="Lines.Grid" xml:space="preserve"><value>Lignes de la pièce</value></data>
+  <data name="Lines.Column.Reference" xml:space="preserve"><value>Réf.</value></data>
+  <data name="Lines.Column.Designation" xml:space="preserve"><value>Désignation</value></data>
+  <data name="Lines.Column.Quantity" xml:space="preserve"><value>Qté</value></data>
+  <data name="Lines.Column.Unit" xml:space="preserve"><value>Unité</value></data>
+  <data name="Lines.Column.UnitPrice" xml:space="preserve"><value>PU HT</value></data>
+  <data name="Lines.Column.Discount" xml:space="preserve"><value>Remise %</value></data>
+  <data name="Lines.Column.Vat" xml:space="preserve"><value>TVA</value></data>
+  <data name="Lines.Column.Total" xml:space="preserve"><value>Total HT</value></data>
+  <data name="Lines.Command.New" xml:space="preserve"><value>Ligne</value></data>
+  <data name="Lines.Command.Delete" xml:space="preserve"><value>Suppr. ligne</value></data>
+  <data name="Lines.Command.ChoiceList" xml:space="preserve"><value>Liste</value></data>
+  <data name="Lines.Choice.Item" xml:space="preserve"><value>Choisir un article</value></data>
+  <data name="Lines.Choice.Vat" xml:space="preserve"><value>Choisir la TVA</value></data>
+  <data name="Lines.Exempt" xml:space="preserve"><value>Exonérée</value></data>
+  <data name="VatRegime.Standard" xml:space="preserve"><value>TVA française</value></data>
+  <data name="VatRegime.Franchise" xml:space="preserve"><value>Franchise en base (art. 293 B du CGI)</value></data>
+  <data name="VatRegime.ReverseChargeIntraEu" xml:space="preserve"><value>Autoliquidation, services intra-UE</value></data>
+  <data name="VatRegime.ReverseChargeConstruction" xml:space="preserve"><value>Autoliquidation, sous-traitance BTP</value></data>
+  <data name="VatRegime.IntraEuGoodsSupply" xml:space="preserve"><value>Livraison intracommunautaire</value></data>
+  <data name="VatRegime.Export" xml:space="preserve"><value>Exportation hors UE</value></data>
+  <data name="VatRegime.Short.Standard" xml:space="preserve"><value>TVA</value></data>
+  <data name="VatRegime.Short.Franchise" xml:space="preserve"><value>Franchise</value></data>
+  <data name="VatRegime.Short.ReverseChargeIntraEu" xml:space="preserve"><value>Autoliq.</value></data>
+  <data name="VatRegime.Short.ReverseChargeConstruction" xml:space="preserve"><value>Autoliq. BTP</value></data>
+  <data name="VatRegime.Short.IntraEuGoodsSupply" xml:space="preserve"><value>Intra-UE</value></data>
+  <data name="VatRegime.Short.Export" xml:space="preserve"><value>Export</value></data>
+  <data name="Billing.Draft" xml:space="preserve"><value>Brouillon</value></data>
+  <data name="Billing.Header" xml:space="preserve"><value>En-tête de la pièce</value></data>
+  <data name="Billing.Status" xml:space="preserve"><value>Statut</value></data>
+  <data name="Billing.AllStatuses" xml:space="preserve"><value>Tous les statuts</value></data>
+  <data name="Billing.Search" xml:space="preserve"><value>Chercher</value></data>
+  <data name="Billing.ListHint" xml:space="preserve"><value>F3 pour chercher, Inser pour créer, Entrée pour ouvrir.</value></data>
+  <data name="Billing.Reload" xml:space="preserve"><value>Recharger</value></data>
+  <data name="Billing.Column.Number" xml:space="preserve"><value>Numéro</value></data>
+  <data name="Billing.Column.Date" xml:space="preserve"><value>Date</value></data>
+  <data name="Billing.Column.Customer" xml:space="preserve"><value>Client</value></data>
+  <data name="Billing.Field.Customer" xml:space="preserve"><value>Client</value></data>
+  <data name="Billing.Field.Subject" xml:space="preserve"><value>Objet</value></data>
+  <data name="Billing.Field.Notes" xml:space="preserve"><value>Notes</value></data>
+  <data name="Billing.Field.VatRegime" xml:space="preserve"><value>Régime de TVA</value></data>
+  <data name="Billing.Field.PdfLanguage" xml:space="preserve"><value>Langue du PDF</value></data>
+  <data name="Billing.Customer.Choose" xml:space="preserve"><value>Choisir un client</value></data>
+  <data name="Billing.Command.Save" xml:space="preserve"><value>Enregistrer</value></data>
+  <data name="Billing.Command.Validate" xml:space="preserve"><value>Valider</value></data>
+  <data name="Billing.Command.Pdf" xml:space="preserve"><value>PDF</value></data>
+  <data name="Billing.Command.Delete" xml:space="preserve"><value>Supprimer</value></data>
+  <data name="Billing.Command.Search" xml:space="preserve"><value>Chercher</value></data>
+  <data name="Quote.TitleNew" xml:space="preserve"><value>Nouveau devis</value></data>
+  <data name="Quote.TitleDraft" xml:space="preserve"><value>Devis en brouillon</value></data>
+  <data name="Quote.TitleNumber" xml:space="preserve"><value>Devis {0}</value></data>
+  <data name="Quote.FileDraft" xml:space="preserve"><value>devis-brouillon</value></data>
+  <data name="Quote.Field.ValidUntil" xml:space="preserve"><value>Valable jusqu'au</value></data>
+  <data name="Quote.Field.DownPaymentPercent" xml:space="preserve"><value>Acompte (%)</value></data>
+  <data name="Quote.Command.Accept" xml:space="preserve"><value>Accepté</value></data>
+  <data name="Quote.Command.Refuse" xml:space="preserve"><value>Refusé</value></data>
+  <data name="Quote.Command.Invoice" xml:space="preserve"><value>Facturer</value></data>
+  <data name="Quote.Command.DownPayment" xml:space="preserve"><value>Facture d'acompte</value></data>
+  <data name="Quote.Validated" xml:space="preserve"><value>Devis validé sous le numéro {0}.</value></data>
+  <data name="Quote.AcceptedDone" xml:space="preserve"><value>Devis {0} marqué accepté.</value></data>
+  <data name="Quote.RefusedDone" xml:space="preserve"><value>Devis {0} marqué refusé.</value></data>
+  <data name="Quote.Expired" xml:space="preserve"><value>Expiré</value></data>
+  <data name="QuoteStatus.Draft" xml:space="preserve"><value>Brouillon</value></data>
+  <data name="QuoteStatus.Validated" xml:space="preserve"><value>Validé</value></data>
+  <data name="QuoteStatus.Accepted" xml:space="preserve"><value>Accepté</value></data>
+  <data name="QuoteStatus.Refused" xml:space="preserve"><value>Refusé</value></data>
+  <data name="QuoteStatus.Invoiced" xml:space="preserve"><value>Facturé</value></data>
+  <data name="InvoiceStatus.Draft" xml:space="preserve"><value>Brouillon</value></data>
+  <data name="InvoiceStatus.Validated" xml:space="preserve"><value>Validée</value></data>
+  <data name="InvoiceStatus.Issued" xml:space="preserve"><value>Émise</value></data>
+  <data name="InvoiceKind.Invoice" xml:space="preserve"><value>Facture</value></data>
+  <data name="InvoiceKind.DownPayment" xml:space="preserve"><value>Facture d'acompte</value></data>
+  <data name="InvoiceKind.CreditNote" xml:space="preserve"><value>Avoir</value></data>
+  <data name="InvoiceKind.Invoice.TitleNew" xml:space="preserve"><value>Nouvelle facture</value></data>
+  <data name="InvoiceKind.Invoice.TitleDraft" xml:space="preserve"><value>Facture en brouillon</value></data>
+  <data name="InvoiceKind.DownPayment.TitleDraft" xml:space="preserve"><value>Facture d'acompte en brouillon</value></data>
+  <data name="InvoiceKind.CreditNote.TitleDraft" xml:space="preserve"><value>Avoir en brouillon</value></data>
+  <data name="InvoiceKind.Invoice.TitleNumber" xml:space="preserve"><value>Facture {0}</value></data>
+  <data name="InvoiceKind.DownPayment.TitleNumber" xml:space="preserve"><value>Facture d'acompte {0}</value></data>
+  <data name="InvoiceKind.CreditNote.TitleNumber" xml:space="preserve"><value>Avoir {0}</value></data>
+  <data name="InvoiceKind.Invoice.FileDraft" xml:space="preserve"><value>facture-brouillon</value></data>
+  <data name="InvoiceKind.DownPayment.FileDraft" xml:space="preserve"><value>acompte-brouillon</value></data>
+  <data name="InvoiceKind.CreditNote.FileDraft" xml:space="preserve"><value>avoir-brouillon</value></data>
+  <data name="Invoice.Field.DeliveryDate" xml:space="preserve"><value>Date de livraison ou d'exécution</value></data>
+  <data name="Invoice.Field.DueDate" xml:space="preserve"><value>Échéance</value></data>
+  <data name="Invoice.Field.PaymentTerms" xml:space="preserve"><value>Conditions de paiement</value></data>
+  <data name="Invoice.Field.DeliveryAddress" xml:space="preserve"><value>Adresse de livraison</value></data>
+  <data name="Invoice.Field.CreditReason" xml:space="preserve"><value>Motif de l'avoir</value></data>
+  <data name="Invoice.Command.Issue" xml:space="preserve"><value>Marquer émise</value></data>
+  <data name="Invoice.Command.CreditNote" xml:space="preserve"><value>Avoir</value></data>
+  <data name="Invoice.FromQuote" xml:space="preserve"><value>Issue du devis {0} : les lignes viennent du devis.</value></data>
+  <data name="Invoice.CreditOf" xml:space="preserve"><value>Avoir sur la facture {0}.</value></data>
+  <data name="Invoice.CreditNoteHint" xml:space="preserve"><value>Indiquez le motif puis créez l'avoir.</value></data>
+  <data name="Invoice.Validated" xml:space="preserve"><value>Facture validée sous le numéro {0}.</value></data>
+  <data name="Invoice.IssuedDone" xml:space="preserve"><value>Pièce {0} marquée émise.</value></data>
+  <data name="Invoices.Title" xml:space="preserve"><value>Factures</value></data>
+  <data name="Invoices.TitleCreditNotes" xml:space="preserve"><value>Avoirs</value></data>
+  <data name="Invoices.TitleDownPayments" xml:space="preserve"><value>Factures d'acompte</value></data>
+  <data name="Invoices.Kind" xml:space="preserve"><value>Nature</value></data>
+  <data name="Invoices.AllKinds" xml:space="preserve"><value>Toutes les natures</value></data>
+  <data name="Invoices.New" xml:space="preserve"><value>Nouvelle facture</value></data>
+  <data name="Invoices.Empty" xml:space="preserve"><value>Aucune pièce pour l'instant.</value></data>
+  <data name="Quotes.Title" xml:space="preserve"><value>Devis</value></data>
+  <data name="Quotes.List" xml:space="preserve"><value>Liste des devis</value></data>
+  <data name="Quotes.New" xml:space="preserve"><value>Nouveau devis</value></data>
+  <data name="Quotes.Empty" xml:space="preserve"><value>Aucun devis pour l'instant.</value></data>
+  <data name="Company.Title" xml:space="preserve"><value>Fiche entreprise</value></data>
+  <data name="Company.Intro" xml:space="preserve"><value>Ces informations figurent sur chaque devis et chaque facture du dossier.</value></data>
+  <data name="Company.Identity" xml:space="preserve"><value>Identité légale</value></data>
+  <data name="Company.Address" xml:space="preserve"><value>Adresse du siège</value></data>
+  <data name="Company.Vat" xml:space="preserve"><value>TVA</value></data>
+  <data name="Company.Payment" xml:space="preserve"><value>Paiement</value></data>
+  <data name="Company.Field.LegalForm" xml:space="preserve"><value>Forme juridique</value></data>
+  <data name="Company.Field.ShareCapital" xml:space="preserve"><value>Capital social (€)</value></data>
+  <data name="Company.Field.Rcs" xml:space="preserve"><value>Immatriculation (RCS ou RM)</value></data>
+  <data name="Company.Field.VatFranchise" xml:space="preserve"><value>Franchise en base de TVA (art. 293 B du CGI)</value></data>
+  <data name="Company.Field.VatOnDebits" xml:space="preserve"><value>Option pour le paiement de la TVA d'après les débits</value></data>
+  <data name="Company.Field.PaymentDays" xml:space="preserve"><value>Délai de paiement (jours)</value></data>
+  <data name="Company.Field.LatePenaltyRate" xml:space="preserve"><value>Taux des pénalités de retard (%)</value></data>
+  <data name="Company.Field.EarlyPaymentDiscount" xml:space="preserve"><value>Escompte pour paiement anticipé</value></data>
+  <data name="Company.Field.Bic" xml:space="preserve"><value>BIC</value></data>
+  <data name="Company.Saved" xml:space="preserve"><value>Fiche entreprise enregistrée.</value></data>
+  <data name="Nav.Company" xml:space="preserve"><value>Entreprise</value></data>
 </root>

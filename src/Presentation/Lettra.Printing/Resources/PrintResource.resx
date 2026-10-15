@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Column.Designation" xml:space="preserve"><value>Désignation</value></data>
+  <data name="Column.Discount" xml:space="preserve"><value>Remise</value></data>
+  <data name="Column.Quantity" xml:space="preserve"><value>Qté</value></data>
+  <data name="Column.Reference" xml:space="preserve"><value>Réf.</value></data>
+  <data name="Column.Total" xml:space="preserve"><value>Total HT</value></data>
+  <data name="Column.Unit" xml:space="preserve"><value>Unité</value></data>
+  <data name="Column.UnitPrice" xml:space="preserve"><value>PU HT</value></data>
+  <data name="Column.Vat" xml:space="preserve"><value>TVA</value></data>
+  <data name="Draft.Notice" xml:space="preserve"><value>Document de travail sans numéro ni valeur comptable.</value></data>
+  <data name="Draft.Watermark" xml:space="preserve"><value>BROUILLON</value></data>
+  <data name="Footer.Of" xml:space="preserve"><value>sur</value></data>
+  <data name="Footer.Page" xml:space="preserve"><value>Page</value></data>
+  <data name="Footer.ShareCapital" xml:space="preserve"><value>au capital de {0}</value></data>
+  <data name="Header.DeliveryDate" xml:space="preserve"><value>Date de la vente ou de la prestation</value></data>
+  <data name="Header.DueDate" xml:space="preserve"><value>Date d'échéance</value></data>
+  <data name="Header.IssueDate" xml:space="preserve"><value>Date d'émission</value></data>
+  <data name="Header.Number" xml:space="preserve"><value>N° {0}</value></data>
+  <data name="Header.ValidUntil" xml:space="preserve"><value>Valable jusqu'au</value></data>
+  <data name="Party.Buyer" xml:space="preserve"><value>Client</value></data>
+  <data name="Party.DeliveryAddress" xml:space="preserve"><value>Adresse de livraison</value></data>
+  <data name="Party.Email" xml:space="preserve"><value>E-mail {0}</value></data>
+  <data name="Party.Phone" xml:space="preserve"><value>Tél. {0}</value></data>
+  <data name="Party.Siren" xml:space="preserve"><value>SIREN {0}</value></data>
+  <data name="Party.VatNumber" xml:space="preserve"><value>N° TVA intracommunautaire {0}</value></data>
+  <data name="Payment.Bic" xml:space="preserve"><value>BIC {0}</value></data>
+  <data name="Payment.Iban" xml:space="preserve"><value>IBAN {0}</value></data>
+  <data name="Payment.Terms" xml:space="preserve"><value>Conditions de paiement</value></data>
+  <data name="Quote.Acceptance" xml:space="preserve"><value>Bon pour accord : date, nom et signature du client</value></data>
+  <data name="Related.CreditNote" xml:space="preserve"><value>Avoir sur la facture n° {0}</value></data>
+  <data name="Related.DownPaymentInvoice" xml:space="preserve"><value>Acompte sur le devis n° {0}</value></data>
+  <data name="Related.Invoice" xml:space="preserve"><value>Selon le devis n° {0}</value></data>
+  <data name="Related.Quote" xml:space="preserve"><value>Référence {0}</value></data>
+  <data name="Title.CreditNote" xml:space="preserve"><value>Avoir</value></data>
+  <data name="Title.DownPaymentInvoice" xml:space="preserve"><value>Facture d'acompte</value></data>
+  <data name="Title.Invoice" xml:space="preserve"><value>Facture</value></data>
+  <data name="Title.Quote" xml:space="preserve"><value>Devis</value></data>
+  <data name="Total.Deduction" xml:space="preserve"><value>Acompte n° {0} du {1}</value></data>
+  <data name="Total.ExclTax" xml:space="preserve"><value>Total HT</value></data>
+  <data name="Total.InclTax" xml:space="preserve"><value>Total TTC</value></data>
+  <data name="Total.NetToPay" xml:space="preserve"><value>Net à payer</value></data>
+  <data name="Total.Vat" xml:space="preserve"><value>Total TVA</value></data>
+  <data name="Vat.Amount" xml:space="preserve"><value>Montant de TVA</value></data>
+  <data name="Vat.Base" xml:space="preserve"><value>Base HT</value></data>
+  <data name="Vat.Rate" xml:space="preserve"><value>Taux de TVA</value></data>
+</root>

@@ -25,6 +25,7 @@
       "src\\Modules\\Supervision\\Lettra.Supervision.Domain\\Lettra.Supervision.Domain.csproj",
       "src\\Modules\\Supervision\\Lettra.Supervision.Infrastructure\\Lettra.Supervision.Infrastructure.csproj",
       "src\\Composition\\Lettra.Bootstrap\\Lettra.Bootstrap.csproj",
+      "src\\Presentation\\Lettra.Printing\\Lettra.Printing.csproj",
       "src\\Presentation\\Lettra.UI.Abstractions\\Lettra.UI.Abstractions.csproj",
       "src\\Presentation\\Lettra.UI.Gateway.Http\\Lettra.UI.Gateway.Http.csproj",
       "src\\Presentation\\Lettra.UI.Gateway.InProcess\\Lettra.UI.Gateway.InProcess.csproj",

@@ -10,3 +10,5 @@ artifacts/
 *.db-shm
 *.db-wal
 .DS_Store
+build/verapdf/lib/
+pdf-samples/
