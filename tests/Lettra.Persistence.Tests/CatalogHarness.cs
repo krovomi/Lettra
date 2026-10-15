@@ -249,6 +249,69 @@ internal static class CatalogScenarios
             .Should().Be(new OrganisationId(CatalogHarness.OtherCabinet));
         (await directory.GetScopePathAsync(cabinet, default))!.Ancestors.Should().Equal(cabinet, AuthorizationScope.Plateforme);
         (await directory.GetScopePathAsync(AuthorizationScope.ForCabinet(new OrganisationId(Guid.CreateVersion7())), default)).Should().BeNull();
+
+        // Tous les dossiers du cabinet situés d'un coup : mêmes chemins que dossier par dossier, l'inconnu omis.
+        IReadOnlyList<ScopePath> paths = await directory.GetDossierPathsAsync(
+            CatalogHarness.Organisation, [inGroup, outOfGroup, new DossierId(Guid.CreateVersion7())], default);
+        paths.Select(p => p.Target).Should().BeEquivalentTo(new[] { AuthorizationScope.ForDossier(inGroup), AuthorizationScope.ForDossier(outOfGroup) });
+        paths.Single(p => p.Target.Id == inGroup.Value).Ancestors.Should().Equal(
+            AuthorizationScope.ForDossier(inGroup), AuthorizationScope.ForGroup(new GroupId(CatalogHarness.Group)), cabinet, AuthorizationScope.Plateforme);
+        (await directory.GetDossierPathsAsync(new OrganisationId(CatalogHarness.OtherCabinet), [inGroup], default)).Should().BeEmpty();
+
+        await AdministrationAsync(services, directory, outOfGroup);
+    }
+
+    /// <summary>Écriture du registre : chaque lien reste dans le cabinet, et les opérations répétées ne dupliquent rien.</summary>
+    private static async Task AdministrationAsync(IServiceProvider services, IAuthorizationDirectory directory, DossierId dossier)
+    {
+        IAuthorizationAdministration admin = services.GetRequiredService<IAuthorizationAdministration>();
+        OrganisationId cabinet = CatalogHarness.Organisation;
+        Guid user = Guid.CreateVersion7();
+
+        (await admin.SetAccountAsync(cabinet, user, AccountState.Active, default)).IsSuccess.Should().BeTrue();
+        (await admin.SetAccountAsync(new OrganisationId(CatalogHarness.OtherCabinet), user, AccountState.Active, default))
+            .Errors.Should().ContainSingle().Which.Code.Should().Be(RightsErrors.UserNotFoundCode);
+        (await admin.CreateGroupAsync(new OrganisationId(Guid.CreateVersion7()), "Fantôme", default))
+            .Errors.Should().ContainSingle().Which.Code.Should().Be(DossierErrors.OrganisationNotFoundCode);
+
+        GroupId group = (await admin.CreateGroupAsync(cabinet, "Pôle social", default)).Value;
+        for (int i = 0; i < 2; i++)
+        {
+            (await admin.SetGroupMemberAsync(group, user, member: true, default)).IsSuccess.Should().BeTrue();
+            (await admin.SetDossierPlacementAsync(group, dossier, placed: true, default)).IsSuccess.Should().BeTrue();
+        }
+
+        (await admin.SetGroupMemberAsync(new GroupId(CatalogHarness.ForeignGroup), user, member: true, default))
+            .Errors.Should().ContainSingle().Which.Code.Should().Be(RightsErrors.UserNotFoundCode);
+        (await admin.SetDossierPlacementAsync(new GroupId(CatalogHarness.ForeignGroup), dossier, placed: true, default))
+            .Errors.Should().ContainSingle().Which.Code.Should().Be(TenancyErrors.DossierNotFoundCode);
+
+        RoleAssignment assignment = new(new SubjectRef(SubjectKind.User, user), "collaborateur", AuthorizationScope.ForGroup(group));
+        Guid first = (await admin.AssignAsync(cabinet, assignment, default)).Value;
+        DateTimeOffset expires = DateTimeOffset.Parse("2027-06-30T00:00:00Z", CultureInfo.InvariantCulture);
+        (await admin.AssignAsync(cabinet, assignment with { ExpiresAt = expires }, default)).Value.Should().Be(first);
+        (await admin.AssignAsync(new OrganisationId(CatalogHarness.OtherCabinet), assignment, default))
+            .Errors.Should().ContainSingle().Which.Code.Should().Be(RightsErrors.SubjectNotFoundCode);
+
+        UserAuthorizationProfile profile = (await directory.FindUserAsync(user, default))!;
+        profile.Groups.Should().Equal(group);
+        profile.Assignments.Should().ContainSingle().Which.ExpiresAt.Should().Be(expires);
+        (await directory.GetScopePathAsync(AuthorizationScope.ForDossier(dossier), default))!.Ancestors.Should().Contain(AuthorizationScope.ForGroup(group));
+        (await admin.FindCustomRoleAsync(cabinet, "stagiaire", default))!.RequiresExpiry.Should().BeTrue();
+        (await admin.FindCustomRoleAsync(new OrganisationId(CatalogHarness.OtherCabinet), "stagiaire", default)).Should().BeNull();
+
+        (await admin.RevokeAsync(new OrganisationId(CatalogHarness.OtherCabinet), first, default))
+            .Errors.Should().ContainSingle().Which.Code.Should().Be(RightsErrors.AssignmentNotFoundCode);
+        (await admin.RevokeAsync(cabinet, first, default)).Value.Should().Be(new SubjectRef(SubjectKind.User, user));
+        (await admin.SetGroupMemberAsync(group, user, member: false, default)).IsSuccess.Should().BeTrue();
+        (await admin.SetDossierPlacementAsync(group, dossier, placed: false, default)).IsSuccess.Should().BeTrue();
+        (await admin.SetAccountAsync(cabinet, user, AccountState.Suspended, default)).IsSuccess.Should().BeTrue();
+
+        profile = (await directory.FindUserAsync(user, default))!;
+        profile.State.Should().Be(AccountState.Suspended);
+        profile.Groups.Should().BeEmpty();
+        profile.Assignments.Should().BeEmpty();
+        (await directory.GetScopePathAsync(AuthorizationScope.ForDossier(dossier), default))!.Ancestors.Should().NotContain(AuthorizationScope.ForGroup(group));
     }
 
     /// <summary>Séparation des tâches (annexe F §3.2) : inactive par défaut, réglée puis modifiée par l'administrateur.</summary>

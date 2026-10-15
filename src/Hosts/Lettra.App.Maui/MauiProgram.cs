@@ -16,7 +16,7 @@ using Microsoft.Maui.Storage;
 namespace Lettra.App.Maui;
 
 /// <summary>
-/// Composition du poste isolé (mode 1) : registre local des dossiers dans le dossier de données de l'application,
+/// Composition du poste isolé (mode 1, par défaut ; relié à un serveur, voir <see cref="ConnectedDevice"/>) : registre local des dossiers dans le dossier de données de l'application,
 /// une base SQLite chiffrée (SQLite3 Multiple Ciphers) par dossier, clé du cabinet dans le coffre de l'OS.
 /// Au premier lancement, le cabinet local et un premier dossier sont créés.
 /// </summary>
@@ -29,6 +29,12 @@ public static class MauiProgram
         builder.Services.AddMauiBlazorWebView();
 
         LettraCultures.Apply(LettraCultures.Resolve(CultureInfo.InstalledUICulture.Name));
+
+        // Relié à un serveur (lettra.json) : connexion PKCE au Keycloak du cabinet et gateways HTTP authentifiées.
+        if (ConnectedDevice.TryConfigure(builder))
+        {
+            return builder.Build();
+        }
 
         builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
         {

@@ -6,6 +6,7 @@ using Lettra.Infrastructure.Persistence.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Lettra.Infrastructure.Catalog;
 
@@ -36,6 +37,9 @@ public static class DependencyInjection
         services.AddSingleton<IDossierProvisioner>(sp => sp.GetRequiredService<CatalogDossierProvisioner>());
         // Avant l'identité serveur, qui n'enregistre son registre lu en configuration qu'à défaut (TryAdd).
         services.AddSingleton<IAuthorizationDirectory, CatalogAuthorizationDirectory>();
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddSingleton<IAuthorizationAdministration, CatalogAuthorizationAdministration>();
+
         // Remplace la politique « aucune » du mode 1 enregistrée par AddApplication.
         services.AddSingleton<IOrganisationPolicyStore, CatalogOrganisationPolicyStore>();
         services.AddSingleton<CatalogInitializer>();

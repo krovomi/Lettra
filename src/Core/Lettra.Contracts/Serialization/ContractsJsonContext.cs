@@ -9,6 +9,7 @@ using Lettra.Contracts.Policies;
 using Lettra.Contracts.Presence;
 using Lettra.Contracts.Directory;
 using Lettra.Contracts.Dossiers;
+using Lettra.Contracts.Rights;
 using Lettra.Contracts.Suppliers;
 
 namespace Lettra.Contracts.Serialization;
@@ -25,6 +26,9 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(SessionResponse))]
 [JsonSerializable(typeof(CreateLocalAccountRequest))]
 [JsonSerializable(typeof(UnlockLocalSessionRequest))]
+[JsonSerializable(typeof(IssueRightsSnapshotRequest))]
+[JsonSerializable(typeof(RightsSnapshotResponse))]
+[JsonSerializable(typeof(RightsSnapshotKeysResponse))]
 [JsonSerializable(typeof(CreateSupplierRequest))]
 [JsonSerializable(typeof(SupplierResponse))]
 [JsonSerializable(typeof(PagedResponse<SupplierSummary>))]
@@ -37,6 +41,12 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(VatNumberCheckResponse))]
 [JsonSerializable(typeof(CreateDossierRequest))]
 [JsonSerializable(typeof(DossierSummary))]
+[JsonSerializable(typeof(IReadOnlyList<DossierSummary>))]
+[JsonSerializable(typeof(SetUserAccountRequest))]
+[JsonSerializable(typeof(CreateGroupRequest))]
+[JsonSerializable(typeof(GroupSummary))]
+[JsonSerializable(typeof(AssignRoleRequest))]
+[JsonSerializable(typeof(RoleAssignmentSummary))]
 [JsonSerializable(typeof(AskAssistantRequest))]
 [JsonSerializable(typeof(AssistantEvent))]
 [JsonSerializable(typeof(IReadOnlyList<AssistantJournalEntry>))]

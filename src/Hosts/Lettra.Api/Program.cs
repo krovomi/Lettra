@@ -65,7 +65,23 @@ RouteGroupBuilder cabinet = app.MapGroup($"/api/v1/cabinets/{{{CabinetPermission
     .RequireAuthorization(LettraPolicies.User)
     .AddEndpointFilter<CsrfEndpointFilter>();
 cabinet.MapDossiers();
+cabinet.MapCabinetRights();
 cabinet.MapCabinetPolicies();
+
+// Membres et dossiers d'un groupe : la permission porte sur le groupe de la route.
+app.MapGroup($"/api/v1/groupes/{{{GroupPermissionEndpointFilter.RouteKey}:guid}}")
+    .RequireAuthorization(LettraPolicies.User)
+    .AddEndpointFilter<CsrfEndpointFilter>()
+    .MapGroupRights();
+
+// Les dossiers que l'utilisateur peut ouvrir (sélecteur de dossier) : pas encore de dossier choisi.
+app.MapGroup("/api/v1/dossiers")
+    .RequireAuthorization(LettraPolicies.User)
+    .AddEndpointFilter<CsrfEndpointFilter>()
+    .MapAccessibleDossiers();
+
+// Instantané de droits signé pour le hors ligne (annexe F §4) et ses clés publiques.
+app.MapRightsSnapshot();
 
 app.MapLettraPresence();
 app.MapLettraBff();

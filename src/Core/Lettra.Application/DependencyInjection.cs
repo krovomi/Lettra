@@ -26,6 +26,10 @@ public static class DependencyInjection
         // Hors du mode 1, les cas d'usage de session locale répondent « non pris en charge ».
         services.TryAddSingleton<ILocalAccounts, NoLocalAccounts>();
 
+        // Sans base Catalog (poste isolé, registre en configuration), les droits ne s'administrent pas.
+        services.TryAddSingleton<IAuthorizationAdministration, NoAuthorizationAdministration>();
+        services.TryAddSingleton<IPermissionCacheInvalidator, NoPermissionCache>();
+
         // Séparation des tâches (annexe F §3.2) : la politique vient de la base Catalog hors du mode 1.
         services.TryAddSingleton<IOrganisationPolicyStore, NoOrganisationPolicies>();
         services.AddScoped<ISegregationOfDuties, SegregationOfDutiesService>();
