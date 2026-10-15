@@ -32,6 +32,12 @@ internal sealed record EInvoiceLine(
     string VatCategory,
     decimal VatRate);
 
+/// <summary>
+/// Une note de la pièce (BG-1) : son texte (BT-22) et, pour les mentions que la norme française XP Z12-012 code
+/// (BR-FR-05), son code sujet (BT-21) : PMT indemnité de recouvrement, PMD pénalités de retard, AAB escompte.
+/// </summary>
+internal sealed record EInvoiceNote(string Content, string? SubjectCode = null);
+
 /// <summary>Une ventilation de TVA (BG-23).</summary>
 internal sealed record EInvoiceVat(string Category, decimal Rate, decimal Basis, decimal Amount, string? ExemptionCode, string? ExemptionText);
 
@@ -45,6 +51,14 @@ internal sealed record EInvoice
     public const string ElectronicAddressScheme = "0225";
     public const string SirenScheme = "0002";
     public const string SepaCreditTransfer = "58";
+    public const string RecoveryIndemnityNote = "PMT";
+    public const string LatePenaltiesNote = "PMD";
+    public const string EarlyPaymentDiscountNote = "AAB";
+
+    private const string LatePenaltiesPrefix = "Pénalités de retard";
+    private const string RecoveryIndemnityPrefix = "Indemnité forfaitaire";
+    private const string VatOnDebitsPrefix = "Option pour le paiement de la TVA";
+    private const string CreditedInvoicePrefix = "Avoir sur la facture";
 
     public required string TypeCode { get; init; }
 
@@ -60,7 +74,7 @@ internal sealed record EInvoice
 
     public string Currency { get; init; } = "EUR";
 
-    public required IReadOnlyList<string> Notes { get; init; }
+    public required IReadOnlyList<EInvoiceNote> Notes { get; init; }
 
     public required EInvoiceParty Seller { get; init; }
 
@@ -71,6 +85,9 @@ internal sealed record EInvoice
     public string? PurchaseOrderReference { get; init; }
 
     public string? PrecedingInvoiceNumber { get; init; }
+
+    /// <summary>Date d'émission de la facture d'origine d'un avoir (BT-26, exigée par BR-FR-CO-05).</summary>
+    public DateOnly? PrecedingInvoiceDate { get; init; }
 
     public string? PaymentTerms { get; init; }
 
@@ -101,8 +118,11 @@ internal sealed record EInvoice
 
     public static string IsoDate(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
-    /// <summary>La pièce validée (numérotée, figée) et les coordonnées bancaires de la fiche entreprise.</summary>
-    public static EInvoice From(InvoiceResponse invoice, CompanyProfileResponse? profile)
+    /// <summary>
+    /// La pièce validée (numérotée, figée), les coordonnées bancaires de la fiche entreprise et, pour un avoir, la date
+    /// de la facture d'origine.
+    /// </summary>
+    public static EInvoice From(InvoiceResponse invoice, CompanyProfileResponse? profile, DateOnly? precedingInvoiceDate = null)
     {
         ArgumentNullException.ThrowIfNull(invoice);
         if (invoice.Number is null || invoice.IssueDate is null || invoice.Seller is null)
@@ -112,8 +132,7 @@ internal sealed record EInvoice
 
         VatRegime regime = (VatRegime)(int)invoice.VatRegime;
         bool credit = invoice.Kind == InvoiceKindDto.CreditNote;
-        List<string> notes = [.. new[] { invoice.Subject, invoice.Notes, invoice.CreditReason }.Where(n => !string.IsNullOrWhiteSpace(n)).Select(n => n!.Trim())];
-        notes.AddRange(invoice.LegalMentions.Where(m => !string.IsNullOrWhiteSpace(m)));
+        IReadOnlyList<EInvoiceNote> notes = NotesOf(invoice, regime, credit);
 
         return new EInvoice
         {
@@ -136,6 +155,7 @@ internal sealed record EInvoice
                 : [.. invoice.DeliveryAddress.Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)],
             PurchaseOrderReference = invoice.PurchaseOrderReference,
             PrecedingInvoiceNumber = credit ? invoice.CreditedInvoiceNumber : null,
+            PrecedingInvoiceDate = credit ? precedingInvoiceDate : null,
             PaymentTerms = credit ? null : invoice.PaymentTerms ?? profile?.PaymentTerms,
             Iban = credit ? null : profile?.Iban,
             Bic = credit ? null : profile?.Bic,
@@ -151,6 +171,58 @@ internal sealed record EInvoice
             TotalVat = invoice.Totals.TotalVat,
             TotalInclTax = invoice.Totals.TotalInclTax,
         };
+    }
+
+    /// <summary>
+    /// Les notes : objet, notes et motif de l'avoir, puis les mentions légales figées à la validation. Les trois mentions
+    /// de paiement codées par BR-FR-05 portent leur code sujet ; absente de la pièce (avoir, client particulier, pas de
+    /// taux ni d'escompte à la fiche), la mention est écrite telle que la loi s'applique alors, pour que la note existe.
+    /// Les mentions figées sont reconnues à leur libellé, celui que la validation écrit (<c>Invoice.BuildLegalMentions</c>) :
+    /// le texte d'exonération, l'option sur les débits et la référence de l'avoir sont connus ; ce qui reste est l'escompte.
+    /// </summary>
+    private static List<EInvoiceNote> NotesOf(InvoiceResponse invoice, VatRegime regime, bool credit)
+    {
+        List<EInvoiceNote> notes = [.. new[] { invoice.Subject, invoice.Notes, invoice.CreditReason }
+            .Where(n => !string.IsNullOrWhiteSpace(n))
+            .Select(n => new EInvoiceNote(n!.Trim()))];
+        HashSet<string> vatTexts = [.. invoice.Totals.Breakdown.Select(b => VatTreatment.LegalTextOf(regime, b.ExemptionCode)).OfType<string>()];
+        string? penalties = null;
+        string? indemnity = null;
+        string? discount = null;
+        foreach (string mention in invoice.LegalMentions.Where(m => !string.IsNullOrWhiteSpace(m)).Select(m => m.Trim()))
+        {
+            if (mention.StartsWith(LatePenaltiesPrefix, StringComparison.Ordinal))
+            {
+                penalties = mention;
+            }
+            else if (mention.StartsWith(RecoveryIndemnityPrefix, StringComparison.Ordinal))
+            {
+                indemnity = mention;
+            }
+            else if (!credit && discount is null && !vatTexts.Contains(mention)
+                && !mention.StartsWith(VatOnDebitsPrefix, StringComparison.Ordinal)
+                && !mention.StartsWith(CreditedInvoicePrefix, StringComparison.Ordinal))
+            {
+                discount = mention;
+            }
+            else
+            {
+                notes.Add(new EInvoiceNote(mention));
+            }
+        }
+
+        notes.Add(new EInvoiceNote(
+            indemnity ?? (credit
+                ? "Indemnité forfaitaire pour frais de recouvrement : sans objet pour un avoir"
+                : "Indemnité forfaitaire pour frais de recouvrement : non applicable, client non professionnel"),
+            RecoveryIndemnityNote));
+        notes.Add(new EInvoiceNote(
+            penalties ?? (credit
+                ? "Pénalités de retard : sans objet pour un avoir"
+                : "Pénalités de retard : à défaut de taux convenu, taux de la BCE majoré de 10 points (art. L441-10 du Code de commerce)"),
+            LatePenaltiesNote));
+        notes.Add(new EInvoiceNote(discount ?? "Pas d'escompte pour paiement anticipé", EarlyPaymentDiscountNote));
+        return notes;
     }
 
     private static EInvoiceParty Party(PartySnapshotResponse party) => new(

@@ -39,15 +39,31 @@ public static class EInvoiceSerializer
 {
     public const string FacturXFileName = "factur-x.xml";
 
-    public static byte[] Write(Contracts.Billing.InvoiceResponse invoice, Contracts.Billing.CompanyProfileResponse? profile, EInvoiceFormatDto format)
+    public static byte[] Write(
+        Contracts.Billing.InvoiceResponse invoice,
+        Contracts.Billing.CompanyProfileResponse? profile,
+        EInvoiceFormatDto format,
+        DateOnly? precedingInvoiceDate = null)
     {
-        EInvoice model = EInvoice.From(invoice, profile);
+        EInvoice model = EInvoice.From(invoice, profile, precedingInvoiceDate);
         return format switch
         {
             EInvoiceFormatDto.Cii => CiiWriter.Write(model),
             EInvoiceFormatDto.Ubl => UblWriter.Write(model),
             _ => throw new ArgumentOutOfRangeException(nameof(format), format, null),
         };
+    }
+
+    /// <summary>La date d'émission de la facture d'origine d'un avoir (BT-26), lue dans le dossier.</summary>
+    internal static async Task<DateOnly?> PrecedingInvoiceDateAsync(IInvoiceRepository invoices, Invoice invoice, CancellationToken cancellationToken)
+    {
+        if (invoice.CreditedInvoiceId is not { } credited)
+        {
+            return null;
+        }
+
+        Invoice? original = await invoices.FindAsync(credited, cancellationToken).ConfigureAwait(false);
+        return original?.IssueDate;
     }
 
     public static string FileNameOf(string number, EInvoiceFormatDto format) =>
@@ -77,7 +93,8 @@ internal sealed class GetEInvoiceHandler(IInvoiceRepository invoices, ICompanyPr
         }
 
         CompanyProfile? profile = await profiles.FindAsync(cancellationToken).ConfigureAwait(false);
-        byte[] content = EInvoiceSerializer.Write(invoice.ToResponse(), profile?.ToResponse(), query.Format);
+        DateOnly? preceding = await EInvoiceSerializer.PrecedingInvoiceDateAsync(invoices, invoice, cancellationToken).ConfigureAwait(false);
+        byte[] content = EInvoiceSerializer.Write(invoice.ToResponse(), profile?.ToResponse(), query.Format, preceding);
         return new EInvoiceFile(EInvoiceSerializer.FileNameOf(invoice.Number, query.Format), "application/xml", content);
     }
 }

@@ -77,4 +77,10 @@
   <data name="Sync.Conflicts.EmptyValue" xml:space="preserve"><value>(vide)</value></data>
   <data name="Sync.NotSynchronized" xml:space="preserve"><value>Ce poste ne synchronise pas : tout est enregistré directement.</value></data>
   <data name="Sync.Back" xml:space="preserve"><value>Retour à la synchronisation</value></data>
+  <data name="Sync.Failure.DeviceRevoked" xml:space="preserve"><value>Le cabinet a retiré ce poste : ses données ont été effacées. Contactez l'administrateur du cabinet.</value></data>
+  <data name="Error.Sync.DeviceRevoked" xml:space="preserve"><value>Le cabinet a retiré ce poste : il ne peut plus ni synchroniser ni valider.</value></data>
+  <data name="Error.Sync.OfflineTooLong" xml:space="preserve"><value>Ce poste est resté hors ligne plus longtemps que le cabinet ne le permet : synchronisez avant de valider.</value></data>
+  <data name="Error.Sync.PolicyInvalid" xml:space="preserve"><value>La durée maximale hors ligne va de 1 heure à 30 jours.</value></data>
+  <data name="Error.Sync.DeviceUnknown" xml:space="preserve"><value>Ce poste ne s'est jamais synchronisé avec ce dossier.</value></data>
+  <data name="Error.Sync.NothingToRelease" xml:space="preserve"><value>Ce poste n'a pas de série ouverte dans ce dossier : rien à débloquer.</value></data>
 </root>

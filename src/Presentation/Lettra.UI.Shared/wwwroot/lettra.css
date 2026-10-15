@@ -147,3 +147,10 @@ body { margin: 0; }
 .lettra-status.is-platform-refused, .lettra-status.is-platform-rejected, .lettra-status.is-platform-disputed { background: #fde8e8; color: var(--lettra-danger); }
 .lettra-status.is-platform-suspended { background: #fff4e5; color: #8a4b00; }
 .lettra-platform .lettra-status { font-size: 0.85em; margin-left: 0; }
+
+/* Écran FEC (phase 5) */
+.lettra-banner.is-success { background: #e7f5ee; border: 1px solid var(--lettra-success); }
+.lettra-fec h3 { font-size: 1rem; margin-top: 1.25rem; }
+.lettra-fec-mark { font-size: 0.8em; font-weight: 700; padding: 0 0.3rem; border-radius: 3px; }
+.lettra-fec tr.is-error .lettra-fec-mark { background: #fde8e8; color: var(--lettra-danger); }
+.lettra-fec tr.is-warning .lettra-fec-mark { background: #fff4e5; color: #8a4b00; }

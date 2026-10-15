@@ -1,0 +1,80 @@
+@page "/poste/code-pin"
+@inject DeviceLock Lock
+@inject IStringLocalizer<SharedResource> L
+
+@* Code PIN du poste (étape 4.4) : le définir, le changer, le retirer, verrouiller maintenant. *@
+
+<PageTitle>@L["Pin.Title"] · Lettra</PageTitle>
+
+<h1 tabindex="-1">@L["Pin.Title"]</h1>
+
+@if (!Lock.IsAvailable)
+{
+    <p id="pin-unavailable">@L["Pin.Unavailable"]</p>
+}
+else
+{
+    <section class="lettra-card">
+        <p id="pin-state">@(Lock.HasPin ? L["Pin.State.On"] : L["Pin.State.Off"])</p>
+        <form @onsubmit="SaveAsync">
+            @if (Lock.HasPin)
+            {
+                <label for="pin-current">@L["Pin.Current"]</label>
+                <input id="pin-current" type="password" inputmode="numeric" autocomplete="off" maxlength="@DeviceLock.MaxLength" @bind="_current" />
+            }
+            <label for="pin-new">@L["Pin.New"]</label>
+            <input id="pin-new" type="password" inputmode="numeric" autocomplete="off" maxlength="@DeviceLock.MaxLength" @bind="_new" />
+            <label for="pin-confirm">@L["Pin.Confirm"]</label>
+            <input id="pin-confirm" type="password" inputmode="numeric" autocomplete="off" maxlength="@DeviceLock.MaxLength" @bind="_confirm" />
+            <button type="submit" id="pin-save" class="lettra-button">@(Lock.HasPin ? L["Pin.Change"] : L["Pin.Set"])</button>
+        </form>
+        @if (Lock.HasPin)
+        {
+            <button type="button" id="pin-remove" class="lettra-link" @onclick="RemoveAsync">@L["Pin.Remove"]</button>
+            <button type="button" id="pin-lock-now" class="lettra-link" @onclick="Lock.Lock">@L["Pin.LockNow"]</button>
+        }
+        @if (_message is not null)
+        {
+            <p id="pin-message" role="status">@_message</p>
+        }
+    </section>
+}
+
+@code {
+    private string _current = string.Empty;
+    private string _new = string.Empty;
+    private string _confirm = string.Empty;
+    private string? _message;
+
+    protected override Task OnInitializedAsync() => Lock.LoadAsync(CancellationToken.None);
+
+    private async Task SaveAsync()
+    {
+        if (_new != _confirm)
+        {
+            _message = L["Pin.Mismatch"];
+            return;
+        }
+
+        bool had = Lock.HasPin;
+        PinCheck check = await Lock.SetPinAsync(_current, _new, CancellationToken.None);
+        _message = Message(check, had ? "Pin.Changed" : "Pin.Saved");
+        Clear();
+    }
+
+    private async Task RemoveAsync()
+    {
+        _message = Message(await Lock.RemovePinAsync(_current, CancellationToken.None), "Pin.Removed");
+        Clear();
+    }
+
+    private string Message(PinCheck check, string acceptedKey) => check switch
+    {
+        PinCheck.Accepted => L[acceptedKey],
+        PinCheck.Invalid => string.Format(CultureInfo.CurrentCulture, L["Pin.Invalid"], DeviceLock.MinLength, DeviceLock.MaxLength),
+        PinCheck.Blocked => L["Pin.Blocked"],
+        _ => L["Lock.Wrong"],
+    };
+
+    private void Clear() => (_current, _new, _confirm) = (string.Empty, string.Empty, string.Empty);
+}

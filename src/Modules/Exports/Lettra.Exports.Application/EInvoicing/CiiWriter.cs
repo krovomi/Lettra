@@ -33,7 +33,9 @@ internal static class CiiWriter
                     new XElement(Ram + "ID", invoice.Number),
                     new XElement(Ram + "TypeCode", invoice.TypeCode),
                     new XElement(Ram + "IssueDateTime", DateTime(invoice.IssueDate)),
-                    invoice.Notes.Select(n => new XElement(Ram + "IncludedNote", new XElement(Ram + "Content", n)))),
+                    invoice.Notes.Select(n => new XElement(Ram + "IncludedNote",
+                        new XElement(Ram + "Content", n.Content),
+                        n.SubjectCode is { } code ? new XElement(Ram + "SubjectCode", code) : null))),
                 new XElement(Rsm + "SupplyChainTradeTransaction",
                     invoice.Lines.Select(Line),
                     Agreement(invoice),
@@ -162,7 +164,12 @@ internal static class CiiWriter
                 new XElement(Ram + "GrandTotalAmount", EInvoice.Amount(invoice.TotalInclTax)),
                 new XElement(Ram + "DuePayableAmount", EInvoice.Amount(invoice.TotalInclTax))),
             invoice.PrecedingInvoiceNumber is { } preceding
-                ? new XElement(Ram + "InvoiceReferencedDocument", new XElement(Ram + "IssuerAssignedID", preceding))
+                ? new XElement(Ram + "InvoiceReferencedDocument",
+                    new XElement(Ram + "IssuerAssignedID", preceding),
+                    invoice.PrecedingInvoiceDate is { } issued
+                        ? new XElement(Ram + "FormattedIssueDateTime",
+                            new XElement(Qdt + "DateTimeString", new XAttribute("format", "102"), EInvoice.Date102(issued)))
+                        : null)
                 : null);
 
     private static XElement? Optional(XName name, string? value) =>

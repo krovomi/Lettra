@@ -1,0 +1,173 @@
+@page "/exports/fec"
+@inject IFecGateway Fec
+@inject IFileDownloader Files
+@inject IStringLocalizer<SharedResource> L
+
+@* Fichier des écritures comptables (phase 5) : export sur un exercice, puis rapport du validateur intégré sur le
+   fichier remis. Le même validateur contrôle un FEC venu d'un autre logiciel. *@
+
+<PageTitle>@L["Fec.Title"] · Lettra</PageTitle>
+
+<h1 tabindex="-1">@L["Fec.Title"]</h1>
+<p class="lettra-hint">@L["Fec.Intro"]</p>
+
+<GeneralErrors Errors="_errors" />
+
+<section class="lettra-card lettra-fec" aria-labelledby="fec-period-title">
+    <h2 id="fec-period-title">@L["Fec.Period.Title"]</h2>
+    <div class="lettra-inline">
+        <label for="fec-from">@L["Fec.Period.From"]</label>
+        <input id="fec-from" type="date" @bind="_from" />
+        <label for="fec-to">@L["Fec.Period.To"]</label>
+        <input id="fec-to" type="date" @bind="_to" />
+        <button type="button" id="fec-export" class="lettra-button" disabled="@_busy" @onclick="ExportAsync">@L["Fec.Export"]</button>
+    </div>
+
+    <h3>@L["Fec.Check.Title"]</h3>
+    <p class="lettra-hint">@L["Fec.Check.Hint"]</p>
+    <InputFile id="fec-file" accept=".txt,.csv" disabled="@_busy" OnChange="ValidateFileAsync" />
+</section>
+
+@if (_busy)
+{
+    <p role="status">@L["Fec.Working"]</p>
+}
+
+@if (_report is { } report)
+{
+    <section id="fec-report" class="lettra-card lettra-fec" aria-labelledby="fec-report-title">
+        <h2 id="fec-report-title">@L["Fec.Report.Title"]</h2>
+        @if (_exported is { } exported)
+        {
+            <p id="fec-exported">@string.Format(Culture, L["Fec.Report.Exported"], exported)</p>
+        }
+
+        <p id="fec-verdict" class="lettra-banner @(report.IsValid ? "is-success" : "is-danger")" role="status">@Verdict(report)</p>
+
+        <dl class="lettra-platform-facts">
+            <dt>@L["Fec.Report.File"]</dt><dd>@report.FileName</dd>
+            <dt>@L["Fec.Report.Lines"]</dt><dd>@report.LineCount.ToString("N0", Culture)</dd>
+            <dt>@L["Fec.Report.Entries"]</dt><dd>@report.EntryCount.ToString("N0", Culture)</dd>
+            <dt>@L["Fec.Report.Debit"]</dt><dd id="fec-debit">@Amount(report.TotalDebit)</dd>
+            <dt>@L["Fec.Report.Credit"]</dt><dd id="fec-credit">@Amount(report.TotalCredit)</dd>
+        </dl>
+
+        @if (report.Findings.Count > 0)
+        {
+            <table id="fec-findings" class="lettra-table">
+                <caption class="lettra-visually-hidden">@L["Fec.Findings"]</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">@L["Fec.Findings.Severity"]</th>
+                        <th scope="col">@L["Fec.Findings.Line"]</th>
+                        <th scope="col">@L["Fec.Findings.Column"]</th>
+                        <th scope="col">@L["Fec.Findings.Entry"]</th>
+                        <th scope="col">@L["Fec.Findings.Text"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (FecFindingResponse finding in report.Findings)
+                    {
+                        <tr class="is-@finding.Severity.ToString().ToLowerInvariant()">
+                            <td><span class="lettra-fec-mark">@L[$"Fec.Severity.{finding.Severity}"]</span></td>
+                            <td>@finding.Line</td>
+                            <td>@finding.Column</td>
+                            <td>@finding.EntryNumber</td>
+                            <td>@L.Error(finding.Code)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            @if (report.FindingsTruncated)
+            {
+                <p id="fec-truncated" class="lettra-hint">@L["Fec.Findings.Truncated"]</p>
+            }
+        }
+    </section>
+}
+
+@code {
+    /// <summary>Plafond du validateur (<c>ValidateFecQuery.MaxContentLength</c>) : un exercice de toute une PME.</summary>
+    private const long MaxFileSize = 64 * 1024 * 1024;
+
+    private const string FecMimeType = "text/plain";
+
+    private DateOnly _from = new(DateTime.Today.Year, 1, 1);
+    private DateOnly _to = new(DateTime.Today.Year, 12, 31);
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private FecValidationResponse? _report;
+    private string? _exported;
+    private bool _busy;
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private async Task ExportAsync()
+    {
+        await RunAsync(async () =>
+        {
+            OperationResult<FecDocument> file = await Fec.ExportAsync(_from, _to, CancellationToken.None);
+            if (file is not { IsSuccess: true, Value: { } document })
+            {
+                return file.Errors;
+            }
+
+            await Files.DownloadAsync(document.FileName, FecMimeType, document.Content, CancellationToken.None);
+            // Le serveur a déjà refusé un fichier non conforme : le rapport montre ce qui a été vérifié.
+            OperationResult<FecValidationResponse> report = await Fec.ValidateAsync(document.FileName, document.Content, _from, _to, CancellationToken.None);
+            _exported = document.FileName;
+            _report = report.Value;
+            return report.Errors;
+        });
+    }
+
+    private async Task ValidateFileAsync(InputFileChangeEventArgs e)
+    {
+        IBrowserFile file = e.File;
+        await RunAsync(async () =>
+        {
+            if (file.Size > MaxFileSize)
+            {
+                return [new ErrorDetail(ErrorCodes.Fec.FileTooLarge)];
+            }
+
+            using MemoryStream content = new();
+            await using (Stream stream = file.OpenReadStream(MaxFileSize))
+            {
+                await stream.CopyToAsync(content);
+            }
+
+            OperationResult<FecValidationResponse> report = await Fec.ValidateAsync(file.Name, content.ToArray(), _from, _to, CancellationToken.None);
+            _exported = null;
+            _report = report.Value;
+            return report.Errors;
+        });
+    }
+
+    private async Task RunAsync(Func<Task<IReadOnlyList<ErrorDetail>>> operation)
+    {
+        _busy = true;
+        _errors = [];
+        _report = null;
+        _exported = null;
+        try
+        {
+            // Les refus de période visent le champ « au » : affichés en tête, comme les autres.
+            _errors = [.. (await operation()).Select(e => e with { Target = null })];
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private string Verdict(FecValidationResponse report)
+    {
+        int errors = report.Findings.Count(f => f.Severity == FecFindingSeverityDto.Error);
+        int warnings = report.Findings.Count - errors;
+        return !report.IsValid ? string.Format(Culture, L["Fec.Verdict.Invalid"], errors)
+            : warnings > 0 ? string.Format(Culture, L["Fec.Verdict.ValidWithWarnings"], warnings)
+            : L["Fec.Verdict.Valid"];
+    }
+
+    private static string Amount(decimal value) => GridNumber.FormatAmount(value, Culture);
+}

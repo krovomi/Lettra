@@ -1,0 +1,29 @@
+# Démonstration seulement : Caddy signe les certificats avec son autorité locale (volume caddy-donnees).
+# Le téléphone approuve le certificat racine, servi en HTTP sur le port 8079 ; la clé privée ne sort jamais.
+{
+	local_certs
+	skip_install_trust
+	auto_https disable_redirects
+	# Accès par adresse IP : pas de SNI, le certificat de l'hôte de démonstration est servi par défaut.
+	default_sni {$LETTRA_DEMO_HOST}
+}
+
+# Lettra (API et application PWA).
+https://{$LETTRA_DEMO_HOST}:8443 {
+	reverse_proxy api:8080
+}
+
+# Keycloak.
+https://{$LETTRA_DEMO_HOST}:8444 {
+	reverse_proxy keycloak:8080
+}
+
+http://:8079 {
+	handle /lettra-demo-ca.crt {
+		root * /data/caddy/pki/authorities/local
+		rewrite * /root.crt
+		header Content-Type application/x-x509-ca-cert
+		file_server
+	}
+	respond "Certificat racine de la démonstration : /lettra-demo-ca.crt" 404
+}

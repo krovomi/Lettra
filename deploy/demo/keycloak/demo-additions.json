@@ -1,0 +1,26 @@
+{
+  "organizations": [
+    {
+      "id": "0199e3a0-0000-7000-8000-0000000000c1",
+      "name": "Cabinet de démonstration",
+      "alias": "cabinet-demo",
+      "enabled": true,
+      "description": "Cabinet fictif de la démonstration (données de test uniquement).",
+      "domains": [{ "name": "cabinet-demo.example", "verified": false }],
+      "members": [{ "username": "demo", "membershipType": "UNMANAGED" }]
+    }
+  ],
+  "users": [
+    {
+      "id": "0199e3a0-0000-7000-8000-0000000de001",
+      "username": "demo",
+      "email": "demo@cabinet-demo.example",
+      "emailVerified": true,
+      "firstName": "Camille",
+      "lastName": "Démo",
+      "enabled": true,
+      "requiredActions": ["CONFIGURE_TOTP"],
+      "credentials": [{ "type": "password", "value": "${LETTRA_DEMO_PASSWORD}", "temporary": false }]
+    }
+  ]
+}

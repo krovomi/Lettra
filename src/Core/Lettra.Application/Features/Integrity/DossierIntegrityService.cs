@@ -19,7 +19,8 @@ public sealed partial class DossierIntegrityService(
     IDossierAlertPublisher alerts,
     ClosingSchedule schedule,
     TimeProvider clock,
-    ILogger<DossierIntegrityService> logger)
+    ILogger<DossierIntegrityService> logger,
+    IPlatformHistoryReader? platformHistories = null)
 {
     public async Task<Result<IntegrityReport>> VerifyAsync(CancellationToken cancellationToken)
     {
@@ -41,7 +42,10 @@ public sealed partial class DossierIntegrityService(
         IReadOnlyDictionary<Guid, string> current = documents.IsConnected && verification.JournaledDocuments.Count > 0
             ? await documents.ComputeContentHashesAsync([.. verification.JournaledDocuments.Keys], cancellationToken).ConfigureAwait(false)
             : new Dictionary<Guid, string>();
-        IntegrityReport report = verification.Complete(series, current, documents.IsConnected, clock.GetUtcNow());
+        IReadOnlyDictionary<Guid, IReadOnlyList<string>>? platform = platformHistories is null
+            ? null
+            : await platformHistories.ComputeFingerprintsAsync(cancellationToken).ConfigureAwait(false);
+        IntegrityReport report = verification.Complete(series, current, documents.IsConnected, clock.GetUtcNow(), platform);
 
         LogChecked(logger, dossier.DossierId.Value, report.EntriesChecked, report.ClosingsChecked, report.Findings.Count,
             string.Join(',', report.Findings.Select(f => f.Kind).Distinct()));

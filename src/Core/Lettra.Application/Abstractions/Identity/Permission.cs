@@ -83,6 +83,11 @@ public enum Permission
 
     // 100-109 : plateforme (l'éditeur). Aucune n'ouvre un dossier.
     [PermissionCategory(PermissionKind.Administration)] PlateformeAdministrer = 100,
+
+    // 110-119 : postes hors ligne (étape 4.4). Le registre est dans la base du dossier.
+
+    /// <summary>Voir les postes du dossier, en révoquer un, régler la durée maximale hors ligne.</summary>
+    [PermissionCategory(PermissionKind.DossierData)] PostesGerer = 110,
 }
 
 /// <summary>Ce qu'une permission ouvre.</summary>

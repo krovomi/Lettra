@@ -1359,6 +1359,34 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.ToTable("SyncConflicts", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.SyncDeviceRecord", b =>
+                {
+                    b.Property<Guid>("DeviceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("FirstSeenAtMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("LastSeenAtMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("LastUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("RevokedAtMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("RevokedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("WipedAtMs")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("DeviceId");
+
+                    b.ToTable("SyncDevices", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.SyncJournalRecord", b =>
                 {
                     b.Property<long>("Sequence")
@@ -1446,6 +1474,36 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.HasKey("IdempotencyKey");
 
                     b.ToTable("SyncReceipts", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.SyncSeriesReleaseRecord", b =>
+                {
+                    b.Property<string>("Number")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("ConsumedAtMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("DeviceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("ReleasedAtMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("ReleasedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SeriesCode")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Number");
+
+                    b.HasIndex("DeviceId");
+
+                    b.ToTable("SyncSeriesReleases", (string)null);
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.SyncStateRecord", b =>

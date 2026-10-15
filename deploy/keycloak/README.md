@@ -62,8 +62,12 @@ Chaque jeton porte `amr` (niveau d'authentification), `organization` (cabinet) e
 
 ## Règles portées par le realm
 
-- **MFA obligatoire** : flux `lettra-browser-mfa`, mot de passe puis OTP ou WebAuthn (REQUIRED). L'enrôlement OTP est
-  une action requise par défaut. L'API refuse aussi un jeton sans `amr` fort (`Security.MfaRequired`), en défense en profondeur.
+- **MFA obligatoire** : flux `lettra-browser-mfa`, mot de passe puis second facteur (REQUIRED) : OTP ou WebAuthn pour un
+  utilisateur enrôlé, sinon formulaire OTP obligatoire, qui impose l'enrôlement TOTP (action requise). L'API refuse aussi
+  un jeton sans `amr` fort (`Security.MfaRequired`), en défense en profondeur ; après un enrôlement (que Keycloak ne compte
+  pas dans `amr`), le BFF redemande une fois une authentification complète (`prompt=login`).
+- **amr** : chaque valeur reste valable la durée maximale d'une session SSO (`default.reference.maxAge`) ; sans cette
+  durée, Keycloak ne l'émet que dans la seconde de l'authentification.
 - **Jetons** : accès 5 min, session inactive 30 min, rotation du refresh token avec **une réutilisation tolérée**
   (`refreshTokenMaxReuse: 1`). C'est la grâce validée par le POC synchro hors ligne : si la réponse d'un rafraîchissement
   se perd, l'ancien jeton reste utilisable une fois, jusqu'à l'usage du nouveau. Le BFF regroupe en plus les rafraîchissements

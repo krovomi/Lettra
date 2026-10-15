@@ -56,6 +56,14 @@ internal sealed class SyncOutboxRecord
         Detail = detail;
         AcknowledgedAtMs = now.ToUnixTimeMilliseconds();
     }
+
+    /// <summary>Refusée, puis débloquée par le cabinet : elle repart avec sa clé.</summary>
+    public void Requeue()
+    {
+        Status = SyncOutboxStatus.Pending;
+        Detail = null;
+        AcknowledgedAtMs = null;
+    }
 }
 
 /// <summary>Un champ disputé reçu du serveur, gardé sur le poste jusqu'à sa résolution.</summary>
