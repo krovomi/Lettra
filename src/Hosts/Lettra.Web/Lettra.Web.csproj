@@ -6,7 +6,13 @@
     <SatelliteResourceLanguages>fr;en</SatelliteResourceLanguages>
     <!-- CA1515 : Program est public par convention de l'hôte. -->
     <NoWarn>$(NoWarn);CA1515</NoWarn>
+    <!-- PWA : manifeste des ressources de l'enveloppe, lu par le service worker publié. -->
+    <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Presentation\Lettra.UI.Shared\Lettra.UI.Shared.csproj" />

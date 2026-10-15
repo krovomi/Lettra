@@ -1,0 +1,90 @@
+# Démonstration navigateur de Lettra (mode 2, réseau local) : Keycloak + API, qui sert l'application PWA.
+# Seul Docker est nécessaire (Docker Desktop sous Windows et macOS, Docker Engine sous Linux), pas de SDK .NET.
+#
+#   docker compose -f deploy/demo/compose.yaml up -d --build --wait      puis http://localhost:8080/
+#   docker compose -f deploy/demo/compose.yaml down                      arrêt (les données restent)
+#   docker compose -f deploy/demo/compose.yaml down -v                   arrêt et remise à zéro
+#
+# Données et secrets FICTIFS, réservés à la démonstration (.env) : ne jamais réutiliser en production.
+# Accès depuis un téléphone (HTTPS sur le réseau local) : compose.lan.yaml, voir README.md.
+name: lettra-demo
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4
+    # Le realm versionné, complété du cabinet et de l'utilisateur de démonstration (keycloak/start.sh).
+    entrypoint: ["/bin/bash", "/opt/lettra/start.sh"]
+    command: ["start-dev", "--import-realm", "--features=organization"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?voir deploy/demo/.env}
+      KC_HEALTH_ENABLED: "true"
+      # Émetteur des jetons : l'adresse vue par le navigateur. L'API, elle, appelle Keycloak par le réseau Docker
+      # (http://keycloak:8080) : les points d'accès serveur à serveur suivent l'adresse de la requête.
+      KC_HOSTNAME: http://localhost:${LETTRA_DEMO_KEYCLOAK_PORT:-8081}
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      LETTRA_PUBLIC_URL: http://localhost:${LETTRA_DEMO_PORT:-8080}
+      LETTRA_BFF_CLIENT_SECRET: ${LETTRA_BFF_CLIENT_SECRET:?voir deploy/demo/.env}
+      LETTRA_DEMO_PASSWORD: ${LETTRA_DEMO_PASSWORD:?voir deploy/demo/.env}
+    ports:
+      - "127.0.0.1:${LETTRA_DEMO_KEYCLOAK_PORT:-8081}:8080"
+    volumes:
+      - ../keycloak/realm-lettra.json:/opt/lettra/realm-lettra.json:ro
+      - ./keycloak/demo-additions.json:/opt/lettra/demo-additions.json:ro
+      - ./keycloak/start.sh:/opt/lettra/start.sh:ro
+      - keycloak-donnees:/opt/keycloak/data
+    healthcheck:
+      # Ni curl ni wget dans l'image : requête HTTP en bash pur sur le port de gestion.
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n' >&3 && grep -q UP <&3"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 20s
+
+  api:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    image: lettra-demo-api
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      Lettra__DeploymentMode: LocalNetwork
+      Lettra__EInvoicing__Platform: Simulated
+      Lettra__Identity__Oidc__Authority: http://keycloak:8080/realms/lettra
+      Lettra__Identity__Oidc__RequireHttpsMetadata: "false"
+      Lettra__Identity__Oidc__BffClientSecret: ${LETTRA_BFF_CLIENT_SECRET}
+      # Émetteur attendu (information) : s'il change, Compose recrée l'API, qui relit la découverte de Keycloak.
+      LETTRA_DEMO_EMETTEUR: http://localhost:${LETTRA_DEMO_KEYCLOAK_PORT:-8081}/realms/lettra
+      # Cabinet de démonstration : même identifiant que l'organisation Keycloak.
+      Lettra__Organisations__0__Id: 0199e3a0-0000-7000-8000-0000000000c1
+      Lettra__Organisations__0__Name: Cabinet de démonstration
+      Lettra__Organisations__0__Kek: ${LETTRA_DEMO_KEK:?voir deploy/demo/.env}
+      Lettra__Clusters__local__Provider: Sqlite
+      Lettra__Clusters__local__Directory: /home/app/dossiers
+      # Dossier ouvert par l'application (wwwroot/appsettings.json de Lettra.Web).
+      Lettra__Dossiers__0__Id: 0199e3a0-0000-7000-8000-00000000d051
+      Lettra__Dossiers__0__OrganisationId: 0199e3a0-0000-7000-8000-0000000000c1
+      Lettra__Dossiers__0__Name: Dossier de démonstration
+      Lettra__Dossiers__0__Provider: Sqlite
+      Lettra__Dossiers__0__ConnectionSecretRef: config:DossierDemo
+      ConnectionStrings__Catalog: Data Source=/home/app/lettra-catalogue.db
+      ConnectionStrings__DossierDemo: Data Source=/home/app/lettra-dossier-demo.db
+      # L'utilisateur de démonstration (sub Keycloak) est manager du cabinet.
+      Lettra__Authorization__Users__0__Id: 0199e3a0-0000-7000-8000-0000000de001
+      Lettra__Authorization__Users__0__Cabinet: 0199e3a0-0000-7000-8000-0000000000c1
+      Lettra__Authorization__Users__0__State: Active
+      Lettra__Authorization__Users__0__Assignments__0__Role: manager
+      Lettra__Authorization__Users__0__Assignments__0__Scope: Cabinet
+      Lettra__Authorization__Users__0__Assignments__0__ScopeId: 0199e3a0-0000-7000-8000-0000000000c1
+    ports:
+      - "127.0.0.1:${LETTRA_DEMO_PORT:-8080}:8080"
+    volumes:
+      # Catalogue, dossier SQLite et clés de session (DataProtection) : dossier personnel de l'utilisateur de l'image.
+      - lettra-donnees:/home/app
+
+volumes:
+  keycloak-donnees:
+  lettra-donnees:
