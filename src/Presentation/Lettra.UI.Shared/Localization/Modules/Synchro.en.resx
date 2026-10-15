@@ -11,4 +11,70 @@
   <data name="Error.Sync.DeviceSeriesUnknown" xml:space="preserve"><value>This numbering series does not belong to this device: the document is not accepted.</value></data>
   <data name="Error.Sync.NumberOutOfOrder" xml:space="preserve"><value>An earlier document from this device is missing or was rejected: this one is on hold.</value></data>
   <data name="Error.Sync.ConflictAwaitingRefresh" xml:space="preserve"><value>The office version has not reached this device yet: sync first.</value></data>
+  <data name="Sync.Title" xml:space="preserve"><value>Synchronisation</value></data>
+  <data name="Sync.Status.Offline" xml:space="preserve"><value>Offline</value></data>
+  <data name="Sync.Status.PendingConsent" xml:space="preserve"><value>Waiting for your go-ahead</value></data>
+  <data name="Sync.Status.Pushing" xml:space="preserve"><value>Sending</value></data>
+  <data name="Sync.Status.Pulling" xml:space="preserve"><value>Receiving</value></data>
+  <data name="Sync.Status.ResolvingConflicts" xml:space="preserve"><value>Conflicts to resolve</value></data>
+  <data name="Sync.Status.UpToDate" xml:space="preserve"><value>Up to date</value></data>
+  <data name="Sync.Status.Failed" xml:space="preserve"><value>Synchronisation failed</value></data>
+  <data name="Sync.Badge.Pending" xml:space="preserve"><value>{0} pending</value></data>
+  <data name="Sync.Badge.Conflicts" xml:space="preserve"><value>{0} conflict(s)</value></data>
+  <data name="Sync.Failure.ConnectionLost" xml:space="preserve"><value>The connection dropped during the exchange: whatever was not sent will go at the next synchronisation.</value></data>
+  <data name="Sync.Failure.Unauthenticated" xml:space="preserve"><value>Your session has expired: sign in again, then restart the synchronisation.</value></data>
+  <data name="Sync.Failure.Forbidden" xml:space="preserve"><value>The firm refuses this device or this dossier: contact its administrator.</value></data>
+  <data name="Sync.Failure.DossierUnavailable" xml:space="preserve"><value>The dossier cannot be opened on this device.</value></data>
+  <data name="Sync.Summary.Text" xml:space="preserve"><value>{0} (about {1}).</value></data>
+  <data name="Sync.Summary.Validations" xml:space="preserve"><value>{0} validated invoice(s)</value></data>
+  <data name="Sync.Summary.Creations" xml:space="preserve"><value>{0} creation(s)</value></data>
+  <data name="Sync.Summary.Changes" xml:space="preserve"><value>{0} change(s)</value></data>
+  <data name="Sync.Summary.Nothing" xml:space="preserve"><value>Nothing to send.</value></data>
+  <data name="Sync.Size.Bytes" xml:space="preserve"><value>{0} B</value></data>
+  <data name="Sync.Size.Kilo" xml:space="preserve"><value>{0} KB</value></data>
+  <data name="Sync.Size.Mega" xml:space="preserve"><value>{0} MB</value></data>
+  <data name="Sync.Prompt.Title" xml:space="preserve"><value>You're back online: send to the firm?</value></data>
+  <data name="Sync.Prompt.Cellular" xml:space="preserve"><value>You're on a mobile network.</value></data>
+  <data name="Sync.Prompt.Now" xml:space="preserve"><value>Now</value></data>
+  <data name="Sync.Prompt.Later" xml:space="preserve"><value>Later</value></data>
+  <data name="Sync.Prompt.Detail" xml:space="preserve"><value>Details</value></data>
+  <data name="Sync.Item.Customer" xml:space="preserve"><value>Customer</value></data>
+  <data name="Sync.Item.Supplier" xml:space="preserve"><value>Supplier</value></data>
+  <data name="Sync.Item.CatalogItem" xml:space="preserve"><value>Item</value></data>
+  <data name="Sync.Item.Invoice" xml:space="preserve"><value>Invoice</value></data>
+  <data name="Sync.Change.Creation" xml:space="preserve"><value>Creation</value></data>
+  <data name="Sync.Change.Change" xml:space="preserve"><value>Change</value></data>
+  <data name="Sync.Change.Validation" xml:space="preserve"><value>Validation</value></data>
+  <data name="Sync.State.Title" xml:space="preserve"><value>Status</value></data>
+  <data name="Sync.Now" xml:space="preserve"><value>Synchronise now</value></data>
+  <data name="Sync.LastReport.Text" xml:space="preserve"><value>Last synchronisation on {0}: {1} sent, {2} received, {3} conflict(s), {4} refused.</value></data>
+  <data name="Sync.LastReport.Postponed" xml:space="preserve"><value>Synchronisation postponed on {0}.</value></data>
+  <data name="Sync.Pending.Title" xml:space="preserve"><value>Waiting to be sent</value></data>
+  <data name="Sync.Pending.Empty" xml:space="preserve"><value>Nothing is waiting on this device.</value></data>
+  <data name="Sync.Column.Change" xml:space="preserve"><value>Operation</value></data>
+  <data name="Sync.Column.Item" xml:space="preserve"><value>Item</value></data>
+  <data name="Sync.Column.RecordedAt" xml:space="preserve"><value>Entered on</value></data>
+  <data name="Sync.Column.Reason" xml:space="preserve"><value>Reason</value></data>
+  <data name="Sync.Rejected.Title" xml:space="preserve"><value>Entries refused by the firm</value></data>
+  <data name="Sync.Rejected.Intro" xml:space="preserve"><value>They are not applied at the firm. Correct them on this device, or check with a manager at the firm.</value></data>
+  <data name="Sync.Mode.Title" xml:space="preserve"><value>When to synchronise</value></data>
+  <data name="Sync.Mode.AlwaysAsk" xml:space="preserve"><value>Ask me every time the network comes back</value></data>
+  <data name="Sync.Mode.AutoOnWifi" xml:space="preserve"><value>Without asking on Wi-Fi or Ethernet (ask me on a mobile network)</value></data>
+  <data name="Sync.Mode.NeverOnCellular" xml:space="preserve"><value>Never on a mobile network (ask me elsewhere)</value></data>
+  <data name="Sync.Reminder.Day" xml:space="preserve"><value>An invoice validated on this device has been waiting for more than 24 hours: synchronise to send it to the firm.</value></data>
+  <data name="Sync.Reminder.ThreeDays" xml:space="preserve"><value>An invoice validated on this device has been waiting for more than 3 days. It is not sent to the approved platform until it is synchronised.</value></data>
+  <data name="Sync.Conflicts.Title" xml:space="preserve"><value>Conflicts to resolve</value></data>
+  <data name="Sync.Conflicts.Count" xml:space="preserve"><value>{0} field(s) changed both on this device and at the firm.</value></data>
+  <data name="Sync.Conflicts.Open" xml:space="preserve"><value>Resolve the conflicts</value></data>
+  <data name="Sync.Conflicts.Empty" xml:space="preserve"><value>No conflict to resolve.</value></data>
+  <data name="Sync.Conflicts.Intro" xml:space="preserve"><value>These fields were changed both on this device and at the firm. Choose the value to keep for each one; the other fields are already up to date.</value></data>
+  <data name="Sync.Conflicts.Field" xml:space="preserve"><value>Field</value></data>
+  <data name="Sync.Conflicts.Base" xml:space="preserve"><value>Before</value></data>
+  <data name="Sync.Conflicts.Mine" xml:space="preserve"><value>This device</value></data>
+  <data name="Sync.Conflicts.Server" xml:space="preserve"><value>Firm</value></data>
+  <data name="Sync.Conflicts.Apply" xml:space="preserve"><value>Apply</value></data>
+  <data name="Sync.Conflicts.Applied" xml:space="preserve"><value>Conflict resolved.</value></data>
+  <data name="Sync.Conflicts.EmptyValue" xml:space="preserve"><value>(empty)</value></data>
+  <data name="Sync.NotSynchronized" xml:space="preserve"><value>This device does not synchronise: everything is saved directly.</value></data>
+  <data name="Sync.Back" xml:space="preserve"><value>Back to synchronisation</value></data>
 </root>

@@ -11,4 +11,70 @@
   <data name="Error.Sync.DeviceSeriesUnknown" xml:space="preserve"><value>Cette série de numérotation n'appartient pas à ce poste : la pièce n'est pas reçue.</value></data>
   <data name="Error.Sync.NumberOutOfOrder" xml:space="preserve"><value>Une pièce précédente de ce poste manque ou a été refusée : celle-ci attend.</value></data>
   <data name="Error.Sync.ConflictAwaitingRefresh" xml:space="preserve"><value>La version du cabinet n'est pas encore arrivée sur ce poste : synchronisez d'abord.</value></data>
+  <data name="Sync.Title" xml:space="preserve"><value>Synchronisation</value></data>
+  <data name="Sync.Status.Offline" xml:space="preserve"><value>Hors ligne</value></data>
+  <data name="Sync.Status.PendingConsent" xml:space="preserve"><value>En attente de votre accord</value></data>
+  <data name="Sync.Status.Pushing" xml:space="preserve"><value>Envoi en cours</value></data>
+  <data name="Sync.Status.Pulling" xml:space="preserve"><value>Réception en cours</value></data>
+  <data name="Sync.Status.ResolvingConflicts" xml:space="preserve"><value>Conflits à résoudre</value></data>
+  <data name="Sync.Status.UpToDate" xml:space="preserve"><value>À jour</value></data>
+  <data name="Sync.Status.Failed" xml:space="preserve"><value>Échec de la synchronisation</value></data>
+  <data name="Sync.Badge.Pending" xml:space="preserve"><value>{0} en attente</value></data>
+  <data name="Sync.Badge.Conflicts" xml:space="preserve"><value>{0} conflit(s)</value></data>
+  <data name="Sync.Failure.ConnectionLost" xml:space="preserve"><value>Le réseau a lâché pendant l'échange : ce qui n'est pas parti repartira à la prochaine synchronisation.</value></data>
+  <data name="Sync.Failure.Unauthenticated" xml:space="preserve"><value>Votre session a expiré : reconnectez-vous, puis relancez la synchronisation.</value></data>
+  <data name="Sync.Failure.Forbidden" xml:space="preserve"><value>Le cabinet refuse ce poste ou ce dossier : contactez son administrateur.</value></data>
+  <data name="Sync.Failure.DossierUnavailable" xml:space="preserve"><value>Le dossier ne s'ouvre pas sur ce poste.</value></data>
+  <data name="Sync.Summary.Text" xml:space="preserve"><value>{0} (environ {1}).</value></data>
+  <data name="Sync.Summary.Validations" xml:space="preserve"><value>{0} facture(s) validée(s)</value></data>
+  <data name="Sync.Summary.Creations" xml:space="preserve"><value>{0} création(s)</value></data>
+  <data name="Sync.Summary.Changes" xml:space="preserve"><value>{0} modification(s)</value></data>
+  <data name="Sync.Summary.Nothing" xml:space="preserve"><value>Rien à envoyer.</value></data>
+  <data name="Sync.Size.Bytes" xml:space="preserve"><value>{0} o</value></data>
+  <data name="Sync.Size.Kilo" xml:space="preserve"><value>{0} Ko</value></data>
+  <data name="Sync.Size.Mega" xml:space="preserve"><value>{0} Mo</value></data>
+  <data name="Sync.Prompt.Title" xml:space="preserve"><value>Le réseau est revenu : envoyer au cabinet ?</value></data>
+  <data name="Sync.Prompt.Cellular" xml:space="preserve"><value>Vous êtes sur un réseau mobile.</value></data>
+  <data name="Sync.Prompt.Now" xml:space="preserve"><value>Maintenant</value></data>
+  <data name="Sync.Prompt.Later" xml:space="preserve"><value>Plus tard</value></data>
+  <data name="Sync.Prompt.Detail" xml:space="preserve"><value>Détail</value></data>
+  <data name="Sync.Item.Customer" xml:space="preserve"><value>Client</value></data>
+  <data name="Sync.Item.Supplier" xml:space="preserve"><value>Fournisseur</value></data>
+  <data name="Sync.Item.CatalogItem" xml:space="preserve"><value>Article</value></data>
+  <data name="Sync.Item.Invoice" xml:space="preserve"><value>Facture</value></data>
+  <data name="Sync.Change.Creation" xml:space="preserve"><value>Création</value></data>
+  <data name="Sync.Change.Change" xml:space="preserve"><value>Modification</value></data>
+  <data name="Sync.Change.Validation" xml:space="preserve"><value>Validation</value></data>
+  <data name="Sync.State.Title" xml:space="preserve"><value>État</value></data>
+  <data name="Sync.Now" xml:space="preserve"><value>Synchroniser maintenant</value></data>
+  <data name="Sync.LastReport.Text" xml:space="preserve"><value>Dernière synchronisation le {0} : {1} envoyé(s), {2} reçu(s), {3} conflit(s), {4} refusé(s).</value></data>
+  <data name="Sync.LastReport.Postponed" xml:space="preserve"><value>Synchronisation reportée le {0}.</value></data>
+  <data name="Sync.Pending.Title" xml:space="preserve"><value>En attente d'envoi</value></data>
+  <data name="Sync.Pending.Empty" xml:space="preserve"><value>Rien n'attend sur ce poste.</value></data>
+  <data name="Sync.Column.Change" xml:space="preserve"><value>Opération</value></data>
+  <data name="Sync.Column.Item" xml:space="preserve"><value>Élément</value></data>
+  <data name="Sync.Column.RecordedAt" xml:space="preserve"><value>Saisi le</value></data>
+  <data name="Sync.Column.Reason" xml:space="preserve"><value>Motif</value></data>
+  <data name="Sync.Rejected.Title" xml:space="preserve"><value>Saisies refusées par le cabinet</value></data>
+  <data name="Sync.Rejected.Intro" xml:space="preserve"><value>Elles ne sont pas appliquées au cabinet. Corrigez-les sur ce poste, ou voyez avec un manager du cabinet.</value></data>
+  <data name="Sync.Mode.Title" xml:space="preserve"><value>Quand synchroniser</value></data>
+  <data name="Sync.Mode.AlwaysAsk" xml:space="preserve"><value>Me demander à chaque retour du réseau</value></data>
+  <data name="Sync.Mode.AutoOnWifi" xml:space="preserve"><value>Sans demander en Wi-Fi ou Ethernet (me demander en réseau mobile)</value></data>
+  <data name="Sync.Mode.NeverOnCellular" xml:space="preserve"><value>Jamais en réseau mobile (me demander ailleurs)</value></data>
+  <data name="Sync.Reminder.Day" xml:space="preserve"><value>Une facture validée sur ce poste attend depuis plus de 24 h : synchronisez pour l'envoyer au cabinet.</value></data>
+  <data name="Sync.Reminder.ThreeDays" xml:space="preserve"><value>Une facture validée sur ce poste attend depuis plus de 3 jours. Elle ne part pas à la plateforme agréée tant qu'elle n'est pas synchronisée.</value></data>
+  <data name="Sync.Conflicts.Title" xml:space="preserve"><value>Conflits à résoudre</value></data>
+  <data name="Sync.Conflicts.Count" xml:space="preserve"><value>{0} champ(s) modifié(s) à la fois sur ce poste et au cabinet.</value></data>
+  <data name="Sync.Conflicts.Open" xml:space="preserve"><value>Résoudre les conflits</value></data>
+  <data name="Sync.Conflicts.Empty" xml:space="preserve"><value>Aucun conflit à résoudre.</value></data>
+  <data name="Sync.Conflicts.Intro" xml:space="preserve"><value>Ces champs ont été modifiés à la fois sur ce poste et au cabinet. Choisissez pour chacun la valeur à garder ; les autres champs sont déjà à jour.</value></data>
+  <data name="Sync.Conflicts.Field" xml:space="preserve"><value>Champ</value></data>
+  <data name="Sync.Conflicts.Base" xml:space="preserve"><value>Avant</value></data>
+  <data name="Sync.Conflicts.Mine" xml:space="preserve"><value>Ce poste</value></data>
+  <data name="Sync.Conflicts.Server" xml:space="preserve"><value>Cabinet</value></data>
+  <data name="Sync.Conflicts.Apply" xml:space="preserve"><value>Appliquer</value></data>
+  <data name="Sync.Conflicts.Applied" xml:space="preserve"><value>Conflit résolu.</value></data>
+  <data name="Sync.Conflicts.EmptyValue" xml:space="preserve"><value>(vide)</value></data>
+  <data name="Sync.NotSynchronized" xml:space="preserve"><value>Ce poste ne synchronise pas : tout est enregistré directement.</value></data>
+  <data name="Sync.Back" xml:space="preserve"><value>Retour à la synchronisation</value></data>
 </root>

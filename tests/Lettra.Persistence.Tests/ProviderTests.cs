@@ -120,6 +120,20 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Transmission_a_la_plateforme_agreee_simulee()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator(), simulatedPlatform: true);
+        await PlatformScenarios.TransmissionAsync(harness, DatabaseProvider.Sqlite, Database("pa"));
+    }
+
+    [Fact]
+    public async Task Sans_plateforme_agreee_configuree_rien_ne_part()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await PlatformScenarios.NotConfiguredAsync(harness, DatabaseProvider.Sqlite, Database("pa-aucune"));
+    }
+
+    [Fact]
     public async Task Validations_concurrentes_sans_trou_ni_doublon()
     {
         await using TenantHarness harness = new(new SqliteConfigurator());
@@ -404,6 +418,14 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     }
 
     [SkippableFact]
+    public async Task Transmission_a_la_plateforme_agreee_simulee()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new PostgreSqlConfigurator(), simulatedPlatform: true);
+        await PlatformScenarios.TransmissionAsync(harness, DatabaseProvider.PostgreSql, Database("pa"));
+    }
+
+    [SkippableFact]
     public async Task Validations_concurrentes_sans_trou_ni_doublon()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
@@ -640,6 +662,14 @@ public sealed class SqlServerTests : IAsyncLifetime
         Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new SqlServerConfigurator());
         await ExportScenarios.BulkExportAsync(harness, DatabaseProvider.SqlServer, Database("fec_a"), Database("fec_b"));
+    }
+
+    [SkippableFact]
+    public async Task Transmission_a_la_plateforme_agreee_simulee()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new SqlServerConfigurator(), simulatedPlatform: true);
+        await PlatformScenarios.TransmissionAsync(harness, DatabaseProvider.SqlServer, Database("pa"));
     }
 
     [SkippableFact]

@@ -1,0 +1,171 @@
+@page "/synchronisation"
+@implements IDisposable
+@inject IServiceProvider Services
+@inject IStringLocalizer<SharedResource> L
+
+@* Synchronisation du poste (étape 4.3, ADR-0008) : état, « synchroniser maintenant », saisies en attente, préférence,
+   conflits et saisies refusées. *@
+
+<PageTitle>@L["Sync.Title"] · Lettra</PageTitle>
+
+<h1 tabindex="-1">@L["Sync.Title"]</h1>
+
+@if (_sync is null)
+{
+    <p id="sync-unavailable">@L["Sync.NotSynchronized"]</p>
+}
+else
+{
+    SyncSnapshot snapshot = _sync.Current;
+    <section aria-labelledby="sync-state-title" class="lettra-card">
+        <h2 id="sync-state-title">@L["Sync.State.Title"]</h2>
+        <p id="sync-status"><span class="lettra-sync-badge is-@snapshot.Status.ToString().ToLowerInvariant()">@L[$"Sync.Status.{snapshot.Status}"]</span></p>
+        @if (snapshot.LastReport is { } report)
+        {
+            <p id="sync-last">@LastReport(report)</p>
+            @if (report.Failure != SyncFailureKind.None)
+            {
+                <p class="validation-message" role="alert">@L[$"Sync.Failure.{report.Failure}"]</p>
+            }
+        }
+        <p>@SyncText.Summary(L, snapshot.Pending)</p>
+        <button type="button" id="sync-run" class="lettra-button" disabled="@_busy" @onclick="SyncNowAsync">@L["Sync.Now"]</button>
+        @if (snapshot.Conflicts > 0)
+        {
+            <p>
+                @string.Format(CultureInfo.CurrentCulture, L["Sync.Conflicts.Count"], snapshot.Conflicts)
+                <a id="sync-conflicts-link" href="synchronisation/conflits">@L["Sync.Conflicts.Open"]</a>
+            </p>
+        }
+    </section>
+
+    <section aria-labelledby="sync-pending-title" class="lettra-card">
+        <h2 id="sync-pending-title">@L["Sync.Pending.Title"]</h2>
+        @if (_pending.Count == 0)
+        {
+            <p>@L["Sync.Pending.Empty"]</p>
+        }
+        else
+        {
+            <table id="sync-pending" class="lettra-table">
+                <thead>
+                    <tr>
+                        <th scope="col">@L["Sync.Column.Change"]</th>
+                        <th scope="col">@L["Sync.Column.Item"]</th>
+                        <th scope="col">@L["Sync.Column.RecordedAt"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (SyncPendingItem item in _pending)
+                    {
+                        <tr>
+                            <td>@L[$"Sync.Change.{item.Change}"]</td>
+                            <td>@L[$"Sync.Item.{item.Item}"]@(item.Label is null ? null : $" « {item.Label} »")</td>
+                            <td>@When(item.RecordedAt)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </section>
+
+    @if (_rejected.Count > 0)
+    {
+        <section aria-labelledby="sync-rejected-title" class="lettra-card">
+            <h2 id="sync-rejected-title">@L["Sync.Rejected.Title"]</h2>
+            <p>@L["Sync.Rejected.Intro"]</p>
+            <table id="sync-rejected" class="lettra-table">
+                <thead>
+                    <tr>
+                        <th scope="col">@L["Sync.Column.Change"]</th>
+                        <th scope="col">@L["Sync.Column.Item"]</th>
+                        <th scope="col">@L["Sync.Column.Reason"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (SyncRejectedItem item in _rejected)
+                    {
+                        <tr>
+                            <td>@L[$"Sync.Change.{item.Change}"]</td>
+                            <td>@L[$"Sync.Item.{item.Item}"]@(item.Label is null ? null : $" « {item.Label} »")</td>
+                            <td>@string.Join(" ", item.ErrorCodes.Select(L.Error))</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    }
+
+    <section aria-labelledby="sync-mode-title" class="lettra-card">
+        <h2 id="sync-mode-title">@L["Sync.Mode.Title"]</h2>
+        <fieldset id="sync-mode">
+            <legend class="lettra-visually-hidden">@L["Sync.Mode.Title"]</legend>
+            @foreach (SyncMode mode in Enum.GetValues<SyncMode>())
+            {
+                <div>
+                    <label>
+                        <input type="radio" name="sync-mode" value="@mode" checked="@(_sync.Mode == mode)" @onchange="() => SetModeAsync(mode)" />
+                        @L[$"Sync.Mode.{mode}"]
+                    </label>
+                </div>
+            }
+        </fieldset>
+    </section>
+}
+
+@code {
+    private ISyncCenter? _sync;
+    private IReadOnlyList<SyncPendingItem> _pending = [];
+    private IReadOnlyList<SyncRejectedItem> _rejected = [];
+    private bool _busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _sync = Services.GetService(typeof(ISyncCenter)) as ISyncCenter;
+        if (_sync is null)
+        {
+            return;
+        }
+
+        _sync.Changed += OnChanged;
+        await LoadListsAsync();
+    }
+
+    private async Task LoadListsAsync()
+    {
+        _pending = await _sync!.ListPendingAsync(CancellationToken.None);
+        _rejected = await _sync.ListRejectedAsync(CancellationToken.None);
+    }
+
+    private async Task SyncNowAsync()
+    {
+        _busy = true;
+        try
+        {
+            await _sync!.SyncNowAsync(CancellationToken.None);
+            await LoadListsAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private Task SetModeAsync(SyncMode mode) => _sync!.SetModeAsync(mode, CancellationToken.None);
+
+    private string LastReport(SyncCycleReport report) => report.Postponed
+        ? string.Format(CultureInfo.CurrentCulture, L["Sync.LastReport.Postponed"], When(report.FinishedAt))
+        : string.Format(CultureInfo.CurrentCulture, L["Sync.LastReport.Text"], When(report.FinishedAt), report.Sent, report.Received, report.Conflicts, report.Rejected);
+
+    private static string When(DateTimeOffset at) => at.ToLocalTime().ToString("g", CultureInfo.CurrentCulture);
+
+    private void OnChanged(object? sender, EventArgs e) => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        if (_sync is not null)
+        {
+            _sync.Changed -= OnChanged;
+        }
+    }
+}

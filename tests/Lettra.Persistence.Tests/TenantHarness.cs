@@ -23,7 +23,9 @@ internal sealed class TenantHarness : IAsyncDisposable
     /// pièces ne sont alors pas comparées, comme avant le branchement du module des pièces.
     /// </param>
     /// <param name="syncJournal">Vrai pour tenir le journal de synchronisation, comme le serveur (phase 4).</param>
-    public TenantHarness(IDbProviderConfigurator configurator, TimeProvider? clock = null, bool syntheticDocuments = false, bool syncJournal = false)
+    /// <param name="simulatedPlatform">Vrai pour transmettre à la plateforme agréée simulée (phase 5.3) ; sinon aucune.</param>
+    public TenantHarness(
+        IDbProviderConfigurator configurator, TimeProvider? clock = null, bool syntheticDocuments = false, bool syncJournal = false, bool simulatedPlatform = false)
     {
         ServiceCollection services = new();
         services.AddLogging();
@@ -35,6 +37,11 @@ internal sealed class TenantHarness : IAsyncDisposable
         services.AddApplication();
         services.AddPersistenceCore();
         services.AddExports();
+        if (simulatedPlatform)
+        {
+            services.AddSimulatedAccreditedPlatform();
+        }
+
         services.AddSingleton(configurator);
         services.AddSingleton<ITenantCatalog>(new Catalog(_dossiers));
         services.AddSingleton<ISecretStore>(new Secrets(_dossiers));
