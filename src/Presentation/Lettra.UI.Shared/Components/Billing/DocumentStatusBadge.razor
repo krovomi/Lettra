@@ -1,0 +1,9 @@
+@* Statut d'une pièce (brouillon, validée, émise…), coloré selon son étape. *@
+<span class="lettra-status is-@Kind">@Text</span>
+
+@code {
+    [Parameter, EditorRequired] public string Text { get; set; } = string.Empty;
+
+    /// <summary>Étape en minuscules (draft, validated, issued, accepted…), pour la couleur.</summary>
+    [Parameter, EditorRequired] public string Kind { get; set; } = string.Empty;
+}
