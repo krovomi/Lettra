@@ -8,8 +8,9 @@ namespace Lettra.Ai.Claude;
 /// <summary>
 /// Adapter Claude (SDK officiel C# « Anthropic »), derrière le port <see cref="IAiEngine"/>. L'orchestrateur garde la
 /// boucle d'outils : on n'utilise pas le tool runner du SDK, pour que chaque résultat d'outil soit pseudonymisé et
-/// contrôlé côté serveur avant de repartir. Le client désigne le point d'accès choisi par le cabinet (API directe avec
-/// résidence UE, ou un fournisseur cloud en région européenne).
+/// contrôlé côté serveur avant de repartir. Le client désigne le point d'accès choisi par le cabinet. L'API directe
+/// d'Anthropic n'offre pas de résidence des données dans l'UE (zones de traitement « us » ou « global » seulement) :
+/// « Claude en région européenne » passe par un fournisseur cloud dans une région UE (Amazon Bedrock, Google Vertex AI).
 /// </summary>
 public sealed class ClaudeEngine(IAnthropicClient client, ClaudeEngineOptions options) : IAiEngine
 {

@@ -18,6 +18,7 @@ public sealed class ToolRegistryTests
     }
 
     [Theory]
+    [InlineData("valider_facture")]
     [InlineData("valider_devis")]
     [InlineData("emettre_facture")]
     [InlineData("envoyer_facture_pa")]
@@ -31,8 +32,8 @@ public sealed class ToolRegistryTests
         Assert.Throws<InvalidOperationException>(() => new ToolRegistry([new FakeTool("outil", (AiToolRisk)2)]));
 
     [Fact]
-    public void Valider_facture_doit_rester_en_lecture_seule() =>
-        Assert.Throws<InvalidOperationException>(() => new ToolRegistry([new FakeTool("valider_facture", AiToolRisk.CreatesDraft)]));
+    public void Verifier_facture_doit_rester_en_lecture_seule() =>
+        Assert.Throws<InvalidOperationException>(() => new ToolRegistry([new FakeTool("verifier_facture", AiToolRisk.CreatesDraft)]));
 
     [Fact]
     public async Task Les_outils_du_produit_sont_tous_sans_pouvoir_et_proposes_selon_droits_et_fonction()

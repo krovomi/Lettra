@@ -18,7 +18,10 @@ public enum AiEngineKind
     /// <summary>Pas d'IA : les règles de conformité restent actives, elles sont en C#.</summary>
     None = 0,
 
-    /// <summary>Claude en région européenne, sans conservation.</summary>
+    /// <summary>
+    /// Claude en région européenne, sans conservation : fournisseur cloud dans une région UE (Amazon Bedrock, Google
+    /// Vertex AI). L'API directe d'Anthropic ne garantit pas cette résidence.
+    /// </summary>
     ClaudeEu = 1,
 
     /// <summary>Modèle à poids ouverts hébergé en France ou sur le serveur du cabinet (API compatible OpenAI).</summary>

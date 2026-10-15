@@ -73,7 +73,7 @@ public sealed class AssistantGuardrailTests
     public async Task L_assistant_ne_lit_que_la_facture_ouverte_a_l_ecran()
     {
         var engine = new ScriptedTurnsEngine(
-            _ => Call("valider_facture", new { facture_id = SampleDossiers.InvoiceConformeId.ToString() }),
+            _ => Call("verifier_facture", new { facture_id = SampleDossiers.InvoiceConformeId.ToString() }),
             _ => Say("fin"));
         await using var h = new AssistantHarness(engine, AssistantHarness.Enabled());
 
@@ -109,7 +109,7 @@ public sealed class AssistantGuardrailTests
     {
         var engine = new ScriptedTurnsEngine(
             _ => Call("contexte_dossier", new { }),
-            _ => Call("valider_facture", new { facture_id = SampleDossiers.InvoiceIncompleteId.ToString() }, "c2"),
+            _ => Call("verifier_facture", new { facture_id = SampleDossiers.InvoiceIncompleteId.ToString() }, "c2"),
             _ => Call("rechercher_client", new { nom = "[CLIENT_1]" }, "c3"),
             _ => Say("fin"));
         await using var h = new AssistantHarness(engine, AssistantHarness.Enabled());
@@ -150,7 +150,7 @@ public sealed class AssistantGuardrailTests
     public async Task Un_montant_invente_par_le_moteur_est_signale()
     {
         var engine = new ScriptedTurnsEngine(
-            _ => Call("valider_facture", new { facture_id = SampleDossiers.InvoiceIncompleteId.ToString() }),
+            _ => Call("verifier_facture", new { facture_id = SampleDossiers.InvoiceIncompleteId.ToString() }),
             _ => Say("Total TTC : 2400,00 EUR. Pénalités estimées : 37,50 € ."));
         await using var h = new AssistantHarness(engine, AssistantHarness.Enabled());
 
