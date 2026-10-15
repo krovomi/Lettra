@@ -1,4 +1,5 @@
 @inject IStringLocalizer<SharedResource> L
+@inject AssistantPanelState Assistant
 @* Checklist des mentions obligatoires, en direct (annexe A §7 point 2) : rouge bloque la validation, orange alerte,
    vert présent. Un clic (ou Entrée) sur un constat place le curseur sur le champ ou la ligne à corriger.
    La liste vient du serveur, qui la recalcule à la validation : elle seule fait foi. *@
@@ -35,6 +36,10 @@
                             <span class="lettra-muted"> · @string.Format(CultureInfo.CurrentCulture, L["Checklist.Line"], line)</span>
                         }
                     </button>
+                    @if (DocumentId is { } documentId && finding.Severity != ComplianceSeverityDto.Ok && Assistant.Offers(Lettra.Contracts.Assistant.AssistantFeature.ExplainCompliance))
+                    {
+                        <button type="button" class="lettra-link lettra-why" @onclick="() => AskWhy(documentId, finding)">@L["Assistant.Why"]</button>
+                    }
                     @if (finding.LegalBasis is not null && finding.Severity != ComplianceSeverityDto.Ok)
                     {
                         <span class="lettra-muted lettra-finding-basis">@finding.LegalBasis</span>
@@ -49,6 +54,18 @@
     [Parameter] public ComplianceReportResponse? Report { get; set; }
 
     [Parameter] public EventCallback<ComplianceFindingResponse> OnFindingSelected { get; set; }
+
+    /// <summary>Document contrôlé : avec lui, et si le cabinet l'a activé, chaque constat offre « Pourquoi ? » à l'assistant.</summary>
+    [Parameter] public Guid? DocumentId { get; set; }
+
+    protected override Task OnInitializedAsync() => Assistant.LoadAsync();
+
+    private void AskWhy(Guid documentId, ComplianceFindingResponse finding)
+    {
+        string where = finding.Line is { } line ? " (" + string.Format(CultureInfo.CurrentCulture, L["Checklist.Line"], line) + ")" : string.Empty;
+        string question = string.Format(CultureInfo.CurrentCulture, L["Assistant.WhyQuestion"], L.Error(finding.Code) + where, finding.Code);
+        Assistant.Open(Lettra.Contracts.Assistant.AssistantFeature.ExplainCompliance, documentId, question);
+    }
 
     private static string Mark(ComplianceSeverityDto severity) => severity switch
     {

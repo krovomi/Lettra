@@ -31,6 +31,12 @@ internal static class AssistantEndpoints
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status403Forbidden);
 
+        group.MapGet("/statut", StatusAsync)
+            .WithName("GetAssistantStatus")
+            .RequirePermission(Permission.IaUtiliser)
+            .Produces<AssistantStatusResponse>()
+            .ProducesProblem(StatusCodes.Status403Forbidden);
+
         group.MapGet("/journal", JournalAsync)
             .WithName("GetAssistantJournal")
             .RequirePermission(Permission.IaUtiliser)
@@ -89,6 +95,13 @@ internal static class AssistantEndpoints
         AskAssistantQuery query = new(tenant.Current.DossierId, request.Feature, request.Question, request.OpenDocumentId);
         Result<IAsyncEnumerable<AssistantEvent>> result = await queries.QueryAsync(query, cancellationToken).ConfigureAwait(false);
         return result.IsSuccess ? new NdjsonStreamResult(result.Value) : result.Errors.ToProblem();
+    }
+
+    private static async Task<IResult> StatusAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken)
+    {
+        Result<AssistantStatusResponse> result = await queries
+            .QueryAsync(new GetAssistantStatusQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false);
+        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
     }
 
     private static async Task<IResult> JournalAsync(
