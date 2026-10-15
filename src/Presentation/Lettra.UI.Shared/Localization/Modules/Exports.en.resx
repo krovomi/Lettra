@@ -39,6 +39,7 @@
   <data name="Error.Platform.PaymentDateInvalid" xml:space="preserve"><value>The collection date cannot be earlier than the document date.</value></data>
   <data name="Error.Platform.ReferenceUnknown" xml:space="preserve"><value>The accredited platform does not know this transmission.</value></data>
   <data name="Error.Platform.SellerSirenMissing" xml:space="preserve"><value>Enter the company's SIREN: the accredited platform identifies the seller by its SIREN.</value></data>
+  <data name="Error.Platform.Queued" xml:space="preserve"><value>The transmission to the accredited platform is queued (platform not responding, or sending left to the Worker): nothing has been sent yet, it will go out on its own.</value></data>
   <data name="Error.Platform.Unavailable" xml:space="preserve"><value>The accredited platform is not responding. Try again later: nothing was sent.</value></data>
   <data name="Platform.Title" xml:space="preserve"><value>Accredited platform</value></data>
   <data name="Platform.NotConfigured" xml:space="preserve"><value>No accredited platform is configured for this firm: the document cannot be sent. The firm's administrator chooses the platform in the settings (Lettra:EInvoicing:Platform).</value></data>

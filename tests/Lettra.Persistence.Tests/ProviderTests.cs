@@ -1,8 +1,10 @@
 using Lettra.Application.Abstractions.Tenancy;
+using Lettra.Exports.Application.EInvoicing.Platform;
 using Lettra.Infrastructure.Persistence.PostgreSql;
 using Lettra.Infrastructure.Persistence.Sqlite;
 using Lettra.Infrastructure.Persistence.SqlServer;
 using Lettra.Infrastructure.Catalog;
+using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.MsSql;
 using Testcontainers.PostgreSql;
 
@@ -158,6 +160,18 @@ public sealed class SqliteTests : IDisposable
     {
         await using TenantHarness harness = new(new SqliteConfigurator(), simulatedPlatform: true);
         await PlatformScenarios.TransmissionAsync(harness, DatabaseProvider.Sqlite, Database("pa"));
+    }
+
+    [Fact]
+    public async Task Envois_a_la_plateforme_par_l_outbox_sans_doublon()
+    {
+        ManualClock clock = new(OutboxScenarios.Start);
+        await using TenantHarness harness = new(new SqliteConfigurator(), clock, simulatedPlatform: true, configure: services =>
+        {
+            services.AddSingleton<LosingPlatform>();
+            services.AddSingleton<IAccreditedPlatformClient>(sp => sp.GetRequiredService<LosingPlatform>());
+        });
+        await PlatformScenarios.OutboxAsync(harness, clock, DatabaseProvider.Sqlite, Database("pa-outbox"));
     }
 
     [Fact]
@@ -498,6 +512,19 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     }
 
     [SkippableFact]
+    public async Task Envois_a_la_plateforme_par_l_outbox_sans_doublon()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        ManualClock clock = new(OutboxScenarios.Start);
+        await using TenantHarness harness = new(new PostgreSqlConfigurator(), clock, simulatedPlatform: true, configure: services =>
+        {
+            services.AddSingleton<LosingPlatform>();
+            services.AddSingleton<IAccreditedPlatformClient>(sp => sp.GetRequiredService<LosingPlatform>());
+        });
+        await PlatformScenarios.OutboxAsync(harness, clock, DatabaseProvider.PostgreSql, Database("pa-outbox"));
+    }
+
+    [SkippableFact]
     public async Task Validations_concurrentes_sans_trou_ni_doublon()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
@@ -780,6 +807,19 @@ public sealed class SqlServerTests : IAsyncLifetime
         Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new SqlServerConfigurator(), simulatedPlatform: true);
         await PlatformScenarios.TransmissionAsync(harness, DatabaseProvider.SqlServer, Database("pa"));
+    }
+
+    [SkippableFact]
+    public async Task Envois_a_la_plateforme_par_l_outbox_sans_doublon()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        ManualClock clock = new(OutboxScenarios.Start);
+        await using TenantHarness harness = new(new SqlServerConfigurator(), clock, simulatedPlatform: true, configure: services =>
+        {
+            services.AddSingleton<LosingPlatform>();
+            services.AddSingleton<IAccreditedPlatformClient>(sp => sp.GetRequiredService<LosingPlatform>());
+        });
+        await PlatformScenarios.OutboxAsync(harness, clock, DatabaseProvider.SqlServer, Database("pa-outbox"));
     }
 
     [SkippableFact]

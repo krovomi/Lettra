@@ -126,10 +126,11 @@ internal sealed partial class EfOutboxDispatcher(
         LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
         long now = clock.GetUtcNow().ToUnixTimeMilliseconds();
         int updated = await db.Set<OutboxRecord>()
-            .Where(r => r.Id == messageId && r.ParkedAtMs != null)
+            .Where(r => r.Id == messageId && r.DeliveredAtMs == null && (r.ParkedAtMs != null || r.NextAttemptAtMs > now)
+                && (r.LeaseUntilMs == null || r.LeaseUntilMs < now))
             .ExecuteUpdateAsync(s => s
+                .SetProperty(r => r.Attempts, r => r.ParkedAtMs != null ? 0 : r.Attempts)
                 .SetProperty(r => r.ParkedAtMs, (long?)null)
-                .SetProperty(r => r.Attempts, 0)
                 .SetProperty(r => r.NextAttemptAtMs, now), cancellationToken)
             .ConfigureAwait(false);
         return updated == 1;

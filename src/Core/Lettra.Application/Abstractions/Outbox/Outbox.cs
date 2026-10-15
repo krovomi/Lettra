@@ -93,7 +93,10 @@ public interface IOutboxDispatcher
 
     Task<IReadOnlyList<OutboxMessageState>> ListParkedAsync(CancellationToken cancellationToken);
 
-    /// <summary>Remet un message mis de côté dans la file, pour un nouvel essai tout de suite (après correction).</summary>
+    /// <summary>
+    /// Avance au plus tôt l'essai d'un message pas encore parti : mis de côté (ses essais repartent de zéro, après
+    /// correction) ou en attente de son prochain essai (l'utilisateur redemande l'envoi). Faux s'il est parti ou en cours.
+    /// </summary>
     Task<bool> RequeueAsync(Guid messageId, CancellationToken cancellationToken);
 }
 
