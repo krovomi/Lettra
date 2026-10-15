@@ -18,6 +18,7 @@ public static class DependencyInjection
         services.AddSingleton<ICurrentUser>(sp => sp.GetRequiredService<LocalSession>());
         services.Replace(ServiceDescriptor.Singleton<ILocalAccounts, LocalAccounts>());
         services.AddSingleton<IAuthorizationDirectory, LocalAuthorizationDirectory>();
+        services.AddSingleton<IScopeMemberDirectory, LocalAuthorizationDirectory>();
         services.AddLettraAuthorization();
         return services;
     }

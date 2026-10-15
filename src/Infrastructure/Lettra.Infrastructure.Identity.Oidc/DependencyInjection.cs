@@ -26,6 +26,7 @@ public static class DependencyInjection
 
         // Le registre lu en configuration tient lieu de base Catalog tant qu'elle n'existe pas (TryAdd : elle le remplacera).
         services.TryAddSingleton<IAuthorizationDirectory, ConfigurationAuthorizationDirectory>();
+        services.TryAddSingleton<IScopeMemberDirectory, ConfigurationAuthorizationDirectory>();
         services.AddLettraAuthorization();
         services.AddHybridCache();
         services.AddScoped<CachingPermissionService>();

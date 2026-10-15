@@ -1,3 +1,4 @@
+using Lettra.Application.Abstractions.Identity;
 using Lettra.Supervision.Domain;
 
 namespace Lettra.Supervision.Application;
@@ -19,7 +20,7 @@ public sealed class RoutingPolicy(IRoleDirectory directory, IOnCallSchedule onCa
         }
         else
         {
-            recipients.UnionWith(await directory.HoldersAsync(SupervisionPermission.AlertesLire, alert.Scope, cancellationToken).ConfigureAwait(false));
+            recipients.UnionWith(await directory.HoldersAsync(Permission.AlertesLire, alert.Scope, cancellationToken).ConfigureAwait(false));
         }
 
         if (alert.Severity == Severity.S1 && alert.Scope.Cabinet is { } cabinet)

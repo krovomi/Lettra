@@ -1,5 +1,6 @@
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Infrastructure.Persistence.Catalog;
+using Lettra.Infrastructure.Persistence.Supervision;
 using Lettra.Infrastructure.Persistence.Tenancy;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -32,6 +33,15 @@ public sealed class SqliteConfigurator : IDbProviderConfigurator
     {
         SqliteEncryption.EnsureInitialized();
         builder.UseSqlite(connectionString, o => o.MigrationsAssembly(MigrationsAssembly));
+    }
+
+    /// <summary>Base de supervision : souvent le fichier du catalogue, avec son propre historique de migrations.</summary>
+    public static void ConfigureSupervision(DbContextOptionsBuilder builder, string connectionString)
+    {
+        SqliteEncryption.EnsureInitialized();
+        builder.UseSqlite(connectionString, o => o
+            .MigrationsAssembly(MigrationsAssembly)
+            .MigrationsHistoryTable(SupervisionDbContext.MigrationsHistoryTable));
     }
 }
 
@@ -106,5 +116,16 @@ internal sealed class CatalogDesignTimeFactory : IDesignTimeDbContextFactory<Cat
         DbContextOptionsBuilder<CatalogDbContext> builder = new();
         SqliteConfigurator.ConfigureCatalog(builder, "Data Source=catalog-design.db");
         return new CatalogDbContext(builder.Options);
+    }
+}
+
+/// <summary>Utilisé uniquement par <c>dotnet ef migrations add --context SupervisionDbContext</c>.</summary>
+internal sealed class SupervisionDesignTimeFactory : IDesignTimeDbContextFactory<SupervisionDbContext>
+{
+    public SupervisionDbContext CreateDbContext(string[] args)
+    {
+        DbContextOptionsBuilder<SupervisionDbContext> builder = new();
+        SqliteConfigurator.ConfigureSupervision(builder, "Data Source=supervision-design.db");
+        return new SupervisionDbContext(builder.Options);
     }
 }

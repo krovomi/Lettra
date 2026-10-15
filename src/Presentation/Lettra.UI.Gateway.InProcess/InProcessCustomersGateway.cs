@@ -63,6 +63,7 @@ public static class DependencyInjection
         services.AddSingleton<ISuppliersGateway, InProcessSuppliersGateway>();
         services.AddSingleton<ICatalogGateway, InProcessCatalogGateway>();
         services.AddSingleton<IDirectoryGateway, InProcessDirectoryGateway>();
+        services.AddSingleton<IAlertsGateway, InProcessAlertsGateway>();
         return services;
     }
 }

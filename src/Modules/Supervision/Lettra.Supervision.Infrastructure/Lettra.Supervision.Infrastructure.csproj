@@ -4,6 +4,7 @@
        d'alertes), stockage, astreinte, canaux de notification. Vigie (IAlertTriageAgent) arrive en phase 6. -->
   <ItemGroup>
     <ProjectReference Include="..\Lettra.Supervision.Application\Lettra.Supervision.Application.csproj" />
+    <ProjectReference Include="..\..\..\Infrastructure\Lettra.Infrastructure.Persistence\Lettra.Infrastructure.Persistence.csproj" />
   </ItemGroup>
 
   <ItemGroup>

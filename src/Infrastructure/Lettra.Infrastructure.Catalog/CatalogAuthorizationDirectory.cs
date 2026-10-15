@@ -10,7 +10,7 @@ namespace Lettra.Infrastructure.Catalog;
 /// cabinet de l'utilisateur (ou du dossier) ; les rôles personnalisés sont ceux du cabinet de l'utilisateur.
 /// Le résultat est mis en cache par le service de permissions, invalidé sur <c>DroitsModifies</c>.
 /// </summary>
-internal sealed class CatalogAuthorizationDirectory(IDbContextFactory<CatalogDbContext> factory) : IAuthorizationDirectory
+internal sealed class CatalogAuthorizationDirectory(IDbContextFactory<CatalogDbContext> factory) : IAuthorizationDirectory, IScopeMemberDirectory
 {
     public async ValueTask<UserAuthorizationProfile?> FindUserAsync(Guid userId, CancellationToken cancellationToken)
     {
@@ -124,6 +124,45 @@ internal sealed class CatalogAuthorizationDirectory(IDbContextFactory<CatalogDbC
 
             default:
                 return null;
+        }
+    }
+
+    public async ValueTask<IReadOnlyCollection<Guid>> ListCandidatesAsync(ScopePath path, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(path);
+        CatalogDbContext db = await factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        await using (db.ConfigureAwait(false))
+        {
+            // Les attributions sur l'une des portées du chemin ; le filtre fin (rôle, échéance) est celui des permissions.
+            List<(SubjectKind Kind, Guid Id)> subjects = [];
+            foreach (IGrouping<ScopeKind, AuthorizationScope> level in path.Ancestors.GroupBy(s => s.Kind))
+            {
+                Guid[] ids = [.. level.Select(s => s.Id)];
+                ScopeKind kind = level.Key;
+                subjects.AddRange((await db.RoleAssignments.AsNoTracking()
+                        .Where(a => a.ScopeKind == kind && ids.Contains(a.ScopeId))
+                        .Select(a => new { a.SubjectKind, a.SubjectId })
+                        .ToListAsync(cancellationToken).ConfigureAwait(false))
+                    .Select(a => (a.SubjectKind, a.SubjectId)));
+            }
+
+            Guid[] users = [.. subjects.Where(s => s.Kind == SubjectKind.User).Select(s => s.Id).Distinct()];
+            Guid[] groups = [.. subjects.Where(s => s.Kind == SubjectKind.Group).Select(s => s.Id).Distinct()];
+
+            // Un membre ne compte par son groupe que si le groupe est de son cabinet.
+            List<Guid> members = await (
+                    from member in db.GroupMembers
+                    join g in db.Groups on member.GroupId equals g.Id
+                    join account in db.UserAccounts on member.UserId equals account.Id
+                    where groups.Contains(g.Id) && account.OrganisationId == g.OrganisationId
+                    select member.UserId)
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
+
+            Guid[] candidates = [.. users.Concat(members).Distinct()];
+            return await db.UserAccounts.AsNoTracking()
+                .Where(u => candidates.Contains(u.Id) && u.State == AccountState.Active)
+                .Select(u => u.Id)
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
