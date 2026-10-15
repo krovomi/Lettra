@@ -227,7 +227,8 @@ jobs:
           sleep 10
           xcrun simctl io "$udid" screenshot artifacts/ios-run/lettra-ios.png
           xcrun simctl spawn "$udid" log show --last 5m --predicate 'process == "Lettra.App.Maui"' > artifacts/ios-run/log.txt 2>&1 || true
-          if ! xcrun simctl spawn "$udid" launchctl list | grep -q fr.lettra.app; then echo "Lettra s'est arrêté au démarrage."; tail -n 80 artifacts/ios-run/log.txt; exit 1; fi
+          services=$(xcrun simctl spawn "$udid" launchctl list)
+          if ! grep -q fr.lettra.app <<< "$services"; then echo "Lettra s'est arrêté au démarrage."; tail -n 80 artifacts/ios-run/log.txt; exit 1; fi
           if [ -z "$dossiers" ]; then echo "Aucun dossier local créé sous $data."; find "$data" -maxdepth 3; tail -n 80 artifacts/ios-run/log.txt; exit 1; fi
           echo "Dossiers locaux : $dossiers"
       - uses: actions/upload-artifact@v4
