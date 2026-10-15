@@ -120,3 +120,8 @@ curl -s http://localhost:8889/metrics | grep lettra_use_case
   électronique simulée, utilisateur `demo` manager du cabinet.
 - Vérifié à chaque CI par le job « Démo navigateur » de `.github/workflows/deploy.yml` (Playwright, `e2e/parcours.mjs`), y compris le profil HTTPS
   avec un nom d'hôte hors localhost.
+- La même pile sert aussi un test de charge léger (k6, job « Démo — charge k6 ») et un scan de sécurité ZAP de base
+  (« Démo — scan de sécurité ZAP ») : voir [deploy/tests/README.md](../tests/README.md). `node parcours.mjs session`
+  se connecte (mot de passe + TOTP) et exporte le cookie de session pour k6.
+- L'API pose ses en-têtes de sécurité sur toutes les réponses (CSP compatible Blazor WebAssembly, refus des cadres,
+  isolation d'origine) : l'inscription du service worker est donc dans `pwa.js`, pas dans un script en ligne.

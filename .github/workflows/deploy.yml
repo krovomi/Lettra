@@ -195,3 +195,131 @@ jobs:
         env:
           LETTRA_DEMO_HOST: lettra-demo.test
         run: $COMPOSE_LAN down -v
+
+  # Charge légère (k6) sur la pile de démonstration : santé et enveloppe PWA en anonyme, lectures authentifiées du
+  # dossier de démonstration avec la session du BFF ouverte par Playwright (mot de passe + TOTP), puis une rafale
+  # qui doit déclencher la limite de débit (429). Seuils : deploy/tests/k6/fumee.js.
+  demo-charge:
+    name: Démo — charge k6 (fumée)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      COMPOSE: docker compose -f ${{ github.workspace }}/deploy/demo/compose.yaml
+      # Session exportée hors des dossiers publiés en artefact.
+      SORTIE: ${{ github.workspace }}/.session-k6
+      K6_SORTIE: ${{ github.workspace }}/deploy/tests/k6/sortie
+      K6_VERSION: 1.3.0
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Construction de l'image de l'API
+        run: $COMPOSE build
+
+      - name: Démarrage (localhost)
+        run: |
+          $COMPOSE up -d --wait
+          timeout 180 bash -c 'until curl -sf http://localhost:8080/health; do sleep 2; done'
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Playwright (Chromium)
+        working-directory: deploy/demo/e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Connexion complète (mot de passe + TOTP) et export de la session du BFF
+        working-directory: deploy/demo/e2e
+        run: |
+          set -a; . ../.env; set +a
+          node parcours.mjs session
+          echo "::add-mask::$(cat "$SORTIE/session-cookie.txt")"
+
+      - uses: grafana/setup-k6-action@v1
+        with:
+          k6-version: ${{ env.K6_VERSION }}
+
+      - name: k6 — profil de fumée (~1 min)
+        env:
+          K6_WEB_DASHBOARD: "true"
+          K6_WEB_DASHBOARD_EXPORT: ${{ github.workspace }}/deploy/tests/k6/sortie/rapport.html
+        run: |
+          mkdir -p "$K6_SORTIE"
+          LETTRA_SESSION_COOKIE="$(cat "$SORTIE/session-cookie.txt")" k6 run deploy/tests/k6/fumee.js
+
+      - name: Journaux
+        if: always()
+        run: |
+          mkdir -p "$K6_SORTIE"
+          for s in keycloak api; do $COMPOSE logs --no-color "$s" > "$K6_SORTIE/$s.log" 2>&1 || true; done
+          cp "$SORTIE"/*.png "$K6_SORTIE/" 2>/dev/null || true
+
+      - name: Rapports k6 (résumé JSON et texte, tableau de bord HTML)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-charge-k6
+          path: deploy/tests/k6/sortie/
+          if-no-files-found: warn
+
+      - name: Arrêt
+        if: always()
+        run: $COMPOSE down -v
+
+  # Scan ZAP de base (passif, sans authentification) de http://localhost:8080/ : échoue sur une règle classée FAIL
+  # dans deploy/tests/zap/rules.tsv ou sur toute constatation de risque faible ou plus qui n'y est pas classée.
+  demo-zap:
+    name: Démo — scan de sécurité ZAP (base)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      COMPOSE: docker compose -f ${{ github.workspace }}/deploy/demo/compose.yaml
+      ZAP_IMAGE: zaproxy/zap-stable:2.16.1
+      ZAP_SORTIE: ${{ github.workspace }}/deploy/tests/zap/sortie
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Construction de l'image de l'API et image ZAP
+        run: |
+          $COMPOSE build
+          docker pull -q "$ZAP_IMAGE"
+
+      - name: Démarrage (localhost)
+        run: |
+          $COMPOSE up -d --wait
+          timeout 180 bash -c 'until curl -sf http://localhost:8080/health; do sleep 2; done'
+          curl -sfI http://localhost:8080/
+
+      - name: Scan ZAP de base
+        run: |
+          mkdir -p "$ZAP_SORTIE" && chmod 777 "$ZAP_SORTIE"
+          cp deploy/tests/zap/rules.tsv "$ZAP_SORTIE/"
+          set +e
+          docker run --rm --network host -v "$ZAP_SORTIE:/zap/wrk:rw" "$ZAP_IMAGE" \
+            zap-baseline.py -t http://localhost:8080/ -c rules.tsv -I \
+            -r rapport.html -J rapport.json -w rapport.md
+          code=$?
+          set -e
+          # 0 : rien en FAIL ; 1 : au moins une règle FAIL ; autre : erreur du scan.
+          deploy/tests/zap/verifier.sh "$ZAP_SORTIE/rapport.json"
+          exit $code
+
+      - name: Journaux
+        if: always()
+        run: |
+          mkdir -p "$ZAP_SORTIE"
+          $COMPOSE logs --no-color api > "$ZAP_SORTIE/api.log" 2>&1 || true
+
+      - name: Rapports ZAP (HTML, JSON, Markdown)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-zap
+          path: deploy/tests/zap/sortie/
+          if-no-files-found: warn
+
+      - name: Arrêt
+        if: always()
+        run: $COMPOSE down -v

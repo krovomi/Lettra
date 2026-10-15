@@ -1,0 +1,77 @@
+using Microsoft.Net.Http.Headers;
+
+namespace Lettra.Api.Security;
+
+/// <summary>
+/// En-têtes de sécurité de toutes les réponses (application Blazor, API, BFF) : politique de contenu (CSP), refus
+/// de l'affichage dans un cadre, isolation d'origine, pas de reniflage de type ; et aucune mise en cache des
+/// réponses de l'API et du BFF, qui portent des données de dossier ou de session.
+/// <para>
+/// CSP de Blazor WebAssembly : <c>'wasm-unsafe-eval'</c> autorise la compilation du runtime .NET (WebAssembly),
+/// sans ouvrir <c>eval</c> au JavaScript ; aucun script en ligne (l'inscription du service worker est dans
+/// <c>pwa.js</c>). Les attributs <c>style</c> posés par les composants (variables CSS de la grille de saisie) exigent
+/// <c>style-src-attr 'unsafe-inline'</c> ; les feuilles de style restent limitées à l'origine.
+/// </para>
+/// </summary>
+public static class SecurityHeaders
+{
+    /// <summary>Politique de contenu servie partout, sauf en développement (voir <see cref="DevelopmentContentSecurityPolicy"/>).</summary>
+    public static readonly string ContentSecurityPolicy = Csp("'self'");
+
+    /// <summary>En développement : rechargement à chaud et débogage WASM ouvrent un WebSocket sur un autre port local.</summary>
+    public static readonly string DevelopmentContentSecurityPolicy = Csp("'self' ws://localhost:* wss://localhost:* http://localhost:*");
+
+    public const string PermissionsPolicy =
+        "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()";
+
+    private static string Csp(string connect) =>
+        "default-src 'self'; " +
+        "script-src 'self' 'wasm-unsafe-eval'; " +
+        "style-src 'self'; " +
+        "style-src-attr 'unsafe-inline'; " +
+        "img-src 'self' data:; " +
+        "font-src 'self'; " +
+        $"connect-src {connect}; " +
+        "worker-src 'self'; " +
+        "manifest-src 'self'; " +
+        "object-src 'none'; " +
+        "base-uri 'self'; " +
+        "form-action 'self'; " +
+        "frame-ancestors 'none'";
+
+    public static IApplicationBuilder UseLettraSecurityHeaders(this IApplicationBuilder app, IWebHostEnvironment environment)
+    {
+        ArgumentNullException.ThrowIfNull(environment);
+        string csp = environment.IsDevelopment() ? DevelopmentContentSecurityPolicy : ContentSecurityPolicy;
+        return app.Use((context, next) =>
+        {
+            // Au départ de la réponse : couvre aussi les fichiers statiques, les erreurs et les 401/429.
+            context.Response.OnStarting(() =>
+            {
+                Apply(context, csp);
+                return Task.CompletedTask;
+            });
+            return next(context);
+        });
+    }
+
+    private static void Apply(HttpContext context, string csp)
+    {
+        IHeaderDictionary headers = context.Response.Headers;
+        headers[HeaderNames.ContentSecurityPolicy] = csp;
+        headers[HeaderNames.XContentTypeOptions] = "nosniff";
+        headers[HeaderNames.XFrameOptions] = "DENY";
+        headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+        headers["Permissions-Policy"] = PermissionsPolicy;
+        headers["Cross-Origin-Opener-Policy"] = "same-origin";
+        headers["Cross-Origin-Resource-Policy"] = "same-origin";
+        headers["Cross-Origin-Embedder-Policy"] = "require-corp";
+
+        PathString path = context.Request.Path;
+        if (path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase) || path.StartsWithSegments("/bff", StringComparison.OrdinalIgnoreCase))
+        {
+            headers[HeaderNames.CacheControl] = "no-store";
+            headers[HeaderNames.Pragma] = "no-cache";
+        }
+    }
+}

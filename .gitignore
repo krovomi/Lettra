@@ -16,3 +16,6 @@ build/einvoice/lib/
 build/einvoice/rules/
 node_modules/
 deploy/demo/e2e/sortie/
+deploy/tests/k6/sortie/
+deploy/tests/zap/sortie/
+.session-k6/
