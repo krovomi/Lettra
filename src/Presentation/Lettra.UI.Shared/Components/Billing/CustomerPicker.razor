@@ -25,6 +25,9 @@
 
     [Parameter] public bool ReadOnly { get; set; }
 
+    /// <summary>Nom affiché, y compris celui retrouvé d'après <see cref="CustomerId"/> (titre d'un brouillon hors ligne).</summary>
+    public string? DisplayedName => SelectedName ?? _resolvedName;
+
     [Parameter] public EventCallback<CustomerSummary> OnSelected { get; set; }
 
     private IReadOnlyList<CustomerSummary>? _options;
