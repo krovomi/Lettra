@@ -26,6 +26,9 @@ public enum SyncFailureKind
     Unauthenticated = 2,
     Forbidden = 3,
     DossierUnavailable = 4,
+
+    /// <summary>Le cabinet a révoqué ce poste : sa réplique est effacée (étape 4.4).</summary>
+    DeviceRevoked = 5,
 }
 
 /// <summary>Rappel quand une facture validée sur le poste attend d'être envoyée (miroir de <c>SyncReminder</c>).</summary>

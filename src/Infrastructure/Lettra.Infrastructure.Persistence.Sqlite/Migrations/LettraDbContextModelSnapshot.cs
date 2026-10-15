@@ -1359,6 +1359,34 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.ToTable("SyncConflicts", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.SyncDeviceRecord", b =>
+                {
+                    b.Property<Guid>("DeviceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("FirstSeenAtMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("LastSeenAtMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("LastUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("RevokedAtMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("RevokedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("WipedAtMs")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("DeviceId");
+
+                    b.ToTable("SyncDevices", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.SyncJournalRecord", b =>
                 {
                     b.Property<long>("Sequence")

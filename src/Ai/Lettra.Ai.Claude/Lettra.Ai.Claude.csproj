@@ -7,8 +7,14 @@
 
   <ItemGroup>
     <PackageReference Include="Anthropic" />
+    <PackageReference Include="Anthropic.Bedrock" />
+    <PackageReference Include="Anthropic.Vertex" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lettra.Ai.Tests" />
   </ItemGroup>
 
 </Project>

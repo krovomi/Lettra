@@ -16,8 +16,8 @@ public sealed class DeviceSeriesTests : IAsyncLifetime
 
     public async Task DisposeAsync() => await _world.DisposeAsync();
 
-    private static Task<DeviceSeries?> SeriesAsync(DossierNode node) =>
-        node.RunAsync(sp => sp.GetRequiredService<IDeviceNumbering>().FindAsync(NumberSeriesCodes.Invoices, default));
+    private static async Task<DeviceSeries?> SeriesAsync(DossierNode node) =>
+        (await node.RunAsync(sp => sp.GetRequiredService<IDeviceNumbering>().FindAsync(NumberSeriesCodes.Invoices, default))).Value;
 
     [Fact]
     public async Task Chaque_poste_recoit_sa_serie_au_premier_passage_en_ligne_et_la_garde()
