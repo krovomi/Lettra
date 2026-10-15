@@ -111,8 +111,10 @@ if [[ "$redirection" == *request_uri=urn%3Aietf%3Aparams%3Aoauth%3Arequest_uri%3
 else
   [[ "$redirection" == *code_challenge_method=S256* ]] || echec "ni PAR ni PKCE S256 dans la redirection : $redirection"
 fi
-read -r page emplacement < <(curl -sS -c "$SORTIE/cookies.txt" -o "$SORTIE/page-connexion.html" -w '%{http_code} %{redirect_url}\n' "$redirection")
-[[ "$page" == 200 ]] || echec "Keycloak refuse la demande du BFF ($page vers $emplacement)"
+# Avec PAR, Keycloak ouvre la session d'authentification puis renvoie vers login-actions/authenticate : on suit.
+read -r page adresse < <(curl -sS -L --max-redirs 5 -b "$SORTIE/cookies.txt" -c "$SORTIE/cookies.txt" \
+  -o "$SORTIE/page-connexion.html" -w '%{http_code} %{url_effective}\n' "$redirection")
+[[ "$page" == 200 && "$adresse" == "$EMETTEUR/"* ]] || echec "Keycloak refuse la demande du BFF ($page sur $adresse)"
 grep -q 'kc-form-login' "$SORTIE/page-connexion.html" || echec "pas de formulaire de connexion Keycloak"
 echo "   /bff/login → $EMETTEUR/protocol/openid-connect/auth → formulaire de connexion"
 
