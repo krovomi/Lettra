@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Bench.Title" xml:space="preserve"><value>Mesure de la grille</value></data>
+  <data name="Bench.Intro" xml:space="preserve"><value>Cette page rejoue une saisie au clavier sur une pièce de {0} lignes (une frappe toutes les {1} ms) et mesure le délai entre chaque frappe et l'image qui en affiche le résultat. Ne touchez ni au clavier ni à la souris pendant la mesure (environ une minute).</value></data>
+  <data name="Bench.Start" xml:space="preserve"><value>Lancer la mesure</value></data>
+  <data name="Bench.Running" xml:space="preserve"><value>Mesure en cours… ne touchez à rien.</value></data>
+  <data name="Bench.Done" xml:space="preserve"><value>Mesure terminée. Copiez le résultat et collez-le dans le fil du projet.</value></data>
+  <data name="Bench.Failed" xml:space="preserve"><value>La mesure n'a pas pu aller au bout : {0}</value></data>
+  <data name="Bench.Copy" xml:space="preserve"><value>Copier le résultat</value></data>
+  <data name="Bench.Copied" xml:space="preserve"><value>Résultat copié.</value></data>
+  <data name="Bench.CopyFailed" xml:space="preserve"><value>Copie impossible : sélectionnez le texte ci-dessous et copiez-le.</value></data>
+  <data name="Bench.Column.Measure" xml:space="preserve"><value>Mesure</value></data>
+  <data name="Bench.Column.Count" xml:space="preserve"><value>Frappes</value></data>
+  <data name="Bench.Column.Median" xml:space="preserve"><value>Médiane</value></data>
+  <data name="Bench.Column.P95" xml:space="preserve"><value>p95</value></data>
+  <data name="Bench.Column.Max" xml:space="preserve"><value>Max</value></data>
+  <data name="Bench.Navigation" xml:space="preserve"><value>Navigation (Tab, Entrée, flèches, Page suivante)</value></data>
+  <data name="Bench.Entry" xml:space="preserve"><value>Tab après une saisie</value></data>
+  <data name="Bench.Amount" xml:space="preserve"><value>Mise à jour du montant de la ligne</value></data>
+  <data name="Bench.Verdict.Ok" xml:space="preserve"><value>p95 de navigation sous 100 ms : la saisie paraît instantanée.</value></data>
+  <data name="Bench.Verdict.Slow" xml:space="preserve"><value>p95 de navigation au-dessus de 100 ms : un retard peut se sentir sur ce poste.</value></data>
+  <data name="Bench.Missed" xml:space="preserve"><value>{0} frappe(s) sans réponse en 2 s.</value></data>
+  <data name="Bench.Grid" xml:space="preserve"><value>Pièce de mesure</value></data>
+  <data name="Bench.Col.Reference" xml:space="preserve"><value>Réf.</value></data>
+  <data name="Bench.Col.Designation" xml:space="preserve"><value>Désignation</value></data>
+  <data name="Bench.Col.Quantity" xml:space="preserve"><value>Qté</value></data>
+  <data name="Bench.Col.Price" xml:space="preserve"><value>PU HT</value></data>
+  <data name="Bench.Col.Discount" xml:space="preserve"><value>Remise %</value></data>
+  <data name="Bench.Col.Vat" xml:space="preserve"><value>TVA %</value></data>
+  <data name="Bench.Col.Total" xml:space="preserve"><value>Total HT</value></data>
+</root>
