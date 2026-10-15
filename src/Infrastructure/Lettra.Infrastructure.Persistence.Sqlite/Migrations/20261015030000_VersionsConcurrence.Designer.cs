@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
 {
     [DbContext(typeof(LettraDbContext))]
-    [Migration("20261015020000_VersionsConcurrence")]
+    [Migration("20261015030000_VersionsConcurrence")]
     partial class VersionsConcurrence
     {
         /// <inheritdoc />
