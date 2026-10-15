@@ -98,5 +98,5 @@ réimporté et l'enrôlement TOTP est à refaire.
   serveur, avec le même émetteur. Navigateur et API valident donc les mêmes jetons.
 - L'API reçoit sa configuration par variables d'environnement (`compose.yaml`) : mode réseau local, facturation
   électronique simulée, utilisateur `demo` manager du cabinet.
-- Vérifié à chaque CI par `.github/workflows/demo.yml` (Playwright, `e2e/parcours.mjs`), y compris le profil HTTPS
+- Vérifié à chaque CI par le job « Démo navigateur » de `.github/workflows/deploy.yml` (Playwright, `e2e/parcours.mjs`), y compris le profil HTTPS
   avec un nom d'hôte hors localhost.
