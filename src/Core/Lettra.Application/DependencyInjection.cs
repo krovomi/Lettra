@@ -26,6 +26,10 @@ public static class DependencyInjection
         // Hors du mode 1, les cas d'usage de session locale répondent « non pris en charge ».
         services.TryAddSingleton<ILocalAccounts, NoLocalAccounts>();
 
+        // Séparation des tâches (annexe F §3.2) : la politique vient de la base Catalog hors du mode 1.
+        services.TryAddSingleton<IOrganisationPolicyStore, NoOrganisationPolicies>();
+        services.AddScoped<ISegregationOfDuties, SegregationOfDutiesService>();
+
         // Ordre = de l'extérieur vers l'intérieur : on trace tout, puis on vérifie le dossier,
         // puis les droits, puis la saisie. Un refus de droits ne révèle donc rien de la validation.
         // Au plus près du handler, l'écriture concurrente détectée à l'enregistrement devient un échec (ADR-0013).

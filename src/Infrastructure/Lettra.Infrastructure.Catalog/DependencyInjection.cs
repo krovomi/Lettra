@@ -36,6 +36,8 @@ public static class DependencyInjection
         services.AddSingleton<IDossierProvisioner>(sp => sp.GetRequiredService<CatalogDossierProvisioner>());
         // Avant l'identité serveur, qui n'enregistre son registre lu en configuration qu'à défaut (TryAdd).
         services.AddSingleton<IAuthorizationDirectory, CatalogAuthorizationDirectory>();
+        // Remplace la politique « aucune » du mode 1 enregistrée par AddApplication.
+        services.AddSingleton<IOrganisationPolicyStore, CatalogOrganisationPolicyStore>();
         services.AddSingleton<CatalogInitializer>();
         services.AddSingleton<DossierMigrationOrchestrator>();
         return services;

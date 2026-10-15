@@ -226,6 +226,29 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.CatalogMigrations
                     b.ToTable("Organisations", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogOrganisationPolicy", b =>
+                {
+                    b.Property<Guid>("OrganisationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("CreditNoteApprovalThresholdInclTax")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("SegregationOfDutiesEnabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("OrganisationId");
+
+                    b.ToTable("OrganisationPolicies", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogRoleAssignment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -315,6 +338,15 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.CatalogMigrations
                     b.HasOne("Lettra.Infrastructure.Persistence.Catalog.CatalogGroup", null)
                         .WithMany()
                         .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogOrganisationPolicy", b =>
+                {
+                    b.HasOne("Lettra.Infrastructure.Persistence.Catalog.CatalogOrganisation", null)
+                        .WithOne()
+                        .HasForeignKey("Lettra.Infrastructure.Persistence.Catalog.CatalogOrganisationPolicy", "OrganisationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
