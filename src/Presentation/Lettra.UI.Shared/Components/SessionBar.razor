@@ -3,7 +3,12 @@
 @inject ISessionGateway Sessions
 @inject NavigationManager Navigation
 @inject IStringLocalizer<SharedResource> L
+@inject DeviceLock DeviceLock
 
+@if (DeviceLock.HasPin)
+{
+    <button type="button" id="device-lock-now" class="lettra-link" @onclick="DeviceLock.Lock" title="@L["Pin.LockNow"]">@L["Pin.LockNow"]</button>
+}
 @if (_session is { IsAuthenticated: true })
 {
     <span class="lettra-user">@_session.DisplayName</span>

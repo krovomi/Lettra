@@ -3,6 +3,7 @@
 @inject IStringLocalizer<SharedResource> L
 @inject UiPreferences Preferences
 
+<DeviceLockGate>
 <CascadingValue Value="Preferences.Density">
     <div class="lettra-shell @Preferences.Density.CssClass()">
         <header class="lettra-header">
@@ -33,6 +34,7 @@
 
 <GlobalShortcuts Scope="_globalScope" />
 <CommandPalette @ref="_palette" />
+</DeviceLockGate>
 
 @code {
     private KeyboardScope _globalScope = default!;

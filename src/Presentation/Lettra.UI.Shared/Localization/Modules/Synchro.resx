@@ -82,4 +82,5 @@
   <data name="Error.Sync.OfflineTooLong" xml:space="preserve"><value>Ce poste est resté hors ligne plus longtemps que le cabinet ne le permet : synchronisez avant de valider.</value></data>
   <data name="Error.Sync.PolicyInvalid" xml:space="preserve"><value>La durée maximale hors ligne va de 1 heure à 30 jours.</value></data>
   <data name="Error.Sync.DeviceUnknown" xml:space="preserve"><value>Ce poste ne s'est jamais synchronisé avec ce dossier.</value></data>
+  <data name="Error.Sync.NothingToRelease" xml:space="preserve"><value>Ce poste n'a pas de série ouverte dans ce dossier : rien à débloquer.</value></data>
 </root>

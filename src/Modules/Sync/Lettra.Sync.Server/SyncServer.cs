@@ -112,7 +112,10 @@ public sealed class SyncServer(
         }
 
         int hours = await devices.GetMaxOfflineHoursAsync(cancellationToken).ConfigureAwait(false);
-        return changes.Value with { Policy = new SyncPolicyResponse(hours) };
+        IReadOnlyList<string> released = deviceId is Guid caller
+            ? await devices.ListReleasesAsync(caller, cancellationToken).ConfigureAwait(false)
+            : [];
+        return changes.Value with { Policy = new SyncPolicyResponse(hours), Released = released.Count > 0 ? released : null };
     }
 
     /// <summary>
@@ -164,15 +167,35 @@ public sealed class SyncServer(
     {
         string hash = Hash(intent);
         SyncReceipt? known = await receipts.FindAsync(intent.IdempotencyKey, cancellationToken).ConfigureAwait(false);
-        if (known is not null)
+        if (known is not null && known.RequestHash != hash)
         {
-            return known.RequestHash == hash
-                ? known.Result
-                : Rejected(intent, SyncErrors.IdempotencyKeyReused);
+            return Rejected(intent, SyncErrors.IdempotencyKeyReused);
         }
 
-        SyncIntentResult result = await work.RunAsync((sp, ct) => IntentReplay.ReplayAsync(sp, intent, deviceId, ct), cancellationToken).ConfigureAwait(false);
-        await receipts.SaveAsync(new SyncReceipt(intent.IdempotencyKey, deviceId, hash, result, clock.GetUtcNow()), cancellationToken).ConfigureAwait(false);
+        // Une pièce dont la série a été débloquée (étape 4.4) est rejouée, même refusée la première fois.
+        string? number = (intent as ValidatedInvoiceFact)?.Document.Number;
+        Guid? releasedBy = number is null ? null : await devices.FindReleaseAsync(deviceId, number, cancellationToken).ConfigureAwait(false);
+        if (known is not null && (releasedBy is null || known.Result.Outcome != SyncIntentOutcome.Rejected))
+        {
+            return known.Result;
+        }
+
+        SyncIntentResult result = await work.RunAsync((sp, ct) => IntentReplay.ReplayAsync(sp, intent, deviceId, releasedBy, ct), cancellationToken)
+            .ConfigureAwait(false);
+        DateTimeOffset now = clock.GetUtcNow();
+        if (releasedBy is not null && result.Outcome != SyncIntentOutcome.Rejected)
+        {
+            await devices.ConsumeReleaseAsync(deviceId, number!, now, cancellationToken).ConfigureAwait(false);
+        }
+
+        // Une pièce qui attend la précédente n'est pas refusée pour de bon : pas de réponse gardée, elle reviendra.
+        if (result.IsWaiting())
+        {
+            return result;
+        }
+
+        SyncReceipt receipt = new(intent.IdempotencyKey, deviceId, hash, result, now);
+        await (known is null ? receipts.SaveAsync(receipt, cancellationToken) : receipts.ReplaceAsync(receipt, cancellationToken)).ConfigureAwait(false);
         return result;
     }
 
@@ -186,7 +209,7 @@ public sealed class SyncServer(
     /// <summary>Le rejeu d'une intention, dans une portée neuve sur le dossier.</summary>
     private static class IntentReplay
     {
-        public static Task<SyncIntentResult> ReplayAsync(IServiceProvider services, SyncIntent intent, Guid deviceId, CancellationToken ct)
+        public static Task<SyncIntentResult> ReplayAsync(IServiceProvider services, SyncIntent intent, Guid deviceId, Guid? releasedBy, CancellationToken ct)
         {
             Replayer replayer = new(
                 services.GetRequiredService<ICommandDispatcher>(),
@@ -194,7 +217,8 @@ public sealed class SyncServer(
                 services.GetRequiredService<ISupplierReadStore>(),
                 services.GetRequiredService<ICatalogItemReadStore>(),
                 services.GetRequiredService<ITenantContext>().Current.DossierId,
-                deviceId);
+                deviceId,
+                releasedBy);
             return replayer.ReplayAsync(intent, ct);
         }
     }
@@ -205,7 +229,8 @@ public sealed class SyncServer(
         ISupplierReadStore suppliers,
         ICatalogItemReadStore items,
         DossierId dossier,
-        Guid deviceId)
+        Guid deviceId,
+        Guid? releasedBy)
     {
         public Task<SyncIntentResult> ReplayAsync(SyncIntent intent, CancellationToken ct) => intent switch
         {
@@ -241,7 +266,7 @@ public sealed class SyncServer(
         /// <summary>Un fait : reçu tel quel après revérification, ou refusé ; jamais fusionné ni en conflit.</summary>
         private async Task<SyncIntentResult> ImportAsync(ValidatedInvoiceFact fact, CancellationToken ct)
         {
-            Result<SyncIntentOutcome> imported = await commands.SendAsync(new ImportOfflineInvoiceCommand(dossier, deviceId, fact), ct).ConfigureAwait(false);
+            Result<SyncIntentOutcome> imported = await commands.SendAsync(new ImportOfflineInvoiceCommand(dossier, deviceId, fact, releasedBy), ct).ConfigureAwait(false);
             return imported.IsSuccess
                 ? new SyncIntentResult(fact.IdempotencyKey, fact.EntityId, imported.Value, null, [], [])
                 : Rejected(fact, imported.Errors);

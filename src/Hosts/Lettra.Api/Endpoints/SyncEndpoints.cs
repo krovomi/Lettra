@@ -51,6 +51,12 @@ internal static class SyncEndpoints
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        group.MapPost("/devices/{deviceId:guid}/release", ReleaseDeviceSeriesAsync)
+            .WithName("ReleaseDeviceSeries")
+            .RequirePermission(Permission.PostesGerer)
+            .Produces<ReleaseDeviceSeriesResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         group.MapGet("/policy", GetPolicyAsync)
             .WithName("GetSyncPolicy")
             .RequirePermission(Permission.PostesGerer)
@@ -75,6 +81,12 @@ internal static class SyncEndpoints
     {
         Result result = await commands.SendAsync(new RevokeSyncDeviceCommand(tenant.Current.DossierId, deviceId), cancellationToken).ConfigureAwait(false);
         return result.IsSuccess ? TypedResults.NoContent() : result.Errors.ToProblem();
+    }
+
+    private static async Task<IResult> ReleaseDeviceSeriesAsync(Guid deviceId, ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken)
+    {
+        Result<ReleaseDeviceSeriesResponse> result = await commands.SendAsync(new ReleaseDeviceSeriesCommand(tenant.Current.DossierId, deviceId), cancellationToken).ConfigureAwait(false);
+        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
     }
 
     private static async Task<IResult> GetPolicyAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken)

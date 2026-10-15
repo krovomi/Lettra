@@ -112,7 +112,8 @@ public sealed record SyncChangesResponse(
     IReadOnlyList<SupplierResponse> Suppliers,
     IReadOnlyList<CatalogItemResponse> CatalogItems,
     CompanyProfileResponse? CompanyProfile = null,
-    SyncPolicyResponse? Policy = null)
+    SyncPolicyResponse? Policy = null,
+    IReadOnlyList<string>? Released = null)
 {
     [JsonIgnore]
     public int Count => Customers.Count + Suppliers.Count + CatalogItems.Count;
@@ -120,6 +121,17 @@ public sealed record SyncChangesResponse(
 
 public static class SyncIntents
 {
+    /// <summary>
+    /// Refus d'attente : une pièce précédente du même poste manque ou est refusée. La pièce n'est ni reçue ni refusée
+    /// pour de bon : elle repartira avec la même clé une fois la précédente reçue (étape 4.4).
+    /// </summary>
+    public static bool IsWaiting(this SyncIntentResult result)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        return result.Outcome == SyncIntentOutcome.Rejected && result.Errors.Count > 0
+            && result.Errors.All(e => e.Code == Common.ErrorCodes.Sync.NumberOutOfOrder);
+    }
+
     /// <summary>Nature de l'élément visé, pour regrouper les intentions et les changements reçus.</summary>
     public static SyncEntityKind EntityOf(this SyncIntent intent) => intent switch
     {
@@ -199,6 +211,15 @@ public sealed record SyncDeviceResponse(
     DateTimeOffset? RevokedAt,
     Guid? RevokedBy,
     DateTimeOffset? WipedAt);
+
+/// <summary>
+/// Déblocage d'une série de poste (étape 4.4) : le cabinet accepte, sous l'autorité de qui débloque, la pièce attendue
+/// sous ce numéro, refusée à sa réception (approbation manquante, droit retiré, règle changée). Elle a été remise au
+/// client : elle entre dans la chaîne, et se corrige s'il le faut par un avoir.
+/// </summary>
+/// <param name="SeriesCode">Série du poste.</param>
+/// <param name="Number">Numéro accepté.</param>
+public sealed record ReleaseDeviceSeriesResponse(string SeriesCode, string Number);
 
 public static class SyncHttp
 {

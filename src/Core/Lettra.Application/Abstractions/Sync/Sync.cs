@@ -93,6 +93,12 @@ public interface ISyncOutbox
 
     /// <summary>Le champ disputé est résolu ; faux s'il ne l'était déjà plus.</summary>
     Task<bool> RemoveConflictAsync(long id, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Remet en attente les pièces refusées portant ces numéros (le cabinet a débloqué la série) : elles repartent avec
+    /// leur clé. Renvoie le nombre de pièces remises en attente.
+    /// </summary>
+    Task<int> RequeueAsync(IReadOnlyCollection<string> numbers, CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -170,6 +176,21 @@ public interface ISyncDeviceRegistry
     Task<int> GetMaxOfflineHoursAsync(CancellationToken cancellationToken);
 
     Task SaveMaxOfflineHoursAsync(int hours, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Débloque la série du poste : le prochain numéro attendu sera accepté sous l'autorité de <paramref name="releasedBy"/>.
+    /// Rejouable : débloquer deux fois le même numéro ne change rien.
+    /// </summary>
+    Task<Result<ReleaseDeviceSeriesResponse>> ReleaseNextAsync(Guid deviceId, Guid releasedBy, DateTimeOffset now, CancellationToken cancellationToken);
+
+    /// <summary>Qui a débloqué <paramref name="number"/> pour ce poste, s'il n'a pas encore servi.</summary>
+    Task<Guid?> FindReleaseAsync(Guid deviceId, string number, CancellationToken cancellationToken);
+
+    /// <summary>Le déblocage a servi : la pièce est reçue.</summary>
+    Task ConsumeReleaseAsync(Guid deviceId, string number, DateTimeOffset now, CancellationToken cancellationToken);
+
+    /// <summary>Numéros débloqués pour ce poste et pas encore reçus : le poste les renvoie.</summary>
+    Task<IReadOnlyList<string>> ListReleasesAsync(Guid deviceId, CancellationToken cancellationToken);
 }
 
 /// <summary>Par défaut (poste, navigateur) : pas de registre, aucun poste refusé.</summary>
@@ -184,6 +205,15 @@ internal sealed class NoSyncDeviceRegistry : ISyncDeviceRegistry
     public Task<int> GetMaxOfflineHoursAsync(CancellationToken cancellationToken) => Task.FromResult(OfflinePolicy.DefaultMaxOfflineHours);
 
     public Task SaveMaxOfflineHoursAsync(int hours, CancellationToken cancellationToken) => Task.CompletedTask;
+
+    public Task<Result<ReleaseDeviceSeriesResponse>> ReleaseNextAsync(Guid deviceId, Guid releasedBy, DateTimeOffset now, CancellationToken cancellationToken) =>
+        Task.FromResult<Result<ReleaseDeviceSeriesResponse>>(SyncErrors.NothingToRelease);
+
+    public Task<Guid?> FindReleaseAsync(Guid deviceId, string number, CancellationToken cancellationToken) => Task.FromResult<Guid?>(null);
+
+    public Task ConsumeReleaseAsync(Guid deviceId, string number, DateTimeOffset now, CancellationToken cancellationToken) => Task.CompletedTask;
+
+    public Task<IReadOnlyList<string>> ListReleasesAsync(Guid deviceId, CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<string>>([]);
 }
 
 /// <summary>Réponse gardée par le serveur pour une clé d'idempotence.</summary>
@@ -200,6 +230,9 @@ public interface ISyncReceipts
     Task<SyncReceipt?> FindAsync(Guid idempotencyKey, CancellationToken cancellationToken);
 
     Task SaveAsync(SyncReceipt receipt, CancellationToken cancellationToken);
+
+    /// <summary>Remplace la réponse gardée (pièce refusée puis reçue après le déblocage de sa série).</summary>
+    Task ReplaceAsync(SyncReceipt receipt, CancellationToken cancellationToken);
 }
 
 /// <summary>Parties du dossier que l'utilisateur peut recevoir.</summary>
@@ -237,6 +270,8 @@ public static class SyncErrors
     public static Error PolicyInvalid => Error.Validation(Contracts.Common.ErrorCodes.Sync.PolicyInvalid, "MaxOfflineHours");
 
     public static Error DeviceUnknown => new(Contracts.Common.ErrorCodes.Sync.DeviceUnknown, ErrorKind.NotFound);
+
+    public static Error NothingToRelease => new(Contracts.Common.ErrorCodes.Sync.NothingToRelease, ErrorKind.NotFound);
 }
 
 /// <summary>

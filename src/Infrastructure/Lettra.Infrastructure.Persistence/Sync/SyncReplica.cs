@@ -49,7 +49,8 @@ internal sealed class EfSyncOutbox(TenantDbSession session) : ISyncOutbox
 
         foreach (SyncIntentResult result in results)
         {
-            if (!rows.TryGetValue(result.IdempotencyKey, out SyncOutboxRecord? row) || row.Status != SyncOutboxStatus.Pending)
+            // Une pièce qui attend la précédente de sa série (étape 4.4) reste en attente : elle repartira.
+            if (!rows.TryGetValue(result.IdempotencyKey, out SyncOutboxRecord? row) || row.Status != SyncOutboxStatus.Pending || result.IsWaiting())
             {
                 continue;
             }
@@ -83,6 +84,34 @@ internal sealed class EfSyncOutbox(TenantDbSession session) : ISyncOutbox
     {
         LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
         return await db.Set<SyncConflictRow>().Where(r => r.Id == id).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false) > 0;
+    }
+
+    public async Task<int> RequeueAsync(IReadOnlyCollection<string> numbers, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(numbers);
+        if (numbers.Count == 0)
+        {
+            return 0;
+        }
+
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        db.ChangeTracker.Clear();
+        List<SyncOutboxRecord> rejected = await db.Set<SyncOutboxRecord>().AsTracking()
+            .Where(r => r.Status == SyncOutboxStatus.Rejected && r.Entity == SyncEntityKind.Invoice)
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
+        int requeued = 0;
+        foreach (SyncOutboxRecord row in rejected)
+        {
+            if (row.Intent is ValidatedInvoiceFact { Document.Number: { } number } && numbers.Contains(number))
+            {
+                row.Requeue();
+                requeued++;
+            }
+        }
+
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        db.ChangeTracker.Clear();
+        return requeued;
     }
 }
 
