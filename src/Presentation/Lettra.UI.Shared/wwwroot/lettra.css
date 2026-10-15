@@ -121,3 +121,18 @@ body { margin: 0; }
 .lettra-palette-options li[role=option] { display: flex; justify-content: space-between; gap: 1rem; padding: 0.35rem 0.6rem; border-radius: 4px; cursor: pointer; }
 .lettra-palette-options li[aria-selected="true"] { background: #eef3ff; outline: 1px solid var(--lettra-accent); outline-offset: -1px; }
 .lettra-palette-group { padding: 0.4rem 0.6rem 0.1rem; font-size: 0.8em; font-weight: 700; text-transform: uppercase; color: #5b6475; }
+
+/* Synchronisation du poste (étape 4.3) */
+.lettra-banner.is-danger { background: #fde8e8; border: 1px solid var(--lettra-danger); }
+.lettra-banner .lettra-button { margin-left: 1rem; }
+.lettra-sync-badge { display: inline-flex; gap: 0.4rem; align-items: center; padding: 0.1rem 0.6rem; border-radius: 999px; background: #eceff3; color: #3d4555; text-decoration: none; font-size: 0.9em; }
+.lettra-header .lettra-sync-badge { color: #3d4555; }
+.lettra-sync-badge.is-uptodate { background: #e7f5ee; color: var(--lettra-success); }
+.lettra-sync-badge.is-pendingconsent, .lettra-sync-badge.is-resolvingconflicts { background: #fff4e5; color: #8a4b00; }
+.lettra-sync-badge.is-failed { background: #fde8e8; color: var(--lettra-danger); }
+.lettra-sync-badge.is-pushing, .lettra-sync-badge.is-pulling { background: #e7f0fb; color: var(--lettra-accent); }
+.lettra-sync-count { font-weight: 600; }
+.lettra-sync-prompt { position: fixed; right: 1.5rem; bottom: 1.5rem; z-index: 20; width: min(26rem, 92vw); background: var(--lettra-card); border-radius: var(--lettra-radius); box-shadow: 0 8px 32px rgb(0 0 0 / 25%); padding: 1rem 1.25rem; }
+.lettra-sync-prompt h2 { margin: 0 0 0.5rem; font-size: 1.05rem; }
+.lettra-sync-detail { max-height: 12rem; overflow-y: auto; padding-left: 1.25rem; }
+.lettra-hint { color: #5b6473; font-size: 0.9em; }
