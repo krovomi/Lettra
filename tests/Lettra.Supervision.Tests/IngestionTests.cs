@@ -23,6 +23,7 @@ public sealed class IngestionTests : IDisposable
         services.AddLogging();
         services.AddSingleton<TimeProvider>(_clock);
         services.AddSupervision(configuration);
+        services.AddFakeDirectory(new FakeDirectory());
         services.AddSingleton<INotificationChannel>(_channel);
         _services = services.BuildServiceProvider();
     }

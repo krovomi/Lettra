@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Module Supervision : cycle de vie, gravité, escalade, routage, ingestion Alertmanager. Sans base ni réseau. -->
+  <!-- Module Supervision : cycle de vie, gravité, escalade, routage, ingestion Alertmanager, base de supervision (SQLite). -->
   <ItemGroup>
     <ProjectReference Include="..\..\src\Modules\Supervision\Lettra.Supervision.Infrastructure\Lettra.Supervision.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Infrastructure\Lettra.Infrastructure.Persistence.Sqlite\Lettra.Infrastructure.Persistence.Sqlite.csproj" />
   </ItemGroup>
 
   <ItemGroup>

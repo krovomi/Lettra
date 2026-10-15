@@ -96,6 +96,159 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.HasAnnotation("Lettra:SearchKeySource", "Designation");
                 });
 
+            modelBuilder.Entity("Lettra.Domain.Integrity.JournalEntry", b =>
+                {
+                    b.Property<long>("Sequence")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ContentHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("Currency")
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
+                    b.Property<Guid?>("CustomerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("DocumentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("DocumentKind")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Hash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateOnly?>("IssueDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Number")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<long>("OccurredAt")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("PreviousHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<Guid?>("RelatedDocumentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Seal")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("SeriesCode")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<decimal>("TotalExclTax")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("TotalInclTax")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("TotalVat")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.HasKey("Sequence");
+
+                    b.HasIndex("DocumentId");
+
+                    b.HasIndex("OccurredAt");
+
+                    b.ToTable("IntegrityJournal", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Integrity.PeriodClosing", b =>
+                {
+                    b.Property<int>("Number")
+                        .HasColumnType("int");
+
+                    b.Property<long>("ClosedAt")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("CumulativeInclTax")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<long>("FirstSequence")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Hash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("KeyId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<string>("LastEntryHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<long>("LastSequence")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateOnly>("PeriodEnd")
+                        .HasColumnType("date");
+
+                    b.Property<int>("PeriodKind")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("PeriodStart")
+                        .HasColumnType("date");
+
+                    b.Property<string>("PreviousClosingHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("PublicKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("Signature")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<decimal>("TotalExclTax")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("TotalInclTax")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("TotalVat")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.HasKey("Number");
+
+                    b.ToTable("IntegrityClosings", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Domain.Parties.Customer", b =>
                 {
                     b.Property<Guid>("Id")
@@ -301,6 +454,37 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("AiJournal", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Integrity.IntegrityChainHead", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LastHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<long>("LastSequence")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("IntegrityChainHead", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            LastHash = "",
+                            LastSequence = 0L,
+                            Version = 0L
+                        });
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Numbering.NumberSeries", b =>

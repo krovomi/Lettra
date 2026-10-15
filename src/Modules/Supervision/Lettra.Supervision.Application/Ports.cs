@@ -1,3 +1,4 @@
+using Lettra.Application.Abstractions.Identity;
 using Lettra.Supervision.Domain;
 
 namespace Lettra.Supervision.Application;
@@ -13,6 +14,12 @@ public interface IAlertStore
     /// <summary>Alertes ouvertes (Nouvelle ou Prise en charge) et résolues non clôturées, pour l'escalade et la clôture.</summary>
     Task<IReadOnlyList<Alert>> ListActiveAsync(CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Alertes situées dans une portée (celles du cabinet, d'un de ses groupes ou d'un dossier), les plus récentes
+    /// d'abord. Les alertes clôturées n'y figurent que sur demande.
+    /// </summary>
+    Task<IReadOnlyList<Alert>> ListWithinAsync(AuthorizationScope scope, bool includeClosed, int limit, CancellationToken cancellationToken);
+
     Task SaveAsync(Alert alert, CancellationToken cancellationToken);
 }
 
@@ -25,18 +32,10 @@ public enum RecipientKind
     OnCall = 2,
 }
 
-/// <summary>Permissions de l'annexe G §6, avec la même logique de portée que les autres (annexe F §3.2).</summary>
-public enum SupervisionPermission
-{
-    AlertesLire = 1,
-    AlertesTraiter = 2,
-    AlertesConfigurer = 3,
-}
-
 /// <summary>« Qui détient telle permission sur tel périmètre ? » : jamais une personne nommée dans une règle.</summary>
 public interface IRoleDirectory
 {
-    Task<IReadOnlyCollection<Recipient>> HoldersAsync(SupervisionPermission permission, AlertScope scope, CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<Recipient>> HoldersAsync(Permission permission, AlertScope scope, CancellationToken cancellationToken);
 
     Task<IReadOnlyCollection<Recipient>> CabinetAdminsAsync(Guid cabinet, CancellationToken cancellationToken);
 }

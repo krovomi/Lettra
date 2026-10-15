@@ -70,6 +70,15 @@ public interface IRequireGroupPermission : ISecuredUseCase
 }
 
 /// <summary>
+/// Cas d'usage dont la portée est donnée par l'objet visé (une alerte de cabinet, de groupe, de dossier ou de la
+/// plateforme), sans ouvrir de base de dossier. Le module qui le déclare traduit sa portée en <see cref="AuthorizationScope"/>.
+/// </summary>
+public interface IRequireScopedPermission : ISecuredUseCase
+{
+    AuthorizationScope Scope { get; }
+}
+
+/// <summary>
 /// Cas d'usage qui parcourt plusieurs portées et ne rend que celles où l'utilisateur a la permission (liste des
 /// dossiers qu'il peut ouvrir) : le pipeline exige seulement l'authentification, le handler filtre chaque élément.
 /// </summary>

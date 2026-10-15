@@ -74,7 +74,7 @@ public sealed class AuthorizationDirectoryOptions
 /// </summary>
 internal sealed class ConfigurationAuthorizationDirectory(
     IOptionsMonitor<AuthorizationDirectoryOptions> options,
-    ITenantCatalog catalog) : IAuthorizationDirectory
+    ITenantCatalog catalog) : IAuthorizationDirectory, IScopeMemberDirectory
 {
     public ValueTask<UserAuthorizationProfile?> FindUserAsync(Guid userId, CancellationToken cancellationToken)
     {
@@ -142,6 +142,27 @@ internal sealed class ConfigurationAuthorizationDirectory(
             default:
                 return null;
         }
+    }
+
+    public ValueTask<IReadOnlyCollection<Guid>> ListCandidatesAsync(ScopePath path, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(path);
+        AuthorizationDirectoryOptions current = options.CurrentValue;
+        HashSet<AuthorizationScope> scopes = [.. path.Ancestors];
+        HashSet<Guid> candidates = [];
+        foreach (UserEntry user in current.Users.Where(u => u.State == AccountState.Active))
+        {
+            bool direct = user.Assignments.Any(a => scopes.Contains(ToAssignment(new SubjectRef(SubjectKind.User, user.Id), a).Scope));
+            bool throughGroup = current.Groups
+                .Where(g => user.Groups.Contains(g.Id) && g.Cabinet == user.Cabinet)
+                .Any(g => g.Assignments.Any(a => scopes.Contains(ToAssignment(new SubjectRef(SubjectKind.Group, g.Id), a).Scope)));
+            if (direct || throughGroup)
+            {
+                candidates.Add(user.Id);
+            }
+        }
+
+        return ValueTask.FromResult<IReadOnlyCollection<Guid>>(candidates);
     }
 
     private static RoleAssignment ToAssignment(SubjectRef subject, AssignmentEntry entry) =>

@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Lettra.Application.Abstractions.Identity;
 using Lettra.Supervision.Application;
 using Lettra.Supervision.Domain;
 using Microsoft.Extensions.Logging;
@@ -6,10 +7,7 @@ using Microsoft.Extensions.Options;
 
 namespace Lettra.Supervision.Infrastructure;
 
-/// <summary>
-/// Stockage en mémoire du squelette. La base de supervision par cellule (métadonnées seulement, séparée par cabinet)
-/// la remplace en phase 3 avec le centre d'alertes.
-/// </summary>
+/// <summary>Stockage en mémoire : tests, et hôte sans base de supervision déclarée.</summary>
 internal sealed class InMemoryAlertStore : IAlertStore
 {
     private readonly ConcurrentDictionary<AlertId, Alert> _alerts = new();
@@ -22,6 +20,12 @@ internal sealed class InMemoryAlertStore : IAlertStore
 
     public Task<IReadOnlyList<Alert>> ListActiveAsync(CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<Alert>>([.. _alerts.Values.Where(a => a.State != AlertState.Closed)]);
+
+    public Task<IReadOnlyList<Alert>> ListWithinAsync(AuthorizationScope scope, bool includeClosed, int limit, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<Alert>>([.. _alerts.Values
+            .Where(a => AlertScopes.IsWithin(a.Scope, scope) && (includeClosed || a.State != AlertState.Closed))
+            .OrderByDescending(a => a.LastSeen)
+            .Take(limit)]);
 
     public Task SaveAsync(Alert alert, CancellationToken cancellationToken)
     {
@@ -42,19 +46,6 @@ internal sealed class ConfiguredOnCallSchedule(IOptions<SupervisionOptions> opti
             : [new Recipient(RecipientKind.OnCall, levels[Math.Min(escalationLevel, levels.Count - 1)])];
         return Task.FromResult(recipients);
     }
-}
-
-/// <summary>
-/// Annuaire des rôles en attente du chantier Identité (rôles à portée, ADR-0010) : personne côté cabinet pour l'instant.
-/// Les alertes de cabinet et de dossier arrivent en phase 3, avec l'annuaire réel.
-/// </summary>
-internal sealed class PendingRoleDirectory : IRoleDirectory
-{
-    public Task<IReadOnlyCollection<Recipient>> HoldersAsync(SupervisionPermission permission, AlertScope scope, CancellationToken cancellationToken) =>
-        Task.FromResult<IReadOnlyCollection<Recipient>>([]);
-
-    public Task<IReadOnlyCollection<Recipient>> CabinetAdminsAsync(Guid cabinet, CancellationToken cancellationToken) =>
-        Task.FromResult<IReadOnlyCollection<Recipient>>([]);
 }
 
 /// <summary>Canal « journal technique » : trace l'envoi (titre, gravité, nombre de destinataires), rien d'autre.</summary>

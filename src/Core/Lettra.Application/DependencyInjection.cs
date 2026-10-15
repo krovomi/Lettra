@@ -1,8 +1,11 @@
 using Lettra.Application.Abstractions.Ai;
 using Lettra.Application.Abstractions.Identity;
+using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Authorization;
 using Lettra.Application.Behaviors;
+using Lettra.Application.Features.Integrity;
+using Lettra.Domain.Integrity;
 using Lettra.Application.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -23,6 +26,12 @@ public static class DependencyInjection
         services.TryAddScoped<IAccountingAssistant, UnavailableAccountingAssistant>();
         services.AddScoped<ICommandDispatcher, CommandDispatcher>();
         services.AddScoped<IQueryDispatcher, QueryDispatcher>();
+
+        // Chaîne anti-fraude : le module des pièces fournit son lecteur, le module Supervision reçoit les alertes.
+        services.TryAddSingleton(ClosingSchedule.Paris);
+        services.TryAddScoped<IJournaledDocumentReader, NotConnectedDocumentReader>();
+        services.TryAddScoped<IDossierAlertPublisher, NoDossierAlertPublisher>();
+        services.AddScoped<DossierIntegrityService>();
 
         // Hors du mode 1, les cas d'usage de session locale répondent « non pris en charge ».
         services.TryAddSingleton<ILocalAccounts, NoLocalAccounts>();

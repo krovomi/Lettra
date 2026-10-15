@@ -1,3 +1,4 @@
+using Lettra.Supervision.Infrastructure;
 using Lettra.Infrastructure.Catalog;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -53,6 +54,7 @@ internal sealed partial class DossierMigrationJob(
         try
         {
             await services.InitializeCatalogAsync(migrate: true, cancellationToken).ConfigureAwait(false);
+            await services.MigrateSupervisionAsync(cancellationToken).ConfigureAwait(false);
             int resumed = await services.ResumeDossierProvisioningAsync(cancellationToken).ConfigureAwait(false);
             if (resumed > 0)
             {

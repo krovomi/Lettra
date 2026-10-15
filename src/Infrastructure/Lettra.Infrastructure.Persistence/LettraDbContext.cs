@@ -1,5 +1,7 @@
 using Lettra.Application.Abstractions.Tenancy;
+using Lettra.Domain.Integrity;
 using Lettra.Domain.Parties;
+using Lettra.Infrastructure.Persistence.Integrity;
 using Lettra.Infrastructure.Persistence.Ai;
 using Lettra.Infrastructure.Persistence.Concurrency;
 using Lettra.Infrastructure.Persistence.Numbering;
@@ -25,6 +27,11 @@ public sealed class LettraDbContext(DbContextOptions<LettraDbContext> options, T
 
     internal DbSet<NumberSeries> NumberSeries => Set<NumberSeries>();
 
+    internal DbSet<JournalEntry> IntegrityJournal => Set<JournalEntry>();
+
+    internal DbSet<PeriodClosing> IntegrityClosings => Set<PeriodClosing>();
+
+    internal DbSet<IntegrityChainHead> IntegrityChainHead => Set<IntegrityChainHead>();
     internal DbSet<AiJournalRecord> AiJournal => Set<AiJournalRecord>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

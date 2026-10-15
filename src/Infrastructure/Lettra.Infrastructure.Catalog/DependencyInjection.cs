@@ -37,7 +37,9 @@ public static class DependencyInjection
         services.AddSingleton<CatalogDossierProvisioner>();
         services.AddSingleton<IDossierProvisioner>(sp => sp.GetRequiredService<CatalogDossierProvisioner>());
         // Avant l'identité serveur, qui n'enregistre son registre lu en configuration qu'à défaut (TryAdd).
-        services.AddSingleton<IAuthorizationDirectory, CatalogAuthorizationDirectory>();
+        services.AddSingleton<CatalogAuthorizationDirectory>();
+        services.AddSingleton<IAuthorizationDirectory>(sp => sp.GetRequiredService<CatalogAuthorizationDirectory>());
+        services.AddSingleton<IScopeMemberDirectory>(sp => sp.GetRequiredService<CatalogAuthorizationDirectory>());
         services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<IAuthorizationAdministration, CatalogAuthorizationAdministration>();
         // Réglages IA par cabinet (remplace le magasin « indisponible » enregistré par l'application).
@@ -57,4 +59,8 @@ public static class DependencyInjection
     /// <summary>Reprise des créations de dossiers interrompues (Worker).</summary>
     public static Task<int> ResumeDossierProvisioningAsync(this IServiceProvider services, CancellationToken cancellationToken) =>
         services.GetRequiredService<CatalogDossierProvisioner>().ResumeAsync(cancellationToken);
+
+    /// <summary>Dossiers actifs de la cellule (passes système du Worker).</summary>
+    public static Task<IReadOnlyList<TenantDescriptor>> ListActiveDossiersAsync(this IServiceProvider services, CancellationToken cancellationToken) =>
+        services.GetRequiredService<CatalogTenantCatalog>().ListActiveAsync(cancellationToken);
 }

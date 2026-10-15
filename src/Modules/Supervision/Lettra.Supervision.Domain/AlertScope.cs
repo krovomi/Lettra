@@ -68,6 +68,10 @@ public sealed record AlertScope
             ? Result<AlertScope>.Failure(SupervisionErrors.ScopeIncomplete)
             : new AlertScope(ScopeLevel.Device, cell, cabinet, null, null, device);
 
+    /// <summary>Portée relue de la base de supervision, telle qu'elle a été enregistrée.</summary>
+    public static AlertScope Restore(ScopeLevel level, string? cell, Guid? cabinet, Guid? group, Guid? dossier, Guid? device) =>
+        new(level, cell, cabinet, group, dossier, device);
+
     /// <summary>Clé stable de la portée, utilisée dans l'empreinte de dédoublonnage.</summary>
     public string Key => Level switch
     {

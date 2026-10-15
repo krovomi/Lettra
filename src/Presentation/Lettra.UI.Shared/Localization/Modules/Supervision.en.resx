@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Alerts.Acknowledge" xml:space="preserve"><value>Acknowledge</value></data>
+  <data name="Alerts.Actor.AgentVigie" xml:space="preserve"><value>suggested by Vigie</value></data>
+  <data name="Alerts.Actor.Human" xml:space="preserve"><value>by a person</value></data>
+  <data name="Alerts.Actor.Rule" xml:space="preserve"><value>by a rule</value></data>
+  <data name="Alerts.CabinetWide" xml:space="preserve"><value>Whole firm</value></data>
+  <data name="Alerts.Counters.OldestUnacknowledged" xml:space="preserve"><value>unacknowledged since {0}</value></data>
+  <data name="Alerts.Counters.Open" xml:space="preserve"><value>{0} open</value></data>
+  <data name="Alerts.Counters.Title" xml:space="preserve"><value>By severity</value></data>
+  <data name="Alerts.Event.Acknowledged" xml:space="preserve"><value>Acknowledged</value></data>
+  <data name="Alerts.Event.Closed" xml:space="preserve"><value>Closed</value></data>
+  <data name="Alerts.Event.Escalated" xml:space="preserve"><value>Escalated to level</value></data>
+  <data name="Alerts.Event.Raised" xml:space="preserve"><value>Raised</value></data>
+  <data name="Alerts.Event.Reopened" xml:space="preserve"><value>Reopened</value></data>
+  <data name="Alerts.Event.Resolved" xml:space="preserve"><value>Resolved</value></data>
+  <data name="Alerts.Event.SeverityChanged" xml:space="preserve"><value>Severity changed</value></data>
+  <data name="Alerts.Event.WithValue" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="Alerts.Field.AcknowledgedBy" xml:space="preserve"><value>Acknowledged by</value></data>
+  <data name="Alerts.Field.LastSeen" xml:space="preserve"><value>Last seen</value></data>
+  <data name="Alerts.Field.Occurrences" xml:space="preserve"><value>Occurrences</value></data>
+  <data name="Alerts.Field.OpenedAt" xml:space="preserve"><value>Opened on</value></data>
+  <data name="Alerts.Field.Scope" xml:space="preserve"><value>Scope</value></data>
+  <data name="Alerts.Field.Severity" xml:space="preserve"><value>Severity</value></data>
+  <data name="Alerts.Field.State" xml:space="preserve"><value>State</value></data>
+  <data name="Alerts.Field.TakeoverDue" xml:space="preserve"><value>Acknowledge before</value></data>
+  <data name="Alerts.Field.Title" xml:space="preserve"><value>Alert</value></data>
+  <data name="Alerts.Filters" xml:space="preserve"><value>Alert centre filters</value></data>
+  <data name="Alerts.IncludeClosed" xml:space="preserve"><value>Show closed alerts</value></data>
+  <data name="Alerts.List.Empty" xml:space="preserve"><value>No alerts.</value></data>
+  <data name="Alerts.List.Title" xml:space="preserve"><value>Alerts</value></data>
+  <data name="Alerts.Resolve" xml:space="preserve"><value>Mark as resolved</value></data>
+  <data name="Alerts.Rule.integrite-chaine" xml:space="preserve"><value>A client file's tamper-evident chain is broken</value></data>
+  <data name="Alerts.Rule.integrite-numerotation" xml:space="preserve"><value>Numbering gap in a client file</value></data>
+  <data name="Alerts.Scope.Cabinet" xml:space="preserve"><value>Firm</value></data>
+  <data name="Alerts.Scope.Cell" xml:space="preserve"><value>Cell</value></data>
+  <data name="Alerts.Scope.Device" xml:space="preserve"><value>Device</value></data>
+  <data name="Alerts.Scope.Dossier" xml:space="preserve"><value>Client file</value></data>
+  <data name="Alerts.Scope.Group" xml:space="preserve"><value>Group</value></data>
+  <data name="Alerts.Scope.Platform" xml:space="preserve"><value>Platform</value></data>
+  <data name="Alerts.Severity.New" xml:space="preserve"><value>New severity</value></data>
+  <data name="Alerts.Severity.Reason" xml:space="preserve"><value>Reason for the change</value></data>
+  <data name="Alerts.Severity.Submit" xml:space="preserve"><value>Change severity</value></data>
+  <data name="Alerts.State.Acknowledged" xml:space="preserve"><value>Acknowledged</value></data>
+  <data name="Alerts.State.Closed" xml:space="preserve"><value>Closed</value></data>
+  <data name="Alerts.State.New" xml:space="preserve"><value>New</value></data>
+  <data name="Alerts.State.Resolved" xml:space="preserve"><value>Resolved</value></data>
+  <data name="Alerts.Timeline.Title" xml:space="preserve"><value>Timeline</value></data>
+  <data name="Alerts.Title" xml:space="preserve"><value>Alert centre</value></data>
+  <data name="Error.Alert.AgentNotAllowed" xml:space="preserve"><value>An agent cannot take this action on an alert.</value></data>
+  <data name="Error.Alert.HumanRequired" xml:space="preserve"><value>This action must be taken by a person.</value></data>
+  <data name="Error.Alert.InvalidTransition" xml:space="preserve"><value>This alert cannot move to that state.</value></data>
+  <data name="Error.Alert.NotFound" xml:space="preserve"><value>This alert does not exist or is not visible to you.</value></data>
+  <data name="Error.Alert.ReasonRequired" xml:space="preserve"><value>Please give a reason.</value></data>
+  <data name="Error.Alert.RuleRequired" xml:space="preserve"><value>The alert rule is required.</value></data>
+  <data name="Error.Alert.SameSeverity" xml:space="preserve"><value>The alert already has this severity.</value></data>
+  <data name="Error.Alert.ScopeIncomplete" xml:space="preserve"><value>The alert scope is incomplete.</value></data>
+</root>
