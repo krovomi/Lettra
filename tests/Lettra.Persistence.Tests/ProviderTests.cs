@@ -205,6 +205,7 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     [SkippableFact]
     public async Task Cycle_de_vie_devis_acompte_facture_finale_et_avoir()
     {
+        Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new PostgreSqlConfigurator());
         await BillingPersistenceScenarios.LifecycleAsync(harness, DatabaseProvider.PostgreSql, Database("devis"));
     }
@@ -212,6 +213,7 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     [SkippableFact]
     public async Task Validations_concurrentes_sans_trou_ni_doublon()
     {
+        Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new PostgreSqlConfigurator());
         await BillingPersistenceScenarios.ConcurrentValidationsAsync(harness, DatabaseProvider.PostgreSql, Database("valid"));
     }
@@ -219,6 +221,7 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     [SkippableFact]
     public async Task Une_version_perimee_n_ecrase_pas_la_piece()
     {
+        Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new PostgreSqlConfigurator());
         await BillingPersistenceScenarios.StaleVersionAsync(harness, DatabaseProvider.PostgreSql, Database("version"));
     }
@@ -339,6 +342,7 @@ public sealed class SqlServerTests : IAsyncLifetime
     [SkippableFact]
     public async Task Cycle_de_vie_devis_acompte_facture_finale_et_avoir()
     {
+        Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new SqlServerConfigurator());
         await BillingPersistenceScenarios.LifecycleAsync(harness, DatabaseProvider.SqlServer, Database("devis"));
     }
@@ -346,6 +350,7 @@ public sealed class SqlServerTests : IAsyncLifetime
     [SkippableFact]
     public async Task Validations_concurrentes_sans_trou_ni_doublon()
     {
+        Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new SqlServerConfigurator());
         await BillingPersistenceScenarios.ConcurrentValidationsAsync(harness, DatabaseProvider.SqlServer, Database("valid"));
     }
@@ -353,6 +358,7 @@ public sealed class SqlServerTests : IAsyncLifetime
     [SkippableFact]
     public async Task Une_version_perimee_n_ecrase_pas_la_piece()
     {
+        Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new SqlServerConfigurator());
         await BillingPersistenceScenarios.StaleVersionAsync(harness, DatabaseProvider.SqlServer, Database("version"));
     }

@@ -91,6 +91,7 @@ public static class ComplianceChecker
         "Client professionnel : déclaré par la fiche du client, plus deviné d'après son nom.",
         "Mentions de TVA : une ligne exonérée, autoliquidée ou hors champ exige le texte légal correspondant.",
         "Avoir : le numéro de la facture d'origine est exigé.",
+        "Ligne : une quantité nulle est refusée (la référence n'exigeait qu'une quantité renseignée).",
     ];
 
     /// <summary>Formes de sociétés commerciales immatriculées au RCS.</summary>

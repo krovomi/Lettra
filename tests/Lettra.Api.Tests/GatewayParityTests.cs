@@ -1,6 +1,8 @@
 using System.Net.Http.Headers;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Bootstrap;
+using Lettra.Contracts.Billing;
+using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
 using Lettra.Infrastructure.Persistence.Security;
@@ -118,6 +120,47 @@ public sealed class GatewayParityTests(LettraApiFactory factory) : IClassFixture
         OperationResult<PagedResponse<CustomerSummary>> result = await services.GetRequiredService<ICustomersGateway>().ListAsync(1, 10, default);
 
         result.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Tenancy.DossierNotFound);
+    }
+
+    [Theory]
+    [MemberData(nameof(Transports))]
+    public async Task Facturer_valider_emettre_puis_crediter(string transport)
+    {
+        await using ServiceProvider services = Gateway(transport);
+        IInvoicesGateway invoices = services.GetRequiredService<IInvoicesGateway>();
+        Guid customer = (await services.GetRequiredService<ICustomersGateway>().CreateAsync(CustomerApiTests.Martin(), default)).Value!.Id;
+        OperationResult<CompanyProfileResponse> profile = await services.GetRequiredService<IBillingSettingsGateway>().SaveCompanyProfileAsync(
+            new SaveCompanyProfileRequest
+            {
+                Name = "Conseil Lettra", LegalForm = "SAS", ShareCapital = 10_000m, Siren = "552100554", Rcs = "RCS Paris 552 100 554",
+                VatNumber = "FR96552100554", AddressLine1 = "10 avenue de l'Opéra", PostalCode = "75001", City = "Paris",
+                LatePenaltyRate = 10m, EarlyPaymentDiscount = "Pas d'escompte pour paiement anticipé",
+            },
+            null,
+            default);
+        profile.IsSuccess.Should().BeTrue(string.Join(", ", profile.Errors.Select(e => e.Code)));
+
+        InvoiceResponse draft = (await invoices.CreateAsync(
+            new SaveInvoiceRequest
+            {
+                CustomerId = customer,
+                Lines = [new DocumentLineRequest { Designation = "Conseil", Quantity = 3, UnitPriceExclTax = 100m, UnitCode = "HUR", Kind = CatalogItemKindDto.Service }],
+            },
+            default)).Value!;
+        OperationResult<InvoiceResponse> stale = await invoices.ValidateAsync(draft.Id, draft.Version + 1, default);
+        OperationResult<InvoiceResponse> validated = await invoices.ValidateAsync(draft.Id, draft.Version, default);
+        OperationResult<InvoiceResponse> issued = await invoices.IssueAsync(draft.Id, validated.Value!.Version, default);
+        OperationResult<InvoiceResponse> credit = await invoices.CreateCreditNoteAsync(
+            draft.Id, new CreateCreditNoteRequest { Reason = "Une heure offerte", Lines = [new CreditNoteLineRequest(1, 1m)] }, default);
+
+        stale.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Billing.VersionMismatch);
+        validated.Value.Number.Should().StartWith("FAC-");
+        validated.Value.ContentHash.Should().Be(CanonicalDocument.ComputeHash(validated.Value));
+        issued.Value!.Status.Should().Be(InvoiceStatusDto.Issued);
+        credit.Value!.Kind.Should().Be(InvoiceKindDto.CreditNote);
+        credit.Value.Totals.TotalInclTax.Should().Be(120m);
+        (await invoices.DeleteAsync(credit.Value.Id, credit.Value.Version, default)).Value.Should().BeTrue();
+        (await invoices.DeleteAsync(draft.Id, null, default)).Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Billing.NotDraft);
     }
 
     public void Dispose()

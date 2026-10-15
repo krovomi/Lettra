@@ -127,7 +127,8 @@ public sealed record InvoiceSummary(
 public sealed record CreditNoteLineRequest(int Position, decimal Quantity);
 
 /// <summary>
-/// Avoir sur une facture validée. Sans lignes, l'avoir reprend la totalité du solde non encore crédité.
+/// Avoir sur une facture validée. Sans lignes, l'avoir reprend toute la facture (refusé si elle est déjà en partie créditée) ;
+/// avec des lignes, il crédite les quantités données (rang de ligne, quantité positive), dans la limite du solde.
 /// L'avoir est créé en brouillon ; sa validation le numérote dans la série des factures.
 /// </summary>
 public sealed record CreateCreditNoteRequest
