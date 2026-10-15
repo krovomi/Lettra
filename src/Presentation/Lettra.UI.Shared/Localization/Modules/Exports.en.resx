@@ -32,4 +32,12 @@
   <data name="Error.Fec.SirenMissing" xml:space="preserve"><value>Fill in the company SIREN: it is part of the FEC file name.</value></data>
   <data name="Error.Fec.ValidationBeforeEntry" xml:space="preserve"><value>The validation date is before the entry date.</value></data>
   <data name="Error.Fec.ZeroLine" xml:space="preserve"><value>The line has neither a debit nor a credit.</value></data>
+  <data name="Error.Platform.AlreadyFinal" xml:space="preserve"><value>The transmission has reached a final status (refused, collected or rejected): nothing more can be reported on it.</value></data>
+  <data name="Error.Platform.NotConfigured" xml:space="preserve"><value>No accredited platform is configured for this firm: e-invoice transmission is turned off.</value></data>
+  <data name="Error.Platform.NotTransmitted" xml:space="preserve"><value>This document has not been sent to the accredited platform yet.</value></data>
+  <data name="Error.Platform.PaymentAmountInvalid" xml:space="preserve"><value>The amount collected must be positive and no more than the document's total including VAT.</value></data>
+  <data name="Error.Platform.PaymentDateInvalid" xml:space="preserve"><value>The collection date cannot be earlier than the document date.</value></data>
+  <data name="Error.Platform.ReferenceUnknown" xml:space="preserve"><value>The accredited platform does not know this transmission.</value></data>
+  <data name="Error.Platform.SellerSirenMissing" xml:space="preserve"><value>Enter the company's SIREN: the accredited platform identifies the seller by its SIREN.</value></data>
+  <data name="Error.Platform.Unavailable" xml:space="preserve"><value>The accredited platform is not responding. Try again later: nothing was sent.</value></data>
 </root>

@@ -32,4 +32,12 @@
   <data name="Error.Fec.SirenMissing" xml:space="preserve"><value>Renseignez le SIREN de l'entreprise : il compose le nom du fichier FEC.</value></data>
   <data name="Error.Fec.ValidationBeforeEntry" xml:space="preserve"><value>La date de validation précède la date de l'écriture.</value></data>
   <data name="Error.Fec.ZeroLine" xml:space="preserve"><value>La ligne n'a ni débit ni crédit.</value></data>
+  <data name="Error.Platform.AlreadyFinal" xml:space="preserve"><value>La transmission a atteint un statut définitif (refusée, encaissée ou rejetée) : plus rien ne s'y déclare.</value></data>
+  <data name="Error.Platform.NotConfigured" xml:space="preserve"><value>Aucune plateforme agréée n'est configurée pour ce cabinet : la transmission des factures électroniques est désactivée.</value></data>
+  <data name="Error.Platform.NotTransmitted" xml:space="preserve"><value>Cette pièce n'a pas encore été transmise à la plateforme agréée.</value></data>
+  <data name="Error.Platform.PaymentAmountInvalid" xml:space="preserve"><value>Le montant encaissé doit être positif et ne pas dépasser le total TTC de la pièce.</value></data>
+  <data name="Error.Platform.PaymentDateInvalid" xml:space="preserve"><value>La date d'encaissement ne peut précéder la date de la pièce.</value></data>
+  <data name="Error.Platform.ReferenceUnknown" xml:space="preserve"><value>La plateforme agréée ne connaît pas cette transmission.</value></data>
+  <data name="Error.Platform.SellerSirenMissing" xml:space="preserve"><value>Renseignez le SIREN de l'entreprise : la plateforme agréée identifie le vendeur par son SIREN.</value></data>
+  <data name="Error.Platform.Unavailable" xml:space="preserve"><value>La plateforme agréée ne répond pas. Réessayez plus tard : rien n'a été transmis.</value></data>
 </root>
