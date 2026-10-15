@@ -1,11 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
 
-  <!-- Blazor Hybrid (.NET MAUI). Phase 0 : Windows, mode 1 (poste isolé, gateway in-process, SQLite local).
-       macOS, iOS et Android s'ajoutent à TargetFramework(s) ensuite (V1 : Windows et macOS).
-       Ne se construit que sous Windows avec la charge de travail maui (job CI dédié). -->
+  <!-- Blazor Hybrid (.NET MAUI), mode 1 (poste isolé, gateway in-process, SQLite local) : Windows, macOS (Mac Catalyst),
+       iOS et Android, une seule application. Chaque plateforme se construit là où sa chaîne d'outils existe : Android
+       partout, iOS et Mac Catalyst sous macOS (Xcode), Windows sous Windows. Sous Windows, Android s'ajoute dès que la
+       charge de travail est installée (Visual Studio avec MAUI) ; le job CI Windows n'installe que maui-windows.
+       Chaque plateforme a son job CI (build, premier lancement, artefact). -->
   <PropertyGroup>
-    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
-    <OutputType>WinExe</OutputType>
+    <TargetFramework />
+    <TargetFrameworks>net10.0-android</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('osx'))">$(TargetFrameworks);net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">net10.0-windows10.0.19041.0</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows')) And Exists('$(NetCoreTargetingPackRoot)\Microsoft.Android.Sdk.Windows')">$(TargetFrameworks);net10.0-android</TargetFrameworks>
+    <OutputType>Exe</OutputType>
     <UseMaui>true</UseMaui>
     <SingleProject>true</SingleProject>
     <EnableDefaultCssItems>false</EnableDefaultCssItems>
@@ -14,12 +20,41 @@
     <ApplicationId>fr.lettra.app</ApplicationId>
     <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
     <ApplicationVersion>1</ApplicationVersion>
-    <WindowsPackageType>None</WindowsPackageType>
-    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
-    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <!-- Le code généré par MAUI/WinUI ne respecte pas tous nos analyseurs : avertissements visibles, non bloquants ici. -->
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <NoWarn>$(NoWarn);CA1515;CA1848</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+    <OutputType>WinExe</OutputType>
+    <WindowsPackageType>None</WindowsPackageType>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+    <SupportedOSPlatformVersion>21.0</SupportedOSPlatformVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+    <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+    <!-- Sur l'appareil (AOT complet), EF Core a besoin de l'interpréteur pour ce que l'AOT ne précompile pas. -->
+    <UseInterpreter>true</UseInterpreter>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
+    <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+  </PropertyGroup>
+
+  <!-- EF Core et la composition (configuration, injection) reposent sur la réflexion : pas de découpage sur mobile,
+       comme sous Windows. -->
+  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+    <PublishTrimmed>false</PublishTrimmed>
+    <!-- La précompilation AOT d'Android exige le découpage : compilation à la volée. -->
+    <RunAOTCompilation>false</RunAOTCompilation>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' Or $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
+    <MtouchLink>None</MtouchLink>
   </PropertyGroup>
 
   <!-- Version de mesure de la grille (critère J1) : dotnet publish -p:LettraGridBenchmark=true. Elle s'ouvre sur
@@ -28,10 +63,18 @@
   <PropertyGroup Condition="'$(LettraGridBenchmark)' == 'true'">
     <DefineConstants>$(DefineConstants);LETTRA_GRID_BENCHMARK</DefineConstants>
     <ApplicationTitle>Lettra · mesure de la grille</ApplicationTitle>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(LettraGridBenchmark)' == 'true' And $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Icône et écran de démarrage : générés pour chaque plateforme à partir des SVG. -->
+    <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#1F3A5F" />
+    <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#1F3A5F" BaseSize="128,128" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Composition\Lettra.Bootstrap\Lettra.Bootstrap.csproj" />
