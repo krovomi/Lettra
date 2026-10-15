@@ -34,5 +34,18 @@ internal static class Schema
         return schema;
     }
 
+    public static JsonObject Number(string description) => new() { ["type"] = "number", ["description"] = description };
+
+    public static JsonObject Array(JsonNode items, string description, int minItems = 0)
+    {
+        JsonObject schema = new() { ["type"] = "array", ["description"] = description, ["items"] = items };
+        if (minItems > 0)
+        {
+            schema["minItems"] = minItems;
+        }
+
+        return schema;
+    }
+
     public static JsonElement ToElement(this JsonNode node) => JsonSerializer.SerializeToElement(node);
 }

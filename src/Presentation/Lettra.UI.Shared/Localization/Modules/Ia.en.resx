@@ -18,4 +18,41 @@
   <data name="Error.Ai.SettingsUnavailable" xml:space="preserve"><value>On this computer, the AI assistant is configured in the configuration file.</value></data>
   <data name="Error.Ai.EngineRequired" xml:space="preserve"><value>Choose an AI engine to turn the assistant on.</value></data>
   <data name="Error.Ai.SettingsConflict" xml:space="preserve"><value>The assistant settings were changed in the meantime: reload them and try again.</value></data>
+  <data name="Assistant.Open" xml:space="preserve"><value>AI assistant</value></data>
+  <data name="Assistant.Title" xml:space="preserve"><value>AI assistant</value></data>
+  <data name="Assistant.Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Assistant.Disclaimer" xml:space="preserve"><value>The assistant suggests, you decide: it never validates, issues or sends a document. Names and identifiers from the client file are masked before anything reaches the engine.</value></data>
+  <data name="Assistant.Feature" xml:space="preserve"><value>Feature</value></data>
+  <data name="Assistant.Feature.DraftFromText" xml:space="preserve"><value>Draft quote</value></data>
+  <data name="Assistant.Feature.ExplainCompliance" xml:space="preserve"><value>Why? (compliance)</value></data>
+  <data name="Assistant.Feature.EInvoicingDiagnosis" xml:space="preserve"><value>E-invoicing diagnosis</value></data>
+  <data name="Assistant.Feature.RegulatoryQuestions" xml:space="preserve"><value>VAT or regulatory question</value></data>
+  <data name="Assistant.Prompt.DraftFromText" xml:space="preserve"><value>Describe the quote</value></data>
+  <data name="Assistant.Prompt.ExplainCompliance" xml:space="preserve"><value>Your question about the open document's compliance</value></data>
+  <data name="Assistant.Prompt.EInvoicingDiagnosis" xml:space="preserve"><value>Your question about e-invoicing for the open document</value></data>
+  <data name="Assistant.Prompt.RegulatoryQuestions" xml:space="preserve"><value>Your question</value></data>
+  <data name="Assistant.Placeholder.DraftFromText" xml:space="preserve"><value>E.g.: quote for Dupont, 3 days of consulting at €650 excl. VAT and a one-day training at €900</value></data>
+  <data name="Assistant.Placeholder.ExplainCompliance" xml:space="preserve"><value>E.g.: why is validation blocked?</value></data>
+  <data name="Assistant.Placeholder.EInvoicingDiagnosis" xml:space="preserve"><value>E.g.: can this invoice be sent to the platform?</value></data>
+  <data name="Assistant.Placeholder.RegulatoryQuestions" xml:space="preserve"><value>E.g.: which VAT rate applies to professional training?</value></data>
+  <data name="Assistant.Ask" xml:space="preserve"><value>Ask</value></data>
+  <data name="Assistant.Stop" xml:space="preserve"><value>Stop</value></data>
+  <data name="Assistant.Step" xml:space="preserve"><value>Step: {0}</value></data>
+  <data name="Assistant.StepFailed" xml:space="preserve"><value>Step refused or failed: {0}</value></data>
+  <data name="Assistant.Rule" xml:space="preserve"><value>Lettra rule applied: {0}</value></data>
+  <data name="Assistant.Source" xml:space="preserve"><value>Source read: {0}</value></data>
+  <data name="Assistant.Draft.quote" xml:space="preserve"><value>Draft quote created, for you to review and validate:</value></data>
+  <data name="Assistant.OpenDraft" xml:space="preserve"><value>Open the draft</value></data>
+  <data name="Assistant.Suggestion" xml:space="preserve"><value>AI suggestion, to be checked</value></data>
+  <data name="Assistant.Completed" xml:space="preserve"><value>Engine: {0} · knowledge pack {1}</value></data>
+  <data name="Assistant.Why" xml:space="preserve"><value>Why?</value></data>
+  <data name="Assistant.WhyQuestion" xml:space="preserve"><value>Why this checklist finding: "{0}" (code {1})? What needs fixing?</value></data>
+  <data name="Assistant.Tool.calculer" xml:space="preserve"><value>accounting calculation</value></data>
+  <data name="Assistant.Tool.lire_reference" xml:space="preserve"><value>reading a reference sheet</value></data>
+  <data name="Assistant.Tool.lister_references" xml:space="preserve"><value>listing reference sheets</value></data>
+  <data name="Assistant.Tool.consulter_site_officiel" xml:space="preserve"><value>reading an official website</value></data>
+  <data name="Assistant.Tool.chercher_client" xml:space="preserve"><value>customer search</value></data>
+  <data name="Assistant.Tool.chercher_article" xml:space="preserve"><value>catalogue search</value></data>
+  <data name="Assistant.Tool.creer_brouillon_devis" xml:space="preserve"><value>creating the draft quote</value></data>
+  <data name="Assistant.Tool.controler_document_ouvert" xml:space="preserve"><value>compliance check of the document</value></data>
 </root>

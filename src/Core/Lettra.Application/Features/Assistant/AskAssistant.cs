@@ -102,6 +102,31 @@ internal sealed class AskAssistantHandler(
     }
 }
 
+/// <summary>
+/// Fonctions de l'assistant ouvertes à l'utilisateur dans le dossier courant. L'UI s'en sert pour n'afficher le panneau
+/// et les boutons « Pourquoi ? » que si le cabinet a activé l'IA, choisi un moteur présent sur ce déploiement et ce point.
+/// </summary>
+public sealed record GetAssistantStatusQuery(DossierId Dossier)
+    : IQuery<Result<AssistantStatusResponse>>, IRequirePermission
+{
+    public Permission Permission => Permission.IaUtiliser;
+}
+
+internal sealed class GetAssistantStatusHandler(ITenantContext tenant, IAiUsagePolicy policy, IAiEngineFactory engines)
+    : IQueryHandler<GetAssistantStatusQuery, Result<AssistantStatusResponse>>
+{
+    public async Task<Result<AssistantStatusResponse>> HandleAsync(GetAssistantStatusQuery query, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+        AiSettings settings = await policy.GetSettingsAsync(tenant.Current.OrganisationId, cancellationToken).ConfigureAwait(false);
+        IAiEngine? engine = engines.Resolve(settings.Engine);
+        AssistantFeature[] features = engine is null
+            ? []
+            : [.. Enum.GetValues<AssistantFeature>().Where(f => AiErrors.CheckPolicy(settings, f, query.Dossier) is null)];
+        return new AssistantStatusResponse(features, features.Length == 0 ? null : engine?.Name);
+    }
+}
+
 /// <summary>Lire le journal IA du dossier : chaque demande, appel au moteur, outil et réponse (annexe F §10).</summary>
 public sealed record GetAssistantJournalQuery(DossierId Dossier, int Limit = 200)
     : IQuery<Result<IReadOnlyList<AssistantJournalEntry>>>, IRequirePermission

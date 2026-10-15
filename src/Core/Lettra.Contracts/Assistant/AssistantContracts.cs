@@ -5,19 +5,19 @@ using Lettra.Contracts.Common;
 namespace Lettra.Contracts.Assistant;
 
 /// <summary>
-/// Points d'IA activables un par un par le cabinet (annexe D, points numérotés). Seuls les points
-/// en lecture seule sont livrés pour l'instant (annexe C, phase 6).
+/// Points d'IA activables un par un par le cabinet (annexe D, points numérotés). Le point 1 crée au plus un
+/// brouillon ; les autres ne font que lire (annexe C, phase 6).
 /// </summary>
 [JsonConverter(typeof(JsonStringEnumConverter<AssistantFeature>))]
 public enum AssistantFeature
 {
-    /// <summary>Point 1 : saisie en langage naturel, brouillon de devis (attend le module Devis).</summary>
+    /// <summary>Point 1 : saisie en langage naturel, brouillon de devis que l'utilisateur relit et valide lui-même.</summary>
     DraftFromText = 1,
 
-    /// <summary>Point 3 : « Pourquoi ? » sur une erreur de conformité (attend le module Facturation).</summary>
+    /// <summary>Point 3 : « Pourquoi ? » sur un constat de la checklist de conformité du document ouvert.</summary>
     ExplainCompliance = 3,
 
-    /// <summary>Point 4 : diagnostic e-facturation du dossier (attend le module Facturation).</summary>
+    /// <summary>Point 4 : diagnostic e-facturation du document ouvert.</summary>
     EInvoicingDiagnosis = 4,
 
     /// <summary>Point 6 : questions TVA et réglementaires.</summary>
@@ -92,6 +92,12 @@ public sealed record AssistantCompletedEvent(
     long? InputTokens,
     long? OutputTokens,
     string SkillPackCommit) : AssistantEvent;
+
+/// <summary>
+/// Ce que l'assistant peut faire pour l'utilisateur dans le dossier ouvert : vide quand l'IA est désactivée (réglage par
+/// défaut), le dossier exclu, le moteur absent ou la permission manquante. L'UI n'affiche le panneau que s'il y a une fonction.
+/// </summary>
+public sealed record AssistantStatusResponse(IReadOnlyList<AssistantFeature> Features, string? Engine);
 
 /// <summary>Entrée du journal IA du dossier (annexe F §10).</summary>
 public sealed record AssistantJournalEntry(

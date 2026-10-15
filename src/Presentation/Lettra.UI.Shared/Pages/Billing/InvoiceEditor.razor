@@ -165,7 +165,7 @@ else
                 }
             </div>
 
-            <ComplianceChecklist Report="_compliance" OnFindingSelected="FocusFindingAsync" />
+            <ComplianceChecklist Report="_compliance" OnFindingSelected="FocusFindingAsync" DocumentId="Id" />
 
             @if (_invoice is { Status: not InvoiceStatusDto.Draft, Number: not null } transmitted)
             {
