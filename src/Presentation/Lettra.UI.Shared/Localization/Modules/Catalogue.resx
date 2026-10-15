@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Catalog.ArchivedDone" xml:space="preserve"><value>Article « {0} » archivé.</value></data>
+  <data name="Catalog.Choice.Kind" xml:space="preserve"><value>Nature de l'article (F4)</value></data>
+  <data name="Catalog.Choice.Unit" xml:space="preserve"><value>Unité (F4)</value></data>
+  <data name="Catalog.Choice.Vat" xml:space="preserve"><value>Taux de TVA (F4)</value></data>
+  <data name="Catalog.Column.Designation" xml:space="preserve"><value>Désignation</value></data>
+  <data name="Catalog.Column.Kind" xml:space="preserve"><value>Nature</value></data>
+  <data name="Catalog.Column.PriceExclTax" xml:space="preserve"><value>PU HT</value></data>
+  <data name="Catalog.Column.PriceInclTax" xml:space="preserve"><value>PU TTC</value></data>
+  <data name="Catalog.Column.Reference" xml:space="preserve"><value>Référence</value></data>
+  <data name="Catalog.Column.Unit" xml:space="preserve"><value>Unité</value></data>
+  <data name="Catalog.Column.Vat" xml:space="preserve"><value>TVA</value></data>
+  <data name="Catalog.Command.Archive" xml:space="preserve"><value>Archiver / réactiver</value></data>
+  <data name="Catalog.Command.ChoiceList" xml:space="preserve"><value>Liste de choix</value></data>
+  <data name="Catalog.Command.Density" xml:space="preserve"><value>Densité</value></data>
+  <data name="Catalog.Command.New" xml:space="preserve"><value>Nouvel article</value></data>
+  <data name="Catalog.Command.Search" xml:space="preserve"><value>Rechercher</value></data>
+  <data name="Catalog.Created" xml:space="preserve"><value>Article « {0} » créé.</value></data>
+  <data name="Catalog.Grid" xml:space="preserve"><value>Articles du catalogue</value></data>
+  <data name="Catalog.Hint" xml:space="preserve"><value>Entrée ou Tab : cellule suivante (une nouvelle ligne en fin de grille) · F2 : modifier · Échap : annuler · F4 : liste de choix · Ctrl+Suppr : archiver.</value></data>
+  <data name="Catalog.List.Empty" xml:space="preserve"><value>Aucun article pour l'instant.</value></data>
+  <data name="Catalog.List.Title" xml:space="preserve"><value>Articles du dossier</value></data>
+  <data name="Catalog.New" xml:space="preserve"><value>Nouvel article</value></data>
+  <data name="Catalog.Reactivated" xml:space="preserve"><value>Article « {0} » réactivé.</value></data>
+  <data name="Catalog.Saved" xml:space="preserve"><value>Article « {0} » enregistré.</value></data>
+  <data name="Catalog.Search" xml:space="preserve"><value>Rechercher</value></data>
+  <data name="Catalog.ShowArchived" xml:space="preserve"><value>Afficher les articles archivés</value></data>
+  <data name="Catalog.Title" xml:space="preserve"><value>Catalogue</value></data>
+  <data name="Catalog.VatPercent" xml:space="preserve"><value>{0} %</value></data>
+  <data name="CatalogItemKind.Good" xml:space="preserve"><value>Bien</value></data>
+  <data name="CatalogItemKind.Service" xml:space="preserve"><value>Service</value></data>
+  <data name="Error.CatalogItem.Archived" xml:space="preserve"><value>Cet article est archivé : réactivez-le pour le modifier ou l'utiliser.</value></data>
+  <data name="Error.CatalogItem.DescriptionTooLong" xml:space="preserve"><value>Le descriptif ne doit pas dépasser 2 000 caractères.</value></data>
+  <data name="Error.CatalogItem.DesignationRequired" xml:space="preserve"><value>La désignation de l'article est obligatoire.</value></data>
+  <data name="Error.CatalogItem.DesignationTooLong" xml:space="preserve"><value>La désignation ne doit pas dépasser 200 caractères.</value></data>
+  <data name="Error.CatalogItem.KindInvalid" xml:space="preserve"><value>Choisissez la nature de l'article : bien ou service.</value></data>
+  <data name="Error.CatalogItem.NotFound" xml:space="preserve"><value>Cet article est introuvable.</value></data>
+  <data name="Error.CatalogItem.PriceNegative" xml:space="preserve"><value>Le prix ne peut pas être négatif.</value></data>
+  <data name="Error.CatalogItem.PriceTooLarge" xml:space="preserve"><value>Ce prix est trop élevé.</value></data>
+  <data name="Error.CatalogItem.ReferenceAlreadyUsed" xml:space="preserve"><value>Cette référence est déjà utilisée par un autre article.</value></data>
+  <data name="Error.CatalogItem.ReferenceInvalid" xml:space="preserve"><value>La référence contient des caractères non autorisés.</value></data>
+  <data name="Error.CatalogItem.ReferenceRequired" xml:space="preserve"><value>La référence de l'article est obligatoire.</value></data>
+  <data name="Error.CatalogItem.ReferenceTooLong" xml:space="preserve"><value>La référence ne doit pas dépasser 50 caractères.</value></data>
+  <data name="Error.CatalogItem.UnitUnknown" xml:space="preserve"><value>Cette unité n'est pas reconnue.</value></data>
+  <data name="Unit.C62" xml:space="preserve"><value>Unité</value></data>
+  <data name="Unit.DAY" xml:space="preserve"><value>Jour</value></data>
+  <data name="Unit.HUR" xml:space="preserve"><value>Heure</value></data>
+  <data name="Unit.KGM" xml:space="preserve"><value>Kilogramme</value></data>
+  <data name="Unit.KMT" xml:space="preserve"><value>Kilomètre</value></data>
+  <data name="Unit.LS" xml:space="preserve"><value>Forfait</value></data>
+  <data name="Unit.LTR" xml:space="preserve"><value>Litre</value></data>
+  <data name="Unit.MON" xml:space="preserve"><value>Mois</value></data>
+  <data name="Unit.MTK" xml:space="preserve"><value>Mètre carré</value></data>
+  <data name="Unit.MTQ" xml:space="preserve"><value>Mètre cube</value></data>
+  <data name="Unit.MTR" xml:space="preserve"><value>Mètre</value></data>
+  <data name="Catalog.Merged" xml:space="preserve">
+    <value>Article « {0} » enregistré : vos changements ont été fusionnés avec ceux d'un collègue.</value>
+  </data>
+</root>
