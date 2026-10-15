@@ -1,3 +1,4 @@
+using Lettra.Application.Abstractions.Integrity;
 using Lettra.Contracts.Integrity;
 using Lettra.Domain.Integrity;
 
@@ -36,5 +37,12 @@ public static class IntegrityMapper
             c.ClosedAt,
             c.KeyId,
             c.Hash))];
+    }
+
+    /// <summary>Registre des clés : la dernière version est celle en vigueur.</summary>
+    public static IReadOnlyList<IntegrityKeySummary> ToSummaries(IReadOnlyList<IntegrityKeyVersion> versions)
+    {
+        ArgumentNullException.ThrowIfNull(versions);
+        return [.. versions.Select((v, i) => new IntegrityKeySummary(v.Version, v.KeyId, v.PublicKey, v.CreatedAt, v.RetiredAt, i == versions.Count - 1))];
     }
 }

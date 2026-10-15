@@ -23,6 +23,35 @@ internal sealed class IntegrityChainHead
     public long Version { get; private set; }
 }
 
+/// <summary>
+/// Une version du registre des clés de la chaîne du dossier : clé publique en clair (registre), secrets enveloppés par
+/// la KEK du cabinet. Ajout seul ; seule l'enveloppe peut être réécrite (ré-enveloppement à la rotation de la KEK).
+/// </summary>
+internal sealed class StoredIntegrityKey
+{
+    public const int MaxPublicKeyLength = 256;
+    public const int MaxWrappedLength = 128;
+
+    public StoredIntegrityKey(int version, string keyId, string publicKey, byte[] wrappedSecret, DateTimeOffset createdAt)
+    {
+        Version = version;
+        KeyId = keyId;
+        PublicKey = publicKey;
+        WrappedSecret = wrappedSecret;
+        CreatedAt = createdAt;
+    }
+
+    public int Version { get; private set; }
+
+    public string KeyId { get; private set; }
+
+    public string PublicKey { get; private set; }
+
+    public byte[] WrappedSecret { get; private set; }
+
+    public DateTimeOffset CreatedAt { get; private set; }
+}
+
 /// <summary>Instants en millisecondes UTC : comparables en SQL sur les trois providers, et sans perte d'un provider à l'autre.</summary>
 internal static class UnixMilliseconds
 {
@@ -47,6 +76,7 @@ internal sealed class JournalEntryConfiguration : IEntityTypeConfiguration<Journ
         builder.Property(e => e.PreviousHash).HasMaxLength(JournalEntry.HashLength).IsRequired();
         builder.Property(e => e.Hash).HasMaxLength(JournalEntry.HashLength).IsRequired();
         builder.Property(e => e.Seal).HasMaxLength(JournalEntry.HashLength).IsRequired();
+        builder.Property(e => e.KeyId).HasMaxLength(JournalEntry.MaxKeyIdLength);
         builder.HasIndex(e => e.DocumentId);
         builder.HasIndex(e => e.OccurredAt);
     }
@@ -83,5 +113,20 @@ internal sealed class IntegrityChainHeadConfiguration : IEntityTypeConfiguration
 
         // La ligne naît avec la migration : aucun ajout n'a à la créer, donc pas de course à sa création.
         builder.HasData(new { Id = IntegrityChainHead.SingletonId, LastSequence = 0L, LastHash = string.Empty, Version = 0L });
+    }
+}
+
+internal sealed class StoredIntegrityKeyConfiguration : IEntityTypeConfiguration<StoredIntegrityKey>
+{
+    public void Configure(EntityTypeBuilder<StoredIntegrityKey> builder)
+    {
+        builder.ToTable("IntegrityKeys");
+        builder.HasKey(k => k.Version);
+        builder.Property(k => k.Version).ValueGeneratedNever();
+        builder.Property(k => k.KeyId).HasMaxLength(JournalEntry.MaxKeyIdLength).IsRequired();
+        builder.Property(k => k.PublicKey).HasMaxLength(StoredIntegrityKey.MaxPublicKeyLength).IsRequired();
+        builder.Property(k => k.WrappedSecret).HasMaxLength(StoredIntegrityKey.MaxWrappedLength).IsRequired();
+        builder.Property(k => k.CreatedAt).HasConversion(UnixMilliseconds.Converter);
+        builder.HasIndex(k => k.KeyId).IsUnique();
     }
 }

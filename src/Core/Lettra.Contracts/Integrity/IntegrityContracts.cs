@@ -28,3 +28,15 @@ public sealed record ClosingSummary(
     DateTimeOffset ClosedAt,
     string KeyId,
     string Hash);
+
+/// <summary>
+/// Une version du registre des clés publiques du dossier. Une clôture ou une archive se vérifie avec la clé publique
+/// de son <c>KeyId</c> ; une version retirée reste au registre pour vérifier l'historique.
+/// </summary>
+public sealed record IntegrityKeySummary(
+    int Version,
+    string KeyId,
+    string PublicKey,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? RetiredAt,
+    bool Current);

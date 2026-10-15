@@ -47,6 +47,12 @@ public interface IIntegrityStore
     /// après la clôture précédente, signe, et inscrit la clôture dans la chaîne. Le tout en une transaction.
     /// </summary>
     Task<Result<PeriodClosing>> CloseAsync(ClosingPeriod period, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Rotation des clés : crée la version suivante et l'annonce dans la chaîne par une entrée scellée avec la clé
+    /// sortante, sous le verrou de la tête de chaîne. L'ancienne version reste au registre, en vérification seule.
+    /// </summary>
+    Task<Result<IntegrityKeyVersion>> RotateKeysAsync(CancellationToken cancellationToken);
 }
 
 /// <summary>Archive scellée d'une clôture : un ZIP autoportant, vérifiable hors de Lettra avec la clé publique jointe.</summary>
@@ -57,26 +63,24 @@ public interface ISealedArchiveBuilder
     Task<Result<SealedArchive>> BuildAsync(int closingNumber, CancellationToken cancellationToken);
 }
 
-/// <summary>Clés de la chaîne d'un cabinet : sceau des entrées (HMAC) et signature des clôtures (ECDSA P-256).</summary>
-public interface IIntegrityKeys : IIntegrityKeyVerifier
-{
-    string KeyId { get; }
-
-    /// <summary>Clé publique de signature (SubjectPublicKeyInfo, base 64).</summary>
-    string PublicKey { get; }
-
-    string Seal(string entryHash);
-
-    string Sign(string closingHash);
-}
+/// <summary>
+/// Une version de clé du registre des clés publiques d'un dossier. Elle est en vigueur de sa création à celle de la
+/// suivante (<see cref="RetiredAt"/>), puis reste au registre, en vérification seule, toute la durée légale.
+/// </summary>
+public sealed record IntegrityKeyVersion(int Version, string KeyId, string PublicKey, DateTimeOffset CreatedAt, DateTimeOffset? RetiredAt);
 
 /// <summary>
-/// Dérive les clés de la chaîne de la clé maîtresse (KEK) du cabinet, protégée comme les clés des dossiers
-/// (ADR-0011). Rien n'est stocké en base : qui n'a pas la KEK ne peut ni sceller ni signer.
+/// Clés de la chaîne du dossier courant (ADR-0011) : une clé de sceau (HMAC) et une clé de signature (ECDSA P-256)
+/// par version, tirées au hasard et conservées dans la base du dossier enveloppées par la clé maîtresse (KEK) du
+/// cabinet. Qui n'a pas la KEK ne peut ni sceller, ni signer, ni ajouter une version au registre.
 /// </summary>
 public interface IIntegrityKeyring
 {
-    ValueTask<Result<IIntegrityKeys>> GetAsync(OrganisationId cabinet, CancellationToken cancellationToken);
+    /// <summary>Toutes les versions, retirées comprises, pour vérifier tout l'historique.</summary>
+    Task<Result<IIntegrityKeyVerifier>> VerifierAsync(CancellationToken cancellationToken);
+
+    /// <summary>Le registre des clés publiques, de la plus ancienne à la plus récente.</summary>
+    Task<IReadOnlyList<IntegrityKeyVersion>> ListAsync(CancellationToken cancellationToken);
 }
 
 /// <summary>Les deux règles d'alerte de dossier de la chaîne (annexe G §5 et §6).</summary>

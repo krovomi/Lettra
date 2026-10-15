@@ -128,6 +128,21 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Rotation_des_cles_et_historique_verifiable()
+    {
+        ManualClock clock = new(DateTimeOffset.UtcNow);
+        await using TenantHarness harness = new(new SqliteConfigurator(), clock);
+        await IntegrityScenarios.KeyRotationAsync(harness, clock, DatabaseProvider.Sqlite, Database("rotation"));
+    }
+
+    [Fact]
+    public async Task Chaine_d_avant_le_versionnage_adoptee()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await IntegrityScenarios.LegacyChainAdoptedAsync(harness, DatabaseProvider.Sqlite, Database("ancienne"));
+    }
+
+    [Fact]
     public async Task Creation_de_dossier_et_vagues_de_migration_par_le_catalogue()
     {
         await using CatalogHarness harness = new(
@@ -230,6 +245,15 @@ public sealed class PostgreSqlTests : IAsyncLifetime
         ManualClock clock = new(DateTimeOffset.UtcNow);
         await using TenantHarness harness = new(new PostgreSqlConfigurator(), clock, syntheticDocuments: true);
         await IntegrityScenarios.ClosingsAndSealedArchiveAsync(harness, clock, DatabaseProvider.PostgreSql, Database("clotures"));
+    }
+
+    [SkippableFact]
+    public async Task Rotation_des_cles_et_historique_verifiable()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        ManualClock clock = new(DateTimeOffset.UtcNow);
+        await using TenantHarness harness = new(new PostgreSqlConfigurator(), clock);
+        await IntegrityScenarios.KeyRotationAsync(harness, clock, DatabaseProvider.PostgreSql, Database("rotation"));
     }
 
     [SkippableFact]
@@ -428,6 +452,15 @@ public sealed class SqlServerTests : IAsyncLifetime
         ManualClock clock = new(DateTimeOffset.UtcNow);
         await using TenantHarness harness = new(new SqlServerConfigurator(), clock, syntheticDocuments: true);
         await IntegrityScenarios.ClosingsAndSealedArchiveAsync(harness, clock, DatabaseProvider.SqlServer, Database("clotures"));
+    }
+
+    [SkippableFact]
+    public async Task Rotation_des_cles_et_historique_verifiable()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        ManualClock clock = new(DateTimeOffset.UtcNow);
+        await using TenantHarness harness = new(new SqlServerConfigurator(), clock);
+        await IntegrityScenarios.KeyRotationAsync(harness, clock, DatabaseProvider.SqlServer, Database("rotation"));
     }
 
     [SkippableFact]

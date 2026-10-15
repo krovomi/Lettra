@@ -73,6 +73,7 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(IReadOnlyList<AssistantJournalEntry>))]
 [JsonSerializable(typeof(IntegrityReportResponse))]
 [JsonSerializable(typeof(IReadOnlyList<ClosingSummary>))]
+[JsonSerializable(typeof(IReadOnlyList<IntegrityKeySummary>))]
 [JsonSerializable(typeof(AlertCentreResponse))]
 [JsonSerializable(typeof(AlertDetailResponse))]
 [JsonSerializable(typeof(ChangeAlertSeverityRequest))]
