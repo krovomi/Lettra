@@ -2,6 +2,8 @@ using Lettra.Printing;
 using Lettra.UI.Shared.Components.Palette;
 using Lettra.UI.Shared.Keyboard;
 using Lettra.UI.Shared.Services;
+using Lettra.UI.Shared.Sync;
+using Lettra.UI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -23,6 +25,10 @@ public static class DependencyInjection
         services.AddSingleton<IDocumentPdfRenderer, PdfDocumentRenderer>();
         services.AddScoped<ICommandPaletteProvider, NavigationPaletteProvider>();
         services.AddScoped<ICommandPaletteProvider, BillingPaletteProvider>();
+        // Demande de synchronisation : appelée par le cycle du poste, hors de tout composant. L'hôte qui synchronise
+        // ajoute son ISyncCenter et relie ISyncConsentDialog au SyncCoordinator.
+        services.TryAddSingleton<SyncConsentDialog>();
+        services.TryAddSingleton<ISyncConsentDialog>(sp => sp.GetRequiredService<SyncConsentDialog>());
         return services;
     }
 }

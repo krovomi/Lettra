@@ -20,11 +20,13 @@
             <button type="button" class="lettra-palette-button" @onclick="OpenPaletteAsync" title="@L["Palette.Title"] (Ctrl+K)">
                 @L["Palette.Open"] <kbd>Ctrl+K</kbd>
             </button>
-            <div class="lettra-session"><SessionBar /></div>
+            <div class="lettra-session"><SyncBadge /><SessionBar /></div>
         </header>
         <main class="lettra-main">
+            <SyncReminderBanner />
             @Body
         </main>
+        <SyncConsentPanel />
     </div>
 </CascadingValue>
 

@@ -1,0 +1,127 @@
+@page "/synchronisation/conflits"
+@inject IServiceProvider Services
+@inject IStringLocalizer<SharedResource> L
+
+@* Résolution des conflits (étape 4.3) : les champs modifiés à la fois sur le poste et au cabinet, champ par champ.
+   Les autres champs de la même saisie sont déjà appliqués. *@
+
+<PageTitle>@L["Sync.Conflicts.Title"] · Lettra</PageTitle>
+
+<h1 tabindex="-1">@L["Sync.Conflicts.Title"]</h1>
+<p><a href="synchronisation">@L["Sync.Back"]</a></p>
+
+<GeneralErrors Errors="_errors" />
+@if (_done is not null)
+{
+    <p role="status" class="lettra-success">@_done</p>
+}
+
+@if (_sync is null)
+{
+    <p>@L["Sync.NotSynchronized"]</p>
+}
+else if (_groups.Count == 0)
+{
+    <p id="sync-conflicts-empty">@L["Sync.Conflicts.Empty"]</p>
+}
+else
+{
+    <p>@L["Sync.Conflicts.Intro"]</p>
+    @foreach (IGrouping<Guid, SyncFieldDispute> group in _groups)
+    {
+        SyncFieldDispute first = group.First();
+        <section class="lettra-card lettra-sync-conflict" data-key="@group.Key" aria-labelledby="conflict-@group.Key">
+            <h2 id="conflict-@group.Key">@L[$"Sync.Item.{first.Item}"]@(first.Label is null ? null : $" « {first.Label} »")</h2>
+            <table class="lettra-table">
+                <thead>
+                    <tr>
+                        <th scope="col">@L["Sync.Conflicts.Field"]</th>
+                        <th scope="col">@L["Sync.Conflicts.Base"]</th>
+                        <th scope="col">@L["Sync.Conflicts.Mine"]</th>
+                        <th scope="col">@L["Sync.Conflicts.Server"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (SyncFieldDispute dispute in group)
+                    {
+                        string name = $"choice-{dispute.Id}";
+                        <tr data-field="@dispute.Field">
+                            <th scope="row">@SyncText.FieldName(L, dispute.Item, dispute.Field)</th>
+                            <td>@Value(dispute.Base)</td>
+                            <td>
+                                <label>
+                                    <input type="radio" name="@name" class="keep-mine" checked="@(Choice(dispute.Id) == true)"
+                                           @onchange="() => Choose(dispute.Id, keepMine: true)" />
+                                    @Value(dispute.Mine)
+                                </label>
+                            </td>
+                            <td>
+                                <label>
+                                    <input type="radio" name="@name" class="take-server" checked="@(Choice(dispute.Id) == false)"
+                                           @onchange="() => Choose(dispute.Id, keepMine: false)" />
+                                    @Value(dispute.Server)
+                                </label>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <button type="button" class="lettra-button apply" disabled="@(_busy || !Complete(group))" @onclick="() => ApplyAsync(group)">@L["Sync.Conflicts.Apply"]</button>
+        </section>
+    }
+}
+
+@code {
+    private ISyncCenter? _sync;
+    private List<IGrouping<Guid, SyncFieldDispute>> _groups = [];
+    private readonly Dictionary<long, bool> _choices = [];
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private string? _done;
+    private bool _busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _sync = Services.GetService(typeof(ISyncCenter)) as ISyncCenter;
+        if (_sync is not null)
+        {
+            await LoadAsync();
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        IReadOnlyList<SyncFieldDispute> disputes = await _sync!.ListConflictsAsync(CancellationToken.None);
+        _groups = [.. disputes.OrderBy(d => d.DetectedAt).GroupBy(d => d.IdempotencyKey)];
+    }
+
+    private bool? Choice(long conflict) => _choices.TryGetValue(conflict, out bool keepMine) ? keepMine : null;
+
+    private void Choose(long conflict, bool keepMine) => _choices[conflict] = keepMine;
+
+    // Aucun choix par défaut : chaque champ disputé est tranché par l'utilisateur.
+    private bool Complete(IGrouping<Guid, SyncFieldDispute> group) => group.All(d => _choices.ContainsKey(d.Id));
+
+    private async Task ApplyAsync(IGrouping<Guid, SyncFieldDispute> group)
+    {
+        _busy = true;
+        _done = null;
+        try
+        {
+            SyncFieldChoice[] choices = [.. group.Select(d => new SyncFieldChoice(d.Id, _choices[d.Id]))];
+            OperationResult<bool> resolved = await _sync!.ResolveAsync(choices, CancellationToken.None);
+            // Un refus peut viser un champ du conflit : il s'affiche en tête, l'écran n'a pas de champ de saisie.
+            _errors = [.. resolved.Errors.Select(e => e with { Target = null })];
+            if (resolved.IsSuccess)
+            {
+                _done = L["Sync.Conflicts.Applied"];
+                await LoadAsync();
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private string Value(string? value) => string.IsNullOrEmpty(value) ? L["Sync.Conflicts.EmptyValue"] : value;
+}
