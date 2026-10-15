@@ -112,6 +112,8 @@ internal sealed class AssistantHarness : IAsyncDisposable
         services.AddSingleton<IAiSkillCatalog>(SkillCatalog.LoadEmbedded());
         services.AddAiTools();
         services.RemoveAll<IAiDossierContext>().AddScoped<IAiDossierContext, FakeDossierContext>();
+        services.AddSingleton<IAiAuditLog, InMemoryAiAuditLog>();
+        services.AddSingleton<IAiSettingsStore>(Settings);
         services.AddAiOrchestration(configuration);
         services.AddKeyedSingleton<IAiEngine>(AiEngineKind.ClaudeEu, engine);
         if (webHandler is not null)
@@ -123,6 +125,9 @@ internal sealed class AssistantHarness : IAsyncDisposable
     }
 
     public ScriptedTurnsEngine Engine { get; }
+
+    /// <summary>Réglages enregistrés par cabinet (la base Catalog en production) ; vide par défaut.</summary>
+    public InMemoryAiSettingsStore Settings { get; } = new();
 
     public static Dictionary<string, string?> Enabled(bool web = false, int? maxToolRounds = null)
     {
@@ -169,4 +174,42 @@ internal sealed class AssistantHarness : IAsyncDisposable
     }
 
     public ValueTask DisposeAsync() => _services.DisposeAsync();
+}
+
+/// <summary>Journal IA en mémoire : en production, c'est la table <c>AiJournal</c> de la base du dossier.</summary>
+internal sealed class InMemoryAiAuditLog : IAiAuditLog
+{
+    private readonly System.Collections.Concurrent.ConcurrentQueue<AiAuditEntry> _entries = new();
+
+    public ValueTask AppendAsync(AiAuditEntry entry, CancellationToken cancellationToken)
+    {
+        _entries.Enqueue(entry);
+        return ValueTask.CompletedTask;
+    }
+
+    public ValueTask<IReadOnlyList<AiAuditEntry>> ReadAsync(DossierId dossier, int limit, CancellationToken cancellationToken) =>
+        ValueTask.FromResult<IReadOnlyList<AiAuditEntry>>([.. _entries.Where(e => e.Dossier == dossier).Reverse().Take(limit)]);
+}
+
+/// <summary>Réglages IA par cabinet en mémoire : en production, la table <c>AiSettings</c> de la base Catalog.</summary>
+internal sealed class InMemoryAiSettingsStore : IAiSettingsStore
+{
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<OrganisationId, StoredAiSettings> _rows = new();
+
+    public bool IsAvailable => true;
+
+    public ValueTask<StoredAiSettings?> FindAsync(OrganisationId organisation, CancellationToken cancellationToken) =>
+        ValueTask.FromResult(_rows.TryGetValue(organisation, out StoredAiSettings? row) ? row : null);
+
+    public ValueTask<Lettra.Domain.Common.Result<StoredAiSettings>> SaveAsync(
+        OrganisationId organisation,
+        AiSettings settings,
+        long? expectedVersion,
+        Guid updatedBy,
+        CancellationToken cancellationToken)
+    {
+        StoredAiSettings row = new(settings, (expectedVersion ?? 0) + 1, DateTimeOffset.UnixEpoch, updatedBy);
+        _rows[organisation] = row;
+        return ValueTask.FromResult<Lettra.Domain.Common.Result<StoredAiSettings>>(row);
+    }
 }

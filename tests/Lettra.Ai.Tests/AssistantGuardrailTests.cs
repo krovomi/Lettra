@@ -77,6 +77,30 @@ public sealed class AssistantGuardrailTests
     }
 
     [Fact]
+    public async Task Les_reglages_enregistres_dans_la_base_Catalog_l_emportent_sur_la_configuration()
+    {
+        ScriptedTurnsEngine engine = new(_ => Say("ok"));
+        await using AssistantHarness h = new(engine, AssistantHarness.Enabled());
+
+        // L'administrateur du cabinet coupe l'IA : la configuration du déploiement (activée) ne compte plus.
+        await h.Settings.SaveAsync(AssistantHarness.Organisation, AiSettings.Disabled, null, Guid.NewGuid(), CancellationToken.None);
+        List<AssistantEvent> refused = await h.AskAsync(AssistantFeature.RegulatoryQuestions, "TVA ?");
+        refused.Should().ContainSingle().Which.Should().BeOfType<AssistantUnavailableEvent>().Which.Code.Should().Be(ErrorCodes.Ai.Disabled);
+        engine.Calls.Should().Be(0);
+
+        // Puis il la rallume pour la seule fonction « questions réglementaires ».
+        await h.Settings.SaveAsync(
+            AssistantHarness.Organisation,
+            new AiSettings { Enabled = true, Engine = AiEngineKind.ClaudeEu, Features = new HashSet<AssistantFeature> { AssistantFeature.RegulatoryQuestions } },
+            1,
+            Guid.NewGuid(),
+            CancellationToken.None);
+        (await h.AskAsync(AssistantFeature.RegulatoryQuestions, "TVA ?")).OfType<AssistantTextEvent>().Should().ContainSingle();
+        (await h.AskAsync(AssistantFeature.EInvoicingDiagnosis, "PA ?")).Should().ContainSingle()
+            .Which.Should().BeOfType<AssistantUnavailableEvent>().Which.Code.Should().Be(ErrorCodes.Ai.FeatureDisabled);
+    }
+
+    [Fact]
     public async Task Une_action_inexistante_ou_reservee_a_un_humain_est_refusee_et_journalisee()
     {
         ScriptedTurnsEngine engine = new(

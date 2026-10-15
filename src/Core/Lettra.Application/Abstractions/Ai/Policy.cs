@@ -1,4 +1,5 @@
 using Lettra.Contracts.Assistant;
+using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Application.Abstractions.Ai;
@@ -57,4 +58,26 @@ public interface IAiEngineFactory
 {
     /// <summary>Le moteur configuré pour ce type, ou <c>null</c> s'il n'est pas disponible ici.</summary>
     IAiEngine? Resolve(AiEngineKind kind);
+}
+
+/// <summary>Réglages IA enregistrés par un cabinet, avec leur version (concurrence optimiste) et leur auteur.</summary>
+public sealed record StoredAiSettings(AiSettings Settings, long Version, DateTimeOffset UpdatedAt, Guid UpdatedBy);
+
+/// <summary>
+/// Réglages IA enregistrés par cabinet : base Catalog en modes 2, 3 et 5. En mode 1 (poste isolé), il n'y a pas de
+/// catalogue : les réglages restent dans le fichier de configuration et ce magasin n'est pas disponible.
+/// </summary>
+public interface IAiSettingsStore
+{
+    bool IsAvailable { get; }
+
+    ValueTask<StoredAiSettings?> FindAsync(OrganisationId organisation, CancellationToken cancellationToken);
+
+    /// <summary>Enregistre si <paramref name="expectedVersion"/> correspond à la version en base (<c>null</c> : aucun réglage enregistré).</summary>
+    ValueTask<Result<StoredAiSettings>> SaveAsync(
+        OrganisationId organisation,
+        AiSettings settings,
+        long? expectedVersion,
+        Guid updatedBy,
+        CancellationToken cancellationToken);
 }
