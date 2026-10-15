@@ -1,0 +1,44 @@
+@* Pastille de la barre : état de la synchronisation et saisies en attente. Rien quand le poste ne synchronise pas. *@
+@implements IDisposable
+@inject IServiceProvider Services
+@inject IStringLocalizer<SharedResource> L
+
+@if (_sync is not null)
+{
+    SyncSnapshot snapshot = _sync.Current;
+    <a href="synchronisation" id="sync-badge" class="lettra-sync-badge is-@snapshot.Status.ToString().ToLowerInvariant()"
+       title="@SyncText.Summary(L, snapshot.Pending)">
+        @L[$"Sync.Status.{snapshot.Status}"]
+        @if (snapshot.Pending.Total > 0)
+        {
+            <span class="lettra-sync-count">@string.Format(CultureInfo.CurrentCulture, L["Sync.Badge.Pending"], snapshot.Pending.Total)</span>
+        }
+        @if (snapshot.Conflicts > 0)
+        {
+            <span class="lettra-badge">@string.Format(CultureInfo.CurrentCulture, L["Sync.Badge.Conflicts"], snapshot.Conflicts)</span>
+        }
+    </a>
+}
+
+@code {
+    private ISyncCenter? _sync;
+
+    protected override void OnInitialized()
+    {
+        _sync = Services.GetService(typeof(ISyncCenter)) as ISyncCenter;
+        if (_sync is not null)
+        {
+            _sync.Changed += OnChanged;
+        }
+    }
+
+    private void OnChanged(object? sender, EventArgs e) => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        if (_sync is not null)
+        {
+            _sync.Changed -= OnChanged;
+        }
+    }
+}

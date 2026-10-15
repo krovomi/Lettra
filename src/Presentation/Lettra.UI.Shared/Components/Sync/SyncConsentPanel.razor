@@ -1,0 +1,41 @@
+@* Demande au retour du réseau (ADR-0008) : panneau non modal, l'utilisateur continue de travailler. *@
+@implements IDisposable
+@inject SyncConsentDialog Dialog
+@inject IStringLocalizer<SharedResource> L
+
+@if (Dialog.Request is { } request)
+{
+    <section class="lettra-sync-prompt" role="dialog" aria-modal="false" aria-labelledby="sync-prompt-title">
+        <h2 id="sync-prompt-title">@L["Sync.Prompt.Title"]</h2>
+        <p id="sync-prompt-summary">@SyncText.Summary(L, request.Summary)</p>
+        @if (request.Network == SyncNetwork.Cellular)
+        {
+            <p class="lettra-hint">@L["Sync.Prompt.Cellular"]</p>
+        }
+        @if (Dialog.Detail is { } detail)
+        {
+            <ul id="sync-prompt-detail" class="lettra-sync-detail">
+                @foreach (SyncPendingItem item in detail)
+                {
+                    <li>@L[$"Sync.Change.{item.Change}"] · @L[$"Sync.Item.{item.Item}"]@(item.Label is null ? null : $" « {item.Label} »")</li>
+                }
+            </ul>
+        }
+        <div class="lettra-inline">
+            <button type="button" id="sync-now" class="lettra-button" @onclick="() => Dialog.Answer(SyncAnswer.Now)">@L["Sync.Prompt.Now"]</button>
+            <button type="button" id="sync-later" class="lettra-button is-secondary" @onclick="() => Dialog.Answer(SyncAnswer.Later)">@L["Sync.Prompt.Later"]</button>
+            @if (Dialog.Detail is null)
+            {
+                <button type="button" id="sync-detail" class="lettra-link" @onclick="() => Dialog.Answer(SyncAnswer.ShowDetail)">@L["Sync.Prompt.Detail"]</button>
+            }
+        </div>
+    </section>
+}
+
+@code {
+    protected override void OnInitialized() => Dialog.Changed += OnChanged;
+
+    private void OnChanged(object? sender, EventArgs e) => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Dialog.Changed -= OnChanged;
+}
