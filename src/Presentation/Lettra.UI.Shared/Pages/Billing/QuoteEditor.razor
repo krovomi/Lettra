@@ -427,9 +427,8 @@ else
         OperationResult<QuoteResponse> result = _quote is null
             ? await Quotes.CreateAsync(_request, CancellationToken.None)
             : await Quotes.UpdateAsync(_quote.Id, _request, _quote.Version, CancellationToken.None);
-        if (_drafts is not null && OfflineDrafts.IsUnreachable(result))
+        if (_drafts is not null && OfflineDrafts.IsUnreachable(result) && await KeepOnDeviceAsync(_drafts))
         {
-            await KeepOnDeviceAsync(_drafts);
             return;
         }
 
@@ -443,10 +442,15 @@ else
     }
 
     /// <summary>Pas de réseau : la saisie reste sur l'appareil et partira à son retour (étape 4.5).</summary>
-    private async Task KeepOnDeviceAsync(OfflineDrafts drafts)
+    private async Task<bool> KeepOnDeviceAsync(OfflineDrafts drafts)
     {
         bool created = _localId is null && _quote is null;
-        _localId = await drafts.KeepQuoteAsync(_localId, _quote, _request, _customerName ?? _customerPicker?.DisplayedName, CancellationToken.None);
+        if (await drafts.KeepQuoteAsync(_localId, _quote, _request, _customerName ?? _customerPicker?.DisplayedName, CancellationToken.None) is not { } kept)
+        {
+            return false;   // pas de stockage sur l'appareil (session ou dossier inconnu) : l'erreur s'affiche comme en ligne
+        }
+
+        _localId = kept;
         _errors = [];
         _status = L["Drafts.KeptOnDevice"];
         if (created)
@@ -456,6 +460,7 @@ else
         }
 
         StateHasChanged();
+        return true;
     }
 
     private async Task HandleSavedAsync(OperationResult<QuoteResponse> result)

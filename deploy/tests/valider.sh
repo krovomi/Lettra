@@ -26,14 +26,6 @@ route severity=S3 cell=c alertname=X "lettra-supervision"
 route severity=S4 cell=c alertname=X "lettra-supervision"
 route alertname=Watchdog severity=none "battement"
 
-step "Collecteur OpenTelemetry"
-if command -v docker >/dev/null; then
-  docker run --rm -v "$OBS/collector.yaml:/c.yaml:ro" -e PROMETHEUS_OTLP=http://p -e LOKI_OTLP=http://l -e TEMPO_OTLP=t:4317 \
-    otel/opentelemetry-collector-contrib:0.136.0 validate --config=/c.yaml && echo "   collector.yaml valide"
-else
-  echo "   docker absent : validation du collecteur ignorée" >&2
-fi
-
 step "Helm : lint, rendu de chaque taille et validation des schémas Kubernetes et CRD"
 cd "$ROOT/deploy/helm"
 helm dependency build lettra-cell >/dev/null
@@ -85,6 +77,49 @@ if helm template c lettra-cell --set lettra-api.image.tag=ci --set lettra-worker
   echo "une API sans realm Keycloak doit être refusée" >&2; exit 1
 fi
 echo "   realm Keycloak obligatoire : refus vérifié"
+
+step "Collecteur OpenTelemetry : base seule, puis avec les destinations rendues par le chart"
+# Même image que la cellule (values.yaml) ; otelcol-contrib dans le PATH évite Docker en local.
+COLLECTOR_IMAGE=$(sed -n 's/^  image: \(otel\/opentelemetry-collector-contrib:.*\)$/\1/p' "$ROOT/deploy/helm/lettra-observability/values.yaml")
+[[ -n "$COLLECTOR_IMAGE" ]] || { echo "image du collecteur introuvable dans lettra-observability/values.yaml" >&2; exit 1; }
+otelcol_validate() { # fichiers de configuration, fusionnés dans l'ordre comme dans le pod
+  local args=() mounts=() i=0 f
+  if command -v otelcol-contrib >/dev/null; then
+    for f in "$@"; do args+=("--config=$f"); done
+    PROMETHEUS_OTLP=http://p FOURNISSEUR_AUTORISATION=x otelcol-contrib validate "${args[@]}"
+  else
+    for f in "$@"; do mounts+=(-v "$f:/conf/$i.yaml:ro"); args+=("--config=/conf/$i.yaml"); i=$((i + 1)); done
+    docker run --rm "${mounts[@]}" -e PROMETHEUS_OTLP=http://p -e FOURNISSEUR_AUTORISATION=x "$COLLECTOR_IMAGE" validate "${args[@]}"
+  fi
+}
+backends() { # options helm -> backends.yaml rendu
+  helm template o lettra-observability --show-only templates/collector.yaml "$@" \
+    | yq 'select(.kind == "ConfigMap") | .data["backends.yaml"]'
+}
+if command -v otelcol-contrib >/dev/null || command -v docker >/dev/null; then
+  RENDU=$(mktemp -d)
+  otelcol_validate "$OBS/collector.yaml" && echo "   collector.yaml seul (essai local, démonstration) : valide"
+  backends > "$RENDU/defaut.yaml"
+  backends --set collector.traces.tempo.enabled=true --set collector.logs.loki.enabled=true > "$RENDU/cellule.yaml"
+  backends --set collector.fournisseur.enabled=true --set collector.fournisseur.endpoint=https://otlp.exemple.fr \
+    --set 'collector.fournisseur.signals={traces,metrics,logs}' --set collector.fournisseur.authSecret=s > "$RENDU/fournisseur.yaml"
+  for cas in defaut cellule fournisseur; do
+    otelcol_validate "$OBS/collector.yaml" "$RENDU/$cas.yaml" && echo "   collector.yaml + backends.yaml ($cas) : valide"
+  done
+  grep -q 'otlp/tempo' "$RENDU/cellule.yaml" && grep -q 'otlphttp/loki' "$RENDU/cellule.yaml" \
+    || { echo "Tempo et Loki doivent être branchés quand la cellule les active" >&2; exit 1; }
+  ! grep -qE 'otlp/tempo|otlphttp/(loki|fournisseur)' "$RENDU/defaut.yaml" \
+    || { echo "aucune destination de traces ni de journaux ne doit être active par défaut" >&2; exit 1; }
+  rm -rf "$RENDU"
+else
+  echo "   ni otelcol-contrib ni docker : validation du collecteur ignorée" >&2
+fi
+helm template o lettra-observability --set collector.fournisseur.enabled=true --set collector.fournisseur.endpoint=https://otlp.exemple.fr \
+  --set collector.fournisseur.authSecret=s | kubeconform_ -
+if helm template o lettra-observability --set collector.fournisseur.enabled=true >/dev/null 2>&1; then
+  echo "un fournisseur sans adresse doit être refusé" >&2; exit 1
+fi
+echo "   fournisseur sans adresse : refus vérifié"
 
 step "OpenTofu : format et validation (sans état ni identifiants)"
 cd "$ROOT/deploy/opentofu"

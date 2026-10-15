@@ -20,13 +20,29 @@ internal static partial class DossierDataScrubber
         "exception.message",
         "exception.stacktrace",
         "http.request.body",
+        "http.response.body",
         "enduser.id",
+        "user.email",
+        "user.full_name",
+        "user.name",
+        "client.address",
     };
+
+    /// <summary>Attribut qui porte une adresse complète : on n'en garde que la partie avant la requête (<c>?</c>).</summary>
+    public const string FullUrlAttribute = "url.full";
 
     public static bool MustDrop(string key) =>
         DroppedAttributes.Contains(key)
         || key.StartsWith("http.request.header.", StringComparison.Ordinal)
-        || key.StartsWith("http.response.header.", StringComparison.Ordinal);
+        || key.StartsWith("http.response.header.", StringComparison.Ordinal)
+        || key.StartsWith("db.query.parameter.", StringComparison.Ordinal);
+
+    /// <summary>Retire la requête et le fragment d'une adresse : une recherche (<c>?search=…</c>) y cite souvent une saisie.</summary>
+    public static string WithoutQuery(string url)
+    {
+        int end = url.AsSpan().IndexOfAny('?', '#');
+        return end < 0 ? url : url[..end];
+    }
 
     public static string Scrub(string value) => Scrub(value, SensitivePattern());
 
