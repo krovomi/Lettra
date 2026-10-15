@@ -1370,6 +1370,34 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.ToTable("SyncConflicts", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.SyncDeviceRecord", b =>
+                {
+                    b.Property<Guid>("DeviceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("FirstSeenAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("LastSeenAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid?>("LastUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long?>("RevokedAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid?>("RevokedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long?>("WipedAtMs")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("DeviceId");
+
+                    b.ToTable("SyncDevices", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.SyncJournalRecord", b =>
                 {
                     b.Property<long>("Sequence")
