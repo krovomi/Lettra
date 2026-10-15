@@ -1,6 +1,7 @@
 using System.Globalization;
 using Bunit;
 using Lettra.Contracts.Billing;
+using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
@@ -84,6 +85,44 @@ public sealed class InvoiceEditorTests : BunitContext
         page.FindAll("input.lg-input").Should().OnlyContain(i => i.HasAttribute("readonly") || i.HasAttribute("disabled"));
         page.Find("#vat-regime").HasAttribute("disabled").Should().BeTrue();
         page.Find("#payment-terms").HasAttribute("disabled").Should().BeFalse();
+    }
+
+    [Fact]
+    public void Un_avoir_au_dela_du_seuil_est_approuve_par_un_manager_puis_valide()
+    {
+        _invoices.CreditNotesNeedApproval = true;
+        InvoiceResponse avoir = _invoices.Add(InvoiceKindDto.CreditNote, InvoiceStatusDto.Draft, null, Conseil);
+        IRenderedComponent<InvoiceEditor> page = Ouvrir(avoir.Id);
+        page.FindAll("#approve-credit").Should().BeEmpty("rien n'indique encore qu'une approbation est exigée");
+
+        page.Find("#validate").Click();
+        page.WaitForAssertion(() => page.Find("#approve-credit"));
+        page.Markup.Should().Contain("Cet avoir dépasse le seuil du cabinet : il doit être approuvé par un manager.");
+
+        page.Find("#approve-credit").Click();
+        page.WaitForAssertion(() => page.Find("[role=status].lettra-success").TextContent.Should().Be("Avoir approuvé : il peut maintenant être validé."));
+        page.Find("#credit-approved").TextContent.Should().Be("Avoir approuvé par un manager le 15/10/2026.");
+        page.FindAll("#approve-credit").Should().BeEmpty();
+
+        page.Find("#validate").Click();
+        page.WaitForAssertion(() => _invoices.Invoices[avoir.Id].Status.Should().Be(InvoiceStatusDto.Validated));
+    }
+
+    [Fact]
+    public void L_auteur_de_l_avoir_ne_peut_pas_l_approuver()
+    {
+        _invoices.CreditNotesNeedApproval = true;
+        _invoices.ApprovalError = ErrorCodes.SegregationOfDuties.ApproverIsCreator;
+        InvoiceResponse avoir = _invoices.Add(InvoiceKindDto.CreditNote, InvoiceStatusDto.Draft, null, Conseil);
+        IRenderedComponent<InvoiceEditor> page = Ouvrir(avoir.Id);
+        page.Find("#validate").Click();
+        page.WaitForAssertion(() => page.Find("#approve-credit"));
+
+        page.Find("#approve-credit").Click();
+
+        page.WaitForAssertion(() => page.Markup.Should().Contain("La séparation des tâches est active : l'auteur de l'avoir ne peut pas l'approuver lui-même."));
+        _invoices.Invoices[avoir.Id].CreditApprovedBy.Should().BeNull();
+        page.Find("#approve-credit").Should().NotBeNull("un manager peut encore l'approuver");
     }
 }
 

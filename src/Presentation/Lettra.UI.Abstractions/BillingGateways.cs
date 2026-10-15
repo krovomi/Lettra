@@ -70,6 +70,12 @@ public interface IInvoicesGateway
 
     /// <summary>Crée un avoir brouillon sur une facture validée.</summary>
     Task<OperationResult<InvoiceResponse>> CreateCreditNoteAsync(Guid id, CreateCreditNoteRequest request, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Approbation d'un avoir brouillon par un manager (permission <c>Avoir.Approuver</c>), exigée par la séparation des
+    /// tâches du cabinet au-delà de son seuil ; l'auteur de l'avoir ne peut pas l'approuver.
+    /// </summary>
+    Task<OperationResult<InvoiceResponse>> ApproveCreditAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken);
 }
 
 /// <summary>Listes fermées de la facturation et fiche de l'entreprise émettrice.</summary>

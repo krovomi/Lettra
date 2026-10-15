@@ -275,6 +275,11 @@ internal sealed class FakeInvoicesGateway : IInvoicesGateway
 
     public Task<OperationResult<InvoiceResponse>> ValidateAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken)
     {
+        if (CreditNotesNeedApproval && Invoices[id] is { Kind: InvoiceKindDto.CreditNote, CreditApprovedBy: null })
+        {
+            return Task.FromResult(OperationResult<InvoiceResponse>.Failure([new ErrorDetail(ErrorCodes.SegregationOfDuties.ManagerApprovalRequired)]));
+        }
+
         Invoices[id] = Invoices[id] with { Status = InvoiceStatusDto.Validated, Number = "FAC-2026-0042", Version = Invoices[id].Version + 1 };
         return Task.FromResult(OperationResult<InvoiceResponse>.Success(Invoices[id]));
     }
@@ -294,6 +299,26 @@ internal sealed class FakeInvoicesGateway : IInvoicesGateway
         };
         Invoices[credit.Id] = credit;
         return Task.FromResult(OperationResult<InvoiceResponse>.Success(credit));
+    }
+
+    /// <summary>Séparation des tâches simulée : un avoir non approuvé est refusé à la validation.</summary>
+    public bool CreditNotesNeedApproval { get; set; }
+
+    /// <summary>Erreur renvoyée par l'approbation (approbateur auteur, permission manquante…), sinon approuvée.</summary>
+    public string? ApprovalError { get; set; }
+
+    public Task<OperationResult<InvoiceResponse>> ApproveCreditAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken)
+    {
+        if (ApprovalError is { } code)
+        {
+            return Task.FromResult(OperationResult<InvoiceResponse>.Failure([new ErrorDetail(code)]));
+        }
+
+        Invoices[id] = Invoices[id] with
+        {
+            CreditApprovedBy = Guid.CreateVersion7(), CreditApprovedAt = new DateTimeOffset(2026, 10, 15, 9, 30, 0, TimeSpan.Zero), Version = Invoices[id].Version + 1,
+        };
+        return Task.FromResult(OperationResult<InvoiceResponse>.Success(Invoices[id]));
     }
 }
 
