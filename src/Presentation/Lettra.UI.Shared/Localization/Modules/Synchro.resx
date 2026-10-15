@@ -10,4 +10,5 @@
   <data name="Error.Sync.EntityNotFound" xml:space="preserve"><value>L'élément modifié sur ce poste n'existe pas sur le serveur.</value></data>
   <data name="Error.Sync.DeviceSeriesUnknown" xml:space="preserve"><value>Cette série de numérotation n'appartient pas à ce poste : la pièce n'est pas reçue.</value></data>
   <data name="Error.Sync.NumberOutOfOrder" xml:space="preserve"><value>Une pièce précédente de ce poste manque ou a été refusée : celle-ci attend.</value></data>
+  <data name="Error.Sync.ConflictAwaitingRefresh" xml:space="preserve"><value>La version du cabinet n'est pas encore arrivée sur ce poste : synchronisez d'abord.</value></data>
 </root>

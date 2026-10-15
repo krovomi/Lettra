@@ -96,6 +96,7 @@ internal sealed class SyncConflictRow
     public long DetectedAtMs { get; private set; }
 
     public SyncConflictRecord ToRecord() => new(
+        Id,
         IdempotencyKey,
         Entity,
         EntityId,
