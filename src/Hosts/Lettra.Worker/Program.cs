@@ -1,6 +1,8 @@
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Bootstrap;
+using Lettra.Exports.Infrastructure;
+using Lettra.Infrastructure.Catalog;
 using Lettra.Worker;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -8,7 +10,7 @@ using Microsoft.Extensions.Hosting;
 
 // Jobs de fond des modes 2, 3 et 5 : migration du catalogue, reprise des créations de dossiers interrompues, migration
 // de toutes les bases de dossiers par vagues (canari d'abord, avec bail et reprise), passe d'escalade de la Supervision,
-// et passe de nuit de la chaîne anti-fraude (clôtures et contrôle d'intégrité de chaque dossier).
+// passe de nuit de la chaîne anti-fraude (clôtures et contrôle d'intégrité de chaque dossier) et export FEC en masse.
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddLettra(builder.Configuration);
@@ -24,6 +26,7 @@ builder.Services.AddOptions<EscalationJobOptions>().Bind(builder.Configuration.G
 builder.Services.AddHostedService<EscalationJob>();
 builder.Services.AddOptions<IntegrityCheckJobOptions>().Bind(builder.Configuration.GetSection(IntegrityCheckJobOptions.SectionName));
 builder.Services.AddHostedService<IntegrityCheckJob>();
+builder.Services.AddFecBulkExport(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
 
 using IHost host = builder.Build();
 await host.RunAsync().ConfigureAwait(false);

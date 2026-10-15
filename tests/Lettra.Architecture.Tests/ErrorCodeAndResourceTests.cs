@@ -27,7 +27,7 @@ public sealed class ErrorCodeAndResourceTests
 
     /// <summary>Codes émis par le domaine et l'application : les constantes <c>*Code</c> des classes <c>*Errors</c>.</summary>
     private static IEnumerable<string> EmittedCodes() =>
-        new[] { Assemblies.Domain, Assemblies.Application }
+        new[] { Assemblies.Domain, Assemblies.Application, Assemblies.ExportsApplication }
             .SelectMany(a => a.GetTypes())
             .Where(t => t.Name.EndsWith("Errors", StringComparison.Ordinal))
             .SelectMany(t => t.GetFields(BindingFlags.Public | BindingFlags.Static)

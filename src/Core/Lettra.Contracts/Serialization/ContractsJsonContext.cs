@@ -15,6 +15,7 @@ using Lettra.Contracts.Dossiers;
 using Lettra.Contracts.Pricing;
 using Lettra.Contracts.Rights;
 using Lettra.Contracts.Suppliers;
+using Lettra.Contracts.Exports;
 
 namespace Lettra.Contracts.Serialization;
 
@@ -72,6 +73,7 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(AssistantEvent))]
 [JsonSerializable(typeof(IReadOnlyList<AssistantJournalEntry>))]
 [JsonSerializable(typeof(IntegrityReportResponse))]
+[JsonSerializable(typeof(FecValidationResponse))]
 [JsonSerializable(typeof(IReadOnlyList<ClosingSummary>))]
 [JsonSerializable(typeof(IReadOnlyList<IntegrityKeySummary>))]
 [JsonSerializable(typeof(AlertCentreResponse))]

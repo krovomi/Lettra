@@ -27,6 +27,9 @@ public sealed class LayerDependencyTests
         { "Lettra.Supervision.Domain", ["Lettra.Calculations", "Lettra.Domain"] },
         { "Lettra.Supervision.Application", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain", "Lettra.Supervision.Domain"] },
         { "Lettra.Supervision.Infrastructure", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain", "Lettra.Infrastructure.Persistence", "Lettra.Supervision.Application", "Lettra.Supervision.Domain"] },
+        // Module Exports (phase 5) : FEC et formats de facture lus depuis les pièces et les écritures, sans les modifier.
+        { "Lettra.Exports.Application", ["Lettra.Application", "Lettra.Calculations", "Lettra.Contracts", "Lettra.Domain"] },
+        { "Lettra.Exports.Infrastructure", ["Lettra.Application", "Lettra.Calculations", "Lettra.Contracts", "Lettra.Domain", "Lettra.Exports.Application", "Lettra.Infrastructure.Persistence"] },
         { "Lettra.UI.Abstractions", ["Lettra.Contracts"] },
         { "Lettra.UI.Shared", ["Lettra.Calculations", "Lettra.Contracts", "Lettra.Printing", "Lettra.UI.Abstractions"] },
         // Rendu PDF (phase 3) : ne voit que les calculs partagés, ni les contrats ni le domaine.
@@ -78,7 +81,7 @@ public sealed class LayerDependencyTests
         foreach (Assembly assembly in new[] { Assemblies.Domain, Assemblies.Application, Assemblies.Contracts })
         {
             Assemblies.LettraReferencesOf(assembly)
-                .Should().NotContain(name => name.StartsWith("Lettra.Supervision.", StringComparison.Ordinal),
+                .Should().NotContain(name => name.StartsWith("Lettra.Supervision.", StringComparison.Ordinal) || name.StartsWith("Lettra.Exports.", StringComparison.Ordinal),
                     because: $"{assembly.GetName().Name} est partagé par tous les modules (ADR-0001)");
         }
     }

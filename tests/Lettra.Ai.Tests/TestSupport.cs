@@ -4,6 +4,7 @@ using System.Text.Json;
 using Lettra.Ai.Orchestration;
 using Lettra.Ai.Skills;
 using Lettra.Ai.Tools;
+using Lettra.Ai.Tools.Company;
 using Lettra.Application.Abstractions.Ai;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Contracts.Assistant;
@@ -112,6 +113,7 @@ internal sealed class AssistantHarness : IAsyncDisposable
         services.AddSingleton<IAiSkillCatalog>(SkillCatalog.LoadEmbedded());
         services.AddAiTools();
         services.RemoveAll<IAiDossierContext>().AddScoped<IAiDossierContext, FakeDossierContext>();
+        services.RemoveAll<ICompanyFactsSource>();
         services.AddSingleton<IAiAuditLog, InMemoryAiAuditLog>();
         services.AddSingleton<IAiSettingsStore>(Settings);
         services.AddAiOrchestration(configuration);
