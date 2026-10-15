@@ -107,6 +107,11 @@ public sealed class Invoice : BillingDocument<InvoiceId>
 
     public DateTimeOffset? IssuedAt { get; private set; }
 
+    /// <summary>Manager qui a approuvé cet avoir (séparation des tâches, au-delà du seuil du cabinet).</summary>
+    public Guid? CreditApprovedBy { get; private set; }
+
+    public DateTimeOffset? CreditApprovedAt { get; private set; }
+
     public override bool IsDraft => Status == InvoiceStatus.Draft;
 
     public bool IsDerived => Kind != InvoiceKind.Invoice;
@@ -362,6 +367,28 @@ public sealed class Invoice : BillingDocument<InvoiceId>
         IssuedAt = now;
         Touch(userId, now);
         Raise(new InvoiceIssued(Id, Number!, userId, now));
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Approbation d'un avoir brouillon par un manager. Elle ne touche pas aux auteurs de la saisie
+    /// (<see cref="BillingDocument{TId}.LastModifiedBy"/>) : l'approbateur peut ensuite le valider. Un avoir ne se
+    /// modifie pas, l'approbation reste donc attachée au montant approuvé.
+    /// </summary>
+    public Result ApproveCredit(Guid userId, DateTimeOffset now)
+    {
+        if (Kind != InvoiceKind.CreditNote)
+        {
+            throw new InvalidOperationException("Seul un avoir s'approuve.");
+        }
+
+        if (!IsDraft)
+        {
+            return BillingErrors.NotDraft;
+        }
+
+        CreditApprovedBy ??= userId;
+        CreditApprovedAt ??= now;
         return Result.Success();
     }
 

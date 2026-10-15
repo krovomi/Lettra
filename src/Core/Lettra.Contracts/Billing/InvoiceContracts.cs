@@ -70,7 +70,8 @@ public sealed record SaveInvoiceRequest
 /// <summary>
 /// Facture, acompte ou avoir tel qu'affiché. <paramref name="Version"/> sert à la concurrence optimiste ;
 /// <paramref name="ContentHash"/> est l'empreinte SHA-256 de la forme canonique (<see cref="CanonicalDocument"/>),
-/// figée à la validation et inscrite au journal inaltérable.
+/// figée à la validation et inscrite au journal inaltérable. <paramref name="CreditApprovedBy"/> : manager qui a
+/// approuvé l'avoir quand la séparation des tâches du cabinet l'exige.
 /// </summary>
 public sealed record InvoiceResponse(
     Guid Id,
@@ -108,7 +109,9 @@ public sealed record InvoiceResponse(
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
     DateTimeOffset? ValidatedAt,
-    DateTimeOffset? IssuedAt);
+    DateTimeOffset? IssuedAt,
+    Guid? CreditApprovedBy = null,
+    DateTimeOffset? CreditApprovedAt = null);
 
 /// <summary>Ligne de la liste des factures et avoirs.</summary>
 public sealed record InvoiceSummary(

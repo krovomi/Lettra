@@ -131,14 +131,14 @@ public sealed class SqliteTests : IDisposable
     public async Task Rotation_des_cles_et_historique_verifiable()
     {
         ManualClock clock = new(DateTimeOffset.UtcNow);
-        await using TenantHarness harness = new(new SqliteConfigurator(), clock);
+        await using TenantHarness harness = new(new SqliteConfigurator(), clock, syntheticDocuments: true);
         await IntegrityScenarios.KeyRotationAsync(harness, clock, DatabaseProvider.Sqlite, Database("rotation"));
     }
 
     [Fact]
     public async Task Chaine_d_avant_le_versionnage_adoptee()
     {
-        await using TenantHarness harness = new(new SqliteConfigurator());
+        await using TenantHarness harness = new(new SqliteConfigurator(), syntheticDocuments: true);
         await IntegrityScenarios.LegacyChainAdoptedAsync(harness, DatabaseProvider.Sqlite, Database("ancienne"));
     }
 
@@ -252,7 +252,7 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     {
         Skip.IfNot(Docker.Available, "Docker absent");
         ManualClock clock = new(DateTimeOffset.UtcNow);
-        await using TenantHarness harness = new(new PostgreSqlConfigurator(), clock);
+        await using TenantHarness harness = new(new PostgreSqlConfigurator(), clock, syntheticDocuments: true);
         await IntegrityScenarios.KeyRotationAsync(harness, clock, DatabaseProvider.PostgreSql, Database("rotation"));
     }
 
@@ -459,7 +459,7 @@ public sealed class SqlServerTests : IAsyncLifetime
     {
         Skip.IfNot(Docker.Available, "Docker absent");
         ManualClock clock = new(DateTimeOffset.UtcNow);
-        await using TenantHarness harness = new(new SqlServerConfigurator(), clock);
+        await using TenantHarness harness = new(new SqlServerConfigurator(), clock, syntheticDocuments: true);
         await IntegrityScenarios.KeyRotationAsync(harness, clock, DatabaseProvider.SqlServer, Database("rotation"));
     }
 

@@ -24,6 +24,11 @@ namespace Lettra.Application.Features.Billing;
 /// <item>effets sur les pièces liées : solde créditable de la facture d'origine, acomptes du devis.</item>
 /// </list>
 /// L'évènement <see cref="InvoiceValidated"/> part avec les changements (outbox du socle à venir).
+/// <para>
+/// Séparation des tâches du cabinet, contrôlée avant de réserver le numéro : ni l'auteur ni le dernier modificateur
+/// du brouillon ne le valident, et un avoir au-delà du seuil exige l'approbation d'un manager, préalable ou donnée
+/// par le manager qui le valide.
+/// </para>
 /// </summary>
 internal sealed class ValidateInvoiceHandler(
     IInvoiceRepository invoices,
@@ -33,6 +38,7 @@ internal sealed class ValidateInvoiceHandler(
     IDocumentNumbering numbering,
     IIntegrityJournal journal,
     ISalesJournal salesJournal,
+    ISegregationOfDuties duties,
     ICurrentUser user,
     TimeProvider clock) : ICommandHandler<ValidateInvoiceCommand, Result>
 {
@@ -47,6 +53,12 @@ internal sealed class ValidateInvoiceHandler(
             return Result.Failure(precheck.Errors);
         }
 
+        Result<bool> approvesCredit = await CheckDutiesAsync(precheck.Value.Invoice, cancellationToken).ConfigureAwait(false);
+        if (approvesCredit.IsFailure)
+        {
+            return Result.Failure(approvesCredit.Errors);
+        }
+
         DateOnly today = BillingCalendar.Today(clock);
         ComplianceReport draftReport = ComplianceChecker.Check(precheck.Value.Invoice.ToComplianceDocument(precheck.Value.Profile.ToSellerTerms()), today);
         if (draftReport.BlocksValidation)
@@ -56,12 +68,12 @@ internal sealed class ValidateInvoiceHandler(
 
         Result<bool> done = await numbering.ExecuteWithNextNumberAsync(
             precheck.Value.Invoice.SeriesCode,
-            (number, ct) => ValidateWithNumberAsync(command, number, ct),
+            (number, ct) => ValidateWithNumberAsync(command, number, approvesCredit.Value, ct),
             cancellationToken).ConfigureAwait(false);
         return done.IsFailure ? Result.Failure(done.Errors) : Result.Success();
     }
 
-    private async Task<Result<bool>> ValidateWithNumberAsync(ValidateInvoiceCommand command, string number, CancellationToken cancellationToken)
+    private async Task<Result<bool>> ValidateWithNumberAsync(ValidateInvoiceCommand command, string number, bool approvesCredit, CancellationToken cancellationToken)
     {
         // Rejouable : tout est relu, le suivi des entités ayant été vidé par la numérotation.
         Result<(Invoice Invoice, CompanyProfile Profile)> loaded = await LoadAsync(command, cancellationToken).ConfigureAwait(false);
@@ -74,6 +86,11 @@ internal sealed class ValidateInvoiceHandler(
         DateTimeOffset now = clock.GetUtcNow();
         DateOnly today = BillingCalendar.Today(clock);
         PartySnapshot customer = await BillingLoads.RefreshedCustomerAsync(customers, invoice, cancellationToken).ConfigureAwait(false);
+        if (approvesCredit)
+        {
+            invoice.ApproveCredit(user.UserId, now);
+        }
+
         Result result = invoice.Validate(number, today, customer, profile.ToSellerTerms(), user.UserId, now);
         if (result.IsFailure)
         {
@@ -142,6 +159,31 @@ internal sealed class ValidateInvoiceHandler(
         }
 
         return Result.Success();
+    }
+
+    /// <summary>
+    /// Contrôles de séparation des tâches. Vrai quand l'utilisateur, manager, approuve l'avoir en le validant.
+    /// La version vérifiée à chaque relecture garantit que les auteurs contrôlés ici sont ceux de la pièce validée.
+    /// </summary>
+    private async Task<Result<bool>> CheckDutiesAsync(Invoice invoice, CancellationToken cancellationToken)
+    {
+        Result issuer = await duties.EnsureCanIssueAsync([invoice.CreatedBy, invoice.LastModifiedBy], cancellationToken).ConfigureAwait(false);
+        if (issuer.IsFailure)
+        {
+            return Result<bool>.Failure(issuer.Errors);
+        }
+
+        if (invoice.Kind != InvoiceKind.CreditNote || invoice.CreditApprovedBy is not null)
+        {
+            return false;
+        }
+
+        return await duties.EvaluateCreditNoteAsync(invoice.TotalInclTax, cancellationToken).ConfigureAwait(false) switch
+        {
+            CreditNoteApproval.ManagerApprovalRequired => SegregationOfDutiesErrors.ManagerApprovalRequired,
+            CreditNoteApproval.GrantedByCurrentUser => true,
+            _ => false,
+        };
     }
 
     private async Task<Result<(Invoice Invoice, CompanyProfile Profile)>> LoadAsync(ValidateInvoiceCommand command, CancellationToken cancellationToken)

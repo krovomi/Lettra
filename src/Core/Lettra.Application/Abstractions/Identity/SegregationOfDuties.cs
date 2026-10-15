@@ -67,6 +67,7 @@ public static class SegregationOfDutiesErrors
     public const string ApproverIsCreatorCode = ErrorCodes.SegregationOfDuties.ApproverIsCreator;
     public const string ThresholdInvalidCode = ErrorCodes.SegregationOfDuties.ThresholdInvalid;
     public const string NotAvailableCode = ErrorCodes.SegregationOfDuties.NotAvailable;
+    public const string NotACreditNoteCode = ErrorCodes.SegregationOfDuties.NotACreditNote;
 
     public static Error EnteredByIssuer => new(EnteredByIssuerCode, ErrorKind.Forbidden);
 
@@ -78,4 +79,6 @@ public static class SegregationOfDutiesErrors
     public static Error ThresholdInvalid => Error.Validation(ThresholdInvalidCode, "CreditNoteApprovalThresholdInclTax");
 
     public static Error NotAvailable => Error.Validation(NotAvailableCode);
+
+    public static Error NotACreditNote => Error.Conflict(NotACreditNoteCode);
 }
