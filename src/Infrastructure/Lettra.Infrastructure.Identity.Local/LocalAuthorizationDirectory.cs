@@ -13,7 +13,7 @@ namespace Lettra.Infrastructure.Identity.Local;
 internal sealed class LocalAuthorizationDirectory(
     LocalAccountStore store,
     ITenantCatalog catalog,
-    IOptions<LocalIdentityOptions> options) : IAuthorizationDirectory
+    IOptions<LocalIdentityOptions> options) : IAuthorizationDirectory, IScopeMemberDirectory
 {
     private OrganisationId Cabinet => new(options.Value.CabinetId);
 
@@ -53,5 +53,13 @@ internal sealed class LocalAuthorizationDirectory(
             default:
                 return null;
         }
+    }
+
+    /// <summary>Le propriétaire du poste est la seule personne concernée par une portée de son cabinet local.</summary>
+    public async ValueTask<IReadOnlyCollection<Guid>> ListCandidatesAsync(ScopePath path, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(path);
+        LocalAccountFile? account = await store.ReadAsync(cancellationToken).ConfigureAwait(false);
+        return account is not null && path.Cabinet == Cabinet ? [account.UserId] : [];
     }
 }

@@ -55,12 +55,15 @@ api.MapSuppliers();
 api.MapCatalog();
 api.MapDirectory();
 api.MapAssistant();
+api.MapIntegrity();
+api.MapDossierAlerts();
 
 // Administration du cabinet : même authentification et anti-CSRF, sans dossier ; la permission porte sur le cabinet.
-app.MapGroup($"/api/v1/cabinets/{{{CabinetPermissionEndpointFilter.RouteKey}:guid}}")
+RouteGroupBuilder cabinet = app.MapGroup($"/api/v1/cabinets/{{{CabinetPermissionEndpointFilter.RouteKey}:guid}}")
     .RequireAuthorization(LettraPolicies.User)
-    .AddEndpointFilter<CsrfEndpointFilter>()
-    .MapDossiers();
+    .AddEndpointFilter<CsrfEndpointFilter>();
+cabinet.MapDossiers();
+cabinet.MapCabinetAlerts();
 
 app.MapLettraBff();
 app.MapHealthChecks("/health");

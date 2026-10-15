@@ -1,5 +1,6 @@
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Infrastructure.Persistence.Catalog;
+using Lettra.Infrastructure.Persistence.Supervision;
 using Lettra.Infrastructure.Persistence.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
@@ -36,6 +37,15 @@ public sealed class PostgreSqlConfigurator : IDbProviderConfigurator
             }
         });
     }
+
+    /// <summary>Base de supervision : son schéma et son propre historique de migrations, souvent dans la base Catalog.</summary>
+    public static void ConfigureSupervision(DbContextOptionsBuilder builder, string connectionString) =>
+        builder.UseNpgsql(connectionString, o =>
+        {
+            o.MigrationsAssembly(MigrationsAssembly);
+            o.MigrationsHistoryTable(SupervisionDbContext.MigrationsHistoryTable, SupervisionDbContext.SchemaName);
+            o.EnableRetryOnFailure(maxRetryCount: 3);
+        });
 
     public static void ConfigureCatalog(DbContextOptionsBuilder builder, string connectionString) =>
         builder.UseNpgsql(connectionString, o =>
@@ -133,5 +143,16 @@ internal sealed class CatalogDesignTimeFactory : IDesignTimeDbContextFactory<Cat
         DbContextOptionsBuilder<CatalogDbContext> builder = new();
         PostgreSqlConfigurator.ConfigureCatalog(builder, "Host=localhost;Database=lettra_catalog_design");
         return new CatalogDbContext(builder.Options);
+    }
+}
+
+/// <summary>Utilisé uniquement par <c>dotnet ef migrations add --context SupervisionDbContext</c>.</summary>
+internal sealed class SupervisionDesignTimeFactory : IDesignTimeDbContextFactory<SupervisionDbContext>
+{
+    public SupervisionDbContext CreateDbContext(string[] args)
+    {
+        DbContextOptionsBuilder<SupervisionDbContext> builder = new();
+        PostgreSqlConfigurator.ConfigureSupervision(builder, "Host=localhost;Database=lettra_catalog_design");
+        return new SupervisionDbContext(builder.Options);
     }
 }

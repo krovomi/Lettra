@@ -1,4 +1,6 @@
+using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Messaging;
+using Lettra.Contracts.Alerts;
 using Lettra.Domain.Common;
 using Lettra.Supervision.Domain;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +23,11 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<AcknowledgeAlertCommand, Result>, AlertCommandHandlers>();
         services.AddScoped<ICommandHandler<ChangeAlertSeverityCommand, Result>, AlertCommandHandlers>();
         services.AddScoped<ICommandHandler<ResolveAlertCommand, Result>, AlertCommandHandlers>();
+        services.AddScoped<IQueryHandler<ListAlertsQuery, Result<AlertCentreResponse>>, AlertQueryHandlers>();
+        services.AddScoped<IQueryHandler<GetAlertQuery, Result<AlertDetailResponse>>, AlertQueryHandlers>();
+
+        // Les alertes de dossier de la chaîne anti-fraude entrent par l'ingestion, comme les autres signaux.
+        services.AddScoped<IDossierAlertPublisher, DossierAlertPublisher>();
         return services;
     }
 }

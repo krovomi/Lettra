@@ -41,4 +41,19 @@ internal sealed class CatalogTenantCatalog(IDbContextFactory<CatalogDbContext> f
                 .ConfigureAwait(false);
         }
     }
+
+    /// <summary>Tous les dossiers actifs de la cellule, pour les passes système du Worker (contrôle d'intégrité).</summary>
+    public async Task<IReadOnlyList<TenantDescriptor>> ListActiveAsync(CancellationToken cancellationToken)
+    {
+        CatalogDbContext db = await factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        await using (db.ConfigureAwait(false))
+        {
+            List<CatalogDossier> dossiers = await db.Dossiers.AsNoTracking()
+                .Where(d => d.State == DossierState.Active)
+                .OrderBy(d => d.Id)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+            return [.. dossiers.Select(d => d.ToDescriptor())];
+        }
+    }
 }

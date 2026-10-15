@@ -199,6 +199,54 @@ public sealed class Alert : AggregateRoot<AlertId>
         return Result.Success();
     }
 
+    /// <summary>État complet d'une alerte, pour la base de supervision. Aucune donnée de dossier n'y figure.</summary>
+    public sealed record Snapshot(
+        Guid Id,
+        string RuleId,
+        string Title,
+        Severity Severity,
+        Severity InitialSeverity,
+        AlertCategory Category,
+        ScopeLevel ScopeLevel,
+        string? Cell,
+        Guid? Cabinet,
+        Guid? Group,
+        Guid? Dossier,
+        Guid? Device,
+        AlertState State,
+        DateTimeOffset FirstSeen,
+        DateTimeOffset LastSeen,
+        DateTimeOffset OpenedAt,
+        DateTimeOffset? ResolvedAt,
+        int Occurrences,
+        int EscalationLevel,
+        Actor? AcknowledgedBy,
+        IReadOnlyList<AlertTimelineEntry> Timeline);
+
+    public Snapshot ToSnapshot() => new(
+        Id.Value, RuleId, Title, Severity, InitialSeverity, Category, Scope.Level, Scope.Cell, Scope.Cabinet, Scope.Group, Scope.Dossier,
+        Scope.Device, State, FirstSeen, LastSeen, OpenedAt, ResolvedAt, Occurrences, EscalationLevel, AcknowledgedBy, [.. _timeline]);
+
+    /// <summary>Reconstitue une alerte relue de la base, sans rien rejouer ni lever d'événement.</summary>
+    public static Alert Restore(Snapshot snapshot)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+        AlertScope scope = AlertScope.Restore(snapshot.ScopeLevel, snapshot.Cell, snapshot.Cabinet, snapshot.Group, snapshot.Dossier, snapshot.Device);
+        Alert alert = new(new AlertId(snapshot.Id), snapshot.RuleId, snapshot.Title, snapshot.InitialSeverity, snapshot.Category, scope, snapshot.FirstSeen)
+        {
+            Severity = snapshot.Severity,
+            State = snapshot.State,
+            LastSeen = snapshot.LastSeen,
+            OpenedAt = snapshot.OpenedAt,
+            ResolvedAt = snapshot.ResolvedAt,
+            Occurrences = snapshot.Occurrences,
+            EscalationLevel = snapshot.EscalationLevel,
+            AcknowledgedBy = snapshot.AcknowledgedBy,
+        };
+        alert._timeline.AddRange(snapshot.Timeline);
+        return alert;
+    }
+
     /// <summary>Clôture une alerte résolue restée calme sept jours. Renvoie vrai si l'alerte a été clôturée.</summary>
     public bool CloseIfQuiet(DateTimeOffset now)
     {
