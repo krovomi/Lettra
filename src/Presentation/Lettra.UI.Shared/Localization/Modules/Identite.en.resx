@@ -44,4 +44,10 @@
   <data name="Error.LocalAccount.PassphraseTooShort" xml:space="preserve"><value>The passphrase must be at least 12 characters long.</value></data>
   <data name="Error.LocalAccount.PassphraseMismatch" xml:space="preserve"><value>The two passphrases do not match.</value></data>
   <data name="Error.LocalAccount.NotSupported" xml:space="preserve"><value>This action is only available on a standalone computer.</value></data>
+  <data name="Error.RightsSnapshot.DeviceRequired" xml:space="preserve"><value>This device has no identifier: restart the application.</value></data>
+  <data name="Error.RightsSnapshot.TooManyDossiers" xml:space="preserve"><value>Too many client files on this device for a single rights snapshot.</value></data>
+  <data name="Error.RightsSnapshot.Unavailable" xml:space="preserve"><value>Offline work is not available on this server (no signing key).</value></data>
+  <data name="Error.RightsSnapshot.Invalid" xml:space="preserve"><value>This device's offline rights are invalid: reconnect to the network.</value></data>
+  <data name="Error.RightsSnapshot.Expired" xml:space="preserve"><value>This device's offline rights have expired: reconnect to the network to renew them.</value></data>
+  <data name="Error.RightsSnapshot.OtherDevice" xml:space="preserve"><value>These offline rights belong to another device.</value></data>
 </root>

@@ -75,6 +75,9 @@ app.MapGroup("/api/v1/dossiers")
     .AddEndpointFilter<CsrfEndpointFilter>()
     .MapAccessibleDossiers();
 
+// Instantané de droits signé pour le hors ligne (annexe F §4) et ses clés publiques.
+app.MapRightsSnapshot();
+
 app.MapLettraBff();
 app.MapHealthChecks("/health");
 

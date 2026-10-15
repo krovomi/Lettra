@@ -44,4 +44,10 @@
   <data name="Error.LocalAccount.PassphraseTooShort" xml:space="preserve"><value>La phrase secrète doit compter au moins 12 caractères.</value></data>
   <data name="Error.LocalAccount.PassphraseMismatch" xml:space="preserve"><value>Les deux phrases secrètes ne sont pas identiques.</value></data>
   <data name="Error.LocalAccount.NotSupported" xml:space="preserve"><value>Cette action n'existe que sur un poste isolé.</value></data>
+  <data name="Error.RightsSnapshot.DeviceRequired" xml:space="preserve"><value>Ce poste n'a pas d'identifiant : relancez l'application.</value></data>
+  <data name="Error.RightsSnapshot.TooManyDossiers" xml:space="preserve"><value>Trop de dossiers sur ce poste pour un seul instantané de droits.</value></data>
+  <data name="Error.RightsSnapshot.Unavailable" xml:space="preserve"><value>Le travail hors ligne n'est pas disponible sur ce serveur (clé de signature absente).</value></data>
+  <data name="Error.RightsSnapshot.Invalid" xml:space="preserve"><value>Les droits hors ligne de ce poste sont invalides : reconnectez-vous au réseau.</value></data>
+  <data name="Error.RightsSnapshot.Expired" xml:space="preserve"><value>Les droits hors ligne de ce poste ont expiré : reconnectez-vous au réseau pour les renouveler.</value></data>
+  <data name="Error.RightsSnapshot.OtherDevice" xml:space="preserve"><value>Ces droits hors ligne appartiennent à un autre poste.</value></data>
 </root>
