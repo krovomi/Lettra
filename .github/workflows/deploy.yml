@@ -1,7 +1,8 @@
 name: Déploiement (validation)
 
 # Valide tout ce que deploy/ décrit, sans identifiant cloud : règles d'alerte et pannes injectées (promtool),
-# routage (amtool), collecteur, charts Helm de chaque taille contre les schémas Kubernetes et CRD, OpenTofu.
+# routage (amtool), collecteur, charts Helm de chaque taille contre les schémas Kubernetes et CRD, OpenTofu ;
+# puis Keycloak dans une cellule kind jetable.
 on:
   pull_request:
   push:
@@ -74,6 +75,33 @@ jobs:
             deploy/local/.run/*.log
             deploy/local/.run/astreinte/*.jsonl
           include-hidden-files: true
+
+  # Keycloak dans la cellule : cluster kind jetable, opérateur CloudNativePG, chart lettra-cell (Keycloak, sa base,
+  # l'API construite ici). Découverte du realm, /health et connexion BFF de l'API, boucle locale du client MAUI, MFA.
+  keycloak-kind:
+    name: Keycloak dans la cellule (kind)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SORTIE: ${{ github.workspace }}/deploy/tests/kind/.run
+    steps:
+      - uses: actions/checkout@v5
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.19.0
+      - uses: helm/kind-action@v1
+        with:
+          install_only: true
+      - name: Essai de la cellule
+        run: deploy/tests/kind/essai-keycloak.sh
+      - name: Journaux de l'essai
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: keycloak-kind
+          path: deploy/tests/kind/.run/
+          include-hidden-files: true
+          if-no-files-found: warn
 
   # La démonstration de deploy/demo, de bout en bout dans Chromium : Keycloak + API + PWA, connexion avec
   # enrôlement TOTP, écran et création de client, manifeste et service worker ; puis le profil HTTPS du réseau local.

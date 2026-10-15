@@ -57,10 +57,37 @@ resource "kubernetes_secret_v1" "api" {
     name      = "lettra-api"
     namespace = kubernetes_namespace_v1.cell["lettra"].metadata[0].name
   }
-  data = merge(
-    { "Lettra__Supervision__WebhookToken" = var.alerting.supervision_token },
-    var.bff_client_secret == null ? {} : { "Lettra__Identity__Oidc__BffClientSecret" = var.bff_client_secret },
-  )
+  data = {
+    "Lettra__Supervision__WebhookToken"       = var.alerting.supervision_token
+    "Lettra__Identity__Oidc__BffClientSecret" = local.bff_client_secret
+  }
+}
+
+# Keycloak de la cellule (chart lettra-keycloak) : compte d'amorçage et secret du client lettra-bff, le même que celui
+# de l'API. Sa base (cluster CloudNativePG keycloak-db) reçoit ses identifiants de l'opérateur, pas d'OpenTofu.
+resource "random_password" "keycloak_admin" {
+  length  = 40
+  special = false
+}
+
+resource "random_password" "bff_client" {
+  length  = 64
+  special = false
+}
+
+locals {
+  bff_client_secret = coalesce(var.bff_client_secret, random_password.bff_client.result)
+}
+
+resource "kubernetes_secret_v1" "keycloak" {
+  metadata {
+    name      = "lettra-keycloak"
+    namespace = kubernetes_namespace_v1.cell["lettra"].metadata[0].name
+  }
+  data = {
+    "admin-password"    = random_password.keycloak_admin.result
+    "bff-client-secret" = local.bff_client_secret
+  }
 }
 
 # Redis de la cellule : cache distribué, sessions du BFF et trousseau Data Protection de l'API.

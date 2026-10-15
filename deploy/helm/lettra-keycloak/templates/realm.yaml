@@ -1,0 +1,15 @@
+{{- if .Values.realm.import }}
+{{- $realm := .Files.Get "files/realm-lettra.json" }}
+{{- if not $realm }}{{ fail "files/realm-lettra.json introuvable (lien vers deploy/keycloak/realm-lettra.json)" }}{{ end }}
+# Realm versionné (deploy/keycloak/realm-lettra.json), tel quel : les variables ${LETTRA_*} sont substituées par
+# Keycloak à l'import, depuis l'environnement du conteneur.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keycloak-realm
+  labels:
+    {{- include "lettra-keycloak.labels" . | nindent 4 }}
+data:
+  realm-lettra.json: |
+    {{- $realm | nindent 4 }}
+{{- end }}
