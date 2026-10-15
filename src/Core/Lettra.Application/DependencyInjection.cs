@@ -27,6 +27,10 @@ public static class DependencyInjection
         // Hors du mode 1, les cas d'usage de session locale répondent « non pris en charge ».
         services.TryAddSingleton<ILocalAccounts, NoLocalAccounts>();
 
+        // Sans base Catalog (poste isolé, registre en configuration), les droits ne s'administrent pas.
+        services.TryAddSingleton<IAuthorizationAdministration, NoAuthorizationAdministration>();
+        services.TryAddSingleton<IPermissionCacheInvalidator, NoPermissionCache>();
+
         // Ordre = de l'extérieur vers l'intérieur : on trace tout, puis on vérifie le dossier,
         // puis les droits, puis la saisie. Un refus de droits ne révèle donc rien de la validation.
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));

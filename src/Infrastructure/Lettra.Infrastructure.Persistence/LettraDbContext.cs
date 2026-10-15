@@ -2,6 +2,7 @@ using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Domain.Parties;
 using Lettra.Infrastructure.Persistence.Ai;
 using Lettra.Infrastructure.Persistence.Numbering;
+using Lettra.Infrastructure.Persistence.Search;
 using Lettra.Infrastructure.Persistence.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -31,6 +32,7 @@ public sealed class LettraDbContext(DbContextOptions<LettraDbContext> options, T
         // Le schéma fait partie du modèle : sans cette clé de cache, EF réutiliserait le modèle
         // (donc le schéma) du premier dossier ouvert pour tous les autres (constat du POC base par dossier).
         optionsBuilder.ReplaceService<IModelCacheKeyFactory, TenantSchemaModelCacheKeyFactory>();
+        optionsBuilder.AddInterceptors(SearchKeyInterceptor.Instance);
         if (Tenant.Schema is not null)
         {
             // Les migrations sont générées sans schéma ; le provider les applique dans le schéma du dossier

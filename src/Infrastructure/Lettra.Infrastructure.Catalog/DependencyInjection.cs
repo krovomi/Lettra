@@ -38,6 +38,8 @@ public static class DependencyInjection
         services.AddSingleton<IDossierProvisioner>(sp => sp.GetRequiredService<CatalogDossierProvisioner>());
         // Avant l'identité serveur, qui n'enregistre son registre lu en configuration qu'à défaut (TryAdd).
         services.AddSingleton<IAuthorizationDirectory, CatalogAuthorizationDirectory>();
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddSingleton<IAuthorizationAdministration, CatalogAuthorizationAdministration>();
         // Réglages IA par cabinet (remplace le magasin « indisponible » enregistré par l'application).
         services.Replace(ServiceDescriptor.Singleton<IAiSettingsStore, CatalogAiSettingsStore>());
         services.AddSingleton<CatalogInitializer>();

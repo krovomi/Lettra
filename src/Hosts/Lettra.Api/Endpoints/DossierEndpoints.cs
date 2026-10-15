@@ -26,6 +26,24 @@ internal static class DossierEndpoints
         return group;
     }
 
+    /// <summary>Les dossiers que l'utilisateur peut ouvrir, hors de tout dossier : chacun est filtré par ses droits.</summary>
+    public static RouteGroupBuilder MapAccessibleDossiers(this RouteGroupBuilder dossiers)
+    {
+        dossiers.MapGet("/", ListAccessibleAsync)
+            .FilterByPermission(Permission.DossierLire)
+            .WithTags("Dossiers")
+            .WithName("ListAccessibleDossiers")
+            .Produces<IReadOnlyList<DossierSummary>>();
+        return dossiers;
+    }
+
+    private static async Task<IResult> ListAccessibleAsync(IQueryDispatcher queries, CancellationToken cancellationToken)
+    {
+        Result<IReadOnlyList<DossierSummary>> listed = await queries
+            .QueryAsync(new ListAccessibleDossiersQuery(), cancellationToken).ConfigureAwait(false);
+        return listed.IsSuccess ? TypedResults.Ok(listed.Value) : listed.Errors.ToProblem();
+    }
+
     private static async Task<IResult> CreateAsync(
         Guid cabinetId,
         CreateDossierRequest request,
