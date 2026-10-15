@@ -74,7 +74,7 @@ else
 @code {
     private ISyncCenter? _sync;
     private List<IGrouping<Guid, SyncFieldDispute>> _groups = [];
-    private readonly Dictionary<Guid, bool> _choices = [];
+    private readonly Dictionary<long, bool> _choices = [];
     private IReadOnlyList<ErrorDetail> _errors = [];
     private string? _done;
     private bool _busy;
@@ -94,9 +94,9 @@ else
         _groups = [.. disputes.OrderBy(d => d.DetectedAt).GroupBy(d => d.IdempotencyKey)];
     }
 
-    private bool? Choice(Guid conflict) => _choices.TryGetValue(conflict, out bool keepMine) ? keepMine : null;
+    private bool? Choice(long conflict) => _choices.TryGetValue(conflict, out bool keepMine) ? keepMine : null;
 
-    private void Choose(Guid conflict, bool keepMine) => _choices[conflict] = keepMine;
+    private void Choose(long conflict, bool keepMine) => _choices[conflict] = keepMine;
 
     // Aucun choix par défaut : chaque champ disputé est tranché par l'utilisateur.
     private bool Complete(IGrouping<Guid, SyncFieldDispute> group) => group.All(d => _choices.ContainsKey(d.Id));

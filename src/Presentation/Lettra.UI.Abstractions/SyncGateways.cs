@@ -110,7 +110,7 @@ public sealed record SyncPendingItem(long Sequence, SyncItemKind Item, SyncChang
 /// d'avant, la saisie du poste et celle du cabinet, prêtes à afficher.
 /// </summary>
 public sealed record SyncFieldDispute(
-    Guid Id,
+    long Id,
     Guid IdempotencyKey,
     SyncItemKind Item,
     Guid EntityId,
@@ -156,7 +156,7 @@ public sealed record SyncSnapshot(
 }
 
 /// <summary>Choix pour un conflit (un champ) : la saisie du poste, ou la valeur du cabinet.</summary>
-public sealed record SyncFieldChoice(Guid ConflictId, bool KeepMine);
+public sealed record SyncFieldChoice(long ConflictId, bool KeepMine);
 
 /// <summary>
 /// Synchronisation du poste pour l'UI. Implémentée par l'adaptateur de <c>SyncCoordinator</c> ; absente du conteneur

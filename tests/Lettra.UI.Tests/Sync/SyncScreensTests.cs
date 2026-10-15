@@ -241,7 +241,7 @@ public sealed class SyncScreensTests : BunitContext
         AvecSynchro();
         Guid cle = Guid.CreateVersion7();
         Guid client = Guid.CreateVersion7();
-        Guid email = Guid.CreateVersion7(), ville = Guid.CreateVersion7();
+        const long email = 41, ville = 42;
         _sync.Conflicts.Add(new SyncFieldDispute(email, cle, SyncItemKind.Customer, client, "Dupont SARL", "Email", "a@dupont.fr", "b@dupont.fr", "c@dupont.fr", Midi));
         _sync.Conflicts.Add(new SyncFieldDispute(ville, cle, SyncItemKind.Customer, client, "Dupont SARL", "City", "Paris", "Lyon", null, Midi));
 
@@ -267,7 +267,7 @@ public sealed class SyncScreensTests : BunitContext
     {
         AvecSynchro();
         _sync.ResolveError = ErrorCodes.Sync.EntityNotFound;
-        _sync.Conflicts.Add(new SyncFieldDispute(Guid.CreateVersion7(), Guid.CreateVersion7(), SyncItemKind.CatalogItem, Guid.CreateVersion7(), "Conseil", "Designation", "Conseil", "Conseil fiscal", "Conseil juridique", Midi));
+        _sync.Conflicts.Add(new SyncFieldDispute(7, Guid.CreateVersion7(), SyncItemKind.CatalogItem, Guid.CreateVersion7(), "Conseil", "Designation", "Conseil", "Conseil fiscal", "Conseil juridique", Midi));
         IRenderedComponent<SyncConflicts> page = Render<SyncConflicts>();
 
         page.Find("input.take-server").Change(true);
