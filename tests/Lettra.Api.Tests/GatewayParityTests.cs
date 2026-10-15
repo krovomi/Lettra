@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net.Http.Headers;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Bootstrap;
@@ -182,15 +183,7 @@ public sealed class GatewayParityTests(LettraApiFactory factory) : IClassFixture
         IInvoicesGateway invoices = services.GetRequiredService<IInvoicesGateway>();
         IPlatformTransmissionGateway platform = services.GetRequiredService<IPlatformTransmissionGateway>();
         Guid customer = (await services.GetRequiredService<ICustomersGateway>().CreateAsync(CustomerApiTests.Martin(), default)).Value!.Id;
-        (await services.GetRequiredService<IBillingSettingsGateway>().SaveCompanyProfileAsync(
-            new SaveCompanyProfileRequest
-            {
-                Name = "Conseil Lettra", LegalForm = "SAS", ShareCapital = 10_000m, Siren = "552100554", Rcs = "RCS Paris 552 100 554",
-                VatNumber = "FR96552100554", AddressLine1 = "10 avenue de l'Opéra", PostalCode = "75001", City = "Paris",
-                LatePenaltyRate = 10m, EarlyPaymentDiscount = "Pas d'escompte pour paiement anticipé",
-            },
-            null,
-            default)).IsSuccess.Should().BeTrue();
+        await SaveCompanyProfileAsync(services);
         InvoiceResponse draft = (await invoices.CreateAsync(
             new SaveInvoiceRequest
             {
@@ -215,6 +208,36 @@ public sealed class GatewayParityTests(LettraApiFactory factory) : IClassFixture
         paid.Value.IsFinal.Should().BeFalse("360 € TTC, 100 € encaissés");
         (await platform.GetAsync(validated.Id, default)).Value!.History.Should().HaveCount(paid.Value.History.Count);
     }
+
+    [Theory]
+    [MemberData(nameof(Transports))]
+    public async Task Exporter_le_fec_puis_le_passer_au_validateur(string transport)
+    {
+        await using ServiceProvider services = Gateway(transport);
+        IFecGateway fec = services.GetRequiredService<IFecGateway>();
+        await SaveCompanyProfileAsync(services);
+        DateOnly from = new(DateTime.Today.Year, 1, 1), to = new(DateTime.Today.Year, 12, 31);
+
+        OperationResult<FecDocument> exported = await fec.ExportAsync(from, to, default);
+        exported.IsSuccess.Should().BeTrue(string.Join(", ", exported.Errors.Select(e => e.Code)));
+        OperationResult<FecValidationResponse> report = await fec.ValidateAsync(exported.Value!.FileName, exported.Value.Content, from, to, default);
+
+        exported.Value.FileName.Should().Be(string.Create(CultureInfo.InvariantCulture, $"552100554FEC{to:yyyyMMdd}.txt"));
+        report.Value!.IsValid.Should().BeTrue();
+        report.Value.FileName.Should().Be(exported.Value.FileName);
+        (await fec.ExportAsync(to, from, default)).Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Fec.PeriodInvalid);
+    }
+
+    private static async Task SaveCompanyProfileAsync(IServiceProvider services) =>
+        (await services.GetRequiredService<IBillingSettingsGateway>().SaveCompanyProfileAsync(
+            new SaveCompanyProfileRequest
+            {
+                Name = "Conseil Lettra", LegalForm = "SAS", ShareCapital = 10_000m, Siren = "552100554", Rcs = "RCS Paris 552 100 554",
+                VatNumber = "FR96552100554", AddressLine1 = "10 avenue de l'Opéra", PostalCode = "75001", City = "Paris",
+                LatePenaltyRate = 10m, EarlyPaymentDiscount = "Pas d'escompte pour paiement anticipé",
+            },
+            null,
+            default)).IsSuccess.Should().BeTrue();
 
     public void Dispose()
     {
