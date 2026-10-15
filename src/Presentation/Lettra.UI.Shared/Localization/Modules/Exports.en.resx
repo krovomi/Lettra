@@ -81,4 +81,34 @@
   <data name="Platform.Status.PaymentSent" xml:space="preserve"><value>Payment sent</value></data>
   <data name="Platform.Status.Collected" xml:space="preserve"><value>Collected</value></data>
   <data name="Platform.Status.Rejected" xml:space="preserve"><value>Rejected</value></data>
+  <!-- Écran FEC -->
+  <data name="Nav.Fec" xml:space="preserve"><value>FEC</value></data>
+  <data name="Fec.Title" xml:space="preserve"><value>Accounting entries file (FEC)</value></data>
+  <data name="Fec.Intro" xml:space="preserve"><value>Export the FEC for a financial year, as the French tax authority requires it, and read the built-in validator's report.</value></data>
+  <data name="Fec.Period.Title" xml:space="preserve"><value>Financial year</value></data>
+  <data name="Fec.Period.From" xml:space="preserve"><value>From</value></data>
+  <data name="Fec.Period.To" xml:space="preserve"><value>to</value></data>
+  <data name="Fec.Export" xml:space="preserve"><value>Export the FEC</value></data>
+  <data name="Fec.Check.Title" xml:space="preserve"><value>Check a file</value></data>
+  <data name="Fec.Check.Hint" xml:space="preserve"><value>A FEC from another software or a file already exported, checked against the financial year above (64 MB at most).</value></data>
+  <data name="Fec.Working" xml:space="preserve"><value>Checking…</value></data>
+  <data name="Fec.Report.Title" xml:space="preserve"><value>Validator report</value></data>
+  <data name="Fec.Report.Exported" xml:space="preserve"><value>File {0} saved.</value></data>
+  <data name="Fec.Report.File" xml:space="preserve"><value>File</value></data>
+  <data name="Fec.Report.Lines" xml:space="preserve"><value>Lines</value></data>
+  <data name="Fec.Report.Entries" xml:space="preserve"><value>Entries</value></data>
+  <data name="Fec.Report.Debit" xml:space="preserve"><value>Total debit</value></data>
+  <data name="Fec.Report.Credit" xml:space="preserve"><value>Total credit</value></data>
+  <data name="Fec.Verdict.Valid" xml:space="preserve"><value>The file is compliant.</value></data>
+  <data name="Fec.Verdict.ValidWithWarnings" xml:space="preserve"><value>The file is compliant, {0} point(s) to check.</value></data>
+  <data name="Fec.Verdict.Invalid" xml:space="preserve"><value>The file is not compliant: {0} error(s) to fix.</value></data>
+  <data name="Fec.Findings" xml:space="preserve"><value>Validator findings</value></data>
+  <data name="Fec.Findings.Severity" xml:space="preserve"><value>Severity</value></data>
+  <data name="Fec.Findings.Line" xml:space="preserve"><value>Line</value></data>
+  <data name="Fec.Findings.Column" xml:space="preserve"><value>Column</value></data>
+  <data name="Fec.Findings.Entry" xml:space="preserve"><value>Entry</value></data>
+  <data name="Fec.Findings.Text" xml:space="preserve"><value>Finding</value></data>
+  <data name="Fec.Findings.Truncated" xml:space="preserve"><value>Only the first findings are shown: fix them, then check again.</value></data>
+  <data name="Fec.Severity.Error" xml:space="preserve"><value>Error</value></data>
+  <data name="Fec.Severity.Warning" xml:space="preserve"><value>To check</value></data>
 </root>
