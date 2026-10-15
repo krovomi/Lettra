@@ -69,13 +69,18 @@ internal sealed class FakeBillingSettingsGateway : IBillingSettingsGateway
 {
     public CompanyProfileResponse? Company { get; set; } = BillingFixtures.Company();
 
+    /// <summary>Serveur injoignable (brouillons hors ligne, étape 4.5).</summary>
+    public bool Offline { get; set; }
+
     public List<(SaveCompanyProfileRequest Request, long? Version)> Saves { get; } = [];
 
     public Task<OperationResult<BillingReferenceData>> GetReferenceDataAsync(CancellationToken cancellationToken) =>
-        Task.FromResult(OperationResult<BillingReferenceData>.Success(BillingFixtures.Reference));
+        Task.FromResult(Offline ? OperationResult<BillingReferenceData>.Failure(ErrorCodes.Api.Unreachable)
+            : OperationResult<BillingReferenceData>.Success(BillingFixtures.Reference));
 
     public Task<OperationResult<CompanyProfileResponse>> GetCompanyProfileAsync(CancellationToken cancellationToken) =>
-        Task.FromResult(Company is null
+        Task.FromResult(Offline ? OperationResult<CompanyProfileResponse>.Failure(ErrorCodes.Api.Unreachable)
+            : Company is null
             ? OperationResult<CompanyProfileResponse>.Failure([new ErrorDetail(ErrorCodes.CompanyProfile.NotFound)])
             : OperationResult<CompanyProfileResponse>.Success(Company));
 
@@ -107,6 +112,9 @@ internal sealed class FakeQuotesGateway : IQuotesGateway
     /// <summary>Simule une modification concurrente : la prochaine écriture échoue.</summary>
     public bool NextVersionMismatch { get; set; }
 
+    /// <summary>Serveur injoignable (brouillons hors ligne, étape 4.5).</summary>
+    public bool Offline { get; set; }
+
     public QuoteResponse Add(QuoteStatusDto status = QuoteStatusDto.Draft, string? number = null, params DocumentLineRequest[] lines)
     {
         (List<DocumentLineResponse> computed, DocumentTotalsResponse totals) = BillingFixtures.Compute(lines, VatRegimeDto.Standard);
@@ -130,10 +138,15 @@ internal sealed class FakeQuotesGateway : IQuotesGateway
     }
 
     public Task<OperationResult<QuoteResponse>> GetAsync(Guid id, CancellationToken cancellationToken) =>
-        Quotes.TryGetValue(id, out QuoteResponse? quote) ? Ok(quote) : Fail<QuoteResponse>(ErrorCodes.Quote.NotFound);
+        Offline ? Fail<QuoteResponse>(ErrorCodes.Api.Unreachable) : Quotes.TryGetValue(id, out QuoteResponse? quote) ? Ok(quote) : Fail<QuoteResponse>(ErrorCodes.Quote.NotFound);
 
     public Task<OperationResult<QuoteResponse>> CreateAsync(SaveQuoteRequest request, CancellationToken cancellationToken)
     {
+        if (Offline)
+        {
+            return Fail<QuoteResponse>(ErrorCodes.Api.Unreachable);
+        }
+
         Creations.Add(request with { Lines = [.. request.Lines] });
         QuoteResponse quote = Add() with { CustomerId = request.CustomerId };
         Quotes[quote.Id] = Apply(quote, request, 1);
@@ -142,6 +155,11 @@ internal sealed class FakeQuotesGateway : IQuotesGateway
 
     public Task<OperationResult<QuoteResponse>> UpdateAsync(Guid id, SaveQuoteRequest request, long? expectedVersion, CancellationToken cancellationToken)
     {
+        if (Offline)
+        {
+            return Fail<QuoteResponse>(ErrorCodes.Api.Unreachable);
+        }
+
         Updates.Add((id, request with { Lines = [.. request.Lines] }, expectedVersion));
         if (TakeMismatch() || Quotes[id].Version != expectedVersion)
         {
@@ -218,6 +236,12 @@ internal sealed class FakeInvoicesGateway : IInvoicesGateway
 
     public List<(Guid Id, CreateCreditNoteRequest Request)> CreditNotes { get; } = [];
 
+    /// <summary>Serveur injoignable (brouillons hors ligne, étape 4.5).</summary>
+    public bool Offline { get; set; }
+
+    private static Task<OperationResult<InvoiceResponse>> Unreachable() =>
+        Task.FromResult(OperationResult<InvoiceResponse>.Failure(ErrorCodes.Api.Unreachable));
+
     public static InvoiceResponse Build(InvoiceKindDto kind, InvoiceStatusDto status, string? number, params DocumentLineRequest[] lines)
     {
         (List<DocumentLineResponse> computed, DocumentTotalsResponse totals) = BillingFixtures.Compute(lines, VatRegimeDto.Standard);
@@ -258,12 +282,22 @@ internal sealed class FakeInvoicesGateway : IInvoicesGateway
 
     public Task<OperationResult<InvoiceResponse>> CreateAsync(SaveInvoiceRequest request, CancellationToken cancellationToken)
     {
+        if (Offline)
+        {
+            return Unreachable();
+        }
+
         InvoiceResponse invoice = Add(InvoiceKindDto.Invoice, InvoiceStatusDto.Draft, null, [.. request.Lines]);
         return Task.FromResult(OperationResult<InvoiceResponse>.Success(invoice));
     }
 
     public Task<OperationResult<InvoiceResponse>> UpdateAsync(Guid id, SaveInvoiceRequest request, long? expectedVersion, CancellationToken cancellationToken)
     {
+        if (Offline)
+        {
+            return Unreachable();
+        }
+
         (List<DocumentLineResponse> lines, DocumentTotalsResponse totals) = BillingFixtures.Compute(request.Lines, request.VatRegime);
         Invoices[id] = Invoices[id] with { Version = Invoices[id].Version + 1, Lines = lines, Totals = totals, PaymentTerms = request.PaymentTerms };
         return Task.FromResult(OperationResult<InvoiceResponse>.Success(Invoices[id]));
