@@ -93,7 +93,7 @@ public sealed class CatalogPageTests : BunitContext
         options.EditableColumns.Should().Equal(0, 1, 2, 3, 4, 5);
         options.CommandKeys.Should().BeEquivalentTo("F4", "Insert", "Ctrl+Delete");
         JSInterop.Invocations.Single(i => i.Identifier == "attachGlobal").Arguments[1]
-            .Should().BeEquivalentTo(new[] { "F3", "Ctrl+Shift+D" });
+            .Should().BeEquivalentTo(new[] { "F3" });   // Ctrl+Shift+D (densité) est désormais global : MainLayout
     }
 
     [Fact]

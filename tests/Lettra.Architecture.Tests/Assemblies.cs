@@ -24,6 +24,7 @@ internal static class Assemblies
     public static readonly Assembly Bootstrap = typeof(Bootstrap.LettraBootstrap).Assembly;
     public static readonly Assembly UiAbstractions = typeof(UI.Abstractions.ICustomersGateway).Assembly;
     public static readonly Assembly UiShared = typeof(UI.Shared.Routes).Assembly;
+    public static readonly Assembly Printing = typeof(Printing.PdfDocumentRenderer).Assembly;
     public static readonly Assembly UiGatewayHttp = typeof(UI.Gateway.Http.DependencyInjection).Assembly;
     public static readonly Assembly UiGatewayInProcess = typeof(UI.Gateway.InProcess.DependencyInjection).Assembly;
     public static readonly Assembly AiSkills = typeof(Ai.Skills.SkillCatalog).Assembly;
@@ -37,7 +38,7 @@ internal static class Assemblies
     [
         Calculations, Contracts, Domain, Application, Persistence, PersistenceSqlite, PersistencePostgreSql,
         PersistenceSqlServer, Catalog, IdentityLocal, IdentityOidc, External, Observability, SupervisionDomain,
-        SupervisionApplication, SupervisionInfrastructure, Bootstrap, UiAbstractions, UiShared, UiGatewayHttp, UiGatewayInProcess,
+        SupervisionApplication, SupervisionInfrastructure, Bootstrap, UiAbstractions, UiShared, Printing, UiGatewayHttp, UiGatewayInProcess,
         AiSkills, AiPrivacy, AiTools, AiOrchestration, AiClaude, AiLocal,
     ];
 

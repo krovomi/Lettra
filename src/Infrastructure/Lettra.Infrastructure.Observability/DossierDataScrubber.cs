@@ -28,11 +28,13 @@ internal static partial class DossierDataScrubber
         || key.StartsWith("http.request.header.", StringComparison.Ordinal)
         || key.StartsWith("http.response.header.", StringComparison.Ordinal);
 
-    /// <remarks>
-    /// Ne lève jamais : une exception remonterait dans le journal appelant (une migration, une requête). Si
-    /// l'expression dépasse son délai, la valeur entière est masquée.
-    /// </remarks>
-    public static string Scrub(string value)
+    public static string Scrub(string value) => Scrub(value, SensitivePattern());
+
+    public static bool LooksSensitive(string value) => LooksSensitive(value, SensitivePattern());
+
+    // Délai dépassé (runner chargé, très longue valeur) : on masque tout plutôt que de laisser passer la valeur ou
+    // de faire échouer l'appelant (une migration qui journalise son SQL, par exemple).
+    internal static string Scrub(string value, Regex pattern)
     {
         if (string.IsNullOrEmpty(value))
         {
@@ -41,7 +43,7 @@ internal static partial class DossierDataScrubber
 
         try
         {
-            return SensitivePattern().Replace(value, Mask);
+            return pattern.Replace(value, Mask);
         }
         catch (RegexMatchTimeoutException)
         {
@@ -49,7 +51,7 @@ internal static partial class DossierDataScrubber
         }
     }
 
-    public static bool LooksSensitive(string value)
+    internal static bool LooksSensitive(string value, Regex pattern)
     {
         if (string.IsNullOrEmpty(value))
         {
@@ -58,7 +60,7 @@ internal static partial class DossierDataScrubber
 
         try
         {
-            return SensitivePattern().IsMatch(value);
+            return pattern.IsMatch(value);
         }
         catch (RegexMatchTimeoutException)
         {

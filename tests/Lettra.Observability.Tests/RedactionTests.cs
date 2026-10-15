@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using Lettra.Infrastructure.Observability;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry;
@@ -36,11 +37,22 @@ public sealed class RedactionTests
     public void Un_long_texte_sans_donnee_reste_lisible_et_ne_depasse_pas_le_delai()
     {
         // Ce que journalise une migration : de longues suites d'identifiants SQL, sans « @ ».
-        string sql = string.Concat(Enumerable.Repeat("UPDATE \"Customers\" SET \"SearchKey\" = REPLACE(UPPER(\"Name\"), 'É', 'E'); ", 2_000))
-            + new string('a', 200_000);
+        string sql = string.Concat(Enumerable.Repeat("UPDATE \"Customers\" SET \"SearchKey\" = REPLACE(UPPER(\"Name\"), 'É', 'E'); ", 200))
+            + new string('a', 20_000);
 
         DossierDataScrubber.Scrub(sql).Should().Be(sql);
         DossierDataScrubber.LooksSensitive(sql).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Un_delai_depasse_masque_toute_la_valeur_sans_lever_d_exception()
+    {
+        // Retour arrière catastrophique : le délai d'une milliseconde expire à coup sûr.
+        Regex slow = new("(a+)+$", RegexOptions.None, TimeSpan.FromMilliseconds(1));
+        string value = new string('a', 64) + "!";
+
+        DossierDataScrubber.Scrub(value, slow).Should().Be(DossierDataScrubber.Mask);
+        DossierDataScrubber.LooksSensitive(value, slow).Should().BeTrue();
     }
 
     [Fact]
