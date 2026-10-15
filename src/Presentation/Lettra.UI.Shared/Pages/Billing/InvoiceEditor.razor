@@ -53,6 +53,10 @@ else
                 {
                     <p class="lettra-field lettra-muted">@string.Format(CultureInfo.CurrentCulture, L["Invoice.CreditOf"], credited)</p>
                 }
+                @if (_invoice?.CreditApprovedAt is { } approvedAt)
+                {
+                    <p class="lettra-field lettra-muted" id="credit-approved">@string.Format(CultureInfo.CurrentCulture, L["Invoice.CreditApproved"], approvedAt.ToLocalTime().ToString("d", CultureInfo.CurrentCulture))</p>
+                }
 
                 <div class="lettra-field">
                     <label for="delivery-date">@L["Invoice.Field.DeliveryDate"]</label>
@@ -122,6 +126,10 @@ else
                     <button type="button" id="validate" class="lettra-button" disabled="@(!CanValidate)" @onclick="ValidateAsync"
                             title="@L["Billing.Command.Validate"] (Ctrl+Enter)">@L["Billing.Command.Validate"]</button>
                     <button type="button" class="lettra-button is-secondary" disabled="@(_invoice is null)" @onclick="SaveNowAsync">@L["Billing.Command.Save"]</button>
+                    @if (AwaitsApproval)
+                    {
+                        <button type="button" id="approve-credit" class="lettra-button" disabled="@_busy" @onclick="ApproveCreditAsync">@L["Invoice.Command.ApproveCredit"]</button>
+                    }
                 }
                 @if (_invoice?.Status == InvoiceStatusDto.Validated)
                 {
@@ -174,6 +182,7 @@ else
     private ComplianceReportResponse? _compliance;
     private CompanyProfileResponse? _company;
     private IReadOnlyList<ErrorDetail> _errors = [];
+    private bool _approvalRequested;
     private string? _status;
     private string? _customerName;
     private string? _creditReason;
@@ -196,6 +205,9 @@ else
 
     /// <summary>Lignes venues d'une autre pièce (acompte, avoir, facture finale d'un devis).</summary>
     private bool LinesLocked => _invoice is not null && (_invoice.Kind != InvoiceKindDto.Invoice || _invoice.QuoteId is not null);
+
+    // Avoir au-delà du seuil de la séparation des tâches : le serveur l'a signalé à la validation, un manager l'approuve ici.
+    private bool AwaitsApproval => _approvalRequested && _invoice is { Kind: InvoiceKindDto.CreditNote, CreditApprovedBy: null };
 
     private bool CanValidate => _invoice is not null && !_busy && !_conflict && _compliance is { BlocksValidation: false };
 
@@ -235,6 +247,7 @@ else
     {
         _loading = true;
         _errors = [];
+        _approvalRequested = false;
         _conflict = false;
         _autosave.Discard();
 
@@ -439,6 +452,7 @@ else
             {
                 _errors = result.Errors;
                 _conflict = result.Errors.Any(e => e.Code == ErrorCodes.Concurrency.VersionMismatch);
+                _approvalRequested |= result.Errors.Any(e => e.Code == ErrorCodes.SegregationOfDuties.ManagerApprovalRequired);
                 return;
             }
 
@@ -451,6 +465,18 @@ else
         {
             _busy = false;
         }
+    }
+
+    private async Task ApproveCreditAsync()
+    {
+        if (_invoice is null)
+        {
+            return;
+        }
+
+        await RunAsync(() => Invoices.ApproveCreditAsync(_invoice.Id, _invoice.Version, CancellationToken.None), "Invoice.CreditApprovedDone");
+        // L'avoir reste un brouillon : sa checklist revient pour qu'il puisse être validé.
+        await CheckAsync();
     }
 
     private async Task CreateCreditNoteAsync()

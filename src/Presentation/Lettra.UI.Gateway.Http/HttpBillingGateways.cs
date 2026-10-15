@@ -170,6 +170,10 @@ internal sealed class HttpInvoicesGateway(HttpClient http) : IInvoicesGateway
             ct => http.PostAsJsonAsync(HttpCalls.Relative($"api/v1/invoices/{id}/credit-notes"), request, ContractsJsonContext.Default.CreateCreditNoteRequest, ct),
             ContractsJsonContext.Default.InvoiceResponse,
             cancellationToken);
+
+    public Task<OperationResult<InvoiceResponse>> ApproveCreditAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken) =>
+        VersionedCalls.SendAsync(
+            http, HttpMethod.Post, HttpCalls.Relative($"api/v1/invoices/{id}/approve-credit"), expectedVersion, null, ContractsJsonContext.Default.InvoiceResponse, cancellationToken);
 }
 
 internal sealed class HttpBillingSettingsGateway(HttpClient http) : IBillingSettingsGateway
