@@ -43,6 +43,17 @@ public sealed class ShortcutRegistry
             .OrderBy(b => SortKey(b.Chord))
             .ToList();
 
+    /// <summary>
+    /// Commandes proposées par la palette (Ctrl+K) : celles des portées de page et globales, du plus spécifique au plus
+    /// global. Les commandes de grille en sont exclues : elles ont besoin d'une cellule active.
+    /// </summary>
+    public IReadOnlyList<ShortcutBinding> PaletteBindings =>
+        Enumerable.Range(0, _scopes.Count).Reverse()
+            .Where(i => _scopes[i].Name != KeyboardScope.GridScopeName)
+            .SelectMany(i => _scopes[i].Bindings.Values)
+            .DistinctBy(b => b.Chord)
+            .ToList();
+
     /// <summary>Touches à confier au module JS d'un scope donné (format <see cref="KeyChord.ToString"/>).</summary>
     public static string[] KeysOf(KeyboardScope scope)
     {

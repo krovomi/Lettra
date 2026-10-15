@@ -1,0 +1,59 @@
+@inject IStringLocalizer<SharedResource> L
+@* Checklist des mentions obligatoires, en direct (annexe A §7 point 2) : rouge bloque la validation, orange alerte,
+   vert présent. Un clic (ou Entrée) sur un constat place le curseur sur le champ ou la ligne à corriger.
+   La liste vient du serveur, qui la recalcule à la validation : elle seule fait foi. *@
+<section class="lettra-checklist" aria-labelledby="checklist-title">
+    <h2 id="checklist-title">
+        @L["Checklist.Title"]
+        @if (Report is { } report)
+        {
+            <span class="lettra-checklist-summary @(report.BlocksValidation ? "is-blocking" : "is-ok")" role="status">
+                @(report.BlocksValidation
+                    ? string.Format(CultureInfo.CurrentCulture, L["Checklist.Blocking"], report.Findings.Count(f => f.Severity == ComplianceSeverityDto.Error))
+                    : L["Checklist.Ready"])
+            </span>
+        }
+    </h2>
+
+    @if (Report is null)
+    {
+        <p class="lettra-muted">@L["Checklist.Pending"]</p>
+    }
+    else
+    {
+        <ul>
+            @foreach (ComplianceFindingResponse finding in Report.Findings.OrderBy(f => f.Severity))
+            {
+                <li class="lettra-finding is-@finding.Severity.ToString().ToLowerInvariant()">
+                    <button type="button" class="lettra-link" @onclick="() => OnFindingSelected.InvokeAsync(finding)"
+                            disabled="@(finding.Severity == ComplianceSeverityDto.Ok)">
+                        <span class="lettra-finding-mark" aria-hidden="true">@Mark(finding.Severity)</span>
+                        <span class="lettra-visually-hidden">@L[$"Checklist.Severity.{finding.Severity}"] :</span>
+                        @L.Error(finding.Code)
+                        @if (finding.Line is { } line)
+                        {
+                            <span class="lettra-muted"> · @string.Format(CultureInfo.CurrentCulture, L["Checklist.Line"], line)</span>
+                        }
+                    </button>
+                    @if (finding.LegalBasis is not null && finding.Severity != ComplianceSeverityDto.Ok)
+                    {
+                        <span class="lettra-muted lettra-finding-basis">@finding.LegalBasis</span>
+                    }
+                </li>
+            }
+        </ul>
+    }
+</section>
+
+@code {
+    [Parameter] public ComplianceReportResponse? Report { get; set; }
+
+    [Parameter] public EventCallback<ComplianceFindingResponse> OnFindingSelected { get; set; }
+
+    private static string Mark(ComplianceSeverityDto severity) => severity switch
+    {
+        ComplianceSeverityDto.Error => "✕",
+        ComplianceSeverityDto.Warning => "!",
+        _ => "✓",
+    };
+}

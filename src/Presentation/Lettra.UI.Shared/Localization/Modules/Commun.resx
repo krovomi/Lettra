@@ -32,4 +32,28 @@
   <data name="Nav.Label" xml:space="preserve"><value>Navigation principale</value></data>
   <data name="Nav.Suppliers" xml:space="preserve"><value>Fournisseurs</value></data>
   <data name="NotFound" xml:space="preserve"><value>Cette page n'existe pas.</value></data>
+  <data name="Nav.Quotes" xml:space="preserve"><value>Devis</value></data>
+  <data name="Nav.Invoices" xml:space="preserve"><value>Factures</value></data>
+  <data name="Nav.CreditNotes" xml:space="preserve"><value>Avoirs</value></data>
+  <data name="Command.Density" xml:space="preserve"><value>Changer de densité</value></data>
+  <data name="Palette.Title" xml:space="preserve"><value>Palette de commandes</value></data>
+  <data name="Palette.Open" xml:space="preserve"><value>Commandes</value></data>
+  <data name="Palette.Placeholder" xml:space="preserve"><value>Chercher une action, un écran, une pièce, un client…</value></data>
+  <data name="Palette.NoResult" xml:space="preserve"><value>Aucun résultat.</value></data>
+  <data name="Palette.Group.Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Palette.Group.Screens" xml:space="preserve"><value>Écrans</value></data>
+  <data name="Palette.Group.Page" xml:space="preserve"><value>Cette page</value></data>
+  <data name="Palette.Group.Customers" xml:space="preserve"><value>Clients</value></data>
+  <data name="Palette.Group.Documents" xml:space="preserve"><value>Pièces</value></data>
+  <data name="Palette.NewQuote" xml:space="preserve"><value>Nouveau devis</value></data>
+  <data name="Palette.NewInvoice" xml:space="preserve"><value>Nouvelle facture</value></data>
+  <data name="Palette.NewQuoteFor" xml:space="preserve"><value>Nouveau devis pour {0}</value></data>
+  <data name="Palette.NewInvoiceFor" xml:space="preserve"><value>Nouvelle facture pour {0}</value></data>
+  <data name="Palette.OpenQuote" xml:space="preserve"><value>Devis {0} · {1}</value></data>
+  <data name="Palette.OpenInvoice" xml:space="preserve"><value>Facture {0} · {1}</value></data>
+  <data name="Palette.OpenDownPayment" xml:space="preserve"><value>Facture d'acompte {0} · {1}</value></data>
+  <data name="Palette.OpenCreditNote" xml:space="preserve"><value>Avoir {0} · {1}</value></data>
+  <data name="Palette.CreditNoteOn" xml:space="preserve"><value>Avoir sur {0} · {1}</value></data>
+  <data name="Palette.ToggleDensity" xml:space="preserve"><value>Passer en densité Confort ou Expert</value></data>
+  <data name="Nav.Company" xml:space="preserve"><value>Entreprise</value></data>
 </root>

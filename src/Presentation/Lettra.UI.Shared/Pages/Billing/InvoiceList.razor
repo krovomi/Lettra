@@ -1,0 +1,127 @@
+@page "/invoices"
+@page "/credit-notes"
+@page "/down-payments"
+@inject IInvoicesGateway Invoices
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+@* Factures, factures d'acompte et avoirs : une seule série (FAC), une seule liste filtrée par nature. *@
+
+<PageTitle>@L[TitleKey] · Lettra</PageTitle>
+
+<h1 tabindex="-1">@L[TitleKey]</h1>
+
+<GlobalShortcuts Scope="_pageScope" />
+
+<section class="lettra-card" aria-labelledby="invoices-list-title">
+    <h2 id="invoices-list-title" class="lettra-visually-hidden">@L[TitleKey]</h2>
+    <div class="lettra-toolbar">
+        <label for="invoices-search">@L["Billing.Search"]</label>
+        <input id="invoices-search" type="search" @ref="_searchInput" @bind="_search" @bind:after="LoadAsync" autocomplete="off" />
+        <label for="invoices-kind">@L["Invoices.Kind"]</label>
+        <select id="invoices-kind" @bind="_kind" @bind:after="LoadAsync">
+            <option value="">@L["Invoices.AllKinds"]</option>
+            @foreach (InvoiceKindDto kind in Enum.GetValues<InvoiceKindDto>())
+            {
+                <option value="@kind">@L[$"InvoiceKind.{kind}"]</option>
+            }
+        </select>
+        <label for="invoices-status">@L["Billing.Status"]</label>
+        <select id="invoices-status" @bind="_statusFilter" @bind:after="LoadAsync">
+            <option value="">@L["Billing.AllStatuses"]</option>
+            @foreach (InvoiceStatusDto status in Enum.GetValues<InvoiceStatusDto>())
+            {
+                <option value="@status">@L[$"InvoiceStatus.{status}"]</option>
+            }
+        </select>
+        <a class="lettra-button" href="invoices/new" id="invoices-new">@L["Invoices.New"]</a>
+    </div>
+    <p class="lettra-muted">@L["Billing.ListHint"]</p>
+
+    <GeneralErrors Errors="_errors" />
+
+    @if (_loading)
+    {
+        <p>@L["Loading"]</p>
+    }
+    else if (_items.Count == 0)
+    {
+        <p>@L["Invoices.Empty"]</p>
+    }
+    else
+    {
+        <table class="lettra-table lettra-documents">
+            <thead>
+                <tr>
+                    <th scope="col">@L["Billing.Column.Number"]</th>
+                    <th scope="col">@L["Invoices.Kind"]</th>
+                    <th scope="col">@L["Billing.Column.Customer"]</th>
+                    <th scope="col">@L["Billing.Column.Date"]</th>
+                    <th scope="col">@L["Invoice.Field.DueDate"]</th>
+                    <th scope="col">@L["Billing.Status"]</th>
+                    <th scope="col" class="lg-num">@L["Totals.ExclTax"]</th>
+                    <th scope="col" class="lg-num">@L["Totals.InclTax"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (InvoiceSummary invoice in _items)
+                {
+                    <tr>
+                        <td><a href="@($"invoices/{invoice.Id}")">@(invoice.Number ?? L["Billing.Draft"])</a></td>
+                        <td>@L[$"InvoiceKind.{invoice.Kind}"]</td>
+                        <td>@invoice.CustomerName</td>
+                        <td>@invoice.IssueDate?.ToString("d", CultureInfo.CurrentCulture)</td>
+                        <td>@invoice.DueDate?.ToString("d", CultureInfo.CurrentCulture)</td>
+                        <td><DocumentStatusBadge Text="@L[$"InvoiceStatus.{invoice.Status}"]" Kind="@invoice.Status.ToString().ToLowerInvariant()" /></td>
+                        <td class="lg-num">@GridNumber.FormatAmount(invoice.TotalExclTax, CultureInfo.CurrentCulture)</td>
+                        <td class="lg-num">@GridNumber.FormatAmount(invoice.TotalInclTax, CultureInfo.CurrentCulture)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
+
+@code {
+    private List<InvoiceSummary> _items = [];
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private string? _search;
+    private InvoiceKindDto? _kind;
+    private InvoiceStatusDto? _statusFilter;
+    private bool _loading = true;
+    private ElementReference _searchInput;
+    private KeyboardScope _pageScope = default!;
+
+    private string TitleKey => _kind switch
+    {
+        InvoiceKindDto.CreditNote => "Invoices.TitleCreditNotes",
+        InvoiceKindDto.DownPayment => "Invoices.TitleDownPayments",
+        _ => "Invoices.Title",
+    };
+
+    protected override void OnInitialized() =>
+        _pageScope = new KeyboardScope("page")
+            .Bind("F3", L["Billing.Command.Search"], async _ => await _searchInput.FocusAsync())
+            .Bind("Insert", L["Invoices.New"], _ => Navigation.NavigateTo("invoices/new"));
+
+    protected override Task OnParametersSetAsync()
+    {
+        string path = Navigation.ToBaseRelativePath(Navigation.Uri).Split('?')[0];
+        _kind = path switch
+        {
+            "credit-notes" => InvoiceKindDto.CreditNote,
+            "down-payments" => InvoiceKindDto.DownPayment,
+            _ => null,
+        };
+        return LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        OperationResult<PagedResponse<InvoiceSummary>> result = await Invoices.ListAsync(
+            new BillingListQuery(string.IsNullOrWhiteSpace(_search) ? null : _search.Trim(), PageSize: 200), _kind, _statusFilter, CancellationToken.None);
+        _items = result.Value?.Items.ToList() ?? [];
+        _errors = result.Errors;
+        _loading = false;
+    }
+}

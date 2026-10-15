@@ -14,4 +14,24 @@
   <data name="Error.Dossier.ProvisioningFailed" xml:space="preserve"><value>La création du dossier n'a pas abouti. Elle sera reprise automatiquement.</value></data>
   <data name="Error.Numbering.SeriesNotFound" xml:space="preserve"><value>Cette série de numérotation n'existe pas dans le dossier.</value></data>
   <data name="Error.Numbering.Contention" xml:space="preserve"><value>Trop de pièces sont validées en même temps dans ce dossier. Réessayez.</value></data>
+  <data name="Error.CompanyProfile.NameRequired" xml:space="preserve"><value>Indiquez la dénomination de l'entreprise.</value></data>
+  <data name="Error.CompanyProfile.NameTooLong" xml:space="preserve"><value>La dénomination dépasse 200 caractères.</value></data>
+  <data name="Error.CompanyProfile.PaymentDaysInvalid" xml:space="preserve"><value>Le délai de paiement va de 0 à 60 jours.</value></data>
+  <data name="Error.CompanyProfile.NotFound" xml:space="preserve"><value>La fiche de l'entreprise n'est pas encore remplie.</value></data>
+  <data name="Company.Title" xml:space="preserve"><value>Fiche entreprise</value></data>
+  <data name="Company.Intro" xml:space="preserve"><value>Ces informations figurent sur chaque devis et chaque facture du dossier.</value></data>
+  <data name="Company.Identity" xml:space="preserve"><value>Identité légale</value></data>
+  <data name="Company.Address" xml:space="preserve"><value>Adresse du siège</value></data>
+  <data name="Company.Vat" xml:space="preserve"><value>TVA</value></data>
+  <data name="Company.Payment" xml:space="preserve"><value>Paiement</value></data>
+  <data name="Company.Field.LegalForm" xml:space="preserve"><value>Forme juridique</value></data>
+  <data name="Company.Field.ShareCapital" xml:space="preserve"><value>Capital social (€)</value></data>
+  <data name="Company.Field.Rcs" xml:space="preserve"><value>Immatriculation (RCS ou RM)</value></data>
+  <data name="Company.Field.VatFranchise" xml:space="preserve"><value>Franchise en base de TVA (art. 293 B du CGI)</value></data>
+  <data name="Company.Field.VatOnDebits" xml:space="preserve"><value>Option pour le paiement de la TVA d'après les débits</value></data>
+  <data name="Company.Field.PaymentDays" xml:space="preserve"><value>Délai de paiement (jours)</value></data>
+  <data name="Company.Field.LatePenaltyRate" xml:space="preserve"><value>Taux des pénalités de retard (%)</value></data>
+  <data name="Company.Field.EarlyPaymentDiscount" xml:space="preserve"><value>Escompte pour paiement anticipé</value></data>
+  <data name="Company.Field.Bic" xml:space="preserve"><value>BIC</value></data>
+  <data name="Company.Saved" xml:space="preserve"><value>Fiche entreprise enregistrée.</value></data>
 </root>

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Rendu PDF des devis, factures, acomptes et avoirs. Code managé pur (PDFsharp/MigraDoc, MIT) : le même
+       rendu tourne dans le navigateur (WASM), dans l'app MAUI hors ligne et, plus tard, sur le serveur.
+       Ne voit que les calculs partagés : jamais le domaine, ni EF, ni l'UI. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Lettra.Calculations\Lettra.Calculations.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="PDFsharp-MigraDoc" />
+  </ItemGroup>
+
+  <!-- Police embarquée (SIL OFL 1.1, voir third_party/liberation-fonts) : aucun accès aux polices du système,
+       le PDF est identique sous Windows, macOS, Linux et dans le navigateur. -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\..\third_party\liberation-fonts\LiberationSans-Regular.ttf" LogicalName="Lettra.Printing.Fonts.LiberationSans-Regular.ttf" />
+    <EmbeddedResource Include="..\..\..\third_party\liberation-fonts\LiberationSans-Bold.ttf" LogicalName="Lettra.Printing.Fonts.LiberationSans-Bold.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lettra.UI.Tests" />
+  </ItemGroup>
+
+</Project>

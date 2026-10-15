@@ -1,0 +1,32 @@
+@inject IStringLocalizer<SharedResource> L
+@* Totaux de la pièce : ventilation par taux puis HT, TVA, TTC. Pendant la saisie, ce sont les totaux tenus ligne par
+   ligne (même règle d'arrondi que le serveur) ; après chaque enregistrement, ceux que le serveur renvoie. *@
+<section class="lettra-totals" aria-labelledby="totals-title" aria-live="polite">
+    <h2 id="totals-title" class="lettra-visually-hidden">@L["Totals.Title"]</h2>
+    <table class="lettra-table lettra-vat">
+        <thead>
+            <tr><th scope="col">@L["Totals.VatRate"]</th><th scope="col">@L["Totals.Base"]</th><th scope="col">@L["Totals.Vat"]</th></tr>
+        </thead>
+        <tbody>
+            @foreach (VatBreakdownLine rate in Totals.Breakdown)
+            {
+                <tr>
+                    <td>@string.Format(Culture, L["Catalog.VatPercent"], rate.VatRatePercent.ToString("0.##", Culture))</td>
+                    <td class="lg-num">@GridNumber.FormatAmount(rate.BaseExclTax, Culture)</td>
+                    <td class="lg-num">@GridNumber.FormatAmount(rate.VatAmount, Culture)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <dl class="lettra-sums">
+        <dt>@L["Totals.ExclTax"]</dt><dd id="total-excl-tax">@GridNumber.FormatAmount(Totals.TotalExclTax, Culture)</dd>
+        <dt>@L["Totals.TotalVat"]</dt><dd id="total-vat">@GridNumber.FormatAmount(Totals.TotalVat, Culture)</dd>
+        <dt class="is-strong">@L["Totals.InclTax"]</dt><dd id="total-incl-tax" class="is-strong">@GridNumber.FormatAmount(Totals.TotalInclTax, Culture)</dd>
+    </dl>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public DocumentTotals Totals { get; set; } = default!;
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+}

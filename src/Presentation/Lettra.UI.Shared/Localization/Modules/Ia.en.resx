@@ -15,4 +15,7 @@
   <data name="Error.Ai.Truncated" xml:space="preserve"><value>The answer was cut short.</value></data>
   <data name="Error.Ai.UngroundedAmounts" xml:space="preserve"><value>These amounts do not come from a Lettra calculation: check them before using them.</value></data>
   <data name="Error.Ai.UnknownReferences" xml:space="preserve"><value>The answer cites unknown references: check them.</value></data>
+  <data name="Error.Ai.SettingsUnavailable" xml:space="preserve"><value>On this computer, the AI assistant is configured in the configuration file.</value></data>
+  <data name="Error.Ai.EngineRequired" xml:space="preserve"><value>Choose an AI engine to turn the assistant on.</value></data>
+  <data name="Error.Ai.SettingsConflict" xml:space="preserve"><value>The assistant settings were changed in the meantime: reload them and try again.</value></data>
 </root>

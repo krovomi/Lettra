@@ -20,4 +20,12 @@ public static partial class ErrorCodes
         public const string SeriesNotFound = "Numbering.SeriesNotFound";
         public const string Contention = "Numbering.Contention";
     }
+
+    public static class CompanyProfile
+    {
+        public const string NameRequired = "CompanyProfile.NameRequired";
+        public const string NameTooLong = "CompanyProfile.NameTooLong";
+        public const string PaymentDaysInvalid = "CompanyProfile.PaymentDaysInvalid";
+        public const string NotFound = "CompanyProfile.NotFound";
+    }
 }

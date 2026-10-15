@@ -32,4 +32,28 @@
   <data name="Nav.Label" xml:space="preserve"><value>Main navigation</value></data>
   <data name="Nav.Suppliers" xml:space="preserve"><value>Suppliers</value></data>
   <data name="NotFound" xml:space="preserve"><value>This page does not exist.</value></data>
+  <data name="Nav.Quotes" xml:space="preserve"><value>Quotes</value></data>
+  <data name="Nav.Invoices" xml:space="preserve"><value>Invoices</value></data>
+  <data name="Nav.CreditNotes" xml:space="preserve"><value>Credit notes</value></data>
+  <data name="Command.Density" xml:space="preserve"><value>Switch density</value></data>
+  <data name="Palette.Title" xml:space="preserve"><value>Command palette</value></data>
+  <data name="Palette.Open" xml:space="preserve"><value>Commands</value></data>
+  <data name="Palette.Placeholder" xml:space="preserve"><value>Search an action, a screen, a document, a customer…</value></data>
+  <data name="Palette.NoResult" xml:space="preserve"><value>No results.</value></data>
+  <data name="Palette.Group.Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Palette.Group.Screens" xml:space="preserve"><value>Screens</value></data>
+  <data name="Palette.Group.Page" xml:space="preserve"><value>This page</value></data>
+  <data name="Palette.Group.Customers" xml:space="preserve"><value>Customers</value></data>
+  <data name="Palette.Group.Documents" xml:space="preserve"><value>Documents</value></data>
+  <data name="Palette.NewQuote" xml:space="preserve"><value>New quote</value></data>
+  <data name="Palette.NewInvoice" xml:space="preserve"><value>New invoice</value></data>
+  <data name="Palette.NewQuoteFor" xml:space="preserve"><value>New quote for {0}</value></data>
+  <data name="Palette.NewInvoiceFor" xml:space="preserve"><value>New invoice for {0}</value></data>
+  <data name="Palette.OpenQuote" xml:space="preserve"><value>Quote {0} · {1}</value></data>
+  <data name="Palette.OpenInvoice" xml:space="preserve"><value>Invoice {0} · {1}</value></data>
+  <data name="Palette.OpenDownPayment" xml:space="preserve"><value>Down payment invoice {0} · {1}</value></data>
+  <data name="Palette.OpenCreditNote" xml:space="preserve"><value>Credit note {0} · {1}</value></data>
+  <data name="Palette.CreditNoteOn" xml:space="preserve"><value>Credit note on {0} · {1}</value></data>
+  <data name="Palette.ToggleDensity" xml:space="preserve"><value>Switch between Comfort and Expert density</value></data>
+  <data name="Nav.Company" xml:space="preserve"><value>Company</value></data>
 </root>

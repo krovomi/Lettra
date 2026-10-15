@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using Lettra.Infrastructure.Observability;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry;
@@ -31,6 +32,17 @@ public sealed class RedactionTests
     [InlineData("12345678")]
     public void Les_identifiants_techniques_et_les_codes_restent_lisibles(string value) =>
         DossierDataScrubber.Scrub(value).Should().Be(value);
+
+    [Fact]
+    public void Un_delai_depasse_masque_toute_la_valeur_sans_lever_d_exception()
+    {
+        // Retour arrière catastrophique : le délai d'une milliseconde expire à coup sûr.
+        Regex slow = new("(a+)+$", RegexOptions.None, TimeSpan.FromMilliseconds(1));
+        string value = new string('a', 64) + "!";
+
+        DossierDataScrubber.Scrub(value, slow).Should().Be(DossierDataScrubber.Mask);
+        DossierDataScrubber.LooksSensitive(value, slow).Should().BeTrue();
+    }
 
     [Fact]
     public void Les_attributs_interdits_et_les_valeurs_sensibles_ne_sortent_pas_des_traces()
