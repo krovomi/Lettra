@@ -160,9 +160,10 @@ jobs:
           sleep 10
           adb exec-out screencap -p > artifacts/android-run/lettra-android.png
           adb logcat -d > artifacts/android-run/logcat.txt
-          if ! adb shell pidof fr.lettra.app >/dev/null; then echo "Lettra s'est arrêté au démarrage."; exit 1; fi
+          journal() { grep -E 'AndroidRuntime|monodroid|mono-rt|DOTNET|fr\.lettra|Lettra' artifacts/android-run/logcat.txt | tail -n 150; }
+          if ! adb shell pidof fr.lettra.app >/dev/null; then echo "Lettra s'est arrêté au démarrage."; journal; exit 1; fi
           if grep -q 'FATAL EXCEPTION' artifacts/android-run/logcat.txt; then grep -A 30 'FATAL EXCEPTION' artifacts/android-run/logcat.txt; exit 1; fi
-          if [ -z "$dossiers" ]; then echo "Aucun dossier local créé sous $data."; adb shell ls -lR /data/user/0/fr.lettra.app/files || true; exit 1; fi
+          if [ -z "$dossiers" ]; then echo "Aucun dossier local créé sous $data."; adb shell ls -lR /data/user/0/fr.lettra.app/files || true; journal; exit 1; fi
           echo "Processus : $(adb shell pidof fr.lettra.app)"
           echo "Dossiers locaux ($data) : $dossiers"
           EOF
@@ -184,13 +185,15 @@ jobs:
 
   maui-apple:
     name: MAUI iOS (simulateur) et macOS (Mac Catalyst)
-    runs-on: macos-latest
+    # Les SDK iOS et Mac Catalyst de .NET 10 suivent le dernier Xcode : image macOS la plus récente.
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-dotnet@v5
         with:
           global-json-file: global.json
-      # Les SDK iOS et Mac Catalyst de .NET 10 suivent le dernier Xcode stable.
+      - name: Xcodes disponibles
+        run: ls -d /Applications/Xcode*
       - uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: latest-stable
