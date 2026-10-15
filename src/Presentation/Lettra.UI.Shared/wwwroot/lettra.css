@@ -136,3 +136,14 @@ body { margin: 0; }
 .lettra-sync-prompt h2 { margin: 0 0 0.5rem; font-size: 1.05rem; }
 .lettra-sync-detail { max-height: 12rem; overflow-y: auto; padding-left: 1.25rem; }
 .lettra-hint { color: #5b6473; font-size: 0.9em; }
+
+/* Plateforme agréée (étape 5.3) */
+.lettra-platform { margin-top: var(--lettra-gap); }
+.lettra-platform h2 { font-size: 1.05rem; }
+.lettra-platform-facts { display: grid; grid-template-columns: max-content 1fr; gap: 0.2rem 0.75rem; }
+.lettra-platform-facts dt { font-weight: 600; }
+.lettra-platform-facts dd { margin: 0; }
+.lettra-status.is-platform-collected { background: #e7f5ee; color: var(--lettra-success); }
+.lettra-status.is-platform-refused, .lettra-status.is-platform-rejected, .lettra-status.is-platform-disputed { background: #fde8e8; color: var(--lettra-danger); }
+.lettra-status.is-platform-suspended { background: #fff4e5; color: #8a4b00; }
+.lettra-platform .lettra-status { font-size: 0.85em; margin-left: 0; }

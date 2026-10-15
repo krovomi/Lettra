@@ -336,6 +336,81 @@ internal sealed class FakeInvoicesGateway : IInvoicesGateway
     }
 }
 
+/// <summary>
+/// Plateforme agréée simulée : dépôt (la pièce passe émise), statuts suivants à l'actualisation, encaissements cumulés
+/// jusqu'au TTC. <see cref="NotConfigured"/> reproduit le réglage par défaut (aucune plateforme).
+/// </summary>
+internal sealed class FakePlatformTransmissionGateway(FakeInvoicesGateway invoices) : IPlatformTransmissionGateway
+{
+    private static readonly DateTimeOffset Depot = new(2026, 10, 15, 14, 0, 0, TimeSpan.Zero);
+
+    public Dictionary<Guid, PlatformTransmissionResponse> Transmissions { get; } = [];
+
+    public bool NotConfigured { get; set; }
+
+    public List<ReportPaymentRequest> Payments { get; } = [];
+
+    public PlatformTransmissionResponse Add(InvoiceResponse invoice, PlatformStatusDto status, decimal collected = 0m)
+    {
+        PlatformTransmissionResponse transmission = new(Guid.CreateVersion7(), invoice.Id, invoice.Number!, PlatformChannelDto.EInvoice, EInvoiceFormatDto.Cii,
+            "Simulée", "PA-0001", status, status is PlatformStatusDto.Refused or PlatformStatusDto.Rejected, collected, Depot,
+            [new PlatformStatusEventResponse(PlatformStatusDto.Deposited, Depot, null, null), .. status == PlatformStatusDto.Deposited ? Array.Empty<PlatformStatusEventResponse>() : [new PlatformStatusEventResponse(status, Depot.AddHours(1), status == PlatformStatusDto.Rejected ? "Doublon" : null, null)]]);
+        Transmissions[invoice.Id] = transmission;
+        return transmission;
+    }
+
+    public Task<OperationResult<PlatformTransmissionResponse>> GetAsync(Guid invoiceId, CancellationToken cancellationToken) =>
+        Task.FromResult(Transmissions.TryGetValue(invoiceId, out PlatformTransmissionResponse? found)
+            ? OperationResult<PlatformTransmissionResponse>.Success(found)
+            : OperationResult<PlatformTransmissionResponse>.Failure(ErrorCodes.Platform.NotTransmitted));
+
+    public Task<OperationResult<PlatformTransmissionResponse>> TransmitAsync(Guid invoiceId, TransmitInvoiceRequest request, CancellationToken cancellationToken)
+    {
+        if (NotConfigured)
+        {
+            return Task.FromResult(OperationResult<PlatformTransmissionResponse>.Failure(ErrorCodes.Platform.NotConfigured));
+        }
+
+        InvoiceResponse invoice = invoices.Invoices[invoiceId];
+        invoices.Invoices[invoiceId] = invoice with { Status = InvoiceStatusDto.Issued, Version = invoice.Version + 1 };
+        Transmissions[invoiceId] = Add(invoice, PlatformStatusDto.Deposited) with { Format = request.Format };
+        return Task.FromResult(OperationResult<PlatformTransmissionResponse>.Success(Transmissions[invoiceId]));
+    }
+
+    public Task<OperationResult<PlatformTransmissionResponse>> RefreshAsync(Guid invoiceId, CancellationToken cancellationToken)
+    {
+        PlatformTransmissionResponse current = Transmissions[invoiceId];
+        Transmissions[invoiceId] = current with
+        {
+            Status = PlatformStatusDto.MadeAvailable,
+            History = [.. current.History, new PlatformStatusEventResponse(PlatformStatusDto.Issued, Depot.AddMinutes(5), null, null),
+                new PlatformStatusEventResponse(PlatformStatusDto.MadeAvailable, Depot.AddMinutes(10), null, null)],
+        };
+        return Task.FromResult(OperationResult<PlatformTransmissionResponse>.Success(Transmissions[invoiceId]));
+    }
+
+    public Task<OperationResult<PlatformTransmissionResponse>> ReportPaymentAsync(Guid invoiceId, ReportPaymentRequest request, CancellationToken cancellationToken)
+    {
+        PlatformTransmissionResponse current = Transmissions[invoiceId];
+        decimal total = invoices.Invoices[invoiceId].Totals.TotalInclTax;
+        if (request.Amount <= 0 || current.CollectedAmount + request.Amount > total)
+        {
+            return Task.FromResult(OperationResult<PlatformTransmissionResponse>.Failure([new ErrorDetail(ErrorCodes.Platform.PaymentAmountInvalid, "Amount")]));
+        }
+
+        Payments.Add(request);
+        decimal collected = current.CollectedAmount + request.Amount;
+        Transmissions[invoiceId] = current with
+        {
+            Status = PlatformStatusDto.Collected,
+            CollectedAmount = collected,
+            IsFinal = collected == total,
+            History = [.. current.History, new PlatformStatusEventResponse(PlatformStatusDto.Collected, Depot.AddDays(Payments.Count), null, request.Amount)],
+        };
+        return Task.FromResult(OperationResult<PlatformTransmissionResponse>.Success(Transmissions[invoiceId]));
+    }
+}
+
 internal sealed class FakePriceListsGateway : IPriceListsGateway
 {
     public Dictionary<Guid, ResolvedPrice> Prices { get; } = [];

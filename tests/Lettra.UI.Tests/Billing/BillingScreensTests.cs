@@ -4,6 +4,7 @@ using Bunit;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
+using Lettra.Contracts.Exports;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
 using Lettra.UI.Shared.Components.Palette;
@@ -22,14 +23,17 @@ public sealed class InvoiceEditorTests : BunitContext
     private readonly FakeInvoicesGateway _invoices = new();
     private readonly FakeBillingSettingsGateway _settings = new();
     private readonly FakeFileDownloader _files = new();
+    private readonly FakePlatformTransmissionGateway _platform;
 
     private static readonly DocumentLineRequest Conseil = new() { Designation = "Conseil", UnitCode = "HUR", Quantity = 2m, UnitPriceExclTax = 100m };
 
     public InvoiceEditorTests()
     {
+        _platform = new FakePlatformTransmissionGateway(_invoices);
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddLettraUi();
         Services.AddSingleton<IInvoicesGateway>(_invoices);
+        Services.AddSingleton<IPlatformTransmissionGateway>(_platform);
         Services.AddSingleton<IBillingSettingsGateway>(_settings);
         Services.AddSingleton<ICatalogGateway>(new FakeCatalogGateway());
         Services.AddSingleton<ICustomersGateway>(new FakeCustomersGateway());
@@ -149,6 +153,95 @@ public sealed class InvoiceEditorTests : BunitContext
     }
 
     [Fact]
+    public void Une_facture_validee_se_transmet_a_la_plateforme_puis_suit_ses_statuts()
+    {
+        InvoiceResponse facture = _invoices.Add(InvoiceKindDto.Invoice, InvoiceStatusDto.Validated, "FAC-2026-0042", Conseil);
+        IRenderedComponent<InvoiceEditor> page = Ouvrir(facture.Id);
+        page.WaitForAssertion(() => page.Find("#platform-none").TextContent.Should().Be("Pas encore transmise à la plateforme agréée."));
+
+        page.Find("#platform-format").Change(EInvoiceFormatDto.Ubl.ToString());
+        page.Find("#platform-transmit").Click();
+
+        page.WaitForAssertion(() => page.Find("#platform-status").TextContent.Should().Contain("Déposée (200)"));
+        _platform.Transmissions[facture.Id].Format.Should().Be(EInvoiceFormatDto.Ubl);
+        page.WaitForAssertion(() => page.Find(".lettra-status").TextContent.Should().Be("Émise"), TimeSpan.FromSeconds(2));
+        page.FindAll("#platform-transmit").Should().BeEmpty("une pièce déposée ne se transmet pas deux fois");
+
+        page.Find("#platform-refresh").Click();
+        page.WaitForAssertion(() => page.FindAll("#platform-history tbody tr").Should().HaveCount(3));
+        page.Find("#platform-status").TextContent.Should().Contain("Mise à disposition (203)");
+    }
+
+    [Fact]
+    public void Les_encaissements_partiels_se_cumulent_jusqu_au_TTC()
+    {
+        InvoiceResponse facture = _invoices.Add(InvoiceKindDto.Invoice, InvoiceStatusDto.Issued, "FAC-2026-0042", Conseil);
+        _platform.Add(facture, PlatformStatusDto.MadeAvailable);
+        IRenderedComponent<InvoiceEditor> page = Ouvrir(facture.Id);
+        page.WaitForAssertion(() => page.Find("#payment-amount").GetAttribute("value").Should().Be("240,00", "le reste à encaisser est proposé"));
+
+        page.Find("#payment-amount").Change("100");
+        page.Find("#payment-report").Click();
+
+        page.WaitForAssertion(() => page.Find("#platform-collected").TextContent.Should().Be("100,00 sur 240,00 TTC"));
+        page.Find("#payment-amount").GetAttribute("value").Should().Be("140,00");
+        page.Find("#platform-history").TextContent.Should().Contain("Encaissement de 100,00");
+
+        page.Find("#payment-report").Click();
+
+        page.WaitForAssertion(() => page.Find("#platform-status").TextContent.Should().Contain("Encaissée (212)").And.Contain("statut définitif"));
+        page.FindAll("#platform-payment").Should().BeEmpty();
+        page.FindAll("#platform-refresh").Should().BeEmpty();
+        _platform.Payments.Select(p => p.Amount).Should().Equal(100m, 140m);
+    }
+
+    [Fact]
+    public void Un_encaissement_refuse_s_affiche()
+    {
+        InvoiceResponse facture = _invoices.Add(InvoiceKindDto.Invoice, InvoiceStatusDto.Issued, "FAC-2026-0042", Conseil);
+        _platform.Add(facture, PlatformStatusDto.MadeAvailable);
+        IRenderedComponent<InvoiceEditor> page = Ouvrir(facture.Id);
+        page.WaitForAssertion(() => page.Find("#payment-amount"));
+
+        page.Find("#payment-amount").Change("500");
+        page.Find("#payment-report").Click();
+
+        page.WaitForAssertion(() => page.Find("#platform p.validation-message").TextContent
+            .Should().Be("Le montant encaissé doit être positif et ne pas dépasser le total TTC de la pièce."));
+        _platform.Payments.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Sans_plateforme_configuree_l_ecran_le_dit()
+    {
+        _platform.NotConfigured = true;
+        InvoiceResponse facture = _invoices.Add(InvoiceKindDto.Invoice, InvoiceStatusDto.Validated, "FAC-2026-0042", Conseil);
+        IRenderedComponent<InvoiceEditor> page = Ouvrir(facture.Id);
+
+        page.WaitForAssertion(() => page.Find("#platform-transmit"));
+        page.Find("#platform-transmit").Click();
+
+        page.WaitForAssertion(() => page.Find("#platform-not-configured").TextContent.Should().StartWith("Aucune plateforme agréée n'est configurée pour ce cabinet"));
+        page.FindAll("#platform-transmit").Should().BeEmpty();
+        page.FindAll("#platform p.validation-message").Should().BeEmpty("l'état remplace le message d'erreur");
+        _invoices.Invoices[facture.Id].Status.Should().Be(InvoiceStatusDto.Validated);
+    }
+
+    [Fact]
+    public void Une_transmission_rejetee_se_retransmet()
+    {
+        InvoiceResponse facture = _invoices.Add(InvoiceKindDto.Invoice, InvoiceStatusDto.Validated, "FAC-2026-0042", Conseil);
+        _platform.Add(facture, PlatformStatusDto.Rejected);
+
+        IRenderedComponent<InvoiceEditor> page = Ouvrir(facture.Id);
+
+        page.WaitForAssertion(() => page.Find("#platform-status").TextContent.Should().Contain("Rejetée (213)"));
+        page.Find("#platform-history").TextContent.Should().Contain("Doublon");
+        page.Find("#platform-transmit").TextContent.Trim().Should().Be("Transmettre de nouveau");
+        page.FindAll("#platform-payment").Should().BeEmpty();
+    }
+
+    [Fact]
     public void Un_brouillon_n_a_pas_de_facture_electronique()
     {
         InvoiceResponse brouillon = _invoices.Add(InvoiceKindDto.Invoice, InvoiceStatusDto.Draft, null, Conseil);
@@ -157,6 +250,7 @@ public sealed class InvoiceEditorTests : BunitContext
 
         page.FindAll("#facturx").Should().BeEmpty();
         page.FindAll("#ubl").Should().BeEmpty();
+        page.FindAll("#platform").Should().BeEmpty();
     }
 
     [Fact]
