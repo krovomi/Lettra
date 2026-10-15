@@ -49,7 +49,8 @@ public static class BffEndpoints
                 SessionModeDto.Oidc,
                 OidcClaims.DisplayName(session.Principal),
                 LocalAccountExists: false,
-                SignOutUrl: token is null ? null : $"/bff/logout?jeton={Uri.EscapeDataString(token)}"));
+                SignOutUrl: token is null ? null : $"/bff/logout?jeton={Uri.EscapeDataString(token)}",
+                DeviceStorageKey: OidcClaims.UserId(session.Principal) is Guid user ? DeviceStorageKeyOf(user) : null));
         });
 
         // Déconnexion par navigation, protégée contre le CSRF par un jeton propre à la session (donné par /bff/user).
@@ -76,6 +77,13 @@ public static class BffEndpoints
 
     private static string? SignOutToken(AuthenticateResult session) =>
         session.Properties?.Items.TryGetValue(SignOutTokenKey, out string? token) == true ? token : null;
+
+    /// <summary>
+    /// Clé des brouillons hors ligne de l'utilisateur dans le navigateur (étape 4.5) : une empreinte de son identifiant,
+    /// stable d'une session à l'autre, qui ne le nomme pas.
+    /// </summary>
+    internal static string DeviceStorageKeyOf(Guid userId) =>
+        Convert.ToHexStringLower(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes($"lettra.brouillons:{userId:N}")))[..32];
 
     internal static string NewSignOutToken() => Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
 

@@ -12,6 +12,8 @@
   <data name="Drafts.StillOffline" xml:space="preserve"><value>Le serveur reste injoignable.</value></data>
   <data name="Drafts.Error.Drafts_Corrupted" xml:space="preserve"><value>copie altérée sur l'appareil : elle n'est pas envoyée.</value></data>
   <data name="Drafts.Error.Concurrency_VersionMismatch" xml:space="preserve"><value>modifié entre-temps au cabinet : ouvrez-le pour choisir.</value></data>
+  <data name="Drafts.Error.Drafts_OtherDossier" xml:space="preserve"><value>saisi dans un autre dossier : il ne part pas vers celui-ci.</value></data>
+  <data name="Drafts.SignOutPending" xml:space="preserve"><value>{0} brouillon(s) n'ont pas pu être envoyés et seront effacés de cet appareil à la déconnexion. Se déconnecter quand même ?</value></data>
   <data name="Drafts.Error.Other" xml:space="preserve"><value>refusé par le serveur : ouvrez-le pour corriger.</value></data>
   <data name="Drafts.KeptOnDevice" xml:space="preserve"><value>Pas de réseau : brouillon enregistré sur cet appareil. Il partira au retour du réseau.</value></data>
   <data name="Drafts.Restored" xml:space="preserve"><value>Brouillon repris de cet appareil : il sera envoyé au prochain enregistrement.</value></data>
