@@ -53,6 +53,7 @@ RouteGroupBuilder api = app.MapGroup("/api/v1")
 api.MapCustomers();
 api.MapSuppliers();
 api.MapCatalog();
+api.MapBilling();
 api.MapDirectory();
 api.MapAssistant();
 

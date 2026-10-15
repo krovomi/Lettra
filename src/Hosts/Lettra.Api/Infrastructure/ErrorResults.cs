@@ -15,7 +15,8 @@ internal static class ErrorResults
     {
         ArgumentNullException.ThrowIfNull(errors);
         Error first = errors[0];
-        int status = first.Kind switch
+        // Version périmée d'une pièce envoyée en If-Match : 412, le client relit puis fusionne.
+        int status = first.Code == ErrorCodes.Billing.VersionMismatch ? StatusCodes.Status412PreconditionFailed : first.Kind switch
         {
             ErrorKind.Validation => StatusCodes.Status400BadRequest,
             ErrorKind.NotFound => StatusCodes.Status404NotFound,

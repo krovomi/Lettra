@@ -135,6 +135,18 @@ public static class DependencyInjection
         services.AddHttpClient<IDirectoryGateway, HttpDirectoryGateway>(client => client.BaseAddress = apiBaseAddress)
             .AddHttpMessageHandler<CsrfHeaderHandler>()
             .AddHttpMessageHandler<DossierHeaderHandler>();
+        services.AddHttpClient<IQuotesGateway, HttpQuotesGateway>(client => client.BaseAddress = apiBaseAddress)
+            .AddHttpMessageHandler<CsrfHeaderHandler>()
+            .AddHttpMessageHandler<DossierHeaderHandler>();
+        services.AddHttpClient<IInvoicesGateway, HttpInvoicesGateway>(client => client.BaseAddress = apiBaseAddress)
+            .AddHttpMessageHandler<CsrfHeaderHandler>()
+            .AddHttpMessageHandler<DossierHeaderHandler>();
+        services.AddHttpClient<IBillingSettingsGateway, HttpBillingSettingsGateway>(client => client.BaseAddress = apiBaseAddress)
+            .AddHttpMessageHandler<CsrfHeaderHandler>()
+            .AddHttpMessageHandler<DossierHeaderHandler>();
+        services.AddHttpClient<IPriceListsGateway, HttpPriceListsGateway>(client => client.BaseAddress = apiBaseAddress)
+            .AddHttpMessageHandler<CsrfHeaderHandler>()
+            .AddHttpMessageHandler<DossierHeaderHandler>();
         return services;
     }
 }
