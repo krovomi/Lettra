@@ -111,7 +111,8 @@ public sealed record SyncChangesResponse(
     IReadOnlyList<CustomerResponse> Customers,
     IReadOnlyList<SupplierResponse> Suppliers,
     IReadOnlyList<CatalogItemResponse> CatalogItems,
-    CompanyProfileResponse? CompanyProfile = null)
+    CompanyProfileResponse? CompanyProfile = null,
+    SyncPolicyResponse? Policy = null)
 {
     [JsonIgnore]
     public int Count => Customers.Count + Suppliers.Count + CatalogItems.Count;
@@ -168,8 +169,48 @@ public sealed record DeviceSeriesResponse(string BaseSeries, string SeriesCode, 
 /// <summary>Les séries ouvertes pour le poste.</summary>
 public sealed record OpenDeviceSeriesResponse(IReadOnlyList<DeviceSeriesResponse> Series);
 
+/// <summary>
+/// Règle du cabinet pour les postes du dossier (étape 4.4), envoyée avec la dernière page reçue : au-delà de
+/// <paramref name="MaxOfflineHours"/> sans contact avec le serveur, le poste ne valide plus de pièce.
+/// </summary>
+/// <param name="MaxOfflineHours">Durée maximale hors ligne, en heures (de 1 à 720).</param>
+public sealed record SyncPolicyResponse(int MaxOfflineHours);
+
+/// <summary>Règle des postes à enregistrer pour le dossier.</summary>
+public sealed record SaveSyncPolicyRequest
+{
+    /// <summary>Durée maximale hors ligne, en heures (de 1 à 720, soit 30 jours).</summary>
+    public int MaxOfflineHours { get; init; }
+}
+
+/// <summary>Un poste qui s'est synchronisé avec le dossier (registre du serveur, étape 4.4).</summary>
+/// <param name="DeviceId">Identifiant du poste, tiré à son premier lancement.</param>
+/// <param name="FirstSeenAt">Premier contact avec le serveur.</param>
+/// <param name="LastSeenAt">Dernier contact.</param>
+/// <param name="LastUserId">Utilisateur du dernier contact.</param>
+/// <param name="RevokedAt">Révocation : le poste est refusé et sa réplique effacée à son prochain contact.</param>
+/// <param name="RevokedBy">Qui l'a révoqué.</param>
+/// <param name="WipedAt">Le poste a reçu sa révocation (sa réplique est effacée).</param>
+public sealed record SyncDeviceResponse(
+    Guid DeviceId,
+    DateTimeOffset FirstSeenAt,
+    DateTimeOffset LastSeenAt,
+    Guid? LastUserId,
+    DateTimeOffset? RevokedAt,
+    Guid? RevokedBy,
+    DateTimeOffset? WipedAt);
+
 public static class SyncHttp
 {
+    /// <summary>En-tête qui porte l'identifiant du poste sur chaque appel de synchronisation.</summary>
+    public const string DeviceHeader = "X-Lettra-Device";
+
+    /// <summary>Registre des postes du dossier ; <c>/{deviceId}/revocation</c> révoque un poste.</summary>
+    public const string DevicesPath = "/api/v1/sync/devices";
+
+    /// <summary>Règle des postes du dossier (durée maximale hors ligne).</summary>
+    public const string PolicyPath = "/api/v1/sync/policy";
+
     /// <summary>Route d'envoi des intentions.</summary>
     public const string IntentsPath = "/api/v1/sync/intents";
 

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using Lettra.Application.Abstractions.Persistence;
@@ -179,6 +180,9 @@ public enum SyncFailure
 
     /// <summary>Le dossier de la réplique ne s'ouvre pas sur le poste.</summary>
     DossierUnavailable = 4,
+
+    /// <summary>Le cabinet a révoqué ce poste : sa réplique est effacée, il ne se synchronise plus (étape 4.4).</summary>
+    DeviceRevoked = 5,
 }
 
 /// <summary>Compte rendu d'un cycle, pour l'UI et le journal du poste.</summary>
@@ -312,6 +316,12 @@ public sealed class SyncCoordinator(
         Guid dossier = services.GetRequiredService<ITenantContext>().Current.DossierId.Value;
         ISyncOutbox outbox = services.GetRequiredService<ISyncOutbox>();
         ISyncReplica replica = services.GetRequiredService<ISyncReplica>();
+        if (await replica.GetSettingAsync(DeviceSettings.RevokedKey, ct).ConfigureAwait(false) is not null)
+        {
+            Enter(SyncState.Failed);
+            return Report(SyncFailure.DeviceRevoked);
+        }
+
         IReadOnlyList<SyncOutboxItem> pending = await outbox.ListAsync(SyncOutboxStatus.Pending, ct).ConfigureAwait(false);
         summary = Summarize(pending);
 
@@ -379,6 +389,7 @@ public sealed class SyncCoordinator(
             // 4. Réception par pages ; chaque page et son jeton sont appliqués ensemble.
             Enter(SyncState.Pulling);
             bool more = true;
+            SyncPolicyResponse? policy = null;
             while (more)
             {
                 string? token = await replica.GetTokenAsync(ct).ConfigureAwait(false);
@@ -387,7 +398,11 @@ public sealed class SyncCoordinator(
                 received += applied.Applied;
                 kept += applied.KeptLocal;
                 more = changes.HasMore;
+                policy = changes.Policy ?? policy;
             }
+
+            // Contact réussi : le compte de la durée hors ligne repart d'ici, avec la règle du cabinet reçue (étape 4.4).
+            await RecordContactAsync(replica, policy, ct).ConfigureAwait(false);
 
             // 5. Série du poste (ADR-0007), au premier passage en ligne : elle permet ensuite de valider hors ligne.
             await EnsureDeviceSeriesAsync(dossier, replica, ct).ConfigureAwait(false);
@@ -396,6 +411,14 @@ public sealed class SyncCoordinator(
             int open = (await outbox.ListConflictsAsync(ct).ConfigureAwait(false)).Count;
             Enter(open > 0 ? SyncState.ResolvingConflicts : SyncState.UpToDate);
             return Report();
+        }
+        catch (SyncRefusedException refused) when (refused.Reason == SyncFailure.DeviceRevoked)
+        {
+            // Le cabinet a retiré ce poste : rien de ce qui reste ici ne doit rester lisible, outbox comprise.
+            await replica.WipeAsync(ct).ConfigureAwait(false);
+            await replica.SaveSettingAsync(DeviceSettings.RevokedKey, Millis(clock.GetUtcNow()), ct).ConfigureAwait(false);
+            Enter(SyncState.Failed);
+            return Report(SyncFailure.DeviceRevoked);
         }
         catch (SyncRefusedException refused)
         {
@@ -429,6 +452,18 @@ public sealed class SyncCoordinator(
                 : SyncReminder.None;
         }
     }
+
+    private async Task RecordContactAsync(ISyncReplica replica, SyncPolicyResponse? policy, CancellationToken ct)
+    {
+        await replica.SaveSettingAsync(DeviceSettings.LastContactKey, Millis(clock.GetUtcNow()), ct).ConfigureAwait(false);
+        if (policy is not null && OfflinePolicy.IsValid(policy.MaxOfflineHours))
+        {
+            await replica.SaveSettingAsync(
+                DeviceSettings.MaxOfflineHoursKey, policy.MaxOfflineHours.ToString(CultureInfo.InvariantCulture), ct).ConfigureAwait(false);
+        }
+    }
+
+    private static string Millis(DateTimeOffset at) => at.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture);
 
     private async Task EnsureDeviceSeriesAsync(Guid dossier, ISyncReplica replica, CancellationToken ct)
     {
