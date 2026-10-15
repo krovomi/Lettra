@@ -17,6 +17,7 @@ if (mode == DeploymentMode.IsolatedDesktop)
 
 builder.Services.AddLettra(builder.Configuration);
 builder.Services.AddLettraApiAuthentication(builder.Configuration);
+builder.Services.AddLettraRateLimiting(builder.Configuration);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IRequestedDossierSource, HeaderDossierSource>();
 builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.TypeInfoResolverChain.Insert(0, ContractsJsonContext.Default));
@@ -44,6 +45,7 @@ app.UseBlazorFrameworkFiles();
 app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 // Authentifié (MFA prouvée), puis anti-CSRF pour le cookie du BFF, puis dossier ; la permission vient par route.
 RouteGroupBuilder api = app.MapGroup("/api/v1")
