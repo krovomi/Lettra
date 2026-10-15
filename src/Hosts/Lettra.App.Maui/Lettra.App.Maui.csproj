@@ -33,7 +33,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
-    <SupportedOSPlatformVersion>21.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion>24.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
@@ -44,6 +44,13 @@
 
   <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
     <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+  </PropertyGroup>
+
+  <!-- ASP.NET Core n'existe pas sur Android, iOS ni Mac Catalyst : sa référence de framework, héritée de la composition
+       (endpoints de supervision, instrumentation OpenTelemetry), n'est pas reprise. Le poste n'exécute aucun de ces
+       chemins serveur. -->
+  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'windows'">
+    <DisableTransitiveFrameworkReferences>true</DisableTransitiveFrameworkReferences>
   </PropertyGroup>
 
   <!-- EF Core et la composition (configuration, injection) reposent sur la réflexion : pas de découpage sur mobile,
