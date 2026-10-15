@@ -1297,6 +1297,60 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.ToTable("NumberSeries", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Outbox.OutboxRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("integer");
+
+                    b.Property<long?>("DeliveredAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("EnqueuedAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid?>("LeaseOwner")
+                        .HasColumnType("uuid");
+
+                    b.Property<long?>("LeaseUntilMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("NextAttemptAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("ParkedAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique();
+
+                    b.HasIndex("DeliveredAtMs", "ParkedAtMs", "NextAttemptAtMs");
+
+                    b.ToTable("OutboxMessages", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.DeviceSeriesRecord", b =>
                 {
                     b.Property<string>("Code")

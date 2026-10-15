@@ -29,6 +29,40 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Outbox_ecrite_avec_le_changement_metier_et_envoyee_aussitot()
+    {
+        FakeRecipient recipient = new();
+        await using TenantHarness harness = OutboxScenarios.Harness(new SqliteConfigurator(), new ManualClock(OutboxScenarios.Start), recipient);
+        await OutboxScenarios.SameTransactionAsync(harness, recipient, DatabaseProvider.Sqlite, Database("outbox"));
+    }
+
+    [Fact]
+    public async Task Outbox_reprises_espacees_puis_mise_de_cote()
+    {
+        FakeRecipient recipient = new();
+        ManualClock clock = new(OutboxScenarios.Start);
+        await using TenantHarness harness = OutboxScenarios.Harness(new SqliteConfigurator(), clock, recipient);
+        await OutboxScenarios.RetryBackoffAndParkingAsync(harness, clock, recipient, DatabaseProvider.Sqlite, Database("outbox-reprise"));
+    }
+
+    [Fact]
+    public async Task Outbox_reprise_apres_un_arret_en_plein_envoi()
+    {
+        FakeRecipient recipient = new();
+        ManualClock clock = new(OutboxScenarios.Start);
+        await using TenantHarness harness = OutboxScenarios.Harness(new SqliteConfigurator(), clock, recipient);
+        await OutboxScenarios.CrashRecoveryAsync(harness, clock, recipient, DatabaseProvider.Sqlite, Database("outbox-arret"));
+    }
+
+    [Fact]
+    public async Task Outbox_envoyee_par_le_Worker_seul()
+    {
+        FakeRecipient recipient = new();
+        await using TenantHarness harness = OutboxScenarios.Harness(new SqliteConfigurator(), new ManualClock(OutboxScenarios.Start), recipient, inline: false);
+        await OutboxScenarios.WorkerOnlyAsync(harness, recipient, DatabaseProvider.Sqlite, Database("outbox-a"), Database("outbox-b"));
+    }
+
+    [Fact]
     public async Task Series_de_poste_ouvertes_recues_dans_l_ordre_et_installees_sur_le_poste()
     {
         await using TenantHarness harness = new(new SqliteConfigurator());
@@ -280,6 +314,44 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     }
 
     [SkippableFact]
+    public async Task Outbox_ecrite_avec_le_changement_metier_et_envoyee_aussitot()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        FakeRecipient recipient = new();
+        await using TenantHarness harness = OutboxScenarios.Harness(new PostgreSqlConfigurator(), new ManualClock(OutboxScenarios.Start), recipient);
+        await OutboxScenarios.SameTransactionAsync(harness, recipient, DatabaseProvider.PostgreSql, Database("outbox"));
+    }
+
+    [SkippableFact]
+    public async Task Outbox_reprises_espacees_puis_mise_de_cote()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        FakeRecipient recipient = new();
+        ManualClock clock = new(OutboxScenarios.Start);
+        await using TenantHarness harness = OutboxScenarios.Harness(new PostgreSqlConfigurator(), clock, recipient);
+        await OutboxScenarios.RetryBackoffAndParkingAsync(harness, clock, recipient, DatabaseProvider.PostgreSql, Database("outbox-reprise"));
+    }
+
+    [SkippableFact]
+    public async Task Outbox_reprise_apres_un_arret_en_plein_envoi()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        FakeRecipient recipient = new();
+        ManualClock clock = new(OutboxScenarios.Start);
+        await using TenantHarness harness = OutboxScenarios.Harness(new PostgreSqlConfigurator(), clock, recipient);
+        await OutboxScenarios.CrashRecoveryAsync(harness, clock, recipient, DatabaseProvider.PostgreSql, Database("outbox-arret"));
+    }
+
+    [SkippableFact]
+    public async Task Outbox_envoyee_par_le_Worker_seul()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        FakeRecipient recipient = new();
+        await using TenantHarness harness = OutboxScenarios.Harness(new PostgreSqlConfigurator(), new ManualClock(OutboxScenarios.Start), recipient, inline: false);
+        await OutboxScenarios.WorkerOnlyAsync(harness, recipient, DatabaseProvider.PostgreSql, Database("outbox-a"), Database("outbox-b"));
+    }
+
+    [SkippableFact]
     public async Task Series_de_poste_ouvertes_recues_dans_l_ordre_et_installees_sur_le_poste()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
@@ -524,6 +596,44 @@ public sealed class SqlServerTests : IAsyncLifetime
         Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new SqlServerConfigurator(), syncJournal: true);
         await SyncPersistenceScenarios.JournalFeedOutboxAndReceiptsAsync(harness, DatabaseProvider.SqlServer, Database("sync"));
+    }
+
+    [SkippableFact]
+    public async Task Outbox_ecrite_avec_le_changement_metier_et_envoyee_aussitot()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        FakeRecipient recipient = new();
+        await using TenantHarness harness = OutboxScenarios.Harness(new SqlServerConfigurator(), new ManualClock(OutboxScenarios.Start), recipient);
+        await OutboxScenarios.SameTransactionAsync(harness, recipient, DatabaseProvider.SqlServer, Database("outbox"));
+    }
+
+    [SkippableFact]
+    public async Task Outbox_reprises_espacees_puis_mise_de_cote()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        FakeRecipient recipient = new();
+        ManualClock clock = new(OutboxScenarios.Start);
+        await using TenantHarness harness = OutboxScenarios.Harness(new SqlServerConfigurator(), clock, recipient);
+        await OutboxScenarios.RetryBackoffAndParkingAsync(harness, clock, recipient, DatabaseProvider.SqlServer, Database("outbox-reprise"));
+    }
+
+    [SkippableFact]
+    public async Task Outbox_reprise_apres_un_arret_en_plein_envoi()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        FakeRecipient recipient = new();
+        ManualClock clock = new(OutboxScenarios.Start);
+        await using TenantHarness harness = OutboxScenarios.Harness(new SqlServerConfigurator(), clock, recipient);
+        await OutboxScenarios.CrashRecoveryAsync(harness, clock, recipient, DatabaseProvider.SqlServer, Database("outbox-arret"));
+    }
+
+    [SkippableFact]
+    public async Task Outbox_envoyee_par_le_Worker_seul()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        FakeRecipient recipient = new();
+        await using TenantHarness harness = OutboxScenarios.Harness(new SqlServerConfigurator(), new ManualClock(OutboxScenarios.Start), recipient, inline: false);
+        await OutboxScenarios.WorkerOnlyAsync(harness, recipient, DatabaseProvider.SqlServer, Database("outbox-a"), Database("outbox-b"));
     }
 
     [SkippableFact]
