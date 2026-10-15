@@ -103,8 +103,14 @@ step "Connexion BFF : l'API lit la découverte de Keycloak (dans la cellule) et 
 read -r statut redirection < <(curl -sS -o /dev/null -w '%{http_code} %{redirect_url}\n' http://localhost:8081/bff/login)
 [[ "$statut" == 302 ]] || echec "/bff/login a répondu $statut"
 [[ "$redirection" == "$EMETTEUR/protocol/openid-connect/auth?"* ]] || echec "redirection inattendue : $redirection"
-[[ "$redirection" == *client_id=lettra-bff* && "$redirection" == *code_challenge_method=S256* ]] \
-  || echec "la redirection ne porte pas lettra-bff avec PKCE S256 : $redirection"
+[[ "$redirection" == *client_id=lettra-bff* ]] || echec "la redirection ne porte pas le client lettra-bff : $redirection"
+# Keycloak publie un point PAR (RFC 9126) : l'API y pousse d'abord sa demande (PKCE S256 compris), authentifiée par le
+# secret du BFF, par le Service interne. Le navigateur ne reçoit qu'un request_uri : preuve de l'appel serveur à serveur.
+if [[ "$redirection" == *request_uri=urn%3Aietf%3Aparams%3Aoauth%3Arequest_uri%3A* ]]; then
+  echo "   demande poussée (PAR) acceptée : secret du BFF partagé entre l'API et Keycloak"
+else
+  [[ "$redirection" == *code_challenge_method=S256* ]] || echec "ni PAR ni PKCE S256 dans la redirection : $redirection"
+fi
 page=$(curl -sS -o "$SORTIE/page-connexion.html" -w '%{http_code}' "$redirection")
 [[ "$page" == 200 ]] || echec "Keycloak refuse la demande du BFF ($page)"
 grep -q 'kc-form-login' "$SORTIE/page-connexion.html" || echec "pas de formulaire de connexion Keycloak"
