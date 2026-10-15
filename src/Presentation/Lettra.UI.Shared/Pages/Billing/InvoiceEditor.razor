@@ -166,6 +166,11 @@ else
             </div>
 
             <ComplianceChecklist Report="_compliance" OnFindingSelected="FocusFindingAsync" />
+
+            @if (_invoice is { Status: not InvoiceStatusDto.Draft, Number: not null } transmitted)
+            {
+                <PlatformTransmissionPanel Invoice="transmitted" OnInvoiceChanged="ReloadAsync" />
+            }
         </aside>
     </div>
 }

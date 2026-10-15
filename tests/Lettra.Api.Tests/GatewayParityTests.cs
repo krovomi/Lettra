@@ -47,6 +47,8 @@ public sealed class GatewayParityTests(LettraApiFactory factory) : IClassFixture
             [LettraBootstrap.LocalDataDirectoryKey] = _folder,
             ["Lettra:LocalIdentity:StorePath"] = Path.Combine(_folder, "compte-local.json"),
             ["Lettra:LocalIdentity:Pbkdf2Iterations"] = "1000",
+            // Comme l'API de test : la plateforme agréée simulée (par défaut, aucune plateforme et tout envoi échoue).
+            ["Lettra:EInvoicing:Platform"] = "Simulated",
         }).Build();
 
         ServiceCollection services = new();
@@ -170,6 +172,48 @@ public sealed class GatewayParityTests(LettraApiFactory factory) : IClassFixture
             .Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.EInvoice.NotValidated);
         (await invoices.DeleteAsync(credit.Value.Id, credit.Value.Version, default)).Value.Should().BeTrue();
         (await invoices.DeleteAsync(draft.Id, null, default)).Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Billing.NotDraft);
+    }
+
+    [Theory]
+    [MemberData(nameof(Transports))]
+    public async Task Transmettre_a_la_plateforme_puis_declarer_un_encaissement_partiel(string transport)
+    {
+        await using ServiceProvider services = Gateway(transport);
+        IInvoicesGateway invoices = services.GetRequiredService<IInvoicesGateway>();
+        IPlatformTransmissionGateway platform = services.GetRequiredService<IPlatformTransmissionGateway>();
+        Guid customer = (await services.GetRequiredService<ICustomersGateway>().CreateAsync(CustomerApiTests.Martin(), default)).Value!.Id;
+        (await services.GetRequiredService<IBillingSettingsGateway>().SaveCompanyProfileAsync(
+            new SaveCompanyProfileRequest
+            {
+                Name = "Conseil Lettra", LegalForm = "SAS", ShareCapital = 10_000m, Siren = "552100554", Rcs = "RCS Paris 552 100 554",
+                VatNumber = "FR96552100554", AddressLine1 = "10 avenue de l'Opéra", PostalCode = "75001", City = "Paris",
+                LatePenaltyRate = 10m, EarlyPaymentDiscount = "Pas d'escompte pour paiement anticipé",
+            },
+            null,
+            default)).IsSuccess.Should().BeTrue();
+        InvoiceResponse draft = (await invoices.CreateAsync(
+            new SaveInvoiceRequest
+            {
+                CustomerId = customer,
+                Lines = [new DocumentLineRequest { Designation = "Conseil", Quantity = 3, UnitPriceExclTax = 100m, UnitCode = "HUR", Kind = CatalogItemKindDto.Service }],
+            },
+            default)).Value!;
+        (await platform.GetAsync(draft.Id, default)).Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Platform.NotTransmitted);
+        InvoiceResponse validated = (await invoices.ValidateAsync(draft.Id, draft.Version, default)).Value!;
+
+        OperationResult<PlatformTransmissionResponse> sent = await platform.TransmitAsync(validated.Id, new TransmitInvoiceRequest(), default);
+        sent.IsSuccess.Should().BeTrue(string.Join(", ", sent.Errors.Select(e => e.Code)));
+        OperationResult<PlatformTransmissionResponse> refreshed = await platform.RefreshAsync(validated.Id, default);
+        OperationResult<PlatformTransmissionResponse> paid = await platform.ReportPaymentAsync(
+            validated.Id, new ReportPaymentRequest { Date = validated.IssueDate!.Value, Amount = 100m }, default);
+
+        sent.Value!.Status.Should().Be(PlatformStatusDto.Deposited);
+        sent.Value.Channel.Should().Be(PlatformChannelDto.EInvoice);
+        (await invoices.GetAsync(validated.Id, default)).Value!.Status.Should().Be(InvoiceStatusDto.Issued, "le dépôt émet la pièce");
+        refreshed.IsSuccess.Should().BeTrue();
+        paid.Value!.CollectedAmount.Should().Be(100m);
+        paid.Value.IsFinal.Should().BeFalse("360 € TTC, 100 € encaissés");
+        (await platform.GetAsync(validated.Id, default)).Value!.History.Should().HaveCount(paid.Value.History.Count);
     }
 
     public void Dispose()
