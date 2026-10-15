@@ -51,10 +51,11 @@ public static class LettraBootstrap
         return mode switch
         {
             DeploymentMode.IsolatedDesktop => services
-                .AddLocalDossiers(configuration[LocalDataDirectoryKey]
-                    ?? throw new InvalidOperationException($"{LocalDataDirectoryKey} est obligatoire en mode {mode}."))
+                .AddLocalDossiers(LocalDataDirectory(configuration, mode))
                 .AddLocalIdentity(configuration)
-                .AddSupervision(configuration),
+                .AddSupervision(configuration)
+                .AddSupervisionDatabase(b => SqliteConfigurator.ConfigureSupervision(
+                    b, $"Data Source={Path.Combine(LocalDataDirectory(configuration, mode), "supervision.db")}")),
 
             // Serveur du cabinet : dossiers sur SQLite, PostgreSQL ou SQL Server, catalogue sur le même serveur.
             DeploymentMode.LocalNetwork => services
@@ -63,14 +64,16 @@ public static class LettraBootstrap
                 .AddSqlServerProvider()
                 .AddCatalogDatabase(configuration, CatalogDatabase(configuration))
                 .AddOidcIdentity(configuration)
-                .AddSupervision(configuration),
+                .AddSupervision(configuration)
+                .AddSupervisionDatabase(SupervisionDatabase(configuration)),
 
             // PostgreSQL dédié (mode 3) ou cellule SaaS (mode 5) : une base par dossier, derrière PgBouncer en SaaS.
             DeploymentMode.OnPremRemote or DeploymentMode.HostedSaaS => services
                 .AddPostgreSqlProvider()
                 .AddCatalogDatabase(configuration, CatalogDatabase(configuration))
                 .AddOidcIdentity(configuration)
-                .AddSupervision(configuration),
+                .AddSupervision(configuration)
+                .AddSupervisionDatabase(SupervisionDatabase(configuration)),
 
             DeploymentMode.HybridCloud => throw new NotSupportedException(
                 $"Mode {mode} : nécessite la synchronisation (phase 4)."),
@@ -90,13 +93,49 @@ public static class LettraBootstrap
         {
             case DeploymentMode.IsolatedDesktop:
                 await services.GetRequiredService<LocalDossierStartup>().EnsureReadyAsync(cancellationToken).ConfigureAwait(false);
+                await services.MigrateSupervisionAsync(cancellationToken).ConfigureAwait(false);
                 break;
             case DeploymentMode.LocalNetwork or DeploymentMode.OnPremRemote or DeploymentMode.HostedSaaS:
                 bool migrate = configuration.GetValue("Lettra:Catalog:MigrateOnStartup", configuration.GetDeploymentMode() != DeploymentMode.HostedSaaS);
                 await services.InitializeCatalogAsync(migrate, cancellationToken).ConfigureAwait(false);
+                if (migrate)
+                {
+                    await services.MigrateSupervisionAsync(cancellationToken).ConfigureAwait(false);
+                }
+
                 break;
         }
     }
+
+    private static string LocalDataDirectory(IConfiguration configuration, DeploymentMode mode) =>
+        configuration[LocalDataDirectoryKey] ?? throw new InvalidOperationException($"{LocalDataDirectoryKey} est obligatoire en mode {mode}.");
+
+    /// <summary>
+    /// Base de supervision des modes serveur : par défaut celle du catalogue (même provider, même chaîne de connexion),
+    /// sous son schéma ; <c>Lettra:Supervision:ConnectionStringName</c> la sépare si l'exploitation le souhaite.
+    /// </summary>
+    private static Action<DbContextOptionsBuilder> SupervisionDatabase(IConfiguration configuration) => builder =>
+    {
+        DatabaseProvider provider = configuration.GetValue("Lettra:Catalog:Provider", DatabaseProvider.Sqlite);
+        string name = configuration.GetValue<string?>("Lettra:Supervision:ConnectionStringName")
+            ?? configuration.GetValue("Lettra:Catalog:ConnectionStringName", "Catalog")!;
+        string connectionString = configuration.GetConnectionString(name)
+            ?? throw new InvalidOperationException($"ConnectionStrings:{name} (base de supervision) est obligatoire.");
+        switch (provider)
+        {
+            case DatabaseProvider.Sqlite:
+                SqliteConfigurator.ConfigureSupervision(builder, connectionString);
+                break;
+            case DatabaseProvider.PostgreSql:
+                PostgreSqlConfigurator.ConfigureSupervision(builder, connectionString);
+                break;
+            case DatabaseProvider.SqlServer:
+                SqlServerConfigurator.ConfigureSupervision(builder, connectionString);
+                break;
+            default:
+                throw new NotSupportedException($"Provider {provider} inconnu pour la supervision.");
+        }
+    };
 
     /// <summary>
     /// Lu à la construction des options, pas à l'enregistrement : la configuration complète (y compris les sources

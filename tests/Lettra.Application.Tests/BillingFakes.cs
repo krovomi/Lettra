@@ -20,7 +20,7 @@ namespace Lettra.Application.Tests;
 /// </summary>
 internal sealed class InMemoryBilling :
     IQuoteRepository, IQuoteReadStore, IInvoiceRepository, IInvoiceReadStore, ICompanyProfileRepository, ISalesJournal,
-    IPriceListRepository, IPriceListReadStore, IDocumentNumbering, IIntegrityJournal
+    IPriceListRepository, IPriceListReadStore, IDocumentNumbering, IIntegrityJournal, IBillingTransaction
 {
     public Dictionary<QuoteId, Quote> Quotes { get; } = [];
 
@@ -151,6 +151,18 @@ internal sealed class InMemoryBilling :
         return result;
     }
 
+    public async Task<Result> ExecuteAsync(Func<CancellationToken, Task<Result>> work, CancellationToken cancellationToken)
+    {
+        int journaled = Journal.Count;
+        Result result = await work(cancellationToken);
+        if (result.IsFailure)
+        {
+            Journal.RemoveRange(journaled, Journal.Count - journaled);
+        }
+
+        return result;
+    }
+
     public Task<Result<long>> AppendAsync(DocumentLifecycleEvent @event, CancellationToken ct)
     {
         Journal.Add(@event);
@@ -203,6 +215,7 @@ internal static class BillingFakesRegistration
         services.AddSingleton<IPriceListReadStore>(billing);
         services.AddSingleton<IDocumentNumbering>(billing);
         services.AddSingleton<IIntegrityJournal>(billing);
+        services.AddSingleton<IBillingTransaction>(billing);
         services.AddSingleton<IBillingReferenceChecker, FakeBillingReferenceChecker>();
         return services;
     }

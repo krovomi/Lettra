@@ -27,6 +27,7 @@
   <data name="Grid.DefaultLabel" xml:space="preserve"><value>Data entry grid</value></data>
   <data name="Keyboard.FunctionKeys" xml:space="preserve"><value>Function keys</value></data>
   <data name="Loading" xml:space="preserve"><value>Loading…</value></data>
+  <data name="Nav.Alerts" xml:space="preserve"><value>Alerts</value></data>
   <data name="Nav.Catalog" xml:space="preserve"><value>Catalogue</value></data>
   <data name="Nav.Customers" xml:space="preserve"><value>Customers</value></data>
   <data name="Nav.Label" xml:space="preserve"><value>Main navigation</value></data>

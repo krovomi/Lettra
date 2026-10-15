@@ -292,13 +292,20 @@ internal sealed class DeleteInvoiceHandler(
 internal sealed class IssueInvoiceHandler(
     IInvoiceRepository invoices,
     Abstractions.Integrity.IIntegrityJournal journal,
+    IBillingTransaction transaction,
     ICurrentUser user,
-    IUnitOfWork unitOfWork,
     TimeProvider clock) : ICommandHandler<IssueInvoiceCommand, Result>
 {
-    public async Task<Result> HandleAsync(IssueInvoiceCommand command, CancellationToken cancellationToken)
+    // L'émission et son entrée au journal inaltérable s'enregistrent ensemble : sans transaction ouverte, le journal
+    // enregistrerait seul et repartirait d'un suivi des modifications vide.
+    public Task<Result> HandleAsync(IssueInvoiceCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
+        return transaction.ExecuteAsync(token => IssueAsync(command, token), cancellationToken);
+    }
+
+    private async Task<Result> IssueAsync(IssueInvoiceCommand command, CancellationToken cancellationToken)
+    {
         Invoice? invoice = await invoices.FindAsync(command.InvoiceId, cancellationToken).ConfigureAwait(false);
         if (invoice is null)
         {
@@ -322,13 +329,7 @@ internal sealed class IssueInvoiceHandler(
                 ? Domain.Integrity.JournalEntryKind.CreditNoteIssued
                 : Domain.Integrity.JournalEntryKind.InvoiceIssued),
             cancellationToken).ConfigureAwait(false);
-        if (journaled.IsFailure)
-        {
-            return Result.Failure(journaled.Errors);
-        }
-
-        await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        return Result.Success();
+        return journaled.IsFailure ? Result.Failure(journaled.Errors) : Result.Success();
     }
 }
 

@@ -1,8 +1,10 @@
 using Lettra.Application.Abstractions.Ai;
+using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Persistence;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Infrastructure.Persistence.Ai;
 using Lettra.Infrastructure.Persistence.Billing;
+using Lettra.Infrastructure.Persistence.Integrity;
 using Lettra.Infrastructure.Persistence.Numbering;
 using Lettra.Infrastructure.Persistence.Repositories;
 using Lettra.Infrastructure.Persistence.Security;
@@ -35,6 +37,10 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IDocumentNumbering, DocumentNumbering>();
         services.AddSingleton<IDossierKeyring, AesGcmDossierKeyring>();
+        services.AddSingleton<IIntegrityKeyring, DerivedIntegrityKeyring>();
+        services.AddScoped<IIntegrityJournal, EfIntegrityJournal>();
+        services.AddScoped<IIntegrityStore, EfIntegrityStore>();
+        services.AddScoped<ISealedArchiveBuilder, EfSealedArchiveBuilder>();
         services.AddPartiesAndCatalogStores();
         services.AddBillingStores();
 

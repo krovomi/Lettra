@@ -56,6 +56,8 @@ public sealed class BillingTests : IAsyncLifetime
         services.AddSingleton<ICustomerRepository>(_customers);
         services.AddSingleton<ICustomerReadStore>(_customers);
         services.AddSingleton<IUnitOfWork>(_customers);
+        // Le faux de facturation enregistre son propre journal après celui-ci : c'est lui que les tests interrogent.
+        services.AddIntegrityFakes(new InMemoryIntegrity(Dossier));
         services.AddPartiesAndCatalogFakes(_catalog, new FakeDirectories(), _billing);
         services.AddSingleton<IDossierProvisioner>(new RecordingDossierProvisioner());
         services.AddSingleton<IAuthorizationDirectory>(new EmptyAuthorizationDirectory());

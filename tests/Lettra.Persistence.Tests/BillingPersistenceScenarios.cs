@@ -3,12 +3,14 @@ using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Features.Billing;
 using Lettra.Application.Features.Customers;
+using Lettra.Application.Features.Integrity;
 using Lettra.Calculations;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Common;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Common;
+using Lettra.Domain.Integrity;
 using Lettra.Domain.Parties;
 using Lettra.Domain.SharedKernel;
 using Lettra.Infrastructure.Persistence;
@@ -137,6 +139,11 @@ internal static class BillingPersistenceScenarios
             PagedResponse<InvoiceSummary> list = (await queries.QueryAsync(new ListInvoicesQuery(dossier, Search: "martin"), default)).Value;
             list.TotalCount.Should().Be(3);
             list.Items.Select(i => i.Number).Should().Equal("FAC-000003", "FAC-000002", "FAC-000001");
+
+            // La chaîne anti-fraude relit les pièces en base : chaque empreinte journalisée est celle de la pièce.
+            IntegrityReport integrity = (await scope.ServiceProvider.GetRequiredService<DossierIntegrityService>().VerifyAsync(default)).Value;
+            integrity.Findings.Should().BeEmpty();
+            integrity.DocumentsChecked.Should().Be(4);
         }
     }
 

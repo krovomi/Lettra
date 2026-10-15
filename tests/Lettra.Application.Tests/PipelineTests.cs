@@ -44,6 +44,7 @@ public sealed class PipelineTests : IAsyncLifetime
         services.AddSingleton<ICustomerReadStore>(_customers);
         services.AddSingleton<IUnitOfWork>(_customers);
         services.AddPartiesAndCatalogFakes(new InMemoryPartiesAndCatalog(), new FakeDirectories());
+        services.AddIntegrityFakes(new InMemoryIntegrity(Dossier));
         services.AddSingleton<IDossierProvisioner>(_provisioner);
         services.AddSingleton<Lettra.Application.Abstractions.Identity.IAuthorizationDirectory>(new EmptyAuthorizationDirectory());
         services.AddSingleton<Lettra.Application.Abstractions.Tenancy.IDossierDirectory>(new EmptyDossierDirectory());

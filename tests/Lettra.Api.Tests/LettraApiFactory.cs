@@ -39,6 +39,9 @@ public sealed class LettraApiFactory : WebApplicationFactory<Program>
 
     public ConcurrentQueue<string> Logs { get; } = new();
 
+    /// <summary>Fichier SQLite du dossier de test : les tests d'altération y écrivent directement.</summary>
+    public string DossierDatabase => Path.Combine(_folder, "api.db");
+
     public static Dictionary<string, string?> DossierSettings(string database) => new()
     {
         ["ConnectionStrings:Catalog"] = $"Data Source={database}.catalog;Pooling=False",
@@ -54,11 +57,12 @@ public sealed class LettraApiFactory : WebApplicationFactory<Program>
         builder.UseEnvironment("Development");
         builder.ConfigureAppConfiguration(config =>
         {
-            Dictionary<string, string?> settings = DossierSettings(Path.Combine(_folder, "api.db"));
+            Dictionary<string, string?> settings = DossierSettings(DossierDatabase);
             settings["Lettra:DeploymentMode"] = "LocalNetwork";
             settings["Lettra:Identity:Oidc:Authority"] = Issuer;
 
             // Création de dossiers : la clé du cabinet de démonstration et un serveur SQLite local.
+            settings["Lettra:Organisations:0:Id"] = CabinetId.ToString();
             settings["Lettra:Organisations:0:Kek"] = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
             settings["Lettra:Clusters:local:Provider"] = "Sqlite";
             settings["Lettra:Clusters:local:Directory"] = Path.Combine(_folder, "dossiers");

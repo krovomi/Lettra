@@ -1,0 +1,262 @@
+@page "/alerts"
+@page "/alerts/{Id:guid}"
+@using Lettra.Contracts.Alerts
+@inject IAlertsGateway Gateway
+@inject IStringLocalizer<SharedResource> L
+
+@* Centre d'alertes v1 (annexe G §8) : compteurs par gravité, liste triée, détail avec sa chronologie et actions
+   tracées. Aucune donnée de dossier : titre de la règle, portée et dates. *@
+
+<PageTitle>@L["Alerts.Title"] · Lettra</PageTitle>
+
+<h1 tabindex="-1">@L["Alerts.Title"]</h1>
+
+<div class="lettra-inline" role="group" aria-label="@L["Alerts.Filters"]">
+    <label><input type="checkbox" id="alerts-cabinet" checked="@_cabinetWide" @onchange="ToggleCabinetAsync" /> @L["Alerts.CabinetWide"]</label>
+    <label><input type="checkbox" id="alerts-closed" checked="@_includeClosed" @onchange="ToggleClosedAsync" /> @L["Alerts.IncludeClosed"]</label>
+</div>
+
+<GeneralErrors Errors="_errors" />
+
+@if (_centre is null)
+{
+    <p>@L["Loading"]</p>
+}
+else
+{
+    <section aria-labelledby="counters-title" class="lettra-card">
+        <h2 id="counters-title">@L["Alerts.Counters.Title"]</h2>
+        <ul class="lettra-alert-counters">
+            @foreach (AlertSeverityCounter counter in _centre.Counters)
+            {
+                <li class="lettra-severity-@counter.Severity.ToString().ToLowerInvariant()">
+                    <strong>@counter.Severity</strong>
+                    @string.Format(CultureInfo.CurrentCulture, L["Alerts.Counters.Open"], counter.Open)
+                    @if (counter.OldestUnacknowledgedSince is DateTimeOffset since)
+                    {
+                        <span> · @string.Format(CultureInfo.CurrentCulture, L["Alerts.Counters.OldestUnacknowledged"], When(since))</span>
+                    }
+                </li>
+            }
+        </ul>
+    </section>
+
+    <section aria-labelledby="list-title" class="lettra-card">
+        <h2 id="list-title">@L["Alerts.List.Title"]</h2>
+        @if (_centre.Alerts.Count == 0)
+        {
+            <p>@L["Alerts.List.Empty"]</p>
+        }
+        else
+        {
+            <table class="lettra-table">
+                <thead>
+                    <tr>
+                        <th scope="col">@L["Alerts.Field.Severity"]</th>
+                        <th scope="col">@L["Alerts.Field.Title"]</th>
+                        <th scope="col">@L["Alerts.Field.Scope"]</th>
+                        <th scope="col">@L["Alerts.Field.State"]</th>
+                        <th scope="col">@L["Alerts.Field.LastSeen"]</th>
+                        <th scope="col">@L["Alerts.Field.Occurrences"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (AlertSummary alert in _centre.Alerts)
+                    {
+                        <tr aria-current="@(alert.Id == Id ? "true" : null)">
+                            <td>@alert.Severity</td>
+                            <td><a href="alerts/@alert.Id">@RuleTitle(alert)</a></td>
+                            <td>@L["Alerts.Scope." + alert.ScopeLevel]</td>
+                            <td>@L["Alerts.State." + alert.State]</td>
+                            <td>@When(alert.LastSeen)</td>
+                            <td>@alert.Occurrences</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </section>
+}
+
+@if (_detail is not null)
+{
+    AlertSummary alert = _detail.Alert;
+    <section aria-labelledby="detail-title" class="lettra-card lettra-alert-detail">
+        <h2 id="detail-title">@alert.Severity · @RuleTitle(alert)</h2>
+        <dl>
+            <dt>@L["Alerts.Field.State"]</dt>
+            <dd>@L["Alerts.State." + alert.State]</dd>
+            <dt>@L["Alerts.Field.Scope"]</dt>
+            <dd>@L["Alerts.Scope." + alert.ScopeLevel]</dd>
+            <dt>@L["Alerts.Field.OpenedAt"]</dt>
+            <dd>@When(alert.OpenedAt)</dd>
+            @if (alert.TakeoverDue is DateTimeOffset due && alert.State == AlertState.New)
+            {
+                <dt>@L["Alerts.Field.TakeoverDue"]</dt>
+                <dd>@When(due)</dd>
+            }
+            @if (alert.AcknowledgedBy is not null)
+            {
+                <dt>@L["Alerts.Field.AcknowledgedBy"]</dt>
+                <dd>@alert.AcknowledgedBy</dd>
+            }
+        </dl>
+
+        @if (alert.State is AlertState.New or AlertState.Acknowledged)
+        {
+            <div class="lettra-inline">
+                @if (alert.State == AlertState.New)
+                {
+                    <button type="button" id="alert-acknowledge" disabled="@_busy" @onclick="AcknowledgeAsync">@L["Alerts.Acknowledge"]</button>
+                }
+                <button type="button" id="alert-resolve" disabled="@_busy" @onclick="ResolveAsync">@L["Alerts.Resolve"]</button>
+            </div>
+
+            <EditForm Model="_severity" OnValidSubmit="ChangeSeverityAsync" FormName="alert-severity">
+                <DataAnnotationsValidator />
+                <label for="alert-severity">@L["Alerts.Severity.New"]</label>
+                <InputSelect id="alert-severity" @bind-Value="_severity.Severity">
+                    @foreach (AlertSeverity severity in Enum.GetValues<AlertSeverity>())
+                    {
+                        <option value="@severity">@severity</option>
+                    }
+                </InputSelect>
+                <label for="alert-reason">@L["Alerts.Severity.Reason"]</label>
+                <InputText id="alert-reason" @bind-Value="_severity.Reason" maxlength="@ChangeAlertSeverityRequest.MaxReasonLength" />
+                <FieldErrors Field="@nameof(ChangeAlertSeverityRequest.Reason)" ServerErrors="_errors" />
+                <button type="submit" disabled="@_busy">@L["Alerts.Severity.Submit"]</button>
+            </EditForm>
+        }
+
+        <h3>@L["Alerts.Timeline.Title"]</h3>
+        <ol class="lettra-timeline">
+            @foreach (AlertTimelineItem item in _detail.Timeline)
+            {
+                <li>
+                    <time>@When(item.At)</time> · @Event(item.Kind) · @L["Alerts.Actor." + item.ActorKind]
+                    @if (!string.IsNullOrEmpty(item.Reason))
+                    {
+                        <span> · @item.Reason</span>
+                    }
+                </li>
+            }
+        </ol>
+    </section>
+}
+
+@code {
+    [Parameter] public Guid? Id { get; set; }
+
+    private AlertCentreResponse? _centre;
+    private AlertDetailResponse? _detail;
+    private ChangeAlertSeverityRequest _severity = new();
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private bool _cabinetWide;
+    private bool _includeClosed;
+    private bool _busy;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadAsync();
+        await LoadDetailAsync();
+    }
+
+    private async Task ToggleCabinetAsync(ChangeEventArgs e)
+    {
+        _cabinetWide = e.Value is true;
+        await LoadAsync();
+    }
+
+    private async Task ToggleClosedAsync(ChangeEventArgs e)
+    {
+        _includeClosed = e.Value is true;
+        await LoadAsync();
+    }
+
+    private Task AcknowledgeAsync() => ActAsync(id => Gateway.AcknowledgeAsync(id, CancellationToken.None));
+
+    private Task ResolveAsync() => ActAsync(id => Gateway.ResolveAsync(id, CancellationToken.None));
+
+    private Task ChangeSeverityAsync() => ActAsync(id => Gateway.ChangeSeverityAsync(id, _severity, CancellationToken.None));
+
+    private async Task ActAsync(Func<Guid, Task<OperationResult<AlertDetailResponse>>> action)
+    {
+        if (_detail is null)
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            OperationResult<AlertDetailResponse> result = await action(_detail.Alert.Id);
+            if (result.IsSuccess)
+            {
+                _detail = result.Value;
+                _severity = new ChangeAlertSeverityRequest { Severity = result.Value!.Alert.Severity };
+                _errors = [];
+                await LoadAsync();
+            }
+            else
+            {
+                _errors = result.Errors;
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        OperationResult<AlertCentreResponse> result = await Gateway.ListAsync(_cabinetWide, _includeClosed, CancellationToken.None);
+        if (result.IsSuccess)
+        {
+            _centre = result.Value;
+        }
+        else
+        {
+            _errors = result.Errors;
+            _centre = new AlertCentreResponse([], []);
+        }
+    }
+
+    private async Task LoadDetailAsync()
+    {
+        _detail = null;
+        if (Id is not Guid id)
+        {
+            return;
+        }
+
+        OperationResult<AlertDetailResponse> result = await Gateway.GetAsync(id, _cabinetWide, CancellationToken.None);
+        if (result.IsSuccess)
+        {
+            _detail = result.Value;
+            _severity = new ChangeAlertSeverityRequest { Severity = result.Value!.Alert.Severity };
+        }
+        else
+        {
+            _errors = result.Errors;
+        }
+    }
+
+    /// <summary>Titre traduit de la règle quand elle est connue, sinon celui de la règle (technique, sans donnée de dossier).</summary>
+    private string RuleTitle(AlertSummary alert)
+    {
+        LocalizedString text = L["Alerts.Rule." + alert.RuleId];
+        return text.ResourceNotFound ? alert.Title : text.Value;
+    }
+
+    /// <summary>« SeverityChanged:S2 » devient « Gravité changée : S2 ».</summary>
+    private string Event(string kind)
+    {
+        string[] parts = kind.Split(':', 2);
+        LocalizedString text = L["Alerts.Event." + parts[0]];
+        string label = text.ResourceNotFound ? parts[0] : text.Value;
+        return parts.Length == 2 ? string.Format(CultureInfo.CurrentCulture, L["Alerts.Event.WithValue"], label, parts[1]) : label;
+    }
+
+    private static string When(DateTimeOffset at) => at.ToLocalTime().ToString("g", CultureInfo.CurrentCulture);
+}

@@ -4,6 +4,7 @@ using Lettra.Contracts.Common;
 using Lettra.Contracts.Pricing;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Catalog;
+using Lettra.Domain.Common;
 using Lettra.Domain.Pricing;
 using Lettra.Domain.SharedKernel;
 
@@ -98,4 +99,14 @@ public interface IBillingReferenceChecker
     Task<IReadOnlySet<CustomerId>> ExistingCustomersAsync(IReadOnlyCollection<CustomerId> ids, CancellationToken cancellationToken);
 
     Task<IReadOnlyDictionary<CatalogItemId, CatalogItem>> FindCatalogItemsAsync(IReadOnlyCollection<CatalogItemId> ids, CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// Exécute un travail sur les pièces et l'enregistre dans une transaction explicite : la pièce et son entrée au journal
+/// inaltérable sont enregistrées ensemble ou pas du tout. Si le travail échoue, rien n'est enregistré. Il peut être
+/// rejoué : il doit recharger ce qu'il modifie.
+/// </summary>
+public interface IBillingTransaction
+{
+    Task<Result> ExecuteAsync(Func<CancellationToken, Task<Result>> work, CancellationToken cancellationToken);
 }

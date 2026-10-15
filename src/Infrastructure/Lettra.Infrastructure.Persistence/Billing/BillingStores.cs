@@ -12,8 +12,8 @@ using Lettra.Domain.Pricing;
 using Lettra.Domain.SharedKernel;
 using Lettra.Infrastructure.Persistence.Tenancy;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Lettra.Infrastructure.Persistence.Billing;
 
@@ -386,13 +386,37 @@ internal sealed class JournaledDocumentReader(TenantDbSession session) : IJourna
 }
 
 /// <summary>
-/// Journal d'intégrité d'attente, tant que l'implémentation chaînée de la chaîne anti-fraude n'est pas fusionnée.
-/// Enregistré avec <c>TryAdd</c> : toute implémentation enregistrée par ailleurs prend le pas. Il n'inscrit rien.
+/// Transaction explicite d'un cas d'usage des pièces (émission) : la pièce et l'entrée du journal inaltérable sont
+/// enregistrées par le même <c>SaveChanges</c>, dans la même transaction, ou pas du tout.
 /// </summary>
-internal sealed class PendingIntegrityJournal : IIntegrityJournal
+internal sealed class BillingTransaction(TenantDbSession session) : IBillingTransaction
 {
-    public Task<Result<long>> AppendAsync(DocumentLifecycleEvent @event, CancellationToken ct) =>
-        Task.FromResult(Result<long>.Success(0));
+    public async Task<Result> ExecuteAsync(Func<CancellationToken, Task<Result>> work, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(work);
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        IExecutionStrategy strategy = db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(
+            (db, work),
+            static async (_, state, token) =>
+            {
+                state.db.ChangeTracker.Clear();
+                await using IDbContextTransaction transaction = await state.db.Database.BeginTransactionAsync(token).ConfigureAwait(false);
+                Result result = await state.work(token).ConfigureAwait(false);
+                if (result.IsFailure)
+                {
+                    await transaction.RollbackAsync(token).ConfigureAwait(false);
+                    state.db.ChangeTracker.Clear();
+                    return result;
+                }
+
+                await state.db.SaveChangesAsync(token).ConfigureAwait(false);
+                await transaction.CommitAsync(token).ConfigureAwait(false);
+                return result;
+            },
+            verifySucceeded: null,
+            cancellationToken).ConfigureAwait(false);
+    }
 }
 
 internal static class BillingRegistration
@@ -410,7 +434,7 @@ internal static class BillingRegistration
         services.AddScoped<IPriceListReadStore, PriceListReadStore>();
         services.AddScoped<IBillingReferenceChecker, BillingReferenceChecker>();
         services.AddScoped<IJournaledDocumentReader, JournaledDocumentReader>();
-        services.TryAddScoped<IIntegrityJournal, PendingIntegrityJournal>();
+        services.AddScoped<IBillingTransaction, BillingTransaction>();
         return services;
     }
 }
