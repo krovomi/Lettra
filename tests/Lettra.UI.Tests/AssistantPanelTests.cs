@@ -101,7 +101,7 @@ public sealed class AssistantPanelTests : BunitContext
     }
 
     [Fact]
-    public void Un_brouillon_propose_s_ouvre_dans_l_ecran_du_devis_et_n_envoie_aucun_document()
+    public async Task Un_brouillon_propose_s_ouvre_dans_l_ecran_du_devis_et_n_envoie_aucun_document()
     {
         Services.AddSingleton<IAssistantGateway>(_gateway);
         _gateway.Answer =
@@ -118,7 +118,9 @@ public sealed class AssistantPanelTests : BunitContext
         screen.WaitForElement("#assistant-question").Input("Devis pour Dupont : 3 jours de conseil à 650 €");
         screen.Find("form").Submit();
 
-        screen.WaitForElement(".assistant-open-draft").Click();
+        // Le flux re-rend le panneau à chaque événement : trouver et cliquer le bouton dans le même passage du moteur de rendu.
+        screen.WaitForAssertion(() => screen.FindAll(".is-suggestion").Should().ContainSingle(e => e.TextContent.Contains("Le brouillon est prêt.")));
+        await screen.InvokeAsync(() => screen.Find(".assistant-open-draft").Click());
         _gateway.Requests.Single().Should().BeEquivalentTo(new AskAssistantRequest
         {
             Feature = AssistantFeature.DraftFromText,
@@ -126,7 +128,7 @@ public sealed class AssistantPanelTests : BunitContext
             OpenDocumentId = null,
         });
         screen.Find(".is-draft").TextContent.Should().Contain("Brouillon de devis créé, à relire puis valider vous-même");
-        Services.GetRequiredService<NavigationManager>().Uri.Should().EndWith($"/quotes/{DocumentId}");
+        screen.WaitForAssertion(() => Services.GetRequiredService<NavigationManager>().Uri.Should().EndWith($"/quotes/{DocumentId}"));
     }
 
     [Fact]
