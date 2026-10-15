@@ -244,11 +244,13 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p artifacts/macos-run artifacts/lettra-macos
-          app=$(find src/Hosts/Lettra.App.Maui/bin/Release/net10.0-maccatalyst -maxdepth 4 -name 'Lettra.App.Maui.app' -type d | head -n 1)
+          find src/Hosts/Lettra.App.Maui/bin/Release/net10.0-maccatalyst -maxdepth 4 -name '*.app' -type d
+          app=$(find src/Hosts/Lettra.App.Maui/bin/Release/net10.0-maccatalyst -maxdepth 4 -name '*.app' -type d | head -n 1)
           echo "Application : $app"
           test -n "$app"
           ditto -c -k --keepParent "$app" artifacts/lettra-macos/Lettra-macos.zip
-          "$app/Contents/MacOS/Lettra.App.Maui" > artifacts/macos-run/sortie.txt 2>&1 &
+          exe=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$app/Contents/Info.plist")
+          "$app/Contents/MacOS/$exe" > artifacts/macos-run/sortie.txt 2>&1 &
           pid=$!
           dossiers=""
           for _ in $(seq 1 24); do
