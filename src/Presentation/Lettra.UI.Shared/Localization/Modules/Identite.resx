@@ -67,4 +67,7 @@
   <data name="Error.SegregationOfDuties.NotAvailable" xml:space="preserve">
     <value>La séparation des tâches n'est pas disponible sur un poste isolé à utilisateur unique.</value>
   </data>
+  <data name="Error.SegregationOfDuties.NotACreditNote" xml:space="preserve">
+    <value>Seul un avoir s'approuve : cette pièce n'en est pas un.</value>
+  </data>
 </root>
