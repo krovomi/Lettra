@@ -7,8 +7,8 @@ using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Application.Features.Parties;
 
-/// <summary>Créer un fournisseur dans le dossier courant.</summary>
-public sealed record CreateSupplierCommand(DossierId Dossier, Supplier.Draft Data)
+/// <summary>Créer un fournisseur dans le dossier courant, avec l'identifiant choisi par l'appelant s'il en donne un.</summary>
+public sealed record CreateSupplierCommand(DossierId Dossier, Supplier.Draft Data, SupplierId? Id = null)
     : ICommand<Result<SupplierId>>, IRequirePermission
 {
     public Permission Permission => Permission.TiersCreer;
@@ -22,7 +22,7 @@ internal sealed class CreateSupplierHandler(
     public async Task<Result<SupplierId>> HandleAsync(CreateSupplierCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
-        Result<Supplier> created = Supplier.Create(SupplierId.New(), command.Data, clock.GetUtcNow());
+        Result<Supplier> created = Supplier.Create(command.Id ?? SupplierId.New(), command.Data, clock.GetUtcNow());
         if (created.IsFailure)
         {
             return Result<SupplierId>.Failure(created.Errors);

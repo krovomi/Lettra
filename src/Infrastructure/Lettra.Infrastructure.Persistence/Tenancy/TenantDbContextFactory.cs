@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Frozen;
 using Lettra.Application.Abstractions.Tenancy;
+using Lettra.Infrastructure.Persistence.Sync;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -33,12 +34,15 @@ public interface IDossierDbContextFactory
 internal sealed class DossierDbContextFactory(
     ISecretStore secrets,
     IEnumerable<IDbProviderConfigurator> configurators,
-    ILoggerFactory loggerFactory) : IDossierDbContextFactory
+    ILoggerFactory loggerFactory,
+    IEnumerable<IDossierInterceptor> interceptors) : IDossierDbContextFactory
 {
     private readonly FrozenDictionary<DatabaseProvider, IDbProviderConfigurator> _byProvider =
         configurators.ToFrozenDictionary(c => c.Provider);
 
     private readonly ConcurrentDictionary<DatabaseProvider, string?> _latest = new();
+
+    private readonly IDossierInterceptor[] _interceptors = [.. interceptors];
 
     public async ValueTask<LettraDbContext> CreateAsync(TenantDescriptor tenant, bool verifyStamp, CancellationToken cancellationToken)
     {
@@ -49,6 +53,7 @@ internal sealed class DossierDbContextFactory(
         DbContextOptionsBuilder<LettraDbContext> builder = new DbContextOptionsBuilder<LettraDbContext>()
             .UseLoggerFactory(loggerFactory);
         configurator.Configure(builder, connectionString, tenant);
+        builder.AddInterceptors(_interceptors);
         LettraDbContext context = new(builder.Options, tenant);
         if (!verifyStamp)
         {

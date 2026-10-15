@@ -1,0 +1,39 @@
+using Lettra.Application.Abstractions.Messaging;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+
+namespace Lettra.Sync.Client;
+
+public static class DependencyInjection
+{
+    /// <summary>
+    /// Poste qui synchronise sa réplique avec un serveur (modes 2 à 5) : intentions écrites dans l'outbox avec chaque
+    /// commande, et <see cref="SyncCoordinator"/>. L'hôte fournit le transport, la sonde réseau et, à l'étape 4.3, la
+    /// demande à l'utilisateur et ses préférences.
+    /// </summary>
+    public static IServiceCollection AddSyncClient(this IServiceCollection services, Action<SyncClientOptions> configure)
+    {
+        ArgumentNullException.ThrowIfNull(configure);
+        SyncClientOptions options = new();
+        configure(options);
+        if (options.DeviceId == Guid.Empty)
+        {
+            throw new ArgumentException("Le poste doit avoir un identifiant (SyncClientOptions.DeviceId).", nameof(configure));
+        }
+
+        // Ajouté après les comportements de l'application : le plus interne, juste autour du handler.
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(SyncOutboxBehavior<,>));
+        services.AddSingleton(options);
+        services.TryAddSingleton(TimeProvider.System);
+        services.TryAddSingleton<ISyncConsentPrompt, AskEveryTimeLater>();
+        services.TryAddSingleton<ISyncPreferences>(new FixedSyncPreference(SyncPreference.AlwaysAsk));
+        services.AddSingleton<SyncCoordinator>();
+        return services;
+    }
+}
+
+/// <summary>Préférence fixe (en attendant l'écran des réglages de l'étape 4.3).</summary>
+public sealed class FixedSyncPreference(SyncPreference preference) : ISyncPreferences
+{
+    public SyncPreference Current { get; } = preference;
+}

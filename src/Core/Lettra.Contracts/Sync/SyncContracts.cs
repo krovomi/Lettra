@@ -1,0 +1,137 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Lettra.Contracts.Catalog;
+using Lettra.Contracts.Common;
+using Lettra.Contracts.Customers;
+using Lettra.Contracts.Suppliers;
+
+namespace Lettra.Contracts.Sync;
+
+/// <summary>
+/// Intention : une commande saisie sur un poste hors ligne, gardée dans son outbox puis rejouée par le serveur avec
+/// ses propres règles et les droits du moment (ADR-0008). Le format est celui des contrats : pas de troisième modèle.
+/// <para>
+/// <see cref="IdempotencyKey"/> identifie l'intention pour toujours : un renvoi après une réponse perdue rend le même
+/// résultat sans rien rejouer. Une intention n'est jamais réécrite dans l'outbox (constat 4 du POC).
+/// </para>
+/// </summary>
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+[JsonDerivedType(typeof(CreateCustomerIntent), "customer.create")]
+[JsonDerivedType(typeof(UpdateCustomerIntent), "customer.update")]
+[JsonDerivedType(typeof(CreateSupplierIntent), "supplier.create")]
+[JsonDerivedType(typeof(UpdateSupplierIntent), "supplier.update")]
+[JsonDerivedType(typeof(CreateCatalogItemIntent), "catalog-item.create")]
+[JsonDerivedType(typeof(UpdateCatalogItemIntent), "catalog-item.update")]
+[JsonDerivedType(typeof(SetCatalogItemArchivedIntent), "catalog-item.archive")]
+public abstract record SyncIntent(Guid IdempotencyKey, Guid EntityId, DateTimeOffset RecordedAt);
+
+/// <summary>Éléments synchronisés. Phase 4.1 : les tiers et le catalogue.</summary>
+public enum SyncEntityKind
+{
+    Customer = 1,
+    Supplier = 2,
+    CatalogItem = 3,
+}
+
+/// <summary>Création d'un client avec l'identifiant choisi sur le poste : le serveur crée le même.</summary>
+public sealed record CreateCustomerIntent(Guid IdempotencyKey, Guid EntityId, DateTimeOffset RecordedAt, CreateCustomerRequest Data)
+    : SyncIntent(IdempotencyKey, EntityId, RecordedAt);
+
+/// <summary>
+/// Modification d'un client. <see cref="Base"/> est l'état lu sur le poste juste avant la saisie : le serveur compare
+/// le contenu, pas la version, pour fusionner champ par champ (constat 2 du POC).
+/// </summary>
+public sealed record UpdateCustomerIntent(Guid IdempotencyKey, Guid EntityId, DateTimeOffset RecordedAt, CreateCustomerRequest Base, CreateCustomerRequest Data)
+    : SyncIntent(IdempotencyKey, EntityId, RecordedAt);
+
+public sealed record CreateSupplierIntent(Guid IdempotencyKey, Guid EntityId, DateTimeOffset RecordedAt, CreateSupplierRequest Data)
+    : SyncIntent(IdempotencyKey, EntityId, RecordedAt);
+
+public sealed record UpdateSupplierIntent(Guid IdempotencyKey, Guid EntityId, DateTimeOffset RecordedAt, CreateSupplierRequest Base, CreateSupplierRequest Data)
+    : SyncIntent(IdempotencyKey, EntityId, RecordedAt);
+
+public sealed record CreateCatalogItemIntent(Guid IdempotencyKey, Guid EntityId, DateTimeOffset RecordedAt, SaveCatalogItemRequest Data)
+    : SyncIntent(IdempotencyKey, EntityId, RecordedAt);
+
+public sealed record UpdateCatalogItemIntent(Guid IdempotencyKey, Guid EntityId, DateTimeOffset RecordedAt, SaveCatalogItemRequest Base, SaveCatalogItemRequest Data)
+    : SyncIntent(IdempotencyKey, EntityId, RecordedAt);
+
+/// <summary>Archivage ou réactivation d'un article ; <see cref="WasArchived"/> est l'état vu sur le poste.</summary>
+public sealed record SetCatalogItemArchivedIntent(Guid IdempotencyKey, Guid EntityId, DateTimeOffset RecordedAt, bool WasArchived, bool IsArchived)
+    : SyncIntent(IdempotencyKey, EntityId, RecordedAt);
+
+/// <summary>Ce que le serveur a fait d'une intention.</summary>
+[JsonConverter(typeof(JsonStringEnumConverter<SyncIntentOutcome>))]
+public enum SyncIntentOutcome
+{
+    /// <summary>Appliquée telle quelle : personne n'avait touché ces champs entre-temps.</summary>
+    Applied = 1,
+
+    /// <summary>Appliquée par-dessus des changements faits au bureau sur d'autres champs.</summary>
+    Merged = 2,
+
+    /// <summary>Les champs sans conflit sont appliqués ; les champs disputés gardent la valeur du serveur et attendent l'utilisateur.</summary>
+    Conflict = 3,
+
+    /// <summary>Refusée par les règles ou les droits du serveur : rien n'est appliqué (voir <see cref="SyncIntentResult.Errors"/>).</summary>
+    Rejected = 4,
+
+    /// <summary>Déjà appliquée (renvoi après une réponse perdue, ou même valeur déjà présente).</summary>
+    AlreadyApplied = 5,
+}
+
+/// <summary>Un champ modifié des deux côtés avec des valeurs différentes. Les valeurs sont celles du contrat, en JSON.</summary>
+public sealed record SyncFieldConflict(string Field, JsonElement Base, JsonElement Mine, JsonElement Server);
+
+public sealed record SyncIntentResult(
+    Guid IdempotencyKey,
+    Guid EntityId,
+    SyncIntentOutcome Outcome,
+    long? ServerVersion,
+    IReadOnlyList<SyncFieldConflict> Conflicts,
+    IReadOnlyList<ErrorDetail> Errors);
+
+/// <summary>Envoi d'un lot d'intentions, dans l'ordre de leur saisie.</summary>
+public sealed record PushSyncIntentsRequest(Guid DeviceId, IReadOnlyList<SyncIntent> Intents);
+
+public sealed record PushSyncIntentsResponse(IReadOnlyList<SyncIntentResult> Results);
+
+/// <summary>
+/// Changements du serveur depuis un jeton opaque (absent : instantané complet, par pages). Un élément n'y figure
+/// qu'une fois, dans son état actuel. Le poste garde <see cref="Token"/> et redemande tant que <see cref="HasMore"/>.
+/// Les éléments que l'utilisateur n'a pas le droit de lire sont absents (tiers ou catalogue).
+/// </summary>
+public sealed record SyncChangesResponse(
+    string Token,
+    bool HasMore,
+    IReadOnlyList<CustomerResponse> Customers,
+    IReadOnlyList<SupplierResponse> Suppliers,
+    IReadOnlyList<CatalogItemResponse> CatalogItems)
+{
+    [JsonIgnore]
+    public int Count => Customers.Count + Suppliers.Count + CatalogItems.Count;
+}
+
+public static class SyncIntents
+{
+    /// <summary>Nature de l'élément visé, pour regrouper les intentions et les changements reçus.</summary>
+    public static SyncEntityKind EntityOf(this SyncIntent intent) => intent switch
+    {
+        CreateCustomerIntent or UpdateCustomerIntent => SyncEntityKind.Customer,
+        CreateSupplierIntent or UpdateSupplierIntent => SyncEntityKind.Supplier,
+        CreateCatalogItemIntent or UpdateCatalogItemIntent or SetCatalogItemArchivedIntent => SyncEntityKind.CatalogItem,
+        _ => throw new ArgumentOutOfRangeException(nameof(intent), intent?.GetType().Name, "Intention inconnue."),
+    };
+}
+
+public static class SyncHttp
+{
+    /// <summary>Route d'envoi des intentions.</summary>
+    public const string IntentsPath = "/api/v1/sync/intents";
+
+    /// <summary>Route de réception des changements (<c>?token=…&amp;limit=…</c>).</summary>
+    public const string ChangesPath = "/api/v1/sync/changes";
+
+    /// <summary>Taille maximale d'un lot d'intentions accepté par le serveur.</summary>
+    public const int MaxBatch = 200;
+}
