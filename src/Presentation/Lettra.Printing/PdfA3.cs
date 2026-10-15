@@ -29,7 +29,18 @@ public sealed record PdfAttachment(
     ReadOnlyMemory<byte> Content,
     string MimeType,
     PdfAttachmentRelationship Relationship = PdfAttachmentRelationship.Data,
-    string? Description = null);
+    string? Description = null)
+{
+    /// <summary>Nom imposé au XML d'un Factur-X.</summary>
+    public const string FacturXFileName = "factur-x.xml";
+
+    /// <summary>
+    /// Le XML CII d'une facture (profil EN 16931) joint pour faire du PDF un Factur-X : le PDF/A-3 déclare alors aussi
+    /// le Factur-X dans ses métadonnées XMP.
+    /// </summary>
+    public static PdfAttachment FacturX(ReadOnlyMemory<byte> ciiXml) =>
+        new(FacturXFileName, ciiXml, "text/xml", PdfAttachmentRelationship.Data, "Factur-X");
+}
 
 /// <summary>
 /// Mise en conformité PDF/A-3b d'un document PDFsharp : profil de sortie sRGB, polices incorporées et
@@ -69,7 +80,9 @@ internal static class PdfA3
             ReplaceOnce(bytes, from, to);
         }
 
-        return bytes;
+        return attachments.Any(a => a.FileName == PdfAttachment.FacturXFileName)
+            ? FacturXMetadata.Declare(bytes)
+            : bytes;
     }
 
     private static PdfReference Attach(PdfDocument pdf, PdfAttachment attachment)
