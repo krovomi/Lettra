@@ -1,0 +1,198 @@
+@* Plateforme agréée (étape 5.3) : transmission d'une pièce validée, statuts du cycle de vie (XP Z12-012) et
+   encaissements, partiels ou non, jusqu'au TTC. Sans plateforme configurée, l'écran le dit au lieu de proposer l'envoi. *@
+@inject IPlatformTransmissionGateway Transmissions
+@inject IStringLocalizer<SharedResource> L
+
+<section id="platform" class="lettra-platform" aria-labelledby="platform-title">
+    <h2 id="platform-title">@L["Platform.Title"]</h2>
+
+    <GeneralErrors Errors="_errors" />
+
+    @if (_loading)
+    {
+        <p>@L["Loading"]</p>
+    }
+    else if (_notConfigured)
+    {
+        <p id="platform-not-configured" class="lettra-banner is-warning" role="status">@L["Platform.NotConfigured"]</p>
+    }
+    else
+    {
+        @if (_transmission is { } transmission)
+        {
+            <p id="platform-status">
+                <span class="lettra-status is-platform-@transmission.Status.ToString().ToLowerInvariant()">@StatusText(transmission.Status)</span>
+                @if (transmission.IsFinal)
+                {
+                    <span class="lettra-hint"> · @L["Platform.Final"]</span>
+                }
+            </p>
+            <dl class="lettra-platform-facts">
+                <dt>@L["Platform.Channel"]</dt><dd>@L[$"Platform.Channel.{transmission.Channel}"]</dd>
+                <dt>@L["Platform.Name"]</dt><dd>@transmission.Platform@(transmission.PlatformReference is { } reference ? $" · {reference}" : null)</dd>
+                <dt>@L["Platform.SubmittedAt"]</dt><dd>@When(transmission.SubmittedAt)</dd>
+                <dt>@L["Platform.Collected"]</dt>
+                <dd id="platform-collected">@string.Format(Culture, L["Platform.CollectedOf"], Amount(transmission.CollectedAmount), Amount(Invoice.Totals.TotalInclTax))</dd>
+            </dl>
+
+            <table id="platform-history" class="lettra-table">
+                <caption class="lettra-visually-hidden">@L["Platform.History"]</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">@L["Platform.History.At"]</th>
+                        <th scope="col">@L["Platform.History.Status"]</th>
+                        <th scope="col">@L["Platform.History.Detail"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (PlatformStatusEventResponse step in transmission.History)
+                    {
+                        <tr>
+                            <td>@When(step.At)</td>
+                            <td>@StatusText(step.Status)</td>
+                            <td>@Detail(step)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (!transmission.IsFinal)
+            {
+                <button type="button" id="platform-refresh" class="lettra-button is-secondary" disabled="@_busy" @onclick="RefreshAsync">@L["Platform.Refresh"]</button>
+
+                <fieldset id="platform-payment" class="lettra-inline">
+                    <legend>@L["Platform.Payment.Title"]</legend>
+                    <label for="payment-date">@L["Platform.Payment.Date"]</label>
+                    <input id="payment-date" type="date" @bind="_paymentDate" />
+                    <label for="payment-amount">@L["Platform.Payment.Amount"]</label>
+                    <input id="payment-amount" inputmode="decimal" class="lg-num" @bind="_paymentAmount" />
+                    <button type="button" id="payment-report" class="lettra-button is-secondary" disabled="@_busy" @onclick="ReportPaymentAsync">@L["Platform.Payment.Report"]</button>
+                </fieldset>
+            }
+        }
+        else
+        {
+            <p id="platform-none">@L["Platform.NotTransmitted"]</p>
+        }
+
+        @if (_transmission is null || _transmission.Status == PlatformStatusDto.Rejected)
+        {
+            <div class="lettra-inline">
+                <label for="platform-format">@L["Platform.Format"]</label>
+                <select id="platform-format" @bind="_format">
+                    <option value="@EInvoiceFormatDto.Cii">@L["Platform.Format.Cii"]</option>
+                    <option value="@EInvoiceFormatDto.Ubl">@L["Platform.Format.Ubl"]</option>
+                </select>
+                <button type="button" id="platform-transmit" class="lettra-button" disabled="@_busy" @onclick="TransmitAsync">
+                    @L[_transmission is null ? "Platform.Transmit" : "Platform.Retransmit"]
+                </button>
+            </div>
+        }
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired] public InvoiceResponse Invoice { get; set; } = default!;
+
+    /// <summary>Le dépôt émet la pièce : la page la relit.</summary>
+    [Parameter] public EventCallback OnInvoiceChanged { get; set; }
+
+    private PlatformTransmissionResponse? _transmission;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private Guid? _loadedFor;
+    private bool _loading = true;
+    private bool _busy;
+    private bool _notConfigured;
+    private EInvoiceFormatDto _format = EInvoiceFormatDto.Cii;
+    private DateOnly _paymentDate = DateOnly.FromDateTime(DateTime.Today);
+    private string? _paymentAmount;
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_loadedFor == Invoice.Id)
+        {
+            return;
+        }
+
+        _loadedFor = Invoice.Id;
+        _loading = true;
+        OperationResult<PlatformTransmissionResponse> loaded = await Transmissions.GetAsync(Invoice.Id, CancellationToken.None);
+        _loading = false;
+        // Jamais transmise : ce n'est pas une erreur, l'écran propose la transmission.
+        if (loaded.Errors.Any(e => e.Code == ErrorCodes.Platform.NotTransmitted))
+        {
+            Show(null);
+            return;
+        }
+
+        Apply(loaded);
+    }
+
+    private Task TransmitAsync() => RunAsync(() => Transmissions.TransmitAsync(Invoice.Id, new TransmitInvoiceRequest { Format = _format }, CancellationToken.None), invoiceChanged: true);
+
+    private Task RefreshAsync() => RunAsync(() => Transmissions.RefreshAsync(Invoice.Id, CancellationToken.None), invoiceChanged: false);
+
+    private Task ReportPaymentAsync()
+    {
+        if (!GridNumber.TryParse(_paymentAmount, Culture, out decimal amount))
+        {
+            _errors = [new ErrorDetail(ErrorCodes.Platform.PaymentAmountInvalid)];
+            return Task.CompletedTask;
+        }
+
+        return RunAsync(() => Transmissions.ReportPaymentAsync(Invoice.Id, new ReportPaymentRequest { Date = _paymentDate, Amount = amount }, CancellationToken.None), invoiceChanged: false);
+    }
+
+    private async Task RunAsync(Func<Task<OperationResult<PlatformTransmissionResponse>>> operation, bool invoiceChanged)
+    {
+        _busy = true;
+        try
+        {
+            OperationResult<PlatformTransmissionResponse> result = await operation();
+            Apply(result);
+            if (result.IsSuccess && invoiceChanged)
+            {
+                await OnInvoiceChanged.InvokeAsync();
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void Apply(OperationResult<PlatformTransmissionResponse> result)
+    {
+        if (result.IsSuccess)
+        {
+            Show(result.Value);
+            return;
+        }
+
+        _notConfigured = result.Errors.Any(e => e.Code == ErrorCodes.Platform.NotConfigured);
+        // Le montant refusé vise le champ du formulaire : affiché en tête du panneau comme les autres refus.
+        _errors = _notConfigured ? [] : [.. result.Errors.Select(e => e with { Target = null })];
+    }
+
+    private void Show(PlatformTransmissionResponse? transmission)
+    {
+        _transmission = transmission;
+        _errors = [];
+        _notConfigured = false;
+        decimal remaining = Invoice.Totals.TotalInclTax - (transmission?.CollectedAmount ?? 0m);
+        _paymentAmount = GridNumber.FormatAmount(Math.Max(remaining, 0m), Culture);
+    }
+
+    private string StatusText(PlatformStatusDto status) =>
+        string.Format(Culture, L["Platform.StatusWithCode"], L[$"Platform.Status.{status}"], (int)status);
+
+    private string? Detail(PlatformStatusEventResponse step) => step.Amount is { } amount
+        ? string.Format(Culture, L["Platform.History.Amount"], Amount(amount))
+        : step.Reason;
+
+    private static string Amount(decimal value) => GridNumber.FormatAmount(value, Culture);
+
+    private static string When(DateTimeOffset at) => at.ToLocalTime().ToString("g", Culture);
+}

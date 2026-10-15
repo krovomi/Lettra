@@ -40,4 +40,45 @@
   <data name="Error.Platform.ReferenceUnknown" xml:space="preserve"><value>La plateforme agréée ne connaît pas cette transmission.</value></data>
   <data name="Error.Platform.SellerSirenMissing" xml:space="preserve"><value>Renseignez le SIREN de l'entreprise : la plateforme agréée identifie le vendeur par son SIREN.</value></data>
   <data name="Error.Platform.Unavailable" xml:space="preserve"><value>La plateforme agréée ne répond pas. Réessayez plus tard : rien n'a été transmis.</value></data>
+  <data name="Platform.Title" xml:space="preserve"><value>Plateforme agréée</value></data>
+  <data name="Platform.NotConfigured" xml:space="preserve"><value>Aucune plateforme agréée n'est configurée pour ce cabinet : la pièce ne peut pas être transmise. L'administrateur du cabinet choisit la plateforme dans le paramétrage (Lettra:EInvoicing:Platform).</value></data>
+  <data name="Platform.NotTransmitted" xml:space="preserve"><value>Pas encore transmise à la plateforme agréée.</value></data>
+  <data name="Platform.Transmit" xml:space="preserve"><value>Transmettre à la plateforme</value></data>
+  <data name="Platform.Retransmit" xml:space="preserve"><value>Transmettre de nouveau</value></data>
+  <data name="Platform.Format" xml:space="preserve"><value>Format</value></data>
+  <data name="Platform.Format.Cii" xml:space="preserve"><value>Factur-X (CII)</value></data>
+  <data name="Platform.Format.Ubl" xml:space="preserve"><value>UBL</value></data>
+  <data name="Platform.Final" xml:space="preserve"><value>statut définitif</value></data>
+  <data name="Platform.Channel" xml:space="preserve"><value>Voie</value></data>
+  <data name="Platform.Channel.EInvoice" xml:space="preserve"><value>Facture électronique</value></data>
+  <data name="Platform.Channel.EReporting" xml:space="preserve"><value>E-reporting de la transaction</value></data>
+  <data name="Platform.Name" xml:space="preserve"><value>Plateforme</value></data>
+  <data name="Platform.SubmittedAt" xml:space="preserve"><value>Transmise le</value></data>
+  <data name="Platform.Collected" xml:space="preserve"><value>Encaissé</value></data>
+  <data name="Platform.CollectedOf" xml:space="preserve"><value>{0} sur {1} TTC</value></data>
+  <data name="Platform.History" xml:space="preserve"><value>Historique des statuts</value></data>
+  <data name="Platform.History.At" xml:space="preserve"><value>Date</value></data>
+  <data name="Platform.History.Status" xml:space="preserve"><value>Statut</value></data>
+  <data name="Platform.History.Detail" xml:space="preserve"><value>Détail</value></data>
+  <data name="Platform.History.Amount" xml:space="preserve"><value>Encaissement de {0}</value></data>
+  <data name="Platform.Refresh" xml:space="preserve"><value>Actualiser les statuts</value></data>
+  <data name="Platform.Payment.Title" xml:space="preserve"><value>Déclarer un encaissement</value></data>
+  <data name="Platform.Payment.Date" xml:space="preserve"><value>Date</value></data>
+  <data name="Platform.Payment.Amount" xml:space="preserve"><value>Montant TTC</value></data>
+  <data name="Platform.Payment.Report" xml:space="preserve"><value>Déclarer</value></data>
+  <data name="Platform.StatusWithCode" xml:space="preserve"><value>{0} ({1})</value></data>
+  <data name="Platform.Status.Deposited" xml:space="preserve"><value>Déposée</value></data>
+  <data name="Platform.Status.Issued" xml:space="preserve"><value>Émise</value></data>
+  <data name="Platform.Status.Received" xml:space="preserve"><value>Reçue</value></data>
+  <data name="Platform.Status.MadeAvailable" xml:space="preserve"><value>Mise à disposition</value></data>
+  <data name="Platform.Status.InProgress" xml:space="preserve"><value>Prise en charge</value></data>
+  <data name="Platform.Status.Approved" xml:space="preserve"><value>Approuvée</value></data>
+  <data name="Platform.Status.PartiallyApproved" xml:space="preserve"><value>Approuvée partiellement</value></data>
+  <data name="Platform.Status.Disputed" xml:space="preserve"><value>En litige</value></data>
+  <data name="Platform.Status.Suspended" xml:space="preserve"><value>Suspendue</value></data>
+  <data name="Platform.Status.Completed" xml:space="preserve"><value>Complétée</value></data>
+  <data name="Platform.Status.Refused" xml:space="preserve"><value>Refusée</value></data>
+  <data name="Platform.Status.PaymentSent" xml:space="preserve"><value>Paiement transmis</value></data>
+  <data name="Platform.Status.Collected" xml:space="preserve"><value>Encaissée</value></data>
+  <data name="Platform.Status.Rejected" xml:space="preserve"><value>Rejetée</value></data>
 </root>

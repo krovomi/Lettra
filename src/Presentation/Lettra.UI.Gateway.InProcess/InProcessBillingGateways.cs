@@ -12,6 +12,7 @@ using Lettra.Domain.Common;
 using Lettra.Domain.Pricing;
 using Lettra.Domain.SharedKernel;
 using Lettra.Exports.Application.EInvoicing;
+using Lettra.Exports.Application.EInvoicing.Platform;
 using Lettra.UI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -183,6 +184,36 @@ internal sealed class InProcessInvoicesGateway(IServiceScopeFactory scopes) : II
             scopes,
             (sp, dossier, ct) => InProcessCommands.SendThenReadAsync(sp, command(dossier, new InvoiceId(id)), new GetInvoiceQuery(dossier, new InvoiceId(id)), ct),
             cancellationToken);
+}
+
+internal sealed class InProcessPlatformTransmissionGateway(IServiceScopeFactory scopes) : IPlatformTransmissionGateway
+{
+    public Task<OperationResult<PlatformTransmissionResponse>> GetAsync(Guid invoiceId, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(
+            scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetPlatformTransmissionQuery(dossier, new InvoiceId(invoiceId)), ct), cancellationToken);
+
+    public Task<OperationResult<PlatformTransmissionResponse>> TransmitAsync(Guid invoiceId, TransmitInvoiceRequest request, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        return SendAsync(dossier => new TransmitInvoiceCommand(dossier, new InvoiceId(invoiceId), request.Format), cancellationToken);
+    }
+
+    public Task<OperationResult<PlatformTransmissionResponse>> RefreshAsync(Guid invoiceId, CancellationToken cancellationToken) =>
+        SendAsync(dossier => new RefreshPlatformStatusCommand(dossier, new InvoiceId(invoiceId)), cancellationToken);
+
+    public Task<OperationResult<PlatformTransmissionResponse>> ReportPaymentAsync(Guid invoiceId, ReportPaymentRequest request, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        return SendAsync(dossier => new ReportPaymentCommand(dossier, new InvoiceId(invoiceId), request.Date, request.Amount), cancellationToken);
+    }
+
+    private Task<OperationResult<PlatformTransmissionResponse>> SendAsync(
+        Func<DossierId, ICommand<Result<PlatformTransmissionResponse>>> command, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, async (sp, dossier, ct) =>
+        {
+            Result<PlatformTransmissionResponse> done = await sp.GetRequiredService<ICommandDispatcher>().SendAsync(command(dossier), ct).ConfigureAwait(false);
+            return done.ToOperationResult();
+        }, cancellationToken);
 }
 
 internal sealed class InProcessBillingSettingsGateway(IServiceScopeFactory scopes) : IBillingSettingsGateway

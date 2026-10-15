@@ -199,6 +199,33 @@ internal sealed class HttpInvoicesGateway(HttpClient http) : IInvoicesGateway
     }
 }
 
+internal sealed class HttpPlatformTransmissionGateway(HttpClient http) : IPlatformTransmissionGateway
+{
+    public Task<OperationResult<PlatformTransmissionResponse>> GetAsync(Guid invoiceId, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.GetAsync(HttpCalls.Relative($"api/v1/invoices/{invoiceId}/platform-transmission"), ct),
+            ContractsJsonContext.Default.PlatformTransmissionResponse,
+            cancellationToken);
+
+    public Task<OperationResult<PlatformTransmissionResponse>> TransmitAsync(Guid invoiceId, TransmitInvoiceRequest request, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.PostAsJsonAsync(HttpCalls.Relative($"api/v1/invoices/{invoiceId}/platform-transmission"), request, ContractsJsonContext.Default.TransmitInvoiceRequest, ct),
+            ContractsJsonContext.Default.PlatformTransmissionResponse,
+            cancellationToken);
+
+    public Task<OperationResult<PlatformTransmissionResponse>> RefreshAsync(Guid invoiceId, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.PostAsync(HttpCalls.Relative($"api/v1/invoices/{invoiceId}/platform-transmission/refresh"), null, ct),
+            ContractsJsonContext.Default.PlatformTransmissionResponse,
+            cancellationToken);
+
+    public Task<OperationResult<PlatformTransmissionResponse>> ReportPaymentAsync(Guid invoiceId, ReportPaymentRequest request, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.PostAsJsonAsync(HttpCalls.Relative($"api/v1/invoices/{invoiceId}/platform-transmission/payments"), request, ContractsJsonContext.Default.ReportPaymentRequest, ct),
+            ContractsJsonContext.Default.PlatformTransmissionResponse,
+            cancellationToken);
+}
+
 internal sealed class HttpBillingSettingsGateway(HttpClient http) : IBillingSettingsGateway
 {
     public Task<OperationResult<BillingReferenceData>> GetReferenceDataAsync(CancellationToken cancellationToken) =>
