@@ -48,9 +48,9 @@ step "Prometheus (récepteur OTLP, règles de la cellule)"
 prometheus --config.file="$RUN/prometheus.yml" --storage.tsdb.path="$RUN/prometheus" --web.listen-address=127.0.0.1:9090 \
   --web.enable-otlp-receiver > "$RUN/prometheus.log" 2>&1 & PIDS+=($!)
 
-step "Collecteur OpenTelemetry filtrant (même configuration que la cellule)"
+step "Collecteur OpenTelemetry filtrant (même base que la cellule, sans Tempo ni Loki)"
 docker run -d --rm --name lettra-essai-collecteur --network host -v "$FILES/collector.yaml:/conf/collector.yaml:ro" \
-  -e PROMETHEUS_OTLP=http://127.0.0.1:9090/api/v1/otlp -e LOKI_OTLP=http://127.0.0.1:3100/otlp -e TEMPO_OTLP=127.0.0.1:4319 \
+  -e PROMETHEUS_OTLP=http://127.0.0.1:9090/api/v1/otlp \
   otel/opentelemetry-collector-contrib:0.136.0 --config=/conf/collector.yaml > /dev/null
 
 step "Lettra.Api (mode 2, développement), export OTLP toutes les 5 s"

@@ -1,16 +1,41 @@
 # Identifiant de la cellule : porté par chaque alerte (étiquette cell) et lu par le module Supervision.
 cell: local
 
+# Collecteur OpenTelemetry filtrant (files/collector.yaml + backends.yaml rendu depuis ces valeurs). L'API et le Worker
+# y envoient leurs signaux en OTLP : lettra-otel-collector.<namespace>:4317 (gRPC) ou :4318 (HTTP).
 collector:
+  # Version figée, montée par PR (Renovate) comme les charts tiers ; la même que dans deploy/tests/valider.sh.
   image: otel/opentelemetry-collector-contrib:0.136.0
   replicas: 2
   resources:
     requests: { cpu: 100m, memory: 256Mi }
     limits: { memory: 512Mi }
-  # Points d'export de la même cellule (jamais hors de la région).
+  # Métriques : récepteur OTLP du Prometheus de la cellule (toujours actif ; les règles SLO en dépendent).
   prometheusOtlp: http://kube-prometheus-stack-prometheus.lettra-observabilite:9090/api/v1/otlp
-  lokiOtlp: http://loki-gateway.lettra-observabilite/otlp
-  tempoOtlp: tempo.lettra-observabilite:4317
+
+  # Destinations des traces et des journaux, désactivées par défaut : sans elles, le collecteur n'en garde qu'un résumé
+  # dans son propre journal (exportateur debug). La racine Argo CD (deploy/argocd/lettra-racine) active Tempo et Loki,
+  # qu'elle déploie dans chaque cellule. Toujours dans la même cellule, donc la même région.
+  traces:
+    tempo:
+      enabled: false
+      endpoint: tempo.lettra-observabilite:4317
+  logs:
+    loki:
+      enabled: false
+      endpoint: http://loki-gateway.lettra-observabilite/otlp
+
+  # Emplacement réservé : fournisseur d'observabilité hébergé en France (OTLP/HTTP), à la place de Tempo et Loki ou en
+  # plus. À n'activer qu'après validation du DPO (contrat de sous-traitance, hébergement et support dans l'UE, durées
+  # de conservation de l'annexe G §3). Le filtrage du collecteur s'applique avant lui comme avant Tempo et Loki.
+  fournisseur:
+    enabled: false
+    # Adresse OTLP/HTTP du fournisseur (sans /v1/traces) : https://otlp.exemple.fr
+    endpoint: ""
+    # Signaux envoyés : traces, logs, metrics.
+    signals: [traces, logs]
+    # Secret existant (coffre de la cellule) dont la clé « authorization » porte l'en-tête complet (« Bearer … »).
+    authSecret: ""
 
 rules:
   # Étiquette attendue par le Prometheus de kube-prometheus-stack (ruleSelector).
