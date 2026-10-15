@@ -62,6 +62,7 @@ export async function run(host, options) {
   const record = (list, value) => (value === null ? result.missed++ : list.push(value));
 
   while (sent < options.keystrokes) {
+    if (!root.isConnected) throw new Error("grille retirée de la page pendant la mesure");
     // Une ligne : Tab jusqu'à la dernière colonne (une ligne sur deux, saisie de la quantité), Entrée vers la
     // ligne suivante, puis quelques flèches ; toutes les 5 lignes, Page suivante.
     for (let c = 1; c < editableCount && sent < options.keystrokes; c++) {
@@ -103,11 +104,20 @@ export function environment() {
   };
 }
 
+// Presse-papiers ; si la vue web le refuse, copie depuis la zone de texte du résultat.
 export async function copyText(text) {
   try {
     await navigator.clipboard.writeText(text);
     return true;
   } catch {
-    return false;
+    const area = document.getElementById("bench-text");
+    if (!area) return false;
+    area.focus();
+    area.select();
+    try {
+      return document.execCommand("copy");
+    } catch {
+      return false;
+    }
   }
 }
