@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using Lettra.Application.Abstractions.Ai;
 using Lettra.Contracts.Assistant;
 using Lettra.Domain.SharedKernel;
@@ -9,7 +8,8 @@ namespace Lettra.Ai.Orchestration;
 
 /// <summary>
 /// Réglages IA lus dans la configuration (<c>Lettra:Ai</c>). Valeur par défaut : désactivé. Les réglages propres à chaque
-/// cabinet viendront de la base Catalog (modes 2, 3 et 5) ; ce fichier sert le cabinet unique des modes 1 et 2 et le développement.
+/// cabinet sont enregistrés dans la base Catalog (modes 2, 3 et 5) et l'emportent ; ce fichier sert le poste isolé (mode 1),
+/// les réglages par défaut d'un déploiement et le développement.
 /// </summary>
 public sealed class AiOptions
 {
@@ -28,7 +28,8 @@ public sealed class AiOptions
     public int MaxToolRounds { get; set; } = 8;
 
     /// <summary>
-    /// Réglages propres à un cabinet (clé : identifiant du cabinet), qui remplacent les réglages ci-dessus pour ses dossiers.
+    /// Réglages propres à un cabinet (clé : identifiant du cabinet), qui remplacent les réglages ci-dessus pour ses dossiers
+    /// tant que le cabinet n'a rien enregistré dans la base Catalog. Conservé pour les déploiements existants.
     /// Clé texte : le binder de configuration ne sait pas lire une clé <see cref="Guid"/>.
     /// </summary>
     public IDictionary<string, AiOptions> Organisations { get; } = new Dictionary<string, AiOptions>(StringComparer.OrdinalIgnoreCase);
@@ -44,43 +45,24 @@ public sealed class AiOptions
     };
 }
 
-internal sealed class ConfigurationAiUsagePolicy(IOptionsMonitor<AiOptions> options) : IAiUsagePolicy
-{
-    public ValueTask<AiSettings> GetSettingsAsync(OrganisationId organisation, CancellationToken cancellationToken)
-    {
-        AiOptions current = options.CurrentValue;
-        AiOptions effective = current.Organisations.TryGetValue(organisation.Value.ToString("D"), out AiOptions? specific) ? specific : current;
-        return ValueTask.FromResult(effective.ToSettings());
-    }
-}
-
 /// <summary>
-/// Journal IA en mémoire, borné par dossier. À remplacer par une table de la base du dossier (chiffrée avec sa clé)
-/// quand la persistance de la phase 2 sera fusionnée : le port ne changera pas.
+/// Réglages du cabinet : ceux enregistrés dans la base Catalog (modes 2, 3 et 5) l'emportent ; à défaut, l'entrée du cabinet
+/// dans la configuration, puis les réglages du déploiement. Sans rien de tout cela, l'IA reste désactivée.
 /// </summary>
-internal sealed class InMemoryAiAuditLog : IAiAuditLog
+internal sealed class CabinetAiUsagePolicy(IOptionsMonitor<AiOptions> options, IAiSettingsStore store) : IAiUsagePolicy
 {
-    private const int MaxEntriesPerDossier = 5_000;
-
-    private readonly ConcurrentDictionary<DossierId, ConcurrentQueue<AiAuditEntry>> _entries = new();
-
-    public ValueTask AppendAsync(AiAuditEntry entry, CancellationToken cancellationToken)
+    public async ValueTask<AiSettings> GetSettingsAsync(OrganisationId organisation, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(entry);
-        ConcurrentQueue<AiAuditEntry> queue = _entries.GetOrAdd(entry.Dossier, _ => new ConcurrentQueue<AiAuditEntry>());
-        queue.Enqueue(entry);
-        while (queue.Count > MaxEntriesPerDossier && queue.TryDequeue(out _))
+        StoredAiSettings? stored = await store.FindAsync(organisation, cancellationToken).ConfigureAwait(false);
+        if (stored is not null)
         {
+            return stored.Settings;
         }
 
-        return ValueTask.CompletedTask;
+        AiOptions current = options.CurrentValue;
+        AiOptions effective = current.Organisations.TryGetValue(organisation.Value.ToString("D"), out AiOptions? specific) ? specific : current;
+        return effective.ToSettings();
     }
-
-    public ValueTask<IReadOnlyList<AiAuditEntry>> ReadAsync(DossierId dossier, int limit, CancellationToken cancellationToken) =>
-        ValueTask.FromResult<IReadOnlyList<AiAuditEntry>>(
-            _entries.TryGetValue(dossier, out ConcurrentQueue<AiAuditEntry>? queue)
-                ? [.. queue.Reverse().Take(limit)]
-                : []);
 }
 
 /// <summary>Moteurs disponibles sur ce déploiement : chaque adapter s'enregistre sous la clé de son <see cref="AiEngineKind"/>.</summary>

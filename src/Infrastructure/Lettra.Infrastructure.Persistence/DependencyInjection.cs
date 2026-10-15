@@ -1,5 +1,7 @@
+using Lettra.Application.Abstractions.Ai;
 using Lettra.Application.Abstractions.Persistence;
 using Lettra.Application.Abstractions.Tenancy;
+using Lettra.Infrastructure.Persistence.Ai;
 using Lettra.Infrastructure.Persistence.Billing;
 using Lettra.Infrastructure.Persistence.Numbering;
 using Lettra.Infrastructure.Persistence.Repositories;
@@ -35,6 +37,9 @@ public static class DependencyInjection
         services.AddSingleton<IDossierKeyring, AesGcmDossierKeyring>();
         services.AddPartiesAndCatalogStores();
         services.AddBillingStores();
+
+        // Journal IA dans la base du dossier (remplace le journal vide enregistré par l'application).
+        services.Replace(ServiceDescriptor.Scoped<IAiAuditLog, DossierAiAuditLog>());
         return services;
     }
 }
