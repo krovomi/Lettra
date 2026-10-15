@@ -142,10 +142,45 @@ public sealed class EngineAdapterTests
 
         Resolve([], AiEngineKind.ClaudeEu).Should().BeNull();
         Resolve([], AiEngineKind.Local).Should().BeNull();
-        Resolve(new() { ["Lettra:Ai:Claude:ApiKey"] = "cle-de-test" }, AiEngineKind.ClaudeEu).Should().BeOfType<ClaudeEngine>();
-        Resolve(new() { ["ANTHROPIC_API_KEY"] = "cle-de-test" }, AiEngineKind.ClaudeEu).Should().BeOfType<ClaudeEngine>();
+        const string EuEndpoint = "https://bedrock-runtime.eu-west-3.amazonaws.com";
+        Resolve(new() { ["Lettra:Ai:Claude:ApiKey"] = "cle-de-test", ["Lettra:Ai:Claude:BaseUrl"] = EuEndpoint }, AiEngineKind.ClaudeEu)
+            .Should().BeOfType<ClaudeEngine>();
+        Resolve(new() { ["ANTHROPIC_API_KEY"] = "cle-de-test", ["Lettra:Ai:Claude:BaseUrl"] = EuEndpoint }, AiEngineKind.ClaudeEu)
+            .Should().BeOfType<ClaudeEngine>();
         Resolve(new() { ["Lettra:Ai:Local:Endpoint"] = "http://modele.local/v1/chat/completions" }, AiEngineKind.Local)
             .Should().BeOfType<LocalModelEngine>().Which.Name.Should().Be("local:mistral-small");
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("https://api.anthropic.com")]
+    [InlineData("https://API.Anthropic.com/v1")]
+    [InlineData("http://bedrock-runtime.eu-west-3.amazonaws.com")]
+    public void Sans_point_d_acces_en_region_UE_le_moteur_Claude_refuse_de_demarrer(string? baseUrl)
+    {
+        IConfiguration configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["ANTHROPIC_API_KEY"] = "cle-de-test",
+            ["Lettra:Ai:Claude:BaseUrl"] = baseUrl,
+        }).Build();
+
+        FluentActions.Invoking(() => new ServiceCollection().AddClaudeEngine(configuration))
+            .Should().Throw<InvalidOperationException>().WithMessage("*région UE*");
+    }
+
+    [Fact]
+    public void L_API_directe_n_est_acceptee_que_sur_autorisation_explicite_pour_les_evaluations()
+    {
+        IConfiguration configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["ANTHROPIC_API_KEY"] = "cle-de-test",
+            ["Lettra:Ai:Claude:AllowNonEuEndpoint"] = "true",
+        }).Build();
+        ServiceCollection services = new();
+        services.AddClaudeEngine(configuration);
+        using ServiceProvider provider = services.BuildServiceProvider();
+
+        provider.GetKeyedService<IAiEngine>(AiEngineKind.ClaudeEu).Should().BeOfType<ClaudeEngine>();
     }
 
     private static EngineRequest Request(params EngineMessage[] messages) => new(
