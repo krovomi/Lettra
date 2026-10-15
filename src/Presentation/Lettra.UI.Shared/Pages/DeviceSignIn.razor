@@ -1,0 +1,37 @@
+@page "/session/connexion"
+@page "/session/deconnexion"
+@* Application de bureau reliée à un serveur : la page de connexion du cabinet s'ouvre dans le navigateur système (PKCE). *@
+@inject IServiceProvider Services
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+
+<PageTitle>@L["Session.Title"] · Lettra</PageTitle>
+
+<section class="lettra-card">
+    <p role="status">@L[_signingOut ? "Session.SigningOut" : "Session.SigningIn"]</p>
+</section>
+
+@code {
+    private bool _signingOut;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _signingOut = Navigation.ToBaseRelativePath(Navigation.Uri).StartsWith("session/deconnexion", StringComparison.OrdinalIgnoreCase);
+        IInteractiveSignIn? signIn = Services.GetService(typeof(IInteractiveSignIn)) as IInteractiveSignIn;
+        if (signIn is null)
+        {
+            Navigation.NavigateTo("session");
+            return;
+        }
+
+        if (_signingOut)
+        {
+            await signIn.SignOutAsync(CancellationToken.None);
+            Navigation.NavigateTo("session");
+            return;
+        }
+
+        OperationResult<SessionResponse> result = await signIn.SignInAsync(CancellationToken.None);
+        Navigation.NavigateTo(result.IsSuccess ? "" : "session?erreur=1");
+    }
+}

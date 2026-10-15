@@ -369,6 +369,9 @@
             "introspection.token.claim": "true"
           }
         }
+      ],
+      "optionalClientScopes": [
+        "offline_access"
       ]
     },
     {
@@ -385,6 +388,14 @@
       "fullScopeAllowed": false,
       "redirectUris": [],
       "webOrigins": []
+    }
+  ],
+  "scopeMappings": [
+    {
+      "client": "lettra-maui",
+      "roles": [
+        "offline_access"
+      ]
     }
   ]
 }
