@@ -22,6 +22,13 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Journal_de_synchronisation_reception_outbox_et_reponses_gardees()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator(), syncJournal: true);
+        await SyncPersistenceScenarios.JournalFeedOutboxAndReceiptsAsync(harness, DatabaseProvider.Sqlite, Database("sync"));
+    }
+
+    [Fact]
     public async Task Une_base_par_dossier()
     {
         await using TenantHarness harness = new(new SqliteConfigurator());
@@ -235,6 +242,14 @@ public sealed class PostgreSqlTests : IAsyncLifetime
 
     private string Database(string name) =>
         new Npgsql.NpgsqlConnectionStringBuilder(_container!.GetConnectionString()) { Database = $"dossier_{name}" }.ConnectionString;
+
+    [SkippableFact]
+    public async Task Journal_de_synchronisation_reception_outbox_et_reponses_gardees()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new PostgreSqlConfigurator(), syncJournal: true);
+        await SyncPersistenceScenarios.JournalFeedOutboxAndReceiptsAsync(harness, DatabaseProvider.PostgreSql, Database("sync"));
+    }
 
     [SkippableFact]
     public async Task Validations_concurrentes_dans_la_chaine()
@@ -458,6 +473,14 @@ public sealed class SqlServerTests : IAsyncLifetime
 
     private string Database(string name) =>
         new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(_container!.GetConnectionString()) { InitialCatalog = $"dossier_{name}" }.ConnectionString;
+
+    [SkippableFact]
+    public async Task Journal_de_synchronisation_reception_outbox_et_reponses_gardees()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new SqlServerConfigurator(), syncJournal: true);
+        await SyncPersistenceScenarios.JournalFeedOutboxAndReceiptsAsync(harness, DatabaseProvider.SqlServer, Database("sync"));
+    }
 
     [SkippableFact]
     public async Task Validations_concurrentes_dans_la_chaine()

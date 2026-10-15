@@ -7,8 +7,8 @@ using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Application.Features.Catalog;
 
-/// <summary>Ajouter un article au catalogue du dossier.</summary>
-public sealed record CreateCatalogItemCommand(DossierId Dossier, CatalogItem.Draft Data)
+/// <summary>Ajouter un article au catalogue du dossier, avec l'identifiant choisi par l'appelant s'il en donne un.</summary>
+public sealed record CreateCatalogItemCommand(DossierId Dossier, CatalogItem.Draft Data, CatalogItemId? Id = null)
     : ICommand<Result<CatalogItemId>>, IRequirePermission
 {
     public Permission Permission => Permission.CatalogueGerer;
@@ -36,7 +36,7 @@ internal sealed class CreateCatalogItemHandler(
     public async Task<Result<CatalogItemId>> HandleAsync(CreateCatalogItemCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
-        Result<CatalogItem> created = CatalogItem.Create(CatalogItemId.New(), command.Data, clock.GetUtcNow());
+        Result<CatalogItem> created = CatalogItem.Create(command.Id ?? CatalogItemId.New(), command.Data, clock.GetUtcNow());
         if (created.IsFailure)
         {
             return Result<CatalogItemId>.Failure(created.Errors);

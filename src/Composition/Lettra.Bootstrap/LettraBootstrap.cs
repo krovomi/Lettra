@@ -11,8 +11,10 @@ using Lettra.Infrastructure.Persistence.PostgreSql;
 using Lettra.Infrastructure.Persistence.Sqlite;
 using Lettra.Infrastructure.Persistence.Sqlite.Local;
 using Lettra.Infrastructure.Persistence.SqlServer;
+using Lettra.Infrastructure.Persistence.Sync;
 using Lettra.Infrastructure.Persistence.Tenancy;
 using Lettra.Supervision.Infrastructure;
+using Lettra.Sync.Server;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -67,7 +69,9 @@ public static class LettraBootstrap
                 .AddCatalogDatabase(configuration, CatalogDatabase(configuration))
                 .AddOidcIdentity(configuration)
                 .AddSupervision(configuration)
-                .AddSupervisionDatabase(SupervisionDatabase(configuration)),
+                .AddSupervisionDatabase(SupervisionDatabase(configuration))
+                .AddSyncServer()
+                .AddSyncJournal(),
 
             // PostgreSQL dédié (mode 3) ou cellule SaaS (mode 5) : une base par dossier, derrière PgBouncer en SaaS.
             DeploymentMode.OnPremRemote or DeploymentMode.HostedSaaS => services
@@ -75,7 +79,9 @@ public static class LettraBootstrap
                 .AddCatalogDatabase(configuration, CatalogDatabase(configuration))
                 .AddOidcIdentity(configuration)
                 .AddSupervision(configuration)
-                .AddSupervisionDatabase(SupervisionDatabase(configuration)),
+                .AddSupervisionDatabase(SupervisionDatabase(configuration))
+                .AddSyncServer()
+                .AddSyncJournal(),
 
             DeploymentMode.HybridCloud => throw new NotSupportedException(
                 $"Mode {mode} : nécessite la synchronisation (phase 4)."),

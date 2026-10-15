@@ -1,0 +1,138 @@
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+
+#nullable disable
+
+namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
+{
+    /// <inheritdoc />
+    public partial class Synchronisation : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.CreateTable(
+                name: "SyncConflicts",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    IdempotencyKey = table.Column<Guid>(type: "uuid", nullable: false),
+                    Entity = table.Column<int>(type: "integer", nullable: false),
+                    EntityId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Field = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    BaseValue = table.Column<string>(type: "text", nullable: false),
+                    MineValue = table.Column<string>(type: "text", nullable: false),
+                    ServerValue = table.Column<string>(type: "text", nullable: false),
+                    DetectedAtMs = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SyncConflicts", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SyncJournal",
+                columns: table => new
+                {
+                    Sequence = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Entity = table.Column<int>(type: "integer", nullable: false),
+                    EntityId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ChangedAtMs = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SyncJournal", x => x.Sequence);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SyncOutbox",
+                columns: table => new
+                {
+                    Sequence = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    IdempotencyKey = table.Column<Guid>(type: "uuid", nullable: false),
+                    Entity = table.Column<int>(type: "integer", nullable: false),
+                    EntityId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Payload = table.Column<string>(type: "text", nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    Detail = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    RecordedAtMs = table.Column<long>(type: "bigint", nullable: false),
+                    AcknowledgedAtMs = table.Column<long>(type: "bigint", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SyncOutbox", x => x.Sequence);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SyncReceipts",
+                columns: table => new
+                {
+                    IdempotencyKey = table.Column<Guid>(type: "uuid", nullable: false),
+                    DeviceId = table.Column<Guid>(type: "uuid", nullable: false),
+                    RequestHash = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
+                    Result = table.Column<string>(type: "text", nullable: false),
+                    ReceivedAtMs = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SyncReceipts", x => x.IdempotencyKey);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SyncState",
+                columns: table => new
+                {
+                    Key = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
+                    Value = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SyncState", x => x.Key);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SyncConflicts_Entity_EntityId",
+                table: "SyncConflicts",
+                columns: new[] { "Entity", "EntityId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SyncJournal_ChangedAtMs",
+                table: "SyncJournal",
+                column: "ChangedAtMs");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SyncOutbox_IdempotencyKey",
+                table: "SyncOutbox",
+                column: "IdempotencyKey",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SyncOutbox_Status_Entity_EntityId",
+                table: "SyncOutbox",
+                columns: new[] { "Status", "Entity", "EntityId" });
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropTable(
+                name: "SyncConflicts");
+
+            migrationBuilder.DropTable(
+                name: "SyncJournal");
+
+            migrationBuilder.DropTable(
+                name: "SyncOutbox");
+
+            migrationBuilder.DropTable(
+                name: "SyncReceipts");
+
+            migrationBuilder.DropTable(
+                name: "SyncState");
+        }
+    }
+}

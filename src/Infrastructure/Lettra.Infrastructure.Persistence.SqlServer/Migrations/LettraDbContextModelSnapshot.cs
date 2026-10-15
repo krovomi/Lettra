@@ -1223,6 +1223,159 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.ToTable("NumberSeries", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.SyncConflictRow", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("BaseValue")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("DetectedAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Entity")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Field")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("IdempotencyKey")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("MineValue")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ServerValue")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Entity", "EntityId");
+
+                    b.ToTable("SyncConflicts", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.SyncJournalRecord", b =>
+                {
+                    b.Property<long>("Sequence")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Sequence"));
+
+                    b.Property<long>("ChangedAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Entity")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Sequence");
+
+                    b.HasIndex("ChangedAtMs");
+
+                    b.ToTable("SyncJournal", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.SyncOutboxRecord", b =>
+                {
+                    b.Property<long>("Sequence")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Sequence"));
+
+                    b.Property<long?>("AcknowledgedAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Detail")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("Entity")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdempotencyKey")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("RecordedAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Sequence");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique();
+
+                    b.HasIndex("Status", "Entity", "EntityId");
+
+                    b.ToTable("SyncOutbox", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.SyncReceiptRecord", b =>
+                {
+                    b.Property<Guid>("IdempotencyKey")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DeviceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("ReceivedAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("RequestHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("Result")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("IdempotencyKey");
+
+                    b.ToTable("SyncReceipts", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.SyncStateRecord", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("SyncState", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Tenancy.DossierStamp", b =>
                 {
                     b.Property<int>("Id")

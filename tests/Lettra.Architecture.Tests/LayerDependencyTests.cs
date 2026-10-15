@@ -27,6 +27,9 @@ public sealed class LayerDependencyTests
         { "Lettra.Supervision.Domain", ["Lettra.Calculations", "Lettra.Domain"] },
         { "Lettra.Supervision.Application", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain", "Lettra.Supervision.Domain"] },
         { "Lettra.Supervision.Infrastructure", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain", "Lettra.Infrastructure.Persistence", "Lettra.Supervision.Application", "Lettra.Supervision.Domain"] },
+        // Synchronisation (phase 4) : des cas d'usage autour des ports de l'application, sans accès direct aux bases.
+        { "Lettra.Sync.Server", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain"] },
+        { "Lettra.Sync.Client", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain"] },
         // Module Exports (phase 5) : FEC et formats de facture lus depuis les pièces et les écritures, sans les modifier.
         { "Lettra.Exports.Application", ["Lettra.Application", "Lettra.Calculations", "Lettra.Contracts", "Lettra.Domain"] },
         { "Lettra.Exports.Infrastructure", ["Lettra.Application", "Lettra.Calculations", "Lettra.Contracts", "Lettra.Domain", "Lettra.Exports.Application", "Lettra.Infrastructure.Persistence"] },
@@ -123,6 +126,17 @@ public sealed class LayerDependencyTests
             Types.InAssembly(assembly)
                 .ShouldNot().HaveDependencyOnAny("Microsoft.EntityFrameworkCore", "Microsoft.AspNetCore", "Lettra.Infrastructure", "Lettra.UI")
                 .GetResult().FailingTypeNames.Should().BeNullOrEmpty(because: $"{assembly.GetName().Name} : les outils de l'IA appellent les cas d'usage, avec les droits de l'utilisateur (ADR-0006)");
+        }
+    }
+
+    [Fact]
+    public void La_synchronisation_passe_par_les_cas_d_usage_et_jamais_par_les_bases()
+    {
+        foreach (Assembly assembly in new[] { Assemblies.SyncServer, Assemblies.SyncClient })
+        {
+            Types.InAssembly(assembly)
+                .ShouldNot().HaveDependencyOnAny("Microsoft.EntityFrameworkCore", "Microsoft.AspNetCore", "Lettra.Infrastructure", "Lettra.UI")
+                .GetResult().FailingTypeNames.Should().BeNullOrEmpty(because: $"{assembly.GetName().Name} : une intention est rejouée par son cas d'usage, avec les droits du moment (ADR-0008)");
         }
     }
 

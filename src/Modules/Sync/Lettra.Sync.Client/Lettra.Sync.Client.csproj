@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Synchronisation, côté poste (phase 4, ADR-0008) : intentions écrites dans l'outbox avec chaque commande,
+       SyncCoordinator (sonde, demande à l'utilisateur, envoi, réception), transport HTTP. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Core\Lettra.Application\Lettra.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lettra.Sync.Tests" />
+  </ItemGroup>
+
+</Project>

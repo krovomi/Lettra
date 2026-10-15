@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Synchronisation, côté serveur (phase 4, ADR-0008) : rejeu idempotent des intentions des postes par les cas
+       d'usage, avec les droits du moment et une fusion champ par champ ; changements depuis un jeton. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Core\Lettra.Application\Lettra.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lettra.Sync.Tests" />
+  </ItemGroup>
+
+</Project>

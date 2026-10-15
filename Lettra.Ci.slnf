@@ -24,6 +24,8 @@
       "src\\Modules\\Supervision\\Lettra.Supervision.Application\\Lettra.Supervision.Application.csproj",
       "src\\Modules\\Supervision\\Lettra.Supervision.Domain\\Lettra.Supervision.Domain.csproj",
       "src\\Modules\\Supervision\\Lettra.Supervision.Infrastructure\\Lettra.Supervision.Infrastructure.csproj",
+      "src\\Modules\\Sync\\Lettra.Sync.Client\\Lettra.Sync.Client.csproj",
+      "src\\Modules\\Sync\\Lettra.Sync.Server\\Lettra.Sync.Server.csproj",
       "src\\Modules\\Exports\\Lettra.Exports.Application\\Lettra.Exports.Application.csproj",
       "src\\Modules\\Exports\\Lettra.Exports.Infrastructure\\Lettra.Exports.Infrastructure.csproj",
       "src\\Composition\\Lettra.Bootstrap\\Lettra.Bootstrap.csproj",
@@ -46,7 +48,8 @@
       "tests\\Lettra.Persistence.Tests\\Lettra.Persistence.Tests.csproj",
       "tests\\Lettra.UI.Tests\\Lettra.UI.Tests.csproj",
       "tests\\Lettra.Observability.Tests\\Lettra.Observability.Tests.csproj",
-      "tests\\Lettra.Supervision.Tests\\Lettra.Supervision.Tests.csproj"
+      "tests\\Lettra.Supervision.Tests\\Lettra.Supervision.Tests.csproj",
+      "tests\\Lettra.Sync.Tests\\Lettra.Sync.Tests.csproj"
     ]
   }
 }

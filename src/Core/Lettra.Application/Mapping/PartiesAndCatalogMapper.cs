@@ -14,8 +14,8 @@ namespace Lettra.Application.Mapping;
 /// </summary>
 public static class PartiesAndCatalogMapper
 {
-    public static CreateSupplierCommand ToCommand(this CreateSupplierRequest request, DossierId dossier) =>
-        new(dossier, request.ToDraft());
+    public static CreateSupplierCommand ToCommand(this CreateSupplierRequest request, DossierId dossier, SupplierId? id = null) =>
+        new(dossier, request.ToDraft(), id ?? SupplierId.New());
 
     /// <summary>Modification : même contrat qu'à la création, plus la version lue (<c>If-Match</c>).</summary>
     public static UpdateSupplierCommand ToUpdateCommand(this CreateSupplierRequest request, DossierId dossier, SupplierId id, long? expectedVersion) =>
@@ -73,8 +73,8 @@ public static class PartiesAndCatalogMapper
             request.VatRateCode);
     }
 
-    public static CreateCatalogItemCommand ToCreateCommand(this SaveCatalogItemRequest request, DossierId dossier) =>
-        new(dossier, request.ToDraft());
+    public static CreateCatalogItemCommand ToCreateCommand(this SaveCatalogItemRequest request, DossierId dossier, CatalogItemId? id = null) =>
+        new(dossier, request.ToDraft(), id ?? CatalogItemId.New());
 
     public static UpdateCatalogItemCommand ToUpdateCommand(
         this SaveCatalogItemRequest request, DossierId dossier, CatalogItemId id, long? expectedVersion = null) =>

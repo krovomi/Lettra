@@ -39,6 +39,10 @@
     <Project Path="src/Modules/Supervision/Lettra.Supervision.Domain/Lettra.Supervision.Domain.csproj" />
     <Project Path="src/Modules/Supervision/Lettra.Supervision.Infrastructure/Lettra.Supervision.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/src/Modules/Sync/">
+    <Project Path="src/Modules/Sync/Lettra.Sync.Client/Lettra.Sync.Client.csproj" />
+    <Project Path="src/Modules/Sync/Lettra.Sync.Server/Lettra.Sync.Server.csproj" />
+  </Folder>
   <Folder Name="/src/Modules/Exports/">
     <Project Path="src/Modules/Exports/Lettra.Exports.Application/Lettra.Exports.Application.csproj" />
     <Project Path="src/Modules/Exports/Lettra.Exports.Infrastructure/Lettra.Exports.Infrastructure.csproj" />
@@ -71,6 +75,7 @@
     <Project Path="tests/Lettra.Observability.Tests/Lettra.Observability.Tests.csproj" />
     <Project Path="tests/Lettra.Persistence.Tests/Lettra.Persistence.Tests.csproj" />
     <Project Path="tests/Lettra.Supervision.Tests/Lettra.Supervision.Tests.csproj" />
+    <Project Path="tests/Lettra.Sync.Tests/Lettra.Sync.Tests.csproj" />
     <Project Path="tests/Lettra.UI.Tests/Lettra.UI.Tests.csproj" />
   </Folder>
 </Solution>

@@ -23,8 +23,9 @@ public static class ContractMapper
         ["Unit"] = "UnitCode",
     };
 
-    public static CreateCustomerCommand ToCommand(this CreateCustomerRequest request, DossierId dossier) =>
-        new(dossier, request.ToDraft());
+    /// <summary>Création : l'identifiant est tiré ici, avant la commande, pour qu'une intention hors ligne le porte.</summary>
+    public static CreateCustomerCommand ToCommand(this CreateCustomerRequest request, DossierId dossier, CustomerId? id = null) =>
+        new(dossier, request.ToDraft(), id ?? CustomerId.New());
 
     /// <summary>Modification : même contrat qu'à la création, plus la version lue (<c>If-Match</c>).</summary>
     public static UpdateCustomerCommand ToUpdateCommand(this CreateCustomerRequest request, DossierId dossier, CustomerId id, long? expectedVersion) =>

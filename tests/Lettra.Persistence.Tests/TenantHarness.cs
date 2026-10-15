@@ -6,6 +6,7 @@ using Lettra.Domain.SharedKernel;
 using Lettra.Exports.Infrastructure;
 using Lettra.Infrastructure.Persistence;
 using Lettra.Infrastructure.Persistence.Security;
+using Lettra.Infrastructure.Persistence.Sync;
 using Lettra.Infrastructure.Persistence.Tenancy;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -21,7 +22,8 @@ internal sealed class TenantHarness : IAsyncDisposable
     /// Vrai pour les scénarios de la chaîne anti-fraude qui journalisent des pièces fictives, sans facture en base : les
     /// pièces ne sont alors pas comparées, comme avant le branchement du module des pièces.
     /// </param>
-    public TenantHarness(IDbProviderConfigurator configurator, TimeProvider? clock = null, bool syntheticDocuments = false)
+    /// <param name="syncJournal">Vrai pour tenir le journal de synchronisation, comme le serveur (phase 4).</param>
+    public TenantHarness(IDbProviderConfigurator configurator, TimeProvider? clock = null, bool syntheticDocuments = false, bool syncJournal = false)
     {
         ServiceCollection services = new();
         services.AddLogging();
@@ -42,6 +44,11 @@ internal sealed class TenantHarness : IAsyncDisposable
         services.AddSingleton<IDossierAlertPublisher>(Alerts);
         services.AddScoped<DossierSource>();
         services.AddScoped<IRequestedDossierSource>(sp => sp.GetRequiredService<DossierSource>());
+        if (syncJournal)
+        {
+            services.AddSyncJournal();
+        }
+
         if (syntheticDocuments)
         {
             services.AddScoped<IJournaledDocumentReader, SyntheticDocuments>();

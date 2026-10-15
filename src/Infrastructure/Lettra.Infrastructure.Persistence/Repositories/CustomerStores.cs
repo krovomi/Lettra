@@ -1,11 +1,14 @@
 using Lettra.Application.Abstractions.Persistence;
+using Lettra.Application.Abstractions.Sync;
 using Lettra.Application.Mapping;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
 using Lettra.Domain.Common;
 using Lettra.Domain.Parties;
 using Lettra.Domain.SharedKernel;
+using Lettra.Contracts.Sync;
 using Lettra.Infrastructure.Persistence.Search;
+using Lettra.Infrastructure.Persistence.Sync;
 using Lettra.Infrastructure.Persistence.Tenancy;
 using Microsoft.EntityFrameworkCore;
 
@@ -58,11 +61,18 @@ internal sealed class CustomerReadStore(TenantDbSession session) : ICustomerRead
     }
 }
 
-internal sealed class UnitOfWork(TenantDbSession session) : IUnitOfWork
+internal sealed class UnitOfWork(TenantDbSession session, SyncOutboxStaging outbox) : IUnitOfWork
 {
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
         LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+
+        // Poste qui synchronise : l'intention de la commande part dans la même transaction que ses écritures (ADR-0007).
+        foreach (SyncIntent intent in outbox.TakeAll())
+        {
+            db.Set<SyncOutboxRecord>().Add(new SyncOutboxRecord(intent));
+        }
+
         int written;
         try
         {
@@ -74,8 +84,7 @@ internal sealed class UnitOfWork(TenantDbSession session) : IUnitOfWork
             throw new ConcurrencyConflictException("Écriture concurrente détectée à l'enregistrement.", ex);
         }
 
-        // Phase 0 : pas encore d'outbox, les événements sont simplement vidés après écriture.
-        // L'outbox (faits et intentions, ADR-0007) arrive avec la synchronisation.
+        // Les événements du domaine sont vidés après écriture : l'outbox du poste porte des intentions (contrats), pas des événements.
         foreach (IHasDomainEvents aggregate in db.ChangeTracker.Entries<IHasDomainEvents>().Select(e => e.Entity))
         {
             aggregate.ClearDomainEvents();
