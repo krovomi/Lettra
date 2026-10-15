@@ -57,8 +57,8 @@ public sealed class EvalRunner(Func<IAiEngine> engineFactory, LettraAiPocOptions
         if (x.Unavailable != true && events.OfType<AssistantUnavailable>().FirstOrDefault() is { } u) failures.Add("indisponible : " + u.Reason);
         foreach (var t in x.ToolsCalled ?? []) if (!tools.Contains(t)) failures.Add($"outil attendu non appelé : {t}");
         foreach (var t in x.ToolsNotCalled ?? []) if (tools.Contains(t)) failures.Add($"outil appelé à tort : {t}");
-        foreach (var s in x.AnswerContains ?? []) if (!answer.Contains(s, StringComparison.OrdinalIgnoreCase)) failures.Add($"réponse sans « {s} »");
-        foreach (var s in x.AnswerNotContains ?? []) if (answer.Contains(s, StringComparison.OrdinalIgnoreCase)) failures.Add($"réponse contient « {s} »");
+        foreach (var s in x.AnswerContains ?? []) if (!AnswerMatcher.Contains(answer, s)) failures.Add($"réponse sans « {s} »");
+        foreach (var s in x.AnswerNotContains ?? []) if (AnswerMatcher.Contains(answer, s)) failures.Add($"réponse contient « {s} »");
         foreach (var s in x.Citations ?? []) if (!citations.Contains(s)) failures.Add($"source non citée : {s}");
         var drafts = events.OfType<AssistantDraftProposed>().Count();
         if (x.DraftCreated == true && drafts == 0) failures.Add("aucun brouillon créé");

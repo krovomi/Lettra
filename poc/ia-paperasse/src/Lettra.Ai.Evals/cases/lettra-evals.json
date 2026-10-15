@@ -9,7 +9,7 @@
       "question": "Pourquoi je ne peux pas valider cette facture ?",
       "facture": "incomplete",
       "attendu": {
-        "outils_appeles": ["valider_facture", "lire_reference"],
+        "outils_appeles": ["verifier_facture", "lire_reference"],
         "reponse_contient": ["SIREN du client", "Catégorie d'opération", "echeance", "NON CONFORME", "2400,00 EUR"],
         "sources": ["comptable/references/facturation/mentions-obligatoires.md"]
       }
@@ -21,7 +21,7 @@
       "question": "Cette facture est-elle complète ?",
       "facture": "conforme",
       "attendu": {
-        "outils_appeles": ["valider_facture"],
+        "outils_appeles": ["verifier_facture"],
         "reponse_contient": ["CONFORME", "aucune mention obligatoire ne manque", "6000,00 EUR"],
         "reponse_ne_contient_pas": ["NON CONFORME"]
       }
@@ -33,7 +33,7 @@
       "question": "Pourquoi cette facture est-elle bloquée ?",
       "facture": null,
       "attendu": {
-        "outils_non_appeles": ["valider_facture"],
+        "outils_non_appeles": ["verifier_facture"],
         "reponse_contient": ["ouvrez la facture"]
       }
     },

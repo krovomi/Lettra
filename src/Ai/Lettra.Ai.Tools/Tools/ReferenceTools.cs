@@ -5,25 +5,6 @@ using Lettra.Contracts.Assistant;
 
 namespace Lettra.Ai.Tools.Tools;
 
-internal static class SkillNames
-{
-    public static readonly string[] All = ["comptable", "controleur-fiscal", "commissaire-aux-comptes"];
-
-    public static AiSkill Parse(string? value) => value switch
-    {
-        "controleur-fiscal" => AiSkill.ControleurFiscal,
-        "commissaire-aux-comptes" => AiSkill.CommissaireAuxComptes,
-        _ => AiSkill.Comptable,
-    };
-
-    public static string Name(AiSkill skill) => skill switch
-    {
-        AiSkill.ControleurFiscal => "controleur-fiscal",
-        AiSkill.CommissaireAuxComptes => "commissaire-aux-comptes",
-        _ => "comptable",
-    };
-}
-
 /// <summary>Lit une fiche <c>references/*.md</c> d'un skill (divulgation progressive, annexe B §3.2).</summary>
 internal sealed class ReadReferenceTool(IAiSkillCatalog catalog) : IAiTool
 {
@@ -42,19 +23,19 @@ internal sealed class ReadReferenceTool(IAiSkillCatalog catalog) : IAiTool
     public bool ReceivesRealValues => true;
 
     public JsonElement InputSchema { get; } = Schema.Object(
-        ("skill", Schema.String("Skill à lire", SkillNames.All), true),
+        ("skill", Schema.String("Skill à lire", [.. AiSkillNames.All]), true),
         ("chemin", Schema.String("Chemin de la fiche sous references/, par exemple « tva.md »"), true)).ToElement();
 
     public bool IsEnabledBy(AiSettings settings) => true;
 
     public Task<AiToolResult> InvokeAsync(JsonElement input, AiToolContext context, CancellationToken cancellationToken)
     {
-        AiSkill skill = SkillNames.Parse(input.GetProperty("skill").GetString());
+        AiSkill skill = AiSkillNames.Parse(input.GetProperty("skill").GetString());
         string path = input.GetProperty("chemin").GetString() ?? string.Empty;
         string? content = catalog.ReadReference(skill, path);
         return Task.FromResult(content is null
             ? AiToolResult.Error($"Fiche introuvable ou non autorisée : {path}. Fiches disponibles : {string.Join(", ", catalog.ListReferences(skill))}")
-            : new AiToolResult(content) { Citation = $"{SkillNames.Name(skill)}/references/{path.Replace("references/", string.Empty, StringComparison.Ordinal)}" });
+            : new AiToolResult(content) { Citation = $"{AiSkillNames.Name(skill)}/references/{path.Replace("references/", string.Empty, StringComparison.Ordinal)}" });
     }
 }
 
@@ -72,10 +53,10 @@ internal sealed class ListReferencesTool(IAiSkillCatalog catalog) : IAiTool
 
     public bool ReceivesRealValues => true;
 
-    public JsonElement InputSchema { get; } = Schema.Object(("skill", Schema.String("Skill", SkillNames.All), true)).ToElement();
+    public JsonElement InputSchema { get; } = Schema.Object(("skill", Schema.String("Skill", [.. AiSkillNames.All]), true)).ToElement();
 
     public bool IsEnabledBy(AiSettings settings) => true;
 
     public Task<AiToolResult> InvokeAsync(JsonElement input, AiToolContext context, CancellationToken cancellationToken) =>
-        Task.FromResult(AiToolResult.Json(catalog.ListReferences(SkillNames.Parse(input.GetProperty("skill").GetString()))));
+        Task.FromResult(AiToolResult.Json(catalog.ListReferences(AiSkillNames.Parse(input.GetProperty("skill").GetString()))));
 }

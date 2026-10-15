@@ -259,7 +259,24 @@ public sealed class AssistantGuardrailTests
 
         List<AssistantEvent> events = await h.AskAsync(AssistantFeature.RegulatoryQuestions, "?");
 
-        events[0].Should().Be(new AssistantWarningEvent(ErrorCodes.Ai.SkillPackStale, "2026-04-18"));
+        events[0].Should().Be(new AssistantWarningEvent(ErrorCodes.Ai.SkillPackStale, "comptable 2026-04-18"));
+    }
+
+    [Fact]
+    public async Task Une_fiche_lue_dans_un_skill_ancien_est_signalee_une_seule_fois()
+    {
+        await using AssistantHarness h = new(
+            new ScriptedTurnsEngine(
+                _ => Call("lire_reference", new { skill = "controleur-fiscal", chemin = "penalites-bareme.md" }),
+                _ => Call("lire_reference", new { skill = "controleur-fiscal", chemin = "penalites-bareme.md" }, "c2"),
+                _ => Say("ok")),
+            AssistantHarness.Enabled(),
+            now: new DateTimeOffset(2026, 10, 15, 9, 0, 0, TimeSpan.Zero));
+
+        List<AssistantEvent> events = await h.AskAsync(AssistantFeature.RegulatoryQuestions, "?");
+
+        events.OfType<AssistantWarningEvent>().Should().ContainSingle()
+            .Which.Should().Be(new AssistantWarningEvent(ErrorCodes.Ai.SkillPackStale, "controleur-fiscal 2026-03-23"));
     }
 
     [Fact]
