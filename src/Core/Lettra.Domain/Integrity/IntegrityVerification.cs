@@ -32,6 +32,12 @@ public enum IntegrityFindingKind
 
     /// <summary>Un numéro de série manque dans le journal (numéro consommé sans pièce, ou entrée supprimée).</summary>
     NumberingGap = 9,
+
+    /// <summary>
+    /// Une entrée ou une clôture n'utilise pas la clé en vigueur à sa place dans la chaîne, une rotation annonce une
+    /// clé absente du registre ou différente de celle du registre, ou la dernière clé du registre n'est pas annoncée.
+    /// </summary>
+    KeyInvalid = 10,
 }
 
 /// <summary>
@@ -62,14 +68,23 @@ public sealed record IntegrityReport(
 }
 
 /// <summary>
-/// Vérification des sceaux et des signatures, avec les clés du cabinet du dossier (jamais en base). Le domaine ne
-/// connaît pas les clés : seulement ce port.
+/// Registre des clés du dossier, en vérification seule : toutes les versions, retirées comprises, pour que
+/// l'historique reste vérifiable après une rotation. Le domaine ne voit jamais les clés secrètes : seulement ce port.
 /// </summary>
 public interface IIntegrityKeyVerifier
 {
-    bool VerifySeal(string entryHash, string seal);
+    /// <summary>Première version : celle des entrées écrites avant le versionnage (sans identifiant de clé).</summary>
+    string? InitialKeyId { get; }
 
-    /// <summary>Vrai si la signature est valable ET faite avec une clé du cabinet (identifiant connu).</summary>
+    /// <summary>Version en vigueur : la dernière annoncée dans la chaîne doit être celle-ci.</summary>
+    string? CurrentKeyId { get; }
+
+    /// <summary>Clé publique de signature d'une version connue (et dont l'enveloppe s'ouvre), sinon <c>null</c>.</summary>
+    string? PublicKeyOf(string keyId);
+
+    bool VerifySeal(string keyId, string entryHash, string seal);
+
+    /// <summary>Vrai si la signature est valable ET faite avec une version connue du registre, de même clé publique.</summary>
     bool VerifyClosingSignature(string keyId, string publicKey, string closingHash, string signature);
 }
 
@@ -94,6 +109,7 @@ public sealed class IntegrityVerification
     private readonly Dictionary<string, HashSet<long>> _numbers = new(StringComparer.Ordinal);
     private long _expectedSequence = 1;
     private string _previousHash;
+    private string? _activeKeyId;
     private decimal _periodHt, _periodVat, _periodTtc, _cumulative;
     private int _closingsChecked;
     private bool _truncated;
@@ -105,6 +121,7 @@ public sealed class IntegrityVerification
         _dossier = dossier;
         _keys = keys;
         _previousHash = JournalEntry.GenesisHash(dossier);
+        _activeKeyId = keys.InitialKeyId;
 
         string previousClosingHash = PeriodClosing.GenesisHash(dossier);
         int expectedNumber = 1;
@@ -156,14 +173,25 @@ public sealed class IntegrityVerification
             Add(new(IntegrityFindingKind.ChainBroken, entry.Sequence));
         }
 
-        if (!_keys.VerifySeal(entry.Hash, entry.Seal))
+        // Une entrée d'avant le versionnage n'a pas d'identifiant : elle relève de la première clé.
+        string? sealedWith = entry.KeyId ?? _activeKeyId;
+        if (sealedWith is null || !_keys.VerifySeal(sealedWith, entry.Hash, entry.Seal))
         {
             Add(new(IntegrityFindingKind.SealInvalid, entry.Sequence));
+        }
+        else if (!string.Equals(sealedWith, _activeKeyId, StringComparison.Ordinal))
+        {
+            // Bien scellée, mais par une clé qui n'est pas celle en vigueur ici (clé retirée réutilisée, ou anticipée).
+            Add(new(IntegrityFindingKind.KeyInvalid, entry.Sequence));
         }
 
         if (entry.Kind == JournalEntryKind.PeriodClosed)
         {
             CheckClosingEntry(entry);
+        }
+        else if (entry.Kind == JournalEntryKind.KeyRotated)
+        {
+            CheckKeyRotation(entry);
         }
         else
         {
@@ -216,6 +244,12 @@ public sealed class IntegrityVerification
             Add(new(IntegrityFindingKind.ClosingMismatch, ClosingNumber: closing.Number));
         }
 
+        // La dernière clé du registre doit être celle que la chaîne a annoncée en dernier.
+        if (EntriesChecked > 0 && !string.Equals(_activeKeyId, _keys.CurrentKeyId, StringComparison.Ordinal))
+        {
+            Add(new(IntegrityFindingKind.KeyInvalid));
+        }
+
         // Une clôture qui n'a pas d'entrée dans la chaîne a été insérée en base, ou son entrée supprimée.
         foreach (PeriodClosing closing in _closingsByNumber.Values.Where(c => !_closingsInChain.Contains(c.Number)))
         {
@@ -266,6 +300,25 @@ public sealed class IntegrityVerification
         {
             Add(new(IntegrityFindingKind.ClosingMismatch, entry.Sequence, number));
         }
+
+        // La clôture est signée avec la clé qui scelle son entrée, sous le même verrou.
+        if (!string.Equals(closing.KeyId, _activeKeyId, StringComparison.Ordinal))
+        {
+            Add(new(IntegrityFindingKind.KeyInvalid, entry.Sequence, number));
+        }
+    }
+
+    /// <summary>La clé annoncée doit être au registre, avec la même clé publique ; elle est en vigueur après l'entrée.</summary>
+    private void CheckKeyRotation(JournalEntry entry)
+    {
+        string? keyId = entry.Number;
+        string? publicKey = keyId is null ? null : _keys.PublicKeyOf(keyId);
+        if (keyId is null || publicKey is null || JournalEntry.KeyFingerprint(keyId, publicKey) != entry.ContentHash)
+        {
+            Add(new(IntegrityFindingKind.KeyInvalid, entry.Sequence));
+        }
+
+        _activeKeyId = keyId;
     }
 
     private void CheckClosingsEndingAt(long sequence, string hash)

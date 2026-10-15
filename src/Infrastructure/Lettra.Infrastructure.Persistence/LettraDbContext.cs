@@ -31,6 +31,9 @@ public sealed class LettraDbContext(DbContextOptions<LettraDbContext> options, T
     internal DbSet<PeriodClosing> IntegrityClosings => Set<PeriodClosing>();
 
     internal DbSet<IntegrityChainHead> IntegrityChainHead => Set<IntegrityChainHead>();
+
+    internal DbSet<StoredIntegrityKey> IntegrityKeys => Set<StoredIntegrityKey>();
+
     internal DbSet<AiJournalRecord> AiJournal => Set<AiJournalRecord>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

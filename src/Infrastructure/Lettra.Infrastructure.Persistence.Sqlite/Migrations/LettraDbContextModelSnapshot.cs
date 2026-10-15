@@ -118,6 +118,10 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.Property<DateOnly?>("IssueDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("KeyId")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("Kind")
                         .HasColumnType("INTEGER");
 
@@ -466,6 +470,37 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                             LastSequence = 0L,
                             Version = 0L
                         });
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Integrity.StoredIntegrityKey", b =>
+                {
+                    b.Property<int>("Version")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("CreatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("KeyId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PublicKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("WrappedSecret")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("BLOB");
+
+                    b.HasKey("Version");
+
+                    b.HasIndex("KeyId")
+                        .IsUnique();
+
+                    b.ToTable("IntegrityKeys", (string)null);
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Numbering.NumberSeries", b =>

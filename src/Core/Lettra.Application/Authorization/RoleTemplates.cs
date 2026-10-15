@@ -38,7 +38,7 @@ public static class RoleTemplates
         new(Manager, Set([.. Production,
             Permission.CatalogueGerer, Permission.FactureValider, Permission.FactureEmettre, Permission.AvoirCreer, Permission.FecExporter,
             Permission.DelegationsApprouver, Permission.AlertesTraiter,
-            Permission.IntegriteVerifier, Permission.ClotureEffectuer, Permission.ArchivesExporter]), ScopeKind.Cabinet),
+            Permission.IntegriteVerifier, Permission.ClotureEffectuer, Permission.ArchivesExporter, Permission.IntegriteClesGerer]), ScopeKind.Cabinet),
         new(AdministrateurGroupe, Set(Permission.GroupeGerer, Permission.DossierAdministrer), ScopeKind.Groupe),
         new(CollaborateurEtendu, Set([.. Production, Permission.FactureValider, Permission.FactureEmettre]), ScopeKind.Groupe),
         new(Collaborateur, Set(Production), ScopeKind.Groupe),

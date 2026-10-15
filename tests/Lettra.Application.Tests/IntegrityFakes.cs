@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Lettra.Application.Tests;
 
 /// <summary>Faux journal du dossier : la chaîne est construite par le domaine, le sceau est une simple étiquette.</summary>
-internal sealed class InMemoryIntegrity(DossierId dossier) : IIntegrityStore, IIntegrityJournal, ISealedArchiveBuilder, IIntegrityKeyring, IIntegrityKeys, IDossierAlertPublisher
+internal sealed class InMemoryIntegrity(DossierId dossier) : IIntegrityStore, IIntegrityJournal, ISealedArchiveBuilder, IIntegrityKeyring, IIntegrityKeyVerifier, IDossierAlertPublisher
 {
     public List<JournalEntry> Entries { get; } = [];
 
@@ -16,9 +16,11 @@ internal sealed class InMemoryIntegrity(DossierId dossier) : IIntegrityStore, II
 
     public List<DossierAlertSignal> Signals { get; } = [];
 
-    public string KeyId => "fake";
+    public const string KeyId = "fake";
 
-    public string PublicKey => "fake";
+    public string? InitialKeyId => KeyId;
+
+    public string? CurrentKeyId => KeyId;
 
     public Task<Result<long>> AppendAsync(DocumentLifecycleEvent @event, CancellationToken cancellationToken)
     {
@@ -30,7 +32,7 @@ internal sealed class InMemoryIntegrity(DossierId dossier) : IIntegrityStore, II
             return Task.FromResult(Result<long>.Failure(entry.Errors));
         }
 
-        entry.Value.ApplySeal(Seal(entry.Value.Hash));
+        entry.Value.ApplySeal(KeyId, Seal(entry.Value.Hash));
         Entries.Add(entry.Value);
         return Task.FromResult(Result<long>.Success(sequence));
     }
@@ -59,16 +61,22 @@ internal sealed class InMemoryIntegrity(DossierId dossier) : IIntegrityStore, II
     public Task<Result<SealedArchive>> BuildAsync(int closingNumber, CancellationToken cancellationToken) =>
         Task.FromResult<Result<SealedArchive>>(IntegrityErrors.ClosingNotFound);
 
-    public ValueTask<Result<IIntegrityKeys>> GetAsync(OrganisationId cabinet, CancellationToken cancellationToken) =>
-        ValueTask.FromResult(Result<IIntegrityKeys>.Success(this));
+    public Task<Result<IntegrityKeyVersion>> RotateKeysAsync(CancellationToken cancellationToken) =>
+        throw new NotSupportedException("La rotation est testée avec la vraie persistance.");
 
-    public string Seal(string entryHash) => "seal:" + entryHash;
+    public Task<Result<IIntegrityKeyVerifier>> VerifierAsync(CancellationToken cancellationToken) =>
+        Task.FromResult(Result<IIntegrityKeyVerifier>.Success(this));
 
-    public string Sign(string closingHash) => "sig:" + closingHash;
+    public Task<IReadOnlyList<IntegrityKeyVersion>> ListAsync(CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<IntegrityKeyVersion>>([new IntegrityKeyVersion(1, KeyId, "fake", DateTimeOffset.UnixEpoch, null)]);
 
-    public bool VerifySeal(string entryHash, string seal) => seal == Seal(entryHash);
+    public string? PublicKeyOf(string keyId) => keyId == KeyId ? "fake" : null;
 
-    public bool VerifyClosingSignature(string keyId, string publicKey, string closingHash, string signature) => signature == Sign(closingHash);
+    public static string Seal(string entryHash) => "seal:" + entryHash;
+
+    public bool VerifySeal(string keyId, string entryHash, string seal) => keyId == KeyId && seal == Seal(entryHash);
+
+    public bool VerifyClosingSignature(string keyId, string publicKey, string closingHash, string signature) => signature == "sig:" + closingHash;
 
     public Task PublishAsync(DossierAlertSignal signal, CancellationToken cancellationToken)
     {

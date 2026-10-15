@@ -22,7 +22,7 @@ public sealed class PermissionMatrixTests
         [
             TiersConsulter, TiersCreer, DossierLire, CatalogueConsulter, CatalogueGerer, DevisCreer, FactureSaisir, FactureValider,
             FactureEmettre, AvoirCreer, FecExporter, IaUtiliser, DelegationsApprouver, AlertesLire, AlertesTraiter,
-            IntegriteVerifier, ClotureEffectuer, ArchivesExporter,
+            IntegriteVerifier, ClotureEffectuer, ArchivesExporter, IntegriteClesGerer,
         ],
         [RoleTemplates.AdministrateurGroupe] = [GroupeGerer, DossierAdministrer],
         [RoleTemplates.CollaborateurEtendu] =

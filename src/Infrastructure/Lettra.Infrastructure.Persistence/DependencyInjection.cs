@@ -36,7 +36,8 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IDocumentNumbering, DocumentNumbering>();
         services.AddSingleton<IDossierKeyring, AesGcmDossierKeyring>();
-        services.AddSingleton<IIntegrityKeyring, DerivedIntegrityKeyring>();
+        services.AddScoped<EnvelopedIntegrityKeyring>();
+        services.AddScoped<IIntegrityKeyring>(sp => sp.GetRequiredService<EnvelopedIntegrityKeyring>());
         services.AddScoped<IIntegrityJournal, EfIntegrityJournal>();
         services.AddScoped<IIntegrityStore, EfIntegrityStore>();
         services.AddScoped<ISealedArchiveBuilder, EfSealedArchiveBuilder>();

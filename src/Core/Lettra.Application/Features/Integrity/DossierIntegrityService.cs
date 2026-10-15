@@ -24,7 +24,7 @@ public sealed partial class DossierIntegrityService(
     public async Task<Result<IntegrityReport>> VerifyAsync(CancellationToken cancellationToken)
     {
         TenantDescriptor dossier = tenant.Current;
-        Result<IIntegrityKeys> keys = await keyring.GetAsync(dossier.OrganisationId, cancellationToken).ConfigureAwait(false);
+        Result<IIntegrityKeyVerifier> keys = await keyring.VerifierAsync(cancellationToken).ConfigureAwait(false);
         if (keys.IsFailure)
         {
             return Result<IntegrityReport>.Failure(keys.Errors);
@@ -81,12 +81,37 @@ public sealed partial class DossierIntegrityService(
         return created;
     }
 
+    /// <summary>
+    /// Fait tourner les clés si la version en vigueur a plus de <paramref name="maxAge"/> (passe de nuit). Rien tant
+    /// que le dossier n'a pas de clé : elle naît avec la première entrée.
+    /// </summary>
+    public async Task<Result<IntegrityKeyVersion?>> RotateKeysIfDueAsync(TimeSpan maxAge, CancellationToken cancellationToken)
+    {
+        IReadOnlyList<IntegrityKeyVersion> versions = await keyring.ListAsync(cancellationToken).ConfigureAwait(false);
+        if (versions.Count == 0 || versions[^1].CreatedAt + maxAge > clock.GetUtcNow())
+        {
+            return Result<IntegrityKeyVersion?>.Success(null);
+        }
+
+        Result<IntegrityKeyVersion> rotated = await store.RotateKeysAsync(cancellationToken).ConfigureAwait(false);
+        if (rotated.IsFailure)
+        {
+            return Result<IntegrityKeyVersion?>.Failure(rotated.Errors);
+        }
+
+        LogRotated(logger, tenant.Current.DossierId.Value, rotated.Value.Version);
+        return rotated.Value;
+    }
+
     [LoggerMessage(EventId = 5000, Level = LogLevel.Information,
         Message = "Intégrité du dossier {DossierId} : {Entries} entrées, {Closings} clôtures, {Findings} constat(s) [{Kinds}]")]
     private static partial void LogChecked(ILogger logger, Guid dossierId, long entries, int closings, int findings, string kinds);
 
     [LoggerMessage(EventId = 5001, Level = LogLevel.Information, Message = "Dossier {DossierId} : {Count} période(s) clôturée(s)")]
     private static partial void LogClosed(ILogger logger, Guid dossierId, int count);
+
+    [LoggerMessage(EventId = 5002, Level = LogLevel.Information, Message = "Dossier {DossierId} : clés de la chaîne passées en version {Version}")]
+    private static partial void LogRotated(ILogger logger, Guid dossierId, int version);
 }
 
 /// <summary>Tant que le module des pièces n'est pas branché, le contrôle ne compare pas les pièces.</summary>

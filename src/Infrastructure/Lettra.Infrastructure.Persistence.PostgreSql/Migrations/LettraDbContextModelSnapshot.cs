@@ -123,6 +123,10 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.Property<DateOnly?>("IssueDate")
                         .HasColumnType("date");
 
+                    b.Property<string>("KeyId")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
                     b.Property<int>("Kind")
                         .HasColumnType("integer");
 
@@ -473,6 +477,37 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                             LastSequence = 0L,
                             Version = 0L
                         });
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Integrity.StoredIntegrityKey", b =>
+                {
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("CreatedAt")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("KeyId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("PublicKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<byte[]>("WrappedSecret")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("bytea");
+
+                    b.HasKey("Version");
+
+                    b.HasIndex("KeyId")
+                        .IsUnique();
+
+                    b.ToTable("IntegrityKeys", (string)null);
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Numbering.NumberSeries", b =>

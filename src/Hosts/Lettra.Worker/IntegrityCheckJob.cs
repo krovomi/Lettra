@@ -1,3 +1,4 @@
+using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Features.Integrity;
 using Lettra.Domain.Common;
@@ -22,11 +23,14 @@ public sealed class IntegrityCheckJobOptions
 
     /// <summary>Attente avant la première passe, le temps que les migrations de démarrage se terminent.</summary>
     public TimeSpan InitialDelay { get; set; } = TimeSpan.FromMinutes(5);
+
+    /// <summary>Âge au-delà duquel les clés de la chaîne d'un dossier tournent (annexe F : chaque année). Zéro : jamais.</summary>
+    public TimeSpan KeyRotationAge { get; set; } = TimeSpan.FromDays(365);
 }
 
 /// <summary>
-/// Passe de nuit de la chaîne anti-fraude : pour chaque dossier actif, clôture et signe les mois écoulés, puis
-/// contrôle la chaîne. Un constat lève l'alerte de dossier (S1 chaîne compromise, S2 trou de numérotation), un contrôle
+/// Passe de nuit de la chaîne anti-fraude : pour chaque dossier actif, clôture et signe les mois écoulés, fait tourner
+/// les clés devenues trop anciennes, puis contrôle la chaîne. Un constat lève l'alerte de dossier (S1 chaîne compromise, S2 trou de numérotation), un contrôle
 /// propre la résout. Un dossier en échec n'arrête pas la passe ; aucune donnée de dossier n'est journalisée.
 /// </summary>
 internal sealed partial class IntegrityCheckJob(
@@ -55,6 +59,7 @@ internal sealed partial class IntegrityCheckJob(
 
     internal async Task<(int Checked, int Compromised, int Failed)> RunPassAsync(CancellationToken cancellationToken)
     {
+        IntegrityCheckJobOptions settings = options.Value;
         int checkedCount = 0;
         int compromised = 0;
         int failed = 0;
@@ -80,6 +85,15 @@ internal sealed partial class IntegrityCheckJob(
                     if (closed.IsFailure)
                     {
                         LogClosingFailed(dossier.DossierId.Value, closed.Errors[0].Code);
+                    }
+
+                    if (settings.KeyRotationAge > TimeSpan.Zero)
+                    {
+                        Result<IntegrityKeyVersion?> rotated = await integrity.RotateKeysIfDueAsync(settings.KeyRotationAge, token).ConfigureAwait(false);
+                        if (rotated.IsFailure)
+                        {
+                            LogRotationFailed(dossier.DossierId.Value, rotated.Errors[0].Code);
+                        }
                     }
 
                     return await integrity.VerifyAsync(token).ConfigureAwait(false);
@@ -115,6 +129,9 @@ internal sealed partial class IntegrityCheckJob(
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Clôture du dossier {DossierId} en échec : {Code}")]
     private partial void LogClosingFailed(Guid dossierId, string code);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Rotation des clés du dossier {DossierId} en échec : {Code}")]
+    private partial void LogRotationFailed(Guid dossierId, string code);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Contrôle d'intégrité du dossier {DossierId} impossible : {Code}")]
     private partial void LogCheckFailed(Guid dossierId, string code);
