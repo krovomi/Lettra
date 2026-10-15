@@ -20,4 +20,7 @@ public static class CustomerErrors
     public static Error IndividualCannotHaveCompanyIds => Error.Validation(IndividualCannotHaveCompanyIdsCode, nameof(Customer.Siren));
     public static Error KindInvalid => Error.Validation(KindInvalidCode, nameof(Customer.Kind));
     public static Error NotFound => Error.NotFound(NotFoundCode);
+
+    /// <summary>Langue d'impression hors de <see cref="DocumentLanguages.Supported"/>.</summary>
+    public static Error PreferredLanguageInvalid => Error.Validation("Validation.Invalid", nameof(Customer.PreferredLanguage));
 }

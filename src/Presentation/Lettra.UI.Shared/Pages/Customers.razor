@@ -71,6 +71,13 @@
         <InputText id="country" @bind-Value="_request.CountryCode" maxlength="2" autocomplete="country" />
         <FieldErrors Field="@nameof(CreateCustomerRequest.CountryCode)" ServerErrors="_errors" />
 
+        <label for="language">@L["Customers.Field.PreferredLanguage"]</label>
+        <InputSelect id="language" @bind-Value="_request.PreferredLanguage">
+            <option value="">Français</option>
+            <option value="en-US">English</option>
+        </InputSelect>
+        <FieldErrors Field="@nameof(CreateCustomerRequest.PreferredLanguage)" ServerErrors="_errors" />
+
         @foreach (ErrorDetail error in _errors.Where(e => e.Target is null))
         {
             <p class="validation-message" role="alert">@L.Error(error.Code)</p>

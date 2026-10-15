@@ -56,6 +56,10 @@ public sealed record CreateCustomerRequest
     [Required(ErrorMessage = ErrorCodes.SharedKernel.CountryCodeInvalid)]
     [StringLength(2, MinimumLength = 2, ErrorMessage = ErrorCodes.SharedKernel.CountryCodeInvalid)]
     public string CountryCode { get; set; } = "FR";
+
+    /// <summary>Langue de ses pièces imprimées (<c>fr-FR</c> ou <c>en-US</c>) ; vide : le français.</summary>
+    [StringLength(10, ErrorMessage = ErrorCodes.Validation.Invalid)]
+    public string? PreferredLanguage { get; set; }
 }
 
 /// <summary>Client tel qu'affiché.</summary>
@@ -76,6 +80,9 @@ public sealed record CustomerResponse(
 {
     /// <summary>Version de concurrence optimiste, renvoyée aussi en <c>ETag</c> ; à renvoyer en <c>If-Match</c> pour modifier.</summary>
     public long Version { get; init; }
+
+    /// <summary>Langue de ses pièces imprimées ; <c>null</c> : le français.</summary>
+    public string? PreferredLanguage { get; init; }
 }
 
 /// <summary>Ligne de la liste des clients.</summary>

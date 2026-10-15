@@ -20,6 +20,7 @@ internal sealed class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.Property(c => c.Siret).HasConversion(v => v!.Value, v => Siret.Create(v).Value).HasMaxLength(14);
         builder.Property(c => c.VatNumber).HasConversion(v => v!.Value, v => VatNumber.Create(v).Value).HasMaxLength(15);
         builder.Property(c => c.Email).HasConversion(v => v!.Value, v => Email.Create(v).Value).HasMaxLength(254);
+        builder.Property(c => c.PreferredLanguage).HasMaxLength(10);
         builder.Property(c => c.CreatedAt).IsRequired();
 
         builder.ComplexProperty(c => c.BillingAddress, address =>
