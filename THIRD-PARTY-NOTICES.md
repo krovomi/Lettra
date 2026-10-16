@@ -113,3 +113,11 @@ SOFTWARE.
 
 Les licences des paquets NuGet sont celles déclarées par leurs auteurs ; la nomenclature (SBOM CycloneDX)
 produite par la CI en donne la liste exacte pour chaque version.
+
+## Whisper (dictée et commandes vocales)
+
+- Whisper.net (paquet NuGet, licence MIT, https://github.com/sandrohanea/whisper.net) embarque whisper.cpp (licence
+  MIT, https://github.com/ggml-org/whisper.cpp). Le serveur de la cellule est whisper.cpp compilé par
+  `build/voix/whisper-server`, qui copie sa licence dans l'image.
+- Les modèles ggml (convertis des poids Whisper d'OpenAI, licence MIT) ne sont pas dans le dépôt : le poste ou le
+  conteneur les télécharge depuis le dépôt public de whisper.cpp et vérifie leur empreinte avant de les charger.

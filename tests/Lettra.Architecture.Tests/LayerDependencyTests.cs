@@ -14,7 +14,7 @@ public sealed class LayerDependencyTests
         { "Lettra.Calculations", [] },
         { "Lettra.Contracts", [] },
         { "Lettra.Domain", ["Lettra.Calculations"] },
-        { "Lettra.Application", ["Lettra.Calculations", "Lettra.Contracts", "Lettra.Domain"] },
+        { "Lettra.Application", ["Lettra.Calculations", "Lettra.Contracts", "Lettra.Domain", "Lettra.Speech"] },
         { "Lettra.Infrastructure.Persistence", ["Lettra.Application", "Lettra.Calculations", "Lettra.Contracts", "Lettra.Domain"] },
         { "Lettra.Infrastructure.Persistence.Sqlite", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain", "Lettra.Infrastructure.Persistence"] },
         { "Lettra.Infrastructure.Persistence.PostgreSql", ["Lettra.Application", "Lettra.Domain", "Lettra.Infrastructure.Persistence"] },
@@ -47,6 +47,12 @@ public sealed class LayerDependencyTests
         { "Lettra.Ai.Orchestration", ["Lettra.Ai.Privacy", "Lettra.Application", "Lettra.Contracts", "Lettra.Domain"] },
         { "Lettra.Ai.Claude", ["Lettra.Application"] },
         { "Lettra.Ai.Local", ["Lettra.Application"] },
+
+        // Voix (vague 5) : grammaire pure (contrats seulement, elle tourne aussi dans le navigateur) et deux adapters du
+        // port ISpeechToText, sans accès aux bases. Whisper.net (natif) n'est que dans l'adapter du poste.
+        { "Lettra.Speech", ["Lettra.Contracts"] },
+        { "Lettra.Infrastructure.Speech", ["Lettra.Application", "Lettra.Domain", "Lettra.Speech"] },
+        { "Lettra.Infrastructure.Speech.OnDevice", ["Lettra.Application", "Lettra.Domain", "Lettra.Speech"] },
     };
 
     [Theory]

@@ -365,7 +365,7 @@ kbd { font-family: var(--font-mono); font-size: var(--text-xs); padding: 0.05rem
 /* Densités : Confort par défaut sur écran tactile, Expert resserre marges et espacements. */
 .lettra-shell.density-expert { --lettra-gap: var(--space-2); font-size: 14px; }
 .lettra-shell.density-expert .lettra-card { padding: var(--space-3) var(--space-4); margin-bottom: var(--space-3); }
-.lettra-shell.density-comfort button, .lettra-shell.density-comfort input:not([type=checkbox]):not([type=radio]), .lettra-shell.density-comfort select { min-height: 40px; }
+.lettra-shell.density-comfort button, .lettra-shell.density-comfort input:not([type=checkbox]):not([type=radio]):not(.lg-input), .lettra-shell.density-comfort select { min-height: 40px; }
 
 /* Pièces : en-tête, lignes, colonne latérale (totaux et checklist). */
 .lettra-document { display: grid; grid-template-columns: minmax(0, 1fr) 20rem; gap: var(--space-4); align-items: start; }

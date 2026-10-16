@@ -5,6 +5,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Lettra.Domain\Lettra.Domain.csproj" />
     <ProjectReference Include="..\Lettra.Contracts\Lettra.Contracts.csproj" />
+    <ProjectReference Include="..\Lettra.Speech\Lettra.Speech.csproj" />
   </ItemGroup>
 
   <ItemGroup>

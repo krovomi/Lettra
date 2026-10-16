@@ -14,6 +14,7 @@ using Lettra.Infrastructure.Persistence.Sqlite.Local;
 using Lettra.Infrastructure.Persistence.SqlServer;
 using Lettra.Infrastructure.Persistence.Sync;
 using Lettra.Infrastructure.Persistence.Tenancy;
+using Lettra.Infrastructure.Speech;
 using Lettra.Supervision.Infrastructure;
 using Lettra.Sync.Server;
 using Microsoft.EntityFrameworkCore;
@@ -54,6 +55,7 @@ public static class LettraBootstrap
         services.AddExternalServices(configuration);
         services.AddLettraObservability(configuration, mode);
         services.AddLettraAi(configuration);
+        services.AddSpeech(configuration);
         services.AddExports(configuration);
 
         return mode switch
