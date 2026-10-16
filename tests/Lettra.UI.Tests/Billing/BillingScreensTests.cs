@@ -45,6 +45,17 @@ public sealed class InvoiceEditorTests : BunitContext
         Render<InvoiceEditor>(p => p.Add(e => e.Id, id).Add(e => e.AutosaveDelay, TimeSpan.Zero));
 
     [Fact]
+    public void Enregistrer_une_nouvelle_facture_sans_client_dit_quoi_faire()
+    {
+        IRenderedComponent<InvoiceEditor> page = Render<InvoiceEditor>(p => p.Add(e => e.AutosaveDelay, TimeSpan.Zero));
+
+        page.Find("#save").HasAttribute("disabled").Should().BeFalse();
+        page.Find("#save").Click();
+
+        page.WaitForAssertion(() => page.Find("#document-status [role=alert]").TextContent.Trim().Should().Be("Choisissez un client."));
+    }
+
+    [Fact]
     public void Valider_puis_emettre_une_facture()
     {
         InvoiceResponse facture = _invoices.Add(InvoiceKindDto.Invoice, InvoiceStatusDto.Draft, null, Conseil);

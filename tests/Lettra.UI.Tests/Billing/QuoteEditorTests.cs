@@ -254,6 +254,52 @@ public sealed class QuoteEditorTests : BunitContext
     }
 
     [Fact]
+    public void Le_choix_du_client_liste_tous_les_clients_du_dossier_meme_au_dela_d_une_page()
+    {
+        // Régression : la liste demandait 500 clients d'un coup, l'API (200 au plus) refusait et la liste restait vide.
+        for (int i = 1; i <= CustomerListing.MaxPageSize + 50; i++)
+        {
+            _customers.Customers.Add(new CustomerSummary(Guid.NewGuid(), CustomerKindDto.Company, $"Client {i:000}", null, "Nantes"));
+        }
+
+        _customers.Customers.Add(new CustomerSummary(Guid.NewGuid(), CustomerKindDto.Individual, "Zoé Martin", null, "Brest"));
+        IRenderedComponent<QuoteEditor> page = Ouvrir();
+
+        page.Find("#customer").Click();
+
+        page.WaitForAssertion(() => Texte(page, ".lg-hint").Should().Contain($"{CustomerListing.MaxPageSize + 52} résultat(s)"));
+        page.Find("[role=dialog] input").Input("zoé");
+        page.Find("[role=dialog] input").KeyDown("Enter");
+        page.WaitForAssertion(() => Texte(page, "#customer").Should().Be("Zoé Martin"));
+    }
+
+    [Fact]
+    public void Enregistrer_sans_client_dit_quoi_faire_au_lieu_de_rester_inactif()
+    {
+        IRenderedComponent<QuoteEditor> page = Ouvrir();
+
+        page.Find("#save").HasAttribute("disabled").Should().BeFalse();
+        page.Find("#save").Click();
+
+        page.WaitForAssertion(() => Texte(page, "#document-status [role=alert]").Should().Be("Choisissez un client."));
+        _quotes.Creations.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Enregistrer_sans_ligne_complete_le_dit()
+    {
+        NavigationManager navigation = Services.GetRequiredService<NavigationManager>();
+        navigation.NavigateTo($"quotes/new?customer={BillingFixtures.DupontId}");
+        IRenderedComponent<QuoteEditor> page = Ouvrir();
+        page.WaitForAssertion(() => Texte(page, "#customer").Should().Be("Dupont SARL"));
+
+        await page.InvokeAsync(() => page.Find("#save").Click());
+
+        page.WaitForAssertion(() => Texte(page, "#document-status [role=alert]").Should().Be("Ajoutez au moins une ligne."));
+        _quotes.Creations.Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task Choisir_un_article_applique_le_tarif_du_client()
     {
         Contracts.Catalog.CatalogItemResponse article = _catalog.Add("TENUE", "Tenue mensuelle", 400m);
