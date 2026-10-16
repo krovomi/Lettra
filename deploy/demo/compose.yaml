@@ -10,6 +10,10 @@
 #
 # Données et secrets FICTIFS, réservés à la démonstration (.env) : ne jamais réutiliser en production.
 # Accès depuis un téléphone (HTTPS sur le réseau local) : compose.lan.yaml, voir README.md.
+#
+# Voix (dictée et commandes) : le conteneur whisper (serveur whisper.cpp, local) télécharge son modèle (142 Mio) au
+# premier démarrage dans le volume whisper-modeles. L'API démarre sans l'attendre ; la transcription répond 503 tant
+# que le modèle n'est pas chargé. Remettre ce volume à zéro ne fait que retélécharger le modèle.
 name: lettra-demo
 
 services:
@@ -52,6 +56,9 @@ services:
     depends_on:
       keycloak:
         condition: service_healthy
+      # Démarré seulement, pas prêt : la démonstration n'attend pas le téléchargement du modèle Whisper.
+      whisper:
+        condition: service_started
     environment:
       # Environnement « Demo » : même comportement que Production (en-têtes, CSP, pages d'erreur, cookies), seul le
       # jeu de démonstration y est permis (il refuse toujours Production).
@@ -92,12 +99,35 @@ services:
       Lettra__Demo__UserId: 0199e3a0-0000-7000-8000-0000000de001
       # Le manager du cabinet ne crée pas de dossier sur le serveur : le dossier configuré suffit.
       Lettra__Demo__AdditionalDossiers: "0"
+      # Voix : serveur whisper.cpp de la démonstration, joint par le réseau Docker. L'audio ne sort pas du poste.
+      Lettra__Speech__Engine: WhisperServer
+      Lettra__Speech__WhisperServer__Endpoint: http://whisper:8080/
     ports:
       - "127.0.0.1:${LETTRA_DEMO_PORT:-8080}:8080"
     volumes:
       # Catalogue, dossier SQLite et clés de session (DataProtection) : dossier personnel de l'utilisateur de l'image.
       - lettra-donnees:/home/app
 
+  # Dictée et commandes vocales : serveur whisper.cpp v1.8.7, construit depuis build/voix/whisper-server (la même image
+  # que le workflow « Voix » ; image de base épinglée par empreinte, source vérifiée par son commit). Au premier
+  # démarrage, le modèle ggml-base.bin (142 Mio) est téléchargé depuis le dépôt public de whisper.cpp et vérifié par
+  # son empreinte SHA-1 (465707469ff3a37a2b9b8d8f89f2f99de7299dac), puis gardé dans le volume whisper-modeles.
+  # Aucun port publié : seule l'API l'appelle. Pas de healthcheck : « up --wait » n'attend pas le téléchargement, et
+  # une démo sans Internet démarre quand même (le conteneur réessaie le téléchargement toutes les 30 s).
+  whisper:
+    build:
+      context: ../../build/voix/whisper-server
+    image: lettra-demo-whisper
+    # Arrêt immédiat par « down » : tini transmet le signal à la boucle ci-dessous.
+    init: true
+    entrypoint: ["/bin/sh", "-c", "until /usr/local/bin/entrypoint.sh; do echo 'Whisper : nouvel essai dans 30 s' >&2; sleep 30; done"]
+    environment:
+      WHISPER_MODEL: base
+    restart: unless-stopped
+    volumes:
+      - whisper-modeles:/models
+
 volumes:
   keycloak-donnees:
   lettra-donnees:
+  whisper-modeles:

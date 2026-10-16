@@ -44,6 +44,8 @@
 
   <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
     <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+    <!-- Micro de la dictée (com.apple.security.device.audio-input). -->
+    <CodesignEntitlements>Platforms/MacCatalyst/Entitlements.plist</CodesignEntitlements>
   </PropertyGroup>
 
   <!-- ASP.NET Core n'existe pas sur Android, iOS ni Mac Catalyst : sa référence de framework, héritée de la composition
@@ -121,11 +123,18 @@
     <ProjectReference Include="..\..\Presentation\Lettra.UI.Gateway.InProcess\Lettra.UI.Gateway.InProcess.csproj" />
     <ProjectReference Include="..\..\Presentation\Lettra.UI.Gateway.Http\Lettra.UI.Gateway.Http.csproj" />
     <ProjectReference Include="..\..\Modules\Sync\Lettra.Sync.Client\Lettra.Sync.Client.csproj" />
+    <!-- Voix sur le poste (Whisper.net) : dictée et commandes transcrites sur l'appareil, hors ligne. -->
+    <ProjectReference Include="..\..\Infrastructure\Lettra.Infrastructure.Speech.OnDevice\Lettra.Infrastructure.Speech.OnDevice.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Maui.Controls" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" />
+    <!-- Bibliothèques natives de whisper.cpp, choisies par les cibles du paquet pour chaque plateforme : Android
+         (arm64-v8a et x86_64, les architectures de l'APK), iOS (appareil et
+         simulateur), Mac Catalyst, Windows (x64, x86, arm64). Directement ici : ces cibles ne s'appliquent qu'à un
+         projet qui référence le paquet lui-même. -->
+    <PackageReference Include="Whisper.net.Runtime" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Condition="'$(Configuration)' == 'Debug'" />
   </ItemGroup>
 
