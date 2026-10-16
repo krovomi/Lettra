@@ -179,10 +179,22 @@ public sealed class TypingLogicTests
             clients[hasard.Next(clients.Length)], 1 + (i % 28), i % 3 == 0 ? "30 jours" : null,
             [.. Enumerable.Range(0, 6).Select(l => ((Guid?)articles[hasard.Next(articles.Length)], $"Prestation {l}"))])));
 
-        Stopwatch chrono = Stopwatch.StartNew();
-        historique.ItemsFor(clients[0]);
-        historique.LastPaymentTermsFor(clients[0]);
-        historique.DesignationsFor(articles[0]);
-        chrono.Elapsed.TotalMilliseconds.Should().BeLessThan(100);
+        // Un premier appel compile le code (JIT) : il n'est pas compté, l'utilisateur ne le paie qu'une fois. On garde
+        // la médiane de cinq suggestions sur des clients différents pour ne pas dépendre d'un à-coup de la machine.
+        Suggerer(historique, clients[^1], articles[^1]);
+        double[] durees = [.. Enumerable.Range(0, 5).Select(i =>
+        {
+            Stopwatch chrono = Stopwatch.StartNew();
+            Suggerer(historique, clients[i], articles[i]);
+            return chrono.Elapsed.TotalMilliseconds;
+        }).Order()];
+        durees[2].Should().BeLessThan(100);
+    }
+
+    private static void Suggerer(DossierHistory historique, Guid client, Guid article)
+    {
+        historique.ItemsFor(client);
+        historique.LastPaymentTermsFor(client);
+        historique.DesignationsFor(article);
     }
 }

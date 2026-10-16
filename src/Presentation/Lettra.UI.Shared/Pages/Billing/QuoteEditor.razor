@@ -78,10 +78,12 @@ else
                                 OnAddItem="id => _linesGrid?.AddCatalogItemAsync(id) ?? Task.CompletedTask" />
             </section>
 
-            <section class="lettra-card">
-                <label for="notes">@L["Billing.Field.Notes"]</label>
-                <SmartInput Id="notes" Voice="@(!IsReadOnly)" VoiceLabel="@L["Billing.Field.Notes"]" Multiline="true" Rows="3" disabled="@IsReadOnly" Value="@_request.Notes" maxlength="4000" OnCommitted="NotesChangedAsync"
-                            Templates="TextFieldKind.QuoteNotes" Spellcheck="true" Tidy="true" data-tour="notes" />
+            <section class="lettra-card lettra-notes">
+                <div class="lettra-field">
+                    <label for="notes">@L["Billing.Field.Notes"]</label>
+                    <SmartInput Id="notes" Voice="@(!IsReadOnly)" VoiceLabel="@L["Billing.Field.Notes"]" Multiline="true" Rows="3" disabled="@IsReadOnly" Value="@_request.Notes" maxlength="4000" OnCommitted="NotesChangedAsync"
+                                Templates="TextFieldKind.QuoteNotes" Spellcheck="true" Tidy="true" data-tour="notes" />
+                </div>
             </section>
         </div>
 

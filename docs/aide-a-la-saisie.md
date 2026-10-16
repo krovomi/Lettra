@@ -101,8 +101,8 @@ phrase, pas mot à mot : Whisper transcrit un enregistrement entier.
 
 | Vérification | Où | Résultat |
 |---|---|---|
-| Tests bUnit : parcours, placement, mémoire et versions, liste de démarrage, champ assisté, modèles, codes postaux, saisie rapide, F4, habitudes du client, micro, panneau, F8, commandes, voix désactivée ou injoignable | CI, Linux | 338 tests de `Lettra.UI.Tests` verts |
-| Latence des suggestions (commune, dossier de 5 000 pièces) | CI, Linux | moins de 100 ms |
+| Tests bUnit : parcours, placement, mémoire et versions, liste de démarrage, champ assisté, modèles, codes postaux, saisie rapide, F4, habitudes du client, micro, panneau, F8, commandes, voix désactivée ou injoignable | CI, Linux | 351 tests de `Lettra.UI.Tests` verts |
+| Latence des suggestions (commune, dossier de 5 000 pièces) | CI, Linux | moins de 100 ms (médiane de cinq, après un premier appel) |
 | Parité des clés FR et EN | `Lettra.Architecture.Tests` | vert |
 | Navigateur réel, application publiée (WASM) : tutoriel à 1440, 768 et 375 px (thème sombre au téléphone), Échap, mémoire après rechargement, bouton **?**, code postal vers ville, modèles « / » | Chromium (Playwright), Linux | vérifié |
 | Voix dans Chromium avec un micro simulé : micro d'un champ, onde et texte inséré, F8 hors champ, commande affichée puis exécutée, WAV reçu par le serveur (RIFF, mono, 16 000 Hz, 16 bits) | Chromium, Linux, serveur de test à la place de l'API | vérifié à 1440 et 375 px |

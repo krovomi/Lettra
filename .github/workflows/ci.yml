@@ -159,9 +159,15 @@ jobs:
           java-version: 17
       - name: Charge de travail MAUI Android
         run: dotnet workload install maui-android
-      # APK signé avec la clé de débogage : à installer sur un émulateur ou un appareil (pas de magasin d'applications).
+      # APK signé avec la clé de démonstration versionnée (pas de magasin d'applications) : la même à chaque
+      # construction, pour qu'« adb install -r » d'une nouvelle version garde les données du téléphone.
       - name: Build de l'APK
-        run: dotnet publish src/Hosts/Lettra.App.Maui/Lettra.App.Maui.csproj -c Release -f net10.0-android -p:AndroidPackageFormat=apk -p:AndroidSdkDirectory=$ANDROID_HOME -o artifacts/lettra-android
+        run: |
+          dotnet publish src/Hosts/Lettra.App.Maui/Lettra.App.Maui.csproj -c Release -f net10.0-android -p:AndroidPackageFormat=apk -p:AndroidSdkDirectory=$ANDROID_HOME -o artifacts/lettra-android
+          apk=$(ls artifacts/lettra-android/*-Signed.apk | head -n 1)
+          apksigner="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -n 1)apksigner"
+          "$apksigner" verify --print-certs "$apk" | tee "$RUNNER_TEMP/certificat-apk.txt"
+          grep -q "CN=Lettra demonstration" "$RUNNER_TEMP/certificat-apk.txt" || { echo "APK non signé avec la clé de démonstration"; exit 1; }
       - uses: actions/upload-artifact@v4
         with:
           name: lettra-android

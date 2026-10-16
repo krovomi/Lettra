@@ -118,10 +118,12 @@ else
                                 OnReuseTerms="t => TextCommittedAsync(t, v => _request.PaymentTerms = v)" />
             </section>
 
-            <section class="lettra-card">
-                <label for="notes">@L["Billing.Field.Notes"]</label>
-                <SmartInput Id="notes" Voice="@(!IsReadOnly)" VoiceLabel="@L["Billing.Field.Notes"]" Multiline="true" Rows="3" disabled="@IsReadOnly" Value="@_request.Notes" maxlength="4000"
-                            OnCommitted="v => TextCommittedAsync(v, t => _request.Notes = t)" Templates="TextFieldKind.InvoiceNotes" Spellcheck="true" Tidy="true" />
+            <section class="lettra-card lettra-notes">
+                <div class="lettra-field">
+                    <label for="notes">@L["Billing.Field.Notes"]</label>
+                    <SmartInput Id="notes" Voice="@(!IsReadOnly)" VoiceLabel="@L["Billing.Field.Notes"]" Multiline="true" Rows="3" disabled="@IsReadOnly" Value="@_request.Notes" maxlength="4000"
+                                OnCommitted="v => TextCommittedAsync(v, t => _request.Notes = t)" Templates="TextFieldKind.InvoiceNotes" Spellcheck="true" Tidy="true" />
+                </div>
             </section>
         </div>
 

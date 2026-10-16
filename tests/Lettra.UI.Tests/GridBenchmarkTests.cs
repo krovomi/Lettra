@@ -137,7 +137,7 @@ public sealed class GridBenchmarkPageTests : BunitContext
         NavigationManager navigation = Services.GetRequiredService<NavigationManager>();
         navigation.NavigateTo("mesure-grille?auto=1");
 
-        Render<SessionBar>();
+        Render<SessionGate>();
 
         navigation.Uri.Should().Be("http://localhost/mesure-grille?auto=1", "la version de mesure s'ouvre avant tout compte local");
         navigation.NavigateTo("quotes");
