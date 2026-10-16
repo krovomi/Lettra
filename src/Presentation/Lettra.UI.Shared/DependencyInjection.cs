@@ -23,6 +23,8 @@ public static class DependencyInjection
         services.AddScoped<UiPreferences>();
         services.AddScoped<AssistantPanelState>();
         services.AddScoped<ToastService>();
+        // Session lue une fois pour la mise en page : la garde des écrans (SessionGate) et la barre de session.
+        services.TryAddScoped<SessionState>();
         // Un hôte peut remplacer le téléchargement (enregistrement natif en MAUI) en l'enregistrant avant.
         services.TryAddScoped<IFileDownloader, JsFileDownloader>();
         services.AddSingleton<IDocumentPdfRenderer, PdfDocumentRenderer>();

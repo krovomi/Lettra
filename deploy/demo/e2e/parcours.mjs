@@ -177,7 +177,8 @@ async function createCustomer(page, name) {
     await page.fill('#city', 'Paris');
     await page.fill('#country', 'FR');
     await page.locator('form button[type=submit]').click();
-    await page.locator('.lettra-success').waitFor({ timeout: 30_000 });
+    // La confirmation passe par le toaster (vague 5) ; .lettra-success reste accepté pour un écran qui l'affiche encore.
+    await page.locator('.lt-toast.is-success, .lettra-success').first().waitFor({ timeout: 30_000 });
     await page.locator('table.lettra-table td', { hasText: name }).first().waitFor({ timeout: 30_000 });
     log(`client « ${name} » créé et listé`);
     await shot(page, 'client-cree');
