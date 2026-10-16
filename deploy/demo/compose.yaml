@@ -50,7 +50,9 @@ services:
       keycloak:
         condition: service_healthy
     environment:
-      ASPNETCORE_ENVIRONMENT: Production
+      # Environnement « Demo » : même comportement que Production (en-têtes, CSP, pages d'erreur, cookies), seul le
+      # jeu de démonstration y est permis (il refuse toujours Production).
+      ASPNETCORE_ENVIRONMENT: Demo
       Lettra__DeploymentMode: LocalNetwork
       Lettra__EInvoicing__Platform: Simulated
       # Pas de Worker dans la démonstration : l'API reprend les envois mis en file pendant une panne de la plateforme.
@@ -81,6 +83,12 @@ services:
       Lettra__Authorization__Users__0__Assignments__0__Role: manager
       Lettra__Authorization__Users__0__Assignments__0__Scope: Cabinet
       Lettra__Authorization__Users__0__Assignments__0__ScopeId: 0199e3a0-0000-7000-8000-0000000000c1
+      # Jeu « Cabinet Démo » (Lettra.DemoData) : un an d'activité dans le dossier de démonstration, au nom de
+      # l'utilisateur de démonstration, au premier démarrage seulement (environ 25 s ; ignoré si le dossier a des pièces).
+      Lettra__Demo__Seed: "true"
+      Lettra__Demo__UserId: 0199e3a0-0000-7000-8000-0000000de001
+      # Le manager du cabinet ne crée pas de dossier sur le serveur : le dossier configuré suffit.
+      Lettra__Demo__AdditionalDossiers: "0"
     ports:
       - "127.0.0.1:${LETTRA_DEMO_PORT:-8080}:8080"
     volumes:

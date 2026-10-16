@@ -49,6 +49,7 @@
   </Folder>
   <Folder Name="/src/Composition/">
     <Project Path="src/Composition/Lettra.Bootstrap/Lettra.Bootstrap.csproj" />
+    <Project Path="src/Composition/Lettra.DemoData/Lettra.DemoData.csproj" />
   </Folder>
   <Folder Name="/src/Presentation/">
     <Project Path="src/Presentation/Lettra.Printing/Lettra.Printing.csproj" />
