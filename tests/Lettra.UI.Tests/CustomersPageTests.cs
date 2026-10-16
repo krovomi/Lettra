@@ -58,8 +58,12 @@ internal sealed class FakeCustomersGateway : ICustomersGateway
         return Task.FromResult(OperationResult<CustomerResponse>.Success(created));
     }
 
+    /// <summary>Comme l'API : une page au-delà de <see cref="CustomerListing.MaxPageSize"/> est refusée en entier.</summary>
     public Task<OperationResult<PagedResponse<CustomerSummary>>> ListAsync(int page, int pageSize, CancellationToken cancellationToken) =>
-        Task.FromResult(OperationResult<PagedResponse<CustomerSummary>>.Success(new PagedResponse<CustomerSummary>([.. Customers], page, pageSize, Customers.Count)));
+        Task.FromResult(page < 1 || pageSize is < 1 or > CustomerListing.MaxPageSize
+            ? OperationResult<PagedResponse<CustomerSummary>>.Failure([new ErrorDetail(ErrorCodes.Validation.Invalid, "PageSize")])
+            : OperationResult<PagedResponse<CustomerSummary>>.Success(new PagedResponse<CustomerSummary>(
+                [.. Customers.Skip((page - 1) * pageSize).Take(pageSize)], page, pageSize, Customers.Count)));
 
     public Task<OperationResult<PagedResponse<CustomerSummary>>> SearchAsync(string? search, int page, int pageSize, CancellationToken cancellationToken)
     {

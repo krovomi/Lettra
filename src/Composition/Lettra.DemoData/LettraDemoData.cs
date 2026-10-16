@@ -129,7 +129,7 @@ public static partial class LettraDemoData
             }
 
             clock.Set(TimeProvider.System.GetUtcNow());
-            Result<DossierSummary> created = await CreateDossierAsync(services, registry is not null, organisation, DemoCompanies.For(business).Name, cancellationToken).ConfigureAwait(false);
+            Result<DossierSummary> created = await CreateDossierAsync(services, organisation, DemoCompanies.For(business).Name, cancellationToken).ConfigureAwait(false);
             if (created.IsFailure)
             {
                 // Le serveur de démonstration peut ne pas donner le droit de créer des dossiers : le dossier ouvert suffit.
@@ -212,21 +212,13 @@ public static partial class LettraDemoData
     }
 
     /// <summary>
-    /// Serveur : par le cas d'usage, avec les droits de l'utilisateur de démonstration. Poste : comme au premier lancement
-    /// (<c>LocalDossierStartup</c>), par le provisionnement du registre local, dans le cabinet du poste dont le
-    /// propriétaire est administrateur par construction (le registre des droits du poste ne connaît pas ce cabinet).
+    /// Par le cas d'usage, avec les droits de l'utilisateur de démonstration, sur le poste comme sur le serveur : sur le
+    /// poste, son propriétaire administre le cabinet du registre local (<c>ILocalCabinet</c>).
     /// </summary>
     private static async Task<Result<DossierSummary>> CreateDossierAsync(
-        ServiceProvider services, bool onDevice, OrganisationId organisation, string name, CancellationToken cancellationToken)
+        ServiceProvider services, OrganisationId organisation, string name, CancellationToken cancellationToken)
     {
         await using AsyncServiceScope scope = services.CreateAsyncScope();
-        if (onDevice)
-        {
-            Result<DossierId> created = await scope.ServiceProvider.GetRequiredService<IDossierProvisioner>()
-                .CreateAsync(organisation, name, cancellationToken).ConfigureAwait(false);
-            return created.IsSuccess ? new DossierSummary(created.Value.Value, name) : Result<DossierSummary>.Failure(created.Errors);
-        }
-
         return await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>()
             .SendAsync(new CreateDossierCommand(organisation, name), cancellationToken).ConfigureAwait(false);
     }
