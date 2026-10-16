@@ -15,7 +15,7 @@ public sealed record ListCustomersQuery(DossierId Dossier, int Page = 1, int Pag
 {
     public const int MaxSearchLength = 100;
 
-    public const int MaxPageSize = 200;
+    public const int MaxPageSize = CustomerListing.MaxPageSize;
 
     public Permission Permission => Permission.TiersConsulter;
 }
