@@ -132,6 +132,7 @@ Les blocs apparaissent avec un léger mouvement à l'ouverture d'une page. Ce mo
 | Point des créances (retards, transmissions) | `ReceivablesSummaryTests`, `ReceivablesApiTests`, `GatewayParityTests` |
 | Bouton des données de démonstration, refus en Production et sans droit | `ShellTests`, `ReceivablesApiTests` |
 | Cellules de la grille à la hauteur de leur ligne | `GridCellTests` |
+| Un champ (liste comprise) tient dans sa colonne ; la grille des lignes tient sans défilement dès 720 px et ne rogne aucune cellule | `GridCellTests`, `QuoteEditorTests` ; banc navigateur de 375 à 1920 px, densités Expert et Confort |
 | Rendu à 375, 768 et 1440 px dans chaque thème, audit axe (WCAG 2.2 AA), aucun défilement horizontal | Galerie + Playwright, ci-dessous |
 
 ```bash

@@ -53,7 +53,9 @@
   grid-template-columns: var(--lg-cols);
   box-sizing: border-box;
   height: var(--lg-row-h);
-  min-width: max-content;
+  /* Largeurs minimales des colonnes : en dessous seulement, la grille défile. max-content la faisait défiler dès que la
+     désignation la plus longue ne tenait pas, et rognait la dernière colonne (« Total HT »). */
+  min-width: min-content;
   border-bottom: 1px solid var(--lg-line);
   /* Mesuré au POC : divise par 7 le temps de peinture en défilement (une ligne ne repeint qu'elle-même). */
   contain: layout paint style;

@@ -70,9 +70,11 @@ else
                                    OnLinesChanged="ScheduleSaveAsync" OnTotalsChanged="TotalsChanged" />
             </section>
 
-            <section class="lettra-card">
-                <label for="notes">@L["Billing.Field.Notes"]</label>
-                <textarea id="notes" rows="3" disabled="@IsReadOnly" value="@_request.Notes" maxlength="4000" @onchange="NotesChangedAsync"></textarea>
+            <section class="lettra-card lettra-notes">
+                <div class="lettra-field">
+                    <label for="notes">@L["Billing.Field.Notes"]</label>
+                    <textarea id="notes" rows="3" disabled="@IsReadOnly" value="@_request.Notes" maxlength="4000" @onchange="NotesChangedAsync"></textarea>
+                </div>
             </section>
         </div>
 
