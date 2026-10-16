@@ -151,6 +151,19 @@ public sealed class VoiceCommandParserTests
         Fr(phrase).Should().BeNull();
 
     [Theory]
+    [InlineData("ouvre les paramètre", VoiceTarget.Settings)]
+    [InlineData("affiche les fournisseurss", VoiceTarget.Suppliers)]
+    [InlineData("nouveau devi", VoiceTarget.Quotes)]
+    public void Une_lettre_de_trop_ou_de_moins_ne_fait_pas_rater_la_commande(string said, VoiceTarget target) =>
+        Fr(said)!.Target.Should().Be(target);
+
+    [Theory]
+    [InlineData("ouvre le cata")]
+    [InlineData("ouvrir les fact")]
+    public void Un_mot_court_ou_trop_different_n_est_pas_devine(string said) =>
+        Fr(said).Should().BeNull();
+
+    [Theory]
     [InlineData("open overdue invoices", VoiceTarget.Invoices, VoiceFilter.Overdue)]
     [InlineData("show draft quotes", VoiceTarget.Quotes, VoiceFilter.Draft)]
     [InlineData("unpaid invoices", VoiceTarget.Invoices, VoiceFilter.Unpaid)]

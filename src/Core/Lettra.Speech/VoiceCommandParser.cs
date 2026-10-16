@@ -502,13 +502,60 @@ public static class VoiceCommandParser
 
             for (int k = 0; k < keys.Length; k++)
             {
-                if (tokens[index + k].Kind != TokenKind.Word || tokens[index + k].Key != keys[k])
+                if (tokens[index + k].Kind != TokenKind.Word || !SoundsLike(tokens[index + k].Key, keys[k]))
                 {
                     return false;
                 }
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Le mot entendu est celui du vocabulaire, à une lettre près pour un mot d'au moins six lettres : Whisper écrit
+        /// parfois une lettre de trop ou de moins (« paramètre », « fournisseurss »). Le vocabulaire est fermé, une lettre
+        /// ne fait pas passer un mot pour un autre.
+        /// </summary>
+        private static bool SoundsLike(string heard, string key) =>
+            string.Equals(heard, key, StringComparison.Ordinal)
+            || (key.Length >= 6 && heard.Length >= 6 && Math.Abs(heard.Length - key.Length) <= 1 && WithinOneEdit(heard, key));
+
+        private static bool WithinOneEdit(string a, string b)
+        {
+            int i = 0;
+            int j = 0;
+            bool edited = false;
+            while (i < a.Length && j < b.Length)
+            {
+                if (a[i] == b[j])
+                {
+                    i++;
+                    j++;
+                    continue;
+                }
+
+                if (edited)
+                {
+                    return false;
+                }
+
+                edited = true;
+                if (a.Length > b.Length)
+                {
+                    i++;
+                }
+                else if (a.Length < b.Length)
+                {
+                    j++;
+                }
+                else
+                {
+                    i++;
+                    j++;
+                }
+            }
+
+            return !edited || (i == a.Length && j == b.Length);
         }
 
         private int? MatchAny(string[][] phrases, int index, int end)
