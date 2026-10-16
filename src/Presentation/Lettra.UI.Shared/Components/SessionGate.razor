@@ -1,0 +1,67 @@
+@* N'affiche son contenu qu'une fois la session connue et ouverte : sans session, aucun écran ne lit le dossier (pas
+   d'appel refusé en 401 dans la console) et l'utilisateur va à l'écran de session. Hors ligne, la dernière session
+   connue suffit, et sans aucune (rechargement hors ligne) le contenu s'affiche pour les brouillons de l'appareil. *@
+@implements IDisposable
+@inject SessionState Session
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+
+@if (Allowed)
+{
+    @ChildContent
+}
+else if (Redirect)
+{
+    <p class="lettra-muted" aria-busy="true">@L["Loading"]</p>
+}
+
+@code {
+    /// <summary>Contenu réservé à une session ouverte.</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Envoie vers l'écran de session quand il n'y en a pas (une seule garde le fait : celle des écrans).</summary>
+    [Parameter] public bool Redirect { get; set; } = true;
+
+    // L'écran de session s'affiche sans session ; ce qui l'entoure (assistant) attend, lui, une session ouverte.
+    private bool Allowed => (Redirect && OnPageWithoutSession()) || Session.IsAuthenticated || (Session.Unreachable && Session.Current is null);
+
+    protected override async Task OnInitializedAsync()
+    {
+        Session.Changed += OnSessionChanged;
+        Navigation.LocationChanged += OnLocationChanged;
+        await Session.RefreshAsync();
+        RedirectIfSignedOut();
+    }
+
+    // L'écran de session lui-même, et la mesure de la grille, qui ne lit aucun dossier : la version de mesure
+    // s'ouvre dessus au premier lancement, avant tout compte local.
+    private bool OnPageWithoutSession()
+    {
+        string path = Navigation.ToBaseRelativePath(Navigation.Uri);
+        return path.StartsWith("session", StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith("mesure-grille", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void RedirectIfSignedOut()
+    {
+        if (Redirect && Session.Current is { IsAuthenticated: false } && !OnPageWithoutSession())
+        {
+            Navigation.NavigateTo("session");
+        }
+    }
+
+    private void OnSessionChanged(object? sender, EventArgs e) => _ = InvokeAsync(() =>
+    {
+        RedirectIfSignedOut();
+        StateHasChanged();
+    });
+
+    // Chaque navigation relit la session (expiration, verrouillage) ; la lecture est partagée entre les gardes.
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e) => _ = InvokeAsync(Session.RefreshAsync);
+
+    public void Dispose()
+    {
+        Session.Changed -= OnSessionChanged;
+        Navigation.LocationChanged -= OnLocationChanged;
+    }
+}

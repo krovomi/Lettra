@@ -60,6 +60,18 @@
     <!-- La précompilation AOT d'Android exige le découpage : compilation à la volée. -->
     <RunAOTCompilation>false</RunAOTCompilation>
   </PropertyGroup>
+
+  <!-- Clé de signature de DÉMONSTRATION, versionnée et publique comme les secrets de deploy/demo/.env : chaque APK (CI ou
+       poste) est signé avec la même clé, donc « adb install -r » d'une nouvelle version garde les données de l'application.
+       Avec la clé de débogage par défaut, recréée sur chaque machine de CI, Android refuse la mise à jour
+       (INSTALL_FAILED_UPDATE_INCOMPATIBLE) et il faut désinstaller, ce qui efface les données. Jamais pour un magasin. -->
+  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android' And '$(AndroidSigningKeyStore)' == ''">
+    <AndroidKeyStore>true</AndroidKeyStore>
+    <AndroidSigningKeyStore>$(MSBuildThisFileDirectory)Platforms/Android/lettra-demo.keystore</AndroidSigningKeyStore>
+    <AndroidSigningKeyAlias>lettra-demo</AndroidSigningKeyAlias>
+    <AndroidSigningStorePass>lettra-demo-android</AndroidSigningStorePass>
+    <AndroidSigningKeyPass>lettra-demo-android</AndroidSigningKeyPass>
+  </PropertyGroup>
   <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' Or $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
     <MtouchLink>None</MtouchLink>
   </PropertyGroup>

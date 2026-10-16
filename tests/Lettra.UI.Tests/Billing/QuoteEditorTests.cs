@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using System.Globalization;
 using System.Text;
 using Bunit;
@@ -80,6 +81,25 @@ public sealed class QuoteEditorTests : BunitContext
         IRenderedComponent<QuoteEditor> page = Ouvrir(devis.Id);
 
         page.WaitForAssertion(() => page.Find("#pdf-language").GetAttribute("value").Should().Be("en-US"));
+    }
+
+    [Fact]
+    public void Les_champs_de_l_en_tete_et_les_notes_sont_des_champs_empiles_et_les_colonnes_des_lignes_sont_souples()
+    {
+        QuoteResponse devis = _quotes.Add(QuoteStatusDto.Draft, null, Conseil);
+
+        IRenderedComponent<QuoteEditor> page = Ouvrir(devis.Id);
+
+        page.WaitForAssertion(() => page.FindAll(".lg-row[data-r]").Should().HaveCount(1));
+        foreach (string champ in new[] { "#valid-until", "#vat-regime", "#subject", "#notes" })
+        {
+            page.Find(champ).ParentElement!.ClassList.Should().Contain("lettra-field", $"{champ} a son libellé au-dessus, sur toute la largeur de sa colonne");
+        }
+
+        page.Find("label[for=notes]").ParentElement!.ClassList.Should().Contain("lettra-field");
+        // Chaque colonne, sauf « Remise % » déjà à sa largeur minimale, a une largeur minimale et maximale : la grille
+        // tient dès 720 px, sans défilement horizontal.
+        Regex.Matches(page.Find(".lg-grid").GetAttribute("style")!, @"minmax\(").Should().HaveCount(7);
     }
 
     [Fact]
@@ -198,6 +218,52 @@ public sealed class QuoteEditorTests : BunitContext
         creation.CustomerId.Should().Be(BillingFixtures.DupontId);
         creation.Lines.Should().ContainSingle().Which.Should().Match<DocumentLineRequest>(l => l.Designation == "Tenue de comptabilité" && l.UnitPriceExclTax == 1200m);
         navigation.Uri.Should().EndWith($"/quotes/{_quotes.Quotes.Keys.Single()}");
+    }
+
+    [Fact]
+    public void Le_choix_du_client_liste_tous_les_clients_du_dossier_meme_au_dela_d_une_page()
+    {
+        // Régression : la liste demandait 500 clients d'un coup, l'API (200 au plus) refusait et la liste restait vide.
+        for (int i = 1; i <= CustomerListing.MaxPageSize + 50; i++)
+        {
+            _customers.Customers.Add(new CustomerSummary(Guid.NewGuid(), CustomerKindDto.Company, $"Client {i:000}", null, "Nantes"));
+        }
+
+        _customers.Customers.Add(new CustomerSummary(Guid.NewGuid(), CustomerKindDto.Individual, "Zoé Martin", null, "Brest"));
+        IRenderedComponent<QuoteEditor> page = Ouvrir();
+
+        page.Find("#customer").Click();
+
+        page.WaitForAssertion(() => Texte(page, ".lg-hint").Should().Contain($"{CustomerListing.MaxPageSize + 52} résultat(s)"));
+        page.Find("[role=dialog] input").Input("zoé");
+        page.Find("[role=dialog] input").KeyDown("Enter");
+        page.WaitForAssertion(() => Texte(page, "#customer").Should().Be("Zoé Martin"));
+    }
+
+    [Fact]
+    public void Enregistrer_sans_client_dit_quoi_faire_au_lieu_de_rester_inactif()
+    {
+        IRenderedComponent<QuoteEditor> page = Ouvrir();
+
+        page.Find("#save").HasAttribute("disabled").Should().BeFalse();
+        page.Find("#save").Click();
+
+        page.WaitForAssertion(() => Texte(page, "#document-status [role=alert]").Should().Be("Choisissez un client."));
+        _quotes.Creations.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Enregistrer_sans_ligne_complete_le_dit()
+    {
+        NavigationManager navigation = Services.GetRequiredService<NavigationManager>();
+        navigation.NavigateTo($"quotes/new?customer={BillingFixtures.DupontId}");
+        IRenderedComponent<QuoteEditor> page = Ouvrir();
+        page.WaitForAssertion(() => Texte(page, "#customer").Should().Be("Dupont SARL"));
+
+        await page.InvokeAsync(() => page.Find("#save").Click());
+
+        page.WaitForAssertion(() => Texte(page, "#document-status [role=alert]").Should().Be("Ajoutez au moins une ligne."));
+        _quotes.Creations.Should().BeEmpty();
     }
 
     [Fact]
