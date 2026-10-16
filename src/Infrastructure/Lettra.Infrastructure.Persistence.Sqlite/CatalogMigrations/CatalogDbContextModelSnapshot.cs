@@ -92,6 +92,14 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.CatalogMigrations
                         .HasMaxLength(64)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Description")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("RequiresExpiry")
                         .HasColumnType("INTEGER");
 
@@ -328,6 +336,14 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.CatalogMigrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DisplayName")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(254)
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("OrganisationId")

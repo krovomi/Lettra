@@ -34,6 +34,9 @@ internal static class DossierEndpoints
             .WithTags("Dossiers")
             .WithName("ListAccessibleDossiers")
             .Produces<IReadOnlyList<DossierSummary>>();
+
+        // Ce que l'utilisateur peut voir (écrans permis, accès à l'administration), sans dossier ouvert.
+        dossiers.MapMyAccess();
         return dossiers;
     }
 

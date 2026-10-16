@@ -1,0 +1,14 @@
+@* Avatar d'une personne : ses initiales sur une teinte stable. Décoratif : le nom est toujours écrit à côté. *@
+
+<span class="la-avatar la-hue-@AdministrationView.Hue(Id) @(Large ? "is-large" : null) @(Muted ? "is-muted" : null)" aria-hidden="true">@AdministrationView.Initials(Name)</span>
+
+@code {
+    [Parameter, EditorRequired] public Guid Id { get; set; }
+
+    [Parameter, EditorRequired] public string Name { get; set; } = string.Empty;
+
+    [Parameter] public bool Large { get; set; }
+
+    /// <summary>Compte invité ou suspendu : avatar en retrait.</summary>
+    [Parameter] public bool Muted { get; set; }
+}

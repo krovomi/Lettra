@@ -98,6 +98,14 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.CatalogMigrations
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
+                    b.Property<string>("Description")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
                     b.Property<bool>("RequiresExpiry")
                         .HasColumnType("boolean");
 
@@ -335,6 +343,14 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.CatalogMigrations
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DisplayName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)");
 
                     b.Property<Guid?>("OrganisationId")
                         .HasColumnType("uuid");

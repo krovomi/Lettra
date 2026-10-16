@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Lettra.Contracts.Administration;
 using Lettra.Contracts.Alerts;
 using Lettra.Contracts.Assistant;
 using Lettra.Contracts.Billing;
@@ -71,6 +72,14 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(GroupSummary))]
 [JsonSerializable(typeof(AssignRoleRequest))]
 [JsonSerializable(typeof(RoleAssignmentSummary))]
+[JsonSerializable(typeof(AdministrationOverview))]
+[JsonSerializable(typeof(MyAccessResponse))]
+[JsonSerializable(typeof(InvitePersonRequest))]
+[JsonSerializable(typeof(UpdatePersonRequest))]
+[JsonSerializable(typeof(RenameTeamRequest))]
+[JsonSerializable(typeof(SaveCustomRoleRequest))]
+[JsonSerializable(typeof(PersonSummary))]
+[JsonSerializable(typeof(RoleDescription))]
 [JsonSerializable(typeof(AskAssistantRequest))]
 [JsonSerializable(typeof(AssistantEvent))]
 [JsonSerializable(typeof(AssistantStatusResponse))]
