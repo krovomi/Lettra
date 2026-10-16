@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Langue parlée (vague 5, lane D) : nombres dits en toutes lettres, ponctuation dictée, montants et grammaire
+       des commandes vocales. Déterministe (aucun modèle de langage), sans dépendance hormis les contrats : il tourne
+       sur le serveur, sur le poste MAUI hors ligne et dans le navigateur (WASM). -->
+  <PropertyGroup>
+    <IsTrimmable>true</IsTrimmable>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Lettra.Contracts\Lettra.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lettra.Speech.Tests" />
+  </ItemGroup>
+
+</Project>

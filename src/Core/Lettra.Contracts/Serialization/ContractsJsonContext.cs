@@ -15,6 +15,7 @@ using Lettra.Contracts.Directory;
 using Lettra.Contracts.Dossiers;
 using Lettra.Contracts.Pricing;
 using Lettra.Contracts.Rights;
+using Lettra.Contracts.Speech;
 using Lettra.Contracts.Suppliers;
 using Lettra.Contracts.Sync;
 using Lettra.Contracts.Exports;
@@ -103,4 +104,6 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(ReceivablesSummaryResponse))]
 [JsonSerializable(typeof(DemoDataStatusResponse))]
 [JsonSerializable(typeof(DemoSeedResponse))]
+[JsonSerializable(typeof(SpeechStatusResponse))]
+[JsonSerializable(typeof(TranscriptionResponse))]
 public sealed partial class ContractsJsonContext : JsonSerializerContext;

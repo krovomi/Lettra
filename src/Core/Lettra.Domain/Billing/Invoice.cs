@@ -586,7 +586,9 @@ public sealed class Invoice : BillingDocument<InvoiceId>
     private List<string> BuildLegalMentions(SellerTerms terms)
     {
         List<string> mentions = [.. VatLegalTexts()];
-        if (terms.VatOnDebits && Kind != InvoiceKind.CreditNote)
+
+        // Un avoir est une facture rectificative : il porte les mentions de la facture (art. 242 nonies A, I-13° bis CGI).
+        if (terms.VatOnDebits)
         {
             mentions.Add("Option pour le paiement de la TVA d'après les débits");
         }

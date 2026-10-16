@@ -7,6 +7,7 @@ internal static class Assemblies
 {
     public static readonly Assembly Calculations = typeof(Calculations.Rounding).Assembly;
     public static readonly Assembly Contracts = typeof(Contracts.Common.ErrorCodes).Assembly;
+    public static readonly Assembly Speech = typeof(Speech.DictationFormatter).Assembly;
     public static readonly Assembly Domain = typeof(Domain.Parties.Customer).Assembly;
     public static readonly Assembly Application = typeof(Application.DependencyInjection).Assembly;
     public static readonly Assembly Persistence = typeof(Infrastructure.Persistence.LettraDbContext).Assembly;
@@ -18,6 +19,8 @@ internal static class Assemblies
     public static readonly Assembly IdentityOidc = typeof(Infrastructure.Identity.Oidc.DependencyInjection).Assembly;
     public static readonly Assembly External = typeof(Infrastructure.External.DependencyInjection).Assembly;
     public static readonly Assembly Observability = typeof(Infrastructure.Observability.DependencyInjection).Assembly;
+    public static readonly Assembly InfrastructureSpeech = typeof(Infrastructure.Speech.DependencyInjection).Assembly;
+    public static readonly Assembly SpeechOnDevice = typeof(Infrastructure.Speech.OnDevice.DependencyInjection).Assembly;
     public static readonly Assembly SupervisionDomain = typeof(Supervision.Domain.SupervisionDomain).Assembly;
     public static readonly Assembly SupervisionApplication = typeof(Supervision.Application.DependencyInjection).Assembly;
     public static readonly Assembly SupervisionInfrastructure = typeof(Supervision.Infrastructure.DependencyInjection).Assembly;
@@ -45,6 +48,7 @@ internal static class Assemblies
         SupervisionApplication, SupervisionInfrastructure, SyncServer, SyncClient, ExportsApplication, ExportsInfrastructure,
         Bootstrap, UiAbstractions, UiShared, Printing, UiGatewayHttp, UiGatewayInProcess,
         AiSkills, AiPrivacy, AiTools, AiOrchestration, AiClaude, AiLocal,
+        Speech, InfrastructureSpeech, SpeechOnDevice,
     ];
 
     public static IEnumerable<string> LettraReferencesOf(Assembly assembly) =>

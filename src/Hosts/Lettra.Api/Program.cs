@@ -5,6 +5,7 @@ using Lettra.Api.Security;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Bootstrap;
 using Lettra.Contracts.Serialization;
+using Lettra.DemoData;
 using Lettra.Infrastructure.Catalog;
 using Lettra.Infrastructure.Persistence.Outbox;
 using Lettra.Supervision.Infrastructure;
@@ -45,6 +46,10 @@ WebApplication app = builder.Build();
 // Catalogue : migration (sauf en SaaS, où le Worker migre) et import des déclarations de la configuration.
 await app.Services.InitializeLettraAsync(app.Configuration, CancellationToken.None).ConfigureAwait(false);
 
+// Démonstration navigateur : jeu « Cabinet Démo » dans le dossier ouvert, au premier démarrage seulement. Sans
+// Lettra:Demo:Seed=true l'appel ne fait rien ; en environnement Production il refuse, quelle que soit la configuration.
+await LettraDemoData.SeedAsync(app.Configuration, app.Environment.EnvironmentName, loggerFactory: app.Services.GetRequiredService<ILoggerFactory>()).ConfigureAwait(false);
+
 // En-têtes de sécurité (CSP, cadres, isolation d'origine) et pas de cache pour l'API et le BFF : avant tout le reste.
 app.UseLettraSecurityHeaders(app.Environment);
 
@@ -75,6 +80,7 @@ api.MapCatalog();
 api.MapBilling();
 api.MapDirectory();
 api.MapAssistant();
+api.MapSpeech();
 api.MapIntegrity();
 api.MapExports();
 api.MapDossierAlerts();

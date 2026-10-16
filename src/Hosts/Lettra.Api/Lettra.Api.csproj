@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Composition\Lettra.Bootstrap\Lettra.Bootstrap.csproj" />
-    <!-- Jeu de démonstration : refusé en Production et sans Lettra:Demo:Seed=true (DemoEndpoints). -->
+    <!-- Jeu de démonstration : inactif sans Lettra:Demo:Seed=true, refusé en Production (démarrage et DemoEndpoints). -->
     <ProjectReference Include="..\..\Composition\Lettra.DemoData\Lettra.DemoData.csproj" />
     <ProjectReference Include="..\Lettra.Web\Lettra.Web.csproj" />
   </ItemGroup>

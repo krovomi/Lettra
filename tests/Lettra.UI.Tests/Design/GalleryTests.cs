@@ -99,6 +99,7 @@ public sealed class GalleryTests : BunitContext
             b.CloseComponent();
         });
         Ecrire(dossier, "entreprise", "settings/company", Page<CompanySettings>());
+        Ecrire(dossier, "articles", "catalog", Page<Catalog>());
     }
 
     [Fact]
