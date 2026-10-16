@@ -287,7 +287,7 @@ Menu **Devis**, **Nouveau devis**.
 1. Client : **Boulangerie Exemple** ; Objet : *Accompagnement comptable*.
 2. Dans la grille **Lignes**, une ligne : Désignation *Tenue comptable mensuelle*, Qté **3**, PU HT **250**.
    **Inser** ajoute une ligne, **Entrée** ou **Tab** passe à la cellule suivante, **F4** ouvre une liste de choix.
-   Le brouillon s'enregistre tout seul.
+   Le brouillon s'enregistre tout seul dès que le client et une ligne complète sont saisis ; **Enregistrer** (Ctrl+S) l'enregistre tout de suite et dit ce qui manque. **Valider** s'active une fois le brouillon enregistré et la checklist sans point bloquant.
 3. Le panneau **Conformité de la pièce** liste chaque mention : « Bloquant », « À vérifier » ou « Présent ». Un point
    bloquant se corrige d'un clic, qui ouvre le bon écran.
 4. **Valider** (Ctrl+Entrée). Le bouton **PDF** (Ctrl+P) produit le devis à remettre au client.
