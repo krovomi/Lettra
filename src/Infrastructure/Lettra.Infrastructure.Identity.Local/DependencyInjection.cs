@@ -17,6 +17,8 @@ public static class DependencyInjection
         services.AddSingleton<LocalSession>();
         services.AddSingleton<ICurrentUser>(sp => sp.GetRequiredService<LocalSession>());
         services.Replace(ServiceDescriptor.Singleton<ILocalAccounts, LocalAccounts>());
+        // Le registre local des dossiers (AddLocalDossiers, appelé avant) fournit le vrai cabinet du poste.
+        services.TryAddSingleton<ILocalCabinet, ConfiguredLocalCabinet>();
         services.AddSingleton<IAuthorizationDirectory, LocalAuthorizationDirectory>();
         services.AddSingleton<IScopeMemberDirectory, LocalAuthorizationDirectory>();
         services.AddLettraAuthorization();
