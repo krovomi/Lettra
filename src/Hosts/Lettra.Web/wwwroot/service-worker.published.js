@@ -44,13 +44,28 @@ function onFetch(event) {
         return;
     }
 
-    event.respondWith(fromShell(event.request));
+    if (event.request.mode === 'navigate' && !manifestUrlList.includes(url.href)) {
+        // Navigation vers une page de l'application : index.html du cache (fonctionne hors ligne).
+        event.respondWith(fromShell(event.request, 'index.html'));
+    } else if (manifestUrlList.includes(url.href)) {
+        event.respondWith(fromShell(event.request, event.request));
+    }
+    // Tout autre fichier (hors manifeste) passe par le réseau sans le service worker : un échec éventuel (serveur
+    // arrêté, hors ligne) reste celui de la page, sans erreur non rattrapée dans le service worker.
 }
 
-async function fromShell(request) {
-    // Navigation vers une page de l'application : index.html du cache (fonctionne hors ligne).
-    const shouldServeIndexHtml = request.mode === 'navigate' && !manifestUrlList.some(url => url === request.url);
+async function fromShell(request, key) {
     const cache = await caches.open(cacheName);
-    const cached = await cache.match(shouldServeIndexHtml ? 'index.html' : request);
-    return cached || fetch(request);
+    const cached = await cache.match(key);
+    if (cached) {
+        return cached;
+    }
+
+    try {
+        return await fetch(request);
+    } catch {
+        // Ni cache ni réseau (enveloppe pas encore en cache, serveur arrêté) : erreur réseau ordinaire pour la page,
+        // au lieu d'une promesse rejetée (« Uncaught (in promise) TypeError: Failed to fetch » dans la console).
+        return Response.error();
+    }
 }

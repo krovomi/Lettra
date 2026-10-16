@@ -59,7 +59,7 @@
             <main id="main" class="lettra-main lt-main" tabindex="-1">
                 <SyncReminderBanner />
                 <OfflineDraftsBanner />
-                @Body
+                <SessionGate>@Body</SessionGate>
             </main>
         </div>
 
@@ -93,7 +93,7 @@
         }
 
         <SyncConsentPanel />
-        <AssistantPanel />
+        <SessionGate Redirect="false"><AssistantPanel /></SessionGate>
     </div>
 </CascadingValue>
 

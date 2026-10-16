@@ -1,7 +1,9 @@
-@* Qui est connecté, et verrouiller / se déconnecter. Sans session, renvoie vers l'écran de session. *@
+@* Qui est connecté, et verrouiller / se déconnecter. La session vient de SessionState (lue par la garde des écrans,
+   SessionGate, qui renvoie aussi vers l'écran de session quand il n'y en a pas). *@
 @implements IDisposable
 @using Microsoft.Extensions.DependencyInjection
 @inject ISessionGateway Sessions
+@inject SessionState Session
 @inject IServiceProvider Services
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
@@ -12,36 +14,24 @@
 {
     <button type="button" id="device-lock-now" class="lettra-link" @onclick="DeviceLock.Lock" title="@L["Pin.LockNow"]">@L["Pin.LockNow"]</button>
 }
-@if (_session is { IsAuthenticated: true })
+@if (Session.Current is { IsAuthenticated: true } session)
 {
-    <span class="lettra-user">@_session.DisplayName</span>
-    @if (_session.SignOutUrl is string signOut)
+    <span class="lettra-user">@session.DisplayName</span>
+    @if (session.SignOutUrl is string signOut)
     {
         <a href="@signOut" data-sign-out @onclick="() => SignOutAsync(signOut)" @onclick:preventDefault>@L["Session.SignOut"]</a>
     }
-    else if (_session.Mode == SessionModeDto.Local)
+    else if (session.Mode == SessionModeDto.Local)
     {
         <button type="button" class="lettra-link" @onclick="LockAsync">@L["Session.Lock"]</button>
     }
 }
 
 @code {
-    private SessionResponse? _session;
-
     protected override async Task OnInitializedAsync()
     {
-        Navigation.LocationChanged += OnLocationChanged;
-        await RefreshAsync();
-    }
-
-    private async Task RefreshAsync()
-    {
-        OperationResult<SessionResponse> result = await Sessions.GetAsync(CancellationToken.None);
-        _session = result.Value;
-        if (result.IsSuccess && _session is { IsAuthenticated: false } && !OnPageWithoutSession())
-        {
-            Navigation.NavigateTo("session");
-        }
+        Session.Changed += OnSessionChanged;
+        await Session.RefreshAsync();
     }
 
     /// <summary>
@@ -69,34 +59,11 @@
     private async Task LockAsync()
     {
         await Sessions.LockAsync(CancellationToken.None);
-        _session = null;
+        Session.Forget();
         Navigation.NavigateTo("session");
     }
 
-    // L'écran de session lui-même, et la mesure de la grille, qui ne lit aucun dossier : la version de mesure
-    // s'ouvre dessus au premier lancement, avant tout compte local.
-    private bool OnPageWithoutSession()
-    {
-        string path = Navigation.ToBaseRelativePath(Navigation.Uri);
-        return path.StartsWith("session", StringComparison.OrdinalIgnoreCase)
-            || path.StartsWith("mesure-grille", StringComparison.OrdinalIgnoreCase);
-    }
+    private void OnSessionChanged(object? sender, EventArgs e) => _ = InvokeAsync(StateHasChanged);
 
-    private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
-    {
-        try
-        {
-            await InvokeAsync(async () =>
-            {
-                await RefreshAsync();
-                StateHasChanged();
-            });
-        }
-        catch (ObjectDisposedException)
-        {
-            // Composant retiré pendant la navigation : rien à rafraîchir.
-        }
-    }
-
-    public void Dispose() => Navigation.LocationChanged -= OnLocationChanged;
+    public void Dispose() => Session.Changed -= OnSessionChanged;
 }
