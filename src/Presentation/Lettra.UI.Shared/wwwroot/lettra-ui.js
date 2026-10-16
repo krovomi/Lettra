@@ -26,3 +26,15 @@ export function writePreference(key, value) {
 export function prefersComfort() {
   return window.matchMedia ? window.matchMedia("(pointer: coarse)").matches : false;
 }
+
+// Thème (vague 5) : data-theme sur <html> ; null suit le système (prefers-color-scheme). La barre d'adresse mobile et
+// la barre de titre de la PWA prennent la couleur du fond.
+export function applyTheme(theme) {
+  const root = document.documentElement;
+  if (theme) { root.setAttribute("data-theme", theme); } else { root.removeAttribute("data-theme"); }
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) {
+    const color = getComputedStyle(root).getPropertyValue("--nav-bg").trim();
+    if (color) { meta.setAttribute("content", color); }
+  }
+}

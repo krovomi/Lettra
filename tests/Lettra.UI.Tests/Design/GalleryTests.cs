@@ -1,0 +1,168 @@
+using System.Globalization;
+using Bunit;
+using Lettra.Contracts.Billing;
+using Lettra.Contracts.Customers;
+using Lettra.Contracts.Identity;
+using Lettra.UI.Abstractions;
+using Lettra.UI.Shared;
+using Lettra.UI.Shared.Layout;
+using Lettra.UI.Shared.Localization;
+using Lettra.UI.Shared.Pages;
+using Lettra.UI.Shared.Pages.Billing;
+using Lettra.UI.Shared.Services;
+using Lettra.UI.Tests.Billing;
+using Lettra.UI.Tests.Security;
+using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Lettra.UI.Tests.Design;
+
+/// <summary>
+/// Galerie des écrans pour les captures du système de design (docs/design/systeme-de-design.md) : chaque écran est
+/// rendu dans la coque avec des données fictives, puis écrit en HTML statique, une fois par thème. Ne produit rien sans
+/// la variable <c>LETTRA_GALLERY_DIR</c> ; <c>build/design-captures.cjs</c> photographie ensuite chaque page à 375, 768
+/// et 1440 px et passe l'audit axe.
+/// </summary>
+[Collection("culture")]
+public sealed class GalleryTests : BunitContext
+{
+    private static readonly string[] Themes = ["light", "dark", "slate", "contrast"];
+
+    private static readonly string[] Clients =
+        ["Boulangerie Martin", "Garage des Lilas", "Studio Nord", "Atelier Coste", "Pharmacie du Port", "Cabinet Roux"];
+
+    private static readonly string[] Villes = ["Lyon", "Paris", "Nantes", "Bordeaux", "Lille", "Rennes"];
+
+    private readonly FakeInvoicesGateway _invoices = new();
+    private readonly FakeQuotesGateway _quotes = new();
+    private readonly FakeCustomersGateway _customers = new();
+
+    public GalleryTests()
+    {
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        Services.AddLettraUi();
+        Services.AddSingleton<IInvoicesGateway>(_invoices);
+        Services.AddSingleton<IQuotesGateway>(_quotes);
+        Services.AddSingleton<ICustomersGateway>(_customers);
+        Services.AddSingleton<ICatalogGateway>(new FakeCatalogGateway());
+        Services.AddSingleton<IDirectoryGateway>(new FakeDirectoryGateway());
+        Services.AddSingleton<IBillingSettingsGateway>(new FakeBillingSettingsGateway());
+        Services.AddSingleton<IPlatformTransmissionGateway>(new FakePlatformTransmissionGateway(_invoices));
+        Services.AddSingleton<IFileDownloader>(new FakeFileDownloader());
+        Services.AddSingleton<ISessionGateway>(new FakeSessionGateway(new SessionResponse(true, SessionModeDto.Local, "Claire Martin", true)));
+        Services.AddSingleton<TimeProvider>(new ManualClock(new DateTimeOffset(2026, 10, 16, 12, 0, 0, TimeSpan.Zero)));
+        LettraCultures.Apply(CultureInfo.GetCultureInfo("fr-FR"));
+    }
+
+    [Fact]
+    public void Galerie_des_ecrans_pour_les_captures()
+    {
+        string? dossier = Environment.GetEnvironmentVariable("LETTRA_GALLERY_DIR");
+        if (string.IsNullOrEmpty(dossier))
+        {
+            return;
+        }
+
+        Directory.CreateDirectory(dossier);
+        Guid facture = Donnees();
+        Ecrire(dossier, "accueil", "", Page<Home>());
+        Ecrire(dossier, "accueil-apparence", "", Page<Home>(), "#appearance-toggle");
+        Ecrire(dossier, "accueil-plus", "", Page<Home>(), "#tab-more");
+        Ecrire(dossier, "devis", "quotes", Page<QuoteList>());
+        Ecrire(dossier, "factures", "invoices", Page<InvoiceList>());
+        Ecrire(dossier, "facture", $"invoices/{facture}", b =>
+        {
+            b.OpenComponent<InvoiceEditor>(0);
+            b.AddComponentParameter(1, nameof(InvoiceEditor.Id), facture);
+            b.CloseComponent();
+        });
+        Ecrire(dossier, "clients", "customers", Page<Customers>());
+    }
+
+    private static RenderFragment Page<TPage>() where TPage : IComponent => b =>
+    {
+        b.OpenComponent<TPage>(0);
+        b.CloseComponent();
+    };
+
+    private void Ecrire(string dossier, string nom, string route, RenderFragment page, string? clic = null)
+    {
+        Services.GetRequiredService<NavigationManager>().NavigateTo(route);
+        IRenderedComponent<MainLayout> coque = Render<MainLayout>(p => p.Add(l => l.Body, page));
+        coque.WaitForState(() => coque.FindAll(".lt-skeleton, .lettra-loading").Count == 0, TimeSpan.FromSeconds(5));
+        if (clic is not null)
+        {
+            coque.Find(clic).Click();
+        }
+
+        foreach (string theme in Themes)
+        {
+            File.WriteAllText(Path.Combine(dossier, $"{nom}.{theme}.html"), $"""
+                <!DOCTYPE html>
+                <html lang="fr" data-theme="{theme}">
+                <head>
+                <meta charset="utf-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+                <title>{nom} · {theme}</title>
+                <link rel="stylesheet" href="css/lettra.css" />
+                <link rel="stylesheet" href="css/lettra-grid.css" />
+                </head>
+                <body>
+                {coque.Markup}
+                </body>
+                </html>
+                """);
+        }
+    }
+
+    /// <summary>Six mois d'activité fictive ; rend l'identifiant d'une facture émise.</summary>
+    private Guid Donnees()
+    {
+        DocumentLineRequest Ligne(string designation, decimal quantite, decimal prix) =>
+            new() { Designation = designation, UnitCode = "HUR", Quantity = quantite, UnitPriceExclTax = prix };
+
+        foreach ((string nom, int i) in Clients.Select((n, i) => (n, i)))
+        {
+            _customers.Customers.Add(new CustomerSummary(Guid.CreateVersion7(), i % 3 == 2 ? CustomerKindDto.Individual : CustomerKindDto.Company,
+                nom, i % 3 == 2 ? null : $"55203253{i}", Villes[i]));
+        }
+
+        decimal[] volumes = [7, 9, 6, 11, 10, 13];
+        int numero = 0;
+        Guid derniere = Guid.Empty;
+        for (int mois = 0; mois < volumes.Length; mois++)
+        {
+            for (int n = 0; n < volumes[mois]; n++)
+            {
+                DateOnly date = new DateOnly(2026, 5, 1).AddMonths(mois).AddDays(Math.Min(n * 2, 15));
+                InvoiceResponse facture = FakeInvoicesGateway.Build(InvoiceKindDto.Invoice, n % 4 == 0 ? InvoiceStatusDto.Issued : InvoiceStatusDto.Validated,
+                    $"FAC-2026-{++numero:0000}", Ligne("Tenue comptable", 1 + (n % 3), 450m + (n * 35m)), Ligne("Conseil", 2, 120m));
+                facture = facture with
+                {
+                    IssueDate = date,
+                    Customer = facture.Customer with { Name = Clients[(n + mois) % Clients.Length] },
+                };
+                _invoices.Invoices[facture.Id] = facture;
+                derniere = facture.Id;
+            }
+        }
+
+        InvoiceResponse avoir = FakeInvoicesGateway.Build(InvoiceKindDto.CreditNote, InvoiceStatusDto.Validated, "AV-2026-0003", Ligne("Remise commerciale", 1, 300m));
+        _invoices.Invoices[avoir.Id] = avoir with { IssueDate = new DateOnly(2026, 10, 12), Customer = avoir.Customer with { Name = Clients[1] } };
+        _invoices.Add(InvoiceKindDto.Invoice, InvoiceStatusDto.Draft, null, Ligne("Bilan annuel", 1, 1800m));
+
+        QuoteStatusDto[] statuts = [QuoteStatusDto.Validated, QuoteStatusDto.Accepted, QuoteStatusDto.Validated, QuoteStatusDto.Refused, QuoteStatusDto.Validated];
+        for (int n = 0; n < statuts.Length; n++)
+        {
+            QuoteResponse devis = _quotes.Add(statuts[n], $"DEV-2026-{n + 31:0000}", Ligne("Mission annuelle", 1, 2400m + (n * 600m)));
+            _quotes.Quotes[devis.Id] = devis with
+            {
+                IssueDate = new DateOnly(2026, 10, 14 - (n * 3)),
+                Customer = devis.Customer with { Name = Clients[(n + 2) % Clients.Length] },
+            };
+        }
+
+        _quotes.Add(QuoteStatusDto.Draft, null, Ligne("Création de société", 1, 1500m));
+        return derniere;
+    }
+}
