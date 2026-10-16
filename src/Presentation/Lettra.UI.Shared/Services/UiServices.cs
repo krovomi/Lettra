@@ -50,20 +50,32 @@ public sealed class JsFileDownloader(IJSRuntime js) : IFileDownloader, IAsyncDis
 }
 
 /// <summary>
-/// Préférences d'affichage de l'utilisateur, partagées par toutes les pages (annexe A §4.1) : la densité, basculée à
-/// chaud par Ctrl+Maj+D et retenue sur le poste. Par défaut : Confort au doigt, Expert à la souris et au clavier.
+/// Préférences d'affichage de l'utilisateur, partagées par toutes les pages et retenues sur l'appareil (stockage local
+/// du navigateur ou du WebView MAUI) :
+/// <list type="bullet">
+/// <item>la densité (annexe A §4.1), basculée à chaud par Ctrl+Maj+D : Confort au doigt, Expert à la souris et au clavier ;</item>
+/// <item>le thème (vague 5) : système par défaut, clair, sombre, ardoise ou contraste élevé, posé par <c>data-theme</c> ;</item>
+/// <item>la barre latérale repliée en rail sur grand écran.</item>
+/// </list>
 /// </summary>
 public sealed class UiPreferences(IJSRuntime js)
 {
     private const string DensityKey = "lettra.density";
+    private const string ThemeKey = "lettra.theme";
+    private const string NavKey = "lettra.nav";
 
     private bool _loaded;
 
     public UiDensity Density { get; private set; } = UiDensity.Expert;
 
+    public UiTheme Theme { get; private set; } = UiTheme.System;
+
+    /// <summary>La barre latérale est repliée en rail d'icônes (grand écran seulement).</summary>
+    public bool NavCollapsed { get; private set; }
+
     public event EventHandler? Changed;
 
-    /// <summary>Lit la préférence retenue (une fois par session) ; sans stockage, garde le défaut de la plateforme.</summary>
+    /// <summary>Lit les préférences retenues (une fois par session) ; sans stockage, garde les défauts de la plateforme.</summary>
     public async Task LoadAsync()
     {
         if (_loaded)
@@ -74,10 +86,21 @@ public sealed class UiPreferences(IJSRuntime js)
         _loaded = true;
         await WithModuleAsync(async module =>
         {
-            string? stored = await module.InvokeAsync<string?>("readPreference", DensityKey).ConfigureAwait(false);
-            Set(Enum.TryParse(stored, out UiDensity parsed)
+            string? density = await module.InvokeAsync<string?>("readPreference", DensityKey).ConfigureAwait(false);
+            string? theme = await module.InvokeAsync<string?>("readPreference", ThemeKey).ConfigureAwait(false);
+            string? nav = await module.InvokeAsync<string?>("readPreference", NavKey).ConfigureAwait(false);
+            UiDensity loadedDensity = Enum.TryParse(density, out UiDensity parsed)
                 ? parsed
-                : await module.InvokeAsync<bool>("prefersComfort").ConfigureAwait(false) ? UiDensity.Comfort : UiDensity.Expert);
+                : await module.InvokeAsync<bool>("prefersComfort").ConfigureAwait(false) ? UiDensity.Comfort : UiDensity.Expert;
+            UiTheme loadedTheme = Enum.TryParse(theme, out UiTheme chosen) && Enum.IsDefined(chosen) ? chosen : UiTheme.System;
+            bool collapsed = nav == "collapsed";
+            Set(
+                () => Density == loadedDensity && Theme == loadedTheme && NavCollapsed == collapsed,
+                () => (Density, Theme, NavCollapsed) = (loadedDensity, loadedTheme, collapsed));
+            if (loadedTheme != UiTheme.System)
+            {
+                await module.InvokeVoidAsync("applyTheme", loadedTheme.DataTheme()).ConfigureAwait(false);
+            }
         }).ConfigureAwait(false);
     }
 
@@ -85,19 +108,47 @@ public sealed class UiPreferences(IJSRuntime js)
 
     public async Task SetDensityAsync(UiDensity density)
     {
-        Set(density);
-        await WithModuleAsync(module => module.InvokeVoidAsync("writePreference", DensityKey, density.ToString()).AsTask()).ConfigureAwait(false);
-    }
-
-    private void Set(UiDensity density)
-    {
-        if (density == Density)
+        if (!Set(() => Density == density, () => Density = density))
         {
             return;
         }
 
-        Density = density;
+        await WithModuleAsync(module => module.InvokeVoidAsync("writePreference", DensityKey, density.ToString()).AsTask()).ConfigureAwait(false);
+    }
+
+    /// <summary>Change de thème sans recharger la page (variables CSS sous <c>data-theme</c>).</summary>
+    public async Task SetThemeAsync(UiTheme theme)
+    {
+        if (!Set(() => Theme == theme, () => Theme = theme))
+        {
+            return;
+        }
+
+        await WithModuleAsync(async module =>
+        {
+            await module.InvokeVoidAsync("applyTheme", theme.DataTheme()).ConfigureAwait(false);
+            await module.InvokeVoidAsync("writePreference", ThemeKey, theme.ToString()).ConfigureAwait(false);
+        }).ConfigureAwait(false);
+    }
+
+    public async Task ToggleNavAsync()
+    {
+        NavCollapsed = !NavCollapsed;
         Changed?.Invoke(this, EventArgs.Empty);
+        await WithModuleAsync(module => module.InvokeVoidAsync("writePreference", NavKey, NavCollapsed ? "collapsed" : "expanded").AsTask())
+            .ConfigureAwait(false);
+    }
+
+    private bool Set(Func<bool> unchanged, Action apply)
+    {
+        if (unchanged())
+        {
+            return false;
+        }
+
+        apply();
+        Changed?.Invoke(this, EventArgs.Empty);
+        return true;
     }
 
     /// <summary>Le stockage local est un confort : sans JS (tests, prérendu) ou sans stockage, la préférence vaut pour la session.</summary>

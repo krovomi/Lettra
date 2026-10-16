@@ -1,0 +1,336 @@
+/* Jetons de design Lettra (vague 5, lane B). Seule feuille qui porte des valeurs : les autres ne lisent que ces
+   variables. Système décrit dans docs/design/systeme-de-design.md (généré avec ui-ux-pro-max-skill, MIT).
+
+   Thèmes : clair (défaut), sombre, ardoise (bleu nuit, sobre) et contraste élevé, posés par data-theme sur <html> ;
+   sans data-theme, l'application suit le système (clair ou sombre). Les couples texte / fond sont vérifiés par
+   ThemeContrastTests (4,5:1 au moins, 7:1 en contraste élevé) : toute couleur de texte ou de fond reste en #RRGGBB. */
+
+@font-face {
+    font-family: "Plus Jakarta Sans Variable";
+    font-style: normal;
+    font-display: swap;
+    font-weight: 200 800;
+    src: url("fonts/plus-jakarta-sans-latin-ext-wght-normal.woff2") format("woff2-variations");
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+    font-family: "Plus Jakarta Sans Variable";
+    font-style: normal;
+    font-display: swap;
+    font-weight: 200 800;
+    src: url("fonts/plus-jakarta-sans-latin-wght-normal.woff2") format("woff2-variations");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Valeurs communes à tous les thèmes : typographie, espacements, rayons, mouvements, gabarits. */
+:root {
+    --font-sans: "Plus Jakarta Sans Variable", "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --font-mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
+
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.375rem;
+    --text-2xl: 1.75rem;
+    --leading: 1.5;
+    --weight-regular: 450;
+    --weight-medium: 560;
+    --weight-bold: 700;
+
+    /* Échelle dense (tableaux de bord) : 4 px de base. */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.5rem;
+    --space-6: 2rem;
+
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-full: 999px;
+
+    --motion-fast: 140ms;
+    --motion-base: 220ms;
+    --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+    /* Gabarit de la coquille : barre latérale, rail (tablette), barre du haut, onglets (téléphone). */
+    --sidebar-w: 15.5rem;
+    --rail-w: 4.75rem;
+    --topbar-h: 3.75rem;
+    --tabbar-h: 4rem;
+    --content-max: 90rem;
+    /* Cible tactile minimale (WCAG 2.5.5, recommandations iOS et Android). */
+    --hit: 44px;
+
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+}
+
+/* Clair (défaut). */
+:root,
+:root[data-theme="light"] {
+    color-scheme: light;
+    --color-bg: #F6F8FB;
+    --color-surface: #FFFFFF;
+    --color-surface-2: #F1F5F9;
+    --color-fg: #0F172A;
+    --color-fg-muted: #475569;
+    --color-border: #E2E8F0;
+    --color-border-strong: #CBD5E1;
+    --color-input-border: #7A889C;
+    --color-primary: #2563EB;
+    --color-primary-hover: #1D4ED8;
+    --color-on-primary: #FFFFFF;
+    --color-primary-soft: #EAF1FF;
+    --color-primary-soft-fg: #1D4ED8;
+    --color-accent: #EA580C;
+    --color-success: #15803D;
+    --color-success-bg: #ECFDF3;
+    --color-success-fg: #166534;
+    --color-warning: #D97706;
+    --color-warning-bg: #FFF7E6;
+    --color-warning-fg: #92400E;
+    --color-danger: #DC2626;
+    --color-danger-bg: #FEF2F2;
+    --color-danger-fg: #B91C1C;
+    --color-info-bg: #EAF1FF;
+    --color-info-fg: #1D4ED8;
+    --color-neutral-bg: #EEF2F6;
+    --color-neutral-fg: #334155;
+    --color-focus: #2563EB;
+    --color-backdrop: rgb(15 23 42 / 45%);
+    --color-skeleton: #E8EDF3;
+
+    --nav-bg: #FFFFFF;
+    --nav-fg: #334155;
+    --nav-fg-muted: #64748B;
+    --nav-active-bg: #EAF1FF;
+    --nav-active-fg: #1D4ED8;
+    --nav-border: #E2E8F0;
+    --brand-mark: #2563EB;
+    --on-brand-mark: #FFFFFF;
+
+    --chart-1: #2563EB;
+    --chart-2: #BFD3FB;
+
+    --shadow-sm: 0 1px 2px rgb(15 23 42 / 6%), 0 1px 1px rgb(15 23 42 / 4%);
+    --shadow-md: 0 4px 12px rgb(15 23 42 / 8%), 0 1px 3px rgb(15 23 42 / 6%);
+    --shadow-lg: 0 16px 40px rgb(15 23 42 / 18%);
+}
+
+/* Sombre : choisi, ou système en sombre sans choix. */
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --color-bg: #0B1220;
+    --color-surface: #111A2E;
+    --color-surface-2: #17223A;
+    --color-fg: #E2E8F0;
+    --color-fg-muted: #9AA8BC;
+    --color-border: #23304A;
+    --color-border-strong: #33415C;
+    --color-input-border: #64779A;
+    --color-primary: #60A5FA;
+    --color-primary-hover: #93C5FD;
+    --color-on-primary: #0B1220;
+    --color-primary-soft: #172B4D;
+    --color-primary-soft-fg: #BFDBFE;
+    --color-accent: #FB923C;
+    --color-success: #4ADE80;
+    --color-success-bg: #0F2A1E;
+    --color-success-fg: #86EFAC;
+    --color-warning: #FBBF24;
+    --color-warning-bg: #33240B;
+    --color-warning-fg: #FCD34D;
+    --color-danger: #F87171;
+    --color-danger-bg: #3A1517;
+    --color-danger-fg: #FCA5A5;
+    --color-info-bg: #172B4D;
+    --color-info-fg: #BFDBFE;
+    --color-neutral-bg: #1E293B;
+    --color-neutral-fg: #CBD5E1;
+    --color-focus: #93C5FD;
+    --color-backdrop: rgb(2 6 23 / 65%);
+    --color-skeleton: #1C2842;
+
+    --nav-bg: #0E1628;
+    --nav-fg: #CBD5E1;
+    --nav-fg-muted: #94A3B8;
+    --nav-active-bg: #172B4D;
+    --nav-active-fg: #BFDBFE;
+    --nav-border: #1C2842;
+    --brand-mark: #60A5FA;
+    --on-brand-mark: #0B1220;
+
+    --chart-1: #60A5FA;
+    --chart-2: #22406E;
+
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 40%);
+    --shadow-md: 0 4px 14px rgb(0 0 0 / 45%);
+    --shadow-lg: 0 18px 44px rgb(0 0 0 / 60%);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+        color-scheme: dark;
+        --color-bg: #0B1220;
+        --color-surface: #111A2E;
+        --color-surface-2: #17223A;
+        --color-fg: #E2E8F0;
+        --color-fg-muted: #9AA8BC;
+        --color-border: #23304A;
+        --color-border-strong: #33415C;
+        --color-input-border: #64779A;
+        --color-primary: #60A5FA;
+        --color-primary-hover: #93C5FD;
+        --color-on-primary: #0B1220;
+        --color-primary-soft: #172B4D;
+        --color-primary-soft-fg: #BFDBFE;
+        --color-accent: #FB923C;
+        --color-success: #4ADE80;
+        --color-success-bg: #0F2A1E;
+        --color-success-fg: #86EFAC;
+        --color-warning: #FBBF24;
+        --color-warning-bg: #33240B;
+        --color-warning-fg: #FCD34D;
+        --color-danger: #F87171;
+        --color-danger-bg: #3A1517;
+        --color-danger-fg: #FCA5A5;
+        --color-info-bg: #172B4D;
+        --color-info-fg: #BFDBFE;
+        --color-neutral-bg: #1E293B;
+        --color-neutral-fg: #CBD5E1;
+        --color-focus: #93C5FD;
+        --color-backdrop: rgb(2 6 23 / 65%);
+        --color-skeleton: #1C2842;
+
+        --nav-bg: #0E1628;
+        --nav-fg: #CBD5E1;
+        --nav-fg-muted: #94A3B8;
+        --nav-active-bg: #172B4D;
+        --nav-active-fg: #BFDBFE;
+        --nav-border: #1C2842;
+        --brand-mark: #60A5FA;
+        --on-brand-mark: #0B1220;
+
+        --chart-1: #60A5FA;
+        --chart-2: #22406E;
+
+        --shadow-sm: 0 1px 2px rgb(0 0 0 / 40%);
+        --shadow-md: 0 4px 14px rgb(0 0 0 / 45%);
+        --shadow-lg: 0 18px 44px rgb(0 0 0 / 60%);
+    }
+}
+
+/* Ardoise : navigation bleu nuit, contenu clair et feutré, accent bleu canard. Pensé pour les cabinets. */
+:root[data-theme="slate"] {
+    color-scheme: light;
+    --color-bg: #EDF1F5;
+    --color-surface: #FFFFFF;
+    --color-surface-2: #F3F6F9;
+    --color-fg: #16222F;
+    --color-fg-muted: #4A5868;
+    --color-border: #D9E1E8;
+    --color-border-strong: #C2CDD8;
+    --color-input-border: #8796A6;
+    --color-primary: #0F6E8C;
+    --color-primary-hover: #0B5469;
+    --color-on-primary: #FFFFFF;
+    --color-primary-soft: #E2F0F4;
+    --color-primary-soft-fg: #0B5469;
+    --color-accent: #C2410C;
+    --color-success: #15803D;
+    --color-success-bg: #EAF6EF;
+    --color-success-fg: #166534;
+    --color-warning: #B45309;
+    --color-warning-bg: #FCF3E3;
+    --color-warning-fg: #8A3B0B;
+    --color-danger: #C62828;
+    --color-danger-bg: #FCEEEE;
+    --color-danger-fg: #A61B1B;
+    --color-info-bg: #E2F0F4;
+    --color-info-fg: #0B5469;
+    --color-neutral-bg: #E8EDF2;
+    --color-neutral-fg: #2E3B4A;
+    --color-focus: #0F6E8C;
+    --color-backdrop: rgb(18 38 58 / 50%);
+    --color-skeleton: #E1E7ED;
+
+    --nav-bg: #12263A;
+    --nav-fg: #D6E2EE;
+    --nav-fg-muted: #A3B6C9;
+    --nav-active-bg: #1F3D59;
+    --nav-active-fg: #FFFFFF;
+    --nav-border: #1B3249;
+    --brand-mark: #5FB4CF;
+    --on-brand-mark: #12263A;
+
+    --chart-1: #0F6E8C;
+    --chart-2: #B9DAE4;
+
+    --shadow-sm: 0 1px 2px rgb(18 38 58 / 8%);
+    --shadow-md: 0 4px 12px rgb(18 38 58 / 10%), 0 1px 3px rgb(18 38 58 / 8%);
+    --shadow-lg: 0 16px 40px rgb(18 38 58 / 22%);
+}
+
+/* Contraste élevé (RGAA, WCAG AAA) : noir sur blanc, bordures franches, liens soulignés, focus épais. */
+:root[data-theme="contrast"] {
+    color-scheme: light;
+    --color-bg: #FFFFFF;
+    --color-surface: #FFFFFF;
+    --color-surface-2: #F2F2F2;
+    --color-fg: #000000;
+    --color-fg-muted: #1F1F1F;
+    --color-border: #000000;
+    --color-border-strong: #000000;
+    --color-input-border: #000000;
+    --color-primary: #0030A0;
+    --color-primary-hover: #001F6B;
+    --color-on-primary: #FFFFFF;
+    --color-primary-soft: #E6ECFF;
+    --color-primary-soft-fg: #001F6B;
+    --color-accent: #8A2C00;
+    --color-success: #004D1A;
+    --color-success-bg: #E8F5EC;
+    --color-success-fg: #004D1A;
+    --color-warning: #5C3700;
+    --color-warning-bg: #FFF4D6;
+    --color-warning-fg: #4A2C00;
+    --color-danger: #8B0000;
+    --color-danger-bg: #FFE9E9;
+    --color-danger-fg: #8B0000;
+    --color-info-bg: #E6ECFF;
+    --color-info-fg: #001F6B;
+    --color-neutral-bg: #F2F2F2;
+    --color-neutral-fg: #000000;
+    --color-focus: #000000;
+    --color-backdrop: rgb(0 0 0 / 70%);
+    --color-skeleton: #D9D9D9;
+
+    --nav-bg: #000000;
+    --nav-fg: #FFFFFF;
+    --nav-fg-muted: #E6E6E6;
+    --nav-active-bg: #FFD60A;
+    --nav-active-fg: #000000;
+    --nav-border: #FFFFFF;
+    --brand-mark: #FFD60A;
+    --on-brand-mark: #000000;
+
+    --chart-1: #0030A0;
+    --chart-2: #8FA6E0;
+
+    --shadow-sm: none;
+    --shadow-md: 0 0 0 1px #000000;
+    --shadow-lg: 0 0 0 2px #000000;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --motion-fast: 0ms;
+        --motion-base: 0ms;
+    }
+}

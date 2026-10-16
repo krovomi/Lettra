@@ -11,4 +11,9 @@
     <PackageReference Include="bunit" />
   </ItemGroup>
 
+  <!-- Les jetons de couleur des thèmes, lus par ThemeContrastTests (contrastes WCAG). -->
+  <ItemGroup>
+    <None Include="..\..\src\Presentation\Lettra.UI.Shared\wwwroot\lettra-tokens.css" Link="Design\lettra-tokens.css" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

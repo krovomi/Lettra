@@ -1,0 +1,239 @@
+@page "/"
+@using Microsoft.Extensions.DependencyInjection
+@inject IInvoicesGateway Invoices
+@inject IQuotesGateway Quotes
+@inject IStringLocalizer<SharedResource> L
+@inject IServiceProvider Services
+
+@* Tableau de bord d'accueil (vague 5, lane B) : chiffre d'affaires HT du mois et des six derniers mois, devis en
+   attente de réponse, brouillons à finaliser, pièces récentes. Calculé à partir des listes existantes. *@
+
+<PageTitle>@L["Home.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Home.Title"]</h1>
+        <p>@Today.ToString("D", Culture)</p>
+    </div>
+    <div class="lt-page-actions">
+        <a class="lettra-button" href="quotes/new" id="home-new-quote"><Icon Name="plus" Size="18" /> @L["Home.NewQuote"]</a>
+        <a class="lettra-button is-secondary" href="invoices/new" id="home-new-invoice"><Icon Name="plus" Size="18" /> @L["Home.NewInvoice"]</a>
+    </div>
+</div>
+
+<GeneralErrors Errors="_errors" />
+
+@if (_figures is not { } figures)
+{
+    <div class="lt-kpis" aria-busy="true" aria-label="@L["Loading"]">
+        @for (int i = 0; i < 4; i++)
+        {
+            <div class="lt-kpi"><span class="lt-skeleton" style="height: 1rem; width: 50%"></span><span class="lt-skeleton" style="height: 2rem; width: 70%"></span></div>
+        }
+    </div>
+}
+else if (IsEmpty(figures))
+{
+    <section id="home-empty" class="lt-panel lt-empty">
+        <span class="lt-empty-icon"><Icon Name="inbox" Size="28" /></span>
+        <h2>@L["Home.Empty.Title"]</h2>
+        <p>@L["Home.Empty.Text"]</p>
+        <div class="lt-page-actions">
+            <a class="lettra-button" href="settings/company">@L["Home.Empty.Company"]</a>
+            <a class="lettra-button is-secondary" href="customers">@L["Home.Empty.Customer"]</a>
+            <a class="lettra-button is-secondary" href="quotes/new">@L["Home.NewQuote"]</a>
+        </div>
+    </section>
+}
+else
+{
+    <section class="lt-kpis" aria-label="@L["Home.Kpis"]">
+        <a class="lt-kpi" href="invoices" id="kpi-revenue">
+            <span class="lt-kpi-head">@L["Home.Kpi.Revenue"]<span class="lt-kpi-icon"><Icon Name="trending-up" /></span></span>
+            <span class="lt-kpi-value">@Money(figures.ThisMonth)</span>
+            <span class="lt-kpi-note">
+                @if (figures.Trend is { } trend)
+                {
+                    <span class="lt-trend @(trend >= 0 ? "is-up" : "is-down")">
+                        <Icon Name="@(trend >= 0 ? "trending-up" : "trending-down")" Size="14" />@trend.ToString("+0;-0;0", Culture) %
+                    </span>
+                    @(" " + L["Home.Kpi.VsPrevious"])
+                }
+                else
+                {
+                    @L["Home.Kpi.NoPrevious"]
+                }
+            </span>
+        </a>
+        <a class="lt-kpi" href="invoices" id="kpi-invoices">
+            <span class="lt-kpi-head">@L["Home.Kpi.Invoices"]<span class="lt-kpi-icon"><Icon Name="receipt" /></span></span>
+            <span class="lt-kpi-value">@figures.InvoicesThisMonth.ToString("N0", Culture)</span>
+            <span class="lt-kpi-note">@L["Home.Kpi.InvoicesNote"]</span>
+        </a>
+        <a class="lt-kpi" href="quotes" id="kpi-pending">
+            <span class="lt-kpi-head">@L["Home.Kpi.Pending"]<span class="lt-kpi-icon"><Icon Name="clock" /></span></span>
+            <span class="lt-kpi-value">@figures.PendingQuotes.ToString("N0", Culture)</span>
+            <span class="lt-kpi-note">@string.Format(Culture, L["Home.Kpi.PendingNote"], Money(figures.PendingQuotesExclTax))</span>
+        </a>
+        <a class="lt-kpi" href="quotes" id="kpi-drafts">
+            <span class="lt-kpi-head">@L["Home.Kpi.Drafts"]<span class="lt-kpi-icon"><Icon Name="file-pen-line" /></span></span>
+            <span class="lt-kpi-value">@_drafts.ToString("N0", Culture)</span>
+            <span class="lt-kpi-note">@L["Home.Kpi.DraftsNote"]</span>
+        </a>
+    </section>
+
+    <div class="lt-dashboard-grid">
+        <section class="lt-panel" aria-labelledby="home-chart-title">
+            <div class="lt-panel-head">
+                <h2 id="home-chart-title">@L["Home.Chart.Title"]</h2>
+                <span class="lettra-hint">@L["Home.Chart.Unit"]</span>
+            </div>
+            <div class="lt-chart" id="home-chart" style="--bars: @figures.Months.Count" aria-hidden="true">
+                @{ decimal max = Math.Max(figures.Months.Max(m => m.ExclTax), 1m); }
+                @foreach (MonthRevenue month in figures.Months)
+                {
+                    <div class="lt-bar @(month == figures.Months[^1] ? "is-current" : null)">
+                        <span class="lt-bar-value">@Compact(month.ExclTax)</span>
+                        <span class="lt-bar-fill" style="--h: @Height(month.ExclTax, max)"></span>
+                        <span class="lt-bar-label">@month.Month.ToString("MMM", Culture)</span>
+                    </div>
+                }
+            </div>
+            <table class="lettra-visually-hidden">
+                <caption>@L["Home.Chart.Title"]</caption>
+                <tbody>
+                    @foreach (MonthRevenue month in figures.Months)
+                    {
+                        <tr><th scope="row">@month.Month.ToString("MMMM yyyy", Culture)</th><td>@Money(month.ExclTax)</td></tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+
+        <div>
+            <section class="lt-panel" aria-labelledby="home-invoices-title">
+                <div class="lt-panel-head">
+                    <h2 id="home-invoices-title">@L["Home.Recent.Invoices"]</h2>
+                    <a href="invoices">@L["Home.Recent.All"]</a>
+                </div>
+                @if (figures.RecentInvoices.Count == 0)
+                {
+                    <p class="lettra-hint">@L["Home.Recent.None"]</p>
+                }
+                else
+                {
+                    <ul class="lt-list" id="home-recent-invoices">
+                        @foreach (InvoiceSummary invoice in figures.RecentInvoices)
+                        {
+                            <li>
+                                <a href="@($"invoices/{invoice.Id}")">
+                                    <span class="lt-list-title">@invoice.CustomerName</span>
+                                    <span class="lt-list-meta">@invoice.Number · @invoice.IssueDate?.ToString("d", Culture)</span>
+                                    <span class="lt-list-amount">
+                                        @Money(invoice.Kind == InvoiceKindDto.CreditNote ? -invoice.TotalInclTax : invoice.TotalInclTax)
+                                        <DocumentStatusBadge Text="@L[$"InvoiceStatus.{invoice.Status}"]" Kind="@invoice.Status.ToString().ToLowerInvariant()" />
+                                    </span>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                }
+            </section>
+
+            <section class="lt-panel" aria-labelledby="home-quotes-title">
+                <div class="lt-panel-head">
+                    <h2 id="home-quotes-title">@L["Home.Recent.Quotes"]</h2>
+                    <a href="quotes">@L["Home.Recent.All"]</a>
+                </div>
+                @if (figures.RecentQuotes.Count == 0)
+                {
+                    <p class="lettra-hint">@L["Home.Recent.None"]</p>
+                }
+                else
+                {
+                    <ul class="lt-list" id="home-recent-quotes">
+                        @foreach (QuoteSummary quote in figures.RecentQuotes)
+                        {
+                            <li>
+                                <a href="@($"quotes/{quote.Id}")">
+                                    <span class="lt-list-title">@quote.CustomerName</span>
+                                    <span class="lt-list-meta">@quote.Number · @quote.IssueDate?.ToString("d", Culture)</span>
+                                    <span class="lt-list-amount">
+                                        @Money(quote.TotalInclTax)
+                                        <DocumentStatusBadge Text="@(quote.IsExpired ? L["Quote.Expired"] : L[$"QuoteStatus.{quote.Status}"])"
+                                                             Kind="@(quote.IsExpired ? "expired" : quote.Status.ToString().ToLowerInvariant())" />
+                                    </span>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                }
+            </section>
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>Pages lues au plus par liste : 2 000 pièces sur six mois suffisent au tableau de bord.</summary>
+    private const int MaxPages = 10;
+
+    private DashboardFigures? _figures;
+    private int _drafts;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    // Horloge de l'hôte si elle est fournie (tests), sinon l'heure locale de l'appareil.
+    private DateOnly Today => DateOnly.FromDateTime((Services.GetService<TimeProvider>() ?? TimeProvider.System).GetLocalNow().DateTime);
+
+    protected override async Task OnInitializedAsync()
+    {
+        DateOnly from = DashboardFigures.PeriodStart(Today);
+        Task<(List<InvoiceSummary> Items, IReadOnlyList<ErrorDetail> Errors)> invoices = ReadAllAsync(
+            page => Invoices.ListAsync(new BillingListQuery(From: from, To: Today, Page: page, PageSize: 200), null, null, CancellationToken.None));
+        Task<(List<QuoteSummary> Items, IReadOnlyList<ErrorDetail> Errors)> quotes = ReadAllAsync(
+            page => Quotes.ListAsync(new BillingListQuery(From: from, Page: page, PageSize: 200), null, CancellationToken.None));
+        Task<OperationResult<PagedResponse<QuoteSummary>>> draftQuotes = Quotes.ListAsync(new BillingListQuery(PageSize: 1), QuoteStatusDto.Draft, CancellationToken.None);
+        Task<OperationResult<PagedResponse<InvoiceSummary>>> draftInvoices = Invoices.ListAsync(new BillingListQuery(PageSize: 1), null, InvoiceStatusDto.Draft, CancellationToken.None);
+        await Task.WhenAll(invoices, quotes, draftQuotes, draftInvoices);
+
+        _drafts = ((await draftQuotes).Value?.TotalCount ?? 0) + ((await draftInvoices).Value?.TotalCount ?? 0);
+        _figures = DashboardFigures.Compute((await invoices).Items, (await quotes).Items, Today);
+        // Un refus (droits, réseau) est le même pour chaque liste : affiché une fois.
+        _errors = [.. (await invoices).Errors.Concat((await quotes).Errors).Select(e => e with { Target = null }).DistinctBy(e => e.Code)];
+    }
+
+    private static async Task<(List<T> Items, IReadOnlyList<ErrorDetail> Errors)> ReadAllAsync<T>(Func<int, Task<OperationResult<PagedResponse<T>>>> read)
+    {
+        List<T> items = [];
+        for (int page = 1; page <= MaxPages; page++)
+        {
+            OperationResult<PagedResponse<T>> result = await read(page);
+            if (result is not { IsSuccess: true, Value: { } response })
+            {
+                return (items, result.Errors);
+            }
+
+            items.AddRange(response.Items);
+            if (response.Items.Count == 0 || items.Count >= response.TotalCount)
+            {
+                break;
+            }
+        }
+
+        return (items, []);
+    }
+
+    private bool IsEmpty(DashboardFigures figures) =>
+        _errors.Count == 0 && _drafts == 0 && figures.RecentInvoices.Count == 0 && figures.RecentQuotes.Count == 0;
+
+    private string Money(decimal value) => string.Format(Culture, L["Home.Money"], value.ToString("N0", Culture));
+
+    /// <summary>Valeur courte au-dessus d'une barre : « 12,4 k ».</summary>
+    private string Compact(decimal value) => Math.Abs(value) >= 1000m
+        ? string.Format(Culture, L["Home.Thousands"], (value / 1000m).ToString("0.#", Culture))
+        : value.ToString("N0", Culture);
+
+    private static string Height(decimal value, decimal max) =>
+        (Math.Max(value, 0m) / max * 100m).ToString("0.#", CultureInfo.InvariantCulture) + "%";
+}

@@ -1,0 +1,29 @@
+@* Liste de navigation partagée par la barre latérale et la feuille « Plus » du téléphone. En rail, les libellés restent
+   lisibles par le lecteur d'écran et s'affichent en info-bulle. *@
+@inject IStringLocalizer<SharedResource> L
+
+<ul class="lt-nav" role="list">
+    @foreach (IGrouping<string?, NavItem> group in NavItems.Groups(Items))
+    {
+        @if (group.Key is { } title)
+        {
+            <li class="lt-nav-group" aria-hidden="true">@L[title]</li>
+        }
+        @foreach (NavItem item in group)
+        {
+            <li>
+                <NavLink href="@item.Href" Match="item.Match" class="lt-nav-link" title="@L[item.LabelKey]" @onclick="OnNavigate">
+                    <Icon Name="@item.Icon" />
+                    <span class="lt-nav-label">@L[item.LabelKey]</span>
+                </NavLink>
+            </li>
+        }
+    }
+</ul>
+
+@code {
+    [Parameter] public IEnumerable<NavItem> Items { get; set; } = NavItems.All;
+
+    /// <summary>Après un clic : la feuille « Plus » se referme.</summary>
+    [Parameter] public EventCallback OnNavigate { get; set; }
+}
