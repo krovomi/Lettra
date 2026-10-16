@@ -1,0 +1,66 @@
+# Démonstration seulement (compose.observabilite.yaml) : sources de données de Grafana, provisionnées (rien à
+# configurer à la main), en lecture seule. Les liens entre elles font le chemin d'une enquête :
+#   pic de latence (Prometheus, exemplaire) → trace (Tempo) → journaux de la même requête (Loki) → retour à la trace.
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      httpMethod: POST
+      timeInterval: 15s
+      # Un exemplaire porte l'identifiant de la trace de la requête mesurée.
+      exemplarTraceIdDestinations:
+        - name: trace_id
+          datasourceUid: tempo
+          urlDisplayLabel: Voir la trace
+
+  - name: Tempo
+    uid: tempo
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+    editable: false
+    jsonData:
+      nodeGraph:
+        enabled: true
+      search:
+        hide: false
+      lokiSearch:
+        datasourceUid: loki
+      # D'une trace (ou d'un span) à ses journaux : Loki garde trace_id en métadonnée structurée.
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: -5m
+        spanEndTimeShift: 5m
+        customQuery: true
+        query: '{service_name=~"lettra-.+"} | trace_id="$${__trace.traceId}"'
+      tracesToMetrics:
+        datasourceUid: prometheus
+        spanStartTimeShift: -5m
+        spanEndTimeShift: 5m
+        queries:
+          - name: Latence p95 de la route
+            query: 'histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{job="lettra/lettra-api"}[5m])))'
+
+  - name: Loki
+    uid: loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    editable: false
+    jsonData:
+      maxLines: 1000
+      # D'un journal à sa trace.
+      derivedFields:
+        - name: trace_id
+          matcherType: label
+          matcherRegex: trace_id
+          datasourceUid: tempo
+          url: '$${__value.raw}'
+          urlDisplayLabel: Voir la trace

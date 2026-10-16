@@ -103,6 +103,32 @@ téléphone après la démonstration.
 > Non vérifié sur un vrai téléphone : la CI vérifie ce profil HTTPS dans Chromium, avec une adresse autre que
 > localhost, mais pas l'installation du certificat ni la PWA sur Android ou iOS.
 
+#### Voir la télémétrie dans Grafana
+
+La même démonstration, avec ses traces, métriques et journaux dans Grafana (collecteur filtrant, Prometheus, Tempo et
+Loki, comme dans une cellule) :
+
+```bash
+docker compose -f deploy/demo/compose.yaml -f deploy/demo/compose.observabilite.yaml up -d --build --wait
+```
+
+Puis **http://localhost:3000/**, sans connexion : trois tableaux de bord dans le dossier « Lettra », **Activité**
+(requêtes, latence, erreurs, outbox, synchronisations, connexions, assistant), **Métier** (devis, factures, avoirs,
+transmissions, FEC, en nombres seulement) et **Objectifs de service** (disponibilité, latence, alertes). Pour remplir
+les courbes, dix minutes d'activité fictive avec k6, une fois la session ouverte
+([commandes complètes](deploy/demo/README.md#remplir-les-courbes--activité-de-démonstration-k6)) :
+
+```bash
+LETTRA_SESSION_COOKIE="$(cat /tmp/lettra-k6/session-cookie.txt)" k6 run -e LETTRA_PROFIL=activite deploy/tests/k6/fumee.js
+```
+
+Détails : [Voir la télémétrie dans Grafana](deploy/demo/README.md#voir-la-télémétrie-dans-grafana).
+
+> La CI (job « Démo — télémétrie dans Grafana ») démarre cette pile, vérifie par l'API de Grafana les sources et les
+> tableaux de bord, puis, après deux minutes d'activité k6, que chaque panneau a des données (sauf les deux panneaux
+> PostgreSQL, vides avec SQLite), qu'un exemplaire mène à une trace et à ses journaux, et que les alertes de la cellule
+> sont visibles. L'affichage dans un navigateur n'est pas vérifié.
+
 ### Application Windows
 
 L'**application de bureau** fonctionne seule sur un PC, sans serveur, sans base de données à installer et sans

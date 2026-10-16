@@ -78,3 +78,17 @@ tests:
             exp_annotations:
               title: Les lectures dépassent 300 ms trop souvent
               runbook_url: https://github.com/krovomi/Lettra/blob/main/deploy/runbooks/latence.md
+
+  - name: aucune erreur → taux d'erreur à 0, pas de série absente
+    interval: 1m
+    external_labels:
+      cell: mut-fr-01
+    input_series:
+      - series: 'http_server_request_duration_seconds_count{job="lettra/lettra-api",http_response_status_code="200"}'
+        values: '0+60x30'
+    promql_expr_test:
+      - expr: lettra:api_erreurs:ratio_rate5m
+        eval_time: 20m
+        exp_samples:
+          - labels: 'lettra:api_erreurs:ratio_rate5m'
+            value: 0
