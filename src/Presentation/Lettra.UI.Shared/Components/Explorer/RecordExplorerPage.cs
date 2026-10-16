@@ -3,6 +3,7 @@ using Lettra.Contracts.Common;
 using Lettra.UI.Shared.Keyboard;
 using Lettra.UI.Shared.Localization;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.Localization;
@@ -56,6 +57,7 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
     private bool _leaving;
     private bool _focusForm;
     private bool _disposed;
+    private EditContext? _formContext;
 
     [Inject] protected NavigationManager Navigation { get; set; } = default!;
 
@@ -92,6 +94,34 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
 
     /// <summary>Échap ou Annuler sur une saisie modifiée : on demande avant d'abandonner.</summary>
     protected bool ConfirmingDiscard { get; private set; }
+
+    /// <summary>
+    /// Contexte de l'EditForm de la fiche, lié au formulaire en cours. Chaque champ modifié redessine la page, même
+    /// quand les champs sont dans un composant à part : « Modifications non enregistrées » suit la frappe.
+    /// </summary>
+    protected EditContext? FormContext
+    {
+        get
+        {
+            if (Form is null)
+            {
+                return null;
+            }
+
+            if (_formContext is null || !ReferenceEquals(_formContext.Model, Form))
+            {
+                if (_formContext is not null)
+                {
+                    _formContext.OnFieldChanged -= OnFormFieldChanged;
+                }
+
+                _formContext = new EditContext(Form);
+                _formContext.OnFieldChanged += OnFormFieldChanged;
+            }
+
+            return _formContext;
+        }
+    }
 
     protected bool IsDirty => Form is not null && Original is not null && !Form.Equals(Original);
 
@@ -172,8 +202,15 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
             .Bind("F3", L["Explorer.Command.Search"], async _ => await SearchInput.FocusAsync())
             .Bind("Insert", L["Explorer.Command.New"], _ => GoTo(NewHref))
             .Bind("F2", L["Explorer.Command.Edit"], _ => GoTo(EditHref(SelectedId!.Value)), _ => Mode == ExplorerMode.View && SelectedId is not null)
-            .Bind("Escape", L["Explorer.Command.Back"], _ => Back(), _ => Mode != ExplorerMode.List, showInBar: false);
+            .Bind("Escape", L["Explorer.Command.Back"], _ => Rendered(Back), _ => Mode != ExplorerMode.List, showInBar: false);
         Navigation.LocationChanged += OnLocationChanged;
+    }
+
+    /// <summary>Un raccourci arrive hors des événements de la page : on la redessine après l'action.</summary>
+    private void Rendered(Action action)
+    {
+        action();
+        StateHasChanged();
     }
 
     protected override async Task OnInitializedAsync()
@@ -286,6 +323,8 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
             GoTo(EditHref(IdOf(items[index])));
         }
     }
+
+    private void OnFormFieldChanged(object? sender, FieldChangedEventArgs e) => StateHasChanged();
 
     protected string? OptionId(TSummary item) => $"{BasePath}-option-{IdOf(item)}";
 
@@ -580,6 +619,11 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
         if (disposing)
         {
             Navigation.LocationChanged -= OnLocationChanged;
+            if (_formContext is not null)
+            {
+                _formContext.OnFieldChanged -= OnFormFieldChanged;
+            }
+
             _searchDebounce?.Cancel();
             _searchDebounce?.Dispose();
         }

@@ -118,6 +118,8 @@ seulement ; Safari et les vrais téléphones ne sont pas testés ici.
 2. Des couleurs uniquement par jetons ; une nouvelle paire texte sur fond se déclare dans `ThemeContrastTests`.
 3. Une icône Lucide de plus : recopier son SVG du paquet `lucide-static` dans `Components/IconPaths.cs`.
 4. Ajouter l'écran à la galerie si son apparence compte.
+5. Une liste d'enregistrements qu'on consulte et modifie (clients, fournisseurs, articles) : hériter de
+   `RecordExplorerPage`, voir [Pages de consultation](pages-de-consultation.md).
 
 ## Licences
 

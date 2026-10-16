@@ -26,23 +26,23 @@
     }
     else
     {
-        <section class="lt-kpis" aria-label="@L["Accounting.Balance.Figures"]">
-            <div class="lt-kpi" id="balance-kpi-revenue">
-                <span class="lt-kpi-head">@L["Accounting.Kpi.Revenue"]<span class="lt-kpi-icon"><Icon Name="trending-up" /></span></span>
-                <span class="lt-kpi-value">@ExplorerText.Money(Revenue)</span>
-                <span class="lt-kpi-note">@L["Accounting.Kpi.RevenueNote"]</span>
+        <dl class="lt-stats" aria-label="@L["Accounting.Balance.Figures"]" id="balance-stats">
+            <div id="balance-kpi-revenue">
+                <dt>@L["Accounting.Kpi.Revenue"]</dt>
+                <dd>@ExplorerText.Money(Revenue)</dd>
+                <dd class="lt-stats-note">@L["Accounting.Kpi.RevenueNote"]</dd>
             </div>
-            <div class="lt-kpi" id="balance-kpi-vat">
-                <span class="lt-kpi-head">@L["Accounting.Kpi.Vat"]<span class="lt-kpi-icon"><Icon Name="receipt" /></span></span>
-                <span class="lt-kpi-value">@ExplorerText.Money(-Net(SalesAccounts.VatCollected))</span>
-                <span class="lt-kpi-note">@L["Accounting.Kpi.VatNote"]</span>
+            <div id="balance-kpi-vat">
+                <dt>@L["Accounting.Kpi.Vat"]</dt>
+                <dd>@ExplorerText.Money(-Net(SalesAccounts.VatCollected))</dd>
+                <dd class="lt-stats-note">@L["Accounting.Kpi.VatNote"]</dd>
             </div>
-            <div class="lt-kpi" id="balance-kpi-receivable">
-                <span class="lt-kpi-head">@L["Accounting.Kpi.Receivable"]<span class="lt-kpi-icon"><Icon Name="hand-coins" /></span></span>
-                <span class="lt-kpi-value">@ExplorerText.Money(Net(SalesAccounts.Customers))</span>
-                <span class="lt-kpi-note">@L["Accounting.Kpi.ReceivableNote"]</span>
+            <div id="balance-kpi-receivable">
+                <dt>@L["Accounting.Kpi.Receivable"]</dt>
+                <dd>@ExplorerText.Money(Net(SalesAccounts.Customers))</dd>
+                <dd class="lt-stats-note">@L["Accounting.Kpi.ReceivableNote"]</dd>
             </div>
-        </section>
+        </dl>
 
         <h2 id="balance-title">@L["Accounting.Balance.General"]</h2>
         @if (_balance.Accounts.Count == 0)
@@ -60,8 +60,8 @@
                         <tr>
                             <th scope="col">@L["Accounting.Account"]</th>
                             <th scope="col">@L["Accounting.AccountName"]</th>
-                            <th scope="col" class="lg-num">@L["Accounting.Debit"]</th>
-                            <th scope="col" class="lg-num">@L["Accounting.Credit"]</th>
+                            <th scope="col" class="lg-num lt-hide-sm">@L["Accounting.Debit"]</th>
+                            <th scope="col" class="lg-num lt-hide-sm">@L["Accounting.Credit"]</th>
                             <th scope="col" class="lg-num">@L["Accounting.DebitBalance"]</th>
                             <th scope="col" class="lg-num">@L["Accounting.CreditBalance"]</th>
                         </tr>
@@ -72,8 +72,8 @@
                             <tr class="lt-row-link" @onclick="() => Navigation.NavigateTo(LedgerHref(account.Account, null))">
                                 <td><a href="@LedgerHref(account.Account, null)" class="lt-account" id="@($"balance-account-{account.Account}")">@account.Account</a></td>
                                 <td>@AccountLabel(account.Account)</td>
-                                <td class="lg-num">@ExplorerText.Money(account.Debit)</td>
-                                <td class="lg-num">@ExplorerText.Money(account.Credit)</td>
+                                <td class="lg-num lt-hide-sm">@ExplorerText.Money(account.Debit)</td>
+                                <td class="lg-num lt-hide-sm">@ExplorerText.Money(account.Credit)</td>
                                 <td class="lg-num">@(account.Balance > 0 ? ExplorerText.Money(account.Balance) : null)</td>
                                 <td class="lg-num">@(account.Balance < 0 ? ExplorerText.Money(-account.Balance) : null)</td>
                             </tr>
@@ -88,8 +88,8 @@
                                     <span class="lettra-status is-issued" id="balance-balanced"><Icon Name="check" Size="14" /> @L["Accounting.Balanced"]</span>
                                 }
                             </th>
-                            <td class="lg-num" id="balance-total-debit">@ExplorerText.Money(_balance.TotalDebit)</td>
-                            <td class="lg-num" id="balance-total-credit">@ExplorerText.Money(_balance.TotalCredit)</td>
+                            <td class="lg-num lt-hide-sm" id="balance-total-debit">@ExplorerText.Money(_balance.TotalDebit)</td>
+                            <td class="lg-num lt-hide-sm" id="balance-total-credit">@ExplorerText.Money(_balance.TotalCredit)</td>
                             <td class="lg-num">@ExplorerText.Money(_balance.Accounts.Where(a => a.Balance > 0).Sum(a => a.Balance))</td>
                             <td class="lg-num">@ExplorerText.Money(-_balance.Accounts.Where(a => a.Balance < 0).Sum(a => a.Balance))</td>
                         </tr>
@@ -104,9 +104,9 @@
                     <thead>
                         <tr>
                             <th scope="col">@L["Billing.Column.Customer"]</th>
-                            <th scope="col" class="lg-num">@L["Accounting.Pieces"]</th>
-                            <th scope="col" class="lg-num">@L["Accounting.Debit"]</th>
-                            <th scope="col" class="lg-num">@L["Accounting.Credit"]</th>
+                            <th scope="col" class="lg-num lt-hide-sm">@L["Accounting.Pieces"]</th>
+                            <th scope="col" class="lg-num lt-hide-sm">@L["Accounting.Debit"]</th>
+                            <th scope="col" class="lg-num lt-hide-sm">@L["Accounting.Credit"]</th>
                             <th scope="col" class="lg-num">@L["Accounting.Balance"]</th>
                         </tr>
                     </thead>
@@ -115,9 +115,9 @@
                         {
                             <tr class="lt-row-link" @onclick="() => Navigation.NavigateTo(LedgerHref(SalesAccounts.Customers, customer.CustomerId))">
                                 <td><a href="@LedgerHref(SalesAccounts.Customers, customer.CustomerId)">@customer.CustomerName</a></td>
-                                <td class="lg-num">@customer.EntryCount.ToString("N0", Culture)</td>
-                                <td class="lg-num">@ExplorerText.Money(customer.Debit)</td>
-                                <td class="lg-num">@ExplorerText.Money(customer.Credit)</td>
+                                <td class="lg-num lt-hide-sm">@customer.EntryCount.ToString("N0", Culture)</td>
+                                <td class="lg-num lt-hide-sm">@ExplorerText.Money(customer.Debit)</td>
+                                <td class="lg-num lt-hide-sm">@ExplorerText.Money(customer.Credit)</td>
                                 <td class="lg-num"><strong>@ExplorerText.Money(customer.Balance)</strong></td>
                             </tr>
                         }

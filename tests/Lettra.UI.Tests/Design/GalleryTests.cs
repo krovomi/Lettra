@@ -8,9 +8,13 @@ using Lettra.UI.Shared;
 using Lettra.UI.Shared.Layout;
 using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Pages;
+using Lettra.UI.Shared.Pages.Accounting;
 using Lettra.UI.Shared.Pages.Billing;
+using Lettra.UI.Shared.Pages.CatalogItems;
+using Lettra.UI.Shared.Pages.Parties;
 using Lettra.UI.Shared.Services;
 using Lettra.UI.Tests.Billing;
+using Lettra.UI.Tests.Consultation;
 using Lettra.UI.Tests.Security;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,6 +40,8 @@ public sealed class GalleryTests : BunitContext
     private readonly FakeInvoicesGateway _invoices = new();
     private readonly FakeQuotesGateway _quotes = new();
     private readonly FakeCustomersGateway _customers = new();
+    private readonly FakeAccountingGateway _accounting = new();
+    private readonly FakeCatalogGateway _catalog = new();
 
     public GalleryTests()
     {
@@ -44,7 +50,9 @@ public sealed class GalleryTests : BunitContext
         Services.AddSingleton<IInvoicesGateway>(_invoices);
         Services.AddSingleton<IQuotesGateway>(_quotes);
         Services.AddSingleton<ICustomersGateway>(_customers);
-        Services.AddSingleton<ICatalogGateway>(new FakeCatalogGateway());
+        Services.AddSingleton<IAccountingGateway>(_accounting);
+        Services.AddSingleton<ISuppliersGateway>(new FakeSuppliersGateway());
+        Services.AddSingleton<ICatalogGateway>(_catalog);
         Services.AddSingleton<IDirectoryGateway>(new FakeDirectoryGateway());
         Services.AddSingleton<IBillingSettingsGateway>(new FakeBillingSettingsGateway());
         Services.AddSingleton<IPlatformTransmissionGateway>(new FakePlatformTransmissionGateway(_invoices));
@@ -76,8 +84,20 @@ public sealed class GalleryTests : BunitContext
             b.AddComponentParameter(1, nameof(InvoiceEditor.Id), facture);
             b.CloseComponent();
         });
-        Ecrire(dossier, "clients", "customers", Page<Customers>());
-        Ecrire(dossier, "articles", "catalog", Page<Catalog>());
+        Ecrire(dossier, "clients", "customers", Page<CustomersPage>());
+        Ecrire(dossier, "client", $"customers/{_customers.Customers[1].Id}", Page<CustomersPage>());
+        Ecrire(dossier, "client-saisie", $"customers/{_customers.Customers[1].Id}/edit", Page<CustomersPage>());
+        Ecrire(dossier, "articles", "catalog", Page<CatalogPage>());
+        Ecrire(dossier, "article", $"catalog/{_catalog.Items[0].Id}", Page<CatalogPage>());
+        Ecrire(dossier, "articles-grille", "catalog/grid", Page<Catalog>());
+        Ecrire(dossier, "journal", "accounting/journal?from=2026-01-01&to=2026-12-31", Page<JournalPage>());
+        Ecrire(dossier, "balance", "accounting/balance?from=2026-01-01&to=2026-12-31", Page<BalancePage>());
+        Ecrire(dossier, "grand-livre", "accounting/accounts/411?from=2026-01-01&to=2026-12-31", b =>
+        {
+            b.OpenComponent<LedgerPage>(0);
+            b.AddComponentParameter(1, nameof(LedgerPage.Account), "411");
+            b.CloseComponent();
+        });
     }
 
     private static RenderFragment Page<TPage>() where TPage : IComponent => b =>
@@ -145,6 +165,8 @@ public sealed class GalleryTests : BunitContext
                 };
                 _invoices.Invoices[facture.Id] = facture;
                 derniere = facture.Id;
+                CustomerSummary client = _customers.Customers.Single(c => c.Name == facture.Customer.Name);
+                _accounting.Entries.Add(FakeAccountingGateway.Invoice(facture.Number!, date, client.Id, client.Name, facture.Totals.TotalExclTax, facture.Totals.TotalVat));
             }
         }
 
@@ -164,6 +186,11 @@ public sealed class GalleryTests : BunitContext
         }
 
         _quotes.Add(QuoteStatusDto.Draft, null, Ligne("Création de société", 1, 1500m));
+        _catalog.Add("TENUE", "Tenue comptable mensuelle", 450m);
+        _catalog.Add("BILAN", "Bilan annuel et liasse fiscale", 1800m);
+        _catalog.Add("CONSEIL", "Conseil (heure)", 120m);
+        _catalog.Add("PAIE", "Bulletin de paie", 25m, unit: "C62");
+        _catalog.Add("ANCIEN", "Ancienne prestation", 80m, archived: true);
         return derniere;
     }
 }

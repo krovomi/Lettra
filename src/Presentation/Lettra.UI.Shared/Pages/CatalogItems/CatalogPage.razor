@@ -176,7 +176,7 @@
                 break;
 
             case ExplorerMode.New or ExplorerMode.Edit when Form is not null:
-                <EditForm Model="Form" OnValidSubmit="SaveAsync" FormName="catalog-sheet" class="lt-card lt-card-editing" id="catalog-form">
+                <EditForm EditContext="FormContext" OnValidSubmit="SaveAsync" FormName="catalog-sheet" class="lt-card lt-card-editing" id="catalog-form">
                     <DataAnnotationsValidator />
                     <header class="lt-card-header">
                         <div class="lt-card-heading">

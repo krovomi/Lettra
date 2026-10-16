@@ -5,7 +5,9 @@ using Lettra.Contracts.Directory;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
 using Lettra.UI.Shared.Localization;
-using Lettra.UI.Shared.Pages;
+using Lettra.UI.Shared.Components.Explorer;
+using Lettra.UI.Shared.Pages.Parties;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.UI.Tests;
@@ -18,19 +20,32 @@ public sealed class SuppliersPageTests : BunitContext
 
     public SuppliersPageTests()
     {
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        ExplorerSettings.SearchDelay = TimeSpan.FromMilliseconds(1);
+        Collapsible.ForgetAll();
         Services.AddLettraUi();
         Services.AddSingleton<ISuppliersGateway>(_gateway);
         Services.AddSingleton<IDirectoryGateway>(_directory);
         UseCulture("fr-FR");
     }
 
+    private NavigationManager Navigation => Services.GetRequiredService<NavigationManager>();
+
     private static void UseCulture(string name) => LettraCultures.Apply(CultureInfo.GetCultureInfo(name));
 
-    private static void Fill(IRenderedComponent<Suppliers> page, string id, string value) => page.Find($"#{id}").Change(value);
+    private IRenderedComponent<SuppliersPage> Open(string route = "suppliers/new")
+    {
+        Navigation.NavigateTo(route);
+        IRenderedComponent<SuppliersPage> page = Render<SuppliersPage>();
+        page.WaitForState(() => page.FindAll(".lt-skeleton").Count == 0);
+        return page;
+    }
 
-    private static string? Value(IRenderedComponent<Suppliers> page, string id) => page.Find($"#{id}").GetAttribute("value");
+    private static void Fill(IRenderedComponent<SuppliersPage> page, string id, string value) => page.Find($"#{id}").Change(value);
 
-    private static void Search(IRenderedComponent<Suppliers> page, string query)
+    private static string? Value(IRenderedComponent<SuppliersPage> page, string id) => page.Find($"#{id}").GetAttribute("value");
+
+    private static void Search(IRenderedComponent<SuppliersPage> page, string query)
     {
         page.Find("#supplier-lookup-query").Input(query);
         page.Find("button.lettra-lookup-search").Click();
@@ -39,22 +54,25 @@ public sealed class SuppliersPageTests : BunitContext
     [Fact]
     public void L_ecran_est_en_francais_et_traduit_en_anglais()
     {
-        IRenderedComponent<Suppliers> page = Render<Suppliers>();
+        IRenderedComponent<SuppliersPage> page = Open("suppliers");
         page.Find("h1").TextContent.Should().Be("Fournisseurs");
-        page.Find("button[type=submit]").TextContent.Should().Be("Créer le fournisseur");
-        page.Find("button.lettra-lookup-search").TextContent.Should().Be("Rechercher dans l'annuaire");
         page.Markup.Should().Contain("Aucun fournisseur pour l'instant.");
+        page.FindAll("form").Should().BeEmpty();
+
+        page = Open();
+        page.Find("#explorer-save").TextContent.Should().Contain("Créer");
+        page.Find("button.lettra-lookup-search").TextContent.Should().Be("Rechercher dans l'annuaire");
 
         UseCulture("en-US");
-        page = Render<Suppliers>();
-        page.Find("button[type=submit]").TextContent.Should().Be("Create supplier");
+        page = Open();
+        page.Find("#explorer-save").TextContent.Should().Contain("Create");
         page.Find("button.lettra-vies-check").TextContent.Should().Be("Check (VIES)");
     }
 
     [Fact]
     public void Creer_un_fournisseur_l_ajoute_a_la_liste()
     {
-        IRenderedComponent<Suppliers> page = Render<Suppliers>();
+        IRenderedComponent<SuppliersPage> page = Open();
 
         Fill(page, "name", "Papeterie Durand");
         Fill(page, "siren", "732829320");
@@ -66,14 +84,17 @@ public sealed class SuppliersPageTests : BunitContext
 
         page.WaitForAssertion(() => page.Find("[role=status]").TextContent.Should().Be("Fournisseur « Papeterie Durand » créé."));
         _gateway.LastRequest!.Iban.Should().Be("FR7630006000011234567890189");
-        page.Find("tbody").TextContent.Should().Contain("Papeterie Durand").And.Contain("732829320").And.Contain("Lyon");
+        Guid id = _gateway.Suppliers.Single().Id;
+        Navigation.ToBaseRelativePath(Navigation.Uri).Should().Be($"suppliers/{id}");
+        page.Find("#suppliers-list").TextContent.Should().Contain("Papeterie Durand").And.Contain("Lyon");
+        page.Find("#supplier-iban").TextContent.Should().Contain("FR76 3000 6000 0112 3456 7890 189");
     }
 
     [Fact]
     public void La_validation_et_les_erreurs_du_serveur_sont_traduites()
     {
         _gateway.NextErrors = [new ErrorDetail(ErrorCodes.SharedKernel.IbanInvalid, "Iban")];
-        IRenderedComponent<Suppliers> page = Render<Suppliers>();
+        IRenderedComponent<SuppliersPage> page = Open();
 
         page.Find("form").Submit();
         page.Markup.Should().Contain("Le nom du fournisseur est obligatoire.");
@@ -94,7 +115,7 @@ public sealed class SuppliersPageTests : BunitContext
     {
         _directory.Companies.Add(FakeDirectoryGateway.Ancienne);
         _directory.Companies.Add(FakeDirectoryGateway.Danone);
-        IRenderedComponent<Suppliers> page = Render<Suppliers>();
+        IRenderedComponent<SuppliersPage> page = Open();
 
         Search(page, "  sarl  ");
 
@@ -121,7 +142,7 @@ public sealed class SuppliersPageTests : BunitContext
     public void Un_clic_sur_un_resultat_le_choisit()
     {
         _directory.Companies.Add(FakeDirectoryGateway.Danone);
-        IRenderedComponent<Suppliers> page = Render<Suppliers>();
+        IRenderedComponent<SuppliersPage> page = Open();
 
         Search(page, "danone");
         page.Find("[role=option]").Click();
@@ -132,7 +153,7 @@ public sealed class SuppliersPageTests : BunitContext
     [Fact]
     public void Une_recherche_trop_courte_n_interroge_pas_l_annuaire()
     {
-        IRenderedComponent<Suppliers> page = Render<Suppliers>();
+        IRenderedComponent<SuppliersPage> page = Open();
 
         Search(page, "ab");
 
@@ -144,7 +165,7 @@ public sealed class SuppliersPageTests : BunitContext
     public void Annuaire_indisponible_message_traduit_et_saisie_manuelle_possible()
     {
         _directory.SearchError = ErrorCodes.Directory.Unavailable;
-        IRenderedComponent<Suppliers> page = Render<Suppliers>();
+        IRenderedComponent<SuppliersPage> page = Open();
 
         Search(page, "danone");
 
@@ -155,7 +176,7 @@ public sealed class SuppliersPageTests : BunitContext
         Fill(page, "zip", "75002");
         Fill(page, "city", "Paris");
         page.Find("form").Submit();
-        page.WaitForAssertion(() => page.Find("tbody").TextContent.Should().Contain("Saisie manuelle"));
+        page.WaitForAssertion(() => page.Find("#suppliers-list").TextContent.Should().Contain("Saisie manuelle"));
     }
 
     [Fact]
@@ -163,7 +184,7 @@ public sealed class SuppliersPageTests : BunitContext
     {
         UseCulture("en-US");
         _directory.SearchError = ErrorCodes.Api.Unreachable;
-        IRenderedComponent<Suppliers> page = Render<Suppliers>();
+        IRenderedComponent<SuppliersPage> page = Open();
 
         Search(page, "danone");
 
@@ -174,7 +195,7 @@ public sealed class SuppliersPageTests : BunitContext
     public void La_verification_VIES_affiche_le_resultat_et_le_nom()
     {
         _directory.VatResponse = new VatNumberCheckResponse("FR27552032534", true, "DANONE", "17 BD HAUSSMANN", DateTimeOffset.UnixEpoch);
-        IRenderedComponent<Suppliers> page = Render<Suppliers>();
+        IRenderedComponent<SuppliersPage> page = Open();
         page.Find("button.lettra-vies-check").HasAttribute("disabled").Should().BeTrue();
 
         Fill(page, "vat", "FR27552032534");
@@ -187,7 +208,7 @@ public sealed class SuppliersPageTests : BunitContext
     public void La_verification_VIES_signale_un_numero_invalide_ou_une_erreur_traduite()
     {
         _directory.VatResponse = new VatNumberCheckResponse("FR00000000000", false, null, null, DateTimeOffset.UnixEpoch);
-        IRenderedComponent<Suppliers> page = Render<Suppliers>();
+        IRenderedComponent<SuppliersPage> page = Open();
         Fill(page, "vat", "FR00000000000");
         page.Find("button.lettra-vies-check").Click();
         page.Find(".lettra-vies-result").TextContent.Trim().Should().Be("Numéro inconnu de VIES ou inactif");
@@ -198,5 +219,41 @@ public sealed class SuppliersPageTests : BunitContext
         page.Find("button.lettra-vies-check").Click();
         page.Find(".lettra-vies-result").TextContent
             .Should().Be("La vérification VIES ne couvre que les numéros de TVA des pays de l'Union européenne.");
+    }
+
+    [Fact]
+    public void La_fiche_fournisseur_se_consulte_puis_se_modifie_sans_changer_d_ecran()
+    {
+        Contracts.Suppliers.SupplierResponse supplier = _gateway.Add("Papeterie Durand", "Lyon", "FR7630006000011234567890189");
+        IRenderedComponent<SuppliersPage> page = Open($"suppliers/{supplier.Id}");
+
+        page.Find("#supplier-sheet-title").TextContent.Should().Be("Papeterie Durand");
+        page.Find("#supplier-details").TextContent.Should().Contain("contact@example.fr").And.Contain("3 rue des Lilas");
+        page.Find("#supplier-bank .lt-collapsible-toggle").Click();
+        page.FindAll("#supplier-iban").Should().BeEmpty("le bloc bancaire est replié");
+        page.Find("#supplier-bank .lt-collapsible-toggle").Click();
+
+        Navigation.NavigateTo($"suppliers/{supplier.Id}/edit");
+        page.WaitForAssertion(() => page.Find("#iban").GetAttribute("value").Should().Be("FR7630006000011234567890189"));
+        Fill(page, "email", "compta@durand.fr");
+        page.Find("form").Submit();
+
+        page.WaitForAssertion(() => page.Find("#explorer-status").TextContent.Should().Be("Fournisseur « Papeterie Durand » enregistré."));
+        _gateway.Updates.Should().ContainSingle().Which.ExpectedVersion.Should().Be(1);
+        page.Find("#supplier-details").TextContent.Should().Contain("compta@durand.fr");
+    }
+
+    [Fact]
+    public void Echap_en_saisie_modifiee_demande_avant_d_abandonner()
+    {
+        Contracts.Suppliers.SupplierResponse supplier = _gateway.Add("Papeterie Durand", "Lyon");
+        IRenderedComponent<SuppliersPage> page = Open($"suppliers/{supplier.Id}/edit");
+
+        Fill(page, "city", "Vienne");
+        page.Find("#explorer-cancel").Click();
+
+        page.Find("#explorer-discard-yes").Click();
+        page.WaitForAssertion(() => Navigation.ToBaseRelativePath(Navigation.Uri).Should().Be($"suppliers/{supplier.Id}"));
+        _gateway.Records[supplier.Id].City.Should().Be("Lyon");
     }
 }

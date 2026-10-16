@@ -20,6 +20,7 @@ internal static class IconPaths
         ["scale"] = "<path d='m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z'/> <path d='m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z'/> <path d='M7 21h10'/> <path d='M12 3v18'/> <path d='M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2'/>",
         ["pencil"] = "<path d='M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z'/> <path d='m15 5 4 4'/>",
         ["arrow-left"] = "<path d='m12 19-7-7 7-7'/> <path d='M19 12H5'/>",
+        ["chevron-right"] = "<path d='m9 18 6-6-6-6'/>",
         ["archive"] = "<rect width='20' height='5' x='2' y='3' rx='1'/> <path d='M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8'/> <path d='M10 12h4'/>",
         ["archive-restore"] = "<rect width='20' height='5' x='2' y='3' rx='1'/> <path d='M4 8v11a2 2 0 0 0 2 2h2'/> <path d='M20 8v11a2 2 0 0 1-2 2h-2'/> <path d='m9 15 3-3 3 3'/> <path d='M12 12v9'/>",
         ["bell"] = "<path d='M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9'/> <path d='M10.3 21a1.94 1.94 0 0 0 3.4 0'/>",

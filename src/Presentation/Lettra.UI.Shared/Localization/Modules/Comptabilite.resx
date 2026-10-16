@@ -70,6 +70,7 @@
   <data name="Error.Accounting.AccountInvalid" xml:space="preserve"><value>Numéro de compte invalide : 3 à 20 chiffres, classe 1 à 8.</value></data>
   <data name="Error.Accounting.PeriodInvalid" xml:space="preserve"><value>La fin de la période précède son début.</value></data>
   <data name="Error.Accounting.PeriodTooLong" xml:space="preserve"><value>Une consultation couvre cinq ans au plus : réduisez la période.</value></data>
+  <data name="Nav.Accounting" xml:space="preserve"><value>Journal et balance</value></data>
   <data name="Nav.Balance" xml:space="preserve"><value>Balance</value></data>
   <data name="Nav.Journal" xml:space="preserve"><value>Journal des ventes</value></data>
 </root>

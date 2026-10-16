@@ -5,7 +5,7 @@
     <div class="lt-collapsible-head">
         <h3>
             <button type="button" class="lt-collapsible-toggle" aria-expanded="@(_open ? "true" : "false")" aria-controls="@BodyId" @onclick="Toggle">
-                <Icon Name="arrow-right" Size="16" />
+                <Icon Name="chevron-right" Size="18" />
                 <span>@Title</span>
                 @if (Count is int count)
                 {
@@ -54,6 +54,15 @@
         lock (Remembered)
         {
             _open = Remembered.TryGetValue(Id, out bool open) ? open : OpenByDefault;
+        }
+    }
+
+    /// <summary>Oublie les blocs repliés : nouvelle session (changement d'utilisateur) et tests.</summary>
+    public static void ForgetAll()
+    {
+        lock (Remembered)
+        {
+            Remembered.Clear();
         }
     }
 

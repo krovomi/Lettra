@@ -228,7 +228,7 @@
                 break;
 
             case ExplorerMode.New or ExplorerMode.Edit when Form is not null:
-                <EditForm Model="Form" OnValidSubmit="SaveAsync" FormName="customer-sheet" class="lt-card lt-card-editing" id="customer-form">
+                <EditForm EditContext="FormContext" OnValidSubmit="SaveAsync" FormName="customer-sheet" class="lt-card lt-card-editing" id="customer-form">
                     <DataAnnotationsValidator />
                     <header class="lt-card-header">
                         <div class="lt-card-heading">
@@ -319,8 +319,8 @@
         Task<OperationResult<PagedResponse<QuoteSummary>>> quotes = Quotes.ListAsync(new BillingListQuery(CustomerId: record.Id, PageSize: ActivityCount), null, CancellationToken.None);
         Task<OperationResult<AccountLedgerResponse>> ledger = Accounting.GetLedgerAsync(SalesAccounts.Customers, new DateOnly(_year, 1, 1), Today, record.Id, CancellationToken.None);
         await Task.WhenAll(invoices, quotes, ledger);
-        _invoices = invoices.Result.Value is { } i ? [.. i.Items] : [];
-        _quotes = quotes.Result.Value is { } q ? [.. q.Items] : [];
+        _invoices = invoices.Result.Value is { } i ? [.. i.Items.Take(ActivityCount)] : [];
+        _quotes = quotes.Result.Value is { } q ? [.. q.Items.Take(ActivityCount)] : [];
         _ledger = ledger.Result.Value;
     }
 }

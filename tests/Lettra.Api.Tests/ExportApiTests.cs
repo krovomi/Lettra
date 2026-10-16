@@ -136,7 +136,7 @@ public sealed class ExportApiTests(LettraApiFactory factory) : IClassFixture<Let
             .StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
-    private static async Task<Guid> ValidatedInvoiceAsync(HttpClient client)
+    internal static async Task<Guid> ValidatedInvoiceAsync(HttpClient client)
     {
         using HttpRequestMessage profile = new(HttpMethod.Put, Api("/api/v1/company-profile"))
         {

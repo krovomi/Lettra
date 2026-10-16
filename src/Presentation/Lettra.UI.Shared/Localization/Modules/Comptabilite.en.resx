@@ -70,6 +70,7 @@
   <data name="Error.Accounting.AccountInvalid" xml:space="preserve"><value>Invalid account number: 3 to 20 digits, class 1 to 8.</value></data>
   <data name="Error.Accounting.PeriodInvalid" xml:space="preserve"><value>The end of the period is before its start.</value></data>
   <data name="Error.Accounting.PeriodTooLong" xml:space="preserve"><value>A query covers five years at most: narrow the period.</value></data>
+  <data name="Nav.Accounting" xml:space="preserve"><value>Journal &amp; balance</value></data>
   <data name="Nav.Balance" xml:space="preserve"><value>Trial balance</value></data>
   <data name="Nav.Journal" xml:space="preserve"><value>Sales journal</value></data>
 </root>
