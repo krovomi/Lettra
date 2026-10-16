@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <!-- Coquille, apparence (thèmes, densité) et tableau de bord : vague 5, lane B. -->
+  <data name="Nav.Home" xml:space="preserve"><value>Home</value></data>
+  <data name="Nav.Group.Sales" xml:space="preserve"><value>Sales</value></data>
+  <data name="Nav.Group.Parties" xml:space="preserve"><value>Contacts</value></data>
+  <data name="Nav.Group.Accounting" xml:space="preserve"><value>Accounting</value></data>
+  <data name="Nav.Group.Settings" xml:space="preserve"><value>Management</value></data>
+  <data name="Shell.SkipToContent" xml:space="preserve"><value>Skip to content</value></data>
+  <data name="Shell.CollapseNav" xml:space="preserve"><value>Collapse menu</value></data>
+  <data name="Shell.ExpandNav" xml:space="preserve"><value>Expand menu</value></data>
+  <data name="Shell.Search" xml:space="preserve"><value>Search a screen, a document, a customer…</value></data>
+  <data name="Shell.TabBar" xml:space="preserve"><value>Quick navigation</value></data>
+  <data name="Shell.More" xml:space="preserve"><value>More</value></data>
+  <data name="Shell.Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Appearance.Title" xml:space="preserve"><value>Appearance</value></data>
+  <data name="Appearance.Theme" xml:space="preserve"><value>Theme</value></data>
+  <data name="Appearance.Theme.System" xml:space="preserve"><value>Same as system</value></data>
+  <data name="Appearance.Theme.Light" xml:space="preserve"><value>Light</value></data>
+  <data name="Appearance.Theme.Dark" xml:space="preserve"><value>Dark</value></data>
+  <data name="Appearance.Theme.Slate" xml:space="preserve"><value>Slate</value></data>
+  <data name="Appearance.Theme.Contrast" xml:space="preserve"><value>High contrast</value></data>
+  <data name="Appearance.Density" xml:space="preserve"><value>Density</value></data>
+  <data name="Appearance.Density.Comfort" xml:space="preserve"><value>Comfortable</value></data>
+  <data name="Appearance.Density.Expert" xml:space="preserve"><value>Expert</value></data>
+  <data name="Appearance.Density.Hint" xml:space="preserve"><value>Ctrl+Shift+D to switch.</value></data>
+  <data name="Home.Title" xml:space="preserve"><value>Dashboard</value></data>
+  <data name="Home.NewQuote" xml:space="preserve"><value>New quote</value></data>
+  <data name="Home.NewInvoice" xml:space="preserve"><value>New invoice</value></data>
+  <data name="Home.Kpis" xml:space="preserve"><value>This month's indicators</value></data>
+  <data name="Home.Kpi.Revenue" xml:space="preserve"><value>Revenue this month (excl. VAT)</value></data>
+  <data name="Home.Kpi.VsPrevious" xml:space="preserve"><value>compared with last month</value></data>
+  <data name="Home.Kpi.NoPrevious" xml:space="preserve"><value>No invoice last month</value></data>
+  <data name="Home.Kpi.Invoices" xml:space="preserve"><value>Invoices this month</value></data>
+  <data name="Home.Kpi.InvoicesNote" xml:space="preserve"><value>Validated invoices and down payments</value></data>
+  <data name="Home.Kpi.Pending" xml:space="preserve"><value>Pending quotes</value></data>
+  <data name="Home.Kpi.PendingNote" xml:space="preserve"><value>{0} excl. VAT awaiting an answer</value></data>
+  <data name="Home.Kpi.Drafts" xml:space="preserve"><value>Drafts</value></data>
+  <data name="Home.Kpi.DraftsNote" xml:space="preserve"><value>Quotes and invoices to finish</value></data>
+  <data name="Home.Chart.Title" xml:space="preserve"><value>Revenue over six months (excl. VAT)</value></data>
+  <data name="Home.Chart.Unit" xml:space="preserve"><value>Invoices and down payments, minus credit notes</value></data>
+  <data name="Home.Recent.Invoices" xml:space="preserve"><value>Latest invoices</value></data>
+  <data name="Home.Recent.Quotes" xml:space="preserve"><value>Latest quotes</value></data>
+  <data name="Home.Recent.All" xml:space="preserve"><value>See all</value></data>
+  <data name="Home.Recent.None" xml:space="preserve"><value>Nothing in the last six months.</value></data>
+  <data name="Home.Empty.Title" xml:space="preserve"><value>Welcome to Lettra</value></data>
+  <data name="Home.Empty.Text" xml:space="preserve"><value>This client file is empty for now. Fill in the company details, add a customer, then make your first quote.</value></data>
+  <data name="Home.Empty.Company" xml:space="preserve"><value>Fill in the company details</value></data>
+  <data name="Home.Empty.Customer" xml:space="preserve"><value>Add a customer</value></data>
+  <data name="Home.Money" xml:space="preserve"><value>€{0}</value></data>
+  <data name="Home.Thousands" xml:space="preserve"><value>{0}k</value></data>
+  <data name="Palette.Theme" xml:space="preserve"><value>Theme: {0}</value></data>
+</root>

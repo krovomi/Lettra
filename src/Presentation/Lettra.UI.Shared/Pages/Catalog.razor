@@ -13,8 +13,10 @@
         <h2 id="catalog-list-title">@L["Catalog.List.Title"]</h2>
 
         <div class="lettra-toolbar">
-            <label for="catalog-search">@L["Catalog.Search"]</label>
-            <input id="catalog-search" type="search" @ref="_searchInput" @bind="_search" @bind:after="ReloadAsync" autocomplete="off" />
+            <div class="lt-filter">
+                <label for="catalog-search">@L["Catalog.Search"]</label>
+                <input id="catalog-search" type="search" @ref="_searchInput" @bind="_search" @bind:after="ReloadAsync" autocomplete="off" />
+            </div>
             <label for="catalog-archived">
                 <input id="catalog-archived" type="checkbox" @bind="_includeArchived" @bind:after="ReloadAsync" />
                 @L["Catalog.ShowArchived"]
