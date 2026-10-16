@@ -7,6 +7,7 @@
             disabled="@ReadOnly" @onclick="OpenAsync" @onkeydown="OnKeyDownAsync">
         @(SelectedName ?? _resolvedName ?? L["Billing.Customer.Choose"])
     </button>
+    <GeneralErrors Errors="_errors" />
 </div>
 
 @if (_options is not null)
@@ -16,8 +17,6 @@
 }
 
 @code {
-    private const int PageSize = 500;
-
     [Parameter] public Guid? CustomerId { get; set; }
 
     /// <summary>Nom affiché (copie du client sur la pièce, ou client choisi).</summary>
@@ -31,6 +30,7 @@
     [Parameter] public EventCallback<CustomerSummary> OnSelected { get; set; }
 
     private IReadOnlyList<CustomerSummary>? _options;
+    private IReadOnlyList<ErrorDetail> _errors = [];
     private Guid? _resolvedFor;
     private string? _resolvedName;
     private ElementReference _button;
@@ -60,14 +60,16 @@
     /// <summary>Client à partir de son identifiant (lien « nouvelle facture pour… »).</summary>
     public async Task<CustomerSummary?> FindAsync(Guid id)
     {
-        OperationResult<PagedResponse<CustomerSummary>> result = await Customers.ListAsync(1, PageSize, CancellationToken.None);
-        return result.Value?.Items.FirstOrDefault(c => c.Id == id);
+        OperationResult<IReadOnlyList<CustomerSummary>> result = await Customers.ListAllAsync(CancellationToken.None);
+        return result.Value?.FirstOrDefault(c => c.Id == id);
     }
 
+    /// <summary>Liste de choix ; un refus de l'API s'affiche sous le bouton au lieu d'une liste vide muette.</summary>
     private async Task OpenAsync()
     {
-        OperationResult<PagedResponse<CustomerSummary>> result = await Customers.ListAsync(1, PageSize, CancellationToken.None);
-        _options = result.Value?.Items ?? [];
+        OperationResult<IReadOnlyList<CustomerSummary>> result = await Customers.ListAllAsync(CancellationToken.None);
+        _errors = result.Errors;
+        _options = result.Value;
     }
 
     private async Task OnKeyDownAsync(KeyboardEventArgs e)
