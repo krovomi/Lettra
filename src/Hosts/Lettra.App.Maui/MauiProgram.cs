@@ -48,9 +48,19 @@ public static class MauiProgram
             // Le compte du poste dans le dossier de données de l'application, pas dans le dossier courant (celui du raccourci).
             ["Lettra:LocalIdentity:StorePath"] = Path.Combine(FileSystem.AppDataDirectory, "compte-local.json"),
         });
+#if LETTRA_DEMO
+        if (server is null)
+        {
+            // Version de démonstration (par défaut, voir le .csproj) : le poste isolé reçoit le jeu « Cabinet Démo » après
+            // la création du compte. Jamais sur une réplique d'un dossier du serveur.
+            builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["Lettra:Demo:Seed"] = "true" });
+        }
+#endif
 
         builder.Services.AddLettra(builder.Configuration);
         builder.Services.AddSingleton<IKekStore, SecureStorageKekStore>();
+        // Jeu de démonstration en arrière-plan après l'ouverture du compte local (sans effet sans Lettra:Demo:Seed=true).
+        builder.Services.AddDemoSeeding(builder.Configuration);
         // Code PIN du poste (étape 4.4) : avant AddLettraUi, qui ne crée le verrou qu'avec un coffre.
         builder.Services.AddSingleton<IDeviceLockStore, SecureStorageDeviceLockStore>();
         builder.Services.AddSingleton<IDossierSelection, ActiveDossierSelection>();

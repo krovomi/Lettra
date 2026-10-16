@@ -7,7 +7,10 @@ public sealed class LocalIdentityOptions
     /// <summary>Fichier du compte local. L'hôte MAUI le place dans le dossier de données de l'application.</summary>
     public string StorePath { get; set; } = "lettra-compte-local.json";
 
-    /// <summary>Le poste isolé forme à lui seul un cabinet : tous ses dossiers y sont rattachés.</summary>
+    /// <summary>
+    /// Cabinet du poste quand aucun registre local ne le fournit (<see cref="Application.Abstractions.Identity.ILocalCabinet"/>
+    /// enregistré par <c>AddLocalDossiers</c> fait foi : celui de <c>organisation.json</c>).
+    /// </summary>
     public Guid CabinetId { get; set; } = new("00000000-0000-7000-8000-00000000ca01");
 
     /// <summary>Session fermée après cette durée sans activité (annexe F §2 : 30 minutes).</summary>

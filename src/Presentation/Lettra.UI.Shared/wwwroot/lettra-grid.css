@@ -87,6 +87,8 @@
   box-sizing: border-box;
   width: 100%;
   height: 100%;
+  /* La cellule a la hauteur de la ligne : sans cela, la hauteur minimale des champs (lettra.css) déborde et rogne le texte. */
+  min-height: 0;
   padding: 0 var(--lg-pad-x);
   font: inherit;
   color: inherit;
@@ -99,6 +101,7 @@
 
 .lg-input {
   border: 0;
+  border-radius: 0;
   background: transparent;
   outline: none;
 }

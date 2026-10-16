@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Voix côté serveur (vague 5, lane D) : ISpeechToText vers un serveur whisper.cpp de la cellule ou du serveur du
+       cabinet. L'audio ne sort jamais de la cellule : un point d'accès public est refusé au démarrage. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Lettra.Application\Lettra.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lettra.Speech.Tests" />
+  </ItemGroup>
+
+</Project>

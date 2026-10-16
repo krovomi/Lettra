@@ -62,6 +62,42 @@ jobs:
       - name: Avis de tiers (notice MIT de Paperasse)
         run: build/check-third-party-notices.sh
 
+  # Système de design (docs/design/systeme-de-design.md) : la galerie des écrans (GalleryTests) photographiée à 375,
+  # 768 et 1440 px dans chaque thème, sans défilement horizontal et sans constat axe WCAG 2.2 AA (build/design-captures.cjs).
+  design-captures:
+    name: Captures du design
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Galerie des écrans
+        run: |
+          dotnet build tests/Lettra.UI.Tests -c Release
+          LETTRA_GALLERY_DIR=$PWD/artifacts/galerie dotnet test tests/Lettra.UI.Tests -c Release --no-build --filter Galerie_des_ecrans
+
+      # Même Playwright que le parcours de la démonstration ; axe-core à version fixe.
+      - name: Playwright (Chromium) et axe-core
+        run: |
+          npm ci --prefix deploy/demo/e2e
+          (cd deploy/demo/e2e && npx playwright install --with-deps chromium)
+          npm install --prefix "$RUNNER_TEMP/axe" --no-save --no-package-lock axe-core@4.10.2
+
+      - name: Captures et audit d'accessibilité
+        run: NODE_PATH=$PWD/deploy/demo/e2e/node_modules node build/design-captures.cjs artifacts/galerie "$RUNNER_TEMP/axe/node_modules/axe-core/axe.min.js"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: galerie-design
+          path: artifacts/galerie
+          retention-days: 30
+
   maui-windows:
     name: Build MAUI (Windows)
     runs-on: windows-latest

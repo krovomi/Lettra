@@ -37,7 +37,7 @@ Les ports ne sont ouverts que sur le poste (127.0.0.1). Pour en changer : `LETTR
    ou saisir la clé affichée sous « Impossible de scanner ? », puis entrer le code à 6 chiffres.
 4. Keycloak redemande **une fois** le mot de passe puis le code : le jeton de l'enrôlement ne prouve pas le second
    facteur, Lettra exige une authentification complète.
-5. L'écran des clients s'affiche, sur le « Dossier de démonstration ». Les connexions suivantes : mot de passe + code.
+5. Le tableau de bord s'affiche, sur le « Dossier de démonstration », rempli d'un an d'activité fictive au premier démarrage (README racine). Les connexions suivantes : mot de passe + code.
 
 ## Installer l'application (PWA)
 

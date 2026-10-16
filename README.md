@@ -62,13 +62,17 @@ racine du dépôt cloné (`git clone https://github.com/krovomi/Lettra`), la mê
 docker compose -f deploy/demo/compose.yaml up -d --build --wait     # premier démarrage : quelques minutes
 ```
 
+Au tout premier démarrage, l'API remplit le dossier de démonstration avant de répondre : la page met encore une
+trentaine de secondes à s'ouvrir après la commande. Les démarrages suivants sont immédiats.
+
 1. Ouvrir **http://localhost:8080/** dans Chrome, Edge ou Firefox, puis **Se connecter**.
 2. Identifiant **`demo`**, mot de passe **`demo-lettra-demo`** (comptes et secrets fictifs, réservés à la démonstration).
 3. À la première connexion, enregistrer le second facteur : scanner le QR code avec une application TOTP qui accepte
    SHA-256 (FreeOTP, Aegis, Google Authenticator récent, Bitwarden, 1Password ; **pas Microsoft Authenticator**), puis
    saisir le code. Keycloak redemande une fois le mot de passe et le code, c'est normal.
-4. Lettra s'ouvre sur le « Dossier de démonstration ». Suivre ensuite le [pas à pas](#premier-usage-pas-à-pas) à
-   partir de l'étape 1 : la connexion remplace la phrase secrète du poste.
+4. Lettra s'ouvre sur le tableau de bord du « Dossier de démonstration », déjà rempli d'un an d'activité fictive
+   ([ce que contient la démo](#ce-que-vous-trouvez-en-arrivant)). Suivre ensuite le
+   [pas à pas](#premier-usage-pas-à-pas) à partir de l'étape 1 : la connexion remplace la phrase secrète du poste.
 
 `docker compose -f deploy/demo/compose.yaml down` arrête la démonstration (les données restent) ; ajouter `-v` remet
 tout à zéro. Détails, ports et télémétrie : [deploy/demo/README.md](deploy/demo/README.md).
@@ -149,7 +153,10 @@ présent d'office sous Windows 11 et sur un Windows 10 à jour, suffit ; rien d'
    12 caractères. Elle protège les dossiers chiffrés de ce PC et **ne peut pas être récupérée** : notez-la pour la
    durée de la démo.
 
-C'est prêt. Lettra a créé un cabinet local et un premier dossier chiffré, « Dossier principal ».
+C'est prêt. Lettra a créé un cabinet local et un premier dossier chiffré, « Dossier principal ». Dès le compte créé,
+il le remplit en arrière-plan d'un an d'activité fictive, en une cinquantaine de secondes : vous pouvez travailler
+pendant ce temps, les écrans montrent les données quand on les rouvre
+([ce que contient la démo](#ce-que-vous-trouvez-en-arrivant)).
 
 > La CI construit cet exécutable et le lance à chaque modification de `main` (job « Build MAUI (Windows) ») : il
 > s'ouvre, crée le cabinet et le premier dossier sans erreur. Le parcours ci-dessous, avec ses données fictives, est
@@ -229,12 +236,47 @@ Le parcours va de la fiche de l'entreprise au FEC, en une quinzaine de minutes, 
 le navigateur : les écrans sont les mêmes. Les noms et numéros proposés sont **fictifs** et acceptés par les contrôles
 de Lettra ; copiez-les tels quels.
 
-Le menu, à gauche : **Devis**, **Factures**, **Avoirs**, **Clients**, **Fournisseurs**, **Catalogue**, **FEC**,
-**Alertes**, **Entreprise**. Au clavier, **Ctrl+K** ouvre la palette de commandes (« Nouveau devis », « Nouvelle facture »).
+### Ce que vous trouvez en arrivant
+
+**Le tableau de bord.** L'**Accueil** montre les indicateurs du mois (chiffre d'affaires HT, factures, devis en
+attente, brouillons), le chiffre d'affaires des six derniers mois, les dernières factures et les derniers devis, et
+deux raccourcis : **Nouveau devis**, **Nouvelle facture**. Sur un dossier vide, il propose à la place de compléter la
+fiche entreprise et d'ajouter un client.
+
+**Les données de démonstration.** Le dossier ouvert arrive avec un an d'activité d'une entreprise fictive,
+« Atelier Numérique Conseil » (SARL de conseil et services numériques, Lyon) : sa fiche entreprise, 30 à 50 clients
+(entreprises et particuliers), des fournisseurs, un catalogue de prestations et de matériel, des grilles tarifaires,
+des devis à tous les stades (brouillon, envoyé, accepté, refusé, expiré, facturé), des factures d'acompte et de solde,
+des avoirs, les transmissions à la plateforme simulée, des encaissements (à l'heure, en retard, en deux fois, impayés)
+et quelques alertes. Les données sont croisées : chaque client a ses articles habituels, certains reviennent souvent.
+Tout est créé par les vrais cas d'usage : numéros, chaîne anti-fraude, écritures et FEC sont ceux de l'application.
+
+- **Dans le navigateur**, le « Dossier de démonstration » est rempli au premier démarrage du serveur.
+- **Dans l'application installée**, le « Dossier principal » est rempli en arrière-plan juste après la création du
+  compte, en une cinquantaine de secondes. Deux autres dossiers sont créés sur le poste (« Bâti Rénov' Lemoine »,
+  artisan du bâtiment, et « Négoce Méditerranée Distribution », négoce), mais l'application n'a pas encore d'écran
+  pour changer de dossier.
+
+Le jeu ne s'ajoute jamais à un dossier qui a déjà des devis ou des factures. Pour repartir d'un dossier rempli à neuf,
+voir « Repartir de zéro » dans [En cas de problème](#en-cas-de-problème).
+
+**La navigation.** **Accueil**, puis **Ventes** (**Devis**, **Factures**, **Avoirs**), **Tiers** (**Clients**,
+**Fournisseurs**, **Catalogue**), **Comptabilité** (**FEC**) et **Pilotage** (**Alertes**, **Entreprise**). Sur un
+ordinateur, le menu est à gauche et se replie en icônes ; sur une tablette, c'est une colonne d'icônes ; sur un
+téléphone, des onglets en bas (Accueil, Devis, Factures, Clients, **Plus** pour le reste). En haut, le champ
+« Rechercher un écran, une pièce, un client… » ouvre la palette de commandes, aussi au clavier avec **Ctrl+K**
+(« Nouveau devis », « Nouvelle facture »).
+
+**Les thèmes.** Le bouton **Apparence**, en haut à droite (dans **Plus** sur un téléphone), propose cinq thèmes :
+**Comme le système**, **Clair**, **Sombre**, **Ardoise** et **Contraste élevé**, ainsi que la densité : **Confort**
+(au doigt) ou **Expert** (souris et clavier ; **Ctrl+Maj+D** bascule). Le choix s'applique tout de suite et reste
+mémorisé sur l'appareil.
 
 ### 1. La fiche de votre entreprise
 
-Menu **Entreprise**. Ces mentions figurent sur chaque facture ; sans elles, Lettra refuse de valider.
+Menu **Entreprise**. Ces mentions figurent sur chaque facture ; sans elles, Lettra refuse de valider. Avec les
+données de démonstration, la fiche est déjà remplie (« Atelier Numérique Conseil ») : vous pouvez la garder et passer
+à l'étape 2, ou la remplacer par les valeurs ci-dessous.
 
 | Champ | Valeur fictive |
 |---|---|
@@ -308,8 +350,9 @@ la facture et s'ouvre en brouillon : **Valider** lui donne son numéro. Il se re
 
 Menu **FEC** : l'exercice est l'année civile en cours (modifiable, 24 mois au plus).
 
-1. **Exporter le FEC** : le fichier `900000019FEC20261231.txt` (SIREN, « FEC », date de clôture) est téléchargé avec
-   les écritures de vente de la facture et de l'avoir.
+1. **Exporter le FEC** : le fichier `<SIREN>FEC<date de clôture>.txt` (par exemple `900000019FEC20261231.txt` avec
+   la fiche de l'étape 1) est téléchargé avec les écritures de vente de l'exercice, dont celles de votre facture et de
+   votre avoir.
 2. Le **Rapport du validateur** s'affiche : « Fichier conforme. », le nombre de lignes et d'écritures, les totaux
    débit et crédit, égaux.
 3. **Contrôler un fichier** passe au même validateur un FEC venu d'un autre logiciel ; chaque constat indique la
@@ -333,7 +376,8 @@ Sans SIREN dans la fiche entreprise, l'export le demande au lieu de produire un 
 
 | Fonction | État |
 |---|---|
-| Assistant IA | Désactivé par défaut, sans écran ; il ne valide ni n'émet jamais rien. |
+| Assistant IA | Les écrans existent : le panneau « Assistant IA » (bouton en haut), le brouillon de devis proposé par l'assistant et le lien « Pourquoi ? » de la checklist de conformité. Ils restent masqués tant que l'IA est désactivée, ce qui est le réglage par défaut (section `Lettra:Ai`) et celui de la démo. L'assistant propose et explique ; il ne valide ni n'émet jamais rien. |
+| Changer de dossier | Pas encore d'écran pour choisir le dossier ouvert : dans l'application installée, les dossiers « bâtiment » et « négoce » du jeu de démonstration sont créés mais ne s'ouvrent pas encore. |
 | Vraie plateforme agréée | En attente d'un partenaire ; la démo utilise la plateforme simulée. |
 | Serveur du cabinet en production | La démonstration navigateur tourne sur un poste avec Docker ; un vrai serveur du cabinet ou une cellule SaaS demande Keycloak, des certificats et une infrastructure (voir plus bas). |
 | Poste relié à un serveur, synchronisation | Prête dans l'application (fichier `lettra.json`), mais demande un serveur Lettra et Keycloak. Sur un poste isolé, la page Synchronisation indique « Ce poste ne synchronise pas ». |
@@ -346,13 +390,13 @@ Sans SIREN dans la fiche entreprise, l'export le demande au lieu de produire un 
 
 | Symptôme | Que faire |
 |---|---|
-| Navigateur : la page ne répond pas | Attendre quelques secondes après `up --wait`, puis recharger ; `docker compose -f deploy/demo/compose.yaml ps` doit montrer les services « healthy ». |
+| Navigateur : la page ne répond pas | Au premier démarrage, le remplissage du dossier de démonstration prend une trentaine de secondes après `up --wait` : attendre, puis recharger ; `docker compose -f deploy/demo/compose.yaml ps` doit montrer les services « healthy ». |
 | Navigateur : le code du second facteur est refusé | L'application TOTP doit accepter SHA-256 (pas Microsoft Authenticator) et l'heure du téléphone être à l'heure. Pour réenrôler : `down -v`, puis redémarrer. |
 | « Windows a protégé votre ordinateur » | Normal pour un prototype non signé : **Informations complémentaires**, puis **Exécuter quand même**. |
 | Rien ne s'ouvre, ou une erreur sur des fichiers bloqués | Le zip n'a pas été débloqué : supprimez le dossier extrait, faites l'étape 2 (Propriétés, **Débloquer**), puis extrayez à nouveau. |
 | Fenêtre blanche | Le composant WebView2 manque (vieux Windows 10) : installez « Microsoft Edge WebView2 Runtime » depuis le site de Microsoft, puis relancez. |
 | « Phrase secrète incorrecte. » / « Trop d'essais » | Après plusieurs erreurs, le poste se verrouille quelques minutes. Une phrase oubliée ne se récupère pas : voir la ligne suivante. |
-| Repartir de zéro (phrase oubliée, nouvelle démo) | Fermez Lettra et supprimez son dossier de données (ci-dessous). Les données de démonstration sont perdues ; le prochain lancement recrée tout. |
+| Repartir de zéro (phrase oubliée, nouvelle démo) | Fermez Lettra et supprimez son dossier de données (ci-dessous). Vos saisies sont perdues ; le prochain lancement recrée tout, données de démonstration comprises. Dans le navigateur : `down -v`, puis `up -d --wait`. |
 | « Remplissez d'abord la fiche de l'entreprise émettrice. » | Étape 1 : menu **Entreprise**. |
 | Une mention reste « Bloquant » | Cliquez dessus dans **Conformité de la pièce** : Lettra ouvre l'écran à compléter (fiche entreprise ou client). |
 

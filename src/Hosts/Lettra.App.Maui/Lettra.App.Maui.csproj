@@ -77,6 +77,16 @@
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
   </PropertyGroup>
 
+  <!-- Version de démonstration (par défaut, donc les artefacts CI lettra-windows, lettra-android, lettra-ios-simulator
+       et lettra-macos) : le poste isolé charge le jeu « Cabinet Démo » (Lettra.DemoData) en arrière-plan après la
+       création du compte local. -p:LettraDemo=false le retire ; la version de mesure de la grille ne l'a jamais. -->
+  <PropertyGroup>
+    <LettraDemo Condition="'$(LettraDemo)' == '' And '$(LettraGridBenchmark)' != 'true'">true</LettraDemo>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(LettraDemo)' == 'true'">
+    <DefineConstants>$(DefineConstants);LETTRA_DEMO</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <!-- Icône et écran de démarrage : générés pour chaque plateforme à partir des SVG. -->
     <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#1F3A5F" />
@@ -94,6 +104,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Composition\Lettra.Bootstrap\Lettra.Bootstrap.csproj" />
+    <ProjectReference Include="..\..\Composition\Lettra.DemoData\Lettra.DemoData.csproj" />
     <ProjectReference Include="..\..\Presentation\Lettra.UI.Shared\Lettra.UI.Shared.csproj" />
     <ProjectReference Include="..\..\Presentation\Lettra.UI.Gateway.InProcess\Lettra.UI.Gateway.InProcess.csproj" />
     <ProjectReference Include="..\..\Presentation\Lettra.UI.Gateway.Http\Lettra.UI.Gateway.Http.csproj" />

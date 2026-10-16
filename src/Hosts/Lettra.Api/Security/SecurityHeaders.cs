@@ -21,8 +21,9 @@ public static class SecurityHeaders
     /// <summary>En développement : rechargement à chaud et débogage WASM ouvrent un WebSocket sur un autre port local.</summary>
     public static readonly string DevelopmentContentSecurityPolicy = Csp("'self' ws://localhost:* wss://localhost:* http://localhost:*");
 
+    /// <summary>Le micro n'est ouvert qu'à l'application elle-même, pour la dictée (vague 5) ; tout le reste est fermé.</summary>
     public const string PermissionsPolicy =
-        "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()";
+        "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(self), payment=(), usb=()";
 
     private static string Csp(string connect) =>
         "default-src 'self'; " +

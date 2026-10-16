@@ -1,4 +1,5 @@
 using Lettra.Domain.Common;
+using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Application.Abstractions.Identity;
 
@@ -49,4 +50,13 @@ public static class LocalAccountErrors
     public static Error NotSupported => Error.Conflict(NotSupportedCode);
 
     public static Error DisplayNameRequired => Error.Validation(DisplayNameRequiredCode, "DisplayName");
+}
+
+/// <summary>
+/// Le cabinet du poste (modes 1 et 4) : celui que le registre local crée au premier lancement et auquel tous les
+/// dossiers du poste sont rattachés. Le propriétaire du poste l'administre.
+/// </summary>
+public interface ILocalCabinet
+{
+    ValueTask<OrganisationId> GetAsync(CancellationToken cancellationToken);
 }
