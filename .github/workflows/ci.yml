@@ -109,6 +109,187 @@ jobs:
           path: artifacts/mesure-grille
           retention-days: 30
 
+  maui-android:
+    name: MAUI Android (APK et émulateur)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: microsoft
+          java-version: 17
+      - name: Charge de travail MAUI Android
+        run: dotnet workload install maui-android
+      # APK signé avec la clé de débogage : à installer sur un émulateur ou un appareil (pas de magasin d'applications).
+      - name: Build de l'APK
+        run: dotnet publish src/Hosts/Lettra.App.Maui/Lettra.App.Maui.csproj -c Release -f net10.0-android -p:AndroidPackageFormat=apk -p:AndroidSdkDirectory=$ANDROID_HOME -o artifacts/lettra-android
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lettra-android
+          path: artifacts/lettra-android/*-Signed.apk
+          retention-days: 90
+      - name: Accélération matérielle de l'émulateur (KVM)
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      # Premier lancement réel : activité au premier plan, sans plantage, cabinet local et premier dossier chiffré créés
+      # dans le dossier de données de l'application (FileSystem.AppDataDirectory = /data/user/0/fr.lettra.app/files).
+      - name: Script de premier lancement
+        run: |
+          cat > "$RUNNER_TEMP/lancement-android.sh" <<'EOF'
+          set -euo pipefail
+          mkdir -p artifacts/android-run
+          apk=$(ls artifacts/lettra-android/*-Signed.apk | head -n 1)
+          adb install -r "$apk"
+          adb logcat -c
+          adb shell am start -W -n fr.lettra.app/.MainActivity
+          data=/data/user/0/fr.lettra.app/files/dossiers
+          adb root >/dev/null 2>&1 || true
+          adb wait-for-device
+          dossiers=""
+          for _ in $(seq 1 36); do
+            sleep 5
+            if ! adb shell pidof fr.lettra.app >/dev/null; then break; fi
+            dossiers=$(adb shell ls "$data" 2>/dev/null | grep '\.lettra$' || true)
+            if [ -n "$dossiers" ]; then break; fi
+          done
+          sleep 10
+          adb exec-out screencap -p > artifacts/android-run/lettra-android.png
+          adb logcat -d > artifacts/android-run/logcat.txt
+          journal() { grep -E 'AndroidRuntime|monodroid|mono-rt|DOTNET|fr\.lettra|Lettra' artifacts/android-run/logcat.txt | tail -n 150; }
+          if ! adb shell pidof fr.lettra.app >/dev/null; then echo "Lettra s'est arrêté au démarrage."; journal; exit 1; fi
+          if grep -q 'FATAL EXCEPTION' artifacts/android-run/logcat.txt; then grep -A 30 'FATAL EXCEPTION' artifacts/android-run/logcat.txt; exit 1; fi
+          if [ -z "$dossiers" ]; then echo "Aucun dossier local créé sous $data."; adb shell ls -lR /data/user/0/fr.lettra.app/files || true; journal; exit 1; fi
+          echo "Processus : $(adb shell pidof fr.lettra.app)"
+          echo "Dossiers locaux ($data) : $dossiers"
+          EOF
+      - name: Premier lancement sur l'émulateur (API 34, x86_64)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          script: bash "$RUNNER_TEMP/lancement-android.sh"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lettra-android-capture
+          path: artifacts/android-run
+          retention-days: 30
+
+  maui-apple:
+    name: MAUI iOS (simulateur) et macOS (Mac Catalyst)
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      # Chaque version du SDK iOS de .NET exige sa version de Xcode : jeu de charges de travail épinglé (iOS et Mac
+      # Catalyst 26.5, jeu 10.0.401) et Xcode 26.6 qu'il exige. À relever ensemble quand l'image aura le Xcode du SDK suivant.
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '26.6'
+      - name: Charge de travail MAUI (iOS, Mac Catalyst, Android)
+        run: |
+          dotnet --version
+          dotnet workload install maui-ios maui-maccatalyst maui-android --version 10.0.401
+      - name: Build iOS (simulateur)
+        run: dotnet build src/Hosts/Lettra.App.Maui/Lettra.App.Maui.csproj -c Release -f net10.0-ios -r iossimulator-arm64
+      # Premier lancement dans le simulateur : application vivante, premier dossier chiffré créé dans le dossier de
+      # données de l'application (FileSystem.AppDataDirectory = Library du conteneur de données).
+      - name: Premier lancement dans le simulateur iOS
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/ios-run artifacts/lettra-ios-simulator
+          app=$(find src/Hosts/Lettra.App.Maui/bin/Release/net10.0-ios -maxdepth 3 -name 'Lettra.App.Maui.app' -type d | head -n 1)
+          echo "Application : $app"
+          cp -R "$app" artifacts/lettra-ios-simulator/
+          udid=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin)["devices"]; print(next(x["udid"] for k in sorted(d, reverse=True) if "iOS" in k for x in d[k] if x["name"].startswith("iPhone")))')
+          echo "Simulateur : $udid"
+          xcrun simctl boot "$udid" || true
+          xcrun simctl bootstatus "$udid" -b
+          xcrun simctl install "$udid" "$app"
+          xcrun simctl launch "$udid" fr.lettra.app
+          data=$(xcrun simctl get_app_container "$udid" fr.lettra.app data)
+          dossiers=""
+          for _ in $(seq 1 24); do
+            sleep 5
+            dossiers=$(find "$data" -name '*.lettra' 2>/dev/null || true)
+            if [ -n "$dossiers" ]; then break; fi
+          done
+          sleep 10
+          xcrun simctl io "$udid" screenshot artifacts/ios-run/lettra-ios.png
+          xcrun simctl spawn "$udid" log show --last 5m --predicate 'process == "Lettra.App.Maui"' > artifacts/ios-run/log.txt 2>&1 || true
+          services=$(xcrun simctl spawn "$udid" launchctl list)
+          if ! grep -q fr.lettra.app <<< "$services"; then echo "Lettra s'est arrêté au démarrage."; tail -n 80 artifacts/ios-run/log.txt; exit 1; fi
+          if [ -z "$dossiers" ]; then echo "Aucun dossier local créé sous $data."; find "$data" -maxdepth 3; tail -n 80 artifacts/ios-run/log.txt; exit 1; fi
+          echo "Dossiers locaux : $dossiers"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lettra-ios-simulator
+          path: artifacts/lettra-ios-simulator
+          retention-days: 90
+      # Apple Silicon seulement (la version universelle, avec Intel, double un build déjà long).
+      - name: Build macOS (Mac Catalyst)
+        run: dotnet build src/Hosts/Lettra.App.Maui/Lettra.App.Maui.csproj -c Release -f net10.0-maccatalyst -r maccatalyst-arm64
+      # Application non signée : au premier lancement, macOS demande de l'ouvrir par clic droit > Ouvrir.
+      # Sous Mac Catalyst, le Trousseau (clé du cabinet) exige une application signée par une équipe Apple Developer
+      # (droit keychain-access-groups) : non signée, elle s'arrête à la création du premier dossier (MissingEntitlement).
+      # Étape non bloquante tant que la CI n'a pas de certificat Apple ; elle redeviendra bloquante avec la signature.
+      - name: Premier lancement sous macOS
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/macos-run artifacts/lettra-macos
+          find src/Hosts/Lettra.App.Maui/bin/Release/net10.0-maccatalyst -maxdepth 4 -name '*.app' -type d
+          app=$(find src/Hosts/Lettra.App.Maui/bin/Release/net10.0-maccatalyst -maxdepth 4 -name '*.app' -type d | head -n 1)
+          echo "Application : $app"
+          test -n "$app"
+          ditto -c -k --keepParent "$app" artifacts/lettra-macos/Lettra-macos.zip
+          exe=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$app/Contents/Info.plist")
+          "$app/Contents/MacOS/$exe" > artifacts/macos-run/sortie.txt 2>&1 &
+          pid=$!
+          dossiers=""
+          for _ in $(seq 1 24); do
+            sleep 5
+            if ! kill -0 "$pid" 2>/dev/null; then break; fi
+            dossiers=$(find "$HOME/Library" -maxdepth 6 -path '*dossiers/*.lettra' -not -path '*/Containers/com.apple.*' 2>/dev/null || true)
+            if [ -n "$dossiers" ]; then break; fi
+          done
+          sleep 10
+          screencapture -x artifacts/macos-run/lettra-macos.png || true
+          if ! kill -0 "$pid" 2>/dev/null; then
+            if grep -q MissingEntitlement artifacts/macos-run/sortie.txt; then
+              echo "::warning::Mac Catalyst : Trousseau inaccessible sans signature Apple Developer (MissingEntitlement)."
+            fi
+            echo "Lettra s'est arrêté au démarrage."; tail -n 60 artifacts/macos-run/sortie.txt; exit 1
+          fi
+          if [ -z "$dossiers" ]; then echo "Aucun dossier local créé."; tail -n 60 artifacts/macos-run/sortie.txt; exit 1; fi
+          echo "Dossiers locaux : $dossiers"
+          kill "$pid"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lettra-macos
+          path: artifacts/lettra-macos
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lettra-apple-captures
+          path: |
+            artifacts/ios-run
+            artifacts/macos-run
+          retention-days: 30
+
   secrets:
     name: Détection de secrets
     runs-on: ubuntu-latest
