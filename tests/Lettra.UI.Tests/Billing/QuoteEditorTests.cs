@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using System.Globalization;
 using System.Text;
 using Bunit;
@@ -80,6 +81,25 @@ public sealed class QuoteEditorTests : BunitContext
         IRenderedComponent<QuoteEditor> page = Ouvrir(devis.Id);
 
         page.WaitForAssertion(() => page.Find("#pdf-language").GetAttribute("value").Should().Be("en-US"));
+    }
+
+    [Fact]
+    public void Les_champs_de_l_en_tete_et_les_notes_sont_des_champs_empiles_et_les_colonnes_des_lignes_sont_souples()
+    {
+        QuoteResponse devis = _quotes.Add(QuoteStatusDto.Draft, null, Conseil);
+
+        IRenderedComponent<QuoteEditor> page = Ouvrir(devis.Id);
+
+        page.WaitForAssertion(() => page.FindAll(".lg-row[data-r]").Should().HaveCount(1));
+        foreach (string champ in new[] { "#valid-until", "#vat-regime", "#subject", "#notes" })
+        {
+            page.Find(champ).ParentElement!.ClassList.Should().Contain("lettra-field", $"{champ} a son libellé au-dessus, sur toute la largeur de sa colonne");
+        }
+
+        page.Find("label[for=notes]").ParentElement!.ClassList.Should().Contain("lettra-field");
+        // Chaque colonne, sauf « Remise % » déjà à sa largeur minimale, a une largeur minimale et maximale : la grille
+        // tient dès 720 px, sans défilement horizontal.
+        Regex.Matches(page.Find(".lg-grid").GetAttribute("style")!, @"minmax\(").Should().HaveCount(7);
     }
 
     [Fact]

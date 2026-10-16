@@ -371,8 +371,16 @@ kbd { font-family: var(--font-mono); font-size: var(--text-xs); padding: 0.05rem
 .lettra-document-main { min-width: 0; }
 .lettra-document-side { position: sticky; top: calc(var(--topbar-h) + var(--space-3)); display: grid; gap: var(--space-3); }
 .lettra-document-header { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: var(--space-3); }
-.lettra-field { display: grid; gap: var(--space-1); align-content: start; }
+.lettra-field { display: grid; gap: var(--space-1); align-content: start; min-width: 0; }
+/* Un champ tient dans sa colonne : sans min-width, une liste prend la largeur de son option la plus longue et sort
+   de la carte (« Régime de TVA »). Libellé et bouton alignés en haut, comme les autres champs de la ligne. */
+.lettra-field > :where(input:not([type=checkbox], [type=radio]), select, textarea) { width: 100%; min-width: 0; max-width: 100%; }
+.lettra-field > label, .lettra-field > .lettra-label, .lettra-field > button { margin-top: 0; }
+.lettra-field > .lettra-label { font-size: inherit; }
+.lettra-field > textarea { min-height: 5rem; resize: vertical; }
 .lettra-field-wide { grid-column: 1 / -1; }
+/* Titre de page qui reçoit le focus à la navigation (lecteurs d'écran) : pas de cadre, ce n'est pas une commande. */
+.lettra-shell h1[tabindex="-1"]:focus { outline: none; }
 .lettra-label { font-weight: var(--weight-medium); font-size: var(--text-sm); }
 .lettra-lines-host { margin-top: var(--space-3); }
 .lettra-picker { display: flex; gap: var(--space-2); align-items: center; }
