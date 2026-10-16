@@ -2,6 +2,7 @@ using Lettra.Application.Abstractions.Ai;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Messaging;
+using Lettra.Application.Abstractions.Speech;
 using Lettra.Application.Abstractions.Sync;
 using Lettra.Application.Authorization;
 using Lettra.Application.Behaviors;
@@ -26,6 +27,10 @@ public static class DependencyInjection
         services.TryAddSingleton<IAiEngineFactory, NoAiEngineFactory>();
         services.TryAddSingleton<IAiSettingsStore, NoAiSettingsStore>();
         services.TryAddScoped<IAccountingAssistant, UnavailableAccountingAssistant>();
+
+        // Voix désactivée tant que le déploiement ne choisit pas de moteur (Lettra.Infrastructure.Speech, ou Whisper sur le poste).
+        services.TryAddSingleton(SpeechSettings.Disabled);
+        services.TryAddSingleton<ISpeechToText, UnavailableSpeechToText>();
         services.AddScoped<ICommandDispatcher, CommandDispatcher>();
         services.AddScoped<IQueryDispatcher, QueryDispatcher>();
 

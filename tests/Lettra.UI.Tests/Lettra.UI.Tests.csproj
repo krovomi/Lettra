@@ -14,6 +14,7 @@
   <!-- Les jetons de couleur des thèmes, lus par ThemeContrastTests (contrastes WCAG). -->
   <ItemGroup>
     <None Include="..\..\src\Presentation\Lettra.UI.Shared\wwwroot\lettra-tokens.css" Link="Design\lettra-tokens.css" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Presentation\Lettra.UI.Shared\wwwroot\lettra-grid.css" Link="Design\lettra-grid.css" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Error.Speech.Disabled" xml:space="preserve"><value>Dictation is not enabled on this deployment.</value></data>
+  <data name="Error.Speech.EngineUnavailable" xml:space="preserve"><value>Speech recognition is not responding right now. Try again in a moment or type instead.</value></data>
+  <data name="Error.Speech.ModelUnavailable" xml:space="preserve"><value>The speech recognition model is not installed on this device yet. It downloads the first time the device is online.</value></data>
+  <data name="Error.Speech.AudioInvalid" xml:space="preserve"><value>The recording could not be read.</value></data>
+  <data name="Error.Speech.AudioTooLong" xml:space="preserve"><value>The recording is too long: dictate in several parts.</value></data>
+  <data name="Error.Speech.LanguageUnsupported" xml:space="preserve"><value>This language is not available for dictation.</value></data>
+  <data name="Error.Speech.NothingHeard" xml:space="preserve"><value>Nothing was heard. Speak closer to the microphone and try again.</value></data>
+</root>
