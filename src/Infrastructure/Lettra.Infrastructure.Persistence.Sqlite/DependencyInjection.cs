@@ -1,3 +1,4 @@
+using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Infrastructure.Persistence.Sqlite.Local;
 using Lettra.Infrastructure.Persistence.Tenancy;
@@ -28,6 +29,7 @@ public static class DependencyInjection
         services.AddSingleton<IDossierDirectory>(sp => sp.GetRequiredService<LocalTenantCatalog>());
         services.AddSingleton<LocalDossierProvisioner>();
         services.AddSingleton<IDossierProvisioner>(sp => sp.GetRequiredService<LocalDossierProvisioner>());
+        services.AddSingleton<ILocalCabinet, LocalRegistryCabinet>();
         services.AddSingleton(sp => new LocalDossierStartup(
             registry, sp.GetRequiredService<LocalDossierProvisioner>(), sp.GetRequiredService<TimeProvider>()));
         return services;
