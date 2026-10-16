@@ -1,0 +1,76 @@
+@* Apparence (en-tête) : thème et densité. Bouton de divulgation et boutons radio natifs : les flèches changent le choix,
+   Échap ou un clic à côté referme le panneau. Le changement s'applique tout de suite, sans recharger. *@
+@implements IDisposable
+@inject UiPreferences Preferences
+@inject IStringLocalizer<SharedResource> L
+
+<div class="lt-appearance @(Inline ? "is-inline" : null)">
+    @if (!Inline)
+    {
+        <button type="button" id="appearance-toggle" class="lt-icon-button" aria-expanded="@(_open ? "true" : "false")"
+                aria-controls="appearance-panel" aria-label="@L["Appearance.Title"]" title="@L["Appearance.Title"]" @onclick="Toggle">
+            <Icon Name="@Preferences.Theme.IconName()" />
+        </button>
+    }
+
+    @if (_open || Inline)
+    {
+        @if (!Inline)
+        {
+            <div class="lt-popover-backdrop" @onclick="Close"></div>
+        }
+        <div id="@(Inline ? null : "appearance-panel")" class="lt-popover lt-appearance-panel" @onkeydown="OnKeyDown">
+            <fieldset>
+                <legend>@L["Appearance.Theme"]</legend>
+                @foreach (UiTheme theme in Enum.GetValues<UiTheme>())
+                {
+                    <label class="lt-choice">
+                        <input type="radio" name="lettra-theme-@_id" value="@theme" checked="@(Preferences.Theme == theme)"
+                               @onchange="() => Preferences.SetThemeAsync(theme)" />
+                        <span class="lt-swatch is-@theme.ToString().ToLowerInvariant()" aria-hidden="true"></span>
+                        <span>@L[$"Appearance.Theme.{theme}"]</span>
+                    </label>
+                }
+            </fieldset>
+            <fieldset>
+                <legend>@L["Appearance.Density"]</legend>
+                @foreach (UiDensity density in Enum.GetValues<UiDensity>())
+                {
+                    <label class="lt-choice">
+                        <input type="radio" name="lettra-density-@_id" value="@density" checked="@(Preferences.Density == density)"
+                               @onchange="() => Preferences.SetDensityAsync(density)" />
+                        <span>@L[$"Appearance.Density.{density}"]</span>
+                    </label>
+                }
+                <p class="lettra-hint">@L["Appearance.Density.Hint"]</p>
+            </fieldset>
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>Dans la feuille « Plus » du téléphone : choix affichés directement, sans bouton.</summary>
+    [Parameter] public bool Inline { get; set; }
+
+    // Deux menus peuvent coexister (en-tête et feuille) : noms de groupes radio distincts.
+    private readonly string _id = Guid.NewGuid().ToString("N")[..8];
+    private bool _open;
+
+    protected override void OnInitialized() => Preferences.Changed += OnChanged;
+
+    private void OnChanged(object? sender, EventArgs e) => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Preferences.Changed -= OnChanged;
+
+    private void Toggle() => _open = !_open;
+
+    private void Close() => _open = false;
+
+    private void OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            Close();
+        }
+    }
+}

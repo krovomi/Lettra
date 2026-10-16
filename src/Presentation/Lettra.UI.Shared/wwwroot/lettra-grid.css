@@ -1,33 +1,18 @@
 /* Grille de saisie Lettra : densités Expert / Confort et disposition carte sur écran étroit. */
 
 :root {
-  --lg-bg: #ffffff;
-  --lg-fg: #1c2330;
-  --lg-muted: #5b6577;
-  --lg-line: #e3e7ee;
-  --lg-head-bg: #f3f5f9;
-  --lg-accent: #2459d6;
-  --lg-focus-bg: #eef3ff;
-  --lg-active-row: #f7f9fd;
-  --lg-validated: #eef8f1;
-  --lg-error-bg: #fde8e8;
-  --lg-error: #c62828;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --lg-bg: #151a22;
-    --lg-fg: #e6e9ef;
-    --lg-muted: #9aa4b5;
-    --lg-line: #2a3240;
-    --lg-head-bg: #1d2430;
-    --lg-accent: #7aa2ff;
-    --lg-focus-bg: #1f2b45;
-    --lg-active-row: #1a2029;
-    --lg-validated: #15291d;
-    --lg-error-bg: #3d1c1c;
-    --lg-error: #ff8a80;
-  }
+  /* La grille lit les jetons du thème (lettra-tokens.css) : elle suit les quatre thèmes et le mode système. */
+  --lg-bg: var(--color-surface);
+  --lg-fg: var(--color-fg);
+  --lg-muted: var(--color-fg-muted);
+  --lg-line: var(--color-border);
+  --lg-head-bg: var(--color-surface-2);
+  --lg-accent: var(--color-primary);
+  --lg-focus-bg: var(--color-primary-soft);
+  --lg-active-row: var(--color-surface-2);
+  --lg-validated: var(--color-success-bg);
+  --lg-error-bg: var(--color-danger-bg);
+  --lg-error: var(--color-danger-fg);
 }
 
 .density-expert {
@@ -198,7 +183,7 @@
   display: grid;
   place-items: start center;
   padding: 10vh 16px 16px;
-  background: rgb(0 0 0 / 0.25);
+  background: var(--color-backdrop);
 }
 
 .lg-dialog {
@@ -210,7 +195,7 @@
   color: var(--lg-fg);
   border: 1px solid var(--lg-line);
   border-radius: 8px;
-  box-shadow: 0 12px 40px rgb(0 0 0 / 0.25);
+  box-shadow: var(--shadow-lg);
 }
 
 .lg-dialog h2 { margin: 0; padding: 10px 12px 4px; font-size: 15px; }

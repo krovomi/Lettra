@@ -15,24 +15,30 @@
 <section class="lettra-card" aria-labelledby="invoices-list-title">
     <h2 id="invoices-list-title" class="lettra-visually-hidden">@L[TitleKey]</h2>
     <div class="lettra-toolbar">
-        <label for="invoices-search">@L["Billing.Search"]</label>
-        <input id="invoices-search" type="search" @ref="_searchInput" @bind="_search" @bind:after="LoadAsync" autocomplete="off" />
-        <label for="invoices-kind">@L["Invoices.Kind"]</label>
-        <select id="invoices-kind" @bind="_kind" @bind:after="LoadAsync">
-            <option value="">@L["Invoices.AllKinds"]</option>
-            @foreach (InvoiceKindDto kind in Enum.GetValues<InvoiceKindDto>())
-            {
-                <option value="@kind">@L[$"InvoiceKind.{kind}"]</option>
-            }
-        </select>
-        <label for="invoices-status">@L["Billing.Status"]</label>
-        <select id="invoices-status" @bind="_statusFilter" @bind:after="LoadAsync">
-            <option value="">@L["Billing.AllStatuses"]</option>
-            @foreach (InvoiceStatusDto status in Enum.GetValues<InvoiceStatusDto>())
-            {
-                <option value="@status">@L[$"InvoiceStatus.{status}"]</option>
-            }
-        </select>
+        <div class="lt-filter">
+            <label for="invoices-search">@L["Billing.Search"]</label>
+            <input id="invoices-search" type="search" @ref="_searchInput" @bind="_search" @bind:after="LoadAsync" autocomplete="off" />
+        </div>
+        <div class="lt-filter">
+            <label for="invoices-kind">@L["Invoices.Kind"]</label>
+            <select id="invoices-kind" @bind="_kind" @bind:after="LoadAsync">
+                <option value="">@L["Invoices.AllKinds"]</option>
+                @foreach (InvoiceKindDto kind in Enum.GetValues<InvoiceKindDto>())
+                {
+                    <option value="@kind">@L[$"InvoiceKind.{kind}"]</option>
+                }
+            </select>
+        </div>
+        <div class="lt-filter">
+            <label for="invoices-status">@L["Billing.Status"]</label>
+            <select id="invoices-status" @bind="_statusFilter" @bind:after="LoadAsync">
+                <option value="">@L["Billing.AllStatuses"]</option>
+                @foreach (InvoiceStatusDto status in Enum.GetValues<InvoiceStatusDto>())
+                {
+                    <option value="@status">@L[$"InvoiceStatus.{status}"]</option>
+                }
+            </select>
+        </div>
         <a class="lettra-button" href="invoices/new" id="invoices-new">@L["Invoices.New"]</a>
     </div>
     <p class="lettra-muted">@L["Billing.ListHint"]</p>

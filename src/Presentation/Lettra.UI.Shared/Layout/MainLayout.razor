@@ -1,39 +1,97 @@
+@* Coquille de l'application (vague 5, lane B), pensée pour chaque appareil :
+   - ordinateur (≥ 1200 px) : barre latérale, repliable en rail ;
+   - tablette (768 à 1199 px) : rail d'icônes ;
+   - téléphone (< 768 px) : barre du haut compacte et onglets en bas (Accueil, Devis, Factures, Clients, Plus), la feuille
+     « Plus » portant le reste de la navigation et l'apparence. Zones sûres iOS et cibles tactiles de 44 px. *@
 @inherits LayoutComponentBase
 @implements IDisposable
 @inject IStringLocalizer<SharedResource> L
 @inject UiPreferences Preferences
 @inject AssistantPanelState Assistant
+@inject NavigationManager Navigation
 
 <DeviceLockGate>
 <CascadingValue Value="Preferences.Density">
-    <div class="lettra-shell @Preferences.Density.CssClass()">
-        <header class="lettra-header">
-            <span class="lettra-brand">Lettra</span>
+    <div class="lettra-shell lt-shell @Preferences.Density.CssClass()" data-nav="@(Preferences.NavCollapsed ? "collapsed" : "expanded")">
+        <a class="lt-skip" href="@SkipLink">@L["Shell.SkipToContent"]</a>
+
+        <aside class="lt-sidebar" aria-label="@L["Nav.Label"]">
+            <a class="lt-brand" href="" title="Lettra">
+                <span class="lt-brand-mark" aria-hidden="true">L</span>
+                <span class="lt-brand-name">Lettra</span>
+            </a>
             <nav aria-label="@L["Nav.Label"]">
-                <NavLink href="quotes" Match="NavLinkMatch.Prefix">@L["Nav.Quotes"]</NavLink>
-                <NavLink href="invoices" Match="NavLinkMatch.Prefix">@L["Nav.Invoices"]</NavLink>
-                <NavLink href="credit-notes" Match="NavLinkMatch.Prefix">@L["Nav.CreditNotes"]</NavLink>
-                <NavLink href="customers" Match="NavLinkMatch.Prefix">@L["Nav.Customers"]</NavLink>
-                <NavLink href="suppliers" Match="NavLinkMatch.Prefix">@L["Nav.Suppliers"]</NavLink>
-                <NavLink href="catalog" Match="NavLinkMatch.Prefix">@L["Nav.Catalog"]</NavLink>
-                <NavLink href="exports/fec" Match="NavLinkMatch.Prefix">@L["Nav.Fec"]</NavLink>
-                <NavLink href="alerts" Match="NavLinkMatch.Prefix">@L["Nav.Alerts"]</NavLink>
-                <NavLink href="settings/company">@L["Nav.Company"]</NavLink>
+                <NavMenu />
             </nav>
-            <button type="button" class="lettra-palette-button" @onclick="OpenPaletteAsync" title="@L["Palette.Title"] (Ctrl+K)">
-                @L["Palette.Open"] <kbd>Ctrl+K</kbd>
+            <button type="button" id="nav-collapse" class="lt-nav-collapse" aria-pressed="@(Preferences.NavCollapsed ? "true" : "false")"
+                    aria-label="@L[Preferences.NavCollapsed ? "Shell.ExpandNav" : "Shell.CollapseNav"]" title="@L[Preferences.NavCollapsed ? "Shell.ExpandNav" : "Shell.CollapseNav"]"
+                    @onclick="Preferences.ToggleNavAsync">
+                <Icon Name="@(Preferences.NavCollapsed ? "chevrons-right" : "chevrons-left")" />
+                <span class="lt-nav-label">@L["Shell.CollapseNav"]</span>
             </button>
-            @if (Assistant.IsAvailable)
+        </aside>
+
+        <div class="lt-frame">
+            <header class="lettra-header lt-topbar">
+                <a class="lt-brand lt-topbar-brand" href="" title="Lettra">
+                    <span class="lt-brand-mark" aria-hidden="true">L</span>
+                    <span class="lettra-visually-hidden">Lettra</span>
+                </a>
+                <button type="button" id="palette-open" class="lettra-palette-button lt-search" @onclick="OpenPaletteAsync" title="@L["Palette.Title"] (Ctrl+K)">
+                    <Icon Name="search" Size="18" />
+                    <span class="lt-search-label">@L["Shell.Search"]</span>
+                    <kbd>Ctrl K</kbd>
+                </button>
+                <div class="lt-topbar-actions">
+                    @if (Assistant.IsAvailable)
+                    {
+                        <button type="button" id="assistant-toggle" class="lt-icon-button" aria-expanded="@(Assistant.IsOpen ? "true" : "false")"
+                                aria-label="@L["Assistant.Open"]" title="@L["Assistant.Open"]" @onclick="Assistant.Toggle">
+                            <Icon Name="sparkles" />
+                        </button>
+                    }
+                    <SyncBadge />
+                    <AppearanceMenu />
+                    <div class="lettra-session"><SessionBar /></div>
+                </div>
+            </header>
+
+            <main id="main" class="lettra-main lt-main" tabindex="-1">
+                <SyncReminderBanner />
+                <OfflineDraftsBanner />
+                @Body
+            </main>
+        </div>
+
+        <nav class="lt-tabbar" aria-label="@L["Shell.TabBar"]">
+            @foreach (NavItem item in NavItems.All.Where(i => i.InTabBar))
             {
-                <button type="button" id="assistant-toggle" class="lettra-palette-button" aria-expanded="@(Assistant.IsOpen ? "true" : "false")" @onclick="Assistant.Toggle">@L["Assistant.Open"]</button>
+                <NavLink href="@item.Href" Match="item.Match" class="lt-tab">
+                    <Icon Name="@item.Icon" Size="22" />
+                    <span>@L[item.LabelKey]</span>
+                </NavLink>
             }
-            <div class="lettra-session"><SyncBadge /><SessionBar /></div>
-        </header>
-        <main class="lettra-main">
-            <SyncReminderBanner />
-            <OfflineDraftsBanner />
-            @Body
-        </main>
+            <button type="button" id="tab-more" class="lt-tab" aria-expanded="@(_moreOpen ? "true" : "false")" aria-controls="more-sheet" @onclick="ToggleMore">
+                <Icon Name="ellipsis" Size="22" />
+                <span>@L["Shell.More"]</span>
+            </button>
+        </nav>
+
+        @if (_moreOpen)
+        {
+            <div class="lt-sheet-backdrop" @onclick="CloseMore"></div>
+            <div id="more-sheet" class="lt-sheet" role="dialog" aria-modal="true" aria-labelledby="more-sheet-title" @onkeydown="OnSheetKeyDown">
+                <div class="lt-sheet-header">
+                    <h2 id="more-sheet-title">@L["Shell.More"]</h2>
+                    <button type="button" class="lt-icon-button" aria-label="@L["Shell.Close"]" @onclick="CloseMore"><Icon Name="x" /></button>
+                </div>
+                <nav aria-label="@L["Nav.Label"]">
+                    <NavMenu Items="NavItems.All.Where(i => !i.InTabBar)" OnNavigate="CloseMore" />
+                </nav>
+                <AppearanceMenu Inline="true" />
+            </div>
+        }
+
         <SyncConsentPanel />
         <AssistantPanel />
     </div>
@@ -46,6 +104,10 @@
 @code {
     private KeyboardScope _globalScope = default!;
     private CommandPalette? _palette;
+    private bool _moreOpen;
+
+    // Lien d'évitement vers le contenu, relatif à la page courante (la base <base href> le résoudrait vers l'accueil).
+    private string SkipLink => Navigation.ToBaseRelativePath(Navigation.Uri).Split('#')[0] + "#main";
 
     protected override void OnInitialized()
     {
@@ -55,6 +117,7 @@
             .Bind("Ctrl+Shift+D", L["Command.Density"], _ => Preferences.ToggleDensityAsync(), showInBar: false);
         Preferences.Changed += OnPreferencesChanged;
         Assistant.Changed += OnPreferencesChanged;
+        Navigation.LocationChanged += OnLocationChanged;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -67,11 +130,33 @@
 
     private Task OpenPaletteAsync() => _palette?.OpenAsync() ?? Task.CompletedTask;
 
+    private void ToggleMore() => _moreOpen = !_moreOpen;
+
+    private void CloseMore() => _moreOpen = false;
+
+    private void OnSheetKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            CloseMore();
+        }
+    }
+
     private void OnPreferencesChanged(object? sender, EventArgs e) => _ = InvokeAsync(StateHasChanged);
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        if (_moreOpen)
+        {
+            _moreOpen = false;
+            _ = InvokeAsync(StateHasChanged);
+        }
+    }
 
     public void Dispose()
     {
         Preferences.Changed -= OnPreferencesChanged;
         Assistant.Changed -= OnPreferencesChanged;
+        Navigation.LocationChanged -= OnLocationChanged;
     }
 }
