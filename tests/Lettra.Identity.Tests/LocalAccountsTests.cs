@@ -14,6 +14,9 @@ public sealed class LocalAccountsTests : IDisposable
     private const string Passphrase = "une phrase secrète solide";
     private static readonly DossierId Dossier = new(Guid.CreateVersion7());
 
+    /// <summary>Un dossier rattaché à un autre cabinet que celui du poste.</summary>
+    private static readonly DossierId ForeignDossier = new(Guid.CreateVersion7());
+
     private readonly string _folder;
     private readonly bool _ownsFolder;
     private readonly ManualClock _clock = new(new DateTimeOffset(2026, 10, 14, 8, 0, 0, TimeSpan.Zero));
@@ -46,10 +49,21 @@ public sealed class LocalAccountsTests : IDisposable
 
     private ICurrentUser User => _services.GetRequiredService<ICurrentUser>();
 
-    private async Task<IReadOnlySet<Permission>> PermissionsOnDossierAsync()
+    private async Task<IReadOnlySet<Permission>> PermissionsOnDossierAsync() => await PermissionsOnAsync(Dossier);
+
+    private async Task<IReadOnlySet<Permission>> PermissionsOnAsync(DossierId dossier)
     {
         await using AsyncServiceScope scope = _services.CreateAsyncScope();
-        return await scope.ServiceProvider.GetRequiredService<IPermissionService>().GetEffectiveAsync(User.UserId, Dossier, default);
+        return await scope.ServiceProvider.GetRequiredService<IPermissionService>().GetEffectiveAsync(User.UserId, dossier, default);
+    }
+
+    [Fact]
+    public async Task Un_dossier_rattache_a_un_autre_cabinet_que_celui_du_poste_reste_ferme()
+    {
+        (await Accounts.CreateAsync("Claire Martin", Passphrase, default)).IsSuccess.Should().BeTrue();
+
+        (await PermissionsOnAsync(ForeignDossier)).Should().BeEmpty();
+        (await PermissionsOnDossierAsync()).Should().NotBeEmpty();
     }
 
     [Fact]
@@ -179,8 +193,9 @@ public sealed class LocalAccountsTests : IDisposable
     private sealed class OneDossierCatalog(DossierId dossier) : ITenantCatalog
     {
         public ValueTask<TenantDescriptor?> FindAsync(DossierId dossierId, CancellationToken cancellationToken) =>
-            ValueTask.FromResult(dossierId == dossier
-                ? new TenantDescriptor(dossier, new OrganisationId(Guid.Empty), DatabaseProvider.Sqlite, "config:x")
+            ValueTask.FromResult(
+                dossierId == dossier ? new TenantDescriptor(dossier, new OrganisationId(new LocalIdentityOptions().CabinetId), DatabaseProvider.Sqlite, "config:x")
+                : dossierId == ForeignDossier ? new TenantDescriptor(ForeignDossier, new OrganisationId(Guid.CreateVersion7()), DatabaseProvider.Sqlite, "config:y")
                 : null);
 
         public ValueTask<bool> UserHasAccessAsync(Guid userId, DossierId dossierId, CancellationToken cancellationToken) =>
