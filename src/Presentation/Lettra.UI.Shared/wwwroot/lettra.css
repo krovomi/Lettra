@@ -695,6 +695,11 @@ a.lt-kpi:hover { border-color: var(--color-primary); box-shadow: var(--shadow-md
 .lt-collapsible-actions { margin-left: auto; display: flex; gap: var(--space-2); align-items: center; }
 .lt-collapsible-body { margin-top: var(--space-3); }
 .lt-collapsible-body[hidden] { display: none; }
+/* Rubrique sans cadre dans une fiche (Card="false", titre h3) : un filet au-dessus, titre plus petit. */
+.lt-collapsible-plain { border-top: 1px solid var(--color-border); padding-block: var(--space-2); }
+.lt-collapsible-plain .lt-collapsible-heading { font-size: var(--text-base); }
+.lt-collapsible-plain .lt-collapsible-body { margin-top: var(--space-2); }
+.lt-collapsible-count { display: inline-grid; place-items: center; min-width: 1.5rem; padding: 0 var(--space-1); border-radius: var(--radius-full); background: var(--color-neutral-bg); color: var(--color-neutral-fg); font-size: var(--text-xs); font-weight: var(--weight-bold); }
 @media (prefers-reduced-motion: reduce) { .lt-collapsible-chevron { transition: none; } }
 @media (max-width: 767px) { .lt-collapsible-summary { flex-basis: 100%; white-space: normal; } }
 

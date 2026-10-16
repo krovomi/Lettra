@@ -65,4 +65,20 @@ public sealed class CollapsibleTests : BunitContext
 
         bloc.Find("#devis-notes-body").HasAttribute("hidden").Should().BeFalse();
     }
+
+    [Fact]
+    public void Dans_une_fiche_la_rubrique_sans_cadre_a_un_titre_h3_et_compte_ses_elements()
+    {
+        IRenderedComponent<Collapsible> rubrique = Render<Collapsible>(p => p
+            .Add(c => c.Id, "client-factures")
+            .Add(c => c.Title, "Dernières factures")
+            .Add(c => c.Count, 4)
+            .Add(c => c.Card, false)
+            .Add(c => c.Level, 3));
+
+        rubrique.Find("section").ClassList.Should().Contain("lt-collapsible-plain").And.NotContain("lettra-card");
+        rubrique.Find("h3 #client-factures-toggle .lt-collapsible-count").TextContent.Should().Be("4");
+        rubrique.FindAll("h2").Should().BeEmpty();
+        Bloc().FindAll(".lt-collapsible-count").Should().BeEmpty("sans compte, pas de pastille");
+    }
 }

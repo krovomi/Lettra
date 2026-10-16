@@ -29,7 +29,7 @@ internal sealed class InProcessDemoDataGateway(
         }
 
         DemoSeedResult result = await LettraDemoData.SeedAsync(
-            configuration, host.EnvironmentName, host.HostServices, user, new DemoSeedTarget(AdditionalDossiers: 0), loggerFactory, cancellationToken)
+            configuration, host.EnvironmentName, new DemoSeedTarget(AdditionalDossiers: 0), host.HostServices, user, loggerFactory, cancellationToken)
             .ConfigureAwait(false);
         return OperationResult<DemoSeedResponse>.Success(result.ToResponse());
     }

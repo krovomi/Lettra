@@ -44,10 +44,11 @@ internal static class DemoEndpoints
         DemoSeedResult result = await LettraDemoData.SeedAsync(
                 configuration,
                 environment.EnvironmentName,
-                userId: user.UserId,
-                target: new DemoSeedTarget(tenant.Current.DossierId.Value, AdditionalDossiers: 0),
-                loggerFactory: loggers,
-                cancellationToken: cancellationToken)
+                new DemoSeedTarget(tenant.Current.DossierId.Value, AdditionalDossiers: 0),
+                hostServices: null,
+                user.UserId,
+                loggers,
+                cancellationToken)
             .ConfigureAwait(false);
         return TypedResults.Ok(result.ToResponse());
     }

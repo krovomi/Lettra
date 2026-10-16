@@ -2,17 +2,19 @@
 @inject IStringLocalizer<SharedResource> L
 @* Bloc repliable (vague 5, lane E) : une carte dont le titre est un bouton qui replie ou déplie le contenu. Replié, il
    montre un résumé d'une ligne. Le contenu reste rendu (masqué par hidden) : une grille ou un champ garde sa saisie.
-   L'état choisi est retenu sur l'appareil, par bloc (clé lettra.bloc.{Id}). *@
+   L'état choisi est retenu sur l'appareil, par bloc (clé lettra.bloc.{Id}). Deux formes : une carte avec un titre h2
+   (éditeurs), ou une section sans cadre avec un titre h3 dans une fiche (Card="false", Level="3"). *@
 
-<section class="lt-collapsible lettra-card @Class" id="@Id" data-open="@(_open ? "true" : "false")" aria-labelledby="@TitleId">
+<section class="lt-collapsible @(Card ? "lettra-card" : "lt-collapsible-plain") @Class" id="@Id" data-open="@(_open ? "true" : "false")" aria-labelledby="@TitleId">
     <div class="lt-collapsible-header">
-        <h2 class="lt-collapsible-heading">
-            <button type="button" class="lt-collapsible-toggle" id="@($"{Id}-toggle")" aria-expanded="@(_open ? "true" : "false")"
-                    aria-controls="@($"{Id}-body")" title="@L["Collapsible.Toggle", Title]" @onclick="ToggleAsync">
-                <Icon Name="chevron-down" Class="lt-collapsible-chevron" />
-                <span id="@TitleId">@Title</span>
-            </button>
-        </h2>
+        @if (Level == 3)
+        {
+            <h3 class="lt-collapsible-heading">@Toggle</h3>
+        }
+        else
+        {
+            <h2 class="lt-collapsible-heading">@Toggle</h2>
+        }
         @if (!_open && !string.IsNullOrEmpty(Summary))
         {
             <p class="lt-collapsible-summary">@Summary</p>
@@ -36,6 +38,15 @@
     /// <summary>Identifiant du titre ; par défaut <c>{Id}-title</c>.</summary>
     [Parameter] public string? HeadingId { get; set; }
 
+    /// <summary>Nombre d'éléments du bloc, en pastille après le titre (factures d'un client…).</summary>
+    [Parameter] public int? Count { get; set; }
+
+    /// <summary>Faux : section sans cadre, pour regrouper les rubriques d'une fiche déjà dans une carte.</summary>
+    [Parameter] public bool Card { get; set; } = true;
+
+    /// <summary>Niveau du titre : 2 (bloc de page, par défaut) ou 3 (rubrique dans une fiche).</summary>
+    [Parameter] public int Level { get; set; } = 2;
+
     /// <summary>Ligne affichée quand le bloc est replié (client, dates, nombre de lignes…).</summary>
     [Parameter] public string? Summary { get; set; }
 
@@ -53,6 +64,19 @@
 
     private bool _open;
     private bool _initialized;
+
+    private RenderFragment Toggle => __builder =>
+    {
+        <button type="button" class="lt-collapsible-toggle" id="@($"{Id}-toggle")" aria-expanded="@(_open ? "true" : "false")"
+                aria-controls="@($"{Id}-body")" title="@L["Collapsible.Toggle", Title]" @onclick="ToggleAsync">
+            <Icon Name="chevron-down" Class="lt-collapsible-chevron" />
+            <span id="@TitleId">@Title</span>
+            @if (Count is int count)
+            {
+                <span class="lt-count lt-collapsible-count">@count</span>
+            }
+        </button>
+    };
 
     public bool IsOpen => _open;
 

@@ -75,17 +75,33 @@ public static partial class LettraDemoData
     /// <param name="environmentName">Environnement de l'hôte ; <c>Production</c> refuse toujours.</param>
     /// <param name="hostServices">Ce que l'hôte ajoute à <c>AddLettra</c> (poste : le coffre de clés de l'OS).</param>
     /// <param name="userId">Utilisateur au nom de qui charger (poste : le compte ouvert), sinon <c>Lettra:Demo:UserId</c>.</param>
-    /// <param name="target">Depuis l'écran : le dossier à remplir et le nombre de dossiers créés en plus, à la place de la configuration.</param>
+    /// <param name="loggerFactory">Journal de l'hôte.</param>
+    /// <param name="cancellationToken">Annulation.</param>
+    public static Task<DemoSeedResult> SeedAsync(
+        IConfiguration configuration,
+        string environmentName,
+        Action<IServiceCollection>? hostServices = null,
+        Guid? userId = null,
+        ILoggerFactory? loggerFactory = null,
+        CancellationToken cancellationToken = default) =>
+        SeedAsync(configuration, environmentName, target: null, hostServices, userId, loggerFactory, cancellationToken);
+
+    /// <summary>Depuis l'écran : comme au démarrage, mais pour le dossier et le nombre de dossiers en plus donnés par <paramref name="target"/>.</summary>
+    /// <param name="configuration">La configuration de l'hôte.</param>
+    /// <param name="environmentName">Environnement de l'hôte ; <c>Production</c> refuse toujours.</param>
+    /// <param name="target">Le dossier à remplir et le nombre de dossiers créés en plus, à la place de la configuration ; null : la configuration.</param>
+    /// <param name="hostServices">Ce que l'hôte ajoute à <c>AddLettra</c>.</param>
+    /// <param name="userId">Utilisateur au nom de qui charger.</param>
     /// <param name="loggerFactory">Journal de l'hôte.</param>
     /// <param name="cancellationToken">Annulation.</param>
     public static async Task<DemoSeedResult> SeedAsync(
         IConfiguration configuration,
         string environmentName,
-        Action<IServiceCollection>? hostServices = null,
-        Guid? userId = null,
-        DemoSeedTarget? target = null,
-        ILoggerFactory? loggerFactory = null,
-        CancellationToken cancellationToken = default)
+        DemoSeedTarget? target,
+        Action<IServiceCollection>? hostServices,
+        Guid? userId,
+        ILoggerFactory? loggerFactory,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(configuration);
         DemoDataOptions options = configuration.GetSection(DemoDataOptions.SectionName).Get<DemoDataOptions>() ?? new DemoDataOptions();
