@@ -12,16 +12,20 @@
 <section class="lettra-card" aria-labelledby="quotes-list-title">
     <h2 id="quotes-list-title" class="lettra-visually-hidden">@L["Quotes.List"]</h2>
     <div class="lettra-toolbar">
-        <label for="quotes-search">@L["Billing.Search"]</label>
-        <input id="quotes-search" type="search" @ref="_searchInput" @bind="_search" @bind:after="LoadAsync" autocomplete="off" />
-        <label for="quotes-status">@L["Billing.Status"]</label>
-        <select id="quotes-status" @bind="_statusFilter" @bind:after="LoadAsync">
-            <option value="">@L["Billing.AllStatuses"]</option>
-            @foreach (QuoteStatusDto status in Enum.GetValues<QuoteStatusDto>())
-            {
-                <option value="@status">@L[$"QuoteStatus.{status}"]</option>
-            }
-        </select>
+        <div class="lt-filter">
+            <label for="quotes-search">@L["Billing.Search"]</label>
+            <input id="quotes-search" type="search" @ref="_searchInput" @bind="_search" @bind:after="LoadAsync" autocomplete="off" />
+        </div>
+        <div class="lt-filter">
+            <label for="quotes-status">@L["Billing.Status"]</label>
+            <select id="quotes-status" @bind="_statusFilter" @bind:after="LoadAsync">
+                <option value="">@L["Billing.AllStatuses"]</option>
+                @foreach (QuoteStatusDto status in Enum.GetValues<QuoteStatusDto>())
+                {
+                    <option value="@status">@L[$"QuoteStatus.{status}"]</option>
+                }
+            </select>
+        </div>
         <a class="lettra-button" href="quotes/new" id="quotes-new">@L["Quotes.New"]</a>
     </div>
     <p class="lettra-muted">@L["Billing.ListHint"]</p>

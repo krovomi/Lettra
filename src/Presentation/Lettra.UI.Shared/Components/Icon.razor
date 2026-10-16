@@ -1,0 +1,18 @@
+@* Icône Lucide en SVG en ligne : suit la couleur du texte (currentColor), décorative par défaut (aria-hidden). Un bouton
+   qui n'a qu'une icône porte son nom par aria-label, jamais par l'icône. *@
+
+<svg class="lt-icon @Class" xmlns="http://www.w3.org/2000/svg" width="@Size" height="@Size" viewBox="0 0 24 24" fill="none"
+     stroke="currentColor" stroke-width="@StrokeWidth" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+    @((MarkupString)IconPaths.All[Name])
+</svg>
+
+@code {
+    /// <summary>Nom de fichier Lucide (ex. <c>file-text</c>), présent dans <see cref="IconPaths"/>.</summary>
+    [Parameter, EditorRequired] public string Name { get; set; } = default!;
+
+    [Parameter] public int Size { get; set; } = 20;
+
+    [Parameter] public string StrokeWidth { get; set; } = "1.75";
+
+    [Parameter] public string? Class { get; set; }
+}

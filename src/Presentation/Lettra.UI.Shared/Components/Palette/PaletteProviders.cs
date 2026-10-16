@@ -29,6 +29,7 @@ public sealed class NavigationPaletteProvider(
             Go(actions, "Palette.NewQuote", "quotes/new"),
             Go(actions, "Palette.NewInvoice", "invoices/new"),
             new(actions, localizer["Palette.ToggleDensity"], preferences.ToggleDensityAsync, "Ctrl+Shift+D"),
+            Go(screens, "Nav.Home", ""),
             Go(screens, "Nav.Quotes", "quotes"),
             Go(screens, "Nav.Invoices", "invoices"),
             Go(screens, "Nav.CreditNotes", "credit-notes"),
@@ -36,8 +37,14 @@ public sealed class NavigationPaletteProvider(
             Go(screens, "Nav.Suppliers", "suppliers"),
             Go(screens, "Nav.Catalog", "catalog"),
             Go(screens, "Nav.Fec", "exports/fec"),
+            Go(screens, "Nav.Alerts", "alerts"),
             Go(screens, "Nav.Company", "settings/company"),
         ];
+        // Thèmes : au clavier comme depuis le menu Apparence.
+        items.AddRange(Enum.GetValues<UiTheme>().Select(theme => new PaletteItem(
+            actions,
+            string.Format(CultureInfo.CurrentCulture, localizer["Palette.Theme"], localizer[$"Appearance.Theme.{theme}"]),
+            () => preferences.SetThemeAsync(theme))));
 
         foreach (ShortcutBinding binding in registry.PaletteBindings.Where(b => b.Chord != CommandPalette.Shortcut))
         {
