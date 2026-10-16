@@ -1,6 +1,7 @@
 /* Feuille de l'application Lettra (vague 5, lane B). Ne contient aucune valeur de couleur : tout vient des jetons de
    lettra-tokens.css, ce qui fait marcher les quatre thèmes. Système décrit dans docs/design/systeme-de-design.md. */
 @import url("lettra-tokens.css");
+@import url("lettra-explorer.css");
 
 /* Alias historiques : les composants et la grille écrits avant les jetons les lisent encore. */
 :root {

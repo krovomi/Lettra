@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Catalog.Archive" xml:space="preserve"><value>Archiver</value></data>
+  <data name="Catalog.Archived" xml:space="preserve"><value>Archivé</value></data>
+  <data name="Catalog.Count" xml:space="preserve"><value>{0} article(s)</value></data>
+  <data name="Catalog.ExclTaxShort" xml:space="preserve"><value> HT</value></data>
+  <data name="Catalog.Field.Description" xml:space="preserve"><value>Description</value></data>
+  <data name="Catalog.GridMode" xml:space="preserve"><value>Saisie en grille</value></data>
+  <data name="Catalog.InclTaxNote" xml:space="preserve"><value>Calculé avec le taux de TVA</value></data>
+  <data name="Catalog.NewItem" xml:space="preserve"><value>Nouvel article</value></data>
+  <data name="Catalog.NoDescription" xml:space="preserve"><value>Pas de description.</value></data>
+  <data name="Catalog.PricePer" xml:space="preserve"><value>Prix par {0}</value></data>
+  <data name="Catalog.Prices" xml:space="preserve"><value>Prix</value></data>
+  <data name="Catalog.Reactivate" xml:space="preserve"><value>Réactiver</value></data>
+  <data name="Catalog.ReloadedAfterChange" xml:space="preserve"><value>L'article avait été modifié entre-temps : la fiche affiche sa version actuelle.</value></data>
+  <data name="Catalog.SearchPlaceholder" xml:space="preserve"><value>Référence ou désignation</value></data>
+  <data name="Catalog.Sheet" xml:space="preserve"><value>Fiche article</value></data>
+  <data name="Customers.Activity" xml:space="preserve"><value>Activité du client</value></data>
+  <data name="Customers.Count" xml:space="preserve"><value>{0} client(s)</value></data>
+  <data name="Customers.Created" xml:space="preserve"><value>Client « {0} » créé.</value></data>
+  <data name="Customers.Kpi.Balance" xml:space="preserve"><value>Solde du compte client</value></data>
+  <data name="Customers.Kpi.BalanceNote" xml:space="preserve"><value>Compte 411, hors encaissements</value></data>
+  <data name="Customers.Kpi.Credited" xml:space="preserve"><value>Avoirs {0}</value></data>
+  <data name="Customers.Kpi.CreditedNote" xml:space="preserve"><value>TTC</value></data>
+  <data name="Customers.Kpi.Invoiced" xml:space="preserve"><value>Facturé {0}</value></data>
+  <data name="Customers.Kpi.InvoicedNote" xml:space="preserve"><value>TTC, pièces validées</value></data>
+  <data name="Customers.LastInvoices" xml:space="preserve"><value>Dernières factures</value></data>
+  <data name="Customers.LastQuotes" xml:space="preserve"><value>Derniers devis</value></data>
+  <data name="Customers.New" xml:space="preserve"><value>Nouveau client</value></data>
+  <data name="Customers.NewInvoice" xml:space="preserve"><value>Facture</value></data>
+  <data name="Customers.NewQuote" xml:space="preserve"><value>Devis</value></data>
+  <data name="Customers.NoInvoice" xml:space="preserve"><value>Aucune facture pour ce client.</value></data>
+  <data name="Customers.NoQuote" xml:space="preserve"><value>Aucun devis pour ce client.</value></data>
+  <data name="Customers.Saved" xml:space="preserve"><value>Client « {0} » enregistré.</value></data>
+  <data name="Customers.Search" xml:space="preserve"><value>Nom du client</value></data>
+  <data name="Customers.SeeLedger" xml:space="preserve"><value>Compte client</value></data>
+  <data name="Customers.Sheet" xml:space="preserve"><value>Fiche client</value></data>
+  <data name="Explorer.All" xml:space="preserve"><value>Tous</value></data>
+  <data name="Explorer.BackToList" xml:space="preserve"><value>Retour à la liste</value></data>
+  <data name="Explorer.Cancel" xml:space="preserve"><value>Annuler</value></data>
+  <data name="Explorer.Command.Back" xml:space="preserve"><value>Revenir</value></data>
+  <data name="Explorer.Command.Browse" xml:space="preserve"><value>Parcourir la liste</value></data>
+  <data name="Explorer.Command.Edit" xml:space="preserve"><value>Modifier la fiche</value></data>
+  <data name="Explorer.Command.New" xml:space="preserve"><value>Nouvelle fiche</value></data>
+  <data name="Explorer.Command.Search" xml:space="preserve"><value>Rechercher</value></data>
+  <data name="Explorer.Create" xml:space="preserve"><value>Créer</value></data>
+  <data name="Explorer.CreateNamed" xml:space="preserve"><value>Créer « {0} »</value></data>
+  <data name="Explorer.Discard.No" xml:space="preserve"><value>Continuer la saisie</value></data>
+  <data name="Explorer.Discard.Question" xml:space="preserve"><value>Vos modifications ne sont pas enregistrées. Les abandonner ?</value></data>
+  <data name="Explorer.Discard.Yes" xml:space="preserve"><value>Abandonner</value></data>
+  <data name="Explorer.Edit" xml:space="preserve"><value>Modifier</value></data>
+  <data name="Explorer.EditHint" xml:space="preserve"><value>Échap pour revenir sans enregistrer.</value></data>
+  <data name="Explorer.Editing" xml:space="preserve"><value>Modifier « {0} »</value></data>
+  <data name="Explorer.Field.CreatedAt" xml:space="preserve"><value>Créé le</value></data>
+  <data name="Explorer.Field.UpdatedAt" xml:space="preserve"><value>Modifié le</value></data>
+  <data name="Explorer.Filters" xml:space="preserve"><value>Filtres</value></data>
+  <data name="Explorer.Key.Enter" xml:space="preserve"><value>Entrée</value></data>
+  <data name="Explorer.Key.Escape" xml:space="preserve"><value>Échap</value></data>
+  <data name="Explorer.Key.Insert" xml:space="preserve"><value>Inser</value></data>
+  <data name="Explorer.More" xml:space="preserve"><value>Afficher la suite ({0} sur {1})</value></data>
+  <data name="Explorer.NoMatch" xml:space="preserve"><value>Rien ne correspond à « {0} ».</value></data>
+  <data name="Explorer.Placeholder" xml:space="preserve"><value>Choisissez une fiche dans la liste, ou créez-en une.</value></data>
+  <data name="Explorer.Save" xml:space="preserve"><value>Enregistrer</value></data>
+  <data name="Explorer.Section.Address" xml:space="preserve"><value>Adresse</value></data>
+  <data name="Explorer.Section.Contact" xml:space="preserve"><value>Coordonnées</value></data>
+  <data name="Explorer.Section.Details" xml:space="preserve"><value>Caractéristiques</value></data>
+  <data name="Explorer.Section.Identity" xml:space="preserve"><value>Identification</value></data>
+  <data name="Explorer.Stale" xml:space="preserve"><value>« {0} » a été modifié par quelqu'un d'autre pendant votre saisie.</value></data>
+  <data name="Explorer.Stale.Overwrite" xml:space="preserve"><value>Garder mes valeurs et enregistrer</value></data>
+  <data name="Explorer.Stale.TakeTheirs" xml:space="preserve"><value>Reprendre ses valeurs</value></data>
+  <data name="Explorer.Unsaved" xml:space="preserve"><value>Modifications non enregistrées</value></data>
+  <data name="Suppliers.Count" xml:space="preserve"><value>{0} fournisseur(s)</value></data>
+  <data name="Suppliers.Created" xml:space="preserve"><value>Fournisseur « {0} » créé.</value></data>
+  <data name="Suppliers.New" xml:space="preserve"><value>Nouveau fournisseur</value></data>
+  <data name="Suppliers.NoIban" xml:space="preserve"><value>Aucun IBAN</value></data>
+  <data name="Suppliers.PurchasesLater" xml:space="preserve"><value>Les achats et les règlements fournisseurs arriveront avec le module Achats.</value></data>
+  <data name="Suppliers.Saved" xml:space="preserve"><value>Fournisseur « {0} » enregistré.</value></data>
+  <data name="Suppliers.Search" xml:space="preserve"><value>Nom du fournisseur</value></data>
+  <data name="Suppliers.Section.Bank" xml:space="preserve"><value>Coordonnées bancaires</value></data>
+  <data name="Suppliers.Sheet" xml:space="preserve"><value>Fiche fournisseur</value></data>
+</root>

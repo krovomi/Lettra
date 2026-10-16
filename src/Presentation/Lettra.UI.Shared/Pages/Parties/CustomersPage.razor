@@ -101,10 +101,10 @@
                 break;
 
             case ExplorerMode.View when Record is { } customer:
-                <article class="lt-sheet" aria-labelledby="customer-sheet-title" id="customer-sheet">
-                    <header class="lt-sheet-header">
+                <article class="lt-card" aria-labelledby="customer-sheet-title" id="customer-sheet">
+                    <header class="lt-card-header">
                         <span class="lt-avatar is-large" aria-hidden="true">@ExplorerText.Initials(customer.Name)</span>
-                        <div class="lt-sheet-heading">
+                        <div class="lt-card-heading">
                             <h2 id="customer-sheet-title" tabindex="-1">@customer.Name</h2>
                             <p class="lettra-muted">
                                 @L[customer.Kind == CustomerKindDto.Company ? "Customers.Kind.Company" : "Customers.Kind.Individual"] · @customer.City
@@ -112,8 +112,8 @@
                         </div>
                         <div class="lt-page-actions">
                             <a class="lettra-button" href="@EditHref(customer.Id)" id="customer-edit"><Icon Name="pencil" Size="18" /> @L["Explorer.Edit"] <kbd>F2</kbd></a>
-                            <a class="lettra-button is-secondary" href="@($"quotes/new?customer={customer.Id}")" id="customer-new-quote"><Icon Name="file-text" Size="18" /> @L["Customers.NewQuote"]</a>
-                            <a class="lettra-button is-secondary" href="@($"invoices/new?customer={customer.Id}")" id="customer-new-invoice"><Icon Name="receipt" Size="18" /> @L["Customers.NewInvoice"]</a>
+                            <a class="lettra-button is-ghost" href="@($"quotes/new?customer={customer.Id}")" id="customer-new-quote"><Icon Name="file-text" Size="18" /> @L["Customers.NewQuote"]</a>
+                            <a class="lettra-button is-ghost" href="@($"invoices/new?customer={customer.Id}")" id="customer-new-invoice"><Icon Name="receipt" Size="18" /> @L["Customers.NewInvoice"]</a>
                         </div>
                     </header>
 
@@ -124,109 +124,86 @@
 
                     @if (_ledger is { } ledger)
                     {
-                        <section class="lt-kpis lt-sheet-kpis" aria-label="@L["Customers.Activity"]">
-                            <a class="lt-kpi" href="@LedgerHref(customer.Id)" id="customer-kpi-invoiced">
-                                <span class="lt-kpi-head">@string.Format(Culture, L["Customers.Kpi.Invoiced"], _year)</span>
-                                <span class="lt-kpi-value">@ExplorerText.Money(ledger.TotalDebit)</span>
-                                <span class="lt-kpi-note">@L["Customers.Kpi.InvoicedNote"]</span>
-                            </a>
-                            <a class="lt-kpi" href="@LedgerHref(customer.Id)" id="customer-kpi-credited">
-                                <span class="lt-kpi-head">@string.Format(Culture, L["Customers.Kpi.Credited"], _year)</span>
-                                <span class="lt-kpi-value">@ExplorerText.Money(ledger.TotalCredit)</span>
-                                <span class="lt-kpi-note">@L["Customers.Kpi.CreditedNote"]</span>
-                            </a>
-                            <a class="lt-kpi" href="@LedgerHref(customer.Id)" id="customer-kpi-balance">
-                                <span class="lt-kpi-head">@L["Customers.Kpi.Balance"]</span>
-                                <span class="lt-kpi-value">@ExplorerText.Money(ledger.ClosingBalance)</span>
-                                <span class="lt-kpi-note">@L["Customers.Kpi.BalanceNote"]</span>
-                            </a>
-                        </section>
+                        <dl class="lt-stats" aria-label="@L["Customers.Activity"]" id="customer-stats">
+                            <div id="customer-kpi-invoiced">
+                                <dt>@string.Format(Culture, L["Customers.Kpi.Invoiced"], _year)</dt>
+                                <dd>@ExplorerText.Money(ledger.TotalDebit)</dd>
+                            </div>
+                            <div id="customer-kpi-credited">
+                                <dt>@string.Format(Culture, L["Customers.Kpi.Credited"], _year)</dt>
+                                <dd>@ExplorerText.Money(ledger.TotalCredit)</dd>
+                            </div>
+                            <div id="customer-kpi-balance">
+                                <dt>@L["Customers.Kpi.Balance"]</dt>
+                                <dd><a href="@LedgerHref(customer.Id)">@ExplorerText.Money(ledger.ClosingBalance)</a></dd>
+                            </div>
+                        </dl>
                     }
 
-                    <div class="lt-sheet-columns">
-                        <section class="lt-sheet-section" aria-labelledby="customer-identity">
-                            <h3 id="customer-identity">@L["Explorer.Section.Identity"]</h3>
-                            <dl class="lt-facts">
-                                @if (customer.Kind == CustomerKindDto.Company)
+                    <Collapsible Id="customer-details" Title="@L["Explorer.Section.Contact"]">
+                        <dl class="lt-facts lt-facts-2">
+                            @if (customer.Kind == CustomerKindDto.Company)
+                            {
+                                <Fact Label="@L["Customers.Field.Siren"]" Value="@(customer.Siren is { } s ? ExplorerText.Siren(s) : null)" />
+                                <Fact Label="@L["Customers.Field.Siret"]" Value="@(customer.Siret is { } t ? ExplorerText.Siret(t) : null)" />
+                                <Fact Label="@L["Customers.Field.VatNumber"]" Value="@customer.VatNumber" />
+                            }
+                            <Fact Label="@L["Customers.Field.Email"]">
+                                @if (customer.Email is { Length: > 0 } email)
                                 {
-                                    <Fact Label="@L["Customers.Field.Siren"]" Value="@(customer.Siren is { } s ? ExplorerText.Siren(s) : null)" />
-                                    <Fact Label="@L["Customers.Field.Siret"]" Value="@(customer.Siret is { } t ? ExplorerText.Siret(t) : null)" />
-                                    <Fact Label="@L["Customers.Field.VatNumber"]" Value="@customer.VatNumber" />
+                                    <a href="@($"mailto:{email}")">@email</a>
                                 }
-                                <Fact Label="@L["Customers.Field.Email"]">
-                                    @if (customer.Email is { Length: > 0 } email)
-                                    {
-                                        <a href="@($"mailto:{email}")">@email</a>
-                                    }
-                                    else
-                                    {
-                                        <span class="lettra-muted">—</span>
-                                    }
-                                </Fact>
-                                <Fact Label="@L["Customers.Field.PreferredLanguage"]" Value="@(customer.PreferredLanguage == "en-US" ? "English" : "Français")" />
-                                <Fact Label="@L["Explorer.Field.CreatedAt"]" Value="@customer.CreatedAt.ToLocalTime().ToString("d", Culture)" />
-                            </dl>
-                        </section>
-                        <section class="lt-sheet-section" aria-labelledby="customer-address">
-                            <h3 id="customer-address">@L["Explorer.Section.Address"]</h3>
-                            <address class="lt-address">
-                                @customer.AddressLine1<br />
-                                @if (!string.IsNullOrWhiteSpace(customer.AddressLine2))
+                                else
                                 {
-                                    @customer.AddressLine2<br />
+                                    <span class="lettra-muted">—</span>
                                 }
-                                @customer.PostalCode @customer.City<br />
-                                @customer.CountryCode
-                            </address>
-                        </section>
-                    </div>
+                            </Fact>
+                            <Fact Label="@L["Explorer.Section.Address"]">
+                                <address class="lt-address">
+                                    @customer.AddressLine1<br />
+                                    @if (!string.IsNullOrWhiteSpace(customer.AddressLine2))
+                                    {
+                                        @customer.AddressLine2<br />
+                                    }
+                                    @customer.PostalCode @customer.City · @customer.CountryCode
+                                </address>
+                            </Fact>
+                            <Fact Label="@L["Customers.Field.PreferredLanguage"]" Value="@(customer.PreferredLanguage == "en-US" ? "English" : "Français")" />
+                        </dl>
+                    </Collapsible>
 
-                    <section class="lt-sheet-section" aria-labelledby="customer-invoices">
-                        <div class="lt-panel-head">
-                            <h3 id="customer-invoices">@L["Customers.LastInvoices"]</h3>
-                            <a href="@LedgerHref(customer.Id)" id="customer-ledger">@L["Customers.SeeLedger"] <Icon Name="arrow-right" Size="16" /></a>
-                        </div>
-                        @if (_invoices is null)
-                        {
-                            <p class="lettra-muted">@L["Loading"]</p>
-                        }
-                        else if (_invoices.Count == 0)
-                        {
-                            <p class="lettra-muted" id="customer-no-invoice">@L["Customers.NoInvoice"]</p>
-                        }
-                        else
-                        {
-                            <table class="lettra-table lt-table-compact" id="customer-invoices-table">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">@L["Billing.Column.Number"]</th>
-                                        <th scope="col">@L["Invoices.Kind"]</th>
-                                        <th scope="col">@L["Billing.Column.Date"]</th>
-                                        <th scope="col">@L["Billing.Status"]</th>
-                                        <th scope="col" class="lg-num">@L["Totals.InclTax"]</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
+                    <Collapsible Id="customer-invoices" Title="@L["Customers.LastInvoices"]" Count="@_invoices?.Count">
+                        <Actions><a href="@LedgerHref(customer.Id)" id="customer-ledger">@L["Customers.SeeLedger"] <Icon Name="arrow-right" Size="16" /></a></Actions>
+                        <ChildContent>
+                            @if (_invoices is null)
+                            {
+                                <ExplorerSkeleton Rows="2" />
+                            }
+                            else if (_invoices.Count == 0)
+                            {
+                                <p class="lettra-muted" id="customer-no-invoice">@L["Customers.NoInvoice"]</p>
+                            }
+                            else
+                            {
+                                <ul class="lt-mini-list" id="customer-invoices-table">
                                     @foreach (InvoiceSummary invoice in _invoices)
                                     {
-                                        <tr>
-                                            <td><a href="@($"invoices/{invoice.Id}")">@(invoice.Number ?? L["Billing.Draft"])</a></td>
-                                            <td>@L[$"InvoiceKind.{invoice.Kind}"]</td>
-                                            <td>@invoice.IssueDate?.ToString("d", Culture)</td>
-                                            <td><DocumentStatusBadge Text="@L[$"InvoiceStatus.{invoice.Status}"]" Kind="@invoice.Status.ToString().ToLowerInvariant()" /></td>
-                                            <td class="lg-num">@ExplorerText.Money(invoice.TotalInclTax)</td>
-                                        </tr>
+                                        <li>
+                                            <a href="@($"invoices/{invoice.Id}")">@(invoice.Number ?? L["Billing.Draft"])</a>
+                                            <span class="lt-mini-meta">@L[$"InvoiceKind.{invoice.Kind}"] · @invoice.IssueDate?.ToString("d", Culture)</span>
+                                            <DocumentStatusBadge Text="@L[$"InvoiceStatus.{invoice.Status}"]" Kind="@invoice.Status.ToString().ToLowerInvariant()" />
+                                            <span class="lt-num">@ExplorerText.Money(invoice.TotalInclTax)</span>
+                                        </li>
                                     }
-                                </tbody>
-                            </table>
-                        }
-                    </section>
+                                </ul>
+                            }
+                        </ChildContent>
+                    </Collapsible>
 
-                    <section class="lt-sheet-section" aria-labelledby="customer-quotes">
-                        <h3 id="customer-quotes">@L["Customers.LastQuotes"]</h3>
+                    <Collapsible Id="customer-quotes" Title="@L["Customers.LastQuotes"]" Count="@_quotes?.Count" OpenByDefault="false">
                         @if (_quotes is null)
                         {
-                            <p class="lettra-muted">@L["Loading"]</p>
+                            <ExplorerSkeleton Rows="2" />
                         }
                         else if (_quotes.Count == 0)
                         {
@@ -234,37 +211,27 @@
                         }
                         else
                         {
-                            <table class="lettra-table lt-table-compact" id="customer-quotes-table">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">@L["Billing.Column.Number"]</th>
-                                        <th scope="col">@L["Billing.Column.Date"]</th>
-                                        <th scope="col">@L["Billing.Status"]</th>
-                                        <th scope="col" class="lg-num">@L["Totals.ExclTax"]</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (QuoteSummary quote in _quotes)
-                                    {
-                                        <tr>
-                                            <td><a href="@($"quotes/{quote.Id}")">@(quote.Number ?? L["Billing.Draft"])</a></td>
-                                            <td>@quote.IssueDate?.ToString("d", Culture)</td>
-                                            <td><DocumentStatusBadge Text="@L[$"QuoteStatus.{quote.Status}"]" Kind="@quote.Status.ToString().ToLowerInvariant()" /></td>
-                                            <td class="lg-num">@ExplorerText.Money(quote.TotalExclTax)</td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
+                            <ul class="lt-mini-list" id="customer-quotes-table">
+                                @foreach (QuoteSummary quote in _quotes)
+                                {
+                                    <li>
+                                        <a href="@($"quotes/{quote.Id}")">@(quote.Number ?? L["Billing.Draft"])</a>
+                                        <span class="lt-mini-meta">@quote.IssueDate?.ToString("d", Culture)</span>
+                                        <DocumentStatusBadge Text="@L[$"QuoteStatus.{quote.Status}"]" Kind="@quote.Status.ToString().ToLowerInvariant()" />
+                                        <span class="lt-num">@ExplorerText.Money(quote.TotalExclTax)<small>@L["Catalog.ExclTaxShort"]</small></span>
+                                    </li>
+                                }
+                            </ul>
                         }
-                    </section>
+                    </Collapsible>
                 </article>
                 break;
 
             case ExplorerMode.New or ExplorerMode.Edit when Form is not null:
-                <EditForm Model="Form" OnValidSubmit="SaveAsync" FormName="customer-sheet" class="lt-sheet lt-sheet-editing" id="customer-form">
+                <EditForm Model="Form" OnValidSubmit="SaveAsync" FormName="customer-sheet" class="lt-card lt-card-editing" id="customer-form">
                     <DataAnnotationsValidator />
-                    <header class="lt-sheet-header">
-                        <div class="lt-sheet-heading">
+                    <header class="lt-card-header">
+                        <div class="lt-card-heading">
                             <h2 tabindex="-1">@(Mode == ExplorerMode.New ? L["Customers.New"] : string.Format(Culture, L["Explorer.Editing"], Record?.Name))</h2>
                             <p class="lettra-muted">@L["Explorer.EditHint"]</p>
                         </div>

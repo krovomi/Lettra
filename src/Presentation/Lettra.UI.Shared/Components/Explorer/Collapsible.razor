@@ -1,0 +1,68 @@
+@* Bloc repliable : un titre cliquable (bouton, aria-expanded), un compteur et des actions facultatifs, le contenu.
+   L'état ouvert ou fermé est retenu par clé pendant la session de l'application, d'une fiche à l'autre. *@
+
+<section class="lt-collapsible @(_open ? "is-open" : null) @Class" id="@Id">
+    <div class="lt-collapsible-head">
+        <h3>
+            <button type="button" class="lt-collapsible-toggle" aria-expanded="@(_open ? "true" : "false")" aria-controls="@BodyId" @onclick="Toggle">
+                <Icon Name="arrow-right" Size="16" />
+                <span>@Title</span>
+                @if (Count is int count)
+                {
+                    <span class="lt-count">@count</span>
+                }
+            </button>
+        </h3>
+        @if (Actions is not null)
+        {
+            <div class="lt-collapsible-actions">@Actions</div>
+        }
+    </div>
+    <div class="lt-collapsible-body" id="@BodyId" hidden="@(!_open)">
+        @if (_open)
+        {
+            @ChildContent
+        }
+    </div>
+</section>
+
+@code {
+    private static readonly Dictionary<string, bool> Remembered = new(StringComparer.Ordinal);
+
+    private bool _open;
+
+    /// <summary>Identifiant du bloc ; sert aussi de clé pour retenir son état.</summary>
+    [Parameter, EditorRequired] public string Id { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+
+    [Parameter] public int? Count { get; set; }
+
+    /// <summary>Ouvert au premier affichage, tant que l'utilisateur ne l'a pas replié.</summary>
+    [Parameter] public bool OpenByDefault { get; set; } = true;
+
+    [Parameter] public string? Class { get; set; }
+
+    [Parameter] public RenderFragment? Actions { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private string BodyId => $"{Id}-body";
+
+    protected override void OnParametersSet()
+    {
+        lock (Remembered)
+        {
+            _open = Remembered.TryGetValue(Id, out bool open) ? open : OpenByDefault;
+        }
+    }
+
+    private void Toggle()
+    {
+        _open = !_open;
+        lock (Remembered)
+        {
+            Remembered[Id] = _open;
+        }
+    }
+}

@@ -93,10 +93,10 @@
                 break;
 
             case ExplorerMode.View when Record is { } supplier:
-                <article class="lt-sheet" aria-labelledby="supplier-sheet-title" id="supplier-sheet">
-                    <header class="lt-sheet-header">
+                <article class="lt-card" aria-labelledby="supplier-sheet-title" id="supplier-sheet">
+                    <header class="lt-card-header">
                         <span class="lt-avatar is-large is-alt" aria-hidden="true">@ExplorerText.Initials(supplier.Name)</span>
-                        <div class="lt-sheet-heading">
+                        <div class="lt-card-heading">
                             <h2 id="supplier-sheet-title" tabindex="-1">@supplier.Name</h2>
                             <p class="lettra-muted">@supplier.City</p>
                         </div>
@@ -110,42 +110,35 @@
                         <p class="lettra-success" role="status" id="explorer-status">@Status</p>
                     }
 
-                    <div class="lt-sheet-columns">
-                        <section class="lt-sheet-section" aria-labelledby="supplier-identity">
-                            <h3 id="supplier-identity">@L["Explorer.Section.Identity"]</h3>
-                            <dl class="lt-facts">
-                                <Fact Label="@L["Customers.Field.Siren"]" Value="@(supplier.Siren is { } s ? ExplorerText.Siren(s) : null)" />
-                                <Fact Label="@L["Customers.Field.Siret"]" Value="@(supplier.Siret is { } t ? ExplorerText.Siret(t) : null)" />
-                                <Fact Label="@L["Customers.Field.VatNumber"]" Value="@supplier.VatNumber" />
-                                <Fact Label="@L["Customers.Field.Email"]">
-                                    @if (supplier.Email is { Length: > 0 } email)
-                                    {
-                                        <a href="@($"mailto:{email}")">@email</a>
-                                    }
-                                    else
-                                    {
-                                        <span class="lettra-muted">—</span>
-                                    }
-                                </Fact>
-                                <Fact Label="@L["Explorer.Field.CreatedAt"]" Value="@supplier.CreatedAt.ToLocalTime().ToString("d", Culture)" />
-                            </dl>
-                        </section>
-                        <section class="lt-sheet-section" aria-labelledby="supplier-address">
-                            <h3 id="supplier-address">@L["Explorer.Section.Address"]</h3>
-                            <address class="lt-address">
-                                @supplier.AddressLine1<br />
-                                @if (!string.IsNullOrWhiteSpace(supplier.AddressLine2))
+                    <Collapsible Id="supplier-details" Title="@L["Explorer.Section.Contact"]">
+                        <dl class="lt-facts lt-facts-2">
+                            <Fact Label="@L["Customers.Field.Siren"]" Value="@(supplier.Siren is { } s ? ExplorerText.Siren(s) : null)" />
+                            <Fact Label="@L["Customers.Field.Siret"]" Value="@(supplier.Siret is { } t ? ExplorerText.Siret(t) : null)" />
+                            <Fact Label="@L["Customers.Field.VatNumber"]" Value="@supplier.VatNumber" />
+                            <Fact Label="@L["Customers.Field.Email"]">
+                                @if (supplier.Email is { Length: > 0 } email)
                                 {
-                                    @supplier.AddressLine2<br />
+                                    <a href="@($"mailto:{email}")">@email</a>
                                 }
-                                @supplier.PostalCode @supplier.City<br />
-                                @supplier.CountryCode
-                            </address>
-                        </section>
-                    </div>
+                                else
+                                {
+                                    <span class="lettra-muted">—</span>
+                                }
+                            </Fact>
+                            <Fact Label="@L["Explorer.Section.Address"]">
+                                <address class="lt-address">
+                                    @supplier.AddressLine1<br />
+                                    @if (!string.IsNullOrWhiteSpace(supplier.AddressLine2))
+                                    {
+                                        @supplier.AddressLine2<br />
+                                    }
+                                    @supplier.PostalCode @supplier.City · @supplier.CountryCode
+                                </address>
+                            </Fact>
+                        </dl>
+                    </Collapsible>
 
-                    <section class="lt-sheet-section" aria-labelledby="supplier-bank">
-                        <h3 id="supplier-bank">@L["Suppliers.Section.Bank"]</h3>
+                    <Collapsible Id="supplier-bank" Title="@L["Suppliers.Section.Bank"]">
                         <dl class="lt-facts">
                             <Fact Label="@L["Suppliers.Field.Iban"]">
                                 @if (supplier.Iban is { Length: > 0 } iban)
@@ -159,15 +152,15 @@
                             </Fact>
                         </dl>
                         <p class="lettra-hint">@L["Suppliers.PurchasesLater"]</p>
-                    </section>
+                    </Collapsible>
                 </article>
                 break;
 
             case ExplorerMode.New or ExplorerMode.Edit when Form is not null:
-                <EditForm Model="Form" OnValidSubmit="SaveAsync" FormName="supplier-sheet" class="lt-sheet lt-sheet-editing" id="supplier-form">
+                <EditForm Model="Form" OnValidSubmit="SaveAsync" FormName="supplier-sheet" class="lt-card lt-card-editing" id="supplier-form">
                     <DataAnnotationsValidator />
-                    <header class="lt-sheet-header">
-                        <div class="lt-sheet-heading">
+                    <header class="lt-card-header">
+                        <div class="lt-card-heading">
                             <h2 tabindex="-1">@(Mode == ExplorerMode.New ? L["Suppliers.New"] : string.Format(Culture, L["Explorer.Editing"], Record?.Name))</h2>
                             <p class="lettra-muted">@L["Explorer.EditHint"]</p>
                         </div>

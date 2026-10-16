@@ -108,10 +108,10 @@
                 break;
 
             case ExplorerMode.View when Record is { } item:
-                <article class="lt-sheet" aria-labelledby="catalog-sheet-title" id="catalog-sheet">
-                    <header class="lt-sheet-header">
+                <article class="lt-card" aria-labelledby="catalog-sheet-title" id="catalog-sheet">
+                    <header class="lt-card-header">
                         <span class="lt-avatar is-large is-square" aria-hidden="true"><Icon Name="@(item.Kind == CatalogItemKindDto.Good ? "package" : "sparkles")" Size="24" /></span>
-                        <div class="lt-sheet-heading">
+                        <div class="lt-card-heading">
                             <h2 id="catalog-sheet-title" tabindex="-1">
                                 @item.Designation
                                 @if (item.IsArchived)
@@ -137,26 +137,22 @@
                         <p class="lettra-success" role="status" id="explorer-status">@Status</p>
                     }
 
-                    <section class="lt-kpis lt-sheet-kpis" aria-label="@L["Catalog.Prices"]">
-                        <div class="lt-kpi" id="catalog-kpi-excl">
-                            <span class="lt-kpi-head">@string.Format(Culture, L["Catalog.PricePer"], UnitLabel(item.UnitCode))</span>
-                            <span class="lt-kpi-value">@ExplorerText.Money(item.UnitPriceExclTax)</span>
-                            <span class="lt-kpi-note">@L["Catalog.Column.PriceExclTax"]</span>
+                    <dl class="lt-stats" aria-label="@L["Catalog.Prices"]" id="catalog-stats">
+                        <div id="catalog-kpi-excl">
+                            <dt>@string.Format(Culture, L["Catalog.PricePer"], UnitLabel(item.UnitCode))</dt>
+                            <dd>@ExplorerText.Money(item.UnitPriceExclTax)<small>@L["Catalog.ExclTaxShort"]</small></dd>
                         </div>
-                        <div class="lt-kpi">
-                            <span class="lt-kpi-head">@L["Catalog.Column.Vat"]</span>
-                            <span class="lt-kpi-value">@VatLabel(item.VatRatePercent)</span>
-                            <span class="lt-kpi-note">@item.VatRateCode</span>
+                        <div>
+                            <dt>@L["Catalog.Column.Vat"]</dt>
+                            <dd>@VatLabel(item.VatRatePercent)</dd>
                         </div>
-                        <div class="lt-kpi" id="catalog-kpi-incl">
-                            <span class="lt-kpi-head">@L["Catalog.Column.PriceInclTax"]</span>
-                            <span class="lt-kpi-value">@ExplorerText.Money(PriceConversion.InclTax(item.UnitPriceExclTax, item.VatRatePercent))</span>
-                            <span class="lt-kpi-note">@L["Catalog.InclTaxNote"]</span>
+                        <div id="catalog-kpi-incl">
+                            <dt>@L["Catalog.Column.PriceInclTax"]</dt>
+                            <dd>@ExplorerText.Money(PriceConversion.InclTax(item.UnitPriceExclTax, item.VatRatePercent))</dd>
                         </div>
-                    </section>
+                    </dl>
 
-                    <section class="lt-sheet-section" aria-labelledby="catalog-description">
-                        <h3 id="catalog-description">@L["Catalog.Field.Description"]</h3>
+                    <Collapsible Id="catalog-description" Title="@L["Catalog.Field.Description"]">
                         @if (string.IsNullOrWhiteSpace(item.Description))
                         {
                             <p class="lettra-muted">@L["Catalog.NoDescription"]</p>
@@ -165,26 +161,25 @@
                         {
                             <p class="lt-prewrap">@item.Description</p>
                         }
-                    </section>
+                    </Collapsible>
 
-                    <section class="lt-sheet-section" aria-labelledby="catalog-facts">
-                        <h3 id="catalog-facts">@L["Explorer.Section.Details"]</h3>
-                        <dl class="lt-facts">
+                    <Collapsible Id="catalog-facts" Title="@L["Explorer.Section.Details"]" OpenByDefault="false">
+                        <dl class="lt-facts lt-facts-2">
                             <Fact Label="@L["Catalog.Column.Reference"]" Value="@item.Reference" />
                             <Fact Label="@L["Catalog.Column.Kind"]" Value="@L[$"CatalogItemKind.{item.Kind}"]" />
                             <Fact Label="@L["Catalog.Column.Unit"]" Value="@($"{UnitLabel(item.UnitCode)} ({item.UnitCode})")" />
                             <Fact Label="@L["Explorer.Field.CreatedAt"]" Value="@item.CreatedAt.ToLocalTime().ToString("d", Culture)" />
                             <Fact Label="@L["Explorer.Field.UpdatedAt"]" Value="@item.UpdatedAt.ToLocalTime().ToString("g", Culture)" />
                         </dl>
-                    </section>
+                    </Collapsible>
                 </article>
                 break;
 
             case ExplorerMode.New or ExplorerMode.Edit when Form is not null:
-                <EditForm Model="Form" OnValidSubmit="SaveAsync" FormName="catalog-sheet" class="lt-sheet lt-sheet-editing" id="catalog-form">
+                <EditForm Model="Form" OnValidSubmit="SaveAsync" FormName="catalog-sheet" class="lt-card lt-card-editing" id="catalog-form">
                     <DataAnnotationsValidator />
-                    <header class="lt-sheet-header">
-                        <div class="lt-sheet-heading">
+                    <header class="lt-card-header">
+                        <div class="lt-card-heading">
                             <h2 tabindex="-1">@(Mode == ExplorerMode.New ? L["Catalog.NewItem"] : string.Format(Culture, L["Explorer.Editing"], Record?.Designation))</h2>
                             <p class="lettra-muted">@L["Explorer.EditHint"]</p>
                         </div>
