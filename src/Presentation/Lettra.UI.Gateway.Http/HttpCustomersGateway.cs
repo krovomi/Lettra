@@ -148,14 +148,36 @@ internal sealed class CsrfHeaderHandler : DelegatingHandler
     }
 }
 
+/// <summary>
+/// Hors ligne (selon <see cref="INetworkStatus"/>, quand l'hôte en fournit un) : la requête n'est pas envoyée et
+/// l'appel échoue comme un serveur injoignable. Le navigateur n'inscrit donc pas une erreur réseau dans la console pour
+/// chaque appel, et les écrans gardent leur comportement hors ligne (brouillons de l'appareil).
+/// </summary>
+internal sealed class OfflineShortCircuitHandler(IServiceProvider services) : DelegatingHandler
+{
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        if (services.GetService<INetworkStatus>() is { } network && await network.IsOfflineAsync(cancellationToken).ConfigureAwait(false))
+        {
+            throw new HttpRequestException(HttpRequestError.ConnectionError, "Appareil hors ligne : requête non envoyée.");
+        }
+
+        return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+    }
+}
+
 public static class DependencyInjection
 {
     public static IServiceCollection AddHttpGateways(this IServiceCollection services, Uri apiBaseAddress)
     {
         services.AddTransient<CsrfHeaderHandler>();
+        services.AddTransient<OfflineShortCircuitHandler>();
         services.AddHttpClient<ISessionGateway, HttpSessionGateway>(client => client.BaseAddress = apiBaseAddress)
+            .AddHttpMessageHandler<OfflineShortCircuitHandler>()
             .AddHttpMessageHandler<CsrfHeaderHandler>();
-        return services.AddApiGateways(apiBaseAddress, builder => builder.AddHttpMessageHandler<CsrfHeaderHandler>());
+        return services.AddApiGateways(apiBaseAddress, builder => builder
+            .AddHttpMessageHandler<OfflineShortCircuitHandler>()
+            .AddHttpMessageHandler<CsrfHeaderHandler>());
     }
 
     /// <summary>

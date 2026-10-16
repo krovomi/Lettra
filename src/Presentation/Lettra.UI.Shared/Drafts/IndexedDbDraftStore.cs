@@ -177,6 +177,8 @@ public static class OfflineDraftsRegistration
         services.TryAddScoped<OfflineDraftScope>();
         services.TryAddScoped<IOfflineDraftStore, IndexedDbDraftStore>();
         services.TryAddScoped<OfflineDrafts>();
+        // Hors ligne, les gateways HTTP n'envoient pas de requête vouée à l'échec (pas d'erreur réseau dans la console).
+        services.TryAddScoped<INetworkStatus, BrowserNetworkStatus>();
         return services;
     }
 }
