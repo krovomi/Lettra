@@ -52,7 +52,7 @@ public sealed class InvoiceEditorTests : BunitContext
         page.Find("#save").HasAttribute("disabled").Should().BeFalse();
         page.Find("#save").Click();
 
-        page.WaitForAssertion(() => page.Find("#document-status [role=alert]").TextContent.Trim().Should().Be("Choisissez un client."));
+        page.WaitForAssertion(() => this.ToastText().Should().Be("Choisissez un client."));
     }
 
     [Fact]

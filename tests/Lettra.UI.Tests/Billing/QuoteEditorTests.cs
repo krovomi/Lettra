@@ -281,7 +281,7 @@ public sealed class QuoteEditorTests : BunitContext
         page.Find("#save").HasAttribute("disabled").Should().BeFalse();
         page.Find("#save").Click();
 
-        page.WaitForAssertion(() => Texte(page, "#document-status [role=alert]").Should().Be("Choisissez un client."));
+        page.WaitForAssertion(() => this.ToastText().Should().Be("Choisissez un client."));
         _quotes.Creations.Should().BeEmpty();
     }
 
@@ -295,7 +295,7 @@ public sealed class QuoteEditorTests : BunitContext
 
         await page.InvokeAsync(() => page.Find("#save").Click());
 
-        page.WaitForAssertion(() => Texte(page, "#document-status [role=alert]").Should().Be("Ajoutez au moins une ligne."));
+        page.WaitForAssertion(() => this.ToastText().Should().Be("Ajoutez au moins une ligne."));
         _quotes.Creations.Should().BeEmpty();
     }
 

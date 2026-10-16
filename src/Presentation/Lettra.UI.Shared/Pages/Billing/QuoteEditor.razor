@@ -420,6 +420,7 @@ else
         if (_quote is null && _request.CustomerId == Guid.Empty)
         {
             _errors = [new ErrorDetail(ErrorCodes.Billing.CustomerRequired)];
+            await ExpandAsync(_mainBlock);
             if (_customerPicker is not null)
             {
                 await _customerPicker.FocusAsync();
