@@ -130,7 +130,7 @@ else
                 {
                     <button type="button" id="validate" class="lettra-button" disabled="@(!CanValidate)" @onclick="ValidateAsync"
                             title="@L["Billing.Command.Validate"] (Ctrl+Enter)">@L["Billing.Command.Validate"]</button>
-                    <button type="button" class="lettra-button is-secondary" disabled="@(_invoice is null)" @onclick="SaveNowAsync">@L["Billing.Command.Save"]</button>
+                    <button type="button" id="save" class="lettra-button is-secondary" disabled="@_busy" @onclick="SaveNowAsync">@L["Billing.Command.Save"]</button>
                     @if (AwaitsApproval)
                     {
                         <button type="button" id="approve-credit" class="lettra-button" disabled="@_busy" @onclick="ApproveCreditAsync">@L["Invoice.Command.ApproveCredit"]</button>
@@ -463,8 +463,29 @@ else
 
     private Task ScheduleSaveAsync() => IsDraft && !_conflict ? _autosave.ScheduleAsync() : Task.CompletedTask;
 
+    /// <summary>
+    /// Enregistrement demandé (bouton, Ctrl+S) : la pièce ne naît qu'avec son client et une ligne complète ; s'il en
+    /// manque un, on le dit et on y place le curseur au lieu de laisser un bouton inactif sans explication.
+    /// </summary>
     private async Task SaveNowAsync()
     {
+        if (_invoice is null && _request.CustomerId == Guid.Empty)
+        {
+            _errors = [new ErrorDetail(ErrorCodes.Billing.CustomerRequired)];
+            if (_customerPicker is not null)
+            {
+                await _customerPicker.FocusAsync();
+            }
+
+            return;
+        }
+
+        if (_invoice is null && _lines.All(l => l.IsIncomplete))
+        {
+            _errors = [new ErrorDetail(ErrorCodes.Billing.LinesRequired)];
+            return;
+        }
+
         await ScheduleSaveAsync();
         await _autosave.FlushAsync();
     }

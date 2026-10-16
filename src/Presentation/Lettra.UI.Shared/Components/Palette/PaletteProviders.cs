@@ -3,6 +3,7 @@ using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
 using Lettra.UI.Abstractions;
+using Lettra.UI.Shared.Billing;
 using Lettra.UI.Shared.Keyboard;
 using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Services;
@@ -72,8 +73,6 @@ public sealed class BillingPaletteProvider(
     NavigationManager navigation,
     IStringLocalizer<SharedResource> localizer) : ICommandPaletteProvider
 {
-    private const int MaxCustomers = 500;
-
     private IReadOnlyList<CustomerSummary>? _customers;
 
     public async Task<IReadOnlyList<PaletteItem>> SearchAsync(string query, CancellationToken cancellationToken)
@@ -95,8 +94,8 @@ public sealed class BillingPaletteProvider(
     {
         if (_customers is null && services.GetService<ICustomersGateway>() is { } customers)
         {
-            OperationResult<PagedResponse<CustomerSummary>> result = await customers.ListAsync(1, MaxCustomers, cancellationToken).ConfigureAwait(false);
-            _customers = result.IsSuccess && result.Value is not null ? result.Value.Items : [];
+            OperationResult<IReadOnlyList<CustomerSummary>> result = await customers.ListAllAsync(cancellationToken).ConfigureAwait(false);
+            _customers = result.Value ?? [];
         }
 
         string group = localizer["Palette.Group.Customers"];
