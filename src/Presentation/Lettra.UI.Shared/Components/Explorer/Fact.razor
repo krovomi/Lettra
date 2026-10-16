@@ -1,0 +1,14 @@
+@* Une ligne de la fiche en lecture : libellé et valeur ; une valeur absente s'affiche « — ». *@
+
+<div class="lt-fact">
+    <dt>@Label</dt>
+    <dd>@if (ChildContent is not null) { @ChildContent } else if (string.IsNullOrWhiteSpace(Value)) { <span class="lettra-muted">—</span> } else { @Value }</dd>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; } = string.Empty;
+
+    [Parameter] public string? Value { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

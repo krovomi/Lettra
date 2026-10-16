@@ -1,0 +1,359 @@
+@page "/customers"
+@page "/customers/new"
+@page "/customers/{Id:guid}"
+@page "/customers/{Id:guid}/edit"
+@inherits RecordExplorerPage<CustomerSummary, CustomerResponse, CreateCustomerRequest>
+@inject ICustomersGateway Gateway
+@inject IInvoicesGateway Invoices
+@inject IQuotesGateway Quotes
+@inject IAccountingGateway Accounting
+@inject IServiceProvider Services
+@* Clients : liste et fiche sur un seul écran (consultation), saisie dans la fiche (Nouveau, Modifier, Échap). *@
+
+<PageTitle>@L["Customers.Title"] · Lettra</PageTitle>
+
+<GlobalShortcuts Scope="PageScope" />
+<NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Customers.Title"]</h1>
+        <p class="lettra-muted" id="customers-count">@string.Format(Culture, L["Customers.Count"], TotalCount)</p>
+    </div>
+    <div class="lt-page-actions">
+        <a class="lettra-button" href="@NewHref" id="customers-new"><Icon Name="plus" Size="18" /> @L["Customers.New"] <kbd>@L["Explorer.Key.Insert"]</kbd></a>
+    </div>
+</div>
+
+<ExplorerLayout Mode="Mode" BackHref="@BasePath" ListLabel="@L["Customers.List.Title"]" DetailLabel="@L["Customers.Sheet"]">
+    <List>
+        <div class="lt-explorer-search">
+            <Icon Name="search" Size="18" />
+            <label for="customers-search" class="lettra-visually-hidden">@L["Customers.Search"]</label>
+            <input id="customers-search" type="search" @ref="SearchInput" @bind="Search" @bind:event="oninput"
+                   placeholder="@L["Customers.Search"]" autocomplete="off" />
+            <kbd>F3</kbd>
+        </div>
+
+        @if (Loading)
+        {
+            <ExplorerSkeleton />
+        }
+        else if (Items.Count == 0)
+        {
+            <div class="lt-explorer-empty" id="customers-empty">
+                @if (string.IsNullOrWhiteSpace(Search))
+                {
+                    <p>@L["Customers.List.Empty"]</p>
+                    <a class="lettra-button" href="@NewHref">@L["Customers.New"]</a>
+                }
+                else
+                {
+                    <p>@string.Format(Culture, L["Explorer.NoMatch"], Search)</p>
+                    <a class="lettra-button is-secondary" href="@CreateFromSearchHref" id="customers-create-from-search">@string.Format(Culture, L["Explorer.CreateNamed"], Search.Trim())</a>
+                }
+            </div>
+        }
+        else
+        {
+            <ul class="lt-records" role="listbox" tabindex="0" id="customers-list" aria-label="@L["Customers.List.Title"]"
+                aria-activedescendant="@ActiveOptionId" @ref="ListElement" @onkeydown="OnListKeyDown">
+                @foreach (CustomerSummary customer in Items)
+                {
+                    <li @key="customer.Id" id="@OptionId(customer)" role="option" aria-selected="@(IsSelected(customer) ? "true" : "false")"
+                        class="lt-record @(IsSelected(customer) ? "is-selected" : null)" @onclick="() => GoTo(Href(customer.Id))">
+                        <span class="lt-avatar" aria-hidden="true">@ExplorerText.Initials(customer.Name)</span>
+                        <span class="lt-record-main">
+                            <span class="lt-record-title">@customer.Name</span>
+                            <span class="lt-record-meta">@customer.City@(customer.Siren is { } siren ? $" · {ExplorerText.Siren(siren)}" : null)</span>
+                        </span>
+                        @if (customer.Kind == CustomerKindDto.Individual)
+                        {
+                            <span class="lettra-status">@L["Customers.Kind.Individual"]</span>
+                        }
+                    </li>
+                }
+            </ul>
+            @if (HasMore)
+            {
+                <button type="button" class="lettra-button is-ghost lt-explorer-more" id="customers-more" @onclick="LoadMoreAsync">
+                    @string.Format(Culture, L["Explorer.More"], Items.Count, TotalCount)
+                </button>
+            }
+        }
+    </List>
+
+    <Detail>
+        <GeneralErrors Errors="Errors" />
+
+        @switch (Mode)
+        {
+            case ExplorerMode.List:
+                <div class="lt-explorer-placeholder" id="customers-placeholder">
+                    <span class="lt-empty-icon"><Icon Name="users" Size="28" /></span>
+                    <p>@L["Explorer.Placeholder"]</p>
+                    <ExplorerShortcuts />
+                </div>
+                break;
+
+            case ExplorerMode.View when LoadingRecord:
+                <ExplorerSkeleton />
+                break;
+
+            case ExplorerMode.View when Record is { } customer:
+                <article class="lt-sheet" aria-labelledby="customer-sheet-title" id="customer-sheet">
+                    <header class="lt-sheet-header">
+                        <span class="lt-avatar is-large" aria-hidden="true">@ExplorerText.Initials(customer.Name)</span>
+                        <div class="lt-sheet-heading">
+                            <h2 id="customer-sheet-title" tabindex="-1">@customer.Name</h2>
+                            <p class="lettra-muted">
+                                @L[customer.Kind == CustomerKindDto.Company ? "Customers.Kind.Company" : "Customers.Kind.Individual"] · @customer.City
+                            </p>
+                        </div>
+                        <div class="lt-page-actions">
+                            <a class="lettra-button" href="@EditHref(customer.Id)" id="customer-edit"><Icon Name="pencil" Size="18" /> @L["Explorer.Edit"] <kbd>F2</kbd></a>
+                            <a class="lettra-button is-secondary" href="@($"quotes/new?customer={customer.Id}")" id="customer-new-quote"><Icon Name="file-text" Size="18" /> @L["Customers.NewQuote"]</a>
+                            <a class="lettra-button is-secondary" href="@($"invoices/new?customer={customer.Id}")" id="customer-new-invoice"><Icon Name="receipt" Size="18" /> @L["Customers.NewInvoice"]</a>
+                        </div>
+                    </header>
+
+                    @if (Status is not null)
+                    {
+                        <p class="lettra-success" role="status" id="explorer-status">@Status</p>
+                    }
+
+                    @if (_ledger is { } ledger)
+                    {
+                        <section class="lt-kpis lt-sheet-kpis" aria-label="@L["Customers.Activity"]">
+                            <a class="lt-kpi" href="@LedgerHref(customer.Id)" id="customer-kpi-invoiced">
+                                <span class="lt-kpi-head">@string.Format(Culture, L["Customers.Kpi.Invoiced"], _year)</span>
+                                <span class="lt-kpi-value">@ExplorerText.Money(ledger.TotalDebit)</span>
+                                <span class="lt-kpi-note">@L["Customers.Kpi.InvoicedNote"]</span>
+                            </a>
+                            <a class="lt-kpi" href="@LedgerHref(customer.Id)" id="customer-kpi-credited">
+                                <span class="lt-kpi-head">@string.Format(Culture, L["Customers.Kpi.Credited"], _year)</span>
+                                <span class="lt-kpi-value">@ExplorerText.Money(ledger.TotalCredit)</span>
+                                <span class="lt-kpi-note">@L["Customers.Kpi.CreditedNote"]</span>
+                            </a>
+                            <a class="lt-kpi" href="@LedgerHref(customer.Id)" id="customer-kpi-balance">
+                                <span class="lt-kpi-head">@L["Customers.Kpi.Balance"]</span>
+                                <span class="lt-kpi-value">@ExplorerText.Money(ledger.ClosingBalance)</span>
+                                <span class="lt-kpi-note">@L["Customers.Kpi.BalanceNote"]</span>
+                            </a>
+                        </section>
+                    }
+
+                    <div class="lt-sheet-columns">
+                        <section class="lt-sheet-section" aria-labelledby="customer-identity">
+                            <h3 id="customer-identity">@L["Explorer.Section.Identity"]</h3>
+                            <dl class="lt-facts">
+                                @if (customer.Kind == CustomerKindDto.Company)
+                                {
+                                    <Fact Label="@L["Customers.Field.Siren"]" Value="@(customer.Siren is { } s ? ExplorerText.Siren(s) : null)" />
+                                    <Fact Label="@L["Customers.Field.Siret"]" Value="@(customer.Siret is { } t ? ExplorerText.Siret(t) : null)" />
+                                    <Fact Label="@L["Customers.Field.VatNumber"]" Value="@customer.VatNumber" />
+                                }
+                                <Fact Label="@L["Customers.Field.Email"]">
+                                    @if (customer.Email is { Length: > 0 } email)
+                                    {
+                                        <a href="@($"mailto:{email}")">@email</a>
+                                    }
+                                    else
+                                    {
+                                        <span class="lettra-muted">—</span>
+                                    }
+                                </Fact>
+                                <Fact Label="@L["Customers.Field.PreferredLanguage"]" Value="@(customer.PreferredLanguage == "en-US" ? "English" : "Français")" />
+                                <Fact Label="@L["Explorer.Field.CreatedAt"]" Value="@customer.CreatedAt.ToLocalTime().ToString("d", Culture)" />
+                            </dl>
+                        </section>
+                        <section class="lt-sheet-section" aria-labelledby="customer-address">
+                            <h3 id="customer-address">@L["Explorer.Section.Address"]</h3>
+                            <address class="lt-address">
+                                @customer.AddressLine1<br />
+                                @if (!string.IsNullOrWhiteSpace(customer.AddressLine2))
+                                {
+                                    @customer.AddressLine2<br />
+                                }
+                                @customer.PostalCode @customer.City<br />
+                                @customer.CountryCode
+                            </address>
+                        </section>
+                    </div>
+
+                    <section class="lt-sheet-section" aria-labelledby="customer-invoices">
+                        <div class="lt-panel-head">
+                            <h3 id="customer-invoices">@L["Customers.LastInvoices"]</h3>
+                            <a href="@LedgerHref(customer.Id)" id="customer-ledger">@L["Customers.SeeLedger"] <Icon Name="arrow-right" Size="16" /></a>
+                        </div>
+                        @if (_invoices is null)
+                        {
+                            <p class="lettra-muted">@L["Loading"]</p>
+                        }
+                        else if (_invoices.Count == 0)
+                        {
+                            <p class="lettra-muted" id="customer-no-invoice">@L["Customers.NoInvoice"]</p>
+                        }
+                        else
+                        {
+                            <table class="lettra-table lt-table-compact" id="customer-invoices-table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">@L["Billing.Column.Number"]</th>
+                                        <th scope="col">@L["Invoices.Kind"]</th>
+                                        <th scope="col">@L["Billing.Column.Date"]</th>
+                                        <th scope="col">@L["Billing.Status"]</th>
+                                        <th scope="col" class="lg-num">@L["Totals.InclTax"]</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (InvoiceSummary invoice in _invoices)
+                                    {
+                                        <tr>
+                                            <td><a href="@($"invoices/{invoice.Id}")">@(invoice.Number ?? L["Billing.Draft"])</a></td>
+                                            <td>@L[$"InvoiceKind.{invoice.Kind}"]</td>
+                                            <td>@invoice.IssueDate?.ToString("d", Culture)</td>
+                                            <td><DocumentStatusBadge Text="@L[$"InvoiceStatus.{invoice.Status}"]" Kind="@invoice.Status.ToString().ToLowerInvariant()" /></td>
+                                            <td class="lg-num">@ExplorerText.Money(invoice.TotalInclTax)</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                    </section>
+
+                    <section class="lt-sheet-section" aria-labelledby="customer-quotes">
+                        <h3 id="customer-quotes">@L["Customers.LastQuotes"]</h3>
+                        @if (_quotes is null)
+                        {
+                            <p class="lettra-muted">@L["Loading"]</p>
+                        }
+                        else if (_quotes.Count == 0)
+                        {
+                            <p class="lettra-muted" id="customer-no-quote">@L["Customers.NoQuote"]</p>
+                        }
+                        else
+                        {
+                            <table class="lettra-table lt-table-compact" id="customer-quotes-table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">@L["Billing.Column.Number"]</th>
+                                        <th scope="col">@L["Billing.Column.Date"]</th>
+                                        <th scope="col">@L["Billing.Status"]</th>
+                                        <th scope="col" class="lg-num">@L["Totals.ExclTax"]</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (QuoteSummary quote in _quotes)
+                                    {
+                                        <tr>
+                                            <td><a href="@($"quotes/{quote.Id}")">@(quote.Number ?? L["Billing.Draft"])</a></td>
+                                            <td>@quote.IssueDate?.ToString("d", Culture)</td>
+                                            <td><DocumentStatusBadge Text="@L[$"QuoteStatus.{quote.Status}"]" Kind="@quote.Status.ToString().ToLowerInvariant()" /></td>
+                                            <td class="lg-num">@ExplorerText.Money(quote.TotalExclTax)</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                    </section>
+                </article>
+                break;
+
+            case ExplorerMode.New or ExplorerMode.Edit when Form is not null:
+                <EditForm Model="Form" OnValidSubmit="SaveAsync" FormName="customer-sheet" class="lt-sheet lt-sheet-editing" id="customer-form">
+                    <DataAnnotationsValidator />
+                    <header class="lt-sheet-header">
+                        <div class="lt-sheet-heading">
+                            <h2 tabindex="-1">@(Mode == ExplorerMode.New ? L["Customers.New"] : string.Format(Culture, L["Explorer.Editing"], Record?.Name))</h2>
+                            <p class="lettra-muted">@L["Explorer.EditHint"]</p>
+                        </div>
+                    </header>
+                    <CustomerFormFields @ref="_fields" Model="Form" Errors="Errors" />
+                    <EditBar Creating="Mode == ExplorerMode.New" Busy="Busy" Dirty="IsDirty" ConfirmingDiscard="ConfirmingDiscard"
+                             StaleName="@StaleRecord?.Name" OnCancel="Back" OnDiscard="() => DiscardAndLeave()" OnKeepEditing="KeepEditing"
+                             OnOverwrite="SaveAsync" OnTakeTheirs="TakeTheirs" />
+                </EditForm>
+                break;
+        }
+    </Detail>
+</ExplorerLayout>
+
+@code {
+    private const int ActivityCount = 5;
+
+    private CustomerFormFields? _fields;
+    private List<InvoiceSummary>? _invoices;
+    private List<QuoteSummary>? _quotes;
+    private AccountLedgerResponse? _ledger;
+    private int _year;
+
+    [Parameter] public Guid? Id { get; set; }
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    protected override string BasePath => "customers";
+
+    protected override string ResourcePrefix => "Customers";
+
+    protected override ElementReference? FirstField => _fields?.FirstField;
+
+    private DateOnly Today => DateOnly.FromDateTime((Services.GetService<TimeProvider>() ?? TimeProvider.System).GetLocalNow().DateTime);
+
+    private string LedgerHref(Guid id) => $"accounting/accounts/{SalesAccounts.Customers}?customer={id}";
+
+    protected override Task<OperationResult<PagedResponse<CustomerSummary>>> LoadPageAsync(string? search, int page, CancellationToken cancellationToken) =>
+        Gateway.SearchAsync(search, page, PageSize, cancellationToken);
+
+    protected override Task<OperationResult<CustomerResponse>> GetAsync(Guid id, CancellationToken cancellationToken) => Gateway.GetAsync(id, cancellationToken);
+
+    protected override Task<OperationResult<CustomerResponse>> CreateAsync(CreateCustomerRequest form, CancellationToken cancellationToken) =>
+        Gateway.CreateAsync(form, cancellationToken);
+
+    protected override Task<OperationResult<CustomerResponse>> UpdateAsync(Guid id, long expectedVersion, CreateCustomerRequest form, CancellationToken cancellationToken) =>
+        Gateway.UpdateAsync(id, expectedVersion, form, cancellationToken);
+
+    protected override CreateCustomerRequest NewForm(string? name) => new() { Name = name ?? string.Empty };
+
+    protected override CreateCustomerRequest ToForm(CustomerResponse record) => new()
+    {
+        Kind = record.Kind,
+        Name = record.Name,
+        Siren = record.Siren,
+        Siret = record.Siret,
+        VatNumber = record.VatNumber,
+        Email = record.Email,
+        AddressLine1 = record.AddressLine1,
+        AddressLine2 = record.AddressLine2,
+        PostalCode = record.PostalCode,
+        City = record.City,
+        CountryCode = record.CountryCode,
+        PreferredLanguage = record.PreferredLanguage,
+    };
+
+    protected override CreateCustomerRequest Copy(CreateCustomerRequest form) => form with { };
+
+    protected override Guid IdOf(CustomerSummary item) => item.Id;
+
+    protected override Guid IdOf(CustomerResponse record) => record.Id;
+
+    protected override long VersionOf(CustomerResponse record) => record.Version;
+
+    protected override string DisplayName(CustomerResponse record) => record.Name;
+
+    /// <summary>Activité du client : ses dernières pièces et son compte 411 de l'année (lecture, sans bloquer la fiche).</summary>
+    protected override async Task OnRecordLoadedAsync(CustomerResponse record)
+    {
+        _invoices = null;
+        _quotes = null;
+        _ledger = null;
+        _year = Today.Year;
+        Task<OperationResult<PagedResponse<InvoiceSummary>>> invoices = Invoices.ListAsync(new BillingListQuery(CustomerId: record.Id, PageSize: ActivityCount), null, null, CancellationToken.None);
+        Task<OperationResult<PagedResponse<QuoteSummary>>> quotes = Quotes.ListAsync(new BillingListQuery(CustomerId: record.Id, PageSize: ActivityCount), null, CancellationToken.None);
+        Task<OperationResult<AccountLedgerResponse>> ledger = Accounting.GetLedgerAsync(SalesAccounts.Customers, new DateOnly(_year, 1, 1), Today, record.Id, CancellationToken.None);
+        await Task.WhenAll(invoices, quotes, ledger);
+        _invoices = invoices.Result.Value is { } i ? [.. i.Items] : [];
+        _quotes = quotes.Result.Value is { } q ? [.. q.Items] : [];
+        _ledger = ledger.Result.Value;
+    }
+}

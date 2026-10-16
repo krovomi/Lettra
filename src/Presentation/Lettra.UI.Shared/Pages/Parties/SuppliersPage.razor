@@ -1,0 +1,235 @@
+@page "/suppliers"
+@page "/suppliers/new"
+@page "/suppliers/{Id:guid}"
+@page "/suppliers/{Id:guid}/edit"
+@inherits RecordExplorerPage<SupplierSummary, SupplierResponse, CreateSupplierRequest>
+@inject ISuppliersGateway Gateway
+@* Fournisseurs : liste et fiche sur un seul écran (consultation), saisie dans la fiche (Nouveau, Modifier, Échap). *@
+
+<PageTitle>@L["Suppliers.Title"] · Lettra</PageTitle>
+
+<GlobalShortcuts Scope="PageScope" />
+<NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Suppliers.Title"]</h1>
+        <p class="lettra-muted" id="suppliers-count">@string.Format(Culture, L["Suppliers.Count"], TotalCount)</p>
+    </div>
+    <div class="lt-page-actions">
+        <a class="lettra-button" href="@NewHref" id="suppliers-new"><Icon Name="plus" Size="18" /> @L["Suppliers.New"] <kbd>@L["Explorer.Key.Insert"]</kbd></a>
+    </div>
+</div>
+
+<ExplorerLayout Mode="Mode" BackHref="@BasePath" ListLabel="@L["Suppliers.List.Title"]" DetailLabel="@L["Suppliers.Sheet"]">
+    <List>
+        <div class="lt-explorer-search">
+            <Icon Name="search" Size="18" />
+            <label for="suppliers-search" class="lettra-visually-hidden">@L["Suppliers.Search"]</label>
+            <input id="suppliers-search" type="search" @ref="SearchInput" @bind="Search" @bind:event="oninput"
+                   placeholder="@L["Suppliers.Search"]" autocomplete="off" />
+            <kbd>F3</kbd>
+        </div>
+
+        @if (Loading)
+        {
+            <ExplorerSkeleton />
+        }
+        else if (Items.Count == 0)
+        {
+            <div class="lt-explorer-empty" id="suppliers-empty">
+                @if (string.IsNullOrWhiteSpace(Search))
+                {
+                    <p>@L["Suppliers.List.Empty"]</p>
+                    <a class="lettra-button" href="@NewHref">@L["Suppliers.New"]</a>
+                }
+                else
+                {
+                    <p>@string.Format(Culture, L["Explorer.NoMatch"], Search)</p>
+                    <a class="lettra-button is-secondary" href="@CreateFromSearchHref" id="suppliers-create-from-search">@string.Format(Culture, L["Explorer.CreateNamed"], Search.Trim())</a>
+                }
+            </div>
+        }
+        else
+        {
+            <ul class="lt-records" role="listbox" tabindex="0" id="suppliers-list" aria-label="@L["Suppliers.List.Title"]"
+                aria-activedescendant="@ActiveOptionId" @ref="ListElement" @onkeydown="OnListKeyDown">
+                @foreach (SupplierSummary supplier in Items)
+                {
+                    <li @key="supplier.Id" id="@OptionId(supplier)" role="option" aria-selected="@(IsSelected(supplier) ? "true" : "false")"
+                        class="lt-record @(IsSelected(supplier) ? "is-selected" : null)" @onclick="() => GoTo(Href(supplier.Id))">
+                        <span class="lt-avatar is-alt" aria-hidden="true">@ExplorerText.Initials(supplier.Name)</span>
+                        <span class="lt-record-main">
+                            <span class="lt-record-title">@supplier.Name</span>
+                            <span class="lt-record-meta">@supplier.City@(supplier.Siren is { } siren ? $" · {ExplorerText.Siren(siren)}" : null)</span>
+                        </span>
+                    </li>
+                }
+            </ul>
+            @if (HasMore)
+            {
+                <button type="button" class="lettra-button is-ghost lt-explorer-more" id="suppliers-more" @onclick="LoadMoreAsync">
+                    @string.Format(Culture, L["Explorer.More"], Items.Count, TotalCount)
+                </button>
+            }
+        }
+    </List>
+
+    <Detail>
+        <GeneralErrors Errors="Errors" />
+
+        @switch (Mode)
+        {
+            case ExplorerMode.List:
+                <div class="lt-explorer-placeholder" id="suppliers-placeholder">
+                    <span class="lt-empty-icon"><Icon Name="truck" Size="28" /></span>
+                    <p>@L["Explorer.Placeholder"]</p>
+                    <ExplorerShortcuts />
+                </div>
+                break;
+
+            case ExplorerMode.View when LoadingRecord:
+                <ExplorerSkeleton />
+                break;
+
+            case ExplorerMode.View when Record is { } supplier:
+                <article class="lt-sheet" aria-labelledby="supplier-sheet-title" id="supplier-sheet">
+                    <header class="lt-sheet-header">
+                        <span class="lt-avatar is-large is-alt" aria-hidden="true">@ExplorerText.Initials(supplier.Name)</span>
+                        <div class="lt-sheet-heading">
+                            <h2 id="supplier-sheet-title" tabindex="-1">@supplier.Name</h2>
+                            <p class="lettra-muted">@supplier.City</p>
+                        </div>
+                        <div class="lt-page-actions">
+                            <a class="lettra-button" href="@EditHref(supplier.Id)" id="supplier-edit"><Icon Name="pencil" Size="18" /> @L["Explorer.Edit"] <kbd>F2</kbd></a>
+                        </div>
+                    </header>
+
+                    @if (Status is not null)
+                    {
+                        <p class="lettra-success" role="status" id="explorer-status">@Status</p>
+                    }
+
+                    <div class="lt-sheet-columns">
+                        <section class="lt-sheet-section" aria-labelledby="supplier-identity">
+                            <h3 id="supplier-identity">@L["Explorer.Section.Identity"]</h3>
+                            <dl class="lt-facts">
+                                <Fact Label="@L["Customers.Field.Siren"]" Value="@(supplier.Siren is { } s ? ExplorerText.Siren(s) : null)" />
+                                <Fact Label="@L["Customers.Field.Siret"]" Value="@(supplier.Siret is { } t ? ExplorerText.Siret(t) : null)" />
+                                <Fact Label="@L["Customers.Field.VatNumber"]" Value="@supplier.VatNumber" />
+                                <Fact Label="@L["Customers.Field.Email"]">
+                                    @if (supplier.Email is { Length: > 0 } email)
+                                    {
+                                        <a href="@($"mailto:{email}")">@email</a>
+                                    }
+                                    else
+                                    {
+                                        <span class="lettra-muted">—</span>
+                                    }
+                                </Fact>
+                                <Fact Label="@L["Explorer.Field.CreatedAt"]" Value="@supplier.CreatedAt.ToLocalTime().ToString("d", Culture)" />
+                            </dl>
+                        </section>
+                        <section class="lt-sheet-section" aria-labelledby="supplier-address">
+                            <h3 id="supplier-address">@L["Explorer.Section.Address"]</h3>
+                            <address class="lt-address">
+                                @supplier.AddressLine1<br />
+                                @if (!string.IsNullOrWhiteSpace(supplier.AddressLine2))
+                                {
+                                    @supplier.AddressLine2<br />
+                                }
+                                @supplier.PostalCode @supplier.City<br />
+                                @supplier.CountryCode
+                            </address>
+                        </section>
+                    </div>
+
+                    <section class="lt-sheet-section" aria-labelledby="supplier-bank">
+                        <h3 id="supplier-bank">@L["Suppliers.Section.Bank"]</h3>
+                        <dl class="lt-facts">
+                            <Fact Label="@L["Suppliers.Field.Iban"]">
+                                @if (supplier.Iban is { Length: > 0 } iban)
+                                {
+                                    <span class="lt-mono" id="supplier-iban">@ExplorerText.Iban(iban)</span>
+                                }
+                                else
+                                {
+                                    <span class="lettra-muted">@L["Suppliers.NoIban"]</span>
+                                }
+                            </Fact>
+                        </dl>
+                        <p class="lettra-hint">@L["Suppliers.PurchasesLater"]</p>
+                    </section>
+                </article>
+                break;
+
+            case ExplorerMode.New or ExplorerMode.Edit when Form is not null:
+                <EditForm Model="Form" OnValidSubmit="SaveAsync" FormName="supplier-sheet" class="lt-sheet lt-sheet-editing" id="supplier-form">
+                    <DataAnnotationsValidator />
+                    <header class="lt-sheet-header">
+                        <div class="lt-sheet-heading">
+                            <h2 tabindex="-1">@(Mode == ExplorerMode.New ? L["Suppliers.New"] : string.Format(Culture, L["Explorer.Editing"], Record?.Name))</h2>
+                            <p class="lettra-muted">@L["Explorer.EditHint"]</p>
+                        </div>
+                    </header>
+                    <SupplierFormFields @ref="_fields" Model="Form" Errors="Errors" />
+                    <EditBar Creating="Mode == ExplorerMode.New" Busy="Busy" Dirty="IsDirty" ConfirmingDiscard="ConfirmingDiscard"
+                             StaleName="@StaleRecord?.Name" OnCancel="Back" OnDiscard="() => DiscardAndLeave()" OnKeepEditing="KeepEditing"
+                             OnOverwrite="SaveAsync" OnTakeTheirs="TakeTheirs" />
+                </EditForm>
+                break;
+        }
+    </Detail>
+</ExplorerLayout>
+
+@code {
+    private SupplierFormFields? _fields;
+
+    [Parameter] public Guid? Id { get; set; }
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    protected override string BasePath => "suppliers";
+
+    protected override string ResourcePrefix => "Suppliers";
+
+    protected override ElementReference? FirstField => _fields?.FirstField;
+
+    protected override Task<OperationResult<PagedResponse<SupplierSummary>>> LoadPageAsync(string? search, int page, CancellationToken cancellationToken) =>
+        Gateway.SearchAsync(search, page, PageSize, cancellationToken);
+
+    protected override Task<OperationResult<SupplierResponse>> GetAsync(Guid id, CancellationToken cancellationToken) => Gateway.GetAsync(id, cancellationToken);
+
+    protected override Task<OperationResult<SupplierResponse>> CreateAsync(CreateSupplierRequest form, CancellationToken cancellationToken) =>
+        Gateway.CreateAsync(form, cancellationToken);
+
+    protected override Task<OperationResult<SupplierResponse>> UpdateAsync(Guid id, long expectedVersion, CreateSupplierRequest form, CancellationToken cancellationToken) =>
+        Gateway.UpdateAsync(id, expectedVersion, form, cancellationToken);
+
+    protected override CreateSupplierRequest NewForm(string? name) => new() { Name = name ?? string.Empty };
+
+    protected override CreateSupplierRequest ToForm(SupplierResponse record) => new()
+    {
+        Name = record.Name,
+        Siren = record.Siren,
+        Siret = record.Siret,
+        VatNumber = record.VatNumber,
+        Email = record.Email,
+        Iban = record.Iban,
+        AddressLine1 = record.AddressLine1,
+        AddressLine2 = record.AddressLine2,
+        PostalCode = record.PostalCode,
+        City = record.City,
+        CountryCode = record.CountryCode,
+    };
+
+    protected override CreateSupplierRequest Copy(CreateSupplierRequest form) => form with { };
+
+    protected override Guid IdOf(SupplierSummary item) => item.Id;
+
+    protected override Guid IdOf(SupplierResponse record) => record.Id;
+
+    protected override long VersionOf(SupplierResponse record) => record.Version;
+
+    protected override string DisplayName(SupplierResponse record) => record.Name;
+}

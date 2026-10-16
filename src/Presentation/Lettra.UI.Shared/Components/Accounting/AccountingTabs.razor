@@ -1,0 +1,13 @@
+@* Onglets de la comptabilité ; la période suit d'un onglet à l'autre. *@
+@inject IStringLocalizer<SharedResource> L
+
+<nav class="lt-tabs" aria-label="@L["Nav.Group.Accounting"]">
+    <NavLink class="lt-tab" href="@($"accounting/journal?{Period.Query}")" Match="NavLinkMatch.Prefix" id="tab-journal"><Icon Name="book-open" Size="18" /> @L["Accounting.Journal.Title"]</NavLink>
+    <NavLink class="lt-tab" href="@($"accounting/balance?{Period.Query}")" Match="NavLinkMatch.Prefix" id="tab-balance"><Icon Name="scale" Size="18" /> @L["Accounting.Balance.Title"]</NavLink>
+    <NavLink class="lt-tab" href="@($"accounting/accounts/{SalesAccounts.Customers}?{Period.Query}")" Match="NavLinkMatch.Prefix" id="tab-ledger"><Icon Name="users" Size="18" /> @L["Accounting.Ledger.Title"]</NavLink>
+    <NavLink class="lt-tab" href="exports/fec" Match="NavLinkMatch.Prefix" id="tab-fec"><Icon Name="file-spreadsheet" Size="18" /> @L["Nav.Fec"]</NavLink>
+</nav>
+
+@code {
+    [Parameter, EditorRequired] public AccountingPeriod Period { get; set; }
+}

@@ -1,0 +1,10 @@
+@* Rappel des raccourcis des pages de consultation, affiché quand aucune fiche n'est ouverte. *@
+@inject IStringLocalizer<SharedResource> L
+
+<dl class="lt-shortcuts">
+    <div><dt><kbd>F3</kbd></dt><dd>@L["Explorer.Command.Search"]</dd></div>
+    <div><dt><kbd>↑</kbd> <kbd>↓</kbd></dt><dd>@L["Explorer.Command.Browse"]</dd></div>
+    <div><dt><kbd>@L["Explorer.Key.Insert"]</kbd></dt><dd>@L["Explorer.Command.New"]</dd></div>
+    <div><dt><kbd>F2</kbd> <kbd>@L["Explorer.Key.Enter"]</kbd></dt><dd>@L["Explorer.Command.Edit"]</dd></div>
+    <div><dt><kbd>@L["Explorer.Key.Escape"]</kbd></dt><dd>@L["Explorer.Command.Back"]</dd></div>
+</dl>

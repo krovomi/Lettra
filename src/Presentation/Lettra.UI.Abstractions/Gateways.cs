@@ -14,6 +14,15 @@ public interface ICustomersGateway
     Task<OperationResult<PagedResponse<CustomerSummary>>> ListAsync(int page, int pageSize, CancellationToken cancellationToken);
 
     Task<OperationResult<CustomerResponse>> GetAsync(Guid id, CancellationToken cancellationToken);
+
+    /// <summary>Liste filtrée sur le nom, sans accents ni casse (page de consultation).</summary>
+    Task<OperationResult<PagedResponse<CustomerSummary>>> SearchAsync(string? search, int page, int pageSize, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Modifie un client à partir de la version lue (ADR-0013). Si quelqu'un l'a modifié entre-temps : échec
+    /// <c>Concurrency.VersionMismatch</c> avec le client actuel dans <see cref="OperationResult{T}.Current"/>.
+    /// </summary>
+    Task<OperationResult<CustomerResponse>> UpdateAsync(Guid id, long expectedVersion, CreateCustomerRequest request, CancellationToken cancellationToken);
 }
 
 /// <summary>Dossier sur lequel l'utilisateur travaille. Phase 0 : fixé par la configuration ; le sélecteur de dossier arrive en phase 2.</summary>

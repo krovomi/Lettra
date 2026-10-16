@@ -1,0 +1,364 @@
+@page "/catalog"
+@page "/catalog/new"
+@page "/catalog/{Id:guid}"
+@page "/catalog/{Id:guid}/edit"
+@inherits RecordExplorerPage<CatalogItemSummary, CatalogItemResponse, SaveCatalogItemRequest>
+@inject ICatalogGateway Gateway
+@* Articles : liste filtrée et fiche sur un seul écran ; la saisie rapide en grille reste sur /catalog/grid. *@
+
+<PageTitle>@L["Catalog.Title"] · Lettra</PageTitle>
+
+<GlobalShortcuts Scope="PageScope" />
+<NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Catalog.Title"]</h1>
+        <p class="lettra-muted" id="catalog-count">@string.Format(Culture, L["Catalog.Count"], TotalCount)</p>
+    </div>
+    <div class="lt-page-actions">
+        <a class="lettra-button is-secondary" href="catalog/grid" id="catalog-grid-link"><Icon Name="rows-3" Size="18" /> @L["Catalog.GridMode"]</a>
+        <a class="lettra-button" href="@NewHref" id="catalog-new-item"><Icon Name="plus" Size="18" /> @L["Catalog.NewItem"] <kbd>@L["Explorer.Key.Insert"]</kbd></a>
+    </div>
+</div>
+
+<ExplorerLayout Mode="Mode" BackHref="@BasePath" ListLabel="@L["Catalog.List.Title"]" DetailLabel="@L["Catalog.Sheet"]">
+    <List>
+        <div class="lt-explorer-search">
+            <Icon Name="search" Size="18" />
+            <label for="catalog-items-search" class="lettra-visually-hidden">@L["Catalog.Search"]</label>
+            <input id="catalog-items-search" type="search" @ref="SearchInput" @bind="Search" @bind:event="oninput"
+                   placeholder="@L["Catalog.SearchPlaceholder"]" autocomplete="off" />
+            <kbd>F3</kbd>
+        </div>
+        <div class="lt-explorer-filters" role="group" aria-label="@L["Explorer.Filters"]">
+            <div class="lt-segmented" role="radiogroup" aria-label="@L["Catalog.Column.Kind"]">
+                <button type="button" role="radio" aria-checked="@(_kind is null ? "true" : "false")" id="catalog-kind-all" @onclick="() => FilterKind(null)">@L["Explorer.All"]</button>
+                @foreach (CatalogItemKindDto kind in Enum.GetValues<CatalogItemKindDto>())
+                {
+                    <button type="button" role="radio" aria-checked="@(_kind == kind ? "true" : "false")" id="@($"catalog-kind-{kind.ToString().ToLowerInvariant()}")" @onclick="() => FilterKind(kind)">@L[$"CatalogItemKind.{kind}"]</button>
+                }
+            </div>
+            <label class="lt-toggle">
+                <input id="catalog-items-archived" type="checkbox" @bind="_includeArchived" @bind:after="ReloadAsync" />
+                @L["Catalog.ShowArchived"]
+            </label>
+        </div>
+
+        @if (Loading)
+        {
+            <ExplorerSkeleton />
+        }
+        else if (Shown.Count == 0)
+        {
+            <div class="lt-explorer-empty" id="catalog-items-empty">
+                @if (string.IsNullOrWhiteSpace(Search) && _kind is null)
+                {
+                    <p>@L["Catalog.List.Empty"]</p>
+                    <a class="lettra-button" href="@NewHref">@L["Catalog.NewItem"]</a>
+                }
+                else
+                {
+                    <p>@string.Format(Culture, L["Explorer.NoMatch"], Search ?? string.Empty)</p>
+                    <a class="lettra-button is-secondary" href="@CreateFromSearchHref" id="catalog-create-from-search">@L["Catalog.NewItem"]</a>
+                }
+            </div>
+        }
+        else
+        {
+            <ul class="lt-records" role="listbox" tabindex="0" id="catalog-items-list" aria-label="@L["Catalog.List.Title"]"
+                aria-activedescendant="@ActiveOptionId" @ref="ListElement" @onkeydown="OnListKeyDown">
+                @foreach (CatalogItemSummary item in Shown)
+                {
+                    <li @key="item.Id" id="@OptionId(item)" role="option" aria-selected="@(IsSelected(item) ? "true" : "false")"
+                        class="lt-record @(IsSelected(item) ? "is-selected" : null) @(item.IsArchived ? "is-archived" : null)" @onclick="() => GoTo(Href(item.Id))">
+                        <span class="lt-avatar is-square" aria-hidden="true"><Icon Name="@(item.Kind == CatalogItemKindDto.Good ? "package" : "sparkles")" Size="18" /></span>
+                        <span class="lt-record-main">
+                            <span class="lt-record-title">@item.Designation</span>
+                            <span class="lt-record-meta">@item.Reference · @UnitLabel(item.UnitCode)@(item.IsArchived ? $" · {L["Catalog.Archived"]}" : null)</span>
+                        </span>
+                        <span class="lt-record-side lt-num">@ExplorerText.Money(item.UnitPriceExclTax)<small>@L["Catalog.ExclTaxShort"]</small></span>
+                    </li>
+                }
+            </ul>
+            @if (HasMore)
+            {
+                <button type="button" class="lettra-button is-ghost lt-explorer-more" id="catalog-more" @onclick="LoadMoreAsync">
+                    @string.Format(Culture, L["Explorer.More"], Items.Count, TotalCount)
+                </button>
+            }
+        }
+    </List>
+
+    <Detail>
+        <GeneralErrors Errors="Errors" />
+
+        @switch (Mode)
+        {
+            case ExplorerMode.List:
+                <div class="lt-explorer-placeholder" id="catalog-placeholder">
+                    <span class="lt-empty-icon"><Icon Name="package" Size="28" /></span>
+                    <p>@L["Explorer.Placeholder"]</p>
+                    <ExplorerShortcuts />
+                </div>
+                break;
+
+            case ExplorerMode.View when LoadingRecord:
+                <ExplorerSkeleton />
+                break;
+
+            case ExplorerMode.View when Record is { } item:
+                <article class="lt-sheet" aria-labelledby="catalog-sheet-title" id="catalog-sheet">
+                    <header class="lt-sheet-header">
+                        <span class="lt-avatar is-large is-square" aria-hidden="true"><Icon Name="@(item.Kind == CatalogItemKindDto.Good ? "package" : "sparkles")" Size="24" /></span>
+                        <div class="lt-sheet-heading">
+                            <h2 id="catalog-sheet-title" tabindex="-1">
+                                @item.Designation
+                                @if (item.IsArchived)
+                                {
+                                    <span class="lettra-status is-draft" id="catalog-archived-badge">@L["Catalog.Archived"]</span>
+                                }
+                            </h2>
+                            <p class="lettra-muted">@item.Reference · @L[$"CatalogItemKind.{item.Kind}"]</p>
+                        </div>
+                        <div class="lt-page-actions">
+                            @if (!item.IsArchived)
+                            {
+                                <a class="lettra-button" href="@EditHref(item.Id)" id="catalog-edit"><Icon Name="pencil" Size="18" /> @L["Explorer.Edit"] <kbd>F2</kbd></a>
+                            }
+                            <button type="button" class="lettra-button is-secondary" id="catalog-archive" disabled="@Busy" @onclick="ToggleArchiveAsync">
+                                <Icon Name="@(item.IsArchived ? "archive-restore" : "archive")" Size="18" /> @(item.IsArchived ? L["Catalog.Reactivate"] : L["Catalog.Archive"])
+                            </button>
+                        </div>
+                    </header>
+
+                    @if (Status is not null)
+                    {
+                        <p class="lettra-success" role="status" id="explorer-status">@Status</p>
+                    }
+
+                    <section class="lt-kpis lt-sheet-kpis" aria-label="@L["Catalog.Prices"]">
+                        <div class="lt-kpi" id="catalog-kpi-excl">
+                            <span class="lt-kpi-head">@string.Format(Culture, L["Catalog.PricePer"], UnitLabel(item.UnitCode))</span>
+                            <span class="lt-kpi-value">@ExplorerText.Money(item.UnitPriceExclTax)</span>
+                            <span class="lt-kpi-note">@L["Catalog.Column.PriceExclTax"]</span>
+                        </div>
+                        <div class="lt-kpi">
+                            <span class="lt-kpi-head">@L["Catalog.Column.Vat"]</span>
+                            <span class="lt-kpi-value">@VatLabel(item.VatRatePercent)</span>
+                            <span class="lt-kpi-note">@item.VatRateCode</span>
+                        </div>
+                        <div class="lt-kpi" id="catalog-kpi-incl">
+                            <span class="lt-kpi-head">@L["Catalog.Column.PriceInclTax"]</span>
+                            <span class="lt-kpi-value">@ExplorerText.Money(PriceConversion.InclTax(item.UnitPriceExclTax, item.VatRatePercent))</span>
+                            <span class="lt-kpi-note">@L["Catalog.InclTaxNote"]</span>
+                        </div>
+                    </section>
+
+                    <section class="lt-sheet-section" aria-labelledby="catalog-description">
+                        <h3 id="catalog-description">@L["Catalog.Field.Description"]</h3>
+                        @if (string.IsNullOrWhiteSpace(item.Description))
+                        {
+                            <p class="lettra-muted">@L["Catalog.NoDescription"]</p>
+                        }
+                        else
+                        {
+                            <p class="lt-prewrap">@item.Description</p>
+                        }
+                    </section>
+
+                    <section class="lt-sheet-section" aria-labelledby="catalog-facts">
+                        <h3 id="catalog-facts">@L["Explorer.Section.Details"]</h3>
+                        <dl class="lt-facts">
+                            <Fact Label="@L["Catalog.Column.Reference"]" Value="@item.Reference" />
+                            <Fact Label="@L["Catalog.Column.Kind"]" Value="@L[$"CatalogItemKind.{item.Kind}"]" />
+                            <Fact Label="@L["Catalog.Column.Unit"]" Value="@($"{UnitLabel(item.UnitCode)} ({item.UnitCode})")" />
+                            <Fact Label="@L["Explorer.Field.CreatedAt"]" Value="@item.CreatedAt.ToLocalTime().ToString("d", Culture)" />
+                            <Fact Label="@L["Explorer.Field.UpdatedAt"]" Value="@item.UpdatedAt.ToLocalTime().ToString("g", Culture)" />
+                        </dl>
+                    </section>
+                </article>
+                break;
+
+            case ExplorerMode.New or ExplorerMode.Edit when Form is not null:
+                <EditForm Model="Form" OnValidSubmit="SaveAsync" FormName="catalog-sheet" class="lt-sheet lt-sheet-editing" id="catalog-form">
+                    <DataAnnotationsValidator />
+                    <header class="lt-sheet-header">
+                        <div class="lt-sheet-heading">
+                            <h2 tabindex="-1">@(Mode == ExplorerMode.New ? L["Catalog.NewItem"] : string.Format(Culture, L["Explorer.Editing"], Record?.Designation))</h2>
+                            <p class="lettra-muted">@L["Explorer.EditHint"]</p>
+                        </div>
+                    </header>
+                    <div class="lt-form-grid">
+                        <div class="lt-form-field">
+                            <label for="item-reference">@L["Catalog.Column.Reference"]</label>
+                            <InputText id="item-reference" @ref="_reference" @bind-Value="Form.Reference" autocomplete="off" />
+                            <FieldErrors Field="@nameof(SaveCatalogItemRequest.Reference)" ServerErrors="Errors" />
+                        </div>
+                        <fieldset class="lt-form-field">
+                            <legend>@L["Catalog.Column.Kind"]</legend>
+                            <InputRadioGroup @bind-Value="Form.Kind">
+                                @foreach (CatalogItemKindDto kind in Enum.GetValues<CatalogItemKindDto>())
+                                {
+                                    <label><InputRadio Value="kind" /> @L[$"CatalogItemKind.{kind}"]</label>
+                                }
+                            </InputRadioGroup>
+                        </fieldset>
+                        <div class="lt-form-field lt-form-wide">
+                            <label for="item-designation">@L["Catalog.Column.Designation"]</label>
+                            <InputText id="item-designation" @bind-Value="Form.Designation" autocomplete="off" />
+                            <FieldErrors Field="@nameof(SaveCatalogItemRequest.Designation)" ServerErrors="Errors" />
+                        </div>
+                        <div class="lt-form-field lt-form-wide">
+                            <label for="item-description">@L["Catalog.Field.Description"]</label>
+                            <InputTextArea id="item-description" rows="3" @bind-Value="Form.Description" />
+                            <FieldErrors Field="@nameof(SaveCatalogItemRequest.Description)" ServerErrors="Errors" />
+                        </div>
+                        <div class="lt-form-field">
+                            <label for="item-unit">@L["Catalog.Column.Unit"]</label>
+                            <InputSelect id="item-unit" @bind-Value="Form.UnitCode">
+                                @foreach (string unit in _referenceData.UnitCodes)
+                                {
+                                    <option value="@unit">@UnitLabel(unit) (@unit)</option>
+                                }
+                            </InputSelect>
+                            <FieldErrors Field="@nameof(SaveCatalogItemRequest.UnitCode)" ServerErrors="Errors" />
+                        </div>
+                        <div class="lt-form-field">
+                            <label for="item-vat">@L["Catalog.Column.Vat"]</label>
+                            <InputSelect id="item-vat" @bind-Value="Form.VatRateCode">
+                                @foreach (VatRateOption rate in _referenceData.VatRates)
+                                {
+                                    <option value="@rate.Code">@VatLabel(rate.Percent)</option>
+                                }
+                            </InputSelect>
+                            <FieldErrors Field="@nameof(SaveCatalogItemRequest.VatRateCode)" ServerErrors="Errors" />
+                        </div>
+                        <div class="lt-form-field">
+                            <label for="item-price">@L["Catalog.Column.PriceExclTax"]</label>
+                            <InputNumber id="item-price" @bind-Value="Form.UnitPriceExclTax" step="0.01" inputmode="decimal" />
+                            <FieldErrors Field="@nameof(SaveCatalogItemRequest.UnitPriceExclTax)" ServerErrors="Errors" />
+                        </div>
+                        <div class="lt-form-field">
+                            <span class="lettra-label">@L["Catalog.Column.PriceInclTax"]</span>
+                            <output id="item-price-incl" class="lt-output lt-num" for="item-price item-vat">@ExplorerText.Money(PriceConversion.InclTax(Form.UnitPriceExclTax, VatPercentOf(Form.VatRateCode)))</output>
+                        </div>
+                    </div>
+                    <EditBar Creating="Mode == ExplorerMode.New" Busy="Busy" Dirty="IsDirty" ConfirmingDiscard="ConfirmingDiscard"
+                             StaleName="@StaleRecord?.Designation" OnCancel="Back" OnDiscard="() => DiscardAndLeave()" OnKeepEditing="KeepEditing"
+                             OnOverwrite="SaveAsync" OnTakeTheirs="TakeTheirs" />
+                </EditForm>
+                break;
+        }
+    </Detail>
+</ExplorerLayout>
+
+@code {
+    private static readonly VatRateOption FallbackVatRate = new("FR-20", 20m);
+
+    private InputText? _reference;
+    private CatalogReferenceData _referenceData = new(["C62"], [FallbackVatRate]);
+    private CatalogItemKindDto? _kind;
+    private bool _includeArchived;
+
+    [Parameter] public Guid? Id { get; set; }
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    protected override string BasePath => "catalog";
+
+    protected override string ResourcePrefix => "Catalog";
+
+    protected override ElementReference? FirstField => _reference?.Element;
+
+    /// <summary>Le filtre de nature s'applique à l'écran : le serveur ne filtre que sur le texte et l'archivage.</summary>
+    private List<CatalogItemSummary> Shown => _kind is null ? Items : [.. Items.Where(i => i.Kind == _kind)];
+
+    protected override IReadOnlyList<CatalogItemSummary> VisibleItems => Shown;
+
+    protected override async Task OnInitializedAsync()
+    {
+        OperationResult<CatalogReferenceData> reference = await Gateway.GetReferenceDataAsync(CancellationToken.None);
+        if (reference is { IsSuccess: true, Value: { } value })
+        {
+            _referenceData = value;
+        }
+
+        await base.OnInitializedAsync();
+    }
+
+    private void FilterKind(CatalogItemKindDto? kind) => _kind = kind;
+
+    private async Task ToggleArchiveAsync()
+    {
+        if (Record is not { } item)
+        {
+            return;
+        }
+
+        OperationResult<CatalogItemResponse> result = await Gateway.SetArchivedAsync(item.Id, item.Version, !item.IsArchived, CancellationToken.None);
+        if (result is { IsSuccess: true, Value: { } updated })
+        {
+            await ShowUpdatedAsync(updated, string.Format(Culture, L[updated.IsArchived ? "Catalog.ArchivedDone" : "Catalog.Reactivated"], updated.Designation));
+        }
+        else if (result is { IsStale: true, Current: { } current })
+        {
+            await ShowUpdatedAsync(current, L["Catalog.ReloadedAfterChange"]);
+        }
+        else
+        {
+            Errors = result.Errors;
+        }
+    }
+
+    private string UnitLabel(string code)
+    {
+        LocalizedString label = L[$"Unit.{code}"];
+        return label.ResourceNotFound ? code : label.Value;
+    }
+
+    private string VatLabel(decimal percent) => string.Format(Culture, L["Catalog.VatPercent"], percent);
+
+    private decimal VatPercentOf(string code) => _referenceData.VatRates.FirstOrDefault(v => v.Code == code)?.Percent ?? 0m;
+
+    protected override Task<OperationResult<PagedResponse<CatalogItemSummary>>> LoadPageAsync(string? search, int page, CancellationToken cancellationToken) =>
+        Gateway.ListAsync(search, _includeArchived, page, PageSize, cancellationToken);
+
+    protected override Task<OperationResult<CatalogItemResponse>> GetAsync(Guid id, CancellationToken cancellationToken) => Gateway.GetAsync(id, cancellationToken);
+
+    protected override Task<OperationResult<CatalogItemResponse>> CreateAsync(SaveCatalogItemRequest form, CancellationToken cancellationToken) =>
+        Gateway.CreateAsync(form, cancellationToken);
+
+    protected override Task<OperationResult<CatalogItemResponse>> UpdateAsync(Guid id, long expectedVersion, SaveCatalogItemRequest form, CancellationToken cancellationToken) =>
+        Gateway.UpdateAsync(id, expectedVersion, form, cancellationToken);
+
+    /// <summary>Un nouvel article reprend la nature filtrée ; la recherche sans résultat devient sa désignation.</summary>
+    protected override SaveCatalogItemRequest NewForm(string? name) => new()
+    {
+        Designation = name ?? string.Empty,
+        Kind = _kind ?? CatalogItemKindDto.Service,
+        UnitCode = _referenceData.UnitCodes.Contains("C62") ? "C62" : _referenceData.UnitCodes.FirstOrDefault() ?? "C62",
+        VatRateCode = _referenceData.VatRates.FirstOrDefault()?.Code ?? FallbackVatRate.Code,
+    };
+
+    protected override SaveCatalogItemRequest ToForm(CatalogItemResponse record) => new()
+    {
+        Reference = record.Reference,
+        Designation = record.Designation,
+        Description = record.Description,
+        Kind = record.Kind,
+        UnitCode = record.UnitCode,
+        UnitPriceExclTax = record.UnitPriceExclTax,
+        VatRateCode = record.VatRateCode,
+    };
+
+    protected override SaveCatalogItemRequest Copy(SaveCatalogItemRequest form) => form with { };
+
+    protected override Guid IdOf(CatalogItemSummary item) => item.Id;
+
+    protected override Guid IdOf(CatalogItemResponse record) => record.Id;
+
+    protected override long VersionOf(CatalogItemResponse record) => record.Version;
+
+    protected override string DisplayName(CatalogItemResponse record) => record.Designation;
+}

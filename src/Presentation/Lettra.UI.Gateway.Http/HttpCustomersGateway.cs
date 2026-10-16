@@ -54,6 +54,18 @@ internal sealed class HttpCustomersGateway(HttpClient http) : ICustomersGateway
             return OperationResult<CustomerResponse>.Failure(ErrorCodes.Api.Unreachable);
         }
     }
+
+    public Task<OperationResult<PagedResponse<CustomerSummary>>> SearchAsync(string? search, int page, int pageSize, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.GetAsync(HttpCalls.Relative($"api/v1/customers?page={page}&pageSize={pageSize}{HttpCalls.SearchParameter(search)}"), ct),
+            ContractsJsonContext.Default.PagedResponseCustomerSummary,
+            cancellationToken);
+
+    public Task<OperationResult<CustomerResponse>> UpdateAsync(Guid id, long expectedVersion, CreateCustomerRequest request, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.PutVersionedAsync(HttpCalls.Relative($"api/v1/customers/{id}"), expectedVersion, request, ContractsJsonContext.Default.CreateCustomerRequest, ct),
+            ContractsJsonContext.Default.CustomerResponse,
+            cancellationToken);
 }
 
 /// <summary>Traduit une réponse HTTP en <see cref="OperationResult{T}"/> : corps typé, ou codes d'erreur du <c>ProblemResponse</c>.</summary>
@@ -201,6 +213,7 @@ public static class DependencyInjection
         Configure(services.AddHttpClient<IInvoicesGateway, HttpInvoicesGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IPlatformTransmissionGateway, HttpPlatformTransmissionGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IFecGateway, HttpFecGateway>(client => client.BaseAddress = apiBaseAddress));
+        Configure(services.AddHttpClient<IAccountingGateway, HttpAccountingGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IBillingSettingsGateway, HttpBillingSettingsGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IPriceListsGateway, HttpPriceListsGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IAlertsGateway, HttpAlertsGateway>(client => client.BaseAddress = apiBaseAddress));

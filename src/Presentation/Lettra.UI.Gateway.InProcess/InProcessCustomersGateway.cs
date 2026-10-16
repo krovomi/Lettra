@@ -48,6 +48,14 @@ internal sealed class InProcessCustomersGateway(IServiceScopeFactory scopes) : I
             return result.ToOperationResult();
         }, cancellationToken);
 
+    public Task<OperationResult<PagedResponse<CustomerSummary>>> SearchAsync(string? search, int page, int pageSize, CancellationToken cancellationToken) =>
+        RunAsync((sp, dossier, ct) => InProcessScope.QueryAsync(
+            sp, new ListCustomersQuery(dossier, page, pageSize, string.IsNullOrWhiteSpace(search) ? null : search.Trim()), ct), cancellationToken);
+
+    public Task<OperationResult<CustomerResponse>> UpdateAsync(Guid id, long expectedVersion, CreateCustomerRequest request, CancellationToken cancellationToken) =>
+        RunAsync((sp, dossier, ct) => InProcessScope.WriteThenReadAsync(
+            sp, request.ToUpdateCommand(dossier, new CustomerId(id), expectedVersion), new GetCustomerQuery(dossier, new CustomerId(id)), ct), cancellationToken);
+
     private Task<OperationResult<T>> RunAsync<T>(
         Func<IServiceProvider, DossierId, CancellationToken, Task<OperationResult<T>>> operation,
         CancellationToken cancellationToken) =>
@@ -75,6 +83,7 @@ public static class DependencyInjection
         services.AddSingleton<IInvoicesGateway, InProcessInvoicesGateway>();
         services.AddSingleton<IPlatformTransmissionGateway, InProcessPlatformTransmissionGateway>();
         services.AddSingleton<IFecGateway, InProcessFecGateway>();
+        services.AddSingleton<IAccountingGateway, InProcessAccountingGateway>();
         services.AddSingleton<IBillingSettingsGateway, InProcessBillingSettingsGateway>();
         services.AddSingleton<IPriceListsGateway, InProcessPriceListsGateway>();
         services.AddSingleton<IAlertsGateway, InProcessAlertsGateway>();
