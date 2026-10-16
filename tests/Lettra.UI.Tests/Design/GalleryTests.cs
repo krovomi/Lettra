@@ -77,6 +77,7 @@ public sealed class GalleryTests : BunitContext
             b.CloseComponent();
         });
         Ecrire(dossier, "clients", "customers", Page<Customers>());
+        Ecrire(dossier, "articles", "catalog", Page<Catalog>());
     }
 
     private static RenderFragment Page<TPage>() where TPage : IComponent => b =>
