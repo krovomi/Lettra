@@ -76,9 +76,8 @@ internal sealed class DemoScenarioGenerator
             AddressLine1 = _company.AddressLine1,
             PostalCode = _company.City.PostalCode,
             City = _company.City.Name,
-            // Pas d'option pour les débits : avec elle, aucun avoir ne se valide aujourd'hui (mention exigée par la
-            // conformité mais jamais posée sur un avoir, voir Invoice.BuildLegalMentions).
-            VatOnDebits = false,
+            // Le prestataire de services a opté pour les débits : ses factures et ses avoirs portent la mention.
+            VatOnDebits = _company.Business == DemoBusiness.Services,
             VatDeclarationRegime = _company.Business == DemoBusiness.Trading ? VatDeclarationRegimeDto.RealNormal : VatDeclarationRegimeDto.RealSimplified,
             PaymentDays = _company.PaymentDays,
             PaymentTerms = $"Paiement à {_company.PaymentDays} jours par virement",

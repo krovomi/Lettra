@@ -55,7 +55,7 @@ internal sealed class VoiceVocabulary
         Targets =
         [
             new(["tableau", "de", "bord"], VoiceTarget.Home), new(["accueil"], VoiceTarget.Home),
-            new(["devis"], VoiceTarget.Quotes),
+            new(["devis"], VoiceTarget.Quotes), new(["devi"], VoiceTarget.Quotes), // « devis » et « devi » se prononcent pareil
             new(["factures"], VoiceTarget.Invoices), new(["facture"], VoiceTarget.Invoices),
             new(["avoirs"], VoiceTarget.CreditNotes), new(["avoir"], VoiceTarget.CreditNotes),
             new(["clients"], VoiceTarget.Customers), new(["client"], VoiceTarget.Customers), new(["cliente"], VoiceTarget.Customers),

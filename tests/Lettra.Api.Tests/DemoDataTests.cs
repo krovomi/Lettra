@@ -162,6 +162,10 @@ public sealed class DemoDataTests : IDisposable
             }
         }
 
+        // Le prestataire a opté pour les débits : ses avoirs validés portent la mention, comme ses factures.
+        InvoiceSummary credit = allInvoices.First(i => i.Kind == InvoiceKindDto.CreditNote && i.Status != InvoiceStatusDto.Draft);
+        (await invoices.GetAsync(credit.Id, default)).Value!.LegalMentions.Should().Contain(m => m.Contains("débits", StringComparison.Ordinal));
+
         InvoiceSummary paid = allInvoices.First(i => i.Status == InvoiceStatusDto.Issued && i.Kind == InvoiceKindDto.Invoice);
         (await app.GetRequiredService<IPlatformTransmissionGateway>().GetAsync(paid.Id, default)).Value!.History
             .Should().Contain(h => h.Status == PlatformStatusDto.MadeAvailable);
@@ -187,6 +191,8 @@ public sealed class DemoDataTests : IDisposable
         // Le centre d'alertes du dossier a de quoi montrer : une alerte ouverte et une résolue.
         AlertCentreResponse alerts = (await app.GetRequiredService<IAlertsGateway>().ListAsync(cabinetWide: false, includeClosed: true, default)).Value!;
         alerts.Alerts.Select(a => a.State).Should().Contain(AlertState.Resolved).And.Contain(s => s != AlertState.Resolved);
+        AlertCentreResponse cabinetAlerts = (await app.GetRequiredService<IAlertsGateway>().ListAsync(cabinetWide: true, includeClosed: true, default)).Value!;
+        cabinetAlerts.Alerts.Should().HaveCountGreaterThan(alerts.Alerts.Count, "le propriétaire du poste voit aussi les alertes du cabinet");
 
         // Une seconde demande ne mélange rien : le dossier a déjà des pièces.
         (await LettraDemoData.SeedAsync(configuration, "Demo", s => s.AddSingleton<IKekStore>(keys), user)).Status.Should().Be(DemoSeedStatus.DossierNotEmpty);
