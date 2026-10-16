@@ -31,6 +31,11 @@ transcription répond 403 `Speech.Disabled`.
 | Serveur (modes 2, 3, 5) | serveur whisper.cpp de la cellule | `Lettra:Speech:Engine=WhisperServer`, `Lettra:Speech:WhisperServer:Endpoint=http://whisper:8080/` |
 | Poste MAUI (modes 1, 4) | Whisper.net | `services.AddOnDeviceSpeech(new OnDeviceSpeechOptions { ModelDirectory = … })` |
 
+Le serveur est l'image construite par `build/voix/whisper-server` : whisper.cpp v1.8.7 compilé sans optimisations
+propres à la machine de construction, utilisateur non privilégié, modèle (`WHISPER_MODEL=base`) téléchargé au premier
+démarrage dans le volume `/models` et vérifié par empreinte. L'image publique `main` de whisper.cpp s'arrêtait au
+chargement du modèle sur les machines de la CI.
+
 Autres réglages : `Lettra:Speech:Languages` (`fr`, `en`), `Lettra:Speech:MaxSeconds` (30). Une adresse de serveur
 Whisper publique est **refusée au démarrage** : seuls les noms de service, `*.svc`, `*.cluster.local`, `*.internal`,
 `*.local`, `*.lan` et les adresses privées passent.

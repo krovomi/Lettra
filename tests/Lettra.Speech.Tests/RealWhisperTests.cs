@@ -121,6 +121,10 @@ public sealed class RealWhisperTests(ITestOutputHelper output)
         report.AppendLine().AppendLine(CultureInfo.InvariantCulture,
             $"Taux d'erreur de mots moyen : **{meanWer:P1}** (seuil {maxWer:P0}). Commandes reconnues : **{commandsOk}/{commands}** (seuil {minCommands:P0}).");
         output.WriteLine(report.ToString());
+
+        // Annotation du run GitHub : le score se lit sur la PR sans ouvrir le résumé.
+        Console.WriteLine(string.Create(CultureInfo.InvariantCulture,
+            $"::notice title=Voix ({engine.Name})::Erreurs de mots {meanWer:P1}, commandes reconnues {commandsOk}/{commands}"));
         if (Environment.GetEnvironmentVariable("GITHUB_STEP_SUMMARY") is { Length: > 0 } summary)
         {
             await File.AppendAllTextAsync(summary, report.ToString());

@@ -126,15 +126,17 @@ jobs:
           name: voix-corpus
           path: voix
 
-      # Même image et même commande que le conteneur « whisper » de la démonstration.
+      # Même image que le conteneur « whisper » de la démonstration : build/voix/whisper-server.
       - name: Serveur whisper.cpp
         run: |
-          docker run -d --name whisper -p 8178:8080 -v "$PWD/voix/models:/models:ro" ghcr.io/ggml-org/whisper.cpp:main \
-            "\$(command -v whisper-server || echo /app/build/bin/whisper-server) -m /models/ggml-$WHISPER_MODEL.bin --host 0.0.0.0 --port 8080"
-          for i in $(seq 1 60); do
+          docker build -t lettra-whisper build/voix/whisper-server
+          docker run -d --name whisper -p 8178:8080 -e WHISPER_MODEL="$WHISPER_MODEL" -v "$PWD/voix/models:/models:ro" lettra-whisper
+          for i in $(seq 1 90); do
             if curl -fsS -o /dev/null http://localhost:8178/; then echo "Serveur prêt"; exit 0; fi
+            if [ "$(docker inspect -f '{{.State.Running}}' whisper)" != "true" ]; then break; fi
             sleep 2
           done
+          docker inspect -f 'Arrêté : code {{.State.ExitCode}}, mémoire épuisée {{.State.OOMKilled}}' whisper
           docker logs whisper
           exit 1
 
