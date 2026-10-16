@@ -404,8 +404,8 @@
         Guid? customer = null;
         if (command.Customer is { Length: > 0 } name && Services.GetService(typeof(ICustomersGateway)) is ICustomersGateway customers)
         {
-            OperationResult<PagedResponse<CustomerSummary>> list = await customers.ListAsync(1, 500, CancellationToken.None);
-            customer = list.Value?.Items
+            OperationResult<IReadOnlyList<CustomerSummary>> list = await customers.ListAllAsync(CancellationToken.None);
+            customer = list.Value?
                 .Select(c => (c.Id, Score: PaletteMatcher.Score(c.Name, name)))
                 .Where(c => c.Score > 0)
                 .OrderByDescending(c => c.Score)
