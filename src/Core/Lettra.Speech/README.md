@@ -53,7 +53,7 @@ L'API envoie `Permissions-Policy: microphone=(self)` : le micro n'est permis qu'
 | Vérification | Où |
 |---|---|
 | Grammaire, mise en forme, lecture des WAV, adaptateurs (avec un faux serveur), route de l'API | Tests de la CI, Linux |
-| Corpus de phrases lu par une voix de synthèse (espeak-ng) et transcrit par un vrai Whisper | Workflow « Voix » : Whisper.net sur Linux, Windows et macOS ; serveur whisper.cpp en conteneur |
+| Corpus de phrases lu par une voix de synthèse (Piper) et transcrit par un vrai Whisper | Workflow « Voix » : Whisper.net sur Linux, Windows et macOS ; serveur whisper.cpp en conteneur |
 | Whisper.net sur Android, iOS et Mac Catalyst | Non vérifié : le paquet fournit les bibliothèques natives, rien n'a tourné sur un appareil |
 | Vraie voix humaine, bruit de bureau, accents | Non vérifié |
 

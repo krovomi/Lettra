@@ -1,7 +1,7 @@
 name: Voix
 
 # Dictée et commandes vocales (vague 5, lane D) face à un vrai Whisper : un corpus de phrases lues par une voix de
-# synthèse passe par Whisper.net (le moteur du poste, sur Linux, Windows et macOS) et par le serveur whisper.cpp
+# synthèse (Piper) passe par Whisper.net (le moteur du poste, sur Linux, Windows et macOS) et par le serveur whisper.cpp
 # (le moteur de la cellule, en conteneur). Le rapport (erreurs de mots, commandes reconnues) s'affiche dans le
 # résumé du run. Séparé de « CI » : le modèle pèse 142 Mio et ne sert qu'aux changements de la voix.
 
@@ -55,26 +55,32 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Voix de synthèse
-        run: sudo apt-get update -q && sudo apt-get install -yq --no-install-recommends espeak-ng ffmpeg
+      - name: Voix de synthèse (Piper, locale)
+        run: |
+          sudo apt-get update -q && sudo apt-get install -yq --no-install-recommends ffmpeg
+          python3 -m pip install --user piper-tts==1.3.0
 
-      - name: Modèle en cache
+      - name: Modèle et voix en cache
         uses: actions/cache@v4
         with:
-          path: voix/models
-          key: whisper-ggml-${{ env.WHISPER_MODEL }}-v1
+          path: |
+            voix/models
+            voix/voices
+          key: whisper-ggml-${{ env.WHISPER_MODEL }}-piper-v1
 
       # Empreinte SHA-1 publiée par whisper.cpp vérifiée ; le SHA-256 affiché sert à l'épingler.
       - name: Modèle Whisper vérifié
         run: build/voix/model.sh "$WHISPER_MODEL" voix/models
 
-      - name: Corpus lu par espeak-ng
-        run: build/voix/corpus.sh voix/corpus
+      - name: Corpus lu par Piper
+        run: build/voix/corpus.sh voix/corpus voix/voices
 
       - uses: actions/upload-artifact@v4
         with:
           name: voix-corpus
-          path: voix/
+          path: |
+            voix/models
+            voix/corpus
           retention-days: 3
 
   whisper-net:

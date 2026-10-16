@@ -1,5 +1,5 @@
 {
-  "$comment": "Phrases lues par une voix de synthèse (espeak-ng) dans le workflow « Voix », puis transcrites par un vrai Whisper. text = ce qui est lu ; command = ce que la grammaire doit reconnaître (absent pour une dictée).",
+  "$comment": "Phrases lues par une voix de synthèse (Piper) dans le workflow « Voix », puis transcrites par un vrai Whisper. text = ce qui est lu ; command = ce que la grammaire doit reconnaître (absent pour une dictée).",
   "phrases": [
     { "id": "fr-01", "language": "fr", "text": "Ouvrir les factures en retard.", "command": { "kind": "Navigate", "target": "Invoices", "filter": "Overdue" } },
     { "id": "fr-02", "language": "fr", "text": "Nouveau devis.", "command": { "kind": "Create", "target": "Quotes" } },
