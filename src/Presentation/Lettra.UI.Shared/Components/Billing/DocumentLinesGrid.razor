@@ -4,6 +4,7 @@
 @inject IStringLocalizer<SharedResource> L
 @inject TypingHistory History
 @inject IJSRuntime JS
+@inject VoiceCommands Voice
 @* Lignes d'un devis ou d'une facture sur la grille clavier : F4 ouvre l'article, l'unité ou la TVA ; Insert ajoute une
    ligne, Ctrl+Suppr la retire ; Entrée sur la dernière cellule crée la ligne suivante. Les totaux sont tenus ligne par
    ligne ; la pièce est enregistrée par la page (brouillon), pas à chaque cellule. *@
@@ -99,12 +100,20 @@
             .Bind("F4", L["Lines.Command.ChoiceList"], OpenChoice, CanOpenChoice)
             .Bind("Insert", L["Lines.Command.New"], _ => AddLineAsync(), _ => !ReadOnly)
             .Bind("Ctrl+Delete", L["Lines.Command.Delete"], DeleteLineAsync, ctx => !ReadOnly && ctx.Row >= 0 && ctx.Row < Lines.Count);
+        _voice =
+        [
+            Voice.Register(VoiceCommandKind.AddLine, AddVoiceLinesAsync),
+            Voice.Register(VoiceCommandKind.ApplyDiscount, ApplyVoiceDiscountAsync),
+        ];
     }
 
     protected override async Task OnInitializedAsync()
     {
         OperationResult<PagedResponse<CatalogItemSummary>> catalog = await Catalog.ListAsync(null, false, 1, CatalogPageSize, CancellationToken.None);
         _catalog = catalog.Value?.Items ?? [];
+
+        // Lignes d'un devis dicté depuis un autre écran : posées dès que la grille est là.
+        _voiceDeferred = !ReadOnly && Voice.Deferred is { Kind: VoiceCommandKind.AddLine };
     }
 
     protected override async Task OnParametersSetAsync()
@@ -353,6 +362,15 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (_voiceDeferred && _grid is not null)
+        {
+            _voiceDeferred = false;
+            if (Voice.TakeDeferred() is { } deferred)
+            {
+                await AddVoiceLinesAsync(deferred);
+            }
+        }
+
         if (!firstRender || ReadOnly)
         {
             return;
@@ -445,8 +463,98 @@
             : row with { VatRateCode = rate.Code, VatRatePercent = rate.Percent, VatExemptionCode = null };
     }
 
+    // ---------- voix ----------
+
+    private IDisposable[] _voice = [];
+    private bool _voiceDeferred;
+
+    /// <summary>
+    /// « Ajoute trois heures de conseil à 120 euros » : une ligne par ligne dite. Une désignation qui retrouve un article
+    /// du catalogue prend sa référence et son prix ; un prix dit TTC est ramené en HT au taux de la ligne.
+    /// </summary>
+    private async Task<bool> AddVoiceLinesAsync(VoiceCommand command)
+    {
+        if (ReadOnly || _grid is null || command.Lines.Count == 0)
+        {
+            return false;
+        }
+
+        foreach (VoiceLine line in command.Lines)
+        {
+            int row = Lines.FindIndex(l => l.IsIncomplete && l.CatalogItemId is null);
+            if (row < 0)
+            {
+                await AddLineAsync();
+                row = Lines.Count - 1;
+            }
+
+            if (MatchCatalog(line.Designation) is { } item)
+            {
+                await _grid.CommitCellAsync(row, Column.Reference, item.Reference);
+            }
+            else
+            {
+                await _grid.CommitCellAsync(row, Column.Designation, TextTidy.Apply(line.Designation, Culture));
+            }
+
+            string quantity = line.Quantity.ToString("0.###", Culture) + line.Unit switch
+            {
+                QuickEntry.Hour => " h",
+                QuickEntry.Day => " j",
+                _ => string.Empty,
+            };
+            await _grid.CommitCellAsync(row, Column.Quantity, quantity);
+            if (line.Unit is { } unit and not (QuickEntry.Hour or QuickEntry.Day))
+            {
+                await _grid.CommitCellAsync(row, Column.Unit, unit);
+            }
+
+            if (line.UnitPrice is { } price)
+            {
+                decimal exclTax = line.PriceIncludesVat == true
+                    ? Math.Round(price / (1m + (Lines[row].VatRatePercent / 100m)), 2, MidpointRounding.AwayFromZero)
+                    : price;
+                await _grid.CommitCellAsync(row, Column.Price, exclTax.ToString("0.00", Culture));
+            }
+        }
+
+        await _grid.FocusCellAsync(Lines.Count - 1, Column.Designation);
+        return true;
+    }
+
+    /// <summary>« Remise de 10 % » : sur chaque ligne de la pièce.</summary>
+    private async Task<bool> ApplyVoiceDiscountAsync(VoiceCommand command)
+    {
+        if (ReadOnly || _grid is null || command.DiscountPercent is not { } percent || Lines.Count == 0)
+        {
+            return false;
+        }
+
+        for (int row = 0; row < Lines.Count; row++)
+        {
+            if (!Lines[row].IsIncomplete)
+            {
+                await _grid.CommitCellAsync(row, Column.Discount, percent.ToString("0.##", Culture));
+            }
+        }
+
+        return true;
+    }
+
+    private CatalogItemSummary? MatchCatalog(string designation)
+    {
+        string said = PaletteMatcher.Normalize(designation);
+        return said.Length < 3 ? null : _catalog.FirstOrDefault(i => PaletteMatcher.Normalize(i.Designation) == said)
+            ?? _catalog.FirstOrDefault(i => PaletteMatcher.Normalize(i.Designation).StartsWith(said, StringComparison.Ordinal));
+    }
+
     public async ValueTask DisposeAsync()
     {
+        foreach (IDisposable registration in _voice)
+        {
+            registration.Dispose();
+        }
+
         _choice = null;
         if (_assist is not null)
         {

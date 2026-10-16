@@ -9,4 +9,4 @@ est utilisé, puis gardé en mémoire ; fonctionne hors ligne (fichier livré av
 - Données d'origine : Code officiel géographique de l'INSEE et fichier FIMOCT de la DGFiP, publiés sur data.gouv.fr
   sous Licence Ouverte 2.0 (Etalab). Le paquet lui-même est sous licence MIT.
 - Ce jeu évite volontairement la base officielle de La Poste, diffusée sous ODbL (licence virale pour les bases dérivées).
-- Mise à jour : `npm pack codes-postaux`, puis le script décrit dans `docs/aide-a-la-saisie.md`.
+- Mise à jour : `npm pack codes-postaux`, puis `node build/codes-postaux/generer.mjs package/codes-postaux.json` (voir `docs/aide-a-la-saisie.md`).

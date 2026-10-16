@@ -64,7 +64,7 @@ else
 
                 <div class="lettra-field lettra-field-wide">
                     <label for="subject">@L["Billing.Field.Subject"]</label>
-                    <SmartInput Id="subject" disabled="@IsReadOnly" Value="@_request.Subject" maxlength="200" OnCommitted="SubjectChangedAsync"
+                    <SmartInput Id="subject" Voice="@(!IsReadOnly)" VoiceLabel="@L["Billing.Field.Subject"]" disabled="@IsReadOnly" Value="@_request.Subject" maxlength="200" OnCommitted="SubjectChangedAsync"
                                 Templates="TextFieldKind.Subject" Spellcheck="true" Tidy="true" />
                 </div>
             </section>
@@ -80,7 +80,7 @@ else
 
             <section class="lettra-card">
                 <label for="notes">@L["Billing.Field.Notes"]</label>
-                <SmartInput Id="notes" Multiline="true" Rows="3" disabled="@IsReadOnly" Value="@_request.Notes" maxlength="4000" OnCommitted="NotesChangedAsync"
+                <SmartInput Id="notes" Voice="@(!IsReadOnly)" VoiceLabel="@L["Billing.Field.Notes"]" Multiline="true" Rows="3" disabled="@IsReadOnly" Value="@_request.Notes" maxlength="4000" OnCommitted="NotesChangedAsync"
                             Templates="TextFieldKind.QuoteNotes" Spellcheck="true" Tidy="true" data-tour="notes" />
             </section>
         </div>

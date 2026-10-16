@@ -85,7 +85,7 @@ else
 
                 <div class="lettra-field lettra-field-wide">
                     <label for="payment-terms">@L["Invoice.Field.PaymentTerms"]</label>
-                    <SmartInput Id="payment-terms" disabled="@IsReadOnly" Value="@_request.PaymentTerms" maxlength="500" placeholder="@_company?.PaymentTerms"
+                    <SmartInput Id="payment-terms" Voice="@(!IsReadOnly)" VoiceLabel="@L["Invoice.Field.PaymentTerms"]" disabled="@IsReadOnly" Value="@_request.PaymentTerms" maxlength="500" placeholder="@_company?.PaymentTerms"
                                 OnCommitted="v => TextCommittedAsync(v, t => _request.PaymentTerms = t)" Templates="TextFieldKind.PaymentTerms"
                                 Spellcheck="true" Tidy="true" data-tour="payment-terms" />
                 </div>
@@ -98,7 +98,7 @@ else
 
                 <div class="lettra-field lettra-field-wide">
                     <label for="subject">@L["Billing.Field.Subject"]</label>
-                    <SmartInput Id="subject" disabled="@IsReadOnly" Value="@_request.Subject" maxlength="200"
+                    <SmartInput Id="subject" Voice="@(!IsReadOnly)" VoiceLabel="@L["Billing.Field.Subject"]" disabled="@IsReadOnly" Value="@_request.Subject" maxlength="200"
                                 OnCommitted="v => TextCommittedAsync(v, t => _request.Subject = t)" Templates="TextFieldKind.Subject" Spellcheck="true" Tidy="true" />
                 </div>
             </section>
@@ -120,7 +120,7 @@ else
 
             <section class="lettra-card">
                 <label for="notes">@L["Billing.Field.Notes"]</label>
-                <SmartInput Id="notes" Multiline="true" Rows="3" disabled="@IsReadOnly" Value="@_request.Notes" maxlength="4000"
+                <SmartInput Id="notes" Voice="@(!IsReadOnly)" VoiceLabel="@L["Billing.Field.Notes"]" Multiline="true" Rows="3" disabled="@IsReadOnly" Value="@_request.Notes" maxlength="4000"
                             OnCommitted="v => TextCommittedAsync(v, t => _request.Notes = t)" Templates="TextFieldKind.InvoiceNotes" Spellcheck="true" Tidy="true" />
             </section>
         </div>

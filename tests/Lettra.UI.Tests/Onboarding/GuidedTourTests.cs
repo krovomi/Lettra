@@ -178,9 +178,9 @@ public sealed class GuidedTourTests : BunitContext
         IElement bulle = coque.Find("#tour-bubble");
         bulle.GetAttribute("aria-modal").Should().Be("true");
         coque.Find("#tour-title").TextContent.Should().Be("Bienvenue dans Lettra");
-        coque.Find("#tour-count").TextContent.Should().Be("Étape 1 sur 6");
+        coque.Find("#tour-count").TextContent.Should().Be("Étape 1 sur 7");
         coque.FindAll("#tour-previous").Should().BeEmpty();
-        coque.WaitForAssertion(() => coque.Find("#tour-live").TextContent.Should().Be("Étape 1 sur 6. Bienvenue dans Lettra"));
+        coque.WaitForAssertion(() => coque.Find("#tour-live").TextContent.Should().Be("Étape 1 sur 7. Bienvenue dans Lettra"));
 
         coque.Find("#tour-next").Click();
         coque.Find("#tour-title").TextContent.Should().Be("Les écrans");
@@ -189,7 +189,7 @@ public sealed class GuidedTourTests : BunitContext
         coque.Find("#tour-skip").Click();
         coque.FindAll("#tour-bubble").Should().BeEmpty();
         _ui.Invocations.Should().Contain(i => i.Identifier == "writePreference"
-            && ((string)i.Arguments[0]!).StartsWith("lettra.tours.", StringComparison.Ordinal) && Equals(i.Arguments[1], "home:1"));
+            && ((string)i.Arguments[0]!).StartsWith("lettra.tours.", StringComparison.Ordinal) && Equals(i.Arguments[1], "home:2"));
         _tour.Invocations.Should().Contain(i => i.Identifier == "restoreFocus");
     }
 
@@ -197,13 +197,13 @@ public sealed class GuidedTourTests : BunitContext
     public async Task Un_parcours_deja_vu_ne_se_rejoue_pas_mais_une_nouvelle_version_si()
     {
         NavigateurReel();
-        _ui.Setup<string?>("readPreference", i => ((string)i.Arguments[0]!).StartsWith("lettra.tours.", StringComparison.Ordinal)).SetResult("home:1");
+        _ui.Setup<string?>("readPreference", i => ((string)i.Arguments[0]!).StartsWith("lettra.tours.", StringComparison.Ordinal)).SetResult("home:2");
 
         IRenderedComponent<MainLayout> coque = Coque();
         coque.FindAll("#tour-bubble").Should().BeEmpty();
 
         GuidedTours tours = Services.GetRequiredService<GuidedTours>();
-        TourDefinition plusRecent = TourCatalog.Find("home")! with { Version = 2 };
+        TourDefinition plusRecent = TourCatalog.Find("home")! with { Version = 3 };
         (await coque.InvokeAsync(() => tours.StartIfNewAsync(plusRecent))).Should().BeTrue();
         coque.WaitForAssertion(() => coque.FindAll("#tour-bubble").Should().ContainSingle());
     }
@@ -217,9 +217,9 @@ public sealed class GuidedTourTests : BunitContext
 
         racine().KeyDown("ArrowRight");
         racine().KeyDown("ArrowRight");
-        coque.Find("#tour-count").TextContent.Should().Be("Étape 3 sur 6");
+        coque.Find("#tour-count").TextContent.Should().Be("Étape 3 sur 7");
         racine().KeyDown("ArrowLeft");
-        coque.Find("#tour-count").TextContent.Should().Be("Étape 2 sur 6");
+        coque.Find("#tour-count").TextContent.Should().Be("Étape 2 sur 7");
 
         racine().KeyDown("Escape");
         coque.FindAll("#tour-bubble").Should().BeEmpty();
@@ -230,7 +230,7 @@ public sealed class GuidedTourTests : BunitContext
     {
         IRenderedComponent<MainLayout> coque = Coque();
         coque.Find("#tour-help").Click();
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 6; i++)
         {
             coque.Find("#tour-next").Click();
         }

@@ -9,6 +9,7 @@
 @inject IStringLocalizer<SharedResource> L
 
 <div class="lt-assist">
+    <div class="lt-assist-control">
     @if (Multiline)
     {
         <textarea @ref="_input" id="@Id" rows="@Rows" class="@CssClass" @attributes="AdditionalAttributes"
@@ -25,6 +26,12 @@
                aria-activedescendant="@ActiveId" aria-describedby="@HintId"
                @oninput="OnInputAsync" @onchange="OnChangeAsync" @onkeydown="OnKeyDownAsync" @onfocusin="OnFocus" @onfocusout="OnBlurAsync" />
     }
+
+    @if (Voice)
+    {
+        <MicButton For="@Id" FieldLabel="@VoiceLabel" />
+    }
+    </div>
 
     @if (IsOpen)
     {
@@ -55,6 +62,12 @@
     [Parameter, EditorRequired] public string Id { get; set; } = default!;
 
     [Parameter] public string? Value { get; set; }
+
+    /// <summary>Micro de dictée dans le champ (texte libre : objet, notes, conditions, ville).</summary>
+    [Parameter] public bool Voice { get; set; }
+
+    /// <summary>Nom du champ lu par le lecteur d'écran sur le micro (« Dicter : Objet »).</summary>
+    [Parameter] public string? VoiceLabel { get; set; }
 
     /// <summary>À chaque frappe (liaison <c>@bind-Value</c>).</summary>
     [Parameter] public EventCallback<string> ValueChanged { get; set; }

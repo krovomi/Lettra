@@ -84,6 +84,7 @@
 
         int index = Tours.StepIndex;
         _rendered = (tour, index);
+        await FocusBubbleAsync();
         TourTargetRect? rect = null;
         await CallAsync(async m =>
         {
@@ -100,6 +101,12 @@
         _placement = rect is null ? TourPlacement.Compute(null, 1024, 768) : TourPlacement.Compute(rect, rect.ViewportWidth, rect.ViewportHeight);
         _announcement = $"{Count(tour)}. {L[tour.TitleKey(step)]}";
         StateHasChanged();
+    }
+
+    // Le focus va à la bulle dès l'étape affichée, avant que l'élément montré ne soit trouvé : le clavier et le
+    // lecteur d'écran n'attendent pas.
+    private async Task FocusBubbleAsync()
+    {
         try
         {
             await _bubble.FocusAsync();

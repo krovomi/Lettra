@@ -1,0 +1,21 @@
+@* Bouton micro de la barre du haut (vague 5, lane F) : toujours visible, il ouvre le panneau de la voix, qui dit si
+   elle est disponible, comment dicter et quoi dire, et permet de la garder ou de la masquer. *@
+@implements IDisposable
+@inject VoiceInput Voice
+@inject IStringLocalizer<SharedResource> L
+
+<button type="button" id="voice-button" data-tour="voice" class="lt-icon-button lt-voice-button @(Listening ? "is-listening" : null) @(Voice.IsReady && Voice.Enabled ? null : "is-off")"
+        aria-expanded="@(Voice.PanelOpen ? "true" : "false")" aria-controls="voice-panel"
+        aria-label="@L["Voice.Button"]" title="@L["Voice.Button"] (F8)" @onclick="Voice.TogglePanel">
+    <Icon Name="@(Voice.IsReady && Voice.Enabled ? "mic" : "mic-off")" />
+</button>
+
+@code {
+    private bool Listening => Voice.Phase != VoicePhase.Idle;
+
+    protected override void OnInitialized() => Voice.Changed += OnVoiceChanged;
+
+    private void OnVoiceChanged(object? sender, EventArgs e) => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Voice.Changed -= OnVoiceChanged;
+}

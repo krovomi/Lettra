@@ -12,11 +12,12 @@ public static class TourCatalog
 
     public static IReadOnlyList<TourDefinition> All { get; } =
     [
-        new("home", 1, "",
+        new("home", 2, "",
         [
             new("welcome"),
             new("nav", "[data-tour='nav']", ".lt-sidebar nav", ".lt-tabbar"),
             new("search", "[data-tour='search']", "#palette-open"),
+            new("voice", "[data-tour='voice']", "#voice-button"),
             new("starter", "[data-tour='starter']", "#starter-checklist"),
             new("appearance", "[data-tour='appearance']", "#appearance-toggle", "#tab-more"),
             new("help", "[data-tour='help']", "#tour-help"),
@@ -27,13 +28,14 @@ public static class TourCatalog
             new("filters", "[data-tour='quotes-filters']", "#quotes-search", "#quotes-status"),
             new("new", "[data-tour='quotes-new']", "#quotes-new"),
         ]),
-        new("quote-editor", 1, "quotes/*",
+        new("quote-editor", 2, "quotes/*",
         [
             new("customer", "[data-tour='customer']", "#customer"),
             new("lines", "[data-tour='lines']", "#lines-title", ".lettra-lines-host"),
             new("keys", "[data-tour='function-keys']", ".lg-fkeys", ".lettra-lines-host"),
             new("quick", "[data-tour='lines']", ".lettra-lines-host"),
             new("templates", "[data-tour='notes']", "#notes"),
+            new("voice", "#subject-mic", "#notes-mic", "[data-tour='voice']", "#voice-button"),
             new("compliance", "[data-tour='compliance']", "#checklist-title"),
             new("why", "[data-tour='compliance']", "#checklist-title"),
             new("validate", "[data-tour='validate']", "#validate"),
@@ -44,10 +46,11 @@ public static class TourCatalog
             new("filters", "[data-tour='invoices-filters']", "#invoices-kind", "#invoices-status"),
             new("new", "[data-tour='invoices-new']", "#invoices-new"),
         ]),
-        new("invoice-editor", 1, "invoices/*",
+        new("invoice-editor", 2, "invoices/*",
         [
             new("customer", "[data-tour='customer']", "#customer"),
             new("terms", "[data-tour='payment-terms']", "#payment-terms"),
+            new("voice", "#payment-terms-mic", "#subject-mic", "[data-tour='voice']", "#voice-button"),
             new("lines", "[data-tour='lines']", "#lines-title", ".lettra-lines-host"),
             new("compliance", "[data-tour='compliance']", "#checklist-title"),
             new("validate", "[data-tour='validate']", "#validate"),

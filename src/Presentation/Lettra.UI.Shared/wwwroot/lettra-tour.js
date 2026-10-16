@@ -40,6 +40,7 @@ function viewport() {
 // Attend l'élément (l'écran peut encore charger ses données), le fait défiler au milieu, puis rend sa position.
 // Sans élément après le délai : position vide, la bulle se met au centre.
 export async function locate(selectors, timeoutMs) {
+  if (!selectors || selectors.length === 0) { return viewport(); }
   const until = performance.now() + (timeoutMs ?? 1500);
   let element = find(selectors);
   while (!element && performance.now() < until) {
