@@ -56,7 +56,7 @@
         }
         else
         {
-            <ul class="lt-records" role="listbox" tabindex="0" id="customers-list" aria-label="@L["Customers.List.Title"]"
+            <ul class="lt-records" role="listbox" tabindex="0" id="customers-list" data-tour="customers-list" aria-label="@L["Customers.List.Title"]"
                 aria-activedescendant="@ActiveOptionId" @ref="ListElement" @onkeydown="OnListKeyDown">
                 @foreach (CustomerSummary customer in Items)
                 {

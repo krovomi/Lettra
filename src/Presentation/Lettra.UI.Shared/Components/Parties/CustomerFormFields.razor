@@ -58,7 +58,7 @@
         <FieldErrors Field="@nameof(CreateCustomerRequest.PreferredLanguage)" ServerErrors="Errors" />
     </div>
 
-    <div class="lt-form-field lt-form-wide">
+    <div class="lt-form-field lt-form-wide" data-tour="customer-address">
         <label for="line1">@L["Customers.Field.AddressLine1"]</label>
         <InputText id="line1" @bind-Value="Model.AddressLine1" autocomplete="address-line1" />
         <FieldErrors Field="@nameof(CreateCustomerRequest.AddressLine1)" ServerErrors="Errors" />
