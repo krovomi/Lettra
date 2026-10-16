@@ -72,7 +72,8 @@ autrement, et le score bougeait sans changement de code (7/12 commandes reconnue
 10/12). Le job « Corpus et modèle » produit désormais le même corpus, octet pour octet, à chaque run :
 
 - Piper lit sans bruit aléatoire (`--noise-scale 0 --noise-w-scale 0`) ;
-- Piper, ONNX Runtime et leurs dépendances sont épinglés dans `build/voix/piper-requirements.txt`, Python en 3.13 ;
+- Piper, ONNX Runtime et leurs dépendances sont épinglés dans `build/voix/piper-requirements.txt`, Python en 3.13,
+  le job tourne sur `ubuntu-24.04` (et son ffmpeg) plutôt que `ubuntu-latest` ;
 - les voix (`fr_FR-siwis-medium`, `en_US-lessac-medium`) sont vérifiées par leur SHA-256 (`build/voix/voices.sha256`) ;
 - chaque WAV produit doit avoir le SHA-256 attendu (`build/voix/corpus.sha256`), sinon le job échoue et une
   annotation donne les empreintes obtenues.
