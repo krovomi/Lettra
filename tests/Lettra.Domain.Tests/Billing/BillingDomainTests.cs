@@ -128,6 +128,23 @@ public sealed class BillingDomainTests
     }
 
     [Fact]
+    public void Avec_l_option_sur_les_debits_l_avoir_porte_la_mention_et_passe_le_controle()
+    {
+        SellerTerms debits = Terms with { VatOnDebits = true };
+        Invoice invoice = Invoice.Create(InvoiceId.New(), Client, Martin, Header(), [Service(3, 100m)], User, Now).Value;
+        invoice.Validate("FAC-000001", Today, Martin, debits, User, Now).IsSuccess.Should().BeTrue();
+        Invoice credit = Invoice.CreateCreditNote(InvoiceId.New(), invoice, null, "Annulation", User, Now).Value;
+
+        ComplianceChecker.Check(credit.ToComplianceDocument(debits), Today).BlocksValidation.Should().BeFalse();
+        credit.Validate("FAC-000002", Today, Martin, debits, User, Now).IsSuccess.Should().BeTrue();
+
+        credit.LegalMentionList.Should().Contain("Option pour le paiement de la TVA d'après les débits")
+            .And.Contain("Avoir sur la facture n° FAC-000001");
+        ComplianceChecker.Check(credit.ToComplianceDocument(null), Today).Findings
+            .Should().NotContain(f => f.Code == MentionCodes.VatOnDebits && f.Severity == ComplianceSeverity.Error);
+    }
+
+    [Fact]
     public void Une_piece_validee_porte_les_mentions_et_passe_le_controle()
     {
         Invoice invoice = Validated(Invoice.Create(InvoiceId.New(), Client, Martin, Header(), [Service(3, 100m)], User, Now).Value, "FAC-000001");
