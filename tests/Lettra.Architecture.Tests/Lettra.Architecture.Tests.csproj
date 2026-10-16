@@ -4,6 +4,7 @@
        d'usage, codes d'erreur et ressources FR/EN. -->
   <ItemGroup>
     <ProjectReference Include="..\..\src\Composition\Lettra.Bootstrap\Lettra.Bootstrap.csproj" />
+    <ProjectReference Include="..\..\src\Infrastructure\Lettra.Infrastructure.Speech.OnDevice\Lettra.Infrastructure.Speech.OnDevice.csproj" />
     <ProjectReference Include="..\..\src\Modules\Sync\Lettra.Sync.Client\Lettra.Sync.Client.csproj" />
     <ProjectReference Include="..\..\src\Presentation\Lettra.UI.Shared\Lettra.UI.Shared.csproj" />
     <ProjectReference Include="..\..\src\Presentation\Lettra.UI.Gateway.Http\Lettra.UI.Gateway.Http.csproj" />
