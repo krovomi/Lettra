@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Error.Speech.Disabled" xml:space="preserve"><value>La dictée n'est pas activée sur ce déploiement.</value></data>
+  <data name="Error.Speech.EngineUnavailable" xml:space="preserve"><value>La reconnaissance vocale ne répond pas pour le moment. Réessayez dans un instant ou saisissez au clavier.</value></data>
+  <data name="Error.Speech.ModelUnavailable" xml:space="preserve"><value>Le modèle de reconnaissance vocale n'est pas encore installé sur cet appareil. Il se télécharge à la première connexion au réseau.</value></data>
+  <data name="Error.Speech.AudioInvalid" xml:space="preserve"><value>L'enregistrement n'a pas pu être lu.</value></data>
+  <data name="Error.Speech.AudioTooLong" xml:space="preserve"><value>L'enregistrement est trop long : dictez en plusieurs fois.</value></data>
+  <data name="Error.Speech.LanguageUnsupported" xml:space="preserve"><value>Cette langue n'est pas proposée pour la dictée.</value></data>
+  <data name="Error.Speech.NothingHeard" xml:space="preserve"><value>Rien n'a été entendu. Parlez plus près du micro et recommencez.</value></data>
+</root>

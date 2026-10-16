@@ -13,6 +13,7 @@
     <Project Path="src/Core/Lettra.Calculations/Lettra.Calculations.csproj" />
     <Project Path="src/Core/Lettra.Contracts/Lettra.Contracts.csproj" />
     <Project Path="src/Core/Lettra.Domain/Lettra.Domain.csproj" />
+    <Project Path="src/Core/Lettra.Speech/Lettra.Speech.csproj" />
   </Folder>
   <Folder Name="/src/Infrastructure/">
     <Project Path="src/Infrastructure/Lettra.Infrastructure.Catalog/Lettra.Infrastructure.Catalog.csproj" />
@@ -24,6 +25,8 @@
     <Project Path="src/Infrastructure/Lettra.Infrastructure.Persistence.SqlServer/Lettra.Infrastructure.Persistence.SqlServer.csproj" />
     <Project Path="src/Infrastructure/Lettra.Infrastructure.Persistence.Sqlite/Lettra.Infrastructure.Persistence.Sqlite.csproj" />
     <Project Path="src/Infrastructure/Lettra.Infrastructure.Persistence/Lettra.Infrastructure.Persistence.csproj" />
+    <Project Path="src/Infrastructure/Lettra.Infrastructure.Speech/Lettra.Infrastructure.Speech.csproj" />
+    <Project Path="src/Infrastructure/Lettra.Infrastructure.Speech.OnDevice/Lettra.Infrastructure.Speech.OnDevice.csproj" />
   </Folder>
   <Folder Name="/src/Ai/">
     <Project Path="src/Ai/Lettra.Ai.Claude/Lettra.Ai.Claude.csproj" />
@@ -75,6 +78,7 @@
     <Project Path="tests/Lettra.External.Tests/Lettra.External.Tests.csproj" />
     <Project Path="tests/Lettra.Observability.Tests/Lettra.Observability.Tests.csproj" />
     <Project Path="tests/Lettra.Persistence.Tests/Lettra.Persistence.Tests.csproj" />
+    <Project Path="tests/Lettra.Speech.Tests/Lettra.Speech.Tests.csproj" />
     <Project Path="tests/Lettra.Supervision.Tests/Lettra.Supervision.Tests.csproj" />
     <Project Path="tests/Lettra.Sync.Tests/Lettra.Sync.Tests.csproj" />
     <Project Path="tests/Lettra.UI.Tests/Lettra.UI.Tests.csproj" />

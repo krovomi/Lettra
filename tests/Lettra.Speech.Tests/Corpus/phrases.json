@@ -1,0 +1,20 @@
+{
+  "$comment": "Phrases lues par une voix de synthèse (Piper) dans le workflow « Voix », puis transcrites par un vrai Whisper. text = ce qui est lu ; command = ce que la grammaire doit reconnaître (absent pour une dictée).",
+  "phrases": [
+    { "id": "fr-01", "language": "fr", "text": "Ouvrir les factures en retard.", "command": { "kind": "Navigate", "target": "Invoices", "filter": "Overdue" } },
+    { "id": "fr-02", "language": "fr", "text": "Nouveau devis.", "command": { "kind": "Create", "target": "Quotes" } },
+    { "id": "fr-03", "language": "fr", "text": "Affiche les devis acceptés.", "command": { "kind": "Navigate", "target": "Quotes", "filter": "Accepted" } },
+    { "id": "fr-04", "language": "fr", "text": "Ouvre le catalogue.", "command": { "kind": "Navigate", "target": "Catalog" } },
+    { "id": "fr-05", "language": "fr", "text": "Chercher le client Dupont.", "command": { "kind": "Search", "target": "Customers" } },
+    { "id": "fr-06", "language": "fr", "text": "Ajoute deux heures d'audit à quatre-vingt-dix euros.", "command": { "kind": "AddLine" } },
+    { "id": "fr-07", "language": "fr", "text": "Appliquer une remise de dix pour cent.", "command": { "kind": "ApplyDiscount" } },
+    { "id": "fr-08", "language": "fr", "text": "Montre-moi les factures impayées.", "command": { "kind": "Navigate", "target": "Invoices", "filter": "Unpaid" } },
+    { "id": "fr-09", "language": "fr", "text": "Nouvelle facture.", "command": { "kind": "Create", "target": "Invoices" } },
+    { "id": "fr-10", "language": "fr", "text": "Enregistrer.", "command": { "kind": "Save" } },
+    { "id": "fr-11", "language": "fr", "text": "Merci pour votre confiance, nous restons à votre disposition." },
+    { "id": "fr-12", "language": "fr", "text": "La livraison est prévue la semaine prochaine." },
+    { "id": "en-01", "language": "en", "text": "Open overdue invoices.", "command": { "kind": "Navigate", "target": "Invoices", "filter": "Overdue" } },
+    { "id": "en-02", "language": "en", "text": "New quote.", "command": { "kind": "Create", "target": "Quotes" } },
+    { "id": "en-03", "language": "en", "text": "Thank you for your order, the delivery is planned next week." }
+  ]
+}

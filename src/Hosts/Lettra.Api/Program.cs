@@ -80,6 +80,7 @@ api.MapCatalog();
 api.MapBilling();
 api.MapDirectory();
 api.MapAssistant();
+api.MapSpeech();
 api.MapIntegrity();
 api.MapExports();
 api.MapDossierAlerts();

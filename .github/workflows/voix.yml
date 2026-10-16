@@ -1,0 +1,151 @@
+name: Voix
+
+# Dictée et commandes vocales (vague 5, lane D) face à un vrai Whisper : un corpus de phrases lues par une voix de
+# synthèse (Piper) passe par Whisper.net (le moteur du poste, sur Linux, Windows et macOS) et par le serveur whisper.cpp
+# (le moteur de la cellule, en conteneur). Le rapport (erreurs de mots, commandes reconnues) s'affiche dans le
+# résumé du run. Séparé de « CI » : le modèle pèse 142 Mio et ne sert qu'aux changements de la voix.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - src/Core/Lettra.Speech/**
+      - src/Core/Lettra.Application/Abstractions/Speech/**
+      - src/Core/Lettra.Application/Features/Speech/**
+      - src/Infrastructure/Lettra.Infrastructure.Speech/**
+      - src/Infrastructure/Lettra.Infrastructure.Speech.OnDevice/**
+      - tests/Lettra.Speech.Tests/**
+      - build/voix/**
+      - Directory.Packages.props
+      - .github/workflows/voix.yml
+  pull_request:
+    paths:
+      - src/Core/Lettra.Speech/**
+      - src/Core/Lettra.Application/Abstractions/Speech/**
+      - src/Core/Lettra.Application/Features/Speech/**
+      - src/Infrastructure/Lettra.Infrastructure.Speech/**
+      - src/Infrastructure/Lettra.Infrastructure.Speech.OnDevice/**
+      - tests/Lettra.Speech.Tests/**
+      - build/voix/**
+      - Directory.Packages.props
+      - .github/workflows/voix.yml
+  workflow_dispatch:
+    inputs:
+      model:
+        description: Modèle Whisper (tiny, base, small)
+        default: base
+
+permissions:
+  contents: read
+
+concurrency:
+  group: voix-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  CI: true
+  WHISPER_MODEL: ${{ inputs.model || 'base' }}
+
+jobs:
+  corpus:
+    name: Corpus et modèle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Voix de synthèse (Piper, locale)
+        run: |
+          sudo apt-get update -q && sudo apt-get install -yq --no-install-recommends ffmpeg
+          python3 -m pip install --user piper-tts==1.3.0
+
+      - name: Modèle et voix en cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            voix/models
+            voix/voices
+          key: whisper-ggml-${{ env.WHISPER_MODEL }}-piper-v1
+
+      # Empreinte SHA-1 publiée par whisper.cpp vérifiée ; le SHA-256 affiché sert à l'épingler.
+      - name: Modèle Whisper vérifié
+        run: build/voix/model.sh "$WHISPER_MODEL" voix/models
+
+      - name: Corpus lu par Piper
+        run: build/voix/corpus.sh voix/corpus voix/voices
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: voix-corpus
+          path: |
+            voix/models
+            voix/corpus
+          retention-days: 3
+
+  whisper-net:
+    name: Whisper.net sur le poste (${{ matrix.os }})
+    needs: corpus
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - uses: actions/download-artifact@v4
+        with:
+          name: voix-corpus
+          path: voix
+
+      - name: Corpus face à Whisper.net
+        run: >
+          dotnet test tests/Lettra.Speech.Tests -c Release
+          --logger "console;verbosity=normal"
+        env:
+          LETTRA_VOICE_CORPUS: ${{ github.workspace }}/voix/corpus
+          LETTRA_WHISPER_MODEL: ${{ github.workspace }}/voix/models/ggml-${{ env.WHISPER_MODEL }}.bin
+
+  whisper-server:
+    name: Serveur whisper.cpp de la cellule
+    needs: corpus
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - uses: actions/download-artifact@v4
+        with:
+          name: voix-corpus
+          path: voix
+
+      # Même image que le conteneur « whisper » de la démonstration : build/voix/whisper-server.
+      - name: Serveur whisper.cpp
+        run: |
+          docker build -t lettra-whisper build/voix/whisper-server
+          docker run -d --name whisper -p 8178:8080 -e WHISPER_MODEL="$WHISPER_MODEL" -v "$PWD/voix/models:/models:ro" lettra-whisper
+          for i in $(seq 1 90); do
+            if curl -fsS -o /dev/null http://localhost:8178/; then echo "Serveur prêt"; exit 0; fi
+            if [ "$(docker inspect -f '{{.State.Running}}' whisper)" != "true" ]; then break; fi
+            sleep 2
+          done
+          docker inspect -f 'Arrêté : code {{.State.ExitCode}}, mémoire épuisée {{.State.OOMKilled}}' whisper
+          docker logs whisper
+          exit 1
+
+      - name: Corpus face au serveur
+        run: dotnet test tests/Lettra.Speech.Tests -c Release --logger "console;verbosity=normal"
+        env:
+          LETTRA_VOICE_CORPUS: ${{ github.workspace }}/voix/corpus
+          LETTRA_WHISPER_SERVER: http://localhost:8178/
+
+      - name: Journaux du serveur
+        if: failure()
+        run: docker logs whisper
