@@ -3,7 +3,9 @@ name: Voix
 # Dictée et commandes vocales (vague 5, lane D) face à un vrai Whisper : un corpus de phrases lues par une voix de
 # synthèse (Piper) passe par Whisper.net (le moteur du poste, sur Linux, Windows et macOS) et par le serveur whisper.cpp
 # (le moteur de la cellule, en conteneur). Le rapport (erreurs de mots, commandes reconnues) s'affiche dans le
-# résumé du run. Séparé de « CI » : le modèle pèse 142 Mio et ne sert qu'aux changements de la voix.
+# résumé du run. Le corpus est déterministe (Piper sans bruit aléatoire, versions et voix épinglées, empreintes des WAV
+# vérifiées) : le score ne varie plus d'un run à l'autre sans changement de code. Séparé de « CI » : le modèle pèse
+# 142 Mio et ne sert qu'aux changements de la voix.
 
 on:
   push:
@@ -55,10 +57,15 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      # Versions épinglées : le corpus est vérifié octet par octet (build/voix/corpus.sha256).
       - name: Voix de synthèse (Piper, locale)
         run: |
           sudo apt-get update -q && sudo apt-get install -yq --no-install-recommends ffmpeg
-          python3 -m pip install --user piper-tts==1.3.0
+          python -m pip install -r build/voix/piper-requirements.txt
 
       - name: Modèle et voix en cache
         uses: actions/cache@v4
@@ -66,14 +73,17 @@ jobs:
           path: |
             voix/models
             voix/voices
-          key: whisper-ggml-${{ env.WHISPER_MODEL }}-piper-v1
+          key: whisper-ggml-${{ env.WHISPER_MODEL }}-piper-v2
 
       # Empreinte SHA-1 publiée par whisper.cpp vérifiée ; le SHA-256 affiché sert à l'épingler.
       - name: Modèle Whisper vérifié
         run: build/voix/model.sh "$WHISPER_MODEL" voix/models
 
-      - name: Corpus lu par Piper
+      # Sans bruit aléatoire : le même corpus à chaque run, vérifié par build/voix/voices.sha256 et corpus.sha256.
+      - name: Corpus lu par Piper, déterministe et vérifié
         run: build/voix/corpus.sh voix/corpus voix/voices
+        env:
+          PIPER_PYTHON: python
 
       - uses: actions/upload-artifact@v4
         with:

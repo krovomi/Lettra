@@ -65,6 +65,31 @@ L'API envoie `Permissions-Policy: microphone=(self)` : le micro n'est permis qu'
 Le rapport du workflow « Voix » (taux d'erreur de mots, commandes reconnues) s'affiche dans le résumé de chaque run.
 Le corpus est dans `tests/Lettra.Speech.Tests/Corpus/phrases.json`.
 
+### Corpus déterministe
+
+Piper tire d'ordinaire du bruit au hasard (intonation, durée des phonèmes) : chaque run lisait les phrases un peu
+autrement, et le score bougeait sans changement de code (7/12 commandes reconnues, sous le seuil de 60 %, puis 8, 9 ou
+10/12). Le job « Corpus et modèle » produit désormais le même corpus, octet pour octet, à chaque run :
+
+- Piper lit sans bruit aléatoire (`--noise-scale 0 --noise-w-scale 0`) ;
+- Piper, ONNX Runtime et leurs dépendances sont épinglés dans `build/voix/piper-requirements.txt`, Python en 3.13 ;
+- les voix (`fr_FR-siwis-medium`, `en_US-lessac-medium`) sont vérifiées par leur SHA-256 (`build/voix/voices.sha256`) ;
+- chaque WAV produit doit avoir le SHA-256 attendu (`build/voix/corpus.sha256`), sinon le job échoue et une
+  annotation donne les empreintes obtenues.
+
+Le seuil (60 % des commandes, 50 % d'erreurs de mots au plus) ne change pas ; seul le hasard du corpus disparaît.
+
+Pour régénérer le corpus après un changement de `phrases.json`, de voix ou de version de Piper (Python 3.13, ffmpeg
+et jq requis) :
+
+```bash
+python3 -m pip install -r build/voix/piper-requirements.txt
+build/voix/corpus.sh --epingler voix/corpus voix/voices   # réécrit voices.sha256 et corpus.sha256
+```
+
+Puis commiter les deux manifestes avec le changement. Sans accès à Hugging Face, l'annotation d'erreur du job
+« Corpus et modèle » donne les lignes à coller dans le manifeste.
+
 ## Ce qui viendra ensuite (lane F)
 
 Le bouton micro, l'enregistreur du navigateur et l'application des commandes dans les écrans et les formulaires.
