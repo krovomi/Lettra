@@ -250,6 +250,7 @@ des devis à tous les stades (brouillon, envoyé, accepté, refusé, expiré, fa
 des avoirs, les transmissions à la plateforme simulée, des encaissements (à l'heure, en retard, en deux fois, impayés)
 et quelques alertes. Les données sont croisées : chaque client a ses articles habituels, certains reviennent souvent.
 Tout est créé par les vrais cas d'usage : numéros, chaîne anti-fraude, écritures et FEC sont ceux de l'application.
+Le prestataire de services a opté pour la TVA sur les débits : ses factures et ses avoirs portent la mention.
 
 - **Dans le navigateur**, le « Dossier de démonstration » est rempli au premier démarrage du serveur.
 - **Dans l'application installée**, le « Dossier principal » est rempli en arrière-plan juste après la création du
@@ -312,7 +313,7 @@ Menu **Devis**, **Nouveau devis**.
 1. Client : **Boulangerie Exemple** ; Objet : *Accompagnement comptable*.
 2. Dans la grille **Lignes**, une ligne : Désignation *Tenue comptable mensuelle*, Qté **3**, PU HT **250**.
    **Inser** ajoute une ligne, **Entrée** ou **Tab** passe à la cellule suivante, **F4** ouvre une liste de choix.
-   Le brouillon s'enregistre tout seul.
+   Le brouillon s'enregistre tout seul dès que le client et une ligne complète sont saisis ; **Enregistrer** (Ctrl+S) l'enregistre tout de suite et dit ce qui manque. **Valider** s'active une fois le brouillon enregistré et la checklist sans point bloquant.
 3. Le panneau **Conformité de la pièce** liste chaque mention : « Bloquant », « À vérifier » ou « Présent ». Un point
    bloquant se corrige d'un clic, qui ouvre le bon écran.
 4. **Valider** (Ctrl+Entrée). Le bouton **PDF** (Ctrl+P) produit le devis à remettre au client.
@@ -391,25 +392,38 @@ Sans SIREN dans la fiche entreprise, l'export le demande au lieu de produire un 
 | Symptôme | Que faire |
 |---|---|
 | Navigateur : la page ne répond pas | Au premier démarrage, le remplissage du dossier de démonstration prend une trentaine de secondes après `up --wait` : attendre, puis recharger ; `docker compose -f deploy/demo/compose.yaml ps` doit montrer les services « healthy ». |
-| Navigateur : le code du second facteur est refusé | L'application TOTP doit accepter SHA-256 (pas Microsoft Authenticator) et l'heure du téléphone être à l'heure. Pour réenrôler : `down -v`, puis redémarrer. |
+| Navigateur : le code du second facteur est refusé | L'application TOTP doit accepter SHA-256 (pas Microsoft Authenticator) et l'heure du téléphone être à l'heure. Pour réenrôler sans perdre vos saisies, ne remettez à zéro que Keycloak : `docker compose -f deploy/demo/compose.yaml down`, `docker volume rm lettra-demo_keycloak-donnees`, puis `up -d --wait`. Pas de `down -v` : il efface aussi les données Lettra. |
 | « Windows a protégé votre ordinateur » | Normal pour un prototype non signé : **Informations complémentaires**, puis **Exécuter quand même**. |
 | Rien ne s'ouvre, ou une erreur sur des fichiers bloqués | Le zip n'a pas été débloqué : supprimez le dossier extrait, faites l'étape 2 (Propriétés, **Débloquer**), puis extrayez à nouveau. |
 | Fenêtre blanche | Le composant WebView2 manque (vieux Windows 10) : installez « Microsoft Edge WebView2 Runtime » depuis le site de Microsoft, puis relancez. |
 | « Phrase secrète incorrecte. » / « Trop d'essais » | Après plusieurs erreurs, le poste se verrouille quelques minutes. Une phrase oubliée ne se récupère pas : voir la ligne suivante. |
-| Repartir de zéro (phrase oubliée, nouvelle démo) | Fermez Lettra et supprimez son dossier de données (ci-dessous). Vos saisies sont perdues ; le prochain lancement recrée tout, données de démonstration comprises. Dans le navigateur : `down -v`, puis `up -d --wait`. |
+| Repartir de zéro (phrase oubliée, nouvelle démo) | Fermez Lettra et supprimez son dossier de données (ci-dessous). Vos saisies sont perdues ; le prochain lancement recrée tout, données de démonstration comprises. Dans le navigateur : `down -v`, puis `up -d --wait` (efface clients, devis, factures **et** l'enrôlement du second facteur). |
+| Navigateur : mes données ont disparu après une mise à jour | Une mise à jour ne les efface pas (ci-dessous) : vérifiez que la commande est lancée depuis la racine du dépôt avec `-f deploy/demo/compose.yaml`, sans `-p` ni `COMPOSE_PROJECT_NAME`, et que `docker volume ls` montre toujours `lettra-demo_lettra-donnees`. Un `down -v`, un `docker volume prune -a` ou le nettoyage des volumes de Docker Desktop pendant que la démo est arrêtée l'ont supprimé. |
 | « Remplissez d'abord la fiche de l'entreprise émettrice. » | Étape 1 : menu **Entreprise**. |
 | Une mention reste « Bloquant » | Cliquez dessus dans **Conformité de la pièce** : Lettra ouvre l'écran à compléter (fiche entreprise ou client). |
 
-**Où sont les données.** Sous Windows, tout est sur le PC, dans le dossier de données de l'application :
-`%LOCALAPPDATA%\Lettra\Lettra.App.Maui\Data` (à coller dans la barre d'adresse de l'Explorateur). On y trouve le compte du poste (`compte-local.json`) et, dans `dossiers`, une base chiffrée par
-dossier. La clé du cabinet est dans le coffre de Windows : copier ces fichiers sur un autre PC ne les rend pas
-lisibles. Supprimer ce dossier remet Lettra à zéro. Sous Android et iOS, les données sont dans l'application :
-la désinstaller (ou, sous Android, **Effacer les données**) la remet à zéro. Dans le navigateur, elles sont sur le
-serveur de démonstration (`down -v` les efface).
+**Où sont les données.** Une mise à jour (nouvelle version, nouvelle image) ne les touche pas : elles sont rangées
+hors de l'application, et la base est migrée sur place au démarrage.
 
-**Mettre à jour la démo.** Sous Windows, fermez Lettra, téléchargez le nouvel artefact et remplacez le dossier
-extrait : vos données, rangées ailleurs, sont conservées. Sous Android, `adb install -r` (ou réinstaller l'APK) garde
-les données. Dans le navigateur, `git pull` puis la même commande `up -d --build --wait`.
+| Où | Emplacement | Remettre à zéro exprès |
+|---|---|---|
+| Navigateur (Docker) | Volume `lettra-demo_lettra-donnees` (catalogue, dossier SQLite chiffré, clés de session) ; Keycloak (utilisateur, enrôlement TOTP) dans `lettra-demo_keycloak-donnees`. `docker volume ls` les liste. | `docker compose -f deploy/demo/compose.yaml down -v` |
+| Windows | `%LOCALAPPDATA%\Lettra\Lettra.App.Maui\Data` (à coller dans la barre d'adresse de l'Explorateur) : le compte du poste (`compte-local.json`) et, dans `dossiers`, une base chiffrée par dossier. La clé du cabinet est dans le coffre de Windows : copier ces fichiers sur un autre PC ne les rend pas lisibles. | Supprimer ce dossier, Lettra fermé |
+| Android | Dans l'application (`/data/user/0/fr.lettra.app/files`), sans sauvegarde Android. | Désinstaller, ou **Effacer les données** |
+| iOS, macOS | Dans le dossier de données de l'application, clé du cabinet dans le Trousseau. | Désinstaller l'application (macOS : supprimer aussi son dossier `fr.lettra.app` dans `~/Library`) |
+
+**Mettre à jour la démo.** Dans le navigateur, `git pull` puis la même commande
+`docker compose -f deploy/demo/compose.yaml up -d --build --wait` : l'image de l'API est reconstruite, les volumes
+restent, et le jeu de démonstration n'est pas rechargé dans un dossier qui a déjà des pièces. N'utilisez `down -v` que
+pour tout effacer ; pour libérer de la place, `docker builder prune` vide le cache de construction sans toucher aux
+données. Sauvegarder les données du navigateur avant une manipulation risquée :
+`docker run --rm -v lettra-demo_lettra-donnees:/donnees -v "${PWD}:/sauvegarde" busybox tar czf /sauvegarde/lettra-donnees.tgz -C /donnees .`
+(démo arrêtée). Sous Windows, fermez Lettra, téléchargez le nouvel artefact et remplacez le dossier extrait : vos
+données, rangées ailleurs, sont conservées. Sous Android, `adb install -r` installe la nouvelle version par-dessus
+l'ancienne et garde les données : les APK de la CI sont signés avec la même clé de démonstration
+(`Platforms/Android/lettra-demo.keystore`). Seuls les APK construits avant cette clé (signés avec une clé de
+débogage différente à chaque construction) sont refusés (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`) : il faut alors
+désinstaller une dernière fois, ce qui efface les données du téléphone.
 
 ---
 

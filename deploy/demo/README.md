@@ -14,8 +14,11 @@ Depuis la racine du dépôt, même commande dans PowerShell, l'invite de command
 ```bash
 docker compose -f deploy/demo/compose.yaml up -d --build --wait     # démarrer (premier build : quelques minutes)
 docker compose -f deploy/demo/compose.yaml down                     # arrêter, les données restent
-docker compose -f deploy/demo/compose.yaml down -v                  # arrêter et tout remettre à zéro
+docker compose -f deploy/demo/compose.yaml down -v                  # arrêter et tout effacer (saisies comprises)
 ```
+
+Mettre à jour : `git pull`, puis la même commande `up -d --build --wait`. Les données restent dans les volumes
+Docker (ci-dessous) ; seul `down -v` les efface.
 
 Puis ouvrir **http://localhost:8080/** dans Chrome, Edge ou Firefox (l'application peut mettre quelques secondes à
 répondre après le démarrage).
@@ -85,8 +88,20 @@ donc à refaire la première fois sur chaque adresse) ; les données Lettra sont
 | `lettra-demo_keycloak-donnees` | Base Keycloak (utilisateur, enrôlement TOTP), une par adresse publique |
 | `lettra-demo_caddy-donnees` | Autorité de certification et certificats du profil HTTPS |
 
-`down -v` (avec les mêmes fichiers `-f` qu'au démarrage) supprime ces volumes : au prochain démarrage, le realm est
-réimporté et l'enrôlement TOTP est à refaire.
+Les noms viennent du projet Compose `lettra-demo` (`name:` de `compose.yaml`) : lancer la démo avec `-p` ou
+`COMPOSE_PROJECT_NAME` en change le nom, donc les volumes, et l'application repart d'un dossier neuf.
+
+- **Mise à jour** (`git pull`, puis `up -d --build --wait`) : l'API est reconstruite et recréée, les volumes restent ;
+  le catalogue et le dossier sont migrés sur place, et le jeu de démonstration n'est pas rechargé dans un dossier qui a
+  déjà des pièces. Vérifié à chaque CI (job « Démo navigateur » : nouvelle image de l'API, mêmes volumes).
+- **Tout effacer** : `down -v` (avec les mêmes fichiers `-f` qu'au démarrage) supprime ces volumes : saisies, jeu de
+  démonstration, enrôlement TOTP. Au prochain démarrage, le realm est réimporté et le dossier rechargé.
+- **Réenrôler le second facteur seulement** : `down`, `docker volume rm lettra-demo_keycloak-donnees`, puis `up -d --wait`.
+  Les données Lettra restent (l'identifiant de l'utilisateur `demo` est fixe).
+- Docker Desktop (« Clean / Purge data », nettoyage des volumes) et `docker volume prune -a` suppriment aussi les volumes
+  d'une démo arrêtée. Pour libérer de la place, `docker builder prune` suffit (cache de construction de l'image).
+- **Sauvegarder** (démo arrêtée) :
+  `docker run --rm -v lettra-demo_lettra-donnees:/donnees -v "${PWD}:/sauvegarde" busybox tar czf /sauvegarde/lettra-donnees.tgz -C /donnees .`
 
 ## Option : télémétrie OpenTelemetry (collecteur seul)
 

@@ -3,7 +3,10 @@
 #
 #   docker compose -f deploy/demo/compose.yaml up -d --build --wait      puis http://localhost:8080/
 #   docker compose -f deploy/demo/compose.yaml down                      arrêt (les données restent)
-#   docker compose -f deploy/demo/compose.yaml down -v                   arrêt et remise à zéro
+#   docker compose -f deploy/demo/compose.yaml down -v                   arrêt et remise à zéro (saisies comprises)
+#
+# Mise à jour : git pull puis la même commande up -d --build --wait. Les saisies sont dans les volumes nommés
+# lettra-demo_* (le nom du projet ci-dessous, à ne pas changer) : une nouvelle image de l'API les retrouve.
 #
 # Données et secrets FICTIFS, réservés à la démonstration (.env) : ne jamais réutiliser en production.
 # Accès depuis un téléphone (HTTPS sur le réseau local) : compose.lan.yaml, voir README.md.

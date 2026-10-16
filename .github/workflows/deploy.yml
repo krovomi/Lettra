@@ -141,12 +141,22 @@ jobs:
           set -a; . ../.env; set +a
           SORTIE="$SORTIE/localhost" node parcours.mjs premier
 
-      - name: Redémarrage de la pile, connexion mot de passe + code, données conservées
+      # Mise à jour comme chez l'utilisateur (git pull, puis up --build) : arrêt sans -v, nouvelle image de l'API (une
+      # couche de plus suffit à en changer l'identifiant), redémarrage sur les mêmes volumes. Le client créé avant doit
+      # être là, et le jeu de démonstration ne doit pas être rechargé.
+      - name: Mise à jour de l'API (nouvelle image, mêmes volumes), connexion mot de passe + code, données conservées
         working-directory: deploy/demo/e2e
         run: |
+          avant=$(docker image inspect -f '{{.Id}}' lettra-demo-api)
           $COMPOSE down
+          printf 'FROM lettra-demo-api\nLABEL fr.lettra.demo.mise-a-jour=%s\n' "$GITHUB_RUN_ID" | docker build -q -t lettra-demo-api -
+          [ "$(docker image inspect -f '{{.Id}}' lettra-demo-api)" != "$avant" ] || { echo "image de l'API inchangée"; exit 1; }
+          docker volume inspect lettra-demo_lettra-donnees lettra-demo_keycloak-donnees > /dev/null
           $COMPOSE up -d --wait
           timeout 180 bash -c 'until curl -sf http://localhost:8080/health; do sleep 2; done'
+          if $COMPOSE logs --no-color api | grep -q 'Jeu de démonstration .* chargé dans'; then
+            echo "le jeu de démonstration a été rechargé par-dessus le dossier existant"; exit 1
+          fi
           set -a; . ../.env; set +a
           SORTIE="$SORTIE/localhost" node parcours.mjs suivant
 
