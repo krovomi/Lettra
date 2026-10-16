@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <!-- Écrans sur le système de design : tableau de bord (créances, transmissions, démonstration), listes et états vides. Vague 5, lane E. -->
+  <data name="Home.Kpi.Overdue" xml:space="preserve"><value>Factures en retard</value></data>
+  <data name="Home.Kpi.OverdueNote" xml:space="preserve"><value>{0} à relancer, TTC restant dû</value></data>
+  <data name="Home.Kpi.OverdueNone" xml:space="preserve"><value>Aucune facture échue impayée</value></data>
+  <data name="Home.Overdue.Title" xml:space="preserve"><value>À relancer</value></data>
+  <data name="Home.Overdue.Late" xml:space="preserve"><value>échue depuis {0} j</value></data>
+  <data name="Home.Overdue.None" xml:space="preserve"><value>Aucune facture en retard.</value></data>
+  <data name="Home.Platform.Title" xml:space="preserve"><value>Transmissions à la plateforme</value></data>
+  <data name="Home.Platform.Note" xml:space="preserve"><value>Pièces validées, selon leur dernier statut</value></data>
+  <data name="Home.Platform.NotTransmitted" xml:space="preserve"><value>Non transmises</value></data>
+  <data name="Home.Platform.InProgress" xml:space="preserve"><value>En cours</value></data>
+  <data name="Home.Platform.NeedsAttention" xml:space="preserve"><value>À traiter</value></data>
+  <data name="Home.Platform.Collected" xml:space="preserve"><value>Encaissées</value></data>
+  <data name="Home.Demo.Title" xml:space="preserve"><value>Essayer avec des données fictives</value></data>
+  <data name="Home.Demo.Text" xml:space="preserve"><value>Remplit ce dossier d'un an d'activité d'une entreprise fictive : clients, catalogue, devis, factures, avoirs, encaissements et transmissions. Comptez une demi-minute.</value></data>
+  <data name="Home.Demo.Load" xml:space="preserve"><value>Charger les données de démonstration</value></data>
+  <data name="Home.Demo.Loading" xml:space="preserve"><value>Chargement des données de démonstration…</value></data>
+  <data name="Home.Demo.Done" xml:space="preserve"><value>Données de démonstration chargées : {0} clients, {1} devis et {2} factures.</value></data>
+  <data name="Home.Demo.NotEmpty" xml:space="preserve"><value>Ce dossier a déjà des pièces : les données de démonstration ne s'y ajoutent pas.</value></data>
+  <data name="Lists.Empty.FilteredTitle" xml:space="preserve"><value>Aucun résultat</value></data>
+  <data name="Lists.Empty.Filtered" xml:space="preserve"><value>Rien ne correspond à cette recherche ou à ces filtres : élargissez-les.</value></data>
+  <data name="Quotes.Empty.Text" xml:space="preserve"><value>Un devis validé reçoit son numéro et peut devenir une facture en un clic.</value></data>
+  <data name="Invoices.Empty.Text" xml:space="preserve"><value>Créez une facture, ou transformez un devis accepté.</value></data>
+  <data name="Customers.Empty.Text" xml:space="preserve"><value>Ajoutez votre premier client avec le formulaire ci-dessus : le SIREN suffit à retrouver son adresse.</value></data>
+  <data name="Suppliers.Empty.Text" xml:space="preserve"><value>Ajoutez votre premier fournisseur avec le formulaire ci-dessus.</value></data>
+  <data name="Alerts.Subtitle" xml:space="preserve"><value>Ce qui menace l'intégrité des dossiers, du plus grave au moins grave</value></data>
+  <data name="Alerts.List.EmptyText" xml:space="preserve"><value>Les contrôles tournent en continu : une alerte apparaît ici dès qu'une règle se déclenche.</value></data>
+  <data name="Toast.Region" xml:space="preserve"><value>Notifications</value></data>
+  <data name="Toast.Close" xml:space="preserve"><value>Fermer la notification</value></data>
+  <data name="Home.Demo.Refused" xml:space="preserve"><value>Les données de démonstration ne peuvent pas être chargées ici.</value></data>
+</root>

@@ -6,6 +6,7 @@ using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Customers;
+using Lettra.Contracts.Demo;
 using Lettra.Contracts.Identity;
 using Lettra.Contracts.Integrity;
 using Lettra.Contracts.Policies;
@@ -99,4 +100,7 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(SaveSyncPolicyRequest))]
 [JsonSerializable(typeof(SyncDeviceResponse))]
 [JsonSerializable(typeof(IReadOnlyList<SyncDeviceResponse>))]
+[JsonSerializable(typeof(ReceivablesSummaryResponse))]
+[JsonSerializable(typeof(DemoDataStatusResponse))]
+[JsonSerializable(typeof(DemoSeedResponse))]
 public sealed partial class ContractsJsonContext : JsonSerializerContext;

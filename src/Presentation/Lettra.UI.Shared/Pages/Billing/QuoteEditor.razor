@@ -26,13 +26,8 @@
     </div>
 }
 
-<div id="document-status" aria-live="polite">
-    <GeneralErrors Errors="_errors" />
-    @if (_status is not null)
-    {
-        <p class="lettra-success" role="status">@_status</p>
-    }
-</div>
+<GeneralErrors Errors="_errors" />
+<StatusToast Message="@_status" />
 
 @if (_loading)
 {

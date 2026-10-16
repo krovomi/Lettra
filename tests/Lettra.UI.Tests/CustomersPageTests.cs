@@ -132,7 +132,7 @@ public sealed class CustomersPageTests : BunitContext
         Fill(page, "city", "Paris");
         page.Find("form").Submit();
 
-        page.WaitForAssertion(() => page.Find("[role=status]").TextContent.Should().Be("Client « Boulangerie Martin » créé."));
+        page.WaitForAssertion(() => this.ToastText().Should().Be("Client « Boulangerie Martin » créé."));
         page.Find("tbody").TextContent.Should().Contain("Boulangerie Martin").And.Contain("732829320");
         _gateway.LastRequest!.PreferredLanguage.Should().BeNullOrEmpty("le français est la langue par défaut");
     }

@@ -207,6 +207,12 @@ public sealed class GatewayParityTests(LettraApiFactory factory) : IClassFixture
         paid.Value!.CollectedAmount.Should().Be(100m);
         paid.Value.IsFinal.Should().BeFalse("360 € TTC, 100 € encaissés");
         (await platform.GetAsync(validated.Id, default)).Value!.History.Should().HaveCount(paid.Value.History.Count);
+
+        // Le tableau de bord lit la même transmission : encaissée en partie, donc en cours, et pas encore échue.
+        OperationResult<ReceivablesSummaryResponse> summary = await services.GetRequiredService<IReceivablesGateway>().GetSummaryAsync(default);
+        summary.IsSuccess.Should().BeTrue(string.Join(", ", summary.Errors.Select(e => e.Code)));
+        summary.Value!.InProgress.Should().BePositive();
+        summary.Value.Oldest.Should().NotContain(o => o.InvoiceId == validated.Id);
     }
 
     [Theory]

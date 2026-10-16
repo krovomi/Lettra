@@ -151,7 +151,7 @@ public sealed class QuoteEditorTests : BunitContext
 
         page.Find("#validate").Click();
 
-        page.WaitForAssertion(() => Texte(page, "[role=status].lettra-success").Should().Be("Devis validé sous le numéro DEV-2026-0007."));
+        page.WaitForAssertion(() => this.ToastText().Should().Be("Devis validé sous le numéro DEV-2026-0007."));
         Texte(page, "h1").Should().StartWith("Devis DEV-2026-0007");
         Texte(page, ".lettra-status").Should().Be("Validé");
         page.FindAll("#validate").Should().BeEmpty();

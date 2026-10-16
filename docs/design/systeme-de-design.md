@@ -79,18 +79,47 @@ La navigation est décrite une seule fois dans `Layout/NavItems.cs`. Cibles de 4
 
 ## Tableau de bord d'accueil
 
-`Pages/Home.razor`, calculé par `Billing/DashboardFigures.cs` à partir des listes existantes (aucune nouvelle API) :
+`Pages/Home.razor`. Les figures du mois sont calculées par `Billing/DashboardFigures.cs` à partir des listes existantes :
 
 - chiffre d'affaires HT du mois (factures et acomptes validés, moins les avoirs) et son évolution sur le mois précédent ;
-- nombre de factures du mois ;
+- factures en retard : nombre et TTC restant dû (sans point des créances, le nombre de factures du mois à la place) ;
 - devis en attente de réponse (validés, non expirés) et leur montant HT ;
 - brouillons à finaliser ;
 - histogramme des six derniers mois, doublé d'un tableau pour le lecteur d'écran ;
-- cinq dernières factures et cinq derniers devis ;
-- un dossier vide invite à compléter la fiche entreprise, ajouter un client et faire un premier devis.
+- « À relancer » : les cinq factures échues impayées les plus anciennes, avec leur retard en jours ;
+- « Transmissions à la plateforme » : pièces non transmises, en cours, à traiter (rejetées, refusées, en litige,
+  suspendues) et encaissées ;
+- cinq dernières factures et cinq derniers devis.
 
-Les retards de paiement et l'état des transmissions à la plateforme ne figurent pas encore : les listes ne portent
-ni l'encaissement ni le statut de transmission. Il faudra une lecture dédiée côté serveur.
+Les retards et les transmissions viennent du **point des créances** (`GET /api/v1/receivables/summary`, permission
+`DossierLire`), une lecture du module Exports : reste dû = TTC − avoirs validés − encaissements déclarés à la plateforme.
+Une facture est en retard le lendemain de son échéance, à la date de Paris. Calcul : `ReceivablesSummary.Compute`.
+
+Un dossier vide invite à compléter la fiche entreprise, ajouter un client et faire un premier devis. Quand l'hôte le
+permet (`Lettra:Demo:Seed=true`, jamais en Production), il propose aussi **Charger les données de démonstration** :
+un an d'activité fictive dans le dossier ouvert (`POST /api/v1/demo/seed`, droit d'émettre une facture ; sur le poste,
+`AddDemoDataGateway`). Un second clic ne double pas le jeu.
+
+![Accueil avec les retards et les transmissions, 1440 px](captures/accueil-creances-clair-1440.png)
+![Dossier vide avec les données de démonstration, sombre, 375 px](captures/accueil-vide-sombre-375.png)
+
+## Composants des écrans
+
+| Composant | Rôle |
+|---|---|
+| `ToastHost`, `ToastService` | Toaster en bas à droite (au-dessus des onglets sur téléphone). Une réussite disparaît après 6 s ; un avertissement ou une erreur reste jusqu'à ce qu'on le ferme. Trois au plus, sans doublon. |
+| `StatusToast` | Annonce dans le toaster le résultat d'une action (pièce validée, fiche enregistrée, client créé) au lieu d'un message dans la page. |
+| `GeneralErrors` | Erreurs sans champ (droits, serveur injoignable) dans le toaster. Elles se retirent quand la page réussit à nouveau ou se ferme. Les erreurs de champ restent sous leur champ. |
+| `EmptyState` | État vide illustré : icône, ce qui manque, action principale. Une recherche sans résultat dit d'élargir les filtres. |
+| `ListSkeleton` | Squelette de liste pendant le chargement, à la place du texte « Chargement… ». |
+| `.lt-cards` | Sur téléphone, chaque ligne de tableau devient une carte. La première cellule sert de titre ; les autres se libellent par `data-label`. |
+| `.lt-chips` | Filtres en pastilles (cases à cocher habillées). |
+| `.lettra-form-grid` + `.lettra-field` | Formulaire en sections, champs sur plusieurs colonnes. Les actions restent collées en bas de l'écran (`.lt-form-actions`). |
+
+Les blocs apparaissent avec un léger mouvement à l'ouverture d'une page. Ce mouvement est supprimé quand l'appareil demande moins d'animations.
+
+![Centre d'alertes, sombre, 1440 px](captures/alertes-sombre-1440.png)
+![Liste des devis en cartes, clair, 375 px](captures/devis-clair-375.png)
 
 ## Vérifier
 
@@ -100,16 +129,19 @@ ni l'encaissement ni le statut de transmission. Il faudra une lecture dédiée c
 | Le sombre du système identique au sombre choisi, mêmes jetons dans chaque thème | `ThemeContrastTests` |
 | Navigation, onglets, feuille Plus, thème appliqué et retenu, rail retenu, palette | `ShellTests` (bUnit) |
 | Chiffres du tableau de bord | `DashboardFiguresTests`, `ShellTests` |
+| Point des créances (retards, transmissions) | `ReceivablesSummaryTests`, `ReceivablesApiTests`, `GatewayParityTests` |
+| Bouton des données de démonstration, refus en Production et sans droit | `ShellTests`, `ReceivablesApiTests` |
+| Cellules de la grille à la hauteur de leur ligne | `GridCellTests` |
 | Rendu à 375, 768 et 1440 px dans chaque thème, audit axe (WCAG 2.2 AA), aucun défilement horizontal | Galerie + Playwright, ci-dessous |
 
 ```bash
-LETTRA_GALLERY_DIR=$PWD/artifacts/galerie dotnet test tests/Lettra.UI.Tests --filter Galerie_des_ecrans
+LETTRA_GALLERY_DIR=$PWD/artifacts/galerie dotnet test tests/Lettra.UI.Tests --filter Galerie
 NODE_PATH=$(npm root -g) node build/design-captures.cjs artifacts/galerie chemin/vers/axe-core/axe.min.js
 ```
 
-La galerie rend 7 écrans (accueil, menu apparence, feuille Plus, devis, factures, une facture, clients) avec des
-données fictives dans les 4 thèmes ; le script en tire 84 captures et `audit.json`. Au 16 octobre 2026 : 0 défaut axe,
-aucun débordement horizontal. Limites : pages rendues sans JavaScript (la grille de saisie y est statique), Chromium
+La galerie rend 11 écrans avec des données fictives dans les 4 thèmes : accueil, menu apparence, feuille Plus, devis,
+factures, une facture, clients, centre d'alertes, fiche entreprise, accueil d'un dossier vide et devis sans résultat. Le
+script en tire 132 captures et `audit.json`. Au 16 octobre 2026 : 0 défaut axe, aucun débordement horizontal. Limites : pages rendues sans JavaScript (la grille de saisie y est statique), Chromium
 seulement ; Safari et les vrais téléphones ne sont pas testés ici.
 
 ## Ajouter un écran ou un composant

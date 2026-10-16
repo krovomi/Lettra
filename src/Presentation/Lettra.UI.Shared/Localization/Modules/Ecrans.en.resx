@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <!-- Screens on the design system: dashboard (receivables, transmissions, demo), lists and empty states. Wave 5, lane E. -->
+  <data name="Home.Kpi.Overdue" xml:space="preserve"><value>Overdue invoices</value></data>
+  <data name="Home.Kpi.OverdueNote" xml:space="preserve"><value>{0} to chase, incl. VAT outstanding</value></data>
+  <data name="Home.Kpi.OverdueNone" xml:space="preserve"><value>No unpaid overdue invoice</value></data>
+  <data name="Home.Overdue.Title" xml:space="preserve"><value>To chase</value></data>
+  <data name="Home.Overdue.Late" xml:space="preserve"><value>{0} days overdue</value></data>
+  <data name="Home.Overdue.None" xml:space="preserve"><value>No overdue invoice.</value></data>
+  <data name="Home.Platform.Title" xml:space="preserve"><value>E-invoicing platform</value></data>
+  <data name="Home.Platform.Note" xml:space="preserve"><value>Validated documents, by latest status</value></data>
+  <data name="Home.Platform.NotTransmitted" xml:space="preserve"><value>Not sent</value></data>
+  <data name="Home.Platform.InProgress" xml:space="preserve"><value>In progress</value></data>
+  <data name="Home.Platform.NeedsAttention" xml:space="preserve"><value>Need action</value></data>
+  <data name="Home.Platform.Collected" xml:space="preserve"><value>Collected</value></data>
+  <data name="Home.Demo.Title" xml:space="preserve"><value>Try it with sample data</value></data>
+  <data name="Home.Demo.Text" xml:space="preserve"><value>Fills this client file with a year of activity from a fictitious company: customers, catalogue, quotes, invoices, credit notes, payments and transmissions. Allow about half a minute.</value></data>
+  <data name="Home.Demo.Load" xml:space="preserve"><value>Load the demo data</value></data>
+  <data name="Home.Demo.Loading" xml:space="preserve"><value>Loading the demo data…</value></data>
+  <data name="Home.Demo.Done" xml:space="preserve"><value>Demo data loaded: {0} customers, {1} quotes and {2} invoices.</value></data>
+  <data name="Home.Demo.NotEmpty" xml:space="preserve"><value>This client file already has documents: the demo data is not added to it.</value></data>
+  <data name="Lists.Empty.FilteredTitle" xml:space="preserve"><value>No results</value></data>
+  <data name="Lists.Empty.Filtered" xml:space="preserve"><value>Nothing matches this search or these filters: widen them.</value></data>
+  <data name="Quotes.Empty.Text" xml:space="preserve"><value>A validated quote gets its number and can become an invoice in one click.</value></data>
+  <data name="Invoices.Empty.Text" xml:space="preserve"><value>Create an invoice, or turn an accepted quote into one.</value></data>
+  <data name="Customers.Empty.Text" xml:space="preserve"><value>Add your first customer with the form above: the SIREN number is enough to find their address.</value></data>
+  <data name="Suppliers.Empty.Text" xml:space="preserve"><value>Add your first supplier with the form above.</value></data>
+  <data name="Alerts.Subtitle" xml:space="preserve"><value>What threatens client-file integrity, most severe first</value></data>
+  <data name="Alerts.List.EmptyText" xml:space="preserve"><value>Checks run continuously: an alert shows up here as soon as a rule fires.</value></data>
+  <data name="Toast.Region" xml:space="preserve"><value>Notifications</value></data>
+  <data name="Toast.Close" xml:space="preserve"><value>Dismiss notification</value></data>
+  <data name="Home.Demo.Refused" xml:space="preserve"><value>The demo data cannot be loaded here.</value></data>
+</root>

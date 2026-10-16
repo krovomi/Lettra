@@ -22,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<ShortcutRegistry>();
         services.AddScoped<UiPreferences>();
         services.AddScoped<AssistantPanelState>();
+        services.AddScoped<ToastService>();
         // Un hôte peut remplacer le téléchargement (enregistrement natif en MAUI) en l'enregistrant avant.
         services.TryAddScoped<IFileDownloader, JsFileDownloader>();
         services.AddSingleton<IDocumentPdfRenderer, PdfDocumentRenderer>();
