@@ -1,7 +1,9 @@
 @using Lettra.UI.Shared.Pages
-@implements IDisposable
+@implements IAsyncDisposable
 @inject ICatalogGateway Catalog
 @inject IStringLocalizer<SharedResource> L
+@inject TypingHistory History
+@inject IJSRuntime JS
 @* Lignes d'un devis ou d'une facture sur la grille clavier : F4 ouvre l'article, l'unité ou la TVA ; Insert ajoute une
    ligne, Ctrl+Suppr la retire ; Entrée sur la dernière cellule crée la ligne suivante. Les totaux sont tenus ligne par
    ligne ; la pièce est enregistrée par la page (brouillon), pas à chaque cellule. *@
@@ -195,13 +197,14 @@
     // ---------- listes de choix (F4) ----------
 
     private bool CanOpenChoice(CommandContext context) =>
-        !ReadOnly && context.Row >= 0 && context.Row < Lines.Count && context.Column is Column.Reference or Column.Unit or Column.Vat;
+        !ReadOnly && context.Row >= 0 && context.Row < Lines.Count && context.Column is Column.Reference or Column.Designation or Column.Unit or Column.Vat;
 
-    private void OpenChoice(CommandContext context)
+    private async Task OpenChoice(CommandContext context)
     {
         (string title, IReadOnlyList<ChoiceOption> options) = context.Column switch
         {
             Column.Reference => (L["Lines.Choice.Item"].Value, ItemOptions()),
+            Column.Designation => (L["Assist.Designations"].Value, await DesignationOptionsAsync(Lines[context.Row])),
             Column.Unit => (L["Catalog.Choice.Unit"].Value, UnitOptions()),
             _ => (L["Lines.Choice.Vat"].Value, VatOptions()),
         };
@@ -257,6 +260,39 @@
         [.. _catalog.Select(i => new ChoiceOption(i.Reference,
             $"{i.Reference} · {i.Designation} · {GridNumber.FormatPrice(i.UnitPriceExclTax, Culture)}"))];
 
+    /// <summary>F4 sur la désignation (vague 5, lane F) : celle du catalogue, puis celles déjà écrites pour l'article.</summary>
+    private async Task<List<ChoiceOption>> DesignationOptionsAsync(DocumentLineRow row)
+    {
+        DossierHistory history = await History.RecentAsync();
+        CatalogItemSummary? item = row.CatalogItemId is { } id ? _catalog.FirstOrDefault(i => i.Id == id) : null;
+        IEnumerable<string> designations = (item is null ? [] : new[] { item.Designation }).Concat(history.DesignationsFor(row.CatalogItemId));
+        return [.. designations.Distinct(StringComparer.CurrentCultureIgnoreCase)
+            .Where(d => !string.Equals(d, row.Designation.Trim(), StringComparison.CurrentCultureIgnoreCase))
+            .Select(d => new ChoiceOption(d, d))];
+    }
+
+    /// <summary>Ajoute une ligne pour un article du catalogue (suggestion « habituel pour ce client »), au tarif du client.</summary>
+    public async Task AddCatalogItemAsync(Guid catalogItemId)
+    {
+        if (ReadOnly || _catalog.FirstOrDefault(i => i.Id == catalogItemId) is not { } item)
+        {
+            return;
+        }
+
+        int row = Lines.FindIndex(l => l.IsIncomplete && l.CatalogItemId is null);
+        if (row < 0)
+        {
+            await AddLineAsync();
+            row = Lines.Count - 1;
+        }
+
+        if (_grid is not null)
+        {
+            await _grid.CommitCellAsync(row, Column.Reference, item.Reference);
+            await _grid.FocusCellAsync(row, Column.Quantity);
+        }
+    }
+
     private List<ChoiceOption> UnitOptions() =>
         [.. _catalog.Select(i => i.UnitCode).Append("C62").Append("HUR").Append("DAY").Append("LS").Distinct()
             .Select(u => new ChoiceOption(u, $"{UnitLabel(u)} ({u})"))];
@@ -300,11 +336,71 @@
         return row with { Reference = value.Length == 0 ? null : value, CatalogItemId = value.Length == 0 ? null : row.CatalogItemId };
     }
 
+    /// <summary>Quantité, saisie rapide comprise (« 3h », « 1,5 j », « 2x3 ») : l'unité de temps reconnue remplace celle de la ligne.</summary>
     private static DocumentLineRow ParseQuantity(DocumentLineRow row, string text) =>
-        GridNumber.TryParse(text, Culture, out decimal quantity) ? row with { Quantity = quantity } : throw new FormatException(text);
+        QuickEntry.TryParseQuantity(text, Culture, out QuickValue quantity)
+            ? row with { Quantity = quantity.Value, UnitCode = quantity.UnitCode ?? row.UnitCode }
+            : throw new FormatException(text);
 
+    /// <summary>Prix unitaire, produit compris (« 2x45 »).</summary>
     private static DocumentLineRow ParsePrice(DocumentLineRow row, string text) =>
-        GridNumber.TryParse(text, Culture, out decimal price) && price >= 0m ? row with { UnitPriceExclTax = price } : throw new FormatException(text);
+        QuickEntry.TryParseAmount(text, Culture, out QuickValue price) && price.Value >= 0m ? row with { UnitPriceExclTax = price.Value } : throw new FormatException(text);
+
+    // ---------- aperçu de la saisie rapide ----------
+
+    private IJSObjectReference? _assist;
+    private DotNetObjectReference<DocumentLinesGrid>? _self;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || ReadOnly)
+        {
+            return;
+        }
+
+        try
+        {
+            _assist = await JS.InvokeAsync<IJSObjectReference?>("import", AssistModule.Path);
+            if (_assist is not null)
+            {
+                _self = DotNetObjectReference.Create(this);
+                int[] columns = [IndexOf(Column.Quantity), IndexOf(Column.Price)];
+                await _assist.InvokeVoidAsync("attachQuickPreview", ".lettra-lines-host", columns, _self);
+            }
+        }
+        catch (JSException)
+        {
+        }
+        catch (InvalidOperationException)
+        {
+        }
+    }
+
+    private int IndexOf(string key) => _columns.ToList().FindIndex(c => c.Key == key);
+
+    /// <summary>Aperçu sous la cellule pendant la frappe : « 3 h », « = 90,00 » ; rien pour un nombre simple.</summary>
+    [JSInvokable]
+    public string? Preview(int column, string text)
+    {
+        if (!QuickEntry.IsQuickForm(text))
+        {
+            return null;
+        }
+
+        bool quantity = column == IndexOf(Column.Quantity);
+        if (!(quantity ? QuickEntry.TryParseQuantity(text, Culture, out QuickValue value) : QuickEntry.TryParseAmount(text, Culture, out value)))
+        {
+            return L["Assist.Quick.Invalid"];
+        }
+
+        string number = quantity ? value.Value.ToString("#,##0.###", Culture) : GridNumber.FormatPrice(value.Value, Culture);
+        return value.UnitCode switch
+        {
+            QuickEntry.Hour => string.Format(Culture, L["Assist.Quick.Hours"], number),
+            QuickEntry.Day => string.Format(Culture, L["Assist.Quick.Days"], number),
+            _ => string.Format(Culture, L["Assist.Quick.Result"], number),
+        };
+    }
 
     private static DocumentLineRow ParseDiscount(DocumentLineRow row, string text)
     {
@@ -349,5 +445,24 @@
             : row with { VatRateCode = rate.Code, VatRatePercent = rate.Percent, VatExemptionCode = null };
     }
 
-    public void Dispose() => _choice = null;
+    public async ValueTask DisposeAsync()
+    {
+        _choice = null;
+        if (_assist is not null)
+        {
+            try
+            {
+                await _assist.InvokeVoidAsync("detachQuickPreview");
+                await _assist.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+            catch (JSException)
+            {
+            }
+        }
+
+        _self?.Dispose();
+    }
 }

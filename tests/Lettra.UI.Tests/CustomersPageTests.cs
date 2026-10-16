@@ -6,6 +6,7 @@ using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
 using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Pages;
+using Lettra.UI.Shared.Typing;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.UI.Tests;
@@ -71,6 +72,8 @@ public sealed class CustomersPageTests : BunitContext
 
     public CustomersPageTests()
     {
+        // Champs assistés (code postal, ville) : module chargé à la demande, sans effet sans navigateur.
+        JSInterop.SetupModule(AssistModule.Path).Mode = JSRuntimeMode.Loose;
         Services.AddLettraUi();
         Services.AddSingleton<ICustomersGateway>(_gateway);
         Services.AddSingleton<IDirectoryGateway>(_directory);

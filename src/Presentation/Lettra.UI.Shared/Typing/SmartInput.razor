@@ -1,0 +1,350 @@
+@* Champ assisté (vague 5, lane F), un seul composant réutilisé partout : autocomplétion au clavier (flèches, Entrée,
+   Échap) suivant le motif ARIA « combobox », modèles de texte par « / » dans les textes libres, correction
+   orthographique du navigateur sur le texte libre seulement, majuscule et espaces corrigés en sortie du champ. *@
+@using System.Linq.Expressions
+@implements IAsyncDisposable
+@implements ITemplateTarget
+@inject IJSRuntime JS
+@inject TypingAssist Assist
+@inject IStringLocalizer<SharedResource> L
+
+<div class="lt-assist">
+    @if (Multiline)
+    {
+        <textarea @ref="_input" id="@Id" rows="@Rows" class="@CssClass" @attributes="AdditionalAttributes"
+                  value="@_text" spellcheck="@(Spellcheck ? "true" : "false")" autocapitalize="sentences"
+                  role="combobox" aria-autocomplete="list" aria-expanded="@(IsOpen ? "true" : "false")" aria-controls="@ListId"
+                  aria-activedescendant="@ActiveId" aria-describedby="@HintId"
+                  @oninput="OnInputAsync" @onchange="OnChangeAsync" @onkeydown="OnKeyDownAsync" @onfocusin="OnFocus" @onfocusout="OnBlurAsync"></textarea>
+    }
+    else
+    {
+        <input @ref="_input" id="@Id" class="@CssClass" @attributes="AdditionalAttributes" autocomplete="@(AdditionalAttributes?.ContainsKey("autocomplete") == true ? null : "off")"
+               value="@_text" spellcheck="@(Spellcheck ? "true" : "false")"
+               role="combobox" aria-autocomplete="list" aria-expanded="@(IsOpen ? "true" : "false")" aria-controls="@ListId"
+               aria-activedescendant="@ActiveId" aria-describedby="@HintId"
+               @oninput="OnInputAsync" @onchange="OnChangeAsync" @onkeydown="OnKeyDownAsync" @onfocusin="OnFocus" @onfocusout="OnBlurAsync" />
+    }
+
+    @if (IsOpen)
+    {
+        <ul id="@ListId" role="listbox" class="lt-listbox" aria-label="@(_templateMode ? L["Template.List"] : L["Assist.Suggestions"])">
+            @for (int i = 0; i < _options.Count; i++)
+            {
+                int index = i;
+                Suggestion option = _options[i];
+                <li id="@OptionId(index)" role="option" aria-selected="@(index == _active ? "true" : "false")"
+                    @onmousedown="() => PickAsync(index)" @onmousedown:preventDefault="true">
+                    <span>@option.Label</span>
+                    @if (option.Hint is not null)
+                    {
+                        <span class="lt-option-hint">@option.Hint</span>
+                    }
+                </li>
+            }
+        </ul>
+    }
+    @if (Hint is not null || Templates is not TextFieldKind.Free)
+    {
+        <p class="lt-assist-hint" id="@HintId">@(Hint ?? L["Template.Hint"])</p>
+    }
+    <span class="lettra-visually-hidden" aria-live="polite">@_announcement</span>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Id { get; set; } = default!;
+
+    [Parameter] public string? Value { get; set; }
+
+    /// <summary>À chaque frappe (liaison <c>@bind-Value</c>).</summary>
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+
+    /// <summary>Saisie terminée : sortie du champ (après nettoyage), proposition choisie ou modèle inséré.</summary>
+    [Parameter] public EventCallback<string> OnCommitted { get; set; }
+
+    /// <summary>Fourni par <c>@bind-Value</c> : prévient le formulaire (EditForm) qu'un champ a changé.</summary>
+    [Parameter] public Expression<Func<string?>>? ValueExpression { get; set; }
+
+    /// <summary>Propositions pour le texte saisi, servies de la mémoire (moins de 100 ms) ; <c>null</c> : pas d'autocomplétion.</summary>
+    [Parameter] public Func<string, Task<IReadOnlyList<Suggestion>>>? Suggest { get; set; }
+
+    /// <summary>Une proposition est choisie ; sans ce rappel, sa valeur remplace le texte.</summary>
+    [Parameter] public EventCallback<Suggestion> OnPicked { get; set; }
+
+    /// <summary>Champ de texte libre qui reçoit des modèles par « / » et par la palette.</summary>
+    [Parameter] public TextFieldKind Templates { get; set; } = TextFieldKind.Free;
+
+    [Parameter] public bool Multiline { get; set; }
+
+    [Parameter] public int Rows { get; set; } = 3;
+
+    /// <summary>Correction orthographique du navigateur : texte libre oui, codes et numéros non.</summary>
+    [Parameter] public bool Spellcheck { get; set; }
+
+    /// <summary>Espaces et majuscule corrigés à la sortie du champ (texte libre).</summary>
+    [Parameter] public bool Tidy { get; set; }
+
+    [Parameter] public string? Hint { get; set; }
+
+    [Parameter] public string? CssClass { get; set; }
+
+    [CascadingParameter] public EditContext? EditContext { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    public TextFieldKind Kind => Templates;
+
+    private ElementReference _input;
+    private string _text = string.Empty;
+    private string? _lastValue;
+    private IJSObjectReference? _module;
+    private IReadOnlyList<Suggestion> _options = [];
+    private int _active = -1;
+    private bool _templateMode;
+    private int _tokenStart;
+    private int _query;
+    private string? _announcement;
+
+    private bool IsOpen => _options.Count > 0;
+
+    private string ListId => Id + "-list";
+
+    private string? HintId => Hint is not null || Templates is not TextFieldKind.Free ? Id + "-hint" : null;
+
+    private string? ActiveId => IsOpen && _active >= 0 ? OptionId(_active) : null;
+
+    private string OptionId(int index) => $"{Id}-option-{index}";
+
+    /// <summary>
+    /// Le texte affiché ne suit la valeur du parent que quand elle change : un rendu du parent pendant la frappe (brouillon
+    /// enregistré, totaux) n'efface pas ce qui vient d'être tapé.
+    /// </summary>
+    protected override void OnParametersSet()
+    {
+        if (Value != _lastValue)
+        {
+            _lastValue = Value;
+            _text = Value ?? string.Empty;
+        }
+    }
+
+    /// <summary>Texte affiché dans le champ.</summary>
+    public string Text => _text;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await CallAsync(m => m.InvokeVoidAsync("guardCombobox", _input).AsTask());
+        }
+    }
+
+    private void OnFocus()
+    {
+        if (Templates is not TextFieldKind.Free)
+        {
+            Assist.Focused(this);
+        }
+    }
+
+    private async Task OnInputAsync(ChangeEventArgs e)
+    {
+        string text = e.Value?.ToString() ?? string.Empty;
+        await SetValueAsync(text, notify: false);
+        await RefreshAsync(text);
+    }
+
+    /// <summary>Propositions du texte : modèles si le dernier mot commence par « / », sinon l'autocomplétion du champ.</summary>
+    private async Task RefreshAsync(string text)
+    {
+        int query = ++_query;
+        IReadOnlyList<Suggestion> options = [];
+        _templateMode = false;
+        if (Templates is not TextFieldKind.Free && TemplateToken(text) is { } token)
+        {
+            _templateMode = true;
+            _tokenStart = token.Start;
+            options = [.. TextTemplates.For(Templates)
+                .Select(t => new Suggestion(L[t.BodyKey], L[t.TitleKey], null, t))
+                .Where(s => Components.Palette.PaletteMatcher.Score(s.Label, token.Query) > 0)];
+        }
+        else if (Suggest is not null && text.Trim().Length > 0)
+        {
+            options = await Suggest(text);
+        }
+
+        if (query != _query)
+        {
+            return;   // une frappe plus récente a déjà répondu
+        }
+
+        _options = options;
+        _active = options.Count > 0 ? 0 : -1;
+        _announcement = options.Count == 0 ? null : string.Format(CultureInfo.CurrentCulture, L["Assist.Count"], options.Count);
+    }
+
+    /// <summary>« … texte /pen » : position du « / » et texte cherché, si le dernier mot est un appel de modèle.</summary>
+    public static (int Start, string Query)? TemplateToken(string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        int start = text.LastIndexOf('/');
+        if (start < 0 || (start > 0 && !char.IsWhiteSpace(text[start - 1])))
+        {
+            return null;
+        }
+
+        string query = text[(start + 1)..];
+        return query.Contains('\n', StringComparison.Ordinal) || query.Length > 30 ? null : (start, query);
+    }
+
+    private async Task OnKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (!IsOpen)
+        {
+            if (e.Key == "ArrowDown" && Suggest is not null)
+            {
+                await RefreshAsync(_text);
+            }
+
+            return;
+        }
+
+        switch (e.Key)
+        {
+            case "ArrowDown":
+                _active = (_active + 1) % _options.Count;
+                break;
+            case "ArrowUp":
+                _active = _active <= 0 ? _options.Count - 1 : _active - 1;
+                break;
+            case "Enter" when _active >= 0:
+                await PickAsync(_active);
+                break;
+            case "Escape":
+            case "Tab":
+                Close();
+                break;
+        }
+    }
+
+    private async Task PickAsync(int index)
+    {
+        if (index < 0 || index >= _options.Count)
+        {
+            return;
+        }
+
+        Suggestion option = _options[index];
+        bool template = _templateMode;
+        Close();
+        if (template)
+        {
+            string before = _text[..Math.Min(_tokenStart, _text.Length)];
+            await SetValueAsync(before + option.Value, notify: true);
+        }
+        else if (OnPicked.HasDelegate)
+        {
+            await OnPicked.InvokeAsync(option);
+        }
+        else
+        {
+            await SetValueAsync(option.Value, notify: true);
+        }
+
+        _announcement = option.Label;
+        await CallAsync(m => m.InvokeVoidAsync("focusEnd", _input).AsTask());
+    }
+
+    /// <summary>Insertion d'un modèle depuis la palette : à la suite du texte, sur une nouvelle ligne s'il y en a déjà.</summary>
+    public async Task InsertAsync(string text)
+    {
+        string current = _text;
+        string separator = current.Length == 0 ? string.Empty : Multiline ? "\n" : " ";
+        await InvokeAsync(() => SetValueAsync(current.TrimEnd() + separator + text, notify: true));
+        await CallAsync(m => m.InvokeVoidAsync("focusEnd", _input).AsTask());
+    }
+
+    /// <summary>Le navigateur signale la fin de la saisie (sortie du champ, Entrée) : valeur nettoyée et transmise.</summary>
+    private Task OnChangeAsync(ChangeEventArgs e)
+    {
+        _text = e.Value?.ToString() ?? string.Empty;
+        return CommitAsync();
+    }
+
+    private Task OnBlurAsync()
+    {
+        Close();
+        return CommitAsync();
+    }
+
+    private Task CommitAsync()
+    {
+        string text = Tidy && _text.Length > 0 ? TextTidy.Apply(_text, CultureInfo.CurrentCulture) : _text;
+        return SetValueAsync(text, notify: true);
+    }
+
+    private void Close()
+    {
+        _options = [];
+        _active = -1;
+        _templateMode = false;
+    }
+
+    private async Task SetValueAsync(string value, bool notify)
+    {
+        bool changed = value != _text;
+        _text = value;
+        await ValueChanged.InvokeAsync(value);
+        if (notify)
+        {
+            NotifyForm();
+            if (changed || value != (_lastValue ?? string.Empty))
+            {
+                await OnCommitted.InvokeAsync(value);
+            }
+
+            StateHasChanged();
+        }
+    }
+
+    private void NotifyForm()
+    {
+        if (EditContext is not null && ValueExpression is not null)
+        {
+            EditContext.NotifyFieldChanged(FieldIdentifier.Create(ValueExpression));
+        }
+    }
+
+    private async Task CallAsync(Func<IJSObjectReference, Task> action)
+    {
+        try
+        {
+            _module ??= await JS.InvokeAsync<IJSObjectReference?>("import", AssistModule.Path);
+            if (_module is not null)
+            {
+                await action(_module);
+            }
+        }
+        catch (JSException)
+        {
+        }
+        catch (InvalidOperationException)
+        {
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        Assist.Released(this);
+        if (_module is not null)
+        {
+            try
+            {
+                await _module.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+        }
+    }
+}

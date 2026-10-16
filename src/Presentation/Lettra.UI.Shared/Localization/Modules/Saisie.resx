@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <!-- Aide à la saisie (autocomplétion, saisie rapide, modèles de texte) : vague 5, lane F. -->
+  <data name="Assist.Suggestions" xml:space="preserve"><value>Suggestions</value></data>
+  <data name="Assist.Count" xml:space="preserve"><value>{0} suggestions, flèches pour parcourir, Entrée pour choisir.</value></data>
+  <data name="Assist.PostalCode.Hint" xml:space="preserve"><value>Tapez le code postal ou le début du nom de la ville.</value></data>
+  <data name="Assist.Habits.Title" xml:space="preserve"><value>Habituel pour ce client :</value></data>
+  <data name="Assist.Habits.Add" xml:space="preserve"><value>Ajouter « {0} »</value></data>
+  <data name="Assist.Habits.Uses" xml:space="preserve"><value>{0} pièces</value></data>
+  <data name="Assist.Terms.Reuse" xml:space="preserve"><value>Reprendre ses dernières conditions : {0}</value></data>
+  <data name="Assist.Designations" xml:space="preserve"><value>Désignations déjà utilisées</value></data>
+  <data name="Assist.Quick.Hours" xml:space="preserve"><value>{0} h</value></data>
+  <data name="Assist.Quick.Days" xml:space="preserve"><value>{0} j</value></data>
+  <data name="Assist.Quick.Result" xml:space="preserve"><value>= {0}</value></data>
+  <data name="Assist.Quick.Invalid" xml:space="preserve"><value>Saisie non reconnue</value></data>
+  <data name="Template.List" xml:space="preserve"><value>Modèles de texte</value></data>
+  <data name="Template.Hint" xml:space="preserve"><value>« / » pour insérer un modèle de texte.</value></data>
+  <data name="Template.Palette.Insert" xml:space="preserve"><value>Insérer : {0}</value></data>
+  <data name="Palette.Group.Templates" xml:space="preserve"><value>Modèles de texte</value></data>
+  <data name="Template.subject-bookkeeping.Title" xml:space="preserve"><value>Tenue comptable</value></data>
+  <data name="Template.subject-bookkeeping.Body" xml:space="preserve"><value>Tenue comptable mensuelle</value></data>
+  <data name="Template.subject-annual.Title" xml:space="preserve"><value>Comptes annuels</value></data>
+  <data name="Template.subject-annual.Body" xml:space="preserve"><value>Établissement des comptes annuels et de la liasse fiscale</value></data>
+  <data name="Template.subject-payroll.Title" xml:space="preserve"><value>Paie</value></data>
+  <data name="Template.subject-payroll.Body" xml:space="preserve"><value>Établissement des bulletins de paie et des déclarations sociales</value></data>
+  <data name="Template.subject-advice.Title" xml:space="preserve"><value>Conseil</value></data>
+  <data name="Template.subject-advice.Body" xml:space="preserve"><value>Mission de conseil</value></data>
+  <data name="Template.terms-receipt.Title" xml:space="preserve"><value>À réception</value></data>
+  <data name="Template.terms-receipt.Body" xml:space="preserve"><value>Paiement à réception de la facture.</value></data>
+  <data name="Template.terms-30.Title" xml:space="preserve"><value>30 jours</value></data>
+  <data name="Template.terms-30.Body" xml:space="preserve"><value>Paiement à 30 jours à compter de la date d'émission de la facture.</value></data>
+  <data name="Template.terms-45-eom.Title" xml:space="preserve"><value>45 jours fin de mois</value></data>
+  <data name="Template.terms-45-eom.Body" xml:space="preserve"><value>Paiement à 45 jours fin de mois.</value></data>
+  <data name="Template.terms-transfer.Title" xml:space="preserve"><value>Virement</value></data>
+  <data name="Template.terms-transfer.Body" xml:space="preserve"><value>Règlement par virement bancaire sur le compte indiqué sur la facture.</value></data>
+  <data name="Template.terms-no-discount.Title" xml:space="preserve"><value>Pas d'escompte</value></data>
+  <data name="Template.terms-no-discount.Body" xml:space="preserve"><value>Pas d'escompte pour paiement anticipé.</value></data>
+  <data name="Template.late-penalties.Title" xml:space="preserve"><value>Pénalités de retard</value></data>
+  <data name="Template.late-penalties.Body" xml:space="preserve"><value>En cas de retard de paiement, des pénalités au taux de trois fois le taux d'intérêt légal sont exigibles, ainsi qu'une indemnité forfaitaire pour frais de recouvrement de 40 € (articles L441-10 et D441-5 du Code de commerce).</value></data>
+  <data name="Template.quote-validity.Title" xml:space="preserve"><value>Validité de l'offre</value></data>
+  <data name="Template.quote-validity.Body" xml:space="preserve"><value>Devis valable 30 jours à compter de sa date d'émission.</value></data>
+  <data name="Template.quote-acceptance.Title" xml:space="preserve"><value>Bon pour accord</value></data>
+  <data name="Template.quote-acceptance.Body" xml:space="preserve"><value>Devis à retourner daté et signé, précédé de la mention « Bon pour accord ».</value></data>
+  <data name="Template.quote-down-payment.Title" xml:space="preserve"><value>Acompte à la commande</value></data>
+  <data name="Template.quote-down-payment.Body" xml:space="preserve"><value>Un acompte de 30 % du montant TTC est demandé à l'acceptation du devis.</value></data>
+  <data name="Template.vat-franchise.Title" xml:space="preserve"><value>Franchise en base de TVA</value></data>
+  <data name="Template.vat-franchise.Body" xml:space="preserve"><value>TVA non applicable, article 293 B du CGI.</value></data>
+  <data name="Template.thanks.Title" xml:space="preserve"><value>Remerciements</value></data>
+  <data name="Template.thanks.Body" xml:space="preserve"><value>Nous vous remercions de votre confiance.</value></data>
+</root>
