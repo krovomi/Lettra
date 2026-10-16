@@ -73,23 +73,24 @@
 
     protected override void OnInitialized()
     {
+        // Largeurs souples : la grille tient sans défilement horizontal dès 720 px (en dessous, chaque ligne est une carte).
         _columns =
         [
-            new() { Key = Column.Reference, Label = L["Lines.Column.Reference"], Width = "7rem",
+            new() { Key = Column.Reference, Label = L["Lines.Column.Reference"], Width = "minmax(4.5rem, 7rem)",
                     Display = r => r.Reference ?? string.Empty, Parse = ParseReference },
-            new() { Key = Column.Designation, Label = L["Lines.Column.Designation"], Width = "minmax(12rem, 3fr)", Wide = true,
+            new() { Key = Column.Designation, Label = L["Lines.Column.Designation"], Width = "minmax(10rem, 3fr)", Wide = true,
                     Display = r => r.Designation, Parse = (r, t) => r with { Designation = t.Trim() } },
-            new() { Key = Column.Quantity, Label = L["Lines.Column.Quantity"], Width = "5rem", Numeric = true,
+            new() { Key = Column.Quantity, Label = L["Lines.Column.Quantity"], Width = "minmax(4rem, 5rem)", Numeric = true,
                     Display = r => r.Quantity.ToString("#,##0.###", Culture), Parse = ParseQuantity },
-            new() { Key = Column.Unit, Label = L["Lines.Column.Unit"], Width = "6rem",
+            new() { Key = Column.Unit, Label = L["Lines.Column.Unit"], Width = "minmax(4.5rem, 6rem)",
                     Display = r => UnitLabel(r.UnitCode), Parse = ParseUnit },
-            new() { Key = Column.Price, Label = L["Lines.Column.UnitPrice"], Width = "7rem", Numeric = true,
+            new() { Key = Column.Price, Label = L["Lines.Column.UnitPrice"], Width = "minmax(5.5rem, 7rem)", Numeric = true,
                     Display = r => GridNumber.FormatPrice(r.UnitPriceExclTax, Culture), Parse = ParsePrice },
             new() { Key = Column.Discount, Label = L["Lines.Column.Discount"], Width = "5rem", Numeric = true,
                     Display = r => r.DiscountPercent == 0m ? string.Empty : r.DiscountPercent.ToString("0.##", Culture), Parse = ParseDiscount },
-            new() { Key = Column.Vat, Label = L["Lines.Column.Vat"], Width = "6rem", Numeric = true,
+            new() { Key = Column.Vat, Label = L["Lines.Column.Vat"], Width = "minmax(4rem, 6rem)", Numeric = true,
                     Display = VatLabel, Parse = ParseVat },
-            new() { Key = Column.Total, Label = L["Lines.Column.Total"], Width = "7rem", Numeric = true,
+            new() { Key = Column.Total, Label = L["Lines.Column.Total"], Width = "minmax(6rem, 7rem)", Numeric = true,
                     Display = r => GridNumber.FormatAmount(r.TotalExclTax, Culture) },
         ];
 
