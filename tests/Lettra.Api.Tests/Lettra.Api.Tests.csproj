@@ -6,6 +6,8 @@
     <ProjectReference Include="..\..\src\Hosts\Lettra.Api\Lettra.Api.csproj" />
     <ProjectReference Include="..\..\src\Presentation\Lettra.UI.Gateway.Http\Lettra.UI.Gateway.Http.csproj" />
     <ProjectReference Include="..\..\src\Presentation\Lettra.UI.Gateway.InProcess\Lettra.UI.Gateway.InProcess.csproj" />
+    <!-- Jeu de données de la démonstration (vague 5) : chargé sur la composition du poste et sur celle du serveur. -->
+    <ProjectReference Include="..\..\src\Composition\Lettra.DemoData\Lettra.DemoData.csproj" />
   </ItemGroup>
 
   <ItemGroup>

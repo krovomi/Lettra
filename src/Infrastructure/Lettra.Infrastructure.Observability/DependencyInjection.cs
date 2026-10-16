@@ -70,7 +70,9 @@ public static class DependencyInjection
                 ]))
             .WithTracing(tracing => tracing
                 .AddSource(LettraTelemetry.SourceName)
-                .AddAspNetCoreInstrumentation(o => o.Filter = context => IsObserved(context.Request.Path))
+                // Groupe de méthodes, pas lambda : le délégué sur HttpContext n'est chargé que si un hôte ASP.NET Core
+                // construit le traceur. Le poste MAUI (Android, iOS, macOS) n'embarque pas ASP.NET Core.
+                .AddAspNetCoreInstrumentation(o => o.Filter = IsObserved)
                 .AddHttpClientInstrumentation()
                 .AddProcessor(new ActivityRedactionProcessor()))
             .WithMetrics(metrics => metrics
@@ -124,6 +126,8 @@ public static class DependencyInjection
         _ => throw new InvalidOperationException(
             $"{ObservabilityOptions.SectionName}:Otlp:Protocol : « {protocol} » inconnu (grpc ou http/protobuf)."),
     };
+
+    private static bool IsObserved(HttpContext context) => IsObserved(context.Request.Path);
 
     internal static bool IsObserved(PathString path) =>
         !UnobservedPaths.Any(p => path.StartsWithSegments(p, StringComparison.OrdinalIgnoreCase));

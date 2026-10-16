@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Jeu de données fictives de la démonstration (vague 5, lane A). Couche Composition : il compose l'application
+       comme un hôte (AddLettra + gateways in-process) et la remplit par ses propres cas d'usage, jamais par du SQL.
+       Un hôte ne l'appelle que si Lettra:Demo:Seed=true, et jamais en environnement Production. -->
+  <PropertyGroup>
+    <!-- CA5394 : Random sert ici à tirer des données fictives reproductibles (même graine, même jeu), pas à la sécurité. -->
+    <NoWarn>$(NoWarn);CA5394</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Lettra.Bootstrap\Lettra.Bootstrap.csproj" />
+    <ProjectReference Include="..\..\Presentation\Lettra.UI.Gateway.InProcess\Lettra.UI.Gateway.InProcess.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lettra.Api.Tests" />
+  </ItemGroup>
+
+</Project>
