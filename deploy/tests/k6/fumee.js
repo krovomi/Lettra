@@ -92,7 +92,7 @@ export function setup() {
 
     if (AUTH) {
         const user = http.get(`${BASE}/bff/user`, authParams());
-        if (user.status !== 200) fail(`session refusée par /bff/user (${user.status}) : cookie expiré ou absent`);
+        if (user.status !== 200 || user.json('isAuthenticated') !== true) fail(`session refusée par /bff/user (${user.status}) : cookie expiré ou absent`);
     }
 
     return { assets: assets.slice(0, 8) };

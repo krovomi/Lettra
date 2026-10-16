@@ -17,6 +17,8 @@ public static class BffEndpoints
     internal const string SignOutTokenKey = "lettra.signout";
     internal const string ReauthenticationKey = "lettra.reauthentification";
 
+    private static readonly SessionResponse SignedOut = new(IsAuthenticated: false, SessionModeDto.Oidc, DisplayName: null, LocalAccountExists: false);
+
     public static IEndpointRouteBuilder MapLettraBff(this IEndpointRouteBuilder app)
     {
         RouteGroupBuilder bff = app.MapGroup("/bff").ExcludeFromDescription();
@@ -35,12 +37,14 @@ public static class BffEndpoints
             return Results.Challenge(properties, [LettraAuthSchemes.Oidc]);
         });
 
-        bff.MapGet("/user", async (HttpContext context) =>
+        bff.MapGet("/user", async Task<IResult> (HttpContext context) =>
         {
             AuthenticateResult session = await context.AuthenticateAsync(LettraAuthSchemes.Cookie).ConfigureAwait(false);
             if (!session.Succeeded || session.Principal is null)
             {
-                return new[] { SecurityErrors.Unauthenticated }.ToProblem();
+                // « Qui suis-je ? » n'est pas une ressource protégée : sans session, la réponse le dit (200) au lieu d'un
+                // 401 que le navigateur afficherait en erreur dans la console à chaque ouverture de l'application.
+                return TypedResults.Ok(SignedOut);
             }
 
             string? token = SignOutToken(session);
