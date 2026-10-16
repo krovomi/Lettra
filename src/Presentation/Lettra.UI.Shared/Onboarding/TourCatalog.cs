@@ -34,7 +34,7 @@ public static class TourCatalog
             new("lines", "[data-tour='lines']", "#lines-title", ".lettra-lines-host"),
             new("keys", "[data-tour='function-keys']", ".lg-fkeys", ".lettra-lines-host"),
             new("quick", "[data-tour='lines']", ".lettra-lines-host"),
-            new("templates", "[data-tour='notes']", "#notes"),
+            new("templates", "[data-tour='notes']", "#notes", "#quote-notes-toggle"),
             new("voice", "#subject-mic", "#notes-mic", "[data-tour='voice']", "#voice-button"),
             new("compliance", "[data-tour='compliance']", "#checklist-title"),
             new("why", "[data-tour='compliance']", "#checklist-title"),
@@ -49,7 +49,7 @@ public static class TourCatalog
         new("invoice-editor", 2, "invoices/*",
         [
             new("customer", "[data-tour='customer']", "#customer"),
-            new("terms", "[data-tour='payment-terms']", "#payment-terms"),
+            new("terms", "[data-tour='payment-terms']", "#payment-terms", "#invoice-delivery-toggle"),
             new("voice", "#payment-terms-mic", "#subject-mic", "[data-tour='voice']", "#voice-button"),
             new("lines", "[data-tour='lines']", "#lines-title", ".lettra-lines-host"),
             new("compliance", "[data-tour='compliance']", "#checklist-title"),

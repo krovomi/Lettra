@@ -26,6 +26,7 @@ Où c'est rangé :
 - Placement : sous l'élément s'il y a la place, sinon au-dessus, sinon à côté (menu latéral), sinon au centre ; sur
   téléphone (moins de 768 px), la bulle est une feuille en bas, ou en haut quand l'élément montré est en bas. Les
   zones sûres d'iOS sont respectées.
+- Un élément caché dans un bloc replié (bouton `aria-expanded="false"` avec `aria-controls` sur un de ses parents) est déplié avant d'être montré.
 - Pour ajouter une étape : une ligne dans `TourCatalog`, deux clés FR et deux clés EN, et **la version du parcours
   +1** pour que ceux qui l'ont déjà vu le revoient.
 - Le tutoriel ne démarre jamais seul sous un navigateur piloté (Playwright, captures du design) : il couvrirait

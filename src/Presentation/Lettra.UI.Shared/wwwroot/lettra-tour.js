@@ -28,6 +28,21 @@ function find(selectors) {
   return null;
 }
 
+// Un élément présent mais caché dans un bloc replié (bouton aria-expanded="false" qui contrôle un de ses parents) :
+// on déplie le bloc pour pouvoir le montrer. Rend vrai si un bloc a été déplié.
+function expand(selectors) {
+  for (const selector of selectors) {
+    let element = null;
+    try { element = document.querySelector(selector); } catch { element = null; }
+    for (let node = element; node && node !== document.body; node = node.parentElement) {
+      if (!node.id) { continue; }
+      const toggle = document.querySelector(`[aria-expanded="false"][aria-controls~="${CSS.escape(node.id)}"]`);
+      if (toggle) { toggle.click(); return true; }
+    }
+  }
+  return false;
+}
+
 function rectOf(element) {
   const r = element.getBoundingClientRect();
   return { top: r.top, left: r.left, width: r.width, height: r.height, viewportWidth: innerWidth, viewportHeight: innerHeight };
@@ -43,6 +58,10 @@ export async function locate(selectors, timeoutMs) {
   if (!selectors || selectors.length === 0) { return viewport(); }
   const until = performance.now() + (timeoutMs ?? 1500);
   let element = find(selectors);
+  if (!element && expand(selectors)) {
+    await new Promise(resolve => setTimeout(resolve, 150));
+    element = find(selectors);
+  }
   while (!element && performance.now() < until) {
     await new Promise(resolve => setTimeout(resolve, 100));
     element = find(selectors);
