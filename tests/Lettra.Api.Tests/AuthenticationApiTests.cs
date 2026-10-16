@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using Lettra.Api.Security;
 using Lettra.Contracts.Common;
+using Lettra.Contracts.Identity;
 using Lettra.Contracts.Serialization;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
@@ -170,12 +171,18 @@ public sealed class AuthenticationApiTests(LettraApiFactory factory) : IClassFix
     }
 
     [Fact]
-    public async Task Le_bff_sans_session_repond_401()
+    public async Task Le_bff_sans_session_repond_non_connecte_sans_erreur()
     {
         using HttpClient client = factory.CreateClient();
 
         using HttpResponseMessage response = await client.GetAsync(new Uri("/bff/user", UriKind.Relative));
 
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        // 200 et non 401 : le navigateur n'affiche pas d'erreur dans la console avant la connexion.
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        SessionResponse? session = await response.Content.ReadFromJsonAsync(ContractsJsonContext.Default.SessionResponse);
+        session.Should().NotBeNull();
+        session!.IsAuthenticated.Should().BeFalse();
+        session.SignOutUrl.Should().BeNull();
+        session.DeviceStorageKey.Should().BeNull();
     }
 }
