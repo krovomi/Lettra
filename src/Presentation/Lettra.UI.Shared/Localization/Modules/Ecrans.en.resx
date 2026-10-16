@@ -34,4 +34,28 @@
   <data name="Toast.Region" xml:space="preserve"><value>Notifications</value></data>
   <data name="Toast.Close" xml:space="preserve"><value>Dismiss notification</value></data>
   <data name="Home.Demo.Refused" xml:space="preserve"><value>The demo data cannot be loaded here.</value></data>
+  <data name="Collapsible.Toggle" xml:space="preserve"><value>Collapse or expand “{0}”</value></data>
+  <data name="Billing.Section.Main" xml:space="preserve"><value>Details</value></data>
+  <data name="Billing.Summary.NoCustomer" xml:space="preserve"><value>No customer yet</value></data>
+  <data name="Billing.Summary.Lines" xml:space="preserve"><value>{0} line(s) · {1} excl. VAT</value></data>
+  <data name="Billing.Summary.NoLines" xml:space="preserve"><value>No lines: press Insert to add one</value></data>
+  <data name="Billing.Summary.NoNotes" xml:space="preserve"><value>No notes</value></data>
+  <data name="Quote.Summary.ValidUntil" xml:space="preserve"><value>valid until {0}</value></data>
+  <data name="Invoice.Summary.Due" xml:space="preserve"><value>due {0}</value></data>
+  <data name="Invoice.Section.Delivery" xml:space="preserve"><value>Delivery and payment</value></data>
+  <data name="Invoice.Summary.Delivered" xml:space="preserve"><value>delivered or performed on {0}</value></data>
+  <data name="Invoice.Summary.NoDelivery" xml:space="preserve"><value>Delivery date to fill in</value></data>
+  <data name="Invoice.Summary.Address" xml:space="preserve"><value>delivery address set</value></data>
+  <data name="Billing.Toast.Created" xml:space="preserve"><value>Draft created: every change saves itself.</value></data>
+  <data name="Billing.Toast.Saved" xml:space="preserve"><value>Changes saved.</value></data>
+  <data name="Billing.Toast.Deleted" xml:space="preserve"><value>Draft deleted.</value></data>
+  <data name="Quote.Toast.InvoiceCreated" xml:space="preserve"><value>Draft invoice created from quote {0}.</value></data>
+  <data name="Quote.Toast.DownPaymentCreated" xml:space="preserve"><value>Draft down-payment invoice created from quote {0}.</value></data>
+  <data name="Invoice.Toast.CreditNoteCreated" xml:space="preserve"><value>Draft credit note created for invoice {0}.</value></data>
+  <data name="Platform.Toast.Transmitted" xml:space="preserve"><value>Invoice filed with the platform.</value></data>
+  <data name="Platform.Toast.Refreshed" xml:space="preserve"><value>Transmission status refreshed.</value></data>
+  <data name="Platform.Toast.PaymentReported" xml:space="preserve"><value>Payment reported to the platform.</value></data>
+  <data name="Alerts.Toast.Acknowledged" xml:space="preserve"><value>Alert acknowledged.</value></data>
+  <data name="Alerts.Toast.Resolved" xml:space="preserve"><value>Alert resolved.</value></data>
+  <data name="Alerts.Toast.SeverityChanged" xml:space="preserve"><value>Alert severity changed.</value></data>
 </root>

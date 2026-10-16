@@ -34,4 +34,28 @@
   <data name="Toast.Region" xml:space="preserve"><value>Notifications</value></data>
   <data name="Toast.Close" xml:space="preserve"><value>Fermer la notification</value></data>
   <data name="Home.Demo.Refused" xml:space="preserve"><value>Les données de démonstration ne peuvent pas être chargées ici.</value></data>
+  <data name="Collapsible.Toggle" xml:space="preserve"><value>Replier ou déplier « {0} »</value></data>
+  <data name="Billing.Section.Main" xml:space="preserve"><value>Informations</value></data>
+  <data name="Billing.Summary.NoCustomer" xml:space="preserve"><value>Client à choisir</value></data>
+  <data name="Billing.Summary.Lines" xml:space="preserve"><value>{0} ligne(s) · {1} HT</value></data>
+  <data name="Billing.Summary.NoLines" xml:space="preserve"><value>Aucune ligne : Insert pour en ajouter une</value></data>
+  <data name="Billing.Summary.NoNotes" xml:space="preserve"><value>Aucune note</value></data>
+  <data name="Quote.Summary.ValidUntil" xml:space="preserve"><value>valable jusqu'au {0}</value></data>
+  <data name="Invoice.Summary.Due" xml:space="preserve"><value>échéance {0}</value></data>
+  <data name="Invoice.Section.Delivery" xml:space="preserve"><value>Livraison et paiement</value></data>
+  <data name="Invoice.Summary.Delivered" xml:space="preserve"><value>livrée ou exécutée le {0}</value></data>
+  <data name="Invoice.Summary.NoDelivery" xml:space="preserve"><value>Date de livraison à renseigner</value></data>
+  <data name="Invoice.Summary.Address" xml:space="preserve"><value>adresse de livraison renseignée</value></data>
+  <data name="Billing.Toast.Created" xml:space="preserve"><value>Brouillon créé : chaque saisie s'enregistre d'elle-même.</value></data>
+  <data name="Billing.Toast.Saved" xml:space="preserve"><value>Modifications enregistrées.</value></data>
+  <data name="Billing.Toast.Deleted" xml:space="preserve"><value>Brouillon supprimé.</value></data>
+  <data name="Quote.Toast.InvoiceCreated" xml:space="preserve"><value>Facture créée en brouillon depuis le devis {0}.</value></data>
+  <data name="Quote.Toast.DownPaymentCreated" xml:space="preserve"><value>Facture d'acompte créée en brouillon depuis le devis {0}.</value></data>
+  <data name="Invoice.Toast.CreditNoteCreated" xml:space="preserve"><value>Avoir créé en brouillon pour la facture {0}.</value></data>
+  <data name="Platform.Toast.Transmitted" xml:space="preserve"><value>Facture déposée sur la plateforme.</value></data>
+  <data name="Platform.Toast.Refreshed" xml:space="preserve"><value>Statut de la transmission actualisé.</value></data>
+  <data name="Platform.Toast.PaymentReported" xml:space="preserve"><value>Encaissement déclaré à la plateforme.</value></data>
+  <data name="Alerts.Toast.Acknowledged" xml:space="preserve"><value>Alerte prise en compte.</value></data>
+  <data name="Alerts.Toast.Resolved" xml:space="preserve"><value>Alerte résolue.</value></data>
+  <data name="Alerts.Toast.SeverityChanged" xml:space="preserve"><value>Gravité de l'alerte modifiée.</value></data>
 </root>

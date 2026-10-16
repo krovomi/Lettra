@@ -27,6 +27,7 @@ internal static class IconPaths
         ["contrast"] = "<circle cx='12' cy='12' r='10'/> <path d='M12 18a6 6 0 0 0 0-12v12z'/>",
         ["chevrons-left"] = "<path d='m11 17-5-5 5-5'/> <path d='m18 17-5-5 5-5'/>",
         ["chevrons-right"] = "<path d='m6 17 5-5-5-5'/> <path d='m13 17 5-5-5-5'/>",
+        ["chevron-down"] = "<path d='m6 9 6 6 6-6'/>",
         ["ellipsis"] = "<circle cx='12' cy='12' r='1'/> <circle cx='19' cy='12' r='1'/> <circle cx='5' cy='12' r='1'/>",
         ["x"] = "<path d='M18 6 6 18'/> <path d='m6 6 12 12'/>",
         ["plus"] = "<path d='M5 12h14'/> <path d='M12 5v14'/>",

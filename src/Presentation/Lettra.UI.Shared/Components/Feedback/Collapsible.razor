@@ -1,0 +1,107 @@
+@inject UiPreferences Preferences
+@inject IStringLocalizer<SharedResource> L
+@* Bloc repliable (vague 5, lane E) : une carte dont le titre est un bouton qui replie ou déplie le contenu. Replié, il
+   montre un résumé d'une ligne. Le contenu reste rendu (masqué par hidden) : une grille ou un champ garde sa saisie.
+   L'état choisi est retenu sur l'appareil, par bloc (clé lettra.bloc.{Id}). *@
+
+<section class="lt-collapsible lettra-card @Class" id="@Id" data-open="@(_open ? "true" : "false")" aria-labelledby="@TitleId">
+    <div class="lt-collapsible-header">
+        <h2 class="lt-collapsible-heading">
+            <button type="button" class="lt-collapsible-toggle" id="@($"{Id}-toggle")" aria-expanded="@(_open ? "true" : "false")"
+                    aria-controls="@($"{Id}-body")" title="@L["Collapsible.Toggle", Title]" @onclick="ToggleAsync">
+                <Icon Name="chevron-down" Class="lt-collapsible-chevron" />
+                <span id="@TitleId">@Title</span>
+            </button>
+        </h2>
+        @if (!_open && !string.IsNullOrEmpty(Summary))
+        {
+            <p class="lt-collapsible-summary">@Summary</p>
+        }
+        @if (Actions is not null)
+        {
+            <div class="lt-collapsible-actions">@Actions</div>
+        }
+    </div>
+    <div class="lt-collapsible-body" id="@($"{Id}-body")" hidden="@(!_open)">
+        @ChildContent
+    </div>
+</section>
+
+@code {
+    /// <summary>Identifiant du bloc dans la page, stable : il sert aussi de clé à l'état retenu.</summary>
+    [Parameter, EditorRequired] public string Id { get; set; } = "";
+
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+
+    /// <summary>Identifiant du titre ; par défaut <c>{Id}-title</c>.</summary>
+    [Parameter] public string? HeadingId { get; set; }
+
+    /// <summary>Ligne affichée quand le bloc est replié (client, dates, nombre de lignes…).</summary>
+    [Parameter] public string? Summary { get; set; }
+
+    /// <summary>Ouvert au premier affichage tant que l'utilisateur n'a rien choisi pour ce bloc.</summary>
+    [Parameter] public bool InitiallyOpen { get; set; } = true;
+
+    /// <summary>Commandes à droite du titre, visibles replié comme déplié.</summary>
+    [Parameter] public RenderFragment? Actions { get; set; }
+
+    [Parameter] public string? Class { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    [Parameter] public EventCallback<bool> OnToggled { get; set; }
+
+    private bool _open;
+    private bool _initialized;
+
+    public bool IsOpen => _open;
+
+    private string TitleId => HeadingId ?? $"{Id}-title";
+
+    private string Key => $"lettra.bloc.{Id}";
+
+    protected override void OnParametersSet()
+    {
+        if (!_initialized)
+        {
+            _initialized = true;
+            _open = InitiallyOpen;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        string? stored = await Preferences.ReadAsync(Key);
+        if (bool.TryParse(stored, out bool open) && open != _open)
+        {
+            _open = open;
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>Déplie le bloc (avant de placer le curseur sur un de ses champs) ; sans effet s'il l'est déjà.</summary>
+    public async Task ExpandAsync()
+    {
+        if (_open)
+        {
+            return;
+        }
+
+        _open = true;
+        StateHasChanged();
+        // Laisse le rendu retirer hidden avant que l'appelant ne place le focus.
+        await Task.Yield();
+    }
+
+    private async Task ToggleAsync()
+    {
+        _open = !_open;
+        await Preferences.WriteAsync(Key, _open ? "true" : "false");
+        await OnToggled.InvokeAsync(_open);
+    }
+}

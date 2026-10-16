@@ -10,6 +10,7 @@
 @inject IDocumentPdfRenderer Pdf
 @inject IFileDownloader Files
 @inject NavigationManager Navigation
+@inject ToastService Toasts
 @inject IStringLocalizer<SharedResource> L
 
 <PageTitle>@Title · Lettra</PageTitle>
@@ -37,45 +38,47 @@ else
 {
     <div class="lettra-document">
         <div class="lettra-document-main">
-            <section class="lettra-card lettra-document-header" aria-label="@L["Billing.Header"]">
-                <CustomerPicker @ref="_customerPicker" CustomerId="_request.CustomerId" SelectedName="@_customerName" ReadOnly="IsReadOnly"
-                                OnSelected="CustomerSelectedAsync" />
+            <Collapsible @ref="_mainBlock" Id="quote-main" Title="@L["Billing.Section.Main"]" Summary="@MainSummary">
+                <div class="lettra-document-header" role="group" aria-label="@L["Billing.Header"]">
+                    <CustomerPicker @ref="_customerPicker" CustomerId="_request.CustomerId" SelectedName="@_customerName" ReadOnly="IsReadOnly"
+                                    OnSelected="CustomerSelectedAsync" />
 
-                <div class="lettra-field">
-                    <label for="valid-until">@L["Quote.Field.ValidUntil"]</label>
-                    <input id="valid-until" type="date" @ref="_validUntil" disabled="@IsReadOnly"
-                           value="@_request.ValidUntil?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" @onchange="ValidUntilChangedAsync" />
+                    <div class="lettra-field">
+                        <label for="valid-until">@L["Quote.Field.ValidUntil"]</label>
+                        <input id="valid-until" type="date" @ref="_validUntil" disabled="@IsReadOnly"
+                               value="@_request.ValidUntil?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" @onchange="ValidUntilChangedAsync" />
+                    </div>
+
+                    <div class="lettra-field">
+                        <label for="vat-regime">@L["Billing.Field.VatRegime"]</label>
+                        <select id="vat-regime" disabled="@IsReadOnly" value="@_request.VatRegime" @onchange="RegimeChangedAsync">
+                            @foreach (VatRegimeOption regime in _reference.VatRegimes)
+                            {
+                                <option value="@regime.Regime">@L[$"VatRegime.{regime.Regime}"]</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="lettra-field lettra-field-wide">
+                        <label for="subject">@L["Billing.Field.Subject"]</label>
+                        <input id="subject" disabled="@IsReadOnly" value="@_request.Subject" maxlength="200" @onchange="SubjectChangedAsync" />
+                    </div>
                 </div>
+            </Collapsible>
 
-                <div class="lettra-field">
-                    <label for="vat-regime">@L["Billing.Field.VatRegime"]</label>
-                    <select id="vat-regime" disabled="@IsReadOnly" value="@_request.VatRegime" @onchange="RegimeChangedAsync">
-                        @foreach (VatRegimeOption regime in _reference.VatRegimes)
-                        {
-                            <option value="@regime.Regime">@L[$"VatRegime.{regime.Regime}"]</option>
-                        }
-                    </select>
-                </div>
-
-                <div class="lettra-field lettra-field-wide">
-                    <label for="subject">@L["Billing.Field.Subject"]</label>
-                    <input id="subject" disabled="@IsReadOnly" value="@_request.Subject" maxlength="200" @onchange="SubjectChangedAsync" />
-                </div>
-            </section>
-
-            <section class="lettra-card" aria-labelledby="lines-title">
-                <h2 id="lines-title">@L["Lines.Title"]</h2>
+            <Collapsible @ref="_linesBlock" Id="quote-lines" HeadingId="lines-title" Title="@L["Lines.Title"]" Summary="@LinesSummary">
                 <DocumentLinesGrid @ref="_linesGrid" Lines="_lines" ReferenceData="_reference" Regime="_request.VatRegime"
                                    ReadOnly="IsReadOnly" ResolvePrice="ResolvePriceAsync"
                                    OnLinesChanged="ScheduleSaveAsync" OnTotalsChanged="TotalsChanged" />
-            </section>
+            </Collapsible>
 
-            <section class="lettra-card lettra-notes">
+            <Collapsible Id="quote-notes" Title="@L["Billing.Field.Notes"]" Summary="@NotesSummary" InitiallyOpen="@(!string.IsNullOrEmpty(_request.Notes))"
+                         Class="lettra-notes">
                 <div class="lettra-field">
-                    <label for="notes">@L["Billing.Field.Notes"]</label>
+                    <label for="notes" class="lettra-visually-hidden">@L["Billing.Field.Notes"]</label>
                     <textarea id="notes" rows="3" disabled="@IsReadOnly" value="@_request.Notes" maxlength="4000" @onchange="NotesChangedAsync"></textarea>
                 </div>
-            </section>
+            </Collapsible>
         </div>
 
         <aside class="lettra-document-side">
@@ -152,6 +155,8 @@ else
     private KeyboardScope _pageScope = default!;
     private CustomerPicker? _customerPicker;
     private DocumentLinesGrid? _linesGrid;
+    private Collapsible? _mainBlock;
+    private Collapsible? _linesBlock;
     private ElementReference _validUntil;
     private Guid? _loadedId;
     private OfflineDrafts? _drafts;
@@ -166,6 +171,16 @@ else
     private string Title => _quote?.Number is { } number
         ? string.Format(CultureInfo.CurrentCulture, L["Quote.TitleNumber"], number)
         : L[_quote is null ? "Quote.TitleNew" : "Quote.TitleDraft"];
+
+    /// <summary>Résumé du bloc replié : client, validité, régime.</summary>
+    private string MainSummary => BillingSummaries.Join(
+        _customerName ?? L["Billing.Summary.NoCustomer"].Value,
+        _request.ValidUntil is { } until ? string.Format(CultureInfo.CurrentCulture, L["Quote.Summary.ValidUntil"], until.ToString("d", CultureInfo.CurrentCulture)) : null,
+        L[$"VatRegime.{_request.VatRegime}"].Value);
+
+    private string LinesSummary => BillingSummaries.Lines(L, _lines.Count, _totals.TotalExclTax);
+
+    private string NotesSummary => BillingSummaries.Excerpt(_request.Notes) ?? L["Billing.Summary.NoNotes"].Value;
 
     private string StatusText => L[$"QuoteStatus.{_quote?.Status ?? QuoteStatusDto.Draft}"];
 
@@ -472,6 +487,7 @@ else
 
         bool created = _quote is null;
         _errors = [];
+        Toasts.Show(ToastKind.Success, L[created ? "Billing.Toast.Created" : "Billing.Toast.Saved"].Value);
         _quote = result.Value;
         _customerName = result.Value.Customer.Name;
         // Totaux du serveur, sauf si une saisie attend ou qu'une ligne incomplète (non envoyée) compte à l'écran.
@@ -564,6 +580,7 @@ else
             return;
         }
 
+        Toasts.Show(ToastKind.Success, string.Format(CultureInfo.CurrentCulture, L["Quote.Toast.InvoiceCreated"], _quote.Number));
         Navigation.NavigateTo($"invoices/{invoice.Value.Id}");
     }
 
@@ -582,6 +599,7 @@ else
             return;
         }
 
+        Toasts.Show(ToastKind.Success, string.Format(CultureInfo.CurrentCulture, L["Quote.Toast.DownPaymentCreated"], _quote.Number));
         Navigation.NavigateTo($"invoices/{invoice.Value.Id}");
     }
 
@@ -600,6 +618,7 @@ else
             return;
         }
 
+        Toasts.Show(ToastKind.Success, L["Billing.Toast.Deleted"].Value);
         Navigation.NavigateTo("quotes");
     }
 
@@ -624,6 +643,7 @@ else
         switch (finding.Code)
         {
             case var code when code.StartsWith("Mention.Customer", StringComparison.Ordinal):
+                await ExpandAsync(_mainBlock);
                 if (_customerPicker is not null)
                 {
                     await _customerPicker.FocusAsync();
@@ -636,9 +656,11 @@ else
                 Navigation.NavigateTo("settings/company");
                 break;
             case ErrorCodes.Mention.DueDate:
+                await ExpandAsync(_mainBlock);
                 await FocusAsync(_validUntil);
                 break;
             default:
+                await ExpandAsync(_linesBlock);
                 if (_linesGrid is not null)
                 {
                     await _linesGrid.FocusLineAsync((finding.Line ?? 1) - 1);
@@ -647,6 +669,8 @@ else
                 break;
         }
     }
+
+    private static Task ExpandAsync(Collapsible? block) => block?.ExpandAsync() ?? Task.CompletedTask;
 
     private static async Task FocusAsync(ElementReference element)
     {

@@ -2,6 +2,7 @@
 @page "/alerts/{Id:guid}"
 @using Lettra.Contracts.Alerts
 @inject IAlertsGateway Gateway
+@inject ToastService Toasts
 @inject IStringLocalizer<SharedResource> L
 
 @* Centre d'alertes v1 (annexe G §8) : compteurs par gravité, liste triée, détail avec sa chronologie et actions
@@ -193,13 +194,13 @@ else
         await LoadAsync();
     }
 
-    private Task AcknowledgeAsync() => ActAsync(id => Gateway.AcknowledgeAsync(id, CancellationToken.None));
+    private Task AcknowledgeAsync() => ActAsync(id => Gateway.AcknowledgeAsync(id, CancellationToken.None), "Alerts.Toast.Acknowledged");
 
-    private Task ResolveAsync() => ActAsync(id => Gateway.ResolveAsync(id, CancellationToken.None));
+    private Task ResolveAsync() => ActAsync(id => Gateway.ResolveAsync(id, CancellationToken.None), "Alerts.Toast.Resolved");
 
-    private Task ChangeSeverityAsync() => ActAsync(id => Gateway.ChangeSeverityAsync(id, _severity, CancellationToken.None));
+    private Task ChangeSeverityAsync() => ActAsync(id => Gateway.ChangeSeverityAsync(id, _severity, CancellationToken.None), "Alerts.Toast.SeverityChanged");
 
-    private async Task ActAsync(Func<Guid, Task<OperationResult<AlertDetailResponse>>> action)
+    private async Task ActAsync(Func<Guid, Task<OperationResult<AlertDetailResponse>>> action, string successKey)
     {
         if (_detail is null)
         {
@@ -215,6 +216,7 @@ else
                 _detail = result.Value;
                 _severity = new ChangeAlertSeverityRequest { Severity = result.Value!.Alert.Severity };
                 _errors = [];
+                Toasts.Show(ToastKind.Success, L[successKey].Value);
                 await LoadAsync();
             }
             else

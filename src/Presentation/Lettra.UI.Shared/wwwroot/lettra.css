@@ -255,7 +255,7 @@ kbd { font-family: var(--font-mono); font-size: var(--text-xs); padding: 0.05rem
 .lettra-card label { font-weight: var(--weight-medium); margin-top: var(--space-3); }
 .lettra-card fieldset { border: 0; padding: 0; }
 .lettra-card fieldset label { font-weight: var(--weight-regular); margin-right: var(--space-4); }
-.lettra-card :where(button:not(.lettra-link, .lt-icon-button)) { margin-top: var(--space-4); justify-self: start; }
+.lettra-card :where(button:not(.lettra-link, .lt-icon-button, .lt-collapsible-toggle)) { margin-top: var(--space-4); justify-self: start; }
 
 /* Champs : un seul style pour toute l'application. Spécificité d'une classe (:where) : les composants qui ont leur
    propre style, comme les cellules de la grille de saisie (lettra-grid.css, chargé après), le gardent. */
@@ -284,7 +284,7 @@ kbd { font-family: var(--font-mono); font-size: var(--text-xs); padding: 0.05rem
 
 /* Boutons : primaire, secondaire, fantôme ; un bouton nu dans une carte ou une barre d'outils prend le style primaire. */
 .lettra-button,
-.lettra-card :where(button:not(.lettra-link, .lt-icon-button, .lettra-button)),
+.lettra-card :where(button:not(.lettra-link, .lt-icon-button, .lettra-button, .lt-collapsible-toggle)),
 .lettra-toolbar :where(button:not(.lettra-link, .lettra-button)),
 .lettra-lock :where(button) {
     display: inline-flex;
@@ -303,7 +303,7 @@ kbd { font-family: var(--font-mono); font-size: var(--text-xs); padding: 0.05rem
     cursor: pointer;
     transition: background-color var(--motion-fast) var(--ease-out), border-color var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) var(--ease-out), transform var(--motion-fast) var(--ease-out);
 }
-.lettra-button:hover, .lettra-card :where(button:not(.lettra-link, .lt-icon-button, .lettra-button)):hover, .lettra-toolbar :where(button:not(.lettra-link, .lettra-button)):hover {
+.lettra-button:hover, .lettra-card :where(button:not(.lettra-link, .lt-icon-button, .lettra-button, .lt-collapsible-toggle)):hover, .lettra-toolbar :where(button:not(.lettra-link, .lettra-button)):hover {
     background: var(--color-primary-hover);
     border-color: var(--color-primary-hover);
     color: var(--color-on-primary);
@@ -675,3 +675,33 @@ a.lt-kpi:hover { border-color: var(--color-primary); box-shadow: var(--shadow-md
 .lettra-document-side > * + * { padding-top: var(--space-3); border-top: 1px solid var(--color-border); }
 .lettra-document-side h2, .lettra-document-side h3 { font-size: var(--text-base); margin-bottom: var(--space-2); }
 .lettra-document-side .lettra-sums .is-strong { font-size: var(--text-xl); }
+
+/* Bloc repliable (Components/Feedback/Collapsible) : le titre de la carte est le bouton ; replié, une ligne de résumé.
+   Le chevron tourne, sans animation si le mouvement est réduit. */
+.lt-collapsible { padding-block: var(--space-3); }
+.lt-collapsible-header { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-3); min-height: var(--hit, 2.75rem); }
+.lt-collapsible-heading { margin: 0; font-size: var(--text-lg); line-height: 1.3; }
+.lt-collapsible-toggle {
+    display: inline-flex; align-items: center; gap: var(--space-2);
+    margin: 0 0 0 calc(-1 * var(--space-2)); padding: var(--space-1) var(--space-2); min-height: 2.25rem;
+    border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--color-fg);
+    font: inherit; font-weight: var(--weight-bold); text-align: left; cursor: pointer;
+}
+.lt-collapsible-toggle:hover { background: var(--color-surface-2); }
+.lt-collapsible-toggle:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.lt-collapsible-chevron { flex: none; color: var(--color-fg-muted); transition: transform var(--motion-fast) var(--ease-out); }
+.lt-collapsible[data-open="false"] .lt-collapsible-chevron { transform: rotate(-90deg); }
+.lt-collapsible-summary { flex: 1 1 12rem; min-width: 0; margin: 0; color: var(--color-fg-muted); font-size: var(--text-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lt-collapsible-actions { margin-left: auto; display: flex; gap: var(--space-2); align-items: center; }
+.lt-collapsible-body { margin-top: var(--space-3); }
+.lt-collapsible-body[hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) { .lt-collapsible-chevron { transition: none; } }
+@media (max-width: 767px) { .lt-collapsible-summary { flex-basis: 100%; white-space: normal; } }
+
+/* Lignes d'une pièce : la grille prend la hauteur de ses lignes (au moins quatre), jusqu'à 60 % de l'écran ; la barre
+   des touches reste sur une ligne et défile plutôt que d'empiler ses boutons. */
+.lettra-lines-host { height: auto; min-height: 0; margin-top: 0; }
+.lettra-lines-host .lg-grid { height: auto; max-height: 60vh; }
+.lettra-lines-host .lg-viewport { min-height: calc(var(--lg-row-h) * 5); }
+.lg-fkeys:has(+ .lettra-lines-host) { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; background: transparent; border: 0; padding: 0 0 var(--space-2); }
+.lg-fkeys:has(+ .lettra-lines-host) .lg-fkey { flex: none; }

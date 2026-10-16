@@ -115,11 +115,24 @@ un an d'activité fictive dans le dossier ouvert (`POST /api/v1/demo/seed`, droi
 | `.lt-cards` | Sur téléphone, chaque ligne de tableau devient une carte. La première cellule sert de titre ; les autres se libellent par `data-label`. |
 | `.lt-chips` | Filtres en pastilles (cases à cocher habillées). |
 | `.lettra-form-grid` + `.lettra-field` | Formulaire en sections, champs sur plusieurs colonnes. Les actions restent collées en bas de l'écran (`.lt-form-actions`). |
+| `Collapsible` | Bloc repliable : carte dont le titre est un bouton (`aria-expanded`). Replié, il montre un résumé d'une ligne ; son contenu reste rendu, une grille garde sa saisie. L'état choisi est retenu sur l'appareil, par bloc (`lettra.bloc.{Id}`). `ExpandAsync()` le déplie avant d'y placer le curseur. |
+
+Toute création, modification ou suppression s'annonce dans le toaster : pièce créée, modifications enregistrées (un seul
+message pendant la saisie, renouvelé à chaque enregistrement automatique), brouillon supprimé, facture ou avoir tiré
+d'une pièce, transmission à la plateforme, encaissement déclaré, article créé ou archivé, client ou fournisseur créé,
+fiche entreprise enregistrée, alerte prise en compte, résolue ou reclassée.
+
+Les éditeurs de devis et de factures sont découpés en blocs repliables : Informations (client, échéance ou validité,
+régime de TVA, objet), Livraison et paiement (factures : replié dès que la date de livraison est remplie), Lignes et
+Notes (replié tant qu'il est vide). Un constat de la checklist déplie son bloc avant de placer le curseur. La grille des
+lignes prend la hauteur de ses lignes, jusqu'à 60 % de l'écran, et sa barre de touches reste sur une ligne.
 
 Les blocs apparaissent avec un léger mouvement à l'ouverture d'une page. Ce mouvement est supprimé quand l'appareil demande moins d'animations.
 
 ![Centre d'alertes, sombre, 1440 px](captures/alertes-sombre-1440.png)
 ![Liste des devis en cartes, clair, 375 px](captures/devis-clair-375.png)
+![Facture découpée en blocs repliables, clair, 1440 px](captures/facture-blocs-clair-1440.png)
+![Facture en blocs, sombre, 375 px](captures/facture-blocs-sombre-375.png)
 
 ## Vérifier
 
@@ -132,6 +145,7 @@ Les blocs apparaissent avec un léger mouvement à l'ouverture d'une page. Ce mo
 | Point des créances (retards, transmissions) | `ReceivablesSummaryTests`, `ReceivablesApiTests`, `GatewayParityTests` |
 | Bouton des données de démonstration, refus en Production et sans droit | `ShellTests`, `ReceivablesApiTests` |
 | Cellules de la grille à la hauteur de leur ligne | `GridCellTests` |
+| Bloc repliable (bouton, résumé, état retenu) ; blocs des éditeurs ; toaster à l'enregistrement et à la suppression | `CollapsibleTests`, `QuoteEditorTests` |
 | Un champ (liste comprise) tient dans sa colonne ; la grille des lignes tient sans défilement dès 720 px et ne rogne aucune cellule | `GridCellTests`, `QuoteEditorTests` ; banc navigateur de 375 à 1920 px, densités Expert et Confort |
 | Rendu à 375, 768 et 1440 px dans chaque thème, audit axe (WCAG 2.2 AA), aucun défilement horizontal | Galerie + Playwright, ci-dessous |
 
@@ -140,9 +154,9 @@ LETTRA_GALLERY_DIR=$PWD/artifacts/galerie dotnet test tests/Lettra.UI.Tests --fi
 NODE_PATH=$(npm root -g) node build/design-captures.cjs artifacts/galerie chemin/vers/axe-core/axe.min.js
 ```
 
-La galerie rend 11 écrans avec des données fictives dans les 4 thèmes : accueil, menu apparence, feuille Plus, devis,
-factures, une facture, clients, centre d'alertes, fiche entreprise, accueil d'un dossier vide et devis sans résultat. Le
-script en tire 132 captures et `audit.json`. Au 16 octobre 2026 : 0 défaut axe, aucun débordement horizontal. Limites : pages rendues sans JavaScript (la grille de saisie y est statique), Chromium
+La galerie rend 12 écrans avec des données fictives dans les 4 thèmes : accueil, menu apparence, feuille Plus, devis,
+factures, une facture, clients, articles, centre d'alertes, fiche entreprise, accueil d'un dossier vide et devis sans
+résultat. Le script en tire 144 captures et `audit.json`. Au 16 octobre 2026 : 0 défaut axe, aucun débordement horizontal. Limites : pages rendues sans JavaScript (la grille de saisie y est statique), Chromium
 seulement ; Safari et les vrais téléphones ne sont pas testés ici.
 
 ## Ajouter un écran ou un composant

@@ -10,6 +10,7 @@
 @inject IDocumentPdfRenderer Pdf
 @inject IFileDownloader Files
 @inject NavigationManager Navigation
+@inject ToastService Toasts
 @inject IStringLocalizer<SharedResource> L
 @* Facture, facture d'acompte et avoir : même écran. Les lignes d'un acompte, d'un avoir ou d'une facture finale
    viennent d'une autre pièce et ne se saisissent pas ; l'en-tête (dates, conditions) reste modifiable en brouillon. *@
@@ -39,66 +40,72 @@ else
 {
     <div class="lettra-document">
         <div class="lettra-document-main">
-            <section class="lettra-card lettra-document-header" aria-label="@L["Billing.Header"]">
-                <CustomerPicker @ref="_customerPicker" CustomerId="_request.CustomerId" SelectedName="@_customerName"
-                                ReadOnly="@(IsReadOnly || LinesLocked)" OnSelected="CustomerSelectedAsync" />
+            <Collapsible @ref="_mainBlock" Id="invoice-main" Title="@L["Billing.Section.Main"]" Summary="@MainSummary">
+                <div class="lettra-document-header" role="group" aria-label="@L["Billing.Header"]">
+                    <CustomerPicker @ref="_customerPicker" CustomerId="_request.CustomerId" SelectedName="@_customerName"
+                                    ReadOnly="@(IsReadOnly || LinesLocked)" OnSelected="CustomerSelectedAsync" />
 
-                @if (_invoice?.QuoteNumber is { } quoteNumber)
-                {
-                    <p class="lettra-field lettra-muted">@string.Format(CultureInfo.CurrentCulture, L["Invoice.FromQuote"], quoteNumber)</p>
-                }
-                @if (_invoice?.CreditedInvoiceNumber is { } credited)
-                {
-                    <p class="lettra-field lettra-muted">@string.Format(CultureInfo.CurrentCulture, L["Invoice.CreditOf"], credited)</p>
-                }
-                @if (_invoice?.CreditApprovedAt is { } approvedAt)
-                {
-                    <p class="lettra-field lettra-muted" id="credit-approved">@string.Format(CultureInfo.CurrentCulture, L["Invoice.CreditApproved"], approvedAt.ToLocalTime().ToString("d", CultureInfo.CurrentCulture))</p>
-                }
+                    @if (_invoice?.QuoteNumber is { } quoteNumber)
+                    {
+                        <p class="lettra-field lettra-muted">@string.Format(CultureInfo.CurrentCulture, L["Invoice.FromQuote"], quoteNumber)</p>
+                    }
+                    @if (_invoice?.CreditedInvoiceNumber is { } credited)
+                    {
+                        <p class="lettra-field lettra-muted">@string.Format(CultureInfo.CurrentCulture, L["Invoice.CreditOf"], credited)</p>
+                    }
+                    @if (_invoice?.CreditApprovedAt is { } approvedAt)
+                    {
+                        <p class="lettra-field lettra-muted" id="credit-approved">@string.Format(CultureInfo.CurrentCulture, L["Invoice.CreditApproved"], approvedAt.ToLocalTime().ToString("d", CultureInfo.CurrentCulture))</p>
+                    }
 
-                <div class="lettra-field">
-                    <label for="delivery-date">@L["Invoice.Field.DeliveryDate"]</label>
-                    <input id="delivery-date" type="date" @ref="_deliveryDate" disabled="@IsReadOnly"
-                           value="@Iso(_request.DeliveryDate)" @onchange="e => DateChangedAsync(e, d => _request.DeliveryDate = d)" />
+                    <div class="lettra-field">
+                        <label for="due-date">@L["Invoice.Field.DueDate"]</label>
+                        <input id="due-date" type="date" @ref="_dueDate" disabled="@IsReadOnly"
+                               value="@Iso(_request.DueDate)" @onchange="e => DateChangedAsync(e, d => _request.DueDate = d)" />
+                    </div>
+
+                    <div class="lettra-field">
+                        <label for="vat-regime">@L["Billing.Field.VatRegime"]</label>
+                        <select id="vat-regime" disabled="@(IsReadOnly || LinesLocked)" value="@_request.VatRegime" @onchange="RegimeChangedAsync">
+                            @foreach (VatRegimeOption regime in _reference.VatRegimes)
+                            {
+                                <option value="@regime.Regime">@L[$"VatRegime.{regime.Regime}"]</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="lettra-field lettra-field-wide">
+                        <label for="subject">@L["Billing.Field.Subject"]</label>
+                        <input id="subject" disabled="@IsReadOnly" value="@_request.Subject" maxlength="200"
+                               @onchange="e => TextChangedAsync(e, v => _request.Subject = v)" />
+                    </div>
                 </div>
+            </Collapsible>
 
-                <div class="lettra-field">
-                    <label for="due-date">@L["Invoice.Field.DueDate"]</label>
-                    <input id="due-date" type="date" @ref="_dueDate" disabled="@IsReadOnly"
-                           value="@Iso(_request.DueDate)" @onchange="e => DateChangedAsync(e, d => _request.DueDate = d)" />
+            <Collapsible @ref="_deliveryBlock" Id="invoice-delivery" Title="@L["Invoice.Section.Delivery"]" Summary="@DeliverySummary"
+                         InitiallyOpen="@(_request.DeliveryDate is null)">
+                <div class="lettra-document-header">
+                    <div class="lettra-field">
+                        <label for="delivery-date">@L["Invoice.Field.DeliveryDate"]</label>
+                        <input id="delivery-date" type="date" @ref="_deliveryDate" disabled="@IsReadOnly"
+                               value="@Iso(_request.DeliveryDate)" @onchange="e => DateChangedAsync(e, d => _request.DeliveryDate = d)" />
+                    </div>
+
+                    <div class="lettra-field lettra-field-wide">
+                        <label for="payment-terms">@L["Invoice.Field.PaymentTerms"]</label>
+                        <input id="payment-terms" disabled="@IsReadOnly" value="@_request.PaymentTerms" maxlength="500"
+                               placeholder="@_company?.PaymentTerms" @onchange="e => TextChangedAsync(e, v => _request.PaymentTerms = v)" />
+                    </div>
+
+                    <div class="lettra-field lettra-field-wide">
+                        <label for="delivery-address">@L["Invoice.Field.DeliveryAddress"]</label>
+                        <textarea id="delivery-address" @ref="_deliveryAddress" rows="2" disabled="@IsReadOnly" maxlength="500"
+                                  value="@_request.DeliveryAddress" @onchange="e => TextChangedAsync(e, v => _request.DeliveryAddress = v)"></textarea>
+                    </div>
                 </div>
+            </Collapsible>
 
-                <div class="lettra-field">
-                    <label for="vat-regime">@L["Billing.Field.VatRegime"]</label>
-                    <select id="vat-regime" disabled="@(IsReadOnly || LinesLocked)" value="@_request.VatRegime" @onchange="RegimeChangedAsync">
-                        @foreach (VatRegimeOption regime in _reference.VatRegimes)
-                        {
-                            <option value="@regime.Regime">@L[$"VatRegime.{regime.Regime}"]</option>
-                        }
-                    </select>
-                </div>
-
-                <div class="lettra-field lettra-field-wide">
-                    <label for="payment-terms">@L["Invoice.Field.PaymentTerms"]</label>
-                    <input id="payment-terms" disabled="@IsReadOnly" value="@_request.PaymentTerms" maxlength="500"
-                           placeholder="@_company?.PaymentTerms" @onchange="e => TextChangedAsync(e, v => _request.PaymentTerms = v)" />
-                </div>
-
-                <div class="lettra-field lettra-field-wide">
-                    <label for="delivery-address">@L["Invoice.Field.DeliveryAddress"]</label>
-                    <textarea id="delivery-address" @ref="_deliveryAddress" rows="2" disabled="@IsReadOnly" maxlength="500"
-                              value="@_request.DeliveryAddress" @onchange="e => TextChangedAsync(e, v => _request.DeliveryAddress = v)"></textarea>
-                </div>
-
-                <div class="lettra-field lettra-field-wide">
-                    <label for="subject">@L["Billing.Field.Subject"]</label>
-                    <input id="subject" disabled="@IsReadOnly" value="@_request.Subject" maxlength="200"
-                           @onchange="e => TextChangedAsync(e, v => _request.Subject = v)" />
-                </div>
-            </section>
-
-            <section class="lettra-card" aria-labelledby="lines-title">
-                <h2 id="lines-title">@L["Lines.Title"]</h2>
+            <Collapsible @ref="_linesBlock" Id="invoice-lines" HeadingId="lines-title" Title="@L["Lines.Title"]" Summary="@LinesSummary">
                 @if (LinesLocked && IsDraft)
                 {
                     <p class="lettra-muted">@L["Error.Invoice.DerivedDocumentLocked"]</p>
@@ -106,15 +113,16 @@ else
                 <DocumentLinesGrid @ref="_linesGrid" Lines="_lines" ReferenceData="_reference" Regime="_request.VatRegime"
                                    ReadOnly="@(IsReadOnly || LinesLocked)" ResolvePrice="ResolvePriceAsync"
                                    OnLinesChanged="ScheduleSaveAsync" OnTotalsChanged="TotalsChanged" />
-            </section>
+            </Collapsible>
 
-            <section class="lettra-card lettra-notes">
+            <Collapsible Id="invoice-notes" Title="@L["Billing.Field.Notes"]" Summary="@NotesSummary" InitiallyOpen="@(!string.IsNullOrEmpty(_request.Notes))"
+                         Class="lettra-notes">
                 <div class="lettra-field">
-                    <label for="notes">@L["Billing.Field.Notes"]</label>
+                    <label for="notes" class="lettra-visually-hidden">@L["Billing.Field.Notes"]</label>
                     <textarea id="notes" rows="3" disabled="@IsReadOnly" value="@_request.Notes" maxlength="4000"
                               @onchange="e => TextChangedAsync(e, v => _request.Notes = v)"></textarea>
                 </div>
-            </section>
+            </Collapsible>
         </div>
 
         <aside class="lettra-document-side">
@@ -209,6 +217,9 @@ else
     private KeyboardScope _pageScope = default!;
     private CustomerPicker? _customerPicker;
     private DocumentLinesGrid? _linesGrid;
+    private Collapsible? _mainBlock;
+    private Collapsible? _deliveryBlock;
+    private Collapsible? _linesBlock;
     private ElementReference _deliveryDate;
     private ElementReference _dueDate;
     private ElementReference _deliveryAddress;
@@ -233,6 +244,23 @@ else
     private string Title => _invoice?.Number is { } number
         ? string.Format(CultureInfo.CurrentCulture, L[$"InvoiceKind.{Kind}.TitleNumber"], number)
         : L[_invoice is null ? "InvoiceKind.Invoice.TitleNew" : $"InvoiceKind.{Kind}.TitleDraft"];
+
+    /// <summary>Résumés des blocs repliés.</summary>
+    private string MainSummary => BillingSummaries.Join(
+        _customerName ?? L["Billing.Summary.NoCustomer"].Value,
+        _request.DueDate is { } due ? string.Format(CultureInfo.CurrentCulture, L["Invoice.Summary.Due"], due.ToString("d", CultureInfo.CurrentCulture)) : null,
+        L[$"VatRegime.{_request.VatRegime}"].Value);
+
+    private string DeliverySummary => BillingSummaries.Join(
+        _request.DeliveryDate is { } delivered
+            ? string.Format(CultureInfo.CurrentCulture, L["Invoice.Summary.Delivered"], delivered.ToString("d", CultureInfo.CurrentCulture))
+            : L["Invoice.Summary.NoDelivery"].Value,
+        BillingSummaries.Excerpt(_request.PaymentTerms ?? _company?.PaymentTerms),
+        string.IsNullOrWhiteSpace(_request.DeliveryAddress) ? null : L["Invoice.Summary.Address"].Value);
+
+    private string LinesSummary => BillingSummaries.Lines(L, _lines.Count, _totals.TotalExclTax);
+
+    private string NotesSummary => BillingSummaries.Excerpt(_request.Notes) ?? L["Billing.Summary.NoNotes"].Value;
 
     private string StatusText => L[$"InvoiceStatus.{_invoice?.Status ?? InvoiceStatusDto.Draft}"];
 
@@ -507,6 +535,7 @@ else
 
         bool created = _invoice is null;
         _errors = [];
+        Toasts.Show(ToastKind.Success, L[created ? "Billing.Toast.Created" : "Billing.Toast.Saved"].Value);
         _invoice = result.Value;
         _customerName = result.Value.Customer.Name;
         // Totaux du serveur, sauf si une saisie attend ou qu'une ligne incomplète (non envoyée) compte à l'écran.
@@ -635,6 +664,7 @@ else
             return;
         }
 
+        Toasts.Show(ToastKind.Success, string.Format(CultureInfo.CurrentCulture, L["Invoice.Toast.CreditNoteCreated"], _invoice.Number));
         Navigation.NavigateTo($"invoices/{credit.Value.Id}");
     }
 
@@ -653,6 +683,7 @@ else
             return;
         }
 
+        Toasts.Show(ToastKind.Success, L["Billing.Toast.Deleted"].Value);
         Navigation.NavigateTo(Kind == InvoiceKindDto.CreditNote ? "credit-notes" : "invoices");
     }
 
@@ -714,6 +745,7 @@ else
         switch (finding.Code)
         {
             case var code when code.StartsWith("Mention.Customer", StringComparison.Ordinal):
+                await ExpandAsync(_mainBlock);
                 if (_customerPicker is not null)
                 {
                     await _customerPicker.FocusAsync();
@@ -726,15 +758,19 @@ else
                 Navigation.NavigateTo("settings/company");
                 break;
             case ErrorCodes.Mention.DeliveryDate:
+                await ExpandAsync(_deliveryBlock);
                 await FocusAsync(_deliveryDate);
                 break;
             case ErrorCodes.Mention.DueDate:
+                await ExpandAsync(_mainBlock);
                 await FocusAsync(_dueDate);
                 break;
             case ErrorCodes.Mention.DeliveryAddress:
+                await ExpandAsync(_deliveryBlock);
                 await FocusAsync(_deliveryAddress);
                 break;
             default:
+                await ExpandAsync(_linesBlock);
                 if (_linesGrid is not null)
                 {
                     await _linesGrid.FocusLineAsync((finding.Line ?? 1) - 1);
@@ -743,6 +779,8 @@ else
                 break;
         }
     }
+
+    private static Task ExpandAsync(Collapsible? block) => block?.ExpandAsync() ?? Task.CompletedTask;
 
     private static async Task FocusAsync(ElementReference element)
     {

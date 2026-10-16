@@ -103,6 +103,26 @@ public sealed class QuoteEditorTests : BunitContext
     }
 
     [Fact]
+    public void Les_blocs_se_replient_et_resument_leur_contenu_et_les_notes_vides_partent_repliees()
+    {
+        QuoteResponse devis = _quotes.Add(QuoteStatusDto.Draft, null, Conseil, Livre);
+
+        IRenderedComponent<QuoteEditor> page = Ouvrir(devis.Id);
+
+        page.WaitForAssertion(() => page.FindAll(".lg-row[data-r]").Should().HaveCount(2));
+        page.Find("#quote-main-toggle").GetAttribute("aria-expanded").Should().Be("true");
+        page.Find("#quote-notes-toggle").GetAttribute("aria-expanded").Should().Be("false", "sans note, le bloc ne prend qu'une ligne");
+        page.Find("#quote-notes .lt-collapsible-summary").TextContent.Should().Be("Aucune note");
+
+        page.Find("#quote-lines-toggle").Click();
+        page.Find("#quote-main-toggle").Click();
+
+        page.Find("#quote-lines .lt-collapsible-summary").TextContent.Should().Be($"2 ligne(s) · {Fr(230m)} HT");
+        page.Find("#quote-main .lt-collapsible-summary").TextContent.Should().StartWith("Dupont SARL · ").And.EndWith("TVA française");
+        page.FindAll(".lg-row[data-r]").Should().HaveCount(2, "replié, la grille garde ses lignes");
+    }
+
+    [Fact]
     public void Un_brouillon_s_ouvre_avec_ses_lignes_ses_totaux_et_sa_checklist()
     {
         QuoteResponse devis = _quotes.Add(QuoteStatusDto.Draft, null, Conseil, Livre);
@@ -134,6 +154,19 @@ public sealed class QuoteEditorTests : BunitContext
         version.Should().Be(1);
         requete.Lines.Should().ContainSingle().Which.Quantity.Should().Be(3.5m);
         _quotes.Checks.Should().HaveCount(2, "la checklist est recalculée après chaque enregistrement");
+        this.ToastText().Should().Be("Modifications enregistrées.", "chaque modification enregistrée passe par le toaster");
+    }
+
+    [Fact]
+    public void Supprimer_un_brouillon_l_annonce_dans_le_toaster_et_revient_a_la_liste()
+    {
+        QuoteResponse devis = _quotes.Add(QuoteStatusDto.Draft, null, Conseil);
+        IRenderedComponent<QuoteEditor> page = Ouvrir(devis.Id);
+
+        page.WaitForAssertion(() => page.Find("button.lettra-link.is-danger").Click());
+
+        page.WaitForAssertion(() => this.ToastText().Should().Be("Brouillon supprimé."));
+        Services.GetRequiredService<NavigationManager>().Uri.Should().EndWith("/quotes");
     }
 
     [Fact]

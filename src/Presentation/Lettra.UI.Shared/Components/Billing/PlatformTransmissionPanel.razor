@@ -1,6 +1,7 @@
 @* Plateforme agréée (étape 5.3) : transmission d'une pièce validée, statuts du cycle de vie (XP Z12-012) et
    encaissements, partiels ou non, jusqu'au TTC. Sans plateforme configurée, l'écran le dit au lieu de proposer l'envoi. *@
 @inject IPlatformTransmissionGateway Transmissions
+@inject ToastService Toasts
 @inject IStringLocalizer<SharedResource> L
 
 <section id="platform" class="lettra-platform" aria-labelledby="platform-title">
@@ -130,9 +131,11 @@
         Apply(loaded);
     }
 
-    private Task TransmitAsync() => RunAsync(() => Transmissions.TransmitAsync(Invoice.Id, new TransmitInvoiceRequest { Format = _format }, CancellationToken.None), invoiceChanged: true);
+    private Task TransmitAsync() => RunAsync(() => Transmissions.TransmitAsync(Invoice.Id, new TransmitInvoiceRequest { Format = _format }, CancellationToken.None), invoiceChanged: true,
+        "Platform.Toast.Transmitted");
 
-    private Task RefreshAsync() => RunAsync(() => Transmissions.RefreshAsync(Invoice.Id, CancellationToken.None), invoiceChanged: false);
+    private Task RefreshAsync() => RunAsync(() => Transmissions.RefreshAsync(Invoice.Id, CancellationToken.None), invoiceChanged: false, "Platform.Toast.Refreshed",
+        ToastKind.Info);
 
     private Task ReportPaymentAsync()
     {
@@ -142,16 +145,23 @@
             return Task.CompletedTask;
         }
 
-        return RunAsync(() => Transmissions.ReportPaymentAsync(Invoice.Id, new ReportPaymentRequest { Date = _paymentDate, Amount = amount }, CancellationToken.None), invoiceChanged: false);
+        return RunAsync(() => Transmissions.ReportPaymentAsync(Invoice.Id, new ReportPaymentRequest { Date = _paymentDate, Amount = amount }, CancellationToken.None), invoiceChanged: false,
+            "Platform.Toast.PaymentReported");
     }
 
-    private async Task RunAsync(Func<Task<OperationResult<PlatformTransmissionResponse>>> operation, bool invoiceChanged)
+    private async Task RunAsync(Func<Task<OperationResult<PlatformTransmissionResponse>>> operation, bool invoiceChanged, string successKey,
+        ToastKind kind = ToastKind.Success)
     {
         _busy = true;
         try
         {
             OperationResult<PlatformTransmissionResponse> result = await operation();
             Apply(result);
+            if (result.IsSuccess)
+            {
+                Toasts.Show(kind, L[successKey].Value);
+            }
+
             if (result.IsSuccess && invoiceChanged)
             {
                 await OnInvoiceChanged.InvokeAsync();
