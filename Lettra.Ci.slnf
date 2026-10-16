@@ -32,6 +32,7 @@
       "src\\Modules\\Exports\\Lettra.Exports.Application\\Lettra.Exports.Application.csproj",
       "src\\Modules\\Exports\\Lettra.Exports.Infrastructure\\Lettra.Exports.Infrastructure.csproj",
       "src\\Composition\\Lettra.Bootstrap\\Lettra.Bootstrap.csproj",
+      "src\\Composition\\Lettra.DemoData\\Lettra.DemoData.csproj",
       "src\\Presentation\\Lettra.Printing\\Lettra.Printing.csproj",
       "src\\Presentation\\Lettra.UI.Abstractions\\Lettra.UI.Abstractions.csproj",
       "src\\Presentation\\Lettra.UI.Gateway.Http\\Lettra.UI.Gateway.Http.csproj",

@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Lettra</title>
     <base href="/" />
     <meta name="theme-color" content="#23527c" />
@@ -10,6 +10,8 @@
     <link rel="icon" type="image/png" href="icons/favicon.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-title" content="Lettra" />
+    <!-- Thème retenu posé avant le premier rendu ; fichier séparé car la CSP refuse les scripts en ligne. -->
+    <script src="_content/Lettra.UI.Shared/lettra-theme-boot.js"></script>
     <link rel="stylesheet" href="_content/Lettra.UI.Shared/lettra.css" />
     <link rel="stylesheet" href="_content/Lettra.UI.Shared/lettra-grid.css" />
 </head>
