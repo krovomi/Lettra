@@ -78,7 +78,7 @@ public sealed class SharedServerPageTests : BunitContext
         page.Find("form").Submit();
 
         connection.Saved.Should().Be("192.168.1.20:8443");
-        page.Find("#shared-server-saved").TextContent.Should().Contain("https://192.168.1.20:8443");
+        this.ToastText().Should().Contain("https://192.168.1.20:8443");
         page.Find("#shared-server-restart-now").Click();
         connection.Restarts.Should().Be(1);
     }
@@ -93,7 +93,7 @@ public sealed class SharedServerPageTests : BunitContext
         page.Find("#shared-server-address").Change("serveur-inconnu.example");
         page.Find("form").Submit();
 
-        page.Find(".validation-message").TextContent.Should().Contain("Aucun serveur ne répond");
+        this.ToastText().Should().Contain("Aucun serveur ne répond");
         connection.Saved.Should().BeNull();
         page.FindAll("#shared-server-restart-now").Should().BeEmpty();
     }
@@ -111,7 +111,8 @@ public sealed class SharedServerPageTests : BunitContext
         page.Find("#shared-server-device-only").Click();
 
         connection.DeviceOnly.Should().BeTrue();
-        page.Find("#shared-server-saved").TextContent.Should().Contain("cet appareil seul");
+        this.ToastText().Should().Contain("cet appareil seul");
+        page.Find("#shared-server-restart").TextContent.Should().NotBeEmpty();
         page.FindAll("#shared-server-restart-now").Should().BeEmpty("iOS : l'utilisateur ferme et rouvre l'application");
     }
 

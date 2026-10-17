@@ -5,6 +5,7 @@
 @inject IServiceProvider Services
 @inject NavigationManager Navigation
 @inject IStringLocalizer<SharedResource> L
+@inject ToastService Toasts
 
 <PageTitle>@L["SharedServer.Title"] · Lettra</PageTitle>
 
@@ -37,7 +38,6 @@ else
     {
         <section class="lettra-card" aria-labelledby="shared-server-restart">
             <h2 id="shared-server-restart">@L["SharedServer.Restart.Title"]</h2>
-            <p id="shared-server-saved" role="status">@_saved</p>
             @switch (_connection.RestartKind)
             {
                 case ServerRestartKind.Automatic:
@@ -91,7 +91,6 @@ else
     private IServerConnection? _connection;
     private string _address = string.Empty;
     private IReadOnlyList<ErrorDetail> _errors = [];
-    private string? _saved;
     private bool _busy;
 
     protected override void OnInitialized()
@@ -117,7 +116,7 @@ else
             OperationResult<Uri> used = await _connection.UseServerAsync(_address, CancellationToken.None);
             if (used.IsSuccess)
             {
-                _saved = string.Format(CultureInfo.CurrentCulture, L["SharedServer.Saved.Server"], Display(used.Value!));
+                Toasts.Show(ToastKind.Success, string.Format(CultureInfo.CurrentCulture, L["SharedServer.Saved.Server"], Display(used.Value!)));
             }
             else
             {
@@ -141,7 +140,7 @@ else
         try
         {
             await _connection.UseThisDeviceOnlyAsync(CancellationToken.None);
-            _saved = L["SharedServer.Saved.Device"];
+            Toasts.Show(ToastKind.Success, L["SharedServer.Saved.Device"]);
         }
         finally
         {
