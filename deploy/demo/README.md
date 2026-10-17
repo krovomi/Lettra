@@ -102,13 +102,19 @@ téléphone. Le profil `compose.lan.yaml` ajoute Caddy, qui sert Lettra en `http
 3. Autoriser les ports 8443, 8444 et 8079 dans le pare-feu du poste si nécessaire (Windows le demande au premier lancement).
 4. Sur le téléphone, télécharger le certificat racine : **http://192.168.1.20:8079/lettra-demo-ca.crt**, puis l'approuver :
    - **Android** : Paramètres → Sécurité → Chiffrement et identifiants → Installer un certificat → *Certificat CA*
-     (libellé variable selon le constructeur). Chrome approuve alors la démonstration.
+     (libellé variable selon le constructeur). Chrome approuve alors la démonstration, ainsi que l'APK de
+     démonstration de Lettra ; une version construite avec `-p:LettraDemo=false` n'accepte que les autorités
+     d'Android et refuse ce certificat.
    - **iOS / iPadOS** : ouvrir le lien dans Safari, *Autoriser* le profil ; Réglages → Général → VPN et gestion de
      l'appareil → installer le profil ; puis Réglages → Général → Informations → **Réglages des certificats** →
      activer la confiance totale pour « Caddy Local Authority ».
 5. Ouvrir **https://192.168.1.20:8443/** (aussi sur le poste : dans ce profil, c'est la seule adresse de retour de
    Keycloak). Installer la PWA : Chrome Android → menu ⋮ → *Installer l'application* ; Safari iOS → Partager →
    *Sur l'écran d'accueil*.
+
+En HTTPS, l'API envoie l'en-tête HSTS (un an) : ignoré pour une adresse IP ; avec un nom de poste
+(`LETTRA_DEMO_HOST=mon-pc.local`), ce nom reste ensuite en HTTPS dans le navigateur. `http://localhost:8080` ne le
+reçoit jamais.
 
 Retirer le certificat du téléphone après la démonstration. Changer d'adresse (autre Wi-Fi, nouvelle IP) ou revenir à
 `localhost` ne demande aucune remise à zéro : Keycloak garde une base par adresse publique (l'enrôlement TOTP est

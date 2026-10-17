@@ -16,6 +16,19 @@ public enum WhisperModelSize
 /// <summary>Réglages de la voix sur le poste (MAUI). L'hôte les fixe : dossier de l'application, modèle, langues.</summary>
 public sealed class OnDeviceSpeechOptions
 {
+    /// <summary>Réglage du moteur sur le poste, même clé que les serveurs (<c>Lettra:Speech:Engine</c>).</summary>
+    public const string EngineKey = "Lettra:Speech:Engine";
+
+    /// <summary>
+    /// La dictée sur le poste est-elle ouverte, d'après <c>Lettra:Speech:Engine</c> ? Sans réglage, la valeur de la
+    /// version construite (<paramref name="enabledByDefault"/>) ; <c>OnDevice</c> l'ouvre ; <c>None</c> la ferme, comme
+    /// toute autre valeur (le poste n'a pas d'autre moteur que Whisper.net : un réglage incompris ne l'ouvre pas).
+    /// </summary>
+    public static bool IsEnabled(string? engine, bool enabledByDefault = true) =>
+        string.IsNullOrWhiteSpace(engine)
+            ? enabledByDefault
+            : string.Equals(engine.Trim(), "OnDevice", StringComparison.OrdinalIgnoreCase);
+
     /// <summary>Dossier où le modèle est rangé (<c>FileSystem.AppDataDirectory/voix</c> sur MAUI).</summary>
     public required string ModelDirectory { get; init; }
 
