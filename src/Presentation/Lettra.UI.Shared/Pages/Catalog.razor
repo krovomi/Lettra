@@ -25,16 +25,8 @@
         </div>
         <p class="lettra-muted">@L["Catalog.Hint"]</p>
 
-        <div id="catalog-status" aria-live="polite">
-            @foreach (ErrorDetail error in _errors)
-            {
-                <p class="validation-message" role="alert">@L.Error(error.Code)</p>
-            }
-            @if (_status is not null)
-            {
-                <p class="lettra-success" role="status">@_status</p>
-            }
-        </div>
+        <GeneralErrors Errors="_errors" IncludeFieldErrors="true" />
+        <StatusToast Message="@_status" />
 
         @if (_loading)
         {

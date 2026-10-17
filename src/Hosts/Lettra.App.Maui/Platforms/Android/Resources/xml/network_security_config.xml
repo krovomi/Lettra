@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Réseau de l'application Android (serveur commun du cabinet, annexe F) :
+     - https partout, avec les autorités du système et celles que l'utilisateur a installées (certificat racine de la
+       démonstration en réseau local, deploy/demo/compose.lan.yaml) ; à restreindre aux autorités du système avant la
+       production (phase 7) ;
+     - http seulement vers l'appareil lui-même (démonstration relayée par câble USB : adb reverse tcp:8080 tcp:8080). -->
+<network-security-config>
+	<base-config cleartextTrafficPermitted="false">
+		<trust-anchors>
+			<certificates src="system" />
+			<certificates src="user" />
+		</trust-anchors>
+	</base-config>
+	<domain-config cleartextTrafficPermitted="true">
+		<domain includeSubdomains="false">localhost</domain>
+		<domain includeSubdomains="false">127.0.0.1</domain>
+	</domain-config>
+</network-security-config>

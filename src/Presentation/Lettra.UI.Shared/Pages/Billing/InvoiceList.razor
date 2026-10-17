@@ -47,15 +47,21 @@
 
     @if (_loading)
     {
-        <p>@L["Loading"]</p>
+        <ListSkeleton Columns="8" />
     }
     else if (_items.Count == 0)
     {
-        <p>@L["Invoices.Empty"]</p>
+        <EmptyState Id="invoices-empty" IconName="receipt" Title="@(IsFiltered ? L["Lists.Empty.FilteredTitle"] : L["Invoices.Empty"])"
+                    Text="@(IsFiltered ? L["Lists.Empty.Filtered"] : L["Invoices.Empty.Text"])">
+            @if (!IsFiltered)
+            {
+                <a class="lettra-button" href="invoices/new"><Icon Name="plus" Size="18" /> @L["Invoices.New"]</a>
+            }
+        </EmptyState>
     }
     else
     {
-        <table class="lettra-table lettra-documents">
+        <table class="lettra-table lettra-documents lt-cards">
             <thead>
                 <tr>
                     <th scope="col">@L["Billing.Column.Number"]</th>
@@ -73,13 +79,13 @@
                 {
                     <tr>
                         <td><a href="@($"invoices/{invoice.Id}")">@(invoice.Number ?? L["Billing.Draft"])</a></td>
-                        <td>@L[$"InvoiceKind.{invoice.Kind}"]</td>
-                        <td>@invoice.CustomerName</td>
-                        <td>@invoice.IssueDate?.ToString("d", CultureInfo.CurrentCulture)</td>
-                        <td>@invoice.DueDate?.ToString("d", CultureInfo.CurrentCulture)</td>
-                        <td><DocumentStatusBadge Text="@L[$"InvoiceStatus.{invoice.Status}"]" Kind="@invoice.Status.ToString().ToLowerInvariant()" /></td>
-                        <td class="lg-num">@GridNumber.FormatAmount(invoice.TotalExclTax, CultureInfo.CurrentCulture)</td>
-                        <td class="lg-num">@GridNumber.FormatAmount(invoice.TotalInclTax, CultureInfo.CurrentCulture)</td>
+                        <td data-label="@L["Invoices.Kind"]">@L[$"InvoiceKind.{invoice.Kind}"]</td>
+                        <td data-label="@L["Billing.Column.Customer"]">@invoice.CustomerName</td>
+                        <td data-label="@L["Billing.Column.Date"]">@invoice.IssueDate?.ToString("d", CultureInfo.CurrentCulture)</td>
+                        <td data-label="@L["Invoice.Field.DueDate"]">@invoice.DueDate?.ToString("d", CultureInfo.CurrentCulture)</td>
+                        <td data-label="@L["Billing.Status"]"><DocumentStatusBadge Text="@L[$"InvoiceStatus.{invoice.Status}"]" Kind="@invoice.Status.ToString().ToLowerInvariant()" /></td>
+                        <td class="lg-num" data-label="@L["Totals.ExclTax"]">@GridNumber.FormatAmount(invoice.TotalExclTax, CultureInfo.CurrentCulture)</td>
+                        <td class="lg-num" data-label="@L["Totals.InclTax"]">@GridNumber.FormatAmount(invoice.TotalInclTax, CultureInfo.CurrentCulture)</td>
                     </tr>
                 }
             </tbody>
@@ -94,6 +100,9 @@
     private InvoiceKindDto? _kind;
     private InvoiceStatusDto? _statusFilter;
     private bool _loading = true;
+
+    // La nature vient de l'adresse (avoirs, acomptes) : ce n'est pas un filtre posé par l'utilisateur.
+    private bool IsFiltered => !string.IsNullOrWhiteSpace(_search) || _statusFilter is not null;
     private ElementReference _searchInput;
     private KeyboardScope _pageScope = default!;
 

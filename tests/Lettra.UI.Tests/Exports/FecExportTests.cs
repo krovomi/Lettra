@@ -103,7 +103,7 @@ public sealed class FecExportTests : BunitContext
 
         page.Find("#fec-export").Click();
 
-        page.Find("[role=alert]").TextContent.Should().Be("La fin de l'exercice précède son début.");
+        this.ToastText().Should().Be("La fin de l'exercice précède son début.");
         _files.Files.Should().BeEmpty();
         page.FindAll("#fec-report").Should().BeEmpty();
     }
@@ -116,7 +116,7 @@ public sealed class FecExportTests : BunitContext
 
         page.Find("#fec-export").Click();
 
-        page.Find("[role=alert]").TextContent.Should().Be("Renseignez le SIREN de l'entreprise : il compose le nom du fichier FEC.");
+        this.ToastText().Should().Be("Renseignez le SIREN de l'entreprise : il compose le nom du fichier FEC.");
         _files.Files.Should().BeEmpty();
         _fec.Validations.Should().BeEmpty();
     }

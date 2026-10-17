@@ -136,6 +136,13 @@ Les noms viennent du projet Compose `lettra-demo` (`name:` de `compose.yaml`) : 
   supprime aussi.
 - **Réenrôler le second facteur seulement** : `down`, `docker volume rm lettra-demo_keycloak-donnees`, puis `up -d --wait`.
   Les données Lettra restent (l'identifiant de l'utilisateur `demo` est fixe).
+- **Anciennes bases Keycloak** : une mise à jour qui corrige le realm (`deploy/keycloak/realm-lettra.json`) le fait
+  réimporter dans une base neuve (`base-<adresse>-<empreinte du realm>`, voir `keycloak/start.sh`) ; l'enrôlement TOTP
+  est alors à refaire une fois, les données Lettra restent. Les anciennes bases (des dossiers) restent dans le volume,
+  sans effet. Pour les voir, la plus récente en premier (démo arrêtée) :
+  `docker run --rm -v lettra-demo_keycloak-donnees:/d busybox ls -lt /d`, puis supprimer une ancienne avec
+  `docker run --rm -v lettra-demo_keycloak-donnees:/d busybox rm -r /d/base-http---localhost-8080-<ancienne empreinte>`.
+  Aucune suppression automatique. La remise à zéro du second facteur ci-dessus les supprime aussi.
 - Docker Desktop (« Clean / Purge data », nettoyage des volumes) et `docker volume prune -a` suppriment aussi les volumes
   d'une démo arrêtée. Pour libérer de la place, `docker builder prune` suffit (cache de construction de l'image).
 - **Sauvegarder** (démo arrêtée) :

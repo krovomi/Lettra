@@ -1,0 +1,24 @@
+@inject IStringLocalizer<SharedResource> L
+@* Squelette d'une liste en cours de chargement : la forme du tableau sans le texte « Chargement… » qui saute. *@
+
+<div class="lt-list-skeleton" role="status" aria-busy="true">
+    <span class="lettra-visually-hidden">@L["Loading"]</span>
+    @for (int row = 0; row < Rows; row++)
+    {
+        <div class="lt-list-skeleton-row" aria-hidden="true" style="--cols: @Columns">
+            @for (int column = 0; column < Columns; column++)
+            {
+                <span class="lt-skeleton" style="width: @Width(row, column)"></span>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int Rows { get; set; } = 5;
+
+    [Parameter] public int Columns { get; set; } = 5;
+
+    // Largeurs variées d'une ligne à l'autre pour imiter du texte, sans aléa (captures stables).
+    private static string Width(int row, int column) => (55 + ((row * 7 + column * 13) % 40)).ToString(CultureInfo.InvariantCulture) + "%";
+}
