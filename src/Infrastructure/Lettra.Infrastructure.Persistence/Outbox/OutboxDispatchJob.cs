@@ -1,5 +1,6 @@
 using Lettra.Application.Abstractions.Outbox;
 using Lettra.Application.Abstractions.Tenancy;
+using Lettra.Application.Diagnostics;
 using Lettra.Infrastructure.Persistence.Integrity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,6 +34,7 @@ internal sealed partial class OutboxDispatchJob(
     IServiceScopeFactory scopes,
     OutboxDossierSource dossiers,
     IOptions<OutboxDispatchJobOptions> options,
+    TimeProvider clock,
     ILogger<OutboxDispatchJob> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -66,13 +68,24 @@ internal sealed partial class OutboxDispatchJob(
         }
 
         int delivered = 0, retried = 0, parked = 0;
+        long pending = 0, parkedTotal = 0;
+        DateTimeOffset? oldest = null;
         foreach (TenantDescriptor dossier in active)
         {
             try
             {
-                OutboxPass pass = await DossierJobScope.RunAsync(scopes, dossier,
-                    (provider, token) => provider.GetRequiredService<IOutboxDispatcher>().DispatchDueAsync(token), cancellationToken).ConfigureAwait(false);
+                (OutboxPass pass, OutboxBacklog backlog) = await DossierJobScope.RunAsync(scopes, dossier, async (provider, token) =>
+                {
+                    IOutboxDispatcher dispatcher = provider.GetRequiredService<IOutboxDispatcher>();
+                    OutboxPass done = await dispatcher.DispatchDueAsync(token).ConfigureAwait(false);
+                    return (done, await dispatcher.GetBacklogAsync(token).ConfigureAwait(false));
+                }, cancellationToken).ConfigureAwait(false);
                 (delivered, retried, parked) = (delivered + pass.Delivered, retried + pass.Retried, parked + pass.Parked);
+                (pending, parkedTotal) = (pending + backlog.Pending, parkedTotal + backlog.Parked);
+                if (backlog.OldestPendingEnqueuedAt is { } enqueued && (oldest is null || enqueued < oldest))
+                {
+                    oldest = enqueued;
+                }
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
@@ -84,6 +97,9 @@ internal sealed partial class OutboxDispatchJob(
         {
             LogPass(delivered, retried, parked);
         }
+
+        // File de tous les dossiers actifs, pour les tableaux de bord : des nombres, aucun dossier nommé.
+        LettraTelemetry.Outbox.Report(pending, parkedTotal, oldest is { } first ? (clock.GetUtcNow() - first).TotalSeconds : 0);
 
         return new OutboxPass(delivered, retried, parked);
     }

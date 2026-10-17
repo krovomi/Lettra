@@ -1,0 +1,58 @@
+@* Micro d'un champ (vague 5, lane F) : un clic écoute, un second clic arrête et le texte dicté s'ajoute au curseur.
+   Visible seulement si un moteur Whisper répond et que l'utilisateur garde la voix (réglage « Dictée vocale »). *@
+@implements IDisposable
+@inject VoiceInput Voice
+@inject IStringLocalizer<SharedResource> L
+
+@if (Voice.FieldMicsVisible && !string.IsNullOrEmpty(For))
+{
+    <button type="button" id="@($"{For}-mic")" class="lt-icon-button lt-mic @(Listening ? "is-listening" : null) @(Transcribing ? "is-busy" : null)"
+            aria-pressed="@(Listening ? "true" : "false")" aria-label="@AriaLabel" title="@AriaLabel"
+            disabled="@(Transcribing)" @onclick="ToggleAsync" @onmousedown:preventDefault="true">
+        <Icon Name="@(Listening ? "mic-off" : "mic")" Size="18" />
+        @if (Listening)
+        {
+            <span class="lt-mic-level" style="@LevelStyle" aria-hidden="true"></span>
+        }
+    </button>
+}
+
+@code {
+    /// <summary>Id du champ dicté.</summary>
+    [Parameter, EditorRequired] public string For { get; set; } = string.Empty;
+
+    /// <summary>Nom du champ pour le lecteur d'écran (« Dicter : Objet »).</summary>
+    [Parameter] public string? FieldLabel { get; set; }
+
+    private bool Listening => Voice.Phase == VoicePhase.Listening && Voice.Owner == For;
+
+    private bool Transcribing => Voice.Phase == VoicePhase.Transcribing && Voice.Owner == For;
+
+    private string AriaLabel => Listening
+        ? L["Voice.Mic.Stop"]
+        : FieldLabel is { Length: > 0 } label ? string.Format(CultureInfo.CurrentCulture, L["Voice.Mic.For"], label) : L["Voice.Mic.Start"];
+
+    private string LevelStyle => FormattableString.Invariant($"--lt-level: {Voice.Level:0.00}");
+
+    protected override async Task OnInitializedAsync()
+    {
+        Voice.Changed += OnVoiceChanged;
+        await Voice.LoadAsync();
+    }
+
+    private void OnVoiceChanged(object? sender, EventArgs e) => _ = InvokeAsync(StateHasChanged);
+
+    private async Task ToggleAsync()
+    {
+        if (Listening)
+        {
+            await Voice.StopAsync();
+        }
+        else
+        {
+            await Voice.StartAsync(For, SpeechMode.Dictation);
+        }
+    }
+
+    public void Dispose() => Voice.Changed -= OnVoiceChanged;
+}

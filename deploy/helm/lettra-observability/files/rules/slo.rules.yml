@@ -6,22 +6,22 @@ groups:
   - name: lettra-slo-enregistrements
     interval: 30s
     rules:
-      # Disponibilité : part des réponses 5xx.
+      # Disponibilité : part des réponses 5xx ; 0 (et non une absence de série) quand l'API répond sans erreur.
       - record: lettra:api_erreurs:ratio_rate5m
         expr: |
-          sum(rate(http_server_request_duration_seconds_count{job="lettra/lettra-api",http_response_status_code=~"5.."}[5m]))
+          (sum(rate(http_server_request_duration_seconds_count{job="lettra/lettra-api",http_response_status_code=~"5.."}[5m])) or vector(0))
           / clamp_min(sum(rate(http_server_request_duration_seconds_count{job="lettra/lettra-api"}[5m])), 1e-9)
       - record: lettra:api_erreurs:ratio_rate30m
         expr: |
-          sum(rate(http_server_request_duration_seconds_count{job="lettra/lettra-api",http_response_status_code=~"5.."}[30m]))
+          (sum(rate(http_server_request_duration_seconds_count{job="lettra/lettra-api",http_response_status_code=~"5.."}[30m])) or vector(0))
           / clamp_min(sum(rate(http_server_request_duration_seconds_count{job="lettra/lettra-api"}[30m])), 1e-9)
       - record: lettra:api_erreurs:ratio_rate1h
         expr: |
-          sum(rate(http_server_request_duration_seconds_count{job="lettra/lettra-api",http_response_status_code=~"5.."}[1h]))
+          (sum(rate(http_server_request_duration_seconds_count{job="lettra/lettra-api",http_response_status_code=~"5.."}[1h])) or vector(0))
           / clamp_min(sum(rate(http_server_request_duration_seconds_count{job="lettra/lettra-api"}[1h])), 1e-9)
       - record: lettra:api_erreurs:ratio_rate6h
         expr: |
-          sum(rate(http_server_request_duration_seconds_count{job="lettra/lettra-api",http_response_status_code=~"5.."}[6h]))
+          (sum(rate(http_server_request_duration_seconds_count{job="lettra/lettra-api",http_response_status_code=~"5.."}[6h])) or vector(0))
           / clamp_min(sum(rate(http_server_request_duration_seconds_count{job="lettra/lettra-api"}[6h])), 1e-9)
 
       # Latence des lectures : part des GET plus lents que 300 ms (objectif : 95 % sous 300 ms).

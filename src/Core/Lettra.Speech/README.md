@@ -65,8 +65,9 @@ L'API envoie `Permissions-Policy: microphone=(self)` : le micro n'est permis qu'
 Le rapport du workflow « Voix » (taux d'erreur de mots, commandes reconnues) s'affiche dans le résumé de chaque run.
 Le corpus est dans `tests/Lettra.Speech.Tests/Corpus/phrases.json`.
 
-## Ce qui viendra ensuite (lane F)
+## Dans l'interface (lane F)
 
-Le bouton micro, l'enregistreur du navigateur et l'application des commandes dans les écrans et les formulaires.
-Le branchement dans la démonstration (conteneur whisper.cpp) et dans l'application MAUI (moteur du poste,
-autorisations du micro) suit cette PR.
+Le bouton micro de la barre du haut, le micro des champs, F8 maintenue, l'enregistreur du navigateur et l'exécution
+des commandes dans les écrans sont décrits dans `docs/aide-a-la-saisie.md` (section 3). Le branchement dans la
+démonstration (conteneur whisper.cpp) et dans l'application MAUI (moteur du poste, autorisations du micro) est fait
+par Socle.

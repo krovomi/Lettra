@@ -61,7 +61,8 @@ else
 
                     <div class="lettra-field lettra-field-wide">
                         <label for="subject">@L["Billing.Field.Subject"]</label>
-                        <input id="subject" disabled="@IsReadOnly" value="@_request.Subject" maxlength="200" @onchange="SubjectChangedAsync" />
+                        <SmartInput Id="subject" Voice="@(!IsReadOnly)" VoiceLabel="@L["Billing.Field.Subject"]" disabled="@IsReadOnly" Value="@_request.Subject" maxlength="200" OnCommitted="SubjectChangedAsync"
+                                    Templates="TextFieldKind.Subject" Spellcheck="true" Tidy="true" />
                     </div>
                 </div>
             </Collapsible>
@@ -70,13 +71,16 @@ else
                 <DocumentLinesGrid @ref="_linesGrid" Lines="_lines" ReferenceData="_reference" Regime="_request.VatRegime"
                                    ReadOnly="IsReadOnly" ResolvePrice="ResolvePriceAsync"
                                    OnLinesChanged="ScheduleSaveAsync" OnTotalsChanged="TotalsChanged" />
+                <CustomerHabits CustomerId="_request.CustomerId" Enabled="!IsReadOnly" Present="PresentItems"
+                                OnAddItem="id => _linesGrid?.AddCatalogItemAsync(id) ?? Task.CompletedTask" />
             </Collapsible>
 
             <Collapsible Id="quote-notes" Title="@L["Billing.Field.Notes"]" Summary="@NotesSummary" InitiallyOpen="@(!string.IsNullOrEmpty(_request.Notes))"
                          Class="lettra-notes">
                 <div class="lettra-field">
                     <label for="notes" class="lettra-visually-hidden">@L["Billing.Field.Notes"]</label>
-                    <textarea id="notes" rows="3" disabled="@IsReadOnly" value="@_request.Notes" maxlength="4000" @onchange="NotesChangedAsync"></textarea>
+                    <SmartInput Id="notes" Voice="@(!IsReadOnly)" VoiceLabel="@L["Billing.Field.Notes"]" Multiline="true" Rows="3" disabled="@IsReadOnly" Value="@_request.Notes" maxlength="4000" OnCommitted="NotesChangedAsync"
+                                Templates="TextFieldKind.QuoteNotes" Spellcheck="true" Tidy="true" data-tour="notes" />
                 </div>
             </Collapsible>
         </div>
@@ -382,17 +386,20 @@ else
         }
     }
 
-    private async Task SubjectChangedAsync(ChangeEventArgs e)
+    private async Task SubjectChangedAsync(string value)
     {
-        _request.Subject = string.IsNullOrWhiteSpace(e.Value?.ToString()) ? null : e.Value!.ToString()!.Trim();
+        _request.Subject = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
         await ScheduleSaveAsync();
     }
 
-    private async Task NotesChangedAsync(ChangeEventArgs e)
+    private async Task NotesChangedAsync(string value)
     {
-        _request.Notes = string.IsNullOrWhiteSpace(e.Value?.ToString()) ? null : e.Value!.ToString();
+        _request.Notes = string.IsNullOrWhiteSpace(value) ? null : value;
         await ScheduleSaveAsync();
     }
+
+    /// <summary>Articles déjà sur le devis : les suggestions du client ne les reproposent pas.</summary>
+    private Guid[] PresentItems => [.. _lines.Where(l => l.CatalogItemId is not null).Select(l => l.CatalogItemId!.Value)];
 
     private void TotalsChanged(DocumentTotals totals) => _totals = totals;
 
