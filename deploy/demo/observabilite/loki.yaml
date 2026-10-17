@@ -1,0 +1,42 @@
+# Démonstration seulement (compose.observabilite.yaml) : Loki en un seul processus, stockage local dans un volume.
+# Journaux reçus en OTLP (http://loki:3100/otlp) ; trace_id et span_id y deviennent des métadonnées structurées, ce qui
+# permet de passer d'un journal à sa trace et inversement. Journaux gardés 30 jours (annexe G §3).
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  log_level: warn
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /loki
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+
+schema_config:
+  configs:
+    - from: 2025-01-01
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+limits_config:
+  allow_structured_metadata: true
+  retention_period: 720h
+
+compactor:
+  working_directory: /loki/compactor
+  retention_enabled: true
+  delete_request_store: filesystem
+
+analytics:
+  reporting_enabled: false

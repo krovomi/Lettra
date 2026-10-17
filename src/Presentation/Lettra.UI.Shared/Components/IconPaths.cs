@@ -63,5 +63,14 @@ internal static class IconPaths
         ["circle-play"] = "<circle cx='12' cy='12' r='10'/> <polygon points='10 8 16 12 10 16 10 8'/>",
         ["arrow-left"] = "<path d='m12 19-7-7 7-7'/> <path d='M19 12H5'/>",
         ["triangle-alert"] = "<path d='m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3'/> <path d='M12 9v4'/> <path d='M12 17h.01'/>",
+        // Vague 5, lane F : tutoriel, aide à la saisie, dictée.
+        ["circle-help"] = "<circle cx='12' cy='12' r='10'/> <path d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'/> <path d='M12 17h.01'/>",
+        ["circle-check"] = "<circle cx='12' cy='12' r='10'/> <path d='m9 12 2 2 4-4'/>",
+        ["circle"] = "<circle cx='12' cy='12' r='10'/>",
+        ["mic"] = "<path d='M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z'/> <path d='M19 10v2a7 7 0 0 1-14 0v-2'/> <line x1='12' x2='12' y1='19' y2='22'/>",
+        ["mic-off"] = "<line x1='2' x2='22' y1='2' y2='22'/> <path d='M18.89 13.23A7.12 7.12 0 0 0 19 12v-2'/> <path d='M5 10v2a7 7 0 0 0 12 5'/> <path d='M15 9.34V5a3 3 0 0 0-5.68-1.33'/> <path d='M9 9v3a3 3 0 0 0 5.12 2.12'/> <line x1='12' x2='12' y1='19' y2='22'/>",
+        ["list-checks"] = "<path d='m3 17 2 2 4-4'/> <path d='m3 7 2 2 4-4'/> <path d='M13 6h8'/> <path d='M13 12h8'/> <path d='M13 18h8'/>",
+        ["map-pin"] = "<path d='M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0'/> <circle cx='12' cy='10' r='3'/>",
+        ["text-quote"] = "<path d='M17 6H3'/> <path d='M21 12H8'/> <path d='M21 18H8'/> <path d='M3 12v6'/>",
     };
 }

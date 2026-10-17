@@ -1,0 +1,14 @@
+# Démonstration seulement (compose.observabilite.yaml) : les tableaux de bord de la cellule
+# (deploy/helm/lettra-observability/dashboards), montés tels quels dans le dossier « Lettra ». Non modifiables depuis
+# l'interface : on les change dans le dépôt.
+apiVersion: 1
+
+providers:
+  - name: lettra
+    folder: Lettra
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    updateIntervalSeconds: 30
+    options:
+      path: /var/lib/grafana/dashboards/lettra

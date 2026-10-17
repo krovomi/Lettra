@@ -1,0 +1,52 @@
+@* Liste de démarrage du tableau de bord (vague 5, lane F) : cinq étapes qui se cochent toutes seules. Disparaît quand
+   tout est fait ou quand l'utilisateur la masque. *@
+@inject StarterProgress Progress
+@inject IStringLocalizer<SharedResource> L
+
+@if (_steps is { } steps && !_hidden && steps.Any(s => !s.Done))
+{
+    <section id="starter-checklist" class="lt-panel lt-starter" data-tour="starter" aria-labelledby="starter-title">
+        <div class="lt-panel-head">
+            <h2 id="starter-title"><Icon Name="list-checks" /> @L["Starter.Title"]</h2>
+            <span class="lettra-hint" id="starter-count">@string.Format(CultureInfo.CurrentCulture, L["Starter.Count"], steps.Count(s => s.Done), steps.Count)</span>
+        </div>
+        <progress class="lt-starter-progress" max="@steps.Count" value="@steps.Count(s => s.Done)" aria-labelledby="starter-title starter-count"></progress>
+        <ol class="lt-starter-steps">
+            @foreach (StarterStep step in steps)
+            {
+                <li class="@(step.Done ? "is-done" : null)" id="@($"starter-{step.Id}")">
+                    <Icon Name="@(step.Done ? "circle-check" : "circle")" />
+                    @if (step.Done)
+                    {
+                        <span><s>@L[$"Starter.{step.Id}"]</s><span class="lettra-visually-hidden"> · @L["Starter.Done"]</span></span>
+                    }
+                    else
+                    {
+                        <a href="@step.Href">@L[$"Starter.{step.Id}"]</a>
+                    }
+                </li>
+            }
+        </ol>
+        <button type="button" id="starter-hide" class="lettra-link" @onclick="HideAsync">@L["Starter.Hide"]</button>
+    </section>
+}
+
+@code {
+    private IReadOnlyList<StarterStep>? _steps;
+    private bool _hidden;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _hidden = await Progress.IsHiddenAsync();
+        if (!_hidden)
+        {
+            _steps = await Progress.ReadAsync(CancellationToken.None);
+        }
+    }
+
+    private async Task HideAsync()
+    {
+        _hidden = true;
+        await Progress.HideAsync();
+    }
+}

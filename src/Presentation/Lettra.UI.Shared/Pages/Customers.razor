@@ -1,6 +1,7 @@
 @page "/customers"
 @inject ICustomersGateway Gateway
 @inject IStringLocalizer<SharedResource> L
+@inject PostalCodes PostalCodes
 
 <PageTitle>@L["Customers.Title"] · Lettra</PageTitle>
 
@@ -59,11 +60,12 @@
         <InputText id="line2" @bind-Value="_request.AddressLine2" autocomplete="address-line2" />
 
         <label for="zip">@L["Customers.Field.PostalCode"]</label>
-        <InputText id="zip" @bind-Value="_request.PostalCode" autocomplete="postal-code" />
+        <SmartInput Id="zip" @bind-Value="_request.PostalCode" autocomplete="postal-code" inputmode="numeric" data-tour="customer-address"
+                    Suggest="SuggestByPostalCodeAsync" OnPicked="PlacePicked" Hint="@L["Assist.PostalCode.Hint"]" />
         <FieldErrors Field="@nameof(CreateCustomerRequest.PostalCode)" ServerErrors="_errors" />
 
         <label for="city">@L["Customers.Field.City"]</label>
-        <InputText id="city" @bind-Value="_request.City" autocomplete="address-level2" />
+        <SmartInput Id="city" @bind-Value="_request.City" autocomplete="address-level2" Suggest="SuggestByCityAsync" OnPicked="PlacePicked" Tidy="true" />
         <FieldErrors Field="@nameof(CreateCustomerRequest.City)" ServerErrors="_errors" />
 
         <label for="country">@L["Customers.Field.CountryCode"]</label>
@@ -147,6 +149,25 @@
         _request.PostalCode = company.PostalCode ?? string.Empty;
         _request.City = company.City ?? string.Empty;
         _request.CountryCode = company.CountryCode;
+    }
+
+    // Code postal et ville (vague 5, lane F) : fichier des communes livré avec l'application, cherché en mémoire.
+    private async Task<IReadOnlyList<Suggestion>> SuggestByPostalCodeAsync(string text) =>
+        Places((await PostalCodes.GetAsync()).ByPostalCode(text));
+
+    private async Task<IReadOnlyList<Suggestion>> SuggestByCityAsync(string text) =>
+        _request.CountryCode is "FR" or "" ? Places((await PostalCodes.GetAsync()).ByCity(text)) : [];
+
+    private static IReadOnlyList<Suggestion> Places(IReadOnlyList<PostalPlace> places) =>
+        [.. places.Select(p => new Suggestion(p.PostalCode, p.City, p.PostalCode, p))];
+
+    private void PlacePicked(Suggestion suggestion)
+    {
+        if (suggestion.Data is PostalPlace place)
+        {
+            _request.PostalCode = place.PostalCode;
+            _request.City = place.City;
+        }
     }
 
     private async Task CreateAsync()

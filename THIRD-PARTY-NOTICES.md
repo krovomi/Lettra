@@ -121,3 +121,10 @@ produite par la CI en donne la liste exacte pour chaque version.
   `build/voix/whisper-server`, qui copie sa licence dans l'image.
 - Les modèles ggml (convertis des poids Whisper d'OpenAI, licence MIT) ne sont pas dans le dépôt : le poste ou le
   conteneur les télécharge depuis le dépôt public de whisper.cpp et vérifie leur empreinte avant de les charger.
+
+## Codes postaux et communes (aide à la saisie)
+
+- `src/Presentation/Lettra.UI.Shared/wwwroot/data/codes-postaux.txt` est tiré du paquet npm `codes-postaux` 4.1.2
+  (licence MIT, https://github.com/BaseAdresseNationale/codes-postaux), lui-même construit sur le Code officiel
+  géographique de l'INSEE et le fichier FIMOCT de la DGFiP, publiés sous Licence Ouverte 2.0 (Etalab). Seuls le code
+  postal et le nom de la commune sont gardés. La base de La Poste (ODbL) n'est pas utilisée.

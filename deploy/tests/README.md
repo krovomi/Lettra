@@ -5,6 +5,7 @@
 | `valider.sh` | Règles d'alerte, routage, collecteur, charts Helm, OpenTofu (sans identifiant cloud) | `valider` |
 | `k6/fumee.js` | Charge légère de la démonstration (~1 min) : santé, enveloppe PWA, lectures authentifiées, limite de débit | `demo-charge` |
 | `zap/rules.tsv`, `zap/verifier.sh` | Scan de sécurité ZAP de base de la démonstration et classement des constatations | `demo-zap` |
+| `k6/fumee.js` (`LETTRA_PROFIL=activite`), `grafana/verifier.py` | Activité de démonstration (2 min en CI), puis données de chaque panneau des tableaux de bord Grafana, liens exemplaire → trace → journaux, alertes | `demo-grafana` |
 
 Les deux derniers visent la pile de `deploy/demo` (Keycloak + API qui sert la PWA, `http://localhost:8080/`), montée
 comme pour le job « Démo navigateur ». Données et secrets fictifs uniquement.

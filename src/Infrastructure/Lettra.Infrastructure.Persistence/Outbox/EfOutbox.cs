@@ -1,5 +1,7 @@
+using System.Diagnostics;
 using Lettra.Application.Abstractions.Outbox;
 using Lettra.Application.Abstractions.Sync;
+using Lettra.Application.Diagnostics;
 using Lettra.Infrastructure.Persistence.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -121,6 +123,18 @@ internal sealed partial class EfOutboxDispatcher(
         return [.. records.Select(r => r.ToState())];
     }
 
+    public async Task<OutboxBacklog> GetBacklogAsync(CancellationToken cancellationToken)
+    {
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        IQueryable<OutboxRecord> pending = db.Set<OutboxRecord>().AsNoTracking().Where(r => r.DeliveredAtMs == null && r.ParkedAtMs == null);
+        int count = await pending.CountAsync(cancellationToken).ConfigureAwait(false);
+        long? oldest = count == 0
+            ? null
+            : await pending.MinAsync(r => (long?)r.EnqueuedAtMs, cancellationToken).ConfigureAwait(false);
+        int parked = await db.Set<OutboxRecord>().AsNoTracking().CountAsync(r => r.ParkedAtMs != null, cancellationToken).ConfigureAwait(false);
+        return new OutboxBacklog(count, parked, oldest is long ms ? DateTimeOffset.FromUnixTimeMilliseconds(ms) : null);
+    }
+
     public async Task<bool> RequeueAsync(Guid messageId, CancellationToken cancellationToken)
     {
         LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
@@ -207,8 +221,21 @@ internal sealed partial class EfOutboxDispatcher(
             LogParked(message.Kind, message.Id, message.Attempts);
         }
 
+        LettraTelemetry.OutboxDispatches.Add(1, new TagList
+        {
+            { LettraTelemetry.Attributes.OutboxKind, message.Kind },
+            { LettraTelemetry.Attributes.OutboxResult, ResultName(outcome.Result) },
+        });
+
         return outcome;
     }
+
+    private static string ResultName(OutboxResult result) => result switch
+    {
+        OutboxResult.Delivered => "delivered",
+        OutboxResult.Retry => "retry",
+        _ => "parked",
+    };
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Outbox : bail perdu pendant l'envoi du message {Kind} {Id}, il repartira")]
     private partial void LogLeaseLost(string kind, Guid id);

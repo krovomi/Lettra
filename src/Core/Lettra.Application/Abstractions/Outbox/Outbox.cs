@@ -60,6 +60,12 @@ public interface IOutboxHandler
 /// <summary>Bilan d'une passe du répartiteur sur un dossier.</summary>
 public sealed record OutboxPass(int Delivered, int Retried, int Parked);
 
+/// <summary>
+/// File de l'outbox d'un dossier, pour la supervision : messages en attente (ni partis ni mis de côté), mis de côté, et
+/// instant de mise en file du plus ancien en attente (<c>null</c> si aucun). Des nombres seulement.
+/// </summary>
+public sealed record OutboxBacklog(int Pending, int Parked, DateTimeOffset? OldestPendingEnqueuedAt);
+
 /// <summary>État d'un message, pour le suivi et les tests.</summary>
 public sealed record OutboxMessageState(
     Guid Id,
@@ -92,6 +98,9 @@ public interface IOutboxDispatcher
     Task<OutboxMessageState?> FindAsync(Guid messageId, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<OutboxMessageState>> ListParkedAsync(CancellationToken cancellationToken);
+
+    /// <summary>Taille et âge de la file du dossier (métriques de la passe du répartiteur).</summary>
+    Task<OutboxBacklog> GetBacklogAsync(CancellationToken cancellationToken);
 
     /// <summary>
     /// Avance au plus tôt l'essai d'un message pas encore parti : mis de côté (ses essais repartent de zéro, après

@@ -2,6 +2,7 @@
    lettra-tokens.css, ce qui fait marcher les quatre thèmes. Système décrit dans docs/design/systeme-de-design.md. */
 @import url("lettra-tokens.css");
 @import url("lettra-admin.css");
+@import url("lettra-assist.css");
 
 /* Alias historiques : les composants et la grille écrits avant les jetons les lisent encore. */
 :root {
@@ -129,6 +130,7 @@ kbd { font-family: var(--font-mono); font-size: var(--text-xs); padding: 0.05rem
     align-items: center;
     gap: var(--space-2);
     width: min(28rem, 100%);
+    min-width: 0; /* rétrécit avant que les actions de la barre ne débordent (tablette) */
     min-height: 2.5rem;
     padding: 0 var(--space-3);
     border: 1px solid var(--color-border-strong);

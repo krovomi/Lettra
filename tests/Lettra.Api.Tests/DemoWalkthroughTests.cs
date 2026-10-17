@@ -1,4 +1,7 @@
+using System.Diagnostics.Metrics;
+using System.Globalization;
 using Lettra.Application.Abstractions.Identity;
+using Lettra.Application.Diagnostics;
 using Lettra.Bootstrap;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Catalog;
@@ -22,8 +25,87 @@ public sealed class DemoWalkthroughTests : IDisposable
 {
     private readonly string _folder = Directory.CreateTempSubdirectory("lettra-demo-").FullName;
 
+    /// <summary>Données fictives du parcours, qui ne doivent jamais apparaître dans une étiquette de métrique.</summary>
+    private static readonly string[] WalkthroughData =
+        ["Camille", "Cabinet Démo", "900000019", "FR25900000019", "Boulangerie", "90000002700012", "69002", "Lyon", "Accompagnement", "Tenue comptable", "FAC-", "900", "250", "Geste commercial"];
+
     [Fact]
-    public async Task Le_parcours_du_README_va_du_compte_du_poste_a_l_encaissement()
+    public Task Le_parcours_du_README_va_du_compte_du_poste_a_l_encaissement() => RunReadmeWalkthroughAsync();
+
+    /// <summary>
+    /// Annexe G : les métriques comptent les devis, factures, avoirs, transmissions et exports du parcours, mais leurs
+    /// étiquettes ne portent que des noms et statuts fixes : ni dossier, ni personne, ni client, ni montant.
+    /// </summary>
+    [Fact]
+    public async Task Aucune_etiquette_de_metrique_ne_porte_de_donnee_de_dossier()
+    {
+        List<(string Instrument, KeyValuePair<string, object?>[] Tags)> measured = [];
+        Lock gate = new();
+        using MeterListener listener = new();
+        listener.InstrumentPublished = (instrument, l) =>
+        {
+            if (instrument.Meter.Name == LettraTelemetry.SourceName)
+            {
+                l.EnableMeasurementEvents(instrument);
+            }
+        };
+        void Record<T>(Instrument instrument, T value, ReadOnlySpan<KeyValuePair<string, object?>> tags, object? state)
+        {
+            lock (gate)
+            {
+                measured.Add((instrument.Name, tags.ToArray()));
+            }
+        }
+
+        listener.SetMeasurementEventCallback<long>(Record);
+        listener.SetMeasurementEventCallback<double>(Record);
+        listener.Start();
+
+        await RunReadmeWalkthroughAsync();
+        listener.RecordObservableInstruments();
+
+        (string Instrument, KeyValuePair<string, object?>[] Tags)[] all;
+        lock (gate)
+        {
+            all = [.. measured];
+        }
+
+        // Le parcours est bien compté : pièces par type et par étape, transmissions par statut, export FEC.
+        all.Where(m => m.Instrument == "lettra.document.count")
+            .Select(m => $"{Tag(m.Tags, LettraTelemetry.Attributes.DocumentType)}:{Tag(m.Tags, LettraTelemetry.Attributes.DocumentAction)}")
+            .Should().Contain(["quote:created", "quote:validated", "quote:accepted", "invoice:created", "invoice:validated", "credit_note:created"]);
+        all.Where(m => m.Instrument == "lettra.einvoicing.transmission.count")
+            .Select(m => Tag(m.Tags, LettraTelemetry.Attributes.PlatformOperation)).Should().Contain(["deposit", "payment"]);
+        all.Should().Contain(m => m.Instrument == "lettra.fec.export.count" && Tag(m.Tags, LettraTelemetry.Attributes.Outcome) == LettraTelemetry.Outcomes.Success);
+
+        foreach ((string instrument, KeyValuePair<string, object?>[] tags) in all)
+        {
+            foreach ((string key, object? value) in tags)
+            {
+                LettraTelemetry.MetricTags.Should().Contain(key, "étiquette {0} de {1}", key, instrument);
+                string text = Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
+                Guid.TryParse(text, out _).Should().BeFalse("{0}={1} ({2}) ressemble à un identifiant", key, text, instrument);
+                decimal.TryParse(text, NumberStyles.Number, CultureInfo.InvariantCulture, out _).Should().BeFalse("{0}={1} ({2}) ressemble à un montant", key, text, instrument);
+                text.Should().NotContainAny(WalkthroughData, "{0} de {1}", key, instrument);
+            }
+        }
+    }
+
+    [Fact]
+    public void Les_etiquettes_autorisees_ne_designent_ni_dossier_ni_personne_ni_montant()
+    {
+        LettraTelemetry.MetricTags.Should().NotContain(LettraTelemetry.Attributes.DossierId, "l'identifiant du dossier reste dans les traces");
+        string[] forbidden = ["dossier", "user", "person", "customer", "client", "supplier", "amount", "montant", "total", "siren", "siret", "email", "name", "number", "invoice.id"];
+        foreach (string key in LettraTelemetry.MetricTags)
+        {
+            key.Should().NotContainAny(forbidden, "étiquette {0}", key);
+        }
+    }
+
+    private static string Tag(KeyValuePair<string, object?>[] tags, string key) =>
+        Convert.ToString(tags.FirstOrDefault(t => t.Key == key).Value, CultureInfo.InvariantCulture) ?? string.Empty;
+
+    private async Task RunReadmeWalkthroughAsync()
     {
         IConfiguration configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {

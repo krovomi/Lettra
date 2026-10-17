@@ -80,7 +80,19 @@ public static class DependencyInjection
                 .AddAspNetCoreInstrumentation()
                 .AddHttpClientInstrumentation()
                 .AddRuntimeInstrumentation()
+                // Exemplaires : une mesure prise pendant une requête tracée garde l'identifiant de sa trace. Grafana
+                // passe ainsi d'un pic de latence à la trace dans Tempo. Rien d'autre que trace_id et span_id n'y est ajouté.
+                .SetExemplarFilter(ExemplarFilterType.TraceBased)
                 .AddView(HttpServerDurationInstrument, new ExplicitBucketHistogramConfiguration
+                {
+                    Boundaries = [.. SloBuckets.HttpServerDuration],
+                })
+                // Durées Lettra en secondes : mêmes bornes que HTTP (les bornes par défaut d'OpenTelemetry visent des millisecondes).
+                .AddView(LettraTelemetry.UseCaseDuration.Name, new ExplicitBucketHistogramConfiguration
+                {
+                    Boundaries = [.. SloBuckets.HttpServerDuration],
+                })
+                .AddView(LettraTelemetry.SyncDuration.Name, new ExplicitBucketHistogramConfiguration
                 {
                     Boundaries = [.. SloBuckets.HttpServerDuration],
                 }));
