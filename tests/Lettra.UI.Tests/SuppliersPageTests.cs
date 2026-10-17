@@ -64,7 +64,7 @@ public sealed class SuppliersPageTests : BunitContext
         Fill(page, "city", "Lyon");
         page.Find("form").Submit();
 
-        page.WaitForAssertion(() => page.Find("[role=status]").TextContent.Should().Be("Fournisseur « Papeterie Durand » créé."));
+        page.WaitForAssertion(() => this.ToastText().Should().Be("Fournisseur « Papeterie Durand » créé."));
         _gateway.LastRequest!.Iban.Should().Be("FR7630006000011234567890189");
         page.Find("tbody").TextContent.Should().Contain("Papeterie Durand").And.Contain("732829320").And.Contain("Lyon");
     }

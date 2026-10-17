@@ -114,7 +114,7 @@ public sealed class CatalogPageTests : BunitContext
         requete.UnitCode.Should().Be("HUR");
         requete.VatRateCode.Should().Be("FR-20");
         page.WaitForAssertion(() => page.Find(".lg-row[data-r='0'] .lg-calc").TextContent.Should().Be(Fr(1481.40m)));
-        page.Find("[role=status]").TextContent.Should().Be("Article « DEV-01 » enregistré.");
+        this.ToastText().Should().Be("Article « DEV-01 » enregistré.");
     }
 
     [Fact]
@@ -127,7 +127,7 @@ public sealed class CatalogPageTests : BunitContext
         CellCommitResult resultat = await Saisir(page, 0, PrixHt, "-5");
 
         resultat.Should().Be(new CellCommitResult(Fr(100m), false));
-        page.WaitForAssertion(() => page.Find("[role=alert]").TextContent.Should().Be("Le prix ne peut pas être négatif."));
+        page.WaitForAssertion(() => this.ToastText().Should().Be("Le prix ne peut pas être négatif."));
         Cellule(page, 0, PrixHt).Should().Be(Fr(100m));
         _gateway.Items[0].UnitPriceExclTax.Should().Be(100m);
     }
@@ -146,7 +146,7 @@ public sealed class CatalogPageTests : BunitContext
         _gateway.Items[0].Designation.Should().Be("Développement spécifique", "celle du collègue aussi");
         _gateway.Items[0].Version.Should().Be(3);
         page.WaitForAssertion(() => Cellule(page, 0, Designation).Should().Be("Développement spécifique"));
-        page.Find("[role=status]").TextContent.Should().Contain("fusionnés");
+        this.ToastText().Should().Contain("fusionnés");
     }
 
     [Fact]
@@ -160,7 +160,7 @@ public sealed class CatalogPageTests : BunitContext
 
         _gateway.Items[0].UnitPriceExclTax.Should().Be(1100m);
         _gateway.Updates.Should().ContainSingle("pas de nouvel envoi quand le même champ est en conflit");
-        page.WaitForAssertion(() => page.Find("[role=alert]").TextContent.Should().Contain("modifié par quelqu'un d'autre"));
+        page.WaitForAssertion(() => this.ToastText().Should().Contain("modifié par quelqu'un d'autre"));
         page.WaitForAssertion(() => Cellule(page, 0, PrixHt).Should().Be(Fr(1100m)));
     }
 
@@ -221,7 +221,7 @@ public sealed class CatalogPageTests : BunitContext
         _gateway.ArchiveCalls.Should().Equal((item.Id, true));
         page.WaitForAssertion(() => page.FindAll(".lg-row[data-r]").Should().HaveCount(1));
         Cellule(page, 0, Reference).Should().Be("FORM");
-        page.Find("[role=status]").TextContent.Should().Be("Article « DEV-01 » archivé.");
+        this.ToastText().Should().Be("Article « DEV-01 » archivé.");
     }
 
     [Fact]
