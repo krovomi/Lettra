@@ -79,7 +79,7 @@ jobs:
       - name: Galerie des écrans
         run: |
           dotnet build tests/Lettra.UI.Tests -c Release
-          LETTRA_GALLERY_DIR=$PWD/artifacts/galerie dotnet test tests/Lettra.UI.Tests -c Release --no-build --filter Galerie_des_ecrans
+          LETTRA_GALLERY_DIR=$PWD/artifacts/galerie dotnet test tests/Lettra.UI.Tests -c Release --no-build --filter "FullyQualifiedName~Galerie_des_ecrans|FullyQualifiedName~Galerie_de_l_administration"
 
       # Même Playwright que le parcours de la démonstration ; axe-core à version fixe.
       - name: Playwright (Chromium) et axe-core

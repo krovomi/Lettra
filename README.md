@@ -401,6 +401,15 @@ Sans SIREN dans la fiche entreprise, l'export le demande au lieu de produire un 
 - **Verrouiller** (en haut) : ferme la session ; la phrase secrète la rouvre.
 - **Langue** : l'écran suit la langue de l'appareil ou du navigateur (français ou anglais). Chaque client et chaque PDF peuvent avoir la
   leur (« Langue des devis et factures imprimés », « Langue du PDF »).
+- **Équipe et accès** (menu **Pilotage**) : qui travaille dans le cabinet et ce que chacun peut ouvrir. Onglet
+  **Personnes** : ajoutez une personne (nom et adresse), puis donnez-lui un accès en trois questions (quel rôle, où,
+  jusqu'à quand) ; sa fiche dit en clair ce qu'elle peut faire, page par page. Onglet **Équipes** : regroupez des
+  personnes et des dossiers, un rôle donné à l'équipe vaut pour tous ses membres. Onglet **Rôles** : les rôles fournis,
+  et vos rôles sur mesure composés page par page (Aucun, Voir, Modifier, Valider). Chaque retrait se défait depuis le
+  message qui le confirme. Dans l'application installée sur un poste isolé, l'espace est en lecture seule : on y voit
+  son propre compte et ses rôles. Dans la démo navigateur, l'utilisateur fictif (Camille Démo) est administrateur du
+  cabinet. *(Vérifié : navigateur, rendu Chromium à 375, 768 et 1440 px et tests ; poste isolé par un test de bout en
+  bout ; application native non lancée.)*
 
 ### Tutoriel, aide à la saisie et voix
 
@@ -471,6 +480,7 @@ Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou 
 | Serveur du cabinet en production | La démonstration navigateur tourne sur un poste avec Docker ; un vrai serveur du cabinet ou une cellule SaaS demande Keycloak, des certificats et une infrastructure (voir plus bas). |
 | Poste relié à un serveur, synchronisation | Prête dans l'application (fichier `lettra.json`), mais demande un serveur Lettra et Keycloak. Sur un poste isolé, la page Synchronisation indique « Ce poste ne synchronise pas ». |
 | Hors ligne sur un appareil relié au serveur commun | Relié au serveur commun, l'appareil a besoin du réseau. Reste à étendre la synchronisation aux devis, factures et règlements, ou à y ouvrir les brouillons hors ligne. |
+| Invitations | Une personne ajoutée dans **Équipe et accès** apparaît et reçoit des accès, mais Lettra n'envoie pas d'e-mail et ne crée pas encore son compte de connexion (Keycloak) : elle ne peut pas encore se connecter. |
 | Envoi des devis et factures par e-mail | Non : on télécharge le PDF ou le Factur-X. |
 | Applications signées | Non : avertissement de Windows au premier lancement, APK Android installé à la main, application macOS arrêtée par le Trousseau, pas de version pour iPhone réel. |
 
