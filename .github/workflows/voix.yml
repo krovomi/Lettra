@@ -144,3 +144,32 @@ jobs:
       - name: Journaux du serveur
         if: failure()
         run: docker logs whisper
+
+  amorcage:
+    name: Amorçage du corpus (lecture seule)
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: |
+          sudo apt-get update -q && sudo apt-get install -yq --no-install-recommends ffmpeg flac
+          python -m pip install -r build/voix/piper-requirements.txt
+      - run: build/voix/corpus.sh voix/voices
+        env:
+          PIPER_PYTHON: python
+      - run: |
+          mkdir -p /tmp/f
+          for w in tests/Lettra.Speech.Tests/Corpus/wav/*.wav; do flac -s --best -o /tmp/f/$(basename "$w" .wav).flac "$w"; done
+          tar -C /tmp/f -cf - . | base64 -w0 > /tmp/b64
+          split -b 60000 -d -a 2 /tmp/b64 /tmp/part.
+          du -sb tests/Lettra.Speech.Tests/Corpus/wav /tmp/f
+          echo "::notice title=taille::$(wc -c < /tmp/b64) $(ls /tmp/part.* | wc -l) $(sha256sum < /tmp/b64)"
+          echo "::notice title=manifeste::$(sed ':a;N;$!ba;s/\n/%0A/g' tests/Lettra.Speech.Tests/Corpus/corpus.sha256)"
+      - run: for p in /tmp/part.0?; do [ -f "$p" ] && echo "::notice title=${p#/tmp/}::$(cat "$p")"; done; true
+      - run: for p in /tmp/part.1?; do [ -f "$p" ] && echo "::notice title=${p#/tmp/}::$(cat "$p")"; done; true
+      - run: for p in /tmp/part.2?; do [ -f "$p" ] && echo "::notice title=${p#/tmp/}::$(cat "$p")"; done; true
+      - run: for p in /tmp/part.3?; do [ -f "$p" ] && echo "::notice title=${p#/tmp/}::$(cat "$p")"; done; true
+      - run: for p in /tmp/part.4?; do [ -f "$p" ] && echo "::notice title=${p#/tmp/}::$(cat "$p")"; done; true
