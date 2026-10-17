@@ -490,6 +490,14 @@
           }
         }
       ],
+      "defaultClientScopes": [
+        "basic",
+        "profile",
+        "email",
+        "roles",
+        "acr",
+        "web-origins"
+      ],
       "optionalClientScopes": [
         "offline_access"
       ]
