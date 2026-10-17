@@ -81,6 +81,7 @@ public static class DependencyInjection
         services.AddSingleton<IAlertsGateway, InProcessAlertsGateway>();
         services.AddSingleton<IAssistantGateway, InProcessAssistantGateway>();
         services.AddSingleton<ISpeechGateway, InProcessSpeechGateway>();
+        services.AddSingleton<IAdministrationGateway, InProcessAdministrationGateway>();
         return services;
     }
 }

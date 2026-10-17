@@ -1,0 +1,207 @@
+@* Fiche d'une personne : ce qu'elle peut faire (en clair), ses accès un par un, ses équipes, et les gestes courants
+   (donner un accès, retirer, suspendre, réactiver). Un retrait se défait depuis le message qui le confirme. *@
+@inject IStringLocalizer<SharedResource> L
+@inject IAdministrationGateway Gateway
+
+<div class="la-person-head">
+    <AdminAvatar Id="Person.Id" Name="@View.NameOf(Person)" Large="true" Muted="@(Person.State != AccountStateDto.Active)" />
+    <div>
+        <StateChip State="Person.State" />
+        @if (Person.Email is { } email)
+        {
+            <p class="la-muted-line"><Icon Name="mail" Size="14" />@email</p>
+        }
+        @if (Person.IsMe)
+        {
+            <p class="la-muted-line"><Icon Name="info" Size="14" />@L["Admin.Person.ItsYou"]</p>
+        }
+    </div>
+</div>
+
+@if (Person.State == AccountStateDto.Invited)
+{
+    <p class="la-callout"><Icon Name="mail" Size="16" />@string.Format(CultureInfo.CurrentCulture, L["Admin.Person.InvitedHint"], View.FirstNameOf(Person))</p>
+}
+else if (Person.State != AccountStateDto.Active)
+{
+    <p class="la-callout is-warning"><Icon Name="circle-pause" Size="16" />@string.Format(CultureInfo.CurrentCulture, L["Admin.Person.SuspendedHint"], View.FirstNameOf(Person))</p>
+}
+
+<section class="la-section" aria-labelledby="person-can">
+    <h3 id="person-can">@string.Format(CultureInfo.CurrentCulture, L["Admin.Person.CanDo"], View.FirstNameOf(Person))</h3>
+    <AreaList Areas="Effective" Empty="@L[Person.State == AccountStateDto.Active ? "Admin.Person.NothingYet" : "Admin.Person.NothingWhileInactive"]" />
+</section>
+
+<section class="la-section" aria-labelledby="person-access">
+    <div class="la-section-head">
+        <h3 id="person-access">@L["Admin.Person.Access"]</h3>
+        @if (CanManage)
+        {
+            <button type="button" class="lettra-button is-secondary la-small" id="person-grant" @onclick="OnGrant"><Icon Name="plus" Size="16" />@L["Admin.Grant.Open"]</button>
+        }
+    </div>
+    @if (Person.Assignments.Count == 0 && !View.InheritedAssignments(Person).Any())
+    {
+        <p class="lettra-hint">@L["Admin.Person.NoAccess"]</p>
+    }
+    <ul class="la-rows" role="list">
+        @foreach (RoleAssignmentSummary assignment in Person.Assignments)
+        {
+            <li class="la-row" @key="assignment.Id">
+                <span class="la-row-icon"><Icon Name="key-round" Size="16" /></span>
+                <span class="la-row-text">
+                    <strong>@View.RoleName(assignment.Role)</strong>
+                    <span>@View.ScopeLabel(assignment.ScopeKind, assignment.ScopeId)@Until(assignment)</span>
+                </span>
+                @if (CanManage)
+                {
+                    <button type="button" class="lettra-button is-ghost la-small" aria-label="@string.Format(CultureInfo.CurrentCulture, L["Admin.RemoveNamed"], View.RoleName(assignment.Role))"
+                            @onclick="() => RevokeAsync(assignment)">@L["Admin.Remove"]</button>
+                }
+            </li>
+        }
+        @foreach ((TeamSummary team, RoleAssignmentSummary assignment) in View.InheritedAssignments(Person))
+        {
+            <li class="la-row is-inherited" @key="(team.Id, assignment.Id)">
+                <span class="la-row-icon"><Icon Name="users" Size="16" /></span>
+                <span class="la-row-text">
+                    <strong>@View.RoleName(assignment.Role)</strong>
+                    <span>@Inherited(team, assignment)@Until(assignment)</span>
+                </span>
+            </li>
+        }
+    </ul>
+</section>
+
+<section class="la-section" aria-labelledby="person-teams">
+    <h3 id="person-teams">@L["Admin.Person.Teams"]</h3>
+    <div class="la-chips">
+        @foreach (Guid teamId in Person.TeamIds)
+        {
+            if (View.Team(teamId) is not { } team)
+            {
+                continue;
+            }
+
+            <span class="la-chip">
+                <Icon Name="users" Size="14" />@team.Name
+                @if (team.CanManage && !View.Overview.Can.ReadOnly)
+                {
+                    <button type="button" class="la-chip-remove" aria-label="@string.Format(CultureInfo.CurrentCulture, L["Admin.Team.RemoveFrom"], team.Name)"
+                            @onclick="() => SetTeamAsync(team, false)"><Icon Name="x" Size="12" /></button>
+                }
+            </span>
+        }
+        @if (Person.TeamIds.Count == 0)
+        {
+            <span class="lettra-hint">@L["Admin.Person.NoTeam"]</span>
+        }
+    </div>
+    @if (JoinableTeams.Any())
+    {
+        <label class="la-field la-inline-field">
+            <span class="lettra-visually-hidden">@L["Admin.Person.AddToTeam"]</span>
+            <select id="person-add-team" @onchange="AddToTeamAsync">
+                <option value="">@L["Admin.Person.AddToTeam"]</option>
+                @foreach (TeamSummary team in JoinableTeams)
+                {
+                    <option value="@team.Id">@team.Name</option>
+                }
+            </select>
+        </label>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired] public AdministrationView View { get; set; } = default!;
+
+    [Parameter, EditorRequired] public PersonSummary Person { get; set; } = default!;
+
+    [Parameter, EditorRequired] public AdminToasts Toasts { get; set; } = default!;
+
+    [Parameter] public EventCallback OnGrant { get; set; }
+
+    /// <summary>Le registre a changé : la page relit l'espace.</summary>
+    [Parameter] public EventCallback OnChanged { get; set; }
+
+    [Parameter] public DateTimeOffset Now { get; set; } = DateTimeOffset.Now;
+
+    private bool CanManage => View.Overview.Can.ManagePeople;
+
+    private IReadOnlyList<AreaAccess> Effective => View.EffectiveAreas(Person, Now);
+
+    private IEnumerable<TeamSummary> JoinableTeams => View.Overview.Can.ReadOnly
+        ? []
+        : View.Overview.Teams.Where(t => t.CanManage && !Person.TeamIds.Contains(t.Id));
+
+    private string Until(RoleAssignmentSummary assignment) => assignment.ExpiresAt is { } end
+        ? " · " + string.Format(CultureInfo.CurrentCulture, L["Admin.UntilDate"], end.ToLocalTime().ToString("d", CultureInfo.CurrentCulture))
+        : string.Empty;
+
+    /// <summary>« par l'équipe X, sur ses dossiers » plutôt que de répéter deux fois le nom de l'équipe.</summary>
+    private string Inherited(TeamSummary team, RoleAssignmentSummary assignment) =>
+        assignment is { ScopeKind: ScopeKindDto.Groupe } && assignment.ScopeId == team.Id
+            ? string.Format(CultureInfo.CurrentCulture, L["Admin.Person.ViaTeamOwn"], team.Name)
+            : View.ScopeLabel(assignment.ScopeKind, assignment.ScopeId) + " · " + string.Format(CultureInfo.CurrentCulture, L["Admin.Person.ViaTeam"], team.Name);
+
+    private async Task RevokeAsync(RoleAssignmentSummary assignment)
+    {
+        OperationResult<bool> revoked = await Gateway.RevokeAsync(View.Overview.CabinetId, assignment.Id, CancellationToken.None);
+        if (!revoked.IsSuccess)
+        {
+            Toasts.ShowError(L.Error(revoked.Errors[0].Code));
+            return;
+        }
+
+        string role = View.RoleName(assignment.Role);
+        Toasts.Show(
+            string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.Revoked"], role, View.FirstNameOf(Person)),
+            async () =>
+            {
+                AssignRoleRequest again = new()
+                {
+                    SubjectKind = assignment.SubjectKind,
+                    SubjectId = assignment.SubjectId,
+                    Role = assignment.Role,
+                    ScopeKind = assignment.ScopeKind,
+                    ScopeId = assignment.ScopeId,
+                    ExpiresAt = assignment.ExpiresAt,
+                };
+                OperationResult<RoleAssignmentSummary> restored = await Gateway.AssignAsync(View.Overview.CabinetId, again, CancellationToken.None);
+                if (!restored.IsSuccess)
+                {
+                    Toasts.ShowError(L.Error(restored.Errors[0].Code));
+                }
+
+                await OnChanged.InvokeAsync();
+            });
+        await OnChanged.InvokeAsync();
+    }
+
+    private async Task AddToTeamAsync(ChangeEventArgs e)
+    {
+        if (Guid.TryParse(e.Value as string, out Guid teamId) && View.Team(teamId) is { } team)
+        {
+            await SetTeamAsync(team, true);
+        }
+    }
+
+    private async Task SetTeamAsync(TeamSummary team, bool member)
+    {
+        OperationResult<bool> result = await Gateway.SetTeamMemberAsync(team.Id, Person.Id, member, CancellationToken.None);
+        if (!result.IsSuccess)
+        {
+            Toasts.ShowError(L.Error(result.Errors[0].Code));
+            return;
+        }
+
+        Toasts.Show(
+            string.Format(CultureInfo.CurrentCulture, L[member ? "Admin.Toast.JoinedTeam" : "Admin.Toast.LeftTeam"], View.FirstNameOf(Person), team.Name),
+            member ? null : async () =>
+            {
+                await Gateway.SetTeamMemberAsync(team.Id, Person.Id, true, CancellationToken.None);
+                await OnChanged.InvokeAsync();
+            });
+        await OnChanged.InvokeAsync();
+    }
+}

@@ -88,6 +88,8 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
             e.ToTable("UserAccounts");
             e.Property(x => x.Id).ValueGeneratedNever();
             e.Property(x => x.State).HasConversion<int>();
+            e.Property(x => x.DisplayName).HasMaxLength(CatalogUserAccount.MaxDisplayNameLength);
+            e.Property(x => x.Email).HasMaxLength(CatalogUserAccount.MaxEmailLength);
             e.HasIndex(x => x.OrganisationId);
         });
 
@@ -131,6 +133,8 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
             e.HasKey(x => new { x.OrganisationId, x.Key });
             e.Property(x => x.Key).HasMaxLength(CatalogRoleAssignment.MaxRoleKeyLength);
             e.Property(x => x.WidestScope).HasConversion<int>();
+            e.Property(x => x.Name).HasMaxLength(CatalogCustomRole.MaxNameLength);
+            e.Property(x => x.Description).HasMaxLength(CatalogCustomRole.MaxDescriptionLength);
         });
 
         modelBuilder.Entity<CatalogCustomRolePermission>(e =>

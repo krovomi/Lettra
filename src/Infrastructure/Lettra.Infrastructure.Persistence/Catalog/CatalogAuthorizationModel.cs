@@ -16,6 +16,15 @@ public sealed class CatalogUserAccount
     public AccountState State { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
+
+    public const int MaxDisplayNameLength = 200;
+    public const int MaxEmailLength = 254;
+
+    /// <summary>Nom affiché dans l'espace d'administration ; jamais utilisé pour décider d'un droit.</summary>
+    public string? DisplayName { get; set; }
+
+    /// <summary>Adresse de la personne, unique dans son cabinet (comparée en minuscules).</summary>
+    public string? Email { get; set; }
 }
 
 /// <summary>Un groupe du cabinet (pôle, équipe, bureau).</summary>
@@ -76,6 +85,14 @@ public sealed class CatalogCustomRole
     public ScopeKind WidestScope { get; set; }
 
     public bool RequiresExpiry { get; set; }
+
+    public const int MaxNameLength = 80;
+    public const int MaxDescriptionLength = 300;
+
+    /// <summary>Nom donné par l'administrateur (espace d'administration).</summary>
+    public string? Name { get; set; }
+
+    public string? Description { get; set; }
 }
 
 public sealed class CatalogCustomRolePermission
