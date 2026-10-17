@@ -33,10 +33,7 @@ else
             <button type="button" id="pin-remove" class="lettra-link" @onclick="RemoveAsync">@L["Pin.Remove"]</button>
             <button type="button" id="pin-lock-now" class="lettra-link" @onclick="Lock.Lock">@L["Pin.LockNow"]</button>
         }
-        @if (_message is not null)
-        {
-            <p id="pin-message" role="status">@_message</p>
-        }
+        <StatusToast Message="@_message" Kind="ToastKind.Info" />
     </section>
 }
 

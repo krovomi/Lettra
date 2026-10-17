@@ -1,0 +1,32 @@
+@implements IDisposable
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+@* Zone des notifications brèves : annoncée poliment au lecteur d'écran, au-dessus des onglets sur téléphone. *@
+
+<div class="lt-toasts" role="region" aria-label="@L["Toast.Region"]" aria-live="polite">
+    @foreach (Toast toast in Toasts.Visible)
+    {
+        <div class="lt-toast is-@toast.Kind.ToString().ToLowerInvariant()" @key="toast.Id">
+            <Icon Name="@IconOf(toast.Kind)" Size="18" />
+            <span class="lt-toast-text">@toast.Message</span>
+            <button type="button" class="lt-icon-button" aria-label="@L["Toast.Close"]" title="@L["Toast.Close"]" @onclick="() => Toasts.Dismiss(toast.Id)">
+                <Icon Name="x" Size="16" />
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    protected override void OnInitialized() => Toasts.Changed += OnChanged;
+
+    private void OnChanged(object? sender, EventArgs e) => _ = InvokeAsync(StateHasChanged);
+
+    private static string IconOf(ToastKind kind) => kind switch
+    {
+        ToastKind.Success => "circle-check",
+        ToastKind.Info => "inbox",
+        _ => "circle-alert",
+    };
+
+    public void Dispose() => Toasts.Changed -= OnChanged;
+}

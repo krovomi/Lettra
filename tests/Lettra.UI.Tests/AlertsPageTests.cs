@@ -107,12 +107,15 @@ public sealed class AlertsPageTests : BunitContext
 
         page.Find("#alert-resolve").Click();
 
-        page.Find("p.validation-message").TextContent.Should().NotBe(ErrorCodes.Security.Forbidden);
+        this.ToastText().Should().NotBe(ErrorCodes.Security.Forbidden);
         page.Find("#alert-resolve").Should().NotBeNull();
     }
 
     [Fact]
-    public void Une_alerte_hors_de_portee_n_est_pas_affichee() =>
-        Open(Guid.CreateVersion7()).Find("p.validation-message").TextContent
+    public void Une_alerte_hors_de_portee_n_est_pas_affichee()
+    {
+        Open(Guid.CreateVersion7());
+        this.ToastText()
             .Should().Be("Cette alerte n'existe pas ou n'est pas visible pour vous.");
+    }
 }

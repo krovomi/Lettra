@@ -4,9 +4,12 @@
 @inject IQuotesGateway Quotes
 @inject IStringLocalizer<SharedResource> L
 @inject IServiceProvider Services
+@inject ToastService Toasts
 
-@* Tableau de bord d'accueil (vague 5, lane B) : chiffre d'affaires HT du mois et des six derniers mois, devis en
-   attente de réponse, brouillons à finaliser, pièces récentes. Calculé à partir des listes existantes. *@
+@* Tableau de bord d'accueil (vague 5, lanes B et E) : chiffre d'affaires HT du mois et des six derniers mois, devis en
+   attente de réponse, brouillons à finaliser, pièces récentes (calculés à partir des listes), factures en retard et
+   transmissions à la plateforme (point des créances lu côté serveur). Un dossier vide propose d'y charger les données
+   de démonstration quand l'hôte le permet. *@
 
 <PageTitle>@L["Home.Title"] · Lettra</PageTitle>
 
@@ -44,6 +47,20 @@ else if (IsEmpty(figures))
             <a class="lettra-button is-secondary" href="customers">@L["Home.Empty.Customer"]</a>
             <a class="lettra-button is-secondary" href="quotes/new">@L["Home.NewQuote"]</a>
         </div>
+        @if (_demoAvailable)
+        {
+            <div class="lt-demo" id="home-demo">
+                <span class="lt-demo-icon" aria-hidden="true"><Icon Name="database" Size="20" /></span>
+                <div>
+                    <h3>@L["Home.Demo.Title"]</h3>
+                    <p>@L["Home.Demo.Text"]</p>
+                </div>
+                <button type="button" class="lettra-button is-secondary" id="home-demo-load" disabled="@_demoBusy" aria-busy="@(_demoBusy ? "true" : "false")"
+                        @onclick="LoadDemoAsync">
+                    @(_demoBusy ? L["Home.Demo.Loading"] : L["Home.Demo.Load"])
+                </button>
+            </div>
+        }
     </section>
 }
 else
@@ -66,11 +83,22 @@ else
                 }
             </span>
         </a>
-        <a class="lt-kpi" href="invoices" id="kpi-invoices">
-            <span class="lt-kpi-head">@L["Home.Kpi.Invoices"]<span class="lt-kpi-icon"><Icon Name="receipt" /></span></span>
-            <span class="lt-kpi-value">@figures.InvoicesThisMonth.ToString("N0", Culture)</span>
-            <span class="lt-kpi-note">@L["Home.Kpi.InvoicesNote"]</span>
-        </a>
+        @if (_receivables is { } due)
+        {
+            <a class="lt-kpi @(due.OverdueCount > 0 ? "is-alert" : null)" href="invoices" id="kpi-overdue">
+                <span class="lt-kpi-head">@L["Home.Kpi.Overdue"]<span class="lt-kpi-icon"><Icon Name="calendar-clock" /></span></span>
+                <span class="lt-kpi-value">@Money(due.OverdueInclTax)</span>
+                <span class="lt-kpi-note">@(due.OverdueCount > 0 ? string.Format(Culture, L["Home.Kpi.OverdueNote"], due.OverdueCount) : L["Home.Kpi.OverdueNone"])</span>
+            </a>
+        }
+        else
+        {
+            <a class="lt-kpi" href="invoices" id="kpi-invoices">
+                <span class="lt-kpi-head">@L["Home.Kpi.Invoices"]<span class="lt-kpi-icon"><Icon Name="receipt" /></span></span>
+                <span class="lt-kpi-value">@figures.InvoicesThisMonth.ToString("N0", Culture)</span>
+                <span class="lt-kpi-note">@L["Home.Kpi.InvoicesNote"]</span>
+            </a>
+        }
         <a class="lt-kpi" href="quotes" id="kpi-pending">
             <span class="lt-kpi-head">@L["Home.Kpi.Pending"]<span class="lt-kpi-icon"><Icon Name="clock" /></span></span>
             <span class="lt-kpi-value">@figures.PendingQuotes.ToString("N0", Culture)</span>
@@ -84,6 +112,7 @@ else
     </section>
 
     <div class="lt-dashboard-grid">
+        <div>
         <section class="lt-panel" aria-labelledby="home-chart-title">
             <div class="lt-panel-head">
                 <h2 id="home-chart-title">@L["Home.Chart.Title"]</h2>
@@ -110,6 +139,49 @@ else
                 </tbody>
             </table>
         </section>
+
+        @if (_receivables is { } receivables)
+        {
+            <section class="lt-panel" aria-labelledby="home-overdue-title" id="home-overdue">
+                <div class="lt-panel-head">
+                    <h2 id="home-overdue-title">@L["Home.Overdue.Title"]</h2>
+                    <a href="invoices">@L["Home.Recent.All"]</a>
+                </div>
+                @if (receivables.Oldest.Count == 0)
+                {
+                    <p class="lt-panel-ok"><Icon Name="circle-check" Size="18" /> @L["Home.Overdue.None"]</p>
+                }
+                else
+                {
+                    <ul class="lt-list">
+                        @foreach (OverdueInvoiceResponse invoice in receivables.Oldest)
+                        {
+                            <li>
+                                <a href="@($"invoices/{invoice.InvoiceId}")">
+                                    <span class="lt-list-title">@invoice.CustomerName</span>
+                                    <span class="lt-list-meta">@invoice.Number · <span class="lt-late">@string.Format(Culture, L["Home.Overdue.Late"], invoice.DaysLate)</span></span>
+                                    <span class="lt-list-amount">@Money(invoice.OutstandingInclTax)</span>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                }
+            </section>
+
+            <section class="lt-panel" aria-labelledby="home-transmissions-title" id="home-transmissions">
+                <div class="lt-panel-head">
+                    <h2 id="home-transmissions-title">@L["Home.Platform.Title"]</h2>
+                    <span class="lettra-hint">@L["Home.Platform.Note"]</span>
+                </div>
+                <dl class="lt-stats">
+                    <div class="lt-stat" data-stat="not-transmitted"><dt><Icon Name="file-text" Size="16" /> @L["Home.Platform.NotTransmitted"]</dt><dd>@receivables.NotTransmitted.ToString("N0", Culture)</dd></div>
+                    <div class="lt-stat" data-stat="in-progress"><dt><Icon Name="send" Size="16" /> @L["Home.Platform.InProgress"]</dt><dd>@receivables.InProgress.ToString("N0", Culture)</dd></div>
+                    <div class="lt-stat @(receivables.NeedsAttention > 0 ? "is-alert" : null)" data-stat="needs-attention"><dt><Icon Name="circle-alert" Size="16" /> @L["Home.Platform.NeedsAttention"]</dt><dd>@receivables.NeedsAttention.ToString("N0", Culture)</dd></div>
+                    <div class="lt-stat is-good" data-stat="collected"><dt><Icon Name="hand-coins" Size="16" /> @L["Home.Platform.Collected"]</dt><dd>@receivables.Collected.ToString("N0", Culture)</dd></div>
+                </dl>
+            </section>
+        }
+        </div>
 
         <div>
             <section class="lt-panel" aria-labelledby="home-invoices-title">
@@ -181,6 +253,9 @@ else
     private DashboardFigures? _figures;
     private int _drafts;
     private IReadOnlyList<ErrorDetail> _errors = [];
+    private ReceivablesSummaryResponse? _receivables;
+    private bool _demoAvailable;
+    private bool _demoBusy;
 
     private static CultureInfo Culture => CultureInfo.CurrentCulture;
 
@@ -189,6 +264,20 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadAsync();
+        // Le chargement de démonstration n'existe que sur un hôte qui l'a branché et l'autorise (jamais en Production).
+        if (_figures is { } figures && IsEmpty(figures) && Services.GetService<IDemoDataGateway>() is { } demo)
+        {
+            OperationResult<DemoDataStatusResponse> status = await demo.GetStatusAsync(CancellationToken.None);
+            _demoAvailable = status is { IsSuccess: true, Value.Available: true };
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        // Le point des créances est facultatif : sans lui (hôte ancien, refus), la carte des factures du mois reste.
+        Task<OperationResult<ReceivablesSummaryResponse>>? receivables =
+            Services.GetService<IReceivablesGateway>()?.GetSummaryAsync(CancellationToken.None);
         DateOnly from = DashboardFigures.PeriodStart(Today);
         Task<(List<InvoiceSummary> Items, IReadOnlyList<ErrorDetail> Errors)> invoices = ReadAllAsync(
             page => Invoices.ListAsync(new BillingListQuery(From: from, To: Today, Page: page, PageSize: 200), null, null, CancellationToken.None));
@@ -202,6 +291,43 @@ else
         _figures = DashboardFigures.Compute((await invoices).Items, (await quotes).Items, Today);
         // Un refus (droits, réseau) est le même pour chaque liste : affiché une fois.
         _errors = [.. (await invoices).Errors.Concat((await quotes).Errors).Select(e => e with { Target = null }).DistinctBy(e => e.Code)];
+        _receivables = receivables is null ? null : (await receivables).Value;
+    }
+
+    private async Task LoadDemoAsync()
+    {
+        if (Services.GetService<IDemoDataGateway>() is not { } demo || _demoBusy)
+        {
+            return;
+        }
+
+        _demoBusy = true;
+        StateHasChanged();
+        try
+        {
+            OperationResult<DemoSeedResponse> result = await demo.SeedAsync(CancellationToken.None);
+            switch (result.Value)
+            {
+                case { Status: DemoSeedStatusDto.Seeded } seeded:
+                    Toasts.Show(ToastKind.Success, string.Format(Culture, L["Home.Demo.Done"], seeded.Customers, seeded.Quotes, seeded.Invoices));
+                    _demoAvailable = false;
+                    _figures = null;
+                    StateHasChanged();
+                    await LoadAsync();
+                    break;
+                case { Status: DemoSeedStatusDto.DossierNotEmpty }:
+                    Toasts.Show(ToastKind.Warning, L["Home.Demo.NotEmpty"]);
+                    break;
+                default:
+                    // Refus de l'hôte (Production, désactivé, pas de compte ou de dossier) ou erreur réseau.
+                    Toasts.Show(ToastKind.Error, L["Home.Demo.Refused"]);
+                    break;
+            }
+        }
+        finally
+        {
+            _demoBusy = false;
+        }
     }
 
     private static async Task<(List<T> Items, IReadOnlyList<ErrorDetail> Errors)> ReadAllAsync<T>(Func<int, Task<OperationResult<PagedResponse<T>>>> read)

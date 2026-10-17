@@ -52,7 +52,7 @@ public sealed class InvoiceEditorTests : BunitContext
         page.Find("#save").HasAttribute("disabled").Should().BeFalse();
         page.Find("#save").Click();
 
-        page.WaitForAssertion(() => page.Find("#document-status [role=alert]").TextContent.Trim().Should().Be("Choisissez un client."));
+        page.WaitForAssertion(() => this.ToastText().Should().Be("Choisissez un client."));
     }
 
     [Fact]
@@ -63,11 +63,11 @@ public sealed class InvoiceEditorTests : BunitContext
         page.Find("h1").TextContent.Should().StartWith("Facture en brouillon");
 
         page.Find("#validate").Click();
-        page.WaitForAssertion(() => page.Find("[role=status].lettra-success").TextContent.Should().Be("Facture validée sous le numéro FAC-2026-0042."));
+        page.WaitForAssertion(() => this.ToastText().Should().Be("Facture validée sous le numéro FAC-2026-0042."));
         page.Find("#issue").Click();
 
         page.WaitForAssertion(() => page.Find(".lettra-status").TextContent.Should().Be("Émise"));
-        page.Find("[role=status].lettra-success").TextContent.Should().Be("Pièce FAC-2026-0042 marquée émise.");
+        this.ToastText().Should().Be("Pièce FAC-2026-0042 marquée émise.");
         page.Find("#credit-note").Should().NotBeNull("une facture émise se corrige par un avoir");
     }
 
@@ -77,7 +77,7 @@ public sealed class InvoiceEditorTests : BunitContext
         InvoiceResponse facture = _invoices.Add(InvoiceKindDto.Invoice, InvoiceStatusDto.Validated, "FAC-2026-0042", Conseil);
         Services.GetRequiredService<NavigationManager>().NavigateTo($"invoices/{facture.Id}?action=credit-note");
         IRenderedComponent<InvoiceEditor> page = Ouvrir(facture.Id);
-        page.Find("[role=status].lettra-success").TextContent.Should().Be("Indiquez le motif puis créez l'avoir.");
+        this.ToastText().Should().Be("Indiquez le motif puis créez l'avoir.");
 
         page.Find("#credit-reason").Change("Erreur de quantité");
         page.Find("#credit-note").Click();
@@ -114,10 +114,10 @@ public sealed class InvoiceEditorTests : BunitContext
 
         page.Find("#validate").Click();
         page.WaitForAssertion(() => page.Find("#approve-credit"));
-        page.Markup.Should().Contain("Cet avoir dépasse le seuil du cabinet : il doit être approuvé par un manager.");
+        this.ToastText().Should().Be("Cet avoir dépasse le seuil du cabinet : il doit être approuvé par un manager.");
 
         page.Find("#approve-credit").Click();
-        page.WaitForAssertion(() => page.Find("[role=status].lettra-success").TextContent.Should().Be("Avoir approuvé : il peut maintenant être validé."));
+        page.WaitForAssertion(() => this.ToastText().Should().Be("Avoir approuvé : il peut maintenant être validé."));
         page.Find("#credit-approved").TextContent.Should().Be("Avoir approuvé par un manager le 15/10/2026.");
         page.FindAll("#approve-credit").Should().BeEmpty();
 
@@ -137,7 +137,7 @@ public sealed class InvoiceEditorTests : BunitContext
 
         page.Find("#approve-credit").Click();
 
-        page.WaitForAssertion(() => page.Markup.Should().Contain("La séparation des tâches est active : l'auteur de l'avoir ne peut pas l'approuver lui-même."));
+        page.WaitForAssertion(() => this.ToastText().Should().Be("La séparation des tâches est active : l'auteur de l'avoir ne peut pas l'approuver lui-même."));
         _invoices.Invoices[avoir.Id].CreditApprovedBy.Should().BeNull();
         page.Find("#approve-credit").Should().NotBeNull("un manager peut encore l'approuver");
     }
@@ -217,7 +217,7 @@ public sealed class InvoiceEditorTests : BunitContext
         page.Find("#payment-amount").Change("500");
         page.Find("#payment-report").Click();
 
-        page.WaitForAssertion(() => page.Find("#platform p.validation-message").TextContent
+        page.WaitForAssertion(() => this.ToastText()
             .Should().Be("Le montant encaissé doit être positif et ne pas dépasser le total TTC de la pièce."));
         _platform.Payments.Should().BeEmpty();
     }
@@ -234,7 +234,7 @@ public sealed class InvoiceEditorTests : BunitContext
 
         page.WaitForAssertion(() => page.Find("#platform-not-configured").TextContent.Should().StartWith("Aucune plateforme agréée n'est configurée pour ce cabinet"));
         page.FindAll("#platform-transmit").Should().BeEmpty();
-        page.FindAll("#platform p.validation-message").Should().BeEmpty("l'état remplace le message d'erreur");
+        this.Toasts().Should().NotContain(t => t.Kind == ToastKind.Error, "l'état remplace le message d'erreur");
         _invoices.Invoices[facture.Id].Status.Should().Be(InvoiceStatusDto.Validated);
     }
 
@@ -273,7 +273,7 @@ public sealed class InvoiceEditorTests : BunitContext
 
         page.Find("#facturx").Click();
 
-        page.WaitForAssertion(() => page.Find("p.validation-message").TextContent.Should().Be("Le serveur est injoignable. Vérifiez la connexion."));
+        page.WaitForAssertion(() => this.ToastText().Should().Be("Le serveur est injoignable. Vérifiez la connexion."));
         _files.Files.Should().BeEmpty();
         page.Find("#facturx").HasAttribute("disabled").Should().BeFalse("le téléchargement peut être relancé");
     }
@@ -362,7 +362,7 @@ public sealed class CompanySettingsTests : BunitContext
         version.Should().Be(3);
         requete.Rcs.Should().Be("RCS Lyon");
         requete.Iban.Should().Be("FR7630006000011234567890189");
-        page.Find("[role=status]").TextContent.Should().Be("Fiche entreprise enregistrée.");
+        this.ToastText().Should().Be("Fiche entreprise enregistrée.");
     }
 
     [Fact]
