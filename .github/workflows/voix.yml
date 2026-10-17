@@ -1,11 +1,12 @@
 name: Voix
 
 # Dictée et commandes vocales (vague 5, lane D) face à un vrai Whisper : un corpus de phrases lues par une voix de
-# synthèse (Piper) passe par Whisper.net (le moteur du poste, sur Linux, Windows et macOS) et par le serveur whisper.cpp
-# (le moteur de la cellule, en conteneur). Le rapport (erreurs de mots, commandes reconnues) s'affiche dans le
-# résumé du run. Le corpus est déterministe (Piper sans bruit aléatoire, versions et voix épinglées, empreintes des WAV
-# vérifiées) : le score ne varie plus d'un run à l'autre sans changement de code. Séparé de « CI » : le modèle pèse
-# 142 Mio et ne sert qu'aux changements de la voix.
+# synthèse (Piper), commité dans tests/Lettra.Speech.Tests/Corpus/wav, passe par Whisper.net (le moteur du poste, sur
+# Linux, Windows et macOS) et par le serveur whisper.cpp (le moteur de la cellule, en conteneur). Le rapport (erreurs
+# de mots, commandes reconnues) s'affiche dans le résumé du run. Le corpus n'est pas relu à chaque run : Piper tire du
+# bruit au hasard et ses échantillons varient d'un processeur à l'autre, si bien que le score bougeait sans changement
+# de code. La CI vérifie ses empreintes ; build/voix/corpus.sh le régénère à la main. Séparé de « CI » : le modèle
+# pèse 142 Mio et ne sert qu'aux changements de la voix.
 
 on:
   push:
@@ -53,45 +54,28 @@ env:
 jobs:
   corpus:
     name: Corpus et modèle
-    # Image épinglée : le ffmpeg d'une autre version d'Ubuntu pourrait changer les octets du corpus.
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v6
-        with:
-          python-version: '3.13'
+      # Le même corpus à chaque run : un WAV par phrase de phrases.json, chacun avec le SHA-256 de corpus.sha256.
+      - name: Corpus commité vérifié
+        run: build/voix/corpus-verifier.sh
 
-      # Versions épinglées : le corpus est vérifié octet par octet (build/voix/corpus.sha256).
-      - name: Voix de synthèse (Piper, locale)
-        run: |
-          sudo apt-get update -q && sudo apt-get install -yq --no-install-recommends ffmpeg
-          python -m pip install -r build/voix/piper-requirements.txt
-
-      - name: Modèle et voix en cache
+      - name: Modèle en cache
         uses: actions/cache@v4
         with:
-          path: |
-            voix/models
-            voix/voices
-          key: whisper-ggml-${{ env.WHISPER_MODEL }}-piper-v2
+          path: voix/models
+          key: whisper-ggml-${{ env.WHISPER_MODEL }}
 
       # Empreinte SHA-1 publiée par whisper.cpp vérifiée ; le SHA-256 affiché sert à l'épingler.
       - name: Modèle Whisper vérifié
         run: build/voix/model.sh "$WHISPER_MODEL" voix/models
 
-      # Sans bruit aléatoire : le même corpus à chaque run, vérifié par build/voix/voices.sha256 et corpus.sha256.
-      - name: Corpus lu par Piper, déterministe et vérifié
-        run: build/voix/corpus.sh voix/corpus voix/voices
-        env:
-          PIPER_PYTHON: python
-
       - uses: actions/upload-artifact@v4
         with:
-          name: voix-corpus
-          path: |
-            voix/models
-            voix/corpus
+          name: voix-modele
+          path: voix/models
           retention-days: 3
 
   whisper-net:
@@ -112,15 +96,15 @@ jobs:
           global-json-file: global.json
       - uses: actions/download-artifact@v4
         with:
-          name: voix-corpus
-          path: voix
+          name: voix-modele
+          path: voix/models
 
       - name: Corpus face à Whisper.net
         run: >
           dotnet test tests/Lettra.Speech.Tests -c Release
           --logger "console;verbosity=normal"
         env:
-          LETTRA_VOICE_CORPUS: ${{ github.workspace }}/voix/corpus
+          LETTRA_VOICE_CORPUS: ${{ github.workspace }}/tests/Lettra.Speech.Tests/Corpus/wav
           LETTRA_WHISPER_MODEL: ${{ github.workspace }}/voix/models/ggml-${{ env.WHISPER_MODEL }}.bin
 
   whisper-server:
@@ -134,8 +118,8 @@ jobs:
           global-json-file: global.json
       - uses: actions/download-artifact@v4
         with:
-          name: voix-corpus
-          path: voix
+          name: voix-modele
+          path: voix/models
 
       # Même image que le conteneur « whisper » de la démonstration : build/voix/whisper-server.
       - name: Serveur whisper.cpp
@@ -154,7 +138,7 @@ jobs:
       - name: Corpus face au serveur
         run: dotnet test tests/Lettra.Speech.Tests -c Release --logger "console;verbosity=normal"
         env:
-          LETTRA_VOICE_CORPUS: ${{ github.workspace }}/voix/corpus
+          LETTRA_VOICE_CORPUS: ${{ github.workspace }}/tests/Lettra.Speech.Tests/Corpus/wav
           LETTRA_WHISPER_SERVER: http://localhost:8178/
 
       - name: Journaux du serveur
