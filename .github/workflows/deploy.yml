@@ -152,8 +152,12 @@ jobs:
         run: |
           set -a; . ../.env; set +a
           export SORTIE="$SORTIE/localhost"
-          dotnet run --project serveur-commun -- "$(cat "$SORTIE/client.txt")"
-          node appareil.mjs voir "$(cat "$SORTIE/client-appareil.txt")"
+          # Les journaux des jobs ne sont pas toujours lisibles : en cas d'échec, la fin de la sortie devient une annotation.
+          signaler() { echo "::error title=Serveur commun ($1)::$(tail -n 40 "$2" | sed -e 's/%/%25/g' | sed -e ':a;N;$!ba;s/\n/%0A/g')"; exit 1; }
+          dotnet run --project serveur-commun -- "$(cat "$SORTIE/client.txt")" 2>&1 | tee "$SORTIE/serveur-commun.log"
+          [ "${PIPESTATUS[0]}" = 0 ] || signaler appareil "$SORTIE/serveur-commun.log"
+          node appareil.mjs voir "$(cat "$SORTIE/client-appareil.txt")" 2>&1 | tee "$SORTIE/appareil-voir.log"
+          [ "${PIPESTATUS[0]}" = 0 ] || signaler navigateur "$SORTIE/appareil-voir.log"
 
       # Voix : le conteneur whisper télécharge son modèle (142 Mio) au premier démarrage, sans retenir « up --wait ».
       # Le modèle doit être chargé avant la mise à jour ci-dessous, qui vérifie qu'il n'est pas retéléchargé.
