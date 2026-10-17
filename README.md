@@ -371,6 +371,63 @@ Sans SIREN dans la fiche entreprise, l'export le demande au lieu de produire un 
 - **Langue** : l'écran suit la langue de l'appareil ou du navigateur (français ou anglais). Chaque client et chaque PDF peuvent avoir la
   leur (« Langue des devis et factures imprimés », « Langue du PDF »).
 
+### Tutoriel, aide à la saisie et voix
+
+- **Tutoriel** : chaque écran se présente la première fois. Le bouton **?** en haut le rejoue, et le menu
+  Apparence > « Réinitialiser les tutoriels » permet de tout revoir. Le tableau de bord affiche « Pour bien démarrer »,
+  qui se coche tout seul. *(Vérifié : Chromium Linux 1440/768/375 px ; non vérifié : Safari, Firefox, MAUI.)*
+- **Aide à la saisie** : code postal ↔ ville dans la fiche client, « / » pour les modèles de texte (objet, notes,
+  conditions de paiement), saisie rapide dans les lignes (`3h`, `1h30`, `1,5 j`, `2x45`), F4 sur la désignation,
+  articles habituels du client. *(Vérifié : Chromium Linux.)*
+- **Voix** (optionnelle) : bouton micro en haut, micro dans les champs de texte, F8 maintenue pour dicter ou donner une
+  commande (« nouveau devis », « ouvrir les factures en retard », « ajoute trois heures de conseil à 120 euros »). Une
+  commande est toujours affichée avant d'être exécutée. Sans moteur Whisper configuré, le micro explique que la
+  dictée n'est pas activée. *(Vérifié : Chromium Linux avec micro simulé ; non vérifié : vrai Whisper dans
+  l'interface, Safari, Firefox, MAUI.)* Le moteur est décrit juste après.
+
+Détails : [docs/aide-a-la-saisie.md](docs/aide-a-la-saisie.md).
+
+### Dictée et commandes vocales
+
+La dictée et les commandes vocales utilisent Whisper, **toujours en local** : le serveur whisper.cpp de la
+démonstration (navigateur) ou Whisper.net sur l'appareil (application installée). L'audio n'est envoyé à aucun
+service tiers, et il n'est ni enregistré ni journalisé.
+
+- **Dans la démo Docker**, le conteneur `whisper` télécharge le modèle (142 Mio) au premier lancement, puis le garde
+  dans le volume `lettra-demo_whisper-modeles`. Lettra s'ouvre sans l'attendre ; la voix répond « indisponible » tant
+  que le modèle n'est pas chargé (une à quelques minutes selon la connexion).
+- **Dans l'application installée**, le modèle est téléchargé au premier usage de la voix, dans le dossier de
+  l'application (`voix`). Le système demande l'autorisation du micro la première fois.
+
+Pour vérifier que la voix est active : `GET /api/v1/voix/statut` doit répondre `"enabled": true` et
+`"engine": "whisper-serveur"`. Dans le navigateur, une fois connecté, ouvrir la console (F12, onglet **Console**) et
+coller :
+
+```js
+fetch('/api/v1/voix/statut', { headers: { 'X-Dossier': '0199e3a0-0000-7000-8000-00000000d051', 'X-Lettra-Csrf': '1' } }).then(r => r.json()).then(console.log)
+```
+
+Le statut dit que la voix est configurée. Pour savoir si le modèle est chargé, cette commande doit afficher `200` :
+
+```bash
+docker compose -f deploy/demo/compose.yaml exec whisper curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8080/
+```
+
+On peut dire, par exemple : « ouvrir les factures en retard », « nouveau devis », « ajoute deux heures d'audit à
+90 euros », « remise de dix pour cent ». En dictée, on peut dire la ponctuation : « virgule », « point », « à la
+ligne ». Une commande qui valide ou émet une pièce demande toujours confirmation.
+
+| Ce qui est vérifié | Où |
+|---|---|
+| Phrases lues par une voix de synthèse et transcrites par un vrai Whisper : Whisper.net sous Linux, Windows et macOS, serveur whisper.cpp en conteneur | **Vérifié** (workflow « Voix ») |
+| Grammaire des commandes, ponctuation dite, montants, route de l'API | **Vérifié** (tests de la CI) |
+| Démo Docker : le conteneur `whisper` télécharge et charge le modèle, l'API lui fait transcrire un son de test ; après une mise à jour, le modèle n'est pas retéléchargé | **Vérifié** (jobs « Démo — charge k6 » et « Démo navigateur » de `deploy.yml`) |
+| Application Windows, Android, iOS et Mac Catalyst : Whisper.net et le micro sur l'appareil | **Non vérifié** : l'application est construite avec la voix, mais rien n'a été dicté sur un appareil |
+| Une vraie voix humaine, du bruit de bureau, des accents | **Non vérifié** |
+
+Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou F8 maintenue (voir
+[Tutoriel, aide à la saisie et voix](#tutoriel-aide-à-la-saisie-et-voix)). Détails techniques : [src/Core/Lettra.Speech/README.md](src/Core/Lettra.Speech/README.md).
+
 ---
 
 ## Ce que la démo ne fait pas encore
@@ -391,7 +448,9 @@ Sans SIREN dans la fiche entreprise, l'export le demande au lieu de produire un 
 
 | Symptôme | Que faire |
 |---|---|
-| Navigateur : la page ne répond pas | Au premier démarrage, le remplissage du dossier de démonstration prend une trentaine de secondes après `up --wait` : attendre, puis recharger ; `docker compose -f deploy/demo/compose.yaml ps` doit montrer les services « healthy ». |
+| Navigateur : la page ne répond pas | Au premier démarrage, le remplissage du dossier de démonstration prend une trentaine de secondes après `up --wait` : attendre, puis recharger ; `docker compose -f deploy/demo/compose.yaml ps` doit montrer `keycloak` et `api` « healthy » (`whisper`, sans contrôle de santé, est simplement « Up »). |
+| Navigateur : la voix répond « indisponible » (503) | Le conteneur `whisper` télécharge encore son modèle (142 Mio) ou n'a pas accès à Internet : `docker compose -f deploy/demo/compose.yaml logs whisper` montre le téléchargement (et, sans Internet, un nouvel essai toutes les 30 secondes) ; le serveur est prêt quand la commande de vérification de [Dictée et commandes vocales](#dictée-et-commandes-vocales) affiche `200`. Le reste de Lettra fonctionne pendant ce temps. |
+| Navigateur : erreur « Uncaught (in promise) TypeError: Failed to fetch at fromShell » dans la console | C'est l'ancien service worker : fermer tous les onglets de Lettra puis rouvrir (ou DevTools → **Application** → **Service workers** → **Unregister**). La console doit rester vide d'erreurs sur tous les écrans, en ligne comme hors ligne ([détails](deploy/demo/README.md#installer-lapplication-pwa)). |
 | Navigateur : le code du second facteur est refusé | L'application TOTP doit accepter SHA-256 (pas Microsoft Authenticator) et l'heure du téléphone être à l'heure. Pour réenrôler sans perdre vos saisies, ne remettez à zéro que Keycloak : `docker compose -f deploy/demo/compose.yaml down`, `docker volume rm lettra-demo_keycloak-donnees`, puis `up -d --wait`. Pas de `down -v` : il efface aussi les données Lettra. |
 | « Windows a protégé votre ordinateur » | Normal pour un prototype non signé : **Informations complémentaires**, puis **Exécuter quand même**. |
 | Rien ne s'ouvre, ou une erreur sur des fichiers bloqués | Le zip n'a pas été débloqué : supprimez le dossier extrait, faites l'étape 2 (Propriétés, **Débloquer**), puis extrayez à nouveau. |
@@ -407,7 +466,7 @@ hors de l'application, et la base est migrée sur place au démarrage.
 
 | Où | Emplacement | Remettre à zéro exprès |
 |---|---|---|
-| Navigateur (Docker) | Volume `lettra-demo_lettra-donnees` (catalogue, dossier SQLite chiffré, clés de session) ; Keycloak (utilisateur, enrôlement TOTP) dans `lettra-demo_keycloak-donnees`. `docker volume ls` les liste. | `docker compose -f deploy/demo/compose.yaml down -v` |
+| Navigateur (Docker) | Volume `lettra-demo_lettra-donnees` (catalogue, dossier SQLite chiffré, clés de session) ; Keycloak (utilisateur, enrôlement TOTP) dans `lettra-demo_keycloak-donnees`. Le modèle de la voix (sans donnée de dossier) dans `lettra-demo_whisper-modeles`. `docker volume ls` les liste. | `docker compose -f deploy/demo/compose.yaml down -v` |
 | Windows | `%LOCALAPPDATA%\Lettra\Lettra.App.Maui\Data` (à coller dans la barre d'adresse de l'Explorateur) : le compte du poste (`compte-local.json`) et, dans `dossiers`, une base chiffrée par dossier. La clé du cabinet est dans le coffre de Windows : copier ces fichiers sur un autre PC ne les rend pas lisibles. | Supprimer ce dossier, Lettra fermé |
 | Android | Dans l'application (`/data/user/0/fr.lettra.app/files`), sans sauvegarde Android. | Désinstaller, ou **Effacer les données** |
 | iOS, macOS | Dans le dossier de données de l'application, clé du cabinet dans le Trousseau. | Désinstaller l'application (macOS : supprimer aussi son dossier `fr.lettra.app` dans `~/Library`) |

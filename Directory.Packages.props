@@ -74,7 +74,8 @@
 
   <ItemGroup Condition="'$(LettraIsPoc)' != 'true'" Label="Voix (vague 5)">
     <!-- Whisper.net (MIT) : whisper.cpp embarqué, transcription sur le poste sans réseau. Seulement par
-         Lettra.Infrastructure.Speech.OnDevice ; le runtime porte les bibliothèques natives de chaque plateforme. -->
+         Lettra.Infrastructure.Speech.OnDevice ; le runtime porte les bibliothèques natives de chaque plateforme et se
+         référence dans l'exécutable (Lettra.App.Maui, Lettra.Speech.Tests), là où ses cibles MSBuild s'appliquent. -->
     <PackageVersion Include="Whisper.net" Version="1.9.1" />
     <PackageVersion Include="Whisper.net.Runtime" Version="1.9.1" />
   </ItemGroup>
