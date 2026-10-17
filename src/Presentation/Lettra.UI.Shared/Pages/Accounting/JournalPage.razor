@@ -1,0 +1,285 @@
+@page "/accounting"
+@page "/accounting/journal"
+@inject IAccountingGateway Accounting
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+@inject IServiceProvider Services
+@* Journal des ventes : les écritures enregistrées à la validation des pièces, de la plus récente à la plus ancienne. *@
+
+<PageTitle>@L["Accounting.Journal.Title"] · Lettra</PageTitle>
+
+<GlobalShortcuts Scope="_pageScope" />
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Accounting.Journal.Title"]</h1>
+        <p class="lettra-muted">@L["Accounting.Journal.Subtitle"]</p>
+    </div>
+</div>
+
+<AccountingTabs Period="_period" />
+
+<section class="lt-panel lt-accounting" aria-labelledby="journal-filters-title">
+    <h2 id="journal-filters-title" class="lettra-visually-hidden">@L["Explorer.Filters"]</h2>
+    <PeriodPicker Period="_period" Today="Today" PeriodChanged="ChangePeriod" />
+    <div class="lt-accounting-filters">
+        <div class="lt-explorer-search">
+            <Icon Name="search" Size="18" />
+            <label for="journal-search" class="lettra-visually-hidden">@L["Accounting.Journal.Search"]</label>
+            <input id="journal-search" type="search" @ref="_searchInput" @bind="Search" @bind:event="oninput"
+                   placeholder="@L["Accounting.Journal.Search"]" autocomplete="off" />
+            <kbd>F3</kbd>
+        </div>
+        <div class="lt-filter">
+            <label for="journal-account">@L["Accounting.Account"]</label>
+            <select id="journal-account" value="@(Account ?? string.Empty)" @onchange="ChangeAccount">
+                <option value="">@L["Accounting.AllAccounts"]</option>
+                @foreach (string account in AccountNames.Known)
+                {
+                    <option value="@account">@account · @AccountLabel(account)</option>
+                }
+            </select>
+        </div>
+        @if (CustomerId is Guid customer)
+        {
+            <span class="lt-chip" id="journal-customer-chip">
+                @L["Accounting.Customer"] : @(_customerName ?? "…")
+                <a href="@Href(_period, Account, null)" aria-label="@L["Accounting.ClearCustomer"]" id="journal-clear-customer"><Icon Name="x" Size="14" /></a>
+            </span>
+        }
+        <button type="button" class="lettra-button is-ghost" id="journal-expand-all" @onclick="ToggleAll">
+            @(_expandAll ? L["Accounting.Journal.CollapseAll"] : L["Accounting.Journal.ExpandAll"])
+        </button>
+    </div>
+
+    <GeneralErrors Errors="_errors" />
+
+    @if (_journal is null)
+    {
+        <ExplorerSkeleton Rows="8" />
+    }
+    else if (_journal.TotalCount == 0)
+    {
+        <div class="lt-explorer-empty" id="journal-empty">
+            <span class="lt-empty-icon"><Icon Name="book-open" Size="28" /></span>
+            <p>@L["Accounting.Journal.Empty"]</p>
+            <a class="lettra-button is-secondary" href="invoices">@L["Accounting.Journal.GoInvoices"]</a>
+        </div>
+    }
+    else
+    {
+        <p class="lettra-muted" id="journal-count">@string.Format(Culture, L["Accounting.Journal.Count"], _journal.TotalCount)</p>
+        <div class="lt-table-scroll">
+            <table class="lettra-table lt-journal" id="journal-table">
+                <thead>
+                    <tr>
+                        <th scope="col"><span class="lettra-visually-hidden">@L["Accounting.Journal.Lines"]</span></th>
+                        <th scope="col">@L["Billing.Column.Date"]</th>
+                        <th scope="col">@L["Accounting.Piece"]</th>
+                        <th scope="col">@L["Invoices.Kind"]</th>
+                        <th scope="col">@L["Billing.Column.Customer"]</th>
+                        <th scope="col" class="lg-num">@L["Accounting.Debit"]</th>
+                        <th scope="col" class="lg-num">@L["Accounting.Credit"]</th>
+                    </tr>
+                </thead>
+                @foreach (JournalEntryResponse entry in _journal.Items)
+                {
+                    bool open = IsOpen(entry);
+                    <tbody @key="entry.InvoiceId" class="lt-journal-entry @(open ? "is-open" : null)">
+                        <tr class="lt-journal-head">
+                            <td>
+                                <button type="button" class="lt-icon-button lt-disclosure" aria-expanded="@(open ? "true" : "false")"
+                                        aria-label="@string.Format(Culture, L["Accounting.Journal.Toggle"], entry.PieceNumber)" @onclick="() => Toggle(entry)">
+                                    <Icon Name="chevron-right" Size="18" />
+                                </button>
+                            </td>
+                            <td>@entry.Date.ToString("d", Culture)</td>
+                            <td><a href="@($"invoices/{entry.InvoiceId}")">@entry.PieceNumber</a></td>
+                            <td>@L[$"InvoiceKind.{entry.Kind}"]</td>
+                            <td><a href="@($"customers/{entry.CustomerId}")">@entry.CustomerName</a></td>
+                            <td class="lg-num">@ExplorerText.Money(entry.Amount)</td>
+                            <td class="lg-num">@ExplorerText.Money(entry.Lines.Sum(l => l.Credit))</td>
+                        </tr>
+                        @if (open)
+                        {
+                            @foreach (JournalLineResponse line in entry.Lines)
+                            {
+                                <tr class="lt-journal-line">
+                                    <td></td>
+                                    <td colspan="4">
+                                        <a href="@LedgerHref(line.Account, line.Account == SalesAccounts.Customers ? entry.CustomerId : null)" class="lt-account">@line.Account</a>
+                                        @AccountLabel(line.Account)
+                                        @if (line.VatRatePercent is decimal rate)
+                                        {
+                                            <span class="lettra-muted"> · @string.Format(Culture, L["Catalog.VatPercent"], rate)</span>
+                                        }
+                                    </td>
+                                    <td class="lg-num">@(line.Debit == 0 ? null : ExplorerText.Money(line.Debit))</td>
+                                    <td class="lg-num">@(line.Credit == 0 ? null : ExplorerText.Money(line.Credit))</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                }
+                <tfoot>
+                    <tr>
+                        <th scope="row" colspan="5">
+                            @L["Accounting.Total"]
+                            @if (_journal.TotalDebit == _journal.TotalCredit)
+                            {
+                                <span class="lettra-status is-issued" id="journal-balanced"><Icon Name="check" Size="14" /> @L["Accounting.Balanced"]</span>
+                            }
+                            else
+                            {
+                                <span class="lettra-status is-refused">@L["Accounting.Unbalanced"]</span>
+                            }
+                        </th>
+                        <td class="lg-num" id="journal-total-debit">@ExplorerText.Money(_journal.TotalDebit)</td>
+                        <td class="lg-num" id="journal-total-credit">@ExplorerText.Money(_journal.TotalCredit)</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        @if (_journal.TotalCount > _journal.PageSize)
+        {
+            <nav class="lt-pager" aria-label="@L["Accounting.Pages"]">
+                <button type="button" class="lettra-button is-secondary" id="journal-previous" disabled="@(_page <= 1)" @onclick="() => GoToPageAsync(_page - 1)">@L["Accounting.Previous"]</button>
+                <span>@string.Format(Culture, L["Accounting.PageOf"], _page, PageCount)</span>
+                <button type="button" class="lettra-button is-secondary" id="journal-next" disabled="@(_page >= PageCount)" @onclick="() => GoToPageAsync(_page + 1)">@L["Accounting.Next"]</button>
+            </nav>
+        }
+    }
+</section>
+
+@code {
+    private const int PageSize = 50;
+
+    private readonly HashSet<Guid> _open = [];
+    private AccountingPeriod _period;
+    private SalesJournalResponse? _journal;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private string? _search;
+    private string? _customerName;
+    private int _page = 1;
+    private bool _expandAll;
+    private CancellationTokenSource? _debounce;
+    private ElementReference _searchInput;
+    private KeyboardScope _pageScope = default!;
+
+    [SupplyParameterFromQuery(Name = "from")] public string? From { get; set; }
+
+    [SupplyParameterFromQuery(Name = "to")] public string? To { get; set; }
+
+    [SupplyParameterFromQuery(Name = "account")] public string? Account { get; set; }
+
+    [SupplyParameterFromQuery(Name = "customer")] public Guid? CustomerId { get; set; }
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private DateOnly Today => DateOnly.FromDateTime((Services.GetService<TimeProvider>() ?? TimeProvider.System).GetLocalNow().DateTime);
+
+    private int PageCount => _journal is null ? 1 : Math.Max(1, (int)Math.Ceiling(_journal.TotalCount / (double)_journal.PageSize));
+
+    private string? Search
+    {
+        get => _search;
+        set
+        {
+            _search = value;
+            _ = ReloadAfterPauseAsync();
+        }
+    }
+
+    protected override void OnInitialized() =>
+        _pageScope = new KeyboardScope("page")
+            .Bind("F3", L["Explorer.Command.Search"], async _ => await _searchInput.FocusAsync());
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _period = AccountingPeriod.Parse(From, To, Today);
+        _page = 1;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _errors = [];
+        OperationResult<SalesJournalResponse> result = await Accounting.GetJournalAsync(
+            new JournalQuery(_period.From, _period.To, _search, Account, CustomerId, _page, PageSize), CancellationToken.None);
+        if (result is { IsSuccess: true, Value: { } journal })
+        {
+            _journal = journal;
+            if (CustomerId is Guid customer)
+            {
+                _customerName = journal.Items.FirstOrDefault(e => e.CustomerId == customer)?.CustomerName ?? _customerName;
+            }
+        }
+        else
+        {
+            _errors = result.Errors;
+            _journal = new SalesJournalResponse(_period.From, _period.To, [], 1, PageSize, 0, 0, 0);
+        }
+    }
+
+    private async Task ReloadAfterPauseAsync()
+    {
+        _debounce?.Cancel();
+        _debounce?.Dispose();
+        CancellationTokenSource debounce = new();
+        _debounce = debounce;
+        try
+        {
+            await Task.Delay(ExplorerSettings.SearchDelay, debounce.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        await InvokeAsync(async () =>
+        {
+            _page = 1;
+            await LoadAsync();
+            StateHasChanged();
+        });
+    }
+
+    private async Task GoToPageAsync(int page)
+    {
+        _page = page;
+        await LoadAsync();
+    }
+
+    private bool IsOpen(JournalEntryResponse entry) => _expandAll || _open.Contains(entry.InvoiceId);
+
+    private void Toggle(JournalEntryResponse entry)
+    {
+        if (!_open.Remove(entry.InvoiceId))
+        {
+            _open.Add(entry.InvoiceId);
+        }
+    }
+
+    private void ToggleAll()
+    {
+        _expandAll = !_expandAll;
+        _open.Clear();
+    }
+
+    private void ChangePeriod(AccountingPeriod period) => Navigation.NavigateTo(Href(period, Account, CustomerId));
+
+    private void ChangeAccount(ChangeEventArgs e) =>
+        Navigation.NavigateTo(Href(_period, string.IsNullOrEmpty(e.Value?.ToString()) ? null : e.Value!.ToString(), CustomerId));
+
+    private static string Href(AccountingPeriod period, string? account, Guid? customer) =>
+        $"accounting/journal?{period.Query}{(account is null ? null : $"&account={account}")}{(customer is Guid id ? $"&customer={id}" : null)}";
+
+    private string LedgerHref(string account, Guid? customer) =>
+        $"accounting/accounts/{account}?{_period.Query}{(customer is Guid id ? $"&customer={id}" : null)}";
+
+    private string AccountLabel(string account)
+    {
+        LocalizedString label = L[$"Account.{account}"];
+        return label.ResourceNotFound ? string.Empty : label.Value;
+    }
+}

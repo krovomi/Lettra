@@ -10,26 +10,101 @@ internal sealed class FakeSuppliersGateway : ISuppliersGateway
 {
     public List<SupplierSummary> Suppliers { get; } = [];
 
+    public Dictionary<Guid, SupplierResponse> Records { get; } = [];
+
     public IReadOnlyList<ErrorDetail>? NextErrors { get; set; }
 
     public CreateSupplierRequest? LastRequest { get; private set; }
 
+    public List<(Guid Id, long ExpectedVersion, CreateSupplierRequest Request)> Updates { get; } = [];
+
+    public SupplierResponse Add(string name, string city, string? iban = null)
+    {
+        SupplierResponse supplier = new(Guid.CreateVersion7(), name, "732829320", null, null, "contact@example.fr", iban, "3 rue des Lilas", null, "69001", city, "FR", DateTimeOffset.UnixEpoch)
+        {
+            Version = 1,
+        };
+        Records[supplier.Id] = supplier;
+        Suppliers.Add(new SupplierSummary(supplier.Id, supplier.Name, supplier.Siren, supplier.City));
+        return supplier;
+    }
+
     public Task<OperationResult<SupplierResponse>> CreateAsync(CreateSupplierRequest request, CancellationToken cancellationToken)
     {
         LastRequest = request with { };
-        if (NextErrors is not null)
+        if (TakeErrors() is { } errors)
         {
-            return Task.FromResult(OperationResult<SupplierResponse>.Failure(NextErrors));
+            return Task.FromResult(OperationResult<SupplierResponse>.Failure(errors));
         }
 
         SupplierResponse created = new(Guid.CreateVersion7(), request.Name, request.Siren, request.Siret, request.VatNumber, request.Email,
-            request.Iban, request.AddressLine1, request.AddressLine2, request.PostalCode, request.City, request.CountryCode, DateTimeOffset.UnixEpoch);
+            request.Iban, request.AddressLine1, request.AddressLine2, request.PostalCode, request.City, request.CountryCode, DateTimeOffset.UnixEpoch)
+        {
+            Version = 1,
+        };
+        Records[created.Id] = created;
         Suppliers.Add(new SupplierSummary(created.Id, created.Name, created.Siren, created.City));
         return Task.FromResult(OperationResult<SupplierResponse>.Success(created));
     }
 
     public Task<OperationResult<PagedResponse<SupplierSummary>>> ListAsync(int page, int pageSize, CancellationToken cancellationToken) =>
         Task.FromResult(OperationResult<PagedResponse<SupplierSummary>>.Success(new PagedResponse<SupplierSummary>([.. Suppliers], page, pageSize, Suppliers.Count)));
+
+    public Task<OperationResult<PagedResponse<SupplierSummary>>> SearchAsync(string? search, int page, int pageSize, CancellationToken cancellationToken)
+    {
+        List<SupplierSummary> found = Suppliers
+            .Where(s => string.IsNullOrWhiteSpace(search) || s.Name.Contains(search.Trim(), StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        List<SupplierSummary> items = found.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+        return Task.FromResult(OperationResult<PagedResponse<SupplierSummary>>.Success(new PagedResponse<SupplierSummary>(items, page, pageSize, found.Count)));
+    }
+
+    public Task<OperationResult<SupplierResponse>> GetAsync(Guid id, CancellationToken cancellationToken) =>
+        Task.FromResult(Records.TryGetValue(id, out SupplierResponse? supplier)
+            ? OperationResult<SupplierResponse>.Success(supplier)
+            : OperationResult<SupplierResponse>.Failure(ErrorCodes.Supplier.NotFound));
+
+    public Task<OperationResult<SupplierResponse>> UpdateAsync(Guid id, long expectedVersion, CreateSupplierRequest request, CancellationToken cancellationToken)
+    {
+        Updates.Add((id, expectedVersion, request with { }));
+        if (TakeErrors() is { } errors)
+        {
+            return Task.FromResult(OperationResult<SupplierResponse>.Failure(errors));
+        }
+
+        SupplierResponse current = Records[id];
+        if (current.Version != expectedVersion)
+        {
+            return Task.FromResult(OperationResult<SupplierResponse>.Stale(current));
+        }
+
+        SupplierResponse updated = current with
+        {
+            Name = request.Name,
+            Siren = request.Siren,
+            Siret = request.Siret,
+            VatNumber = request.VatNumber,
+            Email = request.Email,
+            Iban = request.Iban,
+            AddressLine1 = request.AddressLine1,
+            AddressLine2 = request.AddressLine2,
+            PostalCode = request.PostalCode,
+            City = request.City,
+            CountryCode = request.CountryCode,
+            Version = current.Version + 1,
+        };
+        Records[id] = updated;
+        int index = Suppliers.FindIndex(s => s.Id == id);
+        Suppliers[index] = new SupplierSummary(id, updated.Name, updated.Siren, updated.City);
+        return Task.FromResult(OperationResult<SupplierResponse>.Success(updated));
+    }
+
+    private IReadOnlyList<ErrorDetail>? TakeErrors()
+    {
+        IReadOnlyList<ErrorDetail>? errors = NextErrors;
+        NextErrors = null;
+        return errors;
+    }
 }
 
 internal sealed class FakeCatalogGateway : ICatalogGateway
@@ -77,6 +152,14 @@ internal sealed class FakeCatalogGateway : ICatalogGateway
             })
             .ToList();
         return Task.FromResult(OperationResult<PagedResponse<CatalogItemSummary>>.Success(new PagedResponse<CatalogItemSummary>(items, page, pageSize, items.Count)));
+    }
+
+    public Task<OperationResult<CatalogItemResponse>> GetAsync(Guid id, CancellationToken cancellationToken)
+    {
+        CatalogItemResponse? item = Items.Find(i => i.Id == id);
+        return Task.FromResult(item is null
+            ? OperationResult<CatalogItemResponse>.Failure(ErrorCodes.CatalogItem.NotFound)
+            : OperationResult<CatalogItemResponse>.Success(item));
     }
 
     public Task<OperationResult<CatalogItemResponse>> CreateAsync(SaveCatalogItemRequest request, CancellationToken cancellationToken)

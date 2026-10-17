@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Catalog.Archive" xml:space="preserve"><value>Archive</value></data>
+  <data name="Catalog.Archived" xml:space="preserve"><value>Archived</value></data>
+  <data name="Catalog.Count" xml:space="preserve"><value>{0} item(s)</value></data>
+  <data name="Catalog.ExclTaxShort" xml:space="preserve"><value> excl.</value></data>
+  <data name="Catalog.Field.Description" xml:space="preserve"><value>Description</value></data>
+  <data name="Catalog.GridMode" xml:space="preserve"><value>Grid entry</value></data>
+  <data name="Catalog.InclTaxNote" xml:space="preserve"><value>Computed with the VAT rate</value></data>
+  <data name="Catalog.NewItem" xml:space="preserve"><value>New item</value></data>
+  <data name="Catalog.NoDescription" xml:space="preserve"><value>No description.</value></data>
+  <data name="Catalog.PricePer" xml:space="preserve"><value>Price per {0}</value></data>
+  <data name="Catalog.Prices" xml:space="preserve"><value>Prices</value></data>
+  <data name="Catalog.Reactivate" xml:space="preserve"><value>Reactivate</value></data>
+  <data name="Catalog.ReloadedAfterChange" xml:space="preserve"><value>The item had changed in the meantime: the record shows its current version.</value></data>
+  <data name="Catalog.SearchPlaceholder" xml:space="preserve"><value>Reference or name</value></data>
+  <data name="Catalog.Sheet" xml:space="preserve"><value>Item record</value></data>
+  <data name="Customers.Activity" xml:space="preserve"><value>Customer activity</value></data>
+  <data name="Customers.Count" xml:space="preserve"><value>{0} customer(s)</value></data>
+  <data name="Customers.Created" xml:space="preserve"><value>Customer “{0}” created.</value></data>
+  <data name="Customers.Kpi.Balance" xml:space="preserve"><value>Customer account balance</value></data>
+  <data name="Customers.Kpi.BalanceNote" xml:space="preserve"><value>Account 411, payments excluded</value></data>
+  <data name="Customers.Kpi.Credited" xml:space="preserve"><value>Credit notes {0}</value></data>
+  <data name="Customers.Kpi.CreditedNote" xml:space="preserve"><value>Incl. VAT</value></data>
+  <data name="Customers.Kpi.Invoiced" xml:space="preserve"><value>Invoiced {0}</value></data>
+  <data name="Customers.Kpi.InvoicedNote" xml:space="preserve"><value>Incl. VAT, validated documents</value></data>
+  <data name="Customers.LastInvoices" xml:space="preserve"><value>Latest invoices</value></data>
+  <data name="Customers.LastQuotes" xml:space="preserve"><value>Latest quotes</value></data>
+  <data name="Customers.New" xml:space="preserve"><value>New customer</value></data>
+  <data name="Customers.NewInvoice" xml:space="preserve"><value>Invoice</value></data>
+  <data name="Customers.NewQuote" xml:space="preserve"><value>Quote</value></data>
+  <data name="Customers.NoInvoice" xml:space="preserve"><value>No invoice for this customer.</value></data>
+  <data name="Customers.NoQuote" xml:space="preserve"><value>No quote for this customer.</value></data>
+  <data name="Customers.Saved" xml:space="preserve"><value>Customer “{0}” saved.</value></data>
+  <data name="Customers.Search" xml:space="preserve"><value>Customer name</value></data>
+  <data name="Customers.SeeLedger" xml:space="preserve"><value>Customer account</value></data>
+  <data name="Customers.Sheet" xml:space="preserve"><value>Customer record</value></data>
+  <data name="Explorer.All" xml:space="preserve"><value>All</value></data>
+  <data name="Explorer.BackToList" xml:space="preserve"><value>Back to the list</value></data>
+  <data name="Explorer.Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Explorer.Command.Back" xml:space="preserve"><value>Go back</value></data>
+  <data name="Explorer.Command.Browse" xml:space="preserve"><value>Browse the list</value></data>
+  <data name="Explorer.Command.Edit" xml:space="preserve"><value>Edit the record</value></data>
+  <data name="Explorer.Command.New" xml:space="preserve"><value>New record</value></data>
+  <data name="Explorer.Command.Search" xml:space="preserve"><value>Search</value></data>
+  <data name="Explorer.Create" xml:space="preserve"><value>Create</value></data>
+  <data name="Explorer.CreateNamed" xml:space="preserve"><value>Create “{0}”</value></data>
+  <data name="Explorer.Discard.No" xml:space="preserve"><value>Keep editing</value></data>
+  <data name="Explorer.Discard.Question" xml:space="preserve"><value>Your changes are not saved. Discard them?</value></data>
+  <data name="Explorer.Discard.Yes" xml:space="preserve"><value>Discard</value></data>
+  <data name="Explorer.Edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="Explorer.EditHint" xml:space="preserve"><value>Press Esc to go back without saving.</value></data>
+  <data name="Explorer.Editing" xml:space="preserve"><value>Edit “{0}”</value></data>
+  <data name="Explorer.Field.CreatedAt" xml:space="preserve"><value>Created on</value></data>
+  <data name="Explorer.Field.UpdatedAt" xml:space="preserve"><value>Updated on</value></data>
+  <data name="Explorer.Filters" xml:space="preserve"><value>Filters</value></data>
+  <data name="Explorer.Key.Enter" xml:space="preserve"><value>Enter</value></data>
+  <data name="Explorer.Key.Escape" xml:space="preserve"><value>Esc</value></data>
+  <data name="Explorer.Key.Insert" xml:space="preserve"><value>Ins</value></data>
+  <data name="Explorer.More" xml:space="preserve"><value>Show more ({0} of {1})</value></data>
+  <data name="Explorer.NoMatch" xml:space="preserve"><value>Nothing matches “{0}”.</value></data>
+  <data name="Explorer.Placeholder" xml:space="preserve"><value>Pick a record in the list, or create one.</value></data>
+  <data name="Explorer.Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Explorer.Section.Address" xml:space="preserve"><value>Address</value></data>
+  <data name="Explorer.Section.Contact" xml:space="preserve"><value>Contact details</value></data>
+  <data name="Explorer.Section.Details" xml:space="preserve"><value>Details</value></data>
+  <data name="Explorer.Section.Identity" xml:space="preserve"><value>Identification</value></data>
+  <data name="Explorer.Stale" xml:space="preserve"><value>“{0}” was changed by someone else while you were editing.</value></data>
+  <data name="Explorer.Stale.Overwrite" xml:space="preserve"><value>Keep my values and save</value></data>
+  <data name="Explorer.Stale.TakeTheirs" xml:space="preserve"><value>Take their values</value></data>
+  <data name="Explorer.Unsaved" xml:space="preserve"><value>Unsaved changes</value></data>
+  <data name="Suppliers.Count" xml:space="preserve"><value>{0} supplier(s)</value></data>
+  <data name="Suppliers.Created" xml:space="preserve"><value>Supplier “{0}” created.</value></data>
+  <data name="Suppliers.New" xml:space="preserve"><value>New supplier</value></data>
+  <data name="Suppliers.NoIban" xml:space="preserve"><value>No IBAN</value></data>
+  <data name="Suppliers.PurchasesLater" xml:space="preserve"><value>Purchases and supplier payments will come with the Purchases module.</value></data>
+  <data name="Suppliers.Saved" xml:space="preserve"><value>Supplier “{0}” saved.</value></data>
+  <data name="Suppliers.Search" xml:space="preserve"><value>Supplier name</value></data>
+  <data name="Suppliers.Section.Bank" xml:space="preserve"><value>Bank details</value></data>
+  <data name="Suppliers.Sheet" xml:space="preserve"><value>Supplier record</value></data>
+</root>

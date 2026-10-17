@@ -54,4 +54,12 @@ public static partial class ErrorCodes
         public const string ReferenceUnknown = "Platform.ReferenceUnknown";
         public const string Queued = "Platform.Queued";
     }
+
+    /// <summary>Consultation de la comptabilité (journal des ventes, balance, grand livre).</summary>
+    public static class Accounting
+    {
+        public const string PeriodInvalid = "Accounting.PeriodInvalid";
+        public const string PeriodTooLong = "Accounting.PeriodTooLong";
+        public const string AccountInvalid = "Accounting.AccountInvalid";
+    }
 }

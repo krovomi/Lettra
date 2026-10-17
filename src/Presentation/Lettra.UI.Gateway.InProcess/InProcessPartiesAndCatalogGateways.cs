@@ -45,6 +45,31 @@ internal static class InProcessScope
         Result<T> result = await services.GetRequiredService<IQueryDispatcher>().QueryAsync(query, cancellationToken).ConfigureAwait(false);
         return result.ToOperationResult();
     }
+
+    /// <summary>
+    /// Modification puis relecture, avec le même contrat que le 412 de l'API : sur un conflit de version, la fiche
+    /// actuelle accompagne le refus, pour la fusion à l'écran.
+    /// </summary>
+    public static async Task<OperationResult<T>> WriteThenReadAsync<T>(
+        IServiceProvider services, ICommand<Result> command, IQuery<Result<T>> read, CancellationToken cancellationToken)
+    {
+        Result written = await services.GetRequiredService<ICommandDispatcher>().SendAsync(command, cancellationToken).ConfigureAwait(false);
+        if (written.IsSuccess)
+        {
+            return await QueryAsync(services, read, cancellationToken).ConfigureAwait(false);
+        }
+
+        if (written.Errors[0].Code == ConcurrencyErrors.VersionMismatchCode)
+        {
+            OperationResult<T> current = await QueryAsync(services, read, cancellationToken).ConfigureAwait(false);
+            if (current is { IsSuccess: true, Value: { } value })
+            {
+                return OperationResult<T>.Stale(value);
+            }
+        }
+
+        return OperationResult<T>.Failure(written.Errors.ToErrorDetails());
+    }
 }
 
 internal sealed class InProcessSuppliersGateway(IServiceScopeFactory scopes) : ISuppliersGateway
@@ -61,6 +86,19 @@ internal sealed class InProcessSuppliersGateway(IServiceScopeFactory scopes) : I
 
     public Task<OperationResult<PagedResponse<SupplierSummary>>> ListAsync(int page, int pageSize, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new ListSuppliersQuery(dossier, page, pageSize), ct), cancellationToken);
+
+    public Task<OperationResult<PagedResponse<SupplierSummary>>> SearchAsync(string? search, int page, int pageSize, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(
+            scopes,
+            (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new ListSuppliersQuery(dossier, page, pageSize, string.IsNullOrWhiteSpace(search) ? null : search.Trim()), ct),
+            cancellationToken);
+
+    public Task<OperationResult<SupplierResponse>> GetAsync(Guid id, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetSupplierQuery(dossier, new SupplierId(id)), ct), cancellationToken);
+
+    public Task<OperationResult<SupplierResponse>> UpdateAsync(Guid id, long expectedVersion, CreateSupplierRequest request, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.WriteThenReadAsync(
+            sp, request.ToUpdateCommand(dossier, new SupplierId(id), expectedVersion), new GetSupplierQuery(dossier, new SupplierId(id)), ct), cancellationToken);
 }
 
 internal sealed class InProcessCatalogGateway(IServiceScopeFactory scopes) : ICatalogGateway
@@ -73,6 +111,9 @@ internal sealed class InProcessCatalogGateway(IServiceScopeFactory scopes) : ICa
             scopes,
             (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new ListCatalogItemsQuery(dossier, search, includeArchived, page, pageSize), ct),
             cancellationToken);
+
+    public Task<OperationResult<CatalogItemResponse>> GetAsync(Guid id, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetCatalogItemQuery(dossier, new CatalogItemId(id)), ct), cancellationToken);
 
     public Task<OperationResult<CatalogItemResponse>> CreateAsync(SaveCatalogItemRequest request, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(scopes, async (sp, dossier, ct) =>

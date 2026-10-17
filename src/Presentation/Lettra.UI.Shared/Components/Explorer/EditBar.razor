@@ -1,0 +1,61 @@
+@* Barre de la fiche en saisie : Enregistrer, Annuler (Échap), et les questions qui protègent la saisie (abandon,
+   modification concurrente). *@
+@inject IStringLocalizer<SharedResource> L
+
+@if (StaleName is not null)
+{
+    <div class="lettra-banner is-warning lt-explorer-banner" role="alert" id="explorer-stale">
+        <p>@string.Format(CultureInfo.CurrentCulture, L["Explorer.Stale"], StaleName)</p>
+        <div class="lt-page-actions">
+            <button type="button" class="lettra-button" id="explorer-overwrite" @onclick="OnOverwrite">@L["Explorer.Stale.Overwrite"]</button>
+            <button type="button" class="lettra-button is-secondary" id="explorer-take-theirs" @onclick="OnTakeTheirs">@L["Explorer.Stale.TakeTheirs"]</button>
+        </div>
+    </div>
+}
+
+@if (ConfirmingDiscard)
+{
+    <div class="lettra-banner is-warning lt-explorer-banner" role="alert" id="explorer-discard">
+        <p>@L["Explorer.Discard.Question"]</p>
+        <div class="lt-page-actions">
+            <button type="button" class="lettra-button is-danger" id="explorer-discard-yes" @onclick="OnDiscard">@L["Explorer.Discard.Yes"]</button>
+            <button type="button" class="lettra-button is-secondary" id="explorer-discard-no" @onclick="OnKeepEditing">@L["Explorer.Discard.No"]</button>
+        </div>
+    </div>
+}
+
+<div class="lt-explorer-editbar">
+    <button type="submit" class="lettra-button" id="explorer-save" disabled="@Busy">
+        <Icon Name="check" Size="18" /> @(Creating ? L["Explorer.Create"] : L["Explorer.Save"])
+    </button>
+    <button type="button" class="lettra-button is-secondary" id="explorer-cancel" @onclick="OnCancel">
+        @L["Explorer.Cancel"] <kbd>@L["Explorer.Key.Escape"]</kbd>
+    </button>
+    @if (Dirty)
+    {
+        <span class="lettra-hint" id="explorer-dirty">@L["Explorer.Unsaved"]</span>
+    }
+</div>
+
+@code {
+    [Parameter] public bool Creating { get; set; }
+
+    [Parameter] public bool Busy { get; set; }
+
+    [Parameter] public bool Dirty { get; set; }
+
+    [Parameter] public bool ConfirmingDiscard { get; set; }
+
+    /// <summary>Nom de la fiche modifiée entre-temps par quelqu'un d'autre, ou <c>null</c>.</summary>
+    [Parameter] public string? StaleName { get; set; }
+
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    [Parameter] public EventCallback OnDiscard { get; set; }
+
+    [Parameter] public EventCallback OnKeepEditing { get; set; }
+
+    [Parameter] public EventCallback OnOverwrite { get; set; }
+
+    [Parameter] public EventCallback OnTakeTheirs { get; set; }
+}
