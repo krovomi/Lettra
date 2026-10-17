@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Account.411" xml:space="preserve"><value>Customers</value></data>
+  <data name="Account.4191" xml:space="preserve"><value>Customers, advances and down payments received</value></data>
+  <data name="Account.44571" xml:space="preserve"><value>Output VAT</value></data>
+  <data name="Account.706" xml:space="preserve"><value>Services rendered</value></data>
+  <data name="Account.707" xml:space="preserve"><value>Sales of goods</value></data>
+  <data name="Accounting.Account" xml:space="preserve"><value>Account</value></data>
+  <data name="Accounting.AccountName" xml:space="preserve"><value>Name</value></data>
+  <data name="Accounting.AllAccounts" xml:space="preserve"><value>All accounts</value></data>
+  <data name="Accounting.Balance" xml:space="preserve"><value>Balance</value></data>
+  <data name="Accounting.Balance.Customers" xml:space="preserve"><value>Customer balance</value></data>
+  <data name="Accounting.Balance.CustomersHint" xml:space="preserve"><value>Account 411 broken down by customer, largest balance first.</value></data>
+  <data name="Accounting.Balance.Figures" xml:space="preserve"><value>Figures for the period</value></data>
+  <data name="Accounting.Balance.General" xml:space="preserve"><value>General accounts</value></data>
+  <data name="Accounting.Balance.Subtitle" xml:space="preserve"><value>Movements and balance of each account over the period.</value></data>
+  <data name="Accounting.Balance.Title" xml:space="preserve"><value>Trial balance</value></data>
+  <data name="Accounting.Balanced" xml:space="preserve"><value>Balanced</value></data>
+  <data name="Accounting.ClearCustomer" xml:space="preserve"><value>Clear the customer filter</value></data>
+  <data name="Accounting.Credit" xml:space="preserve"><value>Credit</value></data>
+  <data name="Accounting.CreditBalance" xml:space="preserve"><value>Credit balance</value></data>
+  <data name="Accounting.Customer" xml:space="preserve"><value>Customer</value></data>
+  <data name="Accounting.Debit" xml:space="preserve"><value>Debit</value></data>
+  <data name="Accounting.DebitBalance" xml:space="preserve"><value>Debit balance</value></data>
+  <data name="Accounting.Journal.CollapseAll" xml:space="preserve"><value>Collapse entries</value></data>
+  <data name="Accounting.Journal.Count" xml:space="preserve"><value>{0} entr(ies)</value></data>
+  <data name="Accounting.Journal.Empty" xml:space="preserve"><value>No entry in this period. Entries are created when invoices, down payments and credit notes are validated.</value></data>
+  <data name="Accounting.Journal.ExpandAll" xml:space="preserve"><value>Expand entries</value></data>
+  <data name="Accounting.Journal.GoInvoices" xml:space="preserve"><value>See invoices</value></data>
+  <data name="Accounting.Journal.Lines" xml:space="preserve"><value>Lines</value></data>
+  <data name="Accounting.Journal.Search" xml:space="preserve"><value>Document number or customer</value></data>
+  <data name="Accounting.Journal.Subtitle" xml:space="preserve"><value>Entries recorded when documents are validated, as in the FEC.</value></data>
+  <data name="Accounting.Journal.Title" xml:space="preserve"><value>Sales journal</value></data>
+  <data name="Accounting.Journal.Toggle" xml:space="preserve"><value>Lines of entry {0}</value></data>
+  <data name="Accounting.Kpi.Receivable" xml:space="preserve"><value>Net invoiced to customers</value></data>
+  <data name="Accounting.Kpi.ReceivableNote" xml:space="preserve"><value>Balance of 411, payments excluded</value></data>
+  <data name="Accounting.Kpi.Revenue" xml:space="preserve"><value>Revenue excl. VAT</value></data>
+  <data name="Accounting.Kpi.RevenueNote" xml:space="preserve"><value>Accounts 706 and 707, net of credit notes</value></data>
+  <data name="Accounting.Kpi.Vat" xml:space="preserve"><value>Output VAT</value></data>
+  <data name="Accounting.Kpi.VatNote" xml:space="preserve"><value>Account 44571</value></data>
+  <data name="Accounting.Ledger.Closing" xml:space="preserve"><value>Total and balance at {0}</value></data>
+  <data name="Accounting.Ledger.CustomerJournal" xml:space="preserve"><value>Their journal entries</value></data>
+  <data name="Accounting.Ledger.Empty" xml:space="preserve"><value>No movement in the period.</value></data>
+  <data name="Accounting.Ledger.Opening" xml:space="preserve"><value>Opening balance at {0}</value></data>
+  <data name="Accounting.Ledger.PageTitle" xml:space="preserve"><value>Ledger {0}</value></data>
+  <data name="Accounting.Ledger.PaymentsNote" xml:space="preserve"><value>Payments are not recorded in Lettra's books yet: the 411 balance is what was invoiced, net of credit notes.</value></data>
+  <data name="Accounting.Ledger.Subtitle" xml:space="preserve"><value>Account movements with the running balance.</value></data>
+  <data name="Accounting.Ledger.Title" xml:space="preserve"><value>Ledger</value></data>
+  <data name="Accounting.Next" xml:space="preserve"><value>Next</value></data>
+  <data name="Accounting.PageOf" xml:space="preserve"><value>Page {0} of {1}</value></data>
+  <data name="Accounting.Pages" xml:space="preserve"><value>Pages</value></data>
+  <data name="Accounting.Period" xml:space="preserve"><value>Period</value></data>
+  <data name="Accounting.Period.From" xml:space="preserve"><value>From</value></data>
+  <data name="Accounting.Period.LastMonth" xml:space="preserve"><value>Last month</value></data>
+  <data name="Accounting.Period.LastYear" xml:space="preserve"><value>Last year</value></data>
+  <data name="Accounting.Period.Presets" xml:space="preserve"><value>Common periods</value></data>
+  <data name="Accounting.Period.ThisMonth" xml:space="preserve"><value>This month</value></data>
+  <data name="Accounting.Period.ThisQuarter" xml:space="preserve"><value>This quarter</value></data>
+  <data name="Accounting.Period.ThisYear" xml:space="preserve"><value>This year</value></data>
+  <data name="Accounting.Period.To" xml:space="preserve"><value>to</value></data>
+  <data name="Accounting.Piece" xml:space="preserve"><value>Document</value></data>
+  <data name="Accounting.Pieces" xml:space="preserve"><value>Documents</value></data>
+  <data name="Accounting.Previous" xml:space="preserve"><value>Previous</value></data>
+  <data name="Accounting.Total" xml:space="preserve"><value>Total</value></data>
+  <data name="Accounting.Unbalanced" xml:space="preserve"><value>Unbalanced</value></data>
+  <data name="Error.Accounting.AccountInvalid" xml:space="preserve"><value>Invalid account number: 3 to 20 digits, class 1 to 8.</value></data>
+  <data name="Error.Accounting.PeriodInvalid" xml:space="preserve"><value>The end of the period is before its start.</value></data>
+  <data name="Error.Accounting.PeriodTooLong" xml:space="preserve"><value>A query covers five years at most: narrow the period.</value></data>
+  <data name="Nav.Accounting" xml:space="preserve"><value>Journal &amp; balance</value></data>
+  <data name="Nav.Balance" xml:space="preserve"><value>Trial balance</value></data>
+  <data name="Nav.Journal" xml:space="preserve"><value>Sales journal</value></data>
+</root>

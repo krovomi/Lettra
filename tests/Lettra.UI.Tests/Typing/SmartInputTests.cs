@@ -4,7 +4,10 @@ using Bunit;
 using Lettra.UI.Shared;
 using Lettra.UI.Shared.Components.Palette;
 using Lettra.UI.Shared.Localization;
-using Lettra.UI.Shared.Pages;
+using Lettra.UI.Shared.Pages.Parties;
+using Lettra.UI.Tests.Billing;
+using Lettra.UI.Tests.Consultation;
+using Microsoft.AspNetCore.Components;
 using Lettra.UI.Shared.Typing;
 using Lettra.UI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
@@ -160,7 +163,11 @@ public sealed class SmartInputTests : BunitContext
         FakeCustomersGateway clients = new();
         Services.AddSingleton<ICustomersGateway>(clients);
         Services.AddSingleton<IDirectoryGateway>(new FakeDirectoryGateway());
-        IRenderedComponent<Customers> page = Render<Customers>();
+        Services.AddSingleton<IAccountingGateway>(new FakeAccountingGateway());
+        Services.AddSingleton<IInvoicesGateway>(new FakeInvoicesGateway());
+        Services.AddSingleton<IQuotesGateway>(new FakeQuotesGateway());
+        Services.GetRequiredService<NavigationManager>().NavigateTo("customers/new");
+        IRenderedComponent<CustomersPage> page = Render<CustomersPage>();
 
         page.Find("#zip").Input("750");
         page.WaitForAssertion(() => page.FindAll("#zip-list [role=option]").Should().ContainSingle());

@@ -28,6 +28,10 @@ internal static class HttpCalls
         }
     }
 
+    /// <summary>Paramètre <c>&amp;search=</c> échappé, vide sans recherche.</summary>
+    public static string SearchParameter(string? search) =>
+        string.IsNullOrWhiteSpace(search) ? string.Empty : "&search=" + Uri.EscapeDataString(search.Trim());
+
     public static Uri Relative(FormattableString uri) => new(string.Create(CultureInfo.InvariantCulture, $"{uri}"), UriKind.Relative);
 
     /// <summary>PUT d'une modification avec la version lue en <c>If-Match</c> (ADR-0013).</summary>
@@ -61,6 +65,24 @@ internal sealed class HttpSuppliersGateway(HttpClient http) : ISuppliersGateway
             ct => http.GetAsync(HttpCalls.Relative($"api/v1/suppliers?page={page}&pageSize={pageSize}"), ct),
             ContractsJsonContext.Default.PagedResponseSupplierSummary,
             cancellationToken);
+
+    public Task<OperationResult<PagedResponse<SupplierSummary>>> SearchAsync(string? search, int page, int pageSize, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.GetAsync(HttpCalls.Relative($"api/v1/suppliers?page={page}&pageSize={pageSize}{HttpCalls.SearchParameter(search)}"), ct),
+            ContractsJsonContext.Default.PagedResponseSupplierSummary,
+            cancellationToken);
+
+    public Task<OperationResult<SupplierResponse>> GetAsync(Guid id, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.GetAsync(HttpCalls.Relative($"api/v1/suppliers/{id}"), ct),
+            ContractsJsonContext.Default.SupplierResponse,
+            cancellationToken);
+
+    public Task<OperationResult<SupplierResponse>> UpdateAsync(Guid id, long expectedVersion, CreateSupplierRequest request, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.PutVersionedAsync(HttpCalls.Relative($"api/v1/suppliers/{id}"), expectedVersion, request, ContractsJsonContext.Default.CreateSupplierRequest, ct),
+            ContractsJsonContext.Default.SupplierResponse,
+            cancellationToken);
 }
 
 internal sealed class HttpCatalogGateway(HttpClient http) : ICatalogGateway
@@ -80,6 +102,12 @@ internal sealed class HttpCatalogGateway(HttpClient http) : ICatalogGateway
             ContractsJsonContext.Default.PagedResponseCatalogItemSummary,
             cancellationToken);
     }
+
+    public Task<OperationResult<CatalogItemResponse>> GetAsync(Guid id, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.GetAsync(HttpCalls.Relative($"api/v1/catalog/items/{id}"), ct),
+            ContractsJsonContext.Default.CatalogItemResponse,
+            cancellationToken);
 
     public Task<OperationResult<CatalogItemResponse>> CreateAsync(SaveCatalogItemRequest request, CancellationToken cancellationToken) =>
         HttpCalls.SendAsync(

@@ -1,0 +1,30 @@
+@* Liste et fiche côte à côte sur ordinateur ; sur tablette et téléphone, l'une ou l'autre selon l'adresse, avec un retour
+   à la liste. Les classes sont dans lettra-explorer.css. *@
+@inject IStringLocalizer<SharedResource> L
+
+<div class="lt-explorer" data-mode="@Mode.ToString().ToLowerInvariant()">
+    <section class="lt-explorer-list" aria-label="@ListLabel">
+        @List
+    </section>
+    <section class="lt-explorer-detail" aria-label="@DetailLabel">
+        @if (Mode != ExplorerMode.List)
+        {
+            <a class="lt-explorer-back" href="@BackHref"><Icon Name="arrow-left" Size="18" /> @L["Explorer.BackToList"]</a>
+        }
+        @Detail
+    </section>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public ExplorerMode Mode { get; set; }
+
+    [Parameter, EditorRequired] public string BackHref { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired] public string ListLabel { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired] public string DetailLabel { get; set; } = string.Empty;
+
+    [Parameter] public RenderFragment? List { get; set; }
+
+    [Parameter] public RenderFragment? Detail { get; set; }
+}

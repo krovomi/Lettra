@@ -1,0 +1,87 @@
+@* Champs de la fiche fournisseur en saisie (création et modification), dans l'EditForm de la page. *@
+@inject IStringLocalizer<SharedResource> L
+
+<CompanyLookup Id="supplier-lookup" OnSelected="Prefill" />
+
+<div class="lt-form-grid">
+    <div class="lt-form-field lt-form-wide">
+        <label for="name">@L["Customers.Field.Name"]</label>
+        <InputText id="name" @ref="_name" @bind-Value="Model.Name" autocomplete="organization" />
+        <FieldErrors Field="@nameof(CreateSupplierRequest.Name)" ServerErrors="Errors" />
+    </div>
+    <div class="lt-form-field">
+        <label for="siren">@L["Customers.Field.Siren"]</label>
+        <InputText id="siren" @bind-Value="Model.Siren" inputmode="numeric" />
+        <FieldErrors Field="@nameof(CreateSupplierRequest.Siren)" ServerErrors="Errors" />
+    </div>
+    <div class="lt-form-field">
+        <label for="siret">@L["Customers.Field.Siret"]</label>
+        <InputText id="siret" @bind-Value="Model.Siret" inputmode="numeric" />
+        <FieldErrors Field="@nameof(CreateSupplierRequest.Siret)" ServerErrors="Errors" />
+    </div>
+    <div class="lt-form-field lt-form-wide">
+        <label for="vat">@L["Customers.Field.VatNumber"]</label>
+        <div class="lettra-inline">
+            <InputText id="vat" @bind-Value="Model.VatNumber" />
+            <VatNumberCheck VatNumber="@Model.VatNumber" />
+        </div>
+        <FieldErrors Field="@nameof(CreateSupplierRequest.VatNumber)" ServerErrors="Errors" />
+    </div>
+    <div class="lt-form-field">
+        <label for="email">@L["Customers.Field.Email"]</label>
+        <InputText id="email" type="email" @bind-Value="Model.Email" autocomplete="email" />
+        <FieldErrors Field="@nameof(CreateSupplierRequest.Email)" ServerErrors="Errors" />
+    </div>
+    <div class="lt-form-field">
+        <label for="iban">@L["Suppliers.Field.Iban"]</label>
+        <InputText id="iban" @bind-Value="Model.Iban" autocomplete="off" spellcheck="false" />
+        <FieldErrors Field="@nameof(CreateSupplierRequest.Iban)" ServerErrors="Errors" />
+    </div>
+    <div class="lt-form-field lt-form-wide">
+        <label for="line1">@L["Customers.Field.AddressLine1"]</label>
+        <InputText id="line1" @bind-Value="Model.AddressLine1" autocomplete="address-line1" />
+        <FieldErrors Field="@nameof(CreateSupplierRequest.AddressLine1)" ServerErrors="Errors" />
+    </div>
+    <div class="lt-form-field lt-form-wide">
+        <label for="line2">@L["Customers.Field.AddressLine2"]</label>
+        <InputText id="line2" @bind-Value="Model.AddressLine2" autocomplete="address-line2" />
+    </div>
+    <div class="lt-form-field">
+        <label for="zip">@L["Customers.Field.PostalCode"]</label>
+        <InputText id="zip" @bind-Value="Model.PostalCode" autocomplete="postal-code" />
+        <FieldErrors Field="@nameof(CreateSupplierRequest.PostalCode)" ServerErrors="Errors" />
+    </div>
+    <div class="lt-form-field">
+        <label for="city">@L["Customers.Field.City"]</label>
+        <InputText id="city" @bind-Value="Model.City" autocomplete="address-level2" />
+        <FieldErrors Field="@nameof(CreateSupplierRequest.City)" ServerErrors="Errors" />
+    </div>
+    <div class="lt-form-field">
+        <label for="country">@L["Customers.Field.CountryCode"]</label>
+        <InputText id="country" @bind-Value="Model.CountryCode" maxlength="2" autocomplete="country" />
+        <FieldErrors Field="@nameof(CreateSupplierRequest.CountryCode)" ServerErrors="Errors" />
+    </div>
+</div>
+
+@code {
+    private InputText? _name;
+
+    [Parameter, EditorRequired] public CreateSupplierRequest Model { get; set; } = default!;
+
+    [Parameter] public IReadOnlyList<ErrorDetail> Errors { get; set; } = [];
+
+    public ElementReference? FirstField => _name?.Element;
+
+    private void Prefill(CompanySearchResult company)
+    {
+        Model.Name = company.Name;
+        Model.Siren = company.Siren;
+        Model.Siret = company.Siret;
+        Model.VatNumber = company.VatNumber;
+        Model.AddressLine1 = company.AddressLine1 ?? string.Empty;
+        Model.AddressLine2 = company.AddressLine2;
+        Model.PostalCode = company.PostalCode ?? string.Empty;
+        Model.City = company.City ?? string.Empty;
+        Model.CountryCode = company.CountryCode;
+    }
+}

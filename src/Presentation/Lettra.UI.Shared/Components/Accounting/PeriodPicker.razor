@@ -1,0 +1,39 @@
+@* Choix de la période : raccourcis (mois, trimestre, année) et dates libres. La période change l'adresse de la page. *@
+@inject IStringLocalizer<SharedResource> L
+
+<div class="lt-period" role="group" aria-label="@L["Accounting.Period"]">
+    <div class="lt-segmented" role="radiogroup" aria-label="@L["Accounting.Period.Presets"]">
+        @foreach (PeriodPreset preset in Enum.GetValues<PeriodPreset>())
+        {
+            <button type="button" role="radio" id="@($"period-{preset.ToString().ToLowerInvariant()}")"
+                    aria-checked="@(Period.Preset(Today) == preset ? "true" : "false")"
+                    @onclick="() => Change(AccountingPeriod.Of(preset, Today))">@L[$"Accounting.Period.{preset}"]</button>
+        }
+    </div>
+    <div class="lt-period-dates">
+        <label for="period-from">@L["Accounting.Period.From"]</label>
+        <input id="period-from" type="date" value="@AccountingPeriod.Day(Period.From)" @onchange="e => ChangeDay(e, isFrom: true)" />
+        <label for="period-to">@L["Accounting.Period.To"]</label>
+        <input id="period-to" type="date" value="@AccountingPeriod.Day(Period.To)" @onchange="e => ChangeDay(e, isFrom: false)" />
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public AccountingPeriod Period { get; set; }
+
+    [Parameter, EditorRequired] public DateOnly Today { get; set; }
+
+    [Parameter] public EventCallback<AccountingPeriod> PeriodChanged { get; set; }
+
+    private Task Change(AccountingPeriod period) => PeriodChanged.InvokeAsync(period);
+
+    private Task ChangeDay(ChangeEventArgs e, bool isFrom)
+    {
+        if (!DateOnly.TryParseExact(e.Value?.ToString(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly day))
+        {
+            return Task.CompletedTask;
+        }
+
+        return Change(isFrom ? Period with { From = day } : Period with { To = day });
+    }
+}
