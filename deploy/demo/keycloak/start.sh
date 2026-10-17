@@ -11,6 +11,9 @@ mkdir -p "$dest"
 printf '%s,\n%s\n' "${realm%\}*}" "${additions#*\{}" > "$dest/realm-lettra.json"
 
 # L'adresse publique entre dans le realm à l'import (URL de retour du BFF) : une base par adresse, pour passer
-# de localhost au réseau local (ou changer d'adresse IP) sans réinitialiser à la main.
+# de localhost au réseau local (ou changer d'adresse IP) sans réinitialiser à la main. Une base aussi par version du
+# realm : Keycloak n'importe un realm qu'une fois, un realm corrigé (clients, rôles) l'est donc au démarrage suivant.
+# Seul l'enrôlement TOTP de l'utilisateur fictif est à refaire ; les saisies de Lettra (volume lettra-donnees) restent.
 url=${LETTRA_PUBLIC_URL:?LETTRA_PUBLIC_URL manquant}
-exec "${KC_SH:-/opt/keycloak/bin/kc.sh}" "$@" --db-url-path="${KC_DEMO_DB_ROOT:-/opt/keycloak/data}/base-${url//[^a-zA-Z0-9]/-}"
+version=$(sha256sum "$dest/realm-lettra.json" | cut -c1-12)
+exec "${KC_SH:-/opt/keycloak/bin/kc.sh}" "$@" --db-url-path="${KC_DEMO_DB_ROOT:-/opt/keycloak/data}/base-${url//[^a-zA-Z0-9]/-}-$version"

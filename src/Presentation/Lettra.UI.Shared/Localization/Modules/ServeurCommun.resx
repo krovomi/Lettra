@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.SharedServer" xml:space="preserve"><value>Serveur du cabinet</value></data>
+  <data name="SharedServer.Title" xml:space="preserve"><value>Serveur du cabinet</value></data>
+  <data name="SharedServer.Browser" xml:space="preserve"><value>Dans le navigateur, Lettra travaille toujours sur le serveur qui l'a ouvert : {0}. Pour que vos ordinateurs, tablettes et téléphones voient les mêmes données, ouvrez cet écran dans l'application installée et saisissez cette adresse.</value></data>
+  <data name="SharedServer.Now" xml:space="preserve"><value>Où sont vos données</value></data>
+  <data name="SharedServer.Now.Device" xml:space="preserve"><value>Sur cet appareil seulement : le navigateur et vos autres appareils ne les voient pas.</value></data>
+  <data name="SharedServer.Now.Server" xml:space="preserve"><value>Sur le serveur du cabinet {0}, partagé avec le navigateur et vos autres appareils.</value></data>
+  <data name="SharedServer.Use.Title" xml:space="preserve"><value>Travailler sur le serveur du cabinet</value></data>
+  <data name="SharedServer.Change.Title" xml:space="preserve"><value>Changer de serveur</value></data>
+  <data name="SharedServer.Use.Intro" xml:space="preserve"><value>Tous les appareils reliés au même serveur voient les mêmes clients, devis et factures, comme le navigateur.</value></data>
+  <data name="SharedServer.Address" xml:space="preserve"><value>Adresse du serveur</value></data>
+  <data name="SharedServer.Address.Help" xml:space="preserve"><value>C'est l'adresse que vous ouvrez dans le navigateur, par exemple https://192.168.1.20:8443. Sur l'ordinateur où tourne la démonstration : http://localhost:8080.</value></data>
+  <data name="SharedServer.Checking" xml:space="preserve"><value>Vérification…</value></data>
+  <data name="SharedServer.Use.Submit" xml:space="preserve"><value>Utiliser ce serveur</value></data>
+  <data name="SharedServer.Use.Data" xml:space="preserve"><value>Ce qui est déjà enregistré sur cet appareil y reste : vous le retrouverez en revenant au travail sur cet appareil seul.</value></data>
+  <data name="SharedServer.Use.Network" xml:space="preserve"><value>Relié au serveur, l'appareil a besoin du réseau pour travailler.</value></data>
+  <data name="SharedServer.Device.Title" xml:space="preserve"><value>Travailler sur cet appareil seul</value></data>
+  <data name="SharedServer.Device.Intro" xml:space="preserve"><value>L'appareil reprend ses propres données et fonctionne sans réseau. Ce qui a été saisi sur le serveur y reste.</value></data>
+  <data name="SharedServer.Device.Submit" xml:space="preserve"><value>Revenir à cet appareil seul</value></data>
+  <data name="SharedServer.Saved.Server" xml:space="preserve"><value>C'est enregistré : Lettra travaillera sur {0}.</value></data>
+  <data name="SharedServer.Saved.Device" xml:space="preserve"><value>C'est enregistré : Lettra travaillera sur cet appareil seul.</value></data>
+  <data name="SharedServer.Restart.Title" xml:space="preserve"><value>Redémarrer Lettra</value></data>
+  <data name="SharedServer.Restart.Automatic" xml:space="preserve"><value>Le changement prend effet au redémarrage de Lettra.</value></data>
+  <data name="SharedServer.Restart.Now" xml:space="preserve"><value>Redémarrer maintenant</value></data>
+  <data name="SharedServer.Restart.Close" xml:space="preserve"><value>Le changement prend effet au prochain démarrage : Lettra va se fermer, rouvrez-la ensuite.</value></data>
+  <data name="SharedServer.Restart.CloseNow" xml:space="preserve"><value>Fermer Lettra</value></data>
+  <data name="SharedServer.Restart.Manual" xml:space="preserve"><value>Le changement prend effet au prochain démarrage : fermez Lettra (balayez-la vers le haut dans le sélecteur d'apps), puis rouvrez-la.</value></data>
+  <data name="SharedServer.Back" xml:space="preserve"><value>Retour à la session</value></data>
+  <data name="SharedServer.Link.Use" xml:space="preserve"><value>Travailler sur le serveur du cabinet</value></data>
+  <data name="SharedServer.Link.Change" xml:space="preserve"><value>Changer de serveur ou revenir à cet appareil seul</value></data>
+  <data name="Error.SharedServer.AddressInvalid" xml:space="preserve"><value>Saisissez l'adresse du serveur, par exemple https://192.168.1.20:8443.</value></data>
+  <data name="Error.SharedServer.HttpsRequired" xml:space="preserve"><value>Cette adresse doit commencer par https:// : sinon votre connexion passerait en clair sur le réseau. Seul localhost est accepté en http.</value></data>
+  <data name="Error.SharedServer.Unreachable" xml:space="preserve"><value>Aucun serveur ne répond à cette adresse. Vérifiez l'adresse, que l'appareil est sur le même réseau et que le serveur est démarré.</value></data>
+  <data name="Error.SharedServer.CertificateUntrusted" xml:space="preserve"><value>Le serveur répond, mais cet appareil ne fait pas confiance à son certificat. Installez d'abord le certificat de la démonstration (voir le guide d'installation).</value></data>
+  <data name="Error.SharedServer.NotLettra" xml:space="preserve"><value>Un serveur répond à cette adresse, mais ce n'est pas un serveur Lettra.</value></data>
+  <data name="Error.SharedServer.NoDossier" xml:space="preserve"><value>Votre compte n'a accès à aucun dossier sur ce serveur. Demandez à l'administrateur du cabinet de vous en ouvrir un.</value></data>
+</root>

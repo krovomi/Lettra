@@ -37,6 +37,7 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(IssueRightsSnapshotRequest))]
 [JsonSerializable(typeof(RightsSnapshotResponse))]
 [JsonSerializable(typeof(RightsSnapshotKeysResponse))]
+[JsonSerializable(typeof(ServerDiscoveryResponse))]
 [JsonSerializable(typeof(CreateSupplierRequest))]
 [JsonSerializable(typeof(SupplierResponse))]
 [JsonSerializable(typeof(PagedResponse<SupplierSummary>))]

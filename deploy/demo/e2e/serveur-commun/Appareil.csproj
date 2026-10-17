@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- « Appareil » de vérification du serveur commun (README, docs/serveur-commun.md) : la composition de l'application
+       installée reliée au serveur (SharedServer.CreateApp sans MAUI), contre la démo Docker et son vrai Keycloak.
+       Hors de Lettra.slnx : lancé par dotnet run après parcours.mjs premier. Outil de test, sans exigence d'analyse. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <RunAnalyzers>false</RunAnalyzers>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\src\Presentation\Lettra.UI.Gateway.Http\Lettra.UI.Gateway.Http.csproj" />
+  </ItemGroup>
+
+</Project>

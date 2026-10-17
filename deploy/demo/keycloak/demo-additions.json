@@ -20,6 +20,7 @@
       "lastName": "Démo",
       "enabled": true,
       "requiredActions": ["CONFIGURE_TOTP"],
+      "realmRoles": ["default-roles-lettra"],
       "credentials": [{ "type": "password", "value": "${LETTRA_DEMO_PASSWORD}", "temporary": false }]
     }
   ]
