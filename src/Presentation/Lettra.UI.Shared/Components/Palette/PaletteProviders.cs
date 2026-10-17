@@ -37,6 +37,8 @@ public sealed class NavigationPaletteProvider(
             Go(screens, "Nav.Customers", "customers"),
             Go(screens, "Nav.Suppliers", "suppliers"),
             Go(screens, "Nav.Catalog", "catalog"),
+            Go(screens, "Nav.Journal", "accounting/journal"),
+            Go(screens, "Nav.Balance", "accounting/balance"),
             Go(screens, "Nav.Fec", "exports/fec"),
             Go(screens, "Nav.Alerts", "alerts"),
             Go(screens, "Nav.Company", "settings/company"),

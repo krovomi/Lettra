@@ -162,11 +162,19 @@ async function landed(page, label) {
     log(`${label} : connecté comme « ${await page.locator('.lettra-user').innerText()} »`);
     await page.goto(`${baseUrl}/customers`);
     await page.locator('#list-title').waitFor({ timeout: 60_000 });
-    await page.locator('table.lettra-table, #list-title + p').first().waitFor({ timeout: 60_000 });
+    await page.locator('#customers-list, #customers-empty').first().waitFor({ timeout: 60_000 });
     await shot(page, `${label}-3-clients`);
 }
 
+// Retrouve un client par la recherche de la page Clients (la liste est paginée).
+async function findCustomer(page, name) {
+    await page.fill('#customers-search', name);
+    await page.locator('#customers-list [role=option]', { hasText: name }).first().waitFor({ timeout: 30_000 });
+}
+
 async function createCustomer(page, name) {
+    await page.locator('#customers-new').click();
+    await page.locator('#name').waitFor({ timeout: 30_000 });
     await page.locator('label', { hasText: 'Particulier' }).locator('input[type=radio]').check().catch(async () => {
         await page.locator('input[type=radio]').nth(1).check();
     });
@@ -179,7 +187,8 @@ async function createCustomer(page, name) {
     await page.locator('form button[type=submit]').click();
     // La confirmation passe par le toaster (vague 5) ; .lettra-success reste accepté pour un écran qui l'affiche encore.
     await page.locator('.lt-toast.is-success, .lettra-success').first().waitFor({ timeout: 30_000 });
-    await page.locator('table.lettra-table td', { hasText: name }).first().waitFor({ timeout: 30_000 });
+    await page.locator('#customer-sheet-title', { hasText: name }).waitFor({ timeout: 30_000 });
+    await findCustomer(page, name);
     log(`client « ${name} » créé et listé`);
     await shot(page, 'client-cree');
 }
@@ -262,7 +271,7 @@ try {
             await signIn(page, 'seconde-connexion');
             await secondFactor(page, secret);
             await landed(page, 'seconde-connexion');
-            await page.locator('table.lettra-table td', { hasText: name }).first().waitFor({ timeout: 30_000 });
+            await findCustomer(page, name);
             log(`seconde connexion : le client « ${name} » est toujours là`);
         });
         writeFileSync(join(out, 'client.txt'), name);
@@ -273,7 +282,7 @@ try {
             await signIn(page, 'connexion');
             await secondFactor(page, secret);
             await landed(page, 'connexion');
-            await page.locator('table.lettra-table td', { hasText: name }).first().waitFor({ timeout: 30_000 });
+            await findCustomer(page, name);
             log(`après redémarrage : le client « ${name} » est toujours là`);
             await checkPwa(page);
         });

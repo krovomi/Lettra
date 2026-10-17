@@ -11,6 +11,14 @@ public interface ISuppliersGateway
     Task<OperationResult<SupplierResponse>> CreateAsync(CreateSupplierRequest request, CancellationToken cancellationToken);
 
     Task<OperationResult<PagedResponse<SupplierSummary>>> ListAsync(int page, int pageSize, CancellationToken cancellationToken);
+
+    /// <summary>Liste filtrée sur le nom, sans accents ni casse (page de consultation).</summary>
+    Task<OperationResult<PagedResponse<SupplierSummary>>> SearchAsync(string? search, int page, int pageSize, CancellationToken cancellationToken);
+
+    Task<OperationResult<SupplierResponse>> GetAsync(Guid id, CancellationToken cancellationToken);
+
+    /// <summary>Modifie un fournisseur à partir de la version lue (ADR-0013), comme <see cref="ICatalogGateway.UpdateAsync"/>.</summary>
+    Task<OperationResult<SupplierResponse>> UpdateAsync(Guid id, long expectedVersion, CreateSupplierRequest request, CancellationToken cancellationToken);
 }
 
 /// <summary>Écran Catalogue, et liste de choix F4 des futurs écrans Devis et Factures.</summary>
@@ -19,6 +27,8 @@ public interface ICatalogGateway
     Task<OperationResult<CatalogReferenceData>> GetReferenceDataAsync(CancellationToken cancellationToken);
 
     Task<OperationResult<PagedResponse<CatalogItemSummary>>> ListAsync(string? search, bool includeArchived, int page, int pageSize, CancellationToken cancellationToken);
+
+    Task<OperationResult<CatalogItemResponse>> GetAsync(Guid id, CancellationToken cancellationToken);
 
     Task<OperationResult<CatalogItemResponse>> CreateAsync(SaveCatalogItemRequest request, CancellationToken cancellationToken);
 

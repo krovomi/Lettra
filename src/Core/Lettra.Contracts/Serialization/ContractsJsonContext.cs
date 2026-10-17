@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Lettra.Contracts.Accounting;
 using Lettra.Contracts.Administration;
 using Lettra.Contracts.Alerts;
 using Lettra.Contracts.Assistant;
@@ -88,6 +89,9 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(IReadOnlyList<AssistantJournalEntry>))]
 [JsonSerializable(typeof(IntegrityReportResponse))]
 [JsonSerializable(typeof(FecValidationResponse))]
+[JsonSerializable(typeof(SalesJournalResponse))]
+[JsonSerializable(typeof(TrialBalanceResponse))]
+[JsonSerializable(typeof(AccountLedgerResponse))]
 [JsonSerializable(typeof(TransmitInvoiceRequest))]
 [JsonSerializable(typeof(ReportPaymentRequest))]
 [JsonSerializable(typeof(PlatformTransmissionResponse))]

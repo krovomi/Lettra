@@ -1,0 +1,132 @@
+@* Champs de la fiche client en saisie (création et modification), dans l'EditForm de la page. Mêmes id de champs que
+   l'ancien écran Clients : les visites guidées et les tests s'y accrochent. *@
+@inject IStringLocalizer<SharedResource> L
+@inject PostalCodes PostalCodes
+
+@if (Model.Kind == CustomerKindDto.Company)
+{
+    <CompanyLookup Id="customer-lookup" OnSelected="Prefill" />
+}
+
+<div class="lt-form-grid">
+    <fieldset class="lt-form-wide">
+        <legend>@L["Customers.Field.Kind"]</legend>
+        <InputRadioGroup @bind-Value="Model.Kind">
+            <label><InputRadio Value="CustomerKindDto.Company" /> @L["Customers.Kind.Company"]</label>
+            <label><InputRadio Value="CustomerKindDto.Individual" /> @L["Customers.Kind.Individual"]</label>
+        </InputRadioGroup>
+    </fieldset>
+
+    <div class="lt-form-field lt-form-wide">
+        <label for="name">@L["Customers.Field.Name"]</label>
+        <InputText id="name" @ref="_name" @bind-Value="Model.Name" autocomplete="organization" />
+        <FieldErrors Field="@nameof(CreateCustomerRequest.Name)" ServerErrors="Errors" />
+    </div>
+
+    @if (Model.Kind == CustomerKindDto.Company)
+    {
+        <div class="lt-form-field">
+            <label for="siren">@L["Customers.Field.Siren"]</label>
+            <InputText id="siren" @bind-Value="Model.Siren" inputmode="numeric" />
+            <FieldErrors Field="@nameof(CreateCustomerRequest.Siren)" ServerErrors="Errors" />
+        </div>
+        <div class="lt-form-field">
+            <label for="siret">@L["Customers.Field.Siret"]</label>
+            <InputText id="siret" @bind-Value="Model.Siret" inputmode="numeric" />
+            <FieldErrors Field="@nameof(CreateCustomerRequest.Siret)" ServerErrors="Errors" />
+        </div>
+        <div class="lt-form-field lt-form-wide">
+            <label for="vat">@L["Customers.Field.VatNumber"]</label>
+            <div class="lettra-inline">
+                <InputText id="vat" @bind-Value="Model.VatNumber" />
+                <VatNumberCheck VatNumber="@Model.VatNumber" />
+            </div>
+            <FieldErrors Field="@nameof(CreateCustomerRequest.VatNumber)" ServerErrors="Errors" />
+        </div>
+    }
+
+    <div class="lt-form-field">
+        <label for="email">@L["Customers.Field.Email"]</label>
+        <InputText id="email" type="email" @bind-Value="Model.Email" autocomplete="email" />
+        <FieldErrors Field="@nameof(CreateCustomerRequest.Email)" ServerErrors="Errors" />
+    </div>
+    <div class="lt-form-field">
+        <label for="language">@L["Customers.Field.PreferredLanguage"]</label>
+        <InputSelect id="language" @bind-Value="Model.PreferredLanguage">
+            <option value="">Français</option>
+            <option value="en-US">English</option>
+        </InputSelect>
+        <FieldErrors Field="@nameof(CreateCustomerRequest.PreferredLanguage)" ServerErrors="Errors" />
+    </div>
+
+    <div class="lt-form-field lt-form-wide">
+        <label for="line1">@L["Customers.Field.AddressLine1"]</label>
+        <InputText id="line1" @bind-Value="Model.AddressLine1" autocomplete="address-line1" />
+        <FieldErrors Field="@nameof(CreateCustomerRequest.AddressLine1)" ServerErrors="Errors" />
+    </div>
+    <div class="lt-form-field lt-form-wide">
+        <label for="line2">@L["Customers.Field.AddressLine2"]</label>
+        <InputText id="line2" @bind-Value="Model.AddressLine2" autocomplete="address-line2" />
+    </div>
+    <div class="lt-form-field">
+        <label for="zip">@L["Customers.Field.PostalCode"]</label>
+        <SmartInput Id="zip" @bind-Value="Model.PostalCode" autocomplete="postal-code" inputmode="numeric" data-tour="customer-address"
+                    Suggest="SuggestByPostalCodeAsync" OnPicked="PlacePicked" Hint="@L["Assist.PostalCode.Hint"]" />
+        <FieldErrors Field="@nameof(CreateCustomerRequest.PostalCode)" ServerErrors="Errors" />
+    </div>
+    <div class="lt-form-field">
+        <label for="city">@L["Customers.Field.City"]</label>
+        <SmartInput Id="city" @bind-Value="Model.City" autocomplete="address-level2" Suggest="SuggestByCityAsync" OnPicked="PlacePicked" Tidy="true" />
+        <FieldErrors Field="@nameof(CreateCustomerRequest.City)" ServerErrors="Errors" />
+    </div>
+    <div class="lt-form-field">
+        <label for="country">@L["Customers.Field.CountryCode"]</label>
+        <InputText id="country" @bind-Value="Model.CountryCode" maxlength="2" autocomplete="country" />
+        <FieldErrors Field="@nameof(CreateCustomerRequest.CountryCode)" ServerErrors="Errors" />
+    </div>
+</div>
+
+@code {
+    private InputText? _name;
+
+    [Parameter, EditorRequired] public CreateCustomerRequest Model { get; set; } = default!;
+
+    [Parameter] public IReadOnlyList<ErrorDetail> Errors { get; set; } = [];
+
+    /// <summary>Le champ Nom, qui reçoit le focus en passant en saisie.</summary>
+    public ElementReference? FirstField => _name?.Element;
+
+    /// <summary>Pré-remplit la fiche depuis l'annuaire ; l'utilisateur relit avant d'enregistrer.</summary>
+    private void Prefill(CompanySearchResult company)
+    {
+        Model.Kind = CustomerKindDto.Company;
+        Model.Name = company.Name;
+        Model.Siren = company.Siren;
+        Model.Siret = company.Siret;
+        Model.VatNumber = company.VatNumber;
+        Model.AddressLine1 = company.AddressLine1 ?? string.Empty;
+        Model.AddressLine2 = company.AddressLine2;
+        Model.PostalCode = company.PostalCode ?? string.Empty;
+        Model.City = company.City ?? string.Empty;
+        Model.CountryCode = company.CountryCode;
+    }
+
+    // Code postal et ville : fichier des communes livré avec l'application, cherché en mémoire.
+    private async Task<IReadOnlyList<Suggestion>> SuggestByPostalCodeAsync(string text) =>
+        Places((await PostalCodes.GetAsync()).ByPostalCode(text));
+
+    private async Task<IReadOnlyList<Suggestion>> SuggestByCityAsync(string text) =>
+        Model.CountryCode is "FR" or "" ? Places((await PostalCodes.GetAsync()).ByCity(text)) : [];
+
+    private static IReadOnlyList<Suggestion> Places(IReadOnlyList<PostalPlace> places) =>
+        [.. places.Select(p => new Suggestion(p.PostalCode, p.City, p.PostalCode, p))];
+
+    private void PlacePicked(Suggestion suggestion)
+    {
+        if (suggestion.Data is PostalPlace place)
+        {
+            Model.PostalCode = place.PostalCode;
+            Model.City = place.City;
+        }
+    }
+}

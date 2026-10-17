@@ -1,0 +1,175 @@
+@page "/accounting/balance"
+@inject IAccountingGateway Accounting
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+@inject IServiceProvider Services
+@* Balance de la période : comptes généraux, puis balance auxiliaire des clients. Chaque ligne ouvre son grand livre. *@
+
+<PageTitle>@L["Accounting.Balance.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Accounting.Balance.Title"]</h1>
+        <p class="lettra-muted">@L["Accounting.Balance.Subtitle"]</p>
+    </div>
+</div>
+
+<AccountingTabs Period="_period" />
+
+<section class="lt-panel lt-accounting" aria-labelledby="balance-title">
+    <PeriodPicker Period="_period" Today="Today" PeriodChanged="ChangePeriod" />
+    <GeneralErrors Errors="_errors" />
+
+    @if (_balance is null)
+    {
+        <ExplorerSkeleton Rows="6" />
+    }
+    else
+    {
+        <dl class="lt-stats" aria-label="@L["Accounting.Balance.Figures"]" id="balance-stats">
+            <div id="balance-kpi-revenue">
+                <dt>@L["Accounting.Kpi.Revenue"]</dt>
+                <dd>@ExplorerText.Money(Revenue)</dd>
+                <dd class="lt-stats-note">@L["Accounting.Kpi.RevenueNote"]</dd>
+            </div>
+            <div id="balance-kpi-vat">
+                <dt>@L["Accounting.Kpi.Vat"]</dt>
+                <dd>@ExplorerText.Money(-Net(SalesAccounts.VatCollected))</dd>
+                <dd class="lt-stats-note">@L["Accounting.Kpi.VatNote"]</dd>
+            </div>
+            <div id="balance-kpi-receivable">
+                <dt>@L["Accounting.Kpi.Receivable"]</dt>
+                <dd>@ExplorerText.Money(Net(SalesAccounts.Customers))</dd>
+                <dd class="lt-stats-note">@L["Accounting.Kpi.ReceivableNote"]</dd>
+            </div>
+        </dl>
+
+        <h2 id="balance-title">@L["Accounting.Balance.General"]</h2>
+        @if (_balance.Accounts.Count == 0)
+        {
+            <div class="lt-explorer-empty" id="balance-empty">
+                <span class="lt-empty-icon"><Icon Name="scale" Size="28" /></span>
+                <p>@L["Accounting.Journal.Empty"]</p>
+            </div>
+        }
+        else
+        {
+            <div class="lt-table-scroll">
+                <table class="lettra-table lt-balance" id="balance-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">@L["Accounting.Account"]</th>
+                            <th scope="col">@L["Accounting.AccountName"]</th>
+                            <th scope="col" class="lg-num lt-hide-sm">@L["Accounting.Debit"]</th>
+                            <th scope="col" class="lg-num lt-hide-sm">@L["Accounting.Credit"]</th>
+                            <th scope="col" class="lg-num">@L["Accounting.DebitBalance"]</th>
+                            <th scope="col" class="lg-num">@L["Accounting.CreditBalance"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (AccountBalanceResponse account in _balance.Accounts)
+                        {
+                            <tr class="lt-row-link" @onclick="() => Navigation.NavigateTo(LedgerHref(account.Account, null))">
+                                <td><a href="@LedgerHref(account.Account, null)" class="lt-account" id="@($"balance-account-{account.Account}")">@account.Account</a></td>
+                                <td>@AccountLabel(account.Account)</td>
+                                <td class="lg-num lt-hide-sm">@ExplorerText.Money(account.Debit)</td>
+                                <td class="lg-num lt-hide-sm">@ExplorerText.Money(account.Credit)</td>
+                                <td class="lg-num">@(account.Balance > 0 ? ExplorerText.Money(account.Balance) : null)</td>
+                                <td class="lg-num">@(account.Balance < 0 ? ExplorerText.Money(-account.Balance) : null)</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th scope="row" colspan="2">
+                                @L["Accounting.Total"]
+                                @if (_balance.TotalDebit == _balance.TotalCredit)
+                                {
+                                    <span class="lettra-status is-issued" id="balance-balanced"><Icon Name="check" Size="14" /> @L["Accounting.Balanced"]</span>
+                                }
+                            </th>
+                            <td class="lg-num lt-hide-sm" id="balance-total-debit">@ExplorerText.Money(_balance.TotalDebit)</td>
+                            <td class="lg-num lt-hide-sm" id="balance-total-credit">@ExplorerText.Money(_balance.TotalCredit)</td>
+                            <td class="lg-num">@ExplorerText.Money(_balance.Accounts.Where(a => a.Balance > 0).Sum(a => a.Balance))</td>
+                            <td class="lg-num">@ExplorerText.Money(-_balance.Accounts.Where(a => a.Balance < 0).Sum(a => a.Balance))</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <h2 id="balance-customers-title">@L["Accounting.Balance.Customers"]</h2>
+            <p class="lettra-hint">@L["Accounting.Balance.CustomersHint"]</p>
+            <div class="lt-table-scroll">
+                <table class="lettra-table lt-balance" id="balance-customers-table" aria-labelledby="balance-customers-title">
+                    <thead>
+                        <tr>
+                            <th scope="col">@L["Billing.Column.Customer"]</th>
+                            <th scope="col" class="lg-num lt-hide-sm">@L["Accounting.Pieces"]</th>
+                            <th scope="col" class="lg-num lt-hide-sm">@L["Accounting.Debit"]</th>
+                            <th scope="col" class="lg-num lt-hide-sm">@L["Accounting.Credit"]</th>
+                            <th scope="col" class="lg-num">@L["Accounting.Balance"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (CustomerBalanceResponse customer in _balance.Customers)
+                        {
+                            <tr class="lt-row-link" @onclick="() => Navigation.NavigateTo(LedgerHref(SalesAccounts.Customers, customer.CustomerId))">
+                                <td><a href="@LedgerHref(SalesAccounts.Customers, customer.CustomerId)">@customer.CustomerName</a></td>
+                                <td class="lg-num lt-hide-sm">@customer.EntryCount.ToString("N0", Culture)</td>
+                                <td class="lg-num lt-hide-sm">@ExplorerText.Money(customer.Debit)</td>
+                                <td class="lg-num lt-hide-sm">@ExplorerText.Money(customer.Credit)</td>
+                                <td class="lg-num"><strong>@ExplorerText.Money(customer.Balance)</strong></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
+</section>
+
+@code {
+    private AccountingPeriod _period;
+    private TrialBalanceResponse? _balance;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+
+    [SupplyParameterFromQuery(Name = "from")] public string? From { get; set; }
+
+    [SupplyParameterFromQuery(Name = "to")] public string? To { get; set; }
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private DateOnly Today => DateOnly.FromDateTime((Services.GetService<TimeProvider>() ?? TimeProvider.System).GetLocalNow().DateTime);
+
+    /// <summary>Chiffre d'affaires HT : les comptes de produits (classe 7), au crédit moins au débit.</summary>
+    private decimal Revenue => _balance?.Accounts.Where(a => AccountNames.IsRevenue(a.Account)).Sum(a => a.Credit - a.Debit) ?? 0m;
+
+    private decimal Net(string account) => _balance?.Accounts.FirstOrDefault(a => a.Account == account)?.Balance ?? 0m;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _period = AccountingPeriod.Parse(From, To, Today);
+        _errors = [];
+        OperationResult<TrialBalanceResponse> result = await Accounting.GetBalanceAsync(_period.From, _period.To, CancellationToken.None);
+        if (result is { IsSuccess: true, Value: { } balance })
+        {
+            _balance = balance;
+        }
+        else
+        {
+            _errors = result.Errors;
+            _balance = new TrialBalanceResponse(_period.From, _period.To, [], [], 0, 0);
+        }
+    }
+
+    private void ChangePeriod(AccountingPeriod period) => Navigation.NavigateTo($"accounting/balance?{period.Query}");
+
+    private string LedgerHref(string account, Guid? customer) =>
+        $"accounting/accounts/{account}?{_period.Query}{(customer is Guid id ? $"&customer={id}" : null)}";
+
+    private string AccountLabel(string account)
+    {
+        LocalizedString label = L[$"Account.{account}"];
+        return label.ResourceNotFound ? string.Empty : label.Value;
+    }
+}

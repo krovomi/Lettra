@@ -1,0 +1,170 @@
+@page "/accounting/accounts/{Account}"
+@inject IAccountingGateway Accounting
+@inject ICustomersGateway Customers
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+@inject IServiceProvider Services
+@* Grand livre d'un compte : solde d'ouverture, mouvements de la période avec le solde cumulé, solde de clôture. *@
+
+<PageTitle>@string.Format(Culture, L["Accounting.Ledger.PageTitle"], Account) · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1"><span class="lt-account">@Account</span> @AccountLabel(Account)</h1>
+        <p class="lettra-muted">@L["Accounting.Ledger.Subtitle"]</p>
+    </div>
+    <div class="lt-page-actions">
+        <div class="lt-filter">
+            <label for="ledger-account">@L["Accounting.Account"]</label>
+            <select id="ledger-account" value="@Account" @onchange="ChangeAccount">
+                @foreach (string account in AccountNames.Known)
+                {
+                    <option value="@account">@account · @AccountLabel(account)</option>
+                }
+                @if (!AccountNames.Known.Contains(Account))
+                {
+                    <option value="@Account">@Account</option>
+                }
+            </select>
+        </div>
+    </div>
+</div>
+
+<AccountingTabs Period="_period" />
+
+<section class="lt-panel lt-accounting" aria-labelledby="ledger-title">
+    <h2 id="ledger-title" class="lettra-visually-hidden">@L["Accounting.Ledger.Title"]</h2>
+    <PeriodPicker Period="_period" Today="Today" PeriodChanged="ChangePeriod" />
+    @if (CustomerId is Guid customer)
+    {
+        <div class="lt-accounting-filters">
+            <span class="lt-chip" id="ledger-customer-chip">
+                @L["Accounting.Customer"] : <a href="@($"customers/{customer}")">@(_customerName ?? "…")</a>
+                <a href="@Href(Account, _period, null)" aria-label="@L["Accounting.ClearCustomer"]" id="ledger-clear-customer"><Icon Name="x" Size="14" /></a>
+            </span>
+            <a href="@($"accounting/journal?{_period.Query}&customer={customer}")" id="ledger-customer-journal">@L["Accounting.Ledger.CustomerJournal"] <Icon Name="arrow-right" Size="16" /></a>
+        </div>
+    }
+    <GeneralErrors Errors="_errors" />
+
+    @if (_ledger is null)
+    {
+        <ExplorerSkeleton Rows="8" />
+    }
+    else
+    {
+        <div class="lt-table-scroll">
+            <table class="lettra-table lt-ledger" id="ledger-table">
+                <thead>
+                    <tr>
+                        <th scope="col">@L["Billing.Column.Date"]</th>
+                        <th scope="col">@L["Accounting.Piece"]</th>
+                        <th scope="col">@L["Invoices.Kind"]</th>
+                        <th scope="col">@L["Billing.Column.Customer"]</th>
+                        <th scope="col" class="lg-num">@L["Accounting.Debit"]</th>
+                        <th scope="col" class="lg-num">@L["Accounting.Credit"]</th>
+                        <th scope="col" class="lg-num">@L["Accounting.Balance"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="lt-ledger-opening" id="ledger-opening">
+                        <td colspan="6">@string.Format(Culture, L["Accounting.Ledger.Opening"], _period.From.ToString("d", Culture))</td>
+                        <td class="lg-num">@ExplorerText.Money(_ledger.OpeningBalance)</td>
+                    </tr>
+                    @if (_ledger.Lines.Count == 0)
+                    {
+                        <tr id="ledger-empty"><td colspan="7" class="lettra-muted">@L["Accounting.Ledger.Empty"]</td></tr>
+                    }
+                    @foreach (LedgerLineResponse line in _ledger.Lines)
+                    {
+                        <tr>
+                            <td>@line.Date.ToString("d", Culture)</td>
+                            <td><a href="@($"invoices/{line.InvoiceId}")">@line.PieceNumber</a></td>
+                            <td>@L[$"InvoiceKind.{line.Kind}"]</td>
+                            <td><a href="@Href(Account, _period, line.CustomerId)">@line.CustomerName</a></td>
+                            <td class="lg-num">@(line.Debit == 0 ? null : ExplorerText.Money(line.Debit))</td>
+                            <td class="lg-num">@(line.Credit == 0 ? null : ExplorerText.Money(line.Credit))</td>
+                            <td class="lg-num">@ExplorerText.Money(line.RunningBalance)</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th scope="row" colspan="4">@string.Format(Culture, L["Accounting.Ledger.Closing"], _period.To.ToString("d", Culture))</th>
+                        <td class="lg-num" id="ledger-total-debit">@ExplorerText.Money(_ledger.TotalDebit)</td>
+                        <td class="lg-num" id="ledger-total-credit">@ExplorerText.Money(_ledger.TotalCredit)</td>
+                        <td class="lg-num" id="ledger-closing"><strong>@ExplorerText.Money(_ledger.ClosingBalance)</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        @if (Account == SalesAccounts.Customers)
+        {
+            <p class="lettra-hint">@L["Accounting.Ledger.PaymentsNote"]</p>
+        }
+    }
+</section>
+
+@code {
+    private AccountingPeriod _period;
+    private AccountLedgerResponse? _ledger;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private string? _customerName;
+
+    [Parameter] public string Account { get; set; } = SalesAccounts.Customers;
+
+    [SupplyParameterFromQuery(Name = "from")] public string? From { get; set; }
+
+    [SupplyParameterFromQuery(Name = "to")] public string? To { get; set; }
+
+    [SupplyParameterFromQuery(Name = "customer")] public Guid? CustomerId { get; set; }
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private DateOnly Today => DateOnly.FromDateTime((Services.GetService<TimeProvider>() ?? TimeProvider.System).GetLocalNow().DateTime);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _period = AccountingPeriod.Parse(From, To, Today);
+        _errors = [];
+        _ledger = null;
+        OperationResult<AccountLedgerResponse> result = await Accounting.GetLedgerAsync(Account, _period.From, _period.To, CustomerId, CancellationToken.None);
+        if (result is { IsSuccess: true, Value: { } ledger })
+        {
+            _ledger = ledger;
+        }
+        else
+        {
+            _errors = result.Errors;
+            _ledger = new AccountLedgerResponse(Account, CustomerId, _period.From, _period.To, 0, [], 0, 0, 0);
+        }
+
+        _customerName = null;
+        if (CustomerId is Guid customer)
+        {
+            _customerName = _ledger.Lines.FirstOrDefault()?.CustomerName;
+            if (_customerName is null)
+            {
+                OperationResult<CustomerResponse> read = await Customers.GetAsync(customer, CancellationToken.None);
+                _customerName = read.Value?.Name;
+            }
+        }
+    }
+
+    private void ChangePeriod(AccountingPeriod period) => Navigation.NavigateTo(Href(Account, period, CustomerId));
+
+    private void ChangeAccount(ChangeEventArgs e)
+    {
+        string account = e.Value?.ToString() ?? Account;
+        Navigation.NavigateTo(Href(account, _period, account == SalesAccounts.Customers ? CustomerId : null));
+    }
+
+    private static string Href(string account, AccountingPeriod period, Guid? customer) =>
+        $"accounting/accounts/{account}?{period.Query}{(customer is Guid id ? $"&customer={id}" : null)}";
+
+    private string AccountLabel(string account)
+    {
+        LocalizedString label = L[$"Account.{account}"];
+        return label.ResourceNotFound ? string.Empty : label.Value;
+    }
+}

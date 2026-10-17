@@ -24,6 +24,9 @@ internal static class ExportEndpoints
     {
         RouteGroupBuilder group = api.MapGroup("/exports").WithTags("Exports");
 
+        // La consultation du journal des ventes lit les mêmes écritures que le FEC : mêmes module et branchement.
+        api.MapAccounting();
+
         group.MapGet("/fec", ExportFecAsync)
             .RequirePermission(Permission.FecExporter)
             .WithName("ExportFec")

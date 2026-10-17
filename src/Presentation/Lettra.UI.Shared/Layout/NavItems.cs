@@ -25,6 +25,7 @@ public static class NavItems
         new("customers", "Nav.Customers", "users", "Nav.Group.Parties", InTabBar: true),
         new("suppliers", "Nav.Suppliers", "truck", "Nav.Group.Parties"),
         new("catalog", "Nav.Catalog", "package", "Nav.Group.Parties"),
+        new("accounting", "Nav.Accounting", "book-open", "Nav.Group.Accounting"),
         new("exports/fec", "Nav.Fec", "file-spreadsheet", "Nav.Group.Accounting"),
         new("alerts", "Nav.Alerts", "bell", "Nav.Group.Settings"),
         new("settings/company", "Nav.Company", "building-2", "Nav.Group.Settings", Match: NavLinkMatch.All),
