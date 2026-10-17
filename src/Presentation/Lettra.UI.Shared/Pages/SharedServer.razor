@@ -1,0 +1,154 @@
+@page "/session/serveur"
+@* Serveur commun : l'application installée travaille sur cet appareil seul, ou sur le serveur du cabinet que partagent le
+   navigateur et les autres appareils. Accessible sans session (route « session/… ») : on choisit avant de se connecter. *@
+@using Microsoft.Extensions.DependencyInjection
+@inject IServiceProvider Services
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+
+<PageTitle>@L["SharedServer.Title"] · Lettra</PageTitle>
+
+<h1 tabindex="-1">@L["SharedServer.Title"]</h1>
+
+@if (_connection is null)
+{
+    @* Navigateur : il travaille toujours sur le serveur qui l'a servi. *@
+    <section class="lettra-card">
+        <p id="shared-server-browser">@string.Format(CultureInfo.CurrentCulture, L["SharedServer.Browser"], Navigation.BaseUri.TrimEnd('/'))</p>
+    </section>
+}
+else
+{
+    <section class="lettra-card" aria-labelledby="shared-server-now">
+        <h2 id="shared-server-now">@L["SharedServer.Now"]</h2>
+        <p id="shared-server-state" data-mode="@(_connection.CurrentServer is null ? "device" : "server")">
+            @if (_connection.CurrentServer is Uri server)
+            {
+                @string.Format(CultureInfo.CurrentCulture, L["SharedServer.Now.Server"], Display(server))
+            }
+            else
+            {
+                @L["SharedServer.Now.Device"]
+            }
+        </p>
+    </section>
+
+    @if (_connection.RestartPending)
+    {
+        <section class="lettra-card" aria-labelledby="shared-server-restart">
+            <h2 id="shared-server-restart">@L["SharedServer.Restart.Title"]</h2>
+            <p id="shared-server-saved" role="status">@_saved</p>
+            @switch (_connection.RestartKind)
+            {
+                case ServerRestartKind.Automatic:
+                    <p>@L["SharedServer.Restart.Automatic"]</p>
+                    <button type="button" id="shared-server-restart-now" class="lettra-button" @onclick="_connection.Restart">@L["SharedServer.Restart.Now"]</button>
+                    break;
+                case ServerRestartKind.CloseThenReopen:
+                    <p>@L["SharedServer.Restart.Close"]</p>
+                    <button type="button" id="shared-server-restart-now" class="lettra-button" @onclick="_connection.Restart">@L["SharedServer.Restart.CloseNow"]</button>
+                    break;
+                default:
+                    <p>@L["SharedServer.Restart.Manual"]</p>
+                    break;
+            }
+        </section>
+    }
+    else
+    {
+        <section class="lettra-card" aria-labelledby="shared-server-use">
+            <h2 id="shared-server-use">@L[_connection.CurrentServer is null ? "SharedServer.Use.Title" : "SharedServer.Change.Title"]</h2>
+            <p>@L["SharedServer.Use.Intro"]</p>
+            <form @onsubmit="UseServerAsync">
+                <label for="shared-server-address">@L["SharedServer.Address"]</label>
+                @* Texte et non « url » : une adresse sans https:// (192.168.1.20:8443) est acceptée et complétée. *@
+                <input id="shared-server-address" type="text" inputmode="url" autocomplete="url" autocapitalize="off" spellcheck="false"
+                       placeholder="https://192.168.1.20:8443" aria-describedby="shared-server-help" @bind="_address" />
+                <p id="shared-server-help" class="lettra-muted">@L["SharedServer.Address.Help"]</p>
+                <GeneralErrors Errors="_errors" />
+                <button type="submit" id="shared-server-submit" class="lettra-button" disabled="@_busy" aria-busy="@(_busy ? "true" : "false")">
+                    @L[_busy ? "SharedServer.Checking" : "SharedServer.Use.Submit"]
+                </button>
+            </form>
+            <p class="lettra-muted">@L["SharedServer.Use.Data"]</p>
+            <p class="lettra-muted">@L["SharedServer.Use.Network"]</p>
+        </section>
+
+        @if (_connection.CurrentServer is not null)
+        {
+            <section class="lettra-card" aria-labelledby="shared-server-device">
+                <h2 id="shared-server-device">@L["SharedServer.Device.Title"]</h2>
+                <p>@L["SharedServer.Device.Intro"]</p>
+                <button type="button" id="shared-server-device-only" class="lettra-button" disabled="@_busy" @onclick="UseThisDeviceOnlyAsync">@L["SharedServer.Device.Submit"]</button>
+            </section>
+        }
+    }
+
+    <p><a href="session">@L["SharedServer.Back"]</a></p>
+}
+
+@code {
+    private IServerConnection? _connection;
+    private string _address = string.Empty;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private string? _saved;
+    private bool _busy;
+
+    protected override void OnInitialized()
+    {
+        _connection = Services.GetService<IServerConnection>();
+        if (_connection?.CurrentServer is Uri server)
+        {
+            _address = Display(server);
+        }
+    }
+
+    private async Task UseServerAsync()
+    {
+        if (_connection is null || _busy)
+        {
+            return;
+        }
+
+        _busy = true;
+        _errors = [];
+        try
+        {
+            OperationResult<Uri> used = await _connection.UseServerAsync(_address, CancellationToken.None);
+            if (used.IsSuccess)
+            {
+                _saved = string.Format(CultureInfo.CurrentCulture, L["SharedServer.Saved.Server"], Display(used.Value!));
+            }
+            else
+            {
+                _errors = used.Errors;
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task UseThisDeviceOnlyAsync()
+    {
+        if (_connection is null || _busy)
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            await _connection.UseThisDeviceOnlyAsync(CancellationToken.None);
+            _saved = L["SharedServer.Saved.Device"];
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    /// <summary>L'adresse telle qu'on la tape, sans la barre finale.</summary>
+    private static string Display(Uri server) => server.GetLeftPart(UriPartial.Authority);
+}

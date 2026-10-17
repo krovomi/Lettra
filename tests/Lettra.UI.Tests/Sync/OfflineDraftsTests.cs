@@ -315,7 +315,7 @@ public sealed class OfflineDraftEditorTests : BunitContext
         // Rechargement, toujours sans réseau : la saisie revient depuis l'appareil.
         await DisposeComponentsAsync();
         page = Render<QuoteEditor>(p => p.Add(e => e.LocalId, brouillon.LocalId).Add(e => e.AutosaveDelay, TimeSpan.Zero));
-        page.WaitForAssertion(() => page.Find("#document-status").TextContent.Should().Contain("repris de cet appareil"));
+        page.WaitForAssertion(() => this.ToastText().Should().Contain("repris de cet appareil"));
         page.FindAll(".lg-row[data-r]").Should().HaveCount(1);
         page.Find("#total-excl-tax").TextContent.Trim().Should().Be(GridNumber.FormatAmount(1200m, CultureInfo.GetCultureInfo("fr-FR")));
 
@@ -347,7 +347,7 @@ public sealed class OfflineDraftEditorTests : BunitContext
         OfflineDraft brouillon = _store.Drafts.Values.Should().ContainSingle().Subject;
         brouillon.ServerId.Should().Be(facture.Id);
         brouillon.BaseVersion.Should().Be(1);
-        page.WaitForAssertion(() => page.Find("#document-status").TextContent.Should().Contain("enregistré sur cet appareil"));
+        page.WaitForAssertion(() => this.ToastText().Should().Contain("enregistré sur cet appareil"));
 
         _invoices.Offline = false;
         await Saisir(page, 0, Prix, "160");
@@ -366,7 +366,7 @@ public sealed class OfflineDraftEditorTests : BunitContext
 
         IRenderedComponent<QuoteEditor> page = Render<QuoteEditor>(p => p.Add(e => e.Id, devis.Id).Add(e => e.AutosaveDelay, TimeSpan.Zero));
 
-        page.WaitForAssertion(() => page.Find("#document-status").TextContent.Should().Contain("repris de cet appareil"));
+        page.WaitForAssertion(() => this.ToastText().Should().Contain("repris de cet appareil"));
         page.Find("#total-excl-tax").TextContent.Trim().Should().Be(GridNumber.FormatAmount(500m, CultureInfo.GetCultureInfo("fr-FR")));
     }
 }

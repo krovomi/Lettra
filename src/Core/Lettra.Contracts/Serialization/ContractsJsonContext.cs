@@ -7,6 +7,7 @@ using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Customers;
+using Lettra.Contracts.Demo;
 using Lettra.Contracts.Identity;
 using Lettra.Contracts.Integrity;
 using Lettra.Contracts.Policies;
@@ -37,6 +38,7 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(IssueRightsSnapshotRequest))]
 [JsonSerializable(typeof(RightsSnapshotResponse))]
 [JsonSerializable(typeof(RightsSnapshotKeysResponse))]
+[JsonSerializable(typeof(ServerDiscoveryResponse))]
 [JsonSerializable(typeof(CreateSupplierRequest))]
 [JsonSerializable(typeof(SupplierResponse))]
 [JsonSerializable(typeof(PagedResponse<SupplierSummary>))]
@@ -109,6 +111,9 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(SaveSyncPolicyRequest))]
 [JsonSerializable(typeof(SyncDeviceResponse))]
 [JsonSerializable(typeof(IReadOnlyList<SyncDeviceResponse>))]
+[JsonSerializable(typeof(ReceivablesSummaryResponse))]
+[JsonSerializable(typeof(DemoDataStatusResponse))]
+[JsonSerializable(typeof(DemoSeedResponse))]
 [JsonSerializable(typeof(SpeechStatusResponse))]
 [JsonSerializable(typeof(TranscriptionResponse))]
 public sealed partial class ContractsJsonContext : JsonSerializerContext;

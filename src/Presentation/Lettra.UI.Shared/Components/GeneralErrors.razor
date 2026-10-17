@@ -1,11 +1,48 @@
-@* Erreurs sans champ (droits, verrouillage, serveur injoignable), traduites. *@
+@* Erreurs sans champ (droits, verrouillage, serveur injoignable), traduites et affichées dans le toaster (vague 5) :
+   elles restent jusqu'à ce qu'on les ferme, et disparaissent d'elles-mêmes quand la page réussit à nouveau ou se ferme. *@
+@implements IDisposable
 @inject IStringLocalizer<SharedResource> L
-
-@foreach (ErrorDetail error in Errors.Where(e => e.Target is null))
-{
-    <p class="validation-message" role="alert">@L.Error(error.Code)</p>
-}
+@inject ToastService Toasts
 
 @code {
+    private readonly List<int> _raised = [];
+    private IReadOnlyList<ErrorDetail>? _shown;
+
     [Parameter] public IReadOnlyList<ErrorDetail> Errors { get; set; } = [];
+
+    /// <summary>Montre aussi les erreurs rattachées à un champ (grille de saisie, qui n'a pas de place sous ses cellules).</summary>
+    [Parameter] public bool IncludeFieldErrors { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (ReferenceEquals(Errors, _shown))
+        {
+            return;
+        }
+
+        _shown = Errors;
+        string[] messages = [.. Errors.Where(e => IncludeFieldErrors || e.Target is null).Select(e => L.Error(e.Code)).Distinct(StringComparer.Ordinal)];
+        if (messages.Length == 0)
+        {
+            DismissRaised();
+            return;
+        }
+
+        foreach (string message in messages)
+        {
+            _raised.Add(Toasts.Show(ToastKind.Error, message).Id);
+        }
+    }
+
+    private void DismissRaised()
+    {
+        foreach (int id in _raised)
+        {
+            Toasts.Dismiss(id);
+        }
+
+        _raised.Clear();
+    }
+
+    public void Dispose() => DismissRaised();
 }

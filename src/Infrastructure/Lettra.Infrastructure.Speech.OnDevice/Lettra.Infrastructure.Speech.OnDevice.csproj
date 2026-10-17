@@ -2,14 +2,17 @@
 
   <!-- Voix sur le poste (vague 5, lane D) : ISpeechToText par Whisper.net (whisper.cpp embarqué), hors ligne, pour
        l'application MAUI (Windows, macOS, Android, iOS). Le modèle ggml est téléchargé au premier usage, ou déposé
-       à l'avance, et vérifié par empreinte avant chaque chargement. Jamais référencé par l'API. -->
+       à l'avance, et vérifié par empreinte avant chaque chargement. Jamais référencé par l'API.
+       Whisper.net.Runtime (bibliothèques natives) n'est pas ici mais dans chaque exécutable (application MAUI, tests) :
+       ses cibles MSBuild, qui choisissent les bibliothèques de la plateforme (Android, iOS, Mac Catalyst, Windows), ne
+       s'appliquent qu'au projet qui référence le paquet directement. Depuis cette bibliothèque (net10.0), elles
+       copieraient dans l'application mobile les bibliothèques de bureau (Linux, macOS, Windows), sans celles du mobile. -->
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Lettra.Application\Lettra.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Whisper.net" />
-    <PackageReference Include="Whisper.net.Runtime" />
     <PackageReference Include="Microsoft.Extensions.Http" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
   </ItemGroup>

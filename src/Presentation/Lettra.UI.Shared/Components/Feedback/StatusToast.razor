@@ -1,0 +1,25 @@
+@inject ToastService Toasts
+@* Résultat d'une action (enregistré, validé, émis) annoncé dans le toaster plutôt que dans la page : chaque nouveau
+   message non vide part une fois. *@
+
+@code {
+    private string? _last;
+
+    [Parameter] public string? Message { get; set; }
+
+    [Parameter] public ToastKind Kind { get; set; } = ToastKind.Success;
+
+    protected override void OnParametersSet()
+    {
+        if (string.Equals(Message, _last, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _last = Message;
+        if (!string.IsNullOrEmpty(Message))
+        {
+            Toasts.Show(Kind, Message);
+        }
+    }
+}

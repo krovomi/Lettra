@@ -134,6 +134,29 @@ public sealed class SpeechApiTests(LettraApiFactory factory) : IClassFixture<Let
     }
 
     [Fact]
+    public async Task Dans_la_demo_un_serveur_whisper_pas_encore_pret_rend_503_sans_bloquer_l_api()
+    {
+        // Comme deploy/demo/compose.yaml pendant le téléchargement du modèle : moteur WhisperServer configuré, serveur
+        // qui ne répond pas encore (port fermé sur la boucle locale, adresse interne acceptée par le garde-fou).
+        using WebApplicationFactory<Program> demo = factory.WithWebHostBuilder(builder => builder
+            .UseSetting("Lettra:Speech:Engine", "WhisperServer")
+            .UseSetting("Lettra:Speech:WhisperServer:Endpoint", "http://127.0.0.1:9/")
+            .UseSetting("Lettra:Speech:WhisperServer:Timeout", "00:00:05"));
+        using HttpClient client = Client(demo);
+
+        using HttpResponseMessage health = await client.GetAsync(new Uri("/health", UriKind.Relative));
+        SpeechStatusResponse status = (await client.GetFromJsonAsync("/api/v1/voix/statut", ContractsJsonContext.Default.SpeechStatusResponse))!;
+        using HttpResponseMessage response = await PostAsync(client, Tone(), "langue=fr");
+
+        health.StatusCode.Should().Be(HttpStatusCode.OK);
+        status.Enabled.Should().BeTrue();
+        status.Engine.Should().Be("whisper-serveur");
+        status.OnDevice.Should().BeFalse();
+        response.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
+        (await ProblemAsync(response)).Code.Should().Be(ErrorCodes.Speech.EngineUnavailable);
+    }
+
+    [Fact]
     public async Task Le_texte_dicte_n_apparait_jamais_dans_les_journaux()
     {
         const string secret = "Boulangerie Zéphyrine";

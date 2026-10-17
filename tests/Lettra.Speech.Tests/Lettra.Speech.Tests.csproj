@@ -14,6 +14,8 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.Extensions.Logging" />
     <PackageReference Include="Xunit.SkippableFact" />
+    <!-- Bibliothèques natives de Whisper.net (Linux, Windows, macOS) pour le corpus du workflow « Voix ». -->
+    <PackageReference Include="Whisper.net.Runtime" />
   </ItemGroup>
 
   <!-- Corpus de phrases du workflow « Voix » : la phrase attendue et la commande attendue de chaque enregistrement. -->

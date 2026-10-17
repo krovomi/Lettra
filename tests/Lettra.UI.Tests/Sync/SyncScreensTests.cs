@@ -5,6 +5,7 @@ using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
 using Lettra.UI.Shared.Components.Sync;
 using Lettra.UI.Shared.Localization;
+using Lettra.UI.Shared.Services;
 using Lettra.UI.Shared.Pages.Sync;
 using Lettra.UI.Shared.Sync;
 using Microsoft.Extensions.DependencyInjection;
@@ -257,7 +258,7 @@ public sealed class SyncScreensTests : BunitContext
         page.Find("tr[data-field=City] input.take-server").Change(true);
         page.Find("button.apply").Click();
 
-        page.WaitForAssertion(() => page.Find("[role=status].lettra-success").TextContent.Should().Be("Conflit résolu."));
+        page.WaitForAssertion(() => this.ToastText().Should().Be("Conflit résolu."));
         _sync.Resolutions.Should().ContainSingle().Which.Should().BeEquivalentTo(new[] { new SyncFieldChoice(email, true), new SyncFieldChoice(ville, false) });
         page.Find("#sync-conflicts-empty").Should().NotBeNull();
     }
@@ -273,9 +274,9 @@ public sealed class SyncScreensTests : BunitContext
         page.Find("input.take-server").Change(true);
         page.Find("button.apply").Click();
 
-        page.WaitForAssertion(() => page.Find("p.validation-message").TextContent.Should().Be("L'élément modifié sur ce poste n'existe pas sur le serveur."));
+        page.WaitForAssertion(() => this.ToastText().Should().Be("L'élément modifié sur ce poste n'existe pas sur le serveur."));
         page.FindAll("section.lettra-sync-conflict").Should().ContainSingle();
-        page.FindAll("[role=status].lettra-success").Should().BeEmpty();
+        this.Toasts().Should().NotContain(t => t.Kind == ToastKind.Success);
     }
 
     [Fact]

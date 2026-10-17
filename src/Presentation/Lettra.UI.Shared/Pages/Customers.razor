@@ -86,10 +86,7 @@
 
         <button type="submit" disabled="@_busy">@L["Customers.Create.Submit"]</button>
 
-        @if (_created is not null)
-        {
-            <p role="status" class="lettra-success">@string.Format(CultureInfo.CurrentCulture, L["Customers.Create.Done"], _created.Name)</p>
-        }
+        <StatusToast Message="@(_created is null ? null : string.Format(CultureInfo.CurrentCulture, L["Customers.Create.Done"], _created.Name))" />
     </EditForm>
 </section>
 
@@ -97,15 +94,15 @@
     <h2 id="list-title">@L["Customers.List.Title"]</h2>
     @if (_page is null)
     {
-        <p>@L["Loading"]</p>
+        <ListSkeleton Columns="3" Rows="4" />
     }
     else if (_page.TotalCount == 0)
     {
-        <p>@L["Customers.List.Empty"]</p>
+        <EmptyState Id="customers-empty" IconName="users" Title="@L["Customers.List.Empty"]" Text="@L["Customers.Empty.Text"]" />
     }
     else
     {
-        <table class="lettra-table">
+        <table class="lettra-table lt-cards">
             <thead>
                 <tr>
                     <th scope="col">@L["Customers.Field.Name"]</th>
@@ -118,8 +115,8 @@
                 {
                     <tr>
                         <td>@customer.Name</td>
-                        <td>@customer.Siren</td>
-                        <td>@customer.City</td>
+                        <td data-label="@L["Customers.Field.Siren"]">@customer.Siren</td>
+                        <td data-label="@L["Customers.Field.City"]">@customer.City</td>
                     </tr>
                 }
             </tbody>
