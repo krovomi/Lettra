@@ -56,6 +56,27 @@ SLO comptent sur `job="lettra/lettra-api"` et sur la disparition de `target_info
 (`LettraApiIndisponible`), que la poussée OTLP donne directement. Le collecteur expose ses propres métriques sur le
 port 8888 (ServiceMonitor), surveillées par `infra.rules.yml`.
 
+## Tableaux de bord
+
+`dashboards/*.json`, rangés dans un ConfigMap que le sidecar de Grafana charge (étiquette `grafana_dashboard`) ; la
+démonstration (`deploy/demo/compose.observabilite.yaml`) monte les mêmes fichiers :
+
+| Fichier | Contenu |
+|---|---|
+| `lettra-slo.json` | Objectifs de service : disponibilité et budget d'erreur, latence des lectures, PgBouncer, alertes. |
+| `lettra-activite.json` | Requêtes par route, latence p50/p95/p99 avec exemplaires, erreurs, cas d'usage, outbox, synchronisations, connexions, assistant, traces (Tempo) et journaux (Loki). |
+| `lettra-metier.json` | Pièces par type et par étape, transmissions à la plateforme par statut, exports FEC : des nombres seulement. |
+
+Métriques de Lettra (`LettraTelemetry`, compteur Meter `Lettra`) et leurs seules étiquettes, toutes à valeurs fixes :
+`lettra.use_case.count`/`.duration` (`lettra.use_case`, `lettra.outcome`), `lettra.document.count`
+(`lettra.document.type`, `lettra.document.action`), `lettra.einvoicing.transmission.count`
+(`lettra.einvoicing.operation`, `lettra.einvoicing.status`), `lettra.fec.export.count` et `lettra.sign_in.count`
+(`lettra.outcome`), `lettra.assistant.call.count` (`lettra.outcome`, `lettra.error.code`), `lettra.sync.duration`
+(`lettra.sync.direction`, `lettra.outcome`), `lettra.outbox.dispatch.count` (`lettra.outbox.kind`,
+`lettra.outbox.result`), jauges `lettra.outbox.pending`, `.parked`, `.oldest_age`. Aucune ne porte de dossier, de
+personne, de client ou de montant (`DemoWalkthroughTests`). Les histogrammes gardent des exemplaires (`trace_id`)
+quand la mesure est prise dans une requête tracée.
+
 ## Valeurs
 
 | Clé | Défaut | Rôle |

@@ -1,8 +1,10 @@
+using System.Diagnostics;
 using Lettra.Api.Infrastructure;
 using Lettra.Api.Security;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Tenancy;
+using Lettra.Application.Diagnostics;
 using Lettra.Application.Features.Sync;
 using Lettra.Contracts.Sync;
 using Lettra.Domain.Common;
@@ -22,12 +24,14 @@ internal static class SyncEndpoints
         RouteGroupBuilder group = api.MapGroup("/sync").WithTags("Sync");
 
         group.MapPost("/intents", PushAsync)
+            .AddEndpointFilter(Measure("push"))
             .WithName("PushSyncIntents")
             .RequirePermission(Permission.DossierLire)
             .Produces<PushSyncIntentsResponse>()
             .ProducesProblem(StatusCodes.Status400BadRequest);
 
         group.MapGet("/changes", PullAsync)
+            .AddEndpointFilter(Measure("pull"))
             .WithName("PullSyncChanges")
             .RequirePermission(Permission.DossierLire)
             .Produces<SyncChangesResponse>()
@@ -70,6 +74,31 @@ internal static class SyncEndpoints
 
         return group;
     }
+
+    /// <summary>
+    /// Durée d'un échange de synchronisation (<c>lettra.sync.duration</c>), par sens et par issue : réussi si la
+    /// réponse est un succès HTTP. Rien du poste ni du dossier dans les étiquettes.
+    /// </summary>
+    private static Func<EndpointFilterInvocationContext, EndpointFilterDelegate, ValueTask<object?>> Measure(string direction) =>
+        async (context, next) =>
+        {
+            long started = Stopwatch.GetTimestamp();
+            string outcome = LettraTelemetry.Outcomes.Error;
+            try
+            {
+                object? result = await next(context).ConfigureAwait(false);
+                outcome = result is IStatusCodeHttpResult { StatusCode: >= 400 } ? LettraTelemetry.Outcomes.Failure : LettraTelemetry.Outcomes.Success;
+                return result;
+            }
+            finally
+            {
+                LettraTelemetry.SyncDuration.Record(Stopwatch.GetElapsedTime(started).TotalSeconds, new TagList
+                {
+                    { LettraTelemetry.Attributes.SyncDirection, direction },
+                    { LettraTelemetry.Attributes.Outcome, outcome },
+                });
+            }
+        };
 
     private static async Task<IResult> ListDevicesAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken)
     {

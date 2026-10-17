@@ -103,10 +103,11 @@ Les noms viennent du projet Compose `lettra-demo` (`name:` de `compose.yaml`) : 
 - **Sauvegarder** (démo arrêtée) :
   `docker run --rm -v lettra-demo_lettra-donnees:/donnees -v "${PWD}:/sauvegarde" busybox tar czf /sauvegarde/lettra-donnees.tgz -C /donnees .`
 
-## Option : télémétrie OpenTelemetry
+## Option : télémétrie OpenTelemetry (collecteur seul)
 
 La démonstration seule n'exporte rien. Pour voir ce que l'API enverrait au collecteur d'une cellule, ajouter
-`compose.otel.yaml` aux mêmes commandes :
+`compose.otel.yaml` aux mêmes commandes (pour les tableaux de bord, voir plutôt « Voir la télémétrie dans Grafana »
+ci-dessous) :
 
 ```bash
 docker compose -f deploy/demo/compose.yaml -f deploy/demo/compose.otel.yaml up -d --build --wait
@@ -122,6 +123,85 @@ curl -s http://localhost:8889/metrics | grep lettra_use_case
   réservé à la démonstration (données fictives) ; une cellule n'en écrit qu'un résumé.
 - Ports publiés sur `127.0.0.1` seulement : 4317 (OTLP gRPC), 4318 (OTLP HTTP), 8889 (métriques). Variables
   `LETTRA_DEMO_OTLP_GRPC_PORT`, `LETTRA_DEMO_OTLP_HTTP_PORT` et `LETTRA_DEMO_METRIQUES_PORT` en cas de conflit.
+
+## Voir la télémétrie dans Grafana
+
+Pour voir ce que fait Lettra pendant la démonstration (requêtes, latence, erreurs, ventes, transmissions, alertes),
+ajouter `compose.observabilite.yaml` aux commandes de la démonstration :
+
+```bash
+docker compose -f deploy/demo/compose.yaml -f deploy/demo/compose.observabilite.yaml up -d --build --wait
+```
+
+Puis ouvrir **http://localhost:3000/** : Grafana s'ouvre sans connexion, en lecture seule, sur « Lettra · Activité ».
+Les trois tableaux de bord sont dans le dossier **Lettra** (menu *Dashboards*), et le bandeau de chacun mène aux autres.
+
+| Tableau de bord | Ce qu'il montre |
+|---|---|
+| **Lettra · Activité** | Requêtes par route, latence p50/p95/p99, réponses en erreur par code (401, 403, 429, 5xx), cas d'usage par issue et leur durée, file de l'outbox (en attente, mis de côté, âge du plus ancien) et ses envois, synchronisations (durée, issue), connexions réussies et refusées, appels à l'assistant par issue, traces récentes (Tempo) et journaux (Loki) de l'API. |
+| **Lettra · Métier** | Devis créés, validés, acceptés ou refusés, factures créées, validées et émises, avoirs, transmissions à la plateforme agréée par statut, exports FEC. **Des nombres seulement** : aucun montant, client, dossier ni personne. |
+| **Lettra · Objectifs de service** | Le tableau de bord de la cellule : disponibilité et budget d'erreur sur 30 jours, latence p95 des lectures, cas d'usage, et la liste des alertes de la cellule. Les deux panneaux PostgreSQL restent vides (la démonstration utilise SQLite). |
+
+**D'un pic à sa cause** : sur une courbe de latence, les points sont des *exemplaires* ; survoler l'un d'eux puis
+**Voir la trace** ouvre la requête mesurée dans Tempo. Dans la trace, le bouton des journaux d'un span ouvre les lignes de
+Loki de la même requête ; dans Loki, **Voir la trace** fait le chemin inverse. Explore (menu de gauche) permet aussi de
+chercher librement dans les trois sources.
+
+**Alertes** : Prometheus évalue les règles de la cellule (`deploy/helm/lettra-observability/files/rules`), visibles dans
+Grafana (*Alerting* → *Alert rules*, et en bas de « Objectifs de service »). Aucune notification ne part (pas
+d'Alertmanager). Dans la démonstration, `Watchdog` est toujours active (la chaîne tourne) et
+`LettraWorkerIndisponible` aussi : la démonstration n'a pas de Worker, l'API reprend son rôle.
+
+### Remplir les courbes : activité de démonstration (k6)
+
+Sans trafic, les courbes restent plates. Le scénario k6 de la démonstration a un profil « activité » : trois
+utilisateurs virtuels partagent la session de démonstration pendant 10 minutes et enchaînent ventes complètes (devis,
+validation, acceptation, facture, validation, transmission à la plateforme simulée, parfois un avoir), devis refusés,
+consultations, synchronisations, questions à l'assistant (désactivé : refus attendu) et exports FEC ; un visiteur
+anonyme charge l'application et une connexion invalide par minute alimente les « connexions refusées ». Données
+fictives uniquement ; le rythme reste sous la limite de débit.
+
+Prérequis : [k6](https://grafana.com/docs/k6/latest/set-up/install-k6/) et Node.js 22 (pour ouvrir la session avec
+Playwright, voir [deploy/tests/README.md](../tests/README.md)). Depuis la racine du dépôt, la pile démarrée :
+
+```bash
+cd deploy/demo/e2e && npm ci && npx playwright install chromium && cd ../../..
+(set -a; . deploy/demo/.env; set +a; SORTIE=/tmp/lettra-k6 node deploy/demo/e2e/parcours.mjs session)
+LETTRA_SESSION_COOKIE="$(cat /tmp/lettra-k6/session-cookie.txt)" k6 run -e LETTRA_PROFIL=activite deploy/tests/k6/fumee.js
+```
+
+Réglages : `-e LETTRA_DUREE=3m` (10m par défaut), `-e LETTRA_UTILISATEURS=5` (3), `-e LETTRA_RYTHME=30` (actions par
+minute, 24). Les métriques arrivent toutes les 10 s : les courbes bougent après une demi-minute environ.
+
+### Comment c'est branché
+
+```
+API ─OTLP─► collecteur (base de la cellule, même filtrage) ─┬─ métriques et exemplaires ─► Prometheus (OTLP, règles de la cellule)
+                                                            ├─ traces ─────────────────► Tempo
+                                                            └─ journaux ───────────────► Loki ──► Grafana (sources et tableaux provisionnés)
+```
+
+- Le collecteur reprend la base de la cellule (`files/collector.yaml`) et ses destinations Tempo et Loki
+  (`otel/collecteur-observabilite.yaml`, identique au rendu du chart : `deploy/tests/valider.sh` le vérifie). Le
+  filtrage des données de dossier est donc celui d'une cellule.
+- Les tableaux de bord sont ceux de la cellule (`deploy/helm/lettra-observability/dashboards`), montés tels quels :
+  une modification dans le dépôt vaut pour les deux. Sources de données : `observabilite/grafana/sources.yaml`.
+- Métriques métier : comptées à la sortie du pipeline des cas d'usage (`BusinessMetrics`, `LettraTelemetry`), avec des
+  étiquettes fixes seulement ; un test vérifie sur le parcours du README qu'aucune ne porte de dossier, de personne,
+  de client ou de montant (`DemoWalkthroughTests`).
+- **Réservé à la démonstration** : Grafana ouvert en lecture sans connexion ; compte `admin` / `admin-demo` (`.env`,
+  `GRAFANA_ADMIN_PASSWORD`) pour Explore et l'administration ; stockage local sans réplication ; rien ne sort vers
+  Internet (statistiques et téléchargements de plugins désactivés).
+- Ports sur `127.0.0.1` seulement : 3000 (Grafana), 9090 (Prometheus), 3200 (Tempo), 3100 (Loki). Variables
+  `LETTRA_DEMO_GRAFANA_PORT`, `LETTRA_DEMO_PROMETHEUS_PORT`, `LETTRA_DEMO_TEMPO_PORT`, `LETTRA_DEMO_LOKI_PORT` en cas
+  de conflit.
+- Arrêt et remise à zéro, avec les mêmes fichiers : `down` garde les métriques, traces et journaux ; `down -v` les
+  efface (volumes `prometheus-donnees`, `tempo-donnees`, `loki-donnees`, `grafana-donnees`).
+- `compose.observabilite.yaml` remplace `compose.otel.yaml` (collecteur seul, ci-dessus) : ne pas combiner les deux.
+- Vérifié à chaque CI par le job « Démo — télémétrie dans Grafana » de `.github/workflows/deploy.yml` : la pile démarre,
+  Grafana répond et a ses sources et ses tableaux de bord, puis après deux minutes d'activité k6, chaque panneau a des
+  données (sauf les deux panneaux PostgreSQL), un exemplaire mène à une trace qui a ses journaux, et les règles
+  d'alerte sont visibles (`deploy/tests/grafana/verifier.py`). L'affichage dans un navigateur n'est pas vérifié par la CI.
 
 ## Comment c'est monté
 

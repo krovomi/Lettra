@@ -110,6 +110,8 @@ if command -v otelcol-contrib >/dev/null || command -v docker >/dev/null; then
     || { echo "Tempo et Loki doivent être branchés quand la cellule les active" >&2; exit 1; }
   ! grep -qE 'otlp/tempo|otlphttp/(loki|fournisseur)' "$RENDU/defaut.yaml" \
     || { echo "aucune destination de traces ni de journaux ne doit être active par défaut" >&2; exit 1; }
+  otelcol_validate "$OBS/collector.yaml" "$ROOT/deploy/demo/otel/collecteur-observabilite.yaml" \
+    && echo "   collector.yaml + destinations de la démonstration (compose.observabilite.yaml) : valide"
   rm -rf "$RENDU"
 else
   echo "   ni otelcol-contrib ni docker : validation du collecteur ignorée" >&2
@@ -120,6 +122,27 @@ if helm template o lettra-observability --set collector.fournisseur.enabled=true
   echo "un fournisseur sans adresse doit être refusé" >&2; exit 1
 fi
 echo "   fournisseur sans adresse : refus vérifié"
+
+step "Démonstration avec Grafana : mêmes destinations et mêmes tableaux de bord que la cellule"
+# Les destinations du collecteur de la démonstration sont le backends.yaml du chart, Tempo et Loki activés, aux adresses
+# de la démonstration près : la démonstration passe par le même filtrage et les mêmes sorties qu'une cellule.
+diff <(backends --set collector.traces.tempo.enabled=true --set collector.traces.tempo.endpoint=tempo:4317 \
+         --set collector.logs.loki.enabled=true --set collector.logs.loki.endpoint=http://loki:3100/otlp | yq -o=json 'sort_keys(..)') \
+     <(yq -o=json 'sort_keys(..)' "$ROOT/deploy/demo/otel/collecteur-observabilite.yaml") \
+  || { echo "deploy/demo/otel/collecteur-observabilite.yaml diffère du rendu du chart (Tempo et Loki activés)" >&2; exit 1; }
+echo "   destinations du collecteur de la démonstration = rendu du chart"
+# Tableaux de bord : JSON valide, uid unique, rangés par Grafana (cellule : sidecar ; démonstration : provisionnement).
+python3 - "$ROOT/deploy/helm/lettra-observability/dashboards" <<'PY'
+import json, pathlib, sys
+uids = {}
+for path in sorted(pathlib.Path(sys.argv[1]).glob("*.json")):
+    d = json.loads(path.read_text(encoding="utf-8"))
+    assert d.get("uid") and d.get("title"), f"{path.name} : uid et titre obligatoires"
+    assert d["uid"] not in uids, f"{path.name} : uid {d['uid']} déjà pris par {uids.get(d['uid'])}"
+    assert "lettra" in d.get("tags", []), f"{path.name} : étiquette « lettra » manquante"
+    uids[d["uid"]] = path.name
+    print(f"   {path.name} : {d['title']} ({d['uid']})")
+PY
 
 step "OpenTofu : format et validation (sans état ni identifiants)"
 cd "$ROOT/deploy/opentofu"

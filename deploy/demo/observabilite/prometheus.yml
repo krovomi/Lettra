@@ -1,0 +1,24 @@
+# Démonstration seulement (compose.observabilite.yaml). Prometheus reçoit les métriques en OTLP, comme celui d'une
+# cellule, et évalue les mêmes règles (deploy/helm/lettra-observability/files/rules) : les alertes s'affichent dans
+# Grafana. Pas d'Alertmanager ici : aucune notification ne part. Au démarrage, la section « otlp » de la cellule
+# (files/prometheus-otlp.yml) est ajoutée à la fin de ce fichier (voir compose.observabilite.yaml).
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cell: demo
+
+rule_files:
+  - /etc/lettra/rules/*.yml
+
+# Métriques propres du collecteur (exportations en échec : règle CollecteurPerdDesSignaux).
+scrape_configs:
+  - job_name: otel-collector
+    static_configs:
+      - targets: ["otel-collector:8888"]
+
+storage:
+  tsdb:
+    # Les lots OTLP du collecteur peuvent arriver un peu dans le désordre.
+    out_of_order_time_window: 10m
+

@@ -91,8 +91,9 @@ build/voix/corpus.sh --epingler voix/corpus voix/voices   # réécrit voices.sha
 Puis commiter les deux manifestes avec le changement. Sans accès à Hugging Face, l'annotation d'erreur du job
 « Corpus et modèle » donne les lignes à coller dans le manifeste.
 
-## Ce qui viendra ensuite (lane F)
+## Dans l'interface (lane F)
 
-Le bouton micro, l'enregistreur du navigateur et l'application des commandes dans les écrans et les formulaires.
-Le branchement dans la démonstration (conteneur whisper.cpp) et dans l'application MAUI (moteur du poste,
-autorisations du micro) suit cette PR.
+Le bouton micro de la barre du haut, le micro des champs, F8 maintenue, l'enregistreur du navigateur et l'exécution
+des commandes dans les écrans sont décrits dans `docs/aide-a-la-saisie.md` (section 3). Le branchement dans la
+démonstration (conteneur whisper.cpp) et dans l'application MAUI (moteur du poste, autorisations du micro) est fait
+par Socle.
