@@ -1,0 +1,19 @@
+@* Bouton « ? » de la barre du haut : rejoue le tutoriel de l'écran affiché (ou celui de l'accueil s'il n'en a pas). *@
+@inject GuidedTours Tours
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+
+<button type="button" id="tour-help" class="lt-icon-button" data-tour="help" aria-label="@L["Tour.Help"]" title="@L["Tour.Help"]" @onclick="Start">
+    <Icon Name="circle-help" />
+</button>
+
+@code {
+    private void Start()
+    {
+        TourDefinition? tour = TourCatalog.ForPath(Navigation.ToBaseRelativePath(Navigation.Uri)) ?? TourCatalog.Find("home");
+        if (tour is not null)
+        {
+            Tours.Start(tour);
+        }
+    }
+}

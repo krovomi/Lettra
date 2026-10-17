@@ -168,6 +168,12 @@ internal static class OutboxScenarios
         (await PassAsync(harness, dossier)).Should().Be(new OutboxPass(0, 1, 1));
         (await FindAsync(harness, dossier, refused))!.ParkedAt.Should().Be(clock.Now);
         (await FindAsync(harness, dossier, down))!.LastError.Should().Be(nameof(InvalidOperationException));
+        await using (AsyncServiceScope peek = await harness.OpenAsync(dossier))
+        {
+            (await peek.ServiceProvider.GetRequiredService<IOutboxDispatcher>().GetBacklogAsync(default))
+                .Should().Be(new OutboxBacklog(1, 1, (await FindAsync(harness, dossier, down))!.EnqueuedAt), "une reprise en attente, un refus mis de côté");
+        }
+
         clock.Now = clock.Now.AddMinutes(1);
         await PassAsync(harness, dossier);
         clock.Now = clock.Now.AddMinutes(2);
@@ -176,6 +182,7 @@ internal static class OutboxScenarios
         await using AsyncServiceScope scope = await harness.OpenAsync(dossier);
         IOutboxDispatcher dispatcher = scope.ServiceProvider.GetRequiredService<IOutboxDispatcher>();
         (await dispatcher.ListParkedAsync(default)).Select(m => m.IdempotencyKey).Should().BeEquivalentTo(["cle-refus", "cle-toujours-en-panne"]);
+        (await dispatcher.GetBacklogAsync(default)).Should().Be(new OutboxBacklog(0, 2, null), "plus rien en attente");
         clock.Now = clock.Now.AddDays(1);
         (await dispatcher.DispatchDueAsync(default)).Should().Be(new OutboxPass(0, 0, 0), "mis de côté : plus d'essai");
         (await dispatcher.RequeueAsync(refused, default)).Should().BeTrue();
@@ -230,6 +237,7 @@ internal static class OutboxScenarios
             harness.Services.GetRequiredService<IServiceScopeFactory>(),
             new OutboxDossierSource((_, _) => Task.FromResult<IReadOnlyList<TenantDescriptor>>([harness.Descriptor(a), harness.Descriptor(b)])),
             Options.Create(new OutboxDispatchJobOptions()),
+            TimeProvider.System,
             NullLogger<OutboxDispatchJob>.Instance);
         (await job.RunPassAsync(default)).Should().Be(new OutboxPass(2, 0, 0));
         recipient.Received.Keys.Should().BeEquivalentTo(["cle-a", "cle-b"]);

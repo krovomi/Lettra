@@ -107,6 +107,32 @@ téléphone après la démonstration.
 > Non vérifié sur un vrai téléphone : la CI vérifie ce profil HTTPS dans Chromium, avec une adresse autre que
 > localhost, mais pas l'installation du certificat ni la PWA sur Android ou iOS.
 
+#### Voir la télémétrie dans Grafana
+
+La même démonstration, avec ses traces, métriques et journaux dans Grafana (collecteur filtrant, Prometheus, Tempo et
+Loki, comme dans une cellule) :
+
+```bash
+docker compose -f deploy/demo/compose.yaml -f deploy/demo/compose.observabilite.yaml up -d --build --wait
+```
+
+Puis **http://localhost:3000/**, sans connexion : trois tableaux de bord dans le dossier « Lettra », **Activité**
+(requêtes, latence, erreurs, outbox, synchronisations, connexions, assistant), **Métier** (devis, factures, avoirs,
+transmissions, FEC, en nombres seulement) et **Objectifs de service** (disponibilité, latence, alertes). Pour remplir
+les courbes, dix minutes d'activité fictive avec k6, une fois la session ouverte
+([commandes complètes](deploy/demo/README.md#remplir-les-courbes--activité-de-démonstration-k6)) :
+
+```bash
+LETTRA_SESSION_COOKIE="$(cat /tmp/lettra-k6/session-cookie.txt)" k6 run -e LETTRA_PROFIL=activite deploy/tests/k6/fumee.js
+```
+
+Détails : [Voir la télémétrie dans Grafana](deploy/demo/README.md#voir-la-télémétrie-dans-grafana).
+
+> La CI (job « Démo — télémétrie dans Grafana ») démarre cette pile, vérifie par l'API de Grafana les sources et les
+> tableaux de bord, puis, après deux minutes d'activité k6, que chaque panneau a des données (sauf les deux panneaux
+> PostgreSQL, vides avec SQLite), qu'un exemplaire mène à une trace et à ses journaux, et que les alertes de la cellule
+> sont visibles. L'affichage dans un navigateur n'est pas vérifié.
+
 ### Application Windows
 
 L'**application de bureau** fonctionne seule sur un PC, sans serveur, sans base de données à installer et sans
@@ -345,6 +371,22 @@ Sans SIREN dans la fiche entreprise, l'export le demande au lieu de produire un 
 - **Langue** : l'écran suit la langue de l'appareil ou du navigateur (français ou anglais). Chaque client et chaque PDF peuvent avoir la
   leur (« Langue des devis et factures imprimés », « Langue du PDF »).
 
+### Tutoriel, aide à la saisie et voix
+
+- **Tutoriel** : chaque écran se présente la première fois. Le bouton **?** en haut le rejoue, et le menu
+  Apparence > « Réinitialiser les tutoriels » permet de tout revoir. Le tableau de bord affiche « Pour bien démarrer »,
+  qui se coche tout seul. *(Vérifié : Chromium Linux 1440/768/375 px ; non vérifié : Safari, Firefox, MAUI.)*
+- **Aide à la saisie** : code postal ↔ ville dans la fiche client, « / » pour les modèles de texte (objet, notes,
+  conditions de paiement), saisie rapide dans les lignes (`3h`, `1h30`, `1,5 j`, `2x45`), F4 sur la désignation,
+  articles habituels du client. *(Vérifié : Chromium Linux.)*
+- **Voix** (optionnelle) : bouton micro en haut, micro dans les champs de texte, F8 maintenue pour dicter ou donner une
+  commande (« nouveau devis », « ouvrir les factures en retard », « ajoute trois heures de conseil à 120 euros »). Une
+  commande est toujours affichée avant d'être exécutée. Sans moteur Whisper configuré, le micro explique que la
+  dictée n'est pas activée. *(Vérifié : Chromium Linux avec micro simulé ; non vérifié : vrai Whisper dans
+  l'interface, Safari, Firefox, MAUI.)* Le moteur est décrit juste après.
+
+Détails : [docs/aide-a-la-saisie.md](docs/aide-a-la-saisie.md).
+
 ### Dictée et commandes vocales
 
 La dictée et les commandes vocales utilisent Whisper, **toujours en local** : le serveur whisper.cpp de la
@@ -383,8 +425,8 @@ ligne ». Une commande qui valide ou émet une pièce demande toujours confirmat
 | Application Windows, Android, iOS et Mac Catalyst : Whisper.net et le micro sur l'appareil | **Non vérifié** : l'application est construite avec la voix, mais rien n'a été dicté sur un appareil |
 | Une vraie voix humaine, du bruit de bureau, des accents | **Non vérifié** |
 
-Le bouton micro dans les écrans arrive avec le tutoriel et l'aide à la saisie (PR en cours) : en attendant, la voix
-ne s'essaie que par l'API. Détails techniques : [src/Core/Lettra.Speech/README.md](src/Core/Lettra.Speech/README.md).
+Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou F8 maintenue (voir
+[Tutoriel, aide à la saisie et voix](#tutoriel-aide-à-la-saisie-et-voix)). Détails techniques : [src/Core/Lettra.Speech/README.md](src/Core/Lettra.Speech/README.md).
 
 ---
 
@@ -397,7 +439,6 @@ ne s'essaie que par l'API. Détails techniques : [src/Core/Lettra.Speech/README.
 | Vraie plateforme agréée | En attente d'un partenaire ; la démo utilise la plateforme simulée. |
 | Serveur du cabinet en production | La démonstration navigateur tourne sur un poste avec Docker ; un vrai serveur du cabinet ou une cellule SaaS demande Keycloak, des certificats et une infrastructure (voir plus bas). |
 | Poste relié à un serveur, synchronisation | Prête dans l'application (fichier `lettra.json`), mais demande un serveur Lettra et Keycloak. Sur un poste isolé, la page Synchronisation indique « Ce poste ne synchronise pas ». |
-| Dictée dans les écrans | La voix est branchée (serveur whisper.cpp de la démo, Whisper.net dans l'application installée), mais le bouton micro des écrans arrive avec le tutoriel et l'aide à la saisie (PR en cours) : voir [Dictée et commandes vocales](#dictée-et-commandes-vocales). |
 | Envoi des devis et factures par e-mail | Non : on télécharge le PDF ou le Factur-X. |
 | Applications signées | Non : avertissement de Windows au premier lancement, APK Android installé à la main, application macOS arrêtée par le Trousseau, pas de version pour iPhone réel. |
 

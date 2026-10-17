@@ -1,0 +1,198 @@
+@* Bulle du tutoriel (vague 5, lane F) : fond assombri avec une découpe autour de l'élément montré, Suivant, Précédent,
+   Passer ; Échap passe, les flèches avancent et reculent ; chaque étape est annoncée au lecteur d'écran. Sur
+   téléphone, la bulle devient une feuille en bas (ou en haut) de l'écran. *@
+@implements IAsyncDisposable
+@inject GuidedTours Tours
+@inject IJSRuntime JS
+@inject IStringLocalizer<SharedResource> L
+
+@if (Tours.Active is { } tour && Tours.Step is { } step)
+{
+    <div class="lt-tour @(_placement.Spot is null ? "is-dim" : null)" @onkeydown="OnKeyDownAsync">
+        @if (_placement.Spot is not null)
+        {
+            <div class="lt-tour-spot" style="@_placement.SpotStyle()" aria-hidden="true"></div>
+        }
+        <div @ref="_bubble" id="tour-bubble" class="lt-tour-bubble is-@_placement.Mode.ToString().ToLowerInvariant()" style="@_placement.BubbleStyle()"
+             role="dialog" aria-modal="true" aria-labelledby="tour-title" aria-describedby="tour-text" tabindex="-1">
+            <p class="lt-tour-count" id="tour-count">@Count(tour)</p>
+            <h2 id="tour-title">@L[tour.TitleKey(step)]</h2>
+            <p id="tour-text">@L[tour.TextKey(step)]</p>
+            <div class="lt-tour-actions">
+                <button type="button" id="tour-skip" class="lettra-link" @onclick="CloseAsync">@L[Tours.IsLast ? "Tour.Close" : "Tour.Skip"]</button>
+                <span class="lt-tour-nav">
+                    @if (!Tours.IsFirst)
+                    {
+                        <button type="button" id="tour-previous" class="lettra-button is-secondary" @onclick="Tours.Previous">@L["Tour.Previous"]</button>
+                    }
+                    @if (Tours.IsLast)
+                    {
+                        <button type="button" id="tour-done" class="lettra-button" @onclick="CloseAsync">@L["Tour.Done"]</button>
+                    }
+                    else
+                    {
+                        <button type="button" id="tour-next" class="lettra-button" @onclick="Tours.Next">@L["Tour.Next"]</button>
+                    }
+                </span>
+            </div>
+        </div>
+    </div>
+}
+<div class="lettra-visually-hidden" aria-live="polite" id="tour-live">@_announcement</div>
+
+@code {
+    private TourPlacement _placement = TourPlacement.Compute(null, 1024, 768);
+    private ElementReference _bubble;
+    private IJSObjectReference? _module;
+    private DotNetObjectReference<GuidedTour>? _self;
+    private (TourDefinition Tour, int Step)? _rendered;
+    private string? _announcement;
+    private bool _wasOpen;
+
+    protected override void OnInitialized() => Tours.Changed += OnToursChanged;
+
+    private void OnToursChanged(object? sender, EventArgs e) => _ = InvokeAsync(StateHasChanged);
+
+    private string Count(TourDefinition tour) =>
+        string.Format(CultureInfo.CurrentCulture, L["Tour.Count"], Tours.StepIndex + 1, tour.Steps.Count);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (Tours.Active is not { } tour || Tours.Step is not { } step)
+        {
+            if (_wasOpen)
+            {
+                _wasOpen = false;
+                _rendered = null;
+                await CallAsync(m => m.InvokeVoidAsync("unwatch").AsTask());
+                await CallAsync(m => m.InvokeVoidAsync("restoreFocus").AsTask());
+            }
+
+            return;
+        }
+
+        if (_rendered is { } done && done.Tour == tour && done.Step == Tours.StepIndex)
+        {
+            return;
+        }
+
+        if (!_wasOpen)
+        {
+            _wasOpen = true;
+            await CallAsync(m => m.InvokeVoidAsync("rememberFocus").AsTask());
+        }
+
+        int index = Tours.StepIndex;
+        _rendered = (tour, index);
+        await FocusBubbleAsync();
+        TourTargetRect? rect = null;
+        await CallAsync(async m =>
+        {
+            _self ??= DotNetObjectReference.Create(this);
+            await m.InvokeVoidAsync("watch", _self, step.Targets);
+            rect = await m.InvokeAsync<TourTargetRect?>("locate", step.Targets, 1500);
+        });
+        if (Tours.Active != tour || Tours.StepIndex != index)
+        {
+            // Fermé ou avancé pendant la recherche de l'élément : le rendu suivant s'en occupe.
+            return;
+        }
+
+        _placement = rect is null ? TourPlacement.Compute(null, 1024, 768) : TourPlacement.Compute(rect, rect.ViewportWidth, rect.ViewportHeight);
+        _announcement = $"{Count(tour)}. {L[tour.TitleKey(step)]}";
+        StateHasChanged();
+    }
+
+    // Le focus va à la bulle dès l'étape affichée, avant que l'élément montré ne soit trouvé : le clavier et le
+    // lecteur d'écran n'attendent pas.
+    private async Task FocusBubbleAsync()
+    {
+        try
+        {
+            await _bubble.FocusAsync();
+        }
+        catch (InvalidOperationException)
+        {
+            // Rendu sans navigateur (tests).
+        }
+        catch (JSException)
+        {
+            // La bulle a disparu entre-temps.
+        }
+    }
+
+    /// <summary>Défilement ou redimensionnement : la découpe et la bulle suivent l'élément.</summary>
+    [JSInvokable]
+    public Task OnViewportChanged(TourTargetRect rect)
+    {
+        ArgumentNullException.ThrowIfNull(rect);
+        _placement = TourPlacement.Compute(rect, rect.ViewportWidth, rect.ViewportHeight);
+        return InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>Touche pressée hors de la bulle pendant le tutoriel (Échap, flèches).</summary>
+    [JSInvokable]
+    public Task OnKey(string key) => InvokeAsync(() => HandleKeyAsync(key));
+
+    private Task OnKeyDownAsync(KeyboardEventArgs e) => HandleKeyAsync(e.Key);
+
+    private async Task HandleKeyAsync(string key)
+    {
+        switch (key)
+        {
+            case "Escape":
+                await CloseAsync();
+                break;
+            case "ArrowRight":
+                Tours.Next();
+                break;
+            case "ArrowLeft":
+                Tours.Previous();
+                break;
+        }
+    }
+
+    private Task CloseAsync() => Tours.CloseAsync();
+
+    private async Task CallAsync(Func<IJSObjectReference, Task> action)
+    {
+        try
+        {
+            _module ??= await JS.InvokeAsync<IJSObjectReference?>("import", TourModule.Path);
+            if (_module is not null)
+            {
+                await action(_module);
+            }
+        }
+        catch (JSException)
+        {
+        }
+        catch (InvalidOperationException)
+        {
+        }
+        catch (TaskCanceledException)
+        {
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        Tours.Changed -= OnToursChanged;
+        if (_module is not null)
+        {
+            try
+            {
+                await _module.InvokeVoidAsync("unwatch");
+                await _module.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+            catch (JSException)
+            {
+            }
+        }
+
+        _self?.Dispose();
+    }
+}

@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using Lettra.Application.Abstractions.Identity;
+using Lettra.Application.Diagnostics;
 using Lettra.Infrastructure.Identity.Oidc;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -108,10 +110,14 @@ public static class LettraAuthentication
                 o.Events.OnTicketReceived = context =>
                 {
                     context.Properties!.Items[BffEndpoints.SignOutTokenKey] = BffEndpoints.NewSignOutToken();
+                    CountSignIn(LettraTelemetry.Outcomes.Success);
                     return Task.CompletedTask;
                 };
                 o.Events.OnRemoteFailure = context =>
                 {
+                    // Retour de Keycloak refusé (second facteur absent, état invalide, erreur du fournisseur) : compté,
+                    // sans rien de l'utilisateur.
+                    CountSignIn(LettraTelemetry.Outcomes.Failure);
                     context.HandleResponse();
                     context.Response.Redirect("/session?erreur=connexion");
                     return Task.CompletedTask;
@@ -146,4 +152,7 @@ public static class LettraAuthentication
 
         return services;
     }
+
+    private static void CountSignIn(string outcome) =>
+        LettraTelemetry.SignIns.Add(1, new TagList { { LettraTelemetry.Attributes.Outcome, outcome } });
 }

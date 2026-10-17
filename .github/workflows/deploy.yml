@@ -316,6 +316,90 @@ jobs:
         if: always()
         run: $COMPOSE down -v
 
+  # Télémétrie de la démonstration dans Grafana (deploy/demo/compose.observabilite.yaml) : collecteur filtrant de la
+  # cellule, Prometheus, Tempo, Loki et Grafana provisionné. Après une connexion complète et deux minutes d'activité k6
+  # (profil « activite »), chaque panneau des trois tableaux de bord doit avoir des données, les exemplaires doivent
+  # mener à une trace qui a ses journaux, et les règles d'alerte de la cellule doivent être visibles : deploy/tests/grafana.
+  demo-grafana:
+    name: Démo — télémétrie dans Grafana
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      COMPOSE: docker compose -f ${{ github.workspace }}/deploy/demo/compose.yaml -f ${{ github.workspace }}/deploy/demo/compose.observabilite.yaml
+      # Session exportée hors des dossiers publiés en artefact.
+      SORTIE: ${{ github.workspace }}/.session-k6
+      K6_SORTIE: ${{ github.workspace }}/deploy/tests/grafana/sortie
+      K6_VERSION: 1.3.0
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Construction de l'image de l'API et images de l'observabilité
+        run: |
+          $COMPOSE build
+          $COMPOSE pull --quiet --ignore-buildable
+
+      - name: Démarrage (démonstration + collecteur, Prometheus, Tempo, Loki, Grafana)
+        run: |
+          $COMPOSE up -d --wait
+          timeout 180 bash -c 'until curl -sf http://localhost:8080/health; do sleep 2; done'
+          timeout 120 bash -c 'until curl -sf http://localhost:3000/api/health; do sleep 2; done'
+          # Lecture sans connexion : un visiteur anonyme voit les tableaux de bord.
+          curl -sf http://localhost:3000/api/dashboards/uid/lettra-activite | jq -r .dashboard.title
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Playwright (Chromium)
+        working-directory: deploy/demo/e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Connexion complète (mot de passe + TOTP) et export de la session du BFF
+        working-directory: deploy/demo/e2e
+        run: |
+          set -a; . ../.env; set +a
+          node parcours.mjs session
+          echo "::add-mask::$(cat "$SORTIE/session-cookie.txt")"
+
+      - uses: grafana/setup-k6-action@v1
+        with:
+          k6-version: ${{ env.K6_VERSION }}
+
+      - name: k6 — activité de démonstration (2 min)
+        run: |
+          mkdir -p "$K6_SORTIE"
+          LETTRA_SESSION_COOKIE="$(cat "$SORTIE/session-cookie.txt")" \
+            k6 run -e LETTRA_PROFIL=activite -e LETTRA_DUREE=2m deploy/tests/k6/fumee.js
+
+      - name: Grafana — sources, tableaux de bord, données de chaque panneau, liens et alertes
+        run: |
+          set -a; . deploy/demo/.env; set +a
+          python3 deploy/tests/grafana/verifier.py --bilan "$K6_SORTIE/bilan-grafana.md"
+
+      - name: Bilan dans le résumé
+        if: always()
+        run: cat "$K6_SORTIE/bilan-grafana.md" >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+
+      - name: Journaux
+        if: always()
+        run: |
+          mkdir -p "$K6_SORTIE"
+          for s in keycloak api otel-collector prometheus tempo loki grafana; do $COMPOSE logs --no-color "$s" > "$K6_SORTIE/$s.log" 2>&1 || true; done
+
+      - name: Bilan, rapports k6 et journaux
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-grafana
+          path: deploy/tests/grafana/sortie/
+          if-no-files-found: warn
+
+      - name: Arrêt
+        if: always()
+        run: $COMPOSE down -v
+
   # Scan ZAP de base (passif, sans authentification) de http://localhost:8080/ : échoue sur une règle classée FAIL
   # dans deploy/tests/zap/rules.tsv ou sur toute constatation de risque faible ou plus qui n'y est pas classée.
   demo-zap:

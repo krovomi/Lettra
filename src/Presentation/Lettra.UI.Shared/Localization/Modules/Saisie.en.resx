@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <!-- Aide à la saisie (autocomplétion, saisie rapide, modèles de texte) : vague 5, lane F. -->
+  <data name="Assist.Suggestions" xml:space="preserve"><value>Suggestions</value></data>
+  <data name="Assist.Count" xml:space="preserve"><value>{0} suggestions, arrow keys to browse, Enter to choose.</value></data>
+  <data name="Assist.PostalCode.Hint" xml:space="preserve"><value>Type the postcode or the start of the city name.</value></data>
+  <data name="Assist.Habits.Title" xml:space="preserve"><value>Usual for this customer:</value></data>
+  <data name="Assist.Habits.Add" xml:space="preserve"><value>Add "{0}"</value></data>
+  <data name="Assist.Habits.Uses" xml:space="preserve"><value>{0} documents</value></data>
+  <data name="Assist.Terms.Reuse" xml:space="preserve"><value>Reuse their latest terms: {0}</value></data>
+  <data name="Assist.Designations" xml:space="preserve"><value>Wordings already used</value></data>
+  <data name="Assist.Quick.Hours" xml:space="preserve"><value>{0} h</value></data>
+  <data name="Assist.Quick.Days" xml:space="preserve"><value>{0} d</value></data>
+  <data name="Assist.Quick.Result" xml:space="preserve"><value>= {0}</value></data>
+  <data name="Assist.Quick.Invalid" xml:space="preserve"><value>Not recognised</value></data>
+  <data name="Template.List" xml:space="preserve"><value>Text templates</value></data>
+  <data name="Template.Hint" xml:space="preserve"><value>"/" to insert a text template.</value></data>
+  <data name="Template.Palette.Insert" xml:space="preserve"><value>Insert: {0}</value></data>
+  <data name="Palette.Group.Templates" xml:space="preserve"><value>Text templates</value></data>
+  <data name="Template.subject-bookkeeping.Title" xml:space="preserve"><value>Bookkeeping</value></data>
+  <data name="Template.subject-bookkeeping.Body" xml:space="preserve"><value>Monthly bookkeeping</value></data>
+  <data name="Template.subject-annual.Title" xml:space="preserve"><value>Annual accounts</value></data>
+  <data name="Template.subject-annual.Body" xml:space="preserve"><value>Preparation of the annual accounts and tax return</value></data>
+  <data name="Template.subject-payroll.Title" xml:space="preserve"><value>Payroll</value></data>
+  <data name="Template.subject-payroll.Body" xml:space="preserve"><value>Payslips and social security returns</value></data>
+  <data name="Template.subject-advice.Title" xml:space="preserve"><value>Advisory</value></data>
+  <data name="Template.subject-advice.Body" xml:space="preserve"><value>Advisory engagement</value></data>
+  <data name="Template.terms-receipt.Title" xml:space="preserve"><value>On receipt</value></data>
+  <data name="Template.terms-receipt.Body" xml:space="preserve"><value>Payment due on receipt of invoice.</value></data>
+  <data name="Template.terms-30.Title" xml:space="preserve"><value>30 days</value></data>
+  <data name="Template.terms-30.Body" xml:space="preserve"><value>Payment within 30 days of the invoice date.</value></data>
+  <data name="Template.terms-45-eom.Title" xml:space="preserve"><value>45 days end of month</value></data>
+  <data name="Template.terms-45-eom.Body" xml:space="preserve"><value>Payment within 45 days end of month.</value></data>
+  <data name="Template.terms-transfer.Title" xml:space="preserve"><value>Bank transfer</value></data>
+  <data name="Template.terms-transfer.Body" xml:space="preserve"><value>Payment by bank transfer to the account shown on the invoice.</value></data>
+  <data name="Template.terms-no-discount.Title" xml:space="preserve"><value>No early-payment discount</value></data>
+  <data name="Template.terms-no-discount.Body" xml:space="preserve"><value>No discount for early payment.</value></data>
+  <data name="Template.late-penalties.Title" xml:space="preserve"><value>Late payment penalties</value></data>
+  <data name="Template.late-penalties.Body" xml:space="preserve"><value>In case of late payment, penalties at three times the French legal interest rate apply, plus a fixed recovery fee of €40 (articles L441-10 and D441-5 of the French Commercial Code).</value></data>
+  <data name="Template.quote-validity.Title" xml:space="preserve"><value>Offer validity</value></data>
+  <data name="Template.quote-validity.Body" xml:space="preserve"><value>This quote is valid for 30 days from its date of issue.</value></data>
+  <data name="Template.quote-acceptance.Title" xml:space="preserve"><value>Acceptance</value></data>
+  <data name="Template.quote-acceptance.Body" xml:space="preserve"><value>Please return this quote dated and signed, preceded by the words "Approved".</value></data>
+  <data name="Template.quote-down-payment.Title" xml:space="preserve"><value>Down payment on order</value></data>
+  <data name="Template.quote-down-payment.Body" xml:space="preserve"><value>A down payment of 30% of the total including VAT is due on acceptance.</value></data>
+  <data name="Template.vat-franchise.Title" xml:space="preserve"><value>VAT exemption (small business)</value></data>
+  <data name="Template.vat-franchise.Body" xml:space="preserve"><value>VAT not applicable, article 293 B of the French Tax Code.</value></data>
+  <data name="Template.thanks.Title" xml:space="preserve"><value>Thanks</value></data>
+  <data name="Template.thanks.Body" xml:space="preserve"><value>Thank you for your trust.</value></data>
+</root>
