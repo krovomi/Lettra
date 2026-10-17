@@ -1,0 +1,44 @@
+@* Les espaces ouverts, chacun avec son icône, son nom et son niveau : « Factures · Valider ». *@
+@inject IStringLocalizer<SharedResource> L
+
+@if (Areas.Count == 0)
+{
+    <p class="lettra-hint la-none">@(Empty ?? L["Admin.Areas.None"])</p>
+}
+else
+{
+    <ul class="la-areas @(Compact ? "is-compact" : null)" role="list">
+        @foreach (AreaAccess access in Areas)
+        {
+            <li>
+                <span class="la-area-icon"><Icon Name="@AreaIcon(access.Area)" Size="16" /></span>
+                <span class="la-area-name">@L[$"Admin.Area.{access.Area}"]</span>
+                <LevelBadge Level="access.Level" />
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<AreaAccess> Areas { get; set; } = [];
+
+    [Parameter] public bool Compact { get; set; }
+
+    [Parameter] public string? Empty { get; set; }
+
+    public static string AreaIcon(AccessAreaDto area) => area switch
+    {
+        AccessAreaDto.Quotes => "file-text",
+        AccessAreaDto.Invoices => "receipt",
+        AccessAreaDto.CreditNotes => "file-minus",
+        AccessAreaDto.Parties => "users",
+        AccessAreaDto.Catalog => "package",
+        AccessAreaDto.Accounting => "file-spreadsheet",
+        AccessAreaDto.Alerts => "bell",
+        AccessAreaDto.Assistant => "sparkles",
+        AccessAreaDto.Devices => "monitor",
+        AccessAreaDto.Administration => "shield-check",
+        AccessAreaDto.Portal => "building-2",
+        _ => "layers",
+    };
+}

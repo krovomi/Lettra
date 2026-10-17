@@ -6,6 +6,7 @@ using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
 using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Pages;
+using Lettra.UI.Shared.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.UI.Tests;
@@ -93,7 +94,7 @@ public sealed class SharedServerPageTests : BunitContext
         page.Find("#shared-server-address").Change("serveur-inconnu.example");
         page.Find("form").Submit();
 
-        page.Find(".validation-message").TextContent.Should().Contain("Aucun serveur ne répond");
+        this.Toasts().Should().ContainSingle(t => t.Kind == ToastKind.Error).Which.Message.Should().Contain("Aucun serveur ne répond");
         connection.Saved.Should().BeNull();
         page.FindAll("#shared-server-restart-now").Should().BeEmpty();
     }
