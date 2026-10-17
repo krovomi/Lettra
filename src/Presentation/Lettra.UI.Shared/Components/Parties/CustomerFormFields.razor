@@ -1,6 +1,7 @@
 @* Champs de la fiche client en saisie (création et modification), dans l'EditForm de la page. Mêmes id de champs que
    l'ancien écran Clients : les visites guidées et les tests s'y accrochent. *@
 @inject IStringLocalizer<SharedResource> L
+@inject PostalCodes PostalCodes
 
 @if (Model.Kind == CustomerKindDto.Company)
 {
@@ -58,7 +59,7 @@
         <FieldErrors Field="@nameof(CreateCustomerRequest.PreferredLanguage)" ServerErrors="Errors" />
     </div>
 
-    <div class="lt-form-field lt-form-wide" data-tour="customer-address">
+    <div class="lt-form-field lt-form-wide">
         <label for="line1">@L["Customers.Field.AddressLine1"]</label>
         <InputText id="line1" @bind-Value="Model.AddressLine1" autocomplete="address-line1" />
         <FieldErrors Field="@nameof(CreateCustomerRequest.AddressLine1)" ServerErrors="Errors" />
@@ -69,12 +70,13 @@
     </div>
     <div class="lt-form-field">
         <label for="zip">@L["Customers.Field.PostalCode"]</label>
-        <InputText id="zip" @bind-Value="Model.PostalCode" autocomplete="postal-code" />
+        <SmartInput Id="zip" @bind-Value="Model.PostalCode" autocomplete="postal-code" inputmode="numeric" data-tour="customer-address"
+                    Suggest="SuggestByPostalCodeAsync" OnPicked="PlacePicked" Hint="@L["Assist.PostalCode.Hint"]" />
         <FieldErrors Field="@nameof(CreateCustomerRequest.PostalCode)" ServerErrors="Errors" />
     </div>
     <div class="lt-form-field">
         <label for="city">@L["Customers.Field.City"]</label>
-        <InputText id="city" @bind-Value="Model.City" autocomplete="address-level2" />
+        <SmartInput Id="city" @bind-Value="Model.City" autocomplete="address-level2" Suggest="SuggestByCityAsync" OnPicked="PlacePicked" Tidy="true" />
         <FieldErrors Field="@nameof(CreateCustomerRequest.City)" ServerErrors="Errors" />
     </div>
     <div class="lt-form-field">
@@ -107,5 +109,24 @@
         Model.PostalCode = company.PostalCode ?? string.Empty;
         Model.City = company.City ?? string.Empty;
         Model.CountryCode = company.CountryCode;
+    }
+
+    // Code postal et ville : fichier des communes livré avec l'application, cherché en mémoire.
+    private async Task<IReadOnlyList<Suggestion>> SuggestByPostalCodeAsync(string text) =>
+        Places((await PostalCodes.GetAsync()).ByPostalCode(text));
+
+    private async Task<IReadOnlyList<Suggestion>> SuggestByCityAsync(string text) =>
+        Model.CountryCode is "FR" or "" ? Places((await PostalCodes.GetAsync()).ByCity(text)) : [];
+
+    private static IReadOnlyList<Suggestion> Places(IReadOnlyList<PostalPlace> places) =>
+        [.. places.Select(p => new Suggestion(p.PostalCode, p.City, p.PostalCode, p))];
+
+    private void PlacePicked(Suggestion suggestion)
+    {
+        if (suggestion.Data is PostalPlace place)
+        {
+            Model.PostalCode = place.PostalCode;
+            Model.City = place.City;
+        }
     }
 }

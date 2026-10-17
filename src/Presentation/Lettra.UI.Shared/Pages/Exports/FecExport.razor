@@ -1,4 +1,5 @@
 @page "/exports/fec"
+@inject StarterProgress Starter
 @inject IFecGateway Fec
 @inject IFileDownloader Files
 @inject IStringLocalizer<SharedResource> L
@@ -116,6 +117,7 @@
             OperationResult<FecValidationResponse> report = await Fec.ValidateAsync(document.FileName, document.Content, _from, _to, CancellationToken.None);
             _exported = document.FileName;
             _report = report.Value;
+            await Starter.MarkFecExportedAsync();
             return report.Errors;
         });
     }

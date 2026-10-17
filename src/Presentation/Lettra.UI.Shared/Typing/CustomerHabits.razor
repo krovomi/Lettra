@@ -1,0 +1,68 @@
+@* Suggestions tirées des pièces du client (vague 5, lane F) : ses articles habituels, à ajouter d'un clic, et ses
+   dernières conditions de règlement. Rien n'est ajouté sans clic. *@
+@inject TypingHistory History
+@inject IStringLocalizer<SharedResource> L
+
+@if (_items.Count > 0 || _terms is not null)
+{
+    <div class="lt-suggestions" id="customer-habits" role="group" aria-label="@L["Assist.Habits.Title"]">
+        <span>@L["Assist.Habits.Title"]</span>
+        @foreach (HabitItem item in _items)
+        {
+            <button type="button" class="lt-chip" title="@string.Format(CultureInfo.CurrentCulture, L["Assist.Habits.Uses"], item.Uses)"
+                    @onclick="() => OnAddItem.InvokeAsync(item.CatalogItemId)">
+                <Icon Name="plus" Size="14" />
+                @string.Format(CultureInfo.CurrentCulture, L["Assist.Habits.Add"], item.Designation)
+            </button>
+        }
+        @if (_terms is { } terms)
+        {
+            <button type="button" class="lt-chip" id="reuse-terms" @onclick="() => OnReuseTerms.InvokeAsync(terms)">
+                @string.Format(CultureInfo.CurrentCulture, L["Assist.Terms.Reuse"], Shorten(terms))
+            </button>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public Guid CustomerId { get; set; }
+
+    /// <summary>Pièce modifiable : sinon rien n'est proposé.</summary>
+    [Parameter] public bool Enabled { get; set; } = true;
+
+    [Parameter] public EventCallback<Guid> OnAddItem { get; set; }
+
+    /// <summary>Facture dont les conditions sont vides : propose celles de la dernière facture du client.</summary>
+    [Parameter] public EventCallback<string> OnReuseTerms { get; set; }
+
+    [Parameter] public bool OfferTerms { get; set; }
+
+    /// <summary>Articles déjà sur la pièce : pas proposés une deuxième fois.</summary>
+    [Parameter] public IReadOnlyCollection<Guid> Present { get; set; } = [];
+
+    private IReadOnlyList<HabitItem> _items = [];
+    private string? _terms;
+    private Guid _loadedFor;
+    private DossierHistory _history = DossierHistory.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!Enabled || CustomerId == Guid.Empty)
+        {
+            _items = [];
+            _terms = null;
+            return;
+        }
+
+        if (CustomerId != _loadedFor)
+        {
+            _loadedFor = CustomerId;
+            _history = await History.ForCustomerAsync(CustomerId);
+        }
+
+        _items = [.. _history.ItemsFor(CustomerId, 8).Where(i => !Present.Contains(i.CatalogItemId)).Take(4)];
+        _terms = OfferTerms && OnReuseTerms.HasDelegate ? _history.LastPaymentTermsFor(CustomerId) : null;
+    }
+
+    private static string Shorten(string text) => text.Length <= 40 ? text : text[..39] + "…";
+}

@@ -1,0 +1,22 @@
+# Démonstration seulement (compose.observabilite.yaml) : destinations des traces et des journaux, comme une cellule qui
+# active Tempo et Loki. Ce fichier est exactement le backends.yaml que rend le chart lettra-observability avec
+# collector.traces.tempo et collector.logs.loki activés, aux adresses de la démonstration près : deploy/tests/valider.sh
+# le vérifie. Il complète la base de la cellule (files/collector.yaml), dont le filtrage s'applique tel quel ; les
+# métriques partent vers le récepteur OTLP de Prometheus (PROMETHEUS_OTLP).
+exporters:
+  otlp/tempo:
+    endpoint: "tempo:4317"
+    tls:
+      insecure: true
+  otlphttp/loki:
+    endpoint: "http://loki:3100/otlp"
+    tls:
+      insecure: true
+service:
+  pipelines:
+    traces:
+      exporters: ["debug","otlp/tempo"]
+    metrics:
+      exporters: ["otlphttp/prometheus","debug"]
+    logs:
+      exporters: ["debug","otlphttp/loki"]

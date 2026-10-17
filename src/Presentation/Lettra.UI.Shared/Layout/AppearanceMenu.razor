@@ -3,6 +3,7 @@
 @implements IDisposable
 @inject UiPreferences Preferences
 @inject IStringLocalizer<SharedResource> L
+@inject GuidedTours Tours
 
 <div class="lt-appearance @(Inline ? "is-inline" : null)">
     @if (!Inline)
@@ -44,6 +45,11 @@
                 }
                 <p class="lettra-hint">@L["Appearance.Density.Hint"]</p>
             </fieldset>
+            <button type="button" class="lettra-link lt-tour-reset" @onclick="ResetToursAsync">@L["Tour.Reset"]</button>
+            @if (_toursReset)
+            {
+                <p class="lettra-hint" role="status">@L["Tour.Reset.Done"]</p>
+            }
         </div>
     }
 </div>
@@ -55,6 +61,7 @@
     // Deux menus peuvent coexister (en-tête et feuille) : noms de groupes radio distincts.
     private readonly string _id = Guid.NewGuid().ToString("N")[..8];
     private bool _open;
+    private bool _toursReset;
 
     protected override void OnInitialized() => Preferences.Changed += OnChanged;
 
@@ -63,6 +70,12 @@
     public void Dispose() => Preferences.Changed -= OnChanged;
 
     private void Toggle() => _open = !_open;
+
+    private async Task ResetToursAsync()
+    {
+        await Tours.ResetAsync();
+        _toursReset = true;
+    }
 
     private void Close() => _open = false;
 

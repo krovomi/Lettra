@@ -18,7 +18,7 @@
     </div>
     <div class="lt-page-actions">
         <a class="lettra-button is-secondary" href="catalog/grid" id="catalog-grid-link"><Icon Name="rows-3" Size="18" /> @L["Catalog.GridMode"]</a>
-        <a class="lettra-button" href="@NewHref" id="catalog-new-item"><Icon Name="plus" Size="18" /> @L["Catalog.NewItem"] <kbd>@L["Explorer.Key.Insert"]</kbd></a>
+        <a class="lettra-button" href="@NewHref" id="catalog-new-item" data-tour="catalog-new"><Icon Name="plus" Size="18" /> @L["Catalog.NewItem"] <kbd>@L["Explorer.Key.Insert"]</kbd></a>
     </div>
 </div>
 
@@ -27,7 +27,7 @@
         <div class="lt-explorer-search">
             <Icon Name="search" Size="18" />
             <label for="catalog-items-search" class="lettra-visually-hidden">@L["Catalog.Search"]</label>
-            <input id="catalog-items-search" type="search" @ref="SearchInput" @bind="Search" @bind:event="oninput"
+            <input id="catalog-items-search" data-tour="catalog-search" type="search" @ref="SearchInput" @bind="Search" @bind:event="oninput"
                    placeholder="@L["Catalog.SearchPlaceholder"]" autocomplete="off" />
             <kbd>F3</kbd>
         </div>
@@ -66,7 +66,7 @@
         }
         else
         {
-            <ul class="lt-records" role="listbox" tabindex="0" id="catalog-items-list" aria-label="@L["Catalog.List.Title"]"
+            <ul class="lt-records" role="listbox" tabindex="0" id="catalog-items-list" data-tour="catalog-list" aria-label="@L["Catalog.List.Title"]"
                 aria-activedescendant="@ActiveOptionId" @ref="ListElement" @onkeydown="OnListKeyDown">
                 @foreach (CatalogItemSummary item in Shown)
                 {

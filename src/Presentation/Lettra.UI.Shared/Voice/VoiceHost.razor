@@ -1,0 +1,470 @@
+@* Hôte de la voix (vague 5, lane F), posé une fois dans la coquille :
+   - F8 maintenue : dicte dans le champ qui a le focus, ou donne une commande hors d'un champ ;
+   - bandeau d'écoute : onde sonore pendant l'écoute, puis le texte ajouté ou ce qui n'a pas marché ;
+   - panneau « Dictée et commandes vocales » : état du moteur, bouton Parler, commande comprise affichée avant
+     d'être exécutée, ce qu'on peut dire, et le choix d'afficher ou non les micros dans les champs. *@
+@implements IAsyncDisposable
+@inject VoiceInput Voice
+@inject VoiceCommands Commands
+@inject NavigationManager Navigation
+@inject AssistantPanelState Assistant
+@inject IServiceProvider Services
+@inject IEnumerable<ICommandPaletteProvider> Providers
+@inject IStringLocalizer<SharedResource> L
+
+@if (Hud is { } hud)
+{
+    <div class="lt-voice-hud @(hud.Error ? "is-error" : null)" id="voice-hud" role="status">
+        @if (Voice.Phase == VoicePhase.Listening)
+        {
+            <span class="lt-wave" aria-hidden="true">
+                @for (int i = 0; i < 5; i++)
+                {
+                    <span style="@Bar(i)"></span>
+                }
+            </span>
+        }
+        <span>@hud.Text</span>
+    </div>
+}
+
+@if (Voice.PanelOpen)
+{
+    <div class="lt-voice-backdrop" @onclick="Voice.ClosePanel"></div>
+    <section id="voice-panel" class="lt-voice-panel" role="dialog" aria-modal="true" aria-labelledby="voice-panel-title" tabindex="-1"
+             @ref="_panel" @onkeydown="OnPanelKeyDown">
+        <header class="lt-voice-panel-header">
+            <h2 id="voice-panel-title"><Icon Name="mic" /> @L["Voice.Panel.Title"]</h2>
+            <button type="button" class="lt-icon-button" id="voice-close" aria-label="@L["Shell.Close"]" @onclick="Voice.ClosePanel"><Icon Name="x" /></button>
+        </header>
+
+        @if (!Voice.IsReady)
+        {
+            <p class="lt-voice-state" id="voice-state" role="status">@Voice.Unavailable()</p>
+            @if (Voice.Availability == VoiceAvailability.NotConfigured)
+            {
+                <p class="lettra-muted" id="voice-how-to-enable">@L["Voice.State.HowToEnable"]</p>
+            }
+            else if (Voice.Availability == VoiceAvailability.Unreachable)
+            {
+                <button type="button" class="lettra-button is-secondary" id="voice-retry" @onclick="RetryAsync">@L["Voice.Retry"]</button>
+            }
+        }
+        else
+        {
+            <div class="lt-voice-speak">
+                <button type="button" id="voice-speak" class="lettra-button lt-voice-speak-button @(CommandListening ? "is-listening" : null)"
+                        aria-pressed="@(CommandListening ? "true" : "false")" disabled="@(Voice.Phase == VoicePhase.Transcribing)" @onclick="ToggleCommandAsync">
+                    <Icon Name="@(CommandListening ? "mic-off" : "mic")" />
+                    @L[CommandListening ? "Voice.Speak.Stop" : Voice.Phase == VoicePhase.Transcribing ? "Voice.Speak.Busy" : "Voice.Speak"]
+                </button>
+                <span class="lettra-muted">@L["Voice.Speak.Hint"]</span>
+            </div>
+
+            @if (_outcome is { } outcome)
+            {
+                <div class="lt-voice-result" id="voice-result">
+                    @if (outcome.Error is not null)
+                    {
+                        <p class="validation-message" role="alert">@outcome.Error</p>
+                    }
+                    else
+                    {
+                        <p id="voice-heard">@string.Format(CultureInfo.CurrentCulture, L["Voice.Heard"], outcome.Text)</p>
+                        @if (outcome.Command is { } command)
+                        {
+                            <p id="voice-command" class="lt-voice-command"><strong>@VoiceCommands.Describe(command, L)</strong></p>
+                            @if (command.Kind == VoiceCommandKind.Help)
+                            {
+                                <p>@L["Voice.Help.Intro"]</p>
+                            }
+                            else
+                            {
+                                <div class="lt-voice-actions">
+                                    <button type="button" id="voice-run" class="lettra-button" @onclick="RunAsync">@L["Voice.Run"]</button>
+                                    <button type="button" id="voice-discard" class="lettra-button is-secondary" @onclick="Discard">@L["Voice.Discard"]</button>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="lettra-muted" id="voice-not-command">@L["Voice.NotACommand"]</p>
+                        }
+                    }
+                </div>
+            }
+
+            @if (_message is not null)
+            {
+                <p class="lt-voice-message" id="voice-message" role="status">@_message</p>
+            }
+
+            @if (_results.Count > 0)
+            {
+                <ul class="lt-voice-results" id="voice-search-results">
+                    @foreach (PaletteItem item in _results)
+                    {
+                        <li><button type="button" class="lettra-link" @onclick="() => RunResultAsync(item)">@item.Label <span class="lettra-muted">· @item.Group</span></button></li>
+                    }
+                </ul>
+            }
+
+            <label class="lt-voice-toggle" for="voice-fields">
+                <input type="checkbox" id="voice-fields" checked="@Voice.Enabled" @onchange="OnFieldsToggledAsync" />
+                <span>@L["Voice.Fields.Toggle"]</span>
+            </label>
+        }
+
+        <h3>@L["Voice.Dictate.Title"]</h3>
+        <p>@L["Voice.Dictate.Text"]</p>
+        <h3>@L["Voice.Examples.Title"]</h3>
+        <ul class="lt-voice-examples" id="voice-examples">
+            @foreach (string key in ExampleKeys)
+            {
+                <li>« @L[key] »</li>
+            }
+        </ul>
+        <p class="lettra-muted lt-voice-privacy">@L["Voice.Privacy"]</p>
+    </section>
+}
+
+@code {
+    private static readonly string[] ExampleKeys =
+    [
+        "Voice.Example.Navigate", "Voice.Example.Create", "Voice.Example.Search", "Voice.Example.AddLine",
+        "Voice.Example.Discount", "Voice.Example.DraftQuote", "Voice.Example.Dictation",
+    ];
+
+    private DotNetObjectReference<VoiceHost>? _self;
+    private ElementReference _panel;
+    private bool _panelWasOpen;
+    private VoiceOutcome? _outcome;
+    private VoiceOutcome? _flash;
+    private string? _message;
+    private List<PaletteItem> _results = [];
+    private CancellationTokenSource? _flashTimer;
+
+    private sealed record HudState(string Text, bool Error);
+
+    private bool CommandListening => Voice.Phase == VoicePhase.Listening && Voice.Owner == VoiceInput.CommandOwner;
+
+    // Le bandeau suit l'écoute d'un champ (micro ou F8) ; une commande s'affiche dans le panneau quand il est ouvert.
+    private HudState? Hud => Voice.Phase switch
+    {
+        VoicePhase.Listening when !(Voice.PanelOpen && CommandListening) =>
+            new(L[Voice.Owner == VoiceInput.CommandOwner ? "Voice.Hud.ListeningCommand" : "Voice.Hud.Listening"], false),
+        VoicePhase.Transcribing when !Voice.PanelOpen => new(L["Voice.Speak.Busy"], false),
+        VoicePhase.Idle when _flash is { } flash => flash.Error is not null
+            ? new(flash.Error, true)
+            : new(string.Format(CultureInfo.CurrentCulture, L["Voice.Hud.Added"], flash.Text), false),
+        _ => null,
+    };
+
+    private string Bar(int i)
+    {
+        double[] shape = [0.45, 0.8, 1, 0.7, 0.5];
+        double height = 0.15 + (Voice.Level * shape[i] * 0.85);
+        return FormattableString.Invariant($"--lt-bar: {height:0.00}");
+    }
+
+    protected override void OnInitialized()
+    {
+        Voice.Changed += OnVoiceChanged;
+        Voice.Completed += OnCompleted;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Voice.LoadAsync();
+            if (await Voice.ModuleAsync() is { } module)
+            {
+                _self = DotNetObjectReference.Create(this);
+                try
+                {
+                    await module.InvokeVoidAsync("listenPushToTalk", _self);
+                }
+                catch (JSException)
+                {
+                }
+            }
+        }
+
+        if (Voice.PanelOpen && !_panelWasOpen)
+        {
+            _panelWasOpen = true;
+            try
+            {
+                await _panel.FocusAsync();
+            }
+            catch (InvalidOperationException)
+            {
+            }
+            catch (JSException)
+            {
+            }
+        }
+        else if (!Voice.PanelOpen)
+        {
+            _panelWasOpen = false;
+        }
+    }
+
+    /// <summary>F8 enfoncée (<paramref name="down"/>) ou relâchée ; <paramref name="field"/> est le champ qui a le focus.</summary>
+    [JSInvokable]
+    public Task OnPushToTalk(bool down, string? field) => InvokeAsync(async () =>
+    {
+        if (!down)
+        {
+            await Voice.StopAsync();
+            return;
+        }
+
+        if (!Voice.IsReady)
+        {
+            Voice.OpenPanel();
+            return;
+        }
+
+        _message = null;
+        _results = [];
+        string? error = await Voice.StartAsync(field ?? VoiceInput.CommandOwner, field is null ? SpeechMode.Command : SpeechMode.Dictation);
+        if (error is not null && field is null)
+        {
+            _outcome = new(VoiceInput.CommandOwner, SpeechMode.Command, null, null, error);
+            Voice.OpenPanel();
+        }
+    });
+
+    private async Task ToggleCommandAsync()
+    {
+        if (CommandListening)
+        {
+            await Voice.StopAsync();
+            return;
+        }
+
+        _outcome = null;
+        _message = null;
+        _results = [];
+        string? error = await Voice.StartAsync(VoiceInput.CommandOwner, SpeechMode.Command);
+        if (error is not null)
+        {
+            _outcome = new(VoiceInput.CommandOwner, SpeechMode.Command, null, null, error);
+        }
+    }
+
+    private void OnCompleted(object? sender, VoiceOutcome outcome) => _ = InvokeAsync(() =>
+    {
+        if (outcome.Owner == VoiceInput.CommandOwner)
+        {
+            _outcome = outcome;
+            _message = null;
+            _results = [];
+            Voice.OpenPanel();
+        }
+        else
+        {
+            Flash(outcome);
+        }
+
+        StateHasChanged();
+    });
+
+    // Le résultat d'une dictée reste affiché quelques secondes dans le bandeau.
+    private void Flash(VoiceOutcome outcome)
+    {
+        _flash = outcome;
+        _flashTimer?.Cancel();
+        _flashTimer?.Dispose();
+        _flashTimer = new CancellationTokenSource();
+        CancellationToken token = _flashTimer.Token;
+        _ = Task.Delay(TimeSpan.FromSeconds(outcome.Error is null ? 3 : 6), token).ContinueWith(
+            _ => InvokeAsync(() =>
+            {
+                _flash = null;
+                StateHasChanged();
+            }),
+            token, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Default);
+    }
+
+    private void Discard()
+    {
+        _outcome = null;
+        _message = null;
+        _results = [];
+    }
+
+    private async Task RunAsync()
+    {
+        if (_outcome?.Command is not { } command)
+        {
+            return;
+        }
+
+        _message = null;
+        _results = [];
+        switch (command.Kind)
+        {
+            case VoiceCommandKind.Navigate when command.Target == VoiceTarget.Assistant:
+                OpenAssistant();
+                break;
+            case VoiceCommandKind.Navigate:
+                Go(VoiceCommands.ListRoute(command.Target ?? VoiceTarget.Home));
+                break;
+            case VoiceCommandKind.Create:
+                Go(command.Target is { } target ? VoiceCommands.CreateRoute(target) : null);
+                break;
+            case VoiceCommandKind.Search:
+                await SearchAsync(command.Term ?? string.Empty);
+                break;
+            case VoiceCommandKind.DraftQuote:
+                await DraftQuoteAsync(command);
+                break;
+            case VoiceCommandKind.AddLine:
+            case VoiceCommandKind.ApplyDiscount:
+                if (await Commands.TryRunAsync(command))
+                {
+                    Done();
+                }
+                else
+                {
+                    _message = L["Voice.Run.NeedDocument"];
+                }
+
+                break;
+            case VoiceCommandKind.Cancel:
+                Voice.ClosePanel();
+                _outcome = null;
+                break;
+            case VoiceCommandKind.Save:
+                _message = L["Voice.Run.Save"];
+                break;
+            case VoiceCommandKind.Validate:
+                _message = L["Voice.Run.Validate"];
+                break;
+        }
+    }
+
+    private void Go(string? route)
+    {
+        if (route is null)
+        {
+            _message = L["Voice.Run.Unknown"];
+            return;
+        }
+
+        Navigation.NavigateTo(route);
+        Done();
+    }
+
+    private void Done()
+    {
+        _outcome = null;
+        Voice.ClosePanel();
+    }
+
+    private void OpenAssistant()
+    {
+        if (!Assistant.IsAvailable)
+        {
+            _message = L["Voice.Run.NoAssistant"];
+            return;
+        }
+
+        Assistant.Open(Assistant.Feature);
+        Done();
+    }
+
+    private async Task SearchAsync(string term)
+    {
+        List<PaletteItem> results = [];
+        foreach (ICommandPaletteProvider provider in Providers)
+        {
+            results.AddRange(await provider.SearchAsync(term, CancellationToken.None));
+        }
+
+        _results = [.. results.Take(8)];
+        _message = _results.Count == 0
+            ? string.Format(CultureInfo.CurrentCulture, L["Voice.Run.NothingFound"], term)
+            : string.Format(CultureInfo.CurrentCulture, L["Voice.Run.Found"], _results.Count, term);
+    }
+
+    private async Task RunResultAsync(PaletteItem item)
+    {
+        Done();
+        await item.Run();
+    }
+
+    // « Devis pour Dupont, trois heures de conseil » : le client est cherché parmi ceux du dossier, le devis s'ouvre en
+    // brouillon et ses lignes l'attendent ; rien n'est enregistré avant que la page ne reçoive les lignes.
+    private async Task DraftQuoteAsync(VoiceCommand command)
+    {
+        Guid? customer = null;
+        if (command.Customer is { Length: > 0 } name && Services.GetService(typeof(ICustomersGateway)) is ICustomersGateway customers)
+        {
+            OperationResult<IReadOnlyList<CustomerSummary>> list = await customers.ListAllAsync(CancellationToken.None);
+            customer = list.Value?
+                .Select(c => (c.Id, Score: PaletteMatcher.Score(c.Name, name)))
+                .Where(c => c.Score > 0)
+                .OrderByDescending(c => c.Score)
+                .Select(c => (Guid?)c.Id)
+                .FirstOrDefault();
+        }
+
+        if (command.Lines.Count > 0)
+        {
+            Commands.Defer(command with { Kind = VoiceCommandKind.AddLine });
+        }
+
+        Navigation.NavigateTo(customer is { } id ? $"quotes/new?customer={id}" : "quotes/new");
+        if (customer is null && command.Customer is { Length: > 0 })
+        {
+            _message = string.Format(CultureInfo.CurrentCulture, L["Voice.Run.CustomerNotFound"], command.Customer);
+            _outcome = null;
+            return;
+        }
+
+        Done();
+    }
+
+    private async Task OnFieldsToggledAsync(ChangeEventArgs e) => await Voice.SetEnabledAsync(e.Value is true || e.Value as string == "true");
+
+    private Task RetryAsync() => Voice.LoadAsync(refresh: true);
+
+    private async Task OnPanelKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            await Voice.CancelAsync();
+            Voice.ClosePanel();
+        }
+    }
+
+    private void OnVoiceChanged(object? sender, EventArgs e) => _ = InvokeAsync(StateHasChanged);
+
+    public async ValueTask DisposeAsync()
+    {
+        Voice.Changed -= OnVoiceChanged;
+        Voice.Completed -= OnCompleted;
+        _flashTimer?.Cancel();
+        _flashTimer?.Dispose();
+        if (_self is not null && await Voice.ModuleAsync() is { } module)
+        {
+            try
+            {
+                await module.InvokeVoidAsync("unlistenPushToTalk");
+                await module.InvokeVoidAsync("cancel");
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+            catch (JSException)
+            {
+            }
+        }
+
+        _self?.Dispose();
+    }
+}

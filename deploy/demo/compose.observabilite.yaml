@@ -1,0 +1,126 @@
+# Option de la démonstration : voir la télémétrie de Lettra dans Grafana. L'API exporte traces, métriques et journaux
+# en OTLP vers le collecteur filtrant de la cellule, qui les range dans Prometheus (métriques et alertes), Tempo
+# (traces) et Loki (journaux) ; Grafana les affiche sur http://localhost:3000, avec les tableaux de bord de la cellule.
+# Mêmes briques et même filtrage qu'une cellule ; ce fichier s'ajoute à la démonstration (compose.yaml) :
+#
+#   docker compose -f deploy/demo/compose.yaml -f deploy/demo/compose.observabilite.yaml up -d --build --wait
+#   docker compose -f deploy/demo/compose.yaml -f deploy/demo/compose.observabilite.yaml down -v
+#
+# Il remplace compose.otel.yaml (collecteur seul, détail des signaux dans son journal) : ne pas combiner les deux.
+# DÉMONSTRATION SEULEMENT : Grafana ouvert en lecture sans connexion, mot de passe d'administration de .env, stockage
+# local sans réplication. Données fictives uniquement. Voir README.md, « Voir la télémétrie dans Grafana ».
+services:
+  otel-collector:
+    # Même version que la cellule (deploy/helm/lettra-observability/values.yaml).
+    image: otel/opentelemetry-collector-contrib:0.136.0
+    # Base de la cellule, puis ses destinations Tempo et Loki (rendu du chart, aux adresses de la démonstration près).
+    command: ["--config=/conf/collector.yaml", "--config=/conf/destinations.yaml"]
+    environment:
+      PROMETHEUS_OTLP: http://prometheus:9090/api/v1/otlp
+    volumes:
+      - ../helm/lettra-observability/files/collector.yaml:/conf/collector.yaml:ro
+      - ./otel/collecteur-observabilite.yaml:/conf/destinations.yaml:ro
+    depends_on:
+      prometheus:
+        condition: service_healthy
+      tempo:
+        condition: service_started
+      loki:
+        condition: service_started
+
+  prometheus:
+    image: prom/prometheus:v3.6.0
+    # La configuration de la démonstration, suivie des réglages OTLP de la cellule (files/prometheus-otlp.yml).
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        cat /etc/lettra/prometheus.yml /etc/lettra/prometheus-otlp.yml > /prometheus/prometheus.yml &&
+        exec /bin/prometheus --config.file=/prometheus/prometheus.yml --storage.tsdb.path=/prometheus
+        --storage.tsdb.retention.time=15d --web.enable-otlp-receiver --enable-feature=exemplar-storage
+        --web.enable-lifecycle
+    ports:
+      - "127.0.0.1:${LETTRA_DEMO_PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./observabilite/prometheus.yml:/etc/lettra/prometheus.yml:ro
+      - ../helm/lettra-observability/files/prometheus-otlp.yml:/etc/lettra/prometheus-otlp.yml:ro
+      - ../helm/lettra-observability/files/rules:/etc/lettra/rules:ro
+      - prometheus-donnees:/prometheus
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9090/-/ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  tempo:
+    image: grafana/tempo:2.8.2
+    command: ["-config.file=/etc/tempo/tempo.yaml"]
+    ports:
+      - "127.0.0.1:${LETTRA_DEMO_TEMPO_PORT:-3200}:3200"
+    volumes:
+      - ./observabilite/tempo.yaml:/etc/tempo/tempo.yaml:ro
+      - tempo-donnees:/var/tempo
+
+  loki:
+    image: grafana/loki:3.5.5
+    command: ["-config.file=/etc/loki/loki.yaml"]
+    ports:
+      - "127.0.0.1:${LETTRA_DEMO_LOKI_PORT:-3100}:3100"
+    volumes:
+      - ./observabilite/loki.yaml:/etc/loki/loki.yaml:ro
+      - loki-donnees:/loki
+
+  grafana:
+    image: grafana/grafana:12.2.0
+    depends_on:
+      prometheus:
+        condition: service_healthy
+      tempo:
+        condition: service_started
+      loki:
+        condition: service_started
+    environment:
+      # Lecture sans connexion (rôle Viewer) : réservé à la démonstration, sur le poste seulement (127.0.0.1).
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?voir deploy/demo/.env}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_USERS_DEFAULT_LANGUAGE: fr-FR
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/lettra/lettra-activite.json
+      # Rien ne sort vers Internet : ni statistiques, ni recherche de mises à jour, ni plugins téléchargés au démarrage.
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES: "false"
+      GF_NEWS_NEWS_FEED_ENABLED: "false"
+      GF_PLUGINS_PREINSTALL_DISABLED: "true"
+    ports:
+      - "127.0.0.1:${LETTRA_DEMO_GRAFANA_PORT:-3000}:3000"
+    volumes:
+      - ./observabilite/grafana/sources.yaml:/etc/grafana/provisioning/datasources/lettra.yaml:ro
+      - ./observabilite/grafana/tableaux.yaml:/etc/grafana/provisioning/dashboards/lettra.yaml:ro
+      - ../helm/lettra-observability/dashboards:/var/lib/grafana/dashboards/lettra:ro
+      - grafana-donnees:/var/lib/grafana
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  api:
+    depends_on:
+      otel-collector:
+        condition: service_started
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      # Toutes les 10 s plutôt que 60 s : les courbes bougent pendant la démonstration.
+      OTEL_METRIC_EXPORT_INTERVAL: "10000"
+      Lettra__Observability__ServiceName: lettra-api
+      Lettra__Observability__Cell: demo
+      Lettra__Observability__Environment: demo
+
+volumes:
+  prometheus-donnees:
+  tempo-donnees:
+  loki-donnees:
+  grafana-donnees:

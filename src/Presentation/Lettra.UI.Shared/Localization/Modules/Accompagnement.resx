@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <!-- Tutoriel des premières fois et liste de démarrage : vague 5, lane F. -->
+  <data name="Tour.Help" xml:space="preserve"><value>Tutoriel de cet écran</value></data>
+  <data name="Tour.Count" xml:space="preserve"><value>Étape {0} sur {1}</value></data>
+  <data name="Tour.Next" xml:space="preserve"><value>Suivant</value></data>
+  <data name="Tour.Previous" xml:space="preserve"><value>Précédent</value></data>
+  <data name="Tour.Skip" xml:space="preserve"><value>Passer le tutoriel</value></data>
+  <data name="Tour.Close" xml:space="preserve"><value>Fermer</value></data>
+  <data name="Tour.Done" xml:space="preserve"><value>C'est parti</value></data>
+  <data name="Tour.Palette.Replay" xml:space="preserve"><value>Tutoriel de cet écran</value></data>
+  <data name="Tour.Palette.Reset" xml:space="preserve"><value>Réinitialiser les tutoriels</value></data>
+  <data name="Tour.Reset" xml:space="preserve"><value>Réinitialiser les tutoriels</value></data>
+  <data name="Tour.Reset.Done" xml:space="preserve"><value>Les tutoriels se rejoueront à la prochaine visite de chaque écran.</value></data>
+  <data name="Palette.Group.Help" xml:space="preserve"><value>Aide</value></data>
+  <data name="Tour.home.welcome.Title" xml:space="preserve"><value>Bienvenue dans Lettra</value></data>
+  <data name="Tour.home.welcome.Text" xml:space="preserve"><value>En une minute, voici où tout se trouve. Les flèches du clavier avancent et reculent, Échap ferme ce tutoriel.</value></data>
+  <data name="Tour.home.nav.Title" xml:space="preserve"><value>Les écrans</value></data>
+  <data name="Tour.home.nav.Text" xml:space="preserve"><value>Devis, factures, clients, catalogue, FEC : tout part d'ici. Sur téléphone, les onglets du bas portent l'essentiel et « Plus » le reste.</value></data>
+  <data name="Tour.home.search.Title" xml:space="preserve"><value>Tout trouver avec Ctrl+K</value></data>
+  <data name="Tour.home.search.Text" xml:space="preserve"><value>Tapez un numéro de pièce, un nom de client ou une action (« nouveau devis Dupont »). Les modèles de texte s'y insèrent aussi.</value></data>
+  <data name="Tour.home.starter.Title" xml:space="preserve"><value>Vos premiers pas</value></data>
+  <data name="Tour.home.starter.Text" xml:space="preserve"><value>Cette liste se coche toute seule au fil de votre travail. Vous pouvez la masquer quand vous voulez.</value></data>
+  <data name="Tour.home.appearance.Title" xml:space="preserve"><value>Thème et densité</value></data>
+  <data name="Tour.home.appearance.Text" xml:space="preserve"><value>Clair, sombre, ardoise ou contraste élevé, et une densité Confort pour le doigt ou Expert pour le clavier.</value></data>
+  <data name="Tour.home.help.Title" xml:space="preserve"><value>Revoir un tutoriel</value></data>
+  <data name="Tour.home.help.Text" xml:space="preserve"><value>Chaque écran a le sien, joué à votre première visite. Ce bouton le relance à tout moment.</value></data>
+  <data name="Tour.quotes.list.Title" xml:space="preserve"><value>Vos devis</value></data>
+  <data name="Tour.quotes.list.Text" xml:space="preserve"><value>Brouillons, devis envoyés, acceptés ou facturés. Un clic ouvre le devis.</value></data>
+  <data name="Tour.quotes.filters.Title" xml:space="preserve"><value>Chercher et filtrer</value></data>
+  <data name="Tour.quotes.filters.Text" xml:space="preserve"><value>F3 place le curseur dans la recherche : numéro, client ou objet. Le statut affine la liste.</value></data>
+  <data name="Tour.quotes.new.Title" xml:space="preserve"><value>Nouveau devis</value></data>
+  <data name="Tour.quotes.new.Text" xml:space="preserve"><value>Le devis est enregistré en brouillon pendant que vous tapez, même sans réseau sur le poste.</value></data>
+  <data name="Tour.quote-editor.customer.Title" xml:space="preserve"><value>Le client</value></data>
+  <data name="Tour.quote-editor.customer.Text" xml:space="preserve"><value>F4 ouvre la liste des clients. Une fois choisi, Lettra propose ses articles habituels.</value></data>
+  <data name="Tour.quote-editor.lines.Title" xml:space="preserve"><value>Les lignes, au clavier</value></data>
+  <data name="Tour.quote-editor.lines.Text" xml:space="preserve"><value>Entrée passe à la cellule suivante, Insert ajoute une ligne, Ctrl+Suppr la retire. Les totaux suivent à chaque saisie.</value></data>
+  <data name="Tour.quote-editor.keys.Title" xml:space="preserve"><value>F4 partout</value></data>
+  <data name="Tour.quote-editor.keys.Text" xml:space="preserve"><value>Sur la référence, F4 ouvre le catalogue ; sur la désignation, les libellés déjà utilisés ; sur l'unité et la TVA, leurs listes. Les touches sont aussi ici, au doigt.</value></data>
+  <data name="Tour.quote-editor.quick.Title" xml:space="preserve"><value>Saisie rapide</value></data>
+  <data name="Tour.quote-editor.quick.Text" xml:space="preserve"><value>Dans la quantité, « 3h » donne 3 heures, « 1,5 j » un jour et demi, « 2x45 » fait le calcul. Le prix accepte aussi « 2x45 ».</value></data>
+  <data name="Tour.quote-editor.templates.Title" xml:space="preserve"><value>Modèles de texte</value></data>
+  <data name="Tour.quote-editor.templates.Text" xml:space="preserve"><value>Tapez « / » dans un texte libre pour insérer une mention ou une condition toute prête. La majuscule et les espaces sont corrigés en sortie du champ.</value></data>
+  <data name="Tour.quote-editor.compliance.Title" xml:space="preserve"><value>Contrôle de conformité</value></data>
+  <data name="Tour.quote-editor.compliance.Text" xml:space="preserve"><value>Les mentions obligatoires sont vérifiées en continu. Un clic sur un constat place le curseur sur la ligne en cause.</value></data>
+  <data name="Tour.quote-editor.why.Title" xml:space="preserve"><value>« Pourquoi ? »</value></data>
+  <data name="Tour.quote-editor.why.Text" xml:space="preserve"><value>Si l'assistant est activé par le cabinet, « Pourquoi ? » explique la règle. Il n'est jamais actif par défaut.</value></data>
+  <data name="Tour.quote-editor.validate.Title" xml:space="preserve"><value>Valider</value></data>
+  <data name="Tour.quote-editor.validate.Text" xml:space="preserve"><value>Ctrl+Entrée numérote et fige le devis, une fois le contrôle au vert. Ensuite : accepté, facture d'acompte, facture finale.</value></data>
+  <data name="Tour.invoices.list.Title" xml:space="preserve"><value>Vos factures</value></data>
+  <data name="Tour.invoices.list.Text" xml:space="preserve"><value>Factures, acomptes et avoirs du dossier, avec leur statut d'émission.</value></data>
+  <data name="Tour.invoices.filters.Title" xml:space="preserve"><value>Filtrer</value></data>
+  <data name="Tour.invoices.filters.Text" xml:space="preserve"><value>Par type de pièce et par statut ; F3 pour chercher un numéro ou un client.</value></data>
+  <data name="Tour.invoices.new.Title" xml:space="preserve"><value>Nouvelle facture</value></data>
+  <data name="Tour.invoices.new.Text" xml:space="preserve"><value>Partez de zéro ici, ou d'un devis accepté pour reprendre ses lignes.</value></data>
+  <data name="Tour.invoice-editor.customer.Title" xml:space="preserve"><value>Le client</value></data>
+  <data name="Tour.invoice-editor.customer.Text" xml:space="preserve"><value>F4 ouvre la liste. Lettra propose ensuite ses articles habituels et ses dernières conditions de règlement.</value></data>
+  <data name="Tour.invoice-editor.terms.Title" xml:space="preserve"><value>Conditions de règlement</value></data>
+  <data name="Tour.invoice-editor.terms.Text" xml:space="preserve"><value>Tapez « / » pour choisir une formule toute prête (30 jours fin de mois, à réception…).</value></data>
+  <data name="Tour.invoice-editor.lines.Title" xml:space="preserve"><value>Les lignes</value></data>
+  <data name="Tour.invoice-editor.lines.Text" xml:space="preserve"><value>Même grille que le devis : F4 sur chaque colonne, saisie rapide « 3h » ou « 2x45 ».</value></data>
+  <data name="Tour.invoice-editor.compliance.Title" xml:space="preserve"><value>Contrôle de conformité</value></data>
+  <data name="Tour.invoice-editor.compliance.Text" xml:space="preserve"><value>Une facture incomplète ne peut pas être validée : la liste dit ce qui manque.</value></data>
+  <data name="Tour.invoice-editor.validate.Title" xml:space="preserve"><value>Valider puis émettre</value></data>
+  <data name="Tour.invoice-editor.validate.Text" xml:space="preserve"><value>Valider numérote la facture ; émettre l'envoie à la plateforme. Une facture émise ne se modifie plus, elle se corrige par un avoir.</value></data>
+  <data name="Tour.invoice-editor.einvoice.Title" xml:space="preserve"><value>PDF et facture électronique</value></data>
+  <data name="Tour.invoice-editor.einvoice.Text" xml:space="preserve"><value>PDF, Factur-X ou UBL, générés sur l'appareil.</value></data>
+  <data name="Tour.customers.lookup.Title" xml:space="preserve"><value>Retrouver une entreprise</value></data>
+  <data name="Tour.customers.lookup.Text" xml:space="preserve"><value>Tapez un nom ou un SIREN : la fiche se remplit depuis l'annuaire des entreprises.</value></data>
+  <data name="Tour.customers.address.Title" xml:space="preserve"><value>Code postal et ville</value></data>
+  <data name="Tour.customers.address.Text" xml:space="preserve"><value>Tapez le code postal : la ville est proposée. Ça marche aussi dans l'autre sens.</value></data>
+  <data name="Tour.customers.list.Title" xml:space="preserve"><value>Vos clients</value></data>
+  <data name="Tour.customers.list.Text" xml:space="preserve"><value>Ils servent ensuite aux devis et factures, et dans la recherche Ctrl+K.</value></data>
+  <data name="Tour.catalog.list.Title" xml:space="preserve"><value>Le catalogue</value></data>
+  <data name="Tour.catalog.list.Text" xml:space="preserve"><value>Vos prestations et produits, avec leur prix HT, leur unité et leur TVA, reprises sur chaque ligne.</value></data>
+  <data name="Tour.catalog.search.Title" xml:space="preserve"><value>Chercher</value></data>
+  <data name="Tour.catalog.search.Text" xml:space="preserve"><value>F3 place le curseur dans la recherche.</value></data>
+  <data name="Tour.catalog.new.Title" xml:space="preserve"><value>Nouvel article</value></data>
+  <data name="Tour.catalog.new.Text" xml:space="preserve"><value>Inser ouvre une fiche vierge. Pour en saisir beaucoup au clavier, « Saisie en grille » reste disponible (F4 sur l'unité et la TVA).</value></data>
+  <data name="Tour.fec.period.Title" xml:space="preserve"><value>La période</value></data>
+  <data name="Tour.fec.period.Text" xml:space="preserve"><value>Choisissez l'exercice ou la période à exporter.</value></data>
+  <data name="Tour.fec.export.Title" xml:space="preserve"><value>Exporter le FEC</value></data>
+  <data name="Tour.fec.export.Text" xml:space="preserve"><value>Le fichier des écritures comptables est produit et contrôlé selon l'article A47 A-1 du LPF.</value></data>
+  <data name="Tour.fec.report.Title" xml:space="preserve"><value>Le rapport de contrôle</value></data>
+  <data name="Tour.fec.report.Text" xml:space="preserve"><value>Équilibre débit et crédit, champs obligatoires : chaque écart est listé.</value></data>
+  <data name="Tour.sync.state.Title" xml:space="preserve"><value>La synchronisation</value></data>
+  <data name="Tour.sync.state.Text" xml:space="preserve"><value>Sur le poste, vous travaillez hors ligne ; Lettra synchronise avec le cabinet quand vous l'acceptez.</value></data>
+  <data name="Tour.sync.pending.Title" xml:space="preserve"><value>En attente</value></data>
+  <data name="Tour.sync.pending.Text" xml:space="preserve"><value>Les pièces créées hors ligne, prêtes à partir.</value></data>
+  <data name="Tour.sync.run.Title" xml:space="preserve"><value>Synchroniser</value></data>
+  <data name="Tour.sync.run.Text" xml:space="preserve"><value>Un clic envoie et reçoit ; un conflit vous est présenté champ par champ.</value></data>
+  <data name="Tour.alerts.counters.Title" xml:space="preserve"><value>Le centre d'alertes</value></data>
+  <data name="Tour.alerts.counters.Text" xml:space="preserve"><value>Les incidents du cabinet, par gravité.</value></data>
+  <data name="Tour.alerts.list.Title" xml:space="preserve"><value>Les alertes</value></data>
+  <data name="Tour.alerts.list.Text" xml:space="preserve"><value>Ouvrez une alerte pour voir sa cause probable et ce qui a déjà été tenté.</value></data>
+  <data name="Tour.alerts.detail.Title" xml:space="preserve"><value>Prendre en charge</value></data>
+  <data name="Tour.alerts.detail.Text" xml:space="preserve"><value>Accusez réception, puis clôturez avec un motif : tout est tracé.</value></data>
+  <data name="Tour.assistant.intro.Title" xml:space="preserve"><value>L'assistant</value></data>
+  <data name="Tour.assistant.intro.Text" xml:space="preserve"><value>Il explique et propose des brouillons. Il ne valide, n'émet et n'envoie jamais rien lui-même.</value></data>
+  <data name="Tour.assistant.feature.Title" xml:space="preserve"><value>Ce qu'il sait faire</value></data>
+  <data name="Tour.assistant.feature.Text" xml:space="preserve"><value>Seules les fonctions ouvertes par le cabinet apparaissent ici.</value></data>
+  <data name="Tour.assistant.ask.Title" xml:space="preserve"><value>Posez votre question</value></data>
+  <data name="Tour.assistant.ask.Text" xml:space="preserve"><value>Il ne lit que le document ouvert à l'écran.</value></data>
+  <data name="Tour.assistant.limits.Title" xml:space="preserve"><value>Vos données restent chez vous</value></data>
+  <data name="Tour.assistant.limits.Text" xml:space="preserve"><value>Le moteur tourne dans la cellule du cabinet ou sur le poste, jamais chez un tiers sans l'accord du cabinet.</value></data>
+  <data name="Starter.Title" xml:space="preserve"><value>Pour bien démarrer</value></data>
+  <data name="Starter.Count" xml:space="preserve"><value>{0} sur {1}</value></data>
+  <data name="Starter.company" xml:space="preserve"><value>Compléter la fiche de l'entreprise</value></data>
+  <data name="Starter.customer" xml:space="preserve"><value>Créer un premier client</value></data>
+  <data name="Starter.quote" xml:space="preserve"><value>Faire un premier devis</value></data>
+  <data name="Starter.invoice" xml:space="preserve"><value>Transformer un devis en facture</value></data>
+  <data name="Starter.fec" xml:space="preserve"><value>Exporter le FEC</value></data>
+  <data name="Starter.Done" xml:space="preserve"><value>fait</value></data>
+  <data name="Starter.Hide" xml:space="preserve"><value>Masquer cette liste</value></data>
+</root>

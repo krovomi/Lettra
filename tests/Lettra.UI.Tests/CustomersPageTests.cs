@@ -11,6 +11,7 @@ using Lettra.UI.Shared.Pages.Parties;
 using Lettra.UI.Tests.Billing;
 using Lettra.UI.Tests.Consultation;
 using Lettra.UI.Tests.Security;
+using Lettra.UI.Shared.Typing;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -169,6 +170,8 @@ public sealed class CustomersPageTests : BunitContext
         JSInterop.Mode = JSRuntimeMode.Loose;
         ExplorerSettings.SearchDelay = TimeSpan.FromMilliseconds(1);
         Collapsible.ForgetAll();
+        // Champs assistés (code postal, ville) : module chargé à la demande, sans effet sans navigateur.
+        JSInterop.SetupModule(AssistModule.Path).Mode = JSRuntimeMode.Loose;
         Services.AddLettraUi();
         Services.AddSingleton<ICustomersGateway>(_gateway);
         Services.AddSingleton<IDirectoryGateway>(_directory);
