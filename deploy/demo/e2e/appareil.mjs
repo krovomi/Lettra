@@ -63,7 +63,10 @@ try {
         await keycloak(page);
         await page.locator('.lettra-user').waitFor({ timeout: 60_000 });
         await page.goto(`${baseUrl}/customers`);
-        await page.locator('table.lettra-table td', { hasText: arg }).first().waitFor({ timeout: 30_000 });
+        // Page Clients en liste et fiche (#86) : la recherche filtre la liste, comme dans parcours.mjs.
+        await page.locator('#customers-list, #customers-empty').first().waitFor({ timeout: 60_000 });
+        await page.fill('#customers-search', arg);
+        await page.locator('#customers-list [role=option]', { hasText: arg }).first().waitFor({ timeout: 30_000 });
         await page.screenshot({ path: join(out, 'navigateur-voit.png'), fullPage: true });
         log(`le navigateur voit « ${arg} »`);
     }
