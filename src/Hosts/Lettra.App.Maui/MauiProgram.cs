@@ -71,7 +71,11 @@ public static class MauiProgram
         builder.Services.AddLettra(builder.Configuration);
         // Voix sur le poste : Whisper.net, hors ligne. Le modèle (142 Mio) est téléchargé au premier usage dans le
         // dossier de l'application, puis vérifié par empreinte ; un poste sans réseau peut y déposer ggml-base.bin.
-        builder.Services.AddOnDeviceSpeech(new OnDeviceSpeechOptions { ModelDirectory = Path.Combine(FileSystem.AppDataDirectory, "voix") });
+        // Ouverte par défaut ; fermée par Lettra:Speech:Engine = None dans lettra.json ou -p:LettraDictee=false (DeviceSpeech).
+        if (DeviceSpeech.IsEnabled())
+        {
+            builder.Services.AddOnDeviceSpeech(new OnDeviceSpeechOptions { ModelDirectory = Path.Combine(FileSystem.AppDataDirectory, "voix") });
+        }
         builder.Services.AddSingleton<IKekStore, SecureStorageKekStore>();
         // Jeu de démonstration en arrière-plan après l'ouverture du compte local (sans effet sans Lettra:Demo:Seed=true).
         builder.Services.AddDemoSeeding(builder.Configuration);

@@ -11,11 +11,15 @@ namespace Lettra.Infrastructure.Speech.OnDevice;
 /// </summary>
 internal sealed partial class WhisperModelStore(OnDeviceSpeechOptions options, IHttpClientFactory http, ILogger<WhisperModelStore> logger) : IDisposable
 {
-    /// <summary>Fichiers du dépôt whisper.cpp, avec la taille et l'empreinte SHA-1 publiées par whisper.cpp (models/README.md).</summary>
+    /// <summary>
+    /// Fichiers du dépôt whisper.cpp, avec l'empreinte SHA-1 publiée par whisper.cpp (models/README.md) et, quand elle
+    /// est épinglée, l'empreinte SHA-256 du même fichier (relevée par <c>build/voix/model.sh</c> et revérifiée à chaque
+    /// run du workflow « Voix »). Les deux sont vérifiées ; sans SHA-256 épinglé, le SHA-1 seul.
+    /// </summary>
     internal static readonly IReadOnlyDictionary<WhisperModelSize, WhisperModelFile> Files = new Dictionary<WhisperModelSize, WhisperModelFile>
     {
         [WhisperModelSize.Tiny] = new("ggml-tiny.bin", "bd577a113a864445d4c299885e0cb97d4ba92b5f"),
-        [WhisperModelSize.Base] = new("ggml-base.bin", "465707469ff3a37a2b9b8d8f89f2f99de7299dac"),
+        [WhisperModelSize.Base] = new("ggml-base.bin", "465707469ff3a37a2b9b8d8f89f2f99de7299dac", "60ed5bc3dd14eea856493d334349b405782ddcaf0028d4b5df4088345fba2efe"),
         [WhisperModelSize.Small] = new("ggml-small.bin", "55356645c2b361a969dfd0ef2c5a50d530afd8d5"),
     };
 
@@ -121,14 +125,25 @@ internal sealed partial class WhisperModelStore(OnDeviceSpeechOptions options, I
 
     private async Task<bool> MatchesAsync(string path, CancellationToken cancellationToken)
     {
+        // Une seule lecture du fichier (142 Mio pour base) pour les deux empreintes.
+#pragma warning disable CA5350 // whisper.cpp ne publie que des SHA-1 : vérifié pour l'intégrité, doublé du SHA-256 épinglé.
+        using IncrementalHash sha1 = IncrementalHash.CreateHash(HashAlgorithmName.SHA1);
+#pragma warning restore CA5350
+        using IncrementalHash sha256 = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+        byte[] buffer = new byte[1 << 16];
         FileStream stream = new(path, FileMode.Open, FileAccess.Read, FileShare.Read, 1 << 16, useAsync: true);
         await using (stream.ConfigureAwait(false))
         {
-#pragma warning disable CA5350 // whisper.cpp ne publie que des SHA-1 : ils servent à vérifier l'intégrité du fichier téléchargé, pas à signer.
-            byte[] hash = await SHA1.HashDataAsync(stream, cancellationToken).ConfigureAwait(false);
-#pragma warning restore CA5350
-            return Convert.ToHexStringLower(hash) == File.Sha1;
+            int read;
+            while ((read = await stream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
+            {
+                sha1.AppendData(buffer, 0, read);
+                sha256.AppendData(buffer, 0, read);
+            }
         }
+
+        return Convert.ToHexStringLower(sha1.GetHashAndReset()) == File.Sha1
+               && (File.Sha256 is null || Convert.ToHexStringLower(sha256.GetHashAndReset()) == File.Sha256);
     }
 
     public void Dispose() => _gate.Dispose();
@@ -140,4 +155,5 @@ internal sealed partial class WhisperModelStore(OnDeviceSpeechOptions options, I
     private static partial void LogDownloadFailed(ILogger logger, string model, string reason);
 }
 
-internal sealed record WhisperModelFile(string Name, string Sha1);
+/// <summary>Un modèle ggml : son nom, son SHA-1 publié par whisper.cpp et son SHA-256 épinglé, s'il l'est.</summary>
+internal sealed record WhisperModelFile(string Name, string Sha1, string? Sha256 = null);

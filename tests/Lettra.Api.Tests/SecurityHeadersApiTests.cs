@@ -96,4 +96,30 @@ public sealed class SecurityHeadersApiTests(LettraApiFactory factory) : IClassFi
 
         Single(response, "Content-Security-Policy").Should().Be(SecurityHeaders.ContentSecurityPolicy);
     }
+
+    [Theory]
+    [InlineData("Production", "https://lettra.example", true)]
+    [InlineData("Demo", "https://192.168.1.20:8443", true)]
+    [InlineData("Demo", "http://localhost:8080", false)]
+    [InlineData("Demo", "https://localhost:8443", false)]
+    [InlineData("Production", "http://lettra.example", false)]
+    [InlineData("Development", "https://lettra.example", false)]
+    public async Task Hsts_n_est_servi_qu_en_https_hors_developpement_et_hors_localhost(string environment, string origin, bool expected)
+    {
+        using WebApplicationFactory<Program> host = factory.WithWebHostBuilder(b => b.UseEnvironment(environment));
+        using HttpClient client = host.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri(origin) });
+        client.DefaultRequestHeaders.Authorization = null;
+
+        using HttpResponseMessage response = await client.GetAsync(new Uri("/health", UriKind.Relative));
+
+        if (expected)
+        {
+            Single(response, "Strict-Transport-Security").Should().Be(SecurityHeaders.StrictTransportSecurity)
+                .And.Contain("max-age=31536000").And.Contain("includeSubDomains");
+        }
+        else
+        {
+            response.Headers.Contains("Strict-Transport-Security").Should().BeFalse();
+        }
+    }
 }

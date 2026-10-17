@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Réseau de l'application Android (serveur commun du cabinet, annexe F) :
-     - https partout, avec les autorités du système et celles que l'utilisateur a installées (certificat racine de la
-       démonstration en réseau local, deploy/demo/compose.lan.yaml) ; à restreindre aux autorités du système avant la
-       production (phase 7) ;
-     - http seulement vers l'appareil lui-même (démonstration relayée par câble USB : adb reverse tcp:8080 tcp:8080). -->
+<!-- Réseau de l'application Android (serveur commun du cabinet, annexe F), version sans démonstration
+     (-p:LettraDemo=false) :
+     - https partout, avec les seules autorités du système : un certificat installé par l'utilisateur n'est pas reconnu ;
+     - http seulement vers l'appareil lui-même (serveur relayé par câble USB : adb reverse tcp:8080 tcp:8080).
+     La version de démonstration (par défaut) la remplace par Platforms/Android/Demo/xml/network_security_config.xml,
+     qui approuve aussi les autorités installées par l'utilisateur (Lettra.App.Maui.csproj). -->
 <network-security-config>
 	<base-config cleartextTrafficPermitted="false">
 		<trust-anchors>
 			<certificates src="system" />
-			<certificates src="user" />
 		</trust-anchors>
 	</base-config>
 	<domain-config cleartextTrafficPermitted="true">

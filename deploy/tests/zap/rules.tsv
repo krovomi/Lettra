@@ -16,6 +16,9 @@
 # Kestrel n'annonce plus sa version (AddServerHeader = false).
 10036	FAIL	(Server Leaks Version Information via "Server" HTTP Response Header Field)
 10037	FAIL	(Server Leaks Information via "X-Powered-By" HTTP Response Header Field(s))
+# HSTS : servi en HTTPS hors développement, jamais pour localhost (SecurityHeaders.cs). Le scan vise
+# http://localhost:8080 : la règle, qui ne lit que les réponses HTTPS, n'y relève rien ; laissée en avertissement.
+10035	WARN	(Strict-Transport-Security Header)
 # Cookie de session : __Host-, HttpOnly, Secure, SameSite=Strict.
 10010	FAIL	(Cookie No HttpOnly Flag)
 10011	FAIL	(Cookie Without Secure Flag)

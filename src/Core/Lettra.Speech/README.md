@@ -31,6 +31,17 @@ transcription répond 403 `Speech.Disabled`.
 | Serveur (modes 2, 3, 5) | serveur whisper.cpp de la cellule | `Lettra:Speech:Engine=WhisperServer`, `Lettra:Speech:WhisperServer:Endpoint=http://whisper:8080/` |
 | Poste MAUI (modes 1, 4) | Whisper.net | `services.AddOnDeviceSpeech(new OnDeviceSpeechOptions { ModelDirectory = … })` |
 
+Exception : l'application MAUI ouvre la dictée **par défaut**, y compris dans la version de démonstration
+(`LettraDemo=true`). Elle se coupe de deux façons (`DeviceSpeech.cs`) :
+
+- sur un appareil, `Lettra:Speech:Engine` dans `lettra.json` (dossier de données de l'application) :
+  `{ "Lettra": { "Speech": { "Engine": "None" } } }`. `"OnDevice"` la rouvre ; toute autre valeur la laisse coupée
+  (le poste n'a pas d'autre moteur). Lu au démarrage ;
+- à la construction, `-p:LettraDictee=false` : coupée par défaut sur ce build, `lettra.json` peut la rouvrir.
+
+Coupée, `AddOnDeviceSpeech` n'est pas appelé : le statut répond `Enabled: false`, le micro n'apparaît pas, le modèle
+n'est jamais téléchargé.
+
 Le serveur est l'image construite par `build/voix/whisper-server` : whisper.cpp v1.8.7 compilé sans optimisations
 propres à la machine de construction, utilisateur non privilégié, modèle (`WHISPER_MODEL=base`) téléchargé au premier
 démarrage dans le volume `/models` et vérifié par empreinte. L'image publique `main` de whisper.cpp s'arrêtait au
@@ -41,8 +52,13 @@ Whisper publique est **refusée au démarrage** : seuls les noms de service, `*.
 `*.local`, `*.lan` et les adresses privées passent.
 
 Sur le poste, le modèle (`base` par défaut, 142 Mio ; `tiny` et `small` possibles) est téléchargé une fois depuis le
-dépôt public de whisper.cpp, puis vérifié par l'empreinte SHA-1 publiée. Un fichier altéré est supprimé et jamais
-chargé. Un poste sans réseau reçoit le fichier `ggml-base.bin` dans son dossier `voix` (`AllowDownload = false`).
+dépôt public de whisper.cpp, puis vérifié par l'empreinte SHA-1 publiée **et** par le SHA-256 épinglé dans
+`WhisperModelStore.Files` (les deux doivent concorder). Un fichier altéré est supprimé et jamais chargé. whisper.cpp ne
+publie que des SHA-1 : le SHA-256 de `ggml-base.bin` (le modèle par défaut et celui de la démonstration) est épinglé et
+revérifié à chaque run du workflow « Voix » par `build/voix/model.sh`, qui annote aussi le SHA-256 obtenu ; `tiny` et
+`small` n'en ont pas encore et restent vérifiés par le seul SHA-1 (pour les épingler : lancer « Voix » avec ce
+modèle, reporter le SHA-256 annoté dans `WhisperModelStore.cs`, `build/voix/model.sh` et
+`build/voix/whisper-server/entrypoint.sh`). Le conteneur `whisper` de la démonstration vérifie les mêmes empreintes. Un poste sans réseau reçoit le fichier `ggml-base.bin` dans son dossier `voix` (`AllowDownload = false`).
 
 ## Route
 

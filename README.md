@@ -108,6 +108,10 @@ téléphone après la démonstration.
 > Non vérifié sur un vrai téléphone : la CI vérifie ce profil HTTPS dans Chromium, avec une adresse autre que
 > localhost, mais pas l'installation du certificat ni la PWA sur Android ou iOS.
 
+En HTTPS, Lettra demande au navigateur de n'y revenir qu'en HTTPS pendant un an (en-tête HSTS). Le navigateur
+l'ignore pour une adresse IP, comme `192.168.1.20` ; avec un nom de poste, ce nom reste ensuite en HTTPS dans ce
+navigateur. Rien ne change pour `http://localhost:8080`, qui ne reçoit jamais cet en-tête.
+
 #### Voir la télémétrie dans Grafana
 
 La même démonstration, avec ses traces, métriques et journaux dans Grafana (collecteur filtrant, Prometheus, Tempo et
@@ -192,6 +196,11 @@ s'installe à la main, hors Play Store.
 Copier l'APK sur le téléphone (câble, e-mail à soi-même, Drive), l'ouvrir, et autoriser l'installation
 d'applications de cette source quand Android le demande. Avec le mode développeur et le débogage USB, `adb install`
 ci-dessus fonctionne aussi. Désinstaller l'application après la démonstration.
+
+L'APK de démonstration accepte les certificats que vous avez installés vous-même sur le téléphone (celui de la
+démonstration en réseau local, par exemple). Une version construite sans démonstration (`-p:LettraDemo=false`)
+n'accepte que les autorités de certification d'Android : un serveur du cabinet doit alors avoir un certificat
+reconnu par Android.
 
 > Non vérifié sur un vrai téléphone.
 
@@ -445,7 +454,14 @@ service tiers, et il n'est ni enregistré ni journalisé.
   dans le volume `lettra-demo_whisper-modeles`. Lettra s'ouvre sans l'attendre ; la voix répond « indisponible » tant
   que le modèle n'est pas chargé (une à quelques minutes selon la connexion).
 - **Dans l'application installée**, le modèle est téléchargé au premier usage de la voix, dans le dossier de
-  l'application (`voix`). Le système demande l'autorisation du micro la première fois.
+  l'application (`voix`), puis vérifié par deux empreintes (SHA-1 publié par whisper.cpp et SHA-256 épinglé dans
+  Lettra) : un fichier différent est supprimé, jamais chargé. Le système demande l'autorisation du micro la première
+  fois.
+- **Couper la dictée dans l'application installée** : elle est active par défaut, y compris dans la démonstration.
+  Pour la couper sur un appareil, écrire dans le fichier `lettra.json` du dossier de données de l'application
+  `{ "Lettra": { "Speech": { "Engine": "None" } } }` (avec `"OnDevice"`, elle revient), puis relancer Lettra. Le
+  bouton micro disparaît, le micro n'est jamais ouvert et le modèle n'est pas téléchargé. Pour construire une version
+  sans dictée par défaut : `-p:LettraDictee=false`.
 
 Pour vérifier que la voix est active : `GET /api/v1/voix/statut` doit répondre `"enabled": true` et
 `"engine": "whisper-serveur"`. Dans le navigateur, une fois connecté, ouvrir la console (F12, onglet **Console**) et
@@ -502,7 +518,9 @@ Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou 
 | Navigateur : la voix répond « indisponible » (503) | Le conteneur `whisper` télécharge encore son modèle (142 Mio) ou n'a pas accès à Internet : `docker compose -f deploy/demo/compose.yaml logs whisper` montre le téléchargement (et, sans Internet, un nouvel essai toutes les 30 secondes) ; le serveur est prêt quand la commande de vérification de [Dictée et commandes vocales](#dictée-et-commandes-vocales) affiche `200`. Le reste de Lettra fonctionne pendant ce temps. |
 | Navigateur : erreur « Uncaught (in promise) TypeError: Failed to fetch at fromShell » dans la console | C'est l'ancien service worker : fermer tous les onglets de Lettra puis rouvrir (ou DevTools → **Application** → **Service workers** → **Unregister**). La console doit rester vide d'erreurs sur tous les écrans, en ligne comme hors ligne ([détails](deploy/demo/README.md#installer-lapplication-pwa)). |
 | Navigateur : le code du second facteur est refusé | L'application TOTP doit accepter SHA-256 (pas Microsoft Authenticator) et l'heure du téléphone être à l'heure. Pour réenrôler sans perdre vos saisies, ne remettez à zéro que Keycloak : `docker compose -f deploy/demo/compose.yaml down`, `docker volume rm lettra-demo_keycloak-donnees`, puis `up -d --wait`. Pas de `down -v` : il efface aussi les données Lettra. |
-| Serveur du cabinet : « cet appareil ne fait pas confiance à son certificat » | Installer sur l'appareil le certificat de la démonstration ou l'autorité de certification du cabinet (voir [Téléphone ou tablette sur le même Wi-Fi](#téléphone-ou-tablette-sur-le-même-wi-fi-navigateur)). |
+| Serveur du cabinet : « cet appareil ne fait pas confiance à son certificat » | Installer sur l'appareil le certificat de la démonstration ou l'autorité de certification du cabinet (voir [Téléphone ou tablette sur le même Wi-Fi](#téléphone-ou-tablette-sur-le-même-wi-fi-navigateur)). Sur Android, seul l'APK de démonstration accepte un certificat installé à la main ; une version construite avec `-p:LettraDemo=false` exige un certificat reconnu par Android. |
+| Application installée : pas de bouton micro | La dictée est coupée par `"Engine": "None"` dans `lettra.json` (dossier de données de l'application) ou la version a été construite avec `-p:LettraDictee=false` : retirer la ligne ou mettre `"OnDevice"`, puis relancer ([Dictée et commandes vocales](#dictée-et-commandes-vocales)). |
+| Navigateur : après la démo en réseau local avec un nom de poste, `http://<nom>:…` passe tout seul en `https://` | C'est l'en-tête HSTS du profil HTTPS : utiliser `http://localhost:8080` sur le poste, ou effacer le réglage du site dans le navigateur (Chrome : `chrome://net-internals/#hsts`, *Delete domain security policies*). Avec une adresse IP, cela n'arrive pas. |
 | Serveur du cabinet : « Cette adresse doit commencer par https:// » | Seule la démo sur le même poste (`localhost`, ou Android relié par `adb reverse`) accepte `http` ; ailleurs, saisir l'adresse en `https://`. |
 | « Windows a protégé votre ordinateur » | Normal pour un prototype non signé : **Informations complémentaires**, puis **Exécuter quand même**. |
 | Rien ne s'ouvre, ou une erreur sur des fichiers bloqués | Le zip n'a pas été débloqué : supprimez le dossier extrait, faites l'étape 2 (Propriétés, **Débloquer**), puis extrayez à nouveau. |

@@ -13,7 +13,7 @@ public sealed class WhisperModelStoreTests : IDisposable
     private static readonly byte[] Model = "un faux modèle ggml"u8.ToArray();
 
 #pragma warning disable CA5350 // Même empreinte que whisper.cpp : SHA-1, pour l'intégrité.
-    private static readonly WhisperModelFile Expected = new("ggml-test.bin", Convert.ToHexStringLower(SHA1.HashData(Model)));
+    private static readonly WhisperModelFile Expected = new("ggml-test.bin", Convert.ToHexStringLower(SHA1.HashData(Model)), Convert.ToHexStringLower(SHA256.HashData(Model)));
 #pragma warning restore CA5350
 
     private readonly string _folder = Directory.CreateTempSubdirectory("lettra-voix-").FullName;
@@ -77,17 +77,45 @@ public sealed class WhisperModelStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task Un_sha_256_different_ecarte_le_modele_meme_si_le_sha_1_concorde()
+    {
+        await File.WriteAllBytesAsync(Path.Combine(_folder, Expected.Name), Model);
+        Downloads downloads = new(HttpStatusCode.OK, Model);
+        using WhisperModelStore store = Store(downloads, file: Expected with { Sha256 = new string('0', 64) });
+
+        Result<string> path = await store.EnsureAsync(CancellationToken.None);
+
+        path.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Speech.ModelUnavailable);
+        downloads.Count.Should().Be(1, "le fichier présent est écarté, puis le téléchargement aussi");
+        Directory.GetFiles(_folder).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Sans_sha_256_epingle_le_sha_1_suffit()
+    {
+        await File.WriteAllBytesAsync(Path.Combine(_folder, Expected.Name), Model);
+        using WhisperModelStore store = Store(new Downloads(HttpStatusCode.OK, []), file: Expected with { Sha256 = null });
+
+        (await store.EnsureAsync(CancellationToken.None)).Value.Should().Be(Path.Combine(_folder, Expected.Name));
+    }
+
+    [Fact]
     public void Les_modeles_proposes_ont_tous_une_empreinte_publiee() =>
-        WhisperModelStore.Files.Values.Should().OnlyContain(f => f.Name.StartsWith("ggml-", StringComparison.Ordinal) && f.Sha1.Length == 40);
+        WhisperModelStore.Files.Values.Should().OnlyContain(f => f.Name.StartsWith("ggml-", StringComparison.Ordinal) && f.Sha1.Length == 40
+                                                                 && (f.Sha256 == null || (f.Sha256.Length == 64 && f.Sha256.All(c => char.IsAsciiHexDigitLower(c) || char.IsAsciiDigit(c)))));
+
+    [Fact]
+    public void Le_modele_de_la_demonstration_a_un_sha_256_epingle() =>
+        WhisperModelStore.Files[WhisperModelSize.Base].Sha256.Should().HaveLength(64);
 
     public void Dispose() => Directory.Delete(_folder, recursive: true);
 
-    private WhisperModelStore Store(Downloads downloads, bool allowDownload = true) => new(
+    private WhisperModelStore Store(Downloads downloads, bool allowDownload = true, WhisperModelFile? file = null) => new(
         new OnDeviceSpeechOptions { ModelDirectory = _folder, AllowDownload = allowDownload, DownloadBaseAddress = new Uri("https://modeles.test/ggml/") },
         downloads,
         NullLogger<WhisperModelStore>.Instance)
     {
-        FileOverride = Expected,
+        FileOverride = file ?? Expected,
     };
 
     private sealed class Downloads(HttpStatusCode status, byte[] content) : HttpMessageHandler, IHttpClientFactory
