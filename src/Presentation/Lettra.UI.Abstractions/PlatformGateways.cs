@@ -21,3 +21,12 @@ public interface IPlatformTransmissionGateway
     /// <summary>Déclare un encaissement, éventuellement partiel ; la transmission devient définitive une fois le TTC encaissé.</summary>
     Task<OperationResult<PlatformTransmissionResponse>> ReportPaymentAsync(Guid invoiceId, ReportPaymentRequest request, CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// Point des créances du dossier pour le tableau de bord : factures en retard (reste dû après avoirs et encaissements
+/// déclarés) et état des transmissions à la plateforme agréée.
+/// </summary>
+public interface IReceivablesGateway
+{
+    Task<OperationResult<ReceivablesSummaryResponse>> GetSummaryAsync(CancellationToken cancellationToken);
+}

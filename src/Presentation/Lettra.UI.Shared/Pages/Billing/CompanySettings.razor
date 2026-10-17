@@ -6,8 +6,12 @@
 
 <PageTitle>@L["Company.Title"] · Lettra</PageTitle>
 
-<h1 tabindex="-1">@L["Company.Title"]</h1>
-<p class="lettra-muted">@L["Company.Intro"]</p>
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Company.Title"]</h1>
+        <p>@L["Company.Intro"]</p>
+    </div>
+</div>
 
 @if (!_loaded)
 {
@@ -21,59 +25,83 @@ else
         <fieldset>
             <legend>@L["Company.Identity"]</legend>
 
-            <label for="company-name">@L["Customers.Field.Name"]</label>
-            <InputText id="company-name" @bind-Value="_request.Name" autocomplete="organization" />
-            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.Name)" ServerErrors="_errors" />
-
-            <label for="company-form">@L["Company.Field.LegalForm"]</label>
-            <InputText id="company-form" @bind-Value="_request.LegalForm" />
-            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.LegalForm)" ServerErrors="_errors" />
-
-            <label for="company-capital">@L["Company.Field.ShareCapital"]</label>
-            <InputNumber id="company-capital" @bind-Value="_request.ShareCapital" inputmode="decimal" />
-            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.ShareCapital)" ServerErrors="_errors" />
-
-            <label for="company-siren">@L["Customers.Field.Siren"]</label>
-            <InputText id="company-siren" @bind-Value="_request.Siren" inputmode="numeric" />
-            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.Siren)" ServerErrors="_errors" />
-
-            <label for="company-siret">@L["Customers.Field.Siret"]</label>
-            <InputText id="company-siret" @bind-Value="_request.Siret" inputmode="numeric" />
-            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.Siret)" ServerErrors="_errors" />
-
-            <label for="company-rcs">@L["Company.Field.Rcs"]</label>
-            <InputText id="company-rcs" @bind-Value="_request.Rcs" />
-            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.Rcs)" ServerErrors="_errors" />
-
-            <label for="company-vat">@L["Customers.Field.VatNumber"]</label>
-            <div class="lettra-inline">
-                <InputText id="company-vat" @bind-Value="_request.VatNumber" />
-                <VatNumberCheck VatNumber="@_request.VatNumber" />
+            <div class="lettra-field">
+                <label for="company-name">@L["Customers.Field.Name"]</label>
+                <InputText id="company-name" @bind-Value="_request.Name" autocomplete="organization" />
+                <FieldErrors Field="@nameof(SaveCompanyProfileRequest.Name)" ServerErrors="_errors" />
             </div>
-            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.VatNumber)" ServerErrors="_errors" />
+
+            <div class="lettra-field">
+                <label for="company-form">@L["Company.Field.LegalForm"]</label>
+                <InputText id="company-form" @bind-Value="_request.LegalForm" />
+                <FieldErrors Field="@nameof(SaveCompanyProfileRequest.LegalForm)" ServerErrors="_errors" />
+            </div>
+
+            <div class="lettra-field">
+                <label for="company-capital">@L["Company.Field.ShareCapital"]</label>
+                <InputNumber id="company-capital" @bind-Value="_request.ShareCapital" inputmode="decimal" />
+                <FieldErrors Field="@nameof(SaveCompanyProfileRequest.ShareCapital)" ServerErrors="_errors" />
+            </div>
+
+            <div class="lettra-field">
+                <label for="company-siren">@L["Customers.Field.Siren"]</label>
+                <InputText id="company-siren" @bind-Value="_request.Siren" inputmode="numeric" />
+                <FieldErrors Field="@nameof(SaveCompanyProfileRequest.Siren)" ServerErrors="_errors" />
+            </div>
+
+            <div class="lettra-field">
+                <label for="company-siret">@L["Customers.Field.Siret"]</label>
+                <InputText id="company-siret" @bind-Value="_request.Siret" inputmode="numeric" />
+                <FieldErrors Field="@nameof(SaveCompanyProfileRequest.Siret)" ServerErrors="_errors" />
+            </div>
+
+            <div class="lettra-field">
+                <label for="company-rcs">@L["Company.Field.Rcs"]</label>
+                <InputText id="company-rcs" @bind-Value="_request.Rcs" />
+                <FieldErrors Field="@nameof(SaveCompanyProfileRequest.Rcs)" ServerErrors="_errors" />
+            </div>
+
+            <div class="lettra-field lettra-field-wide">
+                <label for="company-vat">@L["Customers.Field.VatNumber"]</label>
+                <div class="lettra-inline">
+                    <InputText id="company-vat" @bind-Value="_request.VatNumber" />
+                    <VatNumberCheck VatNumber="@_request.VatNumber" />
+                </div>
+                <FieldErrors Field="@nameof(SaveCompanyProfileRequest.VatNumber)" ServerErrors="_errors" />
+            </div>
         </fieldset>
 
         <fieldset>
             <legend>@L["Company.Address"]</legend>
 
-            <label for="company-line1">@L["Customers.Field.AddressLine1"]</label>
-            <InputText id="company-line1" @bind-Value="_request.AddressLine1" autocomplete="address-line1" />
-            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.AddressLine1)" ServerErrors="_errors" />
+            <div class="lettra-field lettra-field-wide">
+                <label for="company-line1">@L["Customers.Field.AddressLine1"]</label>
+                <InputText id="company-line1" @bind-Value="_request.AddressLine1" autocomplete="address-line1" />
+                <FieldErrors Field="@nameof(SaveCompanyProfileRequest.AddressLine1)" ServerErrors="_errors" />
+            </div>
 
-            <label for="company-line2">@L["Customers.Field.AddressLine2"]</label>
-            <InputText id="company-line2" @bind-Value="_request.AddressLine2" autocomplete="address-line2" />
+            <div class="lettra-field">
+                <label for="company-line2">@L["Customers.Field.AddressLine2"]</label>
+                <InputText id="company-line2" @bind-Value="_request.AddressLine2" autocomplete="address-line2" />
+            </div>
 
-            <label for="company-zip">@L["Customers.Field.PostalCode"]</label>
-            <InputText id="company-zip" @bind-Value="_request.PostalCode" autocomplete="postal-code" />
-            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.PostalCode)" ServerErrors="_errors" />
+            <div class="lettra-field">
+                <label for="company-zip">@L["Customers.Field.PostalCode"]</label>
+                <InputText id="company-zip" @bind-Value="_request.PostalCode" autocomplete="postal-code" />
+                <FieldErrors Field="@nameof(SaveCompanyProfileRequest.PostalCode)" ServerErrors="_errors" />
+            </div>
 
-            <label for="company-city">@L["Customers.Field.City"]</label>
-            <InputText id="company-city" @bind-Value="_request.City" autocomplete="address-level2" />
-            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.City)" ServerErrors="_errors" />
+            <div class="lettra-field">
+                <label for="company-city">@L["Customers.Field.City"]</label>
+                <InputText id="company-city" @bind-Value="_request.City" autocomplete="address-level2" />
+                <FieldErrors Field="@nameof(SaveCompanyProfileRequest.City)" ServerErrors="_errors" />
+            </div>
 
-            <label for="company-country">@L["Customers.Field.CountryCode"]</label>
-            <InputText id="company-country" @bind-Value="_request.CountryCode" maxlength="2" autocomplete="country" />
-            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.CountryCode)" ServerErrors="_errors" />
+            <div class="lettra-field">
+                <label for="company-country">@L["Customers.Field.CountryCode"]</label>
+                <InputText id="company-country" @bind-Value="_request.CountryCode" maxlength="2" autocomplete="country" />
+                <FieldErrors Field="@nameof(SaveCompanyProfileRequest.CountryCode)" ServerErrors="_errors" />
+            </div>
         </fieldset>
 
         <fieldset>
@@ -81,56 +109,66 @@ else
             <label class="lettra-check"><InputCheckbox id="company-franchise" @bind-Value="_request.VatFranchise" /> @L["Company.Field.VatFranchise"]</label>
             <label class="lettra-check"><InputCheckbox id="company-debits" @bind-Value="_request.VatOnDebits" /> @L["Company.Field.VatOnDebits"]</label>
 
-            <label for="company-regime">@L["Company.Field.VatDeclarationRegime"]</label>
-            <InputSelect id="company-regime" @bind-Value="_request.VatDeclarationRegime" disabled="@_request.VatFranchise">
-                <option value="">@L["Company.VatDeclarationRegime.None"]</option>
-                @foreach (VatDeclarationRegimeDto regime in Enum.GetValues<VatDeclarationRegimeDto>())
-                {
-                    <option value="@regime">@L[$"Company.VatDeclarationRegime.{regime}"]</option>
-                }
-            </InputSelect>
-            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.VatDeclarationRegime)" ServerErrors="_errors" />
+            <div class="lettra-field">
+                <label for="company-regime">@L["Company.Field.VatDeclarationRegime"]</label>
+                <InputSelect id="company-regime" @bind-Value="_request.VatDeclarationRegime" disabled="@_request.VatFranchise">
+                    <option value="">@L["Company.VatDeclarationRegime.None"]</option>
+                    @foreach (VatDeclarationRegimeDto regime in Enum.GetValues<VatDeclarationRegimeDto>())
+                    {
+                        <option value="@regime">@L[$"Company.VatDeclarationRegime.{regime}"]</option>
+                    }
+                </InputSelect>
+                <FieldErrors Field="@nameof(SaveCompanyProfileRequest.VatDeclarationRegime)" ServerErrors="_errors" />
+            </div>
         </fieldset>
 
         <fieldset>
             <legend>@L["Company.Payment"]</legend>
 
-            <label for="company-days">@L["Company.Field.PaymentDays"]</label>
-            <InputNumber id="company-days" @bind-Value="_request.PaymentDays" inputmode="numeric" />
-            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.PaymentDays)" ServerErrors="_errors" />
+            <div class="lettra-field">
+                <label for="company-days">@L["Company.Field.PaymentDays"]</label>
+                <InputNumber id="company-days" @bind-Value="_request.PaymentDays" inputmode="numeric" />
+                <FieldErrors Field="@nameof(SaveCompanyProfileRequest.PaymentDays)" ServerErrors="_errors" />
+            </div>
 
-            <label for="company-terms">@L["Invoice.Field.PaymentTerms"]</label>
-            <InputTextArea id="company-terms" @bind-Value="_request.PaymentTerms" rows="2" />
-            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.PaymentTerms)" ServerErrors="_errors" />
+            <div class="lettra-field lettra-field-wide">
+                <label for="company-terms">@L["Invoice.Field.PaymentTerms"]</label>
+                <InputTextArea id="company-terms" @bind-Value="_request.PaymentTerms" rows="2" />
+                <FieldErrors Field="@nameof(SaveCompanyProfileRequest.PaymentTerms)" ServerErrors="_errors" />
+            </div>
 
-            <label for="company-penalty">@L["Company.Field.LatePenaltyRate"]</label>
-            <InputNumber id="company-penalty" @bind-Value="_request.LatePenaltyRate" inputmode="decimal" />
-            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.LatePenaltyRate)" ServerErrors="_errors" />
+            <div class="lettra-field">
+                <label for="company-penalty">@L["Company.Field.LatePenaltyRate"]</label>
+                <InputNumber id="company-penalty" @bind-Value="_request.LatePenaltyRate" inputmode="decimal" />
+                <FieldErrors Field="@nameof(SaveCompanyProfileRequest.LatePenaltyRate)" ServerErrors="_errors" />
+            </div>
 
-            <label for="company-discount">@L["Company.Field.EarlyPaymentDiscount"]</label>
-            <InputText id="company-discount" @bind-Value="_request.EarlyPaymentDiscount" />
-            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.EarlyPaymentDiscount)" ServerErrors="_errors" />
+            <div class="lettra-field">
+                <label for="company-discount">@L["Company.Field.EarlyPaymentDiscount"]</label>
+                <InputText id="company-discount" @bind-Value="_request.EarlyPaymentDiscount" />
+                <FieldErrors Field="@nameof(SaveCompanyProfileRequest.EarlyPaymentDiscount)" ServerErrors="_errors" />
+            </div>
 
-            <label for="company-iban">@L["Suppliers.Field.Iban"]</label>
-            <InputText id="company-iban" @bind-Value="_request.Iban" autocomplete="off" spellcheck="false" />
-            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.Iban)" ServerErrors="_errors" />
+            <div class="lettra-field">
+                <label for="company-iban">@L["Suppliers.Field.Iban"]</label>
+                <InputText id="company-iban" @bind-Value="_request.Iban" autocomplete="off" spellcheck="false" />
+                <FieldErrors Field="@nameof(SaveCompanyProfileRequest.Iban)" ServerErrors="_errors" />
+            </div>
 
-            <label for="company-bic">@L["Company.Field.Bic"]</label>
-            <InputText id="company-bic" @bind-Value="_request.Bic" autocomplete="off" spellcheck="false" />
-            <FieldErrors Field="@nameof(SaveCompanyProfileRequest.Bic)" ServerErrors="_errors" />
+            <div class="lettra-field">
+                <label for="company-bic">@L["Company.Field.Bic"]</label>
+                <InputText id="company-bic" @bind-Value="_request.Bic" autocomplete="off" spellcheck="false" />
+                <FieldErrors Field="@nameof(SaveCompanyProfileRequest.Bic)" ServerErrors="_errors" />
+            </div>
         </fieldset>
 
-        @foreach (ErrorDetail error in _errors.Where(e => e.Target is null))
-        {
-            <p class="validation-message" role="alert">@L.Error(error.Code)</p>
-        }
+        <GeneralErrors Errors="_errors" />
 
-        <button type="submit" disabled="@_busy">@L["Billing.Command.Save"]</button>
+        <div class="lt-form-actions">
+            <button type="submit" class="lettra-button" disabled="@_busy">@L["Billing.Command.Save"]</button>
+        </div>
 
-        @if (_saved)
-        {
-            <p role="status" class="lettra-success">@L["Company.Saved"]</p>
-        }
+        <StatusToast Message="@(_saved ? L["Company.Saved"].Value : null)" />
     </EditForm>
 }
 

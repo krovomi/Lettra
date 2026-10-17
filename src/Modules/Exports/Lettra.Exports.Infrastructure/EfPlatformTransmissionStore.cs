@@ -25,20 +25,26 @@ internal sealed class EfPlatformTransmissionStore(TenantDbSession session) : IPl
             .Where(r => r.InvoiceId == invoiceId)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
-        PlatformTransmissionRecord? latest = records.OrderBy(r => r.SubmittedAtMs).ThenBy(r => r.Id).LastOrDefault();
-        return latest is null ? null : new PlatformTransmission(
-            latest.Id,
-            latest.InvoiceId,
-            latest.InvoiceNumber,
-            (PlatformChannelDto)latest.Channel,
-            (EInvoiceFormatDto?)latest.Format,
-            latest.Platform,
-            latest.Reference,
-            latest.TotalInclTax,
-            DateTimeOffset.FromUnixTimeMilliseconds(latest.SubmittedAtMs),
-            latest.Events.OrderBy(e => e.Sequence).Select(e => new PlatformStatusEvent(
-                (PlatformStatusDto)e.Status, DateTimeOffset.FromUnixTimeMilliseconds(e.AtMs), e.Reason, e.Amount)));
+        PlatformTransmissionRecord? latest = Latest(records);
+        return latest is null ? null : ToTransmission(latest);
     }
+
+    /// <summary>La transmission soumise en dernier parmi celles d'une pièce.</summary>
+    internal static PlatformTransmissionRecord? Latest(IEnumerable<PlatformTransmissionRecord> records) =>
+        records.OrderBy(r => r.SubmittedAtMs).ThenBy(r => r.Id).LastOrDefault();
+
+    internal static PlatformTransmission ToTransmission(PlatformTransmissionRecord record) => new(
+        record.Id,
+        record.InvoiceId,
+        record.InvoiceNumber,
+        (PlatformChannelDto)record.Channel,
+        (EInvoiceFormatDto?)record.Format,
+        record.Platform,
+        record.Reference,
+        record.TotalInclTax,
+        DateTimeOffset.FromUnixTimeMilliseconds(record.SubmittedAtMs),
+        record.Events.OrderBy(e => e.Sequence).Select(e => new PlatformStatusEvent(
+            (PlatformStatusDto)e.Status, DateTimeOffset.FromUnixTimeMilliseconds(e.AtMs), e.Reason, e.Amount)));
 
     public async Task StageAsync(PlatformTransmission transmission, CancellationToken cancellationToken)
     {

@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json.Serialization.Metadata;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
+using Lettra.Contracts.Demo;
 using Lettra.Contracts.Exports;
 using Lettra.Contracts.Pricing;
 using Lettra.Contracts.Serialization;
@@ -280,4 +281,28 @@ internal sealed class HttpPriceListsGateway(HttpClient http) : IPriceListsGatewa
             ContractsJsonContext.Default.IReadOnlyListResolvedPrice,
             cancellationToken);
     }
+}
+
+internal sealed class HttpReceivablesGateway(HttpClient http) : IReceivablesGateway
+{
+    public Task<OperationResult<ReceivablesSummaryResponse>> GetSummaryAsync(CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.GetAsync(HttpCalls.Relative($"api/v1/receivables/summary"), ct),
+            ContractsJsonContext.Default.ReceivablesSummaryResponse,
+            cancellationToken);
+}
+
+internal sealed class HttpDemoDataGateway(HttpClient http) : IDemoDataGateway
+{
+    public Task<OperationResult<DemoDataStatusResponse>> GetStatusAsync(CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.GetAsync(HttpCalls.Relative($"api/v1/demo"), ct),
+            ContractsJsonContext.Default.DemoDataStatusResponse,
+            cancellationToken);
+
+    public Task<OperationResult<DemoSeedResponse>> SeedAsync(CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.PostAsync(HttpCalls.Relative($"api/v1/demo/seed"), null, ct),
+            ContractsJsonContext.Default.DemoSeedResponse,
+            cancellationToken);
 }

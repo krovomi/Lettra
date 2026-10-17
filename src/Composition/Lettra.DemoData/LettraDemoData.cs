@@ -47,6 +47,12 @@ public sealed record DemoSeedResult(DemoSeedStatus Status, IReadOnlyList<DemoDos
 }
 
 /// <summary>
+/// Ce qu'un chargement demandé depuis l'écran remplace dans la configuration : le dossier ouvert de l'utilisateur, et
+/// en général aucun dossier créé en plus (bouton « Charger les données de démonstration » d'un dossier vide).
+/// </summary>
+public sealed record DemoSeedTarget(Guid? DossierId = null, int? AdditionalDossiers = null);
+
+/// <summary>
 /// Point d'entrée du jeu « Cabinet Démo » pour les hôtes (API de démonstration, application de bureau) : un appel au
 /// démarrage, après <c>InitializeLettraAsync</c>. Le chargement compose sa propre instance de l'application (même
 /// configuration, mêmes bases) avec une horloge rejouée et l'utilisateur de démonstration, puis la jette : l'application
@@ -58,6 +64,10 @@ public static partial class LettraDemoData
     public static bool IsRequested(IConfiguration configuration) =>
         configuration?.GetSection(DemoDataOptions.SectionName).Get<DemoDataOptions>()?.Seed == true;
 
+    /// <summary>Vrai si le jeu peut être chargé ici : demandé par la configuration et hors environnement <c>Production</c>.</summary>
+    public static bool IsAvailable(IConfiguration configuration, string environmentName) =>
+        IsRequested(configuration) && !string.Equals(environmentName, "Production", StringComparison.OrdinalIgnoreCase);
+
     /// <summary>
     /// Charge le jeu si la configuration le demande, hors <c>Production</c> et seulement si le dossier n'a encore aucune pièce.
     /// </summary>
@@ -67,16 +77,36 @@ public static partial class LettraDemoData
     /// <param name="userId">Utilisateur au nom de qui charger (poste : le compte ouvert), sinon <c>Lettra:Demo:UserId</c>.</param>
     /// <param name="loggerFactory">Journal de l'hôte.</param>
     /// <param name="cancellationToken">Annulation.</param>
-    public static async Task<DemoSeedResult> SeedAsync(
+    public static Task<DemoSeedResult> SeedAsync(
         IConfiguration configuration,
         string environmentName,
         Action<IServiceCollection>? hostServices = null,
         Guid? userId = null,
         ILoggerFactory? loggerFactory = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        SeedAsync(configuration, environmentName, target: null, hostServices, userId, loggerFactory, cancellationToken);
+
+    /// <summary>Depuis l'écran : comme au démarrage, mais pour le dossier et le nombre de dossiers en plus donnés par <paramref name="target"/>.</summary>
+    /// <param name="configuration">La configuration de l'hôte.</param>
+    /// <param name="environmentName">Environnement de l'hôte ; <c>Production</c> refuse toujours.</param>
+    /// <param name="target">Le dossier à remplir et le nombre de dossiers créés en plus, à la place de la configuration ; null : la configuration.</param>
+    /// <param name="hostServices">Ce que l'hôte ajoute à <c>AddLettra</c>.</param>
+    /// <param name="userId">Utilisateur au nom de qui charger.</param>
+    /// <param name="loggerFactory">Journal de l'hôte.</param>
+    /// <param name="cancellationToken">Annulation.</param>
+    public static async Task<DemoSeedResult> SeedAsync(
+        IConfiguration configuration,
+        string environmentName,
+        DemoSeedTarget? target,
+        Action<IServiceCollection>? hostServices,
+        Guid? userId,
+        ILoggerFactory? loggerFactory,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(configuration);
         DemoDataOptions options = configuration.GetSection(DemoDataOptions.SectionName).Get<DemoDataOptions>() ?? new DemoDataOptions();
+        options.DossierId = target?.DossierId ?? options.DossierId;
+        options.AdditionalDossiers = target?.AdditionalDossiers ?? options.AdditionalDossiers;
         ILogger logger = (loggerFactory ?? NullLoggerFactory.Instance).CreateLogger(typeof(LettraDemoData));
         if (!options.Seed)
         {
@@ -100,8 +130,8 @@ public static partial class LettraDemoData
         DemoSession session = new(user);
         await using ServiceProvider services = Compose(configuration, hostServices, clock, session, loggerFactory);
 
-        Guid? target = options.DossierId ?? await DefaultDossierAsync(services, cancellationToken).ConfigureAwait(false);
-        if (target is not Guid dossier)
+        Guid? chosen = options.DossierId ?? await DefaultDossierAsync(services, cancellationToken).ConfigureAwait(false);
+        if (chosen is not Guid dossier)
         {
             return DemoSeedResult.Of(DemoSeedStatus.NoDossier);
         }

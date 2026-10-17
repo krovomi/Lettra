@@ -1,7 +1,9 @@
 using System.Globalization;
 using Bunit;
+using Lettra.Contracts.Alerts;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Customers;
+using Lettra.Contracts.Exports;
 using Lettra.Contracts.Identity;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
@@ -36,6 +38,7 @@ public sealed class GalleryTests : BunitContext
     private readonly FakeInvoicesGateway _invoices = new();
     private readonly FakeQuotesGateway _quotes = new();
     private readonly FakeCustomersGateway _customers = new();
+    private readonly FakeAlertsGateway _alerts = new();
 
     public GalleryTests()
     {
@@ -48,7 +51,17 @@ public sealed class GalleryTests : BunitContext
         Services.AddSingleton<IDirectoryGateway>(new FakeDirectoryGateway());
         Services.AddSingleton<IBillingSettingsGateway>(new FakeBillingSettingsGateway());
         Services.AddSingleton<IPlatformTransmissionGateway>(new FakePlatformTransmissionGateway(_invoices));
+        Services.AddSingleton<IReceivablesGateway>(new FakeReceivablesGateway(new ReceivablesSummaryResponse(
+            new DateOnly(2026, 10, 16), 4, 18_960m,
+            [
+                new OverdueInvoiceResponse(Guid.CreateVersion7(), "FAC-2026-0031", "Atelier Durand", new DateOnly(2026, 8, 14), 63, 7_200m),
+                new OverdueInvoiceResponse(Guid.CreateVersion7(), "FAC-2026-0038", "Boulangerie Petit", new DateOnly(2026, 9, 2), 44, 2_880m),
+                new OverdueInvoiceResponse(Guid.CreateVersion7(), "FAC-2026-0044", "Cabinet Moreau", new DateOnly(2026, 9, 21), 25, 5_400m),
+                new OverdueInvoiceResponse(Guid.CreateVersion7(), "FAC-2026-0049", "Garage Lefèvre", new DateOnly(2026, 10, 9), 7, 3_480m),
+            ],
+            3, 11, 2, 26)));
         Services.AddSingleton<IFileDownloader>(new FakeFileDownloader());
+        Services.AddSingleton<IAlertsGateway>(_alerts);
         Services.AddSingleton<ISessionGateway>(new FakeSessionGateway(new SessionResponse(true, SessionModeDto.Local, "Claire Martin", true)));
         Services.AddSingleton<TimeProvider>(new ManualClock(new DateTimeOffset(2026, 10, 16, 12, 0, 0, TimeSpan.Zero)));
         LettraCultures.Apply(CultureInfo.GetCultureInfo("fr-FR"));
@@ -77,7 +90,31 @@ public sealed class GalleryTests : BunitContext
             b.CloseComponent();
         });
         Ecrire(dossier, "clients", "customers", Page<Customers>());
+        Guid alerte = _alerts.Add("integrite-chaine", AlertSeverity.S1).Alert.Id;
+        _alerts.Add("integrite-numerotation", AlertSeverity.S2, AlertState.Acknowledged);
+        Ecrire(dossier, "alertes", $"alerts/{alerte}", b =>
+        {
+            b.OpenComponent<Alerts>(0);
+            b.AddComponentParameter(1, nameof(Alerts.Id), alerte);
+            b.CloseComponent();
+        });
+        Ecrire(dossier, "entreprise", "settings/company", Page<CompanySettings>());
         Ecrire(dossier, "articles", "catalog", Page<Catalog>());
+    }
+
+    [Fact]
+    public void Galerie_d_un_dossier_vide_pour_les_captures()
+    {
+        string? dossier = Environment.GetEnvironmentVariable("LETTRA_GALLERY_DIR");
+        if (string.IsNullOrEmpty(dossier))
+        {
+            return;
+        }
+
+        Directory.CreateDirectory(dossier);
+        Services.AddSingleton<IDemoDataGateway>(new FakeDemoDataGateway(true, () => { }));
+        Ecrire(dossier, "accueil-vide", "", Page<Home>());
+        Ecrire(dossier, "devis-vide", "quotes", Page<QuoteList>());
     }
 
     private static RenderFragment Page<TPage>() where TPage : IComponent => b =>
