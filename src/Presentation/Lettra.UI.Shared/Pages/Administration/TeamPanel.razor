@@ -1,0 +1,274 @@
+@* Fiche d'une équipe : ses membres, ses dossiers et les rôles qu'elle donne à tous ses membres. Un rôle donné à l'équipe
+   « sur ses dossiers » suit les dossiers qu'on y place. *@
+@inject IStringLocalizer<SharedResource> L
+@inject IAdministrationGateway Gateway
+
+@if (_renaming)
+{
+    <div class="la-inline-edit">
+        <label class="la-field">
+            <span>@L["Admin.Team.Name"]</span>
+            <input id="team-rename" @bind="_name" @bind:event="oninput" maxlength="@CreateGroupRequest.MaxNameLength" />
+        </label>
+        <div class="la-actions">
+            <button type="button" class="lettra-button la-small" id="team-rename-save" disabled="@string.IsNullOrWhiteSpace(_name)" @onclick="RenameAsync"><Icon Name="check" Size="16" />@L["Admin.Save"]</button>
+            <button type="button" class="lettra-button is-ghost la-small" @onclick="() => _renaming = false">@L["Admin.Cancel"]</button>
+        </div>
+    </div>
+}
+
+<section class="la-section" aria-labelledby="team-members">
+    <div class="la-section-head">
+        <h3 id="team-members">@string.Format(CultureInfo.CurrentCulture, L["Admin.Team.Members"], Team.MemberIds.Count)</h3>
+    </div>
+    @if (Team.MemberIds.Count == 0)
+    {
+        <p class="lettra-hint">@L["Admin.Team.NoMembers"]</p>
+    }
+    <ul class="la-rows" role="list">
+        @foreach (Guid memberId in Team.MemberIds)
+        {
+            if (View.Person(memberId) is not { } person)
+            {
+                continue;
+            }
+
+            <li class="la-row" @key="memberId">
+                <AdminAvatar Id="person.Id" Name="@View.NameOf(person)" Muted="@(person.State != AccountStateDto.Active)" />
+                <span class="la-row-text">
+                    <strong>@View.NameOf(person)</strong>
+                    <span>@(person.Email ?? L[$"Admin.State.{person.State}"])</span>
+                </span>
+                @if (Editable)
+                {
+                    <button type="button" class="lettra-button is-ghost la-small" aria-label="@string.Format(CultureInfo.CurrentCulture, L["Admin.RemoveNamed"], View.NameOf(person))"
+                            @onclick="() => SetMemberAsync(person, false)">@L["Admin.Remove"]</button>
+                }
+            </li>
+        }
+    </ul>
+    @if (Editable && Candidates.Any())
+    {
+        <label class="la-field la-inline-field">
+            <span class="lettra-visually-hidden">@L["Admin.Team.AddMember"]</span>
+            <select id="team-add-member" @onchange="AddMemberAsync">
+                <option value="">@L["Admin.Team.AddMember"]</option>
+                @foreach (PersonSummary person in Candidates)
+                {
+                    <option value="@person.Id">@View.NameOf(person)</option>
+                }
+            </select>
+        </label>
+    }
+</section>
+
+<section class="la-section" aria-labelledby="team-dossiers">
+    <h3 id="team-dossiers">@string.Format(CultureInfo.CurrentCulture, L["Admin.Team.Dossiers"], Team.DossierIds.Count)</h3>
+    <p class="lettra-hint">@L["Admin.Team.DossiersHint"]</p>
+    <ul class="la-rows" role="list">
+        @foreach (Guid dossierId in Team.DossierIds)
+        {
+            <li class="la-row" @key="dossierId">
+                <span class="la-row-icon"><Icon Name="folder" Size="16" /></span>
+                <span class="la-row-text"><strong>@View.DossierName(dossierId)</strong></span>
+                @if (Editable)
+                {
+                    <button type="button" class="lettra-button is-ghost la-small" aria-label="@string.Format(CultureInfo.CurrentCulture, L["Admin.RemoveNamed"], View.DossierName(dossierId))"
+                            @onclick="() => SetDossierAsync(dossierId, false)">@L["Admin.Remove"]</button>
+                }
+            </li>
+        }
+    </ul>
+    @if (Editable && OtherDossiers.Any())
+    {
+        <label class="la-field la-inline-field">
+            <span class="lettra-visually-hidden">@L["Admin.Team.AddDossier"]</span>
+            <select id="team-add-dossier" @onchange="AddDossierAsync">
+                <option value="">@L["Admin.Team.AddDossier"]</option>
+                @foreach (DossierSummary dossier in OtherDossiers)
+                {
+                    <option value="@dossier.Id">@dossier.Name</option>
+                }
+            </select>
+        </label>
+    }
+</section>
+
+<section class="la-section" aria-labelledby="team-roles">
+    <div class="la-section-head">
+        <h3 id="team-roles">@L["Admin.Team.Roles"]</h3>
+        @if (View.Overview.Can.ManagePeople)
+        {
+            <button type="button" class="lettra-button is-secondary la-small" id="team-grant" @onclick="OnGrant"><Icon Name="plus" Size="16" />@L["Admin.Grant.Open"]</button>
+        }
+    </div>
+    <p class="lettra-hint">@L["Admin.Team.RolesHint"]</p>
+    <ul class="la-rows" role="list">
+        @foreach (RoleAssignmentSummary assignment in Team.Assignments)
+        {
+            <li class="la-row" @key="assignment.Id">
+                <span class="la-row-icon"><Icon Name="key-round" Size="16" /></span>
+                <span class="la-row-text">
+                    <strong>@View.RoleName(assignment.Role)</strong>
+                    <span>@View.ScopeLabel(assignment.ScopeKind, assignment.ScopeId)</span>
+                </span>
+                @if (View.Overview.Can.ManagePeople)
+                {
+                    <button type="button" class="lettra-button is-ghost la-small" aria-label="@string.Format(CultureInfo.CurrentCulture, L["Admin.RemoveNamed"], View.RoleName(assignment.Role))"
+                            @onclick="() => RevokeAsync(assignment)">@L["Admin.Remove"]</button>
+                }
+            </li>
+        }
+    </ul>
+</section>
+
+@if (View.Overview.Can.ManageTeams)
+{
+    <div class="la-actions la-actions-split">
+        <button type="button" class="lettra-button is-ghost la-small" id="team-rename-open" @onclick="StartRename"><Icon Name="pencil" Size="16" />@L["Admin.Team.Rename"]</button>
+        @if (_confirmDelete)
+        {
+            <span class="la-confirm" role="alert">
+                @L["Admin.Team.DeleteConfirm"]
+                <button type="button" class="lettra-button is-danger la-small" id="team-delete-confirm" @onclick="DeleteAsync">@L["Admin.Delete"]</button>
+                <button type="button" class="lettra-button is-ghost la-small" @onclick="() => _confirmDelete = false">@L["Admin.Cancel"]</button>
+            </span>
+        }
+        else
+        {
+            <button type="button" class="lettra-button is-ghost la-small la-danger-text" id="team-delete" @onclick="() => _confirmDelete = true"><Icon Name="trash-2" Size="16" />@L["Admin.Team.Delete"]</button>
+        }
+    </div>
+}
+
+@code {
+    private bool _renaming;
+    private bool _confirmDelete;
+    private string _name = string.Empty;
+
+    [Parameter, EditorRequired] public AdministrationView View { get; set; } = default!;
+
+    [Parameter, EditorRequired] public TeamSummary Team { get; set; } = default!;
+
+    [Parameter, EditorRequired] public AdminToasts Toasts { get; set; } = default!;
+
+    [Parameter] public EventCallback OnGrant { get; set; }
+
+    [Parameter] public EventCallback OnChanged { get; set; }
+
+    [Parameter] public EventCallback OnDeleted { get; set; }
+
+    private bool Editable => Team.CanManage;
+
+    private IEnumerable<PersonSummary> Candidates => View.Overview.People.Where(p => !Team.MemberIds.Contains(p.Id));
+
+    private IEnumerable<DossierSummary> OtherDossiers => View.Overview.Dossiers.Where(d => !Team.DossierIds.Contains(d.Id));
+
+    private void StartRename()
+    {
+        _name = Team.Name;
+        _renaming = true;
+    }
+
+    private async Task RenameAsync()
+    {
+        OperationResult<bool> renamed = await Gateway.RenameTeamAsync(View.Overview.CabinetId, Team.Id, new RenameTeamRequest { Name = _name }, CancellationToken.None);
+        if (!renamed.IsSuccess)
+        {
+            Toasts.ShowError(L.Error(renamed.Errors[0].Code));
+            return;
+        }
+
+        _renaming = false;
+        Toasts.Show(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.TeamRenamed"], _name.Trim()));
+        await OnChanged.InvokeAsync();
+    }
+
+    private async Task DeleteAsync()
+    {
+        OperationResult<bool> deleted = await Gateway.DeleteTeamAsync(View.Overview.CabinetId, Team.Id, CancellationToken.None);
+        if (!deleted.IsSuccess)
+        {
+            Toasts.ShowError(L.Error(deleted.Errors[0].Code));
+            return;
+        }
+
+        Toasts.Show(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.TeamDeleted"], Team.Name));
+        await OnDeleted.InvokeAsync();
+    }
+
+    private async Task AddMemberAsync(ChangeEventArgs e)
+    {
+        if (Guid.TryParse(e.Value as string, out Guid id) && View.Person(id) is { } person)
+        {
+            await SetMemberAsync(person, true);
+        }
+    }
+
+    private async Task SetMemberAsync(PersonSummary person, bool member)
+    {
+        OperationResult<bool> result = await Gateway.SetTeamMemberAsync(Team.Id, person.Id, member, CancellationToken.None);
+        if (!result.IsSuccess)
+        {
+            Toasts.ShowError(L.Error(result.Errors[0].Code));
+            return;
+        }
+
+        Toasts.Show(
+            string.Format(CultureInfo.CurrentCulture, L[member ? "Admin.Toast.JoinedTeam" : "Admin.Toast.LeftTeam"], View.FirstNameOf(person), Team.Name),
+            member ? null : async () =>
+            {
+                await Gateway.SetTeamMemberAsync(Team.Id, person.Id, true, CancellationToken.None);
+                await OnChanged.InvokeAsync();
+            });
+        await OnChanged.InvokeAsync();
+    }
+
+    private async Task AddDossierAsync(ChangeEventArgs e)
+    {
+        if (Guid.TryParse(e.Value as string, out Guid id))
+        {
+            await SetDossierAsync(id, true);
+        }
+    }
+
+    private async Task SetDossierAsync(Guid dossierId, bool placed)
+    {
+        OperationResult<bool> result = await Gateway.SetTeamDossierAsync(Team.Id, dossierId, placed, CancellationToken.None);
+        if (!result.IsSuccess)
+        {
+            Toasts.ShowError(L.Error(result.Errors[0].Code));
+            return;
+        }
+
+        Toasts.Show(string.Format(CultureInfo.CurrentCulture, L[placed ? "Admin.Toast.DossierPlaced" : "Admin.Toast.DossierRemoved"], View.DossierName(dossierId), Team.Name));
+        await OnChanged.InvokeAsync();
+    }
+
+    private async Task RevokeAsync(RoleAssignmentSummary assignment)
+    {
+        OperationResult<bool> revoked = await Gateway.RevokeAsync(View.Overview.CabinetId, assignment.Id, CancellationToken.None);
+        if (!revoked.IsSuccess)
+        {
+            Toasts.ShowError(L.Error(revoked.Errors[0].Code));
+            return;
+        }
+
+        Toasts.Show(
+            string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.Revoked"], View.RoleName(assignment.Role), Team.Name),
+            async () =>
+            {
+                await Gateway.AssignAsync(View.Overview.CabinetId, new AssignRoleRequest
+                {
+                    SubjectKind = assignment.SubjectKind,
+                    SubjectId = assignment.SubjectId,
+                    Role = assignment.Role,
+                    ScopeKind = assignment.ScopeKind,
+                    ScopeId = assignment.ScopeId,
+                    ExpiresAt = assignment.ExpiresAt,
+                }, CancellationToken.None);
+                await OnChanged.InvokeAsync();
+            });
+        await OnChanged.InvokeAsync();
+    }
+}

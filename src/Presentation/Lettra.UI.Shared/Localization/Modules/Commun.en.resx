@@ -57,6 +57,7 @@
   <data name="Palette.CreditNoteOn" xml:space="preserve"><value>Credit note on {0} · {1}</value></data>
   <data name="Palette.ToggleDensity" xml:space="preserve"><value>Switch between Comfort and Expert density</value></data>
   <data name="Nav.Company" xml:space="preserve"><value>Company</value></data>
+  <data name="Nav.Admin" xml:space="preserve"><value>Team and access</value></data>
   <data name="Error.Api.TooManyRequests" xml:space="preserve">
     <value>Too many requests for your firm right now. Wait a few seconds and try again.</value>
   </data>

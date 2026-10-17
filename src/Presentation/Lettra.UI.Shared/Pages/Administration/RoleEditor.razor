@@ -1,0 +1,159 @@
+@* Rôle sur mesure : un nom, une phrase, puis pour chaque page de Lettra un niveau choisi d'un geste (Aucun, Voir, Créer et
+   modifier, Valider). Les droits d'administration et le portail client restent dans les rôles fournis. *@
+@inject IStringLocalizer<SharedResource> L
+@inject IAdministrationGateway Gateway
+
+<div class="la-form" id="role-editor">
+    <label class="la-field">
+        <span>@L["Admin.RoleEditor.Name"]</span>
+        <input id="role-name" @bind="_name" @bind:event="oninput" maxlength="@SaveCustomRoleRequest.MaxNameLength" placeholder="@L["Admin.RoleEditor.NamePlaceholder"]" />
+    </label>
+    <label class="la-field">
+        <span>@L["Admin.RoleEditor.Description"]</span>
+        <input id="role-description" @bind="_description" maxlength="@SaveCustomRoleRequest.MaxDescriptionLength" placeholder="@L["Admin.RoleEditor.DescriptionPlaceholder"]" />
+    </label>
+
+    <div class="la-pages" role="group" aria-label="@L["Admin.RoleEditor.Pages"]">
+        <p class="la-pages-title">@L["Admin.RoleEditor.Pages"]</p>
+        @foreach (AccessAreaInfo area in AccessAreas.All.Where(a => a.Customizable))
+        {
+            AccessLevelDto current = _levels.GetValueOrDefault(area.Area);
+            bool implied = area.SharesSalesView && current == AccessLevelDto.None && SalesView;
+            <div class="la-page-row">
+                <span class="la-page-name">
+                    <span class="la-area-icon"><Icon Name="@AreaList.AreaIcon(area.Area)" Size="16" /></span>
+                    <span>
+                        @L[$"Admin.Area.{area.Area}"]
+                        <small>@L[$"Admin.Area.{area.Area}.Hint"]</small>
+                    </span>
+                </span>
+                <span class="la-segmented" role="radiogroup" aria-label="@L[$"Admin.Area.{area.Area}"]">
+                    @foreach (AccessLevelDto level in Options(area))
+                    {
+                        bool on = implied ? level == AccessLevelDto.View : current == level;
+                        <button type="button" role="radio" aria-checked="@(on ? "true" : "false")" class="@(on ? "is-on" : null)"
+                                id="@($"role-{area.Area}-{level}".ToLowerInvariant())" @onclick="() => Set(area.Area, level)">
+                            @if (level != AccessLevelDto.None)
+                            {
+                                <Icon Name="@LevelBadge.IconOf(level)" Size="14" />
+                            }
+                            @L[$"Admin.Level.{level}.Short"]
+                        </button>
+                    }
+                </span>
+            </div>
+        }
+        @if (SalesView)
+        {
+            <p class="lettra-hint"><Icon Name="info" Size="14" /> @L["Admin.RoleEditor.SalesTogether"]</p>
+        }
+    </div>
+
+    <GeneralErrors Errors="_errors" />
+    @foreach (ErrorDetail error in _errors.Where(e => e.Target is not null))
+    {
+        <p class="validation-message" role="alert">@L.Error(error.Code)</p>
+    }
+
+    <div class="la-actions">
+        <button type="button" class="lettra-button" id="role-save" disabled="@(_busy || string.IsNullOrWhiteSpace(_name) || Normalized.Count == 0)" @onclick="SaveAsync">
+            <Icon Name="check" Size="18" />@L[Existing is null ? "Admin.RoleEditor.Create" : "Admin.Save"]
+        </button>
+        <button type="button" class="lettra-button is-ghost" @onclick="OnCancel">@L["Admin.Cancel"]</button>
+        @if (Existing is { } role)
+        {
+            <button type="button" class="lettra-button is-ghost la-danger-text" id="role-delete" disabled="@(_busy || role.AssignedCount > 0)"
+                    title="@(role.AssignedCount > 0 ? L["Admin.RoleEditor.InUse"].Value : null)" @onclick="DeleteAsync">
+                <Icon Name="trash-2" Size="18" />@L["Admin.Delete"]
+            </button>
+        }
+    </div>
+    @if (Existing is { AssignedCount: > 0 } used)
+    {
+        <p class="lettra-hint">@string.Format(CultureInfo.CurrentCulture, L["Admin.RoleEditor.UsedBy"], used.AssignedCount)</p>
+    }
+</div>
+
+@code {
+    private readonly Dictionary<AccessAreaDto, AccessLevelDto> _levels = [];
+    private string _name = string.Empty;
+    private string? _description;
+    private bool _busy;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+
+    [Parameter, EditorRequired] public Guid CabinetId { get; set; }
+
+    [Parameter] public RoleDescription? Existing { get; set; }
+
+    /// <summary>Rôle de départ (« partir de ce rôle ») pour un nouveau rôle.</summary>
+    [Parameter] public RoleDescription? Template { get; set; }
+
+    [Parameter] public EventCallback<RoleDescription> OnSaved { get; set; }
+
+    [Parameter] public EventCallback<string> OnDeleted { get; set; }
+
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private bool SalesView => AccessAreas.All.Any(a => a.SharesSalesView && _levels.GetValueOrDefault(a.Area) >= AccessLevelDto.View);
+
+    private IReadOnlyList<AreaAccess> Normalized => AdministrationView.Normalize(_levels);
+
+    protected override void OnInitialized()
+    {
+        RoleDescription? source = Existing ?? Template;
+        if (Existing is { } role)
+        {
+            _name = role.Name ?? string.Empty;
+            _description = role.Description;
+        }
+
+        foreach (AreaAccess access in source?.Areas ?? [])
+        {
+            if (AccessAreas.Of(access.Area).Customizable)
+            {
+                _levels[access.Area] = access.Level;
+            }
+        }
+    }
+
+    private static IEnumerable<AccessLevelDto> Options(AccessAreaInfo area) => [AccessLevelDto.None, .. area.Levels];
+
+    private void Set(AccessAreaDto area, AccessLevelDto level) => _levels[area] = level;
+
+    private async Task SaveAsync()
+    {
+        _busy = true;
+        _errors = [];
+        SaveCustomRoleRequest request = new() { Name = _name, Description = _description, Areas = [.. Normalized] };
+        OperationResult<RoleDescription> saved = await Gateway.SaveRoleAsync(CabinetId, Existing?.Key, request, CancellationToken.None);
+        _busy = false;
+        if (saved.IsSuccess && saved.Value is { } role)
+        {
+            await OnSaved.InvokeAsync(role);
+        }
+        else
+        {
+            _errors = saved.Errors;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (Existing is not { } role)
+        {
+            return;
+        }
+
+        _busy = true;
+        OperationResult<bool> deleted = await Gateway.DeleteRoleAsync(CabinetId, role.Key, CancellationToken.None);
+        _busy = false;
+        if (deleted.IsSuccess)
+        {
+            await OnDeleted.InvokeAsync(role.Key);
+        }
+        else
+        {
+            _errors = deleted.Errors;
+        }
+    }
+}

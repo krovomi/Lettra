@@ -48,6 +48,7 @@ public static class DependencyInjection
 
         // Sans base Catalog (poste isolé, registre en configuration), les droits ne s'administrent pas.
         services.TryAddSingleton<IAuthorizationAdministration, NoAuthorizationAdministration>();
+        services.TryAddSingleton<IAuthorizationRegistry, NoAuthorizationRegistry>();
         services.TryAddSingleton<IPermissionCacheInvalidator, NoPermissionCache>();
 
         // Séparation des tâches (annexe F §3.2) : la politique vient de la base Catalog hors du mode 1.

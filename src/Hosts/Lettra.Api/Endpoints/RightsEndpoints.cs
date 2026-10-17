@@ -49,6 +49,8 @@ internal static class RightsEndpoints
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        // Espace d'administration : lecture du registre, personnes, équipes et rôles sur mesure.
+        cabinet.MapCabinetAdministration();
         return cabinet;
     }
 

@@ -42,6 +42,7 @@ public static class DependencyInjection
         services.AddSingleton<IScopeMemberDirectory>(sp => sp.GetRequiredService<CatalogAuthorizationDirectory>());
         services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<IAuthorizationAdministration, CatalogAuthorizationAdministration>();
+        services.AddSingleton<IAuthorizationRegistry, CatalogAuthorizationRegistry>();
         // Réglages IA par cabinet (remplace le magasin « indisponible » enregistré par l'application).
         services.Replace(ServiceDescriptor.Singleton<IAiSettingsStore, CatalogAiSettingsStore>());
 

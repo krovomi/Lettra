@@ -1,0 +1,678 @@
+@page "/admin"
+@implements IDisposable
+@inject IAdministrationGateway Gateway
+@inject IDossierSelection Selection
+@inject IStringLocalizer<SharedResource> L
+@inject NavigationManager Navigation
+
+@* Espace « Équipe et accès » : pour les administrateurs, qui ne sont pas forcément techniciens. Trois onglets en langage
+   simple (Personnes, Équipes, Rôles et pages), une fiche latérale par personne ou par équipe, des gestes qui se défont
+   depuis le message de confirmation. Tout ce qui est affiché vient d'une seule lecture du registre, relue après chaque
+   changement ; le serveur revérifie chaque geste. Téléphone : fiches en plein écran, cartes sur une colonne. *@
+
+<PageTitle>@L["Admin.Title"] · Lettra</PageTitle>
+
+<div class="la-page">
+    <div class="lt-page-header">
+        <div>
+            <h1 tabindex="-1">@L["Admin.Title"]</h1>
+            <p>@Subtitle</p>
+        </div>
+        @if (_view is { } header && !header.Overview.Can.ReadOnly)
+        {
+            <div class="lt-page-actions">
+                @if (header.Overview.Can.ManagePeople)
+                {
+                    <button type="button" class="lettra-button" id="admin-invite" @onclick="() => Open(Mode.Invite)"><Icon Name="user-plus" Size="18" />@L["Admin.Invite"]</button>
+                }
+                @if (header.Overview.Can.ManageTeams)
+                {
+                    <button type="button" class="lettra-button is-secondary" id="admin-new-team" @onclick="() => Open(Mode.NewTeam)"><Icon Name="plus" Size="18" />@L["Admin.Team.New"]</button>
+                }
+            </div>
+        }
+    </div>
+
+    @if (_denied)
+    {
+        <section class="lt-panel lt-empty" id="admin-denied">
+            <span class="lt-empty-icon"><Icon Name="shield-check" Size="28" /></span>
+            <h2>@L["Admin.Denied.Title"]</h2>
+            <p>@L["Admin.Denied.Text"]</p>
+            <a class="lettra-button is-secondary" href="">@L["Admin.Denied.Home"]</a>
+        </section>
+    }
+    else if (_view is not { } view)
+    {
+        <GeneralErrors Errors="_errors" />
+        @if (_errors.Count == 0)
+        {
+            <div class="lt-kpis" aria-busy="true" aria-label="@L["Loading"]">
+                @for (int i = 0; i < 4; i++)
+                {
+                    <div class="lt-kpi"><span class="lt-skeleton" style="height: 1rem; width: 50%"></span><span class="lt-skeleton" style="height: 2rem; width: 40%"></span></div>
+                }
+            </div>
+        }
+    }
+    else
+    {
+        @if (view.Overview.Can.ReadOnly)
+        {
+            <p class="la-callout" id="admin-readonly"><Icon Name="info" Size="18" />@L["Admin.ReadOnly"]</p>
+        }
+
+        <section class="lt-kpis la-kpis" aria-label="@L["Admin.Kpis"]">
+            <button type="button" class="lt-kpi" id="kpi-active" @onclick="() => ShowPeople(PeopleFilter.Active)">
+                <span class="lt-kpi-head">@L["Admin.Kpi.Active"]<span class="lt-kpi-icon"><Icon Name="user-check" /></span></span>
+                <span class="lt-kpi-value">@view.ActiveCount</span>
+                <span class="lt-kpi-note">@L["Admin.Kpi.ActiveNote"]</span>
+            </button>
+            <button type="button" class="lt-kpi" id="kpi-pending" @onclick="() => ShowPeople(PeopleFilter.Pending)">
+                <span class="lt-kpi-head">@L["Admin.Kpi.Pending"]<span class="lt-kpi-icon"><Icon Name="mail" /></span></span>
+                <span class="lt-kpi-value">@view.PendingCount</span>
+                <span class="lt-kpi-note">@L["Admin.Kpi.PendingNote"]</span>
+            </button>
+            <button type="button" class="lt-kpi" id="kpi-teams" @onclick="() => SetTab(Tab.Teams)">
+                <span class="lt-kpi-head">@L["Admin.Kpi.Teams"]<span class="lt-kpi-icon"><Icon Name="users" /></span></span>
+                <span class="lt-kpi-value">@view.Overview.Teams.Count</span>
+                <span class="lt-kpi-note">@L["Admin.Kpi.TeamsNote"]</span>
+            </button>
+            <div class="lt-kpi" id="kpi-temporary">
+                <span class="lt-kpi-head">@L["Admin.Kpi.Temporary"]<span class="lt-kpi-icon"><Icon Name="calendar-clock" /></span></span>
+                <span class="lt-kpi-value">@view.TemporaryCount(DateTimeOffset.Now)</span>
+                <span class="lt-kpi-note">@L["Admin.Kpi.TemporaryNote"]</span>
+            </div>
+        </section>
+
+        <div class="la-tabs" role="tablist" aria-label="@L["Admin.Title"]">
+            @foreach (Tab tab in Enum.GetValues<Tab>())
+            {
+                <button type="button" role="tab" id="tab-@tab.ToString().ToLowerInvariant()" aria-selected="@(_tab == tab ? "true" : "false")"
+                        aria-controls="panel-@tab.ToString().ToLowerInvariant()" class="la-tab @(_tab == tab ? "is-active" : null)" @onclick="() => SetTab(tab)">
+                    <Icon Name="@TabIcon(tab)" Size="18" />
+                    <span>@L[$"Admin.Tab.{tab}"]</span>
+                    <span class="la-count">@TabCount(view, tab)</span>
+                </button>
+            }
+        </div>
+
+        <GeneralErrors Errors="_errors" />
+
+        @if (_tab == Tab.People)
+        {
+            <section role="tabpanel" id="panel-people" aria-labelledby="tab-people">
+                <div class="la-toolbar">
+                    <label class="la-search">
+                        <Icon Name="search" Size="18" />
+                        <span class="lettra-visually-hidden">@L["Admin.Search"]</span>
+                        <input type="search" id="people-search" placeholder="@L["Admin.Search"]" @bind="_search" @bind:event="oninput" />
+                    </label>
+                    <div class="la-filters" role="group" aria-label="@L["Admin.Filter"]">
+                        @foreach (PeopleFilter filter in Enum.GetValues<PeopleFilter>())
+                        {
+                            <button type="button" class="la-filter @(_filter == filter ? "is-on" : null)" aria-pressed="@(_filter == filter ? "true" : "false")"
+                                    id="filter-@filter.ToString().ToLowerInvariant()" @onclick="() => _filter = filter">@L[$"Admin.Filter.{filter}"]</button>
+                        }
+                    </div>
+                </div>
+
+                @{ PersonSummary[] people = view.Search(_search, _filter).ToArray(); }
+                @if (people.Length == 0)
+                {
+                    <div class="lt-panel lt-empty">
+                        <span class="lt-empty-icon"><Icon Name="users" Size="28" /></span>
+                        <h2>@L["Admin.People.Empty"]</h2>
+                        <p>@L["Admin.People.EmptyText"]</p>
+                    </div>
+                }
+                <ul class="la-cards" role="list">
+                    @foreach (PersonSummary person in people)
+                    {
+                        <li @key="person.Id">
+                            <button type="button" class="la-card @(person.State != AccountStateDto.Active ? "is-inactive" : null)" id="person-@person.Id"
+                                    @onclick="() => Open(Mode.Person, person.Id)">
+                                <span class="la-card-top">
+                                    <AdminAvatar Id="person.Id" Name="@view.NameOf(person)" Muted="@(person.State != AccountStateDto.Active)" />
+                                    <span class="la-card-title">
+                                        <strong>@view.NameOf(person)@(person.IsMe ? " " + L["Admin.Person.Me"] : null)</strong>
+                                        <span>@(person.Email ?? L["Admin.Person.NoEmail"])</span>
+                                    </span>
+                                    <Icon Name="chevron-right" Size="18" Class="la-card-go" />
+                                </span>
+                                <span class="la-card-meta">
+                                    @if (person.State != AccountStateDto.Active)
+                                    {
+                                        <StateChip State="person.State" />
+                                    }
+                                    @foreach (RoleAssignmentSummary assignment in person.Assignments.Take(2))
+                                    {
+                                        <span class="la-chip is-role"><Icon Name="key-round" Size="12" />@view.RoleName(assignment.Role)</span>
+                                    }
+                                    @if (person.Assignments.Count > 2)
+                                    {
+                                        <span class="la-chip">+@(person.Assignments.Count - 2)</span>
+                                    }
+                                    @foreach (Guid teamId in person.TeamIds.Take(2))
+                                    {
+                                        <span class="la-chip"><Icon Name="users" Size="12" />@view.Team(teamId)?.Name</span>
+                                    }
+                                    @if (person.State == AccountStateDto.Active && person.Assignments.Count == 0 && person.TeamIds.Count == 0)
+                                    {
+                                        <span class="la-chip is-warning"><Icon Name="triangle-alert" Size="12" />@L["Admin.Person.NoAccessShort"]</span>
+                                    }
+                                </span>
+                            </button>
+                        </li>
+                    }
+                </ul>
+            </section>
+        }
+        else if (_tab == Tab.Teams)
+        {
+            <section role="tabpanel" id="panel-teams" aria-labelledby="tab-teams">
+                <p class="la-intro">@L["Admin.Teams.Intro"]</p>
+                @if (view.Overview.Teams.Count == 0)
+                {
+                    <div class="lt-panel lt-empty" id="teams-empty">
+                        <span class="lt-empty-icon"><Icon Name="users" Size="28" /></span>
+                        <h2>@L["Admin.Teams.Empty"]</h2>
+                        <p>@L["Admin.Teams.EmptyText"]</p>
+                        @if (view.Overview.Can.ManageTeams)
+                        {
+                            <button type="button" class="lettra-button" @onclick="() => Open(Mode.NewTeam)"><Icon Name="plus" Size="18" />@L["Admin.Team.New"]</button>
+                        }
+                    </div>
+                }
+                <ul class="la-cards" role="list">
+                    @foreach (TeamSummary team in view.Overview.Teams)
+                    {
+                        <li @key="team.Id">
+                            <button type="button" class="la-card" id="team-@team.Id" @onclick="() => Open(Mode.Team, team.Id)">
+                                <span class="la-card-top">
+                                    <span class="la-team-mark" aria-hidden="true"><Icon Name="users" Size="20" /></span>
+                                    <span class="la-card-title">
+                                        <strong>@team.Name</strong>
+                                        <span>@string.Format(CultureInfo.CurrentCulture, L["Admin.Team.Counts"], team.MemberIds.Count, team.DossierIds.Count)</span>
+                                    </span>
+                                    <Icon Name="chevron-right" Size="18" Class="la-card-go" />
+                                </span>
+                                <span class="la-stack" aria-hidden="true">
+                                    @foreach (Guid memberId in team.MemberIds.Take(5))
+                                    {
+                                        if (view.Person(memberId) is { } member)
+                                        {
+                                            <AdminAvatar Id="member.Id" Name="@view.NameOf(member)" />
+                                        }
+                                    }
+                                    @if (team.MemberIds.Count > 5)
+                                    {
+                                        <span class="la-avatar la-more">+@(team.MemberIds.Count - 5)</span>
+                                    }
+                                </span>
+                                <span class="la-card-meta">
+                                    @foreach (RoleAssignmentSummary assignment in team.Assignments.Take(3))
+                                    {
+                                        <span class="la-chip is-role"><Icon Name="key-round" Size="12" />@view.RoleName(assignment.Role)</span>
+                                    }
+                                </span>
+                            </button>
+                        </li>
+                    }
+                </ul>
+            </section>
+        }
+        else
+        {
+            <section role="tabpanel" id="panel-roles" aria-labelledby="tab-roles">
+                <div class="la-section-head">
+                    <p class="la-intro">@L["Admin.Roles.Intro"]</p>
+                    @if (view.Overview.Can.ManageRoles)
+                    {
+                        <button type="button" class="lettra-button is-secondary" id="role-new" @onclick="() => OpenRoleEditor(null, null)"><Icon Name="plus" Size="18" />@L["Admin.Roles.New"]</button>
+                    }
+                </div>
+                <ul class="la-cards is-roles" role="list">
+                    @foreach (RoleDescription role in view.Overview.Roles)
+                    {
+                        <li @key="role.Key">
+                            <button type="button" class="la-card la-role-card" id="role-@role.Key" @onclick="() => OpenRole(role.Key)">
+                                <span class="la-card-top">
+                                    <span class="la-team-mark @(role.IsCustom ? "is-custom" : null)" aria-hidden="true"><Icon Name="@(role.IsCustom ? "layers" : "key-round")" Size="20" /></span>
+                                    <span class="la-card-title">
+                                        <strong>@view.RoleName(role.Key)</strong>
+                                        <span>@view.RoleSummary(role.Key)</span>
+                                    </span>
+                                </span>
+                                <AreaList Areas="role.Areas" Compact="true" />
+                                <span class="la-card-meta">
+                                    <span class="la-chip"><Icon Name="users" Size="12" />@string.Format(CultureInfo.CurrentCulture, L["Admin.Roles.Uses"], role.AssignedCount)</span>
+                                    @if (role.IsCustom)
+                                    {
+                                        <span class="la-chip is-role">@L["Admin.Roles.Custom"]</span>
+                                    }
+                                    @if (role.RequiresExpiry)
+                                    {
+                                        <span class="la-chip is-warning"><Icon Name="calendar-clock" Size="12" />@L["Admin.Grant.Temporary"]</span>
+                                    }
+                                </span>
+                            </button>
+                        </li>
+                    }
+                </ul>
+
+                <details class="la-collapsible" id="roles-matrix">
+                    <summary><Icon Name="layers" Size="18" />@L["Admin.Matrix.Title"]<Icon Name="chevron-right" Size="18" Class="la-collapsible-chevron" /></summary>
+                    <p class="lettra-hint">@L["Admin.Matrix.Hint"]</p>
+                    <div class="la-matrix-scroll" tabindex="0" role="region" aria-label="@L["Admin.Matrix.Title"]">
+                        <table class="lettra-table la-matrix">
+                            <thead>
+                                <tr>
+                                    <th scope="col">@L["Admin.Matrix.Page"]</th>
+                                    @foreach (RoleDescription role in view.Overview.Roles)
+                                    {
+                                        <th scope="col">@view.RoleName(role.Key)</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (AccessAreaInfo area in AccessAreas.All)
+                                {
+                                    <tr>
+                                        <th scope="row"><Icon Name="@AreaList.AreaIcon(area.Area)" Size="16" />@L[$"Admin.Area.{area.Area}"]</th>
+                                        @foreach (RoleDescription role in view.Overview.Roles)
+                                        {
+                                            AccessLevelDto level = role.Areas.FirstOrDefault(a => a.Area == area.Area)?.Level ?? AccessLevelDto.None;
+                                            <td>
+                                                @if (level == AccessLevelDto.None)
+                                                {
+                                                    <span class="la-dash" aria-label="@L["Admin.Level.None"]">–</span>
+                                                }
+                                                else
+                                                {
+                                                    <LevelBadge Level="level" />
+                                                }
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+            </section>
+        }
+
+        @RenderPanel(view)
+    }
+</div>
+
+<AdminToasts @ref="_toasts" />
+
+@code {
+    private enum Tab { People, Teams, Roles }
+
+    private enum Mode { None, Person, PersonGrant, PersonEdit, Invite, Team, TeamGrant, NewTeam, Role, RoleEdit }
+
+    private readonly CancellationTokenSource _disposed = new();
+    private AdministrationView? _view;
+    private AdminToasts _toasts = default!;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private bool _denied;
+    private Guid? _cabinetId;
+    private Tab _tab = Tab.People;
+    private PeopleFilter _filter = PeopleFilter.All;
+    private string? _search;
+    private Mode _mode;
+    private Guid _selected;
+    private string? _roleKey;
+    private RoleDescription? _template;
+    private string _newTeam = string.Empty;
+
+    private string Subtitle => _view?.Overview.CabinetName is { } name
+        ? string.Format(CultureInfo.CurrentCulture, L["Admin.SubtitleNamed"], name)
+        : L["Admin.Subtitle"];
+
+    protected override async Task OnInitializedAsync()
+    {
+        OperationResult<MyAccessResponse> access = await Gateway.GetMyAccessAsync(Selection.CurrentDossierId, _disposed.Token);
+        if (!access.IsSuccess)
+        {
+            _errors = access.Errors;
+            return;
+        }
+
+        if (access.Value is not { CanAdminister: true, CabinetId: Guid cabinet })
+        {
+            _denied = true;
+            return;
+        }
+
+        _cabinetId = cabinet;
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        if (_cabinetId is not Guid cabinet)
+        {
+            return;
+        }
+
+        OperationResult<AdministrationOverview> overview = await Gateway.GetOverviewAsync(cabinet, _disposed.Token);
+        if (overview.IsSuccess && overview.Value is { } value)
+        {
+            _view = new AdministrationView(value, L);
+            _errors = [];
+        }
+        else if (overview.Errors.Any(e => e.Code == ErrorCodes.Security.Forbidden))
+        {
+            _denied = true;
+        }
+        else
+        {
+            _errors = overview.Errors;
+        }
+
+        // La fiche ouverte disparaît si son objet n'existe plus (équipe supprimée, rôle retiré).
+        if ((_mode is Mode.Team or Mode.TeamGrant && _view?.Team(_selected) is null)
+            || (_mode is Mode.Person or Mode.PersonGrant or Mode.PersonEdit && _view?.Person(_selected) is null))
+        {
+            Close();
+        }
+
+        StateHasChanged();
+    }
+
+    private void SetTab(Tab tab) => _tab = tab;
+
+    private void ShowPeople(PeopleFilter filter)
+    {
+        _tab = Tab.People;
+        _filter = filter;
+    }
+
+    private void Open(Mode mode, Guid id = default)
+    {
+        _mode = mode;
+        _selected = id;
+        _newTeam = string.Empty;
+    }
+
+    private void OpenRole(string key)
+    {
+        _roleKey = key;
+        _mode = Mode.Role;
+    }
+
+    private void OpenRoleEditor(string? key, RoleDescription? template)
+    {
+        _roleKey = key;
+        _template = template;
+        _mode = Mode.RoleEdit;
+    }
+
+    private void Close()
+    {
+        _mode = Mode.None;
+        _template = null;
+    }
+
+    private static string TabIcon(Tab tab) => tab switch
+    {
+        Tab.People => "user-check",
+        Tab.Teams => "users",
+        _ => "key-round",
+    };
+
+    private static int TabCount(AdministrationView view, Tab tab) => tab switch
+    {
+        Tab.People => view.Overview.People.Count,
+        Tab.Teams => view.Overview.Teams.Count,
+        _ => view.Overview.Roles.Count,
+    };
+
+    private RenderFragment RenderPanel(AdministrationView view) => _mode switch
+    {
+        Mode.Person or Mode.PersonGrant or Mode.PersonEdit when view.Person(_selected) is { } person => PersonDrawer(view, person),
+        Mode.Invite => InviteDrawer(view),
+        Mode.Team or Mode.TeamGrant when view.Team(_selected) is { } team => TeamDrawer(view, team),
+        Mode.NewTeam => NewTeamDrawer(view),
+        Mode.Role when _roleKey is { } key && view.Role(key) is { } role => RoleDrawer(view, role),
+        Mode.RoleEdit => RoleEditorDrawer(view),
+        _ => _ => { },
+    };
+
+    private RenderFragment PersonDrawer(AdministrationView view, PersonSummary person) => __builder =>
+    {
+        if (_mode == Mode.PersonGrant)
+        {
+            <AdminDrawer Id="person-grant-drawer" Title="@string.Format(CultureInfo.CurrentCulture, L["Admin.Grant.Title"], view.FirstNameOf(person))"
+                         Subtitle="@L["Admin.Grant.Subtitle"]" OnClose="Close" Back="() => _mode = Mode.Person">
+                <GrantAccessForm View="view" SubjectKind="SubjectKindDto.User" SubjectId="person.Id" SubjectName="@view.FirstNameOf(person)"
+                                 OnGranted="a => GrantedAsync(view.FirstNameOf(person), a)" OnCancel="() => _mode = Mode.Person" />
+            </AdminDrawer>
+        }
+        else if (_mode == Mode.PersonEdit)
+        {
+            <AdminDrawer Id="person-edit-drawer" Title="@L["Admin.Person.Edit"]" OnClose="Close" Back="() => _mode = Mode.Person">
+                <PersonForm CabinetId="view.Overview.CabinetId" Existing="person" OnSaved="PersonSavedAsync" OnCancel="() => _mode = Mode.Person" />
+            </AdminDrawer>
+        }
+        else
+        {
+            <AdminDrawer Id="person-drawer" Title="@view.NameOf(person)" OnClose="Close">
+                <ChildContent>
+                    <PersonPanel View="view" Person="person" Toasts="_toasts" OnGrant="() => _mode = Mode.PersonGrant" OnChanged="ReloadAsync" />
+                </ChildContent>
+                <Footer>
+                    @if (view.Overview.Can.ManagePeople)
+                    {
+                        <button type="button" class="lettra-button is-ghost la-small" id="person-edit" @onclick="() => _mode = Mode.PersonEdit"><Icon Name="pencil" Size="16" />@L["Admin.Person.Edit"]</button>
+                        @if (person.State == AccountStateDto.Invited)
+                        {
+                            <button type="button" class="lettra-button is-secondary la-small" id="person-activate" @onclick="() => SetStateAsync(view, person, AccountStateDto.Active)"><Icon Name="circle-play" Size="16" />@L["Admin.Person.ActivateNow"]</button>
+                        }
+                        else if (person.State == AccountStateDto.Active)
+                        {
+                            <button type="button" class="lettra-button is-ghost la-small la-danger-text" id="person-suspend" disabled="@person.IsMe"
+                                    title="@(person.IsMe ? L["Error.Administration.SelfLockout"].Value : null)" @onclick="() => SetStateAsync(view, person, AccountStateDto.Suspended)">
+                                <Icon Name="circle-pause" Size="16" />@L["Admin.Person.Suspend"]
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="button" class="lettra-button is-secondary la-small" id="person-reactivate" @onclick="() => SetStateAsync(view, person, AccountStateDto.Active)"><Icon Name="circle-play" Size="16" />@L["Admin.Person.Reactivate"]</button>
+                        }
+                    }
+                </Footer>
+            </AdminDrawer>
+        }
+    };
+
+    private RenderFragment InviteDrawer(AdministrationView view) => __builder =>
+    {
+        <AdminDrawer Id="invite-drawer" Title="@L["Admin.Invite"]" Subtitle="@L["Admin.Invite.Subtitle"]" OnClose="Close">
+            <PersonForm CabinetId="view.Overview.CabinetId" OnSaved="InvitedAsync" OnCancel="Close" />
+        </AdminDrawer>
+    };
+
+    private RenderFragment TeamDrawer(AdministrationView view, TeamSummary team) => __builder =>
+    {
+        if (_mode == Mode.TeamGrant)
+        {
+            <AdminDrawer Id="team-grant-drawer" Title="@string.Format(CultureInfo.CurrentCulture, L["Admin.Grant.Title"], team.Name)"
+                         Subtitle="@L["Admin.Grant.TeamSubtitle"]" OnClose="Close" Back="() => _mode = Mode.Team">
+                <GrantAccessForm View="view" SubjectKind="SubjectKindDto.Group" SubjectId="team.Id" SubjectName="@team.Name"
+                                 OnGranted="a => GrantedAsync(team.Name, a)" OnCancel="() => _mode = Mode.Team" />
+            </AdminDrawer>
+        }
+        else
+        {
+            <AdminDrawer Id="team-drawer" Title="@team.Name" Subtitle="@string.Format(CultureInfo.CurrentCulture, L["Admin.Team.Counts"], team.MemberIds.Count, team.DossierIds.Count)" OnClose="Close">
+                <TeamPanel View="view" Team="team" Toasts="_toasts" OnGrant="() => _mode = Mode.TeamGrant" OnChanged="ReloadAsync" OnDeleted="TeamDeletedAsync" />
+            </AdminDrawer>
+        }
+    };
+
+    private RenderFragment NewTeamDrawer(AdministrationView view) => __builder =>
+    {
+        <AdminDrawer Id="new-team-drawer" Title="@L["Admin.Team.New"]" Subtitle="@L["Admin.Team.NewSubtitle"]" OnClose="Close">
+            <div class="la-form">
+                <label class="la-field">
+                    <span>@L["Admin.Team.Name"]</span>
+                    <input id="new-team-name" @bind="_newTeam" @bind:event="oninput" maxlength="@CreateGroupRequest.MaxNameLength" placeholder="@L["Admin.Team.NamePlaceholder"]" />
+                </label>
+                <div class="la-actions">
+                    <button type="button" class="lettra-button" id="new-team-submit" disabled="@string.IsNullOrWhiteSpace(_newTeam)" @onclick="() => CreateTeamAsync(view)"><Icon Name="check" Size="18" />@L["Admin.Team.Create"]</button>
+                    <button type="button" class="lettra-button is-ghost" @onclick="Close">@L["Admin.Cancel"]</button>
+                </div>
+            </div>
+        </AdminDrawer>
+    };
+
+    private RenderFragment RoleDrawer(AdministrationView view, RoleDescription role) => __builder =>
+    {
+        PersonSummary[] holders = view.Overview.People.Where(p => p.Assignments.Any(a => a.Role == role.Key)).ToArray();
+        TeamSummary[] teams = view.Overview.Teams.Where(t => t.Assignments.Any(a => a.Role == role.Key)).ToArray();
+        <AdminDrawer Id="role-drawer" Title="@view.RoleName(role.Key)" Subtitle="@view.RoleSummary(role.Key)" OnClose="Close">
+            <ChildContent>
+                <section class="la-section">
+                    <h3>@L["Admin.Roles.Opens"]</h3>
+                    <AreaList Areas="role.Areas" />
+                    <p class="lettra-hint">@L[$"Admin.Roles.Widest.{role.WidestScope}"]</p>
+                </section>
+                <section class="la-section">
+                    <h3>@string.Format(CultureInfo.CurrentCulture, L["Admin.Roles.Holders"], holders.Length + teams.Length)</h3>
+                    <ul class="la-rows" role="list">
+                        @foreach (PersonSummary person in holders)
+                        {
+                            <li class="la-row">
+                                <AdminAvatar Id="person.Id" Name="@view.NameOf(person)" />
+                                <span class="la-row-text"><strong>@view.NameOf(person)</strong>
+                                    <span>@string.Join(", ", person.Assignments.Where(a => a.Role == role.Key).Select(a => view.ScopeLabel(a.ScopeKind, a.ScopeId)))</span></span>
+                            </li>
+                        }
+                        @foreach (TeamSummary team in teams)
+                        {
+                            <li class="la-row">
+                                <span class="la-row-icon"><Icon Name="users" Size="16" /></span>
+                                <span class="la-row-text"><strong>@team.Name</strong>
+                                    <span>@string.Join(", ", team.Assignments.Where(a => a.Role == role.Key).Select(a => view.ScopeLabel(a.ScopeKind, a.ScopeId)))</span></span>
+                            </li>
+                        }
+                    </ul>
+                    @if (holders.Length + teams.Length == 0)
+                    {
+                        <p class="lettra-hint">@L["Admin.Roles.NoHolder"]</p>
+                    }
+                </section>
+            </ChildContent>
+            <Footer>
+                @if (view.Overview.Can.ManageRoles)
+                {
+                    @if (role.IsCustom)
+                    {
+                        <button type="button" class="lettra-button is-secondary la-small" id="role-edit" @onclick="() => OpenRoleEditor(role.Key, null)"><Icon Name="pencil" Size="16" />@L["Admin.Roles.Edit"]</button>
+                    }
+                    else if (role.Areas.Any(a => AccessAreas.Of(a.Area).Customizable))
+                    {
+                        <button type="button" class="lettra-button is-secondary la-small" id="role-copy" @onclick="() => OpenRoleEditor(null, role)"><Icon Name="layers" Size="16" />@L["Admin.Roles.StartFrom"]</button>
+                    }
+                }
+            </Footer>
+        </AdminDrawer>
+    };
+
+    private RenderFragment RoleEditorDrawer(AdministrationView view) => __builder =>
+    {
+        RoleDescription? existing = _roleKey is { } key ? view.Role(key) : null;
+        <AdminDrawer Id="role-editor-drawer" Wide="true" Title="@L[existing is null ? "Admin.Roles.New" : "Admin.Roles.Edit"]" Subtitle="@L["Admin.RoleEditor.Subtitle"]" OnClose="Close">
+            <RoleEditor CabinetId="view.Overview.CabinetId" Existing="existing" Template="_template" OnSaved="RoleSavedAsync" OnDeleted="RoleDeletedAsync" OnCancel="Close" />
+        </AdminDrawer>
+    };
+
+    private async Task GrantedAsync(string subject, RoleAssignmentSummary assignment)
+    {
+        _toasts.Show(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.Granted"], subject, _view?.RoleName(assignment.Role)));
+        _mode = assignment.SubjectKind == SubjectKindDto.Group ? Mode.Team : Mode.Person;
+        await ReloadAsync();
+    }
+
+    private async Task InvitedAsync(PersonSummary person)
+    {
+        _toasts.Show(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.Invited"], person.DisplayName));
+        await ReloadAsync();
+        // Étape suivante naturelle : lui donner un accès.
+        Open(Mode.PersonGrant, person.Id);
+    }
+
+    private async Task PersonSavedAsync(PersonSummary person)
+    {
+        _toasts.Show(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.PersonSaved"], person.DisplayName));
+        _mode = Mode.Person;
+        await ReloadAsync();
+    }
+
+    private async Task SetStateAsync(AdministrationView view, PersonSummary person, AccountStateDto state)
+    {
+        OperationResult<bool> result = await Gateway.SetAccountStateAsync(view.Overview.CabinetId, person.Id, state, _disposed.Token);
+        if (!result.IsSuccess)
+        {
+            _toasts.ShowError(L.Error(result.Errors[0].Code));
+            return;
+        }
+
+        AccountStateDto previous = person.State;
+        string key = state == AccountStateDto.Active ? "Admin.Toast.Reactivated" : "Admin.Toast.Suspended";
+        _toasts.Show(
+            string.Format(CultureInfo.CurrentCulture, L[key], view.FirstNameOf(person)),
+            async () =>
+            {
+                await Gateway.SetAccountStateAsync(view.Overview.CabinetId, person.Id, previous, _disposed.Token);
+                await ReloadAsync();
+            });
+        await ReloadAsync();
+    }
+
+    private async Task CreateTeamAsync(AdministrationView view)
+    {
+        OperationResult<GroupSummary> created = await Gateway.CreateTeamAsync(view.Overview.CabinetId, new CreateGroupRequest { Name = _newTeam }, _disposed.Token);
+        if (!created.IsSuccess || created.Value is not { } team)
+        {
+            _toasts.ShowError(L.Error(created.Errors[0].Code));
+            return;
+        }
+
+        _toasts.Show(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.TeamCreated"], team.Name));
+        _tab = Tab.Teams;
+        await ReloadAsync();
+        Open(Mode.Team, team.Id);
+    }
+
+    private async Task TeamDeletedAsync()
+    {
+        Close();
+        await ReloadAsync();
+    }
+
+    private async Task RoleSavedAsync(RoleDescription role)
+    {
+        _toasts.Show(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.RoleSaved"], role.Name));
+        await ReloadAsync();
+        OpenRole(role.Key);
+    }
+
+    private async Task RoleDeletedAsync(string key)
+    {
+        _toasts.Show(L["Admin.Toast.RoleDeleted"]);
+        Close();
+        await ReloadAsync();
+    }
+
+    public void Dispose()
+    {
+        _disposed.Cancel();
+        _disposed.Dispose();
+    }
+}

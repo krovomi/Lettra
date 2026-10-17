@@ -2,6 +2,7 @@ using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Features.Dossiers;
 using Lettra.Bootstrap;
+using Lettra.Contracts.Administration;
 using Lettra.Contracts.Alerts;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Dossiers;
@@ -85,6 +86,26 @@ public sealed class LocalCabinetAuthorizationTests : IAsyncLifetime
         Result<DossierSummary> created = await CreateDossierAsync(new OrganisationId(Guid.CreateVersion7()));
 
         created.Errors.Should().ContainSingle().Which.Code.Should().Be(SecurityErrors.ForbiddenCode);
+    }
+
+    [Fact]
+    public async Task Le_proprietaire_voit_l_espace_d_administration_en_lecture_seule()
+    {
+        IAdministrationGateway gateway = _services.GetRequiredService<IAdministrationGateway>();
+        OrganisationId cabinet = await LocalCabinetAsync();
+
+        OperationResult<MyAccessResponse> access = await gateway.GetMyAccessAsync(null, default);
+        access.Value!.CanAdminister.Should().BeTrue();
+        access.Value.CabinetId.Should().Be(cabinet.Value);
+
+        OperationResult<AdministrationOverview> overview = await gateway.GetOverviewAsync(cabinet.Value, default);
+
+        overview.IsSuccess.Should().BeTrue(string.Join(", ", overview.Errors.Select(e => e.Code)));
+        overview.Value!.Can.ReadOnly.Should().BeTrue();
+        overview.Value.People.Should().ContainSingle().Which.Should().Match<PersonSummary>(p => p.DisplayName == "Camille Démo" && p.IsMe);
+        overview.Value.People[0].Assignments.Select(a => a.Role).Should().BeEquivalentTo("manager", "administrateur-cabinet");
+        (await gateway.InviteAsync(cabinet.Value, new InvitePersonRequest { DisplayName = "Léa", Email = "lea@exemple.fr" }, default))
+            .Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Rights.NotSupported);
     }
 
     public async Task DisposeAsync()

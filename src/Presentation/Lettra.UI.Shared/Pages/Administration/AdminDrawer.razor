@@ -1,0 +1,74 @@
+@* Panneau latéral (ordinateur, tablette) ou feuille plein écran (téléphone) : détail d'une personne, d'une équipe, d'un
+   rôle. Échap et le fond ferment ; le focus entre dans le panneau à l'ouverture. *@
+@inject IStringLocalizer<SharedResource> L
+
+<div class="la-backdrop" @onclick="CloseAsync"></div>
+<section class="la-drawer @(Wide ? "is-wide" : null)" role="dialog" aria-modal="true" aria-labelledby="@TitleId" tabindex="-1"
+         @ref="_panel" @onkeydown="OnKeyDownAsync" id="@Id">
+    <header class="la-drawer-head">
+        @if (Back.HasDelegate)
+        {
+            <button type="button" class="lt-icon-button" aria-label="@L["Admin.Back"]" title="@L["Admin.Back"]" @onclick="Back"><Icon Name="arrow-left" /></button>
+        }
+        <div class="la-drawer-title">
+            @Header
+            <h2 id="@TitleId">@Title</h2>
+            @if (Subtitle is not null)
+            {
+                <p>@Subtitle</p>
+            }
+        </div>
+        <button type="button" class="lt-icon-button la-drawer-close" aria-label="@L["Shell.Close"]" title="@L["Shell.Close"]" @onclick="CloseAsync"><Icon Name="x" /></button>
+    </header>
+    <div class="la-drawer-body">
+        @ChildContent
+    </div>
+    @if (Footer is not null)
+    {
+        <footer class="la-drawer-foot">@Footer</footer>
+    }
+</section>
+
+@code {
+    private ElementReference _panel;
+
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+
+    [Parameter] public string? Subtitle { get; set; }
+
+    [Parameter] public string Id { get; set; } = "admin-drawer";
+
+    [Parameter] public RenderFragment? Header { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    [Parameter] public RenderFragment? Footer { get; set; }
+
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    /// <summary>Retour à l'étape précédente (assistant) ; sans valeur, pas de bouton retour.</summary>
+    [Parameter] public EventCallback Back { get; set; }
+
+    [Parameter] public bool Wide { get; set; }
+
+    private string TitleId => Id + "-title";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                await _panel.FocusAsync();
+            }
+            catch (InvalidOperationException)
+            {
+                // Rendu statique (tests, galerie) : pas de focus à donner.
+            }
+        }
+    }
+
+    private Task CloseAsync() => OnClose.InvokeAsync();
+
+    private Task OnKeyDownAsync(KeyboardEventArgs e) => e.Key == "Escape" ? CloseAsync() : Task.CompletedTask;
+}

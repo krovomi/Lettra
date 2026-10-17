@@ -21,6 +21,7 @@ public static class DependencyInjection
         services.TryAddSingleton<ILocalCabinet, ConfiguredLocalCabinet>();
         services.AddSingleton<IAuthorizationDirectory, LocalAuthorizationDirectory>();
         services.AddSingleton<IScopeMemberDirectory, LocalAuthorizationDirectory>();
+        services.AddSingleton<IAuthorizationRegistry, LocalAuthorizationRegistry>();
         services.AddLettraAuthorization();
         return services;
     }
