@@ -101,6 +101,24 @@
     <DefineConstants>$(DefineConstants);LETTRA_DEMO</DefineConstants>
   </PropertyGroup>
 
+  <!-- Dictée sur le poste (Whisper.net) : ouverte par défaut, dans la version de démonstration comme sans elle.
+       -p:LettraDictee=false la ferme par défaut sur ce build ; sur un poste, Lettra:Speech:Engine dans lettra.json
+       (None ou OnDevice) l'emporte (DeviceSpeech.cs). -->
+  <PropertyGroup Condition="'$(LettraDictee)' == 'false'">
+    <DefineConstants>$(DefineConstants);LETTRA_SANS_DICTEE</DefineConstants>
+  </PropertyGroup>
+
+  <!-- Android : la version de démonstration approuve aussi les autorités de certification installées par l'utilisateur
+       (certificat racine du profil HTTPS en réseau local, deploy/demo/compose.lan.yaml). Sa configuration réseau
+       remplace celle de Platforms/Android/Resources, qui n'approuve que les autorités du système (-p:LettraDemo=false).
+       Même nom de ressource (@xml/network_security_config dans AndroidManifest.xml) : un seul fichier dans l'APK. -->
+  <ItemGroup Condition="'$(LettraDemo)' == 'true' And $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+    <AndroidResource Remove="Platforms\Android\Resources\xml\network_security_config.xml" />
+    <AndroidResource Include="Platforms\Android\Demo\xml\network_security_config.xml"
+                     Link="Platforms\Android\Resources\xml\network_security_config.xml"
+                     LogicalName="xml\network_security_config.xml" />
+  </ItemGroup>
+
   <ItemGroup>
     <!-- Icône et écran de démarrage : générés pour chaque plateforme à partir des SVG. -->
     <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#1F3A5F" />
