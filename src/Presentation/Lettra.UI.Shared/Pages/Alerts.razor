@@ -2,6 +2,7 @@
 @page "/alerts/{Id:guid}"
 @using Lettra.Contracts.Alerts
 @inject IAlertsGateway Gateway
+@inject ToastService Toasts
 @inject IStringLocalizer<SharedResource> L
 
 @* Centre d'alertes v1 (annexe G §8) : compteurs par gravité, liste triée, détail avec sa chronologie et actions
@@ -9,67 +10,84 @@
 
 <PageTitle>@L["Alerts.Title"] · Lettra</PageTitle>
 
-<h1 tabindex="-1">@L["Alerts.Title"]</h1>
-
-<div class="lettra-inline" role="group" aria-label="@L["Alerts.Filters"]">
-    <label><input type="checkbox" id="alerts-cabinet" checked="@_cabinetWide" @onchange="ToggleCabinetAsync" /> @L["Alerts.CabinetWide"]</label>
-    <label><input type="checkbox" id="alerts-closed" checked="@_includeClosed" @onchange="ToggleClosedAsync" /> @L["Alerts.IncludeClosed"]</label>
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Alerts.Title"]</h1>
+        <p>@L["Alerts.Subtitle"]</p>
+    </div>
+    <div class="lt-chips" role="group" aria-label="@L["Alerts.Filters"]">
+        <label class="lt-chip"><input type="checkbox" id="alerts-cabinet" checked="@_cabinetWide" @onchange="ToggleCabinetAsync" /> @L["Alerts.CabinetWide"]</label>
+        <label class="lt-chip"><input type="checkbox" id="alerts-closed" checked="@_includeClosed" @onchange="ToggleClosedAsync" /> @L["Alerts.IncludeClosed"]</label>
+    </div>
 </div>
 
 <GeneralErrors Errors="_errors" />
 
 @if (_centre is null)
 {
-    <p>@L["Loading"]</p>
+    <div class="lt-kpis" aria-busy="true" aria-label="@L["Loading"]">
+        @for (int i = 0; i < 4; i++)
+        {
+            <div class="lt-kpi"><span class="lt-skeleton" style="height: 1rem; width: 40%"></span><span class="lt-skeleton" style="height: 2rem; width: 30%"></span></div>
+        }
+    </div>
 }
 else
 {
-    <section aria-labelledby="counters-title" class="lettra-card">
-        <h2 id="counters-title">@L["Alerts.Counters.Title"]</h2>
-        <ul class="lettra-alert-counters">
+    <section aria-labelledby="counters-title">
+        <h2 id="counters-title" class="lettra-visually-hidden">@L["Alerts.Counters.Title"]</h2>
+        <ul class="lt-kpis lettra-alert-counters">
             @foreach (AlertSeverityCounter counter in _centre.Counters)
             {
-                <li class="lettra-severity-@counter.Severity.ToString().ToLowerInvariant()">
-                    <strong>@counter.Severity</strong>
-                    @string.Format(CultureInfo.CurrentCulture, L["Alerts.Counters.Open"], counter.Open)
-                    @if (counter.OldestUnacknowledgedSince is DateTimeOffset since)
-                    {
-                        <span> · @string.Format(CultureInfo.CurrentCulture, L["Alerts.Counters.OldestUnacknowledged"], When(since))</span>
-                    }
+                <li class="lt-kpi lt-severity-card lettra-severity-@counter.Severity.ToString().ToLowerInvariant() @(counter.Open > 0 ? "has-open" : null)">
+                    <span class="lt-kpi-head">
+                        <span class="lt-severity-badge" data-severity="@counter.Severity">@counter.Severity</span>
+                        <span class="lt-kpi-icon"><Icon Name="@(counter.Open > 0 ? "circle-alert" : "circle-check")" /></span>
+                    </span>
+                    <span class="lt-kpi-value">@counter.Open.ToString("N0", CultureInfo.CurrentCulture)</span>
+                    <span class="lt-kpi-note">
+                        @string.Format(CultureInfo.CurrentCulture, L["Alerts.Counters.Open"], counter.Open)
+                        @if (counter.OldestUnacknowledgedSince is DateTimeOffset since)
+                        {
+                            <span> · @string.Format(CultureInfo.CurrentCulture, L["Alerts.Counters.OldestUnacknowledged"], When(since))</span>
+                        }
+                    </span>
                 </li>
             }
         </ul>
     </section>
 
-    <section aria-labelledby="list-title" class="lettra-card">
-        <h2 id="list-title">@L["Alerts.List.Title"]</h2>
+    <section aria-labelledby="list-title" class="lt-panel">
+        <div class="lt-panel-head">
+            <h2 id="list-title">@L["Alerts.List.Title"]</h2>
+        </div>
         @if (_centre.Alerts.Count == 0)
         {
-            <p>@L["Alerts.List.Empty"]</p>
+            <EmptyState Id="alerts-empty" IconName="circle-check" Title="@L["Alerts.List.Empty"]" Text="@L["Alerts.List.EmptyText"]" />
         }
         else
         {
-            <table class="lettra-table">
+            <table class="lettra-table lt-cards">
                 <thead>
                     <tr>
-                        <th scope="col">@L["Alerts.Field.Severity"]</th>
                         <th scope="col">@L["Alerts.Field.Title"]</th>
+                        <th scope="col">@L["Alerts.Field.Severity"]</th>
                         <th scope="col">@L["Alerts.Field.Scope"]</th>
                         <th scope="col">@L["Alerts.Field.State"]</th>
                         <th scope="col">@L["Alerts.Field.LastSeen"]</th>
-                        <th scope="col">@L["Alerts.Field.Occurrences"]</th>
+                        <th scope="col" class="lg-num">@L["Alerts.Field.Occurrences"]</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (AlertSummary alert in _centre.Alerts)
                     {
                         <tr aria-current="@(alert.Id == Id ? "true" : null)">
-                            <td>@alert.Severity</td>
                             <td><a href="alerts/@alert.Id">@RuleTitle(alert)</a></td>
-                            <td>@L["Alerts.Scope." + alert.ScopeLevel]</td>
-                            <td>@L["Alerts.State." + alert.State]</td>
-                            <td>@When(alert.LastSeen)</td>
-                            <td>@alert.Occurrences</td>
+                            <td data-label="@L["Alerts.Field.Severity"]"><span class="lt-severity-badge" data-severity="@alert.Severity">@alert.Severity</span></td>
+                            <td data-label="@L["Alerts.Field.Scope"]">@L["Alerts.Scope." + alert.ScopeLevel]</td>
+                            <td data-label="@L["Alerts.Field.State"]"><span class="lt-state" data-state="@alert.State">@L["Alerts.State." + alert.State]</span></td>
+                            <td data-label="@L["Alerts.Field.LastSeen"]">@When(alert.LastSeen)</td>
+                            <td class="lg-num" data-label="@L["Alerts.Field.Occurrences"]">@alert.Occurrences</td>
                         </tr>
                     }
                 </tbody>
@@ -81,9 +99,12 @@ else
 @if (_detail is not null)
 {
     AlertSummary alert = _detail.Alert;
-    <section aria-labelledby="detail-title" class="lettra-card lettra-alert-detail">
-        <h2 id="detail-title">@alert.Severity · @RuleTitle(alert)</h2>
-        <dl>
+    <section aria-labelledby="detail-title" class="lt-panel lettra-alert-detail">
+        <div class="lt-panel-head">
+            <h2 id="detail-title"><span class="lettra-visually-hidden">@alert.Severity · </span>@RuleTitle(alert)</h2>
+            <span class="lt-severity-badge" data-severity="@alert.Severity" aria-hidden="true">@alert.Severity</span>
+        </div>
+        <dl class="lt-facts">
             <dt>@L["Alerts.Field.State"]</dt>
             <dd>@L["Alerts.State." + alert.State]</dd>
             <dt>@L["Alerts.Field.Scope"]</dt>
@@ -104,15 +125,15 @@ else
 
         @if (alert.State is AlertState.New or AlertState.Acknowledged)
         {
-            <div class="lettra-inline">
+            <div class="lt-page-actions">
                 @if (alert.State == AlertState.New)
                 {
-                    <button type="button" id="alert-acknowledge" disabled="@_busy" @onclick="AcknowledgeAsync">@L["Alerts.Acknowledge"]</button>
+                    <button type="button" id="alert-acknowledge" class="lettra-button" disabled="@_busy" @onclick="AcknowledgeAsync">@L["Alerts.Acknowledge"]</button>
                 }
-                <button type="button" id="alert-resolve" disabled="@_busy" @onclick="ResolveAsync">@L["Alerts.Resolve"]</button>
+                <button type="button" id="alert-resolve" class="lettra-button is-secondary" disabled="@_busy" @onclick="ResolveAsync">@L["Alerts.Resolve"]</button>
             </div>
 
-            <EditForm Model="_severity" OnValidSubmit="ChangeSeverityAsync" FormName="alert-severity">
+            <EditForm Model="_severity" OnValidSubmit="ChangeSeverityAsync" FormName="alert-severity" class="lt-severity-form">
                 <DataAnnotationsValidator />
                 <label for="alert-severity">@L["Alerts.Severity.New"]</label>
                 <InputSelect id="alert-severity" @bind-Value="_severity.Severity">
@@ -124,7 +145,7 @@ else
                 <label for="alert-reason">@L["Alerts.Severity.Reason"]</label>
                 <InputText id="alert-reason" @bind-Value="_severity.Reason" maxlength="@ChangeAlertSeverityRequest.MaxReasonLength" />
                 <FieldErrors Field="@nameof(ChangeAlertSeverityRequest.Reason)" ServerErrors="_errors" />
-                <button type="submit" disabled="@_busy">@L["Alerts.Severity.Submit"]</button>
+                <button type="submit" class="lettra-button is-secondary" disabled="@_busy">@L["Alerts.Severity.Submit"]</button>
             </EditForm>
         }
 
@@ -132,7 +153,7 @@ else
         <ol class="lettra-timeline">
             @foreach (AlertTimelineItem item in _detail.Timeline)
             {
-                <li>
+                <li data-kind="@item.Kind">
                     <time>@When(item.At)</time> · @Event(item.Kind) · @L["Alerts.Actor." + item.ActorKind]
                     @if (!string.IsNullOrEmpty(item.Reason))
                     {
@@ -173,13 +194,13 @@ else
         await LoadAsync();
     }
 
-    private Task AcknowledgeAsync() => ActAsync(id => Gateway.AcknowledgeAsync(id, CancellationToken.None));
+    private Task AcknowledgeAsync() => ActAsync(id => Gateway.AcknowledgeAsync(id, CancellationToken.None), "Alerts.Toast.Acknowledged");
 
-    private Task ResolveAsync() => ActAsync(id => Gateway.ResolveAsync(id, CancellationToken.None));
+    private Task ResolveAsync() => ActAsync(id => Gateway.ResolveAsync(id, CancellationToken.None), "Alerts.Toast.Resolved");
 
-    private Task ChangeSeverityAsync() => ActAsync(id => Gateway.ChangeSeverityAsync(id, _severity, CancellationToken.None));
+    private Task ChangeSeverityAsync() => ActAsync(id => Gateway.ChangeSeverityAsync(id, _severity, CancellationToken.None), "Alerts.Toast.SeverityChanged");
 
-    private async Task ActAsync(Func<Guid, Task<OperationResult<AlertDetailResponse>>> action)
+    private async Task ActAsync(Func<Guid, Task<OperationResult<AlertDetailResponse>>> action, string successKey)
     {
         if (_detail is null)
         {
@@ -195,6 +216,7 @@ else
                 _detail = result.Value;
                 _severity = new ChangeAlertSeverityRequest { Severity = result.Value!.Alert.Severity };
                 _errors = [];
+                Toasts.Show(ToastKind.Success, L[successKey].Value);
                 await LoadAsync();
             }
             else

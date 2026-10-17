@@ -139,6 +139,18 @@ public sealed class UiPreferences(IJSRuntime js)
             .ConfigureAwait(false);
     }
 
+    /// <summary>Préférence d'affichage d'un écran (bloc replié…) ; <c>null</c> si rien n'est retenu ou sans stockage.</summary>
+    public async Task<string?> ReadAsync(string key)
+    {
+        string? value = null;
+        await WithModuleAsync(async module => value = await module.InvokeAsync<string?>("readPreference", key).ConfigureAwait(false))
+            .ConfigureAwait(false);
+        return value;
+    }
+
+    public Task WriteAsync(string key, string value) =>
+        WithModuleAsync(module => module.InvokeVoidAsync("writePreference", key, value).AsTask());
+
     private bool Set(Func<bool> unchanged, Action apply)
     {
         if (unchanged())

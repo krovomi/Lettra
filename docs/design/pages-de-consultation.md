@@ -28,9 +28,12 @@ passe en saisie dans la même fiche, sans changer d'écran. Pages concernées : 
 ## Des fiches légères
 
 - **Chiffres clés en bandeau** (`lt-stats`) plutôt qu'en cartes : trois valeurs, une ligne.
-- **Blocs repliables** (`Collapsible`) : Coordonnées, Dernières factures, Derniers devis, Coordonnées bancaires,
-  Description, Caractéristiques. Le titre est un bouton (`aria-expanded`), l'état replié est retenu pendant la session
-  d'un client à l'autre. Les blocs secondaires (derniers devis, caractéristiques d'un article) sont repliés au départ.
+- **Blocs repliables** (`Collapsible` du système de design, sans cadre dans une fiche : `Card="false" Level="3"`) :
+  Coordonnées, Dernières factures, Derniers devis, Coordonnées bancaires, Description, Caractéristiques. Le titre est un
+  bouton (`aria-expanded`), l'état replié est retenu sur l'appareil d'une fiche à l'autre. Les blocs secondaires
+  (derniers devis, caractéristiques d'un article) sont repliés au départ.
+- **Confirmations dans le toaster** : « Client « Dupont » créé », « … enregistré », un article archivé ; les erreurs
+  sans champ (droits, serveur injoignable) aussi. Les erreurs d'un champ restent sous le champ.
 - **Saisie** : les champs en deux colonnes à partir de 640 px, une seule en dessous ; la barre **Enregistrer /
   Annuler** reste collée en bas de la fiche (au-dessus des onglets sur téléphone).
 
@@ -70,8 +73,8 @@ API : `GET /api/v1/accounting/journal`, `/accounting/balance`, `/accounting/acco
 
 - Une page de consultation hérite de `RecordExplorerPage<TSummary, TRecord, TForm>`
   (`Lettra.UI.Shared/Components/Explorer`) : mode déduit de l'adresse, recherche, liste paginée, clavier, garde de
-  saisie, enregistrement avec version. La page fournit le rendu (`ExplorerLayout`, `EditBar`, `Fact`, `Collapsible`)
-  et les appels à sa passerelle.
+  saisie, enregistrement avec version, message de réussite dans le toaster (`ToastService`). La page fournit le rendu
+  (`ExplorerLayout`, `EditBar`, `Fact`, et le `Collapsible` de `Components/Feedback`) et les appels à sa passerelle.
 - Styles : `wwwroot/lettra-explorer.css`, jetons seulement.
 - Textes : `Localization/Modules/Consultation.resx` et `Comptabilite.resx` (+ `.en.resx`).
 - Tests : `tests/Lettra.UI.Tests/CustomersPageTests.cs`, `SuppliersPageTests.cs`, `Consultation/`,

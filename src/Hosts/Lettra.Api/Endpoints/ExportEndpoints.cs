@@ -15,7 +15,8 @@ namespace Lettra.Api.Endpoints;
 
 /// <summary>
 /// Exports du dossier (module Exports, phase 5) : FEC des écritures de vente et validateur intégré, facture électronique
-/// EN 16931 (CII ou UBL) d'une pièce validée et sa transmission à la plateforme agréée (statuts, encaissement).
+/// EN 16931 (CII ou UBL) d'une pièce validée et sa transmission à la plateforme agréée (statuts, encaissement), point des
+/// créances du tableau de bord.
 /// </summary>
 internal static class ExportEndpoints
 {
@@ -51,6 +52,13 @@ internal static class ExportEndpoints
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict);
+
+        // Tableau de bord : factures en retard et état des transmissions de toutes les pièces validées.
+        api.MapGet("/receivables/summary", GetReceivablesSummaryAsync)
+            .WithTags("Exports")
+            .RequirePermission(Permission.DossierLire)
+            .WithName("GetReceivablesSummary")
+            .Produces<ReceivablesSummaryResponse>();
 
         RouteGroupBuilder platform = api.MapGroup("/invoices/{id:guid}/platform-transmission").WithTags("Exports");
 
@@ -135,6 +143,14 @@ internal static class ExportEndpoints
         Guid id, ReportPaymentRequest request, ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken) =>
         Ok(await commands.SendAsync(
             new ReportPaymentCommand(tenant.Current.DossierId, new InvoiceId(id), request.Date, request.Amount), cancellationToken).ConfigureAwait(false));
+
+    private static async Task<IResult> GetReceivablesSummaryAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken)
+    {
+        Result<ReceivablesSummaryResponse> summary = await queries
+            .QueryAsync(new GetReceivablesSummaryQuery(tenant.Current.DossierId), cancellationToken)
+            .ConfigureAwait(false);
+        return summary.IsSuccess ? TypedResults.Ok(summary.Value) : summary.Errors.ToProblem();
+    }
 
     private static IResult Ok(Result<PlatformTransmissionResponse> result) =>
         result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();

@@ -167,19 +167,19 @@ public sealed class DeviceLockTests : BunitContext
         page.Find("#pin-new").Change("4821");
         page.Find("#pin-confirm").Change("4822");
         await page.Find("form").SubmitAsync();
-        page.Find("#pin-message").TextContent.Should().Be("Les deux saisies du nouveau code ne sont pas identiques.");
+        this.ToastText().Should().Be("Les deux saisies du nouveau code ne sont pas identiques.");
 
         page.Find("#pin-new").Change("4821");
         page.Find("#pin-confirm").Change("4821");
         await page.Find("form").SubmitAsync();
-        page.Find("#pin-message").TextContent.Should().Be("Code défini : l'application se verrouillera désormais.");
+        this.ToastText().Should().Be("Code défini : l'application se verrouillera désormais.");
         page.Find("#pin-state").TextContent.Should().StartWith("Un code PIN protège ce poste");
 
         page.Find("#pin-current").Change("0000");
         page.Find("#pin-new").Change("123456");
         page.Find("#pin-confirm").Change("123456");
         await page.Find("form").SubmitAsync();
-        page.Find("#pin-message").TextContent.Should().Be("Code incorrect.");
+        this.ToastText().Should().Be("Code incorrect.");
 
         page.Find("#pin-lock-now").Click();
         Services.GetRequiredService<DeviceLock>().IsLocked.Should().BeTrue();

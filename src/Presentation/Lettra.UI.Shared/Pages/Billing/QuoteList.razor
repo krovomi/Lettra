@@ -34,15 +34,21 @@
 
     @if (_loading)
     {
-        <p>@L["Loading"]</p>
+        <ListSkeleton Columns="7" />
     }
     else if (_items.Count == 0)
     {
-        <p>@L["Quotes.Empty"]</p>
+        <EmptyState Id="quotes-empty" IconName="file-text" Title="@(IsFiltered ? L["Lists.Empty.FilteredTitle"] : L["Quotes.Empty"])"
+                    Text="@(IsFiltered ? L["Lists.Empty.Filtered"] : L["Quotes.Empty.Text"])">
+            @if (!IsFiltered)
+            {
+                <a class="lettra-button" href="quotes/new"><Icon Name="plus" Size="18" /> @L["Quotes.New"]</a>
+            }
+        </EmptyState>
     }
     else
     {
-        <table class="lettra-table lettra-documents">
+        <table class="lettra-table lettra-documents lt-cards">
             <thead>
                 <tr>
                     <th scope="col">@L["Billing.Column.Number"]</th>
@@ -59,13 +65,13 @@
                 {
                     <tr>
                         <td><a href="@($"quotes/{quote.Id}")">@(quote.Number ?? L["Billing.Draft"])</a></td>
-                        <td>@quote.CustomerName</td>
-                        <td>@quote.IssueDate?.ToString("d", CultureInfo.CurrentCulture)</td>
-                        <td>@quote.ValidUntil?.ToString("d", CultureInfo.CurrentCulture)</td>
-                        <td><DocumentStatusBadge Text="@(quote.IsExpired ? L["Quote.Expired"] : L[$"QuoteStatus.{quote.Status}"])"
+                        <td data-label="@L["Billing.Column.Customer"]">@quote.CustomerName</td>
+                        <td data-label="@L["Billing.Column.Date"]">@quote.IssueDate?.ToString("d", CultureInfo.CurrentCulture)</td>
+                        <td data-label="@L["Quote.Field.ValidUntil"]">@quote.ValidUntil?.ToString("d", CultureInfo.CurrentCulture)</td>
+                        <td data-label="@L["Billing.Status"]"><DocumentStatusBadge Text="@(quote.IsExpired ? L["Quote.Expired"] : L[$"QuoteStatus.{quote.Status}"])"
                                                  Kind="@(quote.IsExpired ? "expired" : quote.Status.ToString().ToLowerInvariant())" /></td>
-                        <td class="lg-num">@GridNumber.FormatAmount(quote.TotalExclTax, CultureInfo.CurrentCulture)</td>
-                        <td class="lg-num">@GridNumber.FormatAmount(quote.TotalInclTax, CultureInfo.CurrentCulture)</td>
+                        <td class="lg-num" data-label="@L["Totals.ExclTax"]">@GridNumber.FormatAmount(quote.TotalExclTax, CultureInfo.CurrentCulture)</td>
+                        <td class="lg-num" data-label="@L["Totals.InclTax"]">@GridNumber.FormatAmount(quote.TotalInclTax, CultureInfo.CurrentCulture)</td>
                     </tr>
                 }
             </tbody>
@@ -79,6 +85,8 @@
     private string? _search;
     private QuoteStatusDto? _statusFilter;
     private bool _loading = true;
+
+    private bool IsFiltered => !string.IsNullOrWhiteSpace(_search) || _statusFilter is not null;
     private ElementReference _searchInput;
     private KeyboardScope _pageScope = default!;
 

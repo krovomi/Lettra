@@ -82,6 +82,7 @@ public static class DependencyInjection
         services.AddSingleton<IQuotesGateway, InProcessQuotesGateway>();
         services.AddSingleton<IInvoicesGateway, InProcessInvoicesGateway>();
         services.AddSingleton<IPlatformTransmissionGateway, InProcessPlatformTransmissionGateway>();
+        services.AddSingleton<IReceivablesGateway, InProcessReceivablesGateway>();
         services.AddSingleton<IFecGateway, InProcessFecGateway>();
         services.AddSingleton<IAccountingGateway, InProcessAccountingGateway>();
         services.AddSingleton<IBillingSettingsGateway, InProcessBillingSettingsGateway>();

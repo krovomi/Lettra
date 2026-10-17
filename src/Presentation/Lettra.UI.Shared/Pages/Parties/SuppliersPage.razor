@@ -105,12 +105,8 @@
                         </div>
                     </header>
 
-                    @if (Status is not null)
-                    {
-                        <p class="lettra-success" role="status" id="explorer-status">@Status</p>
-                    }
 
-                    <Collapsible Id="supplier-details" Title="@L["Explorer.Section.Contact"]">
+                    <Collapsible Card="false" Level="3" Id="supplier-details" Title="@L["Explorer.Section.Contact"]">
                         <dl class="lt-facts lt-facts-2">
                             <Fact Label="@L["Customers.Field.Siren"]" Value="@(supplier.Siren is { } s ? ExplorerText.Siren(s) : null)" />
                             <Fact Label="@L["Customers.Field.Siret"]" Value="@(supplier.Siret is { } t ? ExplorerText.Siret(t) : null)" />
@@ -138,7 +134,7 @@
                         </dl>
                     </Collapsible>
 
-                    <Collapsible Id="supplier-bank" Title="@L["Suppliers.Section.Bank"]">
+                    <Collapsible Card="false" Level="3" Id="supplier-bank" Title="@L["Suppliers.Section.Bank"]">
                         <dl class="lt-facts">
                             <Fact Label="@L["Suppliers.Field.Iban"]">
                                 @if (supplier.Iban is { Length: > 0 } iban)

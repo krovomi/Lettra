@@ -109,7 +109,7 @@ public sealed class AccountingPagesTests : BunitContext
 
         IRenderedComponent<JournalPage> page = Open<JournalPage>("accounting/journal");
 
-        page.Markup.Should().Contain("Une consultation couvre cinq ans au plus");
+        this.ToastText().Should().Contain("Une consultation couvre cinq ans au plus");
     }
 
     [Fact]

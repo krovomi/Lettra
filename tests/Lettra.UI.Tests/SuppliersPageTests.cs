@@ -22,7 +22,6 @@ public sealed class SuppliersPageTests : BunitContext
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         ExplorerSettings.SearchDelay = TimeSpan.FromMilliseconds(1);
-        Collapsible.ForgetAll();
         Services.AddLettraUi();
         Services.AddSingleton<ISuppliersGateway>(_gateway);
         Services.AddSingleton<IDirectoryGateway>(_directory);
@@ -82,7 +81,7 @@ public sealed class SuppliersPageTests : BunitContext
         Fill(page, "city", "Lyon");
         page.Find("form").Submit();
 
-        page.WaitForAssertion(() => page.Find("[role=status]").TextContent.Should().Be("Fournisseur « Papeterie Durand » créé."));
+        page.WaitForAssertion(() => this.ToastText().Should().Be("Fournisseur « Papeterie Durand » créé."));
         _gateway.LastRequest!.Iban.Should().Be("FR7630006000011234567890189");
         Guid id = _gateway.Suppliers.Single().Id;
         Navigation.ToBaseRelativePath(Navigation.Uri).Should().Be($"suppliers/{id}");
@@ -230,7 +229,7 @@ public sealed class SuppliersPageTests : BunitContext
         page.Find("#supplier-sheet-title").TextContent.Should().Be("Papeterie Durand");
         page.Find("#supplier-details").TextContent.Should().Contain("contact@example.fr").And.Contain("3 rue des Lilas");
         page.Find("#supplier-bank .lt-collapsible-toggle").Click();
-        page.FindAll("#supplier-iban").Should().BeEmpty("le bloc bancaire est replié");
+        page.Find("#supplier-bank-body").HasAttribute("hidden").Should().BeTrue("le bloc bancaire est replié");
         page.Find("#supplier-bank .lt-collapsible-toggle").Click();
 
         Navigation.NavigateTo($"suppliers/{supplier.Id}/edit");
@@ -238,7 +237,7 @@ public sealed class SuppliersPageTests : BunitContext
         Fill(page, "email", "compta@durand.fr");
         page.Find("form").Submit();
 
-        page.WaitForAssertion(() => page.Find("#explorer-status").TextContent.Should().Be("Fournisseur « Papeterie Durand » enregistré."));
+        page.WaitForAssertion(() => this.ToastText().Should().Be("Fournisseur « Papeterie Durand » enregistré."));
         _gateway.Updates.Should().ContainSingle().Which.ExpectedVersion.Should().Be(1);
         page.Find("#supplier-details").TextContent.Should().Contain("compta@durand.fr");
     }

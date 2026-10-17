@@ -21,7 +21,6 @@ public sealed class CatalogExplorerTests : BunitContext
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         ExplorerSettings.SearchDelay = TimeSpan.FromMilliseconds(1);
-        Collapsible.ForgetAll();
         Services.AddLettraUi();
         Services.AddSingleton<ICatalogGateway>(_gateway);
         LettraCultures.Apply(CultureInfo.GetCultureInfo("fr-FR"));
@@ -63,7 +62,7 @@ public sealed class CatalogExplorerTests : BunitContext
         page.Find("#explorer-dirty");
         page.Find("form").Submit();
 
-        page.WaitForAssertion(() => page.Find("#explorer-status").TextContent.Should().Be("Article « Conseil (heure) » créé."));
+        page.WaitForAssertion(() => this.ToastText().Should().Be("Article « Conseil (heure) » créé."));
         Guid id = _gateway.Items.Single().Id;
         Navigation.ToBaseRelativePath(Navigation.Uri).Should().Be($"catalog/{id}");
         _gateway.Creations.Single().VatRateCode.Should().Be("FR-10");
@@ -78,7 +77,7 @@ public sealed class CatalogExplorerTests : BunitContext
         page.Find("#item-price").Change("480");
         page.Find("form").Submit();
 
-        page.WaitForAssertion(() => page.Find("#explorer-status").TextContent.Should().Be("Article « Tenue comptable » enregistré."));
+        page.WaitForAssertion(() => this.ToastText().Should().Be("Article « Tenue comptable » enregistré."));
         _gateway.Updates.Single().Request.UnitPriceExclTax.Should().Be(480m);
         page.Find("#catalog-kpi-excl").TextContent.Should().Contain(ExplorerText.Money(480m));
     }
@@ -91,7 +90,7 @@ public sealed class CatalogExplorerTests : BunitContext
 
         page.Find("#catalog-archive").Click();
 
-        page.WaitForAssertion(() => page.Find("#explorer-status").TextContent.Should().Be("Article « Ancienne prestation » archivé."));
+        page.WaitForAssertion(() => this.ToastText().Should().Be("Article « Ancienne prestation » archivé."));
         page.FindAll("#catalog-edit").Should().BeEmpty("un article archivé ne se modifie pas");
         page.FindAll("#catalog-items-list [role=option]").Should().BeEmpty();
 

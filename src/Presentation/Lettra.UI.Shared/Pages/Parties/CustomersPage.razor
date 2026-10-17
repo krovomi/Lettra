@@ -117,10 +117,6 @@
                         </div>
                     </header>
 
-                    @if (Status is not null)
-                    {
-                        <p class="lettra-success" role="status" id="explorer-status">@Status</p>
-                    }
 
                     @if (_ledger is { } ledger)
                     {
@@ -140,7 +136,7 @@
                         </dl>
                     }
 
-                    <Collapsible Id="customer-details" Title="@L["Explorer.Section.Contact"]">
+                    <Collapsible Card="false" Level="3" Id="customer-details" Title="@L["Explorer.Section.Contact"]">
                         <dl class="lt-facts lt-facts-2">
                             @if (customer.Kind == CustomerKindDto.Company)
                             {
@@ -172,7 +168,7 @@
                         </dl>
                     </Collapsible>
 
-                    <Collapsible Id="customer-invoices" Title="@L["Customers.LastInvoices"]" Count="@_invoices?.Count">
+                    <Collapsible Card="false" Level="3" Id="customer-invoices" Title="@L["Customers.LastInvoices"]" Count="@_invoices?.Count">
                         <Actions><a href="@LedgerHref(customer.Id)" id="customer-ledger">@L["Customers.SeeLedger"] <Icon Name="arrow-right" Size="16" /></a></Actions>
                         <ChildContent>
                             @if (_invoices is null)
@@ -200,7 +196,7 @@
                         </ChildContent>
                     </Collapsible>
 
-                    <Collapsible Id="customer-quotes" Title="@L["Customers.LastQuotes"]" Count="@_quotes?.Count" OpenByDefault="false">
+                    <Collapsible Card="false" Level="3" Id="customer-quotes" Title="@L["Customers.LastQuotes"]" Count="@_quotes?.Count" InitiallyOpen="false">
                         @if (_quotes is null)
                         {
                             <ExplorerSkeleton Rows="2" />

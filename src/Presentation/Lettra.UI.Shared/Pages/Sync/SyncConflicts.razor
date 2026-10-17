@@ -11,10 +11,7 @@
 <p><a href="synchronisation">@L["Sync.Back"]</a></p>
 
 <GeneralErrors Errors="_errors" />
-@if (_done is not null)
-{
-    <p role="status" class="lettra-success">@_done</p>
-}
+<StatusToast Message="@_done" />
 
 @if (_sync is null)
 {

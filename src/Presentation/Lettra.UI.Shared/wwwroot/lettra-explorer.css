@@ -119,21 +119,7 @@
     .lt-stats dd.lt-stats-note { flex-basis: 100%; }
 }
 
-/* Blocs repliables. */
-.lt-collapsible { border-top: 1px solid var(--color-border); padding-top: var(--space-2); }
-.lt-collapsible-head { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
-.lt-collapsible-head h3 { margin: 0; flex: 1 1 auto; min-width: 0; font-size: var(--text-base); }
-.lt-collapsible-toggle {
-    display: inline-flex; align-items: center; gap: var(--space-2); width: 100%; min-height: var(--hit);
-    padding: 0 var(--space-2); margin: 0 calc(-1 * var(--space-2)); border: 0; border-radius: var(--radius-md);
-    background: transparent; color: var(--color-fg); font: inherit; font-weight: var(--weight-bold); text-align: left; cursor: pointer;
-}
-.lt-collapsible-toggle:hover { background: var(--color-surface-2); }
-.lt-collapsible-toggle svg { flex: none; color: var(--color-fg-muted); transition: transform var(--motion-fast) var(--ease-out); }
-.lt-collapsible.is-open .lt-collapsible-toggle svg { transform: rotate(90deg); }
-.lt-collapsible-actions { font-size: var(--text-sm); }
-.lt-collapsible-actions a { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--hit); text-decoration: none; font-weight: var(--weight-medium); }
-.lt-collapsible-body { padding: var(--space-2) 0 var(--space-2); }
+/* Pastille de compteur (même règle que .lt-collapsible-count du bloc repliable). */
 .lt-count { display: inline-grid; place-items: center; min-width: 1.5rem; padding: 0 var(--space-1); border-radius: var(--radius-full); background: var(--color-neutral-bg); color: var(--color-neutral-fg); font-size: var(--text-xs); font-weight: var(--weight-bold); }
 
 /* Fiche en lecture : libellé au-dessus de la valeur, deux colonnes si la place le permet. */
@@ -285,5 +271,5 @@
 .lt-page-header h1[tabindex="-1"]:focus { outline: none; }
 
 @media (prefers-reduced-motion: reduce) {
-    .lt-collapsible-toggle svg, .lt-disclosure svg, .lt-record { transition: none; }
+    .lt-disclosure svg, .lt-record { transition: none; }
 }

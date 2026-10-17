@@ -2,6 +2,7 @@ using System.Globalization;
 using Lettra.Contracts.Common;
 using Lettra.UI.Shared.Keyboard;
 using Lettra.UI.Shared.Localization;
+using Lettra.UI.Shared.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Routing;
@@ -63,6 +64,8 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
 
     [Inject] protected IStringLocalizer<SharedResource> L { get; set; } = default!;
 
+    [Inject] protected ToastService Toasts { get; set; } = default!;
+
     protected ExplorerMode Mode { get; private set; } = ExplorerMode.List;
 
     protected Guid? SelectedId { get; private set; }
@@ -83,9 +86,6 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
 
     /// <summary>Erreurs de la liste ou de la fiche (droits, serveur injoignable, validation).</summary>
     protected IReadOnlyList<ErrorDetail> Errors { get; set; } = [];
-
-    /// <summary>Message de réussite de la dernière action (créé, enregistré).</summary>
-    protected string? Status { get; set; }
 
     protected bool Busy { get; private set; }
 
@@ -470,7 +470,6 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
 
     protected void GoTo(string href)
     {
-        Status = null;
         Navigation.NavigateTo(href);
     }
 
@@ -530,7 +529,6 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
         }
 
         Busy = true;
-        Status = null;
         try
         {
             bool creating = Mode == ExplorerMode.New;
@@ -575,7 +573,7 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
             _leaving = true;
             Navigation.NavigateTo(Href(id));
             _leaving = false;
-            Status = string.Format(CultureInfo.CurrentCulture, Text(messageKey), DisplayName(saved));
+            Toasts.Show(ToastKind.Success, string.Format(CultureInfo.CurrentCulture, Text(messageKey), DisplayName(saved)));
             await OnRecordLoadedAsync(saved);
             return;
         }
@@ -595,7 +593,7 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
     {
         Record = record;
         Errors = [];
-        Status = status;
+        Toasts.Show(ToastKind.Success, status);
         await ReloadAsync();
     }
 

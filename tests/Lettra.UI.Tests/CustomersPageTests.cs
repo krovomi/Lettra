@@ -169,7 +169,6 @@ public sealed class CustomersPageTests : BunitContext
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         ExplorerSettings.SearchDelay = TimeSpan.FromMilliseconds(1);
-        Collapsible.ForgetAll();
         // Champs assistés (code postal, ville) : module chargé à la demande, sans effet sans navigateur.
         JSInterop.SetupModule(AssistModule.Path).Mode = JSRuntimeMode.Loose;
         Services.AddLettraUi();
@@ -259,7 +258,7 @@ public sealed class CustomersPageTests : BunitContext
         FillAddress(page);
         page.Find("form").Submit();
 
-        page.WaitForAssertion(() => page.Find("#explorer-status").TextContent.Should().Be("Client « Boulangerie Martin » créé."));
+        page.WaitForAssertion(() => this.ToastText().Should().Be("Client « Boulangerie Martin » créé."));
         Guid id = _gateway.Customers.Single().Id;
         Navigation.ToBaseRelativePath(Navigation.Uri).Should().Be($"customers/{id}");
         page.Find("#customer-sheet-title").TextContent.Should().Be("Boulangerie Martin");
@@ -320,7 +319,7 @@ public sealed class CustomersPageTests : BunitContext
         page.Find("#explorer-dirty").TextContent.Should().Be("Modifications non enregistrées");
         page.Find("form").Submit();
 
-        page.WaitForAssertion(() => page.Find("#explorer-status").TextContent.Should().Be("Client « Pharmacie du Port » enregistré."));
+        page.WaitForAssertion(() => this.ToastText().Should().Be("Client « Pharmacie du Port » enregistré."));
         _gateway.Updates.Should().ContainSingle().Which.ExpectedVersion.Should().Be(1);
         _gateway.Updates[0].Request.City.Should().Be("Dunkerque");
         Navigation.ToBaseRelativePath(Navigation.Uri).Should().Be($"customers/{id}");
@@ -411,7 +410,7 @@ public sealed class CustomersPageTests : BunitContext
 
         page.Find("#explorer-overwrite").Click();
 
-        page.WaitForAssertion(() => page.Find("#explorer-status").TextContent.Should().Be("Client « Studio Nord » enregistré."));
+        page.WaitForAssertion(() => this.ToastText().Should().Be("Client « Studio Nord » enregistré."));
         _gateway.Updates.Select(u => u.ExpectedVersion).Should().Equal(1, 2);
         _gateway.Records[id].City.Should().Be("Villeurbanne");
     }
@@ -478,7 +477,7 @@ public sealed class CustomersPageTests : BunitContext
 
         page.WaitForAssertion(() => page.Markup.Should().Contain("A French company must have a SIREN (or a SIRET)."));
         page.Find("#siren ~ .validation-message").TextContent.Should().Be("A French company must have a SIREN (or a SIRET).");
-        page.Markup.Should().Contain("You do not have permission for this action in this file.");
+        this.Toasts().Select(t => t.Message).Should().Contain("You do not have permission for this action in this file.");
         Navigation.ToBaseRelativePath(Navigation.Uri).Should().Be("customers/new", "la saisie reste ouverte pour corriger");
     }
 

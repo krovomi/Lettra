@@ -132,10 +132,6 @@
                         </div>
                     </header>
 
-                    @if (Status is not null)
-                    {
-                        <p class="lettra-success" role="status" id="explorer-status">@Status</p>
-                    }
 
                     <dl class="lt-stats" aria-label="@L["Catalog.Prices"]" id="catalog-stats">
                         <div id="catalog-kpi-excl">
@@ -152,7 +148,7 @@
                         </div>
                     </dl>
 
-                    <Collapsible Id="catalog-description" Title="@L["Catalog.Field.Description"]">
+                    <Collapsible Card="false" Level="3" Id="catalog-description" Title="@L["Catalog.Field.Description"]">
                         @if (string.IsNullOrWhiteSpace(item.Description))
                         {
                             <p class="lettra-muted">@L["Catalog.NoDescription"]</p>
@@ -163,7 +159,7 @@
                         }
                     </Collapsible>
 
-                    <Collapsible Id="catalog-facts" Title="@L["Explorer.Section.Details"]" OpenByDefault="false">
+                    <Collapsible Card="false" Level="3" Id="catalog-facts" Title="@L["Explorer.Section.Details"]" InitiallyOpen="false">
                         <dl class="lt-facts lt-facts-2">
                             <Fact Label="@L["Catalog.Column.Reference"]" Value="@item.Reference" />
                             <Fact Label="@L["Catalog.Column.Kind"]" Value="@L[$"CatalogItemKind.{item.Kind}"]" />

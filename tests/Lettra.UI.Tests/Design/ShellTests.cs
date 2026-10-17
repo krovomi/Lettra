@@ -3,6 +3,9 @@ using System.Reflection;
 using AngleSharp.Dom;
 using Bunit;
 using Lettra.Contracts.Billing;
+using Lettra.Contracts.Common;
+using Lettra.Contracts.Demo;
+using Lettra.Contracts.Exports;
 using Lettra.Contracts.Identity;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
@@ -176,5 +179,81 @@ public sealed class ShellTests : BunitContext
         accueil.WaitForAssertion(() => accueil.Find("#home-empty h2").TextContent.Should().Be("Bienvenue dans Lettra"));
         accueil.FindAll("#home-empty a").Select(a => a.GetAttribute("href")).Should().Equal("settings/company", "customers", "quotes/new");
         accueil.FindAll(".lt-kpi").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void L_accueil_montre_les_factures_a_relancer_et_les_transmissions()
+    {
+        _invoices.Add(InvoiceKindDto.Invoice, InvoiceStatusDto.Validated, "FAC-2026-0042", Conseil);
+        Guid retard = Guid.CreateVersion7();
+        Services.AddSingleton<IReceivablesGateway>(new FakeReceivablesGateway(new ReceivablesSummaryResponse(
+            new DateOnly(2026, 10, 16), 3, 4250m,
+            [new OverdueInvoiceResponse(retard, "FAC-2026-0007", "Atelier Durand", new DateOnly(2026, 9, 1), 45, 3000m)],
+            2, 5, 1, 7)));
+
+        IRenderedComponent<Home> accueil = Render<Home>();
+
+        accueil.WaitForAssertion(() => accueil.Find("#kpi-overdue .lt-kpi-value").TextContent.Should().Be("4\u202F250 €"));
+        accueil.Find("#kpi-overdue").ClassList.Should().Contain("is-alert");
+        accueil.Find("#kpi-overdue .lt-kpi-note").TextContent.Should().Be("3 à relancer, TTC restant dû");
+        accueil.FindAll("#kpi-invoices").Should().BeEmpty("le retard remplace le nombre de factures du mois");
+        accueil.Find("#home-overdue .lt-list a").GetAttribute("href").Should().Be($"invoices/{retard}");
+        accueil.Find("#home-overdue .lt-list-meta").TextContent.Should().Be("FAC-2026-0007 · échue depuis 45 j");
+        accueil.FindAll("#home-transmissions dd").Select(d => d.TextContent).Should().Equal("2", "5", "1", "7");
+        accueil.Find("#home-transmissions [data-stat=needs-attention]").ClassList.Should().Contain("is-alert");
+    }
+
+    [Fact]
+    public void Sans_point_des_creances_l_accueil_garde_les_factures_du_mois()
+    {
+        _invoices.Add(InvoiceKindDto.Invoice, InvoiceStatusDto.Validated, "FAC-2026-0042", Conseil);
+        Services.AddSingleton<IReceivablesGateway>(new FakeReceivablesGateway(null));
+
+        IRenderedComponent<Home> accueil = Render<Home>();
+
+        accueil.WaitForAssertion(() => accueil.Find("#kpi-invoices .lt-kpi-value").TextContent.Should().Be("1"));
+        accueil.FindAll("#kpi-overdue, #home-overdue, #home-transmissions").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Un_dossier_vide_charge_les_donnees_de_demonstration_puis_affiche_le_tableau_de_bord()
+    {
+        FakeDemoDataGateway demo = new(true, () => _invoices.Add(InvoiceKindDto.Invoice, InvoiceStatusDto.Validated, "FAC-2026-0001", Conseil));
+        Services.AddSingleton<IDemoDataGateway>(demo);
+
+        IRenderedComponent<Home> accueil = Render<Home>();
+        accueil.WaitForAssertion(() => accueil.Find("#home-demo-load").TextContent.Trim().Should().Be("Charger les données de démonstration"));
+        accueil.Find("#home-demo-load").Click();
+
+        accueil.WaitForAssertion(() => accueil.Find("#kpi-revenue .lt-kpi-value").TextContent.Should().Be("200 €"));
+        demo.Seeds.Should().Be(1);
+        accueil.FindAll("#home-empty, #home-demo").Should().BeEmpty();
+        Services.GetRequiredService<ToastService>().Visible.Should().ContainSingle()
+            .Which.Should().Be(new Toast(1, ToastKind.Success, "Données de démonstration chargées : 12 clients, 30 devis et 1 factures."));
+    }
+
+    [Fact]
+    public void Le_bouton_de_demonstration_n_apparait_que_si_l_hote_le_permet()
+    {
+        Services.AddSingleton<IDemoDataGateway>(new FakeDemoDataGateway(false, () => { }));
+
+        IRenderedComponent<Home> accueil = Render<Home>();
+
+        accueil.WaitForAssertion(() => accueil.Find("#home-empty h2").TextContent.Should().Be("Bienvenue dans Lettra"));
+        accueil.FindAll("#home-demo").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Un_dossier_deja_rempli_entre_temps_est_signale_sans_rien_charger()
+    {
+        FakeDemoDataGateway demo = new(true, () => { }, DemoSeedStatusDto.DossierNotEmpty);
+        Services.AddSingleton<IDemoDataGateway>(demo);
+
+        IRenderedComponent<Home> accueil = Render<Home>();
+        accueil.WaitForAssertion(() => accueil.Find("#home-demo-load").Click());
+
+        accueil.WaitForAssertion(() => Services.GetRequiredService<ToastService>().Visible.Should().ContainSingle()
+            .Which.Kind.Should().Be(ToastKind.Warning));
+        accueil.Find("#home-demo-load").HasAttribute("disabled").Should().BeFalse();
     }
 }
