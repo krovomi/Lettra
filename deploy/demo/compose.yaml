@@ -100,6 +100,13 @@ services:
       Lettra__Authorization__Users__0__Assignments__0__Role: manager
       Lettra__Authorization__Users__0__Assignments__0__Scope: Cabinet
       Lettra__Authorization__Users__0__Assignments__0__ScopeId: 0199e3a0-0000-7000-8000-0000000000c1
+      # Espace « Équipe et accès » : l'utilisateur fictif en est aussi l'administrateur. Nom et adresse ne s'appliquent
+      # que s'ils sont renseignés : rien de déjà saisi n'est écrasé.
+      Lettra__Authorization__Users__0__DisplayName: Camille Démo
+      Lettra__Authorization__Users__0__Email: demo@cabinet-demo.example
+      Lettra__Authorization__Users__0__Assignments__1__Role: administrateur-cabinet
+      Lettra__Authorization__Users__0__Assignments__1__Scope: Cabinet
+      Lettra__Authorization__Users__0__Assignments__1__ScopeId: 0199e3a0-0000-7000-8000-0000000000c1
       # Jeu « Cabinet Démo » (Lettra.DemoData) : un an d'activité dans le dossier de démonstration, au nom de
       # l'utilisateur de démonstration, au premier démarrage seulement (environ 25 s ; ignoré si le dossier a des pièces).
       Lettra__Demo__Seed: "true"

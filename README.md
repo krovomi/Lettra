@@ -38,6 +38,7 @@ résultat. « **Non vérifié** » signifie que la méthode est décrite mais qu
 | iPhone ou iPad réel | Application native | **Pas encore possible** : il faut un Mac et un compte Apple Developer pour la signer. Utiliser le navigateur. |
 | Mac (macOS) | [Application macOS](#macos-mac-catalyst) | Construite, mais **s'arrête à la création du premier dossier** tant qu'elle n'est pas signée par Apple. Utiliser le navigateur. |
 | Linux, en application native | Pas de version native (.NET MAUI ne vise pas Linux) | Utiliser le navigateur. |
+| Tous les appareils sur les mêmes données | [Serveur commun](#serveur-commun) : **Paramètres** > **Serveur du cabinet**, adresse `http://localhost:8080` (Android par câble : `adb reverse tcp:8080 tcp:8080` et `adb reverse tcp:8081 tcp:8081`) | Navigateur et harnais de l'application installée **vérifiés** de bout en bout ; Windows, Android et simulateur iOS **non vérifiés** sur appareil ; iPhone et Mac : signature Apple nécessaire. |
 
 Les applications natives se téléchargent depuis la CI. Sur GitHub, ouvrez l'onglet
 [Actions](https://github.com/krovomi/Lettra/actions/workflows/ci.yml?query=branch%3Amain+is%3Asuccess), cliquez sur
@@ -230,6 +231,21 @@ droit, **Ouvrir**, la première fois) et `open Lettra.app`. Rien n'a été essay
 
 ---
 
+## Serveur commun
+
+Le navigateur travaille toujours sur le serveur. Une application installée (Windows, macOS, Android, iOS) travaille
+seule sur ses propres données, sauf si on la relie au serveur du cabinet : **Paramètres** > **Serveur du cabinet**,
+saisir l'adresse (https obligatoire hors localhost), redémarrer l'application, se connecter. Elle travaille alors sur
+le même dossier que le navigateur et les autres appareils reliés. Elle a besoin du réseau ; ses données d'appareil
+seul restent sur l'appareil, intactes, et reviennent avec **Revenir à cet appareil seul**. Détails et état par
+appareil : [docs/serveur-commun.md](docs/serveur-commun.md).
+
+Vérifié à chaque CI (job « Démo navigateur ») : la composition de l'application reliée au serveur se connecte au
+Keycloak de la démo (code + PKCE, mot de passe et code à usage unique), voit le client saisi dans le navigateur et en
+crée un que le navigateur retrouve.
+
+---
+
 ## Premier usage, pas à pas
 
 Le parcours va de la fiche de l'entreprise au FEC, en une quinzaine de minutes, dans l'application installée ou dans
@@ -240,8 +256,11 @@ de Lettra ; copiez-les tels quels.
 
 **Le tableau de bord.** L'**Accueil** montre les indicateurs du mois (chiffre d'affaires HT, factures, devis en
 attente, brouillons), le chiffre d'affaires des six derniers mois, les dernières factures et les derniers devis, et
-deux raccourcis : **Nouveau devis**, **Nouvelle facture**. Sur un dossier vide, il propose à la place de compléter la
-fiche entreprise et d'ajouter un client.
+deux raccourcis : **Nouveau devis**, **Nouvelle facture**. Il montre aussi les factures en retard (les cinq plus
+anciennes, avec leur reste dû) et les transmissions à la plateforme (non transmises, en cours, à traiter, encaissées).
+Sur un dossier vide, il propose à la place de compléter la fiche entreprise et d'ajouter un client, et le bouton
+**Charger les données de démonstration** remplit le dossier d'un an d'activité fictive en une demi-minute. Ce bouton
+est absent en Production et pour qui n'a pas le droit d'émettre des factures.
 
 **Les données de démonstration.** Le dossier ouvert arrive avec un an d'activité d'une entreprise fictive,
 « Atelier Numérique Conseil » (SARL de conseil et services numériques, Lyon) : sa fiche entreprise, 30 à 50 clients
@@ -262,7 +281,7 @@ Le jeu ne s'ajoute jamais à un dossier qui a déjà des devis ou des factures. 
 voir « Repartir de zéro » dans [En cas de problème](#en-cas-de-problème).
 
 **La navigation.** **Accueil**, puis **Ventes** (**Devis**, **Factures**, **Avoirs**), **Tiers** (**Clients**,
-**Fournisseurs**, **Catalogue**), **Comptabilité** (**FEC**) et **Pilotage** (**Alertes**, **Entreprise**). Sur un
+**Fournisseurs**, **Catalogue**), **Comptabilité** (**Journal et balance**, **FEC**) et **Pilotage** (**Alertes**, **Entreprise**). Sur un
 ordinateur, le menu est à gauche et se replie en icônes ; sur une tablette, c'est une colonne d'icônes ; sur un
 téléphone, des onglets en bas (Accueil, Devis, Factures, Clients, **Plus** pour le reste). En haut, le champ
 « Rechercher un écran, une pièce, un client… » ouvre la palette de commandes, aussi au clavier avec **Ctrl+K**
@@ -272,6 +291,16 @@ téléphone, des onglets en bas (Accueil, Devis, Factures, Clients, **Plus** pou
 **Comme le système**, **Clair**, **Sombre**, **Ardoise** et **Contraste élevé**, ainsi que la densité : **Confort**
 (au doigt) ou **Expert** (souris et clavier ; **Ctrl+Maj+D** bascule). Le choix s'applique tout de suite et reste
 mémorisé sur l'appareil.
+
+**Les notifications.** Chaque création, modification et suppression s'annonce dans une notification en bas à droite
+(au-dessus des onglets sur un téléphone). Une réussite disparaît après 6 secondes ; une erreur reste jusqu'à ce qu'on
+la ferme.
+
+**Les listes.** Pendant le chargement, une silhouette de la liste s'affiche ; une liste vide dit quoi faire ; sur un
+téléphone, chaque ligne devient une carte.
+
+*Vérifié : 258 tests de l'interface ; galerie de 12 écrans × 4 thèmes × 3 largeurs, sans défaut d'accessibilité (axe) ;
+éditeurs contrôlés dans Chromium de 375 à 1920 px. Détails : [docs/design/systeme-de-design.md](docs/design/systeme-de-design.md).*
 
 ### 1. La fiche de votre entreprise
 
@@ -296,7 +325,8 @@ interroge le service européen, qui ne connaît pas ces numéros fictifs.
 
 ### 2. Un client
 
-Menu **Clients**. Le formulaire « Nouveau client » est en haut de la page. Saisissez tout à la main (la recherche
+Menu **Clients**. La liste est à gauche, la fiche à droite (sur téléphone et tablette, l'une ou l'autre, avec
+« Retour à la liste »). Cliquez sur **Nouveau client** (touche **Inser**) et saisissez tout à la main (la recherche
 dans l'annuaire SIRENE ne sert qu'aux vraies entreprises) :
 
 - Type de client : **Entreprise**
@@ -304,11 +334,16 @@ dans l'annuaire SIRENE ne sert qu'aux vraies entreprises) :
 - SIRET : **90000002700012**
 - Adresse : **3 place du Marché**, **69002**, **Lyon**
 
-Cliquez sur **Créer le client**.
+Cliquez sur **Créer** : la fiche s'affiche en lecture. **Modifier** (**F2**) repasse en saisie dans la même fiche,
+**Échap** revient sans enregistrer (Lettra demande avant d'abandonner une saisie modifiée). Les blocs de la fiche
+(Coordonnées, Dernières factures, Derniers devis) se replient d'un clic. Les **Fournisseurs** ont la même
+présentation.
 
 ### 3. Un devis
 
-Menu **Devis**, **Nouveau devis**.
+Menu **Devis**, **Nouveau devis**. L'écran est découpé en blocs repliables (Informations, Livraison et paiement,
+Lignes, Notes) ; un bloc replié montre un résumé d'une ligne, et l'état choisi est retenu sur l'appareil. Les factures
+ont la même présentation.
 
 1. Client : **Boulangerie Exemple** ; Objet : *Accompagnement comptable*.
 2. Dans la grille **Lignes**, une ligne : Désignation *Tenue comptable mensuelle*, Qté **3**, PU HT **250**.
@@ -363,13 +398,26 @@ Sans SIREN dans la fiche entreprise, l'export le demande au lieu de produire un 
 
 ### Et ensuite
 
-- **Catalogue** : les articles et prestations, saisis au clavier dans une grille ; facultatif, une ligne de facture
-  peut se saisir librement.
+- **Catalogue** : les articles et prestations, même présentation que les clients (liste, fiche, **Modifier**,
+  **Archiver**) ; **Saisie en grille** reste disponible pour en saisir beaucoup au clavier. Une ligne de facture peut
+  aussi se saisir librement.
+- **Journal et balance** : les écritures de vente de la période (journal, balance, grand livre d'un compte ou d'un
+  client), en lecture, les mêmes que dans le FEC. La fiche d'un client y renvoie par **Compte client**. Les
+  encaissements ne sont pas encore comptabilisés : le solde 411 est ce qui a été facturé, avoirs déduits.
 - **Alertes** : le centre d'alertes techniques (chaîne anti-fraude d'un dossier, trou de numérotation). Il ne montre
   aucune donnée de client.
 - **Verrouiller** (en haut) : ferme la session ; la phrase secrète la rouvre.
 - **Langue** : l'écran suit la langue de l'appareil ou du navigateur (français ou anglais). Chaque client et chaque PDF peuvent avoir la
   leur (« Langue des devis et factures imprimés », « Langue du PDF »).
+- **Équipe et accès** (menu **Pilotage**) : qui travaille dans le cabinet et ce que chacun peut ouvrir. Onglet
+  **Personnes** : ajoutez une personne (nom et adresse), puis donnez-lui un accès en trois questions (quel rôle, où,
+  jusqu'à quand) ; sa fiche dit en clair ce qu'elle peut faire, page par page. Onglet **Équipes** : regroupez des
+  personnes et des dossiers, un rôle donné à l'équipe vaut pour tous ses membres. Onglet **Rôles** : les rôles fournis,
+  et vos rôles sur mesure composés page par page (Aucun, Voir, Modifier, Valider). Chaque retrait se défait depuis le
+  message qui le confirme. Dans l'application installée sur un poste isolé, l'espace est en lecture seule : on y voit
+  son propre compte et ses rôles. Dans la démo navigateur, l'utilisateur fictif (Camille Démo) est administrateur du
+  cabinet. *(Vérifié : navigateur, rendu Chromium à 375, 768 et 1440 px et tests ; poste isolé par un test de bout en
+  bout ; application native non lancée.)*
 
 ### Tutoriel, aide à la saisie et voix
 
@@ -439,6 +487,8 @@ Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou 
 | Vraie plateforme agréée | En attente d'un partenaire ; la démo utilise la plateforme simulée. |
 | Serveur du cabinet en production | La démonstration navigateur tourne sur un poste avec Docker ; un vrai serveur du cabinet ou une cellule SaaS demande Keycloak, des certificats et une infrastructure (voir plus bas). |
 | Poste relié à un serveur, synchronisation | Prête dans l'application (fichier `lettra.json`), mais demande un serveur Lettra et Keycloak. Sur un poste isolé, la page Synchronisation indique « Ce poste ne synchronise pas ». |
+| Hors ligne sur un appareil relié au serveur commun | Relié au serveur commun, l'appareil a besoin du réseau. Reste à étendre la synchronisation aux devis, factures et règlements, ou à y ouvrir les brouillons hors ligne. |
+| Invitations | Une personne ajoutée dans **Équipe et accès** apparaît et reçoit des accès, mais Lettra n'envoie pas d'e-mail et ne crée pas encore son compte de connexion (Keycloak) : elle ne peut pas encore se connecter. |
 | Envoi des devis et factures par e-mail | Non : on télécharge le PDF ou le Factur-X. |
 | Applications signées | Non : avertissement de Windows au premier lancement, APK Android installé à la main, application macOS arrêtée par le Trousseau, pas de version pour iPhone réel. |
 
@@ -452,6 +502,8 @@ Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou 
 | Navigateur : la voix répond « indisponible » (503) | Le conteneur `whisper` télécharge encore son modèle (142 Mio) ou n'a pas accès à Internet : `docker compose -f deploy/demo/compose.yaml logs whisper` montre le téléchargement (et, sans Internet, un nouvel essai toutes les 30 secondes) ; le serveur est prêt quand la commande de vérification de [Dictée et commandes vocales](#dictée-et-commandes-vocales) affiche `200`. Le reste de Lettra fonctionne pendant ce temps. |
 | Navigateur : erreur « Uncaught (in promise) TypeError: Failed to fetch at fromShell » dans la console | C'est l'ancien service worker : fermer tous les onglets de Lettra puis rouvrir (ou DevTools → **Application** → **Service workers** → **Unregister**). La console doit rester vide d'erreurs sur tous les écrans, en ligne comme hors ligne ([détails](deploy/demo/README.md#installer-lapplication-pwa)). |
 | Navigateur : le code du second facteur est refusé | L'application TOTP doit accepter SHA-256 (pas Microsoft Authenticator) et l'heure du téléphone être à l'heure. Pour réenrôler sans perdre vos saisies, ne remettez à zéro que Keycloak : `docker compose -f deploy/demo/compose.yaml down`, `docker volume rm lettra-demo_keycloak-donnees`, puis `up -d --wait`. Pas de `down -v` : il efface aussi les données Lettra. |
+| Serveur du cabinet : « cet appareil ne fait pas confiance à son certificat » | Installer sur l'appareil le certificat de la démonstration ou l'autorité de certification du cabinet (voir [Téléphone ou tablette sur le même Wi-Fi](#téléphone-ou-tablette-sur-le-même-wi-fi-navigateur)). |
+| Serveur du cabinet : « Cette adresse doit commencer par https:// » | Seule la démo sur le même poste (`localhost`, ou Android relié par `adb reverse`) accepte `http` ; ailleurs, saisir l'adresse en `https://`. |
 | « Windows a protégé votre ordinateur » | Normal pour un prototype non signé : **Informations complémentaires**, puis **Exécuter quand même**. |
 | Rien ne s'ouvre, ou une erreur sur des fichiers bloqués | Le zip n'a pas été débloqué : supprimez le dossier extrait, faites l'étape 2 (Propriétés, **Débloquer**), puis extrayez à nouveau. |
 | Fenêtre blanche | Le composant WebView2 manque (vieux Windows 10) : installez « Microsoft Edge WebView2 Runtime » depuis le site de Microsoft, puis relancez. |
@@ -477,7 +529,9 @@ restent, et le jeu de démonstration n'est pas rechargé dans un dossier qui a d
 pour tout effacer ; pour libérer de la place, `docker builder prune` vide le cache de construction sans toucher aux
 données. Sauvegarder les données du navigateur avant une manipulation risquée :
 `docker run --rm -v lettra-demo_lettra-donnees:/donnees -v "${PWD}:/sauvegarde" busybox tar czf /sauvegarde/lettra-donnees.tgz -C /donnees .`
-(démo arrêtée). Sous Windows, fermez Lettra, téléchargez le nouvel artefact et remplacez le dossier extrait : vos
+(démo arrêtée). La version qui apporte le serveur commun corrige le realm Keycloak : après cette mise à jour,
+l'enrôlement du code à usage unique de l'utilisateur fictif est à refaire une fois. Les données Lettra sont conservées.
+Sous Windows, fermez Lettra, téléchargez le nouvel artefact et remplacez le dossier extrait : vos
 données, rangées ailleurs, sont conservées. Sous Android, `adb install -r` installe la nouvelle version par-dessus
 l'ancienne et garde les données : les APK de la CI sont signés avec la même clé de démonstration
 (`Platforms/Android/lettra-demo.keystore`). Seuls les APK construits avant cette clé (signés avec une clé de

@@ -85,6 +85,8 @@ api.MapIntegrity();
 api.MapExports();
 api.MapDossierAlerts();
 api.MapSync();
+// Données de démonstration chargées depuis l'accueil (GET /api/v1/demo, POST /api/v1/demo/seed) ; refusé en Production.
+api.MapDemo();
 
 // Administration du cabinet : même authentification et anti-CSRF, sans dossier ; la permission porte sur le cabinet.
 RouteGroupBuilder cabinet = app.MapGroup($"/api/v1/cabinets/{{{CabinetPermissionEndpointFilter.RouteKey}:guid}}")
