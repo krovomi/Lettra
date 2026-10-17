@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <!-- Voix dans l'interface (vague 5, lane F) : micros, F8, panneau, commandes. -->
+  <data name="Palette.Group.Voice" xml:space="preserve"><value>Voice</value></data>
+  <data name="Voice.Button" xml:space="preserve"><value>Dictation and voice commands</value></data>
+  <data name="Voice.Panel.Title" xml:space="preserve"><value>Dictation and voice commands</value></data>
+  <data name="Voice.State.NotConfigured" xml:space="preserve"><value>Dictation is not enabled on this deployment. You can type everything: voice is an option, never a requirement.</value></data>
+  <data name="Voice.State.HowToEnable" xml:space="preserve"><value>It runs on a Whisper engine installed in your cell or on this device, so your voice never leaves Lettra. An administrator turns it on in the settings (see "Voice" in the documentation).</value></data>
+  <data name="Voice.State.Unreachable" xml:space="preserve"><value>Cannot reach the server to check whether dictation is available. Check the connection and try again.</value></data>
+  <data name="Voice.State.Unknown" xml:space="preserve"><value>Checking dictation…</value></data>
+  <data name="Voice.Retry" xml:space="preserve"><value>Try again</value></data>
+  <data name="Voice.Error.Unsupported" xml:space="preserve"><value>This browser does not give access to the microphone. Try a recent browser or the installed app.</value></data>
+  <data name="Voice.Error.Denied" xml:space="preserve"><value>Microphone access was denied. Allow it in the browser or device settings, then try again.</value></data>
+  <data name="Voice.Error.NoDevice" xml:space="preserve"><value>No microphone was found on this device.</value></data>
+  <data name="Voice.Error.Recorder" xml:space="preserve"><value>Recording could not start. Try again.</value></data>
+  <data name="Voice.Error.FieldGone" xml:space="preserve"><value>The field is no longer on screen: the text was not inserted.</value></data>
+  <data name="Voice.Mic.Start" xml:space="preserve"><value>Dictate</value></data>
+  <data name="Voice.Mic.For" xml:space="preserve"><value>Dictate: {0}</value></data>
+  <data name="Voice.Mic.Stop" xml:space="preserve"><value>Stop dictating</value></data>
+  <data name="Voice.Speak" xml:space="preserve"><value>Talk to Lettra</value></data>
+  <data name="Voice.Speak.Stop" xml:space="preserve"><value>Stop</value></data>
+  <data name="Voice.Speak.Busy" xml:space="preserve"><value>Transcribing…</value></data>
+  <data name="Voice.Speak.Hint" xml:space="preserve"><value>Or hold F8 outside a field.</value></data>
+  <data name="Voice.Hud.Listening" xml:space="preserve"><value>Listening… Click the microphone or release F8 to finish.</value></data>
+  <data name="Voice.Hud.ListeningCommand" xml:space="preserve"><value>Listening… Release F8 to finish.</value></data>
+  <data name="Voice.Hud.Added" xml:space="preserve"><value>Added: "{0}"</value></data>
+  <data name="Voice.Heard" xml:space="preserve"><value>Heard: "{0}"</value></data>
+  <data name="Voice.NotACommand" xml:space="preserve"><value>This is not a command Lettra knows. To dictate text, click a field's microphone.</value></data>
+  <data name="Voice.Run" xml:space="preserve"><value>Run</value></data>
+  <data name="Voice.Discard" xml:space="preserve"><value>Dismiss</value></data>
+  <data name="Voice.Run.NeedDocument" xml:space="preserve"><value>Open a draft quote or invoice for this command.</value></data>
+  <data name="Voice.Run.Save" xml:space="preserve"><value>The draft saves itself while you type.</value></data>
+  <data name="Voice.Run.Validate" xml:space="preserve"><value>Validating is never done by voice: use the document's Validate button.</value></data>
+  <data name="Voice.Run.Unknown" xml:space="preserve"><value>Lettra cannot open this screen by voice yet.</value></data>
+  <data name="Voice.Run.NoAssistant" xml:space="preserve"><value>The AI assistant is not enabled on this deployment.</value></data>
+  <data name="Voice.Run.Found" xml:space="preserve"><value>{0} results for "{1}":</value></data>
+  <data name="Voice.Run.NothingFound" xml:space="preserve"><value>Nothing found for "{0}".</value></data>
+  <data name="Voice.Run.CustomerNotFound" xml:space="preserve"><value>No customer is called "{0}": pick one in the quote.</value></data>
+  <data name="Voice.Do.Navigate" xml:space="preserve"><value>Open: {0}</value></data>
+  <data name="Voice.Do.Create" xml:space="preserve"><value>Create: {0}</value></data>
+  <data name="Voice.Do.Search" xml:space="preserve"><value>Search "{0}" in: {1}</value></data>
+  <data name="Voice.Do.AddLine" xml:space="preserve"><value>Add a line: {0} {1} {2}</value></data>
+  <data name="Voice.Do.PriceHt" xml:space="preserve"><value>at €{0} excl. VAT</value></data>
+  <data name="Voice.Do.PriceTtc" xml:space="preserve"><value>at €{0} incl. VAT</value></data>
+  <data name="Voice.Do.Discount" xml:space="preserve"><value>{0}% discount on every line</value></data>
+  <data name="Voice.Do.DraftQuote" xml:space="preserve"><value>New quote for {0} ({1} lines to review)</value></data>
+  <data name="Voice.Do.Validate" xml:space="preserve"><value>Validate the document</value></data>
+  <data name="Voice.Do.Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Voice.Do.Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Voice.Do.Help" xml:space="preserve"><value>What voice can do</value></data>
+  <data name="Voice.Help.Intro" xml:space="preserve"><value>Here is what you can say, below.</value></data>
+  <data name="Voice.Target.Everywhere" xml:space="preserve"><value>all of Lettra</value></data>
+  <data name="Voice.Target.Home" xml:space="preserve"><value>Home</value></data>
+  <data name="Voice.Target.Quotes" xml:space="preserve"><value>Quotes</value></data>
+  <data name="Voice.Target.Invoices" xml:space="preserve"><value>Invoices</value></data>
+  <data name="Voice.Target.CreditNotes" xml:space="preserve"><value>Credit notes</value></data>
+  <data name="Voice.Target.Customers" xml:space="preserve"><value>Customers</value></data>
+  <data name="Voice.Target.Suppliers" xml:space="preserve"><value>Suppliers</value></data>
+  <data name="Voice.Target.Catalog" xml:space="preserve"><value>Catalogue</value></data>
+  <data name="Voice.Target.Fec" xml:space="preserve"><value>FEC</value></data>
+  <data name="Voice.Target.Alerts" xml:space="preserve"><value>Alerts</value></data>
+  <data name="Voice.Target.Sync" xml:space="preserve"><value>Synchronisation</value></data>
+  <data name="Voice.Target.Settings" xml:space="preserve"><value>Company</value></data>
+  <data name="Voice.Target.Assistant" xml:space="preserve"><value>AI assistant</value></data>
+  <data name="Voice.Filter.Draft" xml:space="preserve"><value>drafts</value></data>
+  <data name="Voice.Filter.Sent" xml:space="preserve"><value>sent</value></data>
+  <data name="Voice.Filter.Accepted" xml:space="preserve"><value>accepted</value></data>
+  <data name="Voice.Filter.Refused" xml:space="preserve"><value>refused</value></data>
+  <data name="Voice.Filter.Expired" xml:space="preserve"><value>expired</value></data>
+  <data name="Voice.Filter.Unpaid" xml:space="preserve"><value>unpaid</value></data>
+  <data name="Voice.Filter.Overdue" xml:space="preserve"><value>overdue</value></data>
+  <data name="Voice.Filter.Paid" xml:space="preserve"><value>paid</value></data>
+  <data name="Voice.Fields.Toggle" xml:space="preserve"><value>Show a microphone in text fields</value></data>
+  <data name="Voice.Dictate.Title" xml:space="preserve"><value>Dictate into a field</value></data>
+  <data name="Voice.Dictate.Text" xml:space="preserve"><value>Click the microphone on the right of a field (subject, notes, payment terms), speak, then click again. Or go to any field and hold F8 while you speak. Say "comma", "full stop", "new line"; amounts write themselves ("one hundred twenty euros" gives €120.00).</value></data>
+  <data name="Voice.Examples.Title" xml:space="preserve"><value>What you can say to Lettra</value></data>
+  <data name="Voice.Example.Navigate" xml:space="preserve"><value>Open overdue invoices</value></data>
+  <data name="Voice.Example.Create" xml:space="preserve"><value>New quote</value></data>
+  <data name="Voice.Example.Search" xml:space="preserve"><value>Search for customer Dupont</value></data>
+  <data name="Voice.Example.AddLine" xml:space="preserve"><value>Add three hours of advisory at 120 euros</value></data>
+  <data name="Voice.Example.Discount" xml:space="preserve"><value>Ten percent discount</value></data>
+  <data name="Voice.Example.DraftQuote" xml:space="preserve"><value>Quote for Dupont, two days of audit at 900 euros excl. VAT</value></data>
+  <data name="Voice.Example.Dictation" xml:space="preserve"><value>In a field: "Annual engagement comma file 2026 full stop"</value></data>
+  <data name="Voice.Privacy" xml:space="preserve"><value>Your voice stays in Lettra: Whisper transcribes it on this device or in your cell, then forgets it. Nothing is stored or sent to a third party. A command is always shown before it runs.</value></data>
+  <data name="Voice.Palette.Speak" xml:space="preserve"><value>Talk to Lettra</value></data>
+  <data name="Voice.Palette.HideMics" xml:space="preserve"><value>Hide field microphones</value></data>
+  <data name="Voice.Palette.ShowMics" xml:space="preserve"><value>Show field microphones</value></data>
+  <data name="Tour.home.voice.Title" xml:space="preserve"><value>Dictate instead of typing</value></data>
+  <data name="Tour.home.voice.Text" xml:space="preserve"><value>This microphone tells you whether dictation is on here, what you can say, and lets you hide the field microphones. Hold F8 to talk to Lettra ("new quote", "open overdue invoices"). It is optional: everything can still be done with the keyboard.</value></data>
+  <data name="Tour.quote-editor.voice.Title" xml:space="preserve"><value>Dictate the subject, notes or lines</value></data>
+  <data name="Tour.quote-editor.voice.Text" xml:space="preserve"><value>A field's microphone writes what you say. Outside a field, hold F8 and say "add three hours of advisory at 120 euros": the line is shown for review before it is added. If no microphone shows, the top microphone button explains why.</value></data>
+  <data name="Tour.invoice-editor.voice.Title" xml:space="preserve"><value>Dictate instead of typing</value></data>
+  <data name="Tour.invoice-editor.voice.Text" xml:space="preserve"><value>A field's microphone writes what you say, punctuation and amounts included. Hold F8 outside a field to add a line or a discount by voice; validating always stays a click.</value></data>
+</root>

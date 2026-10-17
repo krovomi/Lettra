@@ -85,8 +85,9 @@ else
 
                 <div class="lettra-field lettra-field-wide">
                     <label for="payment-terms">@L["Invoice.Field.PaymentTerms"]</label>
-                    <input id="payment-terms" disabled="@IsReadOnly" value="@_request.PaymentTerms" maxlength="500"
-                           placeholder="@_company?.PaymentTerms" @onchange="e => TextChangedAsync(e, v => _request.PaymentTerms = v)" />
+                    <SmartInput Id="payment-terms" Voice="@(!IsReadOnly)" VoiceLabel="@L["Invoice.Field.PaymentTerms"]" disabled="@IsReadOnly" Value="@_request.PaymentTerms" maxlength="500" placeholder="@_company?.PaymentTerms"
+                                OnCommitted="v => TextCommittedAsync(v, t => _request.PaymentTerms = t)" Templates="TextFieldKind.PaymentTerms"
+                                Spellcheck="true" Tidy="true" data-tour="payment-terms" />
                 </div>
 
                 <div class="lettra-field lettra-field-wide">
@@ -97,8 +98,8 @@ else
 
                 <div class="lettra-field lettra-field-wide">
                     <label for="subject">@L["Billing.Field.Subject"]</label>
-                    <input id="subject" disabled="@IsReadOnly" value="@_request.Subject" maxlength="200"
-                           @onchange="e => TextChangedAsync(e, v => _request.Subject = v)" />
+                    <SmartInput Id="subject" Voice="@(!IsReadOnly)" VoiceLabel="@L["Billing.Field.Subject"]" disabled="@IsReadOnly" Value="@_request.Subject" maxlength="200"
+                                OnCommitted="v => TextCommittedAsync(v, t => _request.Subject = t)" Templates="TextFieldKind.Subject" Spellcheck="true" Tidy="true" />
                 </div>
             </section>
 
@@ -111,13 +112,17 @@ else
                 <DocumentLinesGrid @ref="_linesGrid" Lines="_lines" ReferenceData="_reference" Regime="_request.VatRegime"
                                    ReadOnly="@(IsReadOnly || LinesLocked)" ResolvePrice="ResolvePriceAsync"
                                    OnLinesChanged="ScheduleSaveAsync" OnTotalsChanged="TotalsChanged" />
+                <CustomerHabits CustomerId="_request.CustomerId" Enabled="@(!IsReadOnly && !LinesLocked)" Present="PresentItems"
+                                OnAddItem="id => _linesGrid?.AddCatalogItemAsync(id) ?? Task.CompletedTask"
+                                OfferTerms="string.IsNullOrWhiteSpace(_request.PaymentTerms)"
+                                OnReuseTerms="t => TextCommittedAsync(t, v => _request.PaymentTerms = v)" />
             </section>
 
             <section class="lettra-card lettra-notes">
                 <div class="lettra-field">
                     <label for="notes">@L["Billing.Field.Notes"]</label>
-                    <textarea id="notes" rows="3" disabled="@IsReadOnly" value="@_request.Notes" maxlength="4000"
-                              @onchange="e => TextChangedAsync(e, v => _request.Notes = v)"></textarea>
+                    <SmartInput Id="notes" Voice="@(!IsReadOnly)" VoiceLabel="@L["Billing.Field.Notes"]" Multiline="true" Rows="3" disabled="@IsReadOnly" Value="@_request.Notes" maxlength="4000"
+                                OnCommitted="v => TextCommittedAsync(v, t => _request.Notes = t)" Templates="TextFieldKind.InvoiceNotes" Spellcheck="true" Tidy="true" />
                 </div>
             </section>
         </div>
@@ -430,12 +435,16 @@ else
         await ScheduleSaveAsync();
     }
 
-    private async Task TextChangedAsync(ChangeEventArgs e, Action<string?> set)
+    private async Task TextChangedAsync(ChangeEventArgs e, Action<string?> set) => await TextCommittedAsync(e.Value?.ToString(), set);
+
+    private async Task TextCommittedAsync(string? text, Action<string?> set)
     {
-        string? text = e.Value?.ToString();
         set(string.IsNullOrWhiteSpace(text) ? null : text.Trim());
         await ScheduleSaveAsync();
     }
+
+    /// <summary>Articles déjà sur la facture : les suggestions du client ne les reproposent pas.</summary>
+    private Guid[] PresentItems => [.. _lines.Where(l => l.CatalogItemId is not null).Select(l => l.CatalogItemId!.Value)];
 
     private async Task RegimeChangedAsync(ChangeEventArgs e)
     {
