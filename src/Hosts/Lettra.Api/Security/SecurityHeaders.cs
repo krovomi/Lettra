@@ -12,6 +12,12 @@ namespace Lettra.Api.Security;
 /// <c>pwa.js</c>). Les attributs <c>style</c> posés par les composants (variables CSS de la grille de saisie) exigent
 /// <c>style-src-attr 'unsafe-inline'</c> ; les feuilles de style restent limitées à l'origine.
 /// </para>
+/// <para>
+/// HSTS (<see cref="StrictTransportSecurity"/>) : hors développement, sur les seules réponses servies en HTTPS (le
+/// schéma transmis par le proxy compte, voir <c>ASPNETCORE_FORWARDEDHEADERS_ENABLED</c>) et jamais pour
+/// <c>localhost</c> : la démonstration en <c>http://localhost:8080</c> n'en reçoit pas ; le profil HTTPS du réseau
+/// local le reçoit, mais un navigateur l'ignore pour une adresse IP.
+/// </para>
 /// </summary>
 public static class SecurityHeaders
 {
@@ -24,6 +30,9 @@ public static class SecurityHeaders
     /// <summary>Le micro n'est ouvert qu'à l'application elle-même, pour la dictée (vague 5) ; tout le reste est fermé.</summary>
     public const string PermissionsPolicy =
         "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(self), payment=(), usb=()";
+
+    /// <summary>Un an, sous-domaines compris ; servi en HTTPS hors développement et hors <c>localhost</c>.</summary>
+    public const string StrictTransportSecurity = "max-age=31536000; includeSubDomains";
 
     private static string Csp(string connect) =>
         "default-src 'self'; " +
@@ -44,19 +53,20 @@ public static class SecurityHeaders
     {
         ArgumentNullException.ThrowIfNull(environment);
         string csp = environment.IsDevelopment() ? DevelopmentContentSecurityPolicy : ContentSecurityPolicy;
+        bool hsts = !environment.IsDevelopment();
         return app.Use((context, next) =>
         {
             // Au départ de la réponse : couvre aussi les fichiers statiques, les erreurs et les 401/429.
             context.Response.OnStarting(() =>
             {
-                Apply(context, csp);
+                Apply(context, csp, hsts);
                 return Task.CompletedTask;
             });
             return next(context);
         });
     }
 
-    private static void Apply(HttpContext context, string csp)
+    private static void Apply(HttpContext context, string csp, bool hsts)
     {
         IHeaderDictionary headers = context.Response.Headers;
         headers[HeaderNames.ContentSecurityPolicy] = csp;
@@ -67,6 +77,10 @@ public static class SecurityHeaders
         headers["Cross-Origin-Opener-Policy"] = "same-origin";
         headers["Cross-Origin-Resource-Policy"] = "same-origin";
         headers["Cross-Origin-Embedder-Policy"] = "require-corp";
+        if (hsts && context.Request.IsHttps && !IsLoopback(context.Request.Host.Host))
+        {
+            headers[HeaderNames.StrictTransportSecurity] = StrictTransportSecurity;
+        }
 
         PathString path = context.Request.Path;
         if (path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase) || path.StartsWithSegments("/bff", StringComparison.OrdinalIgnoreCase))
@@ -75,4 +89,8 @@ public static class SecurityHeaders
             headers[HeaderNames.Pragma] = "no-cache";
         }
     }
+
+    // Comme HstsOptions.ExcludedHosts : un HSTS sur localhost s'imposerait à tous les services locaux du poste.
+    private static bool IsLoopback(string host) =>
+        string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase) || host is "127.0.0.1" or "[::1]" or "::1";
 }
