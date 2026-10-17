@@ -23,6 +23,7 @@ public static class NavItems
         new("exports/fec", "Nav.Fec", "file-spreadsheet", "Nav.Group.Accounting"),
         new("alerts", "Nav.Alerts", "bell", "Nav.Group.Settings"),
         new("settings/company", "Nav.Company", "building-2", "Nav.Group.Settings", Match: NavLinkMatch.All),
+        new("session/serveur", "Nav.SharedServer", "server", "Nav.Group.Settings"),
     ];
 
     /// <summary>Les entrées par groupe, dans l'ordre de déclaration (le groupe sans titre en premier).</summary>

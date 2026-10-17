@@ -30,6 +30,18 @@ public sealed class RealmConfigurationTests
             .Single(e => (e.TryGetProperty("authenticator", out JsonElement a) ? a.GetString() : e.GetProperty("flowAlias").GetString()) == step)
             .GetProperty("requirement").GetString()!;
 
+    /// <summary>Racine du dépôt (dossier de Lettra.slnx), pour lire les ajouts de la démonstration.</summary>
+    private static string RepositoryRoot()
+    {
+        DirectoryInfo? directory = new(AppContext.BaseDirectory);
+        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "Lettra.slnx")))
+        {
+            directory = directory.Parent;
+        }
+
+        return directory?.FullName ?? throw new InvalidOperationException("Lettra.slnx introuvable au-dessus des tests.");
+    }
+
     private static bool Bool(JsonElement element, string name) =>
         element.TryGetProperty(name, out JsonElement value) && value.GetBoolean();
 
@@ -125,6 +137,29 @@ public sealed class RealmConfigurationTests
             .Single(m => m.GetProperty("client").GetString() == "lettra-maui")
             .GetProperty("roles").EnumerateArray().Select(r => r.GetString())
             .Should().Contain("offline_access", "sans portée complète, le rôle offline_access doit être explicitement permis au client");
+    }
+
+    [Fact]
+    public void L_application_installee_recoit_les_memes_revendications_que_le_navigateur()
+    {
+        // Constaté contre Keycloak 26 (serveur commun) : sans portée par défaut, ni sub (portée basic) ni nom (profile)
+        // dans les jetons, et la connexion échoue ; « openid profile offline_access » était refusé (invalid_scope).
+        JsonElement maui = Client("lettra-maui");
+
+        maui.GetProperty("defaultClientScopes").EnumerateArray().Select(s => s.GetString())
+            .Should().Contain(["basic", "profile", "acr"]);
+    }
+
+    [Fact]
+    public void L_utilisateur_de_demonstration_a_les_roles_par_defaut_du_realm()
+    {
+        // Un utilisateur importé ne reçoit pas les rôles par défaut : sans offline_access, Keycloak refuse le jeton hors
+        // ligne de l'application installée (« Offline tokens not allowed for the user or client »).
+        string path = Path.Combine(RepositoryRoot(), "deploy", "demo", "keycloak", "demo-additions.json");
+        using JsonDocument additions = JsonDocument.Parse(File.ReadAllText(path));
+
+        additions.RootElement.GetProperty("users").EnumerateArray().Should().OnlyContain(u =>
+            u.GetProperty("realmRoles").EnumerateArray().Any(r => r.GetString() == "default-roles-lettra"));
     }
 
     [Fact]
