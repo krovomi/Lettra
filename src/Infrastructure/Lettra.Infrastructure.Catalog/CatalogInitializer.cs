@@ -152,12 +152,24 @@ public sealed class CatalogInitializer(
             CatalogUserAccount? account = await db.UserAccounts.FindAsync([entry.Id], cancellationToken).ConfigureAwait(false);
             if (account is null)
             {
-                db.UserAccounts.Add(new CatalogUserAccount { Id = entry.Id, OrganisationId = entry.Cabinet, State = entry.State, CreatedAt = now });
+                account = new CatalogUserAccount { Id = entry.Id, OrganisationId = entry.Cabinet, State = entry.State, CreatedAt = now };
+                db.UserAccounts.Add(account);
             }
             else
             {
                 account.OrganisationId = entry.Cabinet;
                 account.State = entry.State;
+            }
+
+            // Nom et adresse : seulement s'ils sont déclarés, pour ne pas effacer ce que l'administrateur a saisi.
+            if (!string.IsNullOrWhiteSpace(entry.DisplayName))
+            {
+                account.DisplayName = entry.DisplayName.Trim();
+            }
+
+            if (!string.IsNullOrWhiteSpace(entry.Email))
+            {
+                account.Email = entry.Email.Trim().ToLowerInvariant();
             }
 
             foreach (Guid group in entry.Groups.Distinct())

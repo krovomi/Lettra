@@ -18,7 +18,7 @@ const widths = [375, 768, 1440];
 
 // Feuilles de style et polices à côté des pages, comme dans l'application.
 fs.mkdirSync(path.join(gallery, 'css', 'fonts'), { recursive: true });
-for (const file of ['lettra.css', 'lettra-tokens.css', 'lettra-explorer.css', 'lettra-grid.css']) {
+for (const file of fs.readdirSync(wwwroot).filter(f => f.endsWith('.css'))) {
   fs.copyFileSync(path.join(wwwroot, file), path.join(gallery, 'css', file));
 }
 for (const file of fs.readdirSync(path.join(wwwroot, 'fonts'))) {

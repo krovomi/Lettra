@@ -119,6 +119,12 @@ public sealed class AccountEntry
 
     public Guid? Cabinet { get; set; }
 
+    /// <summary>Nom affiché dans l'espace d'administration (facultatif ; une valeur vide ne remplace pas celle saisie).</summary>
+    public string? DisplayName { get; set; }
+
+    /// <summary>Adresse affichée dans l'espace d'administration (facultative).</summary>
+    public string? Email { get; set; }
+
     public IList<Guid> Groups { get; init; } = [];
 
     public IList<AssignmentEntry> Assignments { get; init; } = [];

@@ -141,6 +141,13 @@ jobs:
           set -a; . ../.env; set +a
           SORTIE="$SORTIE/localhost" node parcours.mjs premier
 
+      # Voix : le conteneur whisper télécharge son modèle (142 Mio) au premier démarrage, sans retenir « up --wait ».
+      # Le modèle doit être chargé avant la mise à jour ci-dessous, qui vérifie qu'il n'est pas retéléchargé.
+      - name: Voix — modèle Whisper téléchargé et serveur prêt
+        run: |
+          timeout 600 bash -c "until $COMPOSE exec -T whisper curl -fsS -o /dev/null http://127.0.0.1:8080/; do sleep 5; done"
+          $COMPOSE logs --no-color whisper | grep -q 'Téléchargement de ggml-base.bin' || { echo "premier démarrage sans téléchargement du modèle ?"; exit 1; }
+
       # Mise à jour comme chez l'utilisateur (git pull, puis up --build) : arrêt sans -v, nouvelle image de l'API (une
       # couche de plus suffit à en changer l'identifiant), redémarrage sur les mêmes volumes. Le client créé avant doit
       # être là, et le jeu de démonstration ne doit pas être rechargé.
@@ -151,11 +158,16 @@ jobs:
           $COMPOSE down
           printf 'FROM lettra-demo-api\nLABEL fr.lettra.demo.mise-a-jour=%s\n' "$GITHUB_RUN_ID" | docker build -q -t lettra-demo-api -
           [ "$(docker image inspect -f '{{.Id}}' lettra-demo-api)" != "$avant" ] || { echo "image de l'API inchangée"; exit 1; }
-          docker volume inspect lettra-demo_lettra-donnees lettra-demo_keycloak-donnees > /dev/null
+          docker volume inspect lettra-demo_lettra-donnees lettra-demo_keycloak-donnees lettra-demo_whisper-modeles > /dev/null
           $COMPOSE up -d --wait
           timeout 180 bash -c 'until curl -sf http://localhost:8080/health; do sleep 2; done'
           if $COMPOSE logs --no-color api | grep -q 'Jeu de démonstration .* chargé dans'; then
             echo "le jeu de démonstration a été rechargé par-dessus le dossier existant"; exit 1
+          fi
+          # Le modèle Whisper est resté dans son volume : prêt sans nouveau téléchargement.
+          timeout 120 bash -c "until $COMPOSE exec -T whisper curl -fsS -o /dev/null http://127.0.0.1:8080/; do sleep 3; done"
+          if $COMPOSE logs --no-color whisper | grep -q 'Téléchargement de ggml'; then
+            echo "le modèle Whisper a été retéléchargé après la mise à jour"; exit 1
           fi
           set -a; . ../.env; set +a
           SORTIE="$SORTIE/localhost" node parcours.mjs suivant
@@ -190,7 +202,7 @@ jobs:
         run: |
           mkdir -p "$SORTIE"
           $COMPOSE_LAN ps -a > "$SORTIE/compose-ps.txt" 2>&1 || true
-          for s in keycloak api proxy; do $COMPOSE_LAN logs --no-color "$s" > "$SORTIE/$s.log" 2>&1 || true; done
+          for s in keycloak api proxy whisper; do $COMPOSE_LAN logs --no-color "$s" > "$SORTIE/$s.log" 2>&1 || true; done
 
       - name: Captures, traces et journaux
         if: always()
@@ -247,6 +259,32 @@ jobs:
           node parcours.mjs session
           echo "::add-mask::$(cat "$SORTIE/session-cookie.txt")"
 
+      # Voix branchée de bout en bout : statut avec la session du BFF, puis un son d'une seconde envoyé à l'API, qui le
+      # transmet au conteneur whisper (modèle chargé). 200 (texte) ou 400 « rien entendu » : le moteur a répondu ;
+      # 503 : l'API ne joint pas le serveur Whisper.
+      - name: Voix — statut et transcription par le serveur whisper.cpp
+        run: |
+          timeout 600 bash -c "until $COMPOSE exec -T whisper curl -fsS -o /dev/null http://127.0.0.1:8080/; do sleep 5; done"
+          entetes=(-H "Cookie: $(cat "$SORTIE/session-cookie.txt")" -H 'X-Lettra-Csrf: 1' -H 'X-Dossier: 0199e3a0-0000-7000-8000-00000000d051')
+          curl -fsS "${entetes[@]}" http://localhost:8080/api/v1/voix/statut | tee "$RUNNER_TEMP/voix-statut.json"
+          echo
+          jq -e '.enabled == true and .engine == "whisper-serveur" and .onDevice == false' "$RUNNER_TEMP/voix-statut.json" > /dev/null
+          python3 -c "
+          import math, struct, sys, wave
+          with wave.open(sys.argv[1], 'wb') as w:
+              w.setnchannels(1); w.setsampwidth(2); w.setframerate(16000)
+              w.writeframes(b''.join(struct.pack('<h', int(8000 * math.sin(2 * math.pi * 440 * i / 16000))) for i in range(16000)))
+          " "$RUNNER_TEMP/son.wav"
+          code=$(curl -sS -o "$RUNNER_TEMP/voix-transcription.json" -w '%{http_code}' "${entetes[@]}" \
+            -H 'Content-Type: audio/wav' --data-binary @"$RUNNER_TEMP/son.wav" \
+            'http://localhost:8080/api/v1/voix/transcription?mode=Dictation&langue=fr')
+          echo "transcription : HTTP $code"; cat "$RUNNER_TEMP/voix-transcription.json"; echo
+          case "$code" in
+            200) ;;
+            400) jq -e '.code == "Speech.NothingHeard"' "$RUNNER_TEMP/voix-transcription.json" > /dev/null ;;
+            *) echo "le serveur Whisper n'a pas répondu à l'API"; exit 1 ;;
+          esac
+
       - uses: grafana/setup-k6-action@v1
         with:
           k6-version: ${{ env.K6_VERSION }}
@@ -263,7 +301,7 @@ jobs:
         if: always()
         run: |
           mkdir -p "$K6_SORTIE"
-          for s in keycloak api; do $COMPOSE logs --no-color "$s" > "$K6_SORTIE/$s.log" 2>&1 || true; done
+          for s in keycloak api whisper; do $COMPOSE logs --no-color "$s" > "$K6_SORTIE/$s.log" 2>&1 || true; done
           cp "$SORTIE"/*.png "$K6_SORTIE/" 2>/dev/null || true
 
       - name: Rapports k6 (résumé JSON et texte, tableau de bord HTML)

@@ -1,0 +1,18 @@
+@* Niveau d'accès en mots et en icône (jamais la couleur seule) : Voir, Créer et modifier, Valider. *@
+@inject IStringLocalizer<SharedResource> L
+
+<span class="la-level la-level-@Level.ToString().ToLowerInvariant()">
+    <Icon Name="@IconOf(Level)" Size="14" />@L[$"Admin.Level.{Level}"]
+</span>
+
+@code {
+    [Parameter, EditorRequired] public AccessLevelDto Level { get; set; }
+
+    public static string IconOf(AccessLevelDto level) => level switch
+    {
+        AccessLevelDto.View => "eye",
+        AccessLevelDto.Work => "pencil",
+        AccessLevelDto.Approve => "badge-check",
+        _ => "x",
+    };
+}

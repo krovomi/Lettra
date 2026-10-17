@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.SharedServer" xml:space="preserve"><value>Firm server</value></data>
+  <data name="SharedServer.Title" xml:space="preserve"><value>Firm server</value></data>
+  <data name="SharedServer.Browser" xml:space="preserve"><value>In the browser, Lettra always works on the server that opened it: {0}. For your computers, tablets and phones to see the same data, open this screen in the installed app and enter this address.</value></data>
+  <data name="SharedServer.Now" xml:space="preserve"><value>Where your data is</value></data>
+  <data name="SharedServer.Now.Device" xml:space="preserve"><value>On this device only: the browser and your other devices don't see it.</value></data>
+  <data name="SharedServer.Now.Server" xml:space="preserve"><value>On the firm server {0}, shared with the browser and your other devices.</value></data>
+  <data name="SharedServer.Use.Title" xml:space="preserve"><value>Work on the firm server</value></data>
+  <data name="SharedServer.Change.Title" xml:space="preserve"><value>Change server</value></data>
+  <data name="SharedServer.Use.Intro" xml:space="preserve"><value>Every device connected to the same server sees the same customers, quotes and invoices, just like the browser.</value></data>
+  <data name="SharedServer.Address" xml:space="preserve"><value>Server address</value></data>
+  <data name="SharedServer.Address.Help" xml:space="preserve"><value>It is the address you open in the browser, for example https://192.168.1.20:8443. On the computer running the demo: http://localhost:8080.</value></data>
+  <data name="SharedServer.Checking" xml:space="preserve"><value>Checking…</value></data>
+  <data name="SharedServer.Use.Submit" xml:space="preserve"><value>Use this server</value></data>
+  <data name="SharedServer.Use.Data" xml:space="preserve"><value>What is already saved on this device stays there: you will find it again when you go back to working on this device only.</value></data>
+  <data name="SharedServer.Use.Network" xml:space="preserve"><value>When connected to the server, the device needs the network to work.</value></data>
+  <data name="SharedServer.Device.Title" xml:space="preserve"><value>Work on this device only</value></data>
+  <data name="SharedServer.Device.Intro" xml:space="preserve"><value>The device goes back to its own data and works without the network. What was entered on the server stays there.</value></data>
+  <data name="SharedServer.Device.Submit" xml:space="preserve"><value>Go back to this device only</value></data>
+  <data name="SharedServer.Saved.Server" xml:space="preserve"><value>Saved: Lettra will work on {0}.</value></data>
+  <data name="SharedServer.Saved.Device" xml:space="preserve"><value>Saved: Lettra will work on this device only.</value></data>
+  <data name="SharedServer.Restart.Title" xml:space="preserve"><value>Restart Lettra</value></data>
+  <data name="SharedServer.Restart.Automatic" xml:space="preserve"><value>The change takes effect when Lettra restarts.</value></data>
+  <data name="SharedServer.Restart.Now" xml:space="preserve"><value>Restart now</value></data>
+  <data name="SharedServer.Restart.Close" xml:space="preserve"><value>The change takes effect at the next start: Lettra will close, then open it again.</value></data>
+  <data name="SharedServer.Restart.CloseNow" xml:space="preserve"><value>Close Lettra</value></data>
+  <data name="SharedServer.Restart.Manual" xml:space="preserve"><value>The change takes effect at the next start: close Lettra (swipe it up in the app switcher), then open it again.</value></data>
+  <data name="SharedServer.Back" xml:space="preserve"><value>Back to the session</value></data>
+  <data name="SharedServer.Link.Use" xml:space="preserve"><value>Work on the firm server</value></data>
+  <data name="SharedServer.Link.Change" xml:space="preserve"><value>Change server or go back to this device only</value></data>
+  <data name="Error.SharedServer.AddressInvalid" xml:space="preserve"><value>Enter the server address, for example https://192.168.1.20:8443.</value></data>
+  <data name="Error.SharedServer.HttpsRequired" xml:space="preserve"><value>This address must start with https://, otherwise your sign-in would travel unencrypted on the network. Only localhost is accepted over http.</value></data>
+  <data name="Error.SharedServer.Unreachable" xml:space="preserve"><value>No server answers at this address. Check the address, that the device is on the same network and that the server is running.</value></data>
+  <data name="Error.SharedServer.CertificateUntrusted" xml:space="preserve"><value>The server answers, but this device does not trust its certificate. Install the demo certificate first (see the installation guide).</value></data>
+  <data name="Error.SharedServer.NotLettra" xml:space="preserve"><value>A server answers at this address, but it is not a Lettra server.</value></data>
+  <data name="Error.SharedServer.NoDossier" xml:space="preserve"><value>Your account has no access to any dossier on this server. Ask the firm administrator to open one for you.</value></data>
+</root>

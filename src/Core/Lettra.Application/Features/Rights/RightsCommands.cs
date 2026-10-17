@@ -56,7 +56,7 @@ public sealed record RevokeRoleCommand(OrganisationId Organisation, Guid Assignm
     public Permission Permission => Permission.UtilisateursGerer;
 }
 
-internal sealed class SetUserAccountHandler(IAuthorizationAdministration administration, IPermissionCacheInvalidator cache)
+internal sealed class SetUserAccountHandler(IAuthorizationAdministration administration, IPermissionCacheInvalidator cache, ICurrentUser user)
     : ICommandHandler<SetUserAccountCommand, Result>
 {
     public async Task<Result> HandleAsync(SetUserAccountCommand command, CancellationToken cancellationToken)
@@ -67,6 +67,12 @@ internal sealed class SetUserAccountHandler(IAuthorizationAdministration adminis
         if (!Enum.IsDefined(command.State) || command.State == AccountState.Deleted || command.UserId == Guid.Empty)
         {
             return RightsErrors.StateInvalid;
+        }
+
+        // Un administrateur ne suspend pas son propre compte : il resterait enfermé dehors.
+        if (command.UserId == user.UserId && command.State != AccountState.Active)
+        {
+            return AdministrationErrors.SelfLockout;
         }
 
         Result result = await administration.SetAccountAsync(command.Organisation, command.UserId, command.State, cancellationToken).ConfigureAwait(false);
@@ -209,12 +215,20 @@ internal sealed class AssignRoleHandler(
     }
 }
 
-internal sealed class RevokeRoleHandler(IAuthorizationAdministration administration, IPermissionCacheInvalidator cache)
-    : ICommandHandler<RevokeRoleCommand, Result>
+internal sealed class RevokeRoleHandler(
+    IAuthorizationAdministration administration,
+    IAuthorizationRegistry registry,
+    IPermissionCacheInvalidator cache,
+    ICurrentUser user) : ICommandHandler<RevokeRoleCommand, Result>
 {
     public async Task<Result> HandleAsync(RevokeRoleCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
+        if (await WouldLockOutAsync(command, cancellationToken).ConfigureAwait(false))
+        {
+            return AdministrationErrors.SelfLockout;
+        }
+
         Result<SubjectRef> revoked = await administration.RevokeAsync(command.Organisation, command.AssignmentId, cancellationToken).ConfigureAwait(false);
         if (!revoked.IsSuccess)
         {
@@ -223,6 +237,29 @@ internal sealed class RevokeRoleHandler(IAuthorizationAdministration administrat
 
         await RightsCache.InvalidateAsync(cache, revoked.Value, cancellationToken).ConfigureAwait(false);
         return Result.Success();
+    }
+
+    /// <summary>
+    /// Retirer à soi-même la dernière attribution directe qui donne la gestion des personnes sur le cabinet fermerait
+    /// l'administration à son auteur : un autre administrateur doit le faire.
+    /// </summary>
+    private async Task<bool> WouldLockOutAsync(RevokeRoleCommand command, CancellationToken cancellationToken)
+    {
+        CabinetRegistry? read = await registry.ReadAsync(command.Organisation, cancellationToken).ConfigureAwait(false);
+        RegistryAssignment? target = read?.Assignments.FirstOrDefault(a => a.Id == command.AssignmentId);
+        if (read is null || target is null || target.Assignment.Subject != new SubjectRef(SubjectKind.User, user.UserId))
+        {
+            return false;
+        }
+
+        AuthorizationScope cabinet = AuthorizationScope.ForCabinet(command.Organisation);
+        bool GivesAdministration(RegistryAssignment a) =>
+            a.Assignment.Scope == cabinet
+            && (RoleTemplates.All.GetValueOrDefault(a.Assignment.Role)
+                ?? read.CustomRoles.FirstOrDefault(r => r.Definition.Key == a.Assignment.Role)?.Definition)?.Permissions.Contains(Permission.UtilisateursGerer) == true;
+
+        return GivesAdministration(target)
+            && !read.Assignments.Any(a => a.Id != target.Id && a.Assignment.Subject == target.Assignment.Subject && GivesAdministration(a));
     }
 }
 

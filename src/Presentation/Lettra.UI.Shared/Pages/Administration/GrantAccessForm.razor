@@ -1,0 +1,223 @@
+@* Donner un accès en trois questions simples : quel rôle, où, jusqu'à quand. Chaque réponse fait apparaître la suivante ;
+   le récapitulatif dit en une phrase ce que la personne pourra faire. *@
+@inject IStringLocalizer<SharedResource> L
+@inject IAdministrationGateway Gateway
+
+<div class="la-grant" id="grant-form">
+    <fieldset class="la-step">
+        <legend><span class="la-step-number">1</span>@L["Admin.Grant.Role"]</legend>
+        <div class="la-role-choices" role="radiogroup" aria-label="@L["Admin.Grant.Role"]">
+            @foreach (RoleDescription role in Roles)
+            {
+                bool selected = _role?.Key == role.Key;
+                <label class="la-role-choice @(selected ? "is-selected" : null)">
+                    <input type="radio" name="grant-role" value="@role.Key" checked="@selected" @onchange="() => SelectRole(role)" />
+                    <span class="la-role-choice-text">
+                        <strong>@View.RoleName(role.Key)</strong>
+                        <span>@View.RoleSummary(role.Key)</span>
+                    </span>
+                    @if (role.RequiresExpiry)
+                    {
+                        <span class="la-chip is-warning"><Icon Name="calendar-clock" Size="14" />@L["Admin.Grant.Temporary"]</span>
+                    }
+                </label>
+            }
+        </div>
+    </fieldset>
+
+    @if (_role is { } chosen)
+    {
+        <fieldset class="la-step">
+            <legend><span class="la-step-number">2</span>@L["Admin.Grant.Where"]</legend>
+            <div class="la-where">
+                @foreach (ScopeKindDto kind in ScopeKinds)
+                {
+                    bool allowed = AdministrationView.Allows(chosen, kind) && HasTargets(kind);
+                    <label class="la-radio @(allowed ? null : "is-disabled")">
+                        <input type="radio" name="grant-where" checked="@(_scope == kind)" disabled="@(!allowed)" @onchange="() => SelectScope(kind)" />
+                        <span>
+                            @L[$"Admin.Grant.Where.{kind}"]
+                            @if (!AdministrationView.Allows(chosen, kind))
+                            {
+                                <small>@L["Admin.Grant.TooWide"]</small>
+                            }
+                        </span>
+                    </label>
+                }
+            </div>
+            @if (_scope == ScopeKindDto.Groupe && SubjectKind != SubjectKindDto.Group)
+            {
+                <label class="la-field">
+                    <span>@L["Admin.Grant.WhichTeam"]</span>
+                    <select id="grant-team" @bind="_scopeId">
+                        @foreach (TeamSummary team in View.Overview.Teams)
+                        {
+                            <option value="@team.Id">@team.Name</option>
+                        }
+                    </select>
+                </label>
+            }
+            else if (_scope == ScopeKindDto.Dossier)
+            {
+                <label class="la-field">
+                    <span>@L["Admin.Grant.WhichDossier"]</span>
+                    <select id="grant-dossier" @bind="_scopeId">
+                        @foreach (DossierSummary dossier in View.Overview.Dossiers)
+                        {
+                            <option value="@dossier.Id">@dossier.Name</option>
+                        }
+                    </select>
+                </label>
+            }
+        </fieldset>
+
+        <fieldset class="la-step">
+            <legend><span class="la-step-number">3</span>@L["Admin.Grant.Until"]</legend>
+            <div class="la-where">
+                <label class="la-radio @(chosen.RequiresExpiry ? "is-disabled" : null)">
+                    <input type="radio" name="grant-until" checked="@(!_limited)" disabled="@chosen.RequiresExpiry" @onchange="() => _limited = false" />
+                    <span>@L["Admin.Grant.NoLimit"]</span>
+                </label>
+                <label class="la-radio">
+                    <input type="radio" name="grant-until" checked="@_limited" @onchange="() => _limited = true" />
+                    <span>@L["Admin.Grant.UntilDate"]</span>
+                </label>
+            </div>
+            @if (_limited)
+            {
+                <label class="la-field">
+                    <span>@L["Admin.Grant.LastDay"]</span>
+                    <input id="grant-until-date" type="date" @bind="_until" min="@Today.AddDays(1).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" />
+                </label>
+            }
+            @if (chosen.RequiresExpiry)
+            {
+                <p class="lettra-hint"><Icon Name="info" Size="14" /> @L["Admin.Grant.ExpiryRequired"]</p>
+            }
+        </fieldset>
+
+        <div class="la-summary" aria-live="polite">
+            <p><strong>@string.Format(CultureInfo.CurrentCulture, L["Admin.Grant.Summary"], SubjectName, View.RoleName(chosen.Key), Where)</strong>@UntilText</p>
+            <AreaList Areas="chosen.Areas" Compact="true" />
+        </div>
+    }
+
+    <GeneralErrors Errors="_errors" />
+    @foreach (ErrorDetail error in _errors.Where(e => e.Target is not null))
+    {
+        <p class="validation-message" role="alert">@L.Error(error.Code)</p>
+    }
+
+    <div class="la-actions">
+        <button type="button" class="lettra-button" id="grant-submit" disabled="@(!CanSubmit)" @onclick="SubmitAsync">
+            <Icon Name="key-round" Size="18" />@L["Admin.Grant.Submit"]
+        </button>
+        <button type="button" class="lettra-button is-ghost" @onclick="OnCancel">@L["Admin.Cancel"]</button>
+    </div>
+</div>
+
+@code {
+    private static readonly ScopeKindDto[] ScopeKinds = [ScopeKindDto.Cabinet, ScopeKindDto.Groupe, ScopeKindDto.Dossier];
+    private RoleDescription? _role;
+    private ScopeKindDto? _scope;
+    private Guid _scopeId;
+    private bool _limited;
+    private DateOnly? _until;
+    private bool _busy;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+
+    [Parameter, EditorRequired] public AdministrationView View { get; set; } = default!;
+
+    [Parameter, EditorRequired] public SubjectKindDto SubjectKind { get; set; }
+
+    [Parameter, EditorRequired] public Guid SubjectId { get; set; }
+
+    [Parameter, EditorRequired] public string SubjectName { get; set; } = string.Empty;
+
+    [Parameter] public EventCallback<RoleAssignmentSummary> OnGranted { get; set; }
+
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private static DateOnly Today => DateOnly.FromDateTime(DateTime.Today);
+
+    /// <summary>Le portail client n'est pas un rôle de collaborateur : il ne se donne pas d'ici.</summary>
+    private IEnumerable<RoleDescription> Roles => View.Overview.Roles.Where(r => r.Key != "client-portail");
+
+    private bool HasTargets(ScopeKindDto kind) => kind switch
+    {
+        ScopeKindDto.Groupe => SubjectKind == SubjectKindDto.Group || View.Overview.Teams.Count > 0,
+        ScopeKindDto.Dossier => View.Overview.Dossiers.Count > 0,
+        _ => true,
+    };
+
+    private string Where => _scope is { } kind ? View.ScopeLabel(kind, _scopeId) : string.Empty;
+
+    private string UntilText => _limited && _until is { } day
+        ? string.Format(CultureInfo.CurrentCulture, L["Admin.Grant.SummaryUntil"], day.ToString("d", CultureInfo.CurrentCulture))
+        : string.Empty;
+
+    private bool CanSubmit => !_busy && _role is not null && _scope is not null && _scopeId != Guid.Empty
+        && (!_limited || _until > Today) && (_limited || _role?.RequiresExpiry != true);
+
+    private void SelectRole(RoleDescription role)
+    {
+        _role = role;
+        _errors = [];
+        _limited = role.RequiresExpiry;
+        if (_limited && _until is null)
+        {
+            _until = Today.AddMonths(1);
+        }
+
+        // La portée la plus large permise, ou celle déjà choisie si elle reste permise.
+        ScopeKindDto? keep = _scope is { } current && AdministrationView.Allows(role, current) && HasTargets(current) ? current : null;
+        SelectScope(keep ?? ScopeKinds.First(k => AdministrationView.Allows(role, k) && HasTargets(k)));
+    }
+
+    private void SelectScope(ScopeKindDto kind)
+    {
+        if (_scope == kind && _scopeId != Guid.Empty)
+        {
+            return;
+        }
+
+        _scope = kind;
+        _scopeId = kind switch
+        {
+            ScopeKindDto.Cabinet => View.Overview.CabinetId,
+            ScopeKindDto.Groupe when SubjectKind == SubjectKindDto.Group => SubjectId,
+            ScopeKindDto.Groupe => View.Overview.Teams.FirstOrDefault()?.Id ?? Guid.Empty,
+            _ => View.Overview.Dossiers.FirstOrDefault()?.Id ?? Guid.Empty,
+        };
+    }
+
+    private async Task SubmitAsync()
+    {
+        if (!CanSubmit || _role is null || _scope is null)
+        {
+            return;
+        }
+
+        _busy = true;
+        AssignRoleRequest request = new()
+        {
+            SubjectKind = SubjectKind,
+            SubjectId = SubjectId,
+            Role = _role.Key,
+            ScopeKind = _scope.Value,
+            ScopeId = _scopeId,
+            // Jusqu'au soir du dernier jour, heure de l'appareil.
+            ExpiresAt = _limited && _until is { } day ? new DateTimeOffset(day.ToDateTime(new TimeOnly(23, 59)), TimeZoneInfo.Local.GetUtcOffset(day.ToDateTime(TimeOnly.MinValue))) : null,
+        };
+        OperationResult<RoleAssignmentSummary> result = await Gateway.AssignAsync(View.Overview.CabinetId, request, CancellationToken.None);
+        _busy = false;
+        if (result.IsSuccess)
+        {
+            await OnGranted.InvokeAsync(result.Value);
+        }
+        else
+        {
+            _errors = result.Errors;
+        }
+    }
+}

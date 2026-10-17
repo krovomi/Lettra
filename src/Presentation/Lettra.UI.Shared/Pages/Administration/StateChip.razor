@@ -1,0 +1,17 @@
+@* État d'un compte en mots et en icône : Active, Invitation en attente, Suspendue. *@
+@inject IStringLocalizer<SharedResource> L
+
+<span class="la-chip la-state-@State.ToString().ToLowerInvariant()">
+    <Icon Name="@IconName" Size="14" />@L[$"Admin.State.{State}"]
+</span>
+
+@code {
+    [Parameter, EditorRequired] public AccountStateDto State { get; set; }
+
+    private string IconName => State switch
+    {
+        AccountStateDto.Active => "user-check",
+        AccountStateDto.Invited => "mail",
+        _ => "circle-pause",
+    };
+}

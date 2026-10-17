@@ -1,0 +1,85 @@
+@* Ajouter une personne (nom, adresse) ou corriger celles d'une personne. Après l'ajout, l'écran propose tout de suite de
+   lui donner un accès. *@
+@inject IStringLocalizer<SharedResource> L
+@inject IAdministrationGateway Gateway
+
+<EditForm Model="_model" OnValidSubmit="SubmitAsync" class="la-form" id="person-form">
+    <DataAnnotationsValidator />
+    <label class="la-field">
+        <span>@L["Admin.Person.Name"]</span>
+        <InputText id="person-name" @bind-Value="_model.DisplayName" autocomplete="name" placeholder="@L["Admin.Person.NamePlaceholder"]" />
+        <FieldErrors Field="@nameof(InvitePersonRequest.DisplayName)" ServerErrors="_errors" />
+    </label>
+    <label class="la-field">
+        <span>@L["Admin.Person.Email"]</span>
+        <InputText id="person-email" type="email" @bind-Value="_model.Email" autocomplete="email" inputmode="email" placeholder="@L["Admin.Person.EmailPlaceholder"]" />
+        <FieldErrors Field="@nameof(InvitePersonRequest.Email)" ServerErrors="_errors" />
+    </label>
+    @if (Existing is null)
+    {
+        <p class="lettra-hint la-callout"><Icon Name="mail" Size="16" /> @L["Admin.Person.InviteHint"]</p>
+    }
+    <GeneralErrors Errors="_errors" />
+    <div class="la-actions">
+        <button type="submit" class="lettra-button" id="person-submit" disabled="@_busy">
+            <Icon Name="@(Existing is null ? "user-plus" : "check")" Size="18" />@L[Existing is null ? "Admin.Person.Invite" : "Admin.Save"]
+        </button>
+        <button type="button" class="lettra-button is-ghost" @onclick="OnCancel">@L["Admin.Cancel"]</button>
+    </div>
+</EditForm>
+
+@code {
+    private InvitePersonRequest _model = new();
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private bool _busy;
+
+    [Parameter, EditorRequired] public Guid CabinetId { get; set; }
+
+    /// <summary>Personne à corriger ; sans valeur, on en ajoute une.</summary>
+    [Parameter] public PersonSummary? Existing { get; set; }
+
+    [Parameter] public EventCallback<PersonSummary> OnSaved { get; set; }
+
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (Existing is { } person)
+        {
+            _model = new InvitePersonRequest { DisplayName = person.DisplayName ?? string.Empty, Email = person.Email ?? string.Empty };
+        }
+    }
+
+    private async Task SubmitAsync()
+    {
+        _busy = true;
+        _errors = [];
+        if (Existing is { } person)
+        {
+            OperationResult<bool> updated = await Gateway.UpdatePersonAsync(
+                CabinetId, person.Id, new UpdatePersonRequest { DisplayName = _model.DisplayName, Email = _model.Email }, CancellationToken.None);
+            _busy = false;
+            if (updated.IsSuccess)
+            {
+                await OnSaved.InvokeAsync(person with { DisplayName = _model.DisplayName.Trim(), Email = _model.Email.Trim().ToLowerInvariant() });
+            }
+            else
+            {
+                _errors = updated.Errors;
+            }
+
+            return;
+        }
+
+        OperationResult<PersonSummary> invited = await Gateway.InviteAsync(CabinetId, _model, CancellationToken.None);
+        _busy = false;
+        if (invited.IsSuccess && invited.Value is { } created)
+        {
+            await OnSaved.InvokeAsync(created);
+        }
+        else
+        {
+            _errors = invited.Errors;
+        }
+    }
+}

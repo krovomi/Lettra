@@ -243,6 +243,7 @@ public static class DependencyInjection
         Configure(services.AddHttpClient<IAlertsGateway, HttpAlertsGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IAssistantGateway, HttpAssistantGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<ISpeechGateway, HttpSpeechGateway>(client => client.BaseAddress = apiBaseAddress));
+        Configure(services.AddHttpClient<IAdministrationGateway, HttpAdministrationGateway>(client => client.BaseAddress = apiBaseAddress));
         return services;
     }
 }

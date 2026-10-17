@@ -5,4 +5,7 @@
 	<application android:allowBackup="false" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true"></application>
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<uses-permission android:name="android.permission.INTERNET" />
+	<!-- Dictée : micro demandé au premier usage, audio transcrit sur l'appareil (Whisper.net), jamais envoyé. -->
+	<uses-permission android:name="android.permission.RECORD_AUDIO" />
+	<uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 </manifest>

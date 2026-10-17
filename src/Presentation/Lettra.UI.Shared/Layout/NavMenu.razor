@@ -1,9 +1,11 @@
 @* Liste de navigation partagée par la barre latérale et la feuille « Plus » du téléphone. En rail, les libellés restent
    lisibles par le lecteur d'écran et s'affichent en info-bulle. *@
+@using Lettra.Contracts.Administration
 @inject IStringLocalizer<SharedResource> L
+@inject IServiceProvider Services
 
 <ul class="lt-nav" role="list">
-    @foreach (IGrouping<string?, NavItem> group in NavItems.Groups(Items))
+    @foreach (IGrouping<string?, NavItem> group in NavItems.Groups(Items.Where(Visible)))
     {
         @if (group.Key is { } title)
         {
@@ -22,8 +24,27 @@
 </ul>
 
 @code {
+    private MyAccessResponse? _access;
+
     [Parameter] public IEnumerable<NavItem> Items { get; set; } = NavItems.All;
 
     /// <summary>Après un clic : la feuille « Plus » se referme.</summary>
     [Parameter] public EventCallback OnNavigate { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Une seule lecture, et seulement si une entrée en dépend ; tant qu'elle n'est pas revenue, ces entrées restent cachées.
+        if (Items.Any(i => i.Page is not null) && Services.GetService(typeof(IAdministrationGateway)) is IAdministrationGateway gateway)
+        {
+            OperationResult<MyAccessResponse> access = await gateway.GetMyAccessAsync(null, CancellationToken.None);
+            _access = access.IsSuccess ? access.Value : null;
+        }
+    }
+
+    private bool Visible(NavItem item) => item.Page switch
+    {
+        null => true,
+        AccessAreaDto.Administration => _access?.CanAdminister == true,
+        { } page => _access?.LevelOf(page) > AccessLevelDto.None,
+    };
 }

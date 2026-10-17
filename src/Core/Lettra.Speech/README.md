@@ -65,9 +65,50 @@ L'API envoie `Permissions-Policy: microphone=(self)` : le micro n'est permis qu'
 Le rapport du workflow « Voix » (taux d'erreur de mots, commandes reconnues) s'affiche dans le résumé de chaque run.
 Le corpus est dans `tests/Lettra.Speech.Tests/Corpus/phrases.json`.
 
+### Corpus déterministe
+
+Piper tire d'ordinaire du bruit au hasard (intonation, durée des phonèmes) : chaque run lisait les phrases un peu
+autrement, et le score bougeait sans changement de code (7/12 commandes reconnues, sous le seuil de 60 %, puis 8, 9 ou
+10/12). Le job « Corpus et modèle » produit désormais un corpus connu d'avance, octet pour octet :
+
+- Piper lit sans bruit aléatoire (`--noise-scale 0 --noise-w-scale 0`) ;
+- Piper, ONNX Runtime et leurs dépendances sont épinglés dans `build/voix/piper-requirements.txt`, Python en 3.13,
+  le job tourne sur `ubuntu-24.04` (et son ffmpeg) plutôt que `ubuntu-latest` ;
+- les voix (`fr_FR-siwis-medium`, `en_US-lessac-medium`) sont vérifiées par leur SHA-256 (`build/voix/voices.sha256`) ;
+- les WAV produits doivent être identiques à l'une des variantes de `build/voix/corpus/*.sha256`, sinon le job
+  échoue et une annotation donne les empreintes obtenues et le processeur du runner.
+
+Pourquoi des variantes : même sans bruit, ONNX Runtime choisit ses noyaux de calcul selon le processeur (AVX2,
+AVX-512…), et les runners GitHub n'ont pas tous le même. Les derniers bits des échantillons changent alors d'un
+processeur à l'autre ; à processeur égal, le corpus est le même octet pour octet. Chaque variante épinglée a été
+transcrite par les quatre moteurs, avec le même score (voir la PR qui l'ajoute) : le score ne dépend plus du hasard.
+
+Le seuil (60 % des commandes, 50 % d'erreurs de mots au plus) ne change pas ; seul le hasard du corpus disparaît.
+
+Pour régénérer le corpus après un changement de `phrases.json`, de voix ou de version de Piper (Python 3.13, ffmpeg,
+jq et accès à huggingface.co requis) :
+
+```bash
+python3 -m pip install -r build/voix/piper-requirements.txt
+build/voix/corpus.sh --epingler voix/corpus voix/voices   # réécrit voices.sha256, remplace les variantes par une seule
+```
+
+Puis commiter les manifestes avec le changement. Le premier run sur un autre processeur échoue avec une annotation qui
+donne les lignes de sa variante : les ajouter dans `build/voix/corpus/<nom>.sha256`, après avoir vérifié son score.
+
 ## Dans l'interface (lane F)
 
 Le bouton micro de la barre du haut, le micro des champs, F8 maintenue, l'enregistreur du navigateur et l'exécution
-des commandes dans les écrans sont décrits dans `docs/aide-a-la-saisie.md` (section 3). Le branchement dans la
-démonstration (conteneur whisper.cpp) et dans l'application MAUI (moteur du poste, autorisations du micro) est fait
-par Socle.
+des commandes dans les écrans sont décrits dans `docs/aide-a-la-saisie.md` (section 3).
+
+## Branchement dans les hôtes
+
+- **Démonstration Docker** (`deploy/demo/compose.yaml`) : conteneur `whisper` construit depuis
+  `build/voix/whisper-server`, modèle dans le volume `whisper-modeles`, API en `WhisperServer`. L'API démarre sans
+  attendre le modèle et répond 503 tant qu'il n'est pas chargé.
+- **Application MAUI** (`MauiProgram.cs`) : `AddOnDeviceSpeech` après `AddLettra`, modèle dans
+  `FileSystem.AppDataDirectory/voix`. `Whisper.net.Runtime` est référencé par l'application elle-même (ses cibles
+  MSBuild choisissent les bibliothèques natives de chaque plateforme : Android arm64-v8a et x86_64, iOS, Mac Catalyst,
+  Windows). Micro : `RECORD_AUDIO` et capture audio accordée à la seule page de l'application (Android),
+  `NSMicrophoneUsageDescription` (iOS, Mac Catalyst) et `com.apple.security.device.audio-input` (Mac Catalyst),
+  autorisation WebView2 pour la page de l'application (Windows). Rien de cela n'a tourné sur un appareil.

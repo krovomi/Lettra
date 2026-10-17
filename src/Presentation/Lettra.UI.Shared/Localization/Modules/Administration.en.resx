@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <!-- Espace d'administration « Équipe et accès » : personnes, équipes, rôles et pages. -->
+  <data name="Admin.Title" xml:space="preserve"><value>Team and access</value></data>
+  <data name="Admin.Subtitle" xml:space="preserve"><value>Who works in the firm and what each person can open.</value></data>
+  <data name="Admin.SubtitleNamed" xml:space="preserve"><value>Who works at {0} and what each person can open.</value></data>
+  <data name="Admin.Invite" xml:space="preserve"><value>Add a person</value></data>
+  <data name="Admin.Invite.Subtitle" xml:space="preserve"><value>A name and an email are enough. You will then choose what this person can do.</value></data>
+  <data name="Admin.Kpis" xml:space="preserve"><value>Team at a glance</value></data>
+  <data name="Admin.Kpi.Active" xml:space="preserve"><value>Active people</value></data>
+  <data name="Admin.Kpi.ActiveNote" xml:space="preserve"><value>can sign in</value></data>
+  <data name="Admin.Kpi.Pending" xml:space="preserve"><value>Pending invitations</value></data>
+  <data name="Admin.Kpi.PendingNote" xml:space="preserve"><value>not signed in yet</value></data>
+  <data name="Admin.Kpi.Teams" xml:space="preserve"><value>Teams</value></data>
+  <data name="Admin.Kpi.TeamsNote" xml:space="preserve"><value>group people and client files</value></data>
+  <data name="Admin.Kpi.Temporary" xml:space="preserve"><value>Temporary access</value></data>
+  <data name="Admin.Kpi.TemporaryNote" xml:space="preserve"><value>end on their own</value></data>
+  <data name="Admin.Tab.People" xml:space="preserve"><value>People</value></data>
+  <data name="Admin.Tab.Teams" xml:space="preserve"><value>Teams</value></data>
+  <data name="Admin.Tab.Roles" xml:space="preserve"><value>Roles</value></data>
+  <data name="Admin.Search" xml:space="preserve"><value>Search a person, an email, a role…</value></data>
+  <data name="Admin.Filter" xml:space="preserve"><value>Show</value></data>
+  <data name="Admin.Filter.All" xml:space="preserve"><value>Everyone</value></data>
+  <data name="Admin.Filter.Active" xml:space="preserve"><value>Active</value></data>
+  <data name="Admin.Filter.Pending" xml:space="preserve"><value>Invited</value></data>
+  <data name="Admin.Filter.Suspended" xml:space="preserve"><value>Suspended</value></data>
+  <data name="Admin.Denied.Title" xml:space="preserve"><value>This area is for managers</value></data>
+  <data name="Admin.Denied.Text" xml:space="preserve"><value>To change someone's access, ask your firm's administrator.</value></data>
+  <data name="Admin.Denied.Home" xml:space="preserve"><value>Back to home</value></data>
+  <data name="Admin.ReadOnly" xml:space="preserve"><value>On this device you work alone with every right. This area shows what you can do; to work as a team, Lettra uses the firm's server.</value></data>
+  <data name="Admin.People.Empty" xml:space="preserve"><value>Nobody yet</value></data>
+  <data name="Admin.People.EmptyText" xml:space="preserve"><value>Nobody matches. Try another word or filter.</value></data>
+  <data name="Admin.Teams.Intro" xml:space="preserve"><value>A team groups people and client files: what you give the team applies to all its members.</value></data>
+  <data name="Admin.Teams.Empty" xml:space="preserve"><value>No team yet</value></data>
+  <data name="Admin.Teams.EmptyText" xml:space="preserve"><value>Create a team to give the same access to several people at once.</value></data>
+  <data name="Admin.Roles.Intro" xml:space="preserve"><value>A role is a set of pages and actions. Lettra provides some for common jobs; you can create your own.</value></data>
+  <data name="Admin.Roles.New" xml:space="preserve"><value>Create a role</value></data>
+  <data name="Admin.Roles.Uses" xml:space="preserve"><value>{0} grant(s)</value></data>
+  <data name="Admin.Roles.Custom" xml:space="preserve"><value>Custom</value></data>
+  <data name="Admin.Roles.Opens" xml:space="preserve"><value>What this role opens</value></data>
+  <data name="Admin.Roles.Holders" xml:space="preserve"><value>Who has it ({0})</value></data>
+  <data name="Admin.Roles.NoHolder" xml:space="preserve"><value>Nobody has this role yet.</value></data>
+  <data name="Admin.Roles.Edit" xml:space="preserve"><value>Edit this role</value></data>
+  <data name="Admin.Roles.StartFrom" xml:space="preserve"><value>Create a role from this one</value></data>
+  <data name="Admin.Roles.Widest.Cabinet" xml:space="preserve"><value>Can cover the whole firm</value></data>
+  <data name="Admin.Roles.Widest.Groupe" xml:space="preserve"><value>One team at most</value></data>
+  <data name="Admin.Roles.Widest.Dossier" xml:space="preserve"><value>One client file at a time</value></data>
+  <data name="Admin.Matrix.Title" xml:space="preserve"><value>Full table: who opens which page</value></data>
+  <data name="Admin.Matrix.Hint" xml:space="preserve"><value>Scroll the table sideways to see every role.</value></data>
+  <data name="Admin.Matrix.Page" xml:space="preserve"><value>Page</value></data>
+  <data name="Admin.Person.Unnamed" xml:space="preserve"><value>Unnamed person</value></data>
+  <data name="Admin.Person.Me" xml:space="preserve"><value>(you)</value></data>
+  <data name="Admin.Person.NoEmail" xml:space="preserve"><value>No email</value></data>
+  <data name="Admin.Person.NoAccessShort" xml:space="preserve"><value>No access</value></data>
+  <data name="Admin.Person.ItsYou" xml:space="preserve"><value>This is you: you cannot remove your own administration rights.</value></data>
+  <data name="Admin.Person.InvitedHint" xml:space="preserve"><value>{0} has not signed in yet. The access will apply from the first sign-in.</value></data>
+  <data name="Admin.Person.SuspendedHint" xml:space="preserve"><value>{0}'s account is suspended: access is kept but unused until you reactivate it.</value></data>
+  <data name="Admin.Person.CanDo" xml:space="preserve"><value>What {0} can do</value></data>
+  <data name="Admin.Person.NothingYet" xml:space="preserve"><value>Nothing yet. Give an access to start.</value></data>
+  <data name="Admin.Person.NothingWhileInactive" xml:space="preserve"><value>Nothing while the account is not active.</value></data>
+  <data name="Admin.Person.Access" xml:space="preserve"><value>Access</value></data>
+  <data name="Admin.Person.NoAccess" xml:space="preserve"><value>No access given.</value></data>
+  <data name="Admin.Person.ViaTeam" xml:space="preserve"><value>through team {0}</value></data>
+  <data name="Admin.Person.ViaTeamOwn" xml:space="preserve"><value>through team {0}, on its files</value></data>
+  <data name="Admin.Person.Teams" xml:space="preserve"><value>Teams</value></data>
+  <data name="Admin.Person.NoTeam" xml:space="preserve"><value>In no team.</value></data>
+  <data name="Admin.Person.AddToTeam" xml:space="preserve"><value>Add to a team…</value></data>
+  <data name="Admin.Person.Edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="Admin.Person.ActivateNow" xml:space="preserve"><value>Activate now</value></data>
+  <data name="Admin.Person.Suspend" xml:space="preserve"><value>Suspend</value></data>
+  <data name="Admin.Person.Reactivate" xml:space="preserve"><value>Reactivate</value></data>
+  <data name="Admin.Person.Name" xml:space="preserve"><value>Full name</value></data>
+  <data name="Admin.Person.NamePlaceholder" xml:space="preserve"><value>For example: Lea Martin</value></data>
+  <data name="Admin.Person.Email" xml:space="preserve"><value>Email address</value></data>
+  <data name="Admin.Person.EmailPlaceholder" xml:space="preserve"><value>lea.martin@firm.com</value></data>
+  <data name="Admin.Person.InviteHint" xml:space="preserve"><value>Lettra sends no email in this prototype: let the person know yourself.</value></data>
+  <data name="Admin.Person.Invite" xml:space="preserve"><value>Add</value></data>
+  <data name="Admin.Team.New" xml:space="preserve"><value>New team</value></data>
+  <data name="Admin.Team.NewSubtitle" xml:space="preserve"><value>Give it a clear name; you will then add people and client files.</value></data>
+  <data name="Admin.Team.Name" xml:space="preserve"><value>Team name</value></data>
+  <data name="Admin.Team.NamePlaceholder" xml:space="preserve"><value>For example: Retail clients</value></data>
+  <data name="Admin.Team.Create" xml:space="preserve"><value>Create team</value></data>
+  <data name="Admin.Team.Counts" xml:space="preserve"><value>{0} member(s) · {1} file(s)</value></data>
+  <data name="Admin.Team.Members" xml:space="preserve"><value>Members ({0})</value></data>
+  <data name="Admin.Team.NoMembers" xml:space="preserve"><value>Nobody in this team.</value></data>
+  <data name="Admin.Team.AddMember" xml:space="preserve"><value>Add a person…</value></data>
+  <data name="Admin.Team.Dossiers" xml:space="preserve"><value>Client files ({0})</value></data>
+  <data name="Admin.Team.DossiersHint" xml:space="preserve"><value>Roles given "on the team's files" follow this list.</value></data>
+  <data name="Admin.Team.AddDossier" xml:space="preserve"><value>Add a client file…</value></data>
+  <data name="Admin.Team.Roles" xml:space="preserve"><value>Team roles</value></data>
+  <data name="Admin.Team.RolesHint" xml:space="preserve"><value>Each member gets these roles while in the team.</value></data>
+  <data name="Admin.Team.Rename" xml:space="preserve"><value>Rename</value></data>
+  <data name="Admin.Team.Delete" xml:space="preserve"><value>Delete team</value></data>
+  <data name="Admin.Team.DeleteConfirm" xml:space="preserve"><value>Members will lose the access the team gives. Delete?</value></data>
+  <data name="Admin.Team.RemoveFrom" xml:space="preserve"><value>Remove from team {0}</value></data>
+  <data name="Admin.Grant.Open" xml:space="preserve"><value>Give access</value></data>
+  <data name="Admin.Grant.Title" xml:space="preserve"><value>Give access to {0}</value></data>
+  <data name="Admin.Grant.Subtitle" xml:space="preserve"><value>Three choices: what, where, until when.</value></data>
+  <data name="Admin.Grant.TeamSubtitle" xml:space="preserve"><value>Every team member will get it.</value></data>
+  <data name="Admin.Grant.Role" xml:space="preserve"><value>Which role?</value></data>
+  <data name="Admin.Grant.Temporary" xml:space="preserve"><value>Always temporary</value></data>
+  <data name="Admin.Grant.Where" xml:space="preserve"><value>Where?</value></data>
+  <data name="Admin.Grant.Where.Cabinet" xml:space="preserve"><value>The whole firm</value></data>
+  <data name="Admin.Grant.Where.Groupe" xml:space="preserve"><value>A team's client files</value></data>
+  <data name="Admin.Grant.Where.Dossier" xml:space="preserve"><value>One client file</value></data>
+  <data name="Admin.Grant.TooWide" xml:space="preserve"><value>This role cannot cover that much.</value></data>
+  <data name="Admin.Grant.WhichTeam" xml:space="preserve"><value>Which team?</value></data>
+  <data name="Admin.Grant.WhichDossier" xml:space="preserve"><value>Which client file?</value></data>
+  <data name="Admin.Grant.Until" xml:space="preserve"><value>Until when?</value></data>
+  <data name="Admin.Grant.NoLimit" xml:space="preserve"><value>No end date</value></data>
+  <data name="Admin.Grant.UntilDate" xml:space="preserve"><value>Until…</value></data>
+  <data name="Admin.Grant.LastDay" xml:space="preserve"><value>Last day included</value></data>
+  <data name="Admin.Grant.ExpiryRequired" xml:space="preserve"><value>This role always ends: choose a date.</value></data>
+  <data name="Admin.Grant.Summary" xml:space="preserve"><value>{0} will be {1} on {2}</value></data>
+  <data name="Admin.Grant.SummaryUntil" xml:space="preserve"><value>, until {0} included</value></data>
+  <data name="Admin.Grant.Submit" xml:space="preserve"><value>Give this access</value></data>
+  <data name="Admin.RoleEditor.Name" xml:space="preserve"><value>Role name</value></data>
+  <data name="Admin.RoleEditor.NamePlaceholder" xml:space="preserve"><value>For example: Billing assistant</value></data>
+  <data name="Admin.RoleEditor.Description" xml:space="preserve"><value>In one sentence, what it is for (optional)</value></data>
+  <data name="Admin.RoleEditor.DescriptionPlaceholder" xml:space="preserve"><value>Prepares quotes and invoices without approving them.</value></data>
+  <data name="Admin.RoleEditor.Pages" xml:space="preserve"><value>For each page, what this role allows</value></data>
+  <data name="Admin.RoleEditor.SalesTogether" xml:space="preserve"><value>Quotes, invoices and credit notes are viewed together: seeing one lets you see the others.</value></data>
+  <data name="Admin.RoleEditor.Create" xml:space="preserve"><value>Create role</value></data>
+  <data name="Admin.RoleEditor.InUse" xml:space="preserve"><value>First remove this role from the people and teams who have it.</value></data>
+  <data name="Admin.RoleEditor.UsedBy" xml:space="preserve"><value>This role is given {0} time(s): your changes apply to all at once.</value></data>
+  <data name="Admin.RoleEditor.Subtitle" xml:space="preserve"><value>Pick, page by page, what this role opens.</value></data>
+  <data name="Admin.Role.CustomHint" xml:space="preserve"><value>Role created for your firm.</value></data>
+  <data name="Admin.Role.administrateur-cabinet.Name" xml:space="preserve"><value>Firm administrator</value></data>
+  <data name="Admin.Role.administrateur-cabinet.Desc" xml:space="preserve"><value>Manages people, teams, roles and firm settings. Does not see client file contents.</value></data>
+  <data name="Admin.Role.manager.Name" xml:space="preserve"><value>Manager</value></data>
+  <data name="Admin.Role.manager.Desc" xml:space="preserve"><value>Does and approves everything in their files: sales, accounting, closings, alerts.</value></data>
+  <data name="Admin.Role.administrateur-groupe.Name" xml:space="preserve"><value>Team lead</value></data>
+  <data name="Admin.Role.administrateur-groupe.Desc" xml:space="preserve"><value>Manages the members and files of their team.</value></data>
+  <data name="Admin.Role.collaborateur-etendu.Name" xml:space="preserve"><value>Senior associate</value></data>
+  <data name="Admin.Role.collaborateur-etendu.Desc" xml:space="preserve"><value>Prepares and issues quotes and invoices, creates credit notes, manages customers and catalog.</value></data>
+  <data name="Admin.Role.collaborateur.Name" xml:space="preserve"><value>Associate</value></data>
+  <data name="Admin.Role.collaborateur.Desc" xml:space="preserve"><value>Prepares quotes and invoices and keeps customer records, without approving.</value></data>
+  <data name="Admin.Role.auditeur.Name" xml:space="preserve"><value>Auditor</value></data>
+  <data name="Admin.Role.auditeur.Desc" xml:space="preserve"><value>Views everything without changing anything, and checks document integrity.</value></data>
+  <data name="Admin.Role.client-portail.Name" xml:space="preserve"><value>Customer (portal)</value></data>
+  <data name="Admin.Role.client-portail.Desc" xml:space="preserve"><value>The customer sees their quotes and invoices, accepts a quote, uploads documents.</value></data>
+  <data name="Admin.Role.exploitant-sur-site.Name" xml:space="preserve"><value>On-site operator</value></data>
+  <data name="Admin.Role.exploitant-sur-site.Desc" xml:space="preserve"><value>Installs and manages the firm's devices, without access to client files.</value></data>
+  <data name="Admin.Role.delegation-avoirs-exports.Name" xml:space="preserve"><value>Credit notes and exports delegation</value></data>
+  <data name="Admin.Role.delegation-avoirs-exports.Desc" xml:space="preserve"><value>Approves credit notes and exports the FEC during an absence, for a limited time.</value></data>
+  <data name="Admin.Scope.Cabinet" xml:space="preserve"><value>the whole firm</value></data>
+  <data name="Admin.Scope.TeamNamed" xml:space="preserve"><value>team {0}'s files</value></data>
+  <data name="Admin.Scope.DossierNamed" xml:space="preserve"><value>client file {0}</value></data>
+  <data name="Admin.Scope.Unknown" xml:space="preserve"><value>(not found)</value></data>
+  <data name="Admin.Area.Quotes" xml:space="preserve"><value>Quotes</value></data>
+  <data name="Admin.Area.Quotes.Hint" xml:space="preserve"><value>Prepare and send quotes</value></data>
+  <data name="Admin.Area.Invoices" xml:space="preserve"><value>Invoices</value></data>
+  <data name="Admin.Area.Invoices.Hint" xml:space="preserve"><value>Enter, approve and issue invoices</value></data>
+  <data name="Admin.Area.CreditNotes" xml:space="preserve"><value>Credit notes</value></data>
+  <data name="Admin.Area.CreditNotes.Hint" xml:space="preserve"><value>Correct an issued invoice</value></data>
+  <data name="Admin.Area.Parties" xml:space="preserve"><value>Customers and suppliers</value></data>
+  <data name="Admin.Area.Parties.Hint" xml:space="preserve"><value>Third-party records</value></data>
+  <data name="Admin.Area.Catalog" xml:space="preserve"><value>Catalog</value></data>
+  <data name="Admin.Area.Catalog.Hint" xml:space="preserve"><value>Items, services and prices</value></data>
+  <data name="Admin.Area.Accounting" xml:space="preserve"><value>Accounting</value></data>
+  <data name="Admin.Area.Accounting.Hint" xml:space="preserve"><value>Checks, FEC, closings and archives</value></data>
+  <data name="Admin.Area.Alerts" xml:space="preserve"><value>Alerts</value></data>
+  <data name="Admin.Area.Alerts.Hint" xml:space="preserve"><value>The alert center and its settings</value></data>
+  <data name="Admin.Area.Assistant" xml:space="preserve"><value>Assistant</value></data>
+  <data name="Admin.Area.Assistant.Hint" xml:space="preserve"><value>Explanations and drafted text</value></data>
+  <data name="Admin.Area.Devices" xml:space="preserve"><value>Devices</value></data>
+  <data name="Admin.Area.Devices.Hint" xml:space="preserve"><value>Install and remove the firm's devices</value></data>
+  <data name="Admin.Area.Administration" xml:space="preserve"><value>Team and access</value></data>
+  <data name="Admin.Area.Portal" xml:space="preserve"><value>Customer portal</value></data>
+  <data name="Admin.Areas.None" xml:space="preserve"><value>No page</value></data>
+  <data name="Admin.Level.None" xml:space="preserve"><value>No access</value></data>
+  <data name="Admin.Level.View" xml:space="preserve"><value>Can view</value></data>
+  <data name="Admin.Level.Work" xml:space="preserve"><value>Can create and edit</value></data>
+  <data name="Admin.Level.Approve" xml:space="preserve"><value>Can approve</value></data>
+  <data name="Admin.Level.None.Short" xml:space="preserve"><value>None</value></data>
+  <data name="Admin.Level.View.Short" xml:space="preserve"><value>View</value></data>
+  <data name="Admin.Level.Work.Short" xml:space="preserve"><value>Edit</value></data>
+  <data name="Admin.Level.Approve.Short" xml:space="preserve"><value>Approve</value></data>
+  <data name="Admin.State.Invited" xml:space="preserve"><value>Invitation pending</value></data>
+  <data name="Admin.State.Active" xml:space="preserve"><value>Active</value></data>
+  <data name="Admin.State.Suspended" xml:space="preserve"><value>Suspended</value></data>
+  <data name="Admin.State.Locked" xml:space="preserve"><value>Locked</value></data>
+  <data name="Admin.State.Disabled" xml:space="preserve"><value>Disabled</value></data>
+  <data name="Admin.Toast.Revoked" xml:space="preserve"><value>Role "{0}" removed from {1}.</value></data>
+  <data name="Admin.Toast.JoinedTeam" xml:space="preserve"><value>{0} joined team {1}.</value></data>
+  <data name="Admin.Toast.LeftTeam" xml:space="preserve"><value>{0} left team {1}.</value></data>
+  <data name="Admin.Toast.Granted" xml:space="preserve"><value>{0} is now {1}.</value></data>
+  <data name="Admin.Toast.Invited" xml:space="preserve"><value>{0} has been added. Now choose what this person can do.</value></data>
+  <data name="Admin.Toast.PersonSaved" xml:space="preserve"><value>{0}'s details saved.</value></data>
+  <data name="Admin.Toast.Reactivated" xml:space="preserve"><value>{0}'s account is active.</value></data>
+  <data name="Admin.Toast.Suspended" xml:space="preserve"><value>{0}'s account is suspended.</value></data>
+  <data name="Admin.Toast.TeamCreated" xml:space="preserve"><value>Team {0} created.</value></data>
+  <data name="Admin.Toast.TeamRenamed" xml:space="preserve"><value>Team renamed to {0}.</value></data>
+  <data name="Admin.Toast.TeamDeleted" xml:space="preserve"><value>Team {0} deleted.</value></data>
+  <data name="Admin.Toast.DossierPlaced" xml:space="preserve"><value>File {0} added to team {1}.</value></data>
+  <data name="Admin.Toast.DossierRemoved" xml:space="preserve"><value>File {0} removed from team {1}.</value></data>
+  <data name="Admin.Toast.RoleSaved" xml:space="preserve"><value>Role "{0}" saved.</value></data>
+  <data name="Admin.Toast.RoleDeleted" xml:space="preserve"><value>Role deleted.</value></data>
+  <data name="Admin.Undo" xml:space="preserve"><value>Undo</value></data>
+  <data name="Admin.Back" xml:space="preserve"><value>Back</value></data>
+  <data name="Admin.Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Admin.Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Admin.Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Admin.Remove" xml:space="preserve"><value>Remove</value></data>
+  <data name="Admin.RemoveNamed" xml:space="preserve"><value>Remove {0}</value></data>
+  <data name="Admin.UntilDate" xml:space="preserve"><value>until {0}</value></data>
+  <data name="Error.Administration.NameRequired" xml:space="preserve"><value>Enter the person's name.</value></data>
+  <data name="Error.Administration.NameTooLong" xml:space="preserve"><value>This name is too long.</value></data>
+  <data name="Error.Administration.EmailInvalid" xml:space="preserve"><value>This email address does not look valid.</value></data>
+  <data name="Error.Administration.EmailTaken" xml:space="preserve"><value>Someone in the firm already uses this address.</value></data>
+  <data name="Error.Administration.RoleNameRequired" xml:space="preserve"><value>Give the role a name.</value></data>
+  <data name="Error.Administration.RoleNameTooLong" xml:space="preserve"><value>This role name is too long.</value></data>
+  <data name="Error.Administration.RoleDescriptionTooLong" xml:space="preserve"><value>This sentence is too long.</value></data>
+  <data name="Error.Administration.RoleEmpty" xml:space="preserve"><value>Open at least one page for this role.</value></data>
+  <data name="Error.Administration.RoleAreaInvalid" xml:space="preserve"><value>This level does not exist for this page.</value></data>
+  <data name="Error.Administration.RoleNotFound" xml:space="preserve"><value>This role no longer exists.</value></data>
+  <data name="Error.Administration.RoleInUse" xml:space="preserve"><value>This role is still given to people or teams.</value></data>
+  <data name="Error.Administration.SelfLockout" xml:space="preserve"><value>You cannot remove your own administration rights.</value></data>
+  <data name="Error.Administration.NoAccess" xml:space="preserve"><value>You do not have access to this area.</value></data>
+</root>

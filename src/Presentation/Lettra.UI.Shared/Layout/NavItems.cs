@@ -1,9 +1,14 @@
+using Lettra.Contracts.Administration;
 using Microsoft.AspNetCore.Components.Routing;
 
 namespace Lettra.UI.Shared.Layout;
 
-/// <summary>Une entrée de la navigation : lien relatif, clé de libellé, icône Lucide, groupe et place dans les onglets du téléphone.</summary>
-public sealed record NavItem(string Href, string LabelKey, string Icon, string? GroupKey, bool InTabBar = false, NavLinkMatch Match = NavLinkMatch.Prefix);
+/// <summary>
+/// Une entrée de la navigation : lien relatif, clé de libellé, icône Lucide, groupe et place dans les onglets du téléphone.
+/// <paramref name="Page"/>, facultatif, cache l'entrée à qui n'ouvre pas cette page (lu une fois par
+/// <c>IAdministrationGateway.GetMyAccessAsync</c>) ; sans lui, l'entrée est toujours affichée et le serveur décide.
+/// </summary>
+public sealed record NavItem(string Href, string LabelKey, string Icon, string? GroupKey, bool InTabBar = false, NavLinkMatch Match = NavLinkMatch.Prefix, AccessAreaDto? Page = null);
 
 /// <summary>
 /// La navigation de l'application, décrite une seule fois : barre latérale (ordinateur), rail (tablette), onglets et
@@ -24,6 +29,8 @@ public static class NavItems
         new("exports/fec", "Nav.Fec", "file-spreadsheet", "Nav.Group.Accounting"),
         new("alerts", "Nav.Alerts", "bell", "Nav.Group.Settings"),
         new("settings/company", "Nav.Company", "building-2", "Nav.Group.Settings", Match: NavLinkMatch.All),
+        new("admin", "Nav.Admin", "shield-check", "Nav.Group.Settings", Page: AccessAreaDto.Administration),
+        new("session/serveur", "Nav.SharedServer", "server", "Nav.Group.Settings"),
     ];
 
     /// <summary>Les entrées par groupe, dans l'ordre de déclaration (le groupe sans titre en premier).</summary>
