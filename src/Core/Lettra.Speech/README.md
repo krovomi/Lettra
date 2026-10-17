@@ -99,6 +99,16 @@ donne les lignes de sa variante : les ajouter dans `build/voix/corpus/<nom>.sha2
 ## Dans l'interface (lane F)
 
 Le bouton micro de la barre du haut, le micro des champs, F8 maintenue, l'enregistreur du navigateur et l'exécution
-des commandes dans les écrans sont décrits dans `docs/aide-a-la-saisie.md` (section 3). Le branchement dans la
-démonstration (conteneur whisper.cpp) et dans l'application MAUI (moteur du poste, autorisations du micro) est fait
-par Socle.
+des commandes dans les écrans sont décrits dans `docs/aide-a-la-saisie.md` (section 3).
+
+## Branchement dans les hôtes
+
+- **Démonstration Docker** (`deploy/demo/compose.yaml`) : conteneur `whisper` construit depuis
+  `build/voix/whisper-server`, modèle dans le volume `whisper-modeles`, API en `WhisperServer`. L'API démarre sans
+  attendre le modèle et répond 503 tant qu'il n'est pas chargé.
+- **Application MAUI** (`MauiProgram.cs`) : `AddOnDeviceSpeech` après `AddLettra`, modèle dans
+  `FileSystem.AppDataDirectory/voix`. `Whisper.net.Runtime` est référencé par l'application elle-même (ses cibles
+  MSBuild choisissent les bibliothèques natives de chaque plateforme : Android arm64-v8a et x86_64, iOS, Mac Catalyst,
+  Windows). Micro : `RECORD_AUDIO` et capture audio accordée à la seule page de l'application (Android),
+  `NSMicrophoneUsageDescription` (iOS, Mac Catalyst) et `com.apple.security.device.audio-input` (Mac Catalyst),
+  autorisation WebView2 pour la page de l'application (Windows). Rien de cela n'a tourné sur un appareil.

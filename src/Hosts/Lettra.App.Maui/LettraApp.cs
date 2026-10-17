@@ -28,6 +28,8 @@ public sealed class MainPage : ContentPage
         // Version de mesure (artefact CI) : s'ouvre sur la mesure de la grille et la lance aussitôt.
         webView.StartPath = "/mesure-grille?auto=1";
 #endif
+        // Micro de la dictée : accordé à la seule page de l'application (MicrophoneAccess, par plateforme).
+        webView.BlazorWebViewInitialized += MicrophoneAccess.OnWebViewInitialized;
         webView.RootComponents.Add(new RootComponent { Selector = "#app", ComponentType = typeof(Routes) });
         Content = webView;
     }

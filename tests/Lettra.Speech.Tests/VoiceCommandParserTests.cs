@@ -78,6 +78,7 @@ public sealed class VoiceCommandParserTests
     [InlineData("ajouter pose de porte-fenêtre pour 320 euros", 1, null, "pose de porte-fenêtre", 320.0, null)]
     [InlineData("ajoute cinq licences 49 euros", 5, null, "licences", 49.0, null)]
     [InlineData("ajouter trois jours de développement à 600", 3, "DAY", "développement", 600.0, null)]
+    [InlineData("ajoute deux heures d'audit à 90 euros", 2, "HUR", "audit", 90.0, null)] // exemple du README
     public void Les_lignes_dites_de_plusieurs_facons_sont_lues(string phrase, double quantity, string? unit, string designation, double? price, bool? includesVat) =>
         Fr(phrase)!.Lines.Should().ContainSingle().Which.Should().Be(
             new VoiceLine((decimal)quantity, unit, designation, price is null ? null : (decimal)price, includesVat));
@@ -87,6 +88,7 @@ public sealed class VoiceCommandParserTests
     [InlineData("appliquer une remise de dix pour cent", 10)]
     [InlineData("réduction de 12,5 pourcent", 12.5)]
     [InlineData("15 % de remise", 15)]
+    [InlineData("remise de dix pour cent", 10)] // exemple du README
     public void Remise(string phrase, double percent) =>
         Fr(phrase).Should().BeEquivalentTo(new { Kind = VoiceCommandKind.ApplyDiscount, DiscountPercent = (decimal)percent });
 
