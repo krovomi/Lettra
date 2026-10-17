@@ -7,13 +7,15 @@
 # Le corpus est déterministe : Piper tire d'ordinaire du bruit au hasard (intonation, durée des phonèmes), si bien
 # que deux runs donnaient deux corpus et deux scores (7/12 puis 10/12 sans changer une ligne de code). Ici le bruit
 # est à zéro (--noise-scale 0 --noise-w-scale 0), les versions de Piper et d'ONNX Runtime sont épinglées
-# (build/voix/piper-requirements.txt), les voix sont vérifiées par leur SHA-256 (build/voix/voices.sha256) et chaque
-# WAV produit doit avoir le SHA-256 attendu (build/voix/corpus.sha256). Un écart arrête le workflow.
+# (build/voix/piper-requirements.txt) et les voix vérifiées par leur SHA-256 (build/voix/voices.sha256). Le corpus
+# produit doit être identique, octet pour octet, à l'une des variantes de build/voix/corpus/*.sha256 : ONNX Runtime
+# choisit ses noyaux selon le processeur, et les derniers bits des échantillons en dépendent. Un écart arrête le
+# workflow.
 #
 # Prérequis : python3 -m pip install -r build/voix/piper-requirements.txt, ffmpeg, jq.
 # Usage : build/voix/corpus.sh [--epingler] <dossier de sortie> [dossier des voix]
-#   --epingler : réécrit voices.sha256 et corpus.sha256 d'après ce qui vient d'être produit (après un changement de
-#                phrases.json, de voix ou de version de Piper), au lieu de les vérifier.
+#   --epingler : réécrit voices.sha256 et remplace les variantes par celle qui vient d'être produite (après un
+#                changement de phrases.json, de voix ou de version de Piper), au lieu de les vérifier.
 set -euo pipefail
 
 pin=false
@@ -78,5 +80,22 @@ while IFS=$'\t' read -r id language text; do
 done < <(jq -r '.phrases[] | [.id, .language, .text] | @tsv' "$phrases")
 
 echo "Corpus : ${#wavs[@]} enregistrements dans $out"
-manifest "$here/corpus.sha256" "$out" "${wavs[@]}"
+cpu="$(lscpu 2>/dev/null | sed -n 's/^Model name: *//p' | head -n 1)"
+actual="$(cd "$out" && sha256sum -- "${wavs[@]}")"
+if $pin; then
+  rm -f "$here"/corpus/*.sha256 && mkdir -p "$here/corpus"
+  printf '%s\n' "$actual" > "$here/corpus/a.sha256"
+  echo "Épinglé : build/voix/corpus/a.sha256 (${cpu:-processeur inconnu})"
+else
+  variant=""
+  for file in "$here"/corpus/*.sha256; do
+    if [ -f "$file" ] && [ "$(cat "$file")" = "$actual" ]; then variant="$(basename "$file" .sha256)"; break; fi
+  done
+  if [ -n "$variant" ]; then
+    echo "::notice title=Corpus vocal::Identique à la variante $variant (${cpu:-processeur inconnu})"
+  else
+    echo "::error title=Corpus vocal hors variantes::Processeur ${cpu:-inconnu}. SHA-256 obtenus (nouvelle variante dans build/voix/corpus/ si le changement est voulu) :%0A${actual//$'\n'/%0A}"
+    failed=true
+  fi
+fi
 if $failed; then exit 1; fi

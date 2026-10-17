@@ -1,5 +1,5 @@
 # Voix de synthèse du corpus (build/voix/corpus.sh). Versions épinglées : le corpus est vérifié octet par octet
-# (build/voix/corpus.sha256), et une autre version de Piper ou d'ONNX Runtime peut changer les échantillons produits.
+# (variantes de build/voix/corpus/), et une autre version de Piper ou d'ONNX Runtime peut changer les échantillons produits.
 piper-tts==1.3.0
 onnxruntime==1.31.0
 numpy==2.5.4

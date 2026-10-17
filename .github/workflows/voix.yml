@@ -62,7 +62,7 @@ jobs:
         with:
           python-version: '3.13'
 
-      # Versions épinglées : le corpus est vérifié octet par octet (build/voix/corpus.sha256).
+      # Versions épinglées : le corpus est vérifié octet par octet (variantes de build/voix/corpus/).
       - name: Voix de synthèse (Piper, locale)
         run: |
           sudo apt-get update -q && sudo apt-get install -yq --no-install-recommends ffmpeg
@@ -80,7 +80,7 @@ jobs:
       - name: Modèle Whisper vérifié
         run: build/voix/model.sh "$WHISPER_MODEL" voix/models
 
-      # Sans bruit aléatoire : le même corpus à chaque run, vérifié par build/voix/voices.sha256 et corpus.sha256.
+      # Sans bruit aléatoire : le même corpus à chaque run, identique à une variante de build/voix/corpus/.
       - name: Corpus lu par Piper, déterministe et vérifié
         run: build/voix/corpus.sh voix/corpus voix/voices
         env:
