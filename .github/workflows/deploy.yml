@@ -141,6 +141,20 @@ jobs:
           set -a; . ../.env; set +a
           SORTIE="$SORTIE/localhost" node parcours.mjs premier
 
+      # Serveur commun (docs/serveur-commun.md) : la composition de l'application installée reliée au serveur
+      # (harnais serveur-commun, sans MAUI) se connecte par PKCE, voit le client du navigateur et en crée un que le
+      # navigateur retrouve.
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - name: Serveur commun — appareil et navigateur sur les mêmes données
+        working-directory: deploy/demo/e2e
+        run: |
+          set -a; . ../.env; set +a
+          export SORTIE="$SORTIE/localhost"
+          dotnet run --project serveur-commun -- "$(cat "$SORTIE/client.txt")"
+          node appareil.mjs voir "$(cat "$SORTIE/client-appareil.txt")"
+
       # Voix : le conteneur whisper télécharge son modèle (142 Mio) au premier démarrage, sans retenir « up --wait ».
       # Le modèle doit être chargé avant la mise à jour ci-dessous, qui vérifie qu'il n'est pas retéléchargé.
       - name: Voix — modèle Whisper téléchargé et serveur prêt

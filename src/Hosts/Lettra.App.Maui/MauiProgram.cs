@@ -1,6 +1,9 @@
 using System.Globalization;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Bootstrap;
+#if LETTRA_DEMO
+using Lettra.DemoData;
+#endif
 using Lettra.Infrastructure.Persistence.Security;
 using Lettra.Infrastructure.Persistence.Sqlite.Local;
 using Lettra.Infrastructure.Speech.OnDevice;
@@ -31,6 +34,13 @@ public static class MauiProgram
         builder.Services.AddMauiBlazorWebView();
 
         LettraCultures.Apply(LettraCultures.Resolve(CultureInfo.InstalledUICulture.Name));
+
+        // Serveur commun (serveur-commun.json, écran « Serveur du cabinet ») : l'application travaille directement sur le
+        // serveur du cabinet, comme le navigateur ; la base de l'appareil reste en place, inutilisée.
+        if (SharedServer.Read() is { } shared)
+        {
+            return SharedServer.CreateApp(builder, shared);
+        }
 
         // Relié à un serveur (lettra.json) : réplique du dossier du serveur, synchronisée ; sinon poste isolé.
         ConnectedDevice.Settings? server = ConnectedDevice.Read();
@@ -69,11 +79,17 @@ public static class MauiProgram
         builder.Services.AddSingleton<IDeviceLockStore, SecureStorageDeviceLockStore>();
         builder.Services.AddSingleton<IDossierSelection, ActiveDossierSelection>();
         builder.Services.AddInProcessGateways();
+#if LETTRA_DEMO
+        // Bouton « Charger les données de démonstration » de l'accueil (dossier vide, jamais en Production).
+        builder.Services.AddDemoDataGateway("Demo", s => s.AddSingleton<IKekStore, SecureStorageKekStore>());
+#endif
         if (server is not null)
         {
             builder.Services.AddSync(server);
         }
 
+        // Écran « Serveur du cabinet » : relier cet appareil au serveur commun.
+        builder.Services.AddSharedServerChoice(server?.SignIn.BaseAddress);
         builder.Services.AddLettraUi();
         if (server is not null)
         {
