@@ -281,7 +281,7 @@ Le jeu ne s'ajoute jamais à un dossier qui a déjà des devis ou des factures. 
 voir « Repartir de zéro » dans [En cas de problème](#en-cas-de-problème).
 
 **La navigation.** **Accueil**, puis **Ventes** (**Devis**, **Factures**, **Avoirs**), **Tiers** (**Clients**,
-**Fournisseurs**, **Catalogue**), **Comptabilité** (**FEC**) et **Pilotage** (**Alertes**, **Entreprise**). Sur un
+**Fournisseurs**, **Catalogue**), **Comptabilité** (**Journal et balance**, **FEC**) et **Pilotage** (**Alertes**, **Entreprise**). Sur un
 ordinateur, le menu est à gauche et se replie en icônes ; sur une tablette, c'est une colonne d'icônes ; sur un
 téléphone, des onglets en bas (Accueil, Devis, Factures, Clients, **Plus** pour le reste). En haut, le champ
 « Rechercher un écran, une pièce, un client… » ouvre la palette de commandes, aussi au clavier avec **Ctrl+K**
@@ -325,7 +325,8 @@ interroge le service européen, qui ne connaît pas ces numéros fictifs.
 
 ### 2. Un client
 
-Menu **Clients**. Le formulaire « Nouveau client » est en haut de la page. Saisissez tout à la main (la recherche
+Menu **Clients**. La liste est à gauche, la fiche à droite (sur téléphone et tablette, l'une ou l'autre, avec
+« Retour à la liste »). Cliquez sur **Nouveau client** (touche **Inser**) et saisissez tout à la main (la recherche
 dans l'annuaire SIRENE ne sert qu'aux vraies entreprises) :
 
 - Type de client : **Entreprise**
@@ -333,7 +334,10 @@ dans l'annuaire SIRENE ne sert qu'aux vraies entreprises) :
 - SIRET : **90000002700012**
 - Adresse : **3 place du Marché**, **69002**, **Lyon**
 
-Cliquez sur **Créer le client**.
+Cliquez sur **Créer** : la fiche s'affiche en lecture. **Modifier** (**F2**) repasse en saisie dans la même fiche,
+**Échap** revient sans enregistrer (Lettra demande avant d'abandonner une saisie modifiée). Les blocs de la fiche
+(Coordonnées, Dernières factures, Derniers devis) se replient d'un clic. Les **Fournisseurs** ont la même
+présentation.
 
 ### 3. Un devis
 
@@ -394,8 +398,12 @@ Sans SIREN dans la fiche entreprise, l'export le demande au lieu de produire un 
 
 ### Et ensuite
 
-- **Catalogue** : les articles et prestations, saisis au clavier dans une grille ; facultatif, une ligne de facture
-  peut se saisir librement.
+- **Catalogue** : les articles et prestations, même présentation que les clients (liste, fiche, **Modifier**,
+  **Archiver**) ; **Saisie en grille** reste disponible pour en saisir beaucoup au clavier. Une ligne de facture peut
+  aussi se saisir librement.
+- **Journal et balance** : les écritures de vente de la période (journal, balance, grand livre d'un compte ou d'un
+  client), en lecture, les mêmes que dans le FEC. La fiche d'un client y renvoie par **Compte client**. Les
+  encaissements ne sont pas encore comptabilisés : le solde 411 est ce qui a été facturé, avoirs déduits.
 - **Alertes** : le centre d'alertes techniques (chaîne anti-fraude d'un dossier, trou de numérotation). Il ne montre
   aucune donnée de client.
 - **Verrouiller** (en haut) : ferme la session ; la phrase secrète la rouvre.
