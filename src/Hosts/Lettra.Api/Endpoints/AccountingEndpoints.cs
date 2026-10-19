@@ -4,6 +4,7 @@ using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Contracts.Accounting;
+using Lettra.Contracts.Common;
 using Lettra.Domain.Common;
 using Lettra.Exports.Application.Accounting;
 using static Lettra.Api.Infrastructure.HttpResults;
@@ -55,8 +56,8 @@ internal static class AccountingEndpoints
     {
         Result<SalesJournalResponse> result = await queries
             .QueryAsync(new GetSalesJournalQuery(
-                tenant.Current.DossierId, from, to, string.IsNullOrWhiteSpace(search) ? null : search.Trim(),
-                string.IsNullOrWhiteSpace(account) ? null : account.Trim(), customerId, page, pageSize), cancellationToken)
+                tenant.Current.DossierId, from, to, ListSearch.Normalize(search),
+                ListSearch.Normalize(account), customerId, page, pageSize), cancellationToken)
             .ConfigureAwait(false);
         return Ok(result);
     }
