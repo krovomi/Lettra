@@ -116,6 +116,17 @@ public sealed class CabinetScreensTests : BunitContext
     }
 
     [Fact]
+    public void Un_lien_mene_aux_tableaux_de_bord_de_mes_dossiers()
+    {
+        IRenderedComponent<CabinetPage> page = Render<CabinetPage>();
+
+        AngleSharp.Dom.IElement link = page.Find("#cabinet-dashboards");
+
+        link.GetAttribute("href").Should().Be("pilotage?vue=dossiers");
+        link.TextContent.Trim().Should().Be("Tableaux de bord");
+    }
+
+    [Fact]
     public void Effacer_les_filtres_remet_tous_les_dossiers()
     {
         IRenderedComponent<CabinetPage> page = Render<CabinetPage>();

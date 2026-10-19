@@ -9,6 +9,7 @@
   <data name="Cabinet.Title" xml:space="preserve"><value>Vue cabinet</value></data>
   <data name="Cabinet.Subtitle" xml:space="preserve"><value>Les dossiers que vous suivez, les plus urgents d'abord.</value></data>
   <data name="Cabinet.Subtitle.Computed" xml:space="preserve"><value>Les dossiers que vous suivez, les plus urgents d'abord. Chiffres calculés {0}.</value></data>
+  <data name="Cabinet.Dashboards" xml:space="preserve"><value>Tableaux de bord</value></data>
   <data name="Cabinet.Refresh" xml:space="preserve"><value>Actualiser</value></data>
   <data name="Cabinet.Refreshing" xml:space="preserve"><value>Calcul en cours…</value></data>
   <data name="Cabinet.Refreshed" xml:space="preserve"><value>Chiffres recalculés pour {0} dossier(s).</value></data>

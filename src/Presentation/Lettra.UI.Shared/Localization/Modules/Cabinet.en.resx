@@ -9,6 +9,7 @@
   <data name="Cabinet.Title" xml:space="preserve"><value>Firm overview</value></data>
   <data name="Cabinet.Subtitle" xml:space="preserve"><value>The dossiers you follow, most urgent first.</value></data>
   <data name="Cabinet.Subtitle.Computed" xml:space="preserve"><value>The dossiers you follow, most urgent first. Figures computed {0}.</value></data>
+  <data name="Cabinet.Dashboards" xml:space="preserve"><value>Dashboards</value></data>
   <data name="Cabinet.Refresh" xml:space="preserve"><value>Refresh</value></data>
   <data name="Cabinet.Refreshing" xml:space="preserve"><value>Computing…</value></data>
   <data name="Cabinet.Refreshed" xml:space="preserve"><value>Figures recomputed for {0} dossier(s).</value></data>
