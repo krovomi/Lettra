@@ -2,6 +2,7 @@ using Lettra.Application.Abstractions.Ai;
 using Lettra.Application.Abstractions.Cabinet;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Tenancy;
+using Lettra.Infrastructure.Catalog.Kpi;
 using Lettra.Infrastructure.Persistence.Catalog;
 using Lettra.Infrastructure.Persistence.Security;
 using Lettra.Infrastructure.Persistence.Tenancy;
@@ -51,6 +52,8 @@ public static class DependencyInjection
         services.AddSingleton<IOrganisationPolicyStore, CatalogOrganisationPolicyStore>();
         // Vue cabinet : les indicateurs des dossiers dans le catalogue (remplace le magasin en mémoire du poste).
         services.Replace(ServiceDescriptor.Singleton<IDossierIndicatorStore, CatalogDossierIndicatorStore>());
+        // Indicateurs de pilotage pour le Grafana de la cellule (point d'accès exposé seulement avec un jeton).
+        services.AddKpiCollection(configuration);
         services.AddSingleton<CatalogInitializer>();
         services.AddSingleton<DossierMigrationOrchestrator>();
         return services;

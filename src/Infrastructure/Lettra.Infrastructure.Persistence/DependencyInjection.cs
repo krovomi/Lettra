@@ -1,12 +1,15 @@
 using Lettra.Application.Abstractions.Ai;
 using Lettra.Application.Abstractions.Cabinet;
 using Lettra.Application.Abstractions.Integrity;
+using Lettra.Application.Abstractions.Kpi;
 using Lettra.Application.Abstractions.Persistence;
 using Lettra.Application.Abstractions.Tenancy;
+using Lettra.Application.Features.Kpi;
 using Lettra.Infrastructure.Persistence.Ai;
 using Lettra.Infrastructure.Persistence.Billing;
 using Lettra.Infrastructure.Persistence.Cabinet;
 using Lettra.Infrastructure.Persistence.Integrity;
+using Lettra.Infrastructure.Persistence.Kpi;
 using Lettra.Infrastructure.Persistence.Numbering;
 using Lettra.Infrastructure.Persistence.Outbox;
 using Lettra.Infrastructure.Persistence.Repositories;
@@ -59,6 +62,11 @@ public static class DependencyInjection
         services.AddScoped<IDossierIndicatorSource, ReviewPendingIndicatorSource>();
         services.TryAddSingleton<IDossierIndicatorStore, InMemoryDossierIndicatorStore>();
         services.AddSingleton<IDossierIndicatorRefresher, DossierIndicatorRefresher>();
+
+        // Indicateurs de pilotage pour Grafana (ventes, base, postes) : lus dans la base du dossier lors d'une collecte.
+        services.AddScoped<IBillingKpiReader, EfBillingKpiReader>();
+        services.AddScoped<IDossierKpiSource, BillingKpiSource>();
+        services.AddScoped<IDossierKpiSource, DossierOperationsKpiSource>();
 
         // Journal IA dans la base du dossier (remplace le journal vide enregistré par l'application).
         services.Replace(ServiceDescriptor.Scoped<IAiAuditLog, DossierAiAuditLog>());

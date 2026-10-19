@@ -1,5 +1,6 @@
 using Lettra.Application.Abstractions.Cabinet;
 using Lettra.Application.Abstractions.Integrity;
+using Lettra.Application.Abstractions.Kpi;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Contracts.Alerts;
 using Lettra.Domain.Common;
@@ -32,6 +33,9 @@ public static class DependencyInjection
 
         // Vue cabinet : les alertes ouvertes de chaque dossier.
         services.AddScoped<IDossierIndicatorSource, OpenAlertsIndicatorSource>();
+
+        // Indicateurs pour Grafana : les alertes ouvertes de la cellule, par gravité.
+        services.AddSingleton<ICellKpiSource, OpenAlertsKpiSource>();
         return services;
     }
 }
