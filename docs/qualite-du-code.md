@@ -121,6 +121,7 @@ Chaque écart a été vérifié dans le code. Les chemins sont relatifs à `src/
 | D4 | Un délai d'attente HTTP devient une exception à l'écran pour la plupart des passerelles, mais « serveur injoignable » pour d'autres. | `Presentation/Lettra.UI.Gateway.Http/HttpPartiesAndCatalogGateways.cs:25`, `HttpBillingGateways.cs:37` contre `HttpCabinetGateway.cs:50` | Un seul filtre d'exception partagé. |
 | D5 | Plusieurs écrans prennent la date du poste (`DateTime.Today`, `DateTimeOffset.Now`) au lieu de `TimeProvider`. | `Presentation/Lettra.UI.Shared` : `DossierReviewPage.razor:101`, `CabinetPage.razor:285`, `FecExport.razor:96`, `GrantAccessForm.razor:141`, `PlatformTransmissionPanel.razor:108`, `Administration.razor:83` | Une horloge d'interface injectée. |
 | D6 | Supprimer un devis ou une facture avec une version périmée : en direct, refus « conflit de version » ; par HTTP, une `JsonException` remonte jusqu'à l'écran, car la pièce jointe au 412 est relue comme un `ProblemResponse`. Trouvé par les tests de parité des passerelles. | `Presentation/Lettra.UI.Gateway.Http/HttpBillingGateways.cs:33`, `HttpCustomersGateway.cs:96` | Pièce jointe illisible ignorée, le refus garde son code (corrigé, PR 2). |
+| D7 | Une charge Alertmanager en JSON illisible faisait répondre 500 ; Alertmanager rejoue les 5xx, donc la charge revenait sans fin. | `Modules/Supervision/Lettra.Supervision.Infrastructure/SupervisionEndpoints.cs:41` | Répondre 400 (corrigé, PR 2). |
 
 ### Duplication (DRY)
 
@@ -167,7 +168,10 @@ Chaque écart a été vérifié dans le code. Les chemins sont relatifs à `src/
 Écarts constatés par les tests de parité, identiques sur les deux transports, à revoir plus tard :
 un conflit de version sur les paramètres fiscaux répond 409 sans les paramètres actuels (les
 autres pièces joignent la version actuelle) ; un relevé bancaire de format inconnu est refusé avec
-`BankStatement.CsvColumnsInvalid` plutôt que `FormatUnknown`.
+`BankStatement.CsvColumnsInvalid` plutôt que `FormatUnknown`. Relevés par les tests d'infrastructure : dans
+`SyncServer.PushOneAsync`, une intention d'un type inconnu des contrats fait échouer tout le lot au
+calcul de l'empreinte, avant la branche qui devait la refuser seule (`SyncServer.cs:271`, code
+mort) ; le webhook accepte une gravité numérique (`"1"` lue comme S1).
 
 A2 (approbation d'avoir) et R6 (réemballages de `Result`) sont de faible valeur : la double
 vérification d'A2 est une défense en profondeur, et un `Bind` sur `Result` rendrait les handlers
@@ -187,9 +191,9 @@ Aucun test existant n'est retiré, désactivé ni affaibli.
 | PR | Contenu | État |
 |---|---|---|
 | 1 | Ce document et le script `build/couverture/fusionner.py` ; API : `HttpResults` remplace les ternaires `Result` → HTTP recopiés (R1) ; défauts D1 et D3 corrigés ; parité des codes d'erreur étendue à `Supervision.Domain` (A8). | En revue (PR #119) |
-| 2 | Doublons transverses : calendrier légal unique `LegalCalendar` (R3), liste UE et devise uniques (R11), boucle unique des tâches de fond `PeriodicPass` sur l'horloge injectée (R10), textes des mentions légales partagés (D2), « écrire puis relire » unique dans les passerelles en processus (R2), défaut D6, tests de parité de toutes les passerelles (68 cas, HTTP et en direct). | En cours |
+| 2 | Doublons transverses : calendrier légal unique `LegalCalendar` (R3), liste UE et devise uniques (R11), boucle unique des tâches de fond `PeriodicPass` sur l'horloge injectée (R10), textes des mentions légales partagés (D2), « écrire puis relire » unique dans les passerelles en processus (R2), défauts D6 et D7, tests de parité de toutes les passerelles (68 cas, HTTP et en direct). | En cours |
 | 3 | Domaine et application : règles d'acompte et de suppression dans les entités (A1), rôles (A3), chargement versionné (R5), validateurs paginés (R7), fin de validation de facture (R8), règlement (R4, S1), `IValidator` dans Exports (A7), tests. | À faire |
-| 4 | Tests d'infrastructure : tâche de la vue cabinet et ses sources, serveur de synchronisation, webhook de supervision, annuaire d'autorisations. | En cours |
+| 4 | Tests d'infrastructure : tâche de la vue cabinet et ses sources, serveur de synchronisation (rejeu après écriture concurrente), webhook de supervision, annuaire d'autorisations (83 cas). Livrés avec la PR 2. | En cours |
 | 5 | API : recherche normalisée (R12), tests. Après le fil « Tris et filtres sur les listes ». | À faire |
 | 6 | Passerelles HTTP : gestion d'erreurs partagée (D4), tests de toutes les passerelles (objectif > 90 %). Après la PR du kit de contrôle fiscal. | À faire |
 | 7 | Conformité : découpage de `ComplianceChecker.Check` (S3). | À faire |

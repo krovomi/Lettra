@@ -3,6 +3,7 @@ using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Infrastructure.Persistence.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -80,6 +81,7 @@ public static class CabinetOverviewHosting
         Func<IServiceProvider, CancellationToken, Task<IReadOnlyList<TenantDescriptor>>> listDossiers)
     {
         ArgumentNullException.ThrowIfNull(configuration);
+        services.TryAddSingleton(TimeProvider.System);
         services.AddOptions<CabinetOverviewJobOptions>().Bind(configuration.GetSection(CabinetOverviewJobOptions.SectionName));
         services.AddHostedService(sp => new CabinetOverviewJob(
             sp, listDossiers, sp.GetRequiredService<IOptions<CabinetOverviewJobOptions>>(),

@@ -368,7 +368,7 @@ public sealed class CabinetIndicatorTests : IDisposable
         TenantHarness harness,
         Func<IServiceProvider, CancellationToken, Task<IReadOnlyList<TenantDescriptor>>> listDossiers,
         CabinetOverviewJobOptions? options = null) =>
-        new(harness.Services, listDossiers, Options.Create(options ?? new CabinetOverviewJobOptions()), NullLogger<CabinetOverviewJob>.Instance);
+        new(harness.Services, listDossiers, Options.Create(options ?? new CabinetOverviewJobOptions()), TimeProvider.System, NullLogger<CabinetOverviewJob>.Instance);
 
     private static T Source<T>(AsyncServiceScope scope) => scope.ServiceProvider.GetServices<IDossierIndicatorSource>().OfType<T>().Single();
 

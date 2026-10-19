@@ -121,13 +121,12 @@ public sealed class WebhookTests : IAsyncDisposable
     }
 
     [Fact]
-    public async Task Une_charge_illisible_fait_echouer_l_appel()
+    public async Task Une_charge_illisible_est_une_mauvaise_requete_pour_ne_pas_etre_rejouee()
     {
-        // Comportement actuel : le JSON invalide n'est pas intercepté, l'hôte répond 500 et Alertmanager rejoue
-        // (il ne rejoue que sur 5xx). Épinglé tel quel.
-        Func<Task> post = () => PostAsync(App(Token), "Bearer " + Token, "{ pas du json");
+        // Alertmanager ne rejoue que les 5xx : une charge illisible doit recevoir 400, sinon elle reviendrait sans fin.
+        (int status, _) = await PostAsync(App(Token), "Bearer " + Token, "{ pas du json");
 
-        await post.Should().ThrowAsync<JsonException>();
+        status.Should().Be(StatusCodes.Status400BadRequest);
     }
 
     [Fact]
