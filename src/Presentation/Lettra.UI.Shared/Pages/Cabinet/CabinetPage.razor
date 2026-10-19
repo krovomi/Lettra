@@ -85,7 +85,6 @@ else
                         {
                             <th scope="col" class="lg-num">@Label(key)</th>
                         }
-                        <th scope="col">@L["Cabinet.Field.ComputedAt"]</th>
                         <th scope="col"><span class="lettra-visually-hidden">@L["Cabinet.Field.Actions"]</span></th>
                     </tr>
                 </thead>
@@ -93,10 +92,16 @@ else
                     @foreach (DossierOverviewRow row in Rows)
                     {
                         <tr @key="row.DossierId" class="lt-level-@row.Level.ToString().ToLowerInvariant()" aria-current="@(row.DossierId == Dossiers.Id ? "true" : null)">
-                            <th scope="row" class="lt-cabinet-name">
-                                <span class="lt-level-dot" data-level="@row.Level" aria-hidden="true"></span>
-                                <span>@row.Name</span>
-                                <span class="lt-level-text">@L["Cabinet.Level." + row.Level]</span>
+                            <th scope="row">
+                                @* Le flex sur un bloc intérieur : la cellule reste une cellule de tableau (bordures alignées). *@
+                                <div class="lt-cabinet-name">
+                                    <span class="lt-level-dot" data-level="@row.Level" aria-hidden="true"></span>
+                                    <span class="lt-cabinet-label">
+                                        <span>@row.Name</span>
+                                        <span class="lt-cabinet-when">@ComputedLine(row.ComputedAt)</span>
+                                    </span>
+                                    <span class="lt-level-text">@L["Cabinet.Level." + row.Level]</span>
+                                </div>
                             </th>
                             @foreach (string key in Columns)
                             {
@@ -111,12 +116,11 @@ else
                                         <span class="lt-indicator" data-level="@indicator.Level">@indicator.Count.ToString("N0", CultureInfo.CurrentCulture)</span>
                                         @if (indicator.DueOn is DateOnly due && indicator.Count > 0)
                                         {
-                                            <span class="lt-indicator-due">@string.Format(CultureInfo.CurrentCulture, L[DueKey(key)], due.ToString("d MMM", CultureInfo.CurrentCulture))</span>
+                                            <span class="lt-indicator-due">@string.Format(CultureInfo.CurrentCulture, L[DueKey(key)], due.ToString("d MMM", CultureInfo.CurrentCulture).Replace(' ', '\u00A0'))</span>
                                         }
                                     }
                                 </td>
                             }
-                            <td data-label="@L["Cabinet.Field.ComputedAt"]">@When(row.ComputedAt)</td>
                             <td class="lt-cabinet-actions">
                                 @if (Dossiers.CanSwitch || row.DossierId == Dossiers.Id)
                                 {
@@ -273,6 +277,10 @@ else
         LocalizedString text = L["Cabinet.Indicator." + key + ".Due"];
         return text.ResourceNotFound ? "Cabinet.Indicator.Due" : "Cabinet.Indicator." + key + ".Due";
     }
+
+    /// <summary>Sous le nom du dossier : l'heure de son dernier calcul (une colonne de moins dans le tableau).</summary>
+    private string ComputedLine(DateTimeOffset? at) =>
+        at is null ? L["Cabinet.NeverComputed"] : string.Format(CultureInfo.CurrentCulture, L["Cabinet.ComputedLine"], When(at));
 
     private string When(DateTimeOffset? at)
     {

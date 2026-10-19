@@ -261,7 +261,8 @@ Cabinet Démo, Bâti Rénov' Lemoine et Négoce Méditerranée Distribution (ajo
 effacer).
 
 La page **Vue cabinet** liste les dossiers que vous pouvez ouvrir, les plus urgents d'abord. Pour chacun, elle montre
-les factures en retard, les rejets de la plateforme, les alertes ouvertes et la revue du mois. Ces chiffres sont
+les factures en retard, les rejets de la plateforme, les alertes ouvertes, la revue du mois et le relevé bancaire non
+rapproché. La colonne relevé non rapproché devient à traiter après 15 jours et urgente après 30. Ces chiffres sont
 calculés la nuit (par le Worker, ou par l'API dans la démo), sur « Actualiser », ou à la première ouverture. Ce ne sont
 que des compteurs : aucun montant ni nom de client ne quitte le dossier.
 
