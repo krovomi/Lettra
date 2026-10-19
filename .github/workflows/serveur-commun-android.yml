@@ -58,6 +58,8 @@ jobs:
         run: |
           npm ci
           npx playwright install --with-deps chromium
+          # Pilote de l'appareil (APK installé sur l'émulateur par Playwright _android).
+          npx playwright install android
       - name: Navigateur — enrôlement TOTP et client
         working-directory: deploy/demo/e2e
         run: |
@@ -96,6 +98,8 @@ jobs:
           api-level: 34
           arch: x86_64
           target: google_apis
+          # Écran de téléphone courant (1080×2340), pas le 320×640 par défaut.
+          profile: pixel_5
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
           script: bash "$RUNNER_TEMP/serveur-commun-android.sh"
