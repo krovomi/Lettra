@@ -53,20 +53,12 @@
   <data name="Reminders.History.Level" xml:space="preserve"><value>Level</value></data>
   <data name="Reminders.History.Outcome" xml:space="preserve"><value>Result</value></data>
   <data name="Reminders.History.Channel" xml:space="preserve"><value>Channel</value></data>
-  <data name="Reminders.History.From" xml:space="preserve"><value>From</value></data>
-  <data name="Reminders.History.To" xml:space="preserve"><value>To</value></data>
+  <data name="Reminders.History.Period" xml:space="preserve"><value>Reminder date</value></data>
   <data name="Reminders.History.All" xml:space="preserve"><value>All</value></data>
-  <data name="Reminders.History.Sort" xml:space="preserve"><value>Sort by</value></data>
   <data name="Reminders.History.Automatic" xml:space="preserve"><value>automatic</value></data>
   <data name="Reminders.History.SentTo" xml:space="preserve"><value>Sent to {0}</value></data>
   <data name="Reminders.History.Empty" xml:space="preserve"><value>No reminders</value></data>
   <data name="Reminders.History.Empty.Text" xml:space="preserve"><value>Every reminder sent or recorded is kept here, with its text.</value></data>
-  <data name="Reminders.Sort.Date" xml:space="preserve"><value>Date</value></data>
-  <data name="Reminders.Sort.Invoice" xml:space="preserve"><value>Invoice</value></data>
-  <data name="Reminders.Sort.Customer" xml:space="preserve"><value>Customer</value></data>
-  <data name="Reminders.Sort.Level" xml:space="preserve"><value>Level</value></data>
-  <data name="Reminders.Sort.Descending" xml:space="preserve"><value>Descending</value></data>
-  <data name="Reminders.Sort.Ascending" xml:space="preserve"><value>Ascending</value></data>
   <data name="Reminders.Toast.Sent" xml:space="preserve"><value>{0} for invoice {1} sent to {2}.</value></data>
   <data name="Reminders.Toast.Noted" xml:space="preserve"><value>{0} for invoice {1} recorded as sent.</value></data>
   <data name="Reminders.Toast.Run" xml:space="preserve"><value>{0} reminder(s) sent, {1} failed, {2} customer(s) without an email address.</value></data>
@@ -90,11 +82,6 @@
   <data name="Error.Administration.NotInvited" xml:space="preserve"><value>This person has already signed in: no invitation needed.</value></data>
   <data name="Reminders.Invoices.Search" xml:space="preserve"><value>Search (invoice, customer, address)</value></data>
   <data name="Reminders.Invoices.DueOnly" xml:space="preserve"><value>Due today only</value></data>
-  <data name="Reminders.Invoices.Sort.Overdue" xml:space="preserve"><value>Days overdue</value></data>
-  <data name="Reminders.Invoices.Sort.DueDate" xml:space="preserve"><value>Due date</value></data>
-  <data name="Reminders.Invoices.Sort.Outstanding" xml:space="preserve"><value>Outstanding</value></data>
-  <data name="Reminders.Invoices.Sort.Customer" xml:space="preserve"><value>Customer</value></data>
-  <data name="Reminders.Invoices.Sort.Number" xml:space="preserve"><value>Invoice</value></data>
   <data name="Reminders.Invoices.NoMatch" xml:space="preserve"><value>No invoice matches these filters.</value></data>
   <data name="Reminders.Invoices.Count" xml:space="preserve"><value>{0} of {1} invoice(s)</value></data>
 </root>

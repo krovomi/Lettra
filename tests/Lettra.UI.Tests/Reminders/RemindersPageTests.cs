@@ -71,12 +71,18 @@ public sealed class RemindersPageTests : BunitContext
         page.Find("#reminders-invoices-count").TextContent.Should().Be("10 facture(s) sur 30");
         page.Find("#reminders-invoices-due").Change(true);
         page.Find("#reminders-invoices-count").TextContent.Should().Be("5 facture(s) sur 30");
-        page.Find("#reminders-invoices-sort").Change("Number");
-        page.Find("#reminders-invoices-direction").Click();
+        page.Find("#reminders-invoices-sort-number").Click();
         page.FindAll("#reminders-table tbody tr a").Select(a => a.TextContent).Should().Equal("F2026-0006", "F2026-0012", "F2026-0018", "F2026-0024", "F2026-0030");
+        page.Find("#reminders-invoices-sort-number").ParentElement!.GetAttribute("aria-sort").Should().Be("ascending");
+        page.Find("#reminders-invoices-sort").Change("Overdue:Ascending");
+        page.Find("#reminders-table tbody tr a").TextContent.Should().Be("F2026-0006", "le moins en retard d'abord");
+        page.Find("#reminders-invoices-filters-toggle").TextContent.Should().Contain("2");
 
         page.Find("#reminders-invoices-search").Input("zzz");
         page.Find("#reminders-invoices-nomatch").TextContent.Should().Be("Aucune facture ne correspond à ces filtres.");
+        page.Find("#reminders-invoices-filters-reset").Click();
+        page.Find("#reminders-invoices-count").TextContent.Should().Be("30 facture(s) sur 30");
+        page.FindAll("#reminders-invoices-filters-reset").Should().BeEmpty();
     }
 
     [Fact]
@@ -223,15 +229,20 @@ public sealed class RemindersPageTests : BunitContext
 
         page.Find("#reminders-filter-outcome").Change("Failed");
         page.Find("#reminders-filter-channel").Change("Email");
-        page.Find("#reminders-filter-from").Change("2026-10-01");
-        page.Find("#reminders-filter-to").Change("2026-10-31");
+        page.Find("#reminders-filter-dates-from").Change("2026-10-01");
+        page.Find("#reminders-filter-dates-to").Change("2026-10-31");
         page.Find("#reminders-search").Change("dupont");
-        page.Find("#reminders-sort").Change("Customer");
-        page.Find("#reminders-sort-direction").Click();
+        page.Find("#reminders-sort").Change("Customer:Ascending");
 
         page.WaitForAssertion(() => _reminders.HistoryQueries[^1].Should().Be(new ReminderHistoryQuery(
             null, ReminderLevelDto.Reminder, ReminderOutcomeDto.Failed, ReminderChannelDto.Email, new DateOnly(2026, 10, 1), new DateOnly(2026, 10, 31),
             "dupont", ReminderSortDto.Customer, false, 1, 25)));
-        page.Find("#reminders-sort-direction").GetAttribute("aria-pressed").Should().Be("false");
+        page.Find("#reminders-sort-customer").ParentElement!.GetAttribute("aria-sort").Should().Be("ascending");
+
+        page.Find("#reminders-sort-date").Click();
+        page.WaitForAssertion(() => _reminders.HistoryQueries[^1].Should().Match<ReminderHistoryQuery>(q => q.Sort == ReminderSortDto.Date && q.Descending));
+        page.Find("#reminders-history-filters-reset").Click();
+        page.WaitForAssertion(() => _reminders.HistoryQueries[^1].Should().Be(new ReminderHistoryQuery(
+            null, null, null, null, null, null, null, ReminderSortDto.Date, true, 1, 25)));
     }
 }

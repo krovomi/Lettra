@@ -26,11 +26,13 @@ td:not(.lg-num) > .lt-reminders-cell { align-items: flex-start; text-align: left
 .lt-reminders-days { display: flex; align-items: center; gap: var(--space-1); }
 .lt-reminders-days > span { color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
 
-.lt-reminders-filters { flex-wrap: wrap; align-items: flex-end; }
 .lt-reminders-sent summary { cursor: pointer; min-height: var(--hit); display: flex; align-items: center; overflow-wrap: anywhere; }
 
 @media (min-width: 768px) {
     .lt-reminders-delays { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    /* Le tableau défile en largeur sur tablette : le client et son adresse gardent une largeur lisible. */
+    #reminders-table td .lt-banking-label { min-width: 18ch; }
+    #reminders-history .lt-reminders-sent { min-width: 24ch; }
 }
 
 @media (min-width: 1200px) {

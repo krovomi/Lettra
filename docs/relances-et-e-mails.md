@@ -57,9 +57,10 @@ C'est du texte simple, sans pièce jointe.
 
 - **Les factures en retard** : numéro, client et son adresse e-mail, échéance, jours de retard, reste dû, pénalités
   possibles, dernière relance faite et prochain niveau. Le badge « Aujourd'hui » marque celles dont le niveau suivant
-  est dû. Recherche (numéro, client, adresse), filtre « À envoyer aujourd'hui seulement », tri par retard,
-  échéance, reste dû, client ou facture dans les deux sens, 25 factures par page. Sur téléphone, le tableau devient une
-  liste de cartes.
+  est dû. Recherche (numéro, client, adresse), filtre « À envoyer aujourd'hui seulement », tri en cliquant sur
+  l'en-tête (facture, client, échéance, retard, reste dû), 25 factures par page. La liste est chargée en entier et
+  triée à l'écran (`ListSorting`). Sur téléphone, le tableau devient une liste de cartes ; le bouton **Filtres** déplie
+  le filtre du jour et la liste **Trier par**.
 - **Voir la relance** ouvre l'aperçu : destinataire, langue, objet et texte exacts de la prochaine relance. Deux choix :
   - **Envoyer par e-mail** (si le client a une adresse et que l'installation envoie des e-mails) ;
   - **Noter comme envoyée** : la relance a été faite autrement (courrier, téléphone). Elle compte dans le scénario et
@@ -68,8 +69,10 @@ C'est du texte simple, sans pièce jointe.
   combien sont parties, combien ont échoué et combien de clients n'ont pas d'adresse.
 - **Historique** : chaque relance avec sa date, sa facture, son client, son niveau, son canal (e-mail ou noté à la
   main, « automatique » quand le Worker l'a envoyée), son résultat et le texte envoyé. Recherche (numéro, client,
-  destinataire, objet, sans tenir compte des accents), filtres par niveau, résultat, canal et période, tri par date, facture,
-  client ou niveau, dans les deux sens. La liste est paginée par le serveur (25 lignes).
+  destinataire, objet, sans tenir compte des accents), filtres par niveau, résultat, canal et période, tri en cliquant
+  sur l'en-tête (date, facture, client, niveau). La liste est triée et paginée par le serveur (25 lignes).
+- Les deux listes utilisent les briques communes de tri et de filtre (`ListFilterBar`, `SortHeader`, `SortSelect`,
+  `DateRangeFilter`, voir `docs/tris-et-filtres.md`) : **Effacer les filtres** apparaît dès qu'un filtre est posé.
 
 Tous les messages de réussite ou d'erreur passent par le toaster. Si l'installation n'envoie pas d'e-mails, un encadré
 le dit et seule la relance notée à la main reste possible.

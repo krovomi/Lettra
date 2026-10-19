@@ -74,28 +74,21 @@
     }
     else
     {
-        <div class="lettra-toolbar lt-reminders-filters">
-            <div class="lt-filter">
-                <label for="reminders-invoices-search">@L["Reminders.Invoices.Search"]</label>
-                <input id="reminders-invoices-search" type="search" @bind="_invoiceSearch" @bind:event="oninput" @bind:after="() => _invoicePage = 1" autocomplete="off" />
-            </div>
-            <div class="lt-filter">
-                <label for="reminders-invoices-sort">@L["Reminders.History.Sort"]</label>
-                <select id="reminders-invoices-sort" @bind="_invoiceSort" @bind:after="() => _invoicePage = 1">
-                    @foreach (InvoiceSort sort in Enum.GetValues<InvoiceSort>())
-                    {
-                        <option value="@sort">@L[$"Reminders.Invoices.Sort.{sort}"]</option>
-                    }
-                </select>
-            </div>
-            <button type="button" class="lettra-button is-secondary" id="reminders-invoices-direction" aria-pressed="@(_invoiceDescending ? "true" : "false")" @onclick="() => { _invoiceDescending = !_invoiceDescending; _invoicePage = 1; }">
-                @L[_invoiceDescending ? "Reminders.Sort.Descending" : "Reminders.Sort.Ascending"]
-            </button>
-            <label class="lt-banking-check">
-                <input type="checkbox" id="reminders-invoices-due" @bind="_dueOnly" @bind:after="() => _invoicePage = 1" />
-                <span>@L["Reminders.Invoices.DueOnly"]</span>
-            </label>
-        </div>
+        <ListFilterBar Id="reminders-invoices-filters" ActiveCount="ActiveInvoiceFilters" OnReset="ResetInvoiceFilters">
+            <ChildContent>
+                <div class="lt-filter">
+                    <label for="reminders-invoices-search">@L["Reminders.Invoices.Search"]</label>
+                    <input id="reminders-invoices-search" type="search" @bind="_invoiceSearch" @bind:event="oninput" @bind:after="() => _invoicePage = 1" autocomplete="off" />
+                </div>
+            </ChildContent>
+            <More>
+                <label class="lt-banking-check">
+                    <input type="checkbox" id="reminders-invoices-due" @bind="_dueOnly" @bind:after="() => _invoicePage = 1" />
+                    <span>@L["Reminders.Invoices.DueOnly"]</span>
+                </label>
+                <SortSelect Id="reminders-invoices-sort" Options="_invoiceSortOptions" State="_invoiceSort" OnSort="() => _invoicePage = 1" />
+            </More>
+        </ListFilterBar>
         <p class="lettra-muted" id="reminders-invoices-count">@string.Format(Culture, L["Reminders.Invoices.Count"], FilteredInvoices.Count, _overview.Invoices.Count)</p>
     }
     @if (_overview is { Invoices.Count: > 0 } && FilteredInvoices.Count == 0)
@@ -104,14 +97,15 @@
     }
     else if (_overview is { Invoices.Count: > 0 })
     {
+        <div class="lt-list-scroll">
         <table class="lettra-table lettra-documents lt-cards" id="reminders-table">
             <thead>
                 <tr>
-                    <th scope="col">@L["Billing.Column.Number"]</th>
-                    <th scope="col">@L["Billing.Column.Customer"]</th>
-                    <th scope="col">@L["Reminders.DueDate"]</th>
-                    <th scope="col" class="lg-num">@L["Reminders.DaysLate"]</th>
-                    <th scope="col" class="lg-num">@L["Reminders.Outstanding"]</th>
+                    <SortHeader Option="InvoiceColumn(InvoiceSort.Number)" State="_invoiceSort" OnSort="() => _invoicePage = 1" Id="reminders-invoices-sort-number" />
+                    <SortHeader Option="InvoiceColumn(InvoiceSort.Customer)" State="_invoiceSort" OnSort="() => _invoicePage = 1" Id="reminders-invoices-sort-customer" />
+                    <SortHeader Option="InvoiceColumn(InvoiceSort.DueDate)" State="_invoiceSort" OnSort="() => _invoicePage = 1" Id="reminders-invoices-sort-due" />
+                    <SortHeader Option="InvoiceColumn(InvoiceSort.Overdue)" State="_invoiceSort" OnSort="() => _invoicePage = 1" Id="reminders-invoices-sort-overdue" Class="lg-num" />
+                    <SortHeader Option="InvoiceColumn(InvoiceSort.Outstanding)" State="_invoiceSort" OnSort="() => _invoicePage = 1" Id="reminders-invoices-sort-outstanding" Class="lg-num" />
                     <th scope="col">@L["Reminders.Last"]</th>
                     <th scope="col">@L["Reminders.Next"]</th>
                     <th scope="col"><span class="lettra-visually-hidden">@L["Reminders.Actions"]</span></th>
@@ -178,6 +172,7 @@
                 }
             </tbody>
         </table>
+        </div>
         @if (FilteredInvoices.Count > PageSize)
         {
             <nav class="lt-pager" aria-label="@L["Accounting.Pages"]" id="reminders-invoices-pager">
@@ -220,62 +215,48 @@
 
 <section class="lettra-card" aria-labelledby="reminders-history-title">
     <h2 id="reminders-history-title">@L["Reminders.History"]</h2>
-    <div class="lettra-toolbar lt-reminders-filters">
-        <div class="lt-filter">
-            <label for="reminders-search">@L["Reminders.History.Search"]</label>
-            <input id="reminders-search" type="search" @bind="_search" @bind:after="ReloadHistoryAsync" autocomplete="off" />
-        </div>
-        <div class="lt-filter">
-            <label for="reminders-filter-level">@L["Reminders.History.Level"]</label>
-            <select id="reminders-filter-level" @bind="_level" @bind:after="ReloadHistoryAsync">
-                <option value="">@L["Reminders.History.All"]</option>
-                @foreach (ReminderLevelDto level in Enum.GetValues<ReminderLevelDto>())
-                {
-                    <option value="@level">@L[$"ReminderLevel.{level}"]</option>
-                }
-            </select>
-        </div>
-        <div class="lt-filter">
-            <label for="reminders-filter-outcome">@L["Reminders.History.Outcome"]</label>
-            <select id="reminders-filter-outcome" @bind="_outcome" @bind:after="ReloadHistoryAsync">
-                <option value="">@L["Reminders.History.All"]</option>
-                @foreach (ReminderOutcomeDto outcome in Enum.GetValues<ReminderOutcomeDto>())
-                {
-                    <option value="@outcome">@L[$"ReminderOutcome.{outcome}"]</option>
-                }
-            </select>
-        </div>
-        <div class="lt-filter">
-            <label for="reminders-filter-channel">@L["Reminders.History.Channel"]</label>
-            <select id="reminders-filter-channel" @bind="_channel" @bind:after="ReloadHistoryAsync">
-                <option value="">@L["Reminders.History.All"]</option>
-                @foreach (ReminderChannelDto channel in Enum.GetValues<ReminderChannelDto>())
-                {
-                    <option value="@channel">@L[$"ReminderChannel.{channel}"]</option>
-                }
-            </select>
-        </div>
-        <div class="lt-filter">
-            <label for="reminders-filter-from">@L["Reminders.History.From"]</label>
-            <input id="reminders-filter-from" type="date" @bind="_from" @bind:after="ReloadHistoryAsync" />
-        </div>
-        <div class="lt-filter">
-            <label for="reminders-filter-to">@L["Reminders.History.To"]</label>
-            <input id="reminders-filter-to" type="date" @bind="_to" @bind:after="ReloadHistoryAsync" />
-        </div>
-        <div class="lt-filter">
-            <label for="reminders-sort">@L["Reminders.History.Sort"]</label>
-            <select id="reminders-sort" @bind="_sort" @bind:after="ReloadHistoryAsync">
-                @foreach (ReminderSortDto sort in Enum.GetValues<ReminderSortDto>())
-                {
-                    <option value="@sort">@L[$"Reminders.Sort.{sort}"]</option>
-                }
-            </select>
-        </div>
-        <button type="button" class="lettra-button is-secondary" id="reminders-sort-direction" aria-pressed="@(_descending ? "true" : "false")" @onclick="ToggleDirectionAsync">
-            @L[_descending ? "Reminders.Sort.Descending" : "Reminders.Sort.Ascending"]
-        </button>
-    </div>
+    <ListFilterBar Id="reminders-history-filters" ActiveCount="ActiveHistoryFilters" OnReset="ResetHistoryFiltersAsync">
+        <ChildContent>
+            <div class="lt-filter">
+                <label for="reminders-search">@L["Reminders.History.Search"]</label>
+                <input id="reminders-search" type="search" @bind="_search" @bind:after="ReloadHistoryAsync" autocomplete="off" />
+            </div>
+        </ChildContent>
+        <More>
+            <div class="lt-filter">
+                <label for="reminders-filter-level">@L["Reminders.History.Level"]</label>
+                <select id="reminders-filter-level" @bind="_level" @bind:after="ReloadHistoryAsync">
+                    <option value="">@L["Reminders.History.All"]</option>
+                    @foreach (ReminderLevelDto level in Enum.GetValues<ReminderLevelDto>())
+                    {
+                        <option value="@level">@L[$"ReminderLevel.{level}"]</option>
+                    }
+                </select>
+            </div>
+            <div class="lt-filter">
+                <label for="reminders-filter-outcome">@L["Reminders.History.Outcome"]</label>
+                <select id="reminders-filter-outcome" @bind="_outcome" @bind:after="ReloadHistoryAsync">
+                    <option value="">@L["Reminders.History.All"]</option>
+                    @foreach (ReminderOutcomeDto outcome in Enum.GetValues<ReminderOutcomeDto>())
+                    {
+                        <option value="@outcome">@L[$"ReminderOutcome.{outcome}"]</option>
+                    }
+                </select>
+            </div>
+            <div class="lt-filter">
+                <label for="reminders-filter-channel">@L["Reminders.History.Channel"]</label>
+                <select id="reminders-filter-channel" @bind="_channel" @bind:after="ReloadHistoryAsync">
+                    <option value="">@L["Reminders.History.All"]</option>
+                    @foreach (ReminderChannelDto channel in Enum.GetValues<ReminderChannelDto>())
+                    {
+                        <option value="@channel">@L[$"ReminderChannel.{channel}"]</option>
+                    }
+                </select>
+            </div>
+            <DateRangeFilter Id="reminders-filter-dates" Label="@L["Reminders.History.Period"]" @bind-From="_from" @bind-To="_to" OnChange="ReloadHistoryAsync" />
+            <SortSelect Id="reminders-sort" Options="_historySortOptions" State="_sort" OnSort="ReloadHistoryAsync" />
+        </More>
+    </ListFilterBar>
 
     @if (_history is null)
     {
@@ -287,13 +268,14 @@
     }
     else
     {
+        <div class="lt-list-scroll">
         <table class="lettra-table lettra-documents lt-cards" id="reminders-history">
             <thead>
                 <tr>
-                    <th scope="col">@L["Billing.Column.Date"]</th>
-                    <th scope="col">@L["Billing.Column.Number"]</th>
-                    <th scope="col">@L["Billing.Column.Customer"]</th>
-                    <th scope="col">@L["Reminders.History.Level"]</th>
+                    <SortHeader Option="HistoryColumn(ReminderSortDto.Date)" State="_sort" OnSort="ReloadHistoryAsync" Id="reminders-sort-date" />
+                    <SortHeader Option="HistoryColumn(ReminderSortDto.Invoice)" State="_sort" OnSort="ReloadHistoryAsync" Id="reminders-sort-invoice" />
+                    <SortHeader Option="HistoryColumn(ReminderSortDto.Customer)" State="_sort" OnSort="ReloadHistoryAsync" Id="reminders-sort-customer" />
+                    <SortHeader Option="HistoryColumn(ReminderSortDto.Level)" State="_sort" OnSort="ReloadHistoryAsync" Id="reminders-sort-level" />
                     <th scope="col">@L["Reminders.History.Channel"]</th>
                     <th scope="col">@L["Reminders.History.Outcome"]</th>
                     <th scope="col">@L["Reminders.Preview.Subject"]</th>
@@ -331,6 +313,7 @@
                 }
             </tbody>
         </table>
+        </div>
         @if (_history.TotalCount > _history.PageSize)
         {
             <nav class="lt-pager" aria-label="@L["Accounting.Pages"]">
@@ -362,15 +345,24 @@
     private ReminderChannelDto? _channel;
     private DateOnly? _from;
     private DateOnly? _to;
-    private ReminderSortDto _sort = ReminderSortDto.Date;
-    private bool _descending = true;
+    private readonly SortState<ReminderSortDto> _sort = new(ReminderSortDto.Date, SortDirectionDto.Descending);
+    private IReadOnlyList<SortOption<ReminderSortDto>> _historySortOptions = [];
     private int _page = 1;
 
     private string? _invoiceSearch;
     private bool _dueOnly;
-    private InvoiceSort _invoiceSort = InvoiceSort.Overdue;
-    private bool _invoiceDescending = true;
+    private readonly SortState<InvoiceSort> _invoiceSort = new(InvoiceSort.Overdue, SortDirectionDto.Descending);
+    private IReadOnlyList<SortOption<InvoiceSort>> _invoiceSortOptions = [];
     private int _invoicePage = 1;
+
+    private static readonly Dictionary<InvoiceSort, Func<ReminderInvoiceResponse, object?>> InvoiceKeys = new()
+    {
+        [InvoiceSort.Number] = i => i.Number,
+        [InvoiceSort.Customer] = i => i.CustomerName,
+        [InvoiceSort.DueDate] = i => i.DueDate,
+        [InvoiceSort.Overdue] = i => i.DaysOverdue,
+        [InvoiceSort.Outstanding] = i => i.Outstanding,
+    };
 
     /// <summary>Tris de la liste des factures en retard, chargée en entier (un dossier en a quelques dizaines).</summary>
     private enum InvoiceSort
@@ -402,17 +394,14 @@
                     || (i.CustomerEmail is string email && compare.IndexOf(email, search, options) >= 0));
             }
 
-            Func<ReminderInvoiceResponse, IComparable> key = _invoiceSort switch
-            {
-                InvoiceSort.DueDate => i => i.DueDate,
-                InvoiceSort.Outstanding => i => i.Outstanding,
-                InvoiceSort.Customer => i => i.CustomerName,
-                InvoiceSort.Number => i => i.Number,
-                _ => i => i.DaysOverdue,
-            };
-            return [.. _invoiceDescending ? rows.OrderByDescending(key) : rows.OrderBy(key)];
+            return ListSorting.Sort(rows, _invoiceSort, InvoiceKeys);
         }
     }
+
+    private int ActiveInvoiceFilters => (string.IsNullOrWhiteSpace(_invoiceSearch) ? 0 : 1) + (_dueOnly ? 1 : 0);
+
+    private int ActiveHistoryFilters =>
+        new object?[] { string.IsNullOrWhiteSpace(_search) ? null : _search, _level, _outcome, _channel, _from, _to }.Count(f => f is not null);
 
     private int InvoicePageCount => Math.Max(1, (int)Math.Ceiling(FilteredInvoices.Count / (double)PageSize));
 
@@ -428,6 +417,21 @@
 
     protected override async Task OnInitializedAsync()
     {
+        _invoiceSortOptions =
+        [
+            new(InvoiceSort.Number, L["Billing.Column.Number"]),
+            new(InvoiceSort.Customer, L["Billing.Column.Customer"]),
+            new(InvoiceSort.DueDate, L["Reminders.DueDate"], SortDirectionDto.Descending),
+            new(InvoiceSort.Overdue, L["Reminders.DaysLate"], SortDirectionDto.Descending),
+            new(InvoiceSort.Outstanding, L["Reminders.Outstanding"], SortDirectionDto.Descending),
+        ];
+        _historySortOptions =
+        [
+            new(ReminderSortDto.Date, L["Billing.Column.Date"], SortDirectionDto.Descending),
+            new(ReminderSortDto.Invoice, L["Billing.Column.Number"]),
+            new(ReminderSortDto.Customer, L["Billing.Column.Customer"]),
+            new(ReminderSortDto.Level, L["Reminders.History.Level"]),
+        ];
         await LoadOverviewAsync();
         await LoadHistoryAsync();
     }
@@ -449,7 +453,7 @@
     private async Task LoadHistoryAsync()
     {
         OperationResult<PagedResponse<PaymentReminderResponse>> result = await Reminders.ListHistoryAsync(
-            new ReminderHistoryQuery(null, _level, _outcome, _channel, _from, _to, _search, _sort, _descending, _page, PageSize), CancellationToken.None);
+            new ReminderHistoryQuery(null, _level, _outcome, _channel, _from, _to, _search, _sort.Column, _sort.Descending, _page, PageSize), CancellationToken.None);
         _history = result.Value ?? new PagedResponse<PaymentReminderResponse>([], 1, PageSize, 0);
         if (!result.IsSuccess)
         {
@@ -463,9 +467,18 @@
         return LoadHistoryAsync();
     }
 
-    private Task ToggleDirectionAsync()
+    private SortOption<InvoiceSort> InvoiceColumn(InvoiceSort column) => _invoiceSortOptions.First(o => o.Column == column);
+
+    private SortOption<ReminderSortDto> HistoryColumn(ReminderSortDto column) => _historySortOptions.First(o => o.Column == column);
+
+    private void ResetInvoiceFilters()
     {
-        _descending = !_descending;
+        (_invoiceSearch, _dueOnly, _invoicePage) = (null, false, 1);
+    }
+
+    private Task ResetHistoryFiltersAsync()
+    {
+        (_search, _level, _outcome, _channel, _from, _to) = (null, null, null, null, null, null);
         return ReloadHistoryAsync();
     }
 

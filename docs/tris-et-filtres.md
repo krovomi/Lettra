@@ -27,6 +27,8 @@ et dans l'application MAUI, sur tous les appareils.
 |---|---|---|---|
 | Factures, avoirs, factures d'acompte | Numéro, client, date, échéance, statut, total HT, total TTC | Recherche, nature, statut, date d'émission, montant TTC | Serveur |
 | Devis | Numéro, client, date, fin de validité, statut, total HT, total TTC | Recherche, statut, date d'émission, montant TTC | Serveur |
+| Relances : factures en retard | Facture, client, échéance, retard, reste dû | Recherche, « À envoyer aujourd'hui seulement » | Écran |
+| Relances : historique | Date, facture, client, niveau | Recherche, niveau, résultat, canal, période | Serveur |
 
 Les autres listes (clients, fournisseurs, catalogue, journaux et grand livre, encaissements et rapprochement,
 déclarations, Vue cabinet, Équipe et accès, alertes) suivent dans une seconde livraison, avec les mêmes briques.

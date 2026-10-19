@@ -53,20 +53,12 @@
   <data name="Reminders.History.Level" xml:space="preserve"><value>Niveau</value></data>
   <data name="Reminders.History.Outcome" xml:space="preserve"><value>Résultat</value></data>
   <data name="Reminders.History.Channel" xml:space="preserve"><value>Canal</value></data>
-  <data name="Reminders.History.From" xml:space="preserve"><value>Du</value></data>
-  <data name="Reminders.History.To" xml:space="preserve"><value>Au</value></data>
+  <data name="Reminders.History.Period" xml:space="preserve"><value>Date de la relance</value></data>
   <data name="Reminders.History.All" xml:space="preserve"><value>Tous</value></data>
-  <data name="Reminders.History.Sort" xml:space="preserve"><value>Trier par</value></data>
   <data name="Reminders.History.Automatic" xml:space="preserve"><value>automatique</value></data>
   <data name="Reminders.History.SentTo" xml:space="preserve"><value>Envoyée à {0}</value></data>
   <data name="Reminders.History.Empty" xml:space="preserve"><value>Aucune relance</value></data>
   <data name="Reminders.History.Empty.Text" xml:space="preserve"><value>Chaque relance envoyée ou notée est gardée ici, avec son texte.</value></data>
-  <data name="Reminders.Sort.Date" xml:space="preserve"><value>Date</value></data>
-  <data name="Reminders.Sort.Invoice" xml:space="preserve"><value>Facture</value></data>
-  <data name="Reminders.Sort.Customer" xml:space="preserve"><value>Client</value></data>
-  <data name="Reminders.Sort.Level" xml:space="preserve"><value>Niveau</value></data>
-  <data name="Reminders.Sort.Descending" xml:space="preserve"><value>Décroissant</value></data>
-  <data name="Reminders.Sort.Ascending" xml:space="preserve"><value>Croissant</value></data>
   <data name="Reminders.Toast.Sent" xml:space="preserve"><value>Relance « {0} » de la facture {1} envoyée à {2}.</value></data>
   <data name="Reminders.Toast.Noted" xml:space="preserve"><value>Relance « {0} » de la facture {1} notée comme envoyée.</value></data>
   <data name="Reminders.Toast.Run" xml:space="preserve"><value>{0} relance(s) envoyée(s), {1} en échec, {2} client(s) sans adresse e-mail.</value></data>
@@ -90,11 +82,6 @@
   <data name="Error.Administration.NotInvited" xml:space="preserve"><value>Cette personne s'est déjà connectée : plus besoin d'invitation.</value></data>
   <data name="Reminders.Invoices.Search" xml:space="preserve"><value>Rechercher (facture, client, adresse)</value></data>
   <data name="Reminders.Invoices.DueOnly" xml:space="preserve"><value>À envoyer aujourd'hui seulement</value></data>
-  <data name="Reminders.Invoices.Sort.Overdue" xml:space="preserve"><value>Retard</value></data>
-  <data name="Reminders.Invoices.Sort.DueDate" xml:space="preserve"><value>Échéance</value></data>
-  <data name="Reminders.Invoices.Sort.Outstanding" xml:space="preserve"><value>Reste dû</value></data>
-  <data name="Reminders.Invoices.Sort.Customer" xml:space="preserve"><value>Client</value></data>
-  <data name="Reminders.Invoices.Sort.Number" xml:space="preserve"><value>Facture</value></data>
   <data name="Reminders.Invoices.NoMatch" xml:space="preserve"><value>Aucune facture ne correspond à ces filtres.</value></data>
   <data name="Reminders.Invoices.Count" xml:space="preserve"><value>{0} facture(s) sur {1}</value></data>
 </root>
