@@ -6,6 +6,7 @@ using Lettra.Application.Features.Rights;
 using Lettra.Contracts.Rights;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
+using static Lettra.Api.Infrastructure.HttpResults;
 
 namespace Lettra.Api.Endpoints;
 
@@ -117,6 +118,6 @@ internal static class RightsEndpoints
         where TCommand : ICommand<Result>
     {
         Result result = await commands.SendAsync(command, cancellationToken).ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.NoContent() : result.Errors.ToProblem();
+        return NoContent(result);
     }
 }

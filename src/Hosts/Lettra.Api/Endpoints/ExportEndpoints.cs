@@ -10,6 +10,7 @@ using Lettra.Exports.Application.EInvoicing;
 using Lettra.Exports.Application.EInvoicing.Platform;
 using Lettra.Exports.Application.Fec;
 using Microsoft.AspNetCore.Mvc;
+using static Lettra.Api.Infrastructure.HttpResults;
 
 namespace Lettra.Api.Endpoints;
 
@@ -118,7 +119,7 @@ internal static class ExportEndpoints
         Result<FecValidationResponse> report = await queries
             .QueryAsync(new ValidateFecQuery(tenant.Current.DossierId, fileName, content.GetBuffer().AsMemory(0, (int)content.Length), from, to), cancellationToken)
             .ConfigureAwait(false);
-        return report.IsSuccess ? TypedResults.Ok(report.Value) : report.Errors.ToProblem();
+        return Ok(report);
     }
 
     private static async Task<IResult> GetEInvoiceAsync(
@@ -153,9 +154,6 @@ internal static class ExportEndpoints
         Result<ReceivablesSummaryResponse> summary = await queries
             .QueryAsync(new GetReceivablesSummaryQuery(tenant.Current.DossierId), cancellationToken)
             .ConfigureAwait(false);
-        return summary.IsSuccess ? TypedResults.Ok(summary.Value) : summary.Errors.ToProblem();
+        return Ok(summary);
     }
-
-    private static IResult Ok(Result<PlatformTransmissionResponse> result) =>
-        result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
 }

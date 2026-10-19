@@ -6,6 +6,7 @@ using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Features.Cabinet;
 using Lettra.Contracts.Cabinet;
 using Lettra.Domain.Common;
+using static Lettra.Api.Infrastructure.HttpResults;
 
 namespace Lettra.Api.Endpoints;
 
@@ -56,21 +57,21 @@ internal static class CabinetOverviewEndpoints
     private static async Task<IResult> GetOverviewAsync(IQueryDispatcher queries, CancellationToken cancellationToken)
     {
         Result<CabinetOverviewResponse> overview = await queries.QueryAsync(new GetCabinetOverviewQuery(), cancellationToken).ConfigureAwait(false);
-        return overview.IsSuccess ? TypedResults.Ok(overview.Value) : overview.Errors.ToProblem();
+        return Ok(overview);
     }
 
     private static async Task<IResult> RefreshAsync(Guid? dossier, ICommandDispatcher commands, CancellationToken cancellationToken)
     {
         Result<CabinetOverviewRefreshResponse> refreshed = await commands
             .SendAsync(new RefreshCabinetOverviewCommand(dossier is Guid one ? [one] : null), cancellationToken).ConfigureAwait(false);
-        return refreshed.IsSuccess ? TypedResults.Ok(refreshed.Value) : refreshed.Errors.ToProblem();
+        return Ok(refreshed);
     }
 
     private static async Task<IResult> GetReviewAsync(string period, ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken)
     {
         Result<DossierReviewResponse> review = await queries
             .QueryAsync(new GetDossierReviewQuery(tenant.Current.DossierId, period), cancellationToken).ConfigureAwait(false);
-        return review.IsSuccess ? TypedResults.Ok(review.Value) : review.Errors.ToProblem();
+        return Ok(review);
     }
 
     private static async Task<IResult> SetItemAsync(
@@ -85,6 +86,6 @@ internal static class CabinetOverviewEndpoints
         Result<DossierReviewResponse> review = await commands
             .SendAsync(new SetDossierReviewItemCommand(tenant.Current.DossierId, period, item, request.Checked, request.Note), cancellationToken)
             .ConfigureAwait(false);
-        return review.IsSuccess ? TypedResults.Ok(review.Value) : review.Errors.ToProblem();
+        return Ok(review);
     }
 }

@@ -6,6 +6,7 @@ using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Features.Parties;
 using Lettra.Contracts.Directory;
 using Lettra.Domain.Common;
+using static Lettra.Api.Infrastructure.HttpResults;
 
 namespace Lettra.Api.Endpoints;
 
@@ -42,13 +43,13 @@ internal static class DirectoryEndpoints
     {
         Result<CompanySearchResponse> result = await queries
             .QueryAsync(new SearchCompaniesQuery(tenant.Current.DossierId, q, max), cancellationToken).ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return Ok(result);
     }
 
     private static async Task<IResult> CheckVatAsync(string vatNumber, ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken)
     {
         Result<VatNumberCheckResponse> result = await queries
             .QueryAsync(new CheckVatNumberQuery(tenant.Current.DossierId, vatNumber), cancellationToken).ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return Ok(result);
     }
 }

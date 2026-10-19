@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Lettra.Application.Abstractions.Identity;
+using Lettra.Application.Abstractions.Persistence;
 using Lettra.Infrastructure.Persistence.Supervision;
 using Lettra.Supervision.Application;
 using Lettra.Supervision.Domain;
@@ -105,7 +106,7 @@ internal sealed class EfAlertStore(IDbContextFactory<SupervisionDbContext> facto
                     .ConfigureAwait(false);
                 if (updated == 0)
                 {
-                    throw new DbUpdateConcurrencyException($"L'alerte {alert.Id} a été modifiée par ailleurs.");
+                    throw new ConcurrencyConflictException($"L'alerte {alert.Id} a été modifiée par ailleurs.");
                 }
 
                 _versions[alert.Id] = version + 1;

@@ -6,6 +6,7 @@ using Lettra.Application.Features.Policies;
 using Lettra.Contracts.Policies;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
+using static Lettra.Api.Infrastructure.HttpResults;
 
 namespace Lettra.Api.Endpoints;
 
@@ -36,7 +37,7 @@ internal static class PolicyEndpoints
     {
         Result<SegregationOfDutiesSettings> result = await queries
             .QueryAsync(new GetSegregationOfDutiesQuery(new OrganisationId(cabinetId)), cancellationToken).ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return Ok(result);
     }
 
     private static async Task<IResult> UpdateAsync(
@@ -48,6 +49,6 @@ internal static class PolicyEndpoints
                 new UpdateSegregationOfDutiesCommand(new OrganisationId(cabinetId), request.Enabled, request.CreditNoteApprovalThresholdInclTax),
                 cancellationToken)
             .ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return Ok(result);
     }
 }
