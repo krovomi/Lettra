@@ -125,6 +125,16 @@ public sealed class AccountingPagesTests : BunitContext
     }
 
     [Fact]
+    public void Le_journal_filtre_sur_un_client_sans_ecriture_sur_la_periode_affiche_son_nom()
+    {
+        IRenderedComponent<JournalPage> page = Open<JournalPage>($"accounting/journal?from=2026-07-01&to=2026-09-30&customer={Dupont}");
+
+        page.WaitForAssertion(() => page.Find("#journal-customer-chip").TextContent.Should().Contain("Dupont SARL"));
+        page.Find("#journal-customer-chip .lt-chip-label").GetAttribute("title").Should().Be("Dupont SARL");
+        page.Find("#journal-clear-customer").ClassList.Should().Contain("lt-chip-clear");
+    }
+
+    [Fact]
     public void Le_grand_livre_d_un_client_part_du_solde_d_ouverture_et_cumule()
     {
         IRenderedComponent<LedgerPage> page = Open<LedgerPage>($"accounting/accounts/411?from=2026-01-01&to=2026-12-31&customer={Dupont}",
@@ -134,6 +144,8 @@ public sealed class AccountingPagesTests : BunitContext
         page.Find("#ledger-opening").TextContent.Should().Contain(ExplorerText.Money(600m));
         page.Find("#ledger-closing").TextContent.Should().Be(ExplorerText.Money(1800m));
         page.Find("#ledger-customer-chip").TextContent.Should().Contain("Dupont SARL");
+        page.Find("#ledger-customer-chip .lt-chip-label").GetAttribute("title").Should().Be("Dupont SARL");
+        page.Find("#ledger-clear-customer").ClassList.Should().Contain("lt-chip-clear");
         _accounting.LedgerQueries.Single().Should().Be(("411", new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31), (Guid?)Dupont));
     }
 }
