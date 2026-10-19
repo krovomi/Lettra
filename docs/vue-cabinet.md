@@ -15,6 +15,8 @@ configuration, sans moyen d'en changer. La vague 6 ajoute trois choses :
    seuls ceux qui demandent une action sont en couleur. « Ouvrir » et « Revue » changent de dossier en un clic. La
    recherche, « Seulement ceux à traiter » et « Effacer les filtres » utilisent la barre de filtres commune des listes
    ([tris-et-filtres.md](tris-et-filtres.md)).
+   Le bouton « Tableaux de bord » en haut de la page ouvre l'onglet « Mes dossiers » des tableaux de bord
+   (`/pilotage?vue=dossiers`, voir [tableaux-de-bord.md](tableaux-de-bord.md)) : les mêmes dossiers en graphiques.
 3. **La revue de dossier** (menu Comptabilité › « Revue du dossier », adresse `/review`) : une liste de contrôle par mois
    ou par trimestre, cochée point par point, avec qui a coché et quand, et une note facultative.
 

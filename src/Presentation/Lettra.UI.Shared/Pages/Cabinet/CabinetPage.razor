@@ -20,6 +20,8 @@
         <p>@Subtitle</p>
     </div>
     <div class="lt-page-actions">
+        @* Les mêmes dossiers en graphiques et en tendances : l'onglet « Mes dossiers » des tableaux de bord. *@
+        <a class="lettra-button is-ghost" href="pilotage?vue=dossiers" id="cabinet-dashboards"><Icon Name="chart-column" Size="18" /> @L["Cabinet.Dashboards"]</a>
         <button type="button" id="cabinet-refresh" class="lettra-button is-secondary" disabled="@_refreshing" @onclick="RefreshAsync">
             <Icon Name="refresh-cw" Size="18" /> @L[_refreshing ? "Cabinet.Refreshing" : "Cabinet.Refresh"]
         </button>
