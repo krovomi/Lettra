@@ -19,6 +19,10 @@ env:
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   CI: true
+  # Jeu de charges de travail MAUI épinglé pour tous les jobs : le jeu 10.0.402.1 publié le 2026-10-19 référence un
+  # manifeste iOS (27.1.10018) absent de nuget.org, et sans version chaque job prend le dernier jeu. À relever quand un
+  # jeu plus récent s'installe en entier (et, pour iOS, avec le Xcode qu'il exige, voir le job Apple).
+  MAUI_WORKLOAD_VERSION: 10.0.401
 
 jobs:
   build-test:
@@ -123,7 +127,7 @@ jobs:
         with:
           global-json-file: global.json
       - name: Charge de travail MAUI
-        run: dotnet workload install maui-windows
+        run: dotnet workload install maui-windows --version ${{ env.MAUI_WORKLOAD_VERSION }}
       - name: Build Lettra.App.Maui
         run: dotnet build src/Hosts/Lettra.App.Maui/Lettra.App.Maui.csproj -c Release
       # Version de démonstration : autonome (runtime .NET et Windows App SDK embarqués), sans installation. Le dossier
@@ -174,7 +178,7 @@ jobs:
           distribution: microsoft
           java-version: 17
       - name: Charge de travail MAUI Android
-        run: dotnet workload install maui-android
+        run: dotnet workload install maui-android --version ${{ env.MAUI_WORKLOAD_VERSION }}
       # APK signé avec la clé de démonstration versionnée (pas de magasin d'applications) : la même à chaque
       # construction, pour qu'« adb install -r » d'une nouvelle version garde les données du téléphone.
       - name: Build de l'APK
@@ -257,7 +261,7 @@ jobs:
       - name: Charge de travail MAUI (iOS, Mac Catalyst, Android)
         run: |
           dotnet --version
-          dotnet workload install maui-ios maui-maccatalyst maui-android --version 10.0.401
+          dotnet workload install maui-ios maui-maccatalyst maui-android --version ${{ env.MAUI_WORKLOAD_VERSION }}
       - name: Build iOS (simulateur)
         run: dotnet build src/Hosts/Lettra.App.Maui/Lettra.App.Maui.csproj -c Release -f net10.0-ios -r iossimulator-arm64
       # Premier lancement dans le simulateur : application vivante, premier dossier chiffré créé dans le dossier de
