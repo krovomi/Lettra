@@ -31,6 +31,9 @@ internal static class ExportEndpoints
         // Les déclarations fiscales lisent les mêmes pièces et le même journal.
         api.MapTax();
 
+        // Le kit contrôle fiscal rassemble le FEC, l'intégrité et la piste d'audit de la période.
+        api.MapAuditKit();
+
         group.MapGet("/fec", ExportFecAsync)
             .RequirePermission(Permission.FecExporter)
             .WithName("ExportFec")
