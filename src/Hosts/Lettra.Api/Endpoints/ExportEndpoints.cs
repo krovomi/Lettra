@@ -28,6 +28,9 @@ internal static class ExportEndpoints
         api.MapAccounting();
         api.MapBanking();
 
+        // Les déclarations fiscales lisent les mêmes pièces et le même journal.
+        api.MapTax();
+
         group.MapGet("/fec", ExportFecAsync)
             .RequirePermission(Permission.FecExporter)
             .WithName("ExportFec")

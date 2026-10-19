@@ -306,8 +306,6 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                 column: "Number",
                 unique: true);
 
-            // Série des encaissements pour les dossiers existants ; un nouveau dossier la reçoit ici aussi, avant son
-            // estampille (TenantMigrator ne recrée pas une série présente).
             migrationBuilder.InsertData(
                 table: "NumberSeries",
                 columns: new[] { "Code", "Prefix", "Next", "Version" },

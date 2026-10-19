@@ -7,3 +7,5 @@ public sealed record SupplierCreated(SupplierId SupplierId, DateTimeOffset Occur
 
 /// <summary>Un fournisseur a été modifié. Ne porte que l'identifiant.</summary>
 public sealed record SupplierUpdated(SupplierId SupplierId, DateTimeOffset OccurredAt) : IDomainEvent;
+
+public sealed record SupplierArchiveChanged(SupplierId SupplierId, bool IsArchived, DateTimeOffset OccurredAt) : IDomainEvent;

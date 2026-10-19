@@ -1,0 +1,49 @@
+@* Contrôles de cohérence avant dépôt : ce qui va, ce qu'il faut regarder, ce qu'il faut corriger. *@
+@inject IStringLocalizer<SharedResource> L
+
+<section class="lt-panel lt-tax-checks" aria-labelledby="@($"{Id}-title")" id="@Id">
+    <h2 id="@($"{Id}-title")">@L["Tax.Checks.Title"]</h2>
+    <ul>
+        @foreach (TaxCheckResponse check in Checks.OrderByDescending(c => c.Severity))
+        {
+            <li class="lt-tax-check is-@check.Severity.ToString().ToLowerInvariant()" id="@($"check-{check.Code}")">
+                <span class="lt-tax-check-icon" aria-hidden="true"><Icon Name="@IconOf(check.Severity)" Size="18" /></span>
+                <span class="lettra-visually-hidden">@L[$"Tax.Severity.{check.Severity}"] : </span>
+                <span class="lt-tax-check-text">
+                    @Text(check)
+                    @if (check.Pieces is { Count: > 0 } pieces)
+                    {
+                        <span class="lt-tax-check-pieces">@string.Join(", ", pieces.Take(MaxPieces))@(pieces.Count > MaxPieces ? "…" : null)</span>
+                    }
+                </span>
+            </li>
+        }
+    </ul>
+</section>
+
+@code {
+    private const int MaxPieces = 8;
+
+    [Parameter, EditorRequired] public IReadOnlyList<TaxCheckResponse> Checks { get; set; } = [];
+
+    [Parameter] public string Id { get; set; } = "tax-checks";
+
+    private static string IconOf(TaxCheckSeverityDto severity) => severity switch
+    {
+        TaxCheckSeverityDto.Ok => "circle-check",
+        TaxCheckSeverityDto.Warning => "triangle-alert",
+        _ => "circle-alert",
+    };
+
+    private string Text(TaxCheckResponse check)
+    {
+        string key = $"Tax.Check.{check.Code}.{check.Severity}";
+        LocalizedString text = L[key];
+        if (text.ResourceNotFound)
+        {
+            text = L[$"Tax.Check.{check.Code}"];
+        }
+
+        return string.Format(CultureInfo.CurrentCulture, text.Value, TaxText.Exact(check.Expected ?? 0m), TaxText.Exact(check.Actual ?? 0m), check.Count ?? 0);
+    }
+}

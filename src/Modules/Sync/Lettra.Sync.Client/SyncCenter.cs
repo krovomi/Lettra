@@ -264,6 +264,8 @@ internal static class SyncItems
         UpdateCustomerIntent u => u.Data.Name,
         CreateSupplierIntent c => c.Data.Name,
         UpdateSupplierIntent u => u.Data.Name,
+        DeleteCustomerIntent d => d.Name,
+        DeleteSupplierIntent d => d.Name,
         CreateCatalogItemIntent c => c.Data.Designation,
         UpdateCatalogItemIntent u => u.Data.Designation,
         ValidatedInvoiceFact f => f.Document.Number,

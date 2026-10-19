@@ -1,0 +1,16 @@
+@* Brouillon impossible sans régime de TVA : l'écran dit quoi compléter, sans toast d'erreur. *@
+@inject IStringLocalizer<SharedResource> L
+
+@{
+    string code = Errors.FirstOrDefault(e => e.Code is ErrorCodes.Tax.ProfileMissing or ErrorCodes.Tax.RegimeMissing or ErrorCodes.Tax.VatFranchise)?.Code ?? ErrorCodes.Tax.RegimeMissing;
+}
+<EmptyState Id="tax-setup" IconName="@(code == ErrorCodes.Tax.VatFranchise ? "circle-check" : "building-2")" Title="@L[$"Tax.Setup.{code}.Title"]" Text="@L[$"Tax.Setup.{code}.Text"]">
+    @if (code != ErrorCodes.Tax.VatFranchise)
+    {
+        <a class="lettra-button" href="settings/company" id="tax-setup-company">@L["Tax.Setup.OpenCompany"]</a>
+    }
+</EmptyState>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<ErrorDetail> Errors { get; set; } = [];
+}

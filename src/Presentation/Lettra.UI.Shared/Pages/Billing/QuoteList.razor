@@ -1,6 +1,7 @@
 @page "/quotes"
 @inject IQuotesGateway Quotes
 @inject NavigationManager Navigation
+@inject ToastService Toasts
 @inject IStringLocalizer<SharedResource> L
 
 <PageTitle>@L["Quotes.Title"] · Lettra</PageTitle>
@@ -58,6 +59,7 @@
                     <th scope="col">@L["Billing.Status"]</th>
                     <th scope="col" class="lg-num">@L["Totals.ExclTax"]</th>
                     <th scope="col" class="lg-num">@L["Totals.InclTax"]</th>
+                    <th scope="col" class="lt-col-actions"><span class="lettra-visually-hidden">@L["Row.Actions"]</span></th>
                 </tr>
             </thead>
             <tbody>
@@ -72,6 +74,11 @@
                                                  Kind="@(quote.IsExpired ? "expired" : quote.Status.ToString().ToLowerInvariant())" /></td>
                         <td class="lg-num" data-label="@L["Totals.ExclTax"]">@GridNumber.FormatAmount(quote.TotalExclTax, CultureInfo.CurrentCulture)</td>
                         <td class="lg-num" data-label="@L["Totals.InclTax"]">@GridNumber.FormatAmount(quote.TotalInclTax, CultureInfo.CurrentCulture)</td>
+                        <td class="lt-col-actions">
+                            <RowDelete Label="@string.Format(CultureInfo.CurrentCulture, L["Quotes.Row.Delete"], quote.Number ?? L["Billing.Draft"], quote.CustomerName)"
+                                       BlockedReason="@(quote.Status == QuoteStatusDto.Draft ? null : L["Quotes.Row.Delete.Blocked"].Value)"
+                                       OnDelete="() => DeleteAsync(quote)" />
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -96,6 +103,20 @@
             .Bind("Insert", L["Quotes.New"], _ => Navigation.NavigateTo("quotes/new"));
 
     protected override Task OnInitializedAsync() => LoadAsync();
+
+    /// <summary>Un brouillon seulement : un devis numéroté reste (série DEV continue), il se refuse ou expire.</summary>
+    private async Task DeleteAsync(QuoteSummary quote)
+    {
+        OperationResult<bool> deleted = await Quotes.DeleteAsync(quote.Id, null, CancellationToken.None);
+        if (!deleted.IsSuccess)
+        {
+            _errors = deleted.Errors;
+            return;
+        }
+
+        _items.Remove(quote);
+        Toasts.Show(ToastKind.Success, L["Billing.Toast.Deleted"].Value);
+    }
 
     private async Task LoadAsync()
     {

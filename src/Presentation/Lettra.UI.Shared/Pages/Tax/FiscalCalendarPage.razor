@@ -1,0 +1,171 @@
+@page "/tax/calendar"
+@inject ITaxGateway Tax
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+@inject IServiceProvider Services
+@* Calendrier fiscal du dossier : échéances de l'année calculées à partir du régime de TVA et des réglages, chacune
+   marquée « déposée » quand c'est fait. Les échéances proches et dépassées arrivent aussi au centre d'alertes. *@
+
+<PageTitle>@L["Tax.Calendar.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Tax.Calendar.Title"]</h1>
+        <p class="lettra-muted">@L["Tax.Calendar.Subtitle"]</p>
+    </div>
+</div>
+
+<TaxTabs />
+<GeneralErrors Errors="_errors" />
+
+@if (_setup.Count > 0)
+{
+    <TaxSetupNeeded Errors="_setup" />
+}
+else if (_calendar is null)
+{
+    <ExplorerSkeleton Rows="8" />
+}
+else
+{
+    FiscalCalendarResponse calendar = _calendar;
+    <section class="lt-panel lt-tax-head" aria-labelledby="calendar-year">
+        <div class="lt-tax-nav">
+            <a class="lettra-button is-ghost" href="@Href(Year - 1)" id="calendar-previous" aria-label="@L["Tax.Period.Previous"]"><Icon Name="chevrons-left" Size="18" /></a>
+            <div class="lt-tax-period">
+                <h2 id="calendar-year">@Year</h2>
+                <p class="lettra-muted" id="calendar-regime">@RegimeText(calendar)</p>
+            </div>
+            <a class="lettra-button is-ghost" href="@Href(Year + 1)" id="calendar-next" aria-label="@L["Tax.Period.Next"]"><Icon Name="chevrons-right" Size="18" /></a>
+        </div>
+        @if (calendar.Settings.Version == 0)
+        {
+            <p class="lettra-banner is-warning" id="calendar-defaults">
+                <Icon Name="info" Size="18" /> @L["Tax.Calendar.Defaults"]
+                <a class="lettra-button is-secondary" href="tax/settings" id="calendar-settings">@L["Tax.Calendar.CheckSettings"]</a>
+            </p>
+        }
+    </section>
+
+    @if (calendar.Deadlines.Count == 0)
+    {
+        <EmptyState Id="calendar-empty" IconName="calendar-clock" Title="@L["Tax.Calendar.Empty"]" />
+    }
+    else
+    {
+        @foreach (IGrouping<int, FiscalDeadlineResponse> month in calendar.Deadlines.GroupBy(d => d.DueDate.Month))
+        {
+            DateOnly first = new(Year, month.Key, 1);
+            <section class="lt-panel lt-tax-month" aria-labelledby="@($"calendar-month-{month.Key}")">
+                <h2 id="@($"calendar-month-{month.Key}")">@TaxText.Month(first)</h2>
+                <ul class="lt-tax-deadlines">
+                    @foreach (FiscalDeadlineResponse deadline in month)
+                    {
+                        string id = $"deadline-{deadline.Obligation}-{TaxText.Iso(deadline.PeriodStart)}";
+                        <li class="lt-tax-deadline @TaxText.StateClass(deadline.State)" id="@id">
+                            <div class="lt-tax-deadline-date">
+                                <span class="lt-tax-deadline-day">@deadline.DueDate.Day</span>
+                                <span class="lt-tax-deadline-weekday">@deadline.DueDate.ToString("ddd", CultureInfo.CurrentCulture)</span>
+                            </div>
+                            <div class="lt-tax-deadline-text">
+                                <strong>@L[$"Tax.Obligation.{deadline.Obligation}"]</strong>
+                                <span class="lettra-muted">@TaxText.Period(L, deadline.PeriodStart, deadline.PeriodEnd)</span>
+                                @if (deadline.Note is { } note)
+                                {
+                                    <span class="lt-tax-note">@string.Format(CultureInfo.CurrentCulture, L[$"Tax.Note.{note}"], calendar.Settings.VatDeadlineDay)</span>
+                                }
+                            </div>
+                            <div class="lt-tax-deadline-actions">
+                                <span class="lt-tax-state" data-state="@deadline.State">@L[$"Tax.State.{deadline.State}"]</span>
+                                @if (Link(deadline) is { } href)
+                                {
+                                    <a class="lettra-button is-ghost" href="@href" id="@($"{id}-open")">@L["Tax.Calendar.Open"]</a>
+                                }
+                                @if (deadline.State != FiscalDeadlineStateDto.Exempt)
+                                {
+                                    bool filed = deadline.State == FiscalDeadlineStateDto.Filed;
+                                    <button type="button" class="lettra-button @(filed ? "is-secondary" : null)" id="@($"{id}-mark")" disabled="@_busy" @onclick="() => MarkAsync(deadline, !filed)">
+                                        @(filed ? L["Tax.Filed.Undo"] : L["Tax.Filed.Mark"])
+                                    </button>
+                                }
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </section>
+        }
+    }
+
+    <p class="lettra-hint" id="calendar-disclaimer">@L["Tax.Calendar.Disclaimer"]</p>
+}
+
+@code {
+    private FiscalCalendarResponse? _calendar;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private IReadOnlyList<ErrorDetail> _setup = [];
+    private bool _busy;
+
+    [SupplyParameterFromQuery(Name = "year")] public int? RequestedYear { get; set; }
+
+    private DateOnly Today => DateOnly.FromDateTime((Services.GetService<TimeProvider>() ?? TimeProvider.System).GetLocalNow().DateTime);
+
+    private int Year => RequestedYear is >= 2000 and <= 2100 ? RequestedYear.Value : Today.Year;
+
+    protected override Task OnParametersSetAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _errors = [];
+        OperationResult<FiscalCalendarResponse> result = await Tax.GetCalendarAsync(new DateOnly(Year, 1, 1), new DateOnly(Year, 12, 31), CancellationToken.None);
+        if (result is { IsSuccess: true, Value: { } calendar })
+        {
+            _calendar = calendar;
+            _setup = [];
+        }
+        else if (TaxText.IsSetupNeeded(result.Errors))
+        {
+            _setup = result.Errors;
+        }
+        else
+        {
+            _errors = result.Errors;
+        }
+    }
+
+    private static string Href(int year) => $"tax/calendar?year={year}";
+
+    private string RegimeText(FiscalCalendarResponse calendar) =>
+        calendar.VatFranchise ? L["Tax.Regime.Franchise"]
+        : calendar.Regime is { } regime ? L[$"Company.VatDeclarationRegime.{regime}"]
+        : L["Tax.Regime.Unknown"];
+
+    private static string? Link(FiscalDeadlineResponse deadline) => deadline.Obligation switch
+    {
+        FiscalObligationDto.VatReturnCa3 or FiscalObligationDto.VatReturnCa12 => $"tax/vat?date={TaxText.Iso(deadline.PeriodStart)}",
+        FiscalObligationDto.Des => $"tax/des?month={deadline.PeriodStart:yyyy-MM}",
+        _ => null,
+    };
+
+    private async Task MarkAsync(FiscalDeadlineResponse deadline, bool filed)
+    {
+        _busy = true;
+        try
+        {
+            OperationResult<FiscalDeadlineResponse> marked = await Tax.MarkFilingAsync(
+                new MarkFiscalFilingRequest(deadline.Obligation, deadline.PeriodStart, filed), CancellationToken.None);
+            if (marked.IsSuccess)
+            {
+                Toasts.Show(ToastKind.Success, L[filed ? "Tax.Toast.Filed" : "Tax.Toast.Unfiled"].Value);
+                await LoadAsync();
+            }
+            else
+            {
+                _errors = marked.Errors;
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

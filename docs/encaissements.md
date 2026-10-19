@@ -50,6 +50,11 @@ règlement qui solde la facture prend le reste au centime près. Les biens et le
 TVA imprimé sur la facture ne change pas. **Les écritures déjà enregistrées ne sont jamais recalculées** : une facture
 validée avant cette version garde sa TVA en 44571.
 
+Le **brouillon de CA3/CA12** (Comptabilité › Déclarations) suit les mêmes règles : la TVA des services d'une facture
+passée en 44574 n'est déclarée qu'à la date de chaque encaissement, pour la part payée (une contre-passation la retire à
+sa date). Une facture validée avant cette version reste déclarée à sa date. Le contrôle « accord avec le journal »
+compare donc toujours le brouillon au 44571.
+
 Le journal (**Comptabilité › Journal et balance**) montre les écritures BQ à côté des ventes : le numéro mène à la fiche
 de l'encaissement, et le code de lettrage s'affiche à côté. La balance et le grand livre comptent les comptes 512, 658,
 758 et 44574. Le chiffre d'affaires de la balance ne compte plus que les comptes 70 (pas le 758). Le **FEC** contient
@@ -137,7 +142,8 @@ dans le toaster.
 - Domaine : `src/Core/Lettra.Domain/Banking` (encaissement, relevé, rapprochement, lettrage) ; calculs purs :
   `src/Core/Lettra.Calculations/PaymentEntries.cs` et `AccountingEntries.cs` (44574).
 - Cas d'usage : `src/Modules/Exports/Lettra.Exports.Application/Banking` (lecteurs de relevés dans `Statements/`) ;
-  persistance : `src/Modules/Exports/Lettra.Exports.Infrastructure/EfBankingStores.cs`.
+  persistance : `src/Modules/Exports/Lettra.Exports.Infrastructure/EfBankingStores.cs` ; TVA à l'encaissement pour les
+  déclarations : `src/Modules/Exports/Lettra.Exports.Infrastructure/EfVatOnReceiptsSource.cs`.
 - API : `src/Hosts/Lettra.Api/Endpoints/BankingEndpoints.cs` (`/api/v1/payments`, `/api/v1/bank`).
 - Écrans : `src/Presentation/Lettra.UI.Shared/Pages/Banking`, styles `wwwroot/lettra-banking.css`, textes
   `Localization/Modules/Encaissements(.en).resx`.

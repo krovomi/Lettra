@@ -3,6 +3,7 @@ using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Exports.Application;
 using Lettra.Exports.Application.Banking;
 using Lettra.Exports.Application.EInvoicing.Platform;
+using Lettra.Exports.Application.Tax;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -32,6 +33,9 @@ public static class DependencyInjection
         services.AddScoped<IBankingSettingsRepository, EfBankingSettingsRepository>();
         services.AddScoped<IKnownIbanStore, EfKnownIbanStore>();
         services.AddScoped<IReceivableDocumentReader, EfReceivableDocumentReader>();
+        services.AddScoped<ITaxDocumentReader, EfTaxDocumentReader>();
+        services.AddScoped<IFiscalStore, EfFiscalStore>();
+        services.AddScoped<IVatOnReceiptsSource, EfVatOnReceiptsSource>();
         string platform = configuration?[PlatformKey] ?? "None";
         switch (platform)
         {
@@ -74,6 +78,24 @@ public static class DependencyInjection
         services.AddSingleton<IExportArchive, FileSystemExportArchive>();
         services.AddSingleton<FecBulkExportJob>();
         services.AddHostedService(sp => sp.GetRequiredService<FecBulkExportJob>());
+        return services;
+    }
+
+    /// <summary>
+    /// Passe d'alertes du calendrier fiscal par le Worker (<c>Lettra:Worker:FiscalCalendar</c>, active par défaut) :
+    /// échéances proches (S3) et dépassées (S2) de chaque dossier actif, vers le centre d'alertes.
+    /// </summary>
+    public static IServiceCollection AddFiscalDeadlineAlerts(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        Func<IServiceProvider, CancellationToken, Task<IReadOnlyList<TenantDescriptor>>> activeDossiers)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddOptions<FiscalDeadlineAlertOptions>().Bind(configuration.GetSection(FiscalDeadlineAlertOptions.SectionName));
+        services.AddSingleton(new FiscalDossierSource(activeDossiers));
+        services.AddSingleton<FiscalDeadlineAlertJob>();
+        services.AddHostedService(sp => sp.GetRequiredService<FiscalDeadlineAlertJob>());
         return services;
     }
 }

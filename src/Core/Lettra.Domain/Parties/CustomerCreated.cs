@@ -8,3 +8,5 @@ public sealed record CustomerCreated(CustomerId CustomerId, DateTimeOffset Occur
 
 /// <summary>Un client a été modifié. Ne porte que l'identifiant.</summary>
 public sealed record CustomerUpdated(CustomerId CustomerId, DateTimeOffset OccurredAt) : IDomainEvent;
+
+public sealed record CustomerArchiveChanged(CustomerId CustomerId, bool IsArchived, DateTimeOffset OccurredAt) : IDomainEvent;
