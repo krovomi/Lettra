@@ -39,7 +39,7 @@ internal sealed class HttpAlertsGateway(HttpClient http) : IAlertsGateway
             using HttpResponseMessage response = await http.GetAsync(new Uri(path, UriKind.Relative), cancellationToken).ConfigureAwait(false);
             return await response.ToOperationResultAsync(typeInfo, cancellationToken).ConfigureAwait(false);
         }
-        catch (HttpRequestException)
+        catch (Exception e) when (HttpCalls.IsUnreachable(e, cancellationToken))
         {
             return OperationResult<T>.Failure(ErrorCodes.Api.Unreachable);
         }
@@ -59,7 +59,7 @@ internal sealed class HttpAlertsGateway(HttpClient http) : IAlertsGateway
                 }
             }
         }
-        catch (HttpRequestException)
+        catch (Exception e) when (HttpCalls.IsUnreachable(e, cancellationToken))
         {
             return OperationResult<AlertDetailResponse>.Failure(ErrorCodes.Api.Unreachable);
         }

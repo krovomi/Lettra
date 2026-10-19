@@ -58,4 +58,43 @@ public sealed class OtherHttpGatewaysUnreachableTests
         (await session.UnlockAsync(new UnlockLocalSessionRequest(), default)).Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.LocalAccount.NotSupported);
         (await session.LockAsync(default)).Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.LocalAccount.NotSupported);
     }
+
+    [Fact]
+    public async Task Un_delai_d_attente_depasse_rend_Api_Unreachable_comme_une_coupure()
+    {
+        // Le HttpClient annule la requête à l'expiration de son délai : sans annulation demandée par l'écran.
+        await using ServiceProvider services = GatewayHarness.Answering(_ => throw new TaskCanceledException("Délai dépassé (test)."));
+        ICustomersGateway customers = services.GetRequiredService<ICustomersGateway>();
+        IInvoicesGateway invoices = services.GetRequiredService<IInvoicesGateway>();
+        IAlertsGateway alerts = services.GetRequiredService<IAlertsGateway>();
+        ICabinetGateway cabinet = services.GetRequiredService<ICabinetGateway>();
+        ISessionGateway session = services.GetRequiredService<ISessionGateway>();
+        IFecGateway fec = services.GetRequiredService<IFecGateway>();
+        Guid id = Guid.CreateVersion7();
+
+        List<IReadOnlyList<ErrorDetail>> failures =
+        [
+            (await customers.GetAsync(id, default)).Errors,
+            (await customers.DeleteAsync(id, 1, default)).Errors,
+            (await invoices.DeleteAsync(id, 1, default)).Errors,
+            (await alerts.GetAsync(id, false, default)).Errors,
+            (await cabinet.GetOverviewAsync(default)).Errors,
+            (await session.GetAsync(default)).Errors,
+            (await fec.ExportAsync(Today, Today, default)).Errors,
+        ];
+
+        failures.Should().AllSatisfy(errors => errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Api.Unreachable));
+    }
+
+    [Fact]
+    public async Task Une_annulation_demandee_par_l_ecran_remonte_telle_quelle()
+    {
+        await using ServiceProvider services = GatewayHarness.Answering(_ => throw new TaskCanceledException("Annulé (test)."));
+        using CancellationTokenSource cancelled = new();
+        await cancelled.CancelAsync();
+
+        Func<Task> get = () => services.GetRequiredService<ICustomersGateway>().GetAsync(Guid.CreateVersion7(), cancelled.Token);
+
+        await get.Should().ThrowAsync<OperationCanceledException>();
+    }
 }

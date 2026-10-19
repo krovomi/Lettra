@@ -18,7 +18,7 @@ internal sealed class HttpAssistantGateway(HttpClient http) : IAssistantGateway
             using HttpResponseMessage response = await http.GetAsync(new Uri("api/v1/assistant/statut", UriKind.Relative), cancellationToken).ConfigureAwait(false);
             return await response.ToOperationResultAsync(ContractsJsonContext.Default.AssistantStatusResponse, cancellationToken).ConfigureAwait(false);
         }
-        catch (HttpRequestException)
+        catch (Exception e) when (HttpCalls.IsUnreachable(e, cancellationToken))
         {
             return OperationResult<AssistantStatusResponse>.Failure(ErrorCodes.Api.Unreachable);
         }
@@ -43,7 +43,7 @@ internal sealed class HttpAssistantGateway(HttpClient http) : IAssistantGateway
                 refusal = failure.Errors.Count > 0 ? failure.Errors[^1].Code : ErrorCodes.Api.Unexpected;
             }
         }
-        catch (HttpRequestException)
+        catch (Exception e) when (HttpCalls.IsUnreachable(e, cancellationToken))
         {
             refusal = ErrorCodes.Api.Unreachable;
         }

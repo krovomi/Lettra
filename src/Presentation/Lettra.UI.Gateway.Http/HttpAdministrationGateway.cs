@@ -101,7 +101,7 @@ internal sealed class HttpAdministrationGateway(HttpClient http) : IAdministrati
             OperationResult<ProblemResponse> failure = await response.ToOperationResultAsync(Json.ProblemResponse, cancellationToken).ConfigureAwait(false);
             return OperationResult<bool>.Failure(failure.Errors);
         }
-        catch (HttpRequestException)
+        catch (Exception e) when (HttpCalls.IsUnreachable(e, cancellationToken))
         {
             return OperationResult<bool>.Failure(ErrorCodes.Api.Unreachable);
         }

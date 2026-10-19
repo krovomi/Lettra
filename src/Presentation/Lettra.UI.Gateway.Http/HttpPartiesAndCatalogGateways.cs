@@ -22,11 +22,18 @@ internal static class HttpCalls
             using HttpResponseMessage response = await send(cancellationToken).ConfigureAwait(false);
             return await response.ToOperationResultAsync(typeInfo, cancellationToken).ConfigureAwait(false);
         }
-        catch (HttpRequestException)
+        catch (Exception e) when (HttpCalls.IsUnreachable(e, cancellationToken))
         {
             return OperationResult<T>.Failure(ErrorCodes.Api.Unreachable);
         }
     }
+
+    /// <summary>
+    /// Serveur injoignable : erreur réseau, ou délai d'attente dépassé (le <see cref="HttpClient"/> annule alors sans
+    /// que l'appelant l'ait demandé). Une annulation voulue par l'écran remonte telle quelle.
+    /// </summary>
+    public static bool IsUnreachable(Exception exception, CancellationToken cancellationToken) =>
+        exception is HttpRequestException || (exception is TaskCanceledException && !cancellationToken.IsCancellationRequested);
 
     /// <summary>Paramètre <c>&amp;search=</c> échappé, vide sans recherche.</summary>
     public static string SearchParameter(string? search) =>
