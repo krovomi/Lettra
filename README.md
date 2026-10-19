@@ -448,6 +448,18 @@ Les correspondances de cases et les dates sont à faire relire par un expert-com
 Chromium Linux à 1440, 768 et 375 px, données conservées après une mise à jour de la démo ; non vérifié : application
 native, Safari, Firefox.)* Détails : [docs/declarations-fiscales.md](docs/declarations-fiscales.md).
 
+#### Kit contrôle fiscal
+
+Menu **Comptabilité > Déclarations > Contrôle fiscal** (`/tax/audit-kit`). Choisissez la période (par défaut l'année
+civile en cours) puis **Préparer le kit** : Lettra télécharge `kit-controle-fiscal-<SIREN>-<du>-<au>.zip` avec le FEC
+et son rapport de validation, l'attestation d'intégrité de la chaîne anti-fraude (registre des clés, archives scellées
+des clôtures), la piste d'audit fiable (qui a créé, validé, émis chaque pièce ; encaissements ; journal chaîné), le XML
+CII et le PDF Factur-X de chaque pièce, et le journal des transmissions à la plateforme agréée. `manifeste.json` donne
+l'empreinte SHA-256 de chaque fichier ; la sienne, affichée à l'écran, est celle du kit. Rien n'est envoyé à
+l'administration. Permission : `ArchivesExporter` (rôles manager et auditeur). Détails et points à faire relire par un
+expert-comptable : [docs/kit-controle-fiscal.md](docs/kit-controle-fiscal.md). *(Vérifié : démo Docker (navigateur,
+1440, 768 et 375 px) ; application installée non vérifiée sur appareil.)*
+
 ### 9. Encaissements et rapprochement bancaire
 
 Menu Comptabilité > **Encaissements** : saisissez un règlement reçu (virement, chèque, carte, espèces, prélèvement),
@@ -466,6 +478,20 @@ Les comptes utilisés sont à faire relire par un expert-comptable. *(Vérifié 
 automatiques ; non vérifié à la main dans la démo Docker ni dans les applications installées. Hors ligne : sur le
 serveur ou dans la base locale du poste seul, pas encore de synchronisation de la réplique.)* Détails :
 [docs/encaissements.md](docs/encaissements.md).
+
+### 10. Factures récurrentes
+
+Menu Ventes > **Factures récurrentes** > **Nouveau modèle** : un nom, le client, les lignes, la fréquence (mensuelle,
+trimestrielle, annuelle), le début, une fin facultative, et une facturation à échoir ou échue. Vous pouvez ajouter une
+révision annuelle des prix : un pourcentage fixe, ou l'indice Syntec que vous saisissez. Les factures dues sont créées
+en brouillon, ou validées si vous cochez « Valider automatiquement les factures » ; le numéro est attribué à la
+validation. Pour l'essayer, choisissez un début deux mois en arrière : le bandeau propose **Créer les factures dues**
+et en crée trois. Chacune porte sa période (« Période facturée : du … au … »), reprise dans le Factur-X et l'UBL. Un
+modèle se met en pause, se reprend et se supprime ; les factures déjà créées restent. Le Worker crée les factures dues
+toutes les 6 heures, sous son compte de service (qui doit avoir FactureSaisir et FactureValider) ; la démo n'a pas de
+Worker, on les crée depuis l'écran. *(Vérifié : démo Docker dans Chromium à 375, 768 et 1440 px, et tests
+automatiques sur SQLite, PostgreSQL et SQL Server ; non vérifié dans les applications installées. Les modèles ne se
+synchronisent pas entre appareils.)* Détails : [docs/factures-recurrentes.md](docs/factures-recurrentes.md).
 
 ### Et ensuite
 
@@ -578,7 +604,7 @@ Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou 
 | Hors ligne sur un appareil relié au serveur commun | Relié au serveur commun, l'appareil a besoin du réseau. Reste à étendre la synchronisation aux devis, factures et règlements, ou à y ouvrir les brouillons hors ligne. |
 | Invitations | Une personne ajoutée dans **Équipe et accès** apparaît et reçoit des accès, mais Lettra n'envoie pas d'e-mail et ne crée pas encore son compte de connexion (Keycloak) : elle ne peut pas encore se connecter. |
 | Télédéclaration de la TVA et de la DES | Non : Lettra prépare le brouillon et le fichier, le dépôt se fait sur impots.gouv ou le service en ligne des douanes. La TVA déductible (achats) n'est pas encore reprise. |
-| Envoi des devis et factures par e-mail | Non : on télécharge le PDF ou le Factur-X. |
+| Envoi des devis et factures par e-mail | Non : on télécharge le PDF ou le Factur-X. Les factures récurrentes aussi : leur envoi viendra avec les e-mails et relances. |
 | Applications signées | Non : avertissement de Windows au premier lancement, APK Android installé à la main, application macOS arrêtée par le Trousseau, pas de version pour iPhone réel. |
 
 ---
