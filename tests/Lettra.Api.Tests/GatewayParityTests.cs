@@ -1,7 +1,4 @@
 using System.Globalization;
-using System.Net.Http.Headers;
-using Lettra.Application.Abstractions.Identity;
-using Lettra.Bootstrap;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Common;
@@ -11,11 +8,7 @@ using Lettra.Contracts.Reminders;
 using Lettra.Infrastructure.Persistence.Security;
 using Lettra.Infrastructure.Persistence.Sqlite.Local;
 using Lettra.UI.Abstractions;
-using Lettra.UI.Gateway.Http;
-using Lettra.UI.Gateway.InProcess;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Http;
 
 namespace Lettra.Api.Tests;
 
@@ -25,63 +18,11 @@ namespace Lettra.Api.Tests;
 /// </summary>
 public sealed partial class GatewayParityTests(LettraApiFactory factory) : IClassFixture<LettraApiFactory>, IDisposable
 {
-    private readonly string _folder = Directory.CreateTempSubdirectory("lettra-maui-").FullName;
+    private readonly GatewayHarness _harness = new(factory);
 
-    private ServiceProvider HttpGateway(Guid dossier)
-    {
-        ServiceCollection services = new();
-        services.AddSingleton<IDossierSelection>(new FixedDossierSelection(dossier));
-        services.AddHttpGateways(new Uri("http://localhost/"));
-        services.ConfigureAll<HttpClientFactoryOptions>(o => o.HttpMessageHandlerBuilderActions.Add(b =>
-        {
-            b.PrimaryHandler = factory.Server.CreateHandler();
-            b.AdditionalHandlers.Insert(0, new BearerHandler(LettraApiFactory.TokenFor(LettraApiFactory.ManagerId)));
-        }));
-        return services.BuildServiceProvider();
-    }
+    public static TheoryData<string> Transports => GatewayHarness.Transports;
 
-    /// <summary>Le poste isolé (mode 1) : registre local, premier dossier créé au démarrage, base SQLite chiffrée.</summary>
-    private ServiceProvider InProcessGateway(Guid? dossier)
-    {
-        IConfiguration configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
-        {
-            [LettraBootstrap.DeploymentModeKey] = "IsolatedDesktop",
-            [LettraBootstrap.LocalDataDirectoryKey] = _folder,
-            ["Lettra:LocalIdentity:StorePath"] = Path.Combine(_folder, "compte-local.json"),
-            ["Lettra:LocalIdentity:Pbkdf2Iterations"] = "1000",
-            // Comme l'API de test : la plateforme agréée simulée (par défaut, aucune plateforme et tout envoi échoue).
-            ["Lettra:EInvoicing:Platform"] = "Simulated",
-        }).Build();
-
-        ServiceCollection services = new();
-        services.AddLogging();
-        services.AddLettra(configuration);
-        services.AddSingleton<IKekStore, InMemoryKekStore>();
-        services.AddSingleton<IDossierSelection>(sp => new FixedDossierSelection(dossier ?? sp.GetRequiredService<LocalDossierRegistry>().ActiveDossierId));
-        services.AddInProcessGateways();
-        ServiceProvider provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
-
-        // Le poste isolé n'ouvre rien avant le déverrouillage : on crée le compte local, ce qui ouvre la session.
-        ILocalAccounts accounts = provider.GetRequiredService<ILocalAccounts>();
-        if (!accounts.GetStatusAsync(default).AsTask().GetAwaiter().GetResult().Exists)
-        {
-            accounts.CreateAsync("Poste de test", "phrase secrète de test", default).AsTask().GetAwaiter().GetResult().IsSuccess.Should().BeTrue();
-        }
-        else
-        {
-            accounts.UnlockAsync("phrase secrète de test", default).AsTask().GetAwaiter().GetResult().IsSuccess.Should().BeTrue();
-        }
-
-        provider.InitializeLettraAsync(configuration, CancellationToken.None).GetAwaiter().GetResult();
-        return provider;
-    }
-
-    public static TheoryData<string> Transports => ["http", "in-process"];
-
-    private ServiceProvider Gateway(string transport, Guid? dossier = null) =>
-        transport == "http"
-            ? HttpGateway(dossier ?? LettraApiFactory.DossierId)
-            : InProcessGateway(dossier);
+    private ServiceProvider Gateway(string transport, Guid? dossier = null) => _harness.Gateway(transport, dossier);
 
     [Theory]
     [MemberData(nameof(Transports))]
@@ -295,29 +236,7 @@ public sealed partial class GatewayParityTests(LettraApiFactory factory) : IClas
         (await fec.ExportAsync(to, from, default)).Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Fec.PeriodInvalid);
     }
 
-    private static async Task SaveCompanyProfileAsync(IServiceProvider services) =>
-        (await services.GetRequiredService<IBillingSettingsGateway>().SaveCompanyProfileAsync(
-            new SaveCompanyProfileRequest
-            {
-                Name = "Conseil Lettra", LegalForm = "SAS", ShareCapital = 10_000m, Siren = "552100554", Rcs = "RCS Paris 552 100 554",
-                VatNumber = "FR96552100554", AddressLine1 = "10 avenue de l'Opéra", PostalCode = "75001", City = "Paris",
-                LatePenaltyRate = 10m, EarlyPaymentDiscount = "Pas d'escompte pour paiement anticipé",
-            },
-            null,
-            default)).IsSuccess.Should().BeTrue();
+    private static Task SaveCompanyProfileAsync(IServiceProvider services) => GatewayHarness.SaveCompanyProfileAsync(services);
 
-    public void Dispose()
-    {
-        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
-        Directory.Delete(_folder, recursive: true);
-    }
-
-    private sealed class BearerHandler(string token) : DelegatingHandler
-    {
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            return base.SendAsync(request, cancellationToken);
-        }
-    }
+    public void Dispose() => _harness.Dispose();
 }

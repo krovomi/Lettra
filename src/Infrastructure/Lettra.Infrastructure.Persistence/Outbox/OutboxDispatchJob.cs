@@ -1,6 +1,7 @@
 using Lettra.Application.Abstractions.Outbox;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Diagnostics;
+using Lettra.Infrastructure.Persistence.Hosting;
 using Lettra.Infrastructure.Persistence.Integrity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -45,13 +46,7 @@ internal sealed partial class OutboxDispatchJob(
             return;
         }
 
-        await Task.Delay(settings.InitialDelay, stoppingToken).ConfigureAwait(false);
-        using PeriodicTimer timer = new(settings.Interval);
-        do
-        {
-            await RunPassAsync(stoppingToken).ConfigureAwait(false);
-        }
-        while (await timer.WaitForNextTickAsync(stoppingToken).ConfigureAwait(false));
+        await PeriodicPass.RunAsync(settings.InitialDelay, settings.Interval, clock, RunPassAsync, stoppingToken).ConfigureAwait(false);
     }
 
     internal async Task<OutboxPass> RunPassAsync(CancellationToken cancellationToken)

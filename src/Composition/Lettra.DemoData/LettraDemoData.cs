@@ -143,7 +143,7 @@ public static partial class LettraDemoData
             LogNotEmpty(logger, dossier);
         }
 
-        DateOnly today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(TimeProvider.System.GetUtcNow(), TimeZoneInfo.FindSystemTimeZoneById("Europe/Paris")).DateTime);
+        DateOnly today = LegalCalendar.Today(TimeProvider.System);
         List<DemoDossierReport> reports = [];
         List<string> notes = [];
         LocalDossierRegistry? registry = services.GetService<LocalDossierRegistry>();

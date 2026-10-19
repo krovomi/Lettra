@@ -79,14 +79,10 @@ public static class ReceivablesSummary
 internal sealed class GetReceivablesSummaryHandler(IReceivablesReader reader, TimeProvider clock)
     : IQueryHandler<GetReceivablesSummaryQuery, Result<ReceivablesSummaryResponse>>
 {
-    private static readonly TimeZoneInfo Paris = TimeZoneInfo.FindSystemTimeZoneById("Europe/Paris");
-
     public async Task<Result<ReceivablesSummaryResponse>> HandleAsync(GetReceivablesSummaryQuery query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
         IReadOnlyList<ReceivableRow> rows = await reader.ReadAsync(cancellationToken).ConfigureAwait(false);
-        // La date légale est celle de Paris, pas celle du serveur (UTC).
-        DateOnly today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(clock.GetUtcNow(), Paris).DateTime);
-        return ReceivablesSummary.Compute(rows, today);
+        return ReceivablesSummary.Compute(rows, LegalCalendar.Today(clock));
     }
 }

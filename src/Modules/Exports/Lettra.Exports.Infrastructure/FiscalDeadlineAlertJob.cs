@@ -2,7 +2,9 @@ using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Contracts.Tax;
 using Lettra.Domain.Common;
+using Lettra.Domain.SharedKernel;
 using Lettra.Exports.Application.Tax;
+using Lettra.Infrastructure.Persistence.Hosting;
 using Lettra.Infrastructure.Persistence.Integrity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -46,13 +48,7 @@ internal sealed partial class FiscalDeadlineAlertJob(
             return;
         }
 
-        await Task.Delay(settings.InitialDelay, stoppingToken).ConfigureAwait(false);
-        using PeriodicTimer timer = new(settings.Interval);
-        do
-        {
-            await RunPassAsync(stoppingToken).ConfigureAwait(false);
-        }
-        while (await timer.WaitForNextTickAsync(stoppingToken).ConfigureAwait(false));
+        await PeriodicPass.RunAsync(settings.InitialDelay, settings.Interval, clock, RunPassAsync, stoppingToken).ConfigureAwait(false);
     }
 
     internal async Task<(int Checked, int Soon, int Overdue, int Failed)> RunPassAsync(CancellationToken cancellationToken)
@@ -68,7 +64,7 @@ internal sealed partial class FiscalDeadlineAlertJob(
             return (0, 0, 0, 0);
         }
 
-        DateOnly today = TaxClock.Today(clock);
+        DateOnly today = LegalCalendar.Today(clock);
         int checkedCount = 0, soon = 0, overdue = 0, failed = 0;
         foreach (TenantDescriptor dossier in dossiers)
         {

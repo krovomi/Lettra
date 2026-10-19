@@ -95,7 +95,7 @@ internal static class HttpResponseExtensions
 
         // 412 (ADR-0013) : le serveur joint le document actuel, pour la fusion à l'écran.
         if (problem?.Code == ErrorCodes.Concurrency.VersionMismatch && problem.Current is JsonElement current
-            && current.ValueKind == JsonValueKind.Object && current.Deserialize(typeInfo) is T currentValue)
+            && current.ValueKind == JsonValueKind.Object && TryRead(current, typeInfo) is T currentValue)
         {
             return OperationResult<T>.Stale(currentValue);
         }
@@ -115,6 +115,22 @@ internal static class HttpResponseExtensions
         }
 
         return OperationResult<T>.Failure(errors);
+    }
+
+    /// <summary>
+    /// La pièce jointe au 412 n'a pas toujours le type attendu : une suppression la lit comme un
+    /// <see cref="ProblemResponse"/>. Illisible, elle est ignorée et le refus garde son code.
+    /// </summary>
+    private static T? TryRead<T>(JsonElement current, JsonTypeInfo<T> typeInfo)
+    {
+        try
+        {
+            return current.Deserialize(typeInfo);
+        }
+        catch (JsonException)
+        {
+            return default;
+        }
     }
 }
 

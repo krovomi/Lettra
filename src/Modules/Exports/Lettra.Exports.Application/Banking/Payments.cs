@@ -52,7 +52,7 @@ internal sealed partial class RecordPaymentHandler(
     {
         ArgumentNullException.ThrowIfNull(command);
         RecordPaymentRequest request = command.Request ?? new RecordPaymentRequest();
-        List<Error> errors = Precheck(request, BankingCalendar.Today(clock));
+        List<Error> errors = Precheck(request, LegalCalendar.Today(clock));
         if (errors.Count > 0)
         {
             return Result<PaymentResponse>.Failure(errors);
@@ -286,7 +286,7 @@ internal sealed class ReversePaymentHandler(
     {
         ArgumentNullException.ThrowIfNull(command);
         ReversePaymentRequest request = command.Request ?? new ReversePaymentRequest();
-        DateOnly today = BankingCalendar.Today(clock);
+        DateOnly today = LegalCalendar.Today(clock);
         if (request.Date is DateOnly asked && (asked > today || asked.Year < 2000))
         {
             return PaymentErrors.DateInvalid;
@@ -426,7 +426,7 @@ internal sealed class GetOpenInvoicesHandler(IReceivableDocumentReader receivabl
     public async Task<Result<IReadOnlyList<OpenInvoiceResponse>>> HandleAsync(GetOpenInvoicesQuery query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
-        DateOnly today = BankingCalendar.Today(clock);
+        DateOnly today = LegalCalendar.Today(clock);
         IReadOnlyList<ReceivableDocument> documents = await receivables.ListAsync(
             query.CustomerId is Guid c ? new CustomerId(c) : null, cancellationToken).ConfigureAwait(false);
         List<OpenInvoiceResponse> open =
@@ -523,7 +523,7 @@ internal static class PaymentViews
         0m,
         0m,
         payment.Amount,
-        "EUR",
+        Money.Euro,
         payment.ComputeFingerprint());
 
     public static string? CodeOf(IEnumerable<Lettering> active, Guid paymentId) =>

@@ -213,4 +213,43 @@ public sealed class BillingDomainTests
         profile.Update(draft with { VatDeclarationRegime = (VatDeclarationRegime)9 }, Now)
             .Errors.Should().ContainSingle().Which.Target.Should().Be(nameof(CompanyProfile.VatDeclarationRegime));
     }
+
+    [Theory]
+    [InlineData(30, null, 0.3)]
+    [InlineData(null, 300, 0.25)]
+    public void La_part_d_un_acompte_se_calcule_en_pourcentage_ou_en_montant(int? percent, int? amount, double expected)
+    {
+        Quote quote = AcceptedQuote(Service(10, 100m)); // 1 200 € TTC
+
+        quote.DownPaymentRatio(percent, amount).Value.Should().Be((decimal)expected);
+    }
+
+    [Theory]
+    [InlineData(30, 300)]
+    [InlineData(null, null)]
+    public void Un_acompte_se_demande_en_pourcentage_ou_en_montant_pas_les_deux(int? percent, int? amount)
+    {
+        Quote quote = AcceptedQuote(Service(10, 100m));
+
+        quote.DownPaymentRatio(percent, amount).Errors.Single().Code.Should().Be(BillingErrors.DownPaymentInvalidCode);
+    }
+
+    [Fact]
+    public void Un_devis_a_zero_ne_prend_pas_d_acompte()
+    {
+        Quote quote = AcceptedQuote(Service(1, 0m));
+
+        quote.DownPaymentRatio(30m, null).Errors.Single().Code.Should().Be(BillingErrors.DownPaymentInvalidCode);
+    }
+
+    [Fact]
+    public void Seul_un_brouillon_se_supprime()
+    {
+        Invoice draft = Invoice.Create(InvoiceId.New(), Client, Martin, Header(), [Service(3, 100m)], User, Now).Value;
+        Invoice validated = Validated(Invoice.Create(InvoiceId.New(), Client, Martin, Header(), [Service(3, 100m)], User, Now).Value, "FAC-000002");
+
+        draft.CanBeDeleted().IsSuccess.Should().BeTrue();
+        validated.CanBeDeleted().Errors.Single().Code.Should().Be(BillingErrors.NotDraftCode);
+        AcceptedQuote(Service(1, 10m)).CanBeDeleted().Errors.Single().Code.Should().Be(BillingErrors.NotDraftCode);
+    }
 }

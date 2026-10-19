@@ -9,6 +9,7 @@ using Lettra.Contracts.Common;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
+using static Lettra.Api.Infrastructure.HttpResults;
 
 namespace Lettra.Api.Endpoints;
 
@@ -56,7 +57,7 @@ internal static class RecurringInvoiceEndpoints
     {
         Result<PagedResponse<RecurringInvoiceSummary>> result = await queries.QueryAsync(
             new ListRecurringInvoicesQuery(tenant.Current.DossierId, search, customerId, active, dueOnly, sort, descending, page, pageSize), cancellationToken).ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return Ok(result);
     }
 
     private static Task<IResult> GetAsync(Guid id, ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken) =>
@@ -73,9 +74,7 @@ internal static class RecurringInvoiceEndpoints
         }
 
         Result<RecurringInvoiceResponse> read = await queries.QueryAsync(new GetRecurringInvoiceQuery(dossier, created.Value), cancellationToken).ConfigureAwait(false);
-        return read.IsSuccess
-            ? TypedResults.Created($"/api/v1/recurring-invoices/{created.Value.Value}", read.Value).WithETag(read.Value.Version)
-            : read.Errors.ToProblem();
+        return Created($"/api/v1/recurring-invoices/{created.Value.Value}", read, r => r.Version);
     }
 
     private static Task<IResult> UpdateAsync(
@@ -119,8 +118,6 @@ internal static class RecurringInvoiceEndpoints
     private static async Task<IResult> ReadAsync(IQueryDispatcher queries, DossierId dossier, RecurringInvoiceId id, CancellationToken cancellationToken)
     {
         Result<RecurringInvoiceResponse> result = await queries.QueryAsync(new GetRecurringInvoiceQuery(dossier, id), cancellationToken).ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value).WithETag(result.Value.Version) : result.Errors.ToProblem();
+        return Versioned(result, r => r.Version);
     }
-
-    private static IResult Ok<T>(Result<T> result) => result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
 }

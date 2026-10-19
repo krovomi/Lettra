@@ -18,19 +18,7 @@ namespace Lettra.UI.Gateway.InProcess;
 internal sealed class InProcessCustomersGateway(IServiceScopeFactory scopes) : ICustomersGateway
 {
     public Task<OperationResult<CustomerResponse>> CreateAsync(CreateCustomerRequest request, CancellationToken cancellationToken) =>
-        RunAsync(async (sp, dossier, ct) =>
-        {
-            Result<CustomerId> created = await sp.GetRequiredService<ICommandDispatcher>()
-                .SendAsync(request.ToCommand(dossier), ct).ConfigureAwait(false);
-            if (created.IsFailure)
-            {
-                return OperationResult<CustomerResponse>.Failure(created.Errors.ToErrorDetails());
-            }
-
-            Result<CustomerResponse> read = await sp.GetRequiredService<IQueryDispatcher>()
-                .QueryAsync(new GetCustomerQuery(dossier, created.Value), ct).ConfigureAwait(false);
-            return read.ToOperationResult();
-        }, cancellationToken);
+        RunAsync((sp, dossier, ct) => InProcessScope.CreateThenReadAsync(sp, request.ToCommand(dossier), id => new GetCustomerQuery(dossier, id), ct), cancellationToken);
 
     public Task<OperationResult<PagedResponse<CustomerSummary>>> ListAsync(int page, int pageSize, CancellationToken cancellationToken) =>
         RunAsync(async (sp, dossier, ct) =>
@@ -41,12 +29,7 @@ internal sealed class InProcessCustomersGateway(IServiceScopeFactory scopes) : I
         }, cancellationToken);
 
     public Task<OperationResult<CustomerResponse>> GetAsync(Guid id, CancellationToken cancellationToken) =>
-        RunAsync(async (sp, dossier, ct) =>
-        {
-            Result<CustomerResponse> result = await sp.GetRequiredService<IQueryDispatcher>()
-                .QueryAsync(new GetCustomerQuery(dossier, new CustomerId(id)), ct).ConfigureAwait(false);
-            return result.ToOperationResult();
-        }, cancellationToken);
+        RunAsync((sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetCustomerQuery(dossier, new CustomerId(id)), ct), cancellationToken);
 
     public Task<OperationResult<PagedResponse<CustomerSummary>>> SearchAsync(PartyListQuery query, CancellationToken cancellationToken) =>
         RunAsync((sp, dossier, ct) => InProcessScope.QueryAsync(
@@ -59,7 +42,7 @@ internal sealed class InProcessCustomersGateway(IServiceScopeFactory scopes) : I
             sp, request.ToUpdateCommand(dossier, new CustomerId(id), expectedVersion), new GetCustomerQuery(dossier, new CustomerId(id)), ct), cancellationToken);
 
     public Task<OperationResult<bool>> DeleteAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken) =>
-        RunAsync((sp, dossier, ct) => InProcessCommands.SendAsync(sp, new DeleteCustomerCommand(dossier, new CustomerId(id), expectedVersion), ct), cancellationToken);
+        RunAsync((sp, dossier, ct) => InProcessScope.SendAsync(sp, new DeleteCustomerCommand(dossier, new CustomerId(id), expectedVersion), ct), cancellationToken);
 
     private Task<OperationResult<T>> RunAsync<T>(
         Func<IServiceProvider, DossierId, CancellationToken, Task<OperationResult<T>>> operation,

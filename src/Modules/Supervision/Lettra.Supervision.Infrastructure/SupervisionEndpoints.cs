@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using Lettra.Domain.Common;
 using Lettra.Supervision.Application;
 using Microsoft.AspNetCore.Builder;
@@ -38,9 +39,19 @@ public static class SupervisionEndpoints
             return TypedResults.Unauthorized();
         }
 
-        AlertmanagerPayload? payload = await context.Request
-            .ReadFromJsonAsync(AlertmanagerJsonContext.Default.AlertmanagerPayload, cancellationToken)
-            .ConfigureAwait(false);
+        AlertmanagerPayload? payload;
+        try
+        {
+            payload = await context.Request
+                .ReadFromJsonAsync(AlertmanagerJsonContext.Default.AlertmanagerPayload, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (JsonException)
+        {
+            // 400 et non 500 : Alertmanager rejoue les 5xx, une charge illisible reviendrait sans fin.
+            return TypedResults.BadRequest();
+        }
+
         if (payload?.Alerts is null)
         {
             return TypedResults.BadRequest();

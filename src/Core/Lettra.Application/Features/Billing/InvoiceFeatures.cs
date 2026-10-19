@@ -186,7 +186,7 @@ internal sealed class CheckInvoiceHandler(IInvoiceRepository invoices, ICompanyP
         }
 
         SellerTerms? terms = invoice.IsDraft ? await BillingLoads.SellerTermsAsync(profiles, cancellationToken).ConfigureAwait(false) : null;
-        return ComplianceChecker.Check(invoice.ToComplianceDocument(terms), BillingCalendar.Today(clock)).ToResponse();
+        return ComplianceChecker.Check(invoice.ToComplianceDocument(terms), LegalCalendar.Today(clock)).ToResponse();
     }
 }
 
@@ -292,9 +292,10 @@ internal sealed class DeleteInvoiceHandler(
             return version;
         }
 
-        if (!invoice.IsDraft)
+        Result deletable = invoice.CanBeDeleted();
+        if (deletable.IsFailure)
         {
-            return BillingErrors.NotDraft;
+            return deletable;
         }
 
         // Supprimer la facture finale brouillon rend le devis à nouveau facturable.

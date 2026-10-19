@@ -178,7 +178,7 @@ public sealed class Invoice : BillingDocument<InvoiceId>
     /// Vrai si la pièce porte l'option pour le paiement de la TVA d'après les débits (mention figée à la validation) :
     /// la TVA de ses services est alors exigible dès la facture.
     /// </summary>
-    public bool VatOnDebits => LegalMentionList.Any(m => m.Contains("débits", StringComparison.Ordinal));
+    public bool VatOnDebits => LegalMentionList.Any(LegalMentionTexts.IsVatOnDebits);
 
     /// <summary>Facture saisie librement.</summary>
     public static Result<Invoice> Create(
@@ -654,7 +654,7 @@ public sealed class Invoice : BillingDocument<InvoiceId>
             seller is null ? new ComplianceParty(null, null, null, null, null, null) : ToParty(seller),
             ToParty(Customer),
             franchise,
-            terms?.VatOnDebits ?? LegalMentionList.Any(m => m.Contains("débits", StringComparison.Ordinal)),
+            terms?.VatOnDebits ?? VatOnDebits,
             Number,
             IssueDate,
             DeliveryDate,
@@ -680,7 +680,7 @@ public sealed class Invoice : BillingDocument<InvoiceId>
         // Un avoir est une facture rectificative : il porte les mentions de la facture (art. 242 nonies A, I-13° bis CGI).
         if (terms.VatOnDebits)
         {
-            mentions.Add("Option pour le paiement de la TVA d'après les débits");
+            mentions.Add(LegalMentionTexts.VatOnDebits);
         }
 
         if (Kind == InvoiceKind.CreditNote)
@@ -696,9 +696,7 @@ public sealed class Invoice : BillingDocument<InvoiceId>
 
         if (Customer.IsBusiness)
         {
-            mentions.Add(string.Create(
-                CultureInfo.GetCultureInfo("fr-FR"),
-                $"Indemnité forfaitaire pour frais de recouvrement en cas de retard de paiement : {MandatoryMentions.RecoveryIndemnityAmount:0} €"));
+            mentions.Add(LegalMentionTexts.RecoveryIndemnity);
         }
 
         if (!string.IsNullOrWhiteSpace(terms.EarlyPaymentDiscount))

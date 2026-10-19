@@ -3,6 +3,7 @@ using Lettra.Contracts.Exports;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Common;
 using Lettra.Domain.Integrity;
+using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Exports.Application.EInvoicing.Platform;
 
@@ -13,7 +14,7 @@ namespace Lettra.Exports.Application.EInvoicing.Platform;
 /// </summary>
 internal static class PlatformJournal
 {
-    private const string Currency = "EUR";
+    private const string Currency = Money.Euro;
 
     public static string Fingerprint(PlatformTransmission transmission, int position)
     {

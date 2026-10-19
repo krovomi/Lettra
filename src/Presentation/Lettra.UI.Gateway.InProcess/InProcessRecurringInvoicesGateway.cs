@@ -32,14 +32,14 @@ internal sealed class InProcessRecurringInvoicesGateway(IServiceScopeFactory sco
     public Task<OperationResult<RecurringInvoiceResponse>> CreateAsync(SaveRecurringInvoiceRequest request, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(
             scopes,
-            (sp, dossier, ct) => InProcessCommands.CreateThenReadAsync(
+            (sp, dossier, ct) => InProcessScope.CreateThenReadAsync(
                 sp, new CreateRecurringInvoiceCommand(dossier, request), id => new GetRecurringInvoiceQuery(dossier, id), ct),
             cancellationToken);
 
     public Task<OperationResult<RecurringInvoiceResponse>> UpdateAsync(Guid id, SaveRecurringInvoiceRequest request, long? expectedVersion, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(
             scopes,
-            (sp, dossier, ct) => InProcessCommands.SendThenReadAsync(
+            (sp, dossier, ct) => InProcessScope.WriteThenReadAsync(
                 sp,
                 new UpdateRecurringInvoiceCommand(dossier, new RecurringInvoiceId(id), request, expectedVersion),
                 new GetRecurringInvoiceQuery(dossier, new RecurringInvoiceId(id)),
@@ -49,7 +49,7 @@ internal sealed class InProcessRecurringInvoicesGateway(IServiceScopeFactory sco
     public Task<OperationResult<RecurringInvoiceResponse>> SetActiveAsync(Guid id, bool isActive, long? expectedVersion, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(
             scopes,
-            (sp, dossier, ct) => InProcessCommands.SendThenReadAsync(
+            (sp, dossier, ct) => InProcessScope.WriteThenReadAsync(
                 sp,
                 new SetRecurringInvoiceActiveCommand(dossier, new RecurringInvoiceId(id), isActive, expectedVersion),
                 new GetRecurringInvoiceQuery(dossier, new RecurringInvoiceId(id)),
@@ -58,7 +58,7 @@ internal sealed class InProcessRecurringInvoicesGateway(IServiceScopeFactory sco
 
     public Task<OperationResult<bool>> DeleteAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(
-            scopes, (sp, dossier, ct) => InProcessCommands.SendAsync(sp, new DeleteRecurringInvoiceCommand(dossier, new RecurringInvoiceId(id), expectedVersion), ct), cancellationToken);
+            scopes, (sp, dossier, ct) => InProcessScope.SendAsync(sp, new DeleteRecurringInvoiceCommand(dossier, new RecurringInvoiceId(id), expectedVersion), ct), cancellationToken);
 
     public Task<OperationResult<RecurringRunResponse>> RunAsync(Guid? id, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(

@@ -3,6 +3,7 @@ using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Exports;
 using Lettra.Contracts.Pricing;
+using Lettra.Domain.SharedKernel;
 using Lettra.UI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -33,8 +34,6 @@ public sealed class DemoDataException(string message) : Exception(message);
 /// </summary>
 internal sealed class DemoDossierLoader(IServiceProvider services, DemoClock clock)
 {
-    private static readonly TimeZoneInfo Paris = TimeZoneInfo.FindSystemTimeZoneById("Europe/Paris");
-
     private readonly ICustomersGateway _customers = services.GetRequiredService<ICustomersGateway>();
     private readonly ISuppliersGateway _suppliers = services.GetRequiredService<ISuppliersGateway>();
     private readonly ICatalogGateway _catalog = services.GetRequiredService<ICatalogGateway>();
@@ -264,7 +263,7 @@ internal sealed class DemoDossierLoader(IServiceProvider services, DemoClock clo
                     return;
                 }
 
-                DateOnly date = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(payment.At, Paris).DateTime);
+                DateOnly date = LegalCalendar.DateOf(payment.At);
                 Ok(await _platform.ReportPaymentAsync(state.Current.Id, new ReportPaymentRequest { Date = date, Amount = amount }, ct).ConfigureAwait(false), "encaissement");
                 _paymentCount++;
             });

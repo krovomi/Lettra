@@ -109,6 +109,9 @@ public abstract class BillingDocument<TId> : AggregateRoot<TId>, IVersioned
 
     public abstract bool IsDraft { get; }
 
+    /// <summary>Seul un brouillon se supprime : une pièce validée est numérotée et inscrite au journal d'intégrité.</summary>
+    public Result CanBeDeleted() => IsDraft ? Result.Success() : BillingErrors.NotDraft;
+
     /// <summary>Catégorie d'opération (mention 2026) : biens, services, ou mixte.</summary>
     public OperationCategory OperationCategory =>
         _lines.Where(l => l.Nature != RevenueNature.DownPayment).Select(l => l.Kind).Distinct().Count() switch

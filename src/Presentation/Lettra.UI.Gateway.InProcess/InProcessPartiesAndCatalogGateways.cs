@@ -70,19 +70,31 @@ internal static class InProcessScope
 
         return OperationResult<T>.Failure(written.Errors.ToErrorDetails());
     }
+
+    /// <summary>Création puis relecture de ce qui vient d'être créé.</summary>
+    public static async Task<OperationResult<T>> CreateThenReadAsync<TId, T>(
+        IServiceProvider services, ICommand<Result<TId>> command, Func<TId, IQuery<Result<T>>> read, CancellationToken cancellationToken)
+    {
+        Result<TId> created = await services.GetRequiredService<ICommandDispatcher>().SendAsync(command, cancellationToken).ConfigureAwait(false);
+        return created.IsFailure
+            ? OperationResult<T>.Failure(created.Errors.ToErrorDetails())
+            : await QueryAsync(services, read(created.Value), cancellationToken).ConfigureAwait(false);
+    }
+
+    public static async Task<OperationResult<bool>> SendAsync(IServiceProvider services, ICommand<Result> command, CancellationToken cancellationToken)
+    {
+        Result done = await services.GetRequiredService<ICommandDispatcher>().SendAsync(command, cancellationToken).ConfigureAwait(false);
+        return done.IsFailure ? OperationResult<bool>.Failure(done.Errors.ToErrorDetails()) : OperationResult<bool>.Success(true);
+    }
 }
 
 internal sealed class InProcessSuppliersGateway(IServiceScopeFactory scopes) : ISuppliersGateway
 {
     public Task<OperationResult<SupplierResponse>> CreateAsync(CreateSupplierRequest request, CancellationToken cancellationToken) =>
-        InProcessScope.RunAsync(scopes, async (sp, dossier, ct) =>
-        {
-            Result<SupplierId> created = await sp.GetRequiredService<ICommandDispatcher>()
-                .SendAsync(request.ToCommand(dossier), ct).ConfigureAwait(false);
-            return created.IsFailure
-                ? OperationResult<SupplierResponse>.Failure(created.Errors.ToErrorDetails())
-                : await InProcessScope.QueryAsync(sp, new GetSupplierQuery(dossier, created.Value), ct).ConfigureAwait(false);
-        }, cancellationToken);
+        InProcessScope.RunAsync(
+            scopes,
+            (sp, dossier, ct) => InProcessScope.CreateThenReadAsync(sp, request.ToCommand(dossier), id => new GetSupplierQuery(dossier, id), ct),
+            cancellationToken);
 
     public Task<OperationResult<PagedResponse<SupplierSummary>>> ListAsync(int page, int pageSize, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new ListSuppliersQuery(dossier, page, pageSize), ct), cancellationToken);
@@ -103,7 +115,7 @@ internal sealed class InProcessSuppliersGateway(IServiceScopeFactory scopes) : I
 
     public Task<OperationResult<bool>> DeleteAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(
-            scopes, (sp, dossier, ct) => InProcessCommands.SendAsync(sp, new DeleteSupplierCommand(dossier, new SupplierId(id), expectedVersion), ct), cancellationToken);
+            scopes, (sp, dossier, ct) => InProcessScope.SendAsync(sp, new DeleteSupplierCommand(dossier, new SupplierId(id), expectedVersion), ct), cancellationToken);
 }
 
 internal sealed class InProcessCatalogGateway(IServiceScopeFactory scopes) : ICatalogGateway

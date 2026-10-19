@@ -111,11 +111,3 @@ public sealed record GetBankReconciliationStatusQuery(DossierId Dossier)
 {
     public Permission Permission => Permission.DossierLire;
 }
-
-/// <summary>La date légale des encaissements : celle de Paris, pas celle du serveur (UTC).</summary>
-internal static class BankingCalendar
-{
-    private static readonly TimeZoneInfo Paris = TimeZoneInfo.FindSystemTimeZoneById("Europe/Paris");
-
-    public static DateOnly Today(TimeProvider clock) => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(clock.GetUtcNow(), Paris).DateTime);
-}

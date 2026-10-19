@@ -25,6 +25,7 @@ internal sealed partial class EscalationJob(
     IServiceScopeFactory scopes,
     IOptions<EscalationJobOptions> options,
     IOptions<DossierMigrationJobOptions> worker,
+    TimeProvider clock,
     ILogger<EscalationJob> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -35,7 +36,7 @@ internal sealed partial class EscalationJob(
             return;
         }
 
-        using PeriodicTimer timer = new(settings.Interval);
+        using PeriodicTimer timer = new(settings.Interval, clock);
         while (await timer.WaitForNextTickAsync(stoppingToken).ConfigureAwait(false))
         {
             try

@@ -131,7 +131,7 @@ internal sealed class ListQuotesHandler(IQuoteReadStore store, TimeProvider cloc
             query.Direction,
             query.MinAmount,
             query.MaxAmount);
-        return await store.ListAsync(filter, (QuoteStatus?)(int?)query.Status, BillingCalendar.Today(clock), cancellationToken).ConfigureAwait(false);
+        return await store.ListAsync(filter, (QuoteStatus?)(int?)query.Status, LegalCalendar.Today(clock), cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -142,7 +142,7 @@ internal sealed class GetQuoteHandler(IQuoteRepository quotes, TimeProvider cloc
     {
         ArgumentNullException.ThrowIfNull(query);
         Quote? quote = await quotes.FindAsync(query.QuoteId, cancellationToken).ConfigureAwait(false);
-        return quote is null ? QuoteErrors.NotFound : quote.ToResponse(BillingCalendar.Today(clock));
+        return quote is null ? QuoteErrors.NotFound : quote.ToResponse(LegalCalendar.Today(clock));
     }
 }
 
@@ -159,7 +159,7 @@ internal sealed class CheckQuoteHandler(IQuoteRepository quotes, ICompanyProfile
         }
 
         SellerTerms? terms = await BillingLoads.SellerTermsAsync(profiles, cancellationToken).ConfigureAwait(false);
-        return ComplianceChecker.Check(quote.ToComplianceDocument(terms), BillingCalendar.Today(clock)).ToResponse();
+        return ComplianceChecker.Check(quote.ToComplianceDocument(terms), LegalCalendar.Today(clock)).ToResponse();
     }
 }
 
@@ -248,9 +248,10 @@ internal sealed class DeleteQuoteHandler(IQuoteRepository quotes, IUnitOfWork un
             return version;
         }
 
-        if (!quote.IsDraft)
+        Result deletable = quote.CanBeDeleted();
+        if (deletable.IsFailure)
         {
-            return BillingErrors.NotDraft;
+            return deletable;
         }
 
         await quotes.RemoveAsync(quote, cancellationToken).ConfigureAwait(false);
@@ -295,13 +296,13 @@ internal sealed class ValidateQuoteHandler(
                 Quote quote = loaded.Value;
                 DateTimeOffset now = clock.GetUtcNow();
                 PartySnapshot customer = await BillingLoads.RefreshedCustomerAsync(customers, quote, ct).ConfigureAwait(false);
-                Result validated = quote.Validate(number, BillingCalendar.Today(clock), customer, user.UserId, now);
+                Result validated = quote.Validate(number, LegalCalendar.Today(clock), customer, user.UserId, now);
                 if (validated.IsFailure)
                 {
                     return Result<bool>.Failure(validated.Errors);
                 }
 
-                string hash = CanonicalDocument.ComputeHash(quote.ToResponse(BillingCalendar.Today(clock)));
+                string hash = CanonicalDocument.ComputeHash(quote.ToResponse(LegalCalendar.Today(clock)));
                 Result<long> journaled = await journal.AppendAsync(
                     new DocumentLifecycleEvent(
                         JournalEntryKind.QuoteValidated,
@@ -401,12 +402,13 @@ internal sealed class CreateDownPaymentHandler(
             return QuoteErrors.NotFound;
         }
 
-        if (quote.TotalInclTax <= 0m)
+        Result<decimal> share = quote.DownPaymentRatio(command.Data.Percent, command.Data.AmountInclTax);
+        if (share.IsFailure)
         {
-            return BillingErrors.DownPaymentInvalid;
+            return Result<InvoiceId>.Failure(share.Errors);
         }
 
-        decimal ratio = command.Data.Percent is { } percent ? percent / 100m : command.Data.AmountInclTax!.Value / quote.TotalInclTax;
+        decimal ratio = share.Value;
         Result<Invoice> created = Invoice.CreateDownPayment(
             InvoiceId.New(),
             quote,
@@ -511,5 +513,5 @@ internal static class BillingTexts
 internal static class BillingJournal
 {
     /// <summary>Lettra ne facture qu'en euros pour l'instant (code ISO 4217).</summary>
-    public const string Currency = "EUR";
+    public const string Currency = Money.Euro;
 }

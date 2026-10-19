@@ -4,6 +4,7 @@ using Lettra.Application.Features.Integrity;
 using Lettra.Domain.Common;
 using Lettra.Domain.Integrity;
 using Lettra.Infrastructure.Catalog;
+using Lettra.Infrastructure.Persistence.Hosting;
 using Lettra.Infrastructure.Persistence.Integrity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -38,6 +39,7 @@ internal sealed partial class IntegrityCheckJob(
     IServiceScopeFactory scopes,
     IOptions<IntegrityCheckJobOptions> options,
     IOptions<DossierMigrationJobOptions> worker,
+    TimeProvider clock,
     ILogger<IntegrityCheckJob> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -48,13 +50,7 @@ internal sealed partial class IntegrityCheckJob(
             return;
         }
 
-        await Task.Delay(settings.InitialDelay, stoppingToken).ConfigureAwait(false);
-        using PeriodicTimer timer = new(settings.Interval);
-        do
-        {
-            await RunPassAsync(stoppingToken).ConfigureAwait(false);
-        }
-        while (await timer.WaitForNextTickAsync(stoppingToken).ConfigureAwait(false));
+        await PeriodicPass.RunAsync(settings.InitialDelay, settings.Interval, clock, RunPassAsync, stoppingToken).ConfigureAwait(false);
     }
 
     internal async Task<(int Checked, int Compromised, int Failed)> RunPassAsync(CancellationToken cancellationToken)

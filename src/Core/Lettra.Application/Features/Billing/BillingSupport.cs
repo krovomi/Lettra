@@ -6,15 +6,6 @@ using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Application.Features.Billing;
 
-/// <summary>Date du jour des pièces : la date légale est celle de Paris, pas celle du serveur (UTC).</summary>
-internal static class BillingCalendar
-{
-    private static readonly TimeZoneInfo Paris = TimeZoneInfo.FindSystemTimeZoneById("Europe/Paris");
-
-    public static DateOnly Today(TimeProvider clock) =>
-        DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(clock.GetUtcNow(), Paris).DateTime);
-}
-
 /// <summary>Chargement de la copie du client et des conditions de l'émetteur, communs aux devis et factures.</summary>
 internal static class BillingLoads
 {

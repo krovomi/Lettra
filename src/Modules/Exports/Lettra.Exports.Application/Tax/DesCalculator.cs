@@ -23,11 +23,8 @@ public static class DesCalculator
     public const string CheckNegative = "DesNegative";
 
     /// <summary>États membres de l'Union hors France, en codes ISO 3166 (la Grèce est « EL » dans les numéros de TVA).</summary>
-    public static IReadOnlySet<string> OtherMemberStates { get; } = new HashSet<string>(StringComparer.Ordinal)
-    {
-        "AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "ES", "FI", "GR", "HR", "HU", "IE", "IT", "LT", "LU", "LV",
-        "MT", "NL", "PL", "PT", "RO", "SE", "SI", "SK",
-    };
+    public static IReadOnlySet<string> OtherMemberStates { get; } =
+        new HashSet<string>(EuropeanUnion.MemberStates.Where(c => c != "FR"), StringComparer.Ordinal);
 
     /// <summary>Vrai si l'opération relève de la DES quel que soit le pays (le pays est contrôlé à part).</summary>
     public static bool IsIntraEuService(VatOperation operation)
