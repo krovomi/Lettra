@@ -1,3 +1,4 @@
+using Lettra.Application.Abstractions.Cabinet;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Outbox;
 using Lettra.Contracts.Accounting;
@@ -67,6 +68,7 @@ public static class DependencyInjection
         services.AddScoped<IQueryHandler<GetFiscalSettingsQuery, Result<FiscalSettingsResponse>>, GetFiscalSettingsHandler>();
         services.AddScoped<ICommandHandler<UpdateFiscalSettingsCommand, Result<FiscalSettingsResponse>>, UpdateFiscalSettingsHandler>();
         services.AddScoped<ICommandHandler<MarkFiscalFilingCommand, Result<FiscalDeadlineResponse>>, MarkFiscalFilingHandler>();
+        services.AddScoped<IDossierIndicatorSource, VatToDeclareIndicatorSource>();
 
         // Envois à la plateforme par l'outbox du serveur (étape 5.4).
         services.AddScoped<IOutboxHandler, PlatformDepositHandler>();

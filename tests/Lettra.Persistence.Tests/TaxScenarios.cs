@@ -1,3 +1,4 @@
+using Lettra.Application.Abstractions.Cabinet;
 using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Tenancy;
@@ -78,6 +79,12 @@ internal static class TaxScenarios
             VatReturnResponse vat = (await queries.QueryAsync(new GetVatReturnQuery(dossier, today), default)).Value;
             vat.FiledAt.Should().NotBeNull();
             vat.DueDate.Day.Should().Be(19);
+
+            // La vue cabinet lit « TVA à déclarer » dans la base du dossier, comme le calendrier.
+            IReadOnlyList<FiscalDeadlineResponse> upcoming = (await queries.QueryAsync(new GetUpcomingFiscalDeadlinesQuery(dossier), default)).Value;
+            DossierIndicator expected = VatToDeclareIndicatorSource.Indicator(upcoming);
+            VatToDeclareIndicatorSource source = scope.ServiceProvider.GetServices<IDossierIndicatorSource>().OfType<VatToDeclareIndicatorSource>().Single();
+            (await source.ComputeAsync(today, default)).Should().ContainSingle().Which.Should().Be(expected);
         }
 
         TenantDescriptor[] dossiers = [harness.Descriptor(dossier)];
