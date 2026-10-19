@@ -78,6 +78,8 @@ trentaine de secondes à s'ouvrir après la commande. Les démarrages suivants s
 `docker compose -f deploy/demo/compose.yaml down` arrête la démonstration (les données restent) ; ajouter `-v` remet
 tout à zéro. Détails, ports et télémétrie : [deploy/demo/README.md](deploy/demo/README.md).
 
+Les e-mails envoyés par la démo (relances, invitations) se lisent dans MailPit : http://localhost:8025.
+
 > La CI rejoue ce chemin à chaque modification (job « Démo navigateur » de `deploy.yml`, Playwright dans Chromium) :
 > connexion, enregistrement du second facteur, écran des clients, service worker, rechargement hors ligne et
 > brouillon gardé dans le navigateur.
@@ -505,6 +507,23 @@ service, rien ne se crée tout seul. *(Vérifié : démo Docker dans Chromium à
 automatiques sur SQLite, PostgreSQL et SQL Server ; non vérifié dans les applications installées. Les modèles ne se
 synchronisent pas entre appareils.)* Détails : [docs/factures-recurrentes.md](docs/factures-recurrentes.md).
 
+### 11. Relances des factures échues
+
+Menu Comptabilité > **Relances** : les factures échues non soldées (les encaissements sont déduits), avec leur retard,
+les pénalités possibles et le prochain niveau de relance (rappel amical, relance, dernière relance, mise en demeure ;
+J+3, J+15, J+30, J+45 par défaut, réglables). **Voir la relance** montre le texte exact, dans la langue du client ;
+**Envoyer par e-mail** l'envoie, **Noter comme envoyée** garde la trace d'une relance faite par courrier ou téléphone.
+**Envoyer les relances du jour** envoie tout ce qui est dû. L'historique se cherche, se filtre et se trie. Les deux
+derniers niveaux citent les intérêts de retard et l'indemnité de 40 €. L'envoi automatique quotidien est coupé par
+défaut (case dans « Scénario de relance ») ; une fois coché, le Worker le fait toutes les 12 heures, et l'API dans la
+démo.
+
+Dans la démo, aucun e-mail ne sort de la machine : ils arrivent dans **MailPit**, http://localhost:8025. Les
+invitations de **Équipe et accès** y arrivent aussi. *(Vérifié : API, écrans et règles par les tests automatiques ;
+envoi, relance notée, passe du jour, invitation et passe automatique vérifiés à la main dans la démo Docker avec
+MailPit, à 1440 et 375 px. Non vérifié dans les applications installées.)* Détails :
+[docs/relances-et-e-mails.md](docs/relances-et-e-mails.md).
+
 ### Et ensuite
 
 - **Catalogue** : les articles et prestations, même présentation que les clients (liste, fiche, **Modifier**,
@@ -641,9 +660,10 @@ Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou 
 | Serveur du cabinet en production | La démonstration navigateur tourne sur un poste avec Docker ; un vrai serveur du cabinet ou une cellule SaaS demande Keycloak, des certificats et une infrastructure (voir plus bas). |
 | Poste relié à un serveur, synchronisation | Prête dans l'application (fichier `lettra.json`), mais demande un serveur Lettra et Keycloak. Sur un poste isolé, la page Synchronisation indique « Ce poste ne synchronise pas ». |
 | Hors ligne sur un appareil relié au serveur commun | Relié au serveur commun, l'appareil a besoin du réseau. Reste à étendre la synchronisation aux devis, factures et règlements, ou à y ouvrir les brouillons hors ligne. |
-| Invitations | Une personne ajoutée dans **Équipe et accès** apparaît et reçoit des accès, mais Lettra n'envoie pas d'e-mail et ne crée pas encore son compte de connexion (Keycloak) : elle ne peut pas encore se connecter. |
+| Invitations | Une personne ajoutée dans **Équipe et accès** reçoit une invitation par e-mail (MailPit dans la démo) et des accès, mais Lettra ne crée pas encore son compte de connexion (Keycloak) : elle ne peut pas encore se connecter. |
 | Télédéclaration de la TVA et de la DES | Non : Lettra prépare le brouillon et le fichier, le dépôt se fait sur impots.gouv ou le service en ligne des douanes. La TVA déductible (achats) n'est pas encore reprise. |
-| Envoi des devis et factures par e-mail | Non : on télécharge le PDF ou le Factur-X. Les factures récurrentes aussi : leur envoi viendra avec les e-mails et relances. |
+| Envoi des devis et factures par e-mail | Non : on télécharge le PDF ou le Factur-X, factures récurrentes comprises. Seules les relances et les invitations partent par e-mail. |
+| Relances par courrier ou en PDF, facture des pénalités | Non : Lettra envoie la relance par e-mail ou la note comme faite à la main ; il cite les pénalités sans les facturer. |
 | Applications signées | Non : avertissement de Windows au premier lancement, APK Android installé à la main, application macOS arrêtée par le Trousseau, pas de version pour iPhone réel. |
 
 ---
@@ -801,8 +821,9 @@ deploy/            Helm, OpenTofu, Argo CD, Keycloak, observabilité, essai de p
 
 ### CI
 
-`.github/workflows/ci.yml` : build et tests Linux (Testcontainers PostgreSQL, SQL Server, Keycloak), conformité
-Factur-X, applications MAUI construites et lancées (Windows ; Android sur émulateur ; simulateur iOS ; macOS, non
+`.github/workflows/ci.yml` : build et tests Linux (Testcontainers PostgreSQL, SQL Server, Keycloak) sous couverture
+de code, qui échoue sous 88 % des lignes ou 78 % des branches (rapport par assembly dans le résumé du job ; détails et
+commande locale : [docs/qualite-du-code.md](docs/qualite-du-code.md)), conformité Factur-X, applications MAUI construites et lancées (Windows ; Android sur émulateur ; simulateur iOS ; macOS, non
 bloquant tant qu'il n'est pas signé) avec leurs artefacts, gitleaks, SBOM CycloneDX,
 CodeQL, avis de tiers, images signées (cosign) sur `main`. `.github/workflows/deploy.yml` valide l'IaC, les règles
 d'alerte et l'essai de panne (API arrêtée, astreinte appelée en S1).

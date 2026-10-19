@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <!-- Menu réglable (recherche, sections repliables, favoris) et aide sans IA (questions fréquentes). Généré puis édité à la main. -->
+  <data name="Nav.Group.Favorites" xml:space="preserve"><value>Favourites</value></data>
+  <data name="Nav.Search.Label" xml:space="preserve"><value>Search the menu</value></data>
+  <data name="Nav.Search.Placeholder" xml:space="preserve"><value>Go to…</value></data>
+  <data name="Nav.Search.Clear" xml:space="preserve"><value>Clear the search</value></data>
+  <data name="Nav.Search.Count" xml:space="preserve"><value>{0} screen(s) found</value></data>
+  <data name="Nav.Search.Empty" xml:space="preserve"><value>No screen matches “{0}”.</value></data>
+  <data name="Nav.Search.Everywhere" xml:space="preserve"><value>Search “{0}” everywhere</value></data>
+  <data name="Nav.Search.AskHelp" xml:space="preserve"><value>Ask help</value></data>
+  <data name="Nav.Sections.HasCurrent" xml:space="preserve"><value>The current screen is in this section</value></data>
+  <data name="Nav.Favorite.Add" xml:space="preserve"><value>Pin {0} to favourites</value></data>
+  <data name="Nav.Favorite.Remove" xml:space="preserve"><value>Unpin {0} from favourites</value></data>
+  <data name="Nav.Home.Keywords" xml:space="preserve"><value>dashboard home kpi revenue</value></data>
+  <data name="Nav.Cabinet.Keywords" xml:space="preserve"><value>dossiers portfolio firm urgent</value></data>
+  <data name="Nav.Quotes.Keywords" xml:space="preserve"><value>estimate proposal offer quotation</value></data>
+  <data name="Nav.Invoices.Keywords" xml:space="preserve"><value>billing bill down payment factur-x pdf sale</value></data>
+  <data name="Nav.CreditNotes.Keywords" xml:space="preserve"><value>cancel correct refund credit note</value></data>
+  <data name="Nav.RecurringInvoices.Keywords" xml:space="preserve"><value>subscription monthly automatic template</value></data>
+  <data name="Nav.Customers.Keywords" xml:space="preserve"><value>party client siren siret address contact</value></data>
+  <data name="Nav.Suppliers.Keywords" xml:space="preserve"><value>party vendor purchase siren</value></data>
+  <data name="Nav.Catalog.Keywords" xml:space="preserve"><value>items products services prices rates</value></data>
+  <data name="Nav.Payments.Keywords" xml:space="preserve"><value>payment receipt transfer cheque matching</value></data>
+  <data name="Nav.Bank.Keywords" xml:space="preserve"><value>bank statement reconcile import</value></data>
+  <data name="Nav.Reminders.Keywords" xml:space="preserve"><value>overdue unpaid dunning email due</value></data>
+  <data name="Nav.Accounting.Keywords" xml:space="preserve"><value>entries journal trial balance ledger accounts</value></data>
+  <data name="Nav.Fec.Keywords" xml:space="preserve"><value>accounting entries file export tax audit</value></data>
+  <data name="Nav.Tax.Keywords" xml:space="preserve"><value>vat tax return ca3 calendar audit kit</value></data>
+  <data name="Nav.Review.Keywords" xml:space="preserve"><value>checklist closing monthly review</value></data>
+  <data name="Nav.Alerts.Keywords" xml:space="preserve"><value>notifications incidents warnings monitoring</value></data>
+  <data name="Nav.Company.Keywords" xml:space="preserve"><value>settings company profile siret logo</value></data>
+  <data name="Nav.Admin.Keywords" xml:space="preserve"><value>team users rights access roles invite colleague permissions</value></data>
+  <data name="Nav.SharedServer.Keywords" xml:space="preserve"><value>shared server devices sync share phone</value></data>
+  <data name="Help.Menu" xml:space="preserve"><value>Help and questions</value></data>
+  <data name="Help.Title" xml:space="preserve"><value>Need help?</value></data>
+  <data name="Help.Ask.Label" xml:space="preserve"><value>Ask your question</value></data>
+  <data name="Help.Ask.Placeholder" xml:space="preserve"><value>For example: correct an invoice</value></data>
+  <data name="Help.Tour" xml:space="preserve"><value>Tour of this screen</value></data>
+  <data name="Help.Tour.Hint" xml:space="preserve"><value>Lettra shows you each area, step by step.</value></data>
+  <data name="Help.Palette" xml:space="preserve"><value>Search everywhere</value></data>
+  <data name="Help.Palette.Hint" xml:space="preserve"><value>Screens, documents, customers and actions.</value></data>
+  <data name="Help.Palette.Open" xml:space="preserve"><value>Help and frequent questions</value></data>
+  <data name="Help.Assistant" xml:space="preserve"><value>Ask the assistant</value></data>
+  <data name="Help.Assistant.Hint" xml:space="preserve"><value>The firm's AI assistant takes your question.</value></data>
+  <data name="Help.OnThisScreen" xml:space="preserve"><value>On this screen</value></data>
+  <data name="Help.Faq" xml:space="preserve"><value>Frequent questions</value></data>
+  <data name="Help.Answers" xml:space="preserve"><value>Answers</value></data>
+  <data name="Help.ResultsCount" xml:space="preserve"><value>{0} answer(s)</value></data>
+  <data name="Help.Open" xml:space="preserve"><value>Open: {0}</value></data>
+  <data name="Help.Empty.Title" xml:space="preserve"><value>No ready answer to this question yet.</value></data>
+  <data name="Help.Empty.Text" xml:space="preserve"><value>Try other words, search everywhere with Ctrl+K, or replay the tour of this screen.</value></data>
+  <data name="Help.Empty.TextWithAssistant" xml:space="preserve"><value>Try other words, search everywhere with Ctrl+K, or ask the assistant.</value></data>
+  <data name="Help.Keys" xml:space="preserve"><value>Handy shortcuts</value></data>
+  <data name="Help.Keys.Palette" xml:space="preserve"><value>Search everything: screens, documents, customers, actions</value></data>
+  <data name="Help.Keys.DensityKey" xml:space="preserve"><value>Ctrl Shift D</value></data>
+  <data name="Help.Keys.Density" xml:space="preserve"><value>Switch between Comfort and Expert display</value></data>
+  <data name="Help.Keys.EscapeKey" xml:space="preserve"><value>Esc</value></data>
+  <data name="Help.Keys.Escape" xml:space="preserve"><value>Close a window or a panel</value></data>
+  <data name="Help.ToursReset" xml:space="preserve"><value>Replay every tour</value></data>
+  <data name="Help.ToursReset.Done" xml:space="preserve"><value>Tours will play again on your next visit to each screen.</value></data>
+  <data name="Help.Faq.first-quote.Question" xml:space="preserve"><value>How do I make my first quote?</value></data>
+  <data name="Help.Faq.first-quote.Answer" xml:space="preserve"><value>Open Quotes then “New quote”. Pick the customer (create it first in Customers if it does not exist), add lines in the grid, check the checklist on the right, then validate: Lettra gives it its final number.</value></data>
+  <data name="Help.Faq.first-quote.Keywords" xml:space="preserve"><value>create new quote estimate start</value></data>
+  <data name="Help.Faq.quote-to-invoice.Question" xml:space="preserve"><value>How do I turn a quote into an invoice?</value></data>
+  <data name="Help.Faq.quote-to-invoice.Answer" xml:space="preserve"><value>Open the validated quote, mark it “Accepted”, then click “Invoice”. The invoice copies the customer and lines; review it and validate it.</value></data>
+  <data name="Help.Faq.quote-to-invoice.Keywords" xml:space="preserve"><value>convert accept accepted invoice quote</value></data>
+  <data name="Help.Faq.fix-invoice.Question" xml:space="preserve"><value>How do I correct or cancel an invoice already validated?</value></data>
+  <data name="Help.Faq.fix-invoice.Answer" xml:space="preserve"><value>A validated invoice can no longer be changed (that is the law). Open it, click “Credit note” and enter the reason: the credit note cancels all or part of the invoice. Then issue a correct invoice if needed.</value></data>
+  <data name="Help.Faq.fix-invoice.Keywords" xml:space="preserve"><value>mistake edit delete cancel credit note refund</value></data>
+  <data name="Help.Faq.payment.Question" xml:space="preserve"><value>How do I record a payment received?</value></data>
+  <data name="Help.Faq.payment.Answer" xml:space="preserve"><value>In Payments, “Record a payment”: customer, date, amount, payment method, then the invoice(s) it settles. With a bank statement, Bank reconciliation suggests the matching invoices and you confirm.</value></data>
+  <data name="Help.Faq.payment.Keywords" xml:space="preserve"><value>paid transfer cheque settle reconcile bank</value></data>
+  <data name="Help.Faq.reminder.Question" xml:space="preserve"><value>How do I remind a customer who has not paid?</value></data>
+  <data name="Help.Faq.reminder.Answer" xml:space="preserve"><value>Reminders lists overdue unpaid invoices, oldest first. Pick the invoice, review the suggested message and send the reminder; the history keeps every message sent.</value></data>
+  <data name="Help.Faq.reminder.Keywords" xml:space="preserve"><value>late overdue unpaid email due</value></data>
+  <data name="Help.Faq.recurring.Question" xml:space="preserve"><value>How do I invoice automatically every month?</value></data>
+  <data name="Help.Faq.recurring.Answer" xml:space="preserve"><value>In Recurring invoices, create a template: customer, lines, frequency (monthly, quarterly…) and first due date. Lettra prepares each invoice when due; you can pause a template and resume it.</value></data>
+  <data name="Help.Faq.recurring.Keywords" xml:space="preserve"><value>subscription monthly recurring automatic fees</value></data>
+  <data name="Help.Faq.customer.Question" xml:space="preserve"><value>How do I add a customer or a supplier?</value></data>
+  <data name="Help.Faq.customer.Answer" xml:space="preserve"><value>In Customers (or Suppliers), type its name or SIREN: Lettra looks the company up in the public directory and fills the address and VAT number. Complete and save.</value></data>
+  <data name="Help.Faq.customer.Keywords" xml:space="preserve"><value>create new client vendor siren siret address</value></data>
+  <data name="Help.Faq.vat.Question" xml:space="preserve"><value>How do I prepare my VAT return?</value></data>
+  <data name="Help.Faq.vat.Answer" xml:space="preserve"><value>Tax returns computes the draft VAT return (CA3) for the period from invoices and payments, and keeps the calendar of due dates. Lettra files nothing: copy the figures to your tax account online.</value></data>
+  <data name="Help.Faq.vat.Keywords" xml:space="preserve"><value>vat return ca3 tax due date calendar</value></data>
+  <data name="Help.Faq.fec.Question" xml:space="preserve"><value>How do I export the FEC for an audit?</value></data>
+  <data name="Help.Faq.fec.Answer" xml:space="preserve"><value>In FEC, pick the financial year then “Export”. The file follows the format the tax authority expects and a report flags what to check. The Tax audit kit, under Tax returns, gathers the rest.</value></data>
+  <data name="Help.Faq.fec.Keywords" xml:space="preserve"><value>fec export accounting file tax audit accountant</value></data>
+  <data name="Help.Faq.dossier.Question" xml:space="preserve"><value>How do I switch to another dossier?</value></data>
+  <data name="Help.Faq.dossier.Answer" xml:space="preserve"><value>The dossier picker, at the top of the screen, lists the dossiers you can open. Switching reloads the screen with that dossier's data. The Firm overview shows all your dossiers, most urgent first.</value></data>
+  <data name="Help.Faq.dossier.Keywords" xml:space="preserve"><value>dossier company switch firm</value></data>
+  <data name="Help.Faq.team.Question" xml:space="preserve"><value>How do I give a colleague access?</value></data>
+  <data name="Help.Faq.team.Answer" xml:space="preserve"><value>In Team and access (firm administrators only), “Add a person”: a name and an email are enough, then choose what they can do in each dossier.</value></data>
+  <data name="Help.Faq.team.Keywords" xml:space="preserve"><value>colleague user add invite rights access role team permission</value></data>
+  <data name="Help.Faq.devices.Question" xml:space="preserve"><value>How do I get my data on another device?</value></data>
+  <data name="Help.Faq.devices.Answer" xml:space="preserve"><value>Link each device to the firm's server in Firm server: computer, phone and browser then share one database. Without a shared server, each device keeps its own data.</value></data>
+  <data name="Help.Faq.devices.Keywords" xml:space="preserve"><value>device phone tablet computer share sync shared server</value></data>
+  <data name="Help.Faq.offline.Question" xml:space="preserve"><value>Can I work offline?</value></data>
+  <data name="Help.Faq.offline.Answer" xml:space="preserve"><value>The installed app (Windows, Mac, Android, iPhone) works fully offline. In the browser, only drafts are kept offline: they are sent as soon as the connection is back.</value></data>
+  <data name="Help.Faq.offline.Keywords" xml:space="preserve"><value>offline connection internet network plane draft</value></data>
+  <data name="Help.Faq.search.Question" xml:space="preserve"><value>How do I quickly find an invoice or a customer?</value></data>
+  <data name="Help.Faq.search.Answer" xml:space="preserve"><value>Press Ctrl+K (or the magnifier) and type a document number, a customer name or an action such as “new quote Dupont”. For a screen, you can also type a few letters in the search at the top of the menu.</value></data>
+  <data name="Help.Faq.search.Keywords" xml:space="preserve"><value>search find number palette ctrl</value></data>
+  <data name="Help.Faq.menu.Question" xml:space="preserve"><value>How do I set up the menu my way?</value></data>
+  <data name="Help.Faq.menu.Answer" xml:space="preserve"><value>Click a section title to fold or unfold it, and the star next to a screen to pin it in Favourites, at the top of the menu. “Collapse menu”, at the bottom, keeps only the icons. Lettra remembers these settings on this device, for you.</value></data>
+  <data name="Help.Faq.menu.Keywords" xml:space="preserve"><value>menu fold unfold favourites pin star chevron sections</value></data>
+  <data name="Help.Faq.voice.Question" xml:space="preserve"><value>Can I dictate instead of typing?</value></data>
+  <data name="Help.Faq.voice.Answer" xml:space="preserve"><value>Yes: the microphone next to a field (or in the top bar) transcribes your voice. Transcription runs on the device or on the firm's server, never at a third party.</value></data>
+  <data name="Help.Faq.voice.Keywords" xml:space="preserve"><value>voice dictation microphone speak dictate</value></data>
+  <data name="Help.Faq.appearance.Question" xml:space="preserve"><value>How do I change colours or display size?</value></data>
+  <data name="Help.Faq.appearance.Answer" xml:space="preserve"><value>The Appearance button, at the top, offers five themes (including dark and high contrast) and two densities: Comfort for touch, Expert for mouse and keyboard (Ctrl+Shift+D).</value></data>
+  <data name="Help.Faq.appearance.Keywords" xml:space="preserve"><value>theme dark light contrast colours density size font</value></data>
+  <data name="Help.Faq.data.Question" xml:space="preserve"><value>Is my data kept when Lettra is updated?</value></data>
+  <data name="Help.Faq.data.Answer" xml:space="preserve"><value>Yes. Lettra updates never touch your dossiers: invoices, customers and settings stay in place, on the server as in the installed app.</value></data>
+  <data name="Help.Faq.data.Keywords" xml:space="preserve"><value>data lose update backup keep</value></data>
+  <data name="Help.Faq.assistant.Question" xml:space="preserve"><value>What is the AI assistant for?</value></data>
+  <data name="Help.Faq.assistant.Answer" xml:space="preserve"><value>The assistant explains a rule or drafts a quote, which you review and validate yourself: it never validates or sends anything. It is off by default; a firm administrator can turn it on. This help works without it.</value></data>
+  <data name="Help.Faq.assistant.Keywords" xml:space="preserve"><value>ai artificial intelligence assistant claude question</value></data>
+</root>

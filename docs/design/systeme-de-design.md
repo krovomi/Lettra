@@ -68,9 +68,9 @@ Au démarrage, `lettra-theme-boot.js`, chargé dans le `<head>` des hôtes, pose
 
 | Largeur | Navigation | Barre du haut |
 |---|---|---|
-| ≥ 1200 px (ordinateur) | Barre latérale groupée (Ventes, Tiers, Comptabilité, Pilotage), repliable en rail, choix retenu | Recherche Ctrl K, assistant, synchronisation, apparence, session |
+| ≥ 1200 px (ordinateur) | Barre latérale groupée (Ventes, Tiers, Comptabilité, Pilotage) : recherche « Aller à… », sections repliables, favoris, aide en bas ; repliable en rail, choix retenu ([menu et aide](../menu-et-aide.md)) | Recherche Ctrl K, assistant, synchronisation, apparence, session |
 | 768 à 1199 px (tablette) | Rail d'icônes, libellés en info-bulle et pour le lecteur d'écran | Idem |
-| < 768 px (téléphone) | Onglets en bas : Accueil, Devis, Factures, Clients, Plus ; la feuille **Plus** porte le reste et l'apparence | Marque, recherche en icône, actions |
+| < 768 px (téléphone) | Onglets en bas : Accueil, Devis, Factures, Clients, Plus ; la feuille **Plus** porte la recherche, le reste du menu, l'aide et l'apparence | Marque, recherche en icône, actions |
 
 La navigation est décrite une seule fois dans `Layout/NavItems.cs`. Cibles de 44 px sur écran tactile, zones sûres
 (`env(safe-area-inset-*)`), lien « Aller au contenu », retour du focus et Échap pour fermer les panneaux.
@@ -141,6 +141,7 @@ Les blocs apparaissent avec un léger mouvement à l'ouverture d'une page. Ce mo
 | Contrastes WCAG de chaque thème (texte 4,5:1, 7:1 en contraste élevé ; bordures et focus 3:1) | `ThemeContrastTests`, lit `lettra-tokens.css` |
 | Le sombre du système identique au sombre choisi, mêmes jetons dans chaque thème | `ThemeContrastTests` |
 | Navigation, onglets, feuille Plus, thème appliqué et retenu, rail retenu, palette | `ShellTests` (bUnit) |
+| Menu sans barre horizontale, sections repliables, favoris, recherche du menu, aide sans IA | `NavMenuTests`, `HelpPanelTests`, `NavLogicTests` |
 | Chiffres du tableau de bord | `DashboardFiguresTests`, `ShellTests` |
 | Point des créances (retards, transmissions) | `ReceivablesSummaryTests`, `ReceivablesApiTests`, `GatewayParityTests` |
 | Bouton des données de démonstration, refus en Production et sans droit | `ShellTests`, `ReceivablesApiTests` |

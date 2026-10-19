@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <!-- Menu réglable (recherche, sections repliables, favoris) et aide sans IA (questions fréquentes). Généré puis édité à la main. -->
+  <data name="Nav.Group.Favorites" xml:space="preserve"><value>Favoris</value></data>
+  <data name="Nav.Search.Label" xml:space="preserve"><value>Rechercher dans le menu</value></data>
+  <data name="Nav.Search.Placeholder" xml:space="preserve"><value>Aller à…</value></data>
+  <data name="Nav.Search.Clear" xml:space="preserve"><value>Effacer la recherche</value></data>
+  <data name="Nav.Search.Count" xml:space="preserve"><value>{0} écran(s) trouvé(s)</value></data>
+  <data name="Nav.Search.Empty" xml:space="preserve"><value>Aucun écran ne correspond à « {0} ».</value></data>
+  <data name="Nav.Search.Everywhere" xml:space="preserve"><value>Chercher « {0} » partout</value></data>
+  <data name="Nav.Search.AskHelp" xml:space="preserve"><value>Poser la question à l'aide</value></data>
+  <data name="Nav.Sections.HasCurrent" xml:space="preserve"><value>L'écran affiché est dans cette section</value></data>
+  <data name="Nav.Favorite.Add" xml:space="preserve"><value>Épingler {0} dans les favoris</value></data>
+  <data name="Nav.Favorite.Remove" xml:space="preserve"><value>Retirer {0} des favoris</value></data>
+  <data name="Nav.Home.Keywords" xml:space="preserve"><value>tableau de bord accueil indicateurs chiffre d'affaires</value></data>
+  <data name="Nav.Cabinet.Keywords" xml:space="preserve"><value>dossiers portefeuille clients du cabinet urgences</value></data>
+  <data name="Nav.Quotes.Keywords" xml:space="preserve"><value>proposition offre estimation</value></data>
+  <data name="Nav.Invoices.Keywords" xml:space="preserve"><value>facturer facturation acompte factur-x pdf vente</value></data>
+  <data name="Nav.CreditNotes.Keywords" xml:space="preserve"><value>annuler corriger rembourser avoir</value></data>
+  <data name="Nav.RecurringInvoices.Keywords" xml:space="preserve"><value>abonnement forfait mensuel automatique modèle</value></data>
+  <data name="Nav.Customers.Keywords" xml:space="preserve"><value>tiers client siren siret adresse contact</value></data>
+  <data name="Nav.Suppliers.Keywords" xml:space="preserve"><value>tiers fournisseur achat siren</value></data>
+  <data name="Nav.Catalog.Keywords" xml:space="preserve"><value>articles produits prestations tarifs prix</value></data>
+  <data name="Nav.Payments.Keywords" xml:space="preserve"><value>paiement règlement reçu virement chèque lettrage encaisser</value></data>
+  <data name="Nav.Bank.Keywords" xml:space="preserve"><value>banque relevé rapprocher import</value></data>
+  <data name="Nav.Reminders.Keywords" xml:space="preserve"><value>retard impayé relancer e-mail courriel échéance</value></data>
+  <data name="Nav.Accounting.Keywords" xml:space="preserve"><value>écritures journal balance grand livre comptes compta</value></data>
+  <data name="Nav.Fec.Keywords" xml:space="preserve"><value>fichier des écritures comptables export contrôle fiscal</value></data>
+  <data name="Nav.Tax.Keywords" xml:space="preserve"><value>tva impôts déclaration ca3 des calendrier fiscalité kit contrôle</value></data>
+  <data name="Nav.Review.Keywords" xml:space="preserve"><value>contrôle clôture liste vérification mensuelle</value></data>
+  <data name="Nav.Alerts.Keywords" xml:space="preserve"><value>notifications incidents avertissements supervision</value></data>
+  <data name="Nav.Company.Keywords" xml:space="preserve"><value>paramètres réglages société profil siret logo mentions</value></data>
+  <data name="Nav.Admin.Keywords" xml:space="preserve"><value>équipe utilisateurs droits accès rôles inviter collègue permissions</value></data>
+  <data name="Nav.SharedServer.Keywords" xml:space="preserve"><value>serveur commun appareils synchronisation partager téléphone</value></data>
+  <data name="Help.Menu" xml:space="preserve"><value>Aide et questions</value></data>
+  <data name="Help.Title" xml:space="preserve"><value>Besoin d'aide ?</value></data>
+  <data name="Help.Ask.Label" xml:space="preserve"><value>Posez votre question</value></data>
+  <data name="Help.Ask.Placeholder" xml:space="preserve"><value>Par exemple : corriger une facture</value></data>
+  <data name="Help.Tour" xml:space="preserve"><value>Tutoriel de cet écran</value></data>
+  <data name="Help.Tour.Hint" xml:space="preserve"><value>Lettra vous montre chaque zone, pas à pas.</value></data>
+  <data name="Help.Palette" xml:space="preserve"><value>Chercher partout</value></data>
+  <data name="Help.Palette.Hint" xml:space="preserve"><value>Écrans, pièces, clients et actions.</value></data>
+  <data name="Help.Palette.Open" xml:space="preserve"><value>Aide et questions fréquentes</value></data>
+  <data name="Help.Assistant" xml:space="preserve"><value>Demander à l'assistant</value></data>
+  <data name="Help.Assistant.Hint" xml:space="preserve"><value>L'assistant IA du cabinet reprend votre question.</value></data>
+  <data name="Help.OnThisScreen" xml:space="preserve"><value>Sur cet écran</value></data>
+  <data name="Help.Faq" xml:space="preserve"><value>Questions fréquentes</value></data>
+  <data name="Help.Answers" xml:space="preserve"><value>Réponses</value></data>
+  <data name="Help.ResultsCount" xml:space="preserve"><value>{0} réponse(s)</value></data>
+  <data name="Help.Open" xml:space="preserve"><value>Ouvrir : {0}</value></data>
+  <data name="Help.Empty.Title" xml:space="preserve"><value>Pas encore de réponse toute prête à cette question.</value></data>
+  <data name="Help.Empty.Text" xml:space="preserve"><value>Essayez d'autres mots, cherchez partout avec Ctrl+K, ou relancez le tutoriel de l'écran.</value></data>
+  <data name="Help.Empty.TextWithAssistant" xml:space="preserve"><value>Essayez d'autres mots, cherchez partout avec Ctrl+K, ou demandez à l'assistant.</value></data>
+  <data name="Help.Keys" xml:space="preserve"><value>Raccourcis utiles</value></data>
+  <data name="Help.Keys.Palette" xml:space="preserve"><value>Tout chercher : écrans, pièces, clients, actions</value></data>
+  <data name="Help.Keys.DensityKey" xml:space="preserve"><value>Ctrl Maj D</value></data>
+  <data name="Help.Keys.Density" xml:space="preserve"><value>Passer de l'affichage Confort à Expert</value></data>
+  <data name="Help.Keys.EscapeKey" xml:space="preserve"><value>Échap</value></data>
+  <data name="Help.Keys.Escape" xml:space="preserve"><value>Fermer une fenêtre ou un panneau</value></data>
+  <data name="Help.ToursReset" xml:space="preserve"><value>Revoir tous les tutoriels</value></data>
+  <data name="Help.ToursReset.Done" xml:space="preserve"><value>Les tutoriels seront rejoués à votre prochaine visite de chaque écran.</value></data>
+  <data name="Help.Faq.first-quote.Question" xml:space="preserve"><value>Comment faire mon premier devis ?</value></data>
+  <data name="Help.Faq.first-quote.Answer" xml:space="preserve"><value>Ouvrez Devis puis « Nouveau devis ». Choisissez le client (créez-le d'abord dans Clients s'il n'existe pas), ajoutez les lignes dans la grille, vérifiez la liste de contrôle à droite, puis validez : Lettra lui donne son numéro définitif.</value></data>
+  <data name="Help.Faq.first-quote.Keywords" xml:space="preserve"><value>créer nouveau devis proposition commencer</value></data>
+  <data name="Help.Faq.quote-to-invoice.Question" xml:space="preserve"><value>Comment transformer un devis en facture ?</value></data>
+  <data name="Help.Faq.quote-to-invoice.Answer" xml:space="preserve"><value>Ouvrez le devis validé, marquez-le « Accepté », puis cliquez sur « Facturer ». La facture reprend le client et les lignes ; relisez-la et validez-la.</value></data>
+  <data name="Help.Faq.quote-to-invoice.Keywords" xml:space="preserve"><value>convertir facturer accepter devis accepté</value></data>
+  <data name="Help.Faq.fix-invoice.Question" xml:space="preserve"><value>Comment corriger ou annuler une facture déjà validée ?</value></data>
+  <data name="Help.Faq.fix-invoice.Answer" xml:space="preserve"><value>Une facture validée ne se modifie plus (c'est la loi). Ouvrez-la, cliquez sur « Avoir », indiquez le motif : l'avoir annule tout ou partie de la facture. Refaites ensuite une facture juste si besoin.</value></data>
+  <data name="Help.Faq.fix-invoice.Keywords" xml:space="preserve"><value>erreur modifier supprimer annuler avoir rectifier rembourser</value></data>
+  <data name="Help.Faq.payment.Question" xml:space="preserve"><value>Comment enregistrer un paiement reçu ?</value></data>
+  <data name="Help.Faq.payment.Answer" xml:space="preserve"><value>Dans Encaissements, « Saisir un encaissement » : client, date, montant, mode de paiement, puis la ou les factures réglées. Avec un relevé bancaire, le Rapprochement bancaire propose les factures correspondantes et vous validez.</value></data>
+  <data name="Help.Faq.payment.Keywords" xml:space="preserve"><value>paiement règlement virement chèque payé encaisser lettrer banque</value></data>
+  <data name="Help.Faq.reminder.Question" xml:space="preserve"><value>Comment relancer un client qui n'a pas payé ?</value></data>
+  <data name="Help.Faq.reminder.Answer" xml:space="preserve"><value>Relances liste les factures échues non soldées, du plus ancien retard au plus récent. Choisissez la facture, relisez le message proposé et envoyez la relance ; l'historique garde chaque envoi.</value></data>
+  <data name="Help.Faq.reminder.Keywords" xml:space="preserve"><value>retard impayé relance e-mail courriel échéance</value></data>
+  <data name="Help.Faq.recurring.Question" xml:space="preserve"><value>Comment facturer automatiquement chaque mois ?</value></data>
+  <data name="Help.Faq.recurring.Answer" xml:space="preserve"><value>Dans Factures récurrentes, créez un modèle : client, lignes, rythme (mensuel, trimestriel…) et première échéance. Lettra prépare chaque facture à son échéance ; vous pouvez mettre un modèle en pause et le reprendre.</value></data>
+  <data name="Help.Faq.recurring.Keywords" xml:space="preserve"><value>abonnement forfait mensuel récurrent automatique honoraires</value></data>
+  <data name="Help.Faq.customer.Question" xml:space="preserve"><value>Comment ajouter un client ou un fournisseur ?</value></data>
+  <data name="Help.Faq.customer.Answer" xml:space="preserve"><value>Dans Clients (ou Fournisseurs), tapez son nom ou son SIREN : Lettra cherche l'entreprise dans l'annuaire public et remplit l'adresse et le numéro de TVA. Complétez puis enregistrez.</value></data>
+  <data name="Help.Faq.customer.Keywords" xml:space="preserve"><value>créer nouveau client fournisseur tiers siren siret adresse</value></data>
+  <data name="Help.Faq.vat.Question" xml:space="preserve"><value>Comment préparer ma déclaration de TVA ?</value></data>
+  <data name="Help.Faq.vat.Answer" xml:space="preserve"><value>Déclarations calcule le brouillon de TVA (CA3) de la période à partir des factures et des encaissements, et tient le calendrier des échéances. Lettra ne dépose rien : reportez les montants sur votre espace professionnel des impôts.</value></data>
+  <data name="Help.Faq.vat.Keywords" xml:space="preserve"><value>tva déclaration ca3 impôts échéance calendrier des</value></data>
+  <data name="Help.Faq.fec.Question" xml:space="preserve"><value>Comment exporter le FEC pour un contrôle ?</value></data>
+  <data name="Help.Faq.fec.Answer" xml:space="preserve"><value>Dans FEC, choisissez l'exercice puis « Exporter ». Le fichier respecte le format attendu par l'administration et un rapport signale ce qu'il faut vérifier. Le Kit contrôle fiscal, dans Déclarations, rassemble le reste.</value></data>
+  <data name="Help.Faq.fec.Keywords" xml:space="preserve"><value>fec export fichier écritures comptables contrôle fiscal expert-comptable</value></data>
+  <data name="Help.Faq.dossier.Question" xml:space="preserve"><value>Comment changer de dossier ?</value></data>
+  <data name="Help.Faq.dossier.Answer" xml:space="preserve"><value>Le sélecteur de dossier, en haut de l'écran, liste les dossiers auxquels vous avez accès. Changer de dossier recharge l'écran avec ses données. La Vue cabinet montre tous vos dossiers, les plus urgents d'abord.</value></data>
+  <data name="Help.Faq.dossier.Keywords" xml:space="preserve"><value>dossier société entreprise changer cabinet basculer</value></data>
+  <data name="Help.Faq.team.Question" xml:space="preserve"><value>Comment donner accès à un collègue ?</value></data>
+  <data name="Help.Faq.team.Answer" xml:space="preserve"><value>Dans Équipe et accès (réservé aux administrateurs du cabinet), « Ajouter une personne » : son nom et son adresse suffisent, puis choisissez ce qu'elle peut faire dans chaque dossier.</value></data>
+  <data name="Help.Faq.team.Keywords" xml:space="preserve"><value>collègue utilisateur ajouter inviter droits accès rôle équipe permission</value></data>
+  <data name="Help.Faq.devices.Question" xml:space="preserve"><value>Comment retrouver mes données sur un autre appareil ?</value></data>
+  <data name="Help.Faq.devices.Answer" xml:space="preserve"><value>Reliez chaque appareil au serveur du cabinet dans Serveur du cabinet : ordinateur, téléphone et navigateur partagent alors la même base. Sans serveur commun, chaque appareil garde ses propres données.</value></data>
+  <data name="Help.Faq.devices.Keywords" xml:space="preserve"><value>appareil téléphone tablette ordinateur partager synchroniser serveur commun</value></data>
+  <data name="Help.Faq.offline.Question" xml:space="preserve"><value>Puis-je travailler sans connexion ?</value></data>
+  <data name="Help.Faq.offline.Answer" xml:space="preserve"><value>L'application installée (Windows, Mac, Android, iPhone) fonctionne entièrement hors ligne. Dans le navigateur, seuls les brouillons sont gardés hors ligne : ils partent dès que la connexion revient.</value></data>
+  <data name="Help.Faq.offline.Keywords" xml:space="preserve"><value>hors ligne connexion internet réseau avion brouillon</value></data>
+  <data name="Help.Faq.search.Question" xml:space="preserve"><value>Comment retrouver vite une facture ou un client ?</value></data>
+  <data name="Help.Faq.search.Answer" xml:space="preserve"><value>Appuyez sur Ctrl+K (ou la loupe) et tapez un numéro de pièce, un nom de client ou une action comme « nouveau devis Dupont ». Pour un écran, tapez aussi quelques lettres dans la recherche en haut du menu.</value></data>
+  <data name="Help.Faq.search.Keywords" xml:space="preserve"><value>chercher rechercher trouver numéro palette ctrl</value></data>
+  <data name="Help.Faq.menu.Question" xml:space="preserve"><value>Comment régler le menu à ma façon ?</value></data>
+  <data name="Help.Faq.menu.Answer" xml:space="preserve"><value>Cliquez sur le titre d'une section pour la replier ou la déplier, et sur l'étoile d'un écran pour l'épingler dans Favoris, en tête du menu. « Replier le menu », en bas, ne garde que les icônes. Lettra retient ces réglages sur cet appareil, pour vous.</value></data>
+  <data name="Help.Faq.menu.Keywords" xml:space="preserve"><value>menu replier déplier favoris épingler étoile chevron sections</value></data>
+  <data name="Help.Faq.voice.Question" xml:space="preserve"><value>Puis-je dicter au lieu de taper ?</value></data>
+  <data name="Help.Faq.voice.Answer" xml:space="preserve"><value>Oui : le micro à côté d'un champ (ou dans la barre du haut) transcrit votre voix. La transcription se fait sur l'appareil ou sur le serveur du cabinet, jamais chez un tiers.</value></data>
+  <data name="Help.Faq.voice.Keywords" xml:space="preserve"><value>voix dictée micro parler dicter</value></data>
+  <data name="Help.Faq.appearance.Question" xml:space="preserve"><value>Comment changer les couleurs ou la taille de l'affichage ?</value></data>
+  <data name="Help.Faq.appearance.Answer" xml:space="preserve"><value>Le bouton Apparence, en haut, propose cinq thèmes (dont sombre et contraste élevé) et deux densités : Confort au doigt, Expert à la souris et au clavier (Ctrl+Maj+D).</value></data>
+  <data name="Help.Faq.appearance.Keywords" xml:space="preserve"><value>thème sombre clair contraste couleurs densité taille police</value></data>
+  <data name="Help.Faq.data.Question" xml:space="preserve"><value>Mes données sont-elles conservées lors d'une mise à jour ?</value></data>
+  <data name="Help.Faq.data.Answer" xml:space="preserve"><value>Oui. Les mises à jour de Lettra ne touchent pas à vos dossiers : factures, clients et réglages restent en place, sur le serveur comme dans l'application installée.</value></data>
+  <data name="Help.Faq.data.Keywords" xml:space="preserve"><value>données perdre mise à jour sauvegarde conserver</value></data>
+  <data name="Help.Faq.assistant.Question" xml:space="preserve"><value>À quoi sert l'assistant IA ?</value></data>
+  <data name="Help.Faq.assistant.Answer" xml:space="preserve"><value>L'assistant explique une règle ou prépare un brouillon de devis, que vous relisez et validez vous-même : il ne valide ni n'envoie rien. Il est désactivé par défaut ; un administrateur du cabinet peut l'activer. Cette aide-ci fonctionne sans lui.</value></data>
+  <data name="Help.Faq.assistant.Keywords" xml:space="preserve"><value>ia intelligence artificielle assistant claude question</value></data>
+</root>
