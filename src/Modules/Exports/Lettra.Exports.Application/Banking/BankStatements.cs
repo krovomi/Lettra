@@ -20,6 +20,7 @@ internal sealed class ImportBankStatementHandler(
     IBankStatementRepository statements,
     IReceivableDocumentReader receivables,
     IKnownIbanStore knownIbans,
+    IIbanFingerprints ibans,
     IBankingSettingsRepository settings,
     IUnitOfWork unitOfWork,
     ICurrentUser user,
@@ -56,7 +57,7 @@ internal sealed class ImportBankStatementHandler(
         }
 
         return await BankImport.StoreAsync(
-            command.Dossier, request.FileName, parsed.Value, statements, receivables, knownIbans, settings, unitOfWork, user.UserId, clock.GetUtcNow(), cancellationToken).ConfigureAwait(false);
+            request.FileName, parsed.Value, statements, receivables, knownIbans, ibans, settings, unitOfWork, user.UserId, clock.GetUtcNow(), cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -65,6 +66,7 @@ internal sealed class ImportDemoBankStatementHandler(
     IBankStatementRepository statements,
     IReceivableDocumentReader receivables,
     IKnownIbanStore knownIbans,
+    IIbanFingerprints ibans,
     IBankingSettingsRepository settings,
     IUnitOfWork unitOfWork,
     ICurrentUser user,
@@ -83,19 +85,19 @@ internal sealed class ImportDemoBankStatementHandler(
         }
 
         return await BankImport.StoreAsync(
-            command.Dossier, DemoBankStatement.FileName(today), parsed.Value, statements, receivables, knownIbans, settings, unitOfWork, user.UserId, clock.GetUtcNow(), cancellationToken).ConfigureAwait(false);
+            DemoBankStatement.FileName(today), parsed.Value, statements, receivables, knownIbans, ibans, settings, unitOfWork, user.UserId, clock.GetUtcNow(), cancellationToken).ConfigureAwait(false);
     }
 }
 
 internal static class BankImport
 {
     public static async Task<Result<BankImportResponse>> StoreAsync(
-        DossierId dossier,
         string? fileName,
         ParsedBankStatement statement,
         IBankStatementRepository statements,
         IReceivableDocumentReader receivables,
         IKnownIbanStore knownIbans,
+        IIbanFingerprints ibans,
         IBankingSettingsRepository settings,
         IUnitOfWork unitOfWork,
         Guid userId,
@@ -114,13 +116,16 @@ internal static class BankImport
             keyed.Add((transaction, occurrence == 0 ? baseKey : BankText.TransactionFingerprint(statement.AccountIban, transaction, occurrence)));
         }
 
+        await ibans.UpgradeLegacyAsync(cancellationToken).ConfigureAwait(false);
         IReadOnlySet<string> existing = await statements.ExistingFingerprintsAsync([.. keyed.Select(k => k.Fingerprint)], cancellationToken).ConfigureAwait(false);
         Guid importId = Guid.CreateVersion7();
-        List<BankStatementLine> lines =
-        [
-            .. keyed.Where(k => !existing.Contains(k.Fingerprint))
-                .Select(k => BankStatementLine.Create(Guid.CreateVersion7(), importId, k.Transaction, k.Fingerprint, BankText.IbanFingerprint(k.Transaction.CounterpartyIban, dossier.Value))),
-        ];
+        List<BankStatementLine> lines = [];
+        foreach ((BankTransaction transaction, string fingerprint) in keyed.Where(k => !existing.Contains(k.Fingerprint)))
+        {
+            string? ibanHash = await ibans.FingerprintAsync(transaction.CounterpartyIban, cancellationToken).ConfigureAwait(false);
+            lines.Add(BankStatementLine.Create(Guid.CreateVersion7(), importId, transaction, fingerprint, ibanHash));
+        }
+
         BankStatementImport import = BankStatementImport.Create(
             importId, string.IsNullOrWhiteSpace(fileName) ? "releve" : fileName, statement, lines.Count, keyed.Count - lines.Count, userId, now);
         await statements.AddImportAsync(import, lines, cancellationToken).ConfigureAwait(false);
@@ -190,11 +195,13 @@ internal sealed class GetReconciliationHandler(
     IPaymentRepository payments,
     IReceivableDocumentReader receivables,
     IKnownIbanStore knownIbans,
+    IIbanFingerprints ibans,
     IBankingSettingsRepository settings) : IQueryHandler<GetReconciliationQuery, Result<ReconciliationResponse>>
 {
     public async Task<Result<ReconciliationResponse>> HandleAsync(GetReconciliationQuery query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
+        await ibans.UpgradeLegacyAsync(cancellationToken).ConfigureAwait(false);
         IReadOnlyList<BankStatementLine> lines = await statements.ListLinesAsync(Math.Clamp(query.Max, 1, 2000), cancellationToken).ConfigureAwait(false);
         IReadOnlyList<MatchProposal> proposals = await Reconciliation.ProposeAsync(
             [.. lines.Where(l => l.Status == BankLineStatus.Pending && l.IsCredit)], receivables, knownIbans, settings, cancellationToken).ConfigureAwait(false);
