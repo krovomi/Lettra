@@ -69,6 +69,7 @@ internal static class IconPaths
         ["chevron-right"] = "<path d='m9 18 6-6-6-6'/>",
         ["info"] = "<circle cx='12' cy='12' r='10'/> <path d='M12 16v-4'/> <path d='M12 8h.01'/>",
         ["undo-2"] = "<path d='M9 14 4 9l5-5'/> <path d='M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11'/>",
+        ["chart-column"] = "<path d='M3 3v16a2 2 0 0 0 2 2h16'/> <path d='M18 17V9'/> <path d='M13 17V5'/> <path d='M8 17v-3'/>",
         ["layers"] = "<path d='m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z'/> <path d='m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65'/> <path d='m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65'/>",
         ["circle-pause"] = "<circle cx='12' cy='12' r='10'/> <line x1='10' x2='10' y1='15' y2='9'/> <line x1='14' x2='14' y1='15' y2='9'/>",
         ["circle-play"] = "<circle cx='12' cy='12' r='10'/> <polygon points='10 8 16 12 10 16 10 8'/>",

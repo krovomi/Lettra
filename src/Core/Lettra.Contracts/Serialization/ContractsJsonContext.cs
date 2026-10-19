@@ -18,6 +18,7 @@ using Lettra.Contracts.Policies;
 using Lettra.Contracts.Presence;
 using Lettra.Contracts.Directory;
 using Lettra.Contracts.Dossiers;
+using Lettra.Contracts.Pilotage;
 using Lettra.Contracts.Pricing;
 using Lettra.Contracts.Preferences;
 using Lettra.Contracts.Rights;
@@ -82,6 +83,9 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(IReadOnlyList<DossierSummary>))]
 [JsonSerializable(typeof(CabinetOverviewResponse))]
 [JsonSerializable(typeof(CabinetOverviewRefreshResponse))]
+[JsonSerializable(typeof(DossierPilotageResponse))]
+[JsonSerializable(typeof(CabinetPilotageResponse))]
+[JsonSerializable(typeof(AdministrationPilotageResponse))]
 [JsonSerializable(typeof(DossierReviewResponse))]
 [JsonSerializable(typeof(SetDossierReviewItemRequest))]
 [JsonSerializable(typeof(SetUserAccountRequest))]

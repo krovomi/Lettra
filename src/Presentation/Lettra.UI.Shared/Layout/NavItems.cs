@@ -50,6 +50,7 @@ public static class NavItems
         new("exports/fec", "Nav.Fec", "file-spreadsheet", "Nav.Group.Accounting"),
         new("tax", "Nav.Tax", "calendar-clock", "Nav.Group.Accounting"),
         new("review", "Nav.Review", "list-checks", "Nav.Group.Accounting"),
+        new("pilotage", "Nav.Pilotage", "chart-column", "Nav.Group.Settings"),
         new("alerts", "Nav.Alerts", "bell", "Nav.Group.Settings"),
         new("settings/company", "Nav.Company", "building-2", "Nav.Group.Settings", Match: NavLinkMatch.All),
         new("settings/preferences", "Nav.Preferences", "sliders-horizontal", "Nav.Group.Settings"),

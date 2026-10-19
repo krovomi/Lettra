@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using Lettra.Application.Abstractions.Kpi;
+using Lettra.Application.Features.Kpi;
 using Lettra.Infrastructure.Catalog.Kpi;
 using Lettra.Infrastructure.Observability;
 using Microsoft.Extensions.Options;
@@ -37,8 +38,12 @@ internal static class KpiEndpoints
         }
 
         KpiSnapshot snapshot = await snapshots.GetAsync(cancellationToken).ConfigureAwait(false);
-        return TypedResults.Text(KpiExposition.Write(snapshot), KpiExposition.ContentType);
+        return TypedResults.Text(KpiExposition.Write(Published(snapshot, options.Value)), KpiExposition.ContentType);
     }
+
+    /// <summary>Sans les indicateurs de gestion quand la cellule ne publie que l'exploitation (le cache, lui, les garde).</summary>
+    internal static KpiSnapshot Published(KpiSnapshot snapshot, KpiOptions options) =>
+        options.BusinessIndicators ? snapshot : snapshot with { Samples = [.. snapshot.Samples.Where(s => !KpiMetrics.Business.Contains(s.Metric))] };
 
     /// <summary>Compare le jeton présenté en temps constant (empreintes de même longueur).</summary>
     internal static bool IsAuthorized(string header, string token)
