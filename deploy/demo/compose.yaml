@@ -63,6 +63,8 @@ services:
       # Démarré seulement, pas prêt : la démonstration n'attend pas le téléchargement du modèle Whisper.
       whisper:
         condition: service_started
+      mailpit:
+        condition: service_started
     environment:
       # Environnement « Demo » : même comportement que Production (en-têtes, CSP, pages d'erreur, cookies), seul le
       # jeu de démonstration y est permis (il refuse toujours Production).
@@ -138,6 +140,15 @@ services:
       # Voix : serveur whisper.cpp de la démonstration, joint par le réseau Docker. L'audio ne sort pas du poste.
       Lettra__Speech__Engine: WhisperServer
       Lettra__Speech__WhisperServer__Endpoint: http://whisper:8080/
+      # E-mails (relances, invitations) : remis à MailPit, qui les garde pour les lire sur http://localhost:8025 et
+      # n'envoie rien hors du poste.
+      Lettra__Email__Enabled: "true"
+      Lettra__Email__Host: mailpit
+      Lettra__Email__Port: "1025"
+      Lettra__Email__EnableSsl: "false"
+      Lettra__Email__FromAddress: relances@cabinet-demo.example
+      Lettra__Email__FromName: Cabinet de démonstration
+      Lettra__Email__PublicUrl: http://localhost:${LETTRA_DEMO_PORT:-8080}
     ports:
       - "127.0.0.1:${LETTRA_DEMO_PORT:-8080}:8080"
     volumes:
@@ -162,6 +173,14 @@ services:
     restart: unless-stopped
     volumes:
       - whisper-modeles:/models
+
+  # Boîte aux lettres de la démonstration : reçoit tout ce que Lettra envoie et ne relaie rien. Seule l'interface web
+  # est publiée (http://localhost:8025) ; le port SMTP reste sur le réseau Docker.
+  mailpit:
+    image: axllent/mailpit:v1.27
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${LETTRA_DEMO_MAILPIT_PORT:-8025}:8025"
 
 volumes:
   keycloak-donnees:
