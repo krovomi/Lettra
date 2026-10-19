@@ -227,6 +227,9 @@ def main():
         print(f"\nÉCHEC : {len(echecs)} vérification(s)", file=sys.stderr)
         for echec in echecs:
             print(f"   {echec}", file=sys.stderr)
+            if os.environ.get("GITHUB_ACTIONS") == "true":
+                # Annotation lisible sans le journal du job (titre : la vérification en échec).
+                print(f"::error title=Grafana::{echec.replace('%', '%25').replace(chr(10), '%0A')}")
         sys.exit(1)
     print("\nGrafana de la démonstration : tout est en place et chaque tableau de bord a des données.")
 
