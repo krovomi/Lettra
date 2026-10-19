@@ -139,6 +139,13 @@ public interface IVatOnReceiptsSource
     bool IsActive { get; }
 
     Task<IReadOnlyList<VatReceiptAllocation>> ReadAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Parmi <paramref name="invoiceIds"/>, les pièces dont la TVA des services a été passée en attente (44574) à la
+    /// validation. Les pièces validées avant le suivi des encaissements ont leur TVA en 44571 : elle reste déclarée à
+    /// la date de la pièce.
+    /// </summary>
+    Task<IReadOnlySet<Guid>> ReadDeferredAsync(IReadOnlyCollection<Guid> invoiceIds, CancellationToken cancellationToken);
 }
 
 /// <summary>Pas de suivi des encaissements : la TVA est exigible à la date de la pièce.</summary>
@@ -148,4 +155,7 @@ public sealed class NoVatOnReceipts : IVatOnReceiptsSource
 
     public Task<IReadOnlyList<VatReceiptAllocation>> ReadAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<VatReceiptAllocation>>([]);
+
+    public Task<IReadOnlySet<Guid>> ReadDeferredAsync(IReadOnlyCollection<Guid> invoiceIds, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlySet<Guid>>(new HashSet<Guid>());
 }

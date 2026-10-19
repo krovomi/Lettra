@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.Payments" xml:space="preserve"><value>Encaissements</value></data>
+  <data name="Nav.Bank" xml:space="preserve"><value>Rapprochement bancaire</value></data>
+  <data name="Account.512" xml:space="preserve"><value>Banque</value></data>
+  <data name="Account.658" xml:space="preserve"><value>Charges diverses de gestion courante</value></data>
+  <data name="Account.758" xml:space="preserve"><value>Produits divers de gestion courante</value></data>
+  <data name="Account.44574" xml:space="preserve"><value>TVA collectée sur encaissements en attente</value></data>
+  <data name="PaymentMethod.Transfer" xml:space="preserve"><value>Virement</value></data>
+  <data name="PaymentMethod.Cheque" xml:space="preserve"><value>Chèque</value></data>
+  <data name="PaymentMethod.Card" xml:space="preserve"><value>Carte bancaire</value></data>
+  <data name="PaymentMethod.Cash" xml:space="preserve"><value>Espèces</value></data>
+  <data name="PaymentMethod.DirectDebit" xml:space="preserve"><value>Prélèvement</value></data>
+  <data name="PaymentStatus.Posted" xml:space="preserve"><value>Comptabilisé</value></data>
+  <data name="PaymentStatus.Reversed" xml:space="preserve"><value>Contre-passé</value></data>
+  <data name="MatchRule.InvoiceNumber" xml:space="preserve"><value>Le numéro de facture figure dans le libellé</value></data>
+  <data name="MatchRule.AmountAndName" xml:space="preserve"><value>Même montant et nom du client dans le libellé</value></data>
+  <data name="MatchRule.AmountAndIban" xml:space="preserve"><value>Même montant et IBAN déjà connu pour ce client</value></data>
+  <data name="MatchRule.SumOfInvoices" xml:space="preserve"><value>Somme exacte de plusieurs factures du même client</value></data>
+  <data name="Accounting.Journal.Payment" xml:space="preserve"><value>Encaissement (BQ)</value></data>
+  <data name="Accounting.Journal.PaymentReversal" xml:space="preserve"><value>Contre-passation (BQ)</value></data>
+  <data name="Payments.Title" xml:space="preserve"><value>Encaissements</value></data>
+  <data name="Payments.Subtitle" xml:space="preserve"><value>Les règlements reçus des clients, imputés sur leurs factures et lettrés.</value></data>
+  <data name="Payments.New" xml:space="preserve"><value>Saisir un encaissement</value></data>
+  <data name="Payments.New.Subtitle" xml:space="preserve"><value>Choisissez le client, indiquez le montant reçu puis répartissez-le sur ses factures.</value></data>
+  <data name="Payments.Search" xml:space="preserve"><value>Rechercher un encaissement</value></data>
+  <data name="Payments.Empty" xml:space="preserve"><value>Aucun encaissement pour l'instant</value></data>
+  <data name="Payments.Empty.Text" xml:space="preserve"><value>Saisissez un règlement reçu ou importez un relevé bancaire pour les rapprocher.</value></data>
+  <data name="Payments.Number" xml:space="preserve"><value>Numéro</value></data>
+  <data name="Payments.Amount" xml:space="preserve"><value>Montant</value></data>
+  <data name="Payments.Method" xml:space="preserve"><value>Mode de règlement</value></data>
+  <data name="Payments.Invoices" xml:space="preserve"><value>Factures</value></data>
+  <data name="Payments.Lettering" xml:space="preserve"><value>Lettrage</value></data>
+  <data name="Payments.Lettering.Hint" xml:space="preserve"><value>Code de lettrage : la facture et son règlement portent le même code dans le compte client.</value></data>
+  <data name="Payments.Back" xml:space="preserve"><value>Retour aux encaissements</value></data>
+  <data name="Payments.Receipt" xml:space="preserve"><value>Règlement reçu</value></data>
+  <data name="Payments.ChooseCustomer" xml:space="preserve"><value>Choisir un client</value></data>
+  <data name="Payments.AmountReceived" xml:space="preserve"><value>Montant reçu</value></data>
+  <data name="Payments.Reference" xml:space="preserve"><value>Référence</value></data>
+  <data name="Payments.Reference.Hint" xml:space="preserve"><value>Numéro de chèque, libellé du virement… facultatif.</value></data>
+  <data name="Payments.FromLine" xml:space="preserve"><value>Opération bancaire du {0} : {1}</value></data>
+  <data name="Payments.Allocation" xml:space="preserve"><value>Factures réglées</value></data>
+  <data name="Payments.Allocation.Hint" xml:space="preserve"><value>Le montant est réparti sur les factures les plus anciennes ; vous pouvez le modifier ligne par ligne.</value></data>
+  <data name="Payments.Spread" xml:space="preserve"><value>Répartir automatiquement</value></data>
+  <data name="Payments.Outstanding" xml:space="preserve"><value>Reste dû</value></data>
+  <data name="Payments.Allocated" xml:space="preserve"><value>Imputé</value></data>
+  <data name="Payments.AllocatedFor" xml:space="preserve"><value>Montant imputé sur la facture {0}</value></data>
+  <data name="Payments.TotalAllocated" xml:space="preserve"><value>Total imputé</value></data>
+  <data name="Payments.Overdue" xml:space="preserve"><value>En retard de {0} j</value></data>
+  <data name="Payments.NothingDue" xml:space="preserve"><value>Rien à encaisser pour ce client</value></data>
+  <data name="Payments.NothingDue.Text" xml:space="preserve"><value>Toutes ses factures sont réglées.</value></data>
+  <data name="Payments.GapLoss" xml:space="preserve"><value>Écart en moins passé en charge (658)</value></data>
+  <data name="Payments.GapGain" xml:space="preserve"><value>Écart en plus passé en produit (758)</value></data>
+  <data name="Payments.GapHint" xml:space="preserve"><value>Les petits écarts jusqu'à {0} sont soldés automatiquement ; au-delà, ajustez la répartition.</value></data>
+  <data name="Payments.Save" xml:space="preserve"><value>Enregistrer l'encaissement</value></data>
+  <data name="Payments.Saved" xml:space="preserve"><value>Encaissement {0} enregistré.</value></data>
+  <data name="Payments.Saved.Lettered" xml:space="preserve"><value>Encaissement {0} enregistré et lettré {1}.</value></data>
+  <data name="Payments.Detail.Title" xml:space="preserve"><value>Encaissement {0}</value></data>
+  <data name="Payments.Entry" xml:space="preserve"><value>Écriture de banque</value></data>
+  <data name="Payments.ReversalEntry" xml:space="preserve"><value>Contre-passation du {0}</value></data>
+  <data name="Payments.Reverse" xml:space="preserve"><value>Contre-passer</value></data>
+  <data name="Payments.Reverse.Hint" xml:space="preserve"><value>Un encaissement n'est jamais supprimé : la contre-passation passe l'écriture inverse, rouvre les factures et garde la trace du lettrage.</value></data>
+  <data name="Payments.Reverse.Reason" xml:space="preserve"><value>Motif</value></data>
+  <data name="Payments.Reverse.Reason.Hint" xml:space="preserve"><value>Par exemple : chèque impayé, erreur de client.</value></data>
+  <data name="Payments.Reverse.Confirm" xml:space="preserve"><value>Confirmer la contre-passation</value></data>
+  <data name="Payments.Reversed" xml:space="preserve"><value>Encaissement {0} contre-passé.</value></data>
+  <data name="Bank.Title" xml:space="preserve"><value>Rapprochement bancaire</value></data>
+  <data name="Bank.Subtitle" xml:space="preserve"><value>Importez le relevé de la banque : Lettra propose les factures correspondantes, vous validez.</value></data>
+  <data name="Bank.Pending" xml:space="preserve"><value>À rapprocher</value></data>
+  <data name="Bank.Proposals" xml:space="preserve"><value>Propositions</value></data>
+  <data name="Bank.Matched" xml:space="preserve"><value>Rapprochées</value></data>
+  <data name="Bank.Ignored" xml:space="preserve"><value>Écartées</value></data>
+  <data name="Bank.Import" xml:space="preserve"><value>Importer un relevé</value></data>
+  <data name="Bank.Import.Hint" xml:space="preserve"><value>Fichier CAMT.053, OFX ou CSV exporté depuis l'espace en ligne de la banque, 5 Mo au plus. Un relevé déjà importé n'est pas compté deux fois.</value></data>
+  <data name="Bank.Import.Choose" xml:space="preserve"><value>Choisir le fichier</value></data>
+  <data name="Bank.Import.Demo" xml:space="preserve"><value>Importer un relevé de démonstration</value></data>
+  <data name="Bank.Imported" xml:space="preserve"><value>{0} opération(s) importée(s), {1} déjà connue(s), {2} proposition(s).</value></data>
+  <data name="Bank.LastImport" xml:space="preserve"><value>Dernier relevé : {0}, importé le {1}</value></data>
+  <data name="Bank.Csv.Title" xml:space="preserve"><value>Réglages pour un fichier CSV</value></data>
+  <data name="Bank.Csv.Hint" xml:space="preserve"><value>Laissez vide pour la détection automatique ; sinon indiquez le nom ou le numéro des colonnes.</value></data>
+  <data name="Bank.Csv.Separator" xml:space="preserve"><value>Séparateur</value></data>
+  <data name="Bank.Csv.Auto" xml:space="preserve"><value>Automatique</value></data>
+  <data name="Bank.Csv.Tab" xml:space="preserve"><value>Tabulation</value></data>
+  <data name="Bank.Csv.Header" xml:space="preserve"><value>La première ligne contient les titres</value></data>
+  <data name="Bank.Csv.DateColumn" xml:space="preserve"><value>Colonne de date</value></data>
+  <data name="Bank.Csv.LabelColumn" xml:space="preserve"><value>Colonne de libellé</value></data>
+  <data name="Bank.Csv.AmountColumn" xml:space="preserve"><value>Colonne de montant</value></data>
+  <data name="Bank.Csv.DebitColumn" xml:space="preserve"><value>Colonne de débit</value></data>
+  <data name="Bank.Csv.CreditColumn" xml:space="preserve"><value>Colonne de crédit</value></data>
+  <data name="Bank.Csv.DateFormat" xml:space="preserve"><value>Format de date</value></data>
+  <data name="Bank.Threshold" xml:space="preserve"><value>Seuil des petits écarts</value></data>
+  <data name="Bank.Threshold.Hint" xml:space="preserve"><value>Un écart inférieur ou égal à ce montant entre le virement et la facture est soldé en 658 ou 758.</value></data>
+  <data name="Bank.Threshold.Saved" xml:space="preserve"><value>Seuil enregistré.</value></data>
+  <data name="Bank.Lines" xml:space="preserve"><value>Opérations du relevé</value></data>
+  <data name="Bank.All" xml:space="preserve"><value>Toutes</value></data>
+  <data name="Bank.Empty" xml:space="preserve"><value>Aucun relevé importé</value></data>
+  <data name="Bank.Empty.Text" xml:space="preserve"><value>Importez un relevé pour voir ses opérations et les rapprocher des factures.</value></data>
+  <data name="Bank.AllDone" xml:space="preserve"><value>Tout est rapproché</value></data>
+  <data name="Bank.AllDone.Text" xml:space="preserve"><value>Aucune opération n'attend de rapprochement.</value></data>
+  <data name="Bank.SelectProposals" xml:space="preserve"><value>Sélectionner les {0} proposition(s)</value></data>
+  <data name="Bank.ConfirmSelected" xml:space="preserve"><value>Valider la sélection ({0})</value></data>
+  <data name="Bank.SelectLine" xml:space="preserve"><value>Sélectionner l'opération {0}</value></data>
+  <data name="Bank.Operation" xml:space="preserve"><value>Opération</value></data>
+  <data name="Bank.Proposal" xml:space="preserve"><value>Proposition</value></data>
+  <data name="Bank.Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Bank.Status.Matched" xml:space="preserve"><value>Rapprochée</value></data>
+  <data name="Bank.Status.Ignored" xml:space="preserve"><value>Écartée</value></data>
+  <data name="Bank.NoProposal" xml:space="preserve"><value>Aucune facture ne correspond</value></data>
+  <data name="Bank.WriteOff" xml:space="preserve"><value>dont écart soldé : {0}</value></data>
+  <data name="Bank.Debit" xml:space="preserve"><value>Débit : hors encaissements</value></data>
+  <data name="Bank.Confirm" xml:space="preserve"><value>Valider</value></data>
+  <data name="Bank.Allocate" xml:space="preserve"><value>Imputer</value></data>
+  <data name="Bank.Ignore" xml:space="preserve"><value>Écarter</value></data>
+  <data name="Bank.Restore" xml:space="preserve"><value>Remettre</value></data>
+  <data name="Bank.Confirmed" xml:space="preserve"><value>{0} rapprochement(s) validé(s) et lettré(s).</value></data>
+  <data name="Bank.ConfirmFailed" xml:space="preserve"><value>{0} rapprochement(s) non validé(s) : {1}</value></data>
+  <data name="Bank.Ignored.Toast" xml:space="preserve"><value>Opération écartée.</value></data>
+  <data name="Bank.Restored.Toast" xml:space="preserve"><value>Opération remise à rapprocher.</value></data>
+  <data name="Error.Payment.NotFound" xml:space="preserve"><value>Cet encaissement n'existe pas ou plus.</value></data>
+  <data name="Error.Payment.AmountInvalid" xml:space="preserve"><value>Le montant doit être positif, avec deux décimales au plus.</value></data>
+  <data name="Error.Payment.DateInvalid" xml:space="preserve"><value>La date de l'encaissement est invalide ou dans le futur.</value></data>
+  <data name="Error.Payment.MethodInvalid" xml:space="preserve"><value>Choisissez un mode de règlement.</value></data>
+  <data name="Error.Payment.ReferenceTooLong" xml:space="preserve"><value>La référence est trop longue (140 caractères au plus).</value></data>
+  <data name="Error.Payment.AllocationsRequired" xml:space="preserve"><value>Imputez l'encaissement sur au moins une facture.</value></data>
+  <data name="Error.Payment.TooManyAllocations" xml:space="preserve"><value>Trop de factures pour un seul encaissement.</value></data>
+  <data name="Error.Payment.AllocationInvalid" xml:space="preserve"><value>Une facture imputée n'existe pas, n'est pas émise ou a un montant imputé invalide.</value></data>
+  <data name="Error.Payment.AllocationDuplicate" xml:space="preserve"><value>La même facture apparaît deux fois.</value></data>
+  <data name="Error.Payment.OtherCustomerInvoice" xml:space="preserve"><value>Une facture appartient à un autre client.</value></data>
+  <data name="Error.Payment.GapAboveThreshold" xml:space="preserve"><value>L'écart entre le montant reçu et le total imputé dépasse le seuil des petits écarts.</value></data>
+  <data name="Error.Payment.ExceedsOutstanding" xml:space="preserve"><value>Le montant imputé dépasse le reste dû de la facture.</value></data>
+  <data name="Error.Payment.CreditNoteNotPayable" xml:space="preserve"><value>Un avoir ne s'encaisse pas.</value></data>
+  <data name="Error.Payment.AlreadyReversed" xml:space="preserve"><value>Cet encaissement a déjà été contre-passé.</value></data>
+  <data name="Error.Payment.ReasonRequired" xml:space="preserve"><value>Indiquez le motif de la contre-passation.</value></data>
+  <data name="Error.Payment.ReasonTooLong" xml:space="preserve"><value>Le motif est trop long.</value></data>
+  <data name="Error.Payment.CustomerNotFound" xml:space="preserve"><value>Ce client n'existe pas.</value></data>
+  <data name="Error.BankStatement.FileRequired" xml:space="preserve"><value>Choisissez un fichier de relevé.</value></data>
+  <data name="Error.BankStatement.FileTooLarge" xml:space="preserve"><value>Le fichier dépasse 5 Mo.</value></data>
+  <data name="Error.BankStatement.FormatUnknown" xml:space="preserve"><value>Format non reconnu : utilisez un fichier CAMT.053, OFX ou CSV.</value></data>
+  <data name="Error.BankStatement.FileInvalid" xml:space="preserve"><value>Le fichier n'a pas pu être lu.</value></data>
+  <data name="Error.BankStatement.NoTransactions" xml:space="preserve"><value>Le relevé ne contient aucune opération.</value></data>
+  <data name="Error.BankStatement.CsvColumnsInvalid" xml:space="preserve"><value>Colonnes CSV introuvables : précisez la date, le libellé et le montant dans les réglages CSV.</value></data>
+  <data name="Error.BankStatement.LineNotFound" xml:space="preserve"><value>Cette opération bancaire n'existe pas.</value></data>
+  <data name="Error.BankStatement.LineAlreadyMatched" xml:space="preserve"><value>Cette opération est déjà rapprochée.</value></data>
+  <data name="Error.BankStatement.LineNotCredit" xml:space="preserve"><value>Seule une opération créditrice peut être rapprochée d'une facture.</value></data>
+  <data name="Error.BankStatement.AmountMismatch" xml:space="preserve"><value>Le montant reçu doit être celui de l'opération bancaire.</value></data>
+  <data name="Error.BankStatement.TooManyLines" xml:space="preserve"><value>Trop d'opérations à la fois : validez-les en plusieurs fois.</value></data>
+  <data name="Error.BankingSettings.ThresholdInvalid" xml:space="preserve"><value>Le seuil doit être compris entre 0 et 100 €.</value></data>
+</root>

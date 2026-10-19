@@ -4,6 +4,7 @@ using Lettra.Application.Mapping;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Pricing;
+using Lettra.Domain.Banking;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Catalog;
 using Lettra.Domain.Common;
@@ -379,6 +380,13 @@ internal sealed class JournaledDocumentReader(TenantDbSession session) : IJourna
         {
             // La date du jour ne sert qu'à « expiré », hors de la forme canonique.
             hashes[quote.Id.Value] = CanonicalDocument.ComputeHash(quote.ToResponse(DateOnly.MinValue));
+        }
+
+        // Encaissements (vague 6) : l'empreinte de leur état, enregistrement puis contre-passation.
+        List<PaymentId> paymentIds = [.. documentIds.Select(id => new PaymentId(id))];
+        foreach (Payment payment in await db.Set<Payment>().AsNoTracking().Where(p => paymentIds.Contains(p.Id)).ToListAsync(cancellationToken).ConfigureAwait(false))
+        {
+            hashes[payment.Id.Value] = payment.ComputeFingerprint();
         }
 
         return hashes;

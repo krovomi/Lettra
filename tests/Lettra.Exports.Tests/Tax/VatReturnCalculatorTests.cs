@@ -140,4 +140,17 @@ public sealed class VatReturnCalculatorTests
 
         operations.Should().ContainSingle().Which.Should().Match<VatOperation>(o => o.Date == new DateOnly(2026, 9, 10) && o.VatAmount == 100m && o.DueOnReceipt);
     }
+
+    [Fact]
+    public void Une_facture_validee_avant_le_suivi_des_encaissements_garde_sa_tva_a_la_date_de_la_piece()
+    {
+        // Validée avant cette version, sa TVA est en 44571 (pas en 44574) : elle n'est pas dans les pièces en attente.
+        TaxDocument document = Invoice("FAC-000061", new(2026, 8, 20), [Services(1000m)], vatOnDebits: false);
+        IReadOnlyList<VatOperation> invoiced = VatOperations.Of(document);
+
+        IReadOnlyList<VatOperation> operations = VatOperations.WithReceipts(
+            invoiced, [], new Dictionary<Guid, TaxDocument> { [document.InvoiceId] = document }, deferred: new HashSet<Guid>());
+
+        operations.Should().ContainSingle().Which.Should().Match<VatOperation>(o => o.Date == new DateOnly(2026, 8, 20) && o.VatAmount == 200m);
+    }
 }

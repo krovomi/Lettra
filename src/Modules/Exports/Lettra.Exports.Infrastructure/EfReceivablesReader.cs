@@ -19,7 +19,7 @@ internal sealed class EfReceivablesReader(TenantDbSession session) : IReceivable
         var invoices = await db.Set<Invoice>()
             .AsNoTracking()
             .Where(i => i.Status != InvoiceStatus.Draft)
-            .Select(i => new { i.Id, i.Kind, i.Number, CustomerName = i.Customer.Name, i.DueDate, i.TotalInclTax, i.CreditedInclTax })
+            .Select(i => new { i.Id, i.Kind, i.Number, CustomerName = i.Customer.Name, i.DueDate, i.TotalInclTax, i.CreditedInclTax, i.PaidInclTax })
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
         List<PlatformTransmissionRecord> records = await db.Set<PlatformTransmissionRecord>()
@@ -41,7 +41,8 @@ internal sealed class EfReceivablesReader(TenantDbSession session) : IReceivable
                 i.DueDate,
                 i.TotalInclTax,
                 i.CreditedInclTax,
-                latest.TryGetValue(i.Id.Value, out PlatformTransmissionRecord? record) ? EfPlatformTransmissionStore.ToTransmission(record) : null)),
+                latest.TryGetValue(i.Id.Value, out PlatformTransmissionRecord? record) ? EfPlatformTransmissionStore.ToTransmission(record) : null,
+                i.PaidInclTax)),
         ];
     }
 }

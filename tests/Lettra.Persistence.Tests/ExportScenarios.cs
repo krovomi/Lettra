@@ -65,7 +65,9 @@ internal static class ExportScenarios
         customer[6].Should().StartWith("C").And.HaveLength(11);
         customer[7].Should().Be("Atelier Durand");
         customer[11].Should().Be("381,10");
-        rows.Where(r => r[4] == SalesAccounts.VatCollected && r[2] == "1").Select(r => r[12]).Should().BeEquivalentTo(["60,00", "1,10"]);
+        // TVA sur encaissements (vague 6) : celle de la prestation attend l'encaissement en 44574, celle des marchandises est due.
+        rows.Where(r => r[4] == SalesAccounts.VatCollected && r[2] == "1").Select(r => r[12]).Should().BeEquivalentTo(["1,10"]);
+        rows.Where(r => r[4] == SalesAccounts.VatPending && r[2] == "1").Select(r => r[12]).Should().BeEquivalentTo(["60,00"]);
         rows.Single(r => r[2] == "2" && r[4] == SalesAccounts.Customers)[12].Should().Be("381,10");
 
         // Le validateur intégré relit le même fichier soumis par l'utilisateur.

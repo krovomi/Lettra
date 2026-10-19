@@ -1,0 +1,382 @@
+@page "/bank"
+@inject IBankingGateway Banking
+@inject NavigationManager Navigation
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+@inject IServiceProvider Services
+@* Rapprochement bancaire (vague 6) : import d'un relevé (CAMT.053, OFX ou CSV, jamais de connexion à la banque),
+   propositions déterministes avec leur raison, validation une par une ou en masse, opérations écartées. *@
+
+<PageTitle>@L["Bank.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Bank.Title"]</h1>
+        <p class="lettra-muted">@L["Bank.Subtitle"]</p>
+    </div>
+    <div class="lt-page-actions">
+        <a class="lettra-button is-secondary" href="payments" id="bank-to-payments"><Icon Name="hand-coins" Size="18" /> @L["Payments.Title"]</a>
+    </div>
+</div>
+
+<GeneralErrors Errors="_errors" IncludeFieldErrors="true" />
+
+<div class="lt-banking-stats" id="bank-stats">
+    <div class="lt-banking-stat is-pending"><span>@L["Bank.Pending"]</span><strong id="bank-pending">@(_view?.Pending ?? 0)</strong></div>
+    <div class="lt-banking-stat is-proposed"><span>@L["Bank.Proposals"]</span><strong id="bank-proposals">@(_view?.Proposals ?? 0)</strong></div>
+    <div class="lt-banking-stat"><span>@L["Bank.Matched"]</span><strong>@(_view?.Matched ?? 0)</strong></div>
+    <div class="lt-banking-stat"><span>@L["Bank.Ignored"]</span><strong>@(_view?.Ignored ?? 0)</strong></div>
+</div>
+
+<Collapsible Id="bank-import" Title="@L["Bank.Import"]" InitiallyOpen="@(_view is null || _view.Lines.Count == 0)" Summary="@ImportSummary">
+    <p class="lettra-muted">@L["Bank.Import.Hint"]</p>
+    <div class="lt-banking-import">
+        <label class="lettra-button" for="bank-file"><Icon Name="upload" Size="18" /> @L["Bank.Import.Choose"]</label>
+        <InputFile id="bank-file" class="lettra-visually-hidden" accept=".xml,.ofx,.qfx,.csv,.txt" disabled="@_busy" OnChange="ImportAsync" />
+        @if (_demoAvailable)
+        {
+            <button type="button" class="lettra-button is-secondary" id="bank-demo" disabled="@_busy" @onclick="ImportDemoAsync">@L["Bank.Import.Demo"]</button>
+        }
+    </div>
+    <details class="lt-banking-csv">
+        <summary>@L["Bank.Csv.Title"]</summary>
+        <p class="lettra-muted">@L["Bank.Csv.Hint"]</p>
+        <div class="lt-banking-grid">
+            <div class="lt-field">
+                <label for="csv-separator">@L["Bank.Csv.Separator"]</label>
+                <select id="csv-separator" @bind="_csvSeparator">
+                    <option value="">@L["Bank.Csv.Auto"]</option>
+                    <option value=";">;</option>
+                    <option value=",">,</option>
+                    <option value="tab">@L["Bank.Csv.Tab"]</option>
+                    <option value="|">|</option>
+                </select>
+            </div>
+            <div class="lt-field"><label for="csv-date">@L["Bank.Csv.DateColumn"]</label><input id="csv-date" type="number" min="1" max="200" @bind="_csvDate" /></div>
+            <div class="lt-field"><label for="csv-label">@L["Bank.Csv.LabelColumn"]</label><input id="csv-label" type="number" min="1" max="200" @bind="_csvLabel" /></div>
+            <div class="lt-field"><label for="csv-amount">@L["Bank.Csv.AmountColumn"]</label><input id="csv-amount" type="number" min="1" max="200" @bind="_csvAmount" /></div>
+            <div class="lt-field"><label for="csv-debit">@L["Bank.Csv.DebitColumn"]</label><input id="csv-debit" type="number" min="1" max="200" @bind="_csvDebit" /></div>
+            <div class="lt-field"><label for="csv-credit">@L["Bank.Csv.CreditColumn"]</label><input id="csv-credit" type="number" min="1" max="200" @bind="_csvCredit" /></div>
+            <div class="lt-field"><label for="csv-dateformat">@L["Bank.Csv.DateFormat"]</label><input id="csv-dateformat" type="text" maxlength="20" placeholder="dd/MM/yyyy" @bind="_csvDateFormat" /></div>
+            <label class="lt-banking-check"><input type="checkbox" @bind="_csvHeader" /> @L["Bank.Csv.Header"]</label>
+        </div>
+    </details>
+    <form class="lt-banking-threshold" @onsubmit="SaveThresholdAsync" @onsubmit:preventDefault="true">
+        <div class="lt-field">
+            <label for="bank-threshold">@L["Bank.Threshold"]</label>
+            <input id="bank-threshold" type="number" inputmode="decimal" step="0.01" min="0" max="100" @bind="_threshold" />
+        </div>
+        <button type="submit" class="lettra-button is-secondary" id="bank-threshold-save" disabled="@_busy">@L["Explorer.Save"]</button>
+        <p class="lettra-muted">@L["Bank.Threshold.Hint"]</p>
+    </form>
+</Collapsible>
+
+<section class="lettra-card" aria-labelledby="bank-lines-title">
+    <div class="lt-banking-section-head">
+        <h2 id="bank-lines-title">@L["Bank.Lines"]</h2>
+        <div class="lt-segmented" role="radiogroup" aria-label="@L["Bank.Lines"]">
+            <button type="button" role="radio" aria-checked="@(_showAll ? "false" : "true")" id="bank-show-pending" @onclick="() => _showAll = false">@L["Bank.Pending"]</button>
+            <button type="button" role="radio" aria-checked="@(_showAll ? "true" : "false")" id="bank-show-all" @onclick="() => _showAll = true">@L["Bank.All"]</button>
+        </div>
+    </div>
+
+    @if (_view is null)
+    {
+        <ListSkeleton Columns="5" />
+    }
+    else if (Shown.Count == 0)
+    {
+        <EmptyState Id="bank-empty" IconName="landmark" Title="@(_view.Lines.Count == 0 ? L["Bank.Empty"] : L["Bank.AllDone"])"
+                    Text="@(_view.Lines.Count == 0 ? L["Bank.Empty.Text"] : L["Bank.AllDone.Text"])" />
+    }
+    else
+    {
+        @if (Proposed.Count > 0)
+        {
+            <div class="lt-banking-bulk" id="bank-bulk">
+                <label class="lt-banking-check">
+                    <input type="checkbox" id="bank-select-all" checked="@(_selected.Count == Proposed.Count)" @onchange="SelectAll" />
+                    @string.Format(Culture, L["Bank.SelectProposals"], Proposed.Count)
+                </label>
+                <button type="button" class="lettra-button" id="bank-confirm-selected" disabled="@(_selected.Count == 0 || _busy)" @onclick="() => ConfirmAsync(SelectedLines)">
+                    <Icon Name="check" Size="18" /> @string.Format(Culture, L["Bank.ConfirmSelected"], _selected.Count)
+                </button>
+            </div>
+        }
+        <table class="lettra-table lt-cards lt-banking-lines" id="bank-lines">
+            <thead>
+                <tr>
+                    <th scope="col">@L["Bank.Operation"]</th>
+                    <th scope="col">@L["Billing.Column.Date"]</th>
+                    <th scope="col" class="lg-num">@L["Payments.Amount"]</th>
+                    <th scope="col">@L["Bank.Proposal"]</th>
+                    <th scope="col"><span class="lettra-visually-hidden">@L["Bank.Actions"]</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (BankLineResponse line in Shown)
+                {
+                    <tr @key="line.Id" class="lt-banking-line @(line.Amount < 0 ? "is-debit" : null)">
+                        <td>
+                            <div class="lt-banking-label">
+                                @if (line.Proposal is not null && line.Status == BankLineStatusDto.Pending)
+                                {
+                                    <input type="checkbox" aria-label="@string.Format(Culture, L["Bank.SelectLine"], line.Label)" checked="@_selected.Contains(line.Id)" @onchange="e => Select(line, e)" />
+                                }
+                                <span>
+                                    <strong>@line.Label</strong>
+                                    @if (line.CounterpartyName is not null || line.CounterpartyIban is not null)
+                                    {
+                                        <small class="lettra-muted">@string.Join(" · ", new[] { line.CounterpartyName, line.CounterpartyIban }.Where(t => t is not null))</small>
+                                    }
+                                </span>
+                            </div>
+                        </td>
+                        <td data-label="@L["Billing.Column.Date"]">@line.BookingDate.ToString("d", Culture)</td>
+                        <td data-label="@L["Payments.Amount"]" class="lg-num lt-banking-money">@ExplorerText.Money(line.Amount)</td>
+                        <td data-label="@L["Bank.Proposal"]">
+                            @switch (line.Status)
+                            {
+                                case BankLineStatusDto.Matched:
+                                    <span class="lettra-status is-issued"><Icon Name="check" Size="14" /> @L["Bank.Status.Matched"]</span>
+                                    @if (line.PaymentId is Guid paymentId)
+                                    {
+                                        <a href="@($"payments/{paymentId}")"> @line.PaymentNumber</a>
+                                    }
+                                    break;
+                                case BankLineStatusDto.Ignored:
+                                    <span class="lettra-status">@L["Bank.Status.Ignored"]</span>
+                                    break;
+                                default:
+                                    @if (line.Proposal is { } proposal)
+                                    {
+                                        <div class="lt-banking-proposal">
+                                            <strong>@proposal.CustomerName</strong>
+                                            <span>@string.Join(", ", proposal.Allocations.Select(a => $"{a.Number} ({ExplorerText.Money(a.Amount)})"))</span>
+                                            <small class="lettra-muted"><Icon Name="info" Size="14" /> @L[$"MatchRule.{proposal.Rule}"] : @proposal.Evidence</small>
+                                            @if (proposal.WriteOff != 0m)
+                                            {
+                                                <small class="lt-banking-writeoff">@string.Format(Culture, L["Bank.WriteOff"], ExplorerText.Money(Math.Abs(proposal.WriteOff)))</small>
+                                            }
+                                        </div>
+                                    }
+                                    else if (line.Amount < 0)
+                                    {
+                                        <span class="lettra-muted">@L["Bank.Debit"]</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="lettra-muted">@L["Bank.NoProposal"]</span>
+                                    }
+                                    break;
+                            }
+                        </td>
+                        <td class="lt-banking-line-actions">
+                            @if (line.Status == BankLineStatusDto.Pending)
+                            {
+                                @if (line.Proposal is not null)
+                                {
+                                    <button type="button" class="lettra-button is-small" disabled="@_busy" @onclick="() => ConfirmAsync([line])">@L["Bank.Confirm"]</button>
+                                }
+                                @if (line.Amount > 0)
+                                {
+                                    <a class="lettra-button is-small is-secondary" href="@($"payments/new?line={line.Id}")">@L["Bank.Allocate"]</a>
+                                }
+                                <button type="button" class="lettra-button is-small is-ghost" disabled="@_busy" @onclick="() => IgnoreAsync(line, true)">@L["Bank.Ignore"]</button>
+                            }
+                            else if (line.Status == BankLineStatusDto.Ignored)
+                            {
+                                <button type="button" class="lettra-button is-small is-ghost" disabled="@_busy" @onclick="() => IgnoreAsync(line, false)">@L["Bank.Restore"]</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
+
+@code {
+    private readonly HashSet<Guid> _selected = [];
+    private ReconciliationResponse? _view;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private bool _busy;
+    private bool _showAll;
+    private bool _demoAvailable;
+    private decimal _threshold = 1m;
+    private string _csvSeparator = string.Empty;
+    private int? _csvDate;
+    private int? _csvLabel;
+    private int? _csvAmount;
+    private int? _csvDebit;
+    private int? _csvCredit;
+    private string? _csvDateFormat;
+    private bool _csvHeader = true;
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private IReadOnlyList<BankLineResponse> Shown =>
+        _view is null ? [] : _showAll ? _view.Lines : [.. _view.Lines.Where(l => l.Status == BankLineStatusDto.Pending)];
+
+    private IReadOnlyList<BankLineResponse> Proposed =>
+        _view is null ? [] : [.. _view.Lines.Where(l => l.Status == BankLineStatusDto.Pending && l.Proposal is not null)];
+
+    private IReadOnlyList<BankLineResponse> SelectedLines => [.. Proposed.Where(l => _selected.Contains(l.Id))];
+
+    private string? ImportSummary => _view?.Imports.FirstOrDefault() is { } last
+        ? string.Format(Culture, L["Bank.LastImport"], last.FileName, last.ImportedAt.ToLocalTime().ToString("g", Culture))
+        : null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Services.GetService<IDemoDataGateway>() is { } demo)
+        {
+            _demoAvailable = (await demo.GetStatusAsync(CancellationToken.None)).Value?.Available ?? false;
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        OperationResult<ReconciliationResponse> result = await Banking.GetReconciliationAsync(CancellationToken.None);
+        _errors = result.Errors;
+        _view = result.Value ?? new ReconciliationResponse([], 0, 0, 0, 0, 1m, []);
+        _threshold = _view.WriteOffThreshold;
+        _selected.IntersectWith(Proposed.Select(l => l.Id));
+    }
+
+    private async Task ImportAsync(InputFileChangeEventArgs e)
+    {
+        IBrowserFile file = e.File;
+        if (file.Size > MaxFileSize)
+        {
+            _errors = [new ErrorDetail(ErrorCodes.BankStatement.FileTooLarge)];
+            return;
+        }
+
+        await RunAsync(async () =>
+        {
+            using MemoryStream content = new();
+            await using (Stream stream = file.OpenReadStream(MaxFileSize))
+            {
+                await stream.CopyToAsync(content);
+            }
+
+            ImportBankStatementRequest request = new() { FileName = file.Name, ContentBase64 = Convert.ToBase64String(content.ToArray()), Csv = CsvOptions() };
+            return Imported(await Banking.ImportStatementAsync(request, CancellationToken.None));
+        });
+    }
+
+    private Task ImportDemoAsync() => RunAsync(async () => Imported(await Banking.ImportDemoStatementAsync(CancellationToken.None)));
+
+    private IReadOnlyList<ErrorDetail> Imported(OperationResult<BankImportResponse> result)
+    {
+        if (result is { IsSuccess: true, Value: { } import })
+        {
+            Toasts.Show(ToastKind.Success, string.Format(Culture, L["Bank.Imported"], import.Imported, import.Duplicates, import.Proposals));
+            _showAll = false;
+        }
+
+        return result.Errors;
+    }
+
+    private CsvImportOptions CsvOptions() => new()
+    {
+        Separator = _csvSeparator switch { "" => null, "tab" => "\t", _ => _csvSeparator },
+        HasHeader = _csvHeader,
+        DateColumn = _csvDate,
+        LabelColumn = _csvLabel,
+        AmountColumn = _csvAmount,
+        DebitColumn = _csvDebit,
+        CreditColumn = _csvCredit,
+        DateFormat = string.IsNullOrWhiteSpace(_csvDateFormat) ? null : _csvDateFormat.Trim(),
+    };
+
+    private Task ConfirmAsync(IReadOnlyList<BankLineResponse> lines) => RunAsync(async () =>
+    {
+        ConfirmMatchesRequest request = new()
+        {
+            Items = [.. lines.Where(l => l.Proposal is not null).Select(l => new ConfirmMatchItem(
+                l.Id, l.Proposal!.CustomerId, [.. l.Proposal.Allocations.Select(a => new PaymentAllocationRequest(a.InvoiceId, a.Amount))]))],
+        };
+        OperationResult<ConfirmMatchesResponse> result = await Banking.ConfirmMatchesAsync(request, CancellationToken.None);
+        if (result is { IsSuccess: true, Value: { } outcome })
+        {
+            _selected.ExceptWith(outcome.Outcomes.Where(o => o.PaymentId is not null).Select(o => o.BankLineId));
+            if (outcome.Confirmed > 0)
+            {
+                Toasts.Show(ToastKind.Success, string.Format(Culture, L["Bank.Confirmed"], outcome.Confirmed));
+            }
+
+            if (outcome.Failed > 0)
+            {
+                Toasts.Show(ToastKind.Warning, string.Format(Culture, L["Bank.ConfirmFailed"], outcome.Failed,
+                    string.Join(" ", outcome.Outcomes.SelectMany(o => o.Errors).Select(err => L.Error(err.Code)).Distinct(StringComparer.Ordinal))));
+            }
+        }
+
+        return result.Errors;
+    });
+
+    private Task IgnoreAsync(BankLineResponse line, bool ignored) => RunAsync(async () =>
+    {
+        OperationResult<BankLineResponse> result = await Banking.IgnoreLineAsync(line.Id, ignored, CancellationToken.None);
+        if (result.IsSuccess)
+        {
+            Toasts.Show(ToastKind.Success, ignored ? L["Bank.Ignored.Toast"] : L["Bank.Restored.Toast"]);
+        }
+
+        return result.Errors;
+    });
+
+    private Task SaveThresholdAsync() => RunAsync(async () =>
+    {
+        OperationResult<BankingSettingsResponse> result = await Banking.UpdateSettingsAsync(new UpdateBankingSettingsRequest { WriteOffThreshold = _threshold }, CancellationToken.None);
+        if (result.IsSuccess)
+        {
+            Toasts.Show(ToastKind.Success, L["Bank.Threshold.Saved"]);
+        }
+
+        return result.Errors;
+    });
+
+    private void Select(BankLineResponse line, ChangeEventArgs e)
+    {
+        if (e.Value is true)
+        {
+            _selected.Add(line.Id);
+        }
+        else
+        {
+            _selected.Remove(line.Id);
+        }
+    }
+
+    private void SelectAll(ChangeEventArgs e)
+    {
+        _selected.Clear();
+        if (e.Value is true)
+        {
+            _selected.UnionWith(Proposed.Select(l => l.Id));
+        }
+    }
+
+    /// <summary>Exécute une action, affiche ses refus dans le toaster, puis relit l'écran.</summary>
+    private async Task RunAsync(Func<Task<IReadOnlyList<ErrorDetail>>> action)
+    {
+        _busy = true;
+        try
+        {
+            IReadOnlyList<ErrorDetail> errors = await action();
+            await LoadAsync();
+            _errors = [.. errors.Select(err => err with { Target = null })];
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private const long MaxFileSize = 5 * 1024 * 1024;
+}

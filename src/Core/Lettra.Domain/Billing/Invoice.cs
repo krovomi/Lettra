@@ -138,6 +138,12 @@ public sealed class Invoice : BillingDocument<InvoiceId>
     /// <summary>Total TTC des avoirs validés sur cette pièce.</summary>
     public decimal CreditedInclTax { get; private set; }
 
+    /// <summary>
+    /// Total TTC des encaissements imputés sur cette pièce (vague 6) ; hors de la forme canonique, comme
+    /// <see cref="CreditedInclTax"/> : il change après la validation sans toucher à l'empreinte.
+    /// </summary>
+    public decimal PaidInclTax { get; private set; }
+
     /// <summary>Empreinte SHA-256 de la forme canonique (<c>Lettra.Contracts.Billing.CanonicalDocument</c>), figée à la validation.</summary>
     public string? ContentHash { get; private set; }
 
@@ -155,6 +161,15 @@ public sealed class Invoice : BillingDocument<InvoiceId>
     public bool IsDerived => Kind != InvoiceKind.Invoice;
 
     public decimal CreditableBalance => TotalInclTax - CreditedInclTax;
+
+    /// <summary>Reste dû : TTC moins avoirs validés moins encaissements. Négatif après un avoir sur une pièce déjà payée.</summary>
+    public decimal OutstandingInclTax => TotalInclTax - CreditedInclTax - PaidInclTax;
+
+    /// <summary>
+    /// Vrai si la pièce porte l'option pour le paiement de la TVA d'après les débits (mention figée à la validation) :
+    /// la TVA de ses services est alors exigible dès la facture.
+    /// </summary>
+    public bool VatOnDebits => LegalMentionList.Any(m => m.Contains("débits", StringComparison.Ordinal));
 
     /// <summary>Facture saisie librement.</summary>
     public static Result<Invoice> Create(
@@ -544,8 +559,47 @@ public sealed class Invoice : BillingDocument<InvoiceId>
         return Result.Success();
     }
 
-    /// <summary>Lignes vues par la comptabilité (nature et montant HT).</summary>
-    public IEnumerable<RevenueLine> RevenueLines => Lines.Select(l => new RevenueLine(l.Nature, l.TotalExclTax));
+    /// <summary>
+    /// Un encaissement est imputé sur cette pièce (vague 6). Seules une facture ou un acompte validés se règlent, dans la
+    /// limite du reste dû.
+    /// </summary>
+    public Result RegisterPayment(decimal amountInclTax, Guid userId, DateTimeOffset now)
+    {
+        if (IsDraft)
+        {
+            return InvoiceErrors.NotValidated;
+        }
+
+        if (Kind == InvoiceKind.CreditNote)
+        {
+            return Banking.PaymentErrors.CreditNoteNotPayable;
+        }
+
+        if (amountInclTax <= 0m || amountInclTax > OutstandingInclTax)
+        {
+            return Banking.PaymentErrors.ExceedsOutstanding;
+        }
+
+        PaidInclTax += amountInclTax;
+        Touch(userId, now);
+        return Result.Success();
+    }
+
+    /// <summary>Un encaissement imputé sur cette pièce est contre-passé : son montant redevient dû.</summary>
+    public void CancelPayment(decimal amountInclTax, Guid userId, DateTimeOffset now)
+    {
+        if (amountInclTax <= 0m || amountInclTax > PaidInclTax)
+        {
+            throw new InvalidOperationException("Contre-passation d'un montant non encaissé sur cette pièce.");
+        }
+
+        PaidInclTax -= amountInclTax;
+        Touch(userId, now);
+    }
+
+    /// <summary>Lignes vues par la comptabilité (nature, montant HT, taux et catégorie de TVA).</summary>
+    public IEnumerable<RevenueLine> RevenueLines =>
+        Lines.Select(l => new RevenueLine(l.Nature, l.TotalExclTax, l.VatRatePercent, l.VatCategory));
 
     /// <summary>Vue de la pièce pour le contrôle des mentions obligatoires.</summary>
     public ComplianceDocument ToComplianceDocument(SellerTerms? terms)

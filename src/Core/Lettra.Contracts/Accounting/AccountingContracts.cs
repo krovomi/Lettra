@@ -9,8 +9,10 @@ namespace Lettra.Contracts.Accounting;
 public sealed record JournalLineResponse(string Account, decimal Debit, decimal Credit, decimal? VatRatePercent);
 
 /// <summary>
-/// Une écriture du journal des ventes : celle d'une pièce validée (facture, acompte ou avoir), toujours équilibrée.
-/// <see cref="Amount"/> est le total des débits (le TTC de la pièce).
+/// Une écriture du journal des ventes (<c>VE</c>) : celle d'une pièce validée (facture, acompte ou avoir) ; ou du
+/// journal de banque (<c>BQ</c>, vague 6) : un encaissement ou sa contre-passation, <see cref="InvoiceId"/> étant alors
+/// l'encaissement. Toujours équilibrée. <see cref="Amount"/> est le total des débits. <see cref="LetteringCode"/> est
+/// le code de lettrage de la ligne du compte client (411), s'il est lettré.
 /// </summary>
 public sealed record JournalEntryResponse(
     Guid InvoiceId,
@@ -20,7 +22,10 @@ public sealed record JournalEntryResponse(
     Guid CustomerId,
     string CustomerName,
     decimal Amount,
-    IReadOnlyList<JournalLineResponse> Lines);
+    IReadOnlyList<JournalLineResponse> Lines,
+    string JournalCode = "VE",
+    string? LetteringCode = null,
+    bool IsReversal = false);
 
 /// <summary>Une page du journal des ventes sur une période, avec les totaux de toutes les écritures retenues par le filtre.</summary>
 public sealed record SalesJournalResponse(
@@ -39,7 +44,7 @@ public sealed record AccountBalanceResponse(string Account, decimal Debit, decim
     public decimal Balance => Debit - Credit;
 }
 
-/// <summary>Un client dans la balance auxiliaire du compte 411 : ce qui lui a été facturé, moins ses avoirs.</summary>
+/// <summary>Un client dans la balance auxiliaire du compte 411 : ce qui lui a été facturé, moins ses avoirs et ses règlements.</summary>
 public sealed record CustomerBalanceResponse(Guid CustomerId, string CustomerName, decimal Debit, decimal Credit, int EntryCount)
 {
     public decimal Balance => Debit - Credit;
@@ -67,7 +72,9 @@ public sealed record LedgerLineResponse(
     string CustomerName,
     decimal Debit,
     decimal Credit,
-    decimal RunningBalance);
+    decimal RunningBalance,
+    string JournalCode = "VE",
+    string? LetteringCode = null);
 
 /// <summary>
 /// Grand livre d'un compte sur une période, éventuellement limité à un client (compte 411 auxiliaire). Le solde

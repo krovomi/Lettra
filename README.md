@@ -253,6 +253,25 @@ Vérifié à chaque CI (job « Démo navigateur ») : la composition de l'applic
 Keycloak de la démo (code + PKCE, mot de passe et code à usage unique), voit le client saisi dans le navigateur et en
 crée un que le navigateur retrouve.
 
+## Vue cabinet
+
+Le sélecteur de dossier (barre du haut, ou Ctrl+K « Ouvrir le dossier … ») change de dossier en un clic. Il propose la
+recherche, les favoris (étoile) et les récents, tous gardés sur l'appareil. La démo Docker contient trois dossiers :
+Cabinet Démo, Bâti Rénov' Lemoine et Négoce Méditerranée Distribution (ajoutés aussi à une démo déjà remplie, sans rien
+effacer).
+
+La page **Vue cabinet** liste les dossiers que vous pouvez ouvrir, les plus urgents d'abord. Pour chacun, elle montre
+les factures en retard, les rejets de la plateforme, les alertes ouvertes et la revue du mois. Ces chiffres sont
+calculés la nuit (par le Worker, ou par l'API dans la démo), sur « Actualiser », ou à la première ouverture. Ce ne sont
+que des compteurs : aucun montant ni nom de client ne quitte le dossier.
+
+**Revue du dossier** (menu Comptabilité) est une liste de contrôle par mois ou par trimestre. Chaque coche garde qui
+l'a posée et quand. Détails : [docs/vue-cabinet.md](docs/vue-cabinet.md).
+
+État : navigateur contrôlé à la main dans la démo Docker à 1440, 768 et 375 px, et par les tests automatiques ;
+application installée (seule ou reliée au serveur commun) : même écran, changement de dossier branché, **non lancée**
+sur un appareil.
+
 ---
 
 ## Premier usage, pas à pas
@@ -532,7 +551,6 @@ Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou 
 | Fonction | État |
 |---|---|
 | Assistant IA | Les écrans existent : le panneau « Assistant IA » (bouton en haut), le brouillon de devis proposé par l'assistant et le lien « Pourquoi ? » de la checklist de conformité. Ils restent masqués tant que l'IA est désactivée, ce qui est le réglage par défaut (section `Lettra:Ai`) et celui de la démo. L'assistant propose et explique ; il ne valide ni n'émet jamais rien. |
-| Changer de dossier | Pas encore d'écran pour choisir le dossier ouvert : dans l'application installée, les dossiers « bâtiment » et « négoce » du jeu de démonstration sont créés mais ne s'ouvrent pas encore. |
 | Vraie plateforme agréée | En attente d'un partenaire ; la démo utilise la plateforme simulée. |
 | Serveur du cabinet en production | La démonstration navigateur tourne sur un poste avec Docker ; un vrai serveur du cabinet ou une cellule SaaS demande Keycloak, des certificats et une infrastructure (voir plus bas). |
 | Poste relié à un serveur, synchronisation | Prête dans l'application (fichier `lettra.json`), mais demande un serveur Lettra et Keycloak. Sur un poste isolé, la page Synchronisation indique « Ce poste ne synchronise pas ». |
