@@ -84,5 +84,9 @@ internal static class IconPaths
         ["landmark"] = "<line x1='3' x2='21' y1='22' y2='22'/> <line x1='6' x2='6' y1='18' y2='11'/> <line x1='10' x2='10' y1='18' y2='11'/> <line x1='14' x2='14' y1='18' y2='11'/> <line x1='18' x2='18' y1='18' y2='11'/> <polygon points='12 2 20 7 4 7'/>",
         ["upload"] = "<path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/> <polyline points='17 8 12 3 7 8'/> <line x1='12' x2='12' y1='3' y2='15'/>",
         ["text-quote"] = "<path d='M17 6H3'/> <path d='M21 12H8'/> <path d='M21 18H8'/> <path d='M3 12v6'/>",
+        ["arrow-up"] = "<path d='m5 12 7-7 7 7'/> <path d='M12 19V5'/>",
+        ["arrow-down"] = "<path d='M12 5v14'/> <path d='m19 12-7 7-7-7'/>",
+        ["chevrons-up-down"] = "<path d='m7 15 5 5 5-5'/> <path d='m7 9 5-5 5 5'/>",
+        ["list-filter"] = "<path d='M3 6h18'/> <path d='M7 12h10'/> <path d='M10 18h4'/>",
     };
 }
