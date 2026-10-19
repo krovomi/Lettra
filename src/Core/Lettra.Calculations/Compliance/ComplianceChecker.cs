@@ -106,13 +106,19 @@ public static class ComplianceChecker
         ArgumentNullException.ThrowIfNull(document);
         List<ComplianceFinding> findings = [];
         bool reformActive = today >= MandatoryMentions.Reform2026;
-        bool isQuote = document.Kind == CompliancePieceKind.Quote;
-        bool isBusinessCustomer = document.Customer.IsBusiness;
-        string country = string.IsNullOrWhiteSpace(document.Customer.CountryCode) ? "FR" : document.Customer.CountryCode.Trim().ToUpperInvariant();
-        bool isFrench = country == "FR";
-        bool isIntraEu = !isFrench && EuCountries.Contains(country);
+        CheckSeller(findings, document);
+        CheckCustomer(findings, document, reformActive);
+        CheckPiece(findings, document, reformActive);
+        CheckLines(findings, document);
+        findings.Add(Ok(MentionCodes.Totals));
+        CheckVatAndCredit(findings, document);
+        CheckPayment(findings, document);
+        return new ComplianceReport(findings);
+    }
 
-        // Émetteur.
+    /// <summary>Émetteur : nom, adresse, SIREN, RCS et capital d'une société commerciale, TVA hors franchise.</summary>
+    private static void CheckSeller(List<ComplianceFinding> findings, ComplianceDocument document)
+    {
         Require(findings, MentionCodes.SellerName, document.Seller.Name);
         Require(findings, MentionCodes.SellerAddress, document.Seller.Address);
         Require(findings, MentionCodes.SellerSiren, Present(document.Seller.Siren) ? document.Seller.Siren : document.Seller.Siret);
@@ -127,21 +133,30 @@ public static class ComplianceChecker
         {
             Require(findings, MentionCodes.SellerVatNumber, document.Seller.VatNumber);
         }
+    }
 
-        // Client.
+    /// <summary>Client : nom, adresse, SIREN d'un professionnel français, numéro de TVA d'un professionnel de l'UE.</summary>
+    private static void CheckCustomer(List<ComplianceFinding> findings, ComplianceDocument document, bool reformActive)
+    {
+        string country = string.IsNullOrWhiteSpace(document.Customer.CountryCode) ? "FR" : document.Customer.CountryCode.Trim().ToUpperInvariant();
+        bool isFrench = country == "FR";
+        bool isIntraEu = !isFrench && EuCountries.Contains(country);
         Require(findings, MentionCodes.CustomerName, document.Customer.Name);
         Require(findings, MentionCodes.CustomerAddress, document.Customer.Address);
-        if (isFrench && isBusinessCustomer)
+        if (isFrench && document.Customer.IsBusiness)
         {
             Require(findings, MentionCodes.CustomerSiren, document.Customer.Siren, reform: !reformActive);
         }
 
-        if (isIntraEu && isBusinessCustomer)
+        if (isIntraEu && document.Customer.IsBusiness)
         {
             Require(findings, MentionCodes.CustomerVatNumber, document.Customer.VatNumber);
         }
+    }
 
-        // Pièce.
+    /// <summary>Pièce : numéro et date (acquis pour un brouillon), livraison, catégorie d'opération, TVA sur les débits.</summary>
+    private static void CheckPiece(List<ComplianceFinding> findings, ComplianceDocument document, bool reformActive)
+    {
         if (document.IsDraft)
         {
             // Attribués par la validation : la checklist les montre comme acquis.
@@ -159,56 +174,61 @@ public static class ComplianceChecker
             findings.Add(Ok(MentionCodes.DeliveryDate));
         }
 
-        if (!isQuote)
+        if (document.Kind == CompliancePieceKind.Quote)
         {
-            Require(findings, MentionCodes.OperationCategory, document.OperationCategory, reform: !reformActive);
-            if (Present(document.DeliveryAddress))
-            {
-                findings.Add(Ok(MentionCodes.DeliveryAddress));
-            }
-
-            if (document.SellerVatOnDebits)
-            {
-                Require(findings, MentionCodes.VatOnDebits, document.LegalMentions.FirstOrDefault(LegalMentionTexts.IsVatOnDebits), reform: !reformActive);
-            }
+            return;
         }
 
-        // Lignes.
+        Require(findings, MentionCodes.OperationCategory, document.OperationCategory, reform: !reformActive);
+        if (Present(document.DeliveryAddress))
+        {
+            findings.Add(Ok(MentionCodes.DeliveryAddress));
+        }
+
+        if (document.SellerVatOnDebits)
+        {
+            Require(findings, MentionCodes.VatOnDebits, document.LegalMentions.FirstOrDefault(LegalMentionTexts.IsVatOnDebits), reform: !reformActive);
+        }
+    }
+
+    /// <summary>Lignes : au moins une, chacune avec sa désignation, une quantité non nulle et son prix unitaire.</summary>
+    private static void CheckLines(List<ComplianceFinding> findings, ComplianceDocument document)
+    {
         if (document.Lines.Count == 0)
         {
             findings.Add(new(MentionCodes.Lines, ComplianceSeverity.Error, "Art. 242 nonies A CGI"));
+            return;
         }
-        else
+
+        int before = findings.Count;
+        for (int i = 0; i < document.Lines.Count; i++)
         {
-            int before = findings.Count;
-            for (int i = 0; i < document.Lines.Count; i++)
+            ComplianceLine line = document.Lines[i];
+            if (!Present(line.Designation))
             {
-                ComplianceLine line = document.Lines[i];
-                if (!Present(line.Designation))
-                {
-                    findings.Add(new(MentionCodes.LineDesignation, ComplianceSeverity.Error, LegalBasis(MentionCodes.LineDesignation), i + 1));
-                }
-
-                if (line.Quantity is null or 0m)
-                {
-                    findings.Add(new(MentionCodes.LineQuantity, ComplianceSeverity.Error, LegalBasis(MentionCodes.LineQuantity), i + 1));
-                }
-
-                if (line.UnitPriceExclTax is null)
-                {
-                    findings.Add(new(MentionCodes.LineUnitPrice, ComplianceSeverity.Error, LegalBasis(MentionCodes.LineUnitPrice), i + 1));
-                }
+                findings.Add(new(MentionCodes.LineDesignation, ComplianceSeverity.Error, LegalBasis(MentionCodes.LineDesignation), i + 1));
             }
 
-            if (findings.Count == before)
+            if (line.Quantity is null or 0m)
             {
-                findings.Add(Ok(MentionCodes.Lines));
+                findings.Add(new(MentionCodes.LineQuantity, ComplianceSeverity.Error, LegalBasis(MentionCodes.LineQuantity), i + 1));
+            }
+
+            if (line.UnitPriceExclTax is null)
+            {
+                findings.Add(new(MentionCodes.LineUnitPrice, ComplianceSeverity.Error, LegalBasis(MentionCodes.LineUnitPrice), i + 1));
             }
         }
 
-        findings.Add(Ok(MentionCodes.Totals));
+        if (findings.Count == before)
+        {
+            findings.Add(Ok(MentionCodes.Lines));
+        }
+    }
 
-        // Mentions de TVA : chaque catégorie sans taux a son texte légal.
+    /// <summary>Texte légal de chaque catégorie de TVA sans taux ; numéro de la facture d'origine d'un avoir.</summary>
+    private static void CheckVatAndCredit(List<ComplianceFinding> findings, ComplianceDocument document)
+    {
         bool needsVatText = document.Lines.Any(l => !VatCategoryCodes.IsTaxed(l.VatCategory)) || document.SellerVatFranchise;
         if (needsVatText)
         {
@@ -224,32 +244,35 @@ public static class ComplianceChecker
                 ? Ok(MentionCodes.OriginalInvoice)
                 : new(MentionCodes.OriginalInvoice, ComplianceSeverity.Error, "Art. 242 nonies A, I-11° CGI"));
         }
+    }
 
-        // Paiement : sans objet pour un devis et un avoir.
-        if (document.Kind is CompliancePieceKind.Invoice or CompliancePieceKind.DownPayment)
+    /// <summary>Paiement d'une facture ou d'un acompte (sans objet pour un devis et un avoir) : échéance, pénalités, escompte, indemnité de 40 €.</summary>
+    private static void CheckPayment(List<ComplianceFinding> findings, ComplianceDocument document)
+    {
+        if (document.Kind is not (CompliancePieceKind.Invoice or CompliancePieceKind.DownPayment))
         {
-            findings.Add(document.DueDate is null && !Present(document.PaymentTerms)
-                ? new(MentionCodes.DueDate, ComplianceSeverity.Error, LegalBasis(MentionCodes.DueDate))
-                : Ok(MentionCodes.DueDate));
-
-            findings.Add(document.LatePenaltyRate is null
-                ? new(MentionCodes.LatePenalties, ComplianceSeverity.Warning, LegalBasis(MentionCodes.LatePenalties))
-                : Ok(MentionCodes.LatePenalties));
-
-            findings.Add(!Present(document.EarlyPaymentDiscount)
-                ? new(MentionCodes.EarlyPaymentDiscount, ComplianceSeverity.Warning, LegalBasis(MentionCodes.EarlyPaymentDiscount))
-                : Ok(MentionCodes.EarlyPaymentDiscount));
-
-            if (isBusinessCustomer)
-            {
-                bool indemnity = document.LegalMentions.Any(LegalMentionTexts.IsRecoveryIndemnity);
-                findings.Add(indemnity
-                    ? Ok(MentionCodes.RecoveryIndemnity)
-                    : new(MentionCodes.RecoveryIndemnity, ComplianceSeverity.Error, LegalBasis(MentionCodes.RecoveryIndemnity)));
-            }
+            return;
         }
 
-        return new ComplianceReport(findings);
+        findings.Add(document.DueDate is null && !Present(document.PaymentTerms)
+            ? new(MentionCodes.DueDate, ComplianceSeverity.Error, LegalBasis(MentionCodes.DueDate))
+            : Ok(MentionCodes.DueDate));
+
+        findings.Add(document.LatePenaltyRate is null
+            ? new(MentionCodes.LatePenalties, ComplianceSeverity.Warning, LegalBasis(MentionCodes.LatePenalties))
+            : Ok(MentionCodes.LatePenalties));
+
+        findings.Add(!Present(document.EarlyPaymentDiscount)
+            ? new(MentionCodes.EarlyPaymentDiscount, ComplianceSeverity.Warning, LegalBasis(MentionCodes.EarlyPaymentDiscount))
+            : Ok(MentionCodes.EarlyPaymentDiscount));
+
+        if (document.Customer.IsBusiness)
+        {
+            bool indemnity = document.LegalMentions.Any(LegalMentionTexts.IsRecoveryIndemnity);
+            findings.Add(indemnity
+                ? Ok(MentionCodes.RecoveryIndemnity)
+                : new(MentionCodes.RecoveryIndemnity, ComplianceSeverity.Error, LegalBasis(MentionCodes.RecoveryIndemnity)));
+        }
     }
 
     private static void Require(List<ComplianceFinding> findings, string code, string? value, bool reform = false)
