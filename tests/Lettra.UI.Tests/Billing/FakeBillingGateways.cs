@@ -125,8 +125,11 @@ internal sealed class FakeQuotesGateway : IQuotesGateway
         return quote;
     }
 
+    public List<BillingListQuery> ListQueries { get; } = [];
+
     public Task<OperationResult<PagedResponse<QuoteSummary>>> ListAsync(BillingListQuery query, QuoteStatusDto? status, CancellationToken cancellationToken)
     {
+        ListQueries.Add(query);
         List<QuoteSummary> items = Quotes.Values
             .Where(q => status is null || q.Status == status)
             .Where(q => query.Search is null || (q.Number ?? string.Empty).Contains(query.Search, StringComparison.OrdinalIgnoreCase)
@@ -261,9 +264,12 @@ internal sealed class FakeInvoicesGateway : IInvoicesGateway
 
     public List<(InvoiceKindDto? Kind, InvoiceStatusDto? Status, string? Search)> ListCalls { get; } = [];
 
+    public List<BillingListQuery> ListQueries { get; } = [];
+
     public Task<OperationResult<PagedResponse<InvoiceSummary>>> ListAsync(BillingListQuery query, InvoiceKindDto? kind, InvoiceStatusDto? status, CancellationToken cancellationToken)
     {
         ListCalls.Add((kind, status, query.Search));
+        ListQueries.Add(query);
         List<InvoiceSummary> items = Invoices.Values
             .Where(i => kind is null || i.Kind == kind)
             .Where(i => status is null || i.Status == status)

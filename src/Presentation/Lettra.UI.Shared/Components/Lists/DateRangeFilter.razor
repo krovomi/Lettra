@@ -1,0 +1,41 @@
+@inject IStringLocalizer<SharedResource> L
+@* Période d'une liste : deux dates, bornes comprises, chacune facultative. *@
+
+<fieldset class="lt-filter lt-range" id="@Id">
+    <legend>@Label</legend>
+    <div class="lt-range-fields">
+        <input type="date" id="@($"{Id}-from")" value="@Format(From)" max="@Format(To)" @onchange="e => ChangeAsync(e, FromChanged)"
+               aria-label="@string.Format(CultureInfo.CurrentCulture, L["Lists.Range.From"], Label)" />
+        <span aria-hidden="true">–</span>
+        <input type="date" id="@($"{Id}-to")" value="@Format(To)" min="@Format(From)" @onchange="e => ChangeAsync(e, ToChanged)"
+               aria-label="@string.Format(CultureInfo.CurrentCulture, L["Lists.Range.To"], Label)" />
+    </div>
+</fieldset>
+
+@code {
+    [Parameter, EditorRequired] public string Id { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired] public string Label { get; set; } = string.Empty;
+
+    [Parameter] public DateOnly? From { get; set; }
+
+    [Parameter] public EventCallback<DateOnly?> FromChanged { get; set; }
+
+    [Parameter] public DateOnly? To { get; set; }
+
+    [Parameter] public EventCallback<DateOnly?> ToChanged { get; set; }
+
+    /// <summary>Appelé après chaque changement de borne : relire la liste.</summary>
+    [Parameter] public EventCallback OnChange { get; set; }
+
+    private static string? Format(DateOnly? date) => date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+    private async Task ChangeAsync(ChangeEventArgs args, EventCallback<DateOnly?> changed)
+    {
+        DateOnly? date = DateOnly.TryParseExact(args.Value?.ToString(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly parsed)
+            ? parsed
+            : null;
+        await changed.InvokeAsync(date);
+        await OnChange.InvokeAsync();
+    }
+}

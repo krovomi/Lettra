@@ -6,6 +6,7 @@ using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Contracts.Tax;
 using Lettra.Domain.Common;
 using Lettra.Exports.Application.Tax;
+using static Lettra.Api.Infrastructure.HttpResults;
 
 namespace Lettra.Api.Endpoints;
 
@@ -74,10 +75,10 @@ internal static class TaxEndpoints
     private const string DesContentType = "text/csv; charset=utf-8";
 
     private static async Task<IResult> GetVatReturnAsync(DateOnly date, ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken) =>
-        (await queries.QueryAsync(new GetVatReturnQuery(tenant.Current.DossierId, date), cancellationToken).ConfigureAwait(false)).ToHttp();
+        Ok(await queries.QueryAsync(new GetVatReturnQuery(tenant.Current.DossierId, date), cancellationToken).ConfigureAwait(false));
 
     private static async Task<IResult> GetDesAsync(int year, int month, ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken) =>
-        (await queries.QueryAsync(new GetDesQuery(tenant.Current.DossierId, year, month), cancellationToken).ConfigureAwait(false)).ToHttp();
+        Ok(await queries.QueryAsync(new GetDesQuery(tenant.Current.DossierId, year, month), cancellationToken).ConfigureAwait(false));
 
     private static async Task<IResult> ExportDesAsync(int year, int month, ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken)
     {
@@ -86,19 +87,17 @@ internal static class TaxEndpoints
     }
 
     private static async Task<IResult> GetCalendarAsync(DateOnly from, DateOnly to, ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken) =>
-        (await queries.QueryAsync(new GetFiscalCalendarQuery(tenant.Current.DossierId, from, to), cancellationToken).ConfigureAwait(false)).ToHttp();
+        Ok(await queries.QueryAsync(new GetFiscalCalendarQuery(tenant.Current.DossierId, from, to), cancellationToken).ConfigureAwait(false));
 
     private static async Task<IResult> GetUpcomingAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken, int days = FiscalCalendar.DueSoonDays) =>
-        (await queries.QueryAsync(new GetUpcomingFiscalDeadlinesQuery(tenant.Current.DossierId, days), cancellationToken).ConfigureAwait(false)).ToHttp();
+        Ok(await queries.QueryAsync(new GetUpcomingFiscalDeadlinesQuery(tenant.Current.DossierId, days), cancellationToken).ConfigureAwait(false));
 
     private static async Task<IResult> MarkFilingAsync(MarkFiscalFilingRequest request, ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken) =>
-        (await commands.SendAsync(new MarkFiscalFilingCommand(tenant.Current.DossierId, request), cancellationToken).ConfigureAwait(false)).ToHttp();
+        Ok(await commands.SendAsync(new MarkFiscalFilingCommand(tenant.Current.DossierId, request), cancellationToken).ConfigureAwait(false));
 
     private static async Task<IResult> GetSettingsAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken) =>
-        (await queries.QueryAsync(new GetFiscalSettingsQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false)).ToHttp();
+        Ok(await queries.QueryAsync(new GetFiscalSettingsQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false));
 
     private static async Task<IResult> UpdateSettingsAsync(UpdateFiscalSettingsRequest request, ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken) =>
-        (await commands.SendAsync(new UpdateFiscalSettingsCommand(tenant.Current.DossierId, request), cancellationToken).ConfigureAwait(false)).ToHttp();
-
-    private static IResult ToHttp<T>(this Result<T> result) => result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        Ok(await commands.SendAsync(new UpdateFiscalSettingsCommand(tenant.Current.DossierId, request), cancellationToken).ConfigureAwait(false));
 }

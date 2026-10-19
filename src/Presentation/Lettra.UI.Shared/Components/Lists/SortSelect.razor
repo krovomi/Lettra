@@ -1,0 +1,48 @@
+@typeparam TColumn where TColumn : struct, Enum
+@inject IStringLocalizer<SharedResource> L
+@* Tri en liste déroulante, pour le téléphone où les en-têtes de colonnes sont masqués (listes en cartes). Chaque
+   colonne apparaît deux fois : croissant puis décroissant. *@
+
+<div class="lt-filter lt-sort-select @(PhoneOnly ? "is-phone-only" : null)">
+    <label for="@Id">@L["Lists.Sort.Label"]</label>
+    <select id="@Id" value="@Value(State.Column, State.Direction)" @onchange="ChangeAsync">
+        @foreach (SortOption<TColumn> option in Options)
+        {
+            foreach (SortDirectionDto direction in Directions(option))
+            {
+                <option value="@Value(option.Column, direction)">@string.Format(CultureInfo.CurrentCulture, L[$"Lists.Sort.{direction}"], option.Label)</option>
+            }
+        }
+    </select>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<SortOption<TColumn>> Options { get; set; } = [];
+
+    [Parameter, EditorRequired] public SortState<TColumn> State { get; set; } = default!;
+
+    [Parameter] public EventCallback OnSort { get; set; }
+
+    [Parameter] public string Id { get; set; } = "list-sort";
+
+    /// <summary>Masquée à partir de la tablette, où les en-têtes de colonnes trient (par défaut).</summary>
+    [Parameter] public bool PhoneOnly { get; set; } = true;
+
+    private static IEnumerable<SortDirectionDto> Directions(SortOption<TColumn> option) => option.FirstDirection == SortDirectionDto.Descending
+        ? [SortDirectionDto.Descending, SortDirectionDto.Ascending]
+        : [SortDirectionDto.Ascending, SortDirectionDto.Descending];
+
+    private static string Value(TColumn column, SortDirectionDto direction) => $"{column}:{direction}";
+
+    private Task ChangeAsync(ChangeEventArgs args)
+    {
+        string[] parts = (args.Value?.ToString() ?? string.Empty).Split(':');
+        if (parts.Length != 2 || !Enum.TryParse(parts[0], out TColumn column) || !Enum.TryParse(parts[1], out SortDirectionDto direction))
+        {
+            return Task.CompletedTask;
+        }
+
+        State.Set(column, direction);
+        return OnSort.InvokeAsync();
+    }
+}

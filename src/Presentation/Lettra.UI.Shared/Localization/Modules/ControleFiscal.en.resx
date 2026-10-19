@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="AuditKit.Tab" xml:space="preserve"><value>Tax audit</value></data>
+  <data name="AuditKit.Title" xml:space="preserve"><value>Tax audit kit</value></data>
+  <data name="AuditKit.Subtitle" xml:space="preserve"><value>Everything you hand to the tax inspector for a period, in one archive.</value></data>
+  <data name="AuditKit.Period" xml:space="preserve"><value>Audited period</value></data>
+  <data name="AuditKit.Prepare" xml:space="preserve"><value>Prepare the kit</value></data>
+  <data name="AuditKit.Contents" xml:space="preserve"><value>The kit holds the FEC and its validation report, the integrity attestation of the anti-fraud chain with the sealed archives of the closings, the reliable audit trail (who created, validated and issued each document), the invoices as XML and Factur-X PDF, and the log of transmissions to the accredited platform.</value></data>
+  <data name="AuditKit.Progress.Server" xml:space="preserve"><value>Preparing the kit: FEC, chain check, audit trail…</value></data>
+  <data name="AuditKit.Progress.Pdf" xml:space="preserve"><value>Invoice PDFs: {0} of {1}…</value></data>
+  <data name="AuditKit.Result.Title" xml:space="preserve"><value>Kit from {0} to {1}</value></data>
+  <data name="AuditKit.Fec.Valid" xml:space="preserve"><value>FEC passes the built-in validator: {0} entries, {1} warning(s).</value></data>
+  <data name="AuditKit.Fec.Invalid" xml:space="preserve"><value>FEC does not pass: {0} error(s). Fix them before handing over the kit.</value></data>
+  <data name="AuditKit.Integrity.Intact" xml:space="preserve"><value>Anti-fraud chain intact: {0} entries checked.</value></data>
+  <data name="AuditKit.Integrity.Findings" xml:space="preserve"><value>Anti-fraud chain: {0} finding(s). See integrite/attestation.json and the Integrity page.</value></data>
+  <data name="AuditKit.Pdf.Failed" xml:space="preserve"><value>{0} invoice(s) could not be read back: their XML is in the kit, not their PDF.</value></data>
+  <data name="AuditKit.Fact.File" xml:space="preserve"><value>File</value></data>
+  <data name="AuditKit.Fact.Pieces" xml:space="preserve"><value>Documents in the period</value></data>
+  <data name="AuditKit.Fact.Pdf" xml:space="preserve"><value>Factur-X PDFs added</value></data>
+  <data name="AuditKit.Fact.Payments" xml:space="preserve"><value>Payments</value></data>
+  <data name="AuditKit.Fact.Transmissions" xml:space="preserve"><value>Platform transmissions</value></data>
+  <data name="AuditKit.Fact.Closings" xml:space="preserve"><value>Signed closings included</value></data>
+  <data name="AuditKit.Fact.GeneratedAt" xml:space="preserve"><value>Prepared on</value></data>
+  <data name="AuditKit.Fact.Fingerprint" xml:space="preserve"><value>Kit fingerprint (SHA-256)</value></data>
+  <data name="AuditKit.Fingerprint.Hint" xml:space="preserve"><value>Write this fingerprint in the hand-over report: it is the manifest's, which lists the fingerprint of every file.</value></data>
+  <data name="AuditKit.Download" xml:space="preserve"><value>Download again</value></data>
+  <data name="AuditKit.Toast.Ready" xml:space="preserve"><value>Tax audit kit downloaded.</value></data>
+  <data name="AuditKit.Disclaimer" xml:space="preserve"><value>Prototype: nothing is sent to the tax authority. The kit has no third-party timestamp; the time is the server's.</value></data>
+</root>

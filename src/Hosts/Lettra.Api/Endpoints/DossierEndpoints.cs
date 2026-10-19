@@ -6,6 +6,7 @@ using Lettra.Application.Features.Dossiers;
 using Lettra.Contracts.Dossiers;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
+using static Lettra.Api.Infrastructure.HttpResults;
 
 namespace Lettra.Api.Endpoints;
 
@@ -45,7 +46,7 @@ internal static class DossierEndpoints
     {
         Result<IReadOnlyList<DossierSummary>> listed = await queries
             .QueryAsync(new ListAccessibleDossiersQuery(), cancellationToken).ConfigureAwait(false);
-        return listed.IsSuccess ? TypedResults.Ok(listed.Value) : listed.Errors.ToProblem();
+        return Ok(listed);
     }
 
     private static async Task<IResult> CreateAsync(

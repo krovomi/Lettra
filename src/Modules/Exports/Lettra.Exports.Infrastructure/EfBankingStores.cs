@@ -365,7 +365,7 @@ internal sealed class EfReceivableDocumentReader(TenantDbSession session) : IRec
         foreach (InvoiceId[] batch in invoices.Distinct().Chunk(BatchSize))
         {
             // Les avoirs de ces factures : leur 44574 au débit réduit la TVA en attente de la facture d'origine. Liste de
-            // nullables : PostgreSQL ne sait pas comparer la colonne nullable à un tableau d'identifiants non nullables.
+            // nullables : PostgreSQL ne convertit pas un tableau d'InvoiceId comparé à une colonne nullable.
             InvoiceId?[] origins = [.. batch.Select(b => (InvoiceId?)b)];
             var credits = await db.Set<Invoice>().AsNoTracking()
                 .Where(i => i.CreditedInvoiceId != null && origins.Contains(i.CreditedInvoiceId) && i.Status != InvoiceStatus.Draft)

@@ -13,6 +13,7 @@ using Lettra.Domain.Billing;
 using Lettra.Domain.Common;
 using Lettra.Domain.Pricing;
 using Lettra.Domain.SharedKernel;
+using static Lettra.Api.Infrastructure.HttpResults;
 
 namespace Lettra.Api.Endpoints;
 
@@ -41,6 +42,7 @@ internal static class BillingEndpoints
         MapQuotes(api.MapGroup("/quotes").WithTags("Quotes"));
         MapInvoices(api.MapGroup("/invoices").WithTags("Invoices"));
         MapPriceLists(api.MapGroup("/price-lists").WithTags("PriceLists"));
+        api.MapRecurringInvoices();
         return api;
     }
 
@@ -142,9 +144,13 @@ internal static class BillingEndpoints
         DateOnly? to = null,
         QuoteStatusDto? status = null,
         int page = 1,
-        int pageSize = 50) =>
+        int pageSize = 50,
+        BillingSortDto sort = BillingSortDto.IssueDate,
+        SortDirectionDto direction = SortDirectionDto.Descending,
+        decimal? minAmount = null,
+        decimal? maxAmount = null) =>
         Ok(await queries.QueryAsync(
-            new ListQuotesQuery(tenant.Current.DossierId, search, customerId, from, to, status, page, pageSize), cancellationToken).ConfigureAwait(false));
+            new ListQuotesQuery(tenant.Current.DossierId, search, customerId, from, to, status, page, pageSize, sort, direction, minAmount, maxAmount), cancellationToken).ConfigureAwait(false));
 
     private static Task<IResult> GetQuoteAsync(Guid id, ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken) =>
         ReadQuoteAsync(queries, tenant.Current.DossierId, new QuoteId(id), cancellationToken);
@@ -235,9 +241,13 @@ internal static class BillingEndpoints
         InvoiceKindDto? kind = null,
         InvoiceStatusDto? status = null,
         int page = 1,
-        int pageSize = 50) =>
+        int pageSize = 50,
+        BillingSortDto sort = BillingSortDto.IssueDate,
+        SortDirectionDto direction = SortDirectionDto.Descending,
+        decimal? minAmount = null,
+        decimal? maxAmount = null) =>
         Ok(await queries.QueryAsync(
-            new ListInvoicesQuery(tenant.Current.DossierId, search, customerId, from, to, kind, status, page, pageSize), cancellationToken).ConfigureAwait(false));
+            new ListInvoicesQuery(tenant.Current.DossierId, search, customerId, from, to, kind, status, page, pageSize, sort, direction, minAmount, maxAmount), cancellationToken).ConfigureAwait(false));
 
     private static Task<IResult> GetInvoiceAsync(Guid id, ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken) =>
         ReadInvoiceAsync(queries, tenant.Current.DossierId, new InvoiceId(id), cancellationToken);
@@ -346,16 +356,6 @@ internal static class BillingEndpoints
         NoContent(await commands.SendAsync(new DeletePriceListCommand(tenant.Current.DossierId, new PriceListId(id)), cancellationToken).ConfigureAwait(false));
 
     // --- Aides
-
-    private static IResult Ok<T>(Result<T> result) => result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
-
-    private static IResult NoContent(Result result) => result.IsSuccess ? TypedResults.NoContent() : result.Errors.ToProblem();
-
-    private static IResult Versioned<T>(Result<T> result, Func<T, long> version) =>
-        result.IsSuccess ? TypedResults.Ok(result.Value).WithETag(version(result.Value)) : result.Errors.ToProblem();
-
-    private static IResult Created<T>(string location, Result<T> result, Func<T, long> version) =>
-        result.IsSuccess ? TypedResults.Created(location, result.Value).WithETag(version(result.Value)) : result.Errors.ToProblem();
 
     private static DossierId DossierOf(IDossierScoped command) => command.Dossier;
 }

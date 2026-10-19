@@ -197,7 +197,9 @@ public static class BillingMapper
             invoice.IssuedAt,
             invoice.CreditApprovedBy,
             invoice.CreditApprovedAt,
-            invoice.PaidInclTax);
+            invoice.PaidInclTax,
+            invoice.BillingPeriodStart,
+            invoice.BillingPeriodEnd);
     }
 
     public static CompanyProfileResponse ToResponse(this CompanyProfile profile)

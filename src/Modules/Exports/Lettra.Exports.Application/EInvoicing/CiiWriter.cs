@@ -152,6 +152,11 @@ internal static class CiiWriter
                 new XElement(Ram + "CategoryCode", v.Category),
                 VatCategoryCodes.IsTaxed(v.Category) ? null : Optional(Ram + "ExemptionReasonCode", v.ExemptionCode),
                 Rate(v.Category, v.Rate))),
+            invoice.PeriodStart is { } periodStart && invoice.PeriodEnd is { } periodEnd
+                ? new XElement(Ram + "BillingSpecifiedPeriod",
+                    new XElement(Ram + "StartDateTime", DateTime(periodStart)),
+                    new XElement(Ram + "EndDateTime", DateTime(periodEnd)))
+                : null,
             invoice.PaymentTerms is null && invoice.DueDate is null
                 ? null
                 : new XElement(Ram + "SpecifiedTradePaymentTerms",

@@ -7,6 +7,7 @@ using Lettra.Contracts.Common;
 using Lettra.Contracts.Exports;
 using Lettra.Domain.Common;
 using Lettra.Exports.Application.Accounting;
+using Lettra.Exports.Application.AuditKit;
 using Lettra.Exports.Application.Banking;
 using Lettra.Exports.Application.EInvoicing;
 using Lettra.Exports.Application.EInvoicing.Platform;
@@ -73,6 +74,9 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<MarkFiscalFilingCommand, Result<FiscalDeadlineResponse>>, MarkFiscalFilingHandler>();
         services.AddScoped<IDossierIndicatorSource, VatToDeclareIndicatorSource>();
 
+        // Kit contrôle fiscal (vague 7) : FEC, attestation d'intégrité, piste d'audit fiable, XML et transmissions.
+        services.AddScoped<AuditKitService>();
+        services.AddScoped<IQueryHandler<GetAuditKitQuery, Result<AuditKitFile>>, GetAuditKitHandler>();
         // Relances des factures échues (vague 7) : scénario, textes FR/EN, envoi par le port e-mail et historique.
         services.AddScoped<PaymentReminderService>();
         services.AddScoped<IQueryHandler<GetReminderOverviewQuery, Result<ReminderOverviewResponse>>, GetReminderOverviewHandler>();

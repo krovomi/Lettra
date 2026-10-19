@@ -67,7 +67,8 @@ internal sealed class InProcessQuotesGateway(IServiceScopeFactory scopes) : IQuo
         return InProcessScope.RunAsync(
             scopes,
             (sp, dossier, ct) => InProcessScope.QueryAsync(
-                sp, new ListQuotesQuery(dossier, query.Search, query.CustomerId, query.From, query.To, status, query.Page, query.PageSize), ct),
+                sp, new ListQuotesQuery(dossier, query.Search, query.CustomerId, query.From, query.To, status, query.Page, query.PageSize,
+                    query.Sort, query.Direction, query.MinAmount, query.MaxAmount), ct),
             cancellationToken);
     }
 
@@ -131,7 +132,8 @@ internal sealed class InProcessInvoicesGateway(IServiceScopeFactory scopes) : II
         return InProcessScope.RunAsync(
             scopes,
             (sp, dossier, ct) => InProcessScope.QueryAsync(
-                sp, new ListInvoicesQuery(dossier, query.Search, query.CustomerId, query.From, query.To, kind, status, query.Page, query.PageSize), ct),
+                sp, new ListInvoicesQuery(dossier, query.Search, query.CustomerId, query.From, query.To, kind, status, query.Page, query.PageSize,
+                    query.Sort, query.Direction, query.MinAmount, query.MaxAmount), ct),
             cancellationToken);
     }
 

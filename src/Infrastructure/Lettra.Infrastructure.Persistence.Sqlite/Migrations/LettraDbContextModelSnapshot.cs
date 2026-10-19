@@ -383,6 +383,12 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateOnly?>("BillingPeriodEnd")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("BillingPeriodStart")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ContentHash")
                         .HasMaxLength(64)
                         .HasColumnType("TEXT");
@@ -861,6 +867,105 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                         .IsUnique();
 
                     b.ToTable("Quotes", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Billing.RecurringInvoice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Frequency")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("GeneratedCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("LastModifiedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("NextIssueDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("NextRevisionDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PaymentTerms")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Revision")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal?>("RevisionPercent")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Subject")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("SyntecLatestIndex")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("SyntecReferenceIndex")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Timing")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("TotalExclTax")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("ValidateAutomatically")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("VatRegime")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("IsActive", "NextIssueDate");
+
+                    b.ToTable("RecurringInvoices", (string)null);
                 });
 
             modelBuilder.Entity("Lettra.Domain.Catalog.CatalogItem", b =>
@@ -2446,6 +2551,119 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.Navigation("Lines");
 
                     b.Navigation("VatSummaries");
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Billing.RecurringInvoice", b =>
+                {
+                    b.OwnsMany("Lettra.Domain.Billing.DocumentLine", "Lines", b1 =>
+                        {
+                            b1.Property<Guid>("RecurringInvoiceId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<int>("Position")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<Guid?>("CatalogItemId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Description")
+                                .HasMaxLength(2000)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Designation")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal>("DiscountPercent")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<int>("Nature")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<decimal>("Quantity")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Reference")
+                                .HasMaxLength(50)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal>("TotalExclTax")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("UnitCode")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal>("UnitPriceExclTax")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("VatCategory")
+                                .IsRequired()
+                                .HasMaxLength(2)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("VatExemptionCode")
+                                .HasMaxLength(30)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("VatRateCode")
+                                .IsRequired()
+                                .HasMaxLength(10)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal>("VatRatePercent")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("RecurringInvoiceId", "Position");
+
+                            b1.ToTable("RecurringInvoiceLines", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("RecurringInvoiceId");
+                        });
+
+                    b.OwnsMany("Lettra.Domain.Billing.RecurringOccurrence", "Occurrences", b1 =>
+                        {
+                            b1.Property<Guid>("RecurringInvoiceId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<DateOnly>("PeriodStart")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<DateTimeOffset>("CreatedAt")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<Guid>("InvoiceId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<DateOnly>("PeriodEnd")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal?>("RevisionCoefficient")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("RecurringInvoiceId", "PeriodStart");
+
+                            b1.HasIndex("InvoiceId")
+                                .IsUnique();
+
+                            b1.ToTable("RecurringInvoiceOccurrences", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("RecurringInvoiceId");
+                        });
+
+                    b.Navigation("Lines");
+
+                    b.Navigation("Occurrences");
                 });
 
             modelBuilder.Entity("Lettra.Domain.Pricing.PriceList", b =>

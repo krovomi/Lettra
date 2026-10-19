@@ -21,30 +21,8 @@ internal sealed class HttpTaxGateway(HttpClient http) : ITaxGateway
             ContractsJsonContext.Default.DesResponse,
             cancellationToken);
 
-    public async Task<OperationResult<DesDocument>> ExportDesAsync(int year, int month, CancellationToken cancellationToken)
-    {
-        try
-        {
-            using HttpResponseMessage response = await http.GetAsync(HttpCalls.Relative($"api/v1/tax/des/file?year={year}&month={month}"), cancellationToken)
-                .ConfigureAwait(false);
-            if (response.IsSuccessStatusCode)
-            {
-                string? fileName = response.Content.Headers.ContentDisposition is { } disposition
-                    ? (disposition.FileNameStar ?? disposition.FileName)?.Trim('"')
-                    : null;
-                byte[] content = await response.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
-                return OperationResult<DesDocument>.Success(new DesDocument(fileName ?? "DES.csv", content));
-            }
-
-            OperationResult<ProblemResponse> problem = await response.ToOperationResultAsync(ContractsJsonContext.Default.ProblemResponse, cancellationToken)
-                .ConfigureAwait(false);
-            return OperationResult<DesDocument>.Failure(problem.Errors);
-        }
-        catch (HttpRequestException)
-        {
-            return OperationResult<DesDocument>.Failure(ErrorCodes.Api.Unreachable);
-        }
-    }
+    public Task<OperationResult<DesDocument>> ExportDesAsync(int year, int month, CancellationToken cancellationToken) =>
+        HttpFileDownloads.GetAsync(http, $"api/v1/tax/des/file?year={year}&month={month}", "DES.csv", (name, content) => new DesDocument(name, content), cancellationToken);
 
     public Task<OperationResult<FiscalCalendarResponse>> GetCalendarAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken) =>
         HttpCalls.SendAsync(

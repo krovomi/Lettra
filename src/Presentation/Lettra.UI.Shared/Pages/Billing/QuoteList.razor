@@ -12,28 +12,37 @@
 
 <section class="lettra-card" aria-labelledby="quotes-list-title">
     <h2 id="quotes-list-title" class="lettra-visually-hidden">@L["Quotes.List"]</h2>
-    <div class="lettra-toolbar">
-        <div class="lt-filter">
-            <label for="quotes-search">@L["Billing.Search"]</label>
-            <input id="quotes-search" type="search" @ref="_searchInput" @bind="_search" @bind:after="LoadAsync" autocomplete="off" />
-        </div>
-        <div class="lt-filter">
-            <label for="quotes-status">@L["Billing.Status"]</label>
-            <select id="quotes-status" @bind="_statusFilter" @bind:after="LoadAsync">
-                <option value="">@L["Billing.AllStatuses"]</option>
-                @foreach (QuoteStatusDto status in Enum.GetValues<QuoteStatusDto>())
-                {
-                    <option value="@status">@L[$"QuoteStatus.{status}"]</option>
-                }
-            </select>
-        </div>
-        <a class="lettra-button" href="quotes/new" id="quotes-new">@L["Quotes.New"]</a>
-    </div>
+    <ListFilterBar Id="quotes-filters" ActiveCount="ActiveFilters" OnReset="ResetFiltersAsync">
+        <ChildContent>
+            <div class="lt-filter">
+                <label for="quotes-search">@L["Billing.Search"]</label>
+                <input id="quotes-search" type="search" @ref="_searchInput" @bind="_search" @bind:after="LoadAsync" autocomplete="off" />
+            </div>
+        </ChildContent>
+        <More>
+            <div class="lt-filter">
+                <label for="quotes-status">@L["Billing.Status"]</label>
+                <select id="quotes-status" @bind="_statusFilter" @bind:after="LoadAsync">
+                    <option value="">@L["Billing.AllStatuses"]</option>
+                    @foreach (QuoteStatusDto status in Enum.GetValues<QuoteStatusDto>())
+                    {
+                        <option value="@status">@L[$"QuoteStatus.{status}"]</option>
+                    }
+                </select>
+            </div>
+            <DateRangeFilter Id="quotes-dates" Label="@L["Lists.Filter.IssueDate"]" @bind-From="_from" @bind-To="_to" OnChange="LoadAsync" />
+            <AmountRangeFilter Id="quotes-amount" Label="@L["Lists.Filter.AmountInclTax"]" @bind-Min="_minAmount" @bind-Max="_maxAmount" OnChange="LoadAsync" />
+            <SortSelect Id="quotes-sort" Options="_sortOptions" State="_sort" OnSort="LoadAsync" />
+        </More>
+        <Actions>
+            <a class="lettra-button" href="quotes/new" id="quotes-new">@L["Quotes.New"]</a>
+        </Actions>
+    </ListFilterBar>
     <p class="lettra-muted">@L["Billing.ListHint"]</p>
 
     <GeneralErrors Errors="_errors" />
 
-    @if (_loading)
+    @if (_loading && !_loaded)
     {
         <ListSkeleton Columns="7" />
     }
@@ -45,44 +54,50 @@
             {
                 <a class="lettra-button" href="quotes/new"><Icon Name="plus" Size="18" /> @L["Quotes.New"]</a>
             }
+            else
+            {
+                <button type="button" class="lettra-button is-secondary" id="quotes-empty-reset" @onclick="ResetFiltersAsync">@L["Lists.Filters.Reset"]</button>
+            }
         </EmptyState>
     }
     else
     {
-        <table class="lettra-table lettra-documents lt-cards">
-            <thead>
-                <tr>
-                    <th scope="col">@L["Billing.Column.Number"]</th>
-                    <th scope="col">@L["Billing.Column.Customer"]</th>
-                    <th scope="col">@L["Billing.Column.Date"]</th>
-                    <th scope="col">@L["Quote.Field.ValidUntil"]</th>
-                    <th scope="col">@L["Billing.Status"]</th>
-                    <th scope="col" class="lg-num">@L["Totals.ExclTax"]</th>
-                    <th scope="col" class="lg-num">@L["Totals.InclTax"]</th>
-                    <th scope="col" class="lt-col-actions"><span class="lettra-visually-hidden">@L["Row.Actions"]</span></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (QuoteSummary quote in _items)
-                {
+        <div class="lt-list-scroll">
+            <table class="lettra-table lettra-documents lt-cards">
+                <thead>
                     <tr>
-                        <td><a href="@($"quotes/{quote.Id}")">@(quote.Number ?? L["Billing.Draft"])</a></td>
-                        <td data-label="@L["Billing.Column.Customer"]">@quote.CustomerName</td>
-                        <td data-label="@L["Billing.Column.Date"]">@quote.IssueDate?.ToString("d", CultureInfo.CurrentCulture)</td>
-                        <td data-label="@L["Quote.Field.ValidUntil"]">@quote.ValidUntil?.ToString("d", CultureInfo.CurrentCulture)</td>
-                        <td data-label="@L["Billing.Status"]"><DocumentStatusBadge Text="@(quote.IsExpired ? L["Quote.Expired"] : L[$"QuoteStatus.{quote.Status}"])"
-                                                 Kind="@(quote.IsExpired ? "expired" : quote.Status.ToString().ToLowerInvariant())" /></td>
-                        <td class="lg-num" data-label="@L["Totals.ExclTax"]">@GridNumber.FormatAmount(quote.TotalExclTax, CultureInfo.CurrentCulture)</td>
-                        <td class="lg-num" data-label="@L["Totals.InclTax"]">@GridNumber.FormatAmount(quote.TotalInclTax, CultureInfo.CurrentCulture)</td>
-                        <td class="lt-col-actions">
-                            <RowDelete Label="@string.Format(CultureInfo.CurrentCulture, L["Quotes.Row.Delete"], quote.Number ?? L["Billing.Draft"], quote.CustomerName)"
-                                       BlockedReason="@(quote.Status == QuoteStatusDto.Draft ? null : L["Quotes.Row.Delete.Blocked"].Value)"
-                                       OnDelete="() => DeleteAsync(quote)" />
-                        </td>
+                        <SortHeader Option="Column(BillingSortDto.Number)" State="_sort" OnSort="LoadAsync" Id="quotes-sort-number" />
+                        <SortHeader Option="Column(BillingSortDto.Customer)" State="_sort" OnSort="LoadAsync" Id="quotes-sort-customer" />
+                        <SortHeader Option="Column(BillingSortDto.IssueDate)" State="_sort" OnSort="LoadAsync" Id="quotes-sort-date" />
+                        <SortHeader Option="Column(BillingSortDto.DueDate)" State="_sort" OnSort="LoadAsync" Id="quotes-sort-valid" />
+                        <SortHeader Option="Column(BillingSortDto.Status)" State="_sort" OnSort="LoadAsync" Id="quotes-sort-status" />
+                        <SortHeader Option="Column(BillingSortDto.TotalExclTax)" State="_sort" OnSort="LoadAsync" Id="quotes-sort-excl" Class="lg-num" />
+                        <SortHeader Option="Column(BillingSortDto.TotalInclTax)" State="_sort" OnSort="LoadAsync" Id="quotes-sort-incl" Class="lg-num" />
+                        <th scope="col" class="lt-col-actions"><span class="lettra-visually-hidden">@L["Row.Actions"]</span></th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (QuoteSummary quote in _items)
+                    {
+                        <tr>
+                            <td><a href="@($"quotes/{quote.Id}")">@(quote.Number ?? L["Billing.Draft"])</a></td>
+                            <td data-label="@L["Billing.Column.Customer"]">@quote.CustomerName</td>
+                            <td data-label="@L["Billing.Column.Date"]">@quote.IssueDate?.ToString("d", CultureInfo.CurrentCulture)</td>
+                            <td data-label="@L["Quote.Field.ValidUntil"]">@quote.ValidUntil?.ToString("d", CultureInfo.CurrentCulture)</td>
+                            <td data-label="@L["Billing.Status"]"><DocumentStatusBadge Text="@(quote.IsExpired ? L["Quote.Expired"] : L[$"QuoteStatus.{quote.Status}"])"
+                                                     Kind="@(quote.IsExpired ? "expired" : quote.Status.ToString().ToLowerInvariant())" /></td>
+                            <td class="lg-num" data-label="@L["Totals.ExclTax"]">@GridNumber.FormatAmount(quote.TotalExclTax, CultureInfo.CurrentCulture)</td>
+                            <td class="lg-num" data-label="@L["Totals.InclTax"]">@GridNumber.FormatAmount(quote.TotalInclTax, CultureInfo.CurrentCulture)</td>
+                            <td class="lt-col-actions">
+                                <RowDelete Label="@string.Format(CultureInfo.CurrentCulture, L["Quotes.Row.Delete"], quote.Number ?? L["Billing.Draft"], quote.CustomerName)"
+                                           BlockedReason="@(quote.Status == QuoteStatusDto.Draft ? null : L["Quotes.Row.Delete.Blocked"].Value)"
+                                           OnDelete="() => DeleteAsync(quote)" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     }
 </section>
 
@@ -91,16 +106,48 @@
     private IReadOnlyList<ErrorDetail> _errors = [];
     private string? _search;
     private QuoteStatusDto? _statusFilter;
+    private DateOnly? _from;
+    private DateOnly? _to;
+    private decimal? _minAmount;
+    private decimal? _maxAmount;
+    private readonly SortState<BillingSortDto> _sort = new(BillingSortDto.IssueDate, SortDirectionDto.Descending);
+    private IReadOnlyList<SortOption<BillingSortDto>> _sortOptions = [];
     private bool _loading = true;
 
-    private bool IsFiltered => !string.IsNullOrWhiteSpace(_search) || _statusFilter is not null;
+    // Squelette au premier chargement seulement : un tri ou un filtre garde la liste affichée (et le focus sur l'en-tête).
+    private bool _loaded;
+
+    private int ActiveFilters =>
+        new object?[] { string.IsNullOrWhiteSpace(_search) ? null : _search, _statusFilter, _from, _to, _minAmount, _maxAmount }.Count(f => f is not null);
+
+    private bool IsFiltered => ActiveFilters > 0;
     private ElementReference _searchInput;
     private KeyboardScope _pageScope = default!;
 
-    protected override void OnInitialized() =>
+    protected override void OnInitialized()
+    {
         _pageScope = new KeyboardScope("page")
             .Bind("F3", L["Billing.Command.Search"], async _ => await _searchInput.FocusAsync())
             .Bind("Insert", L["Quotes.New"], _ => Navigation.NavigateTo("quotes/new"));
+        _sortOptions =
+        [
+            new(BillingSortDto.Number, L["Billing.Column.Number"]),
+            new(BillingSortDto.Customer, L["Billing.Column.Customer"]),
+            new(BillingSortDto.IssueDate, L["Billing.Column.Date"], SortDirectionDto.Descending),
+            new(BillingSortDto.DueDate, L["Quote.Field.ValidUntil"], SortDirectionDto.Descending),
+            new(BillingSortDto.Status, L["Billing.Status"]),
+            new(BillingSortDto.TotalExclTax, L["Totals.ExclTax"], SortDirectionDto.Descending),
+            new(BillingSortDto.TotalInclTax, L["Totals.InclTax"], SortDirectionDto.Descending),
+        ];
+    }
+
+    private SortOption<BillingSortDto> Column(BillingSortDto column) => _sortOptions.First(o => o.Column == column);
+
+    private Task ResetFiltersAsync()
+    {
+        (_search, _statusFilter, _from, _to, _minAmount, _maxAmount) = (null, null, null, null, null, null);
+        return LoadAsync();
+    }
 
     protected override Task OnInitializedAsync() => LoadAsync();
 
@@ -122,9 +169,14 @@
     {
         _loading = true;
         OperationResult<PagedResponse<QuoteSummary>> result = await Quotes.ListAsync(
-            new BillingListQuery(string.IsNullOrWhiteSpace(_search) ? null : _search.Trim(), PageSize: 200), _statusFilter, CancellationToken.None);
+            new BillingListQuery(
+                string.IsNullOrWhiteSpace(_search) ? null : _search.Trim(), From: _from, To: _to, PageSize: 200,
+                Sort: _sort.Column, Direction: _sort.Direction, MinAmount: _minAmount, MaxAmount: _maxAmount),
+            _statusFilter,
+            CancellationToken.None);
         _items = result.Value?.Items.ToList() ?? [];
         _errors = result.Errors;
         _loading = false;
+        _loaded = true;
     }
 }

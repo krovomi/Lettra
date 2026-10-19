@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Persistence;
 using Lettra.Application.Mapping;
@@ -52,8 +53,7 @@ internal sealed class QuoteReadStore(TenantDbSession session) : IQuoteReadStore
         }
 
         int total = await query.CountAsync(cancellationToken).ConfigureAwait(false);
-        var rows = await query
-            .OrderByDescending(q => q.IssueDate)
+        var rows = await BillingQueries.Sort(query, filter, q => q.ValidUntil, q => (int)q.Status)
             .ThenByDescending(q => q.Number)
             .ThenBy(q => q.Id)
             .Skip((filter.Page - 1) * filter.PageSize)
@@ -126,8 +126,7 @@ internal sealed class InvoiceReadStore(TenantDbSession session) : IInvoiceReadSt
         }
 
         int total = await query.CountAsync(cancellationToken).ConfigureAwait(false);
-        var rows = await query
-            .OrderByDescending(i => i.IssueDate)
+        var rows = await BillingQueries.Sort(query, filter, i => i.DueDate, i => (int)i.Status)
             .ThenByDescending(i => i.Number)
             .ThenBy(i => i.Id)
             .Skip((filter.Page - 1) * filter.PageSize)
@@ -184,7 +183,58 @@ internal static class BillingQueries
 #pragma warning restore CA1304, CA1311, CA1862
         }
 
+        // Montants comparés en réel : SQLite ne compare ni ne trie les decimal (stockés en texte) ; à decimal(18,4),
+        // la conversion ne change ni l'ordre ni les bornes saisies au centime.
+        if (filter.MinAmount is { } min)
+        {
+            double bound = (double)min;
+            query = query.Where(d => (double)EF.Property<decimal>(d, "TotalInclTax") >= bound);
+        }
+
+        if (filter.MaxAmount is { } max)
+        {
+            double bound = (double)max;
+            query = query.Where(d => (double)EF.Property<decimal>(d, "TotalInclTax") <= bound);
+        }
+
         return query;
+    }
+
+    /// <summary>
+    /// Tri demandé par la liste ; l'appelant ajoute les départages (numéro, identifiant) pour un ordre stable d'une page
+    /// à l'autre. L'échéance et le statut diffèrent d'une pièce à l'autre, d'où leurs sélecteurs. Les valeurs absentes
+    /// (brouillon sans numéro ni date) restent en fin de liste dans les deux sens, sur les trois providers.
+    /// </summary>
+    public static IOrderedQueryable<TDocument> Sort<TDocument>(
+        IQueryable<TDocument> query,
+        BillingListFilter filter,
+        Expression<Func<TDocument, DateOnly?>> dueDate,
+        Expression<Func<TDocument, int>> status)
+        where TDocument : class
+    {
+        bool descending = filter.Direction == SortDirectionDto.Descending;
+        return filter.Sort switch
+        {
+            BillingSortDto.Number => NullsLast(query, d => EF.Property<string?>(d, "Number"), descending),
+            BillingSortDto.Customer => By(query, d => EF.Property<PartySnapshot>(d, "Customer").Name, descending),
+            BillingSortDto.DueDate => NullsLast(query, dueDate, descending),
+            BillingSortDto.Status => By(query, status, descending),
+            BillingSortDto.TotalExclTax => By(query, d => (double)EF.Property<decimal>(d, "TotalExclTax"), descending),
+            BillingSortDto.TotalInclTax => By(query, d => (double)EF.Property<decimal>(d, "TotalInclTax"), descending),
+            _ => NullsLast(query, d => EF.Property<DateOnly?>(d, "IssueDate"), descending),
+        };
+    }
+
+    private static IOrderedQueryable<TDocument> By<TDocument, TKey>(IQueryable<TDocument> query, Expression<Func<TDocument, TKey>> key, bool descending) =>
+        descending ? query.OrderByDescending(key) : query.OrderBy(key);
+
+    /// <summary>NULL en dernier quel que soit le sens : SQLite et SQL Server le placent en tête, PostgreSQL à la fin.</summary>
+    private static IOrderedQueryable<TDocument> NullsLast<TDocument, TKey>(IQueryable<TDocument> query, Expression<Func<TDocument, TKey>> key, bool descending)
+    {
+        Expression<Func<TDocument, bool>> missing = Expression.Lambda<Func<TDocument, bool>>(
+            Expression.Equal(key.Body, Expression.Constant(null, typeof(TKey))), key.Parameters);
+        IOrderedQueryable<TDocument> ordered = query.OrderBy(missing);
+        return descending ? ordered.ThenByDescending(key) : ordered.ThenBy(key);
     }
 }
 
@@ -452,6 +502,8 @@ internal static class BillingRegistration
         services.AddScoped<IBillingReferenceChecker, BillingReferenceChecker>();
         services.AddScoped<IJournaledDocumentReader, JournaledDocumentReader>();
         services.AddScoped<IBillingTransaction, BillingTransaction>();
+        services.AddScoped<IRecurringInvoiceRepository, RecurringInvoiceRepository>();
+        services.AddScoped<IRecurringInvoiceReadStore, RecurringInvoiceReadStore>();
         return services;
     }
 }
