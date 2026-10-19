@@ -130,10 +130,11 @@ encaissements, activité mois par mois, devis, ce qui reste à faire) et **Admin
 connexions refusées, alertes graves, postes qui ne se synchronisent plus, comptes, dossiers, place occupée). Trois pour
 la technique : **Activité** (requêtes, latence, erreurs, outbox, synchronisations, connexions, assistant), **Métier**
 (devis, factures, avoirs, transmissions, FEC, en nombres seulement) et **Objectifs de service** (disponibilité, latence,
-alertes). Les tableaux de pilotage se remplissent seuls à partir des dossiers de démonstration (une collecte toutes les
-5 minutes) ; ils ne publient que des ratios, des délais, des indices et des compteurs, jamais un montant ni un nom de
-client ([Indicateurs de pilotage dans Grafana](docs/indicateurs-grafana.md)). Tableaux de pilotage **vérifiés** dans la
-démo Docker à 390 px (téléphone), 820 px (tablette) et 1440 px (ordinateur) : aucun panneau vide, aucun défilement de
+alertes). Les tableaux de pilotage se remplissent seuls à partir des dossiers de démonstration (une collecte par minute
+dans la démo, toutes les 5 minutes par défaut ; la vue cabinet est calculée 15 s après le démarrage) ; ils ne
+publient que des ratios, des délais, des indices et des compteurs, jamais un montant ni un nom de client
+([Indicateurs de pilotage dans Grafana](docs/indicateurs-grafana.md)). Tableaux de pilotage **vérifiés** dans la démo
+Docker à 390 px (téléphone), 820 px (tablette) et 1440 px (ordinateur) : aucun panneau vide, aucun défilement de
 côté. Pour remplir les courbes techniques, dix minutes d'activité fictive avec k6, une fois la session ouverte
 ([commandes complètes](deploy/demo/README.md#remplir-les-courbes--activité-de-démonstration-k6)) :
 
