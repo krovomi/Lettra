@@ -1,7 +1,8 @@
 # Démonstration navigateur (Windows, macOS, Linux)
 
 Lettra en mode 2 (réseau local) dans le navigateur : Keycloak (connexion, MFA), l'API, qui sert l'application
-Blazor installable (PWA), et le serveur whisper.cpp de la dictée (conteneur `whisper`). Seul **Docker** est nécessaire : Docker Desktop sous Windows et macOS, Docker Engine et
+Blazor installable (PWA), le serveur whisper.cpp de la dictée (conteneur `whisper`) et MailPit, qui reçoit les
+e-mails de la démo (conteneur `mailpit`). Seul **Docker** est nécessaire : Docker Desktop sous Windows et macOS, Docker Engine et
 son extension Compose sous Linux. Pas de SDK .NET : l'image de l'API est construite depuis le `Dockerfile` du dépôt.
 
 Tout est **fictif et réservé à la démonstration** : cabinet, utilisateur, secrets de `.env`. Ne jamais réutiliser
@@ -28,9 +29,10 @@ répondre après le démarrage).
 | Lettra (API + application) | http://localhost:8080/ | Application, `/health` |
 | Keycloak | http://localhost:8081/ | Connexion ; console d'administration : `admin` / `admin-demo` |
 | Whisper (dictée) | aucune : seule l'API l'appelle (`http://whisper:8080/`) | Transcription de la voix, sur le poste |
+| MailPit (e-mails) | http://localhost:8025/ | Boîte de réception locale : relances et invitations envoyées par la démo. Aucun e-mail ne sort du poste. |
 
-Les ports ne sont ouverts que sur le poste (127.0.0.1). Pour en changer : `LETTRA_DEMO_PORT` et
-`LETTRA_DEMO_KEYCLOAK_PORT` dans `.env`.
+Les ports ne sont ouverts que sur le poste (127.0.0.1). Pour en changer : `LETTRA_DEMO_PORT`,
+`LETTRA_DEMO_KEYCLOAK_PORT` et `LETTRA_DEMO_MAILPIT_PORT` dans `.env`.
 
 ## Premier usage
 
