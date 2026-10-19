@@ -42,7 +42,7 @@ internal static class TaxScenarios
     public static async Task DeclarationsAsync(TenantHarness harness, DatabaseProvider provider, string connectionString)
     {
         DossierId dossier = harness.AddDossier(provider, connectionString);
-        DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
+        DateOnly today = LegalCalendar.DateOf(DateTimeOffset.UtcNow);
         await SeedAsync(harness, dossier);
 
         await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))

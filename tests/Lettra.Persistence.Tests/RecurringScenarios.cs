@@ -34,7 +34,7 @@ internal static class RecurringScenarios
     public static async Task RecurringInvoicesAsync(TenantHarness harness, DatabaseProvider provider, string connectionString)
     {
         DossierId dossier = harness.AddDossier(provider, connectionString);
-        DateOnly start = DateOnly.FromDateTime(DateTime.UtcNow).AddMonths(-1);
+        DateOnly start = LegalCalendar.DateOf(DateTimeOffset.UtcNow).AddMonths(-1);
         RecurringInvoiceId drafted, validated;
         await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
         {

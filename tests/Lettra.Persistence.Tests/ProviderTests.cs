@@ -165,7 +165,7 @@ public sealed class SqliteTests : IDisposable
     [Fact]
     public async Task Relances_des_factures_echues()
     {
-        ManualClock clock = new(DateTimeOffset.UtcNow);
+        ManualClock clock = new(ReminderScenarios.Start);
         CapturedEmails emails = new();
         await using TenantHarness harness = ReminderScenarios.Harness(new SqliteConfigurator(), clock, emails);
         await ReminderScenarios.RemindersAsync(harness, clock, emails, DatabaseProvider.Sqlite, Database("relances"));
@@ -603,7 +603,7 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     public async Task Relances_des_factures_echues()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
-        ManualClock clock = new(DateTimeOffset.UtcNow);
+        ManualClock clock = new(ReminderScenarios.Start);
         CapturedEmails emails = new();
         await using TenantHarness harness = ReminderScenarios.Harness(new PostgreSqlConfigurator(), clock, emails);
         await ReminderScenarios.RemindersAsync(harness, clock, emails, DatabaseProvider.PostgreSql, Database("relances"));
@@ -984,7 +984,7 @@ public sealed class SqlServerTests : IAsyncLifetime
     public async Task Relances_des_factures_echues()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
-        ManualClock clock = new(DateTimeOffset.UtcNow);
+        ManualClock clock = new(ReminderScenarios.Start);
         CapturedEmails emails = new();
         await using TenantHarness harness = ReminderScenarios.Harness(new SqlServerConfigurator(), clock, emails);
         await ReminderScenarios.RemindersAsync(harness, clock, emails, DatabaseProvider.SqlServer, Database("relances"));

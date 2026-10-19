@@ -3,6 +3,7 @@ using Lettra.Contracts.Billing;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
+using Lettra.Domain.SharedKernel;
 using Lettra.UI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -117,7 +118,7 @@ public sealed partial class GatewayParityTests
             },
             default)).Value!;
         InvoiceResponse invoice = (await invoices.ValidateAsync(draft.Id, draft.Version, default)).Value!;
-        DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
+        DateOnly today = LegalCalendar.DateOf(DateTimeOffset.UtcNow);
         foreach (decimal amount in new[] { 40m, 300m, 85.5m })
         {
             OperationResult<PaymentResponse> recorded = await banking.RecordPaymentAsync(

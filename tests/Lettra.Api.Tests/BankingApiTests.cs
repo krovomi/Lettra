@@ -6,6 +6,7 @@ using Lettra.Contracts.Banking;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Serialization;
+using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Api.Tests;
 
@@ -24,7 +25,7 @@ public sealed class BankingApiTests(LettraApiFactory factory) : IClassFixture<Le
         return client;
     }
 
-    private static DateOnly Today => DateOnly.FromDateTime(DateTime.UtcNow);
+    private static DateOnly Today => LegalCalendar.DateOf(DateTimeOffset.UtcNow);
 
     private static async Task<InvoiceResponse> InvoiceAsync(HttpClient client, Guid id) =>
         (await client.GetFromJsonAsync(Api($"/api/v1/invoices/{id}"), ContractsJsonContext.Default.InvoiceResponse))!;

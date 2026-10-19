@@ -66,6 +66,12 @@ internal static class ReminderScenarios
         PaymentTerms: "Virement à 30 jours", LatePenaltyRate: 10m, EarlyPaymentDiscount: "Pas d'escompte pour paiement anticipé",
         Iban: "FR7630006000011234567890189", Bic: "AGRIFRPP", VatDeclarationRegime: VatDeclarationRegime.RealNormal);
 
+    /// <summary>
+    /// 10 h UTC du jour légal (fin de matinée à Paris) : avancer de 50 jours garde la même heure de Paris à un jour près
+    /// du changement d'heure, sans passer d'une date à l'autre comme un départ juste après minuit.
+    /// </summary>
+    public static DateTimeOffset Start => new(LegalCalendar.DateOf(DateTimeOffset.UtcNow).ToDateTime(new TimeOnly(10, 0)), TimeSpan.Zero);
+
     public static TenantHarness Harness(IDbProviderConfigurator configurator, ManualClock clock, CapturedEmails emails) =>
         new(configurator, clock, configure: s => s.AddSingleton<IEmailSender>(emails));
 
@@ -264,7 +270,7 @@ internal static class ReminderScenarios
                 RecordPaymentRequest payment = new()
                 {
                     CustomerId = customer,
-                    Date = DateOnly.FromDateTime(DateTime.UtcNow),
+                    Date = LegalCalendar.DateOf(DateTimeOffset.UtcNow),
                     Amount = 120m,
                     Allocations = [new PaymentAllocationRequest(paid, 120m)],
                 };

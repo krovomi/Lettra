@@ -7,6 +7,7 @@ using Lettra.Contracts.Common;
 using Lettra.Contracts.Reminders;
 using Lettra.Contracts.Serialization;
 using Lettra.Domain.Common;
+using Lettra.Domain.SharedKernel;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Data.Sqlite;
@@ -45,7 +46,7 @@ public sealed class ReminderApiTests(LettraApiFactory factory) : IClassFixture<L
         await connection.OpenAsync();
         await using SqliteCommand command = connection.CreateCommand();
         command.CommandText = """UPDATE "Invoices" SET "DueDate" = $due WHERE lower("Id") = lower($id)""";
-        command.Parameters.AddWithValue("$due", DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-days).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
+        command.Parameters.AddWithValue("$due", LegalCalendar.DateOf(DateTimeOffset.UtcNow).AddDays(-days).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
         command.Parameters.AddWithValue("$id", invoice.ToString());
         (await command.ExecuteNonQueryAsync()).Should().Be(1);
     }

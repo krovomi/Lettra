@@ -5,6 +5,7 @@ using Lettra.Contracts.Banking;
 using Lettra.Contracts.Cabinet;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Serialization;
+using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Api.Tests;
 
@@ -56,7 +57,7 @@ public sealed class CabinetOverviewApiTests
     {
         await using LettraApiFactory api = new();
         HttpClient manager = InDossier(api, LettraApiFactory.ManagerId);
-        DateOnly old = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-40);
+        DateOnly old = LegalCalendar.DateOf(DateTimeOffset.UtcNow).AddDays(-40);
         ImportBankStatementRequest file = new()
         {
             FileName = "releve.xml",

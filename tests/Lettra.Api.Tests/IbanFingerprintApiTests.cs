@@ -8,6 +8,7 @@ using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Serialization;
 using Lettra.Domain.Banking;
+using Lettra.Domain.SharedKernel;
 using Microsoft.Data.Sqlite;
 
 namespace Lettra.Api.Tests;
@@ -22,7 +23,7 @@ public sealed class IbanFingerprintApiTests
 
     private static Uri Api(string path) => new(path, UriKind.Relative);
 
-    private static DateOnly Today => DateOnly.FromDateTime(DateTime.UtcNow);
+    private static DateOnly Today => LegalCalendar.DateOf(DateTimeOffset.UtcNow);
 
     [Fact]
     public async Task Les_empreintes_d_avant_la_cle_sont_converties_et_l_iban_connu_reste_reconnu()

@@ -4,6 +4,7 @@ using Lettra.Contracts.Common;
 using Lettra.Contracts.Demo;
 using Lettra.Contracts.Exports;
 using Lettra.Contracts.Pricing;
+using Lettra.Domain.SharedKernel;
 using Lettra.UI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -19,7 +20,7 @@ public sealed class BillingGatewayParityTests(LettraApiFactory factory) : IClass
 
     public static TheoryData<string> Transports => GatewayHarness.Transports;
 
-    private static DateOnly Today => DateOnly.FromDateTime(DateTime.UtcNow);
+    private static DateOnly Today => LegalCalendar.DateOf(DateTimeOffset.UtcNow);
 
     private static async Task<Guid> CustomerAsync(IServiceProvider services) =>
         (await services.GetRequiredService<ICustomersGateway>().CreateAsync(CustomerApiTests.Martin(), default)).Value!.Id;

@@ -118,7 +118,7 @@ public sealed class DemoDataTests : IDisposable
         (await app.GetRequiredService<ILocalAccounts>().CreateAsync("Camille Démo", "atelier des comptes 2026", default)).IsSuccess.Should().BeTrue();
         Guid user = app.GetRequiredService<ICurrentUser>().UserId;
         Guid opened = app.GetRequiredService<LocalDossierRegistry>().ActiveDossierId!.Value;
-        DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
+        DateOnly today = LegalCalendar.DateOf(DateTimeOffset.UtcNow);
 
         DemoSeedResult result = await LettraDemoData.SeedAsync(configuration, "Demo", s => s.AddSingleton<IKekStore>(keys), user);
 

@@ -43,7 +43,7 @@ internal static class ExportScenarios
 
         await using AsyncServiceScope scope = await harness.OpenAsync(dossier);
         IQueryDispatcher queries = scope.ServiceProvider.GetRequiredService<IQueryDispatcher>();
-        DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
+        DateOnly today = LegalCalendar.DateOf(DateTimeOffset.UtcNow);
         DateOnly from = new(today.Year, 1, 1);
         DateOnly to = new(today.Year, 12, 31);
 
@@ -101,7 +101,7 @@ internal static class ExportScenarios
         await SeedAsync(harness, ready, withProfile: true);
         await SeedAsync(harness, incomplete, withProfile: false);
 
-        DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
+        DateOnly today = LegalCalendar.DateOf(DateTimeOffset.UtcNow);
         DateOnly from = new(today.Year, 1, 1);
         DateOnly to = new(today.Year, 12, 31);
         MemoryExportArchive archive = new();

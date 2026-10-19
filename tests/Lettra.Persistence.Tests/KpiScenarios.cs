@@ -44,7 +44,7 @@ internal static class KpiScenarios
     public static async Task DossierSourcesAsync(TenantHarness harness, DatabaseProvider provider, string connectionString)
     {
         DossierId dossier = harness.AddDossier(provider, connectionString);
-        DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
+        DateOnly today = LegalCalendar.DateOf(DateTimeOffset.UtcNow);
         await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
         {
             ICommandDispatcher commands = scope.ServiceProvider.GetRequiredService<ICommandDispatcher>();

@@ -44,7 +44,7 @@ internal static class AuditKitScenarios
     public static async Task KitAsync(TenantHarness harness, DatabaseProvider provider, string connectionString)
     {
         DossierId dossier = harness.AddDossier(provider, connectionString);
-        DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
+        DateOnly today = LegalCalendar.DateOf(DateTimeOffset.UtcNow);
         DateOnly from = new(today.Year, 1, 1), to = new(today.Year, 12, 31);
 
         await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
