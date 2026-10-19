@@ -22,7 +22,7 @@ internal sealed class HttpCustomersGateway(HttpClient http) : ICustomersGateway
                 .ConfigureAwait(false);
             return await response.ToOperationResultAsync(ContractsJsonContext.Default.CustomerResponse, cancellationToken).ConfigureAwait(false);
         }
-        catch (HttpRequestException)
+        catch (Exception e) when (HttpCalls.IsUnreachable(e, cancellationToken))
         {
             return OperationResult<CustomerResponse>.Failure(ErrorCodes.Api.Unreachable);
         }
@@ -36,7 +36,7 @@ internal sealed class HttpCustomersGateway(HttpClient http) : ICustomersGateway
             using HttpResponseMessage response = await http.GetAsync(uri, cancellationToken).ConfigureAwait(false);
             return await response.ToOperationResultAsync(ContractsJsonContext.Default.PagedResponseCustomerSummary, cancellationToken).ConfigureAwait(false);
         }
-        catch (HttpRequestException)
+        catch (Exception e) when (HttpCalls.IsUnreachable(e, cancellationToken))
         {
             return OperationResult<PagedResponse<CustomerSummary>>.Failure(ErrorCodes.Api.Unreachable);
         }
@@ -49,7 +49,7 @@ internal sealed class HttpCustomersGateway(HttpClient http) : ICustomersGateway
             using HttpResponseMessage response = await http.GetAsync(new Uri($"api/v1/customers/{id}", UriKind.Relative), cancellationToken).ConfigureAwait(false);
             return await response.ToOperationResultAsync(ContractsJsonContext.Default.CustomerResponse, cancellationToken).ConfigureAwait(false);
         }
-        catch (HttpRequestException)
+        catch (Exception e) when (HttpCalls.IsUnreachable(e, cancellationToken))
         {
             return OperationResult<CustomerResponse>.Failure(ErrorCodes.Api.Unreachable);
         }

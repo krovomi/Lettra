@@ -47,7 +47,7 @@ internal sealed class HttpCabinetGateway(HttpClient http) : ICabinetGateway
                 return await response.ToOperationResultAsync(typeInfo, cancellationToken).ConfigureAwait(false);
             }
         }
-        catch (Exception e) when (e is HttpRequestException or TaskCanceledException && !cancellationToken.IsCancellationRequested)
+        catch (Exception e) when (HttpCalls.IsUnreachable(e, cancellationToken))
         {
             return OperationResult<T>.Failure(ErrorCodes.Api.Unreachable);
         }
