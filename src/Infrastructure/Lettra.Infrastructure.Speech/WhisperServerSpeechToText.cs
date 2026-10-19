@@ -18,6 +18,9 @@ internal sealed partial class WhisperServerSpeechToText(HttpClient http, Whisper
 {
     public const string EngineName = "whisper-serveur";
 
+    /// <summary>Délai de la vérification d'état : au-delà, le moteur est dit « en préparation ».</summary>
+    internal static readonly TimeSpan ProbeTimeout = TimeSpan.FromSeconds(3);
+
     public string Name => EngineName;
 
     public async Task<Result<SpeechTranscript>> TranscribeAsync(SpeechAudio audio, SpeechRequest request, CancellationToken cancellationToken)
@@ -52,6 +55,26 @@ internal sealed partial class WhisperServerSpeechToText(HttpClient http, Whisper
         {
             LogUnreachable(logger, exception.GetType().Name);
             return SpeechErrors.EngineUnavailable;
+        }
+    }
+
+    /// <summary>
+    /// Le serveur répond 200 sur sa racine une fois le modèle chargé ; pendant le téléchargement il n'écoute pas
+    /// encore, et pendant le chargement il répond 503. Réponse courte : l'écran d'état n'attend pas plus.
+    /// </summary>
+    public async Task<bool> IsReadyAsync(CancellationToken cancellationToken)
+    {
+        using CancellationTokenSource timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(ProbeTimeout);
+        try
+        {
+            using HttpResponseMessage response = await http
+                .GetAsync(new Uri(string.Empty, UriKind.Relative), HttpCompletionOption.ResponseHeadersRead, timeout.Token).ConfigureAwait(false);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException && !cancellationToken.IsCancellationRequested)
+        {
+            return false;
         }
     }
 

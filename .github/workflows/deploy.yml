@@ -166,19 +166,38 @@ jobs:
           timeout 600 bash -c "until $COMPOSE exec -T whisper curl -fsS -o /dev/null http://127.0.0.1:8080/; do sleep 5; done"
           $COMPOSE logs --no-color whisper | grep -q 'Téléchargement de ggml-base.bin' || { echo "premier démarrage sans téléchargement du modèle ?"; exit 1; }
 
-      # Mise à jour comme chez l'utilisateur (git pull, puis up --build) : arrêt sans -v, nouvelle image de l'API (une
-      # couche de plus suffit à en changer l'identifiant), redémarrage sur les mêmes volumes. Le client créé avant doit
+      # Mise à jour comme chez l'utilisateur (git pull, puis up --build) : arrêt sans -v, nouvelle image de l'API avec
+      # une nouvelle version de l'application web (index.html marqué, manifeste du service worker changé), redémarrage
+      # sur les mêmes volumes. Pendant ce temps un onglet reste ouvert : il doit proposer « Recharger », et un onglet
+      # ouvert juste après doit se recharger seul sur la nouvelle version (mise-a-jour.mjs). Le client créé avant doit
       # être là, et le jeu de démonstration ne doit pas être rechargé.
-      - name: Mise à jour de l'API (nouvelle image, mêmes volumes), connexion mot de passe + code, données conservées
+      - name: Mise à jour de l'API (nouvelle image, mêmes volumes), navigateur déjà ouvert à jour, données conservées
         working-directory: deploy/demo/e2e
+        env:
+          LETTRA_BUILD_ATTENDU: maj-${{ github.run_id }}
         run: |
-          avant=$(docker image inspect -f '{{.Id}}' lettra-demo-api)
+          export avant=$(docker image inspect -f '{{.Id}}' lettra-demo-api)
+          cat > "$RUNNER_TEMP/mise-a-jour.sh" <<'FIN'
+          set -euo pipefail
           $COMPOSE down
-          printf 'FROM lettra-demo-api\nLABEL fr.lettra.demo.mise-a-jour=%s\n' "$GITHUB_RUN_ID" | docker build -q -t lettra-demo-api -
+          www="$RUNNER_TEMP/nouvelle-version"
+          rm -rf "$www" && mkdir -p "$www"
+          id=$(docker create lettra-demo-api)
+          docker cp "$id:/app/wwwroot/index.html" "$www/"
+          docker cp "$id:/app/wwwroot/service-worker-assets.js" "$www/"
+          docker rm "$id" > /dev/null
+          bash nouvelle-version.sh "$www" "$LETTRA_BUILD_ATTENDU"
+          printf 'FROM lettra-demo-api\nLABEL fr.lettra.demo.mise-a-jour=%s\nCOPY index.html service-worker-assets.js /app/wwwroot/\n' "$GITHUB_RUN_ID" > "$www/Dockerfile"
+          docker build -q -t lettra-demo-api "$www"
           [ "$(docker image inspect -f '{{.Id}}' lettra-demo-api)" != "$avant" ] || { echo "image de l'API inchangée"; exit 1; }
           docker volume inspect lettra-demo_lettra-donnees lettra-demo_keycloak-donnees lettra-demo_whisper-modeles > /dev/null
           $COMPOSE up -d --wait
           timeout 180 bash -c 'until curl -sf http://localhost:8080/health; do sleep 2; done'
+          FIN
+          mkdir -p "$SORTIE/localhost"
+          signaler() { echo "::error title=Mise à jour dans le navigateur::$(tail -n 40 "$1" | sed -e 's/%/%25/g' | sed -e ':a;N;$!ba;s/\n/%0A/g')"; exit 1; }
+          SORTIE="$SORTIE/localhost" node mise-a-jour.mjs "bash $RUNNER_TEMP/mise-a-jour.sh" 2>&1 | tee "$SORTIE/localhost/mise-a-jour-sortie.log"
+          [ "${PIPESTATUS[0]}" = 0 ] || signaler "$SORTIE/localhost/mise-a-jour-sortie.log"
           if $COMPOSE logs --no-color api | grep -q 'Jeu de démonstration .* chargé dans'; then
             echo "le jeu de démonstration a été rechargé par-dessus le dossier existant"; exit 1
           fi

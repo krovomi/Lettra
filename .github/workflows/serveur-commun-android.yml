@@ -1,0 +1,115 @@
+name: Serveur commun sur Android
+
+# Serveur commun (docs/serveur-commun.md) de bout en bout sur un émulateur Android : la démo Docker tourne sur le runner,
+# l'émulateur y accède par « adb reverse » (http://localhost:8080 et 8081, comme un téléphone branché par câble). Le
+# navigateur crée un client ; l'application installée (APK de démonstration) est reliée au serveur par l'écran « Serveur
+# du cabinet », se connecte (onglet du navigateur, mot de passe + code), voit ce client et en crée un ; le navigateur le
+# retrouve.
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'deploy/demo/**'
+      - 'deploy/keycloak/**'
+      - '.github/workflows/serveur-commun-android.yml'
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: serveur-commun-android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    name: Navigateur et application Android sur les mêmes données
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    env:
+      COMPOSE: docker compose -f ${{ github.workspace }}/deploy/demo/compose.yaml
+      SORTIE: ${{ github.workspace }}/deploy/demo/e2e/sortie/android
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: microsoft
+          java-version: 17
+      - name: Charge de travail MAUI Android
+        run: dotnet workload install maui-android
+      - name: Build de l'APK de démonstration
+        run: dotnet publish src/Hosts/Lettra.App.Maui/Lettra.App.Maui.csproj -c Release -f net10.0-android -p:AndroidPackageFormat=apk -p:AndroidSdkDirectory=$ANDROID_HOME -o artifacts/lettra-android
+
+      - name: Démo (localhost)
+        run: |
+          $COMPOSE build
+          $COMPOSE up -d --wait
+          timeout 180 bash -c 'until curl -sf http://localhost:8080/health; do sleep 2; done'
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Playwright (Chromium)
+        working-directory: deploy/demo/e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          # Pilote de l'appareil (APK installé sur l'émulateur par Playwright _android).
+          npx playwright install android
+      - name: Navigateur — enrôlement TOTP et client
+        working-directory: deploy/demo/e2e
+        run: |
+          set -a; . ../.env; set +a
+          node parcours.mjs premier
+
+      - name: Accélération matérielle de l'émulateur (KVM)
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Script de l'appareil
+        run: |
+          cat > "$RUNNER_TEMP/serveur-commun-android.sh" <<'EOF'
+          set -euo pipefail
+          cd deploy/demo/e2e
+          set -a; . ../.env; set +a
+          mkdir -p "$SORTIE/android"
+          adb reverse tcp:8080 tcp:8080
+          adb reverse tcp:8081 tcp:8081
+          adb shell pm list packages | grep -iE 'chrome|browser|webview' || true
+          adb install -r "$(ls ../../../artifacts/lettra-android/*-Signed.apk | head -n 1)"
+          adb logcat -c
+          status=0
+          node android.mjs "$(cat "$SORTIE/client.txt")" || status=$?
+          adb logcat -d > "$SORTIE/android/logcat.txt" || true
+          if [ "$status" != 0 ]; then
+            grep -E 'AndroidRuntime|monodroid|mono-rt|DOTNET|fr\.lettra|Lettra|chromium' "$SORTIE/android/logcat.txt" | tail -n 120 || true
+            exit "$status"
+          fi
+          node appareil.mjs voir "$(cat "$SORTIE/client-appareil.txt")"
+          EOF
+      - name: Émulateur (API 34) — appareil relié au serveur commun
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          # Écran de téléphone courant (1080×2340), pas le 320×640 par défaut.
+          profile: pixel_5
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          script: bash "$RUNNER_TEMP/serveur-commun-android.sh"
+
+      - name: Journaux de la démo
+        if: always()
+        run: $COMPOSE logs --no-color > "$SORTIE/compose.log" 2>&1 || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: serveur-commun-android
+          path: deploy/demo/e2e/sortie/android
+          retention-days: 30

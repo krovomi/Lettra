@@ -26,6 +26,9 @@ async function onInstall(event) {
         .filter(asset => !offlineAssetsExclude.some(pattern => pattern.test(asset.url)))
         .map(asset => new Request(asset.url, { integrity: asset.hash, cache: 'no-cache' }));
     await caches.open(cacheName).then(cache => cache.addAll(assetsRequests));
+    // Nouvelle version : elle prend la main sans attendre que tous les onglets et fenêtres de Lettra soient fermés ;
+    // pwa.js recharge alors la page, ou propose de le faire si l'utilisateur a commencé à saisir.
+    await self.skipWaiting();
 }
 
 async function onActivate(event) {
@@ -33,6 +36,8 @@ async function onActivate(event) {
     await Promise.all(cacheKeys
         .filter(key => key.startsWith(cacheNamePrefix) && key !== cacheName)
         .map(key => caches.delete(key)));
+    // Les pages déjà ouvertes passent tout de suite sous cette version (événement controllerchange dans pwa.js).
+    await self.clients.claim();
 }
 
 function onFetch(event) {

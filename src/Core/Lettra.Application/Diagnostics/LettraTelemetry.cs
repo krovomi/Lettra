@@ -103,6 +103,8 @@ public static class LettraTelemetry
         Attributes.SyncDirection,
         Attributes.OutboxKind,
         Attributes.OutboxResult,
+        Attributes.SpeechEngine,
+        Attributes.SpeechMode,
     };
 
     /// <summary>Noms d'attributs autorisés. Tout nouvel attribut est revu : il ne doit jamais porter une donnée de dossier.</summary>
@@ -143,6 +145,12 @@ public static class LettraTelemetry
 
         /// <summary>Résultat d'un envoi de l'outbox : <c>delivered</c>, <c>retry</c>, <c>parked</c>.</summary>
         public const string OutboxResult = "lettra.outbox.result";
+
+        /// <summary>Moteur de transcription vocale (<c>whisper</c>, <c>none</c>…).</summary>
+        public const string SpeechEngine = "lettra.speech.engine";
+
+        /// <summary>Mode de la voix : <c>dictation</c> ou <c>command</c>.</summary>
+        public const string SpeechMode = "lettra.speech.mode";
     }
 
     public static class Outcomes

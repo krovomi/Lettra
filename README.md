@@ -451,8 +451,9 @@ démonstration (navigateur) ou Whisper.net sur l'appareil (application installé
 service tiers, et il n'est ni enregistré ni journalisé.
 
 - **Dans la démo Docker**, le conteneur `whisper` télécharge le modèle (142 Mio) au premier lancement, puis le garde
-  dans le volume `lettra-demo_whisper-modeles`. Lettra s'ouvre sans l'attendre ; la voix répond « indisponible » tant
-  que le modèle n'est pas chargé (une à quelques minutes selon la connexion).
+  dans le volume `lettra-demo_whisper-modeles`. Lettra s'ouvre sans l'attendre. Tant que le modèle n'est pas chargé
+  (une à quelques minutes selon la connexion), le panneau du micro affiche « La dictée se prépare » et les champs
+  n'ont pas de micro. Le micro apparaît tout seul dès que le moteur est prêt, sans recharger la page.
 - **Dans l'application installée**, le modèle est téléchargé au premier usage de la voix, dans le dossier de
   l'application (`voix`), puis vérifié par deux empreintes (SHA-1 publié par whisper.cpp et SHA-256 épinglé dans
   Lettra) : un fichier différent est supprimé, jamais chargé. Le système demande l'autorisation du micro la première
@@ -462,6 +463,9 @@ service tiers, et il n'est ni enregistré ni journalisé.
   `{ "Lettra": { "Speech": { "Engine": "None" } } }` (avec `"OnDevice"`, elle revient), puis relancer Lettra. Le
   bouton micro disparaît, le micro n'est jamais ouvert et le modèle n'est pas téléchargé. Pour construire une version
   sans dictée par défaut : `-p:LettraDictee=false`.
+- **Le micro demande `https://` ou `http://localhost`** : c'est une règle des navigateurs. Sur le poste, ouvrez
+  `http://localhost:8080`. Depuis un téléphone ou un autre poste, utilisez le profil réseau local en HTTPS
+  (`compose.lan.yaml`). En `http://192.168…`, le panneau explique pourquoi le micro manque.
 
 Pour vérifier que la voix est active : `GET /api/v1/voix/statut` doit répondre `"enabled": true` et
 `"engine": "whisper-serveur"`. Dans le navigateur, une fois connecté, ouvrir la console (F12, onglet **Console**) et
@@ -471,7 +475,8 @@ coller :
 fetch('/api/v1/voix/statut', { headers: { 'X-Dossier': '0199e3a0-0000-7000-8000-00000000d051', 'X-Lettra-Csrf': '1' } }).then(r => r.json()).then(console.log)
 ```
 
-Le statut dit que la voix est configurée. Pour savoir si le modèle est chargé, cette commande doit afficher `200` :
+Le statut dit que la voix est configurée. Il répond aussi `"ready": true` quand le modèle est chargé (`false` pendant
+son téléchargement). Depuis le poste, cette commande doit alors afficher `200` :
 
 ```bash
 docker compose -f deploy/demo/compose.yaml exec whisper curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8080/
@@ -515,6 +520,7 @@ Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou 
 | Symptôme | Que faire |
 |---|---|
 | Navigateur : la page ne répond pas | Au premier démarrage, le remplissage du dossier de démonstration prend une trentaine de secondes après `up --wait` : attendre, puis recharger ; `docker compose -f deploy/demo/compose.yaml ps` doit montrer `keycloak` et `api` « healthy » (`whisper`, sans contrôle de santé, est simplement « Up »). |
+| Navigateur : pas de micro dans les champs | Ouvrez le micro de la barre du haut, son panneau dit pourquoi. « La dictée se prépare » : le modèle Whisper se télécharge, attendez. Message « https:// ou http://localhost » : changez d'adresse. |
 | Navigateur : la voix répond « indisponible » (503) | Le conteneur `whisper` télécharge encore son modèle (142 Mio) ou n'a pas accès à Internet : `docker compose -f deploy/demo/compose.yaml logs whisper` montre le téléchargement (et, sans Internet, un nouvel essai toutes les 30 secondes) ; le serveur est prêt quand la commande de vérification de [Dictée et commandes vocales](#dictée-et-commandes-vocales) affiche `200`. Le reste de Lettra fonctionne pendant ce temps. |
 | Navigateur : erreur « Uncaught (in promise) TypeError: Failed to fetch at fromShell » dans la console | C'est l'ancien service worker : fermer tous les onglets de Lettra puis rouvrir (ou DevTools → **Application** → **Service workers** → **Unregister**). La console doit rester vide d'erreurs sur tous les écrans, en ligne comme hors ligne ([détails](deploy/demo/README.md#installer-lapplication-pwa)). |
 | Navigateur : le code du second facteur est refusé | L'application TOTP doit accepter SHA-256 (pas Microsoft Authenticator) et l'heure du téléphone être à l'heure. Pour réenrôler sans perdre vos saisies, ne remettez à zéro que Keycloak : `docker compose -f deploy/demo/compose.yaml down`, `docker volume rm lettra-demo_keycloak-donnees`, puis `up -d --wait`. Pas de `down -v` : il efface aussi les données Lettra. |
@@ -549,6 +555,10 @@ données. Sauvegarder les données du navigateur avant une manipulation risquée
 `docker run --rm -v lettra-demo_lettra-donnees:/donnees -v "${PWD}:/sauvegarde" busybox tar czf /sauvegarde/lettra-donnees.tgz -C /donnees .`
 (démo arrêtée). La version qui apporte le serveur commun corrige le realm Keycloak : après cette mise à jour,
 l'enrôlement du code à usage unique de l'utilisateur fictif est à refaire une fois. Les données Lettra sont conservées.
+Le navigateur prend la nouvelle version tout seul, sans fermer ses onglets : un onglet ouvert dans les dix secondes qui
+suivent se recharge de lui-même ; un onglet déjà ouvert affiche « Nouvelle version de Lettra disponible » avec un
+bouton **Recharger**, pour ne jamais perdre une saisie en cours. Seule exception, la première fois après une version
+d'avant le 19 octobre 2026 : appuyez une fois sur F5 (ou fermez et rouvrez la fenêtre installée).
 Sous Windows, fermez Lettra, téléchargez le nouvel artefact et remplacez le dossier extrait : vos
 données, rangées ailleurs, sont conservées. Sous Android, `adb install -r` installe la nouvelle version par-dessus
 l'ancienne et garde les données : les APK de la CI sont signés avec la même clé de démonstration

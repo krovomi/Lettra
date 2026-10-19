@@ -34,6 +34,7 @@ public sealed class VoiceTests : BunitContext
         _ui = JSInterop.SetupModule(UiModule.Path);
         JSInterop.SetupModule(AssistModule.Path);
         _voice.Setup<bool>("supported").SetResult(true);
+        _voice.Setup<bool>("secureContext").SetResult(true);
         _voice.Setup<string>("start", _ => true).SetResult("ok");
         _voice.Setup<byte[]?>("stop").SetResult(new byte[3200]);
         _voice.Setup<bool>("insertText", _ => true).SetResult(true);
@@ -91,6 +92,35 @@ public sealed class VoiceTests : BunitContext
         page.Find("#voice-retry").Click();
 
         page.WaitForAssertion(() => page.FindAll("#voice-speak").Should().ContainSingle());
+    }
+
+    [Fact]
+    public void Un_moteur_qui_charge_son_modele_le_dit_puis_s_ouvre_tout_seul()
+    {
+        _speech.Status = _speech.Status with { Ready = false };
+        Services.GetRequiredService<VoiceInput>().StartingRetryDelay = TimeSpan.FromMilliseconds(200);
+        IRenderedComponent<Coquille> page = Rendre();
+        page.Find("#voice-button").Click();
+
+        page.WaitForAssertion(() => page.Find("#voice-state").TextContent.Should().StartWith("La dictée se prépare"));
+        page.FindAll("#subject-mic").Should().BeEmpty("on ne laisse pas parler pour rien");
+        page.FindAll("#voice-retry").Should().ContainSingle();
+        _speech.Status = _speech.Status with { Ready = true };
+
+        page.WaitForAssertion(() => page.FindAll("#voice-speak").Should().ContainSingle(), TimeSpan.FromSeconds(5));
+        page.FindAll("#subject-mic").Should().ContainSingle();
+    }
+
+    [Fact]
+    public void En_http_sur_une_adresse_du_reseau_le_panneau_dit_d_utiliser_https_ou_localhost()
+    {
+        _voice.Setup<bool>("supported").SetResult(false);
+        _voice.Setup<bool>("secureContext").SetResult(false);
+        IRenderedComponent<Coquille> page = Rendre();
+        page.Find("#voice-button").Click();
+
+        page.WaitForAssertion(() => page.Find("#voice-state").TextContent.Should().Contain("https://").And.Contain("http://localhost:8080"));
+        page.FindAll("#subject-mic").Should().BeEmpty();
     }
 
     [Fact]
