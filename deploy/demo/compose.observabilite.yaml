@@ -118,6 +118,9 @@ services:
       Lettra__Observability__ServiceName: lettra-api
       Lettra__Observability__Cell: demo
       Lettra__Observability__Environment: demo
+      # Indicateurs de pilotage lus par Prometheus (observabilite/prometheus.yml, même jeton FICTIF) : tableaux de bord
+      # « Pilotage du cabinet », « Pilotage d'un dossier » et « Administration ».
+      Lettra__Kpi__ScrapeToken: demo-indicateurs-fictif-2026
 
 volumes:
   prometheus-donnees:
