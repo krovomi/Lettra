@@ -50,9 +50,20 @@ anti-fraude de la facture (document canonique v1 inchangé) : elle est aussi dan
 - **Depuis l'écran** : un bandeau « N factures récurrentes sont à créer » apparaît sur la liste, avec le bouton
   **Créer les factures dues** ; la fiche d'un modèle a son bouton **Créer la facture due**. Le message en bas de
   l'écran donne le nombre de factures créées et validées.
-- **Par le Worker** : une passe toutes les 6 heures crée les factures dues de chaque dossier actif, sous le compte de
-  service du Worker (réglages `Lettra:Worker:RecurringInvoices` : `Enabled`, `Interval`, `InitialDelay`). Sans
-  identité de service (la démo, qui n'a pas de Worker), la passe ne fait rien et les factures se créent depuis l'écran.
+- **Automatiquement** : une passe toutes les 6 heures crée les factures dues de chaque dossier actif. Elle tourne dans
+  le Worker ou, dans une installation sans Worker (la démonstration), dans l'API
+  (`Lettra:Outbox:Job:HostedByApi=true`). Réglages `Lettra:Worker:RecurringInvoices` : `Enabled`, `Interval`,
+  `InitialDelay` et `ServiceAccountId`.
+  - **Sous quel compte** : `ServiceAccountId`, s'il est renseigné, est le compte de service propre à la passe. Il est
+    déclaré au registre des droits comme tout utilisateur (`Lettra:Authorization:Users`), sans compte Keycloak
+    puisque personne ne s'y connecte, avec un rôle qui donne `FactureSaisir` (et `FactureValider` pour la validation
+    automatique). Ce compte ne vaut que dans la portée de la passe ; les requêtes HTTP gardent l'identité de leur
+    utilisateur. Sans `ServiceAccountId`, la passe agit sous l'identité de l'hôte (`Lettra:Worker:Identity` du
+    Worker). Sans aucune identité, elle ne fait rien et les factures se créent depuis l'écran.
+  - **Démonstration** : l'API fait la passe 1 minute après son démarrage puis toutes les 15 minutes, sous le compte
+    fictif « Facturation récurrente (automatique) » (rôle personnalisé `facturation-recurrente` : lecture du
+    dossier, des clients et du catalogue, saisie et validation des factures). Un modèle dont le début est passé a
+    donc ses factures sans clic, au plus tard 15 minutes après son enregistrement.
 
 Dans les deux cas :
 
@@ -66,6 +77,14 @@ Dans les deux cas :
 
 L'historique de la fiche liste les factures créées, de la plus récente à la plus ancienne, avec leur numéro (ou
 « Brouillon »), leur période et la révision appliquée.
+
+## La liste des modèles
+
+La liste suit les règles communes des listes ([tris et filtres](tris-et-filtres.md)) : un clic sur l'en-tête **Nom du
+modèle**, **Client**, **Prochaine facture** ou **Total HT** trie la liste sur le serveur (le montant d'abord du plus
+grand), un second clic inverse le sens. La recherche (nom, objet, client) reste visible ; le statut (actifs, en
+pause, à facturer) et, sur téléphone, la liste **Trier par** se replient derrière **Filtres**. **Effacer les filtres**
+garde le tri choisi.
 
 ## Révision annuelle des prix
 
@@ -109,11 +128,13 @@ Codes d'erreur : `RecurringInvoice.NotFound`, `NameRequired`, `NameTooLong`, `Fr
 - Persistance : `RecurringInvoiceStores.cs` (tables `RecurringInvoices`, `RecurringInvoiceLines`,
   `RecurringInvoiceOccurrences`), migration `FacturesRecurrentes` sur SQLite, PostgreSQL et SQL Server ; elle ajoute
   aussi les colonnes nullables `BillingPeriodStart` et `BillingPeriodEnd` aux factures, sans toucher aux données.
-- Passe de fond : `RecurringInvoiceJob.cs`, enregistrée par `AddRecurringInvoicing(configuration, activeDossiers)`.
+- Passe de fond : `RecurringInvoiceJob.cs`, enregistrée par `AddRecurringInvoicing(configuration, activeDossiers)`
+  après l'identité de l'hôte (le compte de service de la passe enveloppe `ICurrentUser`).
 - Écrans : `RecurringInvoiceList.razor`, `RecurringInvoiceEditor.razor`, messages `RecurringToasts.cs`, textes
   `Localization/Modules/Recurrentes(.en).resx`.
 - Tests : domaine (`RecurringInvoiceTests`), API (`RecurringInvoiceApiTests`, `GatewayParityTests`), trois bases
-  (`RecurringScenarios`), formats (`EInvoicePeriodTests`), écrans (`RecurringInvoicePagesTests`).
+  (`RecurringScenarios`), passe de fond et compte de service (`RecurringInvoiceJobTests`), formats
+  (`EInvoicePeriodTests`), écrans (`RecurringInvoicePagesTests`).
 
 ## Limites connues
 
