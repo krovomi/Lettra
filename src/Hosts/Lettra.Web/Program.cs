@@ -3,16 +3,13 @@ using Lettra.UI.Abstractions;
 using Lettra.UI.Gateway.Http;
 using Lettra.UI.Shared;
 using Lettra.UI.Shared.Drafts;
-using Lettra.UI.Shared.Localization;
+using Lettra.UI.Shared.Preferences;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
 WebAssemblyHostBuilder builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<Routes>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
-
-// Langue du navigateur si elle est prise en charge, sinon le français.
-LettraCultures.Apply(LettraCultures.Resolve(CultureInfo.CurrentUICulture.Name));
 
 Guid? dossier = Guid.TryParse(builder.Configuration["Lettra:DossierId"], out Guid id) ? id : null;
 builder.Services.AddSingleton<IDossierSelection>(new FixedDossierSelection(dossier));
@@ -22,4 +19,8 @@ builder.Services.AddLettraUi();
 builder.Services.AddOfflineDrafts();
 builder.Services.AddHttpGateways(new Uri(builder.HostEnvironment.BaseAddress));
 
-await builder.Build().RunAsync().ConfigureAwait(false);
+WebAssemblyHost host = builder.Build();
+// Langue choisie dans « Mes préférences » (clé lettra.langue), sinon celle du navigateur si elle est prise en charge,
+// sinon le français ; avant RunAsync, qui charge les textes.
+await ScreenLanguage.ApplyStoredAsync(host.Services, CultureInfo.CurrentUICulture.Name).ConfigureAwait(false);
+await host.RunAsync().ConfigureAwait(false);

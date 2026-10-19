@@ -120,6 +120,7 @@ app.MapGroup("/api/v1/dossiers")
 
 // Instantané de droits signé pour le hors ligne (annexe F §4) et ses clés publiques.
 app.MapRightsSnapshot();
+app.MapUserPreferences();
 
 // Serveur commun : ce que l'application installée lit pour se connecter (realm Keycloak public), sans connexion.
 app.MapServerDiscovery();

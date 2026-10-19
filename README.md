@@ -278,7 +278,8 @@ La page **Vue cabinet** liste les dossiers que vous pouvez ouvrir, les plus urge
 les factures en retard, les rejets de la plateforme, les alertes ouvertes, la revue du mois et le relevé bancaire non
 rapproché. La colonne relevé non rapproché devient à traiter après 15 jours et urgente après 30. Ces chiffres sont
 calculés la nuit (par le Worker, ou par l'API dans la démo), sur « Actualiser », ou à la première ouverture. Ce ne sont
-que des compteurs : aucun montant ni nom de client ne quitte le dossier.
+que des compteurs : aucun montant ni nom de client ne quitte le dossier. Le bouton « Tableaux de bord » en haut de la Vue cabinet ouvre
+l'onglet « Mes dossiers » des tableaux de bord : les mêmes dossiers en graphiques.
 
 **Revue du dossier** (menu Comptabilité) est une liste de contrôle par mois ou par trimestre. Chaque coche garde qui
 l'a posée et quand. Détails : [docs/vue-cabinet.md](docs/vue-cabinet.md).
@@ -572,6 +573,20 @@ Entrée l'ouvre, et « Chercher partout » passe à la palette Ctrl+K. « Aide e
 bouton « ? » ou dans la feuille « Plus » du téléphone, répond aux questions fréquentes en langage courant (« comment
 annuler une facture ? »), relance le tutoriel de l'écran et liste les raccourcis, sans IA. Détails :
 [docs/menu-et-aide.md](docs/menu-et-aide.md).
+
+### Mes préférences
+
+**Paramètres** > **Mes préférences** (`/settings/preferences`) : thème, densité, langue, écran d'accueil, valeurs de
+saisie par dossier (TVA, unité, conditions de paiement, mentions, validité des devis), suggestions par usage (clients et
+articles les plus choisis en tête), « Reprendre où j'en étais » à l'accueil et dans Ctrl+K, réinitialisation. Rangées
+dans le compte (base Catalog) quand le serveur le permet, elles suivent l'utilisateur sur tous ses appareils ; en poste
+isolé elles restent sur l'appareil. Aucun nom de client ni montant, jamais dans les journaux ni Grafana. Détails :
+[docs/preferences-utilisateur.md](docs/preferences-utilisateur.md).
+
+*(Vérifié : tests automatiques (domaine, cas d'usage, SQLite/PostgreSQL/SQL Server, passerelles, écrans bUnit) et démo
+Docker de bout en bout sur ordinateur et téléphone (thème, langue après rechargement, valeurs par défaut sur un
+dossier, « Retenir par défaut », « Reprendre où j'en étais », reprise sur un second appareil). Non vérifié dans les
+applications installées.)*
 
 ### Trier et filtrer les listes
 
