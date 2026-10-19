@@ -186,8 +186,13 @@
 .lt-toggle { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--hit); font-size: var(--text-sm); cursor: pointer; }
 
 .lt-chip { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3); border-radius: var(--radius-full); background: var(--color-primary-soft); color: var(--color-primary-soft-fg); font-size: var(--text-sm); }
-.lt-chip a { display: inline-grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: var(--radius-full); color: inherit; }
-.lt-chip a:hover { background: var(--color-surface); }
+/* Étiquette de filtre : un nom long se coupe avec « … » (nom complet en infobulle), la croix garde sa taille. */
+.lt-chip:has(.lt-chip-clear) { max-width: 100%; min-width: 0; }
+.lt-chip-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lt-chip-label a { color: inherit; }
+.lt-chip .lt-chip-clear { display: inline-grid; flex: none; place-items: center; width: 1.75rem; height: 1.75rem; margin-left: auto; border-radius: var(--radius-full); color: inherit; }
+.lt-chip .lt-chip-clear:hover { background: var(--color-surface); }
+@media (pointer: coarse) { .lt-chip .lt-chip-clear { width: var(--hit); height: var(--hit); margin-block: calc(var(--space-1) * -1); } }
 
 /* ---------- Comptabilité ---------- */
 .lt-subnav { display: flex; gap: var(--space-1); margin-bottom: var(--space-4); border-bottom: 1px solid var(--color-border); overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
