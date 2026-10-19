@@ -35,13 +35,27 @@ jobs:
       - name: Build (analyseurs, nullable, avertissements bloquants)
         run: dotnet build Lettra.Ci.slnf -c Release --no-restore
 
-      # Tests d'architecture, domaine, application, API, UI ; persistance sur SQLite, PostgreSQL et
-      # SQL Server (Testcontainers) ; test « aucune donnée de dossier dans les journaux ».
-      - name: Tests
-        run: dotnet test Lettra.Ci.slnf -c Release --no-build --logger "trx;LogFilePrefix=lettra" --results-directory TestResults
+      # Tests du domaine, de l'application, de l'API, de l'UI ; persistance sur SQLite, PostgreSQL et SQL Server
+      # (Testcontainers) ; test « aucune donnée de dossier dans les journaux ». Sous couverture de code
+      # (docs/qualite-du-code.md) : tous les projets de tests sauf Lettra.Architecture.Tests, que l'instrumentation
+      # fausse et qui passe juste après sans elle.
+      - name: Tests (avec couverture de code)
+        run: |
+          jq '.solution.projects |= map(select(test("Lettra\\.Architecture\\.Tests") | not))' Lettra.Ci.slnf > Lettra.Couverture.slnf
+          dotnet test Lettra.Couverture.slnf -c Release --no-build --logger "trx;LogFilePrefix=lettra" \
+            --collect "Code Coverage;Format=cobertura" --results-directory TestResults/couverture
         env:
           LETTRA_PDF_SAMPLES: ${{ github.workspace }}/pdf-samples
           LETTRA_EINVOICE_SAMPLES: ${{ github.workspace }}/einvoice-samples
+
+      - name: Tests d'architecture (dépendances entre couches, conventions)
+        run: dotnet test tests/Lettra.Architecture.Tests -c Release --no-build --logger "trx;LogFilePrefix=lettra" --results-directory TestResults
+
+      # Couverture fusionnée de tous les projets de tests, par assembly. Échoue sous 88 % des lignes ou 78 % des branches.
+      - name: Couverture de code (seuils)
+        run: |
+          python3 build/couverture/fusionner.py TestResults/couverture 30 --seuil-lignes 88 --seuil-branches 78 | tee couverture.txt
+          { echo '### Couverture de code'; echo '```'; cat couverture.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
       # Les PDF des devis et factures (Lettra.Printing) doivent être PDF/A-3b : base du Factur-X (phase 5).
       - name: Conformité PDF/A-3b (veraPDF)
@@ -57,7 +71,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: TestResults/*.trx
+          path: TestResults/**/*.trx
 
       - name: Avis de tiers (notice MIT de Paperasse)
         run: build/check-third-party-notices.sh

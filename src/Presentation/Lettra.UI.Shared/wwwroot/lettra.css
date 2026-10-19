@@ -744,35 +744,73 @@ a.lt-kpi:hover { border-color: var(--color-primary); box-shadow: var(--shadow-md
 
 .lettra-button.is-small { min-height: 2rem; padding: 0 var(--space-3); font-size: var(--text-sm); }
 .lt-cabinet-kpis { margin: 0 0 var(--space-4); padding: 0; list-style: none; }
-.lt-cabinet-scroll { position: relative; overflow-x: auto; }
-.lt-cabinet-filters { flex-wrap: wrap; gap: var(--space-3); }
-.lt-cabinet-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
-.lt-cabinet-tools .lettra-input { width: min(18rem, 100%); }
-.lt-cabinet-table tbody th[scope="row"] { background: transparent; color: var(--color-fg); font-size: var(--text-sm); font-weight: var(--weight-medium); letter-spacing: normal; text-transform: none; text-align: left; }
-.lt-cabinet-name { display: flex; align-items: center; gap: var(--space-2); }
-.lt-cabinet-label { display: grid; min-width: 0; }
-.lt-cabinet-when { color: var(--color-fg-muted); font-size: var(--text-xs); font-weight: var(--weight-regular); }
-/* En-têtes et échéances sur deux lignes au besoin : le tableau garde ses boutons visibles à l'écran d'ordinateur. */
-.lettra-table.lt-cabinet-table th, .lettra-table.lt-cabinet-table .lg-num { white-space: normal; }
-@media (min-width: 768px) and (max-width: 1279px) {
-    /* Petit écran d'ordinateur : des marges de cellule plus serrées, le tableau tient sans défiler à 1200 px. */
-    .lettra-table.lt-cabinet-table th, .lettra-table.lt-cabinet-table td { padding-inline: var(--space-2); }
+@media (min-width: 768px) and (max-width: 1023px) {
+    /* Tablette : deux par ligne plutôt que trois et un orphelin. */
+    .lt-cabinet-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-.lt-level-text { margin-left: auto; color: var(--color-fg-muted); font-size: var(--text-xs); font-weight: var(--weight-medium); }
-.lt-level-dot { display: inline-block; width: 0.625rem; height: 0.625rem; flex: none; border-radius: var(--radius-full); background: var(--color-success-fg); }
-.lt-level-dot[data-level="Info"] { background: var(--color-info-fg); }
-.lt-level-dot[data-level="Warning"] { background: var(--color-warning-fg); }
-.lt-level-dot[data-level="Critical"] { background: var(--color-danger-fg); }
+
+/* Vue cabinet, liste des dossiers. Le panneau est un conteneur : tableau quand il a la place, cartes sinon (voir la
+   requête de conteneur plus bas). Le niveau du dossier donne une couleur à la pastille, au badge et au liseré. */
+.lt-cabinet-panel { container: lt-cabinet / inline-size; }
+.lt-cabinet-count { display: inline-grid; place-items: center; min-width: 1.75rem; height: 1.5rem; margin-left: var(--space-2); padding: 0 var(--space-2); border-radius: var(--radius-full); background: var(--color-surface-2); color: var(--color-fg-muted); font-size: var(--text-sm); font-weight: var(--weight-medium); vertical-align: middle; }
+.lt-cabinet-panel .lt-list-filters .lt-filter:has(input[type=search]) { flex: 0 1 22rem; }
+.lt-cabinet-panel .lt-sort-select { display: none; }
+.lt-cabinet-table tr[data-level] { --lt-level-fg: var(--color-success-fg); --lt-level-bg: var(--color-success-bg); }
+.lt-cabinet-table tr[data-level="Info"] { --lt-level-fg: var(--color-info-fg); --lt-level-bg: var(--color-info-bg); }
+.lt-cabinet-table tr[data-level="Warning"] { --lt-level-fg: var(--color-warning-fg); --lt-level-bg: var(--color-warning-bg); }
+.lt-cabinet-table tr[data-level="Critical"] { --lt-level-fg: var(--color-danger-fg); --lt-level-bg: var(--color-danger-bg); }
+.lettra-table.lt-cabinet-table th, .lettra-table.lt-cabinet-table .lg-num { white-space: normal; }
+.lettra-table.lt-cabinet-table thead .lt-sort { padding-inline: var(--space-2); }
+.lettra-table.lt-cabinet-table tbody :is(th, td) { padding-block: var(--space-3); }
+.lettra-table.lt-cabinet-table tbody td { padding-inline: var(--space-2); }
+.lt-cabinet-table tbody th[scope="row"] { min-width: 15rem; background: transparent; color: var(--color-fg); font-size: var(--text-sm); font-weight: var(--weight-regular); letter-spacing: normal; text-transform: none; text-align: left; box-shadow: inset 3px 0 0 var(--lt-level-fg); }
+.lt-cabinet-name { display: flex; align-items: center; gap: var(--space-3); }
+.lt-cabinet-avatar { display: inline-grid; place-items: center; flex: none; width: 2.5rem; height: 2.5rem; border-radius: var(--radius-md); background: var(--lt-level-bg); color: var(--lt-level-fg); font-size: var(--text-sm); font-weight: var(--weight-bold); letter-spacing: 0.02em; }
+.lt-cabinet-label { display: grid; gap: 2px; min-width: 0; }
+.lt-cabinet-dossier { font-size: var(--text-base); font-weight: var(--weight-bold); line-height: 1.3; }
+.lt-cabinet-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); }
+.lt-level-badge { display: inline-flex; align-items: center; gap: 0.35em; padding: 0 var(--space-2); border-radius: var(--radius-full); background: var(--lt-level-bg); color: var(--lt-level-fg); font-size: var(--text-xs); font-weight: var(--weight-bold); line-height: 1.6; }
+.lt-level-badge::before { content: ""; width: 0.4rem; height: 0.4rem; border-radius: var(--radius-full); background: currentColor; }
+.lt-cabinet-when { color: var(--color-fg-muted); font-size: var(--text-xs); }
+.lt-cabinet-cell { display: inline-grid; justify-items: end; gap: 2px; }
 .lt-indicator { display: inline-flex; align-items: center; justify-content: center; min-width: 2rem; padding: 0 var(--space-2); border-radius: var(--radius-full); background: var(--color-surface-2); color: var(--color-fg-muted); font-weight: var(--weight-bold); font-variant-numeric: tabular-nums; }
 .lt-indicator[data-level="Info"] { background: var(--color-primary-soft); color: var(--color-primary-soft-fg); }
 .lt-indicator[data-level="Warning"] { background: var(--color-warning-bg); color: var(--color-warning-fg); }
 .lt-indicator[data-level="Critical"] { background: var(--color-danger-bg); color: var(--color-danger-fg); }
-.lt-indicator-due { display: block; color: var(--color-fg-muted); font-size: var(--text-xs); }
+/* Zéro : un chiffre discret, sans pastille ; l'œil va aux compteurs qui demandent une action. */
+.lt-indicator.is-zero { background: transparent; color: var(--color-fg-muted); font-weight: var(--weight-regular); opacity: 0.7; }
+.lt-indicator-due { display: block; color: var(--color-fg-muted); font-size: var(--text-xs); white-space: nowrap; }
+.lt-cabinet-clear { display: none; }
 .lt-cabinet-actions { white-space: nowrap; text-align: right; }
-@media (min-width: 768px) {
-    /* « Ouvrir » et « Revue » l'un sous l'autre : une colonne étroite, même avec les compteurs à venir. */
-    .lt-cabinet-actions .lettra-button { display: flex; width: 100%; justify-content: flex-start; }
-    .lt-cabinet-actions .lettra-button + .lettra-button { margin-top: var(--space-1); }
+.lt-cabinet-actions .lettra-button + .lettra-button { margin-left: var(--space-1); }
+.lt-cabinet-review { padding-inline: var(--space-2); }
+.lt-cabinet-review-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Moins de 60rem de large (tablette, téléphone, petit écran avec le menu déplié) : une carte par dossier, deux
+   colonnes dès qu'il y a la place. Les compteurs à zéro sont masqués ; « Tout est à jour » les remplace. */
+@container lt-cabinet (max-width: 59.99rem) {
+    .lt-cabinet-panel .lt-sort-select { display: grid; }
+    .lt-cabinet-panel .lt-list-scroll { overflow-x: visible; }
+    .lt-cabinet-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .lt-cabinet-table { display: block; }
+    .lt-cabinet-table tbody { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr)); gap: var(--space-3); }
+    .lettra-table.lt-cabinet-table tbody tr { display: flex; flex-direction: column; padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: inset 0 3px 0 var(--lt-level-fg), var(--shadow-sm); }
+    .lettra-table.lt-cabinet-table tbody tr:hover { background: var(--color-surface); border-color: var(--color-primary); }
+    .lettra-table.lt-cabinet-table tbody tr[aria-current="true"] { border-color: var(--color-primary); background: var(--color-surface); }
+    .lettra-table.lt-cabinet-table tbody :is(th, td) { padding: 0; border: 0; }
+    .lt-cabinet-table tbody th[scope="row"] { display: block; min-width: 0; padding-bottom: var(--space-3) !important; box-shadow: none; }
+    .lt-cabinet-table tbody td { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); min-height: 2rem; text-align: right; }
+    .lt-cabinet-table tbody td[data-label]::before { content: attr(data-label); color: var(--color-fg-muted); font-size: var(--text-sm); text-align: left; }
+    .lt-cabinet-table tbody td.is-clear { display: none; }
+    .lt-cabinet-cell { display: flex; flex-direction: row-reverse; align-items: center; gap: var(--space-2); }
+    .lt-cabinet-clear { display: flex; justify-content: flex-start !important; gap: var(--space-2); color: var(--color-success-fg); font-size: var(--text-sm); font-weight: var(--weight-medium); }
+    /* Actions en bas de carte (cartes voisines de hauteurs différentes : boutons alignés), sous un trait dessiné à
+       distance fixe des compteurs. */
+    .lettra-table.lt-cabinet-table tbody td.lt-cabinet-actions { position: relative; display: flex; gap: var(--space-2); margin-top: auto; padding-top: calc(var(--space-3) * 2); }
+    .lt-cabinet-actions::before { content: ""; position: absolute; inset: var(--space-3) 0 auto; border-top: 1px solid var(--color-border); }
+    .lt-cabinet-actions .lettra-button { flex: 1; justify-content: center; min-height: var(--hit); }
+    .lt-cabinet-actions .lettra-button + .lettra-button { margin-left: 0; }
+    .lt-cabinet-review-text { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
 }
 
 .lt-review-period { align-items: center; }
@@ -808,15 +846,13 @@ a.lt-kpi:hover { border-color: var(--color-primary); box-shadow: var(--shadow-md
     .lt-dossier-backdrop { z-index: 50; background: var(--color-backdrop); }
     .lt-dossier-panel { position: fixed; inset: 100% 0 auto 0; z-index: 51; width: auto; max-height: calc(100dvh - var(--topbar-h) - var(--safe-top) - var(--tabbar-h) - var(--safe-bottom)); padding: var(--space-3) calc(var(--space-4) + var(--safe-right)) var(--space-4) calc(var(--space-4) + var(--safe-left)); border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
     .lt-dossier-open, .lt-dossier-overview { min-height: var(--hit); }
-    .lt-cabinet-tools, .lt-cabinet-tools .lettra-input { width: 100%; }
-    .lt-cabinet-scroll { overflow-x: visible; }
-    .lt-cabinet-table tr { grid-template-columns: minmax(0, 1fr); }
-    .lt-cabinet-table tbody th[scope="row"] { display: block; padding: 0 0 var(--space-1); border: 0; font-size: var(--text-base); font-weight: var(--weight-bold); }
-    .lt-cabinet-actions { justify-content: flex-start !important; gap: var(--space-2); white-space: normal; }
-    .lt-cabinet-actions .lettra-button { flex: 1; min-height: var(--hit); }
-    /* Téléphone : l'échéance passe sous le compteur, dans la carte. */
-    .lt-cabinet-table td.lg-num { flex-wrap: wrap; }
-    .lt-indicator-due { flex-basis: 100%; text-align: right; }
+    /* Téléphone : les quatre chiffres clés tiennent sur deux lignes, la liste des dossiers arrive plus vite. */
+    .lt-cabinet-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+    .lt-cabinet-kpis .lt-kpi { padding: var(--space-3); }
+    .lt-cabinet-kpis .lt-kpi-head { align-items: flex-start; gap: var(--space-2); font-size: var(--text-xs); }
+    .lt-cabinet-kpis .lt-kpi-icon { width: 1.75rem; height: 1.75rem; flex: none; }
+    .lt-cabinet-kpis .lt-kpi-value { font-size: var(--text-xl); }
+    .lt-cabinet-kpis .lt-kpi-note { font-size: var(--text-xs); }
     .lt-review-period { width: 100%; }
     .lt-review-period .lettra-input { flex: 1; }
     .lt-review-item { grid-template-columns: minmax(0, 1fr); }

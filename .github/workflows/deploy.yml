@@ -166,6 +166,10 @@ jobs:
           timeout 600 bash -c "until $COMPOSE exec -T whisper curl -fsS -o /dev/null http://127.0.0.1:8080/; do sleep 5; done"
           $COMPOSE logs --no-color whisper | grep -q 'Téléchargement de ggml-base.bin' || { echo "premier démarrage sans téléchargement du modèle ?"; exit 1; }
 
+      # Relances et invitations : les e-mails de la démo arrivent dans MailPit (http://localhost:8025), jamais dehors.
+      - name: E-mails — MailPit joignable
+        run: curl -fsS --retry 10 --retry-connrefused --retry-delay 3 -o /dev/null http://localhost:8025/api/v1/info
+
       # Mise à jour comme chez l'utilisateur (git pull, puis up --build) : arrêt sans -v, nouvelle image de l'API avec
       # une nouvelle version de l'application web (index.html marqué, manifeste du service worker changé), redémarrage
       # sur les mêmes volumes. Pendant ce temps un onglet reste ouvert : il doit proposer « Recharger », et un onglet

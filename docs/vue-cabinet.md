@@ -6,10 +6,15 @@ configuration, sans moyen d'en changer. La vague 6 ajoute trois choses :
 1. **Le sélecteur de dossier**, dans la barre du haut : le dossier ouvert, et un panneau pour en changer (recherche sans
    accents au-delà de 5 dossiers, favoris avec l'étoile, récents, lien vers la vue cabinet). La palette (Ctrl+K) propose
    aussi « Ouvrir le dossier … » et « Vue cabinet ».
-2. **La vue cabinet** (menu « Vue cabinet », adresse `/cabinet`) : un tableau des dossiers que l'utilisateur peut ouvrir,
-   les plus urgents d'abord, avec leurs compteurs (factures en retard, rejets de la plateforme, alertes ouvertes, revue du
-   mois, et les colonnes ajoutées par les autres modules comme « TVA à déclarer » et « Banque non rapprochée »). L'heure du dernier calcul est sous le
-   nom du dossier. « Ouvrir » et « Revue » changent de dossier en un clic.
+2. **La vue cabinet** (menu « Vue cabinet », adresse `/cabinet`) : quatre chiffres clés en haut (dossiers à traiter,
+   puis les trois premiers compteurs, avec une icône orange dès qu'il y a quelque chose à faire), puis la liste des
+   dossiers que l'utilisateur peut ouvrir, les plus urgents d'abord. Chaque dossier a une pastille à ses initiales et
+   un badge de niveau (« Urgent », « À traiter », « À surveiller », « À jour ») dans la couleur du niveau, l'heure du
+   dernier calcul, et ses compteurs (factures en retard, rejets de la plateforme, alertes ouvertes, revue du mois, et
+   ceux des autres modules comme « TVA à déclarer » et « Banque non rapprochée »). Un compteur à zéro reste discret ;
+   seuls ceux qui demandent une action sont en couleur. « Ouvrir » et « Revue » changent de dossier en un clic. La
+   recherche, « Seulement ceux à traiter » et « Effacer les filtres » utilisent la barre de filtres commune des listes
+   ([tris-et-filtres.md](tris-et-filtres.md)).
 3. **La revue de dossier** (menu Comptabilité › « Revue du dossier », adresse `/review`) : une liste de contrôle par mois
    ou par trimestre, cochée point par point, avec qui a coché et quand, et une note facultative.
 
@@ -17,15 +22,22 @@ Chaque action (changer de dossier, actualiser, cocher, décocher, enregistrer un
 
 ## Sur chaque appareil
 
+La liste des dossiers choisit sa forme selon la place qu'elle a (requête de conteneur sur son panneau, pas sur la
+largeur de l'écran) : un tableau à partir de 60rem de large, des cartes en dessous. Elle s'adapte ainsi aussi au menu
+latéral déplié ou replié.
+
 | Taille | Sélecteur | Vue cabinet | Revue |
 |---|---|---|---|
-| Ordinateur (≥ 1200 px) | bouton avec le nom du dossier, panneau sous le bouton | tableau complet ; « Ouvrir » et « Revue » l'un sous l'autre, en-têtes sur deux lignes au besoin, marges de cellule plus serrées sous 1280 px | liste, note en ligne |
-| Tablette (768 à 1199 px) | bouton raccourci | tableau qui défile de côté dans son cadre | liste |
-| Téléphone (< 768 px) | icône dossier (le logo lui laisse la place), panneau sur toute la largeur sous la barre | une carte par dossier, les plus urgentes en haut ; l'échéance passe sous son compteur | liste à une colonne, cibles de 44 px |
+| Grand écran (≥ 1280 px environ) | bouton avec le nom du dossier, panneau sous le bouton | tableau trié par en-têtes cliquables, un liseré de la couleur du niveau à gauche de chaque ligne, « Ouvrir » et l'icône de revue côte à côte | liste, note en ligne |
+| Petit écran d'ordinateur et tablette (768 à 1279 px environ) | bouton raccourci | cartes, deux par ligne quand la place le permet ; tri par liste déroulante ; chiffres clés deux par ligne sur tablette | liste |
+| Téléphone (< 768 px) | icône dossier (le logo lui laisse la place), panneau sur toute la largeur sous la barre | une carte par dossier, chiffres clés deux par ligne, tri replié derrière « Filtres » ; boutons de 44 px | liste à une colonne, cibles de 44 px |
 
-Vérifié dans la démo Docker à 1440, 1280, 1200, 768 et 375 px (aucun débordement horizontal ; dans la console, seulement
-les deux 401 déjà connus avant la connexion), y compris après une mise à jour d'une démo existante (`up --build`) : les deux dossiers de démonstration
-supplémentaires s'ajoutent sans effacer les données.
+En carte, seuls les compteurs non nuls sont affichés (avec leur échéance à côté) ; un dossier sans rien à faire
+affiche « Tout est à jour ». Les boutons restent alignés en bas des cartes voisines.
+
+Vérifié dans la démo Docker à 1440, 1280, 1200, 1024, 768 et 375 px (aucun débordement horizontal ; dans la console,
+seulement les deux 401 déjà connus avant la connexion), y compris après une mise à jour d'une démo existante
+(`up --build`) : les deux dossiers de démonstration supplémentaires s'ajoutent sans effacer les données.
 
 Selon l'installation :
 
