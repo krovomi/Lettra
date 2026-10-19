@@ -86,10 +86,17 @@ async function appPage() {
     return page;
 }
 // Clic au centre de l'écran : sur un téléphone, la barre de navigation fixe du bas recouvrirait un lien en bas de page.
+// Si la WebView ne dessine plus d'images (écran éteint, requestAnimationFrame à l'arrêt), Playwright attend sans fin un
+// élément « stable » : le clic part alors directement par le DOM, comme le ferait le doigt.
 async function press(locator, options) {
     await locator.waitFor(options);
     await locator.evaluate(element => element.scrollIntoView({ block: 'center' }));
-    await locator.click(options);
+    try {
+        await locator.click({ timeout: 10_000 });
+    } catch (error) {
+        log(`clic direct (${error.message.split('\n')[0]})`);
+        await locator.evaluate(element => element.click());
+    }
 }
 async function step(page, what, action) {
     try { return await action(); } catch (error) {
@@ -102,6 +109,11 @@ async function step(page, what, action) {
 async function start() {
     await device.shell(`am start -W -n ${app}/.MainActivity`);
 }
+
+// Écran allumé et déverrouillé : sans cela la WebView ne dessine plus.
+await device.shell('input keyevent KEYCODE_WAKEUP');
+await device.shell('wm dismiss-keyguard');
+await device.shell('svc power stayon true');
 
 // 1. Premier lancement : l'application travaille seule ; l'écran de session mène au choix du serveur.
 await device.shell(`am force-stop ${app}`);
@@ -118,7 +130,7 @@ await shot('serveur-retenu');
 log(`serveur ${baseUrl} retenu`);
 // L'application se ferme (Android : fermer puis rouvrir).
 await page.locator('#shared-server-restart-now').evaluate(element => element.scrollIntoView({ block: 'center' })).catch(() => {});
-await page.locator('#shared-server-restart-now').click({ noWaitAfter: true, timeout: 10_000 }).catch(() => {});
+await page.locator('#shared-server-restart-now').evaluate(element => element.click()).catch(() => {});
 await sleep(3000);
 
 // 2. Relancée, l'application est reliée au serveur : connexion du cabinet dans un onglet du navigateur.
