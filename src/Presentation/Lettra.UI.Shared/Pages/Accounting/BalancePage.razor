@@ -99,19 +99,25 @@
 
             <h2 id="balance-customers-title">@L["Accounting.Balance.Customers"]</h2>
             <p class="lettra-hint">@L["Accounting.Balance.CustomersHint"]</p>
+            <ListFilterBar Id="balance-customers-filters" ActiveCount="@(string.IsNullOrWhiteSpace(_customerSearch) ? 0 : 1)" OnReset="() => _customerSearch = null">
+                <div class="lt-filter">
+                    <label for="balance-customers-search">@L["Lists.Search"]</label>
+                    <input id="balance-customers-search" type="search" @bind="_customerSearch" @bind:event="oninput" autocomplete="off" />
+                </div>
+            </ListFilterBar>
             <div class="lt-table-scroll">
                 <table class="lettra-table lt-balance" id="balance-customers-table" aria-labelledby="balance-customers-title">
                     <thead>
                         <tr>
-                            <th scope="col">@L["Billing.Column.Customer"]</th>
-                            <th scope="col" class="lg-num lt-hide-sm">@L["Accounting.Pieces"]</th>
-                            <th scope="col" class="lg-num lt-hide-sm">@L["Accounting.Debit"]</th>
-                            <th scope="col" class="lg-num lt-hide-sm">@L["Accounting.Credit"]</th>
-                            <th scope="col" class="lg-num">@L["Accounting.Balance"]</th>
+                            <SortHeader Option="CustomerOptions[0]" State="_customerSort" OnSort="StateHasChanged" Id="balance-sort-customer" />
+                            <SortHeader Option="CustomerOptions[1]" State="_customerSort" OnSort="StateHasChanged" Id="balance-sort-pieces" Class="lg-num lt-hide-sm" />
+                            <SortHeader Option="CustomerOptions[2]" State="_customerSort" OnSort="StateHasChanged" Id="balance-sort-debit" Class="lg-num lt-hide-sm" />
+                            <SortHeader Option="CustomerOptions[3]" State="_customerSort" OnSort="StateHasChanged" Id="balance-sort-credit" Class="lg-num lt-hide-sm" />
+                            <SortHeader Option="CustomerOptions[4]" State="_customerSort" OnSort="StateHasChanged" Id="balance-sort-balance" Class="lg-num" />
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (CustomerBalanceResponse customer in _balance.Customers)
+                        @foreach (CustomerBalanceResponse customer in VisibleCustomers)
                         {
                             <tr class="lt-row-link" @onclick="() => Navigation.NavigateTo(LedgerHref(SalesAccounts.Customers, customer.CustomerId))">
                                 <td><a href="@LedgerHref(SalesAccounts.Customers, customer.CustomerId)">@customer.CustomerName</a></td>
@@ -132,6 +138,40 @@
     private AccountingPeriod _period;
     private TrialBalanceResponse? _balance;
     private IReadOnlyList<ErrorDetail> _errors = [];
+    private string? _customerSearch;
+
+    // Soldes clients : les plus gros soldes d'abord, comme le serveur les rend ; les comptes restent dans l'ordre du plan.
+    private readonly SortState<CustomerColumn> _customerSort = new(CustomerColumn.Balance, SortDirectionDto.Descending);
+
+    private enum CustomerColumn
+    {
+        Customer,
+        Pieces,
+        Debit,
+        Credit,
+        Balance,
+    }
+
+    private IReadOnlyList<SortOption<CustomerColumn>> CustomerOptions =>
+    [
+        new(CustomerColumn.Customer, L["Billing.Column.Customer"]),
+        new(CustomerColumn.Pieces, L["Accounting.Pieces"], SortDirectionDto.Descending),
+        new(CustomerColumn.Debit, L["Accounting.Debit"], SortDirectionDto.Descending),
+        new(CustomerColumn.Credit, L["Accounting.Credit"], SortDirectionDto.Descending),
+        new(CustomerColumn.Balance, L["Accounting.Balance"], SortDirectionDto.Descending),
+    ];
+
+    private static readonly Dictionary<CustomerColumn, Func<CustomerBalanceResponse, object?>> CustomerKeys = new()
+    {
+        [CustomerColumn.Customer] = c => c.CustomerName,
+        [CustomerColumn.Pieces] = c => c.EntryCount,
+        [CustomerColumn.Debit] = c => c.Debit,
+        [CustomerColumn.Credit] = c => c.Credit,
+        [CustomerColumn.Balance] = c => c.Balance,
+    };
+
+    private IReadOnlyList<CustomerBalanceResponse> VisibleCustomers => ListSorting.Sort(
+        (_balance?.Customers ?? []).Where(c => ListSorting.Matches(c.CustomerName, _customerSearch)), _customerSort, CustomerKeys);
 
     [SupplyParameterFromQuery(Name = "from")] public string? From { get; set; }
 

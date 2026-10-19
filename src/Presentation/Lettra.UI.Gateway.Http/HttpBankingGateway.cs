@@ -15,8 +15,15 @@ internal sealed class HttpBankingGateway(HttpClient http) : IBankingGateway
         string from = query.From is DateOnly f ? "&from=" + Day(f) : string.Empty;
         string to = query.To is DateOnly t ? "&to=" + Day(t) : string.Empty;
         string customer = query.CustomerId is Guid id ? $"&customerId={id}" : string.Empty;
+        string amounts = (query.MinAmount is decimal min ? "&minAmount=" + min.ToString(CultureInfo.InvariantCulture) : string.Empty)
+            + (query.MaxAmount is decimal max ? "&maxAmount=" + max.ToString(CultureInfo.InvariantCulture) : string.Empty);
+        string sort = query.Sort != PaymentSortDto.Date || query.Direction != SortDirectionDto.Descending
+            ? $"&sort={query.Sort}&direction={query.Direction}"
+            : string.Empty;
         return HttpCalls.SendAsync(
-            ct => http.GetAsync(HttpCalls.Relative($"api/v1/payments?page={query.Page}&pageSize={query.PageSize}{from}{to}{customer}{HttpCalls.SearchParameter(query.Search)}"), ct),
+            ct => http.GetAsync(
+                HttpCalls.Relative($"api/v1/payments?page={query.Page}&pageSize={query.PageSize}{from}{to}{customer}{HttpCalls.SearchParameter(query.Search)}{amounts}{sort}"),
+                ct),
             ContractsJsonContext.Default.PagedResponsePaymentSummary,
             cancellationToken);
     }

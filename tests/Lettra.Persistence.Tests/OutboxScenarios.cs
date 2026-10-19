@@ -116,7 +116,7 @@ internal static class OutboxScenarios
         await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
         {
             IOutboxDispatcher dispatcher = scope.ServiceProvider.GetRequiredService<IOutboxDispatcher>();
-            (await scope.ServiceProvider.GetRequiredService<ICustomerReadStore>().ListAsync(null, 1, 50, default)).Items.Should().ContainSingle("le client abandonné n'a pas été écrit");
+            (await scope.ServiceProvider.GetRequiredService<ICustomerReadStore>().ListAsync(new PartyListFilter(null, 1, 50), default)).Items.Should().ContainSingle("le client abandonné n'a pas été écrit");
             (await dispatcher.FindAsync(id, default))!.DeliveredAt.Should().Be(Start);
             (await scope.ServiceProvider.GetRequiredService<IOutbox>().EnqueueAsync(FakeRecipientHandler.Name, "cle-1", "{}", default))
                 .Should().Be(id, "la clé est déjà en base");

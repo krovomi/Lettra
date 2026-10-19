@@ -72,48 +72,61 @@ else
         }
         else
         {
-            <table class="lettra-table lt-cards lt-tax-boxes" id="des-table">
-                <thead>
-                    <tr>
-                        <th scope="col">@L["Billing.Column.Customer"]</th>
-                        <th scope="col">@L["Tax.Des.Line"]</th>
-                        <th scope="col">@L["Tax.Des.VatNumber"]</th>
-                        <th scope="col" class="lg-num">@L["Tax.Des.Amount"]</th>
-                        <th scope="col"><span class="lettra-visually-hidden">@L["Tax.Box.Detail"]</span></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (DesLineResponse line in des.Lines)
-                    {
-                        string id = $"des-line-{line.LineNumber}";
-                        bool open = _open.Contains(id);
-                        <tr id="@id">
-                            <td>@line.CustomerName</td>
-                            <td data-label="@L["Tax.Des.Line"]">@line.LineNumber</td>
-                            <td data-label="@L["Tax.Des.VatNumber"]"><code>@line.CustomerVatNumber</code></td>
-                            <td class="lg-num" data-label="@L["Tax.Des.Amount"]">@TaxText.Euros(line.Amount)</td>
-                            <td>
-                                <button type="button" class="lettra-button is-secondary lt-tax-toggle" id="@($"{id}-toggle")" aria-expanded="@(open ? "true" : "false")" aria-controls="@($"{id}-detail")" @onclick="() => Toggle(id)">
-                                    <Icon Name="@(open ? "chevron-down" : "chevron-right")" Size="16" /> @string.Format(CultureInfo.CurrentCulture, L["Tax.Box.Pieces"], line.Sources.Count)
-                                </button>
-                            </td>
+            <ListFilterBar Id="des-filters" ActiveCount="@(string.IsNullOrWhiteSpace(_search) ? 0 : 1)" OnReset="() => _search = null">
+                <ChildContent>
+                    <div class="lt-filter">
+                        <label for="des-search">@L["Lists.Search"]</label>
+                        <input id="des-search" type="search" @bind="_search" @bind:event="oninput" autocomplete="off" />
+                    </div>
+                </ChildContent>
+                <More>
+                    <SortSelect Id="des-sort" Options="SortOptions" State="_sort" OnSort="StateHasChanged" />
+                </More>
+            </ListFilterBar>
+            <div class="lt-list-scroll">
+                <table class="lettra-table lt-cards lt-tax-boxes" id="des-table">
+                    <thead>
+                        <tr>
+                            <SortHeader Option="SortOptions[0]" State="_sort" OnSort="StateHasChanged" Id="des-sort-customer" />
+                            <SortHeader Option="SortOptions[1]" State="_sort" OnSort="StateHasChanged" Id="des-sort-line" />
+                            <SortHeader Option="SortOptions[2]" State="_sort" OnSort="StateHasChanged" Id="des-sort-vat" />
+                            <SortHeader Option="SortOptions[3]" State="_sort" OnSort="StateHasChanged" Id="des-sort-amount" Class="lg-num" />
+                            <th scope="col"><span class="lettra-visually-hidden">@L["Tax.Box.Detail"]</span></th>
                         </tr>
-                        @if (open)
+                    </thead>
+                    <tbody>
+                        @foreach (DesLineResponse line in VisibleLines)
                         {
-                            <tr class="lt-tax-detail-row" id="@($"{id}-detail")">
-                                <td colspan="5"><TaxSources Sources="line.Sources" ShowVat="false" Id="@($"{id}-sources")" Caption="@line.CustomerName" /></td>
+                            string id = $"des-line-{line.LineNumber}";
+                            bool open = _open.Contains(id);
+                            <tr id="@id">
+                                <td>@line.CustomerName</td>
+                                <td data-label="@L["Tax.Des.Line"]">@line.LineNumber</td>
+                                <td data-label="@L["Tax.Des.VatNumber"]"><code>@line.CustomerVatNumber</code></td>
+                                <td class="lg-num" data-label="@L["Tax.Des.Amount"]">@TaxText.Euros(line.Amount)</td>
+                                <td>
+                                    <button type="button" class="lettra-button is-secondary lt-tax-toggle" id="@($"{id}-toggle")" aria-expanded="@(open ? "true" : "false")" aria-controls="@($"{id}-detail")" @onclick="() => Toggle(id)">
+                                        <Icon Name="@(open ? "chevron-down" : "chevron-right")" Size="16" /> @string.Format(CultureInfo.CurrentCulture, L["Tax.Box.Pieces"], line.Sources.Count)
+                                    </button>
+                                </td>
                             </tr>
+                            @if (open)
+                            {
+                                <tr class="lt-tax-detail-row" id="@($"{id}-detail")">
+                                    <td colspan="5"><TaxSources Sources="line.Sources" ShowVat="false" Id="@($"{id}-sources")" Caption="@line.CustomerName" /></td>
+                                </tr>
+                            }
                         }
-                    }
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <th scope="row" colspan="3">@L["Accounting.Total"]</th>
-                        <td class="lg-num" id="des-total">@TaxText.Euros(des.Total)</td>
-                        <td></td>
-                    </tr>
-                </tfoot>
-            </table>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th scope="row" colspan="3">@L["Accounting.Total"]</th>
+                            <td class="lg-num" id="des-total">@TaxText.Euros(des.Total)</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
         }
     </section>
 
@@ -125,6 +138,37 @@ else
     private IReadOnlyList<ErrorDetail> _errors = [];
     private readonly HashSet<string> _open = [];
     private bool _busy;
+    private string? _search;
+
+    // Ordre du fichier déposé (numéro de ligne) par défaut ; le total reste celui de toute la déclaration.
+    private readonly SortState<DesColumn> _sort = new(DesColumn.Line);
+
+    private enum DesColumn
+    {
+        Customer,
+        Line,
+        VatNumber,
+        Amount,
+    }
+
+    private IReadOnlyList<SortOption<DesColumn>> SortOptions =>
+    [
+        new(DesColumn.Customer, L["Billing.Column.Customer"]),
+        new(DesColumn.Line, L["Tax.Des.Line"]),
+        new(DesColumn.VatNumber, L["Tax.Des.VatNumber"]),
+        new(DesColumn.Amount, L["Tax.Des.Amount"], SortDirectionDto.Descending),
+    ];
+
+    private static readonly Dictionary<DesColumn, Func<DesLineResponse, object?>> SortKeys = new()
+    {
+        [DesColumn.Customer] = l => l.CustomerName,
+        [DesColumn.Line] = l => l.LineNumber,
+        [DesColumn.VatNumber] = l => l.CustomerVatNumber,
+        [DesColumn.Amount] = l => l.Amount,
+    };
+
+    private IReadOnlyList<DesLineResponse> VisibleLines => ListSorting.Sort(
+        (_des?.Lines ?? []).Where(l => ListSorting.Matches(l.CustomerName, _search) || ListSorting.Matches(l.CustomerVatNumber, _search)), _sort, SortKeys);
 
     [SupplyParameterFromQuery(Name = "month")] public string? Month { get; set; }
 

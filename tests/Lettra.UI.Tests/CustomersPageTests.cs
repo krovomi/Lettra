@@ -66,14 +66,21 @@ internal sealed class FakeCustomersGateway : ICustomersGateway
             : OperationResult<PagedResponse<CustomerSummary>>.Success(new PagedResponse<CustomerSummary>(
                 [.. Customers.Skip((page - 1) * pageSize).Take(pageSize)], page, pageSize, Customers.Count)));
 
-    public Task<OperationResult<PagedResponse<CustomerSummary>>> SearchAsync(string? search, int page, int pageSize, CancellationToken cancellationToken)
+    public List<PartyListQuery> Queries { get; } = [];
+
+    public Task<OperationResult<PagedResponse<CustomerSummary>>> SearchAsync(PartyListQuery query, CancellationToken cancellationToken)
     {
-        Searches.Add(search);
-        List<CustomerSummary> found = Customers
-            .Where(c => string.IsNullOrWhiteSpace(search) || c.Name.Contains(search.Trim(), StringComparison.OrdinalIgnoreCase))
-            .ToList();
-        List<CustomerSummary> items = found.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-        return Task.FromResult(OperationResult<PagedResponse<CustomerSummary>>.Success(new PagedResponse<CustomerSummary>(items, page, pageSize, found.Count)));
+        Queries.Add(query);
+        Searches.Add(query.Search);
+        IEnumerable<CustomerSummary> found = Customers
+            .Where(c => string.IsNullOrWhiteSpace(query.Search) || c.Name.Contains(query.Search.Trim(), StringComparison.OrdinalIgnoreCase))
+            .Where(c => query.Kind is null || c.Kind == query.Kind);
+        Func<CustomerSummary, string> key = query.Sort == PartySortDto.City ? c => c.City : c => c.Name;
+        List<CustomerSummary> sorted = [.. query.Direction == SortDirectionDto.Descending
+            ? found.OrderByDescending(key, StringComparer.Ordinal)
+            : found.OrderBy(key, StringComparer.Ordinal)];
+        List<CustomerSummary> items = sorted.Skip((query.Page - 1) * query.PageSize).Take(query.PageSize).ToList();
+        return Task.FromResult(OperationResult<PagedResponse<CustomerSummary>>.Success(new PagedResponse<CustomerSummary>(items, query.Page, query.PageSize, sorted.Count)));
     }
 
     public Task<OperationResult<CustomerResponse>> GetAsync(Guid id, CancellationToken cancellationToken)
