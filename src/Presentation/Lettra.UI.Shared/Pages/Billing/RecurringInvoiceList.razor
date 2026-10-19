@@ -13,9 +13,6 @@
         <h1 tabindex="-1">@L["Recurring.Title"]</h1>
         <p class="lettra-muted">@L["Recurring.Subtitle"]</p>
     </div>
-    <div class="lt-page-actions">
-        <a class="lettra-button" href="recurring-invoices/new" id="recurring-new"><Icon Name="plus" Size="18" /> @L["Recurring.New"]</a>
-    </div>
 </div>
 
 @if (_dueCount > 0)
@@ -30,45 +27,37 @@
 
 <section class="lettra-card" aria-labelledby="recurring-list-title">
     <h2 id="recurring-list-title" class="lettra-visually-hidden">@L["Recurring.Title"]</h2>
-    <div class="lettra-toolbar">
-        <div class="lt-filter">
-            <label for="recurring-search">@L["Recurring.Search"]</label>
-            <input id="recurring-search" type="search" @bind="_search" @bind:after="ReloadAsync" autocomplete="off" />
-        </div>
-        <div class="lt-filter">
-            <label for="recurring-state">@L["Billing.Status"]</label>
-            <select id="recurring-state" @bind="_state" @bind:after="ReloadAsync">
-                <option value="">@L["Recurring.State.All"]</option>
-                <option value="active">@L["Recurring.State.Active"]</option>
-                <option value="paused">@L["Recurring.State.Paused"]</option>
-                <option value="due">@L["Recurring.State.Due"]</option>
-            </select>
-        </div>
-        <div class="lt-filter">
-            <label for="recurring-sort">@L["Recurring.Sort"]</label>
-            <select id="recurring-sort" @bind="_sort" @bind:after="ReloadAsync">
-                @foreach (RecurringInvoiceSortDto sort in Enum.GetValues<RecurringInvoiceSortDto>())
-                {
-                    <option value="@sort">@L[$"Recurring.Sort.{sort}"]</option>
-                }
-            </select>
-        </div>
-        <div class="lt-filter">
-            <label for="recurring-descending">@L["Recurring.Order"]</label>
-            <select id="recurring-descending" @bind="_order" @bind:after="ReloadAsync">
-                <option value="asc">@L["Recurring.Order.Ascending"]</option>
-                <option value="desc">@L["Recurring.Order.Descending"]</option>
-            </select>
-        </div>
-    </div>
+    <ListFilterBar Id="recurring-filters" ActiveCount="ActiveFilters" OnReset="ResetFiltersAsync">
+        <ChildContent>
+            <div class="lt-filter">
+                <label for="recurring-search">@L["Recurring.Search"]</label>
+                <input id="recurring-search" type="search" @bind="_search" @bind:after="ReloadAsync" autocomplete="off" />
+            </div>
+        </ChildContent>
+        <More>
+            <div class="lt-filter">
+                <label for="recurring-state">@L["Billing.Status"]</label>
+                <select id="recurring-state" @bind="_state" @bind:after="ReloadAsync">
+                    <option value="">@L["Recurring.State.All"]</option>
+                    <option value="active">@L["Recurring.State.Active"]</option>
+                    <option value="paused">@L["Recurring.State.Paused"]</option>
+                    <option value="due">@L["Recurring.State.Due"]</option>
+                </select>
+            </div>
+            <SortSelect Id="recurring-sort" Options="_sortOptions" State="_sort" OnSort="ReloadAsync" />
+        </More>
+        <Actions>
+            <a class="lettra-button" href="recurring-invoices/new" id="recurring-new"><Icon Name="plus" Size="18" /> @L["Recurring.New"]</a>
+        </Actions>
+    </ListFilterBar>
 
     <GeneralErrors Errors="_errors" IncludeFieldErrors="true" />
 
-    @if (_page is null)
+    @if (!_loaded)
     {
         <ListSkeleton Columns="6" />
     }
-    else if (_page.Items.Count == 0)
+    else if (_page is null || _page.Items.Count == 0)
     {
         <EmptyState Id="recurring-empty" IconName="repeat" Title="@(IsFiltered ? L["Lists.Empty.FilteredTitle"] : L["Recurring.Empty"])"
                     Text="@(IsFiltered ? L["Lists.Empty.Filtered"] : L["Recurring.Empty.Text"])">
@@ -76,53 +65,59 @@
             {
                 <a class="lettra-button" href="recurring-invoices/new"><Icon Name="plus" Size="18" /> @L["Recurring.New"]</a>
             }
+            else
+            {
+                <button type="button" class="lettra-button is-secondary" id="recurring-empty-reset" @onclick="ResetFiltersAsync">@L["Lists.Filters.Reset"]</button>
+            }
         </EmptyState>
     }
     else
     {
-        <table class="lettra-table lettra-documents lt-cards" id="recurring-table">
-            <thead>
-                <tr>
-                    <th scope="col">@L["Recurring.Field.Name"]</th>
-                    <th scope="col">@L["Billing.Column.Customer"]</th>
-                    <th scope="col">@L["Recurring.Field.Frequency"]</th>
-                    <th scope="col">@L["Recurring.NextInvoice"]</th>
-                    <th scope="col">@L["Recurring.Invoices"]</th>
-                    <th scope="col" class="lg-num">@L["Totals.ExclTax"]</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (RecurringInvoiceSummary template in _page.Items)
-                {
-                    <tr @key="template.Id">
-                        <td>
-                            <a href="@($"recurring-invoices/{template.Id}")">@template.Name</a>
-                            @if (!template.IsActive)
-                            {
-                                <span class="lettra-status is-refused">@L["Recurring.State.Paused"]</span>
-                            }
-                            else if (template.IsDue)
-                            {
-                                <span class="lettra-status is-draft">@L["Recurring.State.Due"]</span>
-                            }
-                            @if (template.ValidateAutomatically)
-                            {
-                                <span class="lettra-status is-validated">@L["Recurring.AutoValidated"]</span>
-                            }
-                            @if (template.RevisionAwaitsIndex)
-                            {
-                                <span class="lettra-status is-expired" title="@L["Recurring.Revision.AwaitsIndex"]">@L["Recurring.Revision.IndexToEnter"]</span>
-                            }
-                        </td>
-                        <td data-label="@L["Billing.Column.Customer"]">@template.CustomerName</td>
-                        <td data-label="@L["Recurring.Field.Frequency"]">@L[$"Recurring.Frequency.{template.Frequency}"]</td>
-                        <td data-label="@L["Recurring.NextInvoice"]">@(template.NextIssueDate?.ToString("d", Culture) ?? "—")</td>
-                        <td data-label="@L["Recurring.Invoices"]">@template.InvoiceCount</td>
-                        <td data-label="@L["Totals.ExclTax"]" class="lg-num">@ExplorerText.Money(template.TotalExclTax)</td>
+        <div class="lt-list-scroll">
+            <table class="lettra-table lettra-documents lt-cards" id="recurring-table">
+                <thead>
+                    <tr>
+                        <SortHeader Option="Column(RecurringInvoiceSortDto.Name)" State="_sort" OnSort="ReloadAsync" Id="recurring-sort-name" />
+                        <SortHeader Option="Column(RecurringInvoiceSortDto.Customer)" State="_sort" OnSort="ReloadAsync" Id="recurring-sort-customer" />
+                        <th scope="col">@L["Recurring.Field.Frequency"]</th>
+                        <SortHeader Option="Column(RecurringInvoiceSortDto.NextIssueDate)" State="_sort" OnSort="ReloadAsync" Id="recurring-sort-next" />
+                        <th scope="col">@L["Recurring.Invoices"]</th>
+                        <SortHeader Option="Column(RecurringInvoiceSortDto.Amount)" State="_sort" OnSort="ReloadAsync" Id="recurring-sort-amount" Class="lg-num" />
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (RecurringInvoiceSummary template in _page.Items)
+                    {
+                        <tr @key="template.Id">
+                            <td>
+                                <a href="@($"recurring-invoices/{template.Id}")">@template.Name</a>
+                                @if (!template.IsActive)
+                                {
+                                    <span class="lettra-status is-refused">@L["Recurring.State.Paused"]</span>
+                                }
+                                else if (template.IsDue)
+                                {
+                                    <span class="lettra-status is-draft">@L["Recurring.State.Due"]</span>
+                                }
+                                @if (template.ValidateAutomatically)
+                                {
+                                    <span class="lettra-status is-validated">@L["Recurring.AutoValidated"]</span>
+                                }
+                                @if (template.RevisionAwaitsIndex)
+                                {
+                                    <span class="lettra-status is-expired" title="@L["Recurring.Revision.AwaitsIndex"]">@L["Recurring.Revision.IndexToEnter"]</span>
+                                }
+                            </td>
+                            <td data-label="@L["Billing.Column.Customer"]">@template.CustomerName</td>
+                            <td data-label="@L["Recurring.Field.Frequency"]">@L[$"Recurring.Frequency.{template.Frequency}"]</td>
+                            <td data-label="@L["Recurring.NextInvoice"]">@(template.NextIssueDate?.ToString("d", Culture) ?? "—")</td>
+                            <td data-label="@L["Recurring.Invoices"]">@template.InvoiceCount</td>
+                            <td data-label="@L["Totals.ExclTax"]" class="lg-num">@ExplorerText.Money(template.TotalExclTax)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
         @if (_page.TotalCount > _page.PageSize)
         {
             <nav class="lt-pager" aria-label="@L["Accounting.Pages"]">
@@ -141,19 +136,42 @@
     private IReadOnlyList<ErrorDetail> _errors = [];
     private string? _search;
     private string _state = string.Empty;
-    private RecurringInvoiceSortDto _sort = RecurringInvoiceSortDto.NextIssueDate;
-    private string _order = "asc";
+    private readonly SortState<RecurringInvoiceSortDto> _sort = new(RecurringInvoiceSortDto.NextIssueDate);
+    private IReadOnlyList<SortOption<RecurringInvoiceSortDto>> _sortOptions = [];
     private int _pageNumber = 1;
     private int _dueCount;
     private bool _running;
 
+    // Squelette au premier chargement seulement : un tri ou un filtre garde la liste affichée.
+    private bool _loaded;
+
     private static CultureInfo Culture => CultureInfo.CurrentCulture;
 
-    private bool IsFiltered => !string.IsNullOrWhiteSpace(_search) || _state.Length > 0;
+    private int ActiveFilters => (string.IsNullOrWhiteSpace(_search) ? 0 : 1) + (_state.Length > 0 ? 1 : 0);
+
+    private bool IsFiltered => ActiveFilters > 0;
 
     private int PageCount => _page is null ? 1 : Math.Max(1, (int)Math.Ceiling(_page.TotalCount / (double)_page.PageSize));
 
-    protected override Task OnInitializedAsync() => LoadAsync();
+    protected override Task OnInitializedAsync()
+    {
+        _sortOptions =
+        [
+            new(RecurringInvoiceSortDto.Name, L["Recurring.Field.Name"]),
+            new(RecurringInvoiceSortDto.Customer, L["Billing.Column.Customer"]),
+            new(RecurringInvoiceSortDto.NextIssueDate, L["Recurring.NextInvoice"]),
+            new(RecurringInvoiceSortDto.Amount, L["Totals.ExclTax"], SortDirectionDto.Descending),
+        ];
+        return LoadAsync();
+    }
+
+    private SortOption<RecurringInvoiceSortDto> Column(RecurringInvoiceSortDto column) => _sortOptions.First(o => o.Column == column);
+
+    private Task ResetFiltersAsync()
+    {
+        (_search, _state) = (null, string.Empty);
+        return ReloadAsync();
+    }
 
     private Task ReloadAsync()
     {
@@ -167,13 +185,14 @@
             Search: _search,
             Active: _state switch { "active" => true, "paused" => false, _ => null },
             DueOnly: _state == "due",
-            Sort: _sort,
-            Descending: _order == "desc",
+            Sort: _sort.Column,
+            Descending: _sort.Descending,
             Page: _pageNumber,
             PageSize: PageSize);
         OperationResult<PagedResponse<RecurringInvoiceSummary>> result = await Recurring.ListAsync(query, CancellationToken.None);
         _errors = result.Errors;
         _page = result.Value ?? new PagedResponse<RecurringInvoiceSummary>([], 1, PageSize, 0);
+        _loaded = true;
 
         OperationResult<PagedResponse<RecurringInvoiceSummary>> due = await Recurring.ListAsync(new RecurringInvoiceListQuery(DueOnly: true, PageSize: 1), CancellationToken.None);
         _dueCount = due.Value?.TotalCount ?? 0;
