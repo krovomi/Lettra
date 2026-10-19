@@ -39,8 +39,8 @@
     {
         <div class="lt-accounting-filters">
             <span class="lt-chip" id="ledger-customer-chip">
-                @L["Accounting.Customer"] : <a href="@($"customers/{customer}")">@(_customerName ?? "…")</a>
-                <a href="@Href(Account, _period, null)" aria-label="@L["Accounting.ClearCustomer"]" id="ledger-clear-customer"><Icon Name="x" Size="14" /></a>
+                <span class="lt-chip-label" title="@_customerName">@L["Accounting.Customer"] : <a href="@($"customers/{customer}")">@(_customerName ?? "…")</a></span>
+                <a href="@Href(Account, _period, null)" class="lt-chip-clear" aria-label="@L["Accounting.ClearCustomer"]" id="ledger-clear-customer"><Icon Name="x" Size="14" /></a>
             </span>
             <a href="@($"accounting/journal?{_period.Query}&customer={customer}")" id="ledger-customer-journal">@L["Accounting.Ledger.CustomerJournal"] <Icon Name="arrow-right" Size="16" /></a>
         </div>
