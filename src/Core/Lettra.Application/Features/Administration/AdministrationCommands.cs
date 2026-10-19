@@ -12,7 +12,10 @@ namespace Lettra.Application.Features.Administration;
 // Écritures de l'espace d'administration (personnes, équipes, rôles sur mesure). Les états de compte, les membres des
 // équipes et les attributions restent sur les cas d'usage de Features/Rights, que l'interface appelle tels quels.
 
-/// <summary>Ajoute une personne au cabinet, à l'état « invitée » : elle n'a aucun droit avant sa première connexion.</summary>
+/// <summary>
+/// Ajoute une personne au cabinet, à l'état « invitée » : elle n'a aucun droit avant sa première connexion. Un e-mail
+/// d'invitation part quand l'installation sait en envoyer ; la réponse dit s'il est parti.
+/// </summary>
 public sealed record InvitePersonCommand(OrganisationId Organisation, string DisplayName, string Email)
     : ICommand<Result<PersonSummary>>, IRequireOrganisationPermission
 {
@@ -94,7 +97,7 @@ internal static class PersonRules
     }
 }
 
-internal sealed class InvitePersonHandler(IAuthorizationRegistry registry, TimeProvider clock)
+internal sealed class InvitePersonHandler(IAuthorizationRegistry registry, InvitationMailer mailer, TimeProvider clock)
     : ICommandHandler<InvitePersonCommand, Result<PersonSummary>>
 {
     public async Task<Result<PersonSummary>> HandleAsync(InvitePersonCommand command, CancellationToken cancellationToken)
@@ -107,9 +110,13 @@ internal sealed class InvitePersonHandler(IAuthorizationRegistry registry, TimeP
         }
 
         Result<Guid> invited = await registry.InviteAsync(command.Organisation, valid.Value.Name, valid.Value.Email, cancellationToken).ConfigureAwait(false);
-        return invited.IsSuccess
-            ? new PersonSummary(invited.Value, valid.Value.Name, valid.Value.Email, AccountStateDto.Invited, clock.GetUtcNow(), [], [], IsMe: false)
-            : Result<PersonSummary>.Failure(invited.Errors);
+        if (invited.IsFailure)
+        {
+            return Result<PersonSummary>.Failure(invited.Errors);
+        }
+
+        InvitationEmailStatusDto email = await mailer.SendAsync(command.Organisation, valid.Value.Name, valid.Value.Email, cancellationToken).ConfigureAwait(false);
+        return new PersonSummary(invited.Value, valid.Value.Name, valid.Value.Email, AccountStateDto.Invited, clock.GetUtcNow(), [], [], IsMe: false, email);
     }
 }
 

@@ -88,6 +88,9 @@ public static class AdministrationErrors
 
     /// <summary>Un administrateur ne se retire pas lui-même l'accès : il faut un autre administrateur.</summary>
     public static Error SelfLockout => new(ErrorCodes.Administration.SelfLockout, ErrorKind.Conflict);
+
+    /// <summary>La personne n'est plus « invitée » : rien à renvoyer.</summary>
+    public static Error NotInvited => new(ErrorCodes.Administration.NotInvited, ErrorKind.Conflict);
 }
 
 /// <summary>Registre en configuration : rien à lire ni à écrire.</summary>

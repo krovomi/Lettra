@@ -31,6 +31,9 @@ internal sealed class InProcessAdministrationGateway(IServiceScopeFactory scopes
         return SendAsync(new InvitePersonCommand(new OrganisationId(cabinetId), request.DisplayName, request.Email), cancellationToken);
     }
 
+    public Task<OperationResult<InvitationEmailResponse>> ResendInvitationAsync(Guid cabinetId, Guid userId, CancellationToken cancellationToken) =>
+        SendAsync(new ResendInvitationCommand(new OrganisationId(cabinetId), userId), cancellationToken);
+
     public Task<OperationResult<bool>> UpdatePersonAsync(Guid cabinetId, Guid userId, UpdatePersonRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);

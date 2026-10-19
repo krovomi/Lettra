@@ -118,7 +118,10 @@ public sealed record RoleDescription(
     IReadOnlyList<AreaAccess> Areas,
     int AssignedCount);
 
-/// <summary>Une personne du cabinet, ses équipes et ses rôles directs.</summary>
+/// <summary>
+/// Une personne du cabinet, ses équipes et ses rôles directs. <paramref name="InvitationEmail"/> n'est rempli que dans la
+/// réponse d'une invitation : l'e-mail d'invitation est-il parti ?
+/// </summary>
 public sealed record PersonSummary(
     Guid Id,
     string? DisplayName,
@@ -127,7 +130,20 @@ public sealed record PersonSummary(
     DateTimeOffset CreatedAt,
     IReadOnlyList<Guid> TeamIds,
     IReadOnlyList<RoleAssignmentSummary> Assignments,
-    bool IsMe);
+    bool IsMe,
+    InvitationEmailStatusDto? InvitationEmail = null);
+
+/// <summary>Sort de l'e-mail d'invitation : parti, pas d'envoi d'e-mails sur cette installation, ou envoi en échec.</summary>
+[JsonConverter(typeof(JsonStringEnumConverter<InvitationEmailStatusDto>))]
+public enum InvitationEmailStatusDto
+{
+    Sent = 1,
+    NotConfigured = 2,
+    Failed = 3,
+}
+
+/// <summary>Réponse d'un renvoi de l'e-mail d'invitation.</summary>
+public sealed record InvitationEmailResponse(Guid PersonId, InvitationEmailStatusDto Status);
 
 /// <summary>Une équipe (groupe du cabinet) : ses membres, ses dossiers, ses rôles, et si l'utilisateur peut la gérer.</summary>
 public sealed record TeamSummary(

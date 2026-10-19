@@ -77,7 +77,7 @@
   <data name="Admin.Person.NamePlaceholder" xml:space="preserve"><value>Par exemple : Léa Martin</value></data>
   <data name="Admin.Person.Email" xml:space="preserve"><value>Adresse e-mail</value></data>
   <data name="Admin.Person.EmailPlaceholder" xml:space="preserve"><value>lea.martin@cabinet.fr</value></data>
-  <data name="Admin.Person.InviteHint" xml:space="preserve"><value>Lettra n'envoie aucun e-mail dans ce prototype : prévenez la personne vous-même.</value></data>
+  <data name="Admin.Person.InviteHint" xml:space="preserve"><value>Lettra lui envoie une invitation par e-mail quand l'envoi d'e-mails est activé sur cette installation ; sinon, prévenez-la vous-même.</value></data>
   <data name="Admin.Person.Invite" xml:space="preserve"><value>Ajouter</value></data>
   <data name="Admin.Team.New" xml:space="preserve"><value>Nouvelle équipe</value></data>
   <data name="Admin.Team.NewSubtitle" xml:space="preserve"><value>Donnez-lui un nom parlant ; vous ajouterez ensuite des personnes et des dossiers.</value></data>
@@ -221,4 +221,9 @@
   <data name="Error.Administration.RoleInUse" xml:space="preserve"><value>Ce rôle est encore donné à des personnes ou des équipes.</value></data>
   <data name="Error.Administration.SelfLockout" xml:space="preserve"><value>Vous ne pouvez pas vous retirer vos propres droits d'administration.</value></data>
   <data name="Error.Administration.NoAccess" xml:space="preserve"><value>Vous n'avez pas accès à cet espace.</value></data>
+  <data name="Admin.Person.ResendInvitation" xml:space="preserve"><value>Renvoyer l'invitation</value></data>
+  <data name="Admin.Toast.InvitedByEmail" xml:space="preserve"><value>{0} est ajouté(e) et a reçu une invitation par e-mail. Choisissez maintenant ce qu'il ou elle peut faire.</value></data>
+  <data name="Admin.Toast.InvitationSent" xml:space="preserve"><value>Invitation renvoyée à {0} ({1}).</value></data>
+  <data name="Admin.Toast.InvitationNoEmail" xml:space="preserve"><value>Cette installation n'envoie pas d'e-mails : prévenez {0} vous-même.</value></data>
+  <data name="Admin.Toast.InvitationFailed" xml:space="preserve"><value>L'e-mail d'invitation n'est pas parti pour {0}. Réessayez avec « Renvoyer l'invitation », ou prévenez la personne vous-même.</value></data>
 </root>

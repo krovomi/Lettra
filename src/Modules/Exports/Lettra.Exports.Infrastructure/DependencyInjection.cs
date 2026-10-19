@@ -4,6 +4,7 @@ using Lettra.Exports.Application;
 using Lettra.Exports.Application.AuditKit;
 using Lettra.Exports.Application.Banking;
 using Lettra.Exports.Application.EInvoicing.Platform;
+using Lettra.Exports.Application.Reminders;
 using Lettra.Exports.Application.Tax;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -38,6 +39,9 @@ public static class DependencyInjection
         services.AddScoped<ITaxDocumentReader, EfTaxDocumentReader>();
         services.AddScoped<IFiscalStore, EfFiscalStore>();
         services.AddScoped<IVatOnReceiptsSource, EfVatOnReceiptsSource>();
+        services.AddScoped<IReminderSettingsRepository, EfReminderSettingsRepository>();
+        services.AddScoped<IPaymentReminderRepository, EfPaymentReminderRepository>();
+        services.AddScoped<IReminderContextReader, EfReminderContextReader>();
         services.AddScoped<IAuditTrailReader, EfAuditTrailReader>();
         string platform = configuration?[PlatformKey] ?? "None";
         switch (platform)
@@ -99,6 +103,24 @@ public static class DependencyInjection
         services.AddSingleton(new FiscalDossierSource(activeDossiers));
         services.AddSingleton<FiscalDeadlineAlertJob>();
         services.AddHostedService(sp => sp.GetRequiredService<FiscalDeadlineAlertJob>());
+        return services;
+    }
+
+    /// <summary>
+    /// Passe quotidienne des relances par le Worker (<c>Lettra:Worker:PaymentReminders</c>, active par défaut) : envoie
+    /// les relances dues des dossiers en envoi automatique, si un serveur d'e-mail est configuré (<c>Lettra:Email</c>).
+    /// </summary>
+    public static IServiceCollection AddPaymentReminders(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        Func<IServiceProvider, CancellationToken, Task<IReadOnlyList<TenantDescriptor>>> activeDossiers)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddOptions<PaymentReminderJobOptions>().Bind(configuration.GetSection(PaymentReminderJobOptions.SectionName));
+        services.AddSingleton(new ReminderDossierSource(activeDossiers));
+        services.AddSingleton<PaymentReminderJob>();
+        services.AddHostedService(sp => sp.GetRequiredService<PaymentReminderJob>());
         return services;
     }
 }

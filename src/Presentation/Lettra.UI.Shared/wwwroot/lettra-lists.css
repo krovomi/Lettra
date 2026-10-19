@@ -46,8 +46,9 @@
 }
 
 /* Tableau large sur tablette : il défile seul, la barre de filtres reste en place. Sur téléphone, les lignes sont des
-   cartes et rien ne défile en largeur. */
-.lt-list-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+   cartes et rien ne défile en largeur. Position relative : un libellé masqué (lettra-visually-hidden, en absolu) reste
+   dans la zone qui défile au lieu d'élargir la page. */
+.lt-list-scroll { position: relative; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 @media (max-width: 767px) {
     .lt-list-scroll { overflow-x: visible; }
 }
