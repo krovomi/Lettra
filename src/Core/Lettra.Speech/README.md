@@ -62,7 +62,10 @@ modèle, reporter le SHA-256 annoté dans `WhisperModelStore.cs`, `build/voix/mo
 
 ## Route
 
-- `GET /api/v1/voix/statut` : moteur, langues, durée maximale ; l'interface n'affiche le micro que si `Enabled`.
+- `GET /api/v1/voix/statut` : moteur, langues, durée maximale, et `Ready` : faux tant que le moteur ne peut pas
+  transcrire (serveur whisper.cpp qui télécharge ou charge son modèle ; l'API lui demande sa racine, 3 secondes au
+  plus, par `ISpeechToText.IsReadyAsync`). Whisper.net sur l'appareil est toujours `Ready` : son modèle se télécharge
+  au premier usage. L'interface n'affiche le micro des champs que si `Enabled` et `Ready`.
 - `POST /api/v1/voix/transcription?mode=Dictation|Command&langue=fr|en`, corps `audio/wav` : texte mis en forme et
   commande éventuelle. 400 pour un audio invalide, trop long ou silencieux, 415 pour un autre type que WAV,
   503 `Speech.EngineUnavailable` ou `Speech.ModelUnavailable` quand le moteur ne répond pas.
@@ -121,7 +124,8 @@ des commandes dans les écrans sont décrits dans `docs/aide-a-la-saisie.md` (se
 
 - **Démonstration Docker** (`deploy/demo/compose.yaml`) : conteneur `whisper` construit depuis
   `build/voix/whisper-server`, modèle dans le volume `whisper-modeles`, API en `WhisperServer`. L'API démarre sans
-  attendre le modèle et répond 503 tant qu'il n'est pas chargé.
+  attendre le modèle ; tant qu'il n'est pas chargé, le statut répond `Ready: false` (l'interface affiche « La dictée se
+  prépare » et redemande toute seule toutes les 15 secondes) et la transcription 503.
 - **Application MAUI** (`MauiProgram.cs`) : `AddOnDeviceSpeech` après `AddLettra`, modèle dans
   `FileSystem.AppDataDirectory/voix`. `Whisper.net.Runtime` est référencé par l'application elle-même (ses cibles
   MSBuild choisissent les bibliothèques natives de chaque plateforme : Android arm64-v8a et x86_64, iOS, Mac Catalyst,

@@ -45,7 +45,7 @@
             {
                 <p class="lettra-muted" id="voice-how-to-enable">@L["Voice.State.HowToEnable"]</p>
             }
-            else if (Voice.Availability == VoiceAvailability.Unreachable)
+            else if (Voice.Availability is VoiceAvailability.Unreachable or VoiceAvailability.Starting)
             {
                 <button type="button" class="lettra-button is-secondary" id="voice-retry" @onclick="RetryAsync">@L["Voice.Retry"]</button>
             }

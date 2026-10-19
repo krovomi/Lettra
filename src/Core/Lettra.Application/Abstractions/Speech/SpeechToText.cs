@@ -16,6 +16,13 @@ public interface ISpeechToText
     string Name { get; }
 
     Task<Result<SpeechTranscript>> TranscribeAsync(SpeechAudio audio, SpeechRequest request, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Le moteur peut-il transcrire tout de suite ? Faux tant que le serveur Whisper télécharge ou charge son modèle :
+    /// l'interface le dit au lieu de laisser parler pour rien. Vrai par défaut (moteur sur l'appareil : le modèle se
+    /// télécharge au premier usage).
+    /// </summary>
+    Task<bool> IsReadyAsync(CancellationToken cancellationToken) => Task.FromResult(true);
 }
 
 /// <param name="Language">Code ISO 639-1 (<c>fr</c>, <c>en</c>) : jamais de détection automatique, qui se trompe sur des phrases courtes.</param>
@@ -36,8 +43,8 @@ public sealed record SpeechSettings(bool Enabled, string? EngineName, bool OnDev
 
     public static SpeechSettings Disabled { get; } = new(false, null, false, [], 0);
 
-    public SpeechStatusResponse ToResponse() =>
-        Enabled ? new SpeechStatusResponse(true, EngineName, OnDevice, Languages, MaxSeconds) : SpeechStatusResponse.Disabled;
+    public SpeechStatusResponse ToResponse(bool ready = true) =>
+        Enabled ? new SpeechStatusResponse(true, EngineName, OnDevice, Languages, MaxSeconds, ready) : SpeechStatusResponse.Disabled;
 }
 
 /// <summary>
@@ -201,4 +208,6 @@ internal sealed class UnavailableSpeechToText : ISpeechToText
 
     public Task<Result<SpeechTranscript>> TranscribeAsync(SpeechAudio audio, SpeechRequest request, CancellationToken cancellationToken) =>
         Task.FromResult<Result<SpeechTranscript>>(new Error(ErrorCodes.Speech.Disabled, ErrorKind.Forbidden));
+
+    public Task<bool> IsReadyAsync(CancellationToken cancellationToken) => Task.FromResult(false);
 }
