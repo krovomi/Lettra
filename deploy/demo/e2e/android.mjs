@@ -88,8 +88,20 @@ async function appPage() {
 // Clic au centre de l'écran : sur un téléphone, la barre de navigation fixe du bas recouvrirait un lien en bas de page.
 // Si la WebView ne dessine plus d'images (écran éteint, requestAnimationFrame à l'arrêt), Playwright attend sans fin un
 // élément « stable » : le clic part alors directement par le DOM, comme le ferait le doigt.
+// La WebView n'est pas un navigateur piloté (pas de navigator.webdriver) : la visite guidée démarre seule, comme pour
+// un vrai utilisateur, et son fond assombri capte les clics. On la passe comme lui, par « Passer ».
+async function skipTour(page) {
+    for (let i = 0; i < 5; i++) {
+        const skip = page.locator('#tour-skip');
+        if (!(await skip.isVisible().catch(() => false))) return;
+        log('visite guidée passée');
+        await skip.evaluate(element => element.click()).catch(() => {});
+        await page.locator('.lt-tour').waitFor({ state: 'detached', timeout: 5_000 }).catch(() => {});
+    }
+}
 async function press(locator, options) {
     await locator.waitFor(options);
+    await skipTour(locator.page());
     await locator.evaluate(element => element.scrollIntoView({ block: 'center' }));
     try {
         await locator.click({ timeout: 10_000 });
@@ -167,6 +179,7 @@ await step(page, `client « ${browserCustomer} » du navigateur`, async () => {
     // Menu replié sur un téléphone : navigation interne de Blazor, comme un clic sur « Clients ».
     await page.evaluate(() => window.Blazor.navigateTo('customers'));
     await page.locator('#customers-list, #customers-empty').first().waitFor();
+    await skipTour(page);
     await page.fill('#customers-search', browserCustomer);
     await page.locator('#customers-list [role=option]', { hasText: browserCustomer }).first().waitFor({ timeout: 30_000 });
 });
@@ -178,6 +191,7 @@ const name = `Client Android ${new Date().toISOString().replace(/\D/g, '').slice
 await step(page, `client « ${name} » enregistré`, async () => {
     await press(page.locator('#customers-new'));
     await page.locator('#name').waitFor({ timeout: 30_000 });
+    await skipTour(page);
     await page.locator('label', { hasText: /Particulier|Individual/ }).locator('input[type=radio]').check().catch(async () => {
         await page.locator('input[type=radio]').nth(1).check();
     });
