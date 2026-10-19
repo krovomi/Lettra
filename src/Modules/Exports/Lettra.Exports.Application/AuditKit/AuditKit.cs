@@ -117,7 +117,7 @@ public sealed class AuditKitService(
         List<JournalEntry> entries = [];
         await foreach (JournalEntry entry in journal.ReadEntriesAsync(cancellationToken).ConfigureAwait(false))
         {
-            DateOnly recorded = DateOnly.FromDateTime(entry.OccurredAt.UtcDateTime);
+            DateOnly recorded = LegalCalendar.DateOf(entry.OccurredAt);
             if ((entry.IssueDate is { } day && day >= from && day <= to) || (recorded >= from && recorded <= to))
             {
                 entries.Add(entry);

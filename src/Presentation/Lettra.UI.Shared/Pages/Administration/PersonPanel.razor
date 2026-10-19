@@ -2,6 +2,7 @@
    (donner un accès, retirer, suspendre, réactiver). Un retrait se défait depuis le message qui le confirme. *@
 @inject IStringLocalizer<SharedResource> L
 @inject IAdministrationGateway Gateway
+@inject TimeProvider Clock
 
 <div class="la-person-head">
     <AdminAvatar Id="Person.Id" Name="@View.NameOf(Person)" Large="true" Muted="@(Person.State != AccountStateDto.Active)" />
@@ -132,13 +133,11 @@ else if (Person.State != AccountStateDto.Active)
     /// <summary>Le registre a changé : la page relit l'espace.</summary>
     [Parameter] public EventCallback OnChanged { get; set; }
 
-    [Parameter] public DateTimeOffset Now { get; set; } = DateTimeOffset.Now;
-
     private bool CanManage => View.Overview.Can.ManagePeople;
 
     private bool _resending;
 
-    private IReadOnlyList<AreaAccess> Effective => View.EffectiveAreas(Person, Now);
+    private IReadOnlyList<AreaAccess> Effective => View.EffectiveAreas(Person, Clock.GetUtcNow());
 
     private IEnumerable<TeamSummary> JoinableTeams => View.Overview.Can.ReadOnly
         ? []
