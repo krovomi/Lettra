@@ -82,6 +82,9 @@ Les trous les plus importants :
   `ReconciliationPage.razor`, `DocumentLinesGrid.razor`, `TeamPanel.razor`, `VoiceHost.razor`.
 - **Moteur de dictée embarqué** (`WhisperNetSpeechToText`) : dépend du modèle Whisper, testé
   seulement par le workflow `voix.yml`.
+- **Hôte Worker** (`Lettra.Worker`) : aucun projet de test ne le référence, il n'apparaît donc
+  pas dans la mesure. Ses tâches vivent dans les modules et y sont testées ; un projet de test de
+  l'hôte demande une modification de la solution (fichier tenu par le fil Socle).
 
 ### Mesurer soi-même
 
@@ -113,7 +116,7 @@ Chaque écart a été vérifié dans le code. Les chemins sont relatifs à `src/
 | # | Écart | Où | Correction |
 |---|---|---|---|
 | D1 | Un conflit de version sur une alerte lève `DbUpdateConcurrencyException`, non traduit par `ConcurrencyBehavior` (qui n'attrape que `ConcurrencyConflictException`) : erreur 500 au lieu d'un 412. | `Modules/Supervision/Lettra.Supervision.Infrastructure/EfAlertStore.cs:108`, `Core/Lettra.Application/Behaviors/ConcurrencyBehavior.cs:21` | Lever `ConcurrencyConflictException`, comme `DocumentNumbering`. |
-| D2 | Les mentions légales sont repérées par recherche de mots dans le texte généré. | `Core/Lettra.Calculations/Compliance/ComplianceChecker.cs:168, 217, 245`, `Core/Lettra.Domain/Billing/Invoice.cs:172, 621` | Codes de mention structurés dans `ComplianceDocument` ; le texte ne sert qu'à l'impression. |
+| D2 | Les mentions légales sont repérées par recherche de mots dans le texte généré. | `Core/Lettra.Calculations/Compliance/ComplianceChecker.cs:168, 217, 245`, `Core/Lettra.Domain/Billing/Invoice.cs:172, 621` | Textes et prédicats de reconnaissance au même endroit (`LegalMentionTexts`) : le texte imprimé et sa vérification ne peuvent plus diverger. Des codes structurés demanderaient de changer le format des pièces enregistrées, pour un gain faible. |
 | D3 | `SyncCenter.OnSourceChanged` est un `async void` qui avale toute exception sans la journaliser. | `Modules/Sync/Lettra.Sync.Client/SyncCenter.cs:178-188` | Journaliser l'exception. |
 | D4 | Un délai d'attente HTTP devient une exception à l'écran pour la plupart des passerelles, mais « serveur injoignable » pour d'autres. | `Presentation/Lettra.UI.Gateway.Http/HttpPartiesAndCatalogGateways.cs:25`, `HttpBillingGateways.cs:37` contre `HttpCabinetGateway.cs:50` | Un seul filtre d'exception partagé. |
 | D5 | Plusieurs écrans prennent la date du poste (`DateTime.Today`, `DateTimeOffset.Now`) au lieu de `TimeProvider`. | `Presentation/Lettra.UI.Shared` : `DossierReviewPage.razor:101`, `CabinetPage.razor:285`, `FecExport.razor:96`, `GrantAccessForm.razor:141`, `PlatformTransmissionPanel.razor:108`, `Administration.razor:83` | Une horloge d'interface injectée. |
@@ -160,6 +163,10 @@ Chaque écart a été vérifié dans le code. Les chemins sont relatifs à `src/
 | A7 | Les modules Exports (64 handlers) et Supervision (10) n'ont aucun `IValidator` : la validation des requêtes est écrite dans les handlers. | `Exports.Application/Banking/Payments.cs:83`, `BankStatements.cs:32-50`, `Tax/TaxDeclarations.cs:107` |
 | A8 | Le test de parité des codes d'erreur ne couvre pas `Supervision.Domain`. | `tests/Lettra.Architecture.Tests/ErrorCodeAndResourceTests.cs:29` |
 
+A2 (approbation d'avoir) et R6 (réemballages de `Result`) sont de faible valeur : la double
+vérification d'A2 est une défense en profondeur, et un `Bind` sur `Result` rendrait les handlers
+moins lisibles qu'aujourd'hui (KISS). Ils restent listés mais ne seront traités que s'ils gênent.
+
 Ce qui est propre : `Lettra.Calculations`, le module Supervision (petit et cohérent ; son
 `AlertCommandHandlers.ApplyAsync` est le bon modèle pour la facturation), l'hôte Worker, la
 composition par mode de déploiement, l'identité, la voix, l'impression, les trois fournisseurs
@@ -174,12 +181,12 @@ Aucun test existant n'est retiré, désactivé ni affaibli.
 | PR | Contenu | État |
 |---|---|---|
 | 1 | Ce document et le script `build/couverture/fusionner.py` ; API : `HttpResults` remplace les ternaires `Result` → HTTP recopiés (R1) ; défauts D1 et D3 corrigés ; parité des codes d'erreur étendue à `Supervision.Domain` (A8). | En revue (PR #119) |
-| 2 | Domaine : calendrier légal unique (R3), constantes EUR et UE (R11), approbation d'avoir (A2), règles d'acompte et de suppression dans les entités (A1), tests. | À faire |
-| 3 | Application : `Result` (`Bind`, conversion, R6), chargement versionné (R5), validateurs paginés (R7), fin de validation de facture (R8), règlement (R4, S1), `IValidator` dans Exports (A7), tests. | À faire |
-| 4 | Tâches périodiques avec `TimeProvider` (R10), tests d'`EfAlertStore` et des tâches de fond. | À faire |
-| 5 | API : « écrire puis relire » unique (R2), recherche normalisée (R12), tests. | À faire |
-| 6 | Passerelles HTTP et en processus : appels partagés (D4), tests de toutes les passerelles (objectif > 90 %). | À faire |
-| 7 | Conformité : codes de mention structurés (D2), découpage de `ComplianceChecker.Check` (S3). | À faire |
+| 2 | Doublons transverses : calendrier légal unique `LegalCalendar` (R3), liste UE et devise uniques (R11), boucle unique des tâches de fond `PeriodicPass` sur l'horloge injectée (R10), textes des mentions légales partagés (D2), « écrire puis relire » unique dans les passerelles en processus (R2), tests. | En cours |
+| 3 | Domaine et application : règles d'acompte et de suppression dans les entités (A1), rôles (A3), chargement versionné (R5), validateurs paginés (R7), fin de validation de facture (R8), règlement (R4, S1), `IValidator` dans Exports (A7), tests. | À faire |
+| 4 | Tests d'infrastructure : tâche de la vue cabinet et ses sources, serveur de synchronisation, webhook de supervision, annuaire d'autorisations. | En cours |
+| 5 | API : recherche normalisée (R12), tests. Après le fil « Tris et filtres sur les listes ». | À faire |
+| 6 | Passerelles HTTP : gestion d'erreurs partagée (D4), tests de toutes les passerelles (objectif > 90 %). Après la PR du kit de contrôle fiscal. | À faire |
+| 7 | Conformité : découpage de `ComplianceChecker.Check` (S3). | À faire |
 | 8 | Interface Blazor : horloge injectée (D5), fin du localisateur de services (A5, A6), base commune des éditeurs (R9), tests bUnit. | À faire |
 
 Seuil de couverture proposé pour la CI, une fois ces PR fusionnées : 85 % des lignes et 75 % des
