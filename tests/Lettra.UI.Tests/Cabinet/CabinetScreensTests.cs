@@ -94,6 +94,53 @@ public sealed class CabinetScreensTests : BunitContext
     }
 
     [Fact]
+    public void Chaque_dossier_montre_son_niveau_et_ce_qui_demande_une_action()
+    {
+        IRenderedComponent<CabinetPage> page = Render<CabinetPage>();
+        page.WaitForAssertion(() => page.FindAll(".lt-cabinet-table tbody tr").Should().HaveCount(3));
+
+        var rows = page.FindAll(".lt-cabinet-table tbody tr");
+        rows.Select(r => r.GetAttribute("data-level")).Should().Equal("Critical", "Warning", "Ok");
+        rows.Select(r => r.QuerySelector(".lt-cabinet-avatar")!.TextContent).Should().Equal("GC", "AÉ", "BM");
+        rows.Select(r => r.QuerySelector(".lt-level-badge")!.TextContent).Should().Equal("Urgent", "À traiter", "À jour");
+
+        // Un compteur à zéro reste discret ; seul le dossier sans rien à faire dit « Tout est à jour » (en carte).
+        rows[1].QuerySelector("td[data-label='Factures en retard'] .lt-indicator")!.ClassList.Should().Contain("is-zero");
+        rows[1].QuerySelector("td[data-label='Factures en retard']")!.ClassList.Should().Contain("is-clear");
+        rows[0].QuerySelector("td[data-label='Factures en retard'] .lt-indicator-due")!.TextContent.Should().StartWith("depuis le 31");
+        page.FindAll(".lt-cabinet-clear").Should().ContainSingle().Which.TextContent.Should().Contain("Tout est à jour");
+        rows[2].QuerySelector(".lt-cabinet-clear").Should().NotBeNull();
+
+        page.FindAll(".lt-cabinet-kpis .lt-kpi.is-alert").Should().HaveCount(4, "dossiers à traiter, factures en retard, rejets et revue ont tous des chiffres");
+        page.Find(".lt-cabinet-count").TextContent.Should().Be("3");
+    }
+
+    [Fact]
+    public void Effacer_les_filtres_remet_tous_les_dossiers()
+    {
+        IRenderedComponent<CabinetPage> page = Render<CabinetPage>();
+        page.WaitForAssertion(() => page.FindAll(".lt-cabinet-table tbody tr").Should().HaveCount(3));
+
+        page.Find("#cabinet-search").Input("garage");
+        page.Find("#cabinet-urgent").Change(true);
+        page.FindAll(".lt-cabinet-table tbody tr").Should().ContainSingle();
+        page.Find(".lt-cabinet-count").TextContent.Should().Be("1");
+
+        page.Find("#cabinet-filters-reset").Click();
+
+        page.FindAll(".lt-cabinet-table tbody tr").Should().HaveCount(3);
+        page.Find("#cabinet-search").GetAttribute("value").Should().BeNullOrEmpty();
+    }
+
+    [Theory]
+    [InlineData("Bâti Rénov' Lemoine", "BR")]
+    [InlineData("Dossier de démonstration", "D")]
+    [InlineData("Négoce Méditerranée Distribution", "NM")]
+    [InlineData("atelier", "A")]
+    public void Les_initiales_viennent_des_mots_en_majuscule(string name, string initials) =>
+        CabinetPage.Initials(name).Should().Be(initials);
+
+    [Fact]
     public void Un_tableau_jamais_calcule_se_calcule_a_l_ouverture_et_actualiser_le_dit_dans_le_toaster()
     {
         _gateway.Computed = false;
