@@ -85,9 +85,16 @@ async function appPage() {
     page.setDefaultTimeout(60_000);
     return page;
 }
+// Clic au centre de l'écran : sur un téléphone, la barre de navigation fixe du bas recouvrirait un lien en bas de page.
+async function press(locator, options) {
+    await locator.waitFor(options);
+    await locator.evaluate(element => element.scrollIntoView({ block: 'center' }));
+    await locator.click(options);
+}
 async function step(page, what, action) {
     try { return await action(); } catch (error) {
         await shot(`echec-${what}`);
+        log(error.message.split('\n').slice(0, 12).join('\n'));
         await dumpPage(page);
         throw new Error(`${what} : ${error.message.split('\n')[0]}`);
     }
@@ -101,16 +108,17 @@ await device.shell(`am force-stop ${app}`);
 await start();
 let page = await appPage();
 await step(page, 'serveur du cabinet', async () => {
-    await page.locator('#shared-server-link').click({ timeout: 120_000 });
+    await press(page.locator('#shared-server-link'), { timeout: 120_000 });
     await page.fill('#shared-server-address', baseUrl);
     await shot('adresse-saisie');
-    await page.locator('#shared-server-submit').click();
+    await press(page.locator('#shared-server-submit'));
     await page.locator('#shared-server-restart-now').waitFor();
 });
 await shot('serveur-retenu');
 log(`serveur ${baseUrl} retenu`);
 // L'application se ferme (Android : fermer puis rouvrir).
-await page.locator('#shared-server-restart-now').click({ noWaitAfter: true }).catch(() => {});
+await page.locator('#shared-server-restart-now').evaluate(element => element.scrollIntoView({ block: 'center' })).catch(() => {});
+await page.locator('#shared-server-restart-now').click({ noWaitAfter: true, timeout: 10_000 }).catch(() => {});
 await sleep(3000);
 
 // 2. Relancée, l'application est reliée au serveur : connexion du cabinet dans un onglet du navigateur.
@@ -127,7 +135,7 @@ await device.shell(`echo "_ --disable-fre --no-default-browser-check --no-first-
 // Sur une image non « debuggable », Chrome ne lit ce fichier que s'il est l'application de débogage.
 await device.shell('am set-debug-app --persistent com.android.chrome');
 execFileSync('adb', ['forward', 'tcp:9333', `localabstract:${devtools}`]);
-await page.locator('a[data-sign-in]').click();
+await press(page.locator('a[data-sign-in]'));
 log(`connexion demandée ; l'application affiche ${page.url()}`);
 const keycloak = await keycloakPage(90_000).catch(async error => { await dumpPage(page); throw error; });
 await shot('keycloak');
@@ -156,7 +164,7 @@ log(`client du navigateur « ${browserCustomer} » vu sur l'appareil`);
 // 4. Un client saisi sur l'appareil, que le navigateur retrouvera.
 const name = `Client Android ${new Date().toISOString().replace(/\D/g, '').slice(0, 14)}`;
 await step(page, `client « ${name} » enregistré`, async () => {
-    await page.locator('#customers-new').click();
+    await press(page.locator('#customers-new'));
     await page.locator('#name').waitFor({ timeout: 30_000 });
     await page.locator('label', { hasText: /Particulier|Individual/ }).locator('input[type=radio]').check().catch(async () => {
         await page.locator('input[type=radio]').nth(1).check();
@@ -168,7 +176,7 @@ await step(page, `client « ${name} » enregistré`, async () => {
     await page.fill('#city', 'Paris');
     await page.fill('#country', 'FR');
     await shot('client-saisi');
-    await page.locator('form button[type=submit]').click();
+    await press(page.locator('form button[type=submit]'));
     // Confirmation par le toaster, puis la fiche du client.
     await page.locator('.lt-toast.is-success').first().waitFor({ timeout: 30_000 });
     await page.locator('#customer-sheet-title', { hasText: name }).waitFor({ timeout: 30_000 });
