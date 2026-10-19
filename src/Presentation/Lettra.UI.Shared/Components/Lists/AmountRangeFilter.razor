@@ -1,0 +1,40 @@
+@inject IStringLocalizer<SharedResource> L
+@* Fourchette de montant d'une liste (euros, bornes comprises), chaque borne facultative. *@
+
+<fieldset class="lt-filter lt-range" id="@Id">
+    <legend>@Label</legend>
+    <div class="lt-range-fields">
+        <input type="number" inputmode="decimal" step="0.01" id="@($"{Id}-min")" value="@Format(Min)" @onchange="e => ChangeAsync(e, MinChanged)"
+               placeholder="@L["Lists.Range.Min"]" aria-label="@string.Format(CultureInfo.CurrentCulture, L["Lists.Range.MinOf"], Label)" />
+        <span aria-hidden="true">–</span>
+        <input type="number" inputmode="decimal" step="0.01" id="@($"{Id}-max")" value="@Format(Max)" @onchange="e => ChangeAsync(e, MaxChanged)"
+               placeholder="@L["Lists.Range.Max"]" aria-label="@string.Format(CultureInfo.CurrentCulture, L["Lists.Range.MaxOf"], Label)" />
+    </div>
+</fieldset>
+
+@code {
+    [Parameter, EditorRequired] public string Id { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired] public string Label { get; set; } = string.Empty;
+
+    [Parameter] public decimal? Min { get; set; }
+
+    [Parameter] public EventCallback<decimal?> MinChanged { get; set; }
+
+    [Parameter] public decimal? Max { get; set; }
+
+    [Parameter] public EventCallback<decimal?> MaxChanged { get; set; }
+
+    [Parameter] public EventCallback OnChange { get; set; }
+
+    // Un champ number transmet toujours sa valeur avec un point, quelle que soit la langue de l'écran.
+    private static string? Format(decimal? amount) => amount?.ToString(CultureInfo.InvariantCulture);
+
+    private async Task ChangeAsync(ChangeEventArgs args, EventCallback<decimal?> changed)
+    {
+        string text = (args.Value?.ToString() ?? string.Empty).Trim().Replace(',', '.');
+        decimal? amount = decimal.TryParse(text, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal parsed) ? parsed : null;
+        await changed.InvokeAsync(amount);
+        await OnChange.InvokeAsync();
+    }
+}

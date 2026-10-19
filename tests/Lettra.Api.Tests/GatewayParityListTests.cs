@@ -1,0 +1,42 @@
+using Lettra.Contracts.Billing;
+using Lettra.Contracts.Catalog;
+using Lettra.Contracts.Common;
+using Lettra.UI.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Lettra.Api.Tests;
+
+/// <summary>Tri et bornes de montant des listes de pièces : mêmes paramètres et même résultat sur les deux transports.</summary>
+public sealed partial class GatewayParityTests
+{
+    [Theory]
+    [MemberData(nameof(Transports))]
+    public async Task Lister_les_pieces_triees_et_bornees_par_montant(string transport)
+    {
+        await using ServiceProvider services = Gateway(transport);
+        IInvoicesGateway invoices = services.GetRequiredService<IInvoicesGateway>();
+        IQuotesGateway quotes = services.GetRequiredService<IQuotesGateway>();
+        Guid customer = (await services.GetRequiredService<ICustomersGateway>().CreateAsync(CustomerApiTests.Martin(), default)).Value!.Id;
+        foreach (decimal price in new[] { 100m, 1000m, 10.5m })
+        {
+            DocumentLineRequest line = new() { Designation = "Conseil", Quantity = 1, UnitPriceExclTax = price, UnitCode = "HUR", Kind = CatalogItemKindDto.Service };
+            (await invoices.CreateAsync(new SaveInvoiceRequest { CustomerId = customer, Lines = [line] }, default)).IsSuccess.Should().BeTrue();
+            (await quotes.CreateAsync(new SaveQuoteRequest { CustomerId = customer, Lines = [line] }, default)).IsSuccess.Should().BeTrue();
+        }
+
+        OperationResult<PagedResponse<InvoiceSummary>> ascending = await invoices.ListAsync(
+            new BillingListQuery(CustomerId: customer, Sort: BillingSortDto.TotalInclTax, Direction: SortDirectionDto.Ascending), null, null, default);
+        OperationResult<PagedResponse<InvoiceSummary>> bounded = await invoices.ListAsync(
+            new BillingListQuery(CustomerId: customer, Sort: BillingSortDto.TotalExclTax, Direction: SortDirectionDto.Descending, MinAmount: 12.61m, MaxAmount: 1200m),
+            null, null, default);
+        OperationResult<PagedResponse<QuoteSummary>> quoteList = await quotes.ListAsync(
+            new BillingListQuery(CustomerId: customer, Sort: BillingSortDto.TotalInclTax, Direction: SortDirectionDto.Descending, MaxAmount: 120m), null, default);
+        OperationResult<PagedResponse<InvoiceSummary>> reversed = await invoices.ListAsync(
+            new BillingListQuery(CustomerId: customer, MinAmount: 500m, MaxAmount: 100m), null, null, default);
+
+        ascending.Value!.Items.Select(i => i.TotalInclTax).Should().Equal(12.6m, 120m, 1200m);
+        bounded.Value!.Items.Select(i => i.TotalExclTax).Should().Equal(1000m, 100m);
+        quoteList.Value!.Items.Select(q => q.TotalInclTax).Should().Equal(120m, 12.6m);
+        reversed.Errors.Should().ContainSingle().Which.Should().Be(new ErrorDetail(ErrorCodes.Validation.Invalid, "MaxAmount"));
+    }
+}

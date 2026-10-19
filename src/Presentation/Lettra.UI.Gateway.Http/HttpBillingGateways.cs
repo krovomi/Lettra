@@ -47,6 +47,13 @@ internal static class VersionedCalls
         Append(text, "customerId", query.CustomerId?.ToString());
         Append(text, "from", query.From?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
         Append(text, "to", query.To?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+        Append(text, "minAmount", query.MinAmount?.ToString(CultureInfo.InvariantCulture));
+        Append(text, "maxAmount", query.MaxAmount?.ToString(CultureInfo.InvariantCulture));
+        if (query.Sort != BillingSortDto.IssueDate || query.Direction != SortDirectionDto.Descending)
+        {
+            Append(text, "sort", query.Sort.ToString());
+            Append(text, "direction", query.Direction.ToString());
+        }
         foreach ((string name, string? value) in extra)
         {
             Append(text, name, value);

@@ -7,7 +7,7 @@ namespace Lettra.UI.Abstractions;
 
 /// <summary>
 /// Critères des listes de devis et de factures. <paramref name="Search"/> porte sur le numéro et le nom du client ;
-/// les dates bornent la date d'émission.
+/// les dates bornent la date d'émission, les montants le total TTC. Le tri par défaut : date d'émission, récente en tête.
 /// </summary>
 public sealed record BillingListQuery(
     string? Search = null,
@@ -15,7 +15,11 @@ public sealed record BillingListQuery(
     DateOnly? From = null,
     DateOnly? To = null,
     int Page = 1,
-    int PageSize = 50);
+    int PageSize = 50,
+    BillingSortDto Sort = BillingSortDto.IssueDate,
+    SortDirectionDto Direction = SortDirectionDto.Descending,
+    decimal? MinAmount = null,
+    decimal? MaxAmount = null);
 
 /// <summary>
 /// Écrans Devis. <c>expectedVersion</c> est la <c>Version</c> lue : l'écriture échoue avec

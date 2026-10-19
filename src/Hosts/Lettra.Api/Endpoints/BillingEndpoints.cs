@@ -144,9 +144,13 @@ internal static class BillingEndpoints
         DateOnly? to = null,
         QuoteStatusDto? status = null,
         int page = 1,
-        int pageSize = 50) =>
+        int pageSize = 50,
+        BillingSortDto sort = BillingSortDto.IssueDate,
+        SortDirectionDto direction = SortDirectionDto.Descending,
+        decimal? minAmount = null,
+        decimal? maxAmount = null) =>
         Ok(await queries.QueryAsync(
-            new ListQuotesQuery(tenant.Current.DossierId, search, customerId, from, to, status, page, pageSize), cancellationToken).ConfigureAwait(false));
+            new ListQuotesQuery(tenant.Current.DossierId, search, customerId, from, to, status, page, pageSize, sort, direction, minAmount, maxAmount), cancellationToken).ConfigureAwait(false));
 
     private static Task<IResult> GetQuoteAsync(Guid id, ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken) =>
         ReadQuoteAsync(queries, tenant.Current.DossierId, new QuoteId(id), cancellationToken);
@@ -237,9 +241,13 @@ internal static class BillingEndpoints
         InvoiceKindDto? kind = null,
         InvoiceStatusDto? status = null,
         int page = 1,
-        int pageSize = 50) =>
+        int pageSize = 50,
+        BillingSortDto sort = BillingSortDto.IssueDate,
+        SortDirectionDto direction = SortDirectionDto.Descending,
+        decimal? minAmount = null,
+        decimal? maxAmount = null) =>
         Ok(await queries.QueryAsync(
-            new ListInvoicesQuery(tenant.Current.DossierId, search, customerId, from, to, kind, status, page, pageSize), cancellationToken).ConfigureAwait(false));
+            new ListInvoicesQuery(tenant.Current.DossierId, search, customerId, from, to, kind, status, page, pageSize, sort, direction, minAmount, maxAmount), cancellationToken).ConfigureAwait(false));
 
     private static Task<IResult> GetInvoiceAsync(Guid id, ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken) =>
         ReadInvoiceAsync(queries, tenant.Current.DossierId, new InvoiceId(id), cancellationToken);

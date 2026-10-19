@@ -15,38 +15,47 @@
 
 <section class="lettra-card" aria-labelledby="invoices-list-title">
     <h2 id="invoices-list-title" class="lettra-visually-hidden">@L[TitleKey]</h2>
-    <div class="lettra-toolbar">
-        <div class="lt-filter">
-            <label for="invoices-search">@L["Billing.Search"]</label>
-            <input id="invoices-search" type="search" @ref="_searchInput" @bind="_search" @bind:after="LoadAsync" autocomplete="off" />
-        </div>
-        <div class="lt-filter">
-            <label for="invoices-kind">@L["Invoices.Kind"]</label>
-            <select id="invoices-kind" @bind="_kind" @bind:after="LoadAsync">
-                <option value="">@L["Invoices.AllKinds"]</option>
-                @foreach (InvoiceKindDto kind in Enum.GetValues<InvoiceKindDto>())
-                {
-                    <option value="@kind">@L[$"InvoiceKind.{kind}"]</option>
-                }
-            </select>
-        </div>
-        <div class="lt-filter">
-            <label for="invoices-status">@L["Billing.Status"]</label>
-            <select id="invoices-status" @bind="_statusFilter" @bind:after="LoadAsync">
-                <option value="">@L["Billing.AllStatuses"]</option>
-                @foreach (InvoiceStatusDto status in Enum.GetValues<InvoiceStatusDto>())
-                {
-                    <option value="@status">@L[$"InvoiceStatus.{status}"]</option>
-                }
-            </select>
-        </div>
-        <a class="lettra-button" href="invoices/new" id="invoices-new">@L["Invoices.New"]</a>
-    </div>
+    <ListFilterBar Id="invoices-filters" ActiveCount="ActiveFilters" OnReset="ResetFiltersAsync">
+        <ChildContent>
+            <div class="lt-filter">
+                <label for="invoices-search">@L["Billing.Search"]</label>
+                <input id="invoices-search" type="search" @ref="_searchInput" @bind="_search" @bind:after="LoadAsync" autocomplete="off" />
+            </div>
+        </ChildContent>
+        <More>
+            <div class="lt-filter">
+                <label for="invoices-kind">@L["Invoices.Kind"]</label>
+                <select id="invoices-kind" @bind="_kind" @bind:after="LoadAsync">
+                    <option value="">@L["Invoices.AllKinds"]</option>
+                    @foreach (InvoiceKindDto kind in Enum.GetValues<InvoiceKindDto>())
+                    {
+                        <option value="@kind">@L[$"InvoiceKind.{kind}"]</option>
+                    }
+                </select>
+            </div>
+            <div class="lt-filter">
+                <label for="invoices-status">@L["Billing.Status"]</label>
+                <select id="invoices-status" @bind="_statusFilter" @bind:after="LoadAsync">
+                    <option value="">@L["Billing.AllStatuses"]</option>
+                    @foreach (InvoiceStatusDto status in Enum.GetValues<InvoiceStatusDto>())
+                    {
+                        <option value="@status">@L[$"InvoiceStatus.{status}"]</option>
+                    }
+                </select>
+            </div>
+            <DateRangeFilter Id="invoices-dates" Label="@L["Lists.Filter.IssueDate"]" @bind-From="_from" @bind-To="_to" OnChange="LoadAsync" />
+            <AmountRangeFilter Id="invoices-amount" Label="@L["Lists.Filter.AmountInclTax"]" @bind-Min="_minAmount" @bind-Max="_maxAmount" OnChange="LoadAsync" />
+            <SortSelect Id="invoices-sort" Options="_sortOptions" State="_sort" OnSort="LoadAsync" />
+        </More>
+        <Actions>
+            <a class="lettra-button" href="invoices/new" id="invoices-new">@L["Invoices.New"]</a>
+        </Actions>
+    </ListFilterBar>
     <p class="lettra-muted">@L["Billing.ListHint"]</p>
 
     <GeneralErrors Errors="_errors" />
 
-    @if (_loading)
+    @if (_loading && !_loaded)
     {
         <ListSkeleton Columns="8" />
     }
@@ -58,44 +67,50 @@
             {
                 <a class="lettra-button" href="invoices/new"><Icon Name="plus" Size="18" /> @L["Invoices.New"]</a>
             }
+            else
+            {
+                <button type="button" class="lettra-button is-secondary" id="invoices-empty-reset" @onclick="ResetFiltersAsync">@L["Lists.Filters.Reset"]</button>
+            }
         </EmptyState>
     }
     else
     {
-        <table class="lettra-table lettra-documents lt-cards">
-            <thead>
-                <tr>
-                    <th scope="col">@L["Billing.Column.Number"]</th>
-                    <th scope="col">@L["Invoices.Kind"]</th>
-                    <th scope="col">@L["Billing.Column.Customer"]</th>
-                    <th scope="col">@L["Billing.Column.Date"]</th>
-                    <th scope="col">@L["Invoice.Field.DueDate"]</th>
-                    <th scope="col">@L["Billing.Status"]</th>
-                    <th scope="col" class="lg-num">@L["Totals.ExclTax"]</th>
-                    <th scope="col" class="lg-num">@L["Totals.InclTax"]</th>
-                    <th scope="col" class="lt-col-actions"><span class="lettra-visually-hidden">@L["Row.Actions"]</span></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (InvoiceSummary invoice in _items)
-                {
+        <div class="lt-list-scroll">
+            <table class="lettra-table lettra-documents lt-cards">
+                <thead>
                     <tr>
-                        <td><a href="@($"invoices/{invoice.Id}")">@(invoice.Number ?? L["Billing.Draft"])</a></td>
-                        <td data-label="@L["Invoices.Kind"]">@L[$"InvoiceKind.{invoice.Kind}"]</td>
-                        <td data-label="@L["Billing.Column.Customer"]">@invoice.CustomerName</td>
-                        <td data-label="@L["Billing.Column.Date"]">@invoice.IssueDate?.ToString("d", CultureInfo.CurrentCulture)</td>
-                        <td data-label="@L["Invoice.Field.DueDate"]">@invoice.DueDate?.ToString("d", CultureInfo.CurrentCulture)</td>
-                        <td data-label="@L["Billing.Status"]"><DocumentStatusBadge Text="@L[$"InvoiceStatus.{invoice.Status}"]" Kind="@invoice.Status.ToString().ToLowerInvariant()" /></td>
-                        <td class="lg-num" data-label="@L["Totals.ExclTax"]">@GridNumber.FormatAmount(invoice.TotalExclTax, CultureInfo.CurrentCulture)</td>
-                        <td class="lg-num" data-label="@L["Totals.InclTax"]">@GridNumber.FormatAmount(invoice.TotalInclTax, CultureInfo.CurrentCulture)</td>
-                        <td class="lt-col-actions">
-                            <RowDelete Label="@string.Format(CultureInfo.CurrentCulture, L["Invoices.Row.Delete"], invoice.Number ?? L["Billing.Draft"], invoice.CustomerName)"
-                                       BlockedReason="@BlockedReason(invoice)" OnDelete="() => DeleteAsync(invoice)" />
-                        </td>
+                        <SortHeader Option="Column(BillingSortDto.Number)" State="_sort" OnSort="LoadAsync" Id="invoices-sort-number" />
+                        <th scope="col">@L["Invoices.Kind"]</th>
+                        <SortHeader Option="Column(BillingSortDto.Customer)" State="_sort" OnSort="LoadAsync" Id="invoices-sort-customer" />
+                        <SortHeader Option="Column(BillingSortDto.IssueDate)" State="_sort" OnSort="LoadAsync" Id="invoices-sort-date" />
+                        <SortHeader Option="Column(BillingSortDto.DueDate)" State="_sort" OnSort="LoadAsync" Id="invoices-sort-due" />
+                        <SortHeader Option="Column(BillingSortDto.Status)" State="_sort" OnSort="LoadAsync" Id="invoices-sort-status" />
+                        <SortHeader Option="Column(BillingSortDto.TotalExclTax)" State="_sort" OnSort="LoadAsync" Id="invoices-sort-excl" Class="lg-num" />
+                        <SortHeader Option="Column(BillingSortDto.TotalInclTax)" State="_sort" OnSort="LoadAsync" Id="invoices-sort-incl" Class="lg-num" />
+                        <th scope="col" class="lt-col-actions"><span class="lettra-visually-hidden">@L["Row.Actions"]</span></th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (InvoiceSummary invoice in _items)
+                    {
+                        <tr>
+                            <td><a href="@($"invoices/{invoice.Id}")">@(invoice.Number ?? L["Billing.Draft"])</a></td>
+                            <td data-label="@L["Invoices.Kind"]">@L[$"InvoiceKind.{invoice.Kind}"]</td>
+                            <td data-label="@L["Billing.Column.Customer"]">@invoice.CustomerName</td>
+                            <td data-label="@L["Billing.Column.Date"]">@invoice.IssueDate?.ToString("d", CultureInfo.CurrentCulture)</td>
+                            <td data-label="@L["Invoice.Field.DueDate"]">@invoice.DueDate?.ToString("d", CultureInfo.CurrentCulture)</td>
+                            <td data-label="@L["Billing.Status"]"><DocumentStatusBadge Text="@L[$"InvoiceStatus.{invoice.Status}"]" Kind="@invoice.Status.ToString().ToLowerInvariant()" /></td>
+                            <td class="lg-num" data-label="@L["Totals.ExclTax"]">@GridNumber.FormatAmount(invoice.TotalExclTax, CultureInfo.CurrentCulture)</td>
+                            <td class="lg-num" data-label="@L["Totals.InclTax"]">@GridNumber.FormatAmount(invoice.TotalInclTax, CultureInfo.CurrentCulture)</td>
+                            <td class="lt-col-actions">
+                                <RowDelete Label="@string.Format(CultureInfo.CurrentCulture, L["Invoices.Row.Delete"], invoice.Number ?? L["Billing.Draft"], invoice.CustomerName)"
+                                           BlockedReason="@BlockedReason(invoice)" OnDelete="() => DeleteAsync(invoice)" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     }
 </section>
 
@@ -105,10 +120,22 @@
     private string? _search;
     private InvoiceKindDto? _kind;
     private InvoiceStatusDto? _statusFilter;
+    private DateOnly? _from;
+    private DateOnly? _to;
+    private decimal? _minAmount;
+    private decimal? _maxAmount;
+    private readonly SortState<BillingSortDto> _sort = new(BillingSortDto.IssueDate, SortDirectionDto.Descending);
+    private IReadOnlyList<SortOption<BillingSortDto>> _sortOptions = [];
     private bool _loading = true;
 
+    // Squelette au premier chargement seulement : un tri ou un filtre garde la liste affichée (et le focus sur l'en-tête).
+    private bool _loaded;
+
     // La nature vient de l'adresse (avoirs, acomptes) : ce n'est pas un filtre posé par l'utilisateur.
-    private bool IsFiltered => !string.IsNullOrWhiteSpace(_search) || _statusFilter is not null;
+    private int ActiveFilters =>
+        new object?[] { string.IsNullOrWhiteSpace(_search) ? null : _search, _statusFilter, _from, _to, _minAmount, _maxAmount }.Count(f => f is not null);
+
+    private bool IsFiltered => ActiveFilters > 0;
     private ElementReference _searchInput;
     private KeyboardScope _pageScope = default!;
 
@@ -119,10 +146,30 @@
         _ => "Invoices.Title",
     };
 
-    protected override void OnInitialized() =>
+    protected override void OnInitialized()
+    {
         _pageScope = new KeyboardScope("page")
             .Bind("F3", L["Billing.Command.Search"], async _ => await _searchInput.FocusAsync())
             .Bind("Insert", L["Invoices.New"], _ => Navigation.NavigateTo("invoices/new"));
+        _sortOptions =
+        [
+            new(BillingSortDto.Number, L["Billing.Column.Number"]),
+            new(BillingSortDto.Customer, L["Billing.Column.Customer"]),
+            new(BillingSortDto.IssueDate, L["Billing.Column.Date"], SortDirectionDto.Descending),
+            new(BillingSortDto.DueDate, L["Invoice.Field.DueDate"], SortDirectionDto.Descending),
+            new(BillingSortDto.Status, L["Billing.Status"]),
+            new(BillingSortDto.TotalExclTax, L["Totals.ExclTax"], SortDirectionDto.Descending),
+            new(BillingSortDto.TotalInclTax, L["Totals.InclTax"], SortDirectionDto.Descending),
+        ];
+    }
+
+    private SortOption<BillingSortDto> Column(BillingSortDto column) => _sortOptions.First(o => o.Column == column);
+
+    private Task ResetFiltersAsync()
+    {
+        (_search, _statusFilter, _from, _to, _minAmount, _maxAmount) = (null, null, null, null, null, null);
+        return LoadAsync();
+    }
 
     protected override Task OnParametersSetAsync()
     {
@@ -161,9 +208,15 @@
     {
         _loading = true;
         OperationResult<PagedResponse<InvoiceSummary>> result = await Invoices.ListAsync(
-            new BillingListQuery(string.IsNullOrWhiteSpace(_search) ? null : _search.Trim(), PageSize: 200), _kind, _statusFilter, CancellationToken.None);
+            new BillingListQuery(
+                string.IsNullOrWhiteSpace(_search) ? null : _search.Trim(), From: _from, To: _to, PageSize: 200,
+                Sort: _sort.Column, Direction: _sort.Direction, MinAmount: _minAmount, MaxAmount: _maxAmount),
+            _kind,
+            _statusFilter,
+            CancellationToken.None);
         _items = result.Value?.Items.ToList() ?? [];
         _errors = result.Errors;
         _loading = false;
+        _loaded = true;
     }
 }

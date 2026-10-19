@@ -1,0 +1,50 @@
+@inject IStringLocalizer<SharedResource> L
+@* Barre de filtres commune des listes. Sur ordinateur et tablette, tous les filtres sont visibles. Sur téléphone, la
+   recherche et les actions restent visibles, les autres filtres se replient derrière « Filtres » (avec le nombre de
+   filtres posés) pour laisser la place à la liste. « Effacer les filtres » apparaît dès qu'un filtre est posé. *@
+
+<div class="lettra-toolbar lt-list-filters" id="@Id" data-open="@(_open ? "true" : "false")">
+    @ChildContent
+    @if (More is not null)
+    {
+        <button type="button" class="lettra-button is-ghost lt-filters-toggle" id="@($"{Id}-toggle")" aria-expanded="@(_open ? "true" : "false")"
+                aria-controls="@($"{Id}-more")" @onclick="() => _open = !_open">
+            <Icon Name="list-filter" Size="18" /> @L["Lists.Filters"]
+            @if (ActiveCount > 0)
+            {
+                <span class="lt-filter-count" aria-hidden="true">@ActiveCount</span>
+                <span class="lettra-visually-hidden">@string.Format(CultureInfo.CurrentCulture, L["Lists.Filters.Active"], ActiveCount)</span>
+            }
+        </button>
+        <div class="lt-more-filters" id="@($"{Id}-more")">
+            @More
+        </div>
+    }
+    @if (ActiveCount > 0 && OnReset.HasDelegate)
+    {
+        <button type="button" class="lettra-button is-ghost lt-filters-reset" id="@($"{Id}-reset")" @onclick="OnReset">
+            <Icon Name="x" Size="18" /> @L["Lists.Filters.Reset"]
+        </button>
+    }
+    @Actions
+</div>
+
+@code {
+    private bool _open;
+
+    [Parameter, EditorRequired] public string Id { get; set; } = string.Empty;
+
+    /// <summary>Filtres toujours visibles (la recherche, en général).</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Filtres repliés sur téléphone : statut, dates, montants, tri.</summary>
+    [Parameter] public RenderFragment? More { get; set; }
+
+    /// <summary>Boutons de l'écran (Nouveau…), en bout de barre.</summary>
+    [Parameter] public RenderFragment? Actions { get; set; }
+
+    /// <summary>Nombre de filtres posés par l'utilisateur (la recherche comprise).</summary>
+    [Parameter] public int ActiveCount { get; set; }
+
+    [Parameter] public EventCallback OnReset { get; set; }
+}

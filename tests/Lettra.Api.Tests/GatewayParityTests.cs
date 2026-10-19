@@ -22,7 +22,7 @@ namespace Lettra.Api.Tests;
 /// ADR-0005 : la même UI appelle la même interface, par HTTP (WASM) ou en direct (MAUI hors ligne).
 /// Les deux chemins doivent produire le même résultat et les mêmes codes d'erreur.
 /// </summary>
-public sealed class GatewayParityTests(LettraApiFactory factory) : IClassFixture<LettraApiFactory>, IDisposable
+public sealed partial class GatewayParityTests(LettraApiFactory factory) : IClassFixture<LettraApiFactory>, IDisposable
 {
     private readonly string _folder = Directory.CreateTempSubdirectory("lettra-maui-").FullName;
 
