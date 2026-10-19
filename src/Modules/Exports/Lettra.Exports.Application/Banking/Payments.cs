@@ -366,10 +366,17 @@ internal sealed class ListPaymentsHandler(IPaymentRepository payments, ILetterin
     public async Task<Result<PagedResponse<PaymentSummary>>> HandleAsync(ListPaymentsQuery query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
+        if (SortErrors(query) is { Count: > 0 } errors)
+        {
+            return Result<PagedResponse<PaymentSummary>>.Failure(errors);
+        }
+
         int page = Math.Max(1, query.Page);
         int size = Math.Clamp(query.PageSize, 1, 200);
         (IReadOnlyList<Payment> items, int total) = await payments.ListAsync(
-            new PaymentListFilter(query.From, query.To, query.CustomerId is Guid c ? new CustomerId(c) : null, query.Search, page, size),
+            new PaymentListFilter(
+                query.From, query.To, query.CustomerId is Guid c ? new CustomerId(c) : null, query.Search, page, size,
+                query.Sort, query.Direction, query.MinAmount, query.MaxAmount),
             cancellationToken).ConfigureAwait(false);
         IReadOnlyList<Lettering> active = await letterings.ListActiveContainingAsync([.. items.Select(p => p.Id.Value)], cancellationToken).ConfigureAwait(false);
         List<PaymentSummary> summaries =
@@ -388,6 +395,28 @@ internal sealed class ListPaymentsHandler(IPaymentRepository payments, ILetterin
                 PaymentViews.CodeOf(active, p.Id.Value))),
         ];
         return new PagedResponse<PaymentSummary>(summaries, page, size, total);
+    }
+
+    /// <summary>Colonne et sens connus, bornes de montant dans l'ordre : comme les autres listes triables.</summary>
+    private static List<Error> SortErrors(ListPaymentsQuery query)
+    {
+        List<Error> errors = [];
+        if (!Enum.IsDefined(query.Sort))
+        {
+            errors.Add(Error.Validation(ErrorCodes.Validation.Invalid, nameof(query.Sort)));
+        }
+
+        if (!Enum.IsDefined(query.Direction))
+        {
+            errors.Add(Error.Validation(ErrorCodes.Validation.Invalid, nameof(query.Direction)));
+        }
+
+        if (query.MinAmount is { } min && query.MaxAmount is { } max && min > max)
+        {
+            errors.Add(Error.Validation(ErrorCodes.Validation.Invalid, nameof(query.MaxAmount)));
+        }
+
+        return errors;
     }
 }
 

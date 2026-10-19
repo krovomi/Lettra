@@ -1,5 +1,6 @@
 using System.Globalization;
 using Bunit;
+using Lettra.Contracts.Banking;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
@@ -8,9 +9,11 @@ using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
 using Lettra.UI.Shared.Components.Explorer;
 using Lettra.UI.Shared.Localization;
+using Lettra.UI.Shared.Pages.Banking;
 using Lettra.UI.Shared.Pages.CatalogItems;
 using Lettra.UI.Shared.Pages.Parties;
 using Lettra.UI.Shared.Typing;
+using Lettra.UI.Tests.Banking;
 using Lettra.UI.Tests.Billing;
 using Lettra.UI.Tests.Consultation;
 using Lettra.UI.Tests.Security;
@@ -20,7 +23,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Lettra.UI.Tests.Lists;
 
 /// <summary>
-/// Listes paginées hors pièces (clients, fournisseurs, articles) : le tri et les filtres partent au serveur, la liste se relit
+/// Listes paginées hors pièces (clients, fournisseurs, articles, encaissements) : le tri et les filtres partent au serveur, la liste se relit
 /// depuis la première page.
 /// </summary>
 [Collection("culture")]
@@ -117,5 +120,28 @@ public sealed class ServerSideListTests : BunitContext
         catalog.Queries[^1].Sort.Should().Be(CatalogSortDto.UnitPrice, "le tri choisi est gardé");
         page.Find("#catalog-items-empty").Should().NotBeNull("aucun bien dans ce catalogue");
         Designations().Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Les_encaissements_se_trient_et_se_bornent_sur_le_serveur_depuis_la_premiere_page()
+    {
+        FakeBankingGateway banking = new();
+        Services.AddSingleton<IBankingGateway>(banking);
+        IRenderedComponent<PaymentsPage> page = Open<PaymentsPage>("payments");
+
+        banking.PaymentQueries[^1].Should().Be(new PaymentListQuery(PageSize: 50), "la date, la plus récente en tête, par défaut");
+
+        page.Find("#payments-amount-min").Change("85,50");
+        page.WaitForAssertion(() => banking.PaymentQueries[^1].MinAmount.Should().Be(85.5m));
+        page.Find("#payments-filtered-empty").Should().NotBeNull();
+        page.Find("#payments-filters-toggle").TextContent.Should().Contain("1");
+
+        page.Find("#payments-sort").Change("Amount:Ascending");
+        page.WaitForAssertion(() => banking.PaymentQueries[^1].Should().Match<PaymentListQuery>(
+            q => q.Sort == PaymentSortDto.Amount && q.Direction == SortDirectionDto.Ascending && q.Page == 1 && q.MinAmount == 85.5m));
+
+        page.Find("#payments-empty-reset").Click();
+        page.WaitForAssertion(() => banking.PaymentQueries[^1].MinAmount.Should().BeNull());
+        banking.PaymentQueries[^1].Sort.Should().Be(PaymentSortDto.Amount, "effacer les filtres garde le tri");
     }
 }

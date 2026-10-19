@@ -35,9 +35,19 @@ public sealed record GetPaymentQuery(DossierId Dossier, Guid PaymentId) : IQuery
     public Permission Permission => Permission.DossierLire;
 }
 
-/// <summary>Les encaissements du dossier, du plus récent au plus ancien.</summary>
+/// <summary>Les encaissements du dossier, du plus récent au plus ancien par défaut, bornés par date et par montant.</summary>
 public sealed record ListPaymentsQuery(
-    DossierId Dossier, DateOnly? From = null, DateOnly? To = null, Guid? CustomerId = null, string? Search = null, int Page = 1, int PageSize = 50)
+    DossierId Dossier,
+    DateOnly? From = null,
+    DateOnly? To = null,
+    Guid? CustomerId = null,
+    string? Search = null,
+    int Page = 1,
+    int PageSize = 50,
+    PaymentSortDto Sort = PaymentSortDto.Date,
+    SortDirectionDto Direction = SortDirectionDto.Descending,
+    decimal? MinAmount = null,
+    decimal? MaxAmount = null)
     : IQuery<Result<PagedResponse<PaymentSummary>>>, IRequirePermission
 {
     public Permission Permission => Permission.DossierLire;

@@ -1,3 +1,4 @@
+using Lettra.Contracts.Banking;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Common;
@@ -90,5 +91,52 @@ public sealed partial class GatewayParityTests
 
         serviceItems.Value!.Items.Select(i => i.Reference).Should().Equal(prefix + "-A", prefix + "-B");
         refused.Errors.Should().ContainSingle().Which.Should().Be(new ErrorDetail(ErrorCodes.Validation.Invalid, "Kind"));
+    }
+
+    [Theory]
+    [MemberData(nameof(Transports))]
+    public async Task Lister_les_encaissements_tries_par_montant_et_bornes(string transport)
+    {
+        await using ServiceProvider services = Gateway(transport);
+        IInvoicesGateway invoices = services.GetRequiredService<IInvoicesGateway>();
+        IBankingGateway banking = services.GetRequiredService<IBankingGateway>();
+        Guid customer = (await services.GetRequiredService<ICustomersGateway>().CreateAsync(CustomerApiTests.Martin(), default)).Value!.Id;
+        await SaveCompanyProfileAsync(services);
+        InvoiceResponse draft = (await invoices.CreateAsync(
+            new SaveInvoiceRequest
+            {
+                CustomerId = customer,
+                Lines = [new DocumentLineRequest { Designation = "Conseil", Quantity = 10, UnitPriceExclTax = 100m, UnitCode = "HUR", Kind = CatalogItemKindDto.Service }],
+            },
+            default)).Value!;
+        InvoiceResponse invoice = (await invoices.ValidateAsync(draft.Id, draft.Version, default)).Value!;
+        DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
+        foreach (decimal amount in new[] { 40m, 300m, 85.5m })
+        {
+            OperationResult<PaymentResponse> recorded = await banking.RecordPaymentAsync(
+                new RecordPaymentRequest
+                {
+                    CustomerId = customer, Date = today, Amount = amount, Method = PaymentMethodDto.Transfer, Allocations = [new PaymentAllocationRequest(invoice.Id, amount)],
+                },
+                default);
+            recorded.IsSuccess.Should().BeTrue(string.Join(", ", recorded.Errors.Select(e => e.Code)));
+        }
+
+        OperationResult<PagedResponse<PaymentSummary>> ascending = await banking.ListPaymentsAsync(
+            new PaymentListQuery(CustomerId: customer, Sort: PaymentSortDto.Amount, Direction: SortDirectionDto.Ascending), default);
+        OperationResult<PagedResponse<PaymentSummary>> bounded = await banking.ListPaymentsAsync(
+            new PaymentListQuery(CustomerId: customer, MinAmount: 85.5m, MaxAmount: 300m, Sort: PaymentSortDto.Amount), default);
+        OperationResult<PagedResponse<PaymentSummary>> byNumber = await banking.ListPaymentsAsync(
+            new PaymentListQuery(CustomerId: customer, Sort: PaymentSortDto.Number, Direction: SortDirectionDto.Ascending), default);
+        OperationResult<PagedResponse<PaymentSummary>> byCustomer = await banking.ListPaymentsAsync(
+            new PaymentListQuery(CustomerId: customer, Sort: PaymentSortDto.Customer, Direction: SortDirectionDto.Ascending), default);
+        OperationResult<PagedResponse<PaymentSummary>> reversed = await banking.ListPaymentsAsync(new PaymentListQuery(MinAmount: 10m, MaxAmount: 1m), default);
+
+        ascending.Value!.Items.Select(p => p.Amount).Should().Equal(40m, 85.5m, 300m);
+        bounded.Value!.Items.Select(p => p.Amount).Should().Equal(300m, 85.5m);
+        bounded.Value.TotalCount.Should().Be(2);
+        byNumber.Value!.Items.Select(p => p.Number).Should().BeInAscendingOrder(StringComparer.Ordinal).And.HaveCount(3);
+        byCustomer.Value!.Items.Select(p => p.Number).Should().BeInDescendingOrder(StringComparer.Ordinal, "à client égal, le numéro le plus récent d'abord");
+        reversed.Errors.Should().ContainSingle().Which.Should().Be(new ErrorDetail(ErrorCodes.Validation.Invalid, "MaxAmount"));
     }
 }

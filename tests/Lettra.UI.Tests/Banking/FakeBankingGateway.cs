@@ -33,11 +33,16 @@ internal sealed class FakeBankingGateway : IBankingGateway
             [new JournalLineResponse("512", invoice.Outstanding, 0m, null), new JournalLineResponse("411", 0m, invoice.Outstanding, null)],
             [], null, null, DateTimeOffset.UnixEpoch);
 
-    public Task<OperationResult<PagedResponse<PaymentSummary>>> ListPaymentsAsync(PaymentListQuery query, CancellationToken cancellationToken) =>
-        Task.FromResult(OperationResult<PagedResponse<PaymentSummary>>.Success(new(
+    public List<PaymentListQuery> PaymentQueries { get; } = [];
+
+    public Task<OperationResult<PagedResponse<PaymentSummary>>> ListPaymentsAsync(PaymentListQuery query, CancellationToken cancellationToken)
+    {
+        PaymentQueries.Add(query);
+        return Task.FromResult(OperationResult<PagedResponse<PaymentSummary>>.Success(new(
             [.. Payments.Select(p => new PaymentSummary(p.Id, p.Number, p.Status, p.CustomerId, p.CustomerName, p.Date, p.Amount, p.Method, p.Reference,
                 [.. p.Allocations.Select(a => a.InvoiceNumber)], p.LetteringCode))],
             query.Page, query.PageSize, Payments.Count)));
+    }
 
     public Task<OperationResult<PaymentResponse>> GetPaymentAsync(Guid id, CancellationToken cancellationToken) =>
         Task.FromResult(Payments.FirstOrDefault(p => p.Id == id) is { } payment
