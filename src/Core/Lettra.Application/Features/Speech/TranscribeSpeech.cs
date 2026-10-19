@@ -171,8 +171,8 @@ internal static class SpeechTelemetry
     {
         TagList tags = new()
         {
-            { "lettra.speech.engine", engine },
-            { "lettra.speech.mode", mode == SpeechMode.Command ? "command" : "dictation" },
+            { LettraTelemetry.Attributes.SpeechEngine, engine },
+            { LettraTelemetry.Attributes.SpeechMode, mode == SpeechMode.Command ? "command" : "dictation" },
             { LettraTelemetry.Attributes.Outcome, outcome },
         };
         Transcriptions.Add(1, tags);
