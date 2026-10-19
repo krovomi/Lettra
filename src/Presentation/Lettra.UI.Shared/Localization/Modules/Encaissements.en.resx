@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.Payments" xml:space="preserve"><value>Payments</value></data>
+  <data name="Nav.Bank" xml:space="preserve"><value>Bank reconciliation</value></data>
+  <data name="Account.512" xml:space="preserve"><value>Bank</value></data>
+  <data name="Account.658" xml:space="preserve"><value>Other operating expenses</value></data>
+  <data name="Account.758" xml:space="preserve"><value>Other operating income</value></data>
+  <data name="Account.44574" xml:space="preserve"><value>VAT on receipts, pending</value></data>
+  <data name="PaymentMethod.Transfer" xml:space="preserve"><value>Bank transfer</value></data>
+  <data name="PaymentMethod.Cheque" xml:space="preserve"><value>Cheque</value></data>
+  <data name="PaymentMethod.Card" xml:space="preserve"><value>Card</value></data>
+  <data name="PaymentMethod.Cash" xml:space="preserve"><value>Cash</value></data>
+  <data name="PaymentMethod.DirectDebit" xml:space="preserve"><value>Direct debit</value></data>
+  <data name="PaymentStatus.Posted" xml:space="preserve"><value>Posted</value></data>
+  <data name="PaymentStatus.Reversed" xml:space="preserve"><value>Reversed</value></data>
+  <data name="MatchRule.InvoiceNumber" xml:space="preserve"><value>The invoice number appears in the label</value></data>
+  <data name="MatchRule.AmountAndName" xml:space="preserve"><value>Same amount and customer name in the label</value></data>
+  <data name="MatchRule.AmountAndIban" xml:space="preserve"><value>Same amount and an IBAN already known for this customer</value></data>
+  <data name="MatchRule.SumOfInvoices" xml:space="preserve"><value>Exact sum of several invoices of the same customer</value></data>
+  <data name="Accounting.Journal.Payment" xml:space="preserve"><value>Payment (BQ)</value></data>
+  <data name="Accounting.Journal.PaymentReversal" xml:space="preserve"><value>Reversal (BQ)</value></data>
+  <data name="Payments.Title" xml:space="preserve"><value>Payments</value></data>
+  <data name="Payments.Subtitle" xml:space="preserve"><value>Payments received from customers, allocated to their invoices and matched.</value></data>
+  <data name="Payments.New" xml:space="preserve"><value>Record a payment</value></data>
+  <data name="Payments.New.Subtitle" xml:space="preserve"><value>Choose the customer, enter the amount received, then spread it over their invoices.</value></data>
+  <data name="Payments.Search" xml:space="preserve"><value>Search payments</value></data>
+  <data name="Payments.Empty" xml:space="preserve"><value>No payments yet</value></data>
+  <data name="Payments.Empty.Text" xml:space="preserve"><value>Record a payment you received, or import a bank statement to match them.</value></data>
+  <data name="Payments.Number" xml:space="preserve"><value>Number</value></data>
+  <data name="Payments.Amount" xml:space="preserve"><value>Amount</value></data>
+  <data name="Payments.Method" xml:space="preserve"><value>Payment method</value></data>
+  <data name="Payments.Invoices" xml:space="preserve"><value>Invoices</value></data>
+  <data name="Payments.Lettering" xml:space="preserve"><value>Matching code</value></data>
+  <data name="Payments.Lettering.Hint" xml:space="preserve"><value>Matching code: the invoice and its payment carry the same code in the customer account.</value></data>
+  <data name="Payments.Back" xml:space="preserve"><value>Back to payments</value></data>
+  <data name="Payments.Receipt" xml:space="preserve"><value>Payment received</value></data>
+  <data name="Payments.ChooseCustomer" xml:space="preserve"><value>Choose a customer</value></data>
+  <data name="Payments.AmountReceived" xml:space="preserve"><value>Amount received</value></data>
+  <data name="Payments.Reference" xml:space="preserve"><value>Reference</value></data>
+  <data name="Payments.Reference.Hint" xml:space="preserve"><value>Cheque number, transfer label… optional.</value></data>
+  <data name="Payments.FromLine" xml:space="preserve"><value>Bank transaction of {0}: {1}</value></data>
+  <data name="Payments.Allocation" xml:space="preserve"><value>Invoices paid</value></data>
+  <data name="Payments.Allocation.Hint" xml:space="preserve"><value>The amount is spread over the oldest invoices first; you can change it line by line.</value></data>
+  <data name="Payments.Spread" xml:space="preserve"><value>Spread automatically</value></data>
+  <data name="Payments.Outstanding" xml:space="preserve"><value>Outstanding</value></data>
+  <data name="Payments.Allocated" xml:space="preserve"><value>Allocated</value></data>
+  <data name="Payments.AllocatedFor" xml:space="preserve"><value>Amount allocated to invoice {0}</value></data>
+  <data name="Payments.TotalAllocated" xml:space="preserve"><value>Total allocated</value></data>
+  <data name="Payments.Overdue" xml:space="preserve"><value>{0} days overdue</value></data>
+  <data name="Payments.NothingDue" xml:space="preserve"><value>Nothing due for this customer</value></data>
+  <data name="Payments.NothingDue.Text" xml:space="preserve"><value>All of their invoices are paid.</value></data>
+  <data name="Payments.GapLoss" xml:space="preserve"><value>Shortfall booked as an expense (658)</value></data>
+  <data name="Payments.GapGain" xml:space="preserve"><value>Overpayment booked as income (758)</value></data>
+  <data name="Payments.GapHint" xml:space="preserve"><value>Small differences up to {0} are written off automatically; above that, adjust the allocation.</value></data>
+  <data name="Payments.Save" xml:space="preserve"><value>Save the payment</value></data>
+  <data name="Payments.Saved" xml:space="preserve"><value>Payment {0} recorded.</value></data>
+  <data name="Payments.Saved.Lettered" xml:space="preserve"><value>Payment {0} recorded and matched with code {1}.</value></data>
+  <data name="Payments.Detail.Title" xml:space="preserve"><value>Payment {0}</value></data>
+  <data name="Payments.Entry" xml:space="preserve"><value>Bank entry</value></data>
+  <data name="Payments.ReversalEntry" xml:space="preserve"><value>Reversal of {0}</value></data>
+  <data name="Payments.Reverse" xml:space="preserve"><value>Reverse</value></data>
+  <data name="Payments.Reverse.Hint" xml:space="preserve"><value>A payment is never deleted: reversing it posts the opposite entry, reopens the invoices and keeps a trace of the matching.</value></data>
+  <data name="Payments.Reverse.Reason" xml:space="preserve"><value>Reason</value></data>
+  <data name="Payments.Reverse.Reason.Hint" xml:space="preserve"><value>For example: bounced cheque, wrong customer.</value></data>
+  <data name="Payments.Reverse.Confirm" xml:space="preserve"><value>Confirm the reversal</value></data>
+  <data name="Payments.Reversed" xml:space="preserve"><value>Payment {0} reversed.</value></data>
+  <data name="Bank.Title" xml:space="preserve"><value>Bank reconciliation</value></data>
+  <data name="Bank.Subtitle" xml:space="preserve"><value>Import the bank statement: Lettra suggests the matching invoices, you confirm.</value></data>
+  <data name="Bank.Pending" xml:space="preserve"><value>To match</value></data>
+  <data name="Bank.Proposals" xml:space="preserve"><value>Suggestions</value></data>
+  <data name="Bank.Matched" xml:space="preserve"><value>Matched</value></data>
+  <data name="Bank.Ignored" xml:space="preserve"><value>Set aside</value></data>
+  <data name="Bank.Import" xml:space="preserve"><value>Import a statement</value></data>
+  <data name="Bank.Import.Hint" xml:space="preserve"><value>CAMT.053, OFX or CSV file exported from the bank's online space, 5 MB at most. A statement imported twice is not counted twice.</value></data>
+  <data name="Bank.Import.Choose" xml:space="preserve"><value>Choose the file</value></data>
+  <data name="Bank.Import.Demo" xml:space="preserve"><value>Import a demo statement</value></data>
+  <data name="Bank.Imported" xml:space="preserve"><value>{0} transaction(s) imported, {1} already known, {2} suggestion(s).</value></data>
+  <data name="Bank.LastImport" xml:space="preserve"><value>Last statement: {0}, imported on {1}</value></data>
+  <data name="Bank.Csv.Title" xml:space="preserve"><value>Settings for a CSV file</value></data>
+  <data name="Bank.Csv.Hint" xml:space="preserve"><value>Leave empty for automatic detection; otherwise give the column names or numbers.</value></data>
+  <data name="Bank.Csv.Separator" xml:space="preserve"><value>Separator</value></data>
+  <data name="Bank.Csv.Auto" xml:space="preserve"><value>Automatic</value></data>
+  <data name="Bank.Csv.Tab" xml:space="preserve"><value>Tab</value></data>
+  <data name="Bank.Csv.Header" xml:space="preserve"><value>The first line holds the column titles</value></data>
+  <data name="Bank.Csv.DateColumn" xml:space="preserve"><value>Date column</value></data>
+  <data name="Bank.Csv.LabelColumn" xml:space="preserve"><value>Label column</value></data>
+  <data name="Bank.Csv.AmountColumn" xml:space="preserve"><value>Amount column</value></data>
+  <data name="Bank.Csv.DebitColumn" xml:space="preserve"><value>Debit column</value></data>
+  <data name="Bank.Csv.CreditColumn" xml:space="preserve"><value>Credit column</value></data>
+  <data name="Bank.Csv.DateFormat" xml:space="preserve"><value>Date format</value></data>
+  <data name="Bank.Threshold" xml:space="preserve"><value>Small difference threshold</value></data>
+  <data name="Bank.Threshold.Hint" xml:space="preserve"><value>A difference up to this amount between the transfer and the invoice is written off to 658 or 758.</value></data>
+  <data name="Bank.Threshold.Saved" xml:space="preserve"><value>Threshold saved.</value></data>
+  <data name="Bank.Lines" xml:space="preserve"><value>Statement transactions</value></data>
+  <data name="Bank.All" xml:space="preserve"><value>All</value></data>
+  <data name="Bank.Empty" xml:space="preserve"><value>No statement imported</value></data>
+  <data name="Bank.Empty.Text" xml:space="preserve"><value>Import a statement to see its transactions and match them with invoices.</value></data>
+  <data name="Bank.AllDone" xml:space="preserve"><value>Everything is matched</value></data>
+  <data name="Bank.AllDone.Text" xml:space="preserve"><value>No transaction is waiting to be matched.</value></data>
+  <data name="Bank.SelectProposals" xml:space="preserve"><value>Select the {0} suggestion(s)</value></data>
+  <data name="Bank.ConfirmSelected" xml:space="preserve"><value>Confirm selection ({0})</value></data>
+  <data name="Bank.SelectLine" xml:space="preserve"><value>Select transaction {0}</value></data>
+  <data name="Bank.Operation" xml:space="preserve"><value>Transaction</value></data>
+  <data name="Bank.Proposal" xml:space="preserve"><value>Suggestion</value></data>
+  <data name="Bank.Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Bank.Status.Matched" xml:space="preserve"><value>Matched</value></data>
+  <data name="Bank.Status.Ignored" xml:space="preserve"><value>Set aside</value></data>
+  <data name="Bank.NoProposal" xml:space="preserve"><value>No matching invoice</value></data>
+  <data name="Bank.WriteOff" xml:space="preserve"><value>including written-off difference: {0}</value></data>
+  <data name="Bank.Debit" xml:space="preserve"><value>Debit: not a customer payment</value></data>
+  <data name="Bank.Confirm" xml:space="preserve"><value>Confirm</value></data>
+  <data name="Bank.Allocate" xml:space="preserve"><value>Allocate</value></data>
+  <data name="Bank.Ignore" xml:space="preserve"><value>Set aside</value></data>
+  <data name="Bank.Restore" xml:space="preserve"><value>Restore</value></data>
+  <data name="Bank.Confirmed" xml:space="preserve"><value>{0} match(es) confirmed and lettered.</value></data>
+  <data name="Bank.ConfirmFailed" xml:space="preserve"><value>{0} match(es) not confirmed: {1}</value></data>
+  <data name="Bank.Ignored.Toast" xml:space="preserve"><value>Transaction set aside.</value></data>
+  <data name="Bank.Restored.Toast" xml:space="preserve"><value>Transaction back in the list to match.</value></data>
+  <data name="Error.Payment.NotFound" xml:space="preserve"><value>This payment does not exist.</value></data>
+  <data name="Error.Payment.AmountInvalid" xml:space="preserve"><value>The amount must be positive, with at most two decimals.</value></data>
+  <data name="Error.Payment.DateInvalid" xml:space="preserve"><value>The payment date is invalid or in the future.</value></data>
+  <data name="Error.Payment.MethodInvalid" xml:space="preserve"><value>Choose a payment method.</value></data>
+  <data name="Error.Payment.ReferenceTooLong" xml:space="preserve"><value>The reference is too long (140 characters at most).</value></data>
+  <data name="Error.Payment.AllocationsRequired" xml:space="preserve"><value>Allocate the payment to at least one invoice.</value></data>
+  <data name="Error.Payment.TooManyAllocations" xml:space="preserve"><value>Too many invoices for a single payment.</value></data>
+  <data name="Error.Payment.AllocationInvalid" xml:space="preserve"><value>An allocated invoice does not exist, is not issued, or has an invalid allocated amount.</value></data>
+  <data name="Error.Payment.AllocationDuplicate" xml:space="preserve"><value>The same invoice appears twice.</value></data>
+  <data name="Error.Payment.OtherCustomerInvoice" xml:space="preserve"><value>One invoice belongs to another customer.</value></data>
+  <data name="Error.Payment.GapAboveThreshold" xml:space="preserve"><value>The difference between the amount received and the total allocated is above the small difference threshold.</value></data>
+  <data name="Error.Payment.ExceedsOutstanding" xml:space="preserve"><value>The allocated amount is more than the invoice's outstanding balance.</value></data>
+  <data name="Error.Payment.CreditNoteNotPayable" xml:space="preserve"><value>A credit note cannot be paid.</value></data>
+  <data name="Error.Payment.AlreadyReversed" xml:space="preserve"><value>This payment has already been reversed.</value></data>
+  <data name="Error.Payment.ReasonRequired" xml:space="preserve"><value>Give the reason for the reversal.</value></data>
+  <data name="Error.Payment.ReasonTooLong" xml:space="preserve"><value>The reason is too long.</value></data>
+  <data name="Error.Payment.CustomerNotFound" xml:space="preserve"><value>This customer does not exist.</value></data>
+  <data name="Error.BankStatement.FileRequired" xml:space="preserve"><value>Choose a statement file.</value></data>
+  <data name="Error.BankStatement.FileTooLarge" xml:space="preserve"><value>The file is larger than 5 MB.</value></data>
+  <data name="Error.BankStatement.FormatUnknown" xml:space="preserve"><value>Unknown format: use a CAMT.053, OFX or CSV file.</value></data>
+  <data name="Error.BankStatement.FileInvalid" xml:space="preserve"><value>The file could not be read.</value></data>
+  <data name="Error.BankStatement.NoTransactions" xml:space="preserve"><value>The statement has no transactions.</value></data>
+  <data name="Error.BankStatement.CsvColumnsInvalid" xml:space="preserve"><value>CSV columns not found: set the date, label and amount in the CSV settings.</value></data>
+  <data name="Error.BankStatement.LineNotFound" xml:space="preserve"><value>This bank transaction does not exist.</value></data>
+  <data name="Error.BankStatement.LineAlreadyMatched" xml:space="preserve"><value>This transaction is already matched.</value></data>
+  <data name="Error.BankStatement.LineNotCredit" xml:space="preserve"><value>Only a credit transaction can be matched with an invoice.</value></data>
+  <data name="Error.BankStatement.AmountMismatch" xml:space="preserve"><value>The amount received must equal the bank transaction.</value></data>
+  <data name="Error.BankStatement.TooManyLines" xml:space="preserve"><value>Too many transactions at once: confirm them in several goes.</value></data>
+  <data name="Error.BankingSettings.ThresholdInvalid" xml:space="preserve"><value>The threshold must be between €0 and €100.</value></data>
+</root>

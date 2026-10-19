@@ -80,6 +80,8 @@ internal static class IconPaths
         ["mic-off"] = "<line x1='2' x2='22' y1='2' y2='22'/> <path d='M18.89 13.23A7.12 7.12 0 0 0 19 12v-2'/> <path d='M5 10v2a7 7 0 0 0 12 5'/> <path d='M15 9.34V5a3 3 0 0 0-5.68-1.33'/> <path d='M9 9v3a3 3 0 0 0 5.12 2.12'/> <line x1='12' x2='12' y1='19' y2='22'/>",
         ["list-checks"] = "<path d='m3 17 2 2 4-4'/> <path d='m3 7 2 2 4-4'/> <path d='M13 6h8'/> <path d='M13 12h8'/> <path d='M13 18h8'/>",
         ["map-pin"] = "<path d='M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0'/> <circle cx='12' cy='10' r='3'/>",
+        ["landmark"] = "<line x1='3' x2='21' y1='22' y2='22'/> <line x1='6' x2='6' y1='18' y2='11'/> <line x1='10' x2='10' y1='18' y2='11'/> <line x1='14' x2='14' y1='18' y2='11'/> <line x1='18' x2='18' y1='18' y2='11'/> <polygon points='12 2 20 7 4 7'/>",
+        ["upload"] = "<path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/> <polyline points='17 8 12 3 7 8'/> <line x1='12' x2='12' y1='3' y2='15'/>",
         ["text-quote"] = "<path d='M17 6H3'/> <path d='M21 12H8'/> <path d='M21 18H8'/> <path d='M3 12v6'/>",
     };
 }
