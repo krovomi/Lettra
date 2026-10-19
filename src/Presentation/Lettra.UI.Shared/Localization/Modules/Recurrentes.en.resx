@@ -14,14 +14,6 @@
   <data name="Recurring.Run" xml:space="preserve"><value>Create due invoices</value></data>
   <data name="Recurring.RunOne" xml:space="preserve"><value>Create the due invoice</value></data>
   <data name="Recurring.Search" xml:space="preserve"><value>Search templates</value></data>
-  <data name="Recurring.Sort" xml:space="preserve"><value>Sort by</value></data>
-  <data name="Recurring.Sort.NextIssueDate" xml:space="preserve"><value>Next invoice</value></data>
-  <data name="Recurring.Sort.Name" xml:space="preserve"><value>Name</value></data>
-  <data name="Recurring.Sort.Customer" xml:space="preserve"><value>Customer</value></data>
-  <data name="Recurring.Sort.Amount" xml:space="preserve"><value>Amount excl. VAT</value></data>
-  <data name="Recurring.Order" xml:space="preserve"><value>Order</value></data>
-  <data name="Recurring.Order.Ascending" xml:space="preserve"><value>Ascending</value></data>
-  <data name="Recurring.Order.Descending" xml:space="preserve"><value>Descending</value></data>
   <data name="Recurring.Empty" xml:space="preserve"><value>No recurring invoices</value></data>
   <data name="Recurring.Empty.Text" xml:space="preserve"><value>Create a template for a customer billed every month, quarter or year.</value></data>
   <data name="Recurring.NextInvoice" xml:space="preserve"><value>Next invoice</value></data>

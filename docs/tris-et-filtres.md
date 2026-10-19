@@ -27,6 +27,7 @@ et dans l'application MAUI, sur tous les appareils.
 |---|---|---|---|
 | Factures, avoirs, factures d'acompte | Numéro, client, date, échéance, statut, total HT, total TTC | Recherche, nature, statut, date d'émission, montant TTC | Serveur |
 | Devis | Numéro, client, date, fin de validité, statut, total HT, total TTC | Recherche, statut, date d'émission, montant TTC | Serveur |
+| Factures récurrentes | Nom, client, prochaine facture, total HT | Recherche, statut (actif, en pause, à facturer) | Serveur |
 | Clients | Nom, ville | Recherche, nature (entreprise ou particulier) | Serveur |
 | Fournisseurs | Nom, ville | Recherche | Serveur |
 | Catalogue | Référence, désignation, prix HT | Recherche, nature (bien ou service), archivés | Serveur |

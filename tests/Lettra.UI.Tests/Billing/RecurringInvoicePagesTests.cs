@@ -77,20 +77,38 @@ public sealed class RecurringInvoicePagesTests : BunitContext
     }
 
     [Fact]
-    public void Les_filtres_et_le_tri_partent_au_serveur_et_une_liste_filtree_vide_le_dit()
+    public void Les_filtres_et_le_tri_partent_au_serveur_et_une_liste_filtree_vide_se_vide_de_ses_filtres()
     {
         _recurring.Add(FakeRecurringInvoicesGateway.Template("Tenue mensuelle"));
         IRenderedComponent<RecurringInvoiceList> page = List();
 
+        page.Find("#recurring-sort-amount").Click();
+        Last().Should().Match<RecurringInvoiceListQuery>(q => q.Sort == RecurringInvoiceSortDto.Amount && q.Descending, "un montant se trie d'abord du plus grand");
+        page.Find("#recurring-sort-amount").Click();
+        Last().Descending.Should().BeFalse("un second clic inverse le sens");
+        page.Find("#recurring-sort-name").Click();
+        Last().Should().Match<RecurringInvoiceListQuery>(q => q.Sort == RecurringInvoiceSortDto.Name && !q.Descending);
+        page.Find("select#recurring-sort").Change($"{RecurringInvoiceSortDto.Customer}:{SortDirectionDto.Descending}");
+        Last().Should().Match<RecurringInvoiceListQuery>(q => q.Sort == RecurringInvoiceSortDto.Customer && q.Descending, "le téléphone trie par la liste déroulante");
+        page.Find("th[aria-sort=descending]").TextContent.Should().Contain("Client");
+
         page.Find("#recurring-state").Change("paused");
-        page.Find("#recurring-sort").Change(nameof(RecurringInvoiceSortDto.Amount));
-        page.Find("#recurring-descending").Change("desc");
         page.Find("#recurring-search").Change("introuvable");
 
         page.WaitForAssertion(() => page.Find("#recurring-empty").TextContent.Should().NotContain("Créez un modèle"));
-        RecurringInvoiceListQuery last = _recurring.Queries.Where(q => q.PageSize > 1).Last();
-        last.Should().Match<RecurringInvoiceListQuery>(q => q.Active == false && q.Sort == RecurringInvoiceSortDto.Amount && q.Descending && q.Search == "introuvable");
+        Last().Should().Match<RecurringInvoiceListQuery>(q => q.Active == false && q.Search == "introuvable" && q.Page == 1);
+        page.Find("#recurring-filters-toggle").TextContent.Should().Contain("2");
+
+        page.Find("#recurring-empty-reset").Click();
+
+        page.WaitForAssertion(() => page.FindAll("#recurring-table tbody tr").Should().HaveCount(1));
+        Last().Should().Match<RecurringInvoiceListQuery>(q => q.Active == null && q.Search == null && q.Sort == RecurringInvoiceSortDto.Customer,
+            "effacer les filtres garde le tri choisi");
+        page.FindAll("#recurring-filters-reset").Should().BeEmpty();
+        page.Find(".lt-list-scroll #recurring-table").Should().NotBeNull("un tableau plus large que l'écran défile seul");
     }
+
+    private RecurringInvoiceListQuery Last() => _recurring.Queries.Where(q => q.PageSize > 1).Last();
 
     [Fact]
     public void Une_liste_vide_invite_a_creer_un_modele()
