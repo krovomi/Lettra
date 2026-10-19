@@ -19,8 +19,10 @@ namespace Lettra.Contracts.Sync;
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
 [JsonDerivedType(typeof(CreateCustomerIntent), "customer.create")]
 [JsonDerivedType(typeof(UpdateCustomerIntent), "customer.update")]
+[JsonDerivedType(typeof(DeleteCustomerIntent), "customer.delete")]
 [JsonDerivedType(typeof(CreateSupplierIntent), "supplier.create")]
 [JsonDerivedType(typeof(UpdateSupplierIntent), "supplier.update")]
+[JsonDerivedType(typeof(DeleteSupplierIntent), "supplier.delete")]
 [JsonDerivedType(typeof(CreateCatalogItemIntent), "catalog-item.create")]
 [JsonDerivedType(typeof(UpdateCatalogItemIntent), "catalog-item.update")]
 [JsonDerivedType(typeof(SetCatalogItemArchivedIntent), "catalog-item.archive")]
@@ -47,10 +49,21 @@ public sealed record CreateCustomerIntent(Guid IdempotencyKey, Guid EntityId, Da
 public sealed record UpdateCustomerIntent(Guid IdempotencyKey, Guid EntityId, DateTimeOffset RecordedAt, CreateCustomerRequest Base, CreateCustomerRequest Data)
     : SyncIntent(IdempotencyKey, EntityId, RecordedAt);
 
+/// <summary>
+/// Suppression d'un client : retiré des listes, gardé en base pour ses pièces. <see cref="Name"/> sert seulement à
+/// l'afficher dans la demande de synchronisation.
+/// </summary>
+public sealed record DeleteCustomerIntent(Guid IdempotencyKey, Guid EntityId, DateTimeOffset RecordedAt, string? Name = null)
+    : SyncIntent(IdempotencyKey, EntityId, RecordedAt);
+
 public sealed record CreateSupplierIntent(Guid IdempotencyKey, Guid EntityId, DateTimeOffset RecordedAt, CreateSupplierRequest Data)
     : SyncIntent(IdempotencyKey, EntityId, RecordedAt);
 
 public sealed record UpdateSupplierIntent(Guid IdempotencyKey, Guid EntityId, DateTimeOffset RecordedAt, CreateSupplierRequest Base, CreateSupplierRequest Data)
+    : SyncIntent(IdempotencyKey, EntityId, RecordedAt);
+
+/// <summary>Suppression d'un fournisseur, comme <see cref="DeleteCustomerIntent"/>.</summary>
+public sealed record DeleteSupplierIntent(Guid IdempotencyKey, Guid EntityId, DateTimeOffset RecordedAt, string? Name = null)
     : SyncIntent(IdempotencyKey, EntityId, RecordedAt);
 
 public sealed record CreateCatalogItemIntent(Guid IdempotencyKey, Guid EntityId, DateTimeOffset RecordedAt, SaveCatalogItemRequest Data)
@@ -135,8 +148,8 @@ public static class SyncIntents
     /// <summary>Nature de l'élément visé, pour regrouper les intentions et les changements reçus.</summary>
     public static SyncEntityKind EntityOf(this SyncIntent intent) => intent switch
     {
-        CreateCustomerIntent or UpdateCustomerIntent => SyncEntityKind.Customer,
-        CreateSupplierIntent or UpdateSupplierIntent => SyncEntityKind.Supplier,
+        CreateCustomerIntent or UpdateCustomerIntent or DeleteCustomerIntent => SyncEntityKind.Customer,
+        CreateSupplierIntent or UpdateSupplierIntent or DeleteSupplierIntent => SyncEntityKind.Supplier,
         CreateCatalogItemIntent or UpdateCatalogItemIntent or SetCatalogItemArchivedIntent => SyncEntityKind.CatalogItem,
         ValidatedInvoiceFact => SyncEntityKind.Invoice,
         _ => throw new ArgumentOutOfRangeException(nameof(intent), intent?.GetType().Name, "Intention inconnue."),

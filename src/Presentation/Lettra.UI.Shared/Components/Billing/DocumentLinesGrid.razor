@@ -13,6 +13,7 @@
 <div class="lettra-grid-host lettra-lines-host">
     <DataEntryGrid TItem="DocumentLineRow" @ref="_grid" Items="Lines" Columns="_columns" KeySelector="RowKey"
                    Scope="_scope" IsReadOnly="_ => ReadOnly" OnItemChanged="OnItemChangedAsync" EndReached="AddLineAtEndAsync"
+                   OnRowDelete="@(ReadOnly ? default(EventCallback<int>) : EventCallback.Factory.Create<int>(this, DeleteRowAsync))"
                    AriaLabel="@L["Lines.Grid"]" />
 </div>
 
@@ -165,10 +166,18 @@
 
     private Task AddLineAtEndAsync() => ReadOnly ? Task.CompletedTask : AddLineAsync();
 
-    private async Task DeleteLineAsync(CommandContext context)
+    private Task DeleteLineAsync(CommandContext context) => DeleteRowAsync(context.Row);
+
+    /// <summary>Ctrl+Suppr ou la corbeille de la ligne : la ligne part, les totaux suivent, le brouillon s'enregistre.</summary>
+    private async Task DeleteRowAsync(int row)
     {
-        DocumentLineRow line = Lines[context.Row];
-        Lines.RemoveAt(context.Row);
+        if (ReadOnly || row < 0 || row >= Lines.Count)
+        {
+            return;
+        }
+
+        DocumentLineRow line = Lines[row];
+        Lines.RemoveAt(row);
         _totals.Remove(line.ToInput(Regime));
         _grid?.Refresh();
         StateHasChanged();
@@ -176,7 +185,7 @@
         await OnLinesChanged.InvokeAsync();
         if (_grid is not null && Lines.Count > 0)
         {
-            await _grid.FocusCellAsync(Math.Min(context.Row, Lines.Count - 1), Column.Designation);
+            await _grid.FocusCellAsync(Math.Min(row, Lines.Count - 1), Column.Designation);
         }
     }
 

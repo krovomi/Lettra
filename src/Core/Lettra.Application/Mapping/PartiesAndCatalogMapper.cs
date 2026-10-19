@@ -57,6 +57,7 @@ public static class PartiesAndCatalogMapper
             supplier.CreatedAt)
         {
             Version = supplier.Version,
+            IsArchived = supplier.IsArchived,
         };
     }
 

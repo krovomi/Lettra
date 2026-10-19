@@ -73,11 +73,19 @@ internal sealed class SyncOutboxBehavior<TRequest, TResult>(
                 return await customers.GetAsync(u.CustomerId, ct).ConfigureAwait(false) is { } customer
                     ? new UpdateCustomerIntent(key, u.CustomerId.Value, now, customer.ToRequest(), u.Data.ToRequest())
                     : null;
+            case DeleteCustomerCommand d:
+                return await customers.GetAsync(d.CustomerId, ct).ConfigureAwait(false) is { IsArchived: false } deleted
+                    ? new DeleteCustomerIntent(key, d.CustomerId.Value, now, deleted.Name)
+                    : null;
             case CreateSupplierCommand c:
                 return new CreateSupplierIntent(key, Required(c.Id?.Value), now, c.Data.ToRequest());
             case UpdateSupplierCommand u:
                 return await suppliers.GetAsync(u.SupplierId, ct).ConfigureAwait(false) is { } supplier
                     ? new UpdateSupplierIntent(key, u.SupplierId.Value, now, supplier.ToRequest(), u.Data.ToRequest())
+                    : null;
+            case DeleteSupplierCommand d:
+                return await suppliers.GetAsync(d.SupplierId, ct).ConfigureAwait(false) is { IsArchived: false } removed
+                    ? new DeleteSupplierIntent(key, d.SupplierId.Value, now, removed.Name)
                     : null;
             case CreateCatalogItemCommand c:
                 return new CreateCatalogItemIntent(key, Required(c.Id?.Value), now, c.Data.ToRequest());

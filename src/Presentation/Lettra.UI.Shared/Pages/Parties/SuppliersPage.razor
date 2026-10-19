@@ -56,12 +56,17 @@
                 aria-activedescendant="@ActiveOptionId" @ref="ListElement" @onkeydown="OnListKeyDown">
                 @foreach (SupplierSummary supplier in Items)
                 {
-                    <li @key="supplier.Id" id="@OptionId(supplier)" role="option" aria-selected="@(IsSelected(supplier) ? "true" : "false")"
+                    <li @key="supplier.Id" id="@OptionId(supplier)" role="option" aria-keyshortcuts="Delete" aria-selected="@(IsSelected(supplier) ? "true" : "false")"
                         class="lt-record @(IsSelected(supplier) ? "is-selected" : null)" @onclick="() => GoTo(Href(supplier.Id))">
                         <span class="lt-avatar is-alt" aria-hidden="true">@ExplorerText.Initials(supplier.Name)</span>
                         <span class="lt-record-main">
                             <span class="lt-record-title">@supplier.Name</span>
                             <span class="lt-record-meta">@supplier.City@(supplier.Siren is { } siren ? $" · {ExplorerText.Siren(siren)}" : null)</span>
+                        </span>
+                        <span class="lt-record-action">
+                            <RowDelete @ref="RowDeletes[supplier.Id]" InOption="true" Question="@L["Suppliers.Row.Delete.Question"]"
+                                       Label="@string.Format(Culture, L["Suppliers.Row.Delete"], supplier.Name)"
+                                       OnDelete="() => DeleteRowAsync(supplier, supplier.Name)" />
                         </span>
                     </li>
                 }
@@ -194,6 +199,9 @@
 
     protected override Task<OperationResult<SupplierResponse>> UpdateAsync(Guid id, long expectedVersion, CreateSupplierRequest form, CancellationToken cancellationToken) =>
         Gateway.UpdateAsync(id, expectedVersion, form, cancellationToken);
+
+    protected override Task<OperationResult<bool>> DeleteAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken) =>
+        Gateway.DeleteAsync(id, expectedVersion, cancellationToken);
 
     protected override CreateSupplierRequest NewForm(string? name) => new() { Name = name ?? string.Empty };
 
