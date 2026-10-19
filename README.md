@@ -38,7 +38,7 @@ résultat. « **Non vérifié** » signifie que la méthode est décrite mais qu
 | iPhone ou iPad réel | Application native | **Pas encore possible** : il faut un Mac et un compte Apple Developer pour la signer. Utiliser le navigateur. |
 | Mac (macOS) | [Application macOS](#macos-mac-catalyst) | Construite, mais **s'arrête à la création du premier dossier** tant qu'elle n'est pas signée par Apple. Utiliser le navigateur. |
 | Linux, en application native | Pas de version native (.NET MAUI ne vise pas Linux) | Utiliser le navigateur. |
-| Tous les appareils sur les mêmes données | [Serveur commun](#serveur-commun) : **Paramètres** > **Serveur du cabinet**, adresse `http://localhost:8080` (Android par câble : `adb reverse tcp:8080 tcp:8080` et `adb reverse tcp:8081 tcp:8081`) | Navigateur et harnais de l'application installée **vérifiés** de bout en bout ; Windows, Android et simulateur iOS **non vérifiés** sur appareil ; iPhone et Mac : signature Apple nécessaire. |
+| Tous les appareils sur les mêmes données | [Serveur commun](#serveur-commun) : **Paramètres** > **Serveur du cabinet**, adresse `http://localhost:8080` (Android par câble : `adb reverse tcp:8080 tcp:8080` et `adb reverse tcp:8081 tcp:8081`) | Navigateur, harnais de l'application installée et émulateur Android **vérifiés** de bout en bout ; Windows, vrai téléphone Android et simulateur iOS **non vérifiés** ; iPhone et Mac : signature Apple nécessaire. |
 
 Les applications natives se téléchargent depuis la CI. Sur GitHub, ouvrez l'onglet
 [Actions](https://github.com/krovomi/Lettra/actions/workflows/ci.yml?query=branch%3Amain+is%3Asuccess), cliquez sur
@@ -405,6 +405,28 @@ Menu **FEC** : l'exercice est l'année civile en cours (modifiable, 24 mois au p
 
 Sans SIREN dans la fiche entreprise, l'export le demande au lieu de produire un fichier.
 
+### 8. Les déclarations : TVA, DES et calendrier fiscal
+
+Menu **Déclarations** (groupe Comptabilité). Lettra prépare, le cabinet dépose : rien n'est télédéclaré.
+
+1. Dans **Entreprise**, choisissez le « Régime de déclaration de la TVA » (réel normal, réel simplifié ou mini-réel).
+   Sans régime, l'onglet **TVA** le demande.
+2. Onglet **TVA** : le brouillon de la CA3 (ou de la CA12 au réel simplifié) du mois écoulé, partie ventes. Chaque case
+   (A1, 08, E2, 16, 28…) s'ouvre sur les factures, acomptes et avoirs qui la composent. Les contrôles disent si la TVA
+   correspond au journal, s'il reste des brouillons ou des factures non transmises. **Marquer comme déposée** quand
+   c'est fait. La TVA déductible reste à 0 : les achats ne sont pas encore dans Lettra.
+3. Onglet **DES** : la déclaration européenne de services du mois (clients de l'Union en autoliquidation) et son
+   fichier CSV.
+4. Onglet **Calendrier** : les échéances de l'année (CA3 ou CA12 et acomptes, DES, CFE, IS, liasse), proches, en
+   retard ou déposées. Les échéances proches et dépassées arrivent aussi dans **Alertes** (passe toutes les 12 heures,
+   par le Worker ou, dans la démo sans Worker, par l'API).
+5. Onglet **Réglages** : date de clôture, CA3 mensuelle ou trimestrielle, jour limite de la TVA (du 15 au 24), IS et
+   CFE.
+
+Les correspondances de cases et les dates sont à faire relire par un expert-comptable. *(Vérifié : navigateur,
+Chromium Linux à 1440, 768 et 375 px, données conservées après une mise à jour de la démo ; non vérifié : application
+native, Safari, Firefox.)* Détails : [docs/declarations-fiscales.md](docs/declarations-fiscales.md).
+
 ### Et ensuite
 
 - **Catalogue** : les articles et prestations, même présentation que les clients (liste, fiche, **Modifier**,
@@ -413,6 +435,11 @@ Sans SIREN dans la fiche entreprise, l'export le demande au lieu de produire un 
 - **Journal et balance** : les écritures de vente de la période (journal, balance, grand livre d'un compte ou d'un
   client), en lecture, les mêmes que dans le FEC. La fiche d'un client y renvoie par **Compte client**. Les
   encaissements ne sont pas encore comptabilisés : le solde 411 est ce qui a été facturé, avoirs déduits.
+- **Supprimer une ligne** : chaque tableau a une corbeille en bout de ligne. Un clic, une confirmation dans la ligne,
+  puis un message. Un devis ou une facture ne se supprime qu'en brouillon (sinon le message dit quoi faire : refuser,
+  laisser expirer, émettre un avoir). Un client ou un fournisseur supprimé disparaît des listes, ses pièces restent
+  consultables. Un article du catalogue s'archive et se réactive. Détails :
+  [docs/suppression-des-lignes.md](docs/suppression-des-lignes.md).
 - **Alertes** : le centre d'alertes techniques (chaîne anti-fraude d'un dossier, trou de numérotation). Il ne montre
   aucune donnée de client.
 - **Verrouiller** (en haut) : ferme la session ; la phrase secrète la rouvre.
@@ -432,7 +459,8 @@ Sans SIREN dans la fiche entreprise, l'export le demande au lieu de produire un 
 
 - **Tutoriel** : chaque écran se présente la première fois. Le bouton **?** en haut le rejoue, et le menu
   Apparence > « Réinitialiser les tutoriels » permet de tout revoir. Le tableau de bord affiche « Pour bien démarrer »,
-  qui se coche tout seul. *(Vérifié : Chromium Linux 1440/768/375 px ; non vérifié : Safari, Firefox, MAUI.)*
+  qui se coche tout seul. Rien ne démarre avant la connexion : l'accueil se présente juste après. *(Vérifié : Chromium
+  Linux 1440/768/375 px ; non vérifié : Safari, Firefox, MAUI.)*
 - **Aide à la saisie** : code postal ↔ ville dans la fiche client, « / » pour les modèles de texte (objet, notes,
   conditions de paiement), saisie rapide dans les lignes (`3h`, `1h30`, `1,5 j`, `2x45`), F4 sur la désignation,
   articles habituels du client. *(Vérifié : Chromium Linux.)*
@@ -510,6 +538,7 @@ Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou 
 | Poste relié à un serveur, synchronisation | Prête dans l'application (fichier `lettra.json`), mais demande un serveur Lettra et Keycloak. Sur un poste isolé, la page Synchronisation indique « Ce poste ne synchronise pas ». |
 | Hors ligne sur un appareil relié au serveur commun | Relié au serveur commun, l'appareil a besoin du réseau. Reste à étendre la synchronisation aux devis, factures et règlements, ou à y ouvrir les brouillons hors ligne. |
 | Invitations | Une personne ajoutée dans **Équipe et accès** apparaît et reçoit des accès, mais Lettra n'envoie pas d'e-mail et ne crée pas encore son compte de connexion (Keycloak) : elle ne peut pas encore se connecter. |
+| Télédéclaration de la TVA et de la DES | Non : Lettra prépare le brouillon et le fichier, le dépôt se fait sur impots.gouv ou le service en ligne des douanes. La TVA déductible (achats) et la TVA sur les encaissements ne sont pas encore reprises. |
 | Envoi des devis et factures par e-mail | Non : on télécharge le PDF ou le Factur-X. |
 | Applications signées | Non : avertissement de Windows au premier lancement, APK Android installé à la main, application macOS arrêtée par le Trousseau, pas de version pour iPhone réel. |
 

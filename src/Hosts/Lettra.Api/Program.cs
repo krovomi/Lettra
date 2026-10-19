@@ -6,6 +6,7 @@ using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Bootstrap;
 using Lettra.Contracts.Serialization;
 using Lettra.DemoData;
+using Lettra.Exports.Infrastructure;
 using Lettra.Infrastructure.Catalog;
 using Lettra.Infrastructure.Persistence.Outbox;
 using Lettra.Supervision.Infrastructure;
@@ -35,10 +36,12 @@ builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 
 // Installation sans Worker (démonstration navigateur, petit réseau local) : l'API reprend elle-même les envois à la
-// plateforme agréée mis en file pendant une panne. Ailleurs, c'est le Worker qui s'en charge.
+// plateforme agréée mis en file pendant une panne et la passe d'alertes du calendrier fiscal. Ailleurs, c'est le Worker
+// qui s'en charge.
 if (bool.TryParse(builder.Configuration[OutboxApiHosting.Key], out bool outboxInApi) && outboxInApi)
 {
     builder.Services.AddOutboxDispatch(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
+    builder.Services.AddFiscalDeadlineAlerts(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
 }
 
 WebApplication app = builder.Build();
