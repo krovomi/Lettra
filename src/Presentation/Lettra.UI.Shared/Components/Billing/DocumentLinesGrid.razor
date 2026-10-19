@@ -111,7 +111,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        OperationResult<PagedResponse<CatalogItemSummary>> catalog = await Catalog.ListAsync(null, false, 1, CatalogPageSize, CancellationToken.None);
+        OperationResult<PagedResponse<CatalogItemSummary>> catalog = await Catalog.ListAsync(new CatalogListQuery(PageSize: CatalogPageSize), CancellationToken.None);
         _catalog = catalog.Value?.Items ?? [];
 
         // Lignes d'un devis dicté depuis un autre écran : posées dès que la grille est là.

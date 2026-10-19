@@ -144,7 +144,7 @@ public sealed class DemoDataTests : IDisposable
 
         (await app.GetRequiredService<ICustomersGateway>().ListAsync(1, 100, default)).Value!.TotalCount.Should().BeInRange(30, 50);
         (await app.GetRequiredService<ISuppliersGateway>().ListAsync(1, 100, default)).Value!.TotalCount.Should().BeInRange(10, 15);
-        PagedResponse<CatalogItemSummary> catalog = (await app.GetRequiredService<ICatalogGateway>().ListAsync(null, includeArchived: true, 1, 200, default)).Value!;
+        PagedResponse<CatalogItemSummary> catalog = (await app.GetRequiredService<ICatalogGateway>().ListAsync(new CatalogListQuery(IncludeArchived: true, PageSize: 200), default)).Value!;
         catalog.TotalCount.Should().BeGreaterThanOrEqualTo(30);
         catalog.Items.Count(i => i.IsArchived).Should().Be(2);
         PagedResponse<PriceListSummary> priceLists = (await app.GetRequiredService<IPriceListsGateway>().ListAsync(1, 10, default)).Value!;

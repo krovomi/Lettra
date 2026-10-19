@@ -28,10 +28,15 @@ internal sealed class InMemoryPartiesAndCatalog : ISupplierRepository, ISupplier
 
     public Task<Supplier?> FindAsync(SupplierId id, CancellationToken cancellationToken) => Task.FromResult(Suppliers.GetValueOrDefault(id));
 
-    public Task<PagedResponse<SupplierSummary>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken) =>
-        Task.FromResult(new PagedResponse<SupplierSummary>(
+    public PartyListFilter? LastPartyFilter { get; private set; }
+
+    public Task<PagedResponse<SupplierSummary>> ListAsync(PartyListFilter filter, CancellationToken cancellationToken)
+    {
+        LastPartyFilter = filter;
+        return Task.FromResult(new PagedResponse<SupplierSummary>(
             Suppliers.Values.Where(s => !s.IsArchived).Select(s => new SupplierSummary(s.Id.Value, s.Name, s.Siren?.Value, s.Address.City)).ToList(),
-            page, pageSize, Suppliers.Values.Count(s => !s.IsArchived)));
+            filter.Page, filter.PageSize, Suppliers.Values.Count(s => !s.IsArchived)));
+    }
 
     public Task<SupplierResponse?> GetAsync(SupplierId id, CancellationToken cancellationToken) =>
         Task.FromResult(Suppliers.GetValueOrDefault(id)?.ToResponse());

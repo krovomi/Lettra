@@ -163,6 +163,8 @@ internal sealed class FakeTaxGateway : ITaxGateway
 
     public List<MarkFiscalFilingRequest> Marks { get; } = [];
 
+    public List<DesLineResponse> ExtraDesLines { get; } = [];
+
     public string? VatError { get; set; }
 
     public VatDeclarationRegimeDto? Regime { get; set; } = VatDeclarationRegimeDto.RealNormal;
@@ -245,11 +247,11 @@ internal sealed class FakeTaxGateway : ITaxGateway
         return Task.FromResult(OperationResult<FiscalSettingsResponse>.Success(Settings));
     }
 
-    private static DesResponse Des(int year, int month)
+    private DesResponse Des(int year, int month)
     {
         TaxSourceResponse source = new(InvoiceId, InvoiceKindDto.Invoice, "FAC-000101", new(year, month, 10), Guid.Empty, "Berlin Beratung GmbH", 1400.6m, 0m);
         return new DesResponse(year, month, new DateOnly(year, month, 1).AddMonths(1).AddDays(11),
-            [new DesLineResponse(1, "DE123456789", "DE", Guid.Empty, "Berlin Beratung GmbH", 1401m, [source])],
+            [new DesLineResponse(1, "DE123456789", "DE", Guid.Empty, "Berlin Beratung GmbH", 1401m, [source]), .. ExtraDesLines],
             1401m, [new TaxCheckResponse("DesVatNumberMissing", TaxCheckSeverityDto.Ok, Count: 0)], null);
     }
 }

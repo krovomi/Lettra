@@ -99,10 +99,11 @@ internal sealed class InProcessSuppliersGateway(IServiceScopeFactory scopes) : I
     public Task<OperationResult<PagedResponse<SupplierSummary>>> ListAsync(int page, int pageSize, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new ListSuppliersQuery(dossier, page, pageSize), ct), cancellationToken);
 
-    public Task<OperationResult<PagedResponse<SupplierSummary>>> SearchAsync(string? search, int page, int pageSize, CancellationToken cancellationToken) =>
+    public Task<OperationResult<PagedResponse<SupplierSummary>>> SearchAsync(PartyListQuery query, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(
             scopes,
-            (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new ListSuppliersQuery(dossier, page, pageSize, string.IsNullOrWhiteSpace(search) ? null : search.Trim()), ct),
+            (sp, dossier, ct) => InProcessScope.QueryAsync(
+                sp, new ListSuppliersQuery(dossier, query.Page, query.PageSize, string.IsNullOrWhiteSpace(query.Search) ? null : query.Search.Trim(), query.Sort, query.Direction), ct),
             cancellationToken);
 
     public Task<OperationResult<SupplierResponse>> GetAsync(Guid id, CancellationToken cancellationToken) =>
@@ -122,10 +123,11 @@ internal sealed class InProcessCatalogGateway(IServiceScopeFactory scopes) : ICa
     public Task<OperationResult<CatalogReferenceData>> GetReferenceDataAsync(CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetCatalogReferenceDataQuery(dossier), ct), cancellationToken);
 
-    public Task<OperationResult<PagedResponse<CatalogItemSummary>>> ListAsync(string? search, bool includeArchived, int page, int pageSize, CancellationToken cancellationToken) =>
+    public Task<OperationResult<PagedResponse<CatalogItemSummary>>> ListAsync(CatalogListQuery query, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(
             scopes,
-            (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new ListCatalogItemsQuery(dossier, search, includeArchived, page, pageSize), ct),
+            (sp, dossier, ct) => InProcessScope.QueryAsync(
+                sp, new ListCatalogItemsQuery(dossier, query.Search, query.IncludeArchived, query.Page, query.PageSize, query.Sort, query.Direction, query.Kind), ct),
             cancellationToken);
 
     public Task<OperationResult<CatalogItemResponse>> GetAsync(Guid id, CancellationToken cancellationToken) =>
