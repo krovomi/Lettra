@@ -71,7 +71,9 @@ l'appareil retenait (menu, dossiers, thème, densité, valeurs de saisie) y est 
   Catalog `PreferencesUtilisateur` pour SQLite, PostgreSQL et SQL Server. Un document illisible revient aux valeurs
   de départ.
 - **API** : `/api/v1/me/preferences` — `GET`, `PUT` (enregistrer), `DELETE` (réinitialiser), `POST /usage` (compter un
-  choix), `DELETE /usage?dossierId=` (oublier). Politique `User`, jeton CSRF.
+  choix), `DELETE /usage?dossierId=` (oublier). Politique `User`, jeton CSRF. Routes déclarées personnelles par
+  `ForOwnAccountOnly()` (`OwnAccountOnlyMetadata`) : aucune permission de dossier, seule exception admise par
+  `AuthenticationApiTests.Chaque_route_de_l_api_declare_une_permission`, et seulement sous `/api/v1/me/`.
 - **Interface** : `IUserPreferencesGateway` (HTTP et en direct) ; `UserPreferencesState` (lecture, écriture, repli sur
   l'appareil), `PreferencesSync` (relie menu, dossiers, thème, densité, langue et écran d'accueil au compte, démarré
   par `MainLayout`), `EntryPreferences` (ce que lisent les écrans de saisie), `RecentDocuments`, composants
