@@ -47,7 +47,7 @@ public sealed class OtherHttpGatewaysUnreachableTests
             (await customers.CreateAsync(CustomerApiTests.Martin(), default)).Errors,
             (await customers.ListAsync(1, 10, default)).Errors,
             (await customers.GetAsync(id, default)).Errors,
-            (await customers.SearchAsync("martin", 1, 10, default)).Errors,
+            (await customers.SearchAsync(new PartyListQuery("martin", 1, 10), default)).Errors,
             (await customers.UpdateAsync(id, 1, CustomerApiTests.Martin(), default)).Errors,
             (await customers.DeleteAsync(id, 1, default)).Errors,
             (await session.GetAsync(default)).Errors,

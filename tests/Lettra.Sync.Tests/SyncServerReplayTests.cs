@@ -445,8 +445,8 @@ internal sealed class ReplayServerNode(DossierId dossier, string file, TestClock
 
     private sealed class StaleCustomers(ICustomerReadStore inner, StaleReads stale) : ICustomerReadStore
     {
-        public Task<PagedResponse<CustomerSummary>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken) =>
-            inner.ListAsync(search, page, pageSize, cancellationToken);
+        public Task<PagedResponse<CustomerSummary>> ListAsync(PartyListFilter filter, CancellationToken cancellationToken) =>
+            inner.ListAsync(filter, cancellationToken);
 
         public async Task<CustomerResponse?> GetAsync(CustomerId id, CancellationToken cancellationToken)
         {
