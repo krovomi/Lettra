@@ -106,6 +106,8 @@ python3 build/couverture/fusionner.py TestResults/couverture 30
 Le script fusionne les rapports des 14 projets de tests (une ligne est couverte si au moins un
 projet l'exécute), écarte le code généré et affiche la couverture par assembly, puis les
 fichiers qui ont le plus de lignes non couvertes.
+Avec `--seuil-lignes 88 --seuil-branches 78`, il sort en erreur (code 1) si la couverture
+totale passe sous ces seuils : c'est l'étape bloquante proposée pour la CI.
 
 Attention : sous instrumentation de couverture, le test d'architecture
 `Les_domaines_n_utilisent_aucun_framework` échoue (l'instrumentation ajoute une référence
