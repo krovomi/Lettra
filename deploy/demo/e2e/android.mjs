@@ -86,10 +86,35 @@ async function appPage() {
     return page;
 }
 // Clic au centre de l'écran : sur un téléphone, la barre de navigation fixe du bas recouvrirait un lien en bas de page.
+// Si la WebView ne dessine plus d'images (écran éteint, requestAnimationFrame à l'arrêt), Playwright attend sans fin un
+// élément « stable » : le clic part alors directement par le DOM, comme le ferait le doigt.
+// La WebView n'est pas un navigateur piloté (pas de navigator.webdriver) : la visite guidée démarre seule, comme pour
+// un vrai utilisateur, et son fond assombri capte les clics. On la passe comme lui, par « Passer ».
+async function skipTour(page) {
+    for (let i = 0; i < 5; i++) {
+        const skip = page.locator('#tour-skip');
+        if (!(await skip.isVisible().catch(() => false))) return;
+        log('visite guidée passée');
+        await skip.evaluate(element => element.click()).catch(() => {});
+        await page.locator('.lt-tour').waitFor({ state: 'detached', timeout: 5_000 }).catch(() => {});
+    }
+}
+// Les champs Blazor en @bind ne prennent la valeur qu'à l'événement change (perte du focus). Un clic direct par le DOM
+// (repli de press) ne fait pas perdre le focus : on envoie change nous-mêmes, comme le ferait un toucher ailleurs.
+async function type(page, selector, value) {
+    await page.fill(selector, value);
+    await page.locator(selector).dispatchEvent('change');
+}
 async function press(locator, options) {
     await locator.waitFor(options);
+    await skipTour(locator.page());
     await locator.evaluate(element => element.scrollIntoView({ block: 'center' }));
-    await locator.click(options);
+    try {
+        await locator.click({ timeout: 10_000 });
+    } catch (error) {
+        log(`clic direct (${error.message.split('\n')[0]})`);
+        await locator.evaluate(element => element.click());
+    }
 }
 async function step(page, what, action) {
     try { return await action(); } catch (error) {
@@ -103,13 +128,18 @@ async function start() {
     await device.shell(`am start -W -n ${app}/.MainActivity`);
 }
 
+// Écran allumé et déverrouillé : sans cela la WebView ne dessine plus.
+await device.shell('input keyevent KEYCODE_WAKEUP');
+await device.shell('wm dismiss-keyguard');
+await device.shell('svc power stayon true');
+
 // 1. Premier lancement : l'application travaille seule ; l'écran de session mène au choix du serveur.
 await device.shell(`am force-stop ${app}`);
 await start();
 let page = await appPage();
 await step(page, 'serveur du cabinet', async () => {
     await press(page.locator('#shared-server-link'), { timeout: 120_000 });
-    await page.fill('#shared-server-address', baseUrl);
+    await type(page, '#shared-server-address', baseUrl);
     await shot('adresse-saisie');
     await press(page.locator('#shared-server-submit'));
     await page.locator('#shared-server-restart-now').waitFor();
@@ -118,7 +148,7 @@ await shot('serveur-retenu');
 log(`serveur ${baseUrl} retenu`);
 // L'application se ferme (Android : fermer puis rouvrir).
 await page.locator('#shared-server-restart-now').evaluate(element => element.scrollIntoView({ block: 'center' })).catch(() => {});
-await page.locator('#shared-server-restart-now').click({ noWaitAfter: true, timeout: 10_000 }).catch(() => {});
+await page.locator('#shared-server-restart-now').evaluate(element => element.click()).catch(() => {});
 await sleep(3000);
 
 // 2. Relancée, l'application est reliée au serveur : connexion du cabinet dans un onglet du navigateur.
@@ -148,13 +178,15 @@ await keycloak.click('#kc-login');
 log('connexion du cabinet envoyée (mot de passe + code)');
 
 // 3. De retour dans l'application : le client saisi dans le navigateur est là.
-await step(page, 'accueil de l\'application connectée', () => page.locator('.lettra-user').waitFor({ timeout: 120_000 }));
+// Sur un téléphone, le nom de l'utilisateur est replié dans l'en-tête : présent dans la page mais masqué.
+await step(page, 'accueil de l\'application connectée', () => page.locator('.lettra-user').waitFor({ state: 'attached', timeout: 120_000 }));
 await shot('connecte');
-log(`connecté comme « ${await page.locator('.lettra-user').innerText()} »`);
+log(`connecté comme « ${(await page.locator('.lettra-user').textContent())?.trim()} »`);
 await step(page, `client « ${browserCustomer} » du navigateur`, async () => {
     // Menu replié sur un téléphone : navigation interne de Blazor, comme un clic sur « Clients ».
     await page.evaluate(() => window.Blazor.navigateTo('customers'));
     await page.locator('#customers-list, #customers-empty').first().waitFor();
+    await skipTour(page);
     await page.fill('#customers-search', browserCustomer);
     await page.locator('#customers-list [role=option]', { hasText: browserCustomer }).first().waitFor({ timeout: 30_000 });
 });
@@ -166,15 +198,15 @@ const name = `Client Android ${new Date().toISOString().replace(/\D/g, '').slice
 await step(page, `client « ${name} » enregistré`, async () => {
     await press(page.locator('#customers-new'));
     await page.locator('#name').waitFor({ timeout: 30_000 });
-    await page.locator('label', { hasText: /Particulier|Individual/ }).locator('input[type=radio]').check().catch(async () => {
-        await page.locator('input[type=radio]').nth(1).check();
-    });
-    await page.fill('#name', name);
-    await page.fill('#email', 'android@client-demo.example');
-    await page.fill('#line1', '2 rue de l\'Appareil');
-    await page.fill('#zip', '75002');
-    await page.fill('#city', 'Paris');
-    await page.fill('#country', 'FR');
+    await skipTour(page);
+    const individual = page.locator('label', { hasText: /Particulier|Individual/ }).locator('input[type=radio]');
+    await press((await individual.count()) > 0 ? individual.first() : page.locator('input[type=radio]').nth(1));
+    await type(page, '#name', name);
+    await type(page, '#email', 'android@client-demo.example');
+    await type(page, '#line1', '2 rue de l\'Appareil');
+    await type(page, '#zip', '75002');
+    await type(page, '#city', 'Paris');
+    await type(page, '#country', 'FR');
     await shot('client-saisi');
     await press(page.locator('form button[type=submit]'));
     // Confirmation par le toaster, puis la fiche du client.
