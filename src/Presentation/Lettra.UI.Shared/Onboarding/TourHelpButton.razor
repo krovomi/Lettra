@@ -1,19 +1,8 @@
-@* Bouton « ? » de la barre du haut : rejoue le tutoriel de l'écran affiché (ou celui de l'accueil s'il n'en a pas). *@
-@inject GuidedTours Tours
-@inject NavigationManager Navigation
+@* Bouton « ? » de la barre du haut : ouvre l'aide (questions fréquentes, tutoriel de l'écran, recherche générale). *@
+@inject HelpPanelState Help
 @inject IStringLocalizer<SharedResource> L
 
-<button type="button" id="tour-help" class="lt-icon-button" data-tour="help" aria-label="@L["Tour.Help"]" title="@L["Tour.Help"]" @onclick="Start">
+<button type="button" id="tour-help" class="lt-icon-button" data-tour="help" aria-label="@L["Tour.Help"]" title="@L["Tour.Help"]"
+        aria-haspopup="dialog" aria-expanded="@(Help.IsOpen ? "true" : "false")" aria-controls="help-panel" @onclick="() => Help.Open()">
     <Icon Name="circle-help" />
 </button>
-
-@code {
-    private void Start()
-    {
-        TourDefinition? tour = TourCatalog.ForPath(Navigation.ToBaseRelativePath(Navigation.Uri)) ?? TourCatalog.Find("home");
-        if (tour is not null)
-        {
-            Tours.Start(tour);
-        }
-    }
-}

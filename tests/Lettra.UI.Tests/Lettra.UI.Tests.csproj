@@ -18,6 +18,7 @@
     <None Include="..\..\src\Presentation\Lettra.UI.Shared\wwwroot\data\codes-postaux.txt" Link="Typing\codes-postaux.txt" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Presentation\Lettra.UI.Shared\wwwroot\lettra-grid.css" Link="Design\lettra-grid.css" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Presentation\Lettra.UI.Shared\wwwroot\lettra.css" Link="Design\lettra.css" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Presentation\Lettra.UI.Shared\wwwroot\lettra-nav.css" Link="Design\lettra-nav.css" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

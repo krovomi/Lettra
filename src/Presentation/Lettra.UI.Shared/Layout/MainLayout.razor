@@ -2,12 +2,14 @@
    - ordinateur (≥ 1200 px) : barre latérale, repliable en rail ;
    - tablette (768 à 1199 px) : rail d'icônes ;
    - téléphone (< 768 px) : barre du haut compacte et onglets en bas (Accueil, Devis, Factures, Clients, Plus), la feuille
-     « Plus » portant le reste de la navigation et l'apparence. Zones sûres iOS et cibles tactiles de 44 px. *@
+     « Plus » portant le reste de la navigation, l'aide et l'apparence. Zones sûres iOS et cibles tactiles de 44 px.
+   Le menu (NavMenu) défile seul, sans barre horizontale ; l'aide et le repli restent en bas de la barre latérale. *@
 @inherits LayoutComponentBase
 @implements IDisposable
 @inject IStringLocalizer<SharedResource> L
 @inject UiPreferences Preferences
 @inject AssistantPanelState Assistant
+@inject HelpPanelState Help
 @inject NavigationManager Navigation
 @inject Lettra.UI.Shared.Cabinet.CurrentDossier Dossier
 
@@ -22,14 +24,21 @@
                 <span class="lt-brand-name">Lettra</span>
             </a>
             <nav aria-label="@L["Nav.Label"]">
-                <NavMenu />
+                <NavMenu Id="nav" OnSearchEverywhere="SearchEverywhereAsync" />
             </nav>
-            <button type="button" id="nav-collapse" class="lt-nav-collapse" aria-pressed="@(Preferences.NavCollapsed ? "true" : "false")"
-                    aria-label="@L[Preferences.NavCollapsed ? "Shell.ExpandNav" : "Shell.CollapseNav"]" title="@L[Preferences.NavCollapsed ? "Shell.ExpandNav" : "Shell.CollapseNav"]"
-                    @onclick="Preferences.ToggleNavAsync">
-                <Icon Name="@(Preferences.NavCollapsed ? "chevrons-right" : "chevrons-left")" />
-                <span class="lt-nav-label">@L["Shell.CollapseNav"]</span>
-            </button>
+            <div class="lt-sidebar-footer">
+                <button type="button" id="nav-help" class="lt-sidebar-action" aria-haspopup="dialog" aria-controls="help-panel"
+                        aria-label="@L["Help.Menu"]" title="@L["Help.Menu"]" @onclick="() => Help.Open()">
+                    <Icon Name="circle-help" />
+                    <span class="lt-nav-label">@L["Help.Menu"]</span>
+                </button>
+                <button type="button" id="nav-collapse" class="lt-sidebar-action lt-nav-collapse" aria-pressed="@(Preferences.NavCollapsed ? "true" : "false")"
+                        aria-label="@L[Preferences.NavCollapsed ? "Shell.ExpandNav" : "Shell.CollapseNav"]" title="@L[Preferences.NavCollapsed ? "Shell.ExpandNav" : "Shell.CollapseNav"]"
+                        @onclick="Preferences.ToggleNavAsync">
+                    <Icon Name="@(Preferences.NavCollapsed ? "chevrons-right" : "chevrons-left")" />
+                    <span class="lt-nav-label">@L["Shell.CollapseNav"]</span>
+                </button>
+            </div>
         </aside>
 
         <div class="lt-frame">
@@ -92,8 +101,12 @@
                     <button type="button" class="lt-icon-button" aria-label="@L["Shell.Close"]" @onclick="CloseMore"><Icon Name="x" /></button>
                 </div>
                 <nav aria-label="@L["Nav.Label"]">
-                    <NavMenu Items="NavItems.All.Where(i => !i.InTabBar)" OnNavigate="CloseMore" />
+                    <NavMenu Id="more" Items="NavItems.All.Where(i => !i.InTabBar)" OnNavigate="CloseMore" OnSearchEverywhere="SearchEverywhereAsync" />
                 </nav>
+                <button type="button" id="more-help" class="lt-sheet-help" @onclick="OpenHelpFromSheet">
+                    <Icon Name="circle-help" />
+                    <span class="lt-nav-label">@L["Help.Menu"]</span>
+                </button>
                 <AppearanceMenu Inline="true" />
             </div>
         }
@@ -105,6 +118,7 @@
 
 <GlobalShortcuts Scope="_globalScope" />
 <CommandPalette @ref="_palette" />
+<HelpPanel OnSearchEverywhere="SearchEverywhereAsync" />
 <TourHost />
 <VoiceHost />
 </DeviceLockGate>
@@ -138,6 +152,14 @@
     }
 
     private Task OpenPaletteAsync() => _palette?.OpenAsync() ?? Task.CompletedTask;
+
+    private Task SearchEverywhereAsync(string query) => _palette?.OpenAsync(query) ?? Task.CompletedTask;
+
+    private void OpenHelpFromSheet()
+    {
+        CloseMore();
+        Help.Open();
+    }
 
     private void ToggleMore() => _moreOpen = !_moreOpen;
 

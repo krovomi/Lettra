@@ -1,0 +1,257 @@
+@* Panneau « Besoin d'aide ? » : on y tape sa question en langage courant et l'aide répond sans IA, par des réponses
+   écrites à l'avance (HelpCatalog), celles de l'écran affiché en tête. Il relance le tutoriel de l'écran, ouvre la
+   recherche générale (Ctrl+K) et, seulement si le cabinet a activé l'assistant, lui passe la question.
+   Ordinateur et tablette : volet à droite ; téléphone : plein écran. Échap ferme. *@
+@using Lettra.Contracts.Assistant
+@implements IDisposable
+@inject HelpPanelState State
+@inject GuidedTours Tours
+@inject AssistantPanelState Assistant
+@inject ToastService Toasts
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+
+@if (State.IsOpen)
+{
+    <div class="lt-help-backdrop" @onclick="State.Close"></div>
+    <aside id="help-panel" class="lt-help" role="dialog" aria-modal="true" aria-labelledby="help-title" @onkeydown="OnKeyDown">
+        <header class="lt-help-header">
+            <h2 id="help-title"><Icon Name="circle-help" /> @L["Help.Title"]</h2>
+            <button type="button" id="help-close" class="lt-icon-button" aria-label="@L["Shell.Close"]" title="@L["Shell.Close"]" @onclick="State.Close">
+                <Icon Name="x" />
+            </button>
+        </header>
+
+        <div class="lt-help-body">
+            <form class="lt-help-ask" role="search" @onsubmit="Ask" @onsubmit:preventDefault>
+                <label for="help-query">@L["Help.Ask.Label"]</label>
+                <div class="lt-help-ask-field">
+                    <Icon Name="search" Size="18" />
+                    <input @ref="_input" id="help-query" type="search" value="@_query" @oninput="OnInput" autocomplete="off"
+                           placeholder="@L["Help.Ask.Placeholder"]" aria-describedby="help-results-status" />
+                </div>
+            </form>
+
+            <div class="lt-help-actions">
+                @if (CurrentTour is not null)
+                {
+                    <button type="button" id="help-tour-start" class="lt-help-action" @onclick="StartTour">
+                        <Icon Name="circle-play" />
+                        <span><strong>@L["Help.Tour"]</strong><small>@L["Help.Tour.Hint"]</small></span>
+                    </button>
+                }
+                <button type="button" id="help-palette" class="lt-help-action" @onclick="SearchEverywhereAsync">
+                    <Icon Name="search" />
+                    <span><strong>@L["Help.Palette"]</strong><small>@L["Help.Palette.Hint"]</small></span>
+                    <kbd>Ctrl K</kbd>
+                </button>
+                @if (Assistant.IsAvailable)
+                {
+                    <button type="button" id="help-assistant" class="lt-help-action" @onclick="AskAssistant">
+                        <Icon Name="sparkles" />
+                        <span><strong>@L["Help.Assistant"]</strong><small>@L["Help.Assistant.Hint"]</small></span>
+                    </button>
+                }
+            </div>
+
+            <p id="help-results-status" class="lettra-visually-hidden" role="status">@ResultsStatus</p>
+
+            @if (string.IsNullOrWhiteSpace(_query))
+            {
+                @if (_onScreen.Count > 0)
+                {
+                    <section aria-labelledby="help-here-title">
+                        <h3 id="help-here-title" class="lt-help-section-title">@L["Help.OnThisScreen"]</h3>
+                        @Entries(_onScreen)
+                    </section>
+                }
+                <section aria-labelledby="help-faq-title">
+                    <h3 id="help-faq-title" class="lt-help-section-title">@L["Help.Faq"]</h3>
+                    @Entries(HelpCatalog.All.Except(_onScreen).ToList())
+                </section>
+            }
+            else if (_results.Count > 0)
+            {
+                <section aria-labelledby="help-answers-title">
+                    <h3 id="help-answers-title" class="lt-help-section-title">@L["Help.Answers"]</h3>
+                    @Entries(_results)
+                </section>
+            }
+            else
+            {
+                <div id="help-empty" class="lt-help-empty">
+                    <p><strong>@L["Help.Empty.Title"]</strong></p>
+                    <p class="lettra-muted">@L[Assistant.IsAvailable ? "Help.Empty.TextWithAssistant" : "Help.Empty.Text"]</p>
+                </div>
+            }
+
+            <section class="lt-help-more" aria-labelledby="help-keys-title">
+                <h3 id="help-keys-title" class="lt-help-section-title">@L["Help.Keys"]</h3>
+                <dl class="lt-help-keys">
+                    <dt><kbd>Ctrl K</kbd></dt><dd>@L["Help.Keys.Palette"]</dd>
+                    <dt><kbd>@L["Help.Keys.DensityKey"]</kbd></dt><dd>@L["Help.Keys.Density"]</dd>
+                    <dt><kbd>@L["Help.Keys.EscapeKey"]</kbd></dt><dd>@L["Help.Keys.Escape"]</dd>
+                </dl>
+                <button type="button" id="help-tours-reset" class="lettra-link" @onclick="ResetToursAsync">@L["Help.ToursReset"]</button>
+            </section>
+        </div>
+    </aside>
+}
+
+@code {
+    private ElementReference _input;
+    private bool _focusPending;
+    private string _query = string.Empty;
+    private string? _expanded;
+    private IReadOnlyList<HelpEntry> _onScreen = [];
+    private IReadOnlyList<HelpEntry> _results = [];
+    private TourDefinition? _tour;
+
+    /// <summary>« Chercher partout » : ouvre la palette Ctrl+K avec la question tapée.</summary>
+    [Parameter] public EventCallback<string> OnSearchEverywhere { get; set; }
+
+    private TourDefinition? CurrentTour => _tour;
+
+    private string ResultsStatus => string.IsNullOrWhiteSpace(_query)
+        ? string.Empty
+        : string.Format(CultureInfo.CurrentCulture, L["Help.ResultsCount"], _results.Count);
+
+    protected override void OnInitialized()
+    {
+        State.Changed += OnStateChanged;
+        if (State.IsOpen)
+        {
+            Prepare();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_focusPending && State.IsOpen)
+        {
+            _focusPending = false;
+            try
+            {
+                await _input.FocusAsync();
+            }
+            catch (InvalidOperationException)
+            {
+                // Pas de rendu dans un navigateur (tests) : le focus n'a pas d'objet.
+            }
+        }
+    }
+
+    private RenderFragment Entries(IReadOnlyList<HelpEntry> entries) => __builder =>
+    {
+        <ul class="lt-help-faq" role="list">
+            @foreach (HelpEntry entry in entries)
+            {
+                <li>
+                    <details id="@($"help-faq-{entry.Id}")" open="@(entry.Id == _expanded)">
+                        <summary>@L[entry.QuestionKey]</summary>
+                        <div class="lt-help-answer">
+                            <p>@L[entry.AnswerKey]</p>
+                            @if (entry.LinkHref is { } href && entry.LinkLabelKey is { } label)
+                            {
+                                <a class="lettra-button is-secondary lt-help-go" href="@href" @onclick="State.Close">
+                                    @string.Format(CultureInfo.CurrentCulture, L["Help.Open"], L[label]) <Icon Name="arrow-right" Size="16" />
+                                </a>
+                            }
+                        </div>
+                    </details>
+                </li>
+            }
+        </ul>
+    };
+
+    private void Prepare()
+    {
+        string path = Navigation.ToBaseRelativePath(Navigation.Uri);
+        (string? query, string? entryId) = State.TakePending();
+        _query = query ?? string.Empty;
+        _expanded = entryId;
+        _onScreen = HelpCatalog.ForPath(path);
+        _tour = TourCatalog.ForPath(path) ?? TourCatalog.Find("home");
+        Search();
+        // Une question reprise du menu montre tout de suite sa meilleure réponse.
+        if (_expanded is null && _query.Length > 0 && _results.Count > 0)
+        {
+            _expanded = _results[0].Id;
+        }
+
+        _focusPending = true;
+    }
+
+    private void OnInput(ChangeEventArgs e)
+    {
+        _query = e.Value?.ToString() ?? string.Empty;
+        _expanded = null;
+        Search();
+    }
+
+    private void Search()
+    {
+        _results = HelpCatalog.Search(_query, key => L[key]);
+        if (_results.Count == 1)
+        {
+            _expanded = _results[0].Id;
+        }
+    }
+
+    // Entrée : déplie la meilleure réponse.
+    private void Ask()
+    {
+        if (_results.Count > 0 && !string.IsNullOrWhiteSpace(_query))
+        {
+            _expanded = _results[0].Id;
+        }
+    }
+
+    private void StartTour()
+    {
+        if (_tour is { } tour)
+        {
+            State.Close();
+            Tours.Start(tour);
+        }
+    }
+
+    private async Task SearchEverywhereAsync()
+    {
+        string query = _query;
+        State.Close();
+        await OnSearchEverywhere.InvokeAsync(query);
+    }
+
+    private void AskAssistant()
+    {
+        State.Close();
+        Assistant.Open(AssistantFeature.RegulatoryQuestions, question: string.IsNullOrWhiteSpace(_query) ? null : _query.Trim());
+    }
+
+    private async Task ResetToursAsync()
+    {
+        await Tours.ResetAsync();
+        Toasts.Show(ToastKind.Success, L["Help.ToursReset.Done"]);
+    }
+
+    private void OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            State.Close();
+        }
+    }
+
+    private void OnStateChanged(object? sender, EventArgs e)
+    {
+        if (State.IsOpen)
+        {
+            Prepare();
+        }
+
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose() => State.Changed -= OnStateChanged;
+}

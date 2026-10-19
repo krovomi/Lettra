@@ -5,7 +5,7 @@
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <!-- Tutoriel des premières fois et liste de démarrage : vague 5, lane F. -->
-  <data name="Tour.Help" xml:space="preserve"><value>Tutoriel de cet écran</value></data>
+  <data name="Tour.Help" xml:space="preserve"><value>Aide et tutoriels</value></data>
   <data name="Tour.Count" xml:space="preserve"><value>Étape {0} sur {1}</value></data>
   <data name="Tour.Next" xml:space="preserve"><value>Suivant</value></data>
   <data name="Tour.Previous" xml:space="preserve"><value>Précédent</value></data>
@@ -20,15 +20,15 @@
   <data name="Tour.home.welcome.Title" xml:space="preserve"><value>Bienvenue dans Lettra</value></data>
   <data name="Tour.home.welcome.Text" xml:space="preserve"><value>En une minute, voici où tout se trouve. Les flèches du clavier avancent et reculent, Échap ferme ce tutoriel.</value></data>
   <data name="Tour.home.nav.Title" xml:space="preserve"><value>Les écrans</value></data>
-  <data name="Tour.home.nav.Text" xml:space="preserve"><value>Devis, factures, clients, catalogue, FEC : tout part d'ici. Sur téléphone, les onglets du bas portent l'essentiel et « Plus » le reste.</value></data>
+  <data name="Tour.home.nav.Text" xml:space="preserve"><value>Devis, factures, clients, catalogue, FEC : tout part d'ici. Tapez quelques lettres en haut du menu pour trouver un écran, repliez les sections avec leur chevron et épinglez vos écrans favoris avec l'étoile. Sur téléphone, les onglets du bas portent l'essentiel et « Plus » le reste.</value></data>
   <data name="Tour.home.search.Title" xml:space="preserve"><value>Tout trouver avec Ctrl+K</value></data>
   <data name="Tour.home.search.Text" xml:space="preserve"><value>Tapez un numéro de pièce, un nom de client ou une action (« nouveau devis Dupont »). Les modèles de texte s'y insèrent aussi.</value></data>
   <data name="Tour.home.starter.Title" xml:space="preserve"><value>Vos premiers pas</value></data>
   <data name="Tour.home.starter.Text" xml:space="preserve"><value>Cette liste se coche toute seule au fil de votre travail. Vous pouvez la masquer quand vous voulez.</value></data>
   <data name="Tour.home.appearance.Title" xml:space="preserve"><value>Thème et densité</value></data>
   <data name="Tour.home.appearance.Text" xml:space="preserve"><value>Clair, sombre, ardoise ou contraste élevé, et une densité Confort pour le doigt ou Expert pour le clavier.</value></data>
-  <data name="Tour.home.help.Title" xml:space="preserve"><value>Revoir un tutoriel</value></data>
-  <data name="Tour.home.help.Text" xml:space="preserve"><value>Chaque écran a le sien, joué à votre première visite. Ce bouton le relance à tout moment.</value></data>
+  <data name="Tour.home.help.Title" xml:space="preserve"><value>Besoin d'aide ?</value></data>
+  <data name="Tour.home.help.Text" xml:space="preserve"><value>Posez votre question ici : l'aide répond, relance le tutoriel de l'écran affiché et cherche partout. Elle est aussi en bas du menu.</value></data>
   <data name="Tour.quotes.list.Title" xml:space="preserve"><value>Vos devis</value></data>
   <data name="Tour.quotes.list.Text" xml:space="preserve"><value>Brouillons, devis envoyés, acceptés ou facturés. Un clic ouvre le devis.</value></data>
   <data name="Tour.quotes.filters.Title" xml:space="preserve"><value>Chercher et filtrer</value></data>
