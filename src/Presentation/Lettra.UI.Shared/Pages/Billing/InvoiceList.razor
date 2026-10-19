@@ -3,6 +3,7 @@
 @page "/down-payments"
 @inject IInvoicesGateway Invoices
 @inject NavigationManager Navigation
+@inject ToastService Toasts
 @inject IStringLocalizer<SharedResource> L
 @* Factures, factures d'acompte et avoirs : une seule série (FAC), une seule liste filtrée par nature. *@
 
@@ -72,6 +73,7 @@
                     <th scope="col">@L["Billing.Status"]</th>
                     <th scope="col" class="lg-num">@L["Totals.ExclTax"]</th>
                     <th scope="col" class="lg-num">@L["Totals.InclTax"]</th>
+                    <th scope="col" class="lt-col-actions"><span class="lettra-visually-hidden">@L["Row.Actions"]</span></th>
                 </tr>
             </thead>
             <tbody>
@@ -86,6 +88,10 @@
                         <td data-label="@L["Billing.Status"]"><DocumentStatusBadge Text="@L[$"InvoiceStatus.{invoice.Status}"]" Kind="@invoice.Status.ToString().ToLowerInvariant()" /></td>
                         <td class="lg-num" data-label="@L["Totals.ExclTax"]">@GridNumber.FormatAmount(invoice.TotalExclTax, CultureInfo.CurrentCulture)</td>
                         <td class="lg-num" data-label="@L["Totals.InclTax"]">@GridNumber.FormatAmount(invoice.TotalInclTax, CultureInfo.CurrentCulture)</td>
+                        <td class="lt-col-actions">
+                            <RowDelete Label="@string.Format(CultureInfo.CurrentCulture, L["Invoices.Row.Delete"], invoice.Number ?? L["Billing.Draft"], invoice.CustomerName)"
+                                       BlockedReason="@BlockedReason(invoice)" OnDelete="() => DeleteAsync(invoice)" />
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -128,6 +134,27 @@
             _ => null,
         };
         return LoadAsync();
+    }
+
+    /// <summary>
+    /// Une pièce validée ne se supprime jamais (numérotation continue, chaîne anti-fraude, art. 286 I 3° bis du CGI) :
+    /// une facture se corrige par un avoir, un avoir validé reste tel quel.
+    /// </summary>
+    private string? BlockedReason(InvoiceSummary invoice) => invoice.Status == InvoiceStatusDto.Draft
+        ? null
+        : L[invoice.Kind == InvoiceKindDto.CreditNote ? "Invoices.Row.Delete.BlockedCreditNote" : "Invoices.Row.Delete.Blocked"].Value;
+
+    private async Task DeleteAsync(InvoiceSummary invoice)
+    {
+        OperationResult<bool> deleted = await Invoices.DeleteAsync(invoice.Id, null, CancellationToken.None);
+        if (!deleted.IsSuccess)
+        {
+            _errors = deleted.Errors;
+            return;
+        }
+
+        _items.Remove(invoice);
+        Toasts.Show(ToastKind.Success, L["Billing.Toast.Deleted"].Value);
     }
 
     private async Task LoadAsync()

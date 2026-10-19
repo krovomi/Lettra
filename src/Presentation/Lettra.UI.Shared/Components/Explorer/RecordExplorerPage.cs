@@ -1,5 +1,6 @@
 using System.Globalization;
 using Lettra.Contracts.Common;
+using Lettra.UI.Shared.Components.Feedback;
 using Lettra.UI.Shared.Keyboard;
 using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Services;
@@ -202,8 +203,21 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
             .Bind("F3", L["Explorer.Command.Search"], async _ => await SearchInput.FocusAsync())
             .Bind("Insert", L["Explorer.Command.New"], _ => GoTo(NewHref))
             .Bind("F2", L["Explorer.Command.Edit"], _ => GoTo(EditHref(SelectedId!.Value)), _ => Mode == ExplorerMode.View && SelectedId is not null)
-            .Bind("Escape", L["Explorer.Command.Back"], _ => Rendered(Back), _ => Mode != ExplorerMode.List, showInBar: false);
+            .Bind("Escape", L["Explorer.Command.Back"], _ => Rendered(EscapeFromPage), _ => Mode != ExplorerMode.List || ConfirmingRow is not null, showInBar: false);
         Navigation.LocationChanged += OnLocationChanged;
+    }
+
+    /// <summary>Échap ferme d'abord la confirmation d'une corbeille ouverte, sinon revient en arrière.</summary>
+    private void EscapeFromPage()
+    {
+        if (ConfirmingRow is { } trash)
+        {
+            trash.Cancel();
+        }
+        else
+        {
+            Back();
+        }
     }
 
     /// <summary>Un raccourci arrive hors des événements de la page : on la redessine après l'action.</summary>
@@ -296,6 +310,13 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
             return;
         }
 
+        // Confirmation d'une corbeille ouverte : Entrée la valide (Échap passe par le raccourci de la page).
+        if (e.Key == "Enter" && ConfirmingRow is { } confirming)
+        {
+            _ = confirming.ConfirmAsync();
+            return;
+        }
+
         int index = -1;
         for (int i = 0; i < items.Count && SelectedId is not null; i++)
         {
@@ -321,6 +342,10 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
         else if (e.Key == "Enter" && index >= 0)
         {
             GoTo(EditHref(IdOf(items[index])));
+        }
+        else if (e.Key == "Delete" && index >= 0 && RowDeletes.TryGetValue(IdOf(items[index]), out RowDelete? trash))
+        {
+            _ = trash.StartAsync();
         }
     }
 
@@ -471,6 +496,45 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
     protected void GoTo(string href)
     {
         Navigation.NavigateTo(href);
+    }
+
+    // ---------- suppression ----------
+
+    /// <summary>Corbeilles des lignes de la liste, pour la touche Suppr sur la ligne active.</summary>
+    protected Dictionary<Guid, RowDelete> RowDeletes { get; } = [];
+
+    /// <summary>La corbeille dont la confirmation est ouverte, s'il y en a une.</summary>
+    private RowDelete? ConfirmingRow => RowDeletes.Values.FirstOrDefault(r => r.IsConfirming);
+
+    /// <summary>Suppression d'un élément de la liste ; les pages qui n'en offrent pas gardent ce refus.</summary>
+    protected virtual Task<OperationResult<bool>> DeleteAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken) =>
+        Task.FromResult(OperationResult<bool>.Failure(ErrorCodes.Api.Unexpected));
+
+    /// <summary>
+    /// Corbeille d'une ligne, après confirmation : l'élément quitte la liste (et la fiche, s'il y était ouvert), puis le
+    /// toaster le dit (« {Préfixe}.Toast.Deleted »). Fiche ouverte : la version lue protège d'une modification faite entre-temps.
+    /// </summary>
+    protected async Task DeleteRowAsync(TSummary item, string name)
+    {
+        Guid id = IdOf(item);
+        long? version = SelectedId == id && Record is { } open && IdOf(open) == id ? VersionOf(open) : null;
+        OperationResult<bool> deleted = await DeleteAsync(id, version, CancellationToken.None);
+        if (!deleted.IsSuccess)
+        {
+            Errors = deleted.Errors;
+            return;
+        }
+
+        Errors = [];
+        Items.Remove(item);
+        RowDeletes.Remove(id);
+        TotalCount = Math.Max(0, TotalCount - 1);
+        if (SelectedId == id)
+        {
+            GoTo(BasePath);
+        }
+
+        Toasts.Show(ToastKind.Success, string.Format(CultureInfo.CurrentCulture, Text("Toast.Deleted"), name));
     }
 
     // ---------- saisie ----------

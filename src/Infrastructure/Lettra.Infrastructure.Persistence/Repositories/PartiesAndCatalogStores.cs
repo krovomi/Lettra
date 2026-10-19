@@ -32,7 +32,7 @@ internal sealed class SupplierReadStore(TenantDbSession session) : ISupplierRead
     public async Task<PagedResponse<SupplierSummary>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken)
     {
         LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
-        IQueryable<Supplier> query = db.Set<Supplier>().AsNoTracking().WhereSearchKeyContains(search);
+        IQueryable<Supplier> query = db.Set<Supplier>().AsNoTracking().Where(s => !s.IsArchived).WhereSearchKeyContains(search);
         int total = await query.CountAsync(cancellationToken).ConfigureAwait(false);
         var rows = await query
             .OrderBy(s => s.Name)

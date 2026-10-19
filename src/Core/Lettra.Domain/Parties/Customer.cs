@@ -68,6 +68,12 @@ public sealed class Customer : AggregateRoot<CustomerId>, IVersioned
 
     public DateTimeOffset CreatedAt { get; private set; }
 
+    /// <summary>
+    /// Supprimé par l'utilisateur : absent des listes et des choix de saisie, mais gardé en base, car ses devis et
+    /// factures le désignent (la copie figée des pièces validées et le journal d'intégrité ne bougent pas).
+    /// </summary>
+    public bool IsArchived { get; private set; }
+
     /// <summary>Version de concurrence optimiste (ADR-0013), avancée par la persistance à chaque écriture.</summary>
     public long Version { get; private set; }
 
@@ -121,6 +127,18 @@ public sealed class Customer : AggregateRoot<CustomerId>, IVersioned
         PreferredLanguage = v.PreferredLanguage;
         Raise(new CustomerUpdated(Id, now));
         return Result.Success();
+    }
+
+    /// <summary>Retire le client des listes, ou l'y remet. Sans effet (et sans événement) si l'état est déjà celui demandé.</summary>
+    public void SetArchived(bool archived, DateTimeOffset now)
+    {
+        if (IsArchived == archived)
+        {
+            return;
+        }
+
+        IsArchived = archived;
+        Raise(new CustomerArchiveChanged(Id, archived, now));
     }
 
     private static Result<Values> Read(Draft draft)

@@ -23,6 +23,12 @@ public interface ICustomersGateway
     /// <c>Concurrency.VersionMismatch</c> avec le client actuel dans <see cref="OperationResult{T}.Current"/>.
     /// </summary>
     Task<OperationResult<CustomerResponse>> UpdateAsync(Guid id, long expectedVersion, CreateCustomerRequest request, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Supprime un client : il quitte les listes et les choix de saisie, ses devis et factures le gardent. Sans version
+    /// lue (ligne d'une liste), la suppression est inconditionnelle.
+    /// </summary>
+    Task<OperationResult<bool>> DeleteAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken);
 }
 
 /// <summary>Dossier sur lequel l'utilisateur travaille. Phase 0 : fixé par la configuration ; le sélecteur de dossier arrive en phase 2.</summary>

@@ -858,6 +858,9 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .HasMaxLength(254)
                         .HasColumnType("character varying(254)");
 
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("boolean");
+
                     b.Property<int>("Kind")
                         .HasColumnType("integer");
 
@@ -953,6 +956,9 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.Property<string>("Iban")
                         .HasMaxLength(34)
                         .HasColumnType("character varying(34)");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()

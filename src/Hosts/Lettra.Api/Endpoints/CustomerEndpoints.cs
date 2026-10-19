@@ -45,6 +45,14 @@ internal static class CustomerEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .RequireIfMatch();
 
+        // Suppression : retiré des listes, gardé en base pour ses pièces (204 ; 412 si la version lue est périmée).
+        group.MapDelete("/{id:guid}", DeleteAsync)
+            .RequirePermission(Permission.TiersModifier)
+            .WithName("DeleteCustomer")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .RequireIfMatch();
+
         return group;
     }
 
@@ -117,5 +125,21 @@ internal static class CustomerEndpoints
 
         Result<CustomerResponse> read = await Read().ConfigureAwait(false);
         return read.IsSuccess ? TypedResults.Ok(read.Value).WithETag(read.Value.Version) : read.Errors.ToProblem();
+    }
+
+    private static async Task<IResult> DeleteAsync(
+        Guid id,
+        HttpContext http,
+        ITenantContext tenant,
+        ICommandDispatcher commands,
+        IQueryDispatcher queries,
+        CancellationToken cancellationToken)
+    {
+        DossierId dossier = tenant.Current.DossierId;
+        CustomerId customerId = new(id);
+        Result deleted = await commands.SendAsync(new DeleteCustomerCommand(dossier, customerId, http.IfMatchVersion()), cancellationToken).ConfigureAwait(false);
+        return deleted.IsSuccess
+            ? TypedResults.NoContent()
+            : await ConcurrencyResults.WriteFailureAsync(deleted.Errors, () => queries.QueryAsync(new GetCustomerQuery(dossier, customerId), cancellationToken), r => r.Version).ConfigureAwait(false);
     }
 }

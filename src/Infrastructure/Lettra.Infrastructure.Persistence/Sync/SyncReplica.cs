@@ -316,11 +316,13 @@ internal sealed class EfSyncReplica(TenantDbSession session, TimeProvider clock)
                 return null;
             }
 
+            created.Value.SetArchived(server.IsArchived, server.CreatedAt);
             db.Customers.Add(created.Value);
         }
         else
         {
-            if (local.Version == server.Version && local.ToResponse().ToRequest() == server.ToRequest())
+            CustomerResponse current = local.ToResponse();
+            if (local.Version == server.Version && current.ToRequest() == server.ToRequest() && current.IsArchived == server.IsArchived)
             {
                 return false;
             }
@@ -329,6 +331,9 @@ internal sealed class EfSyncReplica(TenantDbSession session, TimeProvider clock)
             {
                 return null;
             }
+
+            // Supprimé au bureau (ou remis) : le poste suit, ses pièces gardent le tiers.
+            local.SetArchived(server.IsArchived, clock.GetUtcNow());
         }
 
         await db.SaveChangesAsync(ct).ConfigureAwait(false);
@@ -348,11 +353,13 @@ internal sealed class EfSyncReplica(TenantDbSession session, TimeProvider clock)
                 return null;
             }
 
+            created.Value.SetArchived(server.IsArchived, server.CreatedAt);
             db.Set<Supplier>().Add(created.Value);
         }
         else
         {
-            if (local.Version == server.Version && local.ToResponse().ToRequest() == server.ToRequest())
+            SupplierResponse current = local.ToResponse();
+            if (local.Version == server.Version && current.ToRequest() == server.ToRequest() && current.IsArchived == server.IsArchived)
             {
                 return false;
             }
@@ -361,6 +368,9 @@ internal sealed class EfSyncReplica(TenantDbSession session, TimeProvider clock)
             {
                 return null;
             }
+
+            // Supprimé au bureau (ou remis) : le poste suit, ses pièces gardent le tiers.
+            local.SetArchived(server.IsArchived, clock.GetUtcNow());
         }
 
         await db.SaveChangesAsync(ct).ConfigureAwait(false);

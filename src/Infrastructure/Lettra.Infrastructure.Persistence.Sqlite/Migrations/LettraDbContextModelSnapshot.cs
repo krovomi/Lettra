@@ -853,6 +853,9 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                         .HasMaxLength(254)
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("Kind")
                         .HasColumnType("INTEGER");
 
@@ -948,6 +951,9 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.Property<string>("Iban")
                         .HasMaxLength(34)
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
                         .IsRequired()
