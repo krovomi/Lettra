@@ -433,7 +433,8 @@ Menu **Déclarations** (groupe Comptabilité). Lettra prépare, le cabinet dépo
 2. Onglet **TVA** : le brouillon de la CA3 (ou de la CA12 au réel simplifié) du mois écoulé, partie ventes. Chaque case
    (A1, 08, E2, 16, 28…) s'ouvre sur les factures, acomptes et avoirs qui la composent. Les contrôles disent si la TVA
    correspond au journal, s'il reste des brouillons ou des factures non transmises. **Marquer comme déposée** quand
-   c'est fait. La TVA déductible reste à 0 : les achats ne sont pas encore dans Lettra.
+   c'est fait. La TVA déductible reste à 0 : les achats ne sont pas encore dans Lettra. Le brouillon de CA3 déclare la
+   TVA des services à la date de chaque encaissement pour les factures validées à partir de cette version.
 3. Onglet **DES** : la déclaration européenne de services du mois (clients de l'Union en autoliquidation) et son
    fichier CSV.
 4. Onglet **Calendrier** : les échéances de l'année (CA3 ou CA12 et acomptes, DES, CFE, IS, liasse), proches, en
@@ -446,6 +447,25 @@ Les correspondances de cases et les dates sont à faire relire par un expert-com
 Chromium Linux à 1440, 768 et 375 px, données conservées après une mise à jour de la démo ; non vérifié : application
 native, Safari, Firefox.)* Détails : [docs/declarations-fiscales.md](docs/declarations-fiscales.md).
 
+### 9. Encaissements et rapprochement bancaire
+
+Menu Comptabilité > **Encaissements** : saisissez un règlement reçu (virement, chèque, carte, espèces, prélèvement),
+total, partiel ou réparti sur plusieurs factures. Chaque règlement passe son écriture au journal de banque (BQ,
+512/411) et lettre le compte client (codes A, B, C…). Un règlement se contre-passe avec un motif ; il n'est jamais
+supprimé.
+
+Menu Comptabilité > **Rapprochement bancaire** : importez un relevé CAMT.053, OFX ou CSV (aucune connexion à la
+banque). Lettra propose les factures correspondantes avec sa raison (numéro dans le libellé, montant et nom, montant et
+IBAN connu, somme de plusieurs factures) ; vous validez une par une ou en masse. Les petits écarts, sous un seuil
+réglable, sont soldés en 658/758. La TVA des prestations de services passe de 44574 à 44571 à l'encaissement, pour les
+factures validées à partir de cette version. Dans la démo, le bouton **Importer un relevé de démonstration** fabrique
+un relevé fictif à partir des factures dues.
+
+Les comptes utilisés sont à faire relire par un expert-comptable. *(Vérifié : API, écrans et règles par les tests
+automatiques ; non vérifié à la main dans la démo Docker ni dans les applications installées. Hors ligne : sur le
+serveur ou dans la base locale du poste seul, pas encore de synchronisation de la réplique.)* Détails :
+[docs/encaissements.md](docs/encaissements.md).
+
 ### Et ensuite
 
 - **Catalogue** : les articles et prestations, même présentation que les clients (liste, fiche, **Modifier**,
@@ -453,7 +473,7 @@ native, Safari, Firefox.)* Détails : [docs/declarations-fiscales.md](docs/decla
   aussi se saisir librement.
 - **Journal et balance** : les écritures de vente de la période (journal, balance, grand livre d'un compte ou d'un
   client), en lecture, les mêmes que dans le FEC. La fiche d'un client y renvoie par **Compte client**. Les
-  encaissements ne sont pas encore comptabilisés : le solde 411 est ce qui a été facturé, avoirs déduits.
+  encaissements y figurent au journal de banque (BQ) et lettrent le compte 411 (étape 9).
 - **Supprimer une ligne** : chaque tableau a une corbeille en bout de ligne. Un clic, une confirmation dans la ligne,
   puis un message. Un devis ou une facture ne se supprime qu'en brouillon (sinon le message dit quoi faire : refuser,
   laisser expirer, émettre un avoir). Un client ou un fournisseur supprimé disparaît des listes, ses pièces restent
@@ -556,7 +576,7 @@ Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou 
 | Poste relié à un serveur, synchronisation | Prête dans l'application (fichier `lettra.json`), mais demande un serveur Lettra et Keycloak. Sur un poste isolé, la page Synchronisation indique « Ce poste ne synchronise pas ». |
 | Hors ligne sur un appareil relié au serveur commun | Relié au serveur commun, l'appareil a besoin du réseau. Reste à étendre la synchronisation aux devis, factures et règlements, ou à y ouvrir les brouillons hors ligne. |
 | Invitations | Une personne ajoutée dans **Équipe et accès** apparaît et reçoit des accès, mais Lettra n'envoie pas d'e-mail et ne crée pas encore son compte de connexion (Keycloak) : elle ne peut pas encore se connecter. |
-| Télédéclaration de la TVA et de la DES | Non : Lettra prépare le brouillon et le fichier, le dépôt se fait sur impots.gouv ou le service en ligne des douanes. La TVA déductible (achats) et la TVA sur les encaissements ne sont pas encore reprises. |
+| Télédéclaration de la TVA et de la DES | Non : Lettra prépare le brouillon et le fichier, le dépôt se fait sur impots.gouv ou le service en ligne des douanes. La TVA déductible (achats) n'est pas encore reprise. |
 | Envoi des devis et factures par e-mail | Non : on télécharge le PDF ou le Factur-X. |
 | Applications signées | Non : avertissement de Windows au premier lancement, APK Android installé à la main, application macOS arrêtée par le Trousseau, pas de version pour iPhone réel. |
 
