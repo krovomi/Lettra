@@ -38,7 +38,7 @@ public sealed class PaymentReminderService(
 {
     public bool EmailConfigured => email.IsConfigured;
 
-    public DateOnly Today => BankingCalendar.Today(clock);
+    public DateOnly Today => LegalCalendar.Today(clock);
 
     public async Task<ReminderSettings> SettingsAsync(CancellationToken cancellationToken) =>
         await settingsStore.FindAsync(cancellationToken).ConfigureAwait(false) ?? ReminderSettings.Default();

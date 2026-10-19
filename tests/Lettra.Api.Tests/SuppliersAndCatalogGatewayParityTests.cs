@@ -31,8 +31,8 @@ public sealed class SuppliersAndCatalogGatewayParityTests(LettraApiFactory facto
         SupplierResponse created = (await suppliers.CreateAsync(request, default)).Value!;
         OperationResult<SupplierResponse> read = await suppliers.GetAsync(created.Id, default);
         OperationResult<PagedResponse<SupplierSummary>> list = await suppliers.ListAsync(1, 200, default);
-        OperationResult<PagedResponse<SupplierSummary>> found = await suppliers.SearchAsync($"  {request.Name}  ", 1, 20, default);
-        OperationResult<PagedResponse<SupplierSummary>> all = await suppliers.SearchAsync(null, 1, 200, default);
+        OperationResult<PagedResponse<SupplierSummary>> found = await suppliers.SearchAsync(new PartyListQuery($"  {request.Name}  ", 1, 20), default);
+        OperationResult<PagedResponse<SupplierSummary>> all = await suppliers.SearchAsync(new PartyListQuery(null, 1, 200), default);
 
         created.Iban.Should().Be("FR7630006000011234567890189");
         read.Value!.Name.Should().Be(request.Name);
@@ -55,7 +55,7 @@ public sealed class SuppliersAndCatalogGatewayParityTests(LettraApiFactory facto
         staleDelete.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Concurrency.VersionMismatch);
         deleted.Value.Should().BeTrue();
         (await suppliers.GetAsync(created.Id, default)).Value!.IsArchived.Should().BeTrue("la suppression archive la fiche, gardée en base");
-        (await suppliers.SearchAsync(request.Name, 1, 20, default)).Value!.Items.Should().BeEmpty();
+        (await suppliers.SearchAsync(new PartyListQuery(request.Name, 1, 20), default)).Value!.Items.Should().BeEmpty();
         (await suppliers.DeleteAsync(created.Id, null, default)).Value.Should().BeTrue("supprimer une fiche déjà archivée ne change rien");
     }
 
@@ -101,9 +101,9 @@ public sealed class SuppliersAndCatalogGatewayParityTests(LettraApiFactory facto
         stale.Current!.UnitPriceExclTax.Should().Be(99.5m, "le refus porte l'article actuel, sur les deux transports");
         staleArchive.Current!.Version.Should().Be(updated.Value.Version);
         archived.Value!.IsArchived.Should().BeTrue();
-        (await catalog.ListAsync($" {reference} ", false, 1, 20, default)).Value!.TotalCount.Should().Be(0);
-        (await catalog.ListAsync(reference, true, 1, 20, default)).Value!.Items.Should().ContainSingle().Which.Id.Should().Be(item.Id);
-        (await catalog.ListAsync(null, true, 1, 200, default)).Value!.Items.Should().NotBeEmpty();
+        (await catalog.ListAsync(new CatalogListQuery($" {reference} ", false, 1, 20), default)).Value!.TotalCount.Should().Be(0);
+        (await catalog.ListAsync(new CatalogListQuery(reference, true, 1, 20), default)).Value!.Items.Should().ContainSingle().Which.Id.Should().Be(item.Id);
+        (await catalog.ListAsync(new CatalogListQuery(null, true, 1, 200), default)).Value!.Items.Should().NotBeEmpty();
     }
 
     [Theory]
@@ -158,12 +158,12 @@ public sealed class SuppliersAndCatalogGatewayParityTests(LettraApiFactory facto
         [
             (await suppliers.CreateAsync(PartiesAndCatalogApiTests.Dupuis(), default)).Errors,
             (await suppliers.ListAsync(1, 10, default)).Errors,
-            (await suppliers.SearchAsync("dupuis", 1, 10, default)).Errors,
+            (await suppliers.SearchAsync(new PartyListQuery("dupuis", 1, 10), default)).Errors,
             (await suppliers.GetAsync(id, default)).Errors,
             (await suppliers.UpdateAsync(id, 1, PartiesAndCatalogApiTests.Dupuis(), default)).Errors,
             (await suppliers.DeleteAsync(id, 1, default)).Errors,
             (await catalog.GetReferenceDataAsync(default)).Errors,
-            (await catalog.ListAsync("x", false, 1, 10, default)).Errors,
+            (await catalog.ListAsync(new CatalogListQuery("x", false, 1, 10), default)).Errors,
             (await catalog.GetAsync(id, default)).Errors,
             (await catalog.CreateAsync(PartiesAndCatalogApiTests.Conseil("X"), default)).Errors,
             (await catalog.UpdateAsync(id, 1, PartiesAndCatalogApiTests.Conseil("X"), default)).Errors,
