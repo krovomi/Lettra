@@ -180,12 +180,12 @@ internal sealed class AssignRoleHandler(
             return RightsErrors.ScopeNotFound;
         }
 
-        if (command.Scope.Kind < role.WidestScope)
+        if (!role.AllowsScope(command.Scope.Kind))
         {
             return RightsErrors.ScopeTooWide;
         }
 
-        if (command.ExpiresAt is DateTimeOffset expires ? expires <= clock.GetUtcNow() : role.RequiresExpiry)
+        if (!role.AcceptsExpiry(command.ExpiresAt, clock.GetUtcNow()))
         {
             return command.ExpiresAt is null ? RightsErrors.ExpiryRequired : RightsErrors.ExpiryInPast;
         }

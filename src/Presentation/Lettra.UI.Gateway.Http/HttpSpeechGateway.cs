@@ -16,7 +16,7 @@ internal sealed class HttpSpeechGateway(HttpClient http) : ISpeechGateway
             using HttpResponseMessage response = await http.GetAsync(new Uri("api/v1/voix/statut", UriKind.Relative), cancellationToken).ConfigureAwait(false);
             return await response.ToOperationResultAsync(ContractsJsonContext.Default.SpeechStatusResponse, cancellationToken).ConfigureAwait(false);
         }
-        catch (HttpRequestException)
+        catch (Exception e) when (HttpCalls.IsUnreachable(e, cancellationToken))
         {
             return OperationResult<SpeechStatusResponse>.Failure(ErrorCodes.Api.Unreachable);
         }
@@ -33,7 +33,7 @@ internal sealed class HttpSpeechGateway(HttpClient http) : ISpeechGateway
             using HttpResponseMessage response = await http.PostAsync(route, content, cancellationToken).ConfigureAwait(false);
             return await response.ToOperationResultAsync(ContractsJsonContext.Default.TranscriptionResponse, cancellationToken).ConfigureAwait(false);
         }
-        catch (HttpRequestException)
+        catch (Exception e) when (HttpCalls.IsUnreachable(e, cancellationToken))
         {
             return OperationResult<TranscriptionResponse>.Failure(ErrorCodes.Api.Unreachable);
         }

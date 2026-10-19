@@ -23,7 +23,7 @@ internal sealed class HttpSessionGateway(HttpClient http) : ISessionGateway
                 ? OperationResult<SessionResponse>.Success(SignedOut)
                 : await response.ToOperationResultAsync(ContractsJsonContext.Default.SessionResponse, cancellationToken).ConfigureAwait(false);
         }
-        catch (HttpRequestException)
+        catch (Exception e) when (HttpCalls.IsUnreachable(e, cancellationToken))
         {
             return OperationResult<SessionResponse>.Failure(ErrorCodes.Api.Unreachable);
         }

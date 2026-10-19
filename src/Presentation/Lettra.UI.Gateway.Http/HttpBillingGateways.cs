@@ -33,7 +33,7 @@ internal static class VersionedCalls
             OperationResult<ProblemResponse> failure = await response.ToOperationResultAsync(ContractsJsonContext.Default.ProblemResponse, cancellationToken).ConfigureAwait(false);
             return OperationResult<bool>.Failure(failure.Errors);
         }
-        catch (HttpRequestException)
+        catch (Exception e) when (HttpCalls.IsUnreachable(e, cancellationToken))
         {
             return OperationResult<bool>.Failure(ErrorCodes.Api.Unreachable);
         }
@@ -200,7 +200,7 @@ internal sealed class HttpInvoicesGateway(HttpClient http) : IInvoicesGateway
                 .ConfigureAwait(false);
             return OperationResult<byte[]>.Failure(problem.Errors);
         }
-        catch (HttpRequestException)
+        catch (Exception e) when (HttpCalls.IsUnreachable(e, cancellationToken))
         {
             return OperationResult<byte[]>.Failure(ErrorCodes.Api.Unreachable);
         }
