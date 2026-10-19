@@ -42,7 +42,8 @@ La démo Docker (`deploy/demo`) sert le navigateur sur `http://localhost:8080` e
 | Navigateur (tout système, Linux compris) | rien : il est déjà sur le serveur | **vérifié** |
 | Application installée, même logique sur le même poste (harnais `deploy/demo/e2e/serveur-commun`) | `http://localhost:8080` | **vérifié** de bout en bout : connexion PKCE + mot de passe + code, client créé par l'appareil vu dans le navigateur et inversement |
 | Windows, application installée | `http://localhost:8080` | compilé par la CI, **non vérifié** sur un poste |
-| Android, émulateur ou téléphone par câble USB | après `adb reverse tcp:8080 tcp:8080` et `adb reverse tcp:8081 tcp:8081` : `http://localhost:8080` | compilé par la CI, **non vérifié** sur un appareil |
+| Android, émulateur | après `adb reverse tcp:8080 tcp:8080` et `adb reverse tcp:8081 tcp:8081` : `http://localhost:8080` | **vérifié** de bout en bout par la CI (workflow `serveur-commun-android.yml`, émulateur API 34) : relier, redémarrer, connexion mot de passe + code, client du navigateur vu sur l'appareil, client créé sur l'appareil vu dans le navigateur |
+| Android, téléphone par câble USB | même chose que l'émulateur | même chemin que l'émulateur, **non vérifié** sur un vrai téléphone |
 | Android par Wi-Fi | l'adresse https du poste (profil réseau local de la démo, autorité de certification installée sur le téléphone) | **non vérifié** |
 | iOS, simulateur sur Mac | `http://localhost:8080` | compilé par la CI, **non vérifié** |
 | iPhone réel | — | impossible pour l'instant : signature Apple nécessaire |
