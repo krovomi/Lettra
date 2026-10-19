@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Lettra.Infrastructure.Persistence.Cabinet;
 
 /// <summary>
-/// Factures et acomptes validés dont l'échéance est passée et qui restent dus : ni entièrement couverts par des avoirs,
-/// ni déclarés encaissés pour tout le reste à payer, ni refusés par l'acheteur. Retard au-delà de 30 jours : critique.
+/// Factures et acomptes validés dont l'échéance est passée et qui restent dus : ni entièrement couverts par des avoirs et
+/// des encaissements, ni déclarés encaissés pour tout le reste à payer, ni refusés par l'acheteur. Retard au-delà de 30 jours : critique.
 /// </summary>
 internal sealed class OverdueInvoicesIndicatorSource(TenantDbSession session) : IDossierIndicatorSource
 {
@@ -23,9 +23,9 @@ internal sealed class OverdueInvoicesIndicatorSource(TenantDbSession session) : 
         // Montants filtrés en mémoire : SQLite ne compare pas les décimaux.
         var due = await db.Set<Invoice>().AsNoTracking()
             .Where(i => i.Status != InvoiceStatus.Draft && i.Kind != InvoiceKind.CreditNote && i.DueDate != null && i.DueDate < today)
-            .Select(i => new { i.Id, i.DueDate, i.TotalInclTax, i.CreditedInclTax })
+            .Select(i => new { i.Id, i.DueDate, i.TotalInclTax, i.CreditedInclTax, i.PaidInclTax })
             .ToListAsync(cancellationToken).ConfigureAwait(false);
-        due = [.. due.Where(i => i.TotalInclTax - i.CreditedInclTax > 0m)];
+        due = [.. due.Where(i => i.TotalInclTax - i.CreditedInclTax - i.PaidInclTax > 0m)];
         if (due.Count == 0)
         {
             return [new DossierIndicator(DossierIndicatorKeys.OverdueInvoices, 0, IndicatorLevel.Ok)];

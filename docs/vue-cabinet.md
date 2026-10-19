@@ -73,9 +73,10 @@ services.AddScoped<IDossierIndicatorSource, VatToDeclareIndicatorSource>();
 - `IndicatorLevel` décide de la couleur et de l'ordre des dossiers : `Ok`, `Info`, `Warning` (« à traiter »),
   `Critical` (« urgent »).
 
-Compteurs livrés : factures en retard (critique après 30 jours), rejets de la plateforme agréée, alertes ouvertes
-(critique pour S1 et S2), points de la revue du mois écoulé non cochés (« à faire » jusqu'au 15, puis « à traiter »), TVA à déclarer (CA3, CA12 et acomptes de TVA en retard ou dus dans les 7 jours :
-« à traiter », « urgent » dès qu'une échéance est en retard ; voir [les déclarations](declarations-fiscales.md)).
+Compteurs livrés : factures en retard (critique après 30 jours ; une facture soldée par des avoirs ou des
+encaissements n'y compte plus), rejets de la plateforme agréée, alertes ouvertes (critique pour S1 et S2), points de la
+revue du mois écoulé non cochés (« à faire » jusqu'au 15, puis « à traiter »), opérations du relevé bancaire à
+rapprocher (`banque.non-rapprochee` : « à traiter » quand la plus ancienne a plus de 15 jours, « urgent » au-delà de 30).
 
 ## La liste de contrôle de la revue
 

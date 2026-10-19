@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text;
+using Lettra.Contracts.Banking;
 using Lettra.Contracts.Cabinet;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Serialization;
@@ -35,7 +37,8 @@ public sealed class CabinetOverviewApiTests
             .Dossiers.Single(d => d.DossierId == LettraApiFactory.DossierId);
         row.ComputedAt.Should().NotBeNull();
         row.Indicators.Select(i => i.Key).Should().Contain(
-            [DossierIndicatorKeys.OverdueInvoices, DossierIndicatorKeys.PlatformRejections, DossierIndicatorKeys.ReviewPending]);
+            [DossierIndicatorKeys.OverdueInvoices, DossierIndicatorKeys.PlatformRejections, DossierIndicatorKeys.ReviewPending, DossierIndicatorKeys.BankUnreconciled]);
+        row.Indicators.Single(i => i.Key == DossierIndicatorKeys.BankUnreconciled).Count.Should().Be(0, "aucun relevé n'a été importé");
         row.Indicators.Single(i => i.Key == DossierIndicatorKeys.OverdueInvoices).Count.Should().Be(0, "le dossier n'a aucune pièce");
         row.Indicators.Single(i => i.Key == DossierIndicatorKeys.ReviewPending).Count.Should().Be(8, "la revue du mois dernier est à faire");
 
@@ -46,6 +49,31 @@ public sealed class CabinetOverviewApiTests
         HttpClient other = api.ClientFor(LettraApiFactory.AutreCabinetAdminId);
         (await other.GetFromJsonAsync(Overview, ContractsJsonContext.Default.CabinetOverviewResponse))!
             .Dossiers.Should().NotContain(d => d.DossierId == LettraApiFactory.DossierId, "un autre cabinet ne voit pas ce dossier");
+    }
+
+    [Fact]
+    public async Task Un_releve_non_rapproche_depuis_plus_de_30_jours_rend_le_compteur_bancaire_urgent()
+    {
+        await using LettraApiFactory api = new();
+        HttpClient manager = InDossier(api, LettraApiFactory.ManagerId);
+        DateOnly old = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-40);
+        ImportBankStatementRequest file = new()
+        {
+            FileName = "releve.xml",
+            ContentBase64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(BankingApiTests.Camt(old, 75m, "VIR SEPA SANS FACTURE"))),
+        };
+        using HttpResponseMessage imported = await manager.PostAsJsonAsync(
+            new Uri("/api/v1/bank/statements", UriKind.Relative), file, ContractsJsonContext.Default.ImportBankStatementRequest);
+        imported.StatusCode.Should().Be(HttpStatusCode.OK, await imported.Content.ReadAsStringAsync());
+
+        (await manager.PostAsync(Refresh, null)).EnsureSuccessStatusCode();
+
+        DossierIndicatorDto bank = (await api.ClientFor(LettraApiFactory.ManagerId).GetFromJsonAsync(Overview, ContractsJsonContext.Default.CabinetOverviewResponse))!
+            .Dossiers.Single(d => d.DossierId == LettraApiFactory.DossierId)
+            .Indicators.Single(i => i.Key == DossierIndicatorKeys.BankUnreconciled);
+        bank.Count.Should().BeGreaterThan(0);
+        bank.Level.Should().Be(IndicatorLevelDto.Critical);
+        bank.DueOn.Should().Be(old);
     }
 
     [Fact]
