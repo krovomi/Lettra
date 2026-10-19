@@ -1,0 +1,456 @@
+@page "/recurring-invoices/new"
+@page "/recurring-invoices/{Id:guid}"
+@inject IRecurringInvoicesGateway Recurring
+@inject IBillingSettingsGateway Settings
+@inject NavigationManager Navigation
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+@* Modèle de facture récurrente (vague 7) : client, lignes, périodicité, révision annuelle, validation automatique.
+   Enregistrement explicite (pas de brouillon automatique) : un modèle ne produit rien tant qu'il n'est pas complet. *@
+
+<PageTitle>@Title · Lettra</PageTitle>
+
+<h1 tabindex="-1">@Title
+    @if (_template is { IsActive: false })
+    {
+        <span class="lettra-status is-refused">@L["Recurring.State.Paused"]</span>
+    }
+</h1>
+
+@if (_conflict)
+{
+    <div class="lettra-banner is-warning" role="alert">
+        @L["Billing.Conflict"]
+        <button type="button" class="lettra-button" @onclick="LoadAsync">@L["Billing.Reload"]</button>
+    </div>
+}
+
+<GeneralErrors Errors="_errors" />
+
+@if (_loading)
+{
+    <p>@L["Loading"]</p>
+}
+else
+{
+    <div class="lettra-document">
+        <div class="lettra-document-main">
+            <Collapsible Id="recurring-main" Title="@L["Billing.Section.Main"]" Summary="@MainSummary">
+                <div class="lettra-document-header" role="group" aria-label="@L["Billing.Header"]">
+                    <div class="lettra-field lettra-field-wide">
+                        <label for="recurring-name">@L["Recurring.Field.Name"]</label>
+                        <input id="recurring-name" @bind="_request.Name" maxlength="120" placeholder="@L["Recurring.Field.Name.Placeholder"]" disabled="@_busy" />
+                        <FieldErrors ServerErrors="_errors" Field="Name" />
+                    </div>
+
+                    <CustomerPicker CustomerId="_request.CustomerId" SelectedName="@_customerName" ReadOnly="@_busy" OnSelected="CustomerSelected" />
+
+                    <div class="lettra-field">
+                        <label for="vat-regime">@L["Billing.Field.VatRegime"]</label>
+                        <select id="vat-regime" disabled="@_busy" @bind="_request.VatRegime">
+                            @foreach (VatRegimeOption regime in _reference.VatRegimes)
+                            {
+                                <option value="@regime.Regime">@L[$"VatRegime.{regime.Regime}"]</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="lettra-field lettra-field-wide">
+                        <label for="subject">@L["Billing.Field.Subject"]</label>
+                        <input id="subject" @bind="_request.Subject" maxlength="200" disabled="@_busy" />
+                        <p class="lettra-hint">@L["Recurring.Field.Subject.Hint"]</p>
+                    </div>
+                </div>
+            </Collapsible>
+
+            <Collapsible Id="recurring-schedule" Title="@L["Recurring.Section.Schedule"]" Summary="@ScheduleSummary">
+                <div class="lettra-document-header">
+                    <div class="lettra-field">
+                        <label for="frequency">@L["Recurring.Field.Frequency"]</label>
+                        <select id="frequency" @bind="_request.Frequency" disabled="@(_busy || ScheduleLocked)">
+                            @foreach (RecurrenceFrequencyDto frequency in Enum.GetValues<RecurrenceFrequencyDto>())
+                            {
+                                <option value="@frequency">@L[$"Recurring.Frequency.{frequency}"]</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="lettra-field">
+                        <label for="timing">@L["Recurring.Field.Timing"]</label>
+                        <select id="timing" @bind="_request.Timing" disabled="@_busy">
+                            @foreach (BillingTimingDto timing in Enum.GetValues<BillingTimingDto>())
+                            {
+                                <option value="@timing">@L[$"Recurring.Timing.{timing}"]</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="lettra-field">
+                        <label for="start-date">@L["Recurring.Field.StartDate"]</label>
+                        <input id="start-date" type="date" value="@Iso(_request.StartDate)" disabled="@(_busy || ScheduleLocked)"
+                               @onchange="e => _request.StartDate = Parse(e) ?? _request.StartDate" />
+                    </div>
+                    <div class="lettra-field">
+                        <label for="end-date">@L["Recurring.Field.EndDate"]</label>
+                        <input id="end-date" type="date" value="@Iso(_request.EndDate)" disabled="@_busy" @onchange="e => _request.EndDate = Parse(e)" />
+                        <FieldErrors ServerErrors="_errors" Field="EndDate" />
+                    </div>
+                    @if (ScheduleLocked)
+                    {
+                        <p class="lettra-hint lettra-field-wide">@L["Recurring.ScheduleLocked.Hint"]</p>
+                    }
+                    <div class="lettra-field-wide">
+                        <label class="lettra-check">
+                            <input id="auto-validate" type="checkbox" @bind="_request.ValidateAutomatically" disabled="@_busy" />
+                            @L["Recurring.Field.ValidateAutomatically"]
+                        </label>
+                        <p class="lettra-hint">@L["Recurring.Field.ValidateAutomatically.Hint"]</p>
+                    </div>
+                    <div class="lettra-field lettra-field-wide">
+                        <label for="payment-terms">@L["Invoice.Field.PaymentTerms"]</label>
+                        <input id="payment-terms" @bind="_request.PaymentTerms" maxlength="500" disabled="@_busy" />
+                    </div>
+                </div>
+            </Collapsible>
+
+            <Collapsible Id="recurring-lines" HeadingId="lines-title" Title="@L["Lines.Title"]" Summary="@LinesSummary">
+                <DocumentLinesGrid Lines="_lines" ReferenceData="_reference" Regime="_request.VatRegime" ReadOnly="@_busy"
+                                   OnTotalsChanged="t => _totals = t" />
+            </Collapsible>
+
+            <Collapsible Id="recurring-revision" Title="@L["Recurring.Section.Revision"]" Summary="@L[$"Recurring.Revision.{_request.Revision}"].Value"
+                         InitiallyOpen="@(_request.Revision != PriceRevisionKindDto.None)">
+                <div class="lettra-document-header">
+                    <div class="lettra-field">
+                        <label for="revision">@L["Recurring.Field.Revision"]</label>
+                        <select id="revision" @bind="_request.Revision" disabled="@_busy">
+                            @foreach (PriceRevisionKindDto revision in Enum.GetValues<PriceRevisionKindDto>())
+                            {
+                                <option value="@revision">@L[$"Recurring.Revision.{revision}"]</option>
+                            }
+                        </select>
+                    </div>
+                    @if (_request.Revision == PriceRevisionKindDto.FixedPercent)
+                    {
+                        <div class="lettra-field">
+                            <label for="revision-percent">@L["Recurring.Field.RevisionPercent"]</label>
+                            <input id="revision-percent" type="number" step="0.01" min="0" max="100" @bind="_request.RevisionPercent" disabled="@_busy" />
+                            <FieldErrors ServerErrors="_errors" Field="RevisionPercent" />
+                        </div>
+                    }
+                    else if (_request.Revision == PriceRevisionKindDto.SyntecIndex)
+                    {
+                        <div class="lettra-field">
+                            <label for="syntec-reference">@L["Recurring.Field.SyntecReference"]</label>
+                            <input id="syntec-reference" type="number" step="0.1" min="0" @bind="_request.SyntecReferenceIndex" disabled="@_busy" />
+                            <FieldErrors ServerErrors="_errors" Field="SyntecReferenceIndex" />
+                        </div>
+                        <div class="lettra-field">
+                            <label for="syntec-latest">@L["Recurring.Field.SyntecLatest"]</label>
+                            <input id="syntec-latest" type="number" step="0.1" min="0" @bind="_request.SyntecLatestIndex" disabled="@_busy" />
+                            <FieldErrors ServerErrors="_errors" Field="SyntecLatestIndex" />
+                        </div>
+                        <p class="lettra-hint lettra-field-wide">@L["Recurring.Revision.Syntec.Hint"]</p>
+                    }
+                    @if (_template?.NextRevisionDate is { } nextRevision)
+                    {
+                        <p class="lettra-hint lettra-field-wide" id="next-revision">
+                            @string.Format(Culture, L["Recurring.Revision.Next"], nextRevision.ToString("d", Culture))
+                        </p>
+                    }
+                    @if (_template is { RevisionAwaitsIndex: true })
+                    {
+                        <p class="lettra-banner is-warning lettra-field-wide" id="revision-awaits">@L["Recurring.Revision.AwaitsIndex"]</p>
+                    }
+                </div>
+            </Collapsible>
+
+            <Collapsible Id="recurring-notes" Title="@L["Billing.Field.Notes"]" InitiallyOpen="@(!string.IsNullOrEmpty(_request.Notes))" Class="lettra-notes">
+                <div class="lettra-field">
+                    <label for="notes" class="lettra-visually-hidden">@L["Billing.Field.Notes"]</label>
+                    <textarea id="notes" rows="3" maxlength="4000" @bind="_request.Notes" disabled="@_busy"></textarea>
+                </div>
+            </Collapsible>
+        </div>
+
+        <aside class="lettra-document-side">
+            <DocumentTotalsPanel Totals="_totals" />
+
+            @if (_template is not null)
+            {
+                <section class="lettra-card" aria-labelledby="next-title" id="recurring-next">
+                    <h2 id="next-title">@L["Recurring.NextInvoice"]</h2>
+                    @if (_template.NextIssueDate is { } issueOn)
+                    {
+                        <p>@string.Format(Culture, L["Recurring.Next.Text"], issueOn.ToString("d", Culture),
+                               _template.NextPeriodStart!.Value.ToString("d", Culture), _template.NextPeriodEnd!.Value.ToString("d", Culture))</p>
+                    }
+                    else
+                    {
+                        <p class="lettra-muted">@L[_template.IsActive ? "Recurring.Next.Ended" : "Recurring.Next.Paused"]</p>
+                    }
+                </section>
+            }
+
+            <div class="lettra-actions">
+                <button type="button" id="recurring-save" class="lettra-button" disabled="@_busy" @onclick="SaveAsync">@L["Billing.Command.Save"]</button>
+                @if (_template is { IsDue: true })
+                {
+                    <button type="button" id="recurring-run-one" class="lettra-button is-secondary" disabled="@_busy" @onclick="RunAsync">@L["Recurring.RunOne"]</button>
+                }
+                @if (_template is not null)
+                {
+                    <button type="button" id="recurring-toggle" class="lettra-button is-secondary" disabled="@_busy" @onclick="ToggleAsync">
+                        @L[_template.IsActive ? "Recurring.Pause" : "Recurring.Resume"]
+                    </button>
+                    <button type="button" id="recurring-delete" class="lettra-link is-danger" disabled="@_busy" @onclick="DeleteAsync">@L["Billing.Command.Delete"]</button>
+                }
+            </div>
+
+            @if (_template is { Occurrences.Count: > 0 })
+            {
+                <section class="lettra-card" aria-labelledby="history-title" id="recurring-history">
+                    <h2 id="history-title">@L["Recurring.History"]</h2>
+                    <ul class="lettra-list">
+                        @foreach (RecurringOccurrenceResponse occurrence in _template.Occurrences)
+                        {
+                            <li @key="occurrence.PeriodStart">
+                                <a href="@($"invoices/{occurrence.InvoiceId}")">@(occurrence.InvoiceNumber ?? L["Recurring.History.Draft"].Value)</a>
+                                <span class="lettra-muted">@string.Format(Culture, L["Recurring.History.Period"], occurrence.PeriodStart.ToString("d", Culture), occurrence.PeriodEnd.ToString("d", Culture))</span>
+                                @if (occurrence.InvoiceStatus is null)
+                                {
+                                    <span class="lettra-muted">@L["Recurring.History.Deleted"]</span>
+                                }
+                                @if (occurrence.RevisionCoefficient is { } coefficient)
+                                {
+                                    <span class="lettra-status is-validated">@string.Format(Culture, L["Recurring.History.Revised"], ((coefficient - 1m) * 100m).ToString("+0.##;-0.##", Culture))</span>
+                                }
+                            </li>
+                        }
+                    </ul>
+                </section>
+            }
+        </aside>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid? Id { get; set; }
+
+    private SaveRecurringInvoiceRequest _request = NewRequest();
+    private RecurringInvoiceResponse? _template;
+    private List<DocumentLineRow> _lines = [];
+    private BillingReferenceData _reference = new([], [], []);
+    private DocumentTotals _totals = new([], 0m, 0m, 0m);
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private string? _customerName;
+    private bool _loading = true;
+    private bool _busy;
+    private bool _conflict;
+    private Guid? _loadedId;
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private string Title => _template?.Name ?? L["Recurring.New"];
+
+    /// <summary>Une fois une période facturée, le début et la périodicité ne changent plus.</summary>
+    private bool ScheduleLocked => _template is { Occurrences.Count: > 0 };
+
+    private string MainSummary => BillingSummaries.Join(_customerName ?? L["Billing.Summary.NoCustomer"].Value, L[$"VatRegime.{_request.VatRegime}"].Value);
+
+    private string ScheduleSummary => BillingSummaries.Join(
+        L[$"Recurring.Frequency.{_request.Frequency}"].Value,
+        L[$"Recurring.Timing.{_request.Timing}"].Value,
+        _request.StartDate.ToString("d", Culture));
+
+    private string LinesSummary => string.Format(Culture, L["Recurring.LinesSummary"], _lines.Count(l => !l.IsIncomplete), GridNumber.FormatAmount(_totals.TotalExclTax, Culture));
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_loadedId == Id && !_loading)
+        {
+            return;
+        }
+
+        _loadedId = Id;
+        await LoadAsync();
+    }
+
+    private static SaveRecurringInvoiceRequest NewRequest()
+    {
+        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+        return new SaveRecurringInvoiceRequest { StartDate = new DateOnly(today.Year, today.Month, 1) };
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _conflict = false;
+        _errors = [];
+        _reference = (await Settings.GetReferenceDataAsync(CancellationToken.None)).Value ?? _reference;
+        if (Id is { } id)
+        {
+            OperationResult<RecurringInvoiceResponse> loaded = await Recurring.GetAsync(id, CancellationToken.None);
+            if (loaded.Value is null)
+            {
+                _errors = loaded.Errors;
+            }
+            else
+            {
+                Show(loaded.Value);
+            }
+        }
+        else
+        {
+            _template = null;
+            _request = NewRequest();
+            _customerName = null;
+            _lines = _reference.VatRates.Count > 0 ? [DocumentLineRow.New(_reference.VatRates[0])] : [];
+            _totals = new([], 0m, 0m, 0m);
+        }
+
+        _loading = false;
+    }
+
+    private void Show(RecurringInvoiceResponse template)
+    {
+        _template = template;
+        _customerName = template.CustomerName;
+        _request = new SaveRecurringInvoiceRequest
+        {
+            Name = template.Name,
+            CustomerId = template.CustomerId,
+            VatRegime = template.VatRegime,
+            Subject = template.Subject,
+            Notes = template.Notes,
+            PaymentTerms = template.PaymentTerms,
+            Frequency = template.Frequency,
+            Timing = template.Timing,
+            StartDate = template.StartDate,
+            EndDate = template.EndDate,
+            ValidateAutomatically = template.ValidateAutomatically,
+            Revision = template.Revision,
+            RevisionPercent = template.RevisionPercent,
+            SyntecReferenceIndex = template.SyntecReferenceIndex,
+            SyntecLatestIndex = template.SyntecLatestIndex,
+        };
+        _lines = [.. template.Lines.OrderBy(l => l.Position).Select(DocumentLineRow.From)];
+        _totals = QuoteEditor.ToTotals(template.Totals);
+    }
+
+    private void CustomerSelected(CustomerSummary customer)
+    {
+        _request.CustomerId = customer.Id;
+        _customerName = customer.Name;
+    }
+
+    private async Task SaveAsync()
+    {
+        _busy = true;
+        try
+        {
+            _request.Lines = [.. _lines.Where(l => !l.IsIncomplete).Select(l => l.ToRequest())];
+            bool created = _template is null;
+            OperationResult<RecurringInvoiceResponse> result = created
+                ? await Recurring.CreateAsync(_request, CancellationToken.None)
+                : await Recurring.UpdateAsync(_template!.Id, _request, _template.Version, CancellationToken.None);
+            if (!Apply(result))
+            {
+                return;
+            }
+
+            Toasts.Show(ToastKind.Success, L[created ? "Recurring.Toast.Created" : "Recurring.Toast.Saved"].Value);
+            if (created)
+            {
+                _loadedId = result.Value!.Id;
+                Navigation.NavigateTo($"recurring-invoices/{result.Value.Id}", new NavigationOptions { ReplaceHistoryEntry = true });
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task ToggleAsync()
+    {
+        _busy = true;
+        try
+        {
+            bool activate = !_template!.IsActive;
+            if (Apply(await Recurring.SetActiveAsync(_template.Id, activate, _template.Version, CancellationToken.None)))
+            {
+                Toasts.Show(ToastKind.Success, L[activate ? "Recurring.Toast.Resumed" : "Recurring.Toast.Paused"].Value);
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task RunAsync()
+    {
+        _busy = true;
+        try
+        {
+            OperationResult<RecurringRunResponse> run = await Recurring.RunAsync(_template!.Id, CancellationToken.None);
+            if (run.Value is null)
+            {
+                _errors = run.Errors;
+                Toasts.Show(ToastKind.Error, L["Recurring.Toast.RunFailed"].Value);
+                return;
+            }
+
+            RecurringToasts.Show(Toasts, L, run.Value);
+            OperationResult<RecurringInvoiceResponse> reloaded = await Recurring.GetAsync(_template.Id, CancellationToken.None);
+            if (reloaded.Value is not null)
+            {
+                Show(reloaded.Value);
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        _busy = true;
+        try
+        {
+            OperationResult<bool> deleted = await Recurring.DeleteAsync(_template!.Id, _template.Version, CancellationToken.None);
+            if (!deleted.IsSuccess)
+            {
+                _errors = deleted.Errors;
+                _conflict = deleted.Errors.Any(e => e.Code == ErrorCodes.Concurrency.VersionMismatch);
+                return;
+            }
+
+            Toasts.Show(ToastKind.Success, L["Recurring.Toast.Deleted"].Value);
+            Navigation.NavigateTo("recurring-invoices");
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private bool Apply(OperationResult<RecurringInvoiceResponse> result)
+    {
+        if (result.Value is null || !result.IsSuccess)
+        {
+            _errors = result.Errors;
+            _conflict = result.Errors.Any(e => e.Code == ErrorCodes.Concurrency.VersionMismatch);
+            return false;
+        }
+
+        _errors = [];
+        Show(result.Value);
+        return true;
+    }
+
+    private static string? Iso(DateOnly? date) => date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+    private static DateOnly? Parse(ChangeEventArgs e) =>
+        DateOnly.TryParse(e.Value?.ToString(), CultureInfo.InvariantCulture, out DateOnly date) ? date : null;
+}

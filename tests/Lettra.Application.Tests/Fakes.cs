@@ -189,6 +189,6 @@ internal static class CabinetFakesRegistration
         services.AddSingleton<Lettra.Application.Abstractions.Cabinet.IDossierIndicatorStore>(stores);
         services.AddSingleton<Lettra.Application.Abstractions.Cabinet.IDossierIndicatorRefresher>(stores);
         services.AddSingleton<Lettra.Application.Abstractions.Cabinet.IDossierReviewStore>(stores);
-        return services;
+        return services.AddRecurringFakes();
     }
 }

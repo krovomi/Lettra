@@ -9,6 +9,7 @@ using Lettra.Contracts.Common;
 using Lettra.Contracts.Speech;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
+using static Lettra.Api.Infrastructure.HttpResults;
 
 namespace Lettra.Api.Endpoints;
 
@@ -47,7 +48,7 @@ internal static class SpeechEndpoints
     {
         Result<SpeechStatusResponse> result = await queries
             .QueryAsync(new GetSpeechStatusQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return Ok(result);
     }
 
     /// <summary>

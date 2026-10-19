@@ -6,6 +6,7 @@ using Lettra.Application.Features.Administration;
 using Lettra.Contracts.Administration;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
+using static Lettra.Api.Infrastructure.HttpResults;
 
 namespace Lettra.Api.Endpoints;
 
@@ -124,13 +125,13 @@ internal static class AdministrationEndpoints
     private static async Task<IResult> QueryAsync<T>(IQueryDispatcher queries, IQuery<Result<T>> query, CancellationToken cancellationToken)
     {
         Result<T> result = await queries.QueryAsync(query, cancellationToken).ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return Ok(result);
     }
 
     private static async Task<IResult> SendAsync<TCommand>(ICommandDispatcher commands, TCommand command, CancellationToken cancellationToken)
         where TCommand : ICommand<Result>
     {
         Result result = await commands.SendAsync(command, cancellationToken).ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.NoContent() : result.Errors.ToProblem();
+        return NoContent(result);
     }
 }

@@ -149,6 +149,13 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Factures_recurrentes_et_passe_de_fond()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await RecurringScenarios.RecurringInvoicesAsync(harness, DatabaseProvider.Sqlite, Database("recurrentes"));
+    }
+
+    [Fact]
     public async Task Declarations_de_tva_des_et_calendrier()
     {
         await using TenantHarness harness = new(new SqliteConfigurator());
@@ -511,6 +518,14 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     }
 
     [SkippableFact]
+    public async Task Factures_recurrentes_et_passe_de_fond()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new PostgreSqlConfigurator());
+        await RecurringScenarios.RecurringInvoicesAsync(harness, DatabaseProvider.PostgreSql, Database("recurrentes"));
+    }
+
+    [SkippableFact]
     public async Task Declarations_de_tva_des_et_calendrier()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
@@ -814,6 +829,14 @@ public sealed class SqlServerTests : IAsyncLifetime
         Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new SqlServerConfigurator());
         await ExportScenarios.BulkExportAsync(harness, DatabaseProvider.SqlServer, Database("fec_a"), Database("fec_b"));
+    }
+
+    [SkippableFact]
+    public async Task Factures_recurrentes_et_passe_de_fond()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new SqlServerConfigurator());
+        await RecurringScenarios.RecurringInvoicesAsync(harness, DatabaseProvider.SqlServer, Database("recurrentes"));
     }
 
     [SkippableFact]
