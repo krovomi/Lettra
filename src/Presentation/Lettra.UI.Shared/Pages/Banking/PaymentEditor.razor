@@ -1,0 +1,321 @@
+@page "/payments/new"
+@inject IBankingGateway Banking
+@inject NavigationManager Navigation
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+@inject IServiceProvider Services
+@* Saisie d'un encaissement (vague 6) : un règlement reçu, réparti sur une ou plusieurs factures du client, en tout ou
+   partie. Depuis le rapprochement, le montant, la date et la référence viennent de la ligne du relevé. *@
+
+<PageTitle>@L["Payments.New"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Payments.New"]</h1>
+        <p class="lettra-muted">@L["Payments.New.Subtitle"]</p>
+    </div>
+</div>
+
+<GeneralErrors Errors="_errors" IncludeFieldErrors="true" />
+
+@if (_open is null)
+{
+    <ListSkeleton Columns="4" />
+}
+else if (_customers.Count == 0)
+{
+    <EmptyState Id="payment-nothing-due" IconName="circle-check" Title="@L["Payments.NothingDue"]" Text="@L["Payments.NothingDue.Text"]">
+        <a class="lettra-button is-secondary" href="payments">@L["Payments.Back"]</a>
+    </EmptyState>
+}
+else
+{
+    <form class="lt-banking-form" @onsubmit="SaveAsync" @onsubmit:preventDefault="true">
+        <section class="lettra-card lt-banking-fields" aria-labelledby="payment-fields-title">
+            <h2 id="payment-fields-title">@L["Payments.Receipt"]</h2>
+            @if (_line is not null)
+            {
+                <p class="lt-banking-from-line" id="payment-from-line">
+                    <Icon Name="landmark" Size="16" /> @string.Format(Culture, L["Payments.FromLine"], _line.BookingDate.ToString("d", Culture), _line.Label)
+                </p>
+            }
+            <div class="lt-banking-grid">
+                <div class="lt-field">
+                    <label for="payment-customer">@L["Billing.Column.Customer"]</label>
+                    <select id="payment-customer" value="@(_customerId?.ToString() ?? string.Empty)" @onchange="ChangeCustomer" required>
+                        <option value="">@L["Payments.ChooseCustomer"]</option>
+                        @foreach ((Guid id, string name) in _customers)
+                        {
+                            <option value="@id">@name</option>
+                        }
+                    </select>
+                </div>
+                <div class="lt-field">
+                    <label for="payment-date">@L["Billing.Column.Date"]</label>
+                    <input id="payment-date" type="date" @bind="_date" max="@Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" readonly="@(_line is not null)" required />
+                </div>
+                <div class="lt-field">
+                    <label for="payment-amount">@L["Payments.AmountReceived"]</label>
+                    <input id="payment-amount" type="number" inputmode="decimal" step="0.01" min="0.01" @bind="_amount" @bind:after="Spread" readonly="@(_line is not null)" required />
+                </div>
+                <div class="lt-field">
+                    <label for="payment-method">@L["Payments.Method"]</label>
+                    <select id="payment-method" @bind="_method">
+                        @foreach (PaymentMethodDto method in Enum.GetValues<PaymentMethodDto>())
+                        {
+                            <option value="@method">@L[$"PaymentMethod.{method}"]</option>
+                        }
+                    </select>
+                </div>
+                <div class="lt-field lt-banking-wide">
+                    <label for="payment-reference">@L["Payments.Reference"]</label>
+                    <input id="payment-reference" type="text" maxlength="140" @bind="_reference" placeholder="@L["Payments.Reference.Hint"]" />
+                </div>
+            </div>
+        </section>
+
+        @if (_customerId is not null)
+        {
+            <section class="lettra-card" aria-labelledby="payment-invoices-title">
+                <div class="lt-banking-section-head">
+                    <h2 id="payment-invoices-title">@L["Payments.Allocation"]</h2>
+                    <button type="button" class="lettra-button is-ghost" id="payment-spread" @onclick="Spread">@L["Payments.Spread"]</button>
+                </div>
+                <p class="lettra-muted">@L["Payments.Allocation.Hint"]</p>
+                <table class="lettra-table lt-cards" id="payment-invoices">
+                    <thead>
+                        <tr>
+                            <th scope="col">@L["Billing.Column.Number"]</th>
+                            <th scope="col">@L["Invoice.Field.DueDate"]</th>
+                            <th scope="col" class="lg-num">@L["Payments.Outstanding"]</th>
+                            <th scope="col" class="lg-num">@L["Payments.Allocated"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (Allocation row in _rows)
+                        {
+                            <tr @key="row.Invoice.InvoiceId">
+                                <td>
+                                    <label class="lt-banking-check">
+                                        <input type="checkbox" checked="@row.Selected" @onchange="e => Select(row, e)" />
+                                        <a href="@($"invoices/{row.Invoice.InvoiceId}")">@row.Invoice.Number</a>
+                                    </label>
+                                    @if (row.Invoice.DaysOverdue > 0)
+                                    {
+                                        <span class="lettra-status is-refused">@string.Format(Culture, L["Payments.Overdue"], row.Invoice.DaysOverdue)</span>
+                                    }
+                                </td>
+                                <td data-label="@L["Invoice.Field.DueDate"]">@(row.Invoice.DueDate?.ToString("d", Culture))</td>
+                                <td data-label="@L["Payments.Outstanding"]" class="lg-num">@ExplorerText.Money(row.Invoice.Outstanding)</td>
+                                <td data-label="@L["Payments.Allocated"]" class="lg-num">
+                                    <input type="number" inputmode="decimal" step="0.01" min="0" max="@row.Invoice.Outstanding.ToString(CultureInfo.InvariantCulture)"
+                                           class="lt-banking-amount" aria-label="@string.Format(Culture, L["Payments.AllocatedFor"], row.Invoice.Number)"
+                                           value="@(row.Selected ? row.Amount.ToString("0.00", CultureInfo.InvariantCulture) : string.Empty)" @onchange="e => ChangeAmount(row, e)" />
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <dl class="lt-banking-summary" id="payment-summary">
+                    <div><dt>@L["Payments.TotalAllocated"]</dt><dd>@ExplorerText.Money(Allocated)</dd></div>
+                    <div><dt>@L["Payments.AmountReceived"]</dt><dd>@ExplorerText.Money(_amount)</dd></div>
+                    @if (Gap != 0m)
+                    {
+                        <div class="@(Math.Abs(Gap) > _threshold ? "is-error" : "is-warning")" id="payment-gap">
+                            <dt>@(Gap > 0 ? L["Payments.GapLoss"] : L["Payments.GapGain"])</dt>
+                            <dd>@ExplorerText.Money(Math.Abs(Gap))</dd>
+                        </div>
+                    }
+                </dl>
+                @if (Gap != 0m)
+                {
+                    <p class="lettra-muted">@string.Format(Culture, L["Payments.GapHint"], ExplorerText.Money(_threshold))</p>
+                }
+            </section>
+        }
+
+        <div class="lt-page-actions lt-banking-actions">
+            <a class="lettra-button is-ghost" href="@(_line is null ? "payments" : "bank")">@L["Explorer.Cancel"]</a>
+            <button type="submit" class="lettra-button" id="payment-save" disabled="@(!CanSave || _busy)">
+                <Icon Name="check" Size="18" /> @L["Payments.Save"]
+            </button>
+        </div>
+    </form>
+}
+
+@code {
+    private sealed class Allocation(OpenInvoiceResponse invoice)
+    {
+        public OpenInvoiceResponse Invoice { get; } = invoice;
+
+        public bool Selected { get; set; }
+
+        public decimal Amount { get; set; }
+    }
+
+    private IReadOnlyList<OpenInvoiceResponse>? _open;
+    private List<(Guid Id, string Name)> _customers = [];
+    private List<Allocation> _rows = [];
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private BankLineResponse? _line;
+    private Guid? _customerId;
+    private DateOnly _date;
+    private decimal _amount;
+    private PaymentMethodDto _method = PaymentMethodDto.Transfer;
+    private string? _reference;
+    private decimal _threshold = 1m;
+    private bool _busy;
+
+    [SupplyParameterFromQuery(Name = "customer")] public Guid? Customer { get; set; }
+
+    [SupplyParameterFromQuery(Name = "invoice")] public Guid? Invoice { get; set; }
+
+    [SupplyParameterFromQuery(Name = "line")] public Guid? Line { get; set; }
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private DateOnly Today => DateOnly.FromDateTime((Services.GetService<TimeProvider>() ?? TimeProvider.System).GetLocalNow().DateTime);
+
+    private decimal Allocated => _rows.Where(r => r.Selected).Sum(r => r.Amount);
+
+    private decimal Gap => _rows.Any(r => r.Selected) ? Allocated - _amount : 0m;
+
+    private bool CanSave => _customerId is not null && _amount > 0m && _rows.Any(r => r.Selected && r.Amount > 0m) && Math.Abs(Gap) <= _threshold;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _date = Today;
+        OperationResult<BankingSettingsResponse> settings = await Banking.GetSettingsAsync(CancellationToken.None);
+        _threshold = settings.Value?.WriteOffThreshold ?? 1m;
+        OperationResult<IReadOnlyList<OpenInvoiceResponse>> open = await Banking.GetOpenInvoicesAsync(null, CancellationToken.None);
+        _errors = open.Errors;
+        _open = open.Value ?? [];
+        _customers = [.. _open.GroupBy(i => i.CustomerId).Select(g => (g.Key, g.First().CustomerName)).OrderBy(c => c.Item2, StringComparer.CurrentCultureIgnoreCase)];
+
+        if (Line is Guid lineId)
+        {
+            OperationResult<ReconciliationResponse> reconciliation = await Banking.GetReconciliationAsync(CancellationToken.None);
+            _line = reconciliation.Value?.Lines.FirstOrDefault(l => l.Id == lineId && l.Status == BankLineStatusDto.Pending && l.Amount > 0m);
+            if (_line is not null)
+            {
+                _date = _line.BookingDate;
+                _amount = _line.Amount;
+                _reference = _line.Reference ?? (_line.Label.Length > 140 ? _line.Label[..140] : _line.Label);
+                Customer ??= _line.Proposal?.CustomerId;
+            }
+        }
+
+        Guid? preset = Customer ?? (Invoice is Guid invoice ? _open.FirstOrDefault(i => i.InvoiceId == invoice)?.CustomerId : null);
+        if (preset is Guid customer && _customers.Any(c => c.Id == customer))
+        {
+            SetCustomer(customer);
+            if (Invoice is Guid only && _rows.FirstOrDefault(r => r.Invoice.InvoiceId == only) is { } row)
+            {
+                row.Selected = true;
+                row.Amount = row.Invoice.Outstanding;
+                _amount = _amount == 0m ? row.Amount : _amount;
+            }
+            else if (_line?.Proposal is { } proposal && proposal.CustomerId == customer)
+            {
+                foreach (ProposedAllocationResponse proposed in proposal.Allocations)
+                {
+                    if (_rows.FirstOrDefault(r => r.Invoice.InvoiceId == proposed.InvoiceId) is { } match)
+                    {
+                        match.Selected = true;
+                        match.Amount = proposed.Amount;
+                    }
+                }
+            }
+            else
+            {
+                Spread();
+            }
+        }
+    }
+
+    private void ChangeCustomer(ChangeEventArgs e) =>
+        SetCustomer(Guid.TryParse(e.Value?.ToString(), out Guid id) ? id : null);
+
+    private void SetCustomer(Guid? customer)
+    {
+        _customerId = customer;
+        _rows = customer is null || _open is null ? [] : [.. _open.Where(i => i.CustomerId == customer).Select(i => new Allocation(i))];
+        Spread();
+    }
+
+    /// <summary>Répartit le montant reçu sur les factures, de la plus ancienne échéance à la plus récente.</summary>
+    private void Spread()
+    {
+        decimal left = _amount;
+        foreach (Allocation row in _rows)
+        {
+            row.Amount = Math.Min(left, row.Invoice.Outstanding);
+            row.Selected = row.Amount > 0m;
+            left -= row.Amount;
+        }
+
+        // Un reste sous le seuil sur la dernière facture touchée est un écart de règlement : la facture est soldée.
+        if (_rows.LastOrDefault(r => r.Selected) is { } last && last.Invoice.Outstanding - last.Amount is > 0m and var remainder && remainder <= _threshold)
+        {
+            last.Amount = last.Invoice.Outstanding;
+        }
+    }
+
+    private void Select(Allocation row, ChangeEventArgs e)
+    {
+        row.Selected = e.Value is true;
+        row.Amount = row.Selected ? Math.Min(row.Invoice.Outstanding, Math.Max(0m, _amount - Allocated)) : 0m;
+        if (row.Selected && row.Amount == 0m)
+        {
+            row.Amount = row.Invoice.Outstanding;
+        }
+    }
+
+    private void ChangeAmount(Allocation row, ChangeEventArgs e)
+    {
+        if (decimal.TryParse(e.Value?.ToString(), NumberStyles.Number, CultureInfo.InvariantCulture, out decimal amount))
+        {
+            row.Amount = Math.Clamp(decimal.Round(amount, 2), 0m, row.Invoice.Outstanding);
+            row.Selected = row.Amount > 0m;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (!CanSave || _customerId is not Guid customer)
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            RecordPaymentRequest request = new()
+            {
+                CustomerId = customer,
+                Date = _date,
+                Amount = _amount,
+                Method = _method,
+                Reference = string.IsNullOrWhiteSpace(_reference) ? null : _reference.Trim(),
+                Allocations = [.. _rows.Where(r => r.Selected && r.Amount > 0m).Select(r => new PaymentAllocationRequest(r.Invoice.InvoiceId, r.Amount))],
+                BankLineId = _line?.Id,
+            };
+            OperationResult<PaymentResponse> saved = await Banking.RecordPaymentAsync(request, CancellationToken.None);
+            if (saved is { IsSuccess: true, Value: { } payment })
+            {
+                Toasts.Show(ToastKind.Success, payment.LetteringCode is { } code
+                    ? string.Format(Culture, L["Payments.Saved.Lettered"], payment.Number, code)
+                    : string.Format(Culture, L["Payments.Saved"], payment.Number));
+                Navigation.NavigateTo(_line is null ? $"payments/{payment.Id}" : "bank");
+                return;
+            }
+
+            _errors = [.. saved.Errors.Select(e => e with { Target = null })];
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

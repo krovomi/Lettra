@@ -24,6 +24,9 @@ public static class NumberSeriesCodes
 {
     public const string Invoices = "FAC";
     public const string Quotes = "DEV";
+
+    /// <summary>Encaissements clients (vague 6) : un numéro par encaissement, contre-passé ou non.</summary>
+    public const string Payments = "ENC";
 }
 
 public static class NumberingErrors

@@ -22,6 +22,14 @@ public enum JournalEntryKind
     PlatformStatusReceived = 8,
     PlatformPaymentReported = 9,
 
+    /// <summary>
+    /// Encaissement enregistré (vague 6), numéroté dans la série <c>ENC</c>, puis sa contre-passation.
+    /// <see cref="JournalEntry.ContentHash"/> est l'empreinte de l'encaissement (<c>Payment.ComputeFingerprint</c>) ;
+    /// <see cref="JournalEntry.TotalInclTax"/> le montant reçu. Aucun effet sur le chiffre d'affaires des clôtures.
+    /// </summary>
+    PaymentRecorded = 10,
+    PaymentReversed = 11,
+
     /// <summary>Une clôture périodique signée : elle entre elle-même dans la chaîne.</summary>
     PeriodClosed = 100,
 
@@ -39,6 +47,9 @@ public enum JournaledDocumentKind
     Invoice = 2,
     DepositInvoice = 3,
     CreditNote = 4,
+
+    /// <summary>Encaissement client (vague 6).</summary>
+    Payment = 5,
 }
 
 /// <summary>
@@ -270,7 +281,8 @@ public sealed class JournalEntry
     public bool IsPlatformEvent => Kind is JournalEntryKind.PlatformTransmitted or JournalEntryKind.PlatformStatusReceived or JournalEntryKind.PlatformPaymentReported;
 
     /// <summary>Vrai si l'entrée consomme un numéro de série (validation d'une pièce).</summary>
-    public bool AssignsNumber => Kind is JournalEntryKind.QuoteValidated or JournalEntryKind.InvoiceValidated or JournalEntryKind.CreditNoteValidated;
+    public bool AssignsNumber => Kind is JournalEntryKind.QuoteValidated or JournalEntryKind.InvoiceValidated or JournalEntryKind.CreditNoteValidated
+        or JournalEntryKind.PaymentRecorded;
 
     public void ApplySeal(string keyId, string seal)
     {

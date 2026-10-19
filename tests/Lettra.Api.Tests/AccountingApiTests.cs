@@ -32,7 +32,8 @@ public sealed class AccountingApiTests(LettraApiFactory factory) : IClassFixture
         JournalEntryResponse entry = journal.Items.Should().ContainSingle().Subject;
         entry.InvoiceId.Should().Be(invoiceId);
         entry.Amount.Should().Be(120m);
-        entry.Lines.Select(l => l.Account).Should().Contain(["411", "706", "44571"]);
+        // Une prestation de services sans option pour les débits : la TVA est due à l'encaissement (44574, vague 6).
+        entry.Lines.Select(l => l.Account).Should().Contain(["411", "706", "44574"]);
         journal.TotalDebit.Should().Be(journal.TotalCredit);
 
         TrialBalanceResponse balance = (await manager.GetFromJsonAsync(Api($"/api/v1/accounting/balance?{Year}"), ContractsJsonContext.Default.TrialBalanceResponse))!;

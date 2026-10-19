@@ -16,7 +16,8 @@ public sealed record ReceivableRow(
     DateOnly? DueDate,
     decimal TotalInclTax,
     decimal CreditedInclTax,
-    PlatformTransmission? Transmission);
+    PlatformTransmission? Transmission,
+    decimal PaidInclTax = 0m);
 
 /// <summary>Lecture des pièces validées ou émises du dossier et de leur dernière transmission (lecture seule).</summary>
 public interface IReceivablesReader
@@ -31,7 +32,8 @@ public sealed record GetReceivablesSummaryQuery(DossierId Dossier) : IQuery<Resu
 }
 
 /// <summary>
-/// Calcul du point des créances. Reste dû = TTC − avoirs validés − encaissements déclarés à la plateforme ; une
+/// Calcul du point des créances. Reste dû = TTC − avoirs validés − encaissements (ceux enregistrés dans Lettra, ou
+/// ceux déclarés à la plateforme s'ils sont plus élevés : un encaissement saisi est aussi déclaré) ; une
 /// facture ou un acompte est en retard le lendemain de son échéance tant qu'il reste dû. Un avoir n'est jamais en
 /// retard mais compte dans l'état des transmissions.
 /// </summary>
@@ -71,7 +73,7 @@ public static class ReceivablesSummary
     }
 
     private static decimal Outstanding(ReceivableRow row) =>
-        Math.Max(0m, row.TotalInclTax - row.CreditedInclTax - (row.Transmission?.CollectedAmount ?? 0m));
+        Math.Max(0m, row.TotalInclTax - row.CreditedInclTax - Math.Max(row.PaidInclTax, row.Transmission?.CollectedAmount ?? 0m));
 }
 
 internal sealed class GetReceivablesSummaryHandler(IReceivablesReader reader, TimeProvider clock)
