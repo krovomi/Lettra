@@ -4,7 +4,8 @@ namespace Lettra.Infrastructure.Persistence.Catalog;
 
 /// <summary>
 /// Base « Catalog » du plan de contrôle (modes 2, 3 et 5) : cabinets, serveurs de bases, dossiers, et le registre
-/// des droits (comptes, groupes, rôles à portée) lu par <c>IAuthorizationDirectory</c>, et les réglages IA des cabinets.
+/// des droits (comptes, groupes, rôles à portée) lu par <c>IAuthorizationDirectory</c>, les réglages IA des cabinets
+/// et les indicateurs de la vue cabinet (des compteurs par dossier, jamais de données de dossier).
 /// Ses migrations vivent, comme celles des dossiers, dans les trois assemblies de providers.
 /// </summary>
 public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options) : DbContext(options)
@@ -33,6 +34,8 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
 
     public DbSet<CatalogAiSettings> AiSettings => Set<CatalogAiSettings>();
     public DbSet<CatalogOrganisationPolicy> OrganisationPolicies => Set<CatalogOrganisationPolicy>();
+
+    public DbSet<CatalogDossierIndicator> DossierIndicators => Set<CatalogDossierIndicator>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -147,6 +150,7 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
         });
 
         CatalogAiSettings.Configure(modelBuilder);
+        CatalogDossierIndicator.Configure(modelBuilder);
 
         modelBuilder.Entity<CatalogOrganisationPolicy>(e =>
         {

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.Cabinet" xml:space="preserve"><value>Firm overview</value></data>
+  <data name="Nav.Review" xml:space="preserve"><value>Dossier review</value></data>
+  <data name="Cabinet.Title" xml:space="preserve"><value>Firm overview</value></data>
+  <data name="Cabinet.Subtitle" xml:space="preserve"><value>The dossiers you follow, most urgent first.</value></data>
+  <data name="Cabinet.Subtitle.Computed" xml:space="preserve"><value>The dossiers you follow, most urgent first. Figures computed {0}.</value></data>
+  <data name="Cabinet.Refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="Cabinet.Refreshing" xml:space="preserve"><value>Computing…</value></data>
+  <data name="Cabinet.Refreshed" xml:space="preserve"><value>Figures recomputed for {0} dossier(s).</value></data>
+  <data name="Cabinet.RefreshedWithFailures" xml:space="preserve"><value>{0} dossier(s) recomputed, {1} failed: their previous figures stay on screen.</value></data>
+  <data name="Cabinet.Empty" xml:space="preserve"><value>No dossier to follow</value></data>
+  <data name="Cabinet.EmptyText" xml:space="preserve"><value>You don't have access to any dossier yet. A firm administrator can grant you some in “Team and access”.</value></data>
+  <data name="Cabinet.Kpis" xml:space="preserve"><value>Firm summary</value></data>
+  <data name="Cabinet.Kpi.ToHandle" xml:space="preserve"><value>Dossiers needing action</value></data>
+  <data name="Cabinet.Kpi.OutOf" xml:space="preserve"><value>out of {0} dossier(s)</value></data>
+  <data name="Cabinet.Kpi.InDossiers" xml:space="preserve"><value>in {0} dossier(s)</value></data>
+  <data name="Cabinet.List.Title" xml:space="preserve"><value>Dossiers</value></data>
+  <data name="Cabinet.List.Caption" xml:space="preserve"><value>Indicators for each dossier, most urgent first</value></data>
+  <data name="Cabinet.Search" xml:space="preserve"><value>Search a dossier</value></data>
+  <data name="Cabinet.OnlyToHandle" xml:space="preserve"><value>Only those needing action</value></data>
+  <data name="Cabinet.Filtered.Empty" xml:space="preserve"><value>No dossier matches</value></data>
+  <data name="Cabinet.Field.Dossier" xml:space="preserve"><value>Dossier</value></data>
+  <data name="Cabinet.Field.ComputedAt" xml:space="preserve"><value>Computed</value></data>
+  <data name="Cabinet.Field.Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Cabinet.Level.Ok" xml:space="preserve"><value>Up to date</value></data>
+  <data name="Cabinet.Level.Info" xml:space="preserve"><value>To watch</value></data>
+  <data name="Cabinet.Level.Warning" xml:space="preserve"><value>Needs action</value></data>
+  <data name="Cabinet.Level.Critical" xml:space="preserve"><value>Urgent</value></data>
+  <data name="Cabinet.NotAvailable" xml:space="preserve"><value>Not tracked for this dossier yet</value></data>
+  <data name="Cabinet.NeverComputed" xml:space="preserve"><value>Not computed yet</value></data>
+  <data name="Cabinet.TodayAt" xml:space="preserve"><value>today at {0}</value></data>
+  <data name="Cabinet.Open" xml:space="preserve"><value>Open</value></data>
+  <data name="Cabinet.Review" xml:space="preserve"><value>Review</value></data>
+  <data name="Cabinet.Footnote" xml:space="preserve"><value>Figures are recomputed every night, and when you click “Refresh”. They are counters only: no amount or customer name leaves the dossier.</value></data>
+  <data name="Cabinet.Indicator.factures.retard" xml:space="preserve"><value>Overdue invoices</value></data>
+  <data name="Cabinet.Indicator.factures.retard.Due" xml:space="preserve"><value>oldest: {0}</value></data>
+  <data name="Cabinet.Indicator.pa.rejets" xml:space="preserve"><value>Platform rejections</value></data>
+  <data name="Cabinet.Indicator.tva.a-declarer" xml:space="preserve"><value>VAT to file</value></data>
+  <data name="Cabinet.Indicator.tva.a-declarer.Due" xml:space="preserve"><value>due {0}</value></data>
+  <data name="Cabinet.Indicator.banque.non-rapprochee" xml:space="preserve"><value>Bank not reconciled</value></data>
+  <data name="Cabinet.Indicator.banque.non-rapprochee.Due" xml:space="preserve"><value>since {0}</value></data>
+  <data name="Cabinet.Indicator.alertes.ouvertes" xml:space="preserve"><value>Open alerts</value></data>
+  <data name="Cabinet.Indicator.revue.a-faire" xml:space="preserve"><value>Monthly review</value></data>
+  <data name="Cabinet.Indicator.revue.a-faire.Due" xml:space="preserve"><value>before {0}</value></data>
+  <data name="Cabinet.Indicator.Due" xml:space="preserve"><value>due {0}</value></data>
+  <data name="Cabinet.Palette.Group" xml:space="preserve"><value>Dossiers</value></data>
+  <data name="Cabinet.Palette.Open" xml:space="preserve"><value>Open dossier {0}</value></data>
+  <data name="Cabinet.Picker.Title" xml:space="preserve"><value>Switch dossier</value></data>
+  <data name="Cabinet.Picker.None" xml:space="preserve"><value>Choose a dossier</value></data>
+  <data name="Cabinet.Picker.Fixed" xml:space="preserve"><value>This installation opens a single dossier.</value></data>
+  <data name="Cabinet.Picker.Search" xml:space="preserve"><value>Search a dossier</value></data>
+  <data name="Cabinet.Picker.Favourites" xml:space="preserve"><value>Favourites</value></data>
+  <data name="Cabinet.Picker.Recents" xml:space="preserve"><value>Recent</value></data>
+  <data name="Cabinet.Picker.All" xml:space="preserve"><value>All dossiers ({0})</value></data>
+  <data name="Cabinet.Picker.NoMatch" xml:space="preserve"><value>No dossier matches.</value></data>
+  <data name="Cabinet.Picker.Overview" xml:space="preserve"><value>Open the firm overview</value></data>
+  <data name="Cabinet.Picker.Favourite" xml:space="preserve"><value>Add {0} to favourites</value></data>
+  <data name="Cabinet.Picker.Unfavourite" xml:space="preserve"><value>Remove {0} from favourites</value></data>
+  <data name="Cabinet.Picker.Favourite.Short" xml:space="preserve"><value>Add to favourites</value></data>
+  <data name="Cabinet.Picker.Unfavourite.Short" xml:space="preserve"><value>Remove from favourites</value></data>
+  <data name="Cabinet.Picker.Opened" xml:space="preserve"><value>Dossier “{0}” opened.</value></data>
+  <data name="Review.Title" xml:space="preserve"><value>Dossier review</value></data>
+  <data name="Review.Subtitle" xml:space="preserve"><value>Checklist for {0}, to tick every month or quarter.</value></data>
+  <data name="Review.Intro" xml:space="preserve"><value>Dossier checklist, to tick every month or quarter.</value></data>
+  <data name="Review.Period" xml:space="preserve"><value>Period</value></data>
+  <data name="Review.Period.Months" xml:space="preserve"><value>Months</value></data>
+  <data name="Review.Period.Quarters" xml:space="preserve"><value>Quarters</value></data>
+  <data name="Review.Period.Quarter" xml:space="preserve"><value>Q{0} {1}</value></data>
+  <data name="Review.Progress" xml:space="preserve"><value>{0} of {1} item(s)</value></data>
+  <data name="Review.Progress.Label" xml:space="preserve"><value>Review progress</value></data>
+  <data name="Review.Item.pieces.emises" xml:space="preserve"><value>Period documents validated and issued</value></data>
+  <data name="Review.Item.pieces.emises.Help" xml:space="preserve"><value>No invoice or credit note draft left over for the period.</value></data>
+  <data name="Review.Item.pa.suivie" xml:space="preserve"><value>E-invoicing platform transmissions followed</value></data>
+  <data name="Review.Item.pa.suivie.Help" xml:space="preserve"><value>Rejections are fixed and resent, refusals handled with a credit note.</value></data>
+  <data name="Review.Item.relances.faites" xml:space="preserve"><value>Overdue invoices chased</value></data>
+  <data name="Review.Item.relances.faites.Help" xml:space="preserve"><value>Each late customer got a reminder or a call.</value></data>
+  <data name="Review.Item.banque.rapprochee" xml:space="preserve"><value>Bank reconciliation done</value></data>
+  <data name="Review.Item.banque.rapprochee.Help" xml:space="preserve"><value>Statement lines are matched to documents.</value></data>
+  <data name="Review.Item.tva.declaree" xml:space="preserve"><value>VAT for the period filed</value></data>
+  <data name="Review.Item.tva.declaree.Help" xml:space="preserve"><value>Return filed and paid on time.</value></data>
+  <data name="Review.Item.pieces.manquantes" xml:space="preserve"><value>Missing documents requested from the client</value></data>
+  <data name="Review.Item.pieces.manquantes.Help" xml:space="preserve"><value>Purchase invoices, statements and receipts requested.</value></data>
+  <data name="Review.Item.periode.cloturee" xml:space="preserve"><value>Period closed, integrity chain checked</value></data>
+  <data name="Review.Item.periode.cloturee.Help" xml:space="preserve"><value>The month closing is signed and the check reports nothing.</value></data>
+  <data name="Review.Item.points.manager" xml:space="preserve"><value>Points of attention noted for the manager</value></data>
+  <data name="Review.Item.points.manager.Help" xml:space="preserve"><value>A short note on anything worth a look (optional).</value></data>
+  <data name="Review.Note" xml:space="preserve"><value>Note</value></data>
+  <data name="Review.Note.Placeholder" xml:space="preserve"><value>Optional note</value></data>
+  <data name="Review.Note.Save" xml:space="preserve"><value>Save note</value></data>
+  <data name="Review.Note.Saved" xml:space="preserve"><value>Note saved: {0}.</value></data>
+  <data name="Review.Checked" xml:space="preserve"><value>Item ticked: {0}.</value></data>
+  <data name="Review.Unchecked" xml:space="preserve"><value>Item unticked: {0}.</value></data>
+  <data name="Review.Who" xml:space="preserve"><value>Ticked by {0} on {1}</value></data>
+  <data name="Review.Who.Me" xml:space="preserve"><value>you</value></data>
+  <data name="Review.Who.Someone" xml:space="preserve"><value>a colleague</value></data>
+  <data name="Review.Hint.pa.rejets" xml:space="preserve"><value>{0} rejection(s) pending</value></data>
+  <data name="Review.Hint.factures.retard" xml:space="preserve"><value>{0} overdue invoice(s)</value></data>
+  <data name="Review.Hint.banque.non-rapprochee" xml:space="preserve"><value>{0} unreconciled line(s)</value></data>
+  <data name="Review.Hint.tva.a-declarer" xml:space="preserve"><value>{0} return(s) to file</value></data>
+  <data name="Review.Hint.alertes.ouvertes" xml:space="preserve"><value>{0} open alert(s)</value></data>
+  <data name="Error.Review.PeriodInvalid" xml:space="preserve"><value>This period is not recognised (expected: 2026-09 or 2026-T3).</value></data>
+  <data name="Error.Review.ItemUnknown" xml:space="preserve"><value>This item is not part of the checklist.</value></data>
+  <data name="Error.Review.NoteTooLong" xml:space="preserve"><value>The note exceeds 500 characters.</value></data>
+</root>

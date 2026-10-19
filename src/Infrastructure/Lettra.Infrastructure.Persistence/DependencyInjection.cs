@@ -1,9 +1,11 @@
 using Lettra.Application.Abstractions.Ai;
+using Lettra.Application.Abstractions.Cabinet;
 using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Persistence;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Infrastructure.Persistence.Ai;
 using Lettra.Infrastructure.Persistence.Billing;
+using Lettra.Infrastructure.Persistence.Cabinet;
 using Lettra.Infrastructure.Persistence.Integrity;
 using Lettra.Infrastructure.Persistence.Numbering;
 using Lettra.Infrastructure.Persistence.Outbox;
@@ -48,6 +50,15 @@ public static class DependencyInjection
         services.AddBillingStores();
         services.AddSyncStores();
         services.AddOutboxStores();
+
+        // Vue cabinet : revue de dossier et indicateurs du dossier ; les indicateurs sont rangés en mémoire tant que la
+        // base Catalog ne remplace pas ce magasin (modes 2, 3 et 5).
+        services.AddScoped<IDossierReviewStore, EfDossierReviewStore>();
+        services.AddScoped<IDossierIndicatorSource, OverdueInvoicesIndicatorSource>();
+        services.AddScoped<IDossierIndicatorSource, PlatformRejectionsIndicatorSource>();
+        services.AddScoped<IDossierIndicatorSource, ReviewPendingIndicatorSource>();
+        services.TryAddSingleton<IDossierIndicatorStore, InMemoryDossierIndicatorStore>();
+        services.AddSingleton<IDossierIndicatorRefresher, DossierIndicatorRefresher>();
 
         // Journal IA dans la base du dossier (remplace le journal vide enregistré par l'application).
         services.Replace(ServiceDescriptor.Scoped<IAiAuditLog, DossierAiAuditLog>());

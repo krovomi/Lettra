@@ -1,0 +1,170 @@
+@* Sélecteur de dossier (barre du haut) : le dossier ouvert, et un panneau pour en changer. Recherche sans accents,
+   favoris (étoile) et récents gardés sur l'appareil, lien vers la vue cabinet. Ordinateur et tablette : panneau sous le
+   bouton ; téléphone : feuille en bas de l'écran, cibles de 44 px. Échap ou un clic à côté referme. *@
+@implements IDisposable
+@inject CurrentDossier Dossiers
+@inject NavigationManager Navigation
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+
+<div class="lt-dossier-picker">
+    <button type="button" id="dossier-picker" class="lt-dossier-button" aria-expanded="@(_open ? "true" : "false")" aria-controls="dossier-panel"
+            aria-haspopup="dialog" title="@L["Cabinet.Picker.Title"]" @onclick="ToggleAsync">
+        <Icon Name="folder" Size="18" />
+        <span class="lt-dossier-name">@(Dossiers.Name ?? (Dossiers.IsLoaded ? L["Cabinet.Picker.None"] : "…"))</span>
+        <Icon Name="chevron-down" Size="16" />
+    </button>
+
+    @if (_open)
+    {
+        <div class="lt-popover-backdrop lt-dossier-backdrop" @onclick="Close"></div>
+        <div id="dossier-panel" class="lt-popover lt-dossier-panel" role="dialog" aria-modal="true" aria-labelledby="dossier-panel-title" @onkeydown="OnKeyDown">
+            <div class="lt-dossier-panel-head">
+                <h2 id="dossier-panel-title">@L["Cabinet.Picker.Title"]</h2>
+                <button type="button" class="lt-icon-button" aria-label="@L["Shell.Close"]" title="@L["Shell.Close"]" @onclick="Close"><Icon Name="x" /></button>
+            </div>
+
+            @if (!Dossiers.IsLoaded)
+            {
+                <ListSkeleton Rows="3" />
+            }
+            else if (Dossiers.Errors.Count > 0)
+            {
+                <GeneralErrors Errors="Dossiers.Errors" />
+            }
+            else
+            {
+                @if (!Dossiers.CanSwitch)
+                {
+                    <p class="lettra-hint">@L["Cabinet.Picker.Fixed"]</p>
+                }
+
+                @if (Dossiers.Dossiers.Count > 5)
+                {
+                    <label class="lettra-visually-hidden" for="dossier-search">@L["Cabinet.Picker.Search"]</label>
+                    <input id="dossier-search" class="lettra-input lt-dossier-search" type="search" autocomplete="off" placeholder="@L["Cabinet.Picker.Search"]"
+                           @bind="_query" @bind:event="oninput" @ref="_search" />
+                }
+
+                @if (string.IsNullOrWhiteSpace(_query))
+                {
+                    @if (Dossiers.Favourites.Count > 0)
+                    {
+                        <h3 class="lt-dossier-group">@L["Cabinet.Picker.Favourites"]</h3>
+                        <ul class="lt-dossier-list">@foreach (DossierSummary d in Dossiers.Favourites) { @Item(d) }</ul>
+                    }
+                    @if (Dossiers.Recents.Count > 0)
+                    {
+                        <h3 class="lt-dossier-group">@L["Cabinet.Picker.Recents"]</h3>
+                        <ul class="lt-dossier-list">@foreach (DossierSummary d in Dossiers.Recents.Take(CurrentDossier.MaxRecents)) { @Item(d) }</ul>
+                    }
+                    <h3 class="lt-dossier-group">@string.Format(CultureInfo.CurrentCulture, L["Cabinet.Picker.All"], Dossiers.Dossiers.Count)</h3>
+                    <ul class="lt-dossier-list">@foreach (DossierSummary d in Dossiers.Dossiers) { @Item(d) }</ul>
+                }
+                else
+                {
+                    IReadOnlyList<DossierSummary> found = Dossiers.Search(_query);
+                    @if (found.Count == 0)
+                    {
+                        <p class="lettra-hint" role="status">@L["Cabinet.Picker.NoMatch"]</p>
+                    }
+                    else
+                    {
+                        <ul class="lt-dossier-list">@foreach (DossierSummary d in found) { @Item(d) }</ul>
+                    }
+                }
+            }
+
+            <a class="lt-dossier-overview" href="cabinet" @onclick="Close"><Icon Name="layers" Size="18" /> @L["Cabinet.Picker.Overview"]</a>
+        </div>
+    }
+</div>
+
+@code {
+    private bool _open;
+    private string? _query;
+    private ElementReference _search;
+    private bool _focusSearch;
+
+    private RenderFragment Item(DossierSummary dossier) => __builder =>
+    {
+        bool current = dossier.Id == Dossiers.Id;
+        bool favourite = Dossiers.IsFavourite(dossier.Id);
+        <li class="lt-dossier-item @(current ? "is-current" : null)" @key="dossier.Id">
+            <button type="button" class="lt-dossier-open" aria-current="@(current ? "true" : null)" disabled="@(!Dossiers.CanSwitch && !current)"
+                    @onclick="() => OpenAsync(dossier)">
+                <span class="lt-dossier-check" aria-hidden="true">@if (current) { <Icon Name="check" Size="16" /> }</span>
+                <span class="lt-dossier-label">@dossier.Name</span>
+            </button>
+            <button type="button" class="lt-icon-button lt-dossier-star" aria-pressed="@(favourite ? "true" : "false")"
+                    aria-label="@string.Format(CultureInfo.CurrentCulture, L[favourite ? "Cabinet.Picker.Unfavourite" : "Cabinet.Picker.Favourite"], dossier.Name)"
+                    title="@L[favourite ? "Cabinet.Picker.Unfavourite.Short" : "Cabinet.Picker.Favourite.Short"]"
+                    @onclick="() => Dossiers.ToggleFavouriteAsync(dossier.Id)">
+                <Icon Name="star" Size="16" />
+            </button>
+        </li>
+    };
+
+    protected override void OnInitialized() => Dossiers.Changed += OnChanged;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Dossiers.EnsureLoadedAsync();
+        }
+
+        if (_focusSearch && _open && Dossiers.Dossiers.Count > 5)
+        {
+            _focusSearch = false;
+            try
+            {
+                await _search.FocusAsync();
+            }
+            catch (InvalidOperationException)
+            {
+                // Le champ n'est pas encore rendu : sans conséquence.
+            }
+        }
+    }
+
+    private async Task ToggleAsync()
+    {
+        _open = !_open;
+        _query = null;
+        _focusSearch = _open;
+        if (_open)
+        {
+            await Dossiers.EnsureLoadedAsync();
+        }
+    }
+
+    private void Close() => _open = false;
+
+    private async Task OpenAsync(DossierSummary dossier)
+    {
+        _open = false;
+        if (dossier.Id == Dossiers.Id)
+        {
+            return;
+        }
+
+        if (await Dossiers.SwitchAsync(dossier.Id))
+        {
+            Toasts.Show(ToastKind.Success, string.Format(CultureInfo.CurrentCulture, L["Cabinet.Picker.Opened"], dossier.Name));
+            Navigation.NavigateTo(string.Empty);
+        }
+    }
+
+    private void OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            Close();
+        }
+    }
+
+    private void OnChanged(object? sender, EventArgs e) => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Dossiers.Changed -= OnChanged;
+}

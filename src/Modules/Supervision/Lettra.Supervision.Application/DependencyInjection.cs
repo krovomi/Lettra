@@ -1,3 +1,4 @@
+using Lettra.Application.Abstractions.Cabinet;
 using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Contracts.Alerts;
@@ -28,6 +29,9 @@ public static class DependencyInjection
 
         // Les alertes de dossier de la chaîne anti-fraude entrent par l'ingestion, comme les autres signaux.
         services.AddScoped<IDossierAlertPublisher, DossierAlertPublisher>();
+
+        // Vue cabinet : les alertes ouvertes de chaque dossier.
+        services.AddScoped<IDossierIndicatorSource, OpenAlertsIndicatorSource>();
         return services;
     }
 }

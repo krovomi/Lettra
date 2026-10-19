@@ -170,6 +170,12 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddHttpGateways(this IServiceCollection services, Uri apiBaseAddress)
     {
+        // Navigateur : le dossier de la configuration n'est que celui du démarrage, le sélecteur de dossier en change.
+        if (services.LastOrDefault(d => d.ServiceType == typeof(IDossierSelection))?.ImplementationInstance is FixedDossierSelection configured)
+        {
+            services.Replace(ServiceDescriptor.Singleton<IDossierSelection>(new SwitchableDossierSelection(configured.CurrentDossierId)));
+        }
+
         services.AddTransient<CsrfHeaderHandler>();
         services.AddTransient<OfflineShortCircuitHandler>();
         services.AddHttpClient<ISessionGateway, HttpSessionGateway>(client => client.BaseAddress = apiBaseAddress)
@@ -238,6 +244,7 @@ public static class DependencyInjection
         Configure(services.AddHttpClient<IDemoDataGateway, HttpDemoDataGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IFecGateway, HttpFecGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IAccountingGateway, HttpAccountingGateway>(client => client.BaseAddress = apiBaseAddress));
+        Configure(services.AddHttpClient<ICabinetGateway, HttpCabinetGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IBillingSettingsGateway, HttpBillingSettingsGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IPriceListsGateway, HttpPriceListsGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IAlertsGateway, HttpAlertsGateway>(client => client.BaseAddress = apiBaseAddress));

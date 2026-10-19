@@ -48,6 +48,8 @@ internal static class IntegrityEndpoints
             .WithName("RotateIntegrityKeys")
             .Produces<IReadOnlyList<IntegrityKeySummary>>();
 
+        // Revue de dossier (vue cabinet) : dans le dossier ouvert, comme la chaîne.
+        api.MapDossierReview();
         return group;
     }
 

@@ -14,6 +14,7 @@ using Lettra.UI.Shared.Voice;
 using Lettra.UI.Tests.Billing;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
+using Lettra.UI.Tests.Cabinet;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.UI.Tests.Voice;
@@ -37,6 +38,7 @@ public sealed class VoiceTests : BunitContext
         _voice.Setup<byte[]?>("stop").SetResult(new byte[3200]);
         _voice.Setup<bool>("insertText", _ => true).SetResult(true);
         Services.AddLettraUi();
+        Services.AddCabinetFakes();
         Services.AddSingleton<ISpeechGateway>(_speech);
         LettraCultures.Apply(CultureInfo.GetCultureInfo("fr-FR"));
     }

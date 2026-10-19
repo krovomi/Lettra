@@ -45,6 +45,9 @@ public static class DependencyInjection
         services.AddScoped<VoiceInput>();
         services.AddScoped<VoiceCommands>();
         services.AddScoped<ICommandPaletteProvider, VoicePaletteProvider>();
+        // Vague 6 : sélecteur de dossier, vue cabinet et revue de dossier.
+        services.AddScoped<Cabinet.CurrentDossier>();
+        services.AddScoped<ICommandPaletteProvider, Cabinet.DossierPaletteProvider>();
         // Demande de synchronisation : appelée par le cycle du poste, hors de tout composant. L'hôte qui synchronise
         // ajoute son ISyncCenter et relie ISyncConsentDialog au SyncCoordinator.
         services.TryAddSingleton<SyncConsentDialog>();
