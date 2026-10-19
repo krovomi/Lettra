@@ -33,6 +33,9 @@ public static class DependencyInjection
         // Un hôte peut remplacer le téléchargement (enregistrement natif en MAUI) en l'enregistrant avant.
         services.TryAddScoped<IFileDownloader, JsFileDownloader>();
         services.AddSingleton<IDocumentPdfRenderer, PdfDocumentRenderer>();
+        // Pièces ouvertes récemment, en tête de la palette quand rien n'est saisi.
+        services.AddScoped<Preferences.RecentDocuments>();
+        services.AddScoped<ICommandPaletteProvider, Preferences.RecentDocumentsPaletteProvider>();
         services.AddScoped<ICommandPaletteProvider, NavigationPaletteProvider>();
         services.AddScoped<ICommandPaletteProvider, BillingPaletteProvider>();
         // Vague 5, lane F : tutoriels des premières fois, liste de démarrage, aide à la saisie.
@@ -53,6 +56,11 @@ public static class DependencyInjection
         services.AddScoped<ICommandPaletteProvider, VoicePaletteProvider>();
         // Vague 6 : sélecteur de dossier, vue cabinet et revue de dossier.
         services.AddScoped<Cabinet.CurrentDossier>();
+        // Préférences de l'utilisateur rangées dans son compte (sur l'appareil sans compte) et leur lien avec le menu,
+        // les dossiers, l'apparence et la langue.
+        services.AddScoped<Preferences.UserPreferencesState>();
+        services.AddScoped<Preferences.PreferencesSync>();
+        services.AddScoped<Preferences.EntryPreferences>();
         services.AddScoped<ICommandPaletteProvider, Cabinet.DossierPaletteProvider>();
         // Demande de synchronisation : appelée par le cycle du poste, hors de tout composant. L'hôte qui synchronise
         // ajoute son ISyncCenter et relie ISyncConsentDialog au SyncCoordinator.

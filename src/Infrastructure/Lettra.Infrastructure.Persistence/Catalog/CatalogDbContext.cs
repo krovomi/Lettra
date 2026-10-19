@@ -37,6 +37,8 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
 
     public DbSet<CatalogDossierIndicator> DossierIndicators => Set<CatalogDossierIndicator>();
 
+    public DbSet<CatalogUserPreferences> UserPreferences => Set<CatalogUserPreferences>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);
@@ -151,6 +153,7 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
 
         CatalogAiSettings.Configure(modelBuilder);
         CatalogDossierIndicator.Configure(modelBuilder);
+        CatalogUserPreferences.Configure(modelBuilder);
 
         modelBuilder.Entity<CatalogOrganisationPolicy>(e =>
         {

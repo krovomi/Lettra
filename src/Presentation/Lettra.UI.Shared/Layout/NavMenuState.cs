@@ -75,6 +75,33 @@ public sealed class NavMenuState
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>Sections repliées, triées : ce que le compte de l'utilisateur retient.</summary>
+    public IReadOnlyList<string> CollapsedSections => [.. _collapsed.Order(StringComparer.Ordinal)];
+
+    /// <summary>
+    /// Reprend le menu rangé dans le compte de l'utilisateur (réglé sur un autre appareil) et le retient aussi sur
+    /// celui-ci. Les écrans qui n'existent plus sont écartés.
+    /// </summary>
+    public async Task AdoptAsync(IEnumerable<string> favorites, IEnumerable<string> collapsedSections)
+    {
+        ArgumentNullException.ThrowIfNull(favorites);
+        ArgumentNullException.ThrowIfNull(collapsedSections);
+        string[] adoptedFavorites = [.. favorites.Where(href => NavItems.All.Any(i => i.Href == href)).Distinct(StringComparer.Ordinal)];
+        string[] adoptedSections = [.. collapsedSections.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal)];
+        if (adoptedFavorites.SequenceEqual(_favorites, StringComparer.Ordinal) && adoptedSections.SequenceEqual(CollapsedSections, StringComparer.Ordinal))
+        {
+            return;
+        }
+
+        _favorites.Clear();
+        _favorites.AddRange(adoptedFavorites);
+        _collapsed.Clear();
+        _collapsed.UnionWith(adoptedSections);
+        Changed?.Invoke(this, EventArgs.Empty);
+        await _preferences.WriteAsync(Key(FavoritesPrefix), string.Join(',', _favorites)).ConfigureAwait(false);
+        await _preferences.WriteAsync(Key(SectionsPrefix), string.Join(',', adoptedSections)).ConfigureAwait(false);
+    }
+
     public Task ToggleSectionAsync(string groupKey)
     {
         if (!_collapsed.Remove(groupKey))

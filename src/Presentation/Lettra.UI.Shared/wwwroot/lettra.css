@@ -11,6 +11,7 @@
 @import url("lettra-pilotage.css");
 @import url("lettra-nav.css");
 @import url("lettra-dates.css");
+@import url("lettra-preferences.css");
 
 /* Alias historiques : les composants et la grille écrits avant les jetons les lisent encore. */
 :root {

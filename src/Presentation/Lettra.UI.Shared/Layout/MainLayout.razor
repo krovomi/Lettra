@@ -12,6 +12,7 @@
 @inject HelpPanelState Help
 @inject NavigationManager Navigation
 @inject Lettra.UI.Shared.Cabinet.CurrentDossier Dossier
+@inject Lettra.UI.Shared.Preferences.PreferencesSync AccountPreferences
 
 <DeviceLockGate>
 <CascadingValue Value="Preferences.Density">
@@ -148,6 +149,7 @@
         if (firstRender)
         {
             await Preferences.LoadAsync();
+            await AccountPreferences.StartAsync();
         }
     }
 

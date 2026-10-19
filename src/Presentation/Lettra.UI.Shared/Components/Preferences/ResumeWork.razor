@@ -1,0 +1,38 @@
+@using Microsoft.Extensions.DependencyInjection
+@inject IServiceProvider Services
+@inject IStringLocalizer<SharedResource> L
+@* Accueil : « Reprendre où j'en étais », les dernières pièces ouvertes par l'utilisateur dans ce dossier (sur tous
+   ses appareils quand ses préférences sont dans son compte). Rien n'est affiché tant qu'aucune pièce n'a été ouverte. *@
+
+@if (_documents.Count > 0)
+{
+    <section class="lt-panel lt-resume" aria-labelledby="home-resume-title" id="home-resume">
+        <div class="lt-panel-head">
+            <h2 id="home-resume-title"><Icon Name="history" Size="18" /> @L["Home.Resume.Title"]</h2>
+            <a href="settings/preferences">@L["Home.Resume.Settings"]</a>
+        </div>
+        <ul class="lt-resume-list">
+            @foreach (RecentDocument document in _documents)
+            {
+                <li>
+                    <a href="@document.Href" class="lt-resume-item">
+                        <Icon Name="@(document.Kind == UsageKindDto.Invoice ? "receipt" : "file-text")" Size="18" />
+                        <span>@document.Label</span>
+                    </a>
+                </li>
+            }
+        </ul>
+    </section>
+}
+
+@code {
+    private IReadOnlyList<RecentDocument> _documents = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Services.GetService<RecentDocuments>() is { } recents)
+        {
+            _documents = await recents.ListAsync();
+        }
+    }
+}

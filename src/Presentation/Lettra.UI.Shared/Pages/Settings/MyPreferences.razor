@@ -1,0 +1,323 @@
+@page "/settings/preferences"
+@using Microsoft.Extensions.DependencyInjection
+@implements IDisposable
+@inject UserPreferencesState Account
+@inject UiPreferences Appearance
+@inject IServiceProvider Services
+@inject NavigationManager Navigation
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+@* « Mes préférences » : tout ce que Lettra retient pour l'utilisateur, au même endroit, réglable et effaçable. Le thème,
+   la densité et la langue s'appliquent tout de suite ; les valeurs de saisie valent pour le dossier ouvert. *@
+
+<PageTitle>@L["Preferences.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Preferences.Title"]</h1>
+        <p>@L["Preferences.Intro"]</p>
+    </div>
+</div>
+
+<p class="lt-pref-where @(Account.InAccount ? "is-account" : "is-device")" id="preferences-where" role="status">
+    <Icon Name="@(Account.InAccount ? "circle-check" : "monitor")" Size="18" />
+    <span>@L[Account.InAccount ? "Preferences.Where.Account" : "Preferences.Where.Device"]</span>
+</p>
+
+@if (!_loaded)
+{
+    <p>@L["Loading"]</p>
+}
+else
+{
+    <div class="lt-pref-grid">
+        <section class="lettra-card lt-pref-card" aria-labelledby="pref-appearance-title">
+            <h2 id="pref-appearance-title"><Icon Name="palette" Size="20" /> @L["Preferences.Section.Appearance"]</h2>
+
+            <fieldset class="lt-pref-choices">
+                <legend>@L["Appearance.Theme"]</legend>
+                @foreach (UiTheme theme in Enum.GetValues<UiTheme>())
+                {
+                    <label class="lt-choice">
+                        <input type="radio" name="pref-theme" value="@theme" checked="@(Appearance.Theme == theme)" @onchange="() => Appearance.SetThemeAsync(theme)" />
+                        <span class="lt-swatch is-@theme.ToString().ToLowerInvariant()" aria-hidden="true"></span>
+                        <span>@L[$"Appearance.Theme.{theme}"]</span>
+                    </label>
+                }
+            </fieldset>
+
+            <fieldset class="lt-pref-choices">
+                <legend>@L["Appearance.Density"]</legend>
+                @foreach (UiDensity density in Enum.GetValues<UiDensity>())
+                {
+                    <label class="lt-choice">
+                        <input type="radio" name="pref-density" value="@density" checked="@(Appearance.Density == density)" @onchange="() => Appearance.SetDensityAsync(density)" />
+                        <span>@L[$"Appearance.Density.{density}"]</span>
+                    </label>
+                }
+            </fieldset>
+
+            <div class="lettra-field">
+                <label for="pref-language">@L["Preferences.Language"]</label>
+                <select id="pref-language" value="@(_workspace.Language ?? string.Empty)" @onchange="LanguageChangedAsync">
+                    <option value="">@L["Preferences.Language.Auto"]</option>
+                    <option value="fr-FR" lang="fr">Français</option>
+                    <option value="en-US" lang="en">English</option>
+                </select>
+                <p class="lettra-hint">@L["Preferences.Language.Hint"]</p>
+            </div>
+
+            <div class="lettra-field">
+                <label for="pref-home">@L["Preferences.HomePage"]</label>
+                <select id="pref-home" value="@(_workspace.HomePage ?? string.Empty)" @onchange="HomeChangedAsync">
+                    <option value="">@L["Nav.Home"]</option>
+                    @foreach (NavItem item in NavItems.All.Where(i => i.Href.Length > 0 && i.Page is null))
+                    {
+                        <option value="@item.Href">@L[item.LabelKey]</option>
+                    }
+                </select>
+                <p class="lettra-hint">@L["Preferences.HomePage.Hint"]</p>
+            </div>
+        </section>
+
+        <section class="lettra-card lt-pref-card" aria-labelledby="pref-entry-title">
+            <h2 id="pref-entry-title"><Icon Name="file-pen-line" Size="20" /> @L["Preferences.Section.Entry"]</h2>
+            @if (_dossierId is null)
+            {
+                <p class="lettra-hint">@L["Preferences.Entry.NoDossier"]</p>
+            }
+            else
+            {
+                <p class="lettra-hint">@string.Format(CultureInfo.CurrentCulture, L["Preferences.Entry.Intro"], DossierName)</p>
+                <div class="lt-pref-fields">
+                    <div class="lettra-field">
+                        <label for="pref-vat">@L["Preferences.Entry.Vat"]</label>
+                        <select id="pref-vat" @bind="_vatRate">
+                            <option value="">@L["Preferences.Entry.Usual"]</option>
+                            @foreach (VatRateOption rate in _rates)
+                            {
+                                <option value="@rate.Code">@rate.Percent.ToString("0.##", CultureInfo.CurrentCulture) %</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="lettra-field">
+                        <label for="pref-unit">@L["Preferences.Entry.Unit"]</label>
+                        <select id="pref-unit" @bind="_unit">
+                            <option value="">@L["Preferences.Entry.Usual"]</option>
+                            @foreach (string unit in Units)
+                            {
+                                <option value="@unit">@L[$"Unit.{unit}"]</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="lettra-field">
+                        <label for="pref-validity">@L["Preferences.Entry.QuoteValidity"]</label>
+                        <input id="pref-validity" type="number" inputmode="numeric" min="1" max="365" @bind="_validityDays" placeholder="30" />
+                    </div>
+                    <div class="lettra-field lettra-field-wide">
+                        <label for="pref-terms">@L["Invoice.Field.PaymentTerms"]</label>
+                        <textarea id="pref-terms" rows="2" maxlength="500" @bind="_paymentTerms"></textarea>
+                    </div>
+                    <div class="lettra-field lettra-field-wide">
+                        <label for="pref-invoice-notes">@L["Preferences.Entry.InvoiceNotes"]</label>
+                        <textarea id="pref-invoice-notes" rows="3" maxlength="2000" @bind="_invoiceNotes"></textarea>
+                    </div>
+                    <div class="lettra-field lettra-field-wide">
+                        <label for="pref-quote-notes">@L["Preferences.Entry.QuoteNotes"]</label>
+                        <textarea id="pref-quote-notes" rows="3" maxlength="2000" @bind="_quoteNotes"></textarea>
+                    </div>
+                </div>
+                <GeneralErrors Errors="_errors" />
+                <div class="lt-pref-actions">
+                    <button type="button" class="lettra-button" id="pref-entry-save" disabled="@_busy" @onclick="SaveDefaultsAsync">@L["Preferences.Entry.Save"]</button>
+                </div>
+            }
+        </section>
+
+        <section class="lettra-card lt-pref-card" aria-labelledby="pref-suggestions-title">
+            <h2 id="pref-suggestions-title"><Icon Name="sparkles" Size="20" /> @L["Preferences.Section.Suggestions"]</h2>
+            <label class="lettra-check">
+                <input type="checkbox" id="pref-rank" checked="@_workspace.RankByUsage" @onchange="RankChangedAsync" />
+                <span>@L["Preferences.Suggestions.Rank"]</span>
+            </label>
+            <p class="lettra-hint">@L["Preferences.Suggestions.Hint"]</p>
+            @if (_dossierId is not null)
+            {
+                <p id="pref-usage-count">@string.Format(CultureInfo.CurrentCulture, L["Preferences.Suggestions.Count"], CountOf(UsageKindDto.Customer), CountOf(UsageKindDto.CatalogItem), CountOf(UsageKindDto.Invoice) + CountOf(UsageKindDto.Quote))</p>
+            }
+            <div class="lt-pref-actions">
+                @if (_dossierId is not null)
+                {
+                    <button type="button" class="lettra-button is-secondary" id="pref-forget-dossier" disabled="@_busy" @onclick="() => ForgetAsync(_dossierId)">@L["Preferences.Suggestions.ForgetDossier"]</button>
+                }
+                <button type="button" class="lettra-button is-secondary" id="pref-forget-all" disabled="@_busy" @onclick="() => ForgetAsync(null)">@L["Preferences.Suggestions.ForgetAll"]</button>
+            </div>
+        </section>
+
+        <section class="lettra-card lt-pref-card" aria-labelledby="pref-privacy-title">
+            <h2 id="pref-privacy-title"><Icon Name="shield-check" Size="20" /> @L["Preferences.Section.Privacy"]</h2>
+            <p>@L["Preferences.Privacy.What"]</p>
+            <p class="lettra-hint">@L["Preferences.Privacy.Never"]</p>
+            @if (_confirmReset)
+            {
+                <div class="lettra-banner is-warning" role="alert">
+                    <p>@L["Preferences.Reset.Confirm"]</p>
+                    <div class="lt-pref-actions">
+                        <button type="button" class="lettra-button is-danger" id="pref-reset-confirm" disabled="@_busy" @onclick="ResetAsync">@L["Preferences.Reset.Yes"]</button>
+                        <button type="button" class="lettra-button is-secondary" @onclick="() => _confirmReset = false">@L["Preferences.Reset.No"]</button>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="lt-pref-actions">
+                    <button type="button" class="lettra-button is-secondary" id="pref-reset" @onclick="() => _confirmReset = true">@L["Preferences.Reset"]</button>
+                </div>
+            }
+        </section>
+    </div>
+}
+
+@code {
+    private static readonly string[] Units = ["C62", "HUR", "DAY", "LS"];
+
+    private bool _loaded;
+    private bool _busy;
+    private bool _confirmReset;
+    private Guid? _dossierId;
+    private WorkspacePreferencesDto _workspace = new();
+    private IReadOnlyList<VatRateOption> _rates = [];
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private string? _vatRate;
+    private string? _unit;
+    private int? _validityDays;
+    private string? _paymentTerms;
+    private string? _invoiceNotes;
+    private string? _quoteNotes;
+
+    private Lettra.UI.Shared.Cabinet.CurrentDossier? _dossiers;
+
+    private string DossierName => _dossiers?.Name ?? L["Preferences.Entry.ThisDossier"];
+
+    protected override async Task OnInitializedAsync()
+    {
+        Account.Changed += OnAccountChanged;
+        Appearance.Changed += OnAccountChanged;
+        _dossiers = Services.GetService<Lettra.UI.Shared.Cabinet.CurrentDossier>();
+        if (_dossiers is not null)
+        {
+            _dossiers.Changed += OnAccountChanged;   // le nom du dossier arrive après la page
+        }
+
+        await Account.EnsureLoadedAsync();
+        _dossierId = EntryPreferences.From(Services)?.DossierId;
+        if (Services.GetService<IBillingSettingsGateway>() is { } settings)
+        {
+            OperationResult<BillingReferenceData> reference = await settings.GetReferenceDataAsync(CancellationToken.None);
+            _rates = reference.Value?.VatRates ?? [];
+        }
+
+        Show();
+        _loaded = true;
+    }
+
+    private void Show()
+    {
+        _workspace = Account.Workspace;
+        EntryDefaultsDto defaults = Account.DefaultsFor(_dossierId);
+        (_vatRate, _unit, _validityDays, _paymentTerms, _invoiceNotes, _quoteNotes) =
+            (defaults.VatRateCode, defaults.Unit, defaults.QuoteValidityDays, defaults.PaymentTerms, defaults.InvoiceNotes, defaults.QuoteNotes);
+    }
+
+    private int CountOf(UsageKindDto kind) => Account.Ranked(_dossierId, kind).Count;
+
+    private async Task SaveDefaultsAsync()
+    {
+        if (_dossierId is not Guid dossier)
+        {
+            return;
+        }
+
+        _busy = true;
+        _errors = await Account.UpdateDefaultsAsync(dossier, d => d with
+        {
+            VatRateCode = Blank(_vatRate),
+            Unit = Blank(_unit),
+            QuoteValidityDays = _validityDays,
+            PaymentTerms = Blank(_paymentTerms),
+            InvoiceNotes = Blank(_invoiceNotes),
+            QuoteNotes = Blank(_quoteNotes),
+        });
+        _busy = false;
+        Notify(_errors.Count == 0, "Preferences.Toast.Saved");
+    }
+
+    private async Task LanguageChangedAsync(ChangeEventArgs e)
+    {
+        string? language = Blank(e.Value?.ToString());
+        IReadOnlyList<ErrorDetail> errors = await Account.UpdateWorkspaceAsync(w => w with { Language = language });
+        if (errors.Count == 0)
+        {
+            await ScreenLanguage.ChooseAsync(Appearance, Navigation, language);
+        }
+        else
+        {
+            Notify(false, "Preferences.Toast.Saved");
+        }
+    }
+
+    private async Task HomeChangedAsync(ChangeEventArgs e)
+    {
+        string? home = Blank(e.Value?.ToString());
+        Notify((await Account.UpdateWorkspaceAsync(w => w with { HomePage = home })).Count == 0, "Preferences.Toast.Saved");
+    }
+
+    private async Task RankChangedAsync(ChangeEventArgs e)
+    {
+        bool rank = e.Value is true || string.Equals(e.Value?.ToString(), "true", StringComparison.OrdinalIgnoreCase);
+        Notify((await Account.UpdateWorkspaceAsync(w => w with { RankByUsage = rank })).Count == 0, "Preferences.Toast.Saved");
+    }
+
+    private async Task ForgetAsync(Guid? dossierId)
+    {
+        _busy = true;
+        IReadOnlyList<ErrorDetail> errors = await Account.ForgetUsageAsync(dossierId);
+        _busy = false;
+        Notify(errors.Count == 0, "Preferences.Toast.Forgotten");
+    }
+
+    private async Task ResetAsync()
+    {
+        _busy = true;
+        IReadOnlyList<ErrorDetail> errors = await Account.ResetAsync();
+        _busy = false;
+        _confirmReset = false;
+        Show();
+        Notify(errors.Count == 0, "Preferences.Toast.Reset");
+    }
+
+    private void Notify(bool success, string key) =>
+        Toasts.Show(success ? ToastKind.Success : ToastKind.Error, L[success ? key : "Preferences.Toast.Failed"].Value);
+
+    private static string? Blank(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private void OnAccountChanged(object? sender, EventArgs e)
+    {
+        if (!_busy)
+        {
+            _workspace = Account.Workspace;
+        }
+
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Account.Changed -= OnAccountChanged;
+        Appearance.Changed -= OnAccountChanged;
+        if (_dossiers is not null)
+        {
+            _dossiers.Changed -= OnAccountChanged;
+        }
+    }
+}

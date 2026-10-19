@@ -1,0 +1,45 @@
+/* Préférences de l'utilisateur : page « Mes préférences », « Retenir par défaut » sous un champ, carte « Reprendre où
+   j'en étais » de l'accueil. Jetons de lettra-tokens.css seulement : les quatre thèmes et les deux densités suivent. */
+
+.lt-pref-where { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-4); padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md); border: 1px solid var(--color-border); background: var(--color-surface-2); font-size: var(--text-sm); }
+.lt-pref-where.is-account { color: var(--color-success-fg); border-color: var(--color-success); background: var(--color-success-bg); }
+
+/* Deux colonnes sur grand écran, une sur tablette en portrait et téléphone. */
+.lt-pref-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); align-items: start; }
+.lt-pref-card { margin: 0; display: grid; gap: var(--space-3); }
+.lt-pref-card h2 { display: flex; align-items: center; gap: var(--space-2); margin: 0; font-size: var(--text-lg); }
+.lt-pref-card h2 .lt-icon { color: var(--color-primary); }
+.lt-pref-card p { margin: 0; }
+.lt-pref-choices { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-2); margin: 0; padding: 0; border: 0; }
+.lt-pref-choices legend { width: 100%; padding: 0; margin-bottom: var(--space-1); font-weight: var(--weight-bold); }
+.lt-pref-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: var(--space-3) var(--space-4); }
+.lt-pref-fields textarea, .lt-pref-card select, .lt-pref-fields input { width: 100%; }
+.lt-pref-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+@media (max-width: 1023px) {
+    .lt-pref-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 639px) {
+    .lt-pref-actions .lettra-button { flex: 1 1 100%; justify-content: center; }
+}
+
+/* « Retenir par défaut » : discret, sous le champ, aligné à droite sur grand écran. */
+.lt-remember { margin: var(--space-1) 0 0; display: flex; justify-content: flex-end; }
+.lt-remember .lettra-link { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-sm); text-decoration: none; }
+.lt-remember .lettra-link:hover, .lt-remember .lettra-link:focus-visible { text-decoration: underline; }
+@media (max-width: 639px) { .lt-remember { justify-content: flex-start; } }
+@media (pointer: coarse) { .lt-remember .lettra-link { min-height: var(--hit); } }
+
+/* Accueil : les dernières pièces ouvertes, en pastilles qui passent à la ligne. */
+.lt-resume { margin-bottom: var(--space-5); }
+.lt-resume h2 { display: flex; align-items: center; gap: var(--space-2); }
+.lt-resume-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.lt-resume-item { display: inline-flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); min-height: var(--hit);
+    border: 1px solid var(--color-border); border-radius: var(--radius-pill, 999px); background: var(--color-surface); color: var(--color-fg);
+    text-decoration: none; font-weight: var(--weight-medium); max-width: 100%; }
+.lt-resume-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lt-resume-item:hover, .lt-resume-item:focus-visible { border-color: var(--color-primary); background: var(--color-surface-2); }
+.lt-resume-item .lt-icon { color: var(--color-primary); flex: none; }
+@media (max-width: 639px) { .lt-resume-list li { width: 100%; } .lt-resume-item { width: 100%; } }
