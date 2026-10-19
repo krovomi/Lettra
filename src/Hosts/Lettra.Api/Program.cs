@@ -129,6 +129,9 @@ app.MapHealthChecks("/health");
 
 // Webhook de l'Alertmanager de la cellule (annexe G §4) : exposé seulement si un jeton est configuré.
 app.MapSupervisionWebhooks();
+
+// Indicateurs de pilotage pour le Prometheus de la cellule, puis Grafana : exposés seulement si un jeton est configuré.
+app.MapKpiScrape();
 app.MapFallbackToFile("index.html");
 
 await app.RunAsync().ConfigureAwait(false);
