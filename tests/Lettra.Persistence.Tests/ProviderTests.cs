@@ -170,6 +170,23 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Indicateurs_de_pilotage_lus_dans_le_dossier()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await KpiScenarios.DossierSourcesAsync(harness, DatabaseProvider.Sqlite, Database("indicateurs"));
+    }
+
+    [Fact]
+    public async Task Indicateurs_de_pilotage_collectes_par_le_catalogue()
+    {
+        await using CatalogHarness harness = new(
+            s => s.AddSqliteProvider(),
+            b => SqliteConfigurator.ConfigureCatalog(b, Database("catalog-indicateurs")),
+            new Dictionary<string, string?> { ["Provider"] = "Sqlite", ["Directory"] = Path.Combine(_folder, "srv-indicateurs") });
+        await KpiScenarios.CatalogCollectionAsync(harness);
+    }
+
+    [Fact]
     public async Task Factures_electroniques_CII_et_UBL_des_pieces_validees()
     {
         await using TenantHarness harness = new(new SqliteConfigurator());
@@ -556,6 +573,26 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     }
 
     [SkippableFact]
+    public async Task Indicateurs_de_pilotage_lus_dans_le_dossier()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new PostgreSqlConfigurator());
+        await KpiScenarios.DossierSourcesAsync(harness, DatabaseProvider.PostgreSql, Database("indicateurs"));
+    }
+
+    [SkippableFact]
+    public async Task Indicateurs_de_pilotage_collectes_par_le_catalogue()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        string server = new Npgsql.NpgsqlConnectionStringBuilder(_container!.GetConnectionString()) { Database = null }.ConnectionString;
+        await using CatalogHarness harness = new(
+            s => s.AddPostgreSqlProvider(),
+            b => PostgreSqlConfigurator.ConfigureCatalog(b, Database("catalog_indicateurs")),
+            new Dictionary<string, string?> { ["Provider"] = "PostgreSql", ["ConnectionString"] = server });
+        await KpiScenarios.CatalogCollectionAsync(harness);
+    }
+
+    [SkippableFact]
     public async Task Transmission_a_la_plateforme_agreee_simulee()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
@@ -883,6 +920,28 @@ public sealed class SqlServerTests : IAsyncLifetime
         Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new SqlServerConfigurator());
         await TaxScenarios.DeclarationsAsync(harness, DatabaseProvider.SqlServer, Database("tva"));
+    }
+
+    [SkippableFact]
+    public async Task Indicateurs_de_pilotage_lus_dans_le_dossier()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new SqlServerConfigurator());
+        await KpiScenarios.DossierSourcesAsync(harness, DatabaseProvider.SqlServer, Database("indicateurs"));
+    }
+
+    [SkippableFact]
+    public async Task Indicateurs_de_pilotage_collectes_par_le_catalogue()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        Microsoft.Data.SqlClient.SqlConnectionStringBuilder server = new(_container!.GetConnectionString());
+        server.Remove("Initial Catalog");
+        server.Remove("Database");
+        await using CatalogHarness harness = new(
+            s => s.AddSqlServerProvider(),
+            b => SqlServerConfigurator.ConfigureCatalog(b, Database("catalog_indicateurs")),
+            new Dictionary<string, string?> { ["Provider"] = "SqlServer", ["ConnectionString"] = server.ConnectionString });
+        await KpiScenarios.CatalogCollectionAsync(harness);
     }
 
     [SkippableFact]
