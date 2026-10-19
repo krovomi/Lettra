@@ -7,8 +7,9 @@
 // Écrit SORTIE/client-appareil.txt et des captures dans SORTIE/android/.
 import { createHmac } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
-import { _android as android } from 'playwright';
+import { _android as android, chromium } from 'playwright';
 
 const [browserCustomer] = process.argv.slice(2);
 const out = process.env.SORTIE ?? 'sortie';
@@ -62,17 +63,38 @@ async function visible(selector, timeout) {
 async function waitFor(selector, what, timeout = 60_000) {
     if (!(await visible(selector, timeout))) {
         await shot(`echec-${what}`);
-        const tree = await device.shell('uiautomator dump /dev/tty').then(b => b.toString()).catch(e => String(e));
-        writeFileSync(join(shots, `echec-${what}.xml`), tree);
-        // L'arbre résumé dans le journal de la CI (identifiants, textes, descriptions).
-        for (const m of tree.matchAll(/<node [^>]*?text="([^"]*)"[^>]*?resource-id="([^"]*)"[^>]*?class="([^"]*)"[^>]*?content-desc="([^"]*)"/g))
-            if (m[1] || m[2] || m[4]) console.log(`  ${m[3]} id=${m[2]} text=${m[1]} desc=${m[4]}`);
-        throw new Error(`${what} : introuvable après ${timeout / 1000} s (capture et arbre dans ${shots}).`);
+        // « uiautomator dump » n'est pas possible pendant que Playwright pilote l'appareil : la fenêtre au premier plan suffit.
+        const focus = await device.shell('dumpsys window | grep -E "mCurrentFocus|mFocusedApp"').then(b => b.toString()).catch(e => String(e));
+        log(`premier plan :\n${focus.trim()}`);
+        throw new Error(`${what} : introuvable après ${timeout / 1000} s (capture dans ${shots}).`);
     }
 }
 // Saisie par l'accessibilité (sans clavier à l'écran, qui masquerait les boutons).
 async function type(selector, text) {
     await device.fill(selector, text);
+}
+// Onglet Chrome ouvert par l'application sur la page de connexion de Keycloak (/realms/…).
+async function keycloakPage(timeout) {
+    const deadline = Date.now() + timeout;
+    let browser;
+    while (Date.now() < deadline) {
+        try {
+            browser ??= await chromium.connectOverCDP('http://127.0.0.1:9333', { timeout: 5_000 });
+            for (const page of browser.contexts().flatMap(c => c.pages()))
+                if (/\/realms\//.test(page.url()) && await page.locator('#username').count()) return page;
+        } catch (error) {
+            browser = undefined;
+            if (Date.now() + 2_000 > deadline) log(`Chrome : ${error.message.split('\n')[0]}`);
+        }
+        await sleep(2_000);
+    }
+    await shot('echec-keycloak');
+    if (browser) for (const page of browser.contexts().flatMap(c => c.pages())) await dumpPage(page);
+    throw new Error(`page de connexion Keycloak : introuvable après ${timeout / 1000} s dans Chrome.`);
+}
+async function dumpPage(page) {
+    const text = await page.locator('body').innerText({ timeout: 2_000 }).catch(() => '');
+    log(`onglet ${page.url()} :\n${text.slice(0, 1500)}`);
 }
 async function start() {
     await device.shell(`am start -W -n ${app}/.MainActivity`);
@@ -99,21 +121,21 @@ await device.shell(`am force-stop ${app}`);
 await start();
 await waitFor({ text: /^(Sign in|Se connecter)$/ }, 'bouton de connexion du cabinet', 120_000);
 await shot('session-serveur');
+// La page de connexion s'ouvre dans un onglet de Chrome : Playwright s'y attache par le protocole de débogage (sans écran
+// d'accueil de Chrome, options lues au démarrage dans /data/local/tmp/chrome-command-line, comme device.launchBrowser).
+const devtools = 'lettra_devtools_remote';
+await device.shell('am force-stop com.android.chrome');
+await device.shell(`echo "_ --disable-fre --no-default-browser-check --no-first-run --remote-debugging-socket-name=${devtools}" > /data/local/tmp/chrome-command-line`);
+execFileSync('adb', ['forward', 'tcp:9333', `localabstract:${devtools}`]);
 await device.tap({ text: /^(Sign in|Se connecter)$/ });
-// Premier lancement de Chrome : écrans d'accueil à passer.
-for (let i = 0; i < 6 && !(await visible(id('username'), 5_000)); i++) {
-    for (const text of [/Accept & continue|Accepter et continuer/i, /Use without an account|Utiliser sans compte/i, /No thanks|Non merci/i, /^Continue$|^Continuer$/i, /^Got it$|^OK$/i]) {
-        if (await visible({ text }, 500)) { await device.tap({ text }); await sleep(1000); }
-    }
-}
-await waitFor(id('username'), 'page de connexion Keycloak', 60_000);
+const keycloak = await keycloakPage(90_000);
 await shot('keycloak');
-await type(id('username'), user);
-await type(id('password'), password);
-await device.tap(id('kc-login'));
-await waitFor(id('otp'), 'code à usage unique');
-await type(id('otp'), await freshCode());
-await device.tap(id('kc-login'));
+await keycloak.fill('#username', user);
+await keycloak.fill('#password', password);
+await keycloak.click('#kc-login');
+await keycloak.waitForSelector('#otp', { timeout: 30_000 }).catch(async error => { await dumpPage(keycloak); throw error; });
+await keycloak.fill('#otp', await freshCode());
+await keycloak.click('#kc-login');
 log('connexion du cabinet envoyée (mot de passe + code)');
 
 // 3. De retour dans l'application : le client saisi dans le navigateur est là.
@@ -145,3 +167,4 @@ await shot('client-cree');
 writeFileSync(join(out, 'client-appareil.txt'), name);
 log(`client « ${name} » créé sur l'appareil`);
 await device.close();
+process.exit(0);
