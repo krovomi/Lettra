@@ -524,6 +524,33 @@ synchronisent pas entre appareils.)* Détails : [docs/factures-recurrentes.md](d
   cabinet. *(Vérifié : navigateur, rendu Chromium à 375, 768 et 1440 px et tests ; poste isolé par un test de bout en
   bout ; application native non lancée.)*
 
+### Trier et filtrer les listes
+
+Toutes les listes de Lettra se trient et se filtrent, sur ordinateur, tablette et téléphone (navigateur, PWA et
+applications MAUI).
+
+- **Tableaux** (factures, avoirs, acomptes, devis, encaissements, rapprochement bancaire, alertes, Vue cabinet, soldes
+  clients de la balance, DES) : un clic sur un en-tête de colonne trie, un second clic inverse le sens.
+- **Listes en deux volets** (clients, fournisseurs, catalogue) et **Équipe et accès** : liste **Trier par** sous la
+  recherche (nom ou ville ; référence, désignation ou prix ; nom, arrivée ou accès).
+- **Filtres** : recherche, puis selon la liste nature, statut, période, fourchette de montant, gravité, état ou
+  échéance. **Effacer les filtres** apparaît dès qu'un filtre est posé.
+- **Téléphone** : les tableaux deviennent des cartes ; le bouton **Filtres** (avec le nombre de filtres posés) déplie
+  les autres filtres et une liste **Trier par**.
+- Journal des ventes et grand livre restent chronologiques (solde progressif) ; le calendrier fiscal reste par date et
+  se filtre par échéance et par état.
+
+Pour l'API : `sort` et `direction` sur `GET /api/v1/invoices`, `/quotes`, `/customers`, `/suppliers`, `/catalog/items`
+et `/payments`, plus `minAmount` / `maxAmount` (pièces, encaissements) et `kind` (clients, articles). Détails :
+[docs/tris-et-filtres.md](docs/tris-et-filtres.md).
+
+| Test sur chaque appareil | Comment | Vérifié |
+|---|---|---|
+| Navigateur ordinateur (1440 px) | Démo Docker, Factures puis clic sur « Total TTC » | Oui |
+| Navigateur tablette (768 px) | Démo Docker, fenêtre à 768 px ou mode appareil | Oui |
+| Navigateur téléphone (375 px) | Démo Docker, mode appareil 375 px, bouton « Filtres » | Oui |
+| Application Windows, macOS, Android, iOS | Mêmes écrans (composants partagés) | Non vérifié sur appareil |
+
 ### Tutoriel, aide à la saisie et voix
 
 - **Tutoriel** : chaque écran se présente la première fois. Le bouton **?** en haut le rejoue, et le menu
