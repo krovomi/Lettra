@@ -203,8 +203,21 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
             .Bind("F3", L["Explorer.Command.Search"], async _ => await SearchInput.FocusAsync())
             .Bind("Insert", L["Explorer.Command.New"], _ => GoTo(NewHref))
             .Bind("F2", L["Explorer.Command.Edit"], _ => GoTo(EditHref(SelectedId!.Value)), _ => Mode == ExplorerMode.View && SelectedId is not null)
-            .Bind("Escape", L["Explorer.Command.Back"], _ => Rendered(Back), _ => Mode != ExplorerMode.List, showInBar: false);
+            .Bind("Escape", L["Explorer.Command.Back"], _ => Rendered(EscapeFromPage), _ => Mode != ExplorerMode.List || ConfirmingRow is not null, showInBar: false);
         Navigation.LocationChanged += OnLocationChanged;
+    }
+
+    /// <summary>Échap ferme d'abord la confirmation d'une corbeille ouverte, sinon revient en arrière.</summary>
+    private void EscapeFromPage()
+    {
+        if (ConfirmingRow is { } trash)
+        {
+            trash.Cancel();
+        }
+        else
+        {
+            Back();
+        }
     }
 
     /// <summary>Un raccourci arrive hors des événements de la page : on la redessine après l'action.</summary>
@@ -294,6 +307,13 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
         IReadOnlyList<TSummary> items = VisibleItems;
         if (items.Count == 0 || IsEditing)
         {
+            return;
+        }
+
+        // Confirmation d'une corbeille ouverte : Entrée la valide (Échap passe par le raccourci de la page).
+        if (e.Key == "Enter" && ConfirmingRow is { } confirming)
+        {
+            _ = confirming.ConfirmAsync();
             return;
         }
 
@@ -482,6 +502,9 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
 
     /// <summary>Corbeilles des lignes de la liste, pour la touche Suppr sur la ligne active.</summary>
     protected Dictionary<Guid, RowDelete> RowDeletes { get; } = [];
+
+    /// <summary>La corbeille dont la confirmation est ouverte, s'il y en a une.</summary>
+    private RowDelete? ConfirmingRow => RowDeletes.Values.FirstOrDefault(r => r.IsConfirming);
 
     /// <summary>Suppression d'un élément de la liste ; les pages qui n'en offrent pas gardent ce refus.</summary>
     protected virtual Task<OperationResult<bool>> DeleteAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken) =>

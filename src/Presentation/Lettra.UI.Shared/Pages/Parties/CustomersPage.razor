@@ -60,7 +60,7 @@
                 aria-activedescendant="@ActiveOptionId" @ref="ListElement" @onkeydown="OnListKeyDown">
                 @foreach (CustomerSummary customer in Items)
                 {
-                    <li @key="customer.Id" id="@OptionId(customer)" role="option" aria-selected="@(IsSelected(customer) ? "true" : "false")"
+                    <li @key="customer.Id" id="@OptionId(customer)" role="option" aria-keyshortcuts="Delete" aria-selected="@(IsSelected(customer) ? "true" : "false")"
                         class="lt-record @(IsSelected(customer) ? "is-selected" : null)" @onclick="() => GoTo(Href(customer.Id))">
                         <span class="lt-avatar" aria-hidden="true">@ExplorerText.Initials(customer.Name)</span>
                         <span class="lt-record-main">
@@ -72,7 +72,7 @@
                             <span class="lettra-status">@L["Customers.Kind.Individual"]</span>
                         }
                         <span class="lt-record-action">
-                            <RowDelete @ref="RowDeletes[customer.Id]" TabIndex="-1" Question="@L["Customers.Row.Delete.Question"]"
+                            <RowDelete @ref="RowDeletes[customer.Id]" InOption="true" Question="@L["Customers.Row.Delete.Question"]"
                                        Label="@string.Format(Culture, L["Customers.Row.Delete"], customer.Name)"
                                        OnDelete="() => DeleteRowAsync(customer, customer.Name)" />
                         </span>

@@ -20,7 +20,9 @@ propres boutons de suppression (équipes, rôles) ; une affectation se révoque.
 ## Comportement
 
 - **Clavier** : dans les listes de clients, fournisseurs et articles, la touche Suppr sur la ligne active ouvre la même
-  confirmation. Dans la grille des lignes d'une pièce, Ctrl+Suppr reste le raccourci ; la corbeille est hors de la
+  confirmation, Entrée la valide et Échap la ferme. Une option de liste ne contient rien de focalisable (WCAG, règle
+  axe `nested-interactive`) : la corbeille et les boutons de confirmation y sont des cibles de souris, annoncées par
+  `aria-keyshortcuts="Delete"` sur la ligne. Dans la grille des lignes d'une pièce, Ctrl+Suppr reste le raccourci ; la corbeille est hors de la
   tabulation pour ne pas allonger le parcours clavier.
 - **Écrans** : sur ordinateur, la corbeille des listes de l'explorateur n'apparaît qu'au survol ou sur la ligne
   sélectionnée ; sur tablette et téléphone (pas de survol), elle est toujours visible. Sous 768 px les tableaux

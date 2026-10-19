@@ -8,6 +8,7 @@
   <data name="Row.Actions" xml:space="preserve"><value>Actions</value></data>
   <data name="Row.Delete" xml:space="preserve"><value>Supprimer</value></data>
   <data name="Row.Delete.Question" xml:space="preserve"><value>Supprimer cette ligne ?</value></data>
+  <data name="Row.Delete.KeyHint" xml:space="preserve"><value>Entrée pour confirmer, Échap pour annuler.</value></data>
   <data name="Row.Delete.Cancel" xml:space="preserve"><value>Annuler</value></data>
   <data name="Row.Delete.Line" xml:space="preserve"><value>Supprimer la ligne {0}</value></data>
   <data name="Quotes.Row.Delete" xml:space="preserve"><value>Supprimer le devis {0} ({1})</value></data>

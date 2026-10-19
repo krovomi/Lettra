@@ -70,7 +70,7 @@
                 aria-activedescendant="@ActiveOptionId" @ref="ListElement" @onkeydown="OnListKeyDown">
                 @foreach (CatalogItemSummary item in Shown)
                 {
-                    <li @key="item.Id" id="@OptionId(item)" role="option" aria-selected="@(IsSelected(item) ? "true" : "false")"
+                    <li @key="item.Id" id="@OptionId(item)" role="option" aria-keyshortcuts="Delete" aria-selected="@(IsSelected(item) ? "true" : "false")"
                         class="lt-record @(IsSelected(item) ? "is-selected" : null) @(item.IsArchived ? "is-archived" : null)" @onclick="() => GoTo(Href(item.Id))">
                         <span class="lt-avatar is-square" aria-hidden="true"><Icon Name="@(item.Kind == CatalogItemKindDto.Good ? "package" : "sparkles")" Size="18" /></span>
                         <span class="lt-record-main">
@@ -81,13 +81,13 @@
                         <span class="lt-record-action">
                             @if (item.IsArchived)
                             {
-                                <RowDelete @ref="RowDeletes[item.Id]" TabIndex="-1" Confirm="false" IconName="archive-restore"
+                                <RowDelete @ref="RowDeletes[item.Id]" InOption="true" Confirm="false" IconName="archive-restore"
                                            Label="@string.Format(Culture, L["Catalog.Row.Reactivate"], item.Designation)"
                                            OnDelete="() => SetRowArchivedAsync(item, false)" />
                             }
                             else
                             {
-                                <RowDelete @ref="RowDeletes[item.Id]" TabIndex="-1" Question="@L["Catalog.Row.Archive.Question"]" ActionText="@L["Catalog.Archive"]"
+                                <RowDelete @ref="RowDeletes[item.Id]" InOption="true" Question="@L["Catalog.Row.Archive.Question"]" ActionText="@L["Catalog.Archive"]"
                                            Label="@string.Format(Culture, L["Catalog.Row.Archive"], item.Designation)"
                                            OnDelete="() => SetRowArchivedAsync(item, true)" />
                             }

@@ -133,9 +133,12 @@ public sealed class RowDeleteTests : BunitContext
         _customers.Customers.Add(new CustomerSummary(Guid.CreateVersion7(), CustomerKindDto.Company, "Martin SA", "732829320", "Paris"));
         IRenderedComponent<CustomersPage> page = Open<CustomersPage>("customers");
 
-        page.Find($"#customers-option-{dupont} .lt-row-delete").GetAttribute("aria-label").Should().Be("Supprimer le client Dupont SARL");
+        page.Find($"#customers-option-{dupont} .lt-row-delete").GetAttribute("title").Should().Be("Supprimer le client Dupont SARL");
+        page.FindAll("#customers-list button, #customers-list [tabindex]").Should().BeEmpty("une option de liste ne contient rien de focalisable");
+        page.Find($"#customers-option-{dupont}").GetAttribute("aria-keyshortcuts").Should().Be("Delete");
         page.Find($"#customers-option-{dupont} .lt-row-delete").Click();
-        page.Find(".lt-row-confirm-text").TextContent.Should().Be("Supprimer ce client ?");
+        page.Find(".lt-row-confirm-text").TextContent.Should().Be("Supprimer ce client ? Entrée pour confirmer, Échap pour annuler.");
+        page.FindAll("#customers-list button").Should().BeEmpty("la confirmation non plus");
         page.Find(".lt-row-confirm-yes").Click();
 
         page.WaitForAssertion(() => page.FindAll(".lt-record").Should().ContainSingle());
@@ -154,7 +157,8 @@ public sealed class RowDeleteTests : BunitContext
         page.WaitForAssertion(() => page.Find("#customer-sheet-title").TextContent.Should().Be("Dupont SARL"));
 
         page.Find("#customers-list").KeyDown(new KeyboardEventArgs { Key = "Delete" });
-        page.WaitForAssertion(() => page.Find(".lt-row-confirm-yes").Click());
+        page.WaitForAssertion(() => page.Find(".lt-row-confirm").Should().NotBeNull());
+        page.Find("#customers-list").KeyDown(new KeyboardEventArgs { Key = "Enter" });
 
         page.WaitForAssertion(() => _customers.Deletes.Should().Equal((dupont, (long?)1)));
         page.WaitForAssertion(() => Navigation.Uri.Should().EndWith("/customers"));
@@ -204,7 +208,7 @@ public sealed class RowDeleteTests : BunitContext
         this.ToastText().Should().StartWith("Article « Tenue comptable » archivé");
 
         page.Find("#catalog-items-archived").Change(true);
-        page.WaitForAssertion(() => page.Find($"#catalog-option-{tenue.Id} .lt-row-delete").GetAttribute("aria-label")
+        page.WaitForAssertion(() => page.Find($"#catalog-option-{tenue.Id} .lt-row-delete").GetAttribute("title")
             .Should().Be("Réactiver l'article Tenue comptable"));
         page.Find($"#catalog-option-{tenue.Id} .lt-row-delete").Click();
 
