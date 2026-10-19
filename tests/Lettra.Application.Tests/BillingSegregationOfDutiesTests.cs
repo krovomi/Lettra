@@ -65,6 +65,7 @@ public sealed class BillingSegregationOfDutiesTests : IAsyncLifetime
         services.AddSingleton<IDossierProvisioner>(new RecordingDossierProvisioner());
         services.AddSingleton<IAuthorizationDirectory>(new EmptyAuthorizationDirectory());
         services.AddSingleton<IDossierDirectory>(new EmptyDossierDirectory());
+        services.AddCabinetFakes();
         _root = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
         _scope = _root.CreateAsyncScope();
         _policies.Policies[Organisation] = new SegregationOfDutiesPolicy(true, 100m);

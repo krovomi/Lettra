@@ -6,6 +6,7 @@ using Lettra.Contracts.Alerts;
 using Lettra.Contracts.Assistant;
 using Lettra.Contracts.Banking;
 using Lettra.Contracts.Billing;
+using Lettra.Contracts.Cabinet;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Customers;
@@ -72,6 +73,10 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(CreateDossierRequest))]
 [JsonSerializable(typeof(DossierSummary))]
 [JsonSerializable(typeof(IReadOnlyList<DossierSummary>))]
+[JsonSerializable(typeof(CabinetOverviewResponse))]
+[JsonSerializable(typeof(CabinetOverviewRefreshResponse))]
+[JsonSerializable(typeof(DossierReviewResponse))]
+[JsonSerializable(typeof(SetDossierReviewItemRequest))]
 [JsonSerializable(typeof(SetUserAccountRequest))]
 [JsonSerializable(typeof(CreateGroupRequest))]
 [JsonSerializable(typeof(GroupSummary))]

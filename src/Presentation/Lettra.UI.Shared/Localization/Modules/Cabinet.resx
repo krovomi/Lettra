@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.Cabinet" xml:space="preserve"><value>Vue cabinet</value></data>
+  <data name="Nav.Review" xml:space="preserve"><value>Revue du dossier</value></data>
+  <data name="Cabinet.Title" xml:space="preserve"><value>Vue cabinet</value></data>
+  <data name="Cabinet.Subtitle" xml:space="preserve"><value>Les dossiers que vous suivez, les plus urgents d'abord.</value></data>
+  <data name="Cabinet.Subtitle.Computed" xml:space="preserve"><value>Les dossiers que vous suivez, les plus urgents d'abord. Chiffres calculés {0}.</value></data>
+  <data name="Cabinet.Refresh" xml:space="preserve"><value>Actualiser</value></data>
+  <data name="Cabinet.Refreshing" xml:space="preserve"><value>Calcul en cours…</value></data>
+  <data name="Cabinet.Refreshed" xml:space="preserve"><value>Chiffres recalculés pour {0} dossier(s).</value></data>
+  <data name="Cabinet.RefreshedWithFailures" xml:space="preserve"><value>{0} dossier(s) recalculé(s), {1} en échec : leurs anciens chiffres restent affichés.</value></data>
+  <data name="Cabinet.Empty" xml:space="preserve"><value>Aucun dossier à suivre</value></data>
+  <data name="Cabinet.EmptyText" xml:space="preserve"><value>Vous n'avez accès à aucun dossier pour l'instant. Un administrateur du cabinet peut vous en ouvrir dans « Équipe et accès ».</value></data>
+  <data name="Cabinet.Kpis" xml:space="preserve"><value>Résumé du cabinet</value></data>
+  <data name="Cabinet.Kpi.ToHandle" xml:space="preserve"><value>Dossiers à traiter</value></data>
+  <data name="Cabinet.Kpi.OutOf" xml:space="preserve"><value>sur {0} dossier(s)</value></data>
+  <data name="Cabinet.Kpi.InDossiers" xml:space="preserve"><value>dans {0} dossier(s)</value></data>
+  <data name="Cabinet.List.Title" xml:space="preserve"><value>Dossiers</value></data>
+  <data name="Cabinet.List.Caption" xml:space="preserve"><value>Indicateurs de chaque dossier, les plus urgents d'abord</value></data>
+  <data name="Cabinet.Search" xml:space="preserve"><value>Chercher un dossier</value></data>
+  <data name="Cabinet.OnlyToHandle" xml:space="preserve"><value>Seulement ceux à traiter</value></data>
+  <data name="Cabinet.Filtered.Empty" xml:space="preserve"><value>Aucun dossier ne correspond</value></data>
+  <data name="Cabinet.Field.Dossier" xml:space="preserve"><value>Dossier</value></data>
+  <data name="Cabinet.Field.ComputedAt" xml:space="preserve"><value>Calculé</value></data>
+  <data name="Cabinet.Field.Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Cabinet.Level.Ok" xml:space="preserve"><value>À jour</value></data>
+  <data name="Cabinet.Level.Info" xml:space="preserve"><value>À surveiller</value></data>
+  <data name="Cabinet.Level.Warning" xml:space="preserve"><value>À traiter</value></data>
+  <data name="Cabinet.Level.Critical" xml:space="preserve"><value>Urgent</value></data>
+  <data name="Cabinet.NotAvailable" xml:space="preserve"><value>Pas encore suivi pour ce dossier</value></data>
+  <data name="Cabinet.NeverComputed" xml:space="preserve"><value>Pas encore calculé</value></data>
+  <data name="Cabinet.TodayAt" xml:space="preserve"><value>aujourd'hui à {0}</value></data>
+  <data name="Cabinet.Open" xml:space="preserve"><value>Ouvrir</value></data>
+  <data name="Cabinet.Review" xml:space="preserve"><value>Revue</value></data>
+  <data name="Cabinet.Footnote" xml:space="preserve"><value>Les chiffres sont recalculés chaque nuit, et quand vous cliquez sur « Actualiser ». Ce ne sont que des compteurs : aucun montant ni nom de client ne sort du dossier.</value></data>
+  <data name="Cabinet.Indicator.factures.retard" xml:space="preserve"><value>Factures en retard</value></data>
+  <data name="Cabinet.Indicator.factures.retard.Due" xml:space="preserve"><value>la plus ancienne : {0}</value></data>
+  <data name="Cabinet.Indicator.pa.rejets" xml:space="preserve"><value>Rejets plateforme</value></data>
+  <data name="Cabinet.Indicator.tva.a-declarer" xml:space="preserve"><value>TVA à déclarer</value></data>
+  <data name="Cabinet.Indicator.tva.a-declarer.Due" xml:space="preserve"><value>échéance {0}</value></data>
+  <data name="Cabinet.Indicator.banque.non-rapprochee" xml:space="preserve"><value>Banque non rapprochée</value></data>
+  <data name="Cabinet.Indicator.banque.non-rapprochee.Due" xml:space="preserve"><value>depuis le {0}</value></data>
+  <data name="Cabinet.Indicator.alertes.ouvertes" xml:space="preserve"><value>Alertes ouvertes</value></data>
+  <data name="Cabinet.Indicator.revue.a-faire" xml:space="preserve"><value>Revue du mois</value></data>
+  <data name="Cabinet.Indicator.revue.a-faire.Due" xml:space="preserve"><value>avant le {0}</value></data>
+  <data name="Cabinet.Indicator.Due" xml:space="preserve"><value>échéance {0}</value></data>
+  <data name="Cabinet.Palette.Group" xml:space="preserve"><value>Dossiers</value></data>
+  <data name="Cabinet.Palette.Open" xml:space="preserve"><value>Ouvrir le dossier {0}</value></data>
+  <data name="Cabinet.Picker.Title" xml:space="preserve"><value>Changer de dossier</value></data>
+  <data name="Cabinet.Picker.None" xml:space="preserve"><value>Choisir un dossier</value></data>
+  <data name="Cabinet.Picker.Fixed" xml:space="preserve"><value>Cette installation ouvre un seul dossier.</value></data>
+  <data name="Cabinet.Picker.Search" xml:space="preserve"><value>Chercher un dossier</value></data>
+  <data name="Cabinet.Picker.Favourites" xml:space="preserve"><value>Favoris</value></data>
+  <data name="Cabinet.Picker.Recents" xml:space="preserve"><value>Récents</value></data>
+  <data name="Cabinet.Picker.All" xml:space="preserve"><value>Tous les dossiers ({0})</value></data>
+  <data name="Cabinet.Picker.NoMatch" xml:space="preserve"><value>Aucun dossier ne correspond.</value></data>
+  <data name="Cabinet.Picker.Overview" xml:space="preserve"><value>Voir la vue cabinet</value></data>
+  <data name="Cabinet.Picker.Favourite" xml:space="preserve"><value>Ajouter {0} aux favoris</value></data>
+  <data name="Cabinet.Picker.Unfavourite" xml:space="preserve"><value>Retirer {0} des favoris</value></data>
+  <data name="Cabinet.Picker.Favourite.Short" xml:space="preserve"><value>Ajouter aux favoris</value></data>
+  <data name="Cabinet.Picker.Unfavourite.Short" xml:space="preserve"><value>Retirer des favoris</value></data>
+  <data name="Cabinet.Picker.Opened" xml:space="preserve"><value>Dossier « {0} » ouvert.</value></data>
+  <data name="Review.Title" xml:space="preserve"><value>Revue du dossier</value></data>
+  <data name="Review.Subtitle" xml:space="preserve"><value>Liste de contrôle de {0}, à cocher chaque mois ou chaque trimestre.</value></data>
+  <data name="Review.Intro" xml:space="preserve"><value>Liste de contrôle du dossier, à cocher chaque mois ou chaque trimestre.</value></data>
+  <data name="Review.Period" xml:space="preserve"><value>Période</value></data>
+  <data name="Review.Period.Months" xml:space="preserve"><value>Mois</value></data>
+  <data name="Review.Period.Quarters" xml:space="preserve"><value>Trimestres</value></data>
+  <data name="Review.Period.Quarter" xml:space="preserve"><value>{0}e trimestre {1}</value></data>
+  <data name="Review.Progress" xml:space="preserve"><value>{0} point(s) sur {1}</value></data>
+  <data name="Review.Progress.Label" xml:space="preserve"><value>Avancement de la revue</value></data>
+  <data name="Review.Item.pieces.emises" xml:space="preserve"><value>Pièces de la période validées et émises</value></data>
+  <data name="Review.Item.pieces.emises.Help" xml:space="preserve"><value>Aucun brouillon de facture ou d'avoir oublié sur la période.</value></data>
+  <data name="Review.Item.pa.suivie" xml:space="preserve"><value>Transmissions à la plateforme suivies</value></data>
+  <data name="Review.Item.pa.suivie.Help" xml:space="preserve"><value>Les rejets sont corrigés et retransmis, les refus traités par un avoir.</value></data>
+  <data name="Review.Item.relances.faites" xml:space="preserve"><value>Factures en retard relancées</value></data>
+  <data name="Review.Item.relances.faites.Help" xml:space="preserve"><value>Chaque client en retard a reçu une relance ou un appel.</value></data>
+  <data name="Review.Item.banque.rapprochee" xml:space="preserve"><value>Rapprochement bancaire fait</value></data>
+  <data name="Review.Item.banque.rapprochee.Help" xml:space="preserve"><value>Les mouvements du relevé sont rapprochés des pièces.</value></data>
+  <data name="Review.Item.tva.declaree" xml:space="preserve"><value>TVA de la période déclarée</value></data>
+  <data name="Review.Item.tva.declaree.Help" xml:space="preserve"><value>Déclaration déposée et payée à l'échéance.</value></data>
+  <data name="Review.Item.pieces.manquantes" xml:space="preserve"><value>Pièces manquantes demandées au client</value></data>
+  <data name="Review.Item.pieces.manquantes.Help" xml:space="preserve"><value>Factures d'achat, relevés et justificatifs réclamés.</value></data>
+  <data name="Review.Item.periode.cloturee" xml:space="preserve"><value>Période clôturée, chaîne d'intégrité vérifiée</value></data>
+  <data name="Review.Item.periode.cloturee.Help" xml:space="preserve"><value>La clôture du mois est signée et le contrôle ne signale rien.</value></data>
+  <data name="Review.Item.points.manager" xml:space="preserve"><value>Points d'attention notés pour le manager</value></data>
+  <data name="Review.Item.points.manager.Help" xml:space="preserve"><value>Une note courte sur ce qui mérite un regard (facultatif).</value></data>
+  <data name="Review.Note" xml:space="preserve"><value>Note</value></data>
+  <data name="Review.Note.Placeholder" xml:space="preserve"><value>Note facultative</value></data>
+  <data name="Review.Note.Save" xml:space="preserve"><value>Enregistrer la note</value></data>
+  <data name="Review.Note.Saved" xml:space="preserve"><value>Note enregistrée : {0}.</value></data>
+  <data name="Review.Checked" xml:space="preserve"><value>Point coché : {0}.</value></data>
+  <data name="Review.Unchecked" xml:space="preserve"><value>Point décoché : {0}.</value></data>
+  <data name="Review.Who" xml:space="preserve"><value>Coché par {0}, le {1}</value></data>
+  <data name="Review.Who.Me" xml:space="preserve"><value>vous</value></data>
+  <data name="Review.Who.Someone" xml:space="preserve"><value>un collègue</value></data>
+  <data name="Review.Hint.pa.rejets" xml:space="preserve"><value>{0} rejet(s) en attente</value></data>
+  <data name="Review.Hint.factures.retard" xml:space="preserve"><value>{0} facture(s) en retard</value></data>
+  <data name="Review.Hint.banque.non-rapprochee" xml:space="preserve"><value>{0} ligne(s) non rapprochée(s)</value></data>
+  <data name="Review.Hint.tva.a-declarer" xml:space="preserve"><value>{0} déclaration(s) à déposer</value></data>
+  <data name="Review.Hint.alertes.ouvertes" xml:space="preserve"><value>{0} alerte(s) ouverte(s)</value></data>
+  <data name="Error.Review.PeriodInvalid" xml:space="preserve"><value>Cette période n'est pas reconnue (attendu : 2026-09 ou 2026-T3).</value></data>
+  <data name="Error.Review.ItemUnknown" xml:space="preserve"><value>Ce point ne fait pas partie de la liste de contrôle.</value></data>
+  <data name="Error.Review.NoteTooLong" xml:space="preserve"><value>La note dépasse 500 caractères.</value></data>
+</root>

@@ -12,9 +12,16 @@ namespace Lettra.UI.Gateway.Http.Device;
 /// Le dossier ouvert par l'application installée sur le serveur commun : choisi à la connexion, gardé sur l'appareil
 /// (l'hôte fournit <paramref name="remember"/>) pour rouvrir le même dossier au lancement suivant, même hors réseau.
 /// </summary>
-public sealed class SharedServerDossierSelection(Guid? remembered, Action<Guid?> remember) : IDossierSelection
+public sealed class SharedServerDossierSelection(Guid? remembered, Action<Guid?> remember) : ISelectableDossierSelection
 {
     public Guid? CurrentDossierId { get; private set; } = remembered;
+
+    /// <summary>Le sélecteur de dossier : le nouveau dossier est retenu sur l'appareil comme celui de la connexion.</summary>
+    public Task SelectAsync(Guid dossierId, CancellationToken cancellationToken)
+    {
+        Choose(dossierId);
+        return Task.CompletedTask;
+    }
 
     internal void Choose(Guid? dossierId)
     {

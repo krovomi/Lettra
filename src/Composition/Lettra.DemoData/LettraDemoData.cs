@@ -137,10 +137,10 @@ public static partial class LettraDemoData
         }
 
         session.CurrentDossierId = dossier;
-        if (await new DemoDossierLoader(services, clock).HasDocumentsAsync(cancellationToken).ConfigureAwait(false))
+        bool alreadySeeded = await new DemoDossierLoader(services, clock).HasDocumentsAsync(cancellationToken).ConfigureAwait(false);
+        if (alreadySeeded)
         {
             LogNotEmpty(logger, dossier);
-            return DemoSeedResult.Of(DemoSeedStatus.DossierNotEmpty);
         }
 
         DateOnly today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(TimeProvider.System.GetUtcNow(), TimeZoneInfo.FindSystemTimeZoneById("Europe/Paris")).DateTime);
@@ -149,8 +149,17 @@ public static partial class LettraDemoData
         LocalDossierRegistry? registry = services.GetService<LocalDossierRegistry>();
         Guid? active = registry?.ActiveDossierId;
 
-        reports.Add(await LoadAsync(services, clock, dossier, DemoBusiness.Services, options, today, cancellationToken).ConfigureAwait(false));
+        if (!alreadySeeded)
+        {
+            reports.Add(await LoadAsync(services, clock, dossier, DemoBusiness.Services, options, today, cancellationToken).ConfigureAwait(false));
+        }
+
+        // Les autres dossiers du cabinet (vue cabinet) : créés une seule fois, y compris dans une démonstration déjà
+        // remplie par une version précédente. Un dossier qui porte déjà le nom de l'entreprise n'est pas recréé.
         OrganisationId? cabinet = (await services.GetRequiredService<ITenantCatalog>().FindAsync(new DossierId(dossier), cancellationToken).ConfigureAwait(false))?.OrganisationId;
+        IReadOnlyList<DossierSummary> existing = cabinet is OrganisationId known
+            ? await services.GetRequiredService<IDossierDirectory>().ListAsync(known, cancellationToken).ConfigureAwait(false)
+            : [];
         foreach (DemoBusiness business in new[] { DemoBusiness.Building, DemoBusiness.Trading }.Take(Math.Clamp(options.AdditionalDossiers, 0, 2)))
         {
             if (cabinet is not OrganisationId organisation)
@@ -158,12 +167,18 @@ public static partial class LettraDemoData
                 break;
             }
 
+            string name = DemoCompanies.For(business).Name;
+            if (existing.Any(d => string.Equals(d.Name, name, StringComparison.Ordinal)))
+            {
+                continue;
+            }
+
             clock.Set(TimeProvider.System.GetUtcNow());
-            Result<DossierSummary> created = await CreateDossierAsync(services, organisation, DemoCompanies.For(business).Name, cancellationToken).ConfigureAwait(false);
+            Result<DossierSummary> created = await CreateDossierAsync(services, organisation, name, cancellationToken).ConfigureAwait(false);
             if (created.IsFailure)
             {
                 // Le serveur de démonstration peut ne pas donner le droit de créer des dossiers : le dossier ouvert suffit.
-                notes.Add($"Dossier « {DemoCompanies.For(business).Name} » non créé : {created.Errors[0].Code}.");
+                notes.Add($"Dossier « {name} » non créé : {created.Errors[0].Code}.");
                 LogDossierNotCreated(logger, business, created.Errors[0].Code);
                 break;
             }
@@ -179,6 +194,11 @@ public static partial class LettraDemoData
         }
 
         session.CurrentDossierId = dossier;
+        if (alreadySeeded)
+        {
+            return new DemoSeedResult(DemoSeedStatus.DossierNotEmpty, reports, notes);
+        }
+
         if (cabinet is OrganisationId owner)
         {
             await RaiseAlertsAsync(services, owner, dossier, today, cancellationToken).ConfigureAwait(false);

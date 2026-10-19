@@ -19,6 +19,7 @@ public static class NavItems
     public static IReadOnlyList<NavItem> All { get; } =
     [
         new("", "Nav.Home", "layout-dashboard", null, InTabBar: true, Match: NavLinkMatch.All),
+        new("cabinet", "Nav.Cabinet", "layers", null),
         new("quotes", "Nav.Quotes", "file-text", "Nav.Group.Sales", InTabBar: true),
         new("invoices", "Nav.Invoices", "receipt", "Nav.Group.Sales", InTabBar: true),
         new("credit-notes", "Nav.CreditNotes", "file-minus", "Nav.Group.Sales"),
@@ -30,6 +31,7 @@ public static class NavItems
         new("accounting", "Nav.Accounting", "book-open", "Nav.Group.Accounting"),
         new("exports/fec", "Nav.Fec", "file-spreadsheet", "Nav.Group.Accounting"),
         new("tax", "Nav.Tax", "calendar-clock", "Nav.Group.Accounting"),
+        new("review", "Nav.Review", "list-checks", "Nav.Group.Accounting"),
         new("alerts", "Nav.Alerts", "bell", "Nav.Group.Settings"),
         new("settings/company", "Nav.Company", "building-2", "Nav.Group.Settings", Match: NavLinkMatch.All),
         new("admin", "Nav.Admin", "shield-check", "Nav.Group.Settings", Page: AccessAreaDto.Administration),
