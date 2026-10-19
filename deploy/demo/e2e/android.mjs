@@ -172,9 +172,10 @@ await keycloak.click('#kc-login');
 log('connexion du cabinet envoyée (mot de passe + code)');
 
 // 3. De retour dans l'application : le client saisi dans le navigateur est là.
-await step(page, 'accueil de l\'application connectée', () => page.locator('.lettra-user').waitFor({ timeout: 120_000 }));
+// Sur un téléphone, le nom de l'utilisateur est replié dans l'en-tête : présent dans la page mais masqué.
+await step(page, 'accueil de l\'application connectée', () => page.locator('.lettra-user').waitFor({ state: 'attached', timeout: 120_000 }));
 await shot('connecte');
-log(`connecté comme « ${await page.locator('.lettra-user').innerText()} »`);
+log(`connecté comme « ${(await page.locator('.lettra-user').textContent())?.trim()} »`);
 await step(page, `client « ${browserCustomer} » du navigateur`, async () => {
     // Menu replié sur un téléphone : navigation interne de Blazor, comme un clic sur « Clients ».
     await page.evaluate(() => window.Blazor.navigateTo('customers'));
