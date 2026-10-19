@@ -1,3 +1,4 @@
+using Lettra.Application.Abstractions.Cabinet;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Outbox;
 using Lettra.Contracts.Accounting;
@@ -54,6 +55,7 @@ public static class DependencyInjection
         services.AddScoped<IQueryHandler<GetBankingSettingsQuery, Result<BankingSettingsResponse>>, GetBankingSettingsHandler>();
         services.AddScoped<ICommandHandler<UpdateBankingSettingsCommand, Result<BankingSettingsResponse>>, UpdateBankingSettingsHandler>();
         services.AddScoped<IQueryHandler<GetBankReconciliationStatusQuery, Result<BankReconciliationStatusResponse>>, GetBankReconciliationStatusHandler>();
+        services.AddScoped<IDossierIndicatorSource, BankUnreconciledIndicatorSource>();
         // Déclarations fiscales : brouillons de CA3/CA12 et de DES, calendrier fiscal (la TVA sur les encaissements se
         // branche en remplaçant IVatOnReceiptsSource).
         services.TryAddScoped<IVatOnReceiptsSource, NoVatOnReceipts>();
@@ -67,6 +69,7 @@ public static class DependencyInjection
         services.AddScoped<IQueryHandler<GetFiscalSettingsQuery, Result<FiscalSettingsResponse>>, GetFiscalSettingsHandler>();
         services.AddScoped<ICommandHandler<UpdateFiscalSettingsCommand, Result<FiscalSettingsResponse>>, UpdateFiscalSettingsHandler>();
         services.AddScoped<ICommandHandler<MarkFiscalFilingCommand, Result<FiscalDeadlineResponse>>, MarkFiscalFilingHandler>();
+        services.AddScoped<IDossierIndicatorSource, VatToDeclareIndicatorSource>();
 
         // Envois à la plateforme par l'outbox du serveur (étape 5.4).
         services.AddScoped<IOutboxHandler, PlatformDepositHandler>();

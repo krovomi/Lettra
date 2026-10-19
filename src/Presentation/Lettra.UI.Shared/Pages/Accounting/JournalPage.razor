@@ -1,6 +1,7 @@
 @page "/accounting"
 @page "/accounting/journal"
 @inject IAccountingGateway Accounting
+@inject ICustomersGateway Customers
 @inject NavigationManager Navigation
 @inject IStringLocalizer<SharedResource> L
 @inject IServiceProvider Services
@@ -43,8 +44,8 @@
         @if (CustomerId is Guid customer)
         {
             <span class="lt-chip" id="journal-customer-chip">
-                @L["Accounting.Customer"] : @(_customerName ?? "…")
-                <a href="@Href(_period, Account, null)" aria-label="@L["Accounting.ClearCustomer"]" id="journal-clear-customer"><Icon Name="x" Size="14" /></a>
+                <span class="lt-chip-label" title="@_customerName">@L["Accounting.Customer"] : @(_customerName ?? "…")</span>
+                <a href="@Href(_period, Account, null)" class="lt-chip-clear" aria-label="@L["Accounting.ClearCustomer"]" id="journal-clear-customer"><Icon Name="x" Size="14" /></a>
             </span>
         }
         <button type="button" class="lettra-button is-ghost" id="journal-expand-all" @onclick="ToggleAll">
@@ -218,6 +219,12 @@
             if (CustomerId is Guid customer)
             {
                 _customerName = journal.Items.FirstOrDefault(e => e.CustomerId == customer)?.CustomerName ?? _customerName;
+                if (_customerName is null)
+                {
+                    // Aucune écriture du client sur la période : son nom vient de sa fiche, comme au grand livre.
+                    OperationResult<CustomerResponse> read = await Customers.GetAsync(customer, CancellationToken.None);
+                    _customerName = read.Value?.Name;
+                }
             }
         }
         else

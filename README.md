@@ -253,6 +253,26 @@ Vérifié à chaque CI (job « Démo navigateur ») : la composition de l'applic
 Keycloak de la démo (code + PKCE, mot de passe et code à usage unique), voit le client saisi dans le navigateur et en
 crée un que le navigateur retrouve.
 
+## Vue cabinet
+
+Le sélecteur de dossier (barre du haut, ou Ctrl+K « Ouvrir le dossier … ») change de dossier en un clic. Il propose la
+recherche, les favoris (étoile) et les récents, tous gardés sur l'appareil. La démo Docker contient trois dossiers :
+Cabinet Démo, Bâti Rénov' Lemoine et Négoce Méditerranée Distribution (ajoutés aussi à une démo déjà remplie, sans rien
+effacer).
+
+La page **Vue cabinet** liste les dossiers que vous pouvez ouvrir, les plus urgents d'abord. Pour chacun, elle montre
+les factures en retard, les rejets de la plateforme, les alertes ouvertes, la revue du mois et le relevé bancaire non
+rapproché. La colonne relevé non rapproché devient à traiter après 15 jours et urgente après 30. Ces chiffres sont
+calculés la nuit (par le Worker, ou par l'API dans la démo), sur « Actualiser », ou à la première ouverture. Ce ne sont
+que des compteurs : aucun montant ni nom de client ne quitte le dossier.
+
+**Revue du dossier** (menu Comptabilité) est une liste de contrôle par mois ou par trimestre. Chaque coche garde qui
+l'a posée et quand. Détails : [docs/vue-cabinet.md](docs/vue-cabinet.md).
+
+État : navigateur contrôlé à la main dans la démo Docker à 1440, 768 et 375 px, et par les tests automatiques ;
+application installée (seule ou reliée au serveur commun) : même écran, changement de dossier branché, **non lancée**
+sur un appareil.
+
 ---
 
 ## Premier usage, pas à pas
@@ -414,7 +434,8 @@ Menu **Déclarations** (groupe Comptabilité). Lettra prépare, le cabinet dépo
 2. Onglet **TVA** : le brouillon de la CA3 (ou de la CA12 au réel simplifié) du mois écoulé, partie ventes. Chaque case
    (A1, 08, E2, 16, 28…) s'ouvre sur les factures, acomptes et avoirs qui la composent. Les contrôles disent si la TVA
    correspond au journal, s'il reste des brouillons ou des factures non transmises. **Marquer comme déposée** quand
-   c'est fait. La TVA déductible reste à 0 : les achats ne sont pas encore dans Lettra.
+   c'est fait. La TVA déductible reste à 0 : les achats ne sont pas encore dans Lettra. Le brouillon de CA3 déclare la
+   TVA des services à la date de chaque encaissement pour les factures validées à partir de cette version.
 3. Onglet **DES** : la déclaration européenne de services du mois (clients de l'Union en autoliquidation) et son
    fichier CSV.
 4. Onglet **Calendrier** : les échéances de l'année (CA3 ou CA12 et acomptes, DES, CFE, IS, liasse), proches, en
@@ -427,6 +448,25 @@ Les correspondances de cases et les dates sont à faire relire par un expert-com
 Chromium Linux à 1440, 768 et 375 px, données conservées après une mise à jour de la démo ; non vérifié : application
 native, Safari, Firefox.)* Détails : [docs/declarations-fiscales.md](docs/declarations-fiscales.md).
 
+### 9. Encaissements et rapprochement bancaire
+
+Menu Comptabilité > **Encaissements** : saisissez un règlement reçu (virement, chèque, carte, espèces, prélèvement),
+total, partiel ou réparti sur plusieurs factures. Chaque règlement passe son écriture au journal de banque (BQ,
+512/411) et lettre le compte client (codes A, B, C…). Un règlement se contre-passe avec un motif ; il n'est jamais
+supprimé.
+
+Menu Comptabilité > **Rapprochement bancaire** : importez un relevé CAMT.053, OFX ou CSV (aucune connexion à la
+banque). Lettra propose les factures correspondantes avec sa raison (numéro dans le libellé, montant et nom, montant et
+IBAN connu, somme de plusieurs factures) ; vous validez une par une ou en masse. Les petits écarts, sous un seuil
+réglable, sont soldés en 658/758. La TVA des prestations de services passe de 44574 à 44571 à l'encaissement, pour les
+factures validées à partir de cette version. Dans la démo, le bouton **Importer un relevé de démonstration** fabrique
+un relevé fictif à partir des factures dues.
+
+Les comptes utilisés sont à faire relire par un expert-comptable. *(Vérifié : API, écrans et règles par les tests
+automatiques ; non vérifié à la main dans la démo Docker ni dans les applications installées. Hors ligne : sur le
+serveur ou dans la base locale du poste seul, pas encore de synchronisation de la réplique.)* Détails :
+[docs/encaissements.md](docs/encaissements.md).
+
 ### Et ensuite
 
 - **Catalogue** : les articles et prestations, même présentation que les clients (liste, fiche, **Modifier**,
@@ -434,7 +474,7 @@ native, Safari, Firefox.)* Détails : [docs/declarations-fiscales.md](docs/decla
   aussi se saisir librement.
 - **Journal et balance** : les écritures de vente de la période (journal, balance, grand livre d'un compte ou d'un
   client), en lecture, les mêmes que dans le FEC. La fiche d'un client y renvoie par **Compte client**. Les
-  encaissements ne sont pas encore comptabilisés : le solde 411 est ce qui a été facturé, avoirs déduits.
+  encaissements y figurent au journal de banque (BQ) et lettrent le compte 411 (étape 9).
 - **Supprimer une ligne** : chaque tableau a une corbeille en bout de ligne. Un clic, une confirmation dans la ligne,
   puis un message. Un devis ou une facture ne se supprime qu'en brouillon (sinon le message dit quoi faire : refuser,
   laisser expirer, émettre un avoir). Un client ou un fournisseur supprimé disparaît des listes, ses pièces restent
@@ -532,13 +572,12 @@ Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou 
 | Fonction | État |
 |---|---|
 | Assistant IA | Les écrans existent : le panneau « Assistant IA » (bouton en haut), le brouillon de devis proposé par l'assistant et le lien « Pourquoi ? » de la checklist de conformité. Ils restent masqués tant que l'IA est désactivée, ce qui est le réglage par défaut (section `Lettra:Ai`) et celui de la démo. L'assistant propose et explique ; il ne valide ni n'émet jamais rien. |
-| Changer de dossier | Pas encore d'écran pour choisir le dossier ouvert : dans l'application installée, les dossiers « bâtiment » et « négoce » du jeu de démonstration sont créés mais ne s'ouvrent pas encore. |
 | Vraie plateforme agréée | En attente d'un partenaire ; la démo utilise la plateforme simulée. |
 | Serveur du cabinet en production | La démonstration navigateur tourne sur un poste avec Docker ; un vrai serveur du cabinet ou une cellule SaaS demande Keycloak, des certificats et une infrastructure (voir plus bas). |
 | Poste relié à un serveur, synchronisation | Prête dans l'application (fichier `lettra.json`), mais demande un serveur Lettra et Keycloak. Sur un poste isolé, la page Synchronisation indique « Ce poste ne synchronise pas ». |
 | Hors ligne sur un appareil relié au serveur commun | Relié au serveur commun, l'appareil a besoin du réseau. Reste à étendre la synchronisation aux devis, factures et règlements, ou à y ouvrir les brouillons hors ligne. |
 | Invitations | Une personne ajoutée dans **Équipe et accès** apparaît et reçoit des accès, mais Lettra n'envoie pas d'e-mail et ne crée pas encore son compte de connexion (Keycloak) : elle ne peut pas encore se connecter. |
-| Télédéclaration de la TVA et de la DES | Non : Lettra prépare le brouillon et le fichier, le dépôt se fait sur impots.gouv ou le service en ligne des douanes. La TVA déductible (achats) et la TVA sur les encaissements ne sont pas encore reprises. |
+| Télédéclaration de la TVA et de la DES | Non : Lettra prépare le brouillon et le fichier, le dépôt se fait sur impots.gouv ou le service en ligne des douanes. La TVA déductible (achats) n'est pas encore reprise. |
 | Envoi des devis et factures par e-mail | Non : on télécharge le PDF ou le Factur-X. |
 | Applications signées | Non : avertissement de Windows au premier lancement, APK Android installé à la main, application macOS arrêtée par le Trousseau, pas de version pour iPhone réel. |
 
