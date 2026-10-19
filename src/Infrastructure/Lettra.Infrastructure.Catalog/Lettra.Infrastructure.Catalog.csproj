@@ -12,4 +12,8 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lettra.Persistence.Tests" />
+  </ItemGroup>
+
 </Project>
