@@ -116,7 +116,7 @@ internal sealed class ListRecurringInvoicesHandler(IRecurringInvoiceReadStore st
             query.DueOnly,
             query.Sort,
             query.Descending,
-            BillingCalendar.Today(clock),
+            LegalCalendar.Today(clock),
             query.Page,
             query.PageSize);
         return await store.ListAsync(filter, cancellationToken).ConfigureAwait(false);
@@ -141,7 +141,7 @@ internal sealed class GetRecurringInvoiceHandler(
         Customer? customer = await customers.FindAsync(template.CustomerId, cancellationToken).ConfigureAwait(false);
         IReadOnlyDictionary<InvoiceId, RecurringInvoiceState> invoices = await store
             .InvoicesAsync([.. template.Occurrences.Select(o => o.InvoiceId)], cancellationToken).ConfigureAwait(false);
-        return template.ToResponse(customer?.Name ?? string.Empty, invoices, BillingCalendar.Today(clock));
+        return template.ToResponse(customer?.Name ?? string.Empty, invoices, LegalCalendar.Today(clock));
     }
 }
 
@@ -275,7 +275,7 @@ internal sealed class GenerateRecurringInvoicesHandler(
     public async Task<Result<RecurringRunResponse>> HandleAsync(GenerateRecurringInvoicesCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
-        DateOnly today = BillingCalendar.Today(clock);
+        DateOnly today = LegalCalendar.Today(clock);
         IReadOnlyList<RecurringInvoiceId> due = command.OnlyTemplate is { } only
             ? [only]
             : await templates.ListDueAsync(today, cancellationToken).ConfigureAwait(false);
