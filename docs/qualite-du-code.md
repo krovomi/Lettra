@@ -140,11 +140,11 @@ Chaque écart a été vérifié dans le code. Les chemins sont relatifs à `src/
 | R1 | `result.IsSuccess ? TypedResults.Ok(...) : result.Errors.ToProblem()` écrit environ 55 fois, plus 4 aides privées équivalentes. | `Hosts/Lettra.Api/Endpoints/*` (`BillingEndpoints.cs:350`, `BankingEndpoints.cs:180`, `ExportEndpoints.cs:159`, `AdministrationEndpoints.cs:121`) |
 | R2 | « Écrire, relire, joindre la version courante en cas de conflit » en 4 exemplaires, dont deux identiques ligne à ligne. | `Presentation/Lettra.UI.Gateway.InProcess/InProcessPartiesAndCatalogGateways.cs:53` et `InProcessBillingGateways.cs:24`, `Hosts/Lettra.Api/Infrastructure/ConcurrencyResults.cs:71` |
 | R3 | « Aujourd'hui à Paris » calculé 4 fois, avec deux politiques de repli différentes ; « Europe/Paris » écrit dans 10 fichiers. | `Core/Lettra.Application/Features/Billing/BillingSupport.cs:10`, `Modules/Exports/Lettra.Exports.Application/Banking/BankingFeatures.cs:106`, `Tax/TaxQueries.cs:200`, `EInvoicing/Platform/Receivables.cs:82` |
-| R4 | Validation d'un règlement écrite dans le handler et dans l'entité. | `Modules/Exports/Lettra.Exports.Application/Banking/Payments.cs:83-133` et `Core/Lettra.Domain/Banking/Payment.cs:142-157, 243-271` |
-| R5 | Préambule « charger, introuvable, vérifier la version, brouillon ? » copié dans une dizaine de handlers ; `IVersionedCommand` n'est utilisé par rien. | `Core/Lettra.Application/Features/Billing/QuoteFeatures.cs:195, 230, 319, 344`, `InvoiceFeatures.cs:229, 274, 322, 404` |
+| R4 | Validation d'un règlement écrite dans le handler et dans l'entité. | `Modules/Exports/Lettra.Exports.Application/Banking/Payments.cs:83-133` et `Core/Lettra.Domain/Banking/Payment.cs:142-157, 243-271` (montant recevable unique `Payment.IsValidAmount`, saisie contrôlée par `RecordPaymentValidator` ; corrigé, PR 4) |
+| R5 | Préambule « charger, introuvable, vérifier la version, brouillon ? » copié dans une dizaine de handlers ; `IVersionedCommand` n'est utilisé par rien. | `Core/Lettra.Application/Features/Billing/QuoteFeatures.cs:195, 230, 319, 344`, `InvoiceFeatures.cs:229, 274, 322, 404` (`Concurrency.Load` dans 17 handlers ; corrigé, PR 4) |
 | R6 | 83 réemballages `Result<T>.Failure(x.Errors)` faute de conversion et de `Bind` sur `Result`. | `Core/Lettra.Domain/Common/Result.cs:58-108` |
 | R7 | Validateurs de liste paginée identiques ; `MaxPageSize = 200` redéclaré 7 fois. | `QuoteFeatures.cs:97`, `InvoiceFeatures.cs:123`, `SupplierQueries.cs:35`, `CatalogQueries.cs:45` |
-| R8 | Fin de validation d'une facture dupliquée entre validation en ligne et import hors ligne. | `Features/Billing/ValidateInvoice.cs:133-143, 195-200`, `Features/Sync/ImportOfflineInvoice.cs:107-142` |
+| R8 | Fin de validation d'une facture dupliquée entre validation en ligne et import hors ligne. | `Features/Billing/ValidateInvoice.cs:133-143, 195-200`, `Features/Sync/ImportOfflineInvoice.cs:107-142` (`InvoiceValidationEffects.Blocked` et `RecordAsync` ; corrigé, PR 4) |
 | R9 | Éditeurs de devis et de facture : une dizaine de méthodes copiées (prix, brouillon local, PDF, focus). | `Presentation/Lettra.UI.Shared/Pages/Billing/InvoiceEditor.razor` (836 lignes), `QuoteEditor.razor` (724 lignes) |
 | R10 | Squelette de tâche périodique recopié 6 fois, sans `TimeProvider` pour `PeriodicTimer`. | `IntegrityCheckJob`, `FiscalDeadlineAlertJob`, `CabinetOverviewJob`, `OutboxDispatchJob`, `DossierMigrationJob`, `EscalationJob` |
 | R11 | Liste des États membres de l'UE en deux exemplaires ; « EUR » défini de 4 façons. | `Calculations/Compliance/ComplianceChecker.cs:102`, `Exports.Application/Tax/DesCalculator.cs:26` |
@@ -154,7 +154,7 @@ Chaque écart a été vérifié dans le code. Les chemins sont relatifs à `src/
 
 | # | Écart | Où |
 |---|---|---|
-| S1 | `RecordPaymentHandler` : 16 dépendances, une méthode de 100 lignes qui fait six choses, et une commande imbriquée. | `Exports.Application/Banking/Payments.cs:33-271` |
+| S1 | `RecordPaymentHandler` : 16 dépendances, une méthode de 100 lignes qui fait six choses, et une commande imbriquée. | `Exports.Application/Banking/Payments.cs:33-271` (saisie et déclaration à la plateforme sorties du handler (`RecordPaymentValidator`, `PaymentPlatformReporter`), 14 dépendances au lieu de 16 ; partiel, PR 4) |
 | S2 | `SyncCoordinator.RunInDossierAsync` : 150 lignes, compteurs mutables capturés dans des closures. | `Modules/Sync/Lettra.Sync.Client/SyncCoordinator.cs:302` |
 | S3 | `ComplianceChecker.Check` : 150 lignes, à découper par rubrique (vendeur, client, pièce, lignes, paiement) avec D2. | `Calculations/Compliance/ComplianceChecker.cs:106` |
 | S4 | `AccountingAssistant.AskAsync` : 112 lignes (politique, pseudonymisation, contexte, boucle d'outils). | `Ai/Lettra.Ai.Orchestration/AccountingAssistant.cs:28` |
@@ -172,7 +172,7 @@ Chaque écart a été vérifié dans le code. Les chemins sont relatifs à `src/
 | A4 | Les endpoints de synchronisation et de démonstration contournent le médiateur (permissions refaites à la main, second conteneur de services à chaque appel). | `Hosts/Lettra.Api/Endpoints/SyncEndpoints.cs:136-153`, `DemoEndpoints.cs:38-54` |
 | A5 | Interface Blazor : `IServiceProvider.GetService(...)` (localisateur de services) dans 23 composants. | `Presentation/Lettra.UI.Shared` |
 | A6 | État statique modifiable `ExplorerSettings.SearchDelay`, modifié par les tests. | `Presentation/Lettra.UI.Shared/Components/Explorer/RecordExplorerPage.cs:19` |
-| A7 | Les modules Exports (64 handlers) et Supervision (10) n'ont aucun `IValidator` : la validation des requêtes est écrite dans les handlers. | `Exports.Application/Banking/Payments.cs:83`, `BankStatements.cs:32-50`, `Tax/TaxDeclarations.cs:107` |
+| A7 | Les modules Exports (64 handlers) et Supervision (10) n'ont aucun `IValidator` : la validation des requêtes est écrite dans les handlers. | `Exports.Application/Banking/Payments.cs:83`, `BankStatements.cs:32-50`, `Tax/TaxDeclarations.cs:107` (premier validateur du module : `RecordPaymentValidator` ; les autres handlers suivront, PR 4) |
 | A8 | Le test de parité des codes d'erreur ne couvre pas `Supervision.Domain`. | `tests/Lettra.Architecture.Tests/ErrorCodeAndResourceTests.cs:29` |
 
 Écarts constatés par les tests de parité, identiques sur les deux transports, à revoir plus tard :
@@ -205,7 +205,7 @@ Aucun test existant n'est retiré, désactivé ni affaibli.
 | 3 | Rôles : portée et échéance d'un rôle portées par `RoleDefinition` (A3, la règle était recopiée dans l'attribution et dans le calcul des droits) ; passerelles HTTP : délai d'attente traité comme une coupure (D4) ; tests. | Fusionnée (PR #139) |
 | 4 | Tests d'infrastructure : tâche de la vue cabinet et ses sources, serveur de synchronisation (rejeu après écriture concurrente), webhook de supervision, annuaire d'autorisations (83 cas). Livrés avec la PR 2. | Fusionnée avec la PR 2 |
 | 5 | API : recherche normalisée (R12), tests. Après le fil « Tris et filtres sur les listes ». | À faire |
-| 6 | Application : chargement versionné (R5), validateurs paginés (R7, après les tris), fin de validation de facture (R8), règlement (R4, S1), `IValidator` dans Exports (A7), tests. | À faire |
+| 6 | Application : chargement versionné (R5), fin de validation de facture (R8), saisie d'un encaissement (R4, S1, premier `IValidator` d'Exports pour A7), tests. Validateurs paginés (R7) et autres validateurs Exports dans une PR suivante. | En cours |
 | 7 | Conformité : découpage de `ComplianceChecker.Check` (S3). | À faire |
 | 8 | Interface Blazor : horloge injectée (D5), fin du localisateur de services (A5, A6), base commune des éditeurs (R9), tests bUnit. | À faire |
 
