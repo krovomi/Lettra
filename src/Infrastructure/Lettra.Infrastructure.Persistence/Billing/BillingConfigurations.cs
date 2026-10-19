@@ -122,6 +122,8 @@ internal sealed class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder.Property(i => i.ContentHash).HasMaxLength(64);
         builder.Ignore(i => i.IsDerived);
         builder.Ignore(i => i.CreditableBalance);
+        builder.Ignore(i => i.OutstandingInclTax);
+        builder.Ignore(i => i.VatOnDebits);
         builder.Ignore(i => i.RevenueLines);
         builder.ComplexProperty(i => i.Seller, party => BillingDocumentMapping.MapParty(party, "Seller"));
         builder.HasIndex(i => i.QuoteId);

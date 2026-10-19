@@ -1,0 +1,32 @@
+@inject IStringLocalizer<SharedResource> L
+@* Les lignes d'une écriture (compte, libellé, débit, crédit), comme au journal. *@
+
+<table class="lettra-table lt-banking-entry">
+    <thead>
+        <tr>
+            <th scope="col">@L["Accounting.Account"]</th>
+            <th scope="col" class="lg-num">@L["Accounting.Debit"]</th>
+            <th scope="col" class="lg-num">@L["Accounting.Credit"]</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (JournalLineResponse line in Lines)
+        {
+            <tr>
+                <td><span class="lt-account">@line.Account</span> @AccountLabel(line.Account)</td>
+                <td class="lg-num">@(line.Debit == 0 ? null : ExplorerText.Money(line.Debit))</td>
+                <td class="lg-num">@(line.Credit == 0 ? null : ExplorerText.Money(line.Credit))</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<JournalLineResponse> Lines { get; set; } = [];
+
+    private string AccountLabel(string account)
+    {
+        LocalizedString label = L[$"Account.{account}"];
+        return label.ResourceNotFound ? string.Empty : label.Value;
+    }
+}

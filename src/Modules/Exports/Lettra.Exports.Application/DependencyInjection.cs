@@ -1,9 +1,12 @@
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Outbox;
 using Lettra.Contracts.Accounting;
+using Lettra.Contracts.Banking;
+using Lettra.Contracts.Common;
 using Lettra.Contracts.Exports;
 using Lettra.Domain.Common;
 using Lettra.Exports.Application.Accounting;
+using Lettra.Exports.Application.Banking;
 using Lettra.Exports.Application.EInvoicing;
 using Lettra.Exports.Application.EInvoicing.Platform;
 using Lettra.Exports.Application.Fec;
@@ -37,6 +40,20 @@ public static class DependencyInjection
         services.AddScoped<IQueryHandler<GetTrialBalanceQuery, Result<TrialBalanceResponse>>, GetTrialBalanceHandler>();
         services.AddScoped<IQueryHandler<GetAccountLedgerQuery, Result<AccountLedgerResponse>>, GetAccountLedgerHandler>();
 
+        // Encaissements, rapprochement bancaire et lettrage (vague 6).
+        services.AddScoped<ICommandHandler<RecordPaymentCommand, Result<PaymentResponse>>, RecordPaymentHandler>();
+        services.AddScoped<ICommandHandler<ReversePaymentCommand, Result<PaymentResponse>>, ReversePaymentHandler>();
+        services.AddScoped<IQueryHandler<GetPaymentQuery, Result<PaymentResponse>>, GetPaymentHandler>();
+        services.AddScoped<IQueryHandler<ListPaymentsQuery, Result<PagedResponse<PaymentSummary>>>, ListPaymentsHandler>();
+        services.AddScoped<IQueryHandler<GetOpenInvoicesQuery, Result<IReadOnlyList<OpenInvoiceResponse>>>, GetOpenInvoicesHandler>();
+        services.AddScoped<ICommandHandler<ImportBankStatementCommand, Result<BankImportResponse>>, ImportBankStatementHandler>();
+        services.AddScoped<ICommandHandler<ImportDemoBankStatementCommand, Result<BankImportResponse>>, ImportDemoBankStatementHandler>();
+        services.AddScoped<IQueryHandler<GetReconciliationQuery, Result<ReconciliationResponse>>, GetReconciliationHandler>();
+        services.AddScoped<ICommandHandler<ConfirmMatchesCommand, Result<ConfirmMatchesResponse>>, ConfirmMatchesHandler>();
+        services.AddScoped<ICommandHandler<IgnoreBankLineCommand, Result<BankLineResponse>>, IgnoreBankLineHandler>();
+        services.AddScoped<IQueryHandler<GetBankingSettingsQuery, Result<BankingSettingsResponse>>, GetBankingSettingsHandler>();
+        services.AddScoped<ICommandHandler<UpdateBankingSettingsCommand, Result<BankingSettingsResponse>>, UpdateBankingSettingsHandler>();
+        services.AddScoped<IQueryHandler<GetBankReconciliationStatusQuery, Result<BankReconciliationStatusResponse>>, GetBankReconciliationStatusHandler>();
         // Déclarations fiscales : brouillons de CA3/CA12 et de DES, calendrier fiscal (la TVA sur les encaissements se
         // branche en remplaçant IVatOnReceiptsSource).
         services.TryAddScoped<IVatOnReceiptsSource, NoVatOnReceipts>();

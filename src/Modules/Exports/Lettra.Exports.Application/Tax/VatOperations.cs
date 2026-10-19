@@ -64,14 +64,19 @@ public static class VatOperations
     /// <summary>
     /// TVA sur les encaissements : retire des opérations de la période la TVA des services due à l'encaissement et la
     /// remplace par les encaissements de la période. Sans suivi des encaissements, les opérations restent telles quelles.
+    /// <paramref name="deferred"/> limite le retrait aux pièces dont la TVA est réellement passée en attente (44574) ;
+    /// sans lui, toutes les opérations dues à l'encaissement sont retirées.
     /// </summary>
     public static IReadOnlyList<VatOperation> WithReceipts(
-        IReadOnlyList<VatOperation> operations, IReadOnlyList<VatReceiptAllocation> receipts, IReadOnlyDictionary<Guid, TaxDocument> documents)
+        IReadOnlyList<VatOperation> operations,
+        IReadOnlyList<VatReceiptAllocation> receipts,
+        IReadOnlyDictionary<Guid, TaxDocument> documents,
+        IReadOnlySet<Guid>? deferred = null)
     {
         ArgumentNullException.ThrowIfNull(operations);
         ArgumentNullException.ThrowIfNull(receipts);
         ArgumentNullException.ThrowIfNull(documents);
-        List<VatOperation> kept = [.. operations.Where(o => !o.DueOnReceipt)];
+        List<VatOperation> kept = [.. operations.Where(o => !o.DueOnReceipt || (deferred is not null && !deferred.Contains(o.InvoiceId)))];
         foreach (VatReceiptAllocation receipt in receipts)
         {
             PartySnapshot? customer = documents.TryGetValue(receipt.InvoiceId, out TaxDocument? document) ? document.Customer : null;

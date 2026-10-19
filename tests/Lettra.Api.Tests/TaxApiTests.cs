@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Lettra.Contracts.Banking;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Serialization;
@@ -50,7 +51,19 @@ public sealed class TaxApiTests(LettraApiFactory factory) : IClassFixture<Lettra
         Guid invoiceId = await ExportApiTests.ValidatedInvoiceAsync(manager);
         await SetRegimeAsync(manager, VatDeclarationRegimeDto.RealNormal);
 
-        VatReturnResponse vat = (await manager.GetFromJsonAsync(Api($"/api/v1/tax/vat-return?date={Today:yyyy-MM-dd}"), ContractsJsonContext.Default.VatReturnResponse))!;
+        Uri draft = Api($"/api/v1/tax/vat-return?date={Today:yyyy-MM-dd}");
+        VatReturnResponse unpaid = (await manager.GetFromJsonAsync(draft, ContractsJsonContext.Default.VatReturnResponse))!;
+        unpaid.Boxes.SelectMany(b => b.Sources).Should().NotContain(s => s.InvoiceId == invoiceId, "la TVA d'une prestation est due à l'encaissement");
+        unpaid.Checks.Single(c => c.Code == "JournalMatch").Severity.Should().Be(TaxCheckSeverityDto.Ok, "la TVA en attente est en 44574");
+
+        InvoiceResponse invoice = (await manager.GetFromJsonAsync(Api($"/api/v1/invoices/{invoiceId}"), ContractsJsonContext.Default.InvoiceResponse))!;
+        using HttpResponseMessage paid = await manager.PostAsJsonAsync(
+            Api("/api/v1/payments"),
+            new RecordPaymentRequest { CustomerId = invoice.CustomerId, Date = Today, Amount = 120m, Allocations = [new PaymentAllocationRequest(invoiceId, 120m)] },
+            ContractsJsonContext.Default.RecordPaymentRequest);
+        paid.StatusCode.Should().Be(HttpStatusCode.Created, await paid.Content.ReadAsStringAsync());
+
+        VatReturnResponse vat = (await manager.GetFromJsonAsync(draft, ContractsJsonContext.Default.VatReturnResponse))!;
 
         vat.Form.Should().Be(VatReturnFormDto.Ca3);
         vat.From.Should().Be(new DateOnly(Today.Year, Today.Month, 1));

@@ -1,0 +1,144 @@
+@page "/payments/{Id:guid}"
+@inject IBankingGateway Banking
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+@* Un encaissement : imputations, écriture du journal de banque, lettrage ; contre-passation avec motif (rien n'est
+   supprimé : l'écriture inverse et le délettrage restent tracés). *@
+
+<PageTitle>@(_payment?.Number ?? L["Payments.Title"]) · Lettra</PageTitle>
+
+<GeneralErrors Errors="_errors" IncludeFieldErrors="true" />
+
+@if (_payment is null)
+{
+    <ListSkeleton Columns="4" />
+}
+else
+{
+    <div class="lt-page-header">
+        <div>
+            <h1 tabindex="-1">
+                @string.Format(Culture, L["Payments.Detail.Title"], _payment.Number)
+                @if (_payment.Status == PaymentStatusDto.Reversed)
+                {
+                    <span class="lettra-status is-refused" id="payment-status">@L["PaymentStatus.Reversed"]</span>
+                }
+                else
+                {
+                    <span class="lettra-status is-issued" id="payment-status">@L["PaymentStatus.Posted"]</span>
+                }
+            </h1>
+            <p class="lettra-muted">@_payment.CustomerName · @_payment.Date.ToString("D", Culture) · @L[$"PaymentMethod.{_payment.Method}"]</p>
+        </div>
+        <div class="lt-page-actions">
+            <a class="lettra-button is-ghost" href="payments"><Icon Name="arrow-left" Size="18" /> @L["Payments.Back"]</a>
+        </div>
+    </div>
+
+    <div class="lt-banking-detail">
+        <section class="lettra-card" aria-labelledby="payment-allocations-title">
+            <h2 id="payment-allocations-title">@L["Payments.Allocation"]</h2>
+            <dl class="lt-banking-summary">
+                <div><dt>@L["Payments.AmountReceived"]</dt><dd id="payment-amount">@ExplorerText.Money(_payment.Amount)</dd></div>
+                <div><dt>@L["Payments.TotalAllocated"]</dt><dd>@ExplorerText.Money(_payment.AllocatedAmount)</dd></div>
+                @if (_payment.WriteOff != 0m)
+                {
+                    <div class="is-warning"><dt>@(_payment.WriteOff > 0 ? L["Payments.GapLoss"] : L["Payments.GapGain"])</dt><dd>@ExplorerText.Money(Math.Abs(_payment.WriteOff))</dd></div>
+                }
+                @if (_payment.LetteringCode is { } letter)
+                {
+                    <div><dt>@L["Payments.Lettering"]</dt><dd><span class="lt-lettering" id="payment-lettering">@letter</span></dd></div>
+                }
+                @if (!string.IsNullOrEmpty(_payment.Reference))
+                {
+                    <div><dt>@L["Payments.Reference"]</dt><dd>@_payment.Reference</dd></div>
+                }
+            </dl>
+            <ul class="lt-banking-list">
+                @foreach (PaymentAllocationResponse allocation in _payment.Allocations)
+                {
+                    <li><a href="@($"invoices/{allocation.InvoiceId}")">@allocation.InvoiceNumber</a> <span>@ExplorerText.Money(allocation.Amount)</span></li>
+                }
+            </ul>
+        </section>
+
+        <section class="lettra-card" aria-labelledby="payment-entry-title">
+            <h2 id="payment-entry-title">@L["Payments.Entry"]</h2>
+            <EntryLines Lines="_payment.EntryLines" />
+            @if (_payment.ReversalLines.Count > 0)
+            {
+                <h3>@string.Format(Culture, L["Payments.ReversalEntry"], _payment.ReversalDate?.ToString("d", Culture))</h3>
+                <p class="lettra-muted">@_payment.ReversalReason</p>
+                <EntryLines Lines="_payment.ReversalLines" />
+            }
+        </section>
+    </div>
+
+    @if (_payment.Status == PaymentStatusDto.Posted)
+    {
+        <section class="lettra-card" aria-labelledby="payment-reverse-title">
+            <h2 id="payment-reverse-title">@L["Payments.Reverse"]</h2>
+            <p class="lettra-muted">@L["Payments.Reverse.Hint"]</p>
+            @if (_reversing)
+            {
+                <form class="lt-banking-grid" @onsubmit="ReverseAsync" @onsubmit:preventDefault="true">
+                    <div class="lt-field lt-banking-wide">
+                        <label for="payment-reverse-reason">@L["Payments.Reverse.Reason"]</label>
+                        <input id="payment-reverse-reason" type="text" maxlength="500" @bind="_reason" @bind:event="oninput" placeholder="@L["Payments.Reverse.Reason.Hint"]" required />
+                    </div>
+                    <div class="lt-page-actions">
+                        <button type="button" class="lettra-button is-ghost" @onclick="() => _reversing = false">@L["Explorer.Cancel"]</button>
+                        <button type="submit" class="lettra-button is-danger" id="payment-reverse-confirm" disabled="@(string.IsNullOrWhiteSpace(_reason) || _busy)">
+                            <Icon Name="undo-2" Size="18" /> @L["Payments.Reverse.Confirm"]
+                        </button>
+                    </div>
+                </form>
+            }
+            else
+            {
+                <button type="button" class="lettra-button is-secondary" id="payment-reverse" @onclick="() => _reversing = true"><Icon Name="undo-2" Size="18" /> @L["Payments.Reverse"]</button>
+            }
+        </section>
+    }
+}
+
+@code {
+    private PaymentResponse? _payment;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private bool _reversing;
+    private bool _busy;
+    private string? _reason;
+
+    [Parameter] public Guid Id { get; set; }
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        OperationResult<PaymentResponse> result = await Banking.GetPaymentAsync(Id, CancellationToken.None);
+        _payment = result.Value;
+        _errors = result.Errors;
+    }
+
+    private async Task ReverseAsync()
+    {
+        _busy = true;
+        try
+        {
+            OperationResult<PaymentResponse> result = await Banking.ReversePaymentAsync(Id, new ReversePaymentRequest { Reason = _reason }, CancellationToken.None);
+            if (result is { IsSuccess: true, Value: { } payment })
+            {
+                _payment = payment;
+                _reversing = false;
+                Toasts.Show(ToastKind.Success, string.Format(Culture, L["Payments.Reversed"], payment.Number));
+                return;
+            }
+
+            _errors = [.. result.Errors.Select(e => e with { Target = null })];
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}
