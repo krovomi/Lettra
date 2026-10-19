@@ -5,7 +5,6 @@ using Lettra.Contracts.Accounting;
 using Lettra.Contracts.Banking;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
-using Lettra.Contracts.Integrity;
 using Lettra.Contracts.Serialization;
 
 namespace Lettra.Api.Tests;
@@ -113,7 +112,10 @@ public sealed class BankingApiTests(LettraApiFactory factory) : IClassFixture<Le
             Api("/api/v1/payments"),
             new RecordPaymentRequest
             {
-                CustomerId = invoice.CustomerId, Date = Today.AddDays(1), Amount = 120m, Method = PaymentMethodDto.Transfer,
+                CustomerId = invoice.CustomerId,
+                Date = Today.AddDays(1),
+                Amount = 120m,
+                Method = PaymentMethodDto.Transfer,
                 Allocations = [new PaymentAllocationRequest(invoiceId, 120m)],
             },
             ContractsJsonContext.Default.RecordPaymentRequest);

@@ -109,7 +109,7 @@ internal sealed class AssistantHarness : IAsyncDisposable
     {
         Engine = engine;
         IConfiguration configuration = new ConfigurationBuilder().AddInMemoryCollection(settings ?? []).Build();
-        ServiceCollection services = new();
+        ServiceCollection services = [];
         services.AddSingleton<TimeProvider>(new FixedTime(now ?? new DateTimeOffset(2026, 10, 14, 9, 0, 0, TimeSpan.Zero)));
         services.AddSingleton<IAiSkillCatalog>(SkillCatalog.LoadEmbedded());
         services.AddAiTools();

@@ -7,7 +7,6 @@ using Lettra.UI.Shared.Cabinet;
 using Lettra.UI.Shared.Components.Cabinet;
 using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Pages.Cabinet;
-using Lettra.UI.Tests.Security;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 

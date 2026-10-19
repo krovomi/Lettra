@@ -13,9 +13,9 @@ using Lettra.UI.Shared.Onboarding;
 using Lettra.UI.Shared.Pages;
 using Lettra.UI.Shared.Services;
 using Lettra.UI.Tests.Billing;
+using Lettra.UI.Tests.Cabinet;
 using Lettra.UI.Tests.Security;
 using Microsoft.AspNetCore.Components;
-using Lettra.UI.Tests.Cabinet;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 

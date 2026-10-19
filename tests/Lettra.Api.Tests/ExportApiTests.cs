@@ -143,9 +143,17 @@ public sealed class ExportApiTests(LettraApiFactory factory) : IClassFixture<Let
             Content = JsonContent.Create(
                 new SaveCompanyProfileRequest
                 {
-                    Name = "Conseil Lettra", LegalForm = "SAS", ShareCapital = 10_000m, Siren = "552100554", Rcs = "RCS Paris 552 100 554",
-                    VatNumber = "FR96552100554", AddressLine1 = "10 avenue de l'Opéra", PostalCode = "75001", City = "Paris",
-                    LatePenaltyRate = 10m, EarlyPaymentDiscount = "Pas d'escompte pour paiement anticipé",
+                    Name = "Conseil Lettra",
+                    LegalForm = "SAS",
+                    ShareCapital = 10_000m,
+                    Siren = "552100554",
+                    Rcs = "RCS Paris 552 100 554",
+                    VatNumber = "FR96552100554",
+                    AddressLine1 = "10 avenue de l'Opéra",
+                    PostalCode = "75001",
+                    City = "Paris",
+                    LatePenaltyRate = 10m,
+                    EarlyPaymentDiscount = "Pas d'escompte pour paiement anticipé",
                 },
                 ContractsJsonContext.Default.SaveCompanyProfileRequest),
         };

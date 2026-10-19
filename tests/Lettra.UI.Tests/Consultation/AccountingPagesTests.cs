@@ -106,8 +106,7 @@ public sealed class AccountingPagesTests : BunitContext
     public void Une_periode_refusee_affiche_l_erreur_traduite()
     {
         _accounting.NextError = ErrorCodes.Accounting.PeriodTooLong;
-
-        IRenderedComponent<JournalPage> page = Open<JournalPage>("accounting/journal");
+        _ = Open<JournalPage>("accounting/journal");
 
         this.ToastText().Should().Contain("Une consultation couvre cinq ans au plus");
     }

@@ -191,7 +191,8 @@ public sealed class PrintableMapperTests
     public void Une_piece_validee_imprime_l_emetteur_fige_et_un_brouillon_la_fiche_entreprise()
     {
         InvoiceResponse validee = FakeInvoicesGateway.Build(InvoiceKindDto.Invoice, InvoiceStatusDto.Validated, "FAC-2026-0042", Heures)
-            with { Seller = BillingFixtures.Cabinet with { Name = "Ancien nom" } };
+            with
+        { Seller = BillingFixtures.Cabinet with { Name = "Ancien nom" } };
         InvoiceResponse brouillon = FakeInvoicesGateway.Build(InvoiceKindDto.Invoice, InvoiceStatusDto.Draft, null, Heures);
 
         PrintableMapper.FromInvoice(validee, BillingFixtures.Company(), Fr).Seller.Name.Should().Be("Ancien nom");
@@ -207,7 +208,8 @@ public sealed class PrintableMapperTests
     public void Un_avoir_rappelle_la_facture_d_origine_et_son_motif()
     {
         InvoiceResponse avoir = FakeInvoicesGateway.Build(InvoiceKindDto.CreditNote, InvoiceStatusDto.Validated, "AV-2026-0003", Heures)
-            with { CreditedInvoiceNumber = "FAC-2026-0042", CreditReason = "Remise commerciale", QuoteNumber = "DEV-2026-0001" };
+            with
+        { CreditedInvoiceNumber = "FAC-2026-0042", CreditReason = "Remise commerciale", QuoteNumber = "DEV-2026-0001" };
 
         PrintableDocument imprime = PrintableMapper.FromInvoice(avoir, null, Fr);
 

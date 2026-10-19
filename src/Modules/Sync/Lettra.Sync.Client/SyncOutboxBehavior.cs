@@ -65,41 +65,31 @@ internal sealed class SyncOutboxBehavior<TRequest, TResult>(
     {
         Guid key = Guid.CreateVersion7();
         DateTimeOffset now = clock.GetUtcNow();
-        switch (request)
+        return request switch
         {
-            case CreateCustomerCommand c:
-                return new CreateCustomerIntent(key, Required(c.Id?.Value), now, c.Data.ToRequest());
-            case UpdateCustomerCommand u:
-                return await customers.GetAsync(u.CustomerId, ct).ConfigureAwait(false) is { } customer
+            CreateCustomerCommand c => new CreateCustomerIntent(key, Required(c.Id?.Value), now, c.Data.ToRequest()),
+            UpdateCustomerCommand u => await customers.GetAsync(u.CustomerId, ct).ConfigureAwait(false) is { } customer
                     ? new UpdateCustomerIntent(key, u.CustomerId.Value, now, customer.ToRequest(), u.Data.ToRequest())
-                    : null;
-            case DeleteCustomerCommand d:
-                return await customers.GetAsync(d.CustomerId, ct).ConfigureAwait(false) is { IsArchived: false } deleted
+                    : null,
+            DeleteCustomerCommand d => await customers.GetAsync(d.CustomerId, ct).ConfigureAwait(false) is { IsArchived: false } deleted
                     ? new DeleteCustomerIntent(key, d.CustomerId.Value, now, deleted.Name)
-                    : null;
-            case CreateSupplierCommand c:
-                return new CreateSupplierIntent(key, Required(c.Id?.Value), now, c.Data.ToRequest());
-            case UpdateSupplierCommand u:
-                return await suppliers.GetAsync(u.SupplierId, ct).ConfigureAwait(false) is { } supplier
+                    : null,
+            CreateSupplierCommand c => new CreateSupplierIntent(key, Required(c.Id?.Value), now, c.Data.ToRequest()),
+            UpdateSupplierCommand u => await suppliers.GetAsync(u.SupplierId, ct).ConfigureAwait(false) is { } supplier
                     ? new UpdateSupplierIntent(key, u.SupplierId.Value, now, supplier.ToRequest(), u.Data.ToRequest())
-                    : null;
-            case DeleteSupplierCommand d:
-                return await suppliers.GetAsync(d.SupplierId, ct).ConfigureAwait(false) is { IsArchived: false } removed
+                    : null,
+            DeleteSupplierCommand d => await suppliers.GetAsync(d.SupplierId, ct).ConfigureAwait(false) is { IsArchived: false } removed
                     ? new DeleteSupplierIntent(key, d.SupplierId.Value, now, removed.Name)
-                    : null;
-            case CreateCatalogItemCommand c:
-                return new CreateCatalogItemIntent(key, Required(c.Id?.Value), now, c.Data.ToRequest());
-            case UpdateCatalogItemCommand u:
-                return await items.GetAsync(u.CatalogItemId, ct).ConfigureAwait(false) is { } item
+                    : null,
+            CreateCatalogItemCommand c => new CreateCatalogItemIntent(key, Required(c.Id?.Value), now, c.Data.ToRequest()),
+            UpdateCatalogItemCommand u => await items.GetAsync(u.CatalogItemId, ct).ConfigureAwait(false) is { } item
                     ? new UpdateCatalogItemIntent(key, u.CatalogItemId.Value, now, item.ToRequest(), u.Data.ToRequest())
-                    : null;
-            case SetCatalogItemArchivedCommand a:
-                return await items.GetAsync(a.CatalogItemId, ct).ConfigureAwait(false) is { } archived
+                    : null,
+            SetCatalogItemArchivedCommand a => await items.GetAsync(a.CatalogItemId, ct).ConfigureAwait(false) is { } archived
                     ? new SetCatalogItemArchivedIntent(key, a.CatalogItemId.Value, now, archived.IsArchived, a.IsArchived)
-                    : null;
-            default:
-                return null;
-        }
+                    : null,
+            _ => null,
+        };
     }
 
     /// <summary>Le serveur doit créer le même élément : l'identifiant est tiré avant la commande (mapping des contrats).</summary>

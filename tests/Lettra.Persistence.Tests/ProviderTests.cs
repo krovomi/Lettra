@@ -3,7 +3,6 @@ using Lettra.Exports.Application.EInvoicing.Platform;
 using Lettra.Infrastructure.Persistence.PostgreSql;
 using Lettra.Infrastructure.Persistence.Sqlite;
 using Lettra.Infrastructure.Persistence.SqlServer;
-using Lettra.Infrastructure.Catalog;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.MsSql;
 using Testcontainers.PostgreSql;

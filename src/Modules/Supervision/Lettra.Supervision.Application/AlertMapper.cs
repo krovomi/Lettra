@@ -39,7 +39,7 @@ public static class AlertMapper
             .Select(severity =>
             {
                 Alert[] open = [.. alerts.Where(a => a.Severity == severity && IsOpen(a.State))];
-                DateTimeOffset? oldest = open.Where(a => a.State == AlertState.New).Select(a => (DateTimeOffset?)a.OpenedAt).Min();
+                DateTimeOffset? oldest = open.Where(a => a.State == AlertState.New).Min(a => (DateTimeOffset?)a.OpenedAt);
                 return new AlertSeverityCounter((AlertSeverity)severity, open.Length, oldest);
             })
             .ToArray();

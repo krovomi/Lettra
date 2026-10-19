@@ -5,8 +5,6 @@ using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
 using Lettra.Contracts.Exports;
 using Lettra.Contracts.Reminders;
-using Lettra.Infrastructure.Persistence.Security;
-using Lettra.Infrastructure.Persistence.Sqlite.Local;
 using Lettra.UI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -50,11 +48,11 @@ public sealed partial class GatewayParityTests(LettraApiFactory factory) : IClas
 
         OperationResult<CustomerResponse> result = await services.GetRequiredService<ICustomersGateway>().CreateAsync(request, default);
 
-        result.Errors.Should().BeEquivalentTo(new[]
-        {
+        result.Errors.Should().BeEquivalentTo(
+        [
             new ErrorDetail(ErrorCodes.SharedKernel.SiretInvalid, nameof(CreateCustomerRequest.Siret)),
             new ErrorDetail(ErrorCodes.SharedKernel.PostalCodeInvalid, nameof(CreateCustomerRequest.PostalCode)),
-        });
+        ]);
     }
 
     [Theory]
@@ -102,9 +100,17 @@ public sealed partial class GatewayParityTests(LettraApiFactory factory) : IClas
         OperationResult<CompanyProfileResponse> profile = await services.GetRequiredService<IBillingSettingsGateway>().SaveCompanyProfileAsync(
             new SaveCompanyProfileRequest
             {
-                Name = "Conseil Lettra", LegalForm = "SAS", ShareCapital = 10_000m, Siren = "552100554", Rcs = "RCS Paris 552 100 554",
-                VatNumber = "FR96552100554", AddressLine1 = "10 avenue de l'Opéra", PostalCode = "75001", City = "Paris",
-                LatePenaltyRate = 10m, EarlyPaymentDiscount = "Pas d'escompte pour paiement anticipé",
+                Name = "Conseil Lettra",
+                LegalForm = "SAS",
+                ShareCapital = 10_000m,
+                Siren = "552100554",
+                Rcs = "RCS Paris 552 100 554",
+                VatNumber = "FR96552100554",
+                AddressLine1 = "10 avenue de l'Opéra",
+                PostalCode = "75001",
+                City = "Paris",
+                LatePenaltyRate = 10m,
+                EarlyPaymentDiscount = "Pas d'escompte pour paiement anticipé",
             },
             null,
             default);

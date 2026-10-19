@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using Lettra.Api.Infrastructure;
 using Lettra.Api.Security;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Messaging;

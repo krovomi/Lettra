@@ -17,7 +17,7 @@ public sealed class CatalogListTests
     {
         new ListCatalogItemsValidator().Validate(new ListCatalogItemsQuery(Dossier, Sort: CatalogSortDto.UnitPrice, Kind: CatalogItemKindDto.Good))
             .Should().BeEmpty();
-        new ListCatalogItemsValidator().Validate(new ListCatalogItemsQuery(Dossier, Sort: (CatalogSortDto)0, Direction: (SortDirectionDto)5, Kind: (CatalogItemKindDto)9))
+        new ListCatalogItemsValidator().Validate(new ListCatalogItemsQuery(Dossier, Sort: 0, Direction: (SortDirectionDto)5, Kind: (CatalogItemKindDto)9))
             .Select(e => e.Target).Should().Equal("Kind", "Sort", "Direction");
     }
 

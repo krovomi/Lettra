@@ -46,7 +46,7 @@ internal sealed class DemoScenarioGenerator
         DateTimeOffset startsAt = At(start, 8, 30);
         List<DemoCatalogItem> items = Items(startsAt.AddMinutes(5));
         int[] popularity = Shuffled(items.Count);
-        List<DemoCustomer> customers = Customers(items, popularity);
+        List<DemoCustomer> customers = Customers(popularity);
         List<DemoSupplier> suppliers = Suppliers();
         List<DemoPriceList> priceLists = PriceLists(customers, items);
         double[] customerWeights = [.. Shuffled(customers.Count).Select(rank => 1d / Math.Pow(rank + 1, 0.8))];
@@ -125,7 +125,7 @@ internal sealed class DemoScenarioGenerator
         return items;
     }
 
-    private List<DemoCustomer> Customers(List<DemoCatalogItem> items, int[] popularity)
+    private List<DemoCustomer> Customers(int[] popularity)
     {
         int count = _random.Next(30, 51);
         HashSet<string> names = new(StringComparer.Ordinal);

@@ -148,7 +148,7 @@ public sealed class FecValidatorTests
         FecValidationResponse report = Validate(Header + "\n" + Balanced().Replace("\t100,00\t", "\t99,99\t", StringComparison.Ordinal));
 
         report.Findings.Select(f => (f.Code, f.EntryNumber)).Should().BeEquivalentTo(
-            [(ErrorCodes.Fec.EntryUnbalanced, (string?)"1"), (ErrorCodes.Fec.FileUnbalanced, (string?)null)]);
+            [(ErrorCodes.Fec.EntryUnbalanced, (string?)"1"), (ErrorCodes.Fec.FileUnbalanced, null)]);
     }
 
     [Fact]

@@ -7,9 +7,7 @@ using Lettra.Infrastructure.Persistence.Billing;
 using Lettra.Infrastructure.Persistence.Cabinet;
 using Lettra.Infrastructure.Persistence.Outbox;
 using Lettra.Worker;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting;
 
 // Jobs de fond des modes 2, 3 et 5 : migration du catalogue, reprise des créations de dossiers interrompues, migration
 // de toutes les bases de dossiers par vagues (canari d'abord, avec bail et reprise), passe d'escalade de la Supervision,

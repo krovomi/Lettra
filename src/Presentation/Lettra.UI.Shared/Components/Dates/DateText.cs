@@ -85,7 +85,7 @@ public static class DateText
     {
         if (!input.All(char.IsAsciiDigit))
         {
-            return input.Split((char[])['/', '.', '-', ' ', ' ', ','], StringSplitOptions.RemoveEmptyEntries);
+            return input.Split(['/', '.', '-', ' ', ' ', ','], StringSplitOptions.RemoveEmptyEntries);
         }
 
         return input.Length switch

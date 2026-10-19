@@ -72,7 +72,7 @@ public sealed class SuppliersAndCatalogGatewayParityTests(LettraApiFactory facto
         OperationResult<SupplierResponse> unknownUpdate = await suppliers.UpdateAsync(Guid.CreateVersion7(), 1, PartiesAndCatalogApiTests.Dupuis(), default);
         OperationResult<bool> unknownDelete = await suppliers.DeleteAsync(Guid.CreateVersion7(), null, default);
 
-        invalid.Errors.Should().BeEquivalentTo(new[] { new ErrorDetail(ErrorCodes.SharedKernel.SiretInvalid, nameof(CreateSupplierRequest.Siret)) });
+        invalid.Errors.Should().BeEquivalentTo([new ErrorDetail(ErrorCodes.SharedKernel.SiretInvalid, nameof(CreateSupplierRequest.Siret))]);
         unknownUpdate.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Supplier.NotFound);
         unknownDelete.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Supplier.NotFound);
     }

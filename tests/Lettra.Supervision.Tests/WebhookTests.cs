@@ -238,8 +238,12 @@ public sealed class WebhookTests : IAsyncDisposable
         Guid dossier = Guid.CreateVersion7();
         Dictionary<string, string> labels = new()
         {
-            ["alertname"] = "R", ["severity"] = "S3", ["category"] = "compliance", ["cell"] = "mut-fr-01",
-            ["cabinet"] = cabinet.ToString(), ["dossier"] = dossier.ToString(),
+            ["alertname"] = "R",
+            ["severity"] = "S3",
+            ["category"] = "compliance",
+            ["cell"] = "mut-fr-01",
+            ["cabinet"] = cabinet.ToString(),
+            ["dossier"] = dossier.ToString(),
         };
 
         labels["scope"] = "cabinet";

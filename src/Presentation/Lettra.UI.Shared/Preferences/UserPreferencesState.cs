@@ -37,11 +37,8 @@ public sealed class UserPreferencesState : IDisposable
         _gateway = services.GetService<IUserPreferencesGateway>();
         _session = services.GetService<ISessionGateway>() is null ? null : services.GetService<SessionState>();
         _clock = services.GetService<TimeProvider>() ?? TimeProvider.System;
-        if (_session is not null)
-        {
-            // Un autre utilisateur ouvre sa session sur le poste : ses propres préférences reviennent.
-            _session.Changed += (_, _) => _ = EnsureLoadedAsync();
-        }
+        // Un autre utilisateur ouvre sa session sur le poste : ses propres préférences reviennent.
+        _session?.Changed += (_, _) => _ = EnsureLoadedAsync();
     }
 
     /// <summary>Après chaque lecture ou changement (écran à rafraîchir, menu, thème).</summary>

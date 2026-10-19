@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Http.Json;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Identity;
 using Lettra.Contracts.Serialization;

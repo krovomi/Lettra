@@ -31,7 +31,7 @@ public sealed class AccessAreaPermissionsTests
             ? [.. shown, .. AccessAreas.All.Where(a => a.SharesSalesView && shown.All(p => p.Area != a.Area)).Select(a => new AreaAccess(a.Area, AccessLevelDto.View))]
             : shown;
         composed.Should().NotBeNull();
-        AccessAreaPermissions.Describe(composed!).Should().BeEquivalentTo(expected);
+        AccessAreaPermissions.Describe(composed).Should().BeEquivalentTo(expected);
     }
 
     [Fact]

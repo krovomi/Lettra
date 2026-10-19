@@ -2,7 +2,6 @@ using System.Text.Json.Nodes;
 using Lettra.Ai.Privacy;
 using Lettra.Ai.Tools;
 using Lettra.Ai.Tools.Company;
-using Lettra.Application.Abstractions.Ai;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Features.Billing;
 using Lettra.Application.Features.Customers;

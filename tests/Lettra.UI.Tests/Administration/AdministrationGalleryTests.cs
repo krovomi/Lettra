@@ -6,7 +6,6 @@ using Lettra.UI.Shared;
 using Lettra.UI.Shared.Layout;
 using Lettra.UI.Shared.Localization;
 using Lettra.UI.Tests.Cabinet;
-using Lettra.UI.Tests.Security;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using AdminPage = Lettra.UI.Shared.Pages.Administration.Administration;
@@ -73,11 +72,11 @@ public sealed class AdministrationGalleryTests : BunitContext
     private void Ecrire(string dossier, string nom, Action<IRenderedComponent<MainLayout>>? gestes = null)
     {
         Services.GetRequiredService<NavigationManager>().NavigateTo("admin");
-        RenderFragment page = b =>
+        static void page(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder b)
         {
             b.OpenComponent<AdminPage>(0);
             b.CloseComponent();
-        };
+        }
         IRenderedComponent<MainLayout> coque = Render<MainLayout>(p => p.Add(l => l.Body, page));
         coque.WaitForState(() => coque.FindAll(".la-cards").Count > 0, TimeSpan.FromSeconds(5));
         gestes?.Invoke(coque);

@@ -1,9 +1,9 @@
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Domain.Integrity;
 using Lettra.Domain.Parties;
-using Lettra.Infrastructure.Persistence.Integrity;
 using Lettra.Infrastructure.Persistence.Ai;
 using Lettra.Infrastructure.Persistence.Concurrency;
+using Lettra.Infrastructure.Persistence.Integrity;
 using Lettra.Infrastructure.Persistence.Numbering;
 using Lettra.Infrastructure.Persistence.Search;
 using Lettra.Infrastructure.Persistence.Tenancy;

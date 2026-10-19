@@ -215,7 +215,7 @@ public static partial class LettraDemoData
     private static ServiceProvider Compose(
         IConfiguration configuration, Action<IServiceCollection>? hostServices, DemoClock clock, DemoSession session, ILoggerFactory? loggerFactory)
     {
-        ServiceCollection services = new();
+        ServiceCollection services = [];
         if (loggerFactory is null)
         {
             services.AddLogging();

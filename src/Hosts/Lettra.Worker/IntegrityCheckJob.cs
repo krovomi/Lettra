@@ -6,9 +6,6 @@ using Lettra.Domain.Integrity;
 using Lettra.Infrastructure.Catalog;
 using Lettra.Infrastructure.Persistence.Hosting;
 using Lettra.Infrastructure.Persistence.Integrity;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Lettra.Worker;

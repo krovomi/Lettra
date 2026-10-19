@@ -132,10 +132,17 @@ public sealed class DemoWalkthroughTests : IDisposable
         OperationResult<CompanyProfileResponse> company = await services.GetRequiredService<IBillingSettingsGateway>().SaveCompanyProfileAsync(
             new SaveCompanyProfileRequest
             {
-                Name = "Cabinet Démo Conseil", LegalForm = "SAS", ShareCapital = 10_000m, Siren = "900000019",
-                Rcs = "RCS Paris 900 000 019", VatNumber = "FR25900000019",
-                AddressLine1 = "12 rue des Exemples", PostalCode = "75010", City = "Paris",
-                LatePenaltyRate = 10m, EarlyPaymentDiscount = "Pas d'escompte pour paiement anticipé",
+                Name = "Cabinet Démo Conseil",
+                LegalForm = "SAS",
+                ShareCapital = 10_000m,
+                Siren = "900000019",
+                Rcs = "RCS Paris 900 000 019",
+                VatNumber = "FR25900000019",
+                AddressLine1 = "12 rue des Exemples",
+                PostalCode = "75010",
+                City = "Paris",
+                LatePenaltyRate = 10m,
+                EarlyPaymentDiscount = "Pas d'escompte pour paiement anticipé",
             },
             null,
             default);
@@ -145,8 +152,12 @@ public sealed class DemoWalkthroughTests : IDisposable
         OperationResult<CustomerResponse> customer = await services.GetRequiredService<ICustomersGateway>().CreateAsync(
             new CreateCustomerRequest
             {
-                Kind = CustomerKindDto.Company, Name = "Boulangerie Exemple", Siret = "90000002700012",
-                AddressLine1 = "3 place du Marché", PostalCode = "69002", City = "Lyon",
+                Kind = CustomerKindDto.Company,
+                Name = "Boulangerie Exemple",
+                Siret = "90000002700012",
+                AddressLine1 = "3 place du Marché",
+                PostalCode = "69002",
+                City = "Lyon",
             },
             default);
         customer.IsSuccess.Should().BeTrue(Codes(customer.Errors));

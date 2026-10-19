@@ -43,7 +43,10 @@ public sealed class AdministrationGatewayParityTests(LettraApiFactory factory) :
         }, default);
         OperationResult<RoleAssignmentSummary> assigned = await admin.AssignAsync(Cabinet, new AssignRoleRequest
         {
-            SubjectId = lea.Id, Role = role.Value.Key, ScopeKind = ScopeKindDto.Dossier, ScopeId = LettraApiFactory.DossierId,
+            SubjectId = lea.Id,
+            Role = role.Value.Key,
+            ScopeKind = ScopeKindDto.Dossier,
+            ScopeId = LettraApiFactory.DossierId,
         }, default);
         OperationResult<bool> inUse = await admin.DeleteRoleAsync(Cabinet, role.Value.Key, default);
         OperationResult<bool> revoked = await admin.RevokeAsync(Cabinet, assigned.Value!.Id, default);

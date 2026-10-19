@@ -2,7 +2,6 @@ using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Persistence;
-using Lettra.Application.Features.Parties;
 using Lettra.Application.Mapping;
 using Lettra.Calculations.Compliance;
 using Lettra.Contracts.Billing;

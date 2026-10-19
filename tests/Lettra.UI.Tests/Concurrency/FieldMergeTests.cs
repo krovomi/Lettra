@@ -1,4 +1,3 @@
-using FluentAssertions;
 using Lettra.UI.Abstractions.Concurrency;
 
 namespace Lettra.UI.Tests.Concurrency;

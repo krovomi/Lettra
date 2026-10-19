@@ -6,7 +6,6 @@ using Lettra.Contracts.Billing;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Common;
 using Lettra.Domain.Billing;
-using Lettra.Domain.Common;
 using Lettra.Domain.Parties;
 using Lettra.Domain.SharedKernel;
 using Lettra.Infrastructure.Persistence.Billing;

@@ -9,7 +9,6 @@ using Lettra.Contracts.Integrity;
 using Lettra.Contracts.Sync;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Common;
-using Lettra.Domain.SharedKernel;
 using Lettra.Sync.Client;
 using Microsoft.Extensions.DependencyInjection;
 

@@ -132,7 +132,7 @@ public sealed class AuditKitService(
     {
         CabinetRegistry? cabinet = await registry.ReadAsync(dossier.OrganisationId, cancellationToken).ConfigureAwait(false);
         return cabinet is null
-            ? new Dictionary<Guid, string>()
+            ? []
             : cabinet.People.Where(p => !string.IsNullOrWhiteSpace(p.DisplayName)).ToDictionary(p => p.Id, p => p.DisplayName!);
     }
 }

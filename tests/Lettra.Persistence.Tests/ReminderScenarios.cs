@@ -263,7 +263,10 @@ internal static class ReminderScenarios
                 paid = created.Value.Value;
                 RecordPaymentRequest payment = new()
                 {
-                    CustomerId = customer, Date = DateOnly.FromDateTime(DateTime.UtcNow), Amount = 120m, Allocations = [new PaymentAllocationRequest(paid, 120m)],
+                    CustomerId = customer,
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow),
+                    Amount = 120m,
+                    Allocations = [new PaymentAllocationRequest(paid, 120m)],
                 };
                 Ok(await commands.SendAsync(new RecordPaymentCommand(dossier, payment), default));
             }

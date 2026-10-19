@@ -1,5 +1,5 @@
-using Lettra.Application.Abstractions.Mail;
 using Lettra.Application.Abstractions.External;
+using Lettra.Application.Abstractions.Mail;
 using Lettra.Infrastructure.External.Mail;
 using Lettra.Infrastructure.External.Sirene;
 using Lettra.Infrastructure.External.Vies;

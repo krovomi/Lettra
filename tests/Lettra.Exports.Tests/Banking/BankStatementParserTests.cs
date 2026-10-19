@@ -71,7 +71,7 @@ public sealed class BankStatementParserTests
         DateOnly today = new(2026, 10, 16);
         CustomerId dupont = new(Guid.CreateVersion7());
         CustomerId martin = new(Guid.CreateVersion7());
-        ReceivableDocument Doc(string number, CustomerId customer, string name, decimal total, int day) =>
+        static ReceivableDocument Doc(string number, CustomerId customer, string name, decimal total, int day) =>
             new(new InvoiceId(Guid.CreateVersion7()), InvoiceKind.Invoice, number, customer, name, new DateOnly(2026, 9, day), new DateOnly(2026, 9, day).AddDays(30), total, 0m, 0m, null);
         List<ReceivableDocument> documents =
         [

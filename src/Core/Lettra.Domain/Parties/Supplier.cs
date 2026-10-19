@@ -18,7 +18,7 @@ public sealed class Supplier : AggregateRoot<SupplierId>, IVersioned
 {
     public const int MaxNameLength = 200;
 
-    // Constructeur réservé à la persistance.
+    // Constructeur réservé à la persistance (EF), repris par le constructeur métier.
     private Supplier(SupplierId id)
         : base(id)
     {
@@ -27,7 +27,7 @@ public sealed class Supplier : AggregateRoot<SupplierId>, IVersioned
     }
 
     private Supplier(SupplierId id, string name, PartyIdentification ids, Email? email, Iban? iban, PostalAddress address, DateTimeOffset createdAt)
-        : base(id)
+        : this(id)
     {
         Name = name;
         Siren = ids.Siren;

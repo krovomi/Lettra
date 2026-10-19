@@ -183,7 +183,7 @@ public sealed class AssistantBillingToolsTests
 
     private static QuoteResponse Quote()
     {
-        DocumentLineResponse Line(int position, string designation, decimal quantity, decimal price) => new(
+        static DocumentLineResponse Line(int position, string designation, decimal quantity, decimal price) => new(
             position, null, null, designation, null, CatalogItemKindDto.Service, "C62", quantity, price, 0m, "FR-20", 20m,
             VatCategoryDto.Standard, null, quantity * price);
 

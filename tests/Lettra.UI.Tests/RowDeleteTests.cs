@@ -142,7 +142,7 @@ public sealed class RowDeleteTests : BunitContext
         page.Find(".lt-row-confirm-yes").Click();
 
         page.WaitForAssertion(() => page.FindAll(".lt-record").Should().ContainSingle());
-        _customers.Deletes.Should().Equal((dupont, (long?)null));
+        _customers.Deletes.Should().Equal((dupont, null));
         page.Find("#customers-count").TextContent.Should().Contain("1");
         this.ToastText().Should().Be("Client « Dupont SARL » supprimé. Ses devis et factures restent consultables.");
         Navigation.Uri.Should().EndWith("/customers", "le clic sur la corbeille n'ouvre pas la fiche");
@@ -160,7 +160,7 @@ public sealed class RowDeleteTests : BunitContext
         page.WaitForAssertion(() => page.Find(".lt-row-confirm").Should().NotBeNull());
         page.Find("#customers-list").KeyDown(new KeyboardEventArgs { Key = "Enter" });
 
-        page.WaitForAssertion(() => _customers.Deletes.Should().Equal((dupont, (long?)1)));
+        page.WaitForAssertion(() => _customers.Deletes.Should().Equal((dupont, 1)));
         page.WaitForAssertion(() => Navigation.Uri.Should().EndWith("/customers"));
     }
 

@@ -4,7 +4,6 @@ using Lettra.Application.Abstractions.Ai;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Features.Customers;
-using Lettra.Application.Features.Parties;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
 using Lettra.Contracts.Suppliers;

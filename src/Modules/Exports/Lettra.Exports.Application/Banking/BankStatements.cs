@@ -236,7 +236,7 @@ internal sealed class ConfirmMatchesHandler(IBankStatementRepository statements,
     {
         ArgumentNullException.ThrowIfNull(command);
         IReadOnlyList<ConfirmMatchItem> items = command.Request?.Items ?? [];
-        if (items.Count == 0 || items.Count > MaxItems)
+        if (items.Count is 0 or > MaxItems)
         {
             return BankStatementErrors.TooManyLines;
         }

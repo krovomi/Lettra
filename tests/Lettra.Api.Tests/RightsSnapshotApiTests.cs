@@ -7,7 +7,6 @@ using Lettra.Contracts.Serialization;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
 using Lettra.Infrastructure.Identity.Oidc.Offline;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Lettra.Api.Tests;

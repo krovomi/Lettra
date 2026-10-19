@@ -1,7 +1,6 @@
 using Lettra.Domain.Banking;
 using Lettra.Domain.Billing;
 using Lettra.Exports.Application.AuditKit;
-using Lettra.Exports.Application.EInvoicing.Platform;
 using Lettra.Infrastructure.Persistence;
 using Lettra.Infrastructure.Persistence.EInvoicing;
 using Lettra.Infrastructure.Persistence.Tenancy;

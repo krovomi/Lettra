@@ -11,7 +11,6 @@ using Lettra.Contracts.Sync;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Catalog;
 using Lettra.Domain.Common;
-using Lettra.Domain.Integrity;
 using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Application.Features.Sync;

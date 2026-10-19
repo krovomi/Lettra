@@ -3,10 +3,10 @@ using Lettra.Contracts.Common;
 using Lettra.Contracts.Dossiers;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Shared.Components.Palette;
+using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Localization;
-using Lettra.UI.Shared.Localization;
 
 namespace Lettra.UI.Shared.Cabinet;
 

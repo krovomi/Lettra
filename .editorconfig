@@ -16,6 +16,8 @@ csharp_style_namespace_declarations = file_scoped:warning
 csharp_style_var_for_built_in_types = false:none
 dotnet_sort_system_directives_first = true
 csharp_prefer_braces = true:warning
+# Blocs de case non indentés (style existant).
+csharp_indent_case_contents_when_block = false
 
 # Noms d'erreur et de ressources en français : pas de contrôle orthographique d'identifiants.
 dotnet_diagnostic.CA1724.severity = none
@@ -43,7 +45,78 @@ dotnet_diagnostic.CA1000.severity = none
 # Noms imposés par l'annexe F (Permission, IRequirePermission) et l'idiome médiateur (RequestHandlerDelegate).
 dotnet_diagnostic.CA1711.severity = none
 
+# Base propre (qualité, PR 7) : code mort, using inutiles, conversions et suppressions superflues, mise en forme et
+# simplifications que le reste du code applique déjà. Bloquant à la compilation (TreatWarningsAsErrors).
+[*.{cs,razor}]
+dotnet_diagnostic.IDE0004.severity = warning
+dotnet_diagnostic.IDE0005.severity = warning
+dotnet_diagnostic.IDE0028.severity = warning
+dotnet_diagnostic.IDE0031.severity = warning
+dotnet_diagnostic.IDE0035.severity = warning
+dotnet_diagnostic.IDE0039.severity = warning
+dotnet_diagnostic.IDE0051.severity = warning
+dotnet_diagnostic.IDE0052.severity = warning
+dotnet_diagnostic.IDE0055.severity = warning
+dotnet_diagnostic.IDE0059.severity = warning
+dotnet_diagnostic.IDE0060.severity = warning
+dotnet_diagnostic.IDE0062.severity = warning
+dotnet_diagnostic.IDE0066.severity = warning
+dotnet_diagnostic.IDE0074.severity = warning
+dotnet_diagnostic.IDE0078.severity = warning
+dotnet_diagnostic.IDE0120.severity = warning
+dotnet_diagnostic.IDE0300.severity = warning
+dotnet_diagnostic.IDE0301.severity = warning
+dotnet_diagnostic.IDE0340.severity = warning
+dotnet_diagnostic.IDE0350.severity = warning
+dotnet_diagnostic.IDE0370.severity = warning
+
 # Migrations EF générées : pas d'analyse de style.
 [**/{Migrations,CatalogMigrations,SupervisionMigrations}/*.cs]
 generated_code = true
 dotnet_analyzer_diagnostic.severity = none
+dotnet_diagnostic.IDE0004.severity = none
+dotnet_diagnostic.IDE0005.severity = none
+dotnet_diagnostic.IDE0028.severity = none
+dotnet_diagnostic.IDE0031.severity = none
+dotnet_diagnostic.IDE0035.severity = none
+dotnet_diagnostic.IDE0039.severity = none
+dotnet_diagnostic.IDE0051.severity = none
+dotnet_diagnostic.IDE0052.severity = none
+dotnet_diagnostic.IDE0055.severity = none
+dotnet_diagnostic.IDE0059.severity = none
+dotnet_diagnostic.IDE0060.severity = none
+dotnet_diagnostic.IDE0062.severity = none
+dotnet_diagnostic.IDE0066.severity = none
+dotnet_diagnostic.IDE0074.severity = none
+dotnet_diagnostic.IDE0078.severity = none
+dotnet_diagnostic.IDE0120.severity = none
+dotnet_diagnostic.IDE0300.severity = none
+dotnet_diagnostic.IDE0301.severity = none
+dotnet_diagnostic.IDE0340.severity = none
+dotnet_diagnostic.IDE0350.severity = none
+dotnet_diagnostic.IDE0370.severity = none
+
+# Application MAUI : compilée seulement par la CI (charges de travail Android, iOS, Windows, macOS absentes ailleurs),
+# ces règles y restent des suggestions tant qu'elle n'a pas été nettoyée à la main et vérifiée par la CI.
+[src/Hosts/Lettra.App.Maui/**.{cs,razor}]
+dotnet_diagnostic.IDE0004.severity = suggestion
+dotnet_diagnostic.IDE0005.severity = suggestion
+dotnet_diagnostic.IDE0028.severity = suggestion
+dotnet_diagnostic.IDE0031.severity = suggestion
+dotnet_diagnostic.IDE0035.severity = suggestion
+dotnet_diagnostic.IDE0039.severity = suggestion
+dotnet_diagnostic.IDE0051.severity = suggestion
+dotnet_diagnostic.IDE0052.severity = suggestion
+dotnet_diagnostic.IDE0055.severity = suggestion
+dotnet_diagnostic.IDE0059.severity = suggestion
+dotnet_diagnostic.IDE0060.severity = suggestion
+dotnet_diagnostic.IDE0062.severity = suggestion
+dotnet_diagnostic.IDE0066.severity = suggestion
+dotnet_diagnostic.IDE0074.severity = suggestion
+dotnet_diagnostic.IDE0078.severity = suggestion
+dotnet_diagnostic.IDE0120.severity = suggestion
+dotnet_diagnostic.IDE0300.severity = suggestion
+dotnet_diagnostic.IDE0301.severity = suggestion
+dotnet_diagnostic.IDE0340.severity = suggestion
+dotnet_diagnostic.IDE0350.severity = suggestion
+dotnet_diagnostic.IDE0370.severity = suggestion

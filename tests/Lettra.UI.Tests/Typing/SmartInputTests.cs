@@ -1,16 +1,16 @@
 using System.Globalization;
 using AngleSharp.Dom;
 using Bunit;
+using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
 using Lettra.UI.Shared.Components.Palette;
 using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Pages.Parties;
+using Lettra.UI.Shared.Typing;
 using Lettra.UI.Tests.Billing;
+using Lettra.UI.Tests.Cabinet;
 using Lettra.UI.Tests.Consultation;
 using Microsoft.AspNetCore.Components;
-using Lettra.UI.Shared.Typing;
-using Lettra.UI.Abstractions;
-using Lettra.UI.Tests.Cabinet;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.UI.Tests.Typing;

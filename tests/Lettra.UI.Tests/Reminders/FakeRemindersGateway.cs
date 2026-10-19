@@ -83,7 +83,7 @@ internal sealed class FakeRemindersGateway : IRemindersGateway
             return Task.FromResult(OperationResult<ReminderSettingsResponse>.Failure(FailWith));
         }
 
-        Settings = new ReminderSettingsResponse(request.AutoSend, [.. request.Delays!], request.MinimumGapDays, Settings.EmailConfigured, Settings.Version + 1);
+        Settings = new ReminderSettingsResponse(request.AutoSend, [.. request.Delays], request.MinimumGapDays, Settings.EmailConfigured, Settings.Version + 1);
         return Task.FromResult(OperationResult<ReminderSettingsResponse>.Success(Settings));
     }
 }

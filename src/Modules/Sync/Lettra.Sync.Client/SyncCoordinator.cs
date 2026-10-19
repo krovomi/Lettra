@@ -462,7 +462,7 @@ public sealed class SyncCoordinator(
 
             IReadOnlyList<SyncOutboxItem> pending = await scope.ServiceProvider.GetRequiredService<ISyncOutbox>()
                 .ListAsync(SyncOutboxStatus.Pending, cancellationToken).ConfigureAwait(false);
-            DateTimeOffset? oldest = pending.Where(i => i.Intent is ValidatedInvoiceFact).Select(i => (DateTimeOffset?)i.Intent.RecordedAt).Min();
+            DateTimeOffset? oldest = pending.Where(i => i.Intent is ValidatedInvoiceFact).Min(i => (DateTimeOffset?)i.Intent.RecordedAt);
             TimeSpan waiting = oldest is { } since ? clock.GetUtcNow() - since : TimeSpan.Zero;
             return waiting >= TimeSpan.FromHours(72) ? SyncReminder.ThreeDays
                 : waiting >= TimeSpan.FromHours(24) ? SyncReminder.Day

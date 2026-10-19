@@ -1,6 +1,5 @@
 using System.Globalization;
 using Lettra.Contracts.Speech;
-using Lettra.UI.Shared.Localization;
 using Microsoft.Extensions.Localization;
 
 namespace Lettra.UI.Shared.Voice;

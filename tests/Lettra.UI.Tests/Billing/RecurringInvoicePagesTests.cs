@@ -108,7 +108,7 @@ public sealed class RecurringInvoicePagesTests : BunitContext
         page.Find(".lt-list-scroll #recurring-table").Should().NotBeNull("un tableau plus large que l'écran défile seul");
     }
 
-    private RecurringInvoiceListQuery Last() => _recurring.Queries.Where(q => q.PageSize > 1).Last();
+    private RecurringInvoiceListQuery Last() => _recurring.Queries.Last(q => q.PageSize > 1);
 
     [Fact]
     public void Une_liste_vide_invite_a_creer_un_modele()

@@ -5,7 +5,6 @@ using Lettra.Application.Mapping;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Catalog;
 using Lettra.Domain.Billing;
-using Lettra.Domain.Catalog;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
 

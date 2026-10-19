@@ -1,5 +1,4 @@
 using System.Threading.Channels;
-using FluentAssertions;
 using Lettra.Api.Presence;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Presence;

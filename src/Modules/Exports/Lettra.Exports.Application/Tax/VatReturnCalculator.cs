@@ -1,7 +1,6 @@
 using Lettra.Calculations;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Tax;
-using Lettra.Domain.Billing;
 
 namespace Lettra.Exports.Application.Tax;
 

@@ -1,6 +1,5 @@
 using Lettra.Domain.Billing;
 using Lettra.Domain.Catalog;
-using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Domain.Tests.Billing;

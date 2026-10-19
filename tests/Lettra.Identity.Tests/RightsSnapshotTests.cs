@@ -1,7 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
 using Lettra.Application.Abstractions.Identity;
-using Lettra.Contracts.Identity;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
 using Lettra.Infrastructure.Identity.Oidc.Offline;

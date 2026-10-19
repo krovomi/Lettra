@@ -1,5 +1,4 @@
 using Lettra.Application.Abstractions.Messaging;
-using Lettra.Application.Abstractions.Persistence;
 using Lettra.Application.Features.Billing;
 using Lettra.Application.Features.Pricing;
 using Lettra.Application.Mapping;

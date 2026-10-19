@@ -22,7 +22,7 @@ internal sealed class AccessibleDossiers(
         UserAuthorizationProfile? profile = await directory.FindUserAsync(user.UserId, cancellationToken).ConfigureAwait(false);
         if (profile is not { State: AccountState.Active, Cabinet: OrganisationId cabinet })
         {
-            return Array.Empty<DossierSummary>();
+            return [];
         }
 
         IReadOnlyList<DossierSummary> all = await dossiers.ListAsync(cabinet, cancellationToken).ConfigureAwait(false);

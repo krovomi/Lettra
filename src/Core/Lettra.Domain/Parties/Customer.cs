@@ -17,7 +17,7 @@ public sealed class Customer : AggregateRoot<CustomerId>, IVersioned
 {
     public const int MaxNameLength = 200;
 
-    // Constructeur réservé à la persistance.
+    // Constructeur réservé à la persistance (EF), repris par le constructeur métier.
     private Customer(CustomerId id)
         : base(id)
     {
@@ -36,7 +36,7 @@ public sealed class Customer : AggregateRoot<CustomerId>, IVersioned
         PostalAddress billingAddress,
         string? preferredLanguage,
         DateTimeOffset createdAt)
-        : base(id)
+        : this(id)
     {
         Kind = kind;
         Name = name;

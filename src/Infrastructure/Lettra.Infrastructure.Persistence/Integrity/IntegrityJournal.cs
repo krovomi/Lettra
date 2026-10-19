@@ -3,7 +3,6 @@ using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Domain.Common;
 using Lettra.Domain.Integrity;
-using Lettra.Infrastructure.Persistence.Numbering;
 using Lettra.Infrastructure.Persistence.Security;
 using Lettra.Infrastructure.Persistence.Tenancy;
 using Microsoft.EntityFrameworkCore;

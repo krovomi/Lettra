@@ -353,7 +353,16 @@ internal sealed class EfReceivableDocumentReader(TenantDbSession session) : IRec
         var rows = await query
             .Select(i => new
             {
-                i.Id, i.Kind, i.Number, i.CustomerId, CustomerName = i.Customer.Name, i.IssueDate, i.DueDate, i.TotalInclTax, i.CreditedInclTax, i.PaidInclTax,
+                i.Id,
+                i.Kind,
+                i.Number,
+                i.CustomerId,
+                CustomerName = i.Customer.Name,
+                i.IssueDate,
+                i.DueDate,
+                i.TotalInclTax,
+                i.CreditedInclTax,
+                i.PaidInclTax,
                 i.CreditedInvoiceId,
             })
             .ToListAsync(cancellationToken)

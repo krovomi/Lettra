@@ -223,8 +223,14 @@ internal sealed class FakeQuotesGateway : IQuotesGateway
         (List<DocumentLineResponse> lines, DocumentTotalsResponse totals) = BillingFixtures.Compute(request.Lines, request.VatRegime);
         return quote with
         {
-            Version = version, CustomerId = request.CustomerId, ValidUntil = request.ValidUntil, VatRegime = request.VatRegime,
-            Subject = request.Subject, Notes = request.Notes, Lines = lines, Totals = totals,
+            Version = version,
+            CustomerId = request.CustomerId,
+            ValidUntil = request.ValidUntil,
+            VatRegime = request.VatRegime,
+            Subject = request.Subject,
+            Notes = request.Notes,
+            Lines = lines,
+            Totals = totals,
         };
     }
 
@@ -337,7 +343,11 @@ internal sealed class FakeInvoicesGateway : IInvoicesGateway
         CreditNotes.Add((id, request));
         InvoiceResponse credit = Add(InvoiceKindDto.CreditNote, InvoiceStatusDto.Draft, null) with
         {
-            CreditedInvoiceId = id, CreditedInvoiceNumber = Invoices[id].Number, CreditReason = request.Reason, Lines = Invoices[id].Lines, Totals = Invoices[id].Totals,
+            CreditedInvoiceId = id,
+            CreditedInvoiceNumber = Invoices[id].Number,
+            CreditReason = request.Reason,
+            Lines = Invoices[id].Lines,
+            Totals = Invoices[id].Totals,
         };
         Invoices[credit.Id] = credit;
         return Task.FromResult(OperationResult<InvoiceResponse>.Success(credit));
@@ -358,7 +368,9 @@ internal sealed class FakeInvoicesGateway : IInvoicesGateway
 
         Invoices[id] = Invoices[id] with
         {
-            CreditApprovedBy = Guid.CreateVersion7(), CreditApprovedAt = new DateTimeOffset(2026, 10, 15, 9, 30, 0, TimeSpan.Zero), Version = Invoices[id].Version + 1,
+            CreditApprovedBy = Guid.CreateVersion7(),
+            CreditApprovedAt = new DateTimeOffset(2026, 10, 15, 9, 30, 0, TimeSpan.Zero),
+            Version = Invoices[id].Version + 1,
         };
         return Task.FromResult(OperationResult<InvoiceResponse>.Success(Invoices[id]));
     }

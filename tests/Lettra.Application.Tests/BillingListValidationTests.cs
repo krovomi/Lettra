@@ -30,7 +30,7 @@ public sealed class BillingListValidationTests
     [Fact]
     public void Colonne_ou_sens_inconnus_refuses()
     {
-        new ListInvoicesValidator().Validate(new ListInvoicesQuery(Dossier, Sort: (BillingSortDto)99, Direction: (SortDirectionDto)0))
+        new ListInvoicesValidator().Validate(new ListInvoicesQuery(Dossier, Sort: (BillingSortDto)99, Direction: 0))
             .Select(e => e.Target).Should().Equal("Sort", "Direction");
     }
 }

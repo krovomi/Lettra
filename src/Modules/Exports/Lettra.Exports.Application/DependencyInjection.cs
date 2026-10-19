@@ -5,6 +5,8 @@ using Lettra.Contracts.Accounting;
 using Lettra.Contracts.Banking;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Exports;
+using Lettra.Contracts.Reminders;
+using Lettra.Contracts.Tax;
 using Lettra.Domain.Common;
 using Lettra.Exports.Application.Accounting;
 using Lettra.Exports.Application.AuditKit;
@@ -13,11 +15,9 @@ using Lettra.Exports.Application.EInvoicing;
 using Lettra.Exports.Application.EInvoicing.Platform;
 using Lettra.Exports.Application.Fec;
 using Lettra.Exports.Application.Reminders;
-using Lettra.Contracts.Reminders;
 using Lettra.Exports.Application.Tax;
-using Lettra.Contracts.Tax;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Lettra.Exports.Application;
 

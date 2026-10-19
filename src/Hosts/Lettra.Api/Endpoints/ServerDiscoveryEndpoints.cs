@@ -53,7 +53,7 @@ internal static class ServerDiscoveryEndpoints
         }
 
         return Uri.TryCreate(authority, UriKind.Absolute, out Uri? realm)
-            ? (IResult)TypedResults.Ok(new ServerDiscoveryResponse(ServerDiscoveryResponse.LettraProduct, realm.ToString().TrimEnd('/'), clientId))
+            ? TypedResults.Ok(new ServerDiscoveryResponse(ServerDiscoveryResponse.LettraProduct, realm.ToString().TrimEnd('/'), clientId))
             // Keycloak injoignable depuis l'API : l'appareil ne pourrait pas non plus s'y connecter.
             : TypedResults.Problem(
                 statusCode: StatusCodes.Status503ServiceUnavailable,

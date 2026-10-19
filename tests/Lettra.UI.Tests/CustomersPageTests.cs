@@ -4,14 +4,14 @@ using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
-using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Components.Explorer;
 using Lettra.UI.Shared.Keyboard;
+using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Pages.Parties;
+using Lettra.UI.Shared.Typing;
 using Lettra.UI.Tests.Billing;
 using Lettra.UI.Tests.Consultation;
 using Lettra.UI.Tests.Security;
-using Lettra.UI.Shared.Typing;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 
