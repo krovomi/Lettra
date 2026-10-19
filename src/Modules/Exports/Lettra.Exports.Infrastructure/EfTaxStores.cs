@@ -50,7 +50,7 @@ internal sealed class EfTaxDocumentReader(TenantDbSession session) : ITaxDocumen
                 i.CustomerId.Value,
                 i.Customer,
                 i.VatRegime,
-                i.LegalMentionList.Any(m => m.Contains("débits", StringComparison.Ordinal)),
+                i.VatOnDebits,
                 [.. i.Lines.Select(l => new TaxLine(l.Nature, l.VatCategory, l.VatRatePercent, l.VatExemptionCode, l.TotalExclTax))],
                 i.VatSummaries,
                 transmitted.Contains(i.Id.Value)))

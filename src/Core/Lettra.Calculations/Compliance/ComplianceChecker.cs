@@ -169,7 +169,7 @@ public static class ComplianceChecker
 
             if (document.SellerVatOnDebits)
             {
-                Require(findings, MentionCodes.VatOnDebits, document.LegalMentions.FirstOrDefault(m => m.Contains("débits", StringComparison.OrdinalIgnoreCase)), reform: !reformActive);
+                Require(findings, MentionCodes.VatOnDebits, document.LegalMentions.FirstOrDefault(LegalMentionTexts.IsVatOnDebits), reform: !reformActive);
             }
         }
 
@@ -212,7 +212,7 @@ public static class ComplianceChecker
         bool needsVatText = document.Lines.Any(l => !VatCategoryCodes.IsTaxed(l.VatCategory)) || document.SellerVatFranchise;
         if (needsVatText)
         {
-            bool printed = document.LegalMentions.Any(m => m.Contains("CGI", StringComparison.Ordinal) || m.Contains("Code général des impôts", StringComparison.Ordinal));
+            bool printed = document.LegalMentions.Any(LegalMentionTexts.IsVatLegalText);
             findings.Add(printed
                 ? Ok(MentionCodes.VatExemptionText)
                 : new(MentionCodes.VatExemptionText, ComplianceSeverity.Error, "Art. 242 nonies A, I-13° CGI"));
@@ -242,7 +242,7 @@ public static class ComplianceChecker
 
             if (isBusinessCustomer)
             {
-                bool indemnity = document.LegalMentions.Any(m => m.Contains("40", StringComparison.Ordinal) && m.Contains("recouvrement", StringComparison.OrdinalIgnoreCase));
+                bool indemnity = document.LegalMentions.Any(LegalMentionTexts.IsRecoveryIndemnity);
                 findings.Add(indemnity
                     ? Ok(MentionCodes.RecoveryIndemnity)
                     : new(MentionCodes.RecoveryIndemnity, ComplianceSeverity.Error, LegalBasis(MentionCodes.RecoveryIndemnity)));
