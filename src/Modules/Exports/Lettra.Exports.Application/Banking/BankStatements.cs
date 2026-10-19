@@ -76,7 +76,7 @@ internal sealed class ImportDemoBankStatementHandler(
     {
         ArgumentNullException.ThrowIfNull(command);
         IReadOnlyList<ReceivableDocument> documents = await receivables.ListAsync(null, cancellationToken).ConfigureAwait(false);
-        DateOnly today = BankingCalendar.Today(clock);
+        DateOnly today = LegalCalendar.Today(clock);
         byte[] file = DemoBankStatement.Build(documents, today);
         Result<ParsedBankStatement> parsed = BankStatementParser.Parse(file, null);
         if (parsed.IsFailure)

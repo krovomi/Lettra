@@ -92,7 +92,7 @@ internal sealed class GetFiscalCalendarHandler(TaxDeclarations tax, TimeProvider
     public Task<Result<FiscalCalendarResponse>> HandleAsync(GetFiscalCalendarQuery query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
-        return tax.CalendarAsync(query.From, query.To, TaxClock.Today(clock), cancellationToken);
+        return tax.CalendarAsync(query.From, query.To, LegalCalendar.Today(clock), cancellationToken);
     }
 }
 
@@ -102,7 +102,7 @@ internal sealed class GetUpcomingFiscalDeadlinesHandler(TaxDeclarations tax, Tim
     public Task<Result<IReadOnlyList<FiscalDeadlineResponse>>> HandleAsync(GetUpcomingFiscalDeadlinesQuery query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
-        return tax.UpcomingAsync(TaxClock.Today(clock), query.Days, cancellationToken);
+        return tax.UpcomingAsync(LegalCalendar.Today(clock), query.Days, cancellationToken);
     }
 }
 
@@ -155,7 +155,7 @@ internal sealed class UpdateFiscalSettingsHandler(IFiscalStore store, TimeProvid
             request.VatDeadlineDay,
             request.CorporateIncomeTax,
             request.Cfe,
-            current.TrackedFrom ?? TaxClock.Today(clock),
+            current.TrackedFrom ?? LegalCalendar.Today(clock),
             current.Version + 1);
         await store.SaveSettingsAsync(saved, now, cancellationToken).ConfigureAwait(false);
         return saved.ToResponse();
@@ -171,7 +171,7 @@ internal sealed class MarkFiscalFilingHandler(TaxDeclarations tax, IFiscalStore 
         MarkFiscalFilingRequest request = command.Request;
 
         // On ne marque qu'une échéance que le calendrier du dossier connaît (fenêtre de trois ans autour de la période).
-        DateOnly today = TaxClock.Today(clock);
+        DateOnly today = LegalCalendar.Today(clock);
         Result<FiscalCalendarResponse> calendar = await tax.CalendarAsync(request.PeriodStart, request.PeriodStart.AddMonths(24), today, cancellationToken).ConfigureAwait(false);
         if (calendar.IsFailure)
         {
@@ -193,29 +193,5 @@ internal sealed class MarkFiscalFilingHandler(TaxDeclarations tax, IFiscalStore 
         return after.IsSuccess && after.Value.Deadlines.FirstOrDefault(d => d.Obligation == request.Obligation && d.PeriodStart == request.PeriodStart) is { } updated
             ? updated
             : deadline;
-    }
-}
-
-/// <summary>La date du jour en France : une échéance se lit à l'heure de Paris, pas en UTC.</summary>
-internal static class TaxClock
-{
-    private static readonly TimeZoneInfo Paris = Find();
-
-    public static DateOnly Today(TimeProvider clock) => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(clock.GetUtcNow(), Paris).DateTime);
-
-    private static TimeZoneInfo Find()
-    {
-        try
-        {
-            return TimeZoneInfo.FindSystemTimeZoneById("Europe/Paris");
-        }
-        catch (TimeZoneNotFoundException)
-        {
-            return TimeZoneInfo.Utc;
-        }
-        catch (InvalidTimeZoneException)
-        {
-            return TimeZoneInfo.Utc;
-        }
     }
 }

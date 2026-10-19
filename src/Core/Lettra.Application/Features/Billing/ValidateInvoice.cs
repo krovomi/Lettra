@@ -10,6 +10,7 @@ using Lettra.Contracts.Billing;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Common;
 using Lettra.Domain.Integrity;
+using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Application.Features.Billing;
 
@@ -61,7 +62,7 @@ internal sealed class ValidateInvoiceHandler(
             return Result.Failure(approvesCredit.Errors);
         }
 
-        DateOnly today = BillingCalendar.Today(clock);
+        DateOnly today = LegalCalendar.Today(clock);
         ComplianceReport draftReport = ComplianceChecker.Check(precheck.Value.Invoice.ToComplianceDocument(precheck.Value.Profile.ToSellerTerms()), today);
         if (draftReport.BlocksValidation)
         {
@@ -96,7 +97,7 @@ internal sealed class ValidateInvoiceHandler(
 
         (Invoice invoice, CompanyProfile profile) = loaded.Value;
         DateTimeOffset now = clock.GetUtcNow();
-        DateOnly today = BillingCalendar.Today(clock);
+        DateOnly today = LegalCalendar.Today(clock);
         PartySnapshot customer = await BillingLoads.RefreshedCustomerAsync(customers, invoice, cancellationToken).ConfigureAwait(false);
         if (approvesCredit)
         {

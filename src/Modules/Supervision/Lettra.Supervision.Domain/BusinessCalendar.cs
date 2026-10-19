@@ -1,3 +1,5 @@
+using Lettra.Domain.SharedKernel;
+
 namespace Lettra.Supervision.Domain;
 
 /// <summary>
@@ -22,7 +24,7 @@ public sealed class BusinessCalendar
     }
 
     public static BusinessCalendar Paris { get; } =
-        new(TimeZoneInfo.FindSystemTimeZoneById("Europe/Paris"), new TimeOnly(9, 0), new TimeOnly(18, 0));
+        new(LegalCalendar.Paris, new TimeOnly(9, 0), new TimeOnly(18, 0));
 
     public TimeOnly Opens { get; }
 

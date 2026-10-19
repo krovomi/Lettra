@@ -131,7 +131,7 @@ internal sealed class ListQuotesHandler(IQuoteReadStore store, TimeProvider cloc
             query.Direction,
             query.MinAmount,
             query.MaxAmount);
-        return await store.ListAsync(filter, (QuoteStatus?)(int?)query.Status, BillingCalendar.Today(clock), cancellationToken).ConfigureAwait(false);
+        return await store.ListAsync(filter, (QuoteStatus?)(int?)query.Status, LegalCalendar.Today(clock), cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -142,7 +142,7 @@ internal sealed class GetQuoteHandler(IQuoteRepository quotes, TimeProvider cloc
     {
         ArgumentNullException.ThrowIfNull(query);
         Quote? quote = await quotes.FindAsync(query.QuoteId, cancellationToken).ConfigureAwait(false);
-        return quote is null ? QuoteErrors.NotFound : quote.ToResponse(BillingCalendar.Today(clock));
+        return quote is null ? QuoteErrors.NotFound : quote.ToResponse(LegalCalendar.Today(clock));
     }
 }
 
@@ -159,7 +159,7 @@ internal sealed class CheckQuoteHandler(IQuoteRepository quotes, ICompanyProfile
         }
 
         SellerTerms? terms = await BillingLoads.SellerTermsAsync(profiles, cancellationToken).ConfigureAwait(false);
-        return ComplianceChecker.Check(quote.ToComplianceDocument(terms), BillingCalendar.Today(clock)).ToResponse();
+        return ComplianceChecker.Check(quote.ToComplianceDocument(terms), LegalCalendar.Today(clock)).ToResponse();
     }
 }
 
@@ -295,13 +295,13 @@ internal sealed class ValidateQuoteHandler(
                 Quote quote = loaded.Value;
                 DateTimeOffset now = clock.GetUtcNow();
                 PartySnapshot customer = await BillingLoads.RefreshedCustomerAsync(customers, quote, ct).ConfigureAwait(false);
-                Result validated = quote.Validate(number, BillingCalendar.Today(clock), customer, user.UserId, now);
+                Result validated = quote.Validate(number, LegalCalendar.Today(clock), customer, user.UserId, now);
                 if (validated.IsFailure)
                 {
                     return Result<bool>.Failure(validated.Errors);
                 }
 
-                string hash = CanonicalDocument.ComputeHash(quote.ToResponse(BillingCalendar.Today(clock)));
+                string hash = CanonicalDocument.ComputeHash(quote.ToResponse(LegalCalendar.Today(clock)));
                 Result<long> journaled = await journal.AppendAsync(
                     new DocumentLifecycleEvent(
                         JournalEntryKind.QuoteValidated,

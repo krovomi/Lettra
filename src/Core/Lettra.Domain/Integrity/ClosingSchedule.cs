@@ -1,3 +1,5 @@
+using Lettra.Domain.SharedKernel;
+
 namespace Lettra.Domain.Integrity;
 
 /// <summary>Une période à clôturer : ses dates (heure de Paris) et l'instant UTC où elle se termine.</summary>
@@ -10,7 +12,7 @@ public sealed record ClosingPeriod(ClosingPeriodKind Kind, DateOnly Start, DateO
 /// </summary>
 public sealed class ClosingSchedule(TimeZoneInfo zone)
 {
-    public static ClosingSchedule Paris { get; } = new(TimeZoneInfo.FindSystemTimeZoneById("Europe/Paris"));
+    public static ClosingSchedule Paris { get; } = new(LegalCalendar.Paris);
 
     /// <summary>Les mois entièrement écoulés à <paramref name="now"/> et pas encore clôturés.</summary>
     /// <param name="lastClosedEnd">Fin de la dernière clôture, ou <c>null</c> s'il n'y en a pas.</param>

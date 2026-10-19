@@ -37,7 +37,7 @@ internal sealed partial class DossierIndicatorRefresher(
                 }
 
                 DateTimeOffset now = clock.GetUtcNow();
-                DateOnly today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, Paris).DateTime);
+                DateOnly today = LegalCalendar.DateOf(now);
                 IReadOnlyList<DossierIndicator> indicators = await DossierJobScope.RunAsync(scopes, descriptor, async (provider, token) =>
                 {
                     List<DossierIndicator> all = [];
@@ -69,20 +69,6 @@ internal sealed partial class DossierIndicatorRefresher(
         return new IndicatorRefreshOutcome(refreshed, failed);
     }
 
-    /// <summary>Les échéances sont des dates françaises : « aujourd'hui » est le jour à Paris, pas en UTC.</summary>
-    private static readonly TimeZoneInfo Paris = FindParis();
-
-    private static TimeZoneInfo FindParis()
-    {
-        try
-        {
-            return TimeZoneInfo.FindSystemTimeZoneById("Europe/Paris");
-        }
-        catch (Exception exception) when (exception is TimeZoneNotFoundException or InvalidTimeZoneException)
-        {
-            return TimeZoneInfo.Utc;
-        }
-    }
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Vue cabinet : indicateur {Source} du dossier {DossierId} en échec")]
     private partial void LogSourceFailed(Guid dossierId, string source, Exception exception);

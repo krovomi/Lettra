@@ -4,6 +4,7 @@ using Lettra.Contracts.Billing;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Customers;
 using Lettra.Contracts.Suppliers;
+using Lettra.Domain.SharedKernel;
 
 namespace Lettra.DemoData;
 
@@ -13,8 +14,6 @@ namespace Lettra.DemoData;
 /// </summary>
 internal sealed class DemoScenarioGenerator
 {
-    private static readonly TimeZoneInfo Paris = TimeZoneInfo.FindSystemTimeZoneById("Europe/Paris");
-
     private readonly Random _random;
     private readonly DemoCompany _company;
     private readonly DateOnly _today;
@@ -404,7 +403,7 @@ internal sealed class DemoScenarioGenerator
             return new DemoSettledInvoice(created, validated, transmitted, credit, []);
         }
 
-        DateOnly due = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(validated, Paris).DateTime).AddDays(_company.PaymentDays);
+        DateOnly due = LegalCalendar.DateOf(validated).AddDays(_company.PaymentDays);
         List<DemoPayment> payments = [];
         DemoPayer effective = downPayment && payer == DemoPayer.Defaulting ? DemoPayer.Late : downPayment ? DemoPayer.OnTime : payer;
         switch (effective)
@@ -533,7 +532,7 @@ internal sealed class DemoScenarioGenerator
     /// <summary>Entre <paramref name="minDays"/> et <paramref name="maxDays"/> jours plus tard, un jour ouvré, aux heures de bureau.</summary>
     private DateTimeOffset Later(DateTimeOffset from, int minDays, int maxDays)
     {
-        DateOnly day = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(from, Paris).DateTime).AddDays(_random.Next(minDays, maxDays + 1));
+        DateOnly day = LegalCalendar.DateOf(from).AddDays(_random.Next(minDays, maxDays + 1));
         while (day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
         {
             day = day.AddDays(1);
@@ -545,7 +544,7 @@ internal sealed class DemoScenarioGenerator
     private static DateTimeOffset At(DateOnly day, int hour, int minutes)
     {
         DateTime local = day.ToDateTime(new TimeOnly(hour, 0)).AddMinutes(minutes);
-        return new DateTimeOffset(TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(local, DateTimeKind.Unspecified), Paris), TimeSpan.Zero);
+        return new DateTimeOffset(TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(local, DateTimeKind.Unspecified), LegalCalendar.Paris), TimeSpan.Zero);
     }
 
     private int[] Shuffled(int count)

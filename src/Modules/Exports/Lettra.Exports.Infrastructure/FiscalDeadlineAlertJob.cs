@@ -2,6 +2,7 @@ using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Contracts.Tax;
 using Lettra.Domain.Common;
+using Lettra.Domain.SharedKernel;
 using Lettra.Exports.Application.Tax;
 using Lettra.Infrastructure.Persistence.Integrity;
 using Microsoft.Extensions.DependencyInjection;
@@ -68,7 +69,7 @@ internal sealed partial class FiscalDeadlineAlertJob(
             return (0, 0, 0, 0);
         }
 
-        DateOnly today = TaxClock.Today(clock);
+        DateOnly today = LegalCalendar.Today(clock);
         int checkedCount = 0, soon = 0, overdue = 0, failed = 0;
         foreach (TenantDescriptor dossier in dossiers)
         {
