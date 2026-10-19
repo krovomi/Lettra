@@ -448,6 +448,18 @@ Les correspondances de cases et les dates sont à faire relire par un expert-com
 Chromium Linux à 1440, 768 et 375 px, données conservées après une mise à jour de la démo ; non vérifié : application
 native, Safari, Firefox.)* Détails : [docs/declarations-fiscales.md](docs/declarations-fiscales.md).
 
+#### Kit contrôle fiscal
+
+Menu **Comptabilité > Déclarations > Contrôle fiscal** (`/tax/audit-kit`). Choisissez la période (par défaut l'année
+civile en cours) puis **Préparer le kit** : Lettra télécharge `kit-controle-fiscal-<SIREN>-<du>-<au>.zip` avec le FEC
+et son rapport de validation, l'attestation d'intégrité de la chaîne anti-fraude (registre des clés, archives scellées
+des clôtures), la piste d'audit fiable (qui a créé, validé, émis chaque pièce ; encaissements ; journal chaîné), le XML
+CII et le PDF Factur-X de chaque pièce, et le journal des transmissions à la plateforme agréée. `manifeste.json` donne
+l'empreinte SHA-256 de chaque fichier ; la sienne, affichée à l'écran, est celle du kit. Rien n'est envoyé à
+l'administration. Permission : `ArchivesExporter` (rôles manager et auditeur). Détails et points à faire relire par un
+expert-comptable : [docs/kit-controle-fiscal.md](docs/kit-controle-fiscal.md). *(Vérifié : démo Docker (navigateur,
+1440, 768 et 375 px) ; application installée non vérifiée sur appareil.)*
+
 ### 9. Encaissements et rapprochement bancaire
 
 Menu Comptabilité > **Encaissements** : saisissez un règlement reçu (virement, chèque, carte, espèces, prélèvement),
