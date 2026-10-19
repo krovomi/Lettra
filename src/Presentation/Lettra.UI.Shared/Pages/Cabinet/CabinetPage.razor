@@ -1,0 +1,295 @@
+@page "/cabinet"
+@implements IDisposable
+@inject ICabinetGateway Gateway
+@inject CurrentDossier Dossiers
+@inject NavigationManager Navigation
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+
+@* Vue cabinet : un tableau de supervision des dossiers que l'utilisateur peut ouvrir, les plus urgents d'abord. Les
+   compteurs sont ceux de la nuit (ou du dernier « Actualiser ») : la page ne lit que le registre des indicateurs, sans
+   ouvrir les dossiers. Ordinateur : tableau ; téléphone : une carte par dossier, dans le même ordre d'urgence. Les
+   indicateurs des autres modules (TVA, banque) prennent leur colonne d'eux-mêmes dès qu'un dossier en a. *@
+
+<PageTitle>@L["Cabinet.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Cabinet.Title"]</h1>
+        <p>@Subtitle</p>
+    </div>
+    <div class="lt-page-actions">
+        <button type="button" id="cabinet-refresh" class="lettra-button is-secondary" disabled="@_refreshing" @onclick="RefreshAsync">
+            <Icon Name="refresh-cw" Size="18" /> @L[_refreshing ? "Cabinet.Refreshing" : "Cabinet.Refresh"]
+        </button>
+    </div>
+</div>
+
+<GeneralErrors Errors="_errors" />
+
+@if (_overview is null)
+{
+    <ListSkeleton Rows="4" Columns="5" />
+}
+else if (_overview.Dossiers.Count == 0)
+{
+    <EmptyState Id="cabinet-empty" IconName="folder" Title="@L["Cabinet.Empty"]" Text="@L["Cabinet.EmptyText"]" />
+}
+else
+{
+    <section aria-labelledby="cabinet-kpis-title">
+        <h2 id="cabinet-kpis-title" class="lettra-visually-hidden">@L["Cabinet.Kpis"]</h2>
+        <ul class="lt-kpis lt-cabinet-kpis">
+            <li class="lt-kpi">
+                <span class="lt-kpi-head">@L["Cabinet.Kpi.ToHandle"]</span>
+                <span class="lt-kpi-value">@ToHandle.ToString("N0", CultureInfo.CurrentCulture)</span>
+                <span class="lt-kpi-note">@string.Format(CultureInfo.CurrentCulture, L["Cabinet.Kpi.OutOf"], _overview.Dossiers.Count)</span>
+            </li>
+            @foreach (string key in Columns.Take(3))
+            {
+                int total = _overview.Dossiers.Sum(d => Indicator(d, key)?.Count ?? 0);
+                int dossiers = _overview.Dossiers.Count(d => Indicator(d, key)?.Count > 0);
+                <li class="lt-kpi">
+                    <span class="lt-kpi-head">@Label(key)</span>
+                    <span class="lt-kpi-value">@total.ToString("N0", CultureInfo.CurrentCulture)</span>
+                    <span class="lt-kpi-note">@string.Format(CultureInfo.CurrentCulture, L["Cabinet.Kpi.InDossiers"], dossiers)</span>
+                </li>
+            }
+        </ul>
+    </section>
+
+    <section aria-labelledby="cabinet-list-title" class="lt-panel">
+        <div class="lt-panel-head lt-cabinet-filters">
+            <h2 id="cabinet-list-title">@L["Cabinet.List.Title"]</h2>
+            <div class="lt-cabinet-tools">
+                <label class="lettra-visually-hidden" for="cabinet-search">@L["Cabinet.Search"]</label>
+                <input id="cabinet-search" class="lettra-input" type="search" autocomplete="off" placeholder="@L["Cabinet.Search"]" @bind="_query" @bind:event="oninput" />
+                <label class="lt-chip"><input type="checkbox" id="cabinet-urgent" @bind="_onlyToHandle" /> @L["Cabinet.OnlyToHandle"]</label>
+            </div>
+        </div>
+
+        @if (Rows.Count == 0)
+        {
+            <EmptyState Id="cabinet-filtered-empty" IconName="circle-check" Title="@L["Cabinet.Filtered.Empty"]" />
+        }
+        else
+        {
+            @* Tablette : le tableau défile de côté plutôt que de déborder ; téléphone : une carte par dossier. *@
+            <div class="lt-cabinet-scroll">
+            <table class="lettra-table lt-cards lt-cabinet-table">
+                <caption class="lettra-visually-hidden">@L["Cabinet.List.Caption"]</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">@L["Cabinet.Field.Dossier"]</th>
+                        @foreach (string key in Columns)
+                        {
+                            <th scope="col" class="lg-num">@Label(key)</th>
+                        }
+                        <th scope="col">@L["Cabinet.Field.ComputedAt"]</th>
+                        <th scope="col"><span class="lettra-visually-hidden">@L["Cabinet.Field.Actions"]</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (DossierOverviewRow row in Rows)
+                    {
+                        <tr @key="row.DossierId" class="lt-level-@row.Level.ToString().ToLowerInvariant()" aria-current="@(row.DossierId == Dossiers.Id ? "true" : null)">
+                            <th scope="row" class="lt-cabinet-name">
+                                <span class="lt-level-dot" data-level="@row.Level" aria-hidden="true"></span>
+                                <span>@row.Name</span>
+                                <span class="lt-level-text">@L["Cabinet.Level." + row.Level]</span>
+                            </th>
+                            @foreach (string key in Columns)
+                            {
+                                DossierIndicatorDto? indicator = Indicator(row, key);
+                                <td class="lg-num" data-label="@Label(key)">
+                                    @if (indicator is null)
+                                    {
+                                        <span class="lettra-muted" title="@L["Cabinet.NotAvailable"]">—</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="lt-indicator" data-level="@indicator.Level">@indicator.Count.ToString("N0", CultureInfo.CurrentCulture)</span>
+                                        @if (indicator.DueOn is DateOnly due && indicator.Count > 0)
+                                        {
+                                            <span class="lt-indicator-due">@string.Format(CultureInfo.CurrentCulture, L[DueKey(key)], due.ToString("d MMM", CultureInfo.CurrentCulture))</span>
+                                        }
+                                    }
+                                </td>
+                            }
+                            <td data-label="@L["Cabinet.Field.ComputedAt"]">@When(row.ComputedAt)</td>
+                            <td class="lt-cabinet-actions">
+                                @if (Dossiers.CanSwitch || row.DossierId == Dossiers.Id)
+                                {
+                                    <button type="button" class="lettra-button is-secondary is-small" @onclick="() => OpenAsync(row, string.Empty)">
+                                        <Icon Name="folder" Size="16" /> @L["Cabinet.Open"]
+                                    </button>
+                                    <button type="button" class="lettra-button is-ghost is-small" @onclick='() => OpenAsync(row, "review")'>
+                                        <Icon Name="list-checks" Size="16" /> @L["Cabinet.Review"]
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            </div>
+        }
+    </section>
+    <p class="lettra-hint">@L["Cabinet.Footnote"]</p>
+}
+
+@code {
+    private CabinetOverviewResponse? _overview;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private bool _refreshing;
+    private bool _autoRefreshed;
+    private string? _query;
+    private bool _onlyToHandle;
+    private readonly CancellationTokenSource _disposed = new();
+
+    /// <summary>Au-delà, le premier calcul est laissé à la passe de nuit : il ouvrirait trop de bases d'un coup.</summary>
+    private const int AutoRefreshLimit = 30;
+
+    private int ToHandle => _overview?.Dossiers.Count(d => d.Level >= IndicatorLevelDto.Warning) ?? 0;
+
+    private string Subtitle
+    {
+        get
+        {
+            DateTimeOffset? oldest = _overview?.Dossiers.Where(d => d.ComputedAt is not null).Select(d => d.ComputedAt).Min();
+            return oldest is DateTimeOffset at
+                ? string.Format(CultureInfo.CurrentCulture, L["Cabinet.Subtitle.Computed"], When(at))
+                : L["Cabinet.Subtitle"];
+        }
+    }
+
+    /// <summary>Les clés connues d'abord, dans l'ordre prévu, puis celles d'autres modules ; seulement celles présentes.</summary>
+    private IReadOnlyList<string> Columns
+    {
+        get
+        {
+            HashSet<string> present = (_overview?.Dossiers ?? []).SelectMany(d => d.Indicators).Select(i => i.Key).ToHashSet(StringComparer.Ordinal);
+            return
+            [
+                .. DossierIndicatorKeys.Known.Where(present.Contains),
+                .. present.Except(DossierIndicatorKeys.Known, StringComparer.Ordinal).Order(StringComparer.Ordinal),
+            ];
+        }
+    }
+
+    private IReadOnlyList<DossierOverviewRow> Rows =>
+    [
+        .. (_overview?.Dossiers ?? [])
+            .Where(d => !_onlyToHandle || d.Level >= IndicatorLevelDto.Warning)
+            .Where(d => Components.Palette.PaletteMatcher.Score(d.Name, _query ?? string.Empty) > 0),
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await FirstLoadAsync();
+        }
+        catch (OperationCanceledException) when (_disposed.IsCancellationRequested)
+        {
+            // Écran quitté pendant la lecture.
+        }
+    }
+
+    private async Task FirstLoadAsync()
+    {
+        await LoadAsync();
+        // Premier affichage sans aucun chiffre (installation neuve, poste isolé) : calcul immédiat s'il reste raisonnable.
+        if (_overview is { Dossiers.Count: > 0 and <= AutoRefreshLimit } overview && overview.Dossiers.All(d => d.ComputedAt is null) && !_autoRefreshed)
+        {
+            _autoRefreshed = true;
+            await RefreshAsync(announce: false);
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        OperationResult<CabinetOverviewResponse> loaded = await Gateway.GetOverviewAsync(_disposed.Token);
+        _errors = loaded.IsSuccess ? [] : loaded.Errors;
+        _overview = loaded.IsSuccess ? loaded.Value : _overview ?? new CabinetOverviewResponse([]);
+    }
+
+    private Task RefreshAsync() => RefreshAsync(announce: true);
+
+    private async Task RefreshAsync(bool announce)
+    {
+        _refreshing = true;
+        StateHasChanged();
+        try
+        {
+            OperationResult<CabinetOverviewRefreshResponse> refreshed = await Gateway.RefreshOverviewAsync(null, _disposed.Token);
+            if (!refreshed.IsSuccess)
+            {
+                Toasts.Show(ToastKind.Error, L.Error(refreshed.Errors[0].Code));
+                return;
+            }
+
+            await LoadAsync();
+            if (announce && refreshed.Value is { } outcome)
+            {
+                Toasts.Show(
+                    outcome.Failed == 0 ? ToastKind.Success : ToastKind.Warning,
+                    outcome.Failed == 0
+                        ? string.Format(CultureInfo.CurrentCulture, L["Cabinet.Refreshed"], outcome.Refreshed)
+                        : string.Format(CultureInfo.CurrentCulture, L["Cabinet.RefreshedWithFailures"], outcome.Refreshed, outcome.Failed));
+            }
+        }
+        finally
+        {
+            _refreshing = false;
+        }
+    }
+
+    private async Task OpenAsync(DossierOverviewRow row, string path)
+    {
+        if (row.DossierId != Dossiers.Id)
+        {
+            if (!await Dossiers.SwitchAsync(row.DossierId))
+            {
+                return;
+            }
+
+            Toasts.Show(ToastKind.Success, string.Format(CultureInfo.CurrentCulture, L["Cabinet.Picker.Opened"], row.Name));
+        }
+
+        Navigation.NavigateTo(path);
+    }
+
+    private static DossierIndicatorDto? Indicator(DossierOverviewRow row, string key) => row.Indicators.FirstOrDefault(i => i.Key == key);
+
+    private string Label(string key)
+    {
+        LocalizedString text = L["Cabinet.Indicator." + key];
+        return text.ResourceNotFound ? key : text.Value;
+    }
+
+    private string DueKey(string key)
+    {
+        LocalizedString text = L["Cabinet.Indicator." + key + ".Due"];
+        return text.ResourceNotFound ? "Cabinet.Indicator.Due" : "Cabinet.Indicator." + key + ".Due";
+    }
+
+    private string When(DateTimeOffset? at)
+    {
+        if (at is not DateTimeOffset value)
+        {
+            return L["Cabinet.NeverComputed"];
+        }
+
+        DateTimeOffset local = value.ToLocalTime();
+        return local.Date == DateTime.Today
+            ? string.Format(CultureInfo.CurrentCulture, L["Cabinet.TodayAt"], local.ToString("t", CultureInfo.CurrentCulture))
+            : local.ToString("g", CultureInfo.CurrentCulture);
+    }
+
+    public void Dispose()
+    {
+        // Annulé sans être libéré : une lecture encore en cours lit son jeton sans lever ObjectDisposedException.
+        _disposed.Cancel();
+    }
+}

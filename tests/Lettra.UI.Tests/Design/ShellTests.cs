@@ -17,6 +17,7 @@ using Lettra.UI.Shared.Services;
 using Lettra.UI.Tests.Billing;
 using Lettra.UI.Tests.Security;
 using Microsoft.AspNetCore.Components;
+using Lettra.UI.Tests.Cabinet;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.UI.Tests.Design;
@@ -36,6 +37,7 @@ public sealed class ShellTests : BunitContext
         JSInterop.Mode = JSRuntimeMode.Loose;
         _module = JSInterop.SetupModule(UiModule.Path);
         Services.AddLettraUi();
+        Services.AddCabinetFakes();
         Services.AddSingleton<IInvoicesGateway>(_invoices);
         Services.AddSingleton<IQuotesGateway>(_quotes);
         Services.AddSingleton<ISessionGateway>(new FakeSessionGateway(new SessionResponse(true, SessionModeDto.Local, "Claire Martin", true)));
@@ -57,7 +59,7 @@ public sealed class ShellTests : BunitContext
         IRenderedComponent<MainLayout> coque = Coque();
 
         Libelles(coque.FindAll(".lt-sidebar .lt-nav-link")).Should().Equal(
-            "Accueil", "Devis", "Factures", "Avoirs", "Clients", "Fournisseurs", "Catalogue", "Journal et balance", "FEC", "Déclarations", "Alertes", "Entreprise", "Serveur du cabinet");
+            "Accueil", "Vue cabinet", "Devis", "Factures", "Avoirs", "Clients", "Fournisseurs", "Catalogue", "Journal et balance", "FEC", "Déclarations", "Revue du dossier", "Alertes", "Entreprise", "Serveur du cabinet");
         coque.FindAll(".lt-sidebar .lt-nav-group").Select(g => g.TextContent).Should().Equal("Ventes", "Tiers", "Comptabilité", "Pilotage");
         Libelles(coque.FindAll(".lt-tabbar .lt-tab")).Should().Equal("Accueil", "Devis", "Factures", "Clients", "Plus");
         coque.Find(".lt-skip").GetAttribute("href").Should().Be("#main");
@@ -74,7 +76,7 @@ public sealed class ShellTests : BunitContext
         coque.Find("#tab-more").GetAttribute("aria-expanded").Should().Be("true");
         IElement feuille = coque.Find("#more-sheet");
         feuille.GetAttribute("role").Should().Be("dialog");
-        Libelles(feuille.QuerySelectorAll(".lt-nav-link")).Should().Equal("Avoirs", "Fournisseurs", "Catalogue", "Journal et balance", "FEC", "Déclarations", "Alertes", "Entreprise", "Serveur du cabinet");
+        Libelles(feuille.QuerySelectorAll(".lt-nav-link")).Should().Equal("Vue cabinet", "Avoirs", "Fournisseurs", "Catalogue", "Journal et balance", "FEC", "Déclarations", "Revue du dossier", "Alertes", "Entreprise", "Serveur du cabinet");
         feuille.QuerySelectorAll("input[type=radio][name^=lettra-theme]").Should().HaveCount(5);
 
         feuille.KeyDown("Escape");

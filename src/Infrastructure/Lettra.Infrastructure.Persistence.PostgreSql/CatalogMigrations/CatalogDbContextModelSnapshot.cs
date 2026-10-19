@@ -208,6 +208,32 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.CatalogMigrations
                     b.ToTable("Dossiers", "catalog");
                 });
 
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogDossierIndicator", b =>
+                {
+                    b.Property<Guid>("DossierId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Key")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("ComputedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Count")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly?>("DueOn")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("integer");
+
+                    b.HasKey("DossierId", "Key");
+
+                    b.ToTable("DossierIndicators", "catalog");
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogGroup", b =>
                 {
                     b.Property<Guid>("Id")
@@ -392,6 +418,15 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.CatalogMigrations
                     b.HasOne("Lettra.Infrastructure.Persistence.Catalog.CatalogOrganisation", null)
                         .WithMany()
                         .HasForeignKey("OrganisationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogDossierIndicator", b =>
+                {
+                    b.HasOne("Lettra.Infrastructure.Persistence.Catalog.CatalogDossier", null)
+                        .WithMany()
+                        .HasForeignKey("DossierId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

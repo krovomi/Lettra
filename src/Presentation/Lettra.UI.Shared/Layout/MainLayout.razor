@@ -9,6 +9,7 @@
 @inject UiPreferences Preferences
 @inject AssistantPanelState Assistant
 @inject NavigationManager Navigation
+@inject Lettra.UI.Shared.Cabinet.CurrentDossier Dossier
 
 <DeviceLockGate>
 <CascadingValue Value="Preferences.Density">
@@ -37,6 +38,7 @@
                     <span class="lt-brand-mark" aria-hidden="true">L</span>
                     <span class="lettra-visually-hidden">Lettra</span>
                 </a>
+                <SessionGate Redirect="false"><Lettra.UI.Shared.Components.Cabinet.DossierPicker /></SessionGate>
                 <button type="button" id="palette-open" class="lettra-palette-button lt-search" @onclick="OpenPaletteAsync" title="@L["Palette.Title"] (Ctrl+K)">
                     <Icon Name="search" Size="18" />
                     <span class="lt-search-label">@L["Shell.Search"]</span>
@@ -61,7 +63,8 @@
             <main id="main" class="lettra-main lt-main" tabindex="-1">
                 <SyncReminderBanner />
                 <OfflineDraftsBanner />
-                <SessionGate>@Body</SessionGate>
+                @* Changer de dossier recrée l'écran : chaque page relit ses données dans le nouveau dossier. *@
+                <SessionGate @key="Dossier.Id">@Body</SessionGate>
             </main>
             <ToastHost />
         </div>
@@ -122,6 +125,7 @@
             .Bind("Ctrl+Shift+D", L["Command.Density"], _ => Preferences.ToggleDensityAsync(), showInBar: false);
         Preferences.Changed += OnPreferencesChanged;
         Assistant.Changed += OnPreferencesChanged;
+        Dossier.Changed += OnPreferencesChanged;
         Navigation.LocationChanged += OnLocationChanged;
     }
 
@@ -162,6 +166,7 @@
     {
         Preferences.Changed -= OnPreferencesChanged;
         Assistant.Changed -= OnPreferencesChanged;
+        Dossier.Changed -= OnPreferencesChanged;
         Navigation.LocationChanged -= OnLocationChanged;
     }
 }

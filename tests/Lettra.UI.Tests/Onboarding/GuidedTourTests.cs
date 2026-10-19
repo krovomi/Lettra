@@ -15,6 +15,7 @@ using Lettra.UI.Shared.Services;
 using Lettra.UI.Tests.Billing;
 using Lettra.UI.Tests.Security;
 using Microsoft.AspNetCore.Components;
+using Lettra.UI.Tests.Cabinet;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 
@@ -33,6 +34,7 @@ public sealed class GuidedTourTests : BunitContext
         _ui = JSInterop.SetupModule(UiModule.Path);
         _tour = JSInterop.SetupModule(TourModule.Path);
         Services.AddLettraUi();
+        Services.AddCabinetFakes();
         Services.AddSingleton<IInvoicesGateway>(new FakeInvoicesGateway());
         Services.AddSingleton<IQuotesGateway>(new FakeQuotesGateway());
         Services.AddSingleton<ISessionGateway>(new FakeSessionGateway(new SessionResponse(true, SessionModeDto.Local, "Claire Martin", true)));

@@ -1057,6 +1057,31 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.ToTable("PriceLists", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Domain.Review.DossierReviewMark", b =>
+                {
+                    b.Property<string>("Period")
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)");
+
+                    b.Property<string>("ItemKey")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<DateTimeOffset>("CheckedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CheckedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Period", "ItemKey");
+
+                    b.ToTable("ReviewMarks", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Ai.AiJournalRecord", b =>
                 {
                     b.Property<long>("Id")

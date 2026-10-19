@@ -1,0 +1,246 @@
+@page "/review"
+@page "/review/{Period}"
+@implements IDisposable
+@inject ICabinetGateway Gateway
+@inject CurrentDossier Dossiers
+@inject NavigationManager Navigation
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+
+@* Revue du dossier ouvert : une liste de contrôle par mois (ou trimestre) que le collaborateur coche, avec qui et quand.
+   Le mois écoulé par défaut. À côté de chaque point, l'indicateur de la vue cabinet qui l'éclaire (rejets, retards,
+   alertes). Une coche est enregistrée tout de suite ; le toaster le confirme. *@
+
+<PageTitle>@L["Review.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Review.Title"]</h1>
+        <p>@(Dossiers.Name is { } name ? string.Format(CultureInfo.CurrentCulture, L["Review.Subtitle"], name) : L["Review.Intro"])</p>
+    </div>
+    <div class="lt-page-actions lt-review-period">
+        <label for="review-period">@L["Review.Period"]</label>
+        <select id="review-period" class="lettra-input" value="@CurrentPeriod" @onchange="OnPeriodChanged">
+            <optgroup label="@L["Review.Period.Months"]">
+                @foreach ((string key, string label) in Months)
+                {
+                    <option value="@key">@label</option>
+                }
+            </optgroup>
+            <optgroup label="@L["Review.Period.Quarters"]">
+                @foreach ((string key, string label) in Quarters)
+                {
+                    <option value="@key">@label</option>
+                }
+            </optgroup>
+        </select>
+    </div>
+</div>
+
+<GeneralErrors Errors="_errors" />
+
+@if (_review is null)
+{
+    <ListSkeleton Rows="6" Columns="2" />
+}
+else
+{
+    <section class="lt-panel" aria-labelledby="review-list-title">
+        <div class="lt-panel-head">
+            <h2 id="review-list-title">@PeriodLabel(_review.Period)</h2>
+            <span class="lt-review-progress-text" role="status">@string.Format(CultureInfo.CurrentCulture, L["Review.Progress"], _review.Done, _review.Items.Count)</span>
+        </div>
+        <progress class="lt-review-progress" max="@_review.Items.Count" value="@_review.Done" aria-label="@L["Review.Progress.Label"]"></progress>
+
+        <ul class="lt-review-list">
+            @foreach (DossierReviewItemDto item in _review.Items)
+            {
+                string id = "review-" + item.Key.Replace('.', '-');
+                <li class="lt-review-item @(item.Checked ? "is-done" : null)" @key="(item.Key, _revision)">
+                    <label class="lt-review-check" for="@id">
+                        <input type="checkbox" id="@id" checked="@item.Checked" disabled="@_saving.Contains(item.Key)" @onchange="e => ToggleAsync(item, (bool)e.Value!)" />
+                        <span class="lt-review-text">
+                            <span class="lt-review-label">@L["Review.Item." + item.Key]</span>
+                            <span class="lettra-hint">@L["Review.Item." + item.Key + ".Help"]</span>
+                        </span>
+                    </label>
+                    @if (Hint(item.Key) is { } hint)
+                    {
+                        <span class="lt-indicator lt-review-hint" data-level="@hint.Level">@hint.Text</span>
+                    }
+                    @if (item.Checked)
+                    {
+                        <p class="lt-review-who">@Who(item)</p>
+                        <div class="lt-review-note">
+                            <label class="lettra-visually-hidden" for="@(id + "-note")">@L["Review.Note"]</label>
+                            <input id="@(id + "-note")" class="lettra-input" maxlength="@SetDossierReviewItemRequest.MaxNoteLength" placeholder="@L["Review.Note.Placeholder"]"
+                                   value="@NoteOf(item)" @onchange="e => _notes[item.Key] = e.Value?.ToString()" />
+                            <button type="button" class="lettra-button is-secondary is-small" disabled="@(_saving.Contains(item.Key) || !NoteChanged(item))" @onclick="() => SaveNoteAsync(item)">
+                                @L["Review.Note.Save"]
+                            </button>
+                        </div>
+                    }
+                </li>
+            }
+        </ul>
+    </section>
+}
+
+@code {
+    [Parameter] public string? Period { get; set; }
+
+    private DossierReviewResponse? _review;
+    private DossierOverviewRow? _indicators;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private readonly HashSet<string> _saving = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, string?> _notes = new(StringComparer.Ordinal);
+    private readonly CancellationTokenSource _disposed = new();
+    private string? _loadedPeriod;
+    private int _revision;
+
+    private static DateOnly Today => DateOnly.FromDateTime(DateTime.Today);
+
+    /// <summary>Par défaut le mois écoulé : la revue se fait en début de mois.</summary>
+    private string CurrentPeriod => Period ?? Months[0].Key;
+
+    private IReadOnlyList<(string Key, string Label)> Months =>
+    [
+        .. Enumerable.Range(1, 12).Select(back =>
+        {
+            DateOnly month = new DateOnly(Today.Year, Today.Month, 1).AddMonths(-back);
+            return (month.ToString("yyyy-MM", CultureInfo.InvariantCulture), Capitalize(month.ToString("MMMM yyyy", CultureInfo.CurrentCulture)));
+        }),
+    ];
+
+    private IReadOnlyList<(string Key, string Label)> Quarters =>
+    [
+        .. Enumerable.Range(1, 4).Select(back =>
+        {
+            DateOnly start = new DateOnly(Today.Year, ((Today.Month - 1) / 3 * 3) + 1, 1).AddMonths(-3 * back);
+            string key = string.Create(CultureInfo.InvariantCulture, $"{start.Year:D4}-T{((start.Month - 1) / 3) + 1}");
+            return (key, PeriodLabel(key));
+        }),
+    ];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            await LoadPeriodAsync();
+        }
+        catch (OperationCanceledException) when (_disposed.IsCancellationRequested)
+        {
+            // Écran quitté (changement de dossier ou de page) pendant la lecture.
+        }
+    }
+
+    private async Task LoadPeriodAsync()
+    {
+        if (_loadedPeriod == CurrentPeriod)
+        {
+            return;
+        }
+
+        _loadedPeriod = CurrentPeriod;
+        _review = null;
+        _notes.Clear();
+        OperationResult<DossierReviewResponse> loaded = await Gateway.GetReviewAsync(CurrentPeriod, _disposed.Token);
+        _errors = loaded.IsSuccess ? [] : loaded.Errors;
+        _review = loaded.IsSuccess ? loaded.Value : new DossierReviewResponse(CurrentPeriod, 0, []);
+        if (_indicators is null)
+        {
+            await Dossiers.EnsureLoadedAsync();
+            OperationResult<CabinetOverviewResponse> overview = await Gateway.GetOverviewAsync(_disposed.Token);
+            _indicators = overview.Value?.Dossiers.FirstOrDefault(d => d.DossierId == Dossiers.Id);
+        }
+    }
+
+    private void OnPeriodChanged(ChangeEventArgs e)
+    {
+        if (e.Value?.ToString() is { Length: > 0 } period)
+        {
+            Navigation.NavigateTo("review/" + period);
+        }
+    }
+
+    private Task ToggleAsync(DossierReviewItemDto item, bool check) =>
+        SaveAsync(item, check, check ? NoteOf(item) : null, L[check ? "Review.Checked" : "Review.Unchecked"]);
+
+    private Task SaveNoteAsync(DossierReviewItemDto item) => SaveAsync(item, true, NoteOf(item), L["Review.Note.Saved"]);
+
+    private async Task SaveAsync(DossierReviewItemDto item, bool check, string? note, string done)
+    {
+        _saving.Add(item.Key);
+        try
+        {
+            OperationResult<DossierReviewResponse> saved = await Gateway.SetReviewItemAsync(
+                _review!.Period, item.Key, new SetDossierReviewItemRequest { Checked = check, Note = note }, _disposed.Token);
+            if (saved.IsSuccess && saved.Value is { } review)
+            {
+                _review = review;
+                _notes.Remove(item.Key);
+                Toasts.Show(ToastKind.Success, string.Format(CultureInfo.CurrentCulture, done, L["Review.Item." + item.Key]));
+            }
+            else
+            {
+                Toasts.Show(ToastKind.Error, L.Error(saved.Errors[0].Code));
+                // La case revient à l'état enregistré : la ligne est recréée.
+                _revision++;
+            }
+        }
+        finally
+        {
+            _saving.Remove(item.Key);
+        }
+    }
+
+    private string? NoteOf(DossierReviewItemDto item) => _notes.TryGetValue(item.Key, out string? edited) ? edited : item.Note;
+
+    private bool NoteChanged(DossierReviewItemDto item) =>
+        _notes.TryGetValue(item.Key, out string? edited) && !string.Equals(edited?.Trim() ?? string.Empty, item.Note ?? string.Empty, StringComparison.Ordinal);
+
+    private string Who(DossierReviewItemDto item)
+    {
+        string who = item.CheckedByMe ? L["Review.Who.Me"] : item.CheckedByName ?? L["Review.Who.Someone"];
+        string when = item.CheckedAt?.ToLocalTime().ToString("g", CultureInfo.CurrentCulture) ?? string.Empty;
+        return string.Format(CultureInfo.CurrentCulture, L["Review.Who"], who, when);
+    }
+
+    /// <summary>L'indicateur de la vue cabinet qui éclaire ce point, quand il y a quelque chose à signaler.</summary>
+    private (IndicatorLevelDto Level, string Text)? Hint(string item)
+    {
+        string? key = item switch
+        {
+            "pa.suivie" => DossierIndicatorKeys.PlatformRejections,
+            "relances.faites" => DossierIndicatorKeys.OverdueInvoices,
+            "banque.rapprochee" => DossierIndicatorKeys.BankUnreconciled,
+            "tva.declaree" => DossierIndicatorKeys.VatToDeclare,
+            "periode.cloturee" => DossierIndicatorKeys.OpenAlerts,
+            _ => null,
+        };
+        DossierIndicatorDto? indicator = key is null ? null : _indicators?.Indicators.FirstOrDefault(i => i.Key == key);
+        return indicator is { Count: > 0 }
+            ? (indicator.Level, string.Format(CultureInfo.CurrentCulture, L["Review.Hint." + key], indicator.Count))
+            : null;
+    }
+
+    private string PeriodLabel(string period)
+    {
+        if (period.Length == 7 && period[5] == 'T')
+        {
+            return string.Format(CultureInfo.CurrentCulture, L["Review.Period.Quarter"], period[6], period[..4]);
+        }
+
+        return DateOnly.TryParseExact(period + "-01", "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly month)
+            ? Capitalize(month.ToString("MMMM yyyy", CultureInfo.CurrentCulture))
+            : period;
+    }
+
+    private static string Capitalize(string text) => text.Length == 0 ? text : char.ToUpper(text[0], CultureInfo.CurrentCulture) + text[1..];
+
+    public void Dispose()
+    {
+        // Annulé sans être libéré : une lecture encore en cours lit son jeton sans lever ObjectDisposedException.
+        _disposed.Cancel();
+    }
+}

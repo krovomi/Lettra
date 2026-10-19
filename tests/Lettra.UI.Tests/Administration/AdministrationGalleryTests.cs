@@ -5,6 +5,7 @@ using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
 using Lettra.UI.Shared.Layout;
 using Lettra.UI.Shared.Localization;
+using Lettra.UI.Tests.Cabinet;
 using Lettra.UI.Tests.Security;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,6 +27,7 @@ public sealed class AdministrationGalleryTests : BunitContext
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddLettraUi();
+        Services.AddCabinetFakes();
         Services.AddSingleton<IAdministrationGateway>(new FakeAdministrationGateway());
         Services.AddSingleton<IDossierSelection>(new FixedDossierSelection(FakeAdministrationGateway.Boulangerie));
         Services.AddSingleton<ISessionGateway>(new FakeSessionGateway(new SessionResponse(true, SessionModeDto.Local, "Camille Démo", true)));

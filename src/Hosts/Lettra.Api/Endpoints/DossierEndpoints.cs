@@ -37,6 +37,7 @@ internal static class DossierEndpoints
 
         // Ce que l'utilisateur peut voir (écrans permis, accès à l'administration), sans dossier ouvert.
         dossiers.MapMyAccess();
+        dossiers.MapCabinetOverview();
         return dossiers;
     }
 
