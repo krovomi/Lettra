@@ -7,6 +7,7 @@ using Lettra.Contracts.Identity;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
 using Lettra.Infrastructure.Identity.Oidc.Offline;
+using static Lettra.Api.Infrastructure.HttpResults;
 
 namespace Lettra.Api.Endpoints;
 
@@ -49,6 +50,6 @@ internal static class RightsSnapshotEndpoints
         Result<RightsSnapshotResponse> issued = await commands
             .SendAsync(new IssueRightsSnapshotCommand(request.DeviceId, dossiers), cancellationToken)
             .ConfigureAwait(false);
-        return issued.IsSuccess ? TypedResults.Ok(issued.Value) : issued.Errors.ToProblem();
+        return Ok(issued);
     }
 }

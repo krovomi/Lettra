@@ -7,6 +7,7 @@ using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Features.Integrity;
 using Lettra.Contracts.Integrity;
 using Lettra.Domain.Common;
+using static Lettra.Api.Infrastructure.HttpResults;
 
 namespace Lettra.Api.Endpoints;
 
@@ -57,35 +58,35 @@ internal static class IntegrityEndpoints
     {
         Result<IReadOnlyList<IntegrityKeySummary>> keys = await queries
             .QueryAsync(new ListIntegrityKeysQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false);
-        return keys.IsSuccess ? TypedResults.Ok(keys.Value) : keys.Errors.ToProblem();
+        return Ok(keys);
     }
 
     private static async Task<IResult> RotateKeysAsync(ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken)
     {
         Result<IReadOnlyList<IntegrityKeySummary>> keys = await commands
             .SendAsync(new RotateIntegrityKeysCommand(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false);
-        return keys.IsSuccess ? TypedResults.Ok(keys.Value) : keys.Errors.ToProblem();
+        return Ok(keys);
     }
 
     private static async Task<IResult> VerifyAsync(ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken)
     {
         Result<IntegrityReportResponse> report = await commands
             .SendAsync(new VerifyDossierIntegrityCommand(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false);
-        return report.IsSuccess ? TypedResults.Ok(report.Value) : report.Errors.ToProblem();
+        return Ok(report);
     }
 
     private static async Task<IResult> ListClosingsAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken)
     {
         Result<IReadOnlyList<ClosingSummary>> closings = await queries
             .QueryAsync(new ListClosingsQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false);
-        return closings.IsSuccess ? TypedResults.Ok(closings.Value) : closings.Errors.ToProblem();
+        return Ok(closings);
     }
 
     private static async Task<IResult> CloseAsync(ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken)
     {
         Result<IReadOnlyList<ClosingSummary>> closed = await commands
             .SendAsync(new CloseDuePeriodsCommand(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false);
-        return closed.IsSuccess ? TypedResults.Ok(closed.Value) : closed.Errors.ToProblem();
+        return Ok(closed);
     }
 
     private static async Task<IResult> ArchiveAsync(int number, ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken)

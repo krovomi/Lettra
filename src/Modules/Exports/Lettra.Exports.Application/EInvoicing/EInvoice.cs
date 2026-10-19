@@ -72,6 +72,11 @@ internal sealed record EInvoice
 
     public DateOnly? DeliveryDate { get; init; }
 
+    /// <summary>Période facturée (BT-73 et BT-74) d'une facture récurrente.</summary>
+    public DateOnly? PeriodStart { get; init; }
+
+    public DateOnly? PeriodEnd { get; init; }
+
     public string Currency { get; init; } = "EUR";
 
     public required IReadOnlyList<EInvoiceNote> Notes { get; init; }
@@ -147,6 +152,8 @@ internal sealed record EInvoice
             IssueDate = invoice.IssueDate.Value,
             DueDate = credit ? null : invoice.DueDate,
             DeliveryDate = invoice.DeliveryDate,
+            PeriodStart = invoice.BillingPeriodStart,
+            PeriodEnd = invoice.BillingPeriodEnd,
             Notes = notes,
             Seller = Party(invoice.Seller),
             Buyer = Party(invoice.Customer),

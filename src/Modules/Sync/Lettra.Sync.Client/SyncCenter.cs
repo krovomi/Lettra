@@ -11,6 +11,7 @@ using Lettra.Domain.Parties;
 using Lettra.Domain.SharedKernel;
 using Lettra.UI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Lettra.Sync.Client;
 
@@ -19,24 +20,26 @@ namespace Lettra.Sync.Client;
 /// <see cref="ISyncCenter"/>. L'instantané est relu après chaque changement d'état du coordinateur, chaque cycle et
 /// chaque saisie qui laisse une intention ; <see cref="Changed"/> part alors de n'importe quel thread.
 /// </summary>
-internal sealed class SyncCenter : ISyncCenter, IDisposable
+internal sealed partial class SyncCenter : ISyncCenter, IDisposable
 {
     private readonly SyncCoordinator _coordinator;
     private readonly ISyncPreferences _preferences;
     private readonly IServiceScopeFactory _scopes;
     private readonly SyncOutboxSignal _signal;
     private readonly TimeProvider _clock;
+    private readonly ILogger<SyncCenter> _logger;
     private readonly SemaphoreSlim _refresh = new(1, 1);
     private SyncReport? _lastReport;
     private SyncCycleReport? _lastCycle;
 
-    public SyncCenter(SyncCoordinator coordinator, ISyncPreferences preferences, IServiceScopeFactory scopes, SyncOutboxSignal signal, TimeProvider clock)
+    public SyncCenter(SyncCoordinator coordinator, ISyncPreferences preferences, IServiceScopeFactory scopes, SyncOutboxSignal signal, TimeProvider clock, ILogger<SyncCenter> logger)
     {
         _coordinator = coordinator;
         _preferences = preferences;
         _scopes = scopes;
         _signal = signal;
         _clock = clock;
+        _logger = logger;
         _coordinator.Changed += OnSourceChanged;
         _signal.Recorded += OnSourceChanged;
         OnSourceChanged(this, EventArgs.Empty);
@@ -182,11 +185,15 @@ internal sealed class SyncCenter : ISyncCenter, IDisposable
             await RefreshAsync(CancellationToken.None).ConfigureAwait(false);
         }
 #pragma warning disable CA1031 // Un évènement ne doit jamais faire tomber l'application : l'instantané reste le précédent.
-        catch (Exception)
+        catch (Exception exception)
 #pragma warning restore CA1031
         {
+            LogRefreshFailed(_logger, exception.GetType().Name);
         }
     }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Rafraîchissement de l'état de synchronisation impossible ({ExceptionType}) : l'écran garde le précédent.")]
+    private static partial void LogRefreshFailed(ILogger logger, string exceptionType);
 
     private static SyncCycleReport Map(SyncReport r, DateTimeOffset finishedAt) => new(
         (SyncStatus)(int)r.State,
