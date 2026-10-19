@@ -32,6 +32,7 @@
   <data name="Cabinet.Level.Warning" xml:space="preserve"><value>Needs action</value></data>
   <data name="Cabinet.Level.Critical" xml:space="preserve"><value>Urgent</value></data>
   <data name="Cabinet.NotAvailable" xml:space="preserve"><value>Not tracked for this dossier yet</value></data>
+  <data name="Cabinet.ComputedLine" xml:space="preserve"><value>Computed {0}</value></data>
   <data name="Cabinet.NeverComputed" xml:space="preserve"><value>Not computed yet</value></data>
   <data name="Cabinet.TodayAt" xml:space="preserve"><value>today at {0}</value></data>
   <data name="Cabinet.Open" xml:space="preserve"><value>Open</value></data>

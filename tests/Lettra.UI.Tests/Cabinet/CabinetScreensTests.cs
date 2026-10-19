@@ -81,6 +81,8 @@ public sealed class CabinetScreensTests : BunitContext
                 a => a.Should().Contain("Atelier Éole"),
                 b => b.Should().Contain("Boulangerie Martin"));
         page.FindAll(".lt-cabinet-table thead th").Select(t => t.TextContent.Trim()).Should().Contain("module.futur");
+        page.FindAll(".lt-cabinet-table thead th").Select(t => t.TextContent.Trim()).Should().NotContain("Calculé", "l'heure du calcul est sous le nom du dossier");
+        page.FindAll(".lt-cabinet-table tbody th .lt-cabinet-when").Should().HaveCount(3);
         page.Find(".lt-cabinet-kpis .lt-kpi-value").TextContent.Should().Be("2", "deux dossiers sont à traiter");
         _gateway.Refreshes.Should().Be(0, "les chiffres sont déjà calculés");
 
