@@ -62,6 +62,18 @@ public sealed class DeviceSignInTests : IDisposable
     }
 
     [Fact]
+    public async Task L_adresse_de_retour_du_telephone_part_telle_qu_enregistree_dans_le_realm()
+    {
+        _browser.RedirectUri = new Uri("fr.lettra.app://callback");
+
+        OperationResult<DeviceTokens> signedIn = await _client.SignInAsync(CancellationToken.None);
+
+        signedIn.IsSuccess.Should().BeTrue();
+        Query(_browser.Opened!)["redirect_uri"].Should().Be("fr.lettra.app://callback", "Keycloak compare l'adresse au caractère près");
+        _keycloak.LastForm!["redirect_uri"].Should().Be("fr.lettra.app://callback");
+    }
+
+    [Fact]
     public async Task Un_state_qui_ne_correspond_pas_est_refuse()
     {
         _browser.TamperState = true;
@@ -208,7 +220,9 @@ public sealed class DeviceSignInTests : IDisposable
 
         public bool Abandon { get; set; }
 
-        public Uri PrepareRedirectUri() => Redirect;
+        public Uri RedirectUri { get; set; } = Redirect;
+
+        public Uri PrepareRedirectUri() => RedirectUri;
 
         public Task<Uri?> AuthorizeAsync(Uri authorizeUrl, Uri redirectUri, CancellationToken cancellationToken)
         {
