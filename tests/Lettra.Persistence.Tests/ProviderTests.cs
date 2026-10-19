@@ -170,6 +170,13 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Kit_controle_fiscal_d_une_periode()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator(), simulatedPlatform: true);
+        await AuditKitScenarios.KitAsync(harness, DatabaseProvider.Sqlite, Database("kit"));
+    }
+
+    [Fact]
     public async Task Transmission_a_la_plateforme_agreee_simulee()
     {
         await using TenantHarness harness = new(new SqliteConfigurator(), simulatedPlatform: true);
@@ -542,6 +549,14 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     }
 
     [SkippableFact]
+    public async Task Kit_controle_fiscal_d_une_periode()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new PostgreSqlConfigurator(), simulatedPlatform: true);
+        await AuditKitScenarios.KitAsync(harness, DatabaseProvider.PostgreSql, Database("kit"));
+    }
+
+    [SkippableFact]
     public async Task Envois_a_la_plateforme_par_l_outbox_sans_doublon()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
@@ -853,6 +868,14 @@ public sealed class SqlServerTests : IAsyncLifetime
         Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new SqlServerConfigurator(), simulatedPlatform: true);
         await PlatformScenarios.TransmissionAsync(harness, DatabaseProvider.SqlServer, Database("pa"));
+    }
+
+    [SkippableFact]
+    public async Task Kit_controle_fiscal_d_une_periode()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new SqlServerConfigurator(), simulatedPlatform: true);
+        await AuditKitScenarios.KitAsync(harness, DatabaseProvider.SqlServer, Database("kit"));
     }
 
     [SkippableFact]

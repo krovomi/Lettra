@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="AuditKit.Tab" xml:space="preserve"><value>Contrôle fiscal</value></data>
+  <data name="AuditKit.Title" xml:space="preserve"><value>Kit contrôle fiscal</value></data>
+  <data name="AuditKit.Subtitle" xml:space="preserve"><value>Tout ce qu'on remet au vérificateur pour une période, en une archive.</value></data>
+  <data name="AuditKit.Period" xml:space="preserve"><value>Période contrôlée</value></data>
+  <data name="AuditKit.Prepare" xml:space="preserve"><value>Préparer le kit</value></data>
+  <data name="AuditKit.Contents" xml:space="preserve"><value>Le kit contient le FEC et son rapport de validation, l'attestation d'intégrité de la chaîne anti-fraude avec les archives scellées des clôtures, la piste d'audit fiable (qui a créé, validé, émis chaque pièce), les factures en XML et en PDF Factur-X, et le journal des transmissions à la plateforme agréée.</value></data>
+  <data name="AuditKit.Progress.Server" xml:space="preserve"><value>Préparation du kit : FEC, contrôle de la chaîne, piste d'audit…</value></data>
+  <data name="AuditKit.Progress.Pdf" xml:space="preserve"><value>Factures en PDF : {0} sur {1}…</value></data>
+  <data name="AuditKit.Result.Title" xml:space="preserve"><value>Kit du {0} au {1}</value></data>
+  <data name="AuditKit.Fec.Valid" xml:space="preserve"><value>FEC conforme au validateur intégré : {0} écritures, {1} avertissement(s).</value></data>
+  <data name="AuditKit.Fec.Invalid" xml:space="preserve"><value>FEC non conforme : {0} erreur(s). Corrigez avant de remettre le kit.</value></data>
+  <data name="AuditKit.Integrity.Intact" xml:space="preserve"><value>Chaîne anti-fraude intacte : {0} entrées vérifiées.</value></data>
+  <data name="AuditKit.Integrity.Findings" xml:space="preserve"><value>Chaîne anti-fraude : {0} constat(s). Voyez le détail dans integrite/attestation.json et la page Intégrité.</value></data>
+  <data name="AuditKit.Pdf.Failed" xml:space="preserve"><value>{0} facture(s) n'ont pas pu être relues : leur XML est dans le kit, pas leur PDF.</value></data>
+  <data name="AuditKit.Fact.File" xml:space="preserve"><value>Fichier</value></data>
+  <data name="AuditKit.Fact.Pieces" xml:space="preserve"><value>Pièces de la période</value></data>
+  <data name="AuditKit.Fact.Pdf" xml:space="preserve"><value>PDF Factur-X ajoutés</value></data>
+  <data name="AuditKit.Fact.Payments" xml:space="preserve"><value>Encaissements</value></data>
+  <data name="AuditKit.Fact.Transmissions" xml:space="preserve"><value>Transmissions à la plateforme</value></data>
+  <data name="AuditKit.Fact.Closings" xml:space="preserve"><value>Clôtures signées jointes</value></data>
+  <data name="AuditKit.Fact.GeneratedAt" xml:space="preserve"><value>Préparé le</value></data>
+  <data name="AuditKit.Fact.Fingerprint" xml:space="preserve"><value>Empreinte du kit (SHA-256)</value></data>
+  <data name="AuditKit.Fingerprint.Hint" xml:space="preserve"><value>Notez cette empreinte dans le procès-verbal de remise : c'est celle du manifeste, qui liste l'empreinte de chaque fichier.</value></data>
+  <data name="AuditKit.Download" xml:space="preserve"><value>Télécharger à nouveau</value></data>
+  <data name="AuditKit.Toast.Ready" xml:space="preserve"><value>Kit contrôle fiscal téléchargé.</value></data>
+  <data name="AuditKit.Disclaimer" xml:space="preserve"><value>Prototype : rien n'est envoyé à l'administration. Le kit n'est pas horodaté par un tiers ; l'heure est celle du serveur.</value></data>
+</root>

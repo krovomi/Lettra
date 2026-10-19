@@ -1,0 +1,161 @@
+@page "/tax/audit-kit"
+@inject IAuditKitGateway AuditKit
+@inject IInvoicesGateway Invoices
+@inject IBillingSettingsGateway Settings
+@inject IDocumentPdfRenderer Pdf
+@inject IFileDownloader Files
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+@inject IServiceProvider Services
+@* Kit contrôle fiscal (vague 7) : le serveur rassemble le FEC, l'attestation d'intégrité, la piste d'audit fiable, le
+   XML des pièces et les transmissions à la plateforme ; l'écran y ajoute le PDF Factur-X de chaque pièce, rendu comme
+   depuis la fiche de la facture, puis télécharge l'archive. Rien n'est envoyé à l'administration. *@
+
+<PageTitle>@L["AuditKit.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["AuditKit.Title"]</h1>
+        <p class="lettra-muted">@L["AuditKit.Subtitle"]</p>
+    </div>
+</div>
+
+<TaxTabs />
+<GeneralErrors Errors="_errors" />
+
+<section class="lt-panel lt-audit-kit" aria-labelledby="audit-kit-period">
+    <h2 id="audit-kit-period">@L["AuditKit.Period"]</h2>
+    <div class="lt-audit-kit-form">
+        <label for="audit-kit-from">@L["Fec.Period.From"]
+            <input id="audit-kit-from" type="date" @bind="_from" disabled="@_busy" />
+        </label>
+        <label for="audit-kit-to">@L["Fec.Period.To"]
+            <input id="audit-kit-to" type="date" @bind="_to" disabled="@_busy" />
+        </label>
+        <button type="button" id="audit-kit-prepare" class="lettra-button" disabled="@_busy" @onclick="PrepareAsync">
+            <Icon Name="shield-check" Size="18" /> @L["AuditKit.Prepare"]
+        </button>
+    </div>
+    <p class="lettra-hint">@L["AuditKit.Contents"]</p>
+
+    @if (_busy)
+    {
+        <p id="audit-kit-progress" role="status" aria-live="polite">
+            @(_total is int total ? string.Format(CultureInfo.CurrentCulture, L["AuditKit.Progress.Pdf"], _done, total) : L["AuditKit.Progress.Server"])
+        </p>
+    }
+</section>
+
+@if (_kit is { } kit)
+{
+    AuditKitManifestResponse manifest = kit.Manifest;
+    <section class="lt-panel lt-audit-kit" id="audit-kit-result" aria-labelledby="audit-kit-result-title">
+        <h2 id="audit-kit-result-title">@string.Format(CultureInfo.CurrentCulture, L["AuditKit.Result.Title"], TaxText.Day(manifest.From), TaxText.Day(manifest.To))</h2>
+
+        <p id="audit-kit-fec" class="lettra-banner @(manifest.Fec.IsValid ? "is-success" : "is-danger")">
+            <Icon Name="@(manifest.Fec.IsValid ? "badge-check" : "triangle-alert")" Size="18" />
+            @(manifest.Fec.IsValid
+                ? string.Format(CultureInfo.CurrentCulture, L["AuditKit.Fec.Valid"], manifest.Fec.EntryCount, manifest.Fec.WarningCount)
+                : string.Format(CultureInfo.CurrentCulture, L["AuditKit.Fec.Invalid"], manifest.Fec.ErrorCount))
+        </p>
+        <p id="audit-kit-integrity" class="lettra-banner @(manifest.Integrity.Intact ? "is-success" : "is-danger")">
+            <Icon Name="@(manifest.Integrity.Intact ? "shield-check" : "triangle-alert")" Size="18" />
+            @(manifest.Integrity.Intact
+                ? string.Format(CultureInfo.CurrentCulture, L["AuditKit.Integrity.Intact"], manifest.Integrity.EntriesChecked)
+                : string.Format(CultureInfo.CurrentCulture, L["AuditKit.Integrity.Findings"], manifest.Integrity.FindingCount))
+        </p>
+        @if (kit.PdfFailed > 0)
+        {
+            <p id="audit-kit-pdf-failed" class="lettra-banner is-warning">
+                <Icon Name="triangle-alert" Size="18" /> @string.Format(CultureInfo.CurrentCulture, L["AuditKit.Pdf.Failed"], kit.PdfFailed)
+            </p>
+        }
+
+        <dl class="lettra-platform-facts lt-audit-kit-facts">
+            <dt>@L["AuditKit.Fact.File"]</dt><dd id="audit-kit-file">@kit.FileName</dd>
+            <dt>@L["AuditKit.Fact.Pieces"]</dt><dd id="audit-kit-pieces">@manifest.Pieces.Count</dd>
+            <dt>@L["AuditKit.Fact.Pdf"]</dt><dd id="audit-kit-pdf">@kit.PdfAdded</dd>
+            <dt>@L["AuditKit.Fact.Payments"]</dt><dd id="audit-kit-payments">@manifest.PaymentCount</dd>
+            <dt>@L["AuditKit.Fact.Transmissions"]</dt><dd id="audit-kit-transmissions">@manifest.TransmissionCount</dd>
+            <dt>@L["AuditKit.Fact.Closings"]</dt><dd id="audit-kit-closings">@manifest.Integrity.ClosingNumbers.Count</dd>
+            <dt>@L["AuditKit.Fact.GeneratedAt"]</dt><dd>@manifest.GeneratedAt.ToLocalTime().ToString("g", CultureInfo.CurrentCulture)</dd>
+            <dt>@L["AuditKit.Fact.Fingerprint"]</dt><dd><code id="audit-kit-fingerprint" class="lt-audit-kit-hash">@kit.Fingerprint</code></dd>
+        </dl>
+        <p class="lettra-hint">@L["AuditKit.Fingerprint.Hint"]</p>
+
+        <button type="button" id="audit-kit-download" class="lettra-button is-secondary" disabled="@_busy" @onclick="DownloadAsync">
+            <Icon Name="archive" Size="18" /> @L["AuditKit.Download"]
+        </button>
+    </section>
+}
+
+<p class="lettra-hint" id="audit-kit-disclaimer">@L["AuditKit.Disclaimer"]</p>
+
+@code {
+    private const string ZipMimeType = "application/zip";
+
+    /// <summary>Le kit va à l'administration française : ses PDF sont en français, quelle que soit la langue de l'écran.</summary>
+    private static readonly CultureInfo DocumentCulture = CultureInfo.GetCultureInfo("fr-FR");
+
+    private DateOnly _from;
+    private DateOnly _to;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private AssembledAuditKit? _kit;
+    private int _done;
+    private int? _total;
+    private bool _busy;
+
+    private DateOnly Today => DateOnly.FromDateTime((Services.GetService<TimeProvider>() ?? TimeProvider.System).GetLocalNow().DateTime);
+
+    /// <summary>Par défaut, l'année civile en cours, comme l'export FEC.</summary>
+    protected override void OnInitialized()
+    {
+        _from = new DateOnly(Today.Year, 1, 1);
+        _to = new DateOnly(Today.Year, 12, 31);
+    }
+
+    private async Task PrepareAsync()
+    {
+        _busy = true;
+        _errors = [];
+        _kit = null;
+        _total = null;
+        _done = 0;
+        try
+        {
+            OperationResult<AuditKitDocument> kit = await AuditKit.PrepareAsync(_from, _to, CancellationToken.None);
+            if (kit is not { IsSuccess: true, Value: { } document })
+            {
+                // Les refus de période visent le champ « au » : affichés en tête, comme sur l'export FEC.
+                _errors = [.. kit.Errors.Select(e => e with { Target = null })];
+                return;
+            }
+
+            _total = AuditKitAssembler.ReadManifest(document.Content).Pieces.Count;
+            OperationResult<CompanyProfileResponse> company = await Settings.GetCompanyProfileAsync(CancellationToken.None);
+            _kit = await AuditKitAssembler.AddPdfsAsync(document, (piece, xml, ct) => RenderAsync(piece, xml, company.Value, ct), CancellationToken.None);
+            await DownloadAsync();
+            Toasts.Show(ToastKind.Success, L["AuditKit.Toast.Ready"].Value);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task<byte[]?> RenderAsync(AuditKitPieceResponse piece, byte[] xml, CompanyProfileResponse? company, CancellationToken cancellationToken)
+    {
+        OperationResult<InvoiceResponse> invoice = await Invoices.GetAsync(piece.InvoiceId, cancellationToken);
+        byte[]? pdf = invoice.Value is { } value
+            ? Pdf.Render(PrintableMapper.FromInvoice(value, company, DocumentCulture), [PdfAttachment.FacturX(xml)])
+            : null;
+        _done++;
+        // Le rendu occupe le fil du navigateur : on lui rend la main pour afficher l'avancement.
+        StateHasChanged();
+        await Task.Delay(1, cancellationToken);
+        return pdf;
+    }
+
+    private Task DownloadAsync() =>
+        _kit is { } kit ? Files.DownloadAsync(kit.FileName, ZipMimeType, kit.Content, CancellationToken.None) : Task.CompletedTask;
+}

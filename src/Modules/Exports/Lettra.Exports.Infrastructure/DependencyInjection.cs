@@ -1,6 +1,7 @@
 using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Exports.Application;
+using Lettra.Exports.Application.AuditKit;
 using Lettra.Exports.Application.Banking;
 using Lettra.Exports.Application.EInvoicing.Platform;
 using Lettra.Exports.Application.Tax;
@@ -37,6 +38,7 @@ public static class DependencyInjection
         services.AddScoped<ITaxDocumentReader, EfTaxDocumentReader>();
         services.AddScoped<IFiscalStore, EfFiscalStore>();
         services.AddScoped<IVatOnReceiptsSource, EfVatOnReceiptsSource>();
+        services.AddScoped<IAuditTrailReader, EfAuditTrailReader>();
         string platform = configuration?[PlatformKey] ?? "None";
         switch (platform)
         {
