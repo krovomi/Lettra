@@ -46,6 +46,8 @@ public static class DependencyInjection
 
         // Encaissements, rapprochement bancaire et lettrage (vague 6).
         services.AddScoped<ICommandHandler<RecordPaymentCommand, Result<PaymentResponse>>, RecordPaymentHandler>();
+        services.AddScoped<IValidator<RecordPaymentCommand>, RecordPaymentValidator>();
+        services.AddScoped<PaymentPlatformReporter>();
         services.AddScoped<ICommandHandler<ReversePaymentCommand, Result<PaymentResponse>>, ReversePaymentHandler>();
         services.AddScoped<IQueryHandler<GetPaymentQuery, Result<PaymentResponse>>, GetPaymentHandler>();
         services.AddScoped<IQueryHandler<ListPaymentsQuery, Result<PagedResponse<PaymentSummary>>>, ListPaymentsHandler>();

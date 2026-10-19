@@ -58,6 +58,9 @@ public sealed class Payment : AggregateRoot<PaymentId>, IVersioned
     public const int MaxReasonLength = 500;
     public const int MaxAllocations = 50;
 
+    /// <summary>Montant d'encaissement ou d'imputation recevable : positif, au centime près.</summary>
+    public static bool IsValidAmount(decimal amount) => amount > 0m && decimal.Round(amount, 2) == amount;
+
     private readonly List<PaymentAllocation> _allocations = [];
     private readonly List<PaymentVatShare> _vatShares = [];
 
@@ -139,7 +142,7 @@ public sealed class Payment : AggregateRoot<PaymentId>, IVersioned
         ArgumentNullException.ThrowIfNull(allocations);
         ArgumentNullException.ThrowIfNull(vatShares);
         List<Error> errors = [];
-        if (amount <= 0m || decimal.Round(amount, 2) != amount)
+        if (!IsValidAmount(amount))
         {
             errors.Add(PaymentErrors.AmountInvalid);
         }
@@ -257,7 +260,7 @@ public sealed class Payment : AggregateRoot<PaymentId>, IVersioned
 
         for (int i = 0; i < allocations.Count; i++)
         {
-            if (allocations[i].Amount <= 0m || decimal.Round(allocations[i].Amount, 2) != allocations[i].Amount)
+            if (!IsValidAmount(allocations[i].Amount))
             {
                 errors.Add(PaymentErrors.AllocationInvalid(i));
             }

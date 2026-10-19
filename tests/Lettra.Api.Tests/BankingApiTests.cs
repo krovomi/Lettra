@@ -103,6 +103,27 @@ public sealed class BankingApiTests(LettraApiFactory factory) : IClassFixture<Le
     }
 
     [Fact]
+    public async Task Un_encaissement_date_de_demain_est_refuse_avant_tout_enregistrement()
+    {
+        using HttpClient manager = InDossier(factory.CreateClient());
+        Guid invoiceId = await ExportApiTests.ValidatedInvoiceAsync(manager);
+        InvoiceResponse invoice = await InvoiceAsync(manager, invoiceId);
+
+        using HttpResponseMessage future = await manager.PostAsJsonAsync(
+            Api("/api/v1/payments"),
+            new RecordPaymentRequest
+            {
+                CustomerId = invoice.CustomerId, Date = Today.AddDays(1), Amount = 120m, Method = PaymentMethodDto.Transfer,
+                Allocations = [new PaymentAllocationRequest(invoiceId, 120m)],
+            },
+            ContractsJsonContext.Default.RecordPaymentRequest);
+
+        future.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await future.Content.ReadAsStringAsync()).Should().Contain(ErrorCodes.Payment.DateInvalid);
+        (await InvoiceAsync(manager, invoiceId)).PaidInclTax.Should().Be(0m);
+    }
+
+    [Fact]
     public async Task Un_ecart_au_dela_du_seuil_ou_la_facture_d_un_autre_client_est_refuse()
     {
         using HttpClient manager = InDossier(factory.CreateClient());

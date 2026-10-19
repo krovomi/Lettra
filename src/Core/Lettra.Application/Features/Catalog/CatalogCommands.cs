@@ -62,17 +62,14 @@ internal sealed class UpdateCatalogItemHandler(
     public async Task<Result> HandleAsync(UpdateCatalogItemCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
-        CatalogItem? item = await items.FindAsync(command.CatalogItemId, cancellationToken).ConfigureAwait(false);
-        if (item is null)
+        Result<CatalogItem> loaded = Concurrency.Load(
+            await items.FindAsync(command.CatalogItemId, cancellationToken).ConfigureAwait(false), CatalogItemErrors.NotFound, command.ExpectedVersion);
+        if (loaded.IsFailure)
         {
-            return CatalogItemErrors.NotFound;
+            return Result.Failure(loaded.Errors);
         }
 
-        Result fresh = Concurrency.Check(item, command.ExpectedVersion);
-        if (fresh.IsFailure)
-        {
-            return fresh;
-        }
+        CatalogItem item = loaded.Value;
 
         string key = CatalogItem.KeyOf(command.Data.Reference);
         if (key.Length > 0 && key != item.ReferenceKey
@@ -100,17 +97,14 @@ internal sealed class SetCatalogItemArchivedHandler(
     public async Task<Result> HandleAsync(SetCatalogItemArchivedCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
-        CatalogItem? item = await items.FindAsync(command.CatalogItemId, cancellationToken).ConfigureAwait(false);
-        if (item is null)
+        Result<CatalogItem> loaded = Concurrency.Load(
+            await items.FindAsync(command.CatalogItemId, cancellationToken).ConfigureAwait(false), CatalogItemErrors.NotFound, command.ExpectedVersion);
+        if (loaded.IsFailure)
         {
-            return CatalogItemErrors.NotFound;
+            return Result.Failure(loaded.Errors);
         }
 
-        Result fresh = Concurrency.Check(item, command.ExpectedVersion);
-        if (fresh.IsFailure)
-        {
-            return fresh;
-        }
+        CatalogItem item = loaded.Value;
 
         item.SetArchived(command.IsArchived, clock.GetUtcNow());
         await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

@@ -25,17 +25,14 @@ internal sealed class UpdateCustomerHandler(
     public async Task<Result> HandleAsync(UpdateCustomerCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
-        Customer? customer = await customers.FindAsync(command.CustomerId, cancellationToken).ConfigureAwait(false);
-        if (customer is null)
+        Result<Customer> loaded = Concurrency.Load(
+            await customers.FindAsync(command.CustomerId, cancellationToken).ConfigureAwait(false), CustomerErrors.NotFound, command.ExpectedVersion);
+        if (loaded.IsFailure)
         {
-            return CustomerErrors.NotFound;
+            return Result.Failure(loaded.Errors);
         }
 
-        Result fresh = Concurrency.Check(customer, command.ExpectedVersion);
-        if (fresh.IsFailure)
-        {
-            return fresh;
-        }
+        Customer customer = loaded.Value;
 
         Result updated = customer.Update(command.Data, clock.GetUtcNow());
         if (updated.IsFailure)
