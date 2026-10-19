@@ -1,7 +1,8 @@
 // Serveur commun sur Android (docs/serveur-commun.md) : l'application installée, dans un émulateur relié à la démo par
 // « adb reverse », est reliée au serveur du cabinet par l'écran « Serveur du cabinet », se connecte (onglet du navigateur,
 // mot de passe + code), voit le client saisi dans le navigateur et en crée un que le navigateur retrouvera
-// (node appareil.mjs voir). L'interface est pilotée par l'accessibilité d'Android (Playwright _android).
+// (node appareil.mjs voir). La page de l'application (WebView) et l'onglet de Chrome sont pilotés par leur port de débogage
+// (Playwright _android et connectOverCDP).
 //   node android.mjs <client du navigateur>
 // Variables : LETTRA_URL (http://localhost:8080), LETTRA_DEMO_USER, LETTRA_DEMO_PASSWORD, SORTIE (./sortie).
 // Écrit SORTIE/client-appareil.txt et des captures dans SORTIE/android/.
@@ -45,33 +46,11 @@ async function freshCode() {
 
 const [device] = await android.devices();
 if (!device) throw new Error('Aucun appareil Android (adb devices).');
-const escape = text => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 let shotIndex = 0;
 async function shot(name) {
     const file = join(shots, `${String(++shotIndex).padStart(2, '0')}-${name}.png`);
     await device.screenshot({ path: file }).catch(() => {});
-}
-// L'identifiant HTML d'un élément de la page (WebView) ou de Keycloak (Chrome) devient son identifiant d'accessibilité.
-const id = name => ({ res: new RegExp(`(^|[:/])${name}$`) });
-async function visible(selector, timeout) {
-    try { await device.wait(selector, { timeout }); return true; } catch (error) {
-        if (!/timeout/i.test(String(error?.message))) log(`attente interrompue : ${error?.message}`);
-        return false;
-    }
-}
-async function waitFor(selector, what, timeout = 60_000) {
-    if (!(await visible(selector, timeout))) {
-        await shot(`echec-${what}`);
-        // « uiautomator dump » n'est pas possible pendant que Playwright pilote l'appareil : la fenêtre au premier plan suffit.
-        const focus = await device.shell('dumpsys window | grep -E "mCurrentFocus|mFocusedApp"').then(b => b.toString()).catch(e => String(e));
-        log(`premier plan :\n${focus.trim()}`);
-        throw new Error(`${what} : introuvable après ${timeout / 1000} s (capture dans ${shots}).`);
-    }
-}
-// Saisie par l'accessibilité (sans clavier à l'écran, qui masquerait les boutons).
-async function type(selector, text) {
-    await device.fill(selector, text);
 }
 // Onglet Chrome ouvert par l'application sur la page de connexion de Keycloak (/realms/…).
 async function keycloakPage(timeout) {
@@ -99,6 +78,20 @@ async function dumpPage(page) {
     const text = await page.locator('body').innerText({ timeout: 2_000 }).catch(() => '');
     log(`onglet ${page.url()} :\n${text.slice(0, 1500)}`);
 }
+// Page Blazor de l'application (WebView, débogable) : pilotée comme une page du navigateur, par sélecteur CSS.
+async function appPage() {
+    const webview = await device.webView({ pkg: app }, { timeout: 120_000 });
+    const page = await webview.page();
+    page.setDefaultTimeout(60_000);
+    return page;
+}
+async function step(page, what, action) {
+    try { return await action(); } catch (error) {
+        await shot(`echec-${what}`);
+        await dumpPage(page);
+        throw new Error(`${what} : ${error.message.split('\n')[0]}`);
+    }
+}
 async function start() {
     await device.shell(`am start -W -n ${app}/.MainActivity`);
 }
@@ -106,23 +99,25 @@ async function start() {
 // 1. Premier lancement : l'application travaille seule ; l'écran de session mène au choix du serveur.
 await device.shell(`am force-stop ${app}`);
 await start();
-await waitFor(id('shared-server-link'), 'lien « Serveur du cabinet » de l\'écran de session', 120_000);
-await shot('session-appareil-seul');
-await device.tap(id('shared-server-link'));
-await waitFor(id('shared-server-address'), 'champ de l\'adresse du serveur');
-await type(id('shared-server-address'), baseUrl);
-await shot('adresse-saisie');
-await device.tap(id('shared-server-submit'));
-await waitFor(id('shared-server-restart-now'), 'serveur vérifié et retenu');
+let page = await appPage();
+await step(page, 'serveur du cabinet', async () => {
+    await page.locator('#shared-server-link').click({ timeout: 120_000 });
+    await page.fill('#shared-server-address', baseUrl);
+    await shot('adresse-saisie');
+    await page.locator('#shared-server-submit').click();
+    await page.locator('#shared-server-restart-now').waitFor();
+});
 await shot('serveur-retenu');
 log(`serveur ${baseUrl} retenu`);
-await device.tap(id('shared-server-restart-now'));
+// L'application se ferme (Android : fermer puis rouvrir).
+await page.locator('#shared-server-restart-now').click({ noWaitAfter: true }).catch(() => {});
 await sleep(3000);
 
 // 2. Relancée, l'application est reliée au serveur : connexion du cabinet dans un onglet du navigateur.
 await device.shell(`am force-stop ${app}`);
 await start();
-await waitFor({ text: /^(Sign in|Se connecter)$/ }, 'bouton de connexion du cabinet', 120_000);
+page = await appPage();
+await step(page, 'bouton de connexion du cabinet', () => page.locator('a[data-sign-in]').waitFor({ timeout: 120_000 }));
 await shot('session-serveur');
 // La page de connexion s'ouvre dans un onglet de Chrome : Playwright s'y attache par le protocole de débogage (sans écran
 // d'accueil de Chrome, options lues au démarrage dans /data/local/tmp/chrome-command-line, comme device.launchBrowser).
@@ -132,8 +127,9 @@ await device.shell(`echo "_ --disable-fre --no-default-browser-check --no-first-
 // Sur une image non « debuggable », Chrome ne lit ce fichier que s'il est l'application de débogage.
 await device.shell('am set-debug-app --persistent com.android.chrome');
 execFileSync('adb', ['forward', 'tcp:9333', `localabstract:${devtools}`]);
-await device.tap({ text: /^(Sign in|Se connecter)$/ });
-const keycloak = await keycloakPage(90_000);
+await page.locator('a[data-sign-in]').click();
+log(`connexion demandée ; l'application affiche ${page.url()}`);
+const keycloak = await keycloakPage(90_000).catch(async error => { await dumpPage(page); throw error; });
 await shot('keycloak');
 await keycloak.fill('#username', user);
 await keycloak.fill('#password', password);
@@ -144,30 +140,39 @@ await keycloak.click('#kc-login');
 log('connexion du cabinet envoyée (mot de passe + code)');
 
 // 3. De retour dans l'application : le client saisi dans le navigateur est là.
-await waitFor({ text: /^(Customers|Clients)$/ }, 'accueil de l\'application connectée', 120_000);
+await step(page, 'accueil de l\'application connectée', () => page.locator('.lettra-user').waitFor({ timeout: 120_000 }));
 await shot('connecte');
-await device.tap({ text: /^(Customers|Clients)$/ });
-await waitFor(id('customers-search'), 'page Clients');
-await type(id('customers-search'), browserCustomer);
-await waitFor({ text: new RegExp(escape(browserCustomer)) }, `client « ${browserCustomer} » du navigateur`, 30_000);
+log(`connecté comme « ${await page.locator('.lettra-user').innerText()} »`);
+await step(page, `client « ${browserCustomer} » du navigateur`, async () => {
+    // Menu replié sur un téléphone : navigation interne de Blazor, comme un clic sur « Clients ».
+    await page.evaluate(() => window.Blazor.navigateTo('customers'));
+    await page.locator('#customers-list, #customers-empty').first().waitFor();
+    await page.fill('#customers-search', browserCustomer);
+    await page.locator('#customers-list [role=option]', { hasText: browserCustomer }).first().waitFor({ timeout: 30_000 });
+});
 await shot('client-du-navigateur');
 log(`client du navigateur « ${browserCustomer} » vu sur l'appareil`);
 
 // 4. Un client saisi sur l'appareil, que le navigateur retrouvera.
 const name = `Client Android ${new Date().toISOString().replace(/\D/g, '').slice(0, 14)}`;
-await device.tap(id('customers-new'));
-await waitFor(id('name'), 'formulaire du client');
-if (await visible({ text: /^(Individual|Particulier)$/ }, 3_000)) await device.tap({ text: /^(Individual|Particulier)$/ });
-await type(id('name'), name);
-await type(id('email'), 'android@client-demo.example');
-await type(id('line1'), '2 rue de l\'Appareil');
-await type(id('zip'), '75002');
-await type(id('city'), 'Paris');
-await type(id('country'), 'FR');
-await shot('client-saisi');
-await device.tap(id('explorer-save'));
-// Confirmation du toaster (« Client « … » enregistré. ») : le nom seul serait déjà dans le champ.
-await waitFor({ text: new RegExp(`${escape(name)}.*(saved|enregistré)`) }, `client « ${name} » enregistré`, 30_000);
+await step(page, `client « ${name} » enregistré`, async () => {
+    await page.locator('#customers-new').click();
+    await page.locator('#name').waitFor({ timeout: 30_000 });
+    await page.locator('label', { hasText: /Particulier|Individual/ }).locator('input[type=radio]').check().catch(async () => {
+        await page.locator('input[type=radio]').nth(1).check();
+    });
+    await page.fill('#name', name);
+    await page.fill('#email', 'android@client-demo.example');
+    await page.fill('#line1', '2 rue de l\'Appareil');
+    await page.fill('#zip', '75002');
+    await page.fill('#city', 'Paris');
+    await page.fill('#country', 'FR');
+    await shot('client-saisi');
+    await page.locator('form button[type=submit]').click();
+    // Confirmation par le toaster, puis la fiche du client.
+    await page.locator('.lt-toast.is-success').first().waitFor({ timeout: 30_000 });
+    await page.locator('#customer-sheet-title', { hasText: name }).waitFor({ timeout: 30_000 });
+});
 await shot('client-cree');
 writeFileSync(join(out, 'client-appareil.txt'), name);
 log(`client « ${name} » créé sur l'appareil`);
