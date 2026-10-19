@@ -20,7 +20,17 @@ public interface ICatalogItemRepository
 /// <param name="IncludeArchived">Inclure les articles archivés (écran Catalogue) ; jamais pour la saisie F4.</param>
 /// <param name="Page">Page, à partir de 1.</param>
 /// <param name="PageSize">Taille de page.</param>
-public sealed record CatalogItemFilter(string? Search, bool IncludeArchived, int Page, int PageSize);
+/// <param name="Sort">Colonne de tri ; la référence départage.</param>
+/// <param name="Direction">Sens du tri.</param>
+/// <param name="Kind">Nature des articles retenus (bien ou service), toutes si absente.</param>
+public sealed record CatalogItemFilter(
+    string? Search,
+    bool IncludeArchived,
+    int Page,
+    int PageSize,
+    CatalogSortDto Sort = CatalogSortDto.Reference,
+    SortDirectionDto Direction = SortDirectionDto.Ascending,
+    CatalogItemKind? Kind = null);
 
 /// <summary>Lecture des articles : projection directe en contrats.</summary>
 public interface ICatalogItemReadStore

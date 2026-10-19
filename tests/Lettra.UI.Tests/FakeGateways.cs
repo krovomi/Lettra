@@ -50,13 +50,16 @@ internal sealed class FakeSuppliersGateway : ISuppliersGateway
     public Task<OperationResult<PagedResponse<SupplierSummary>>> ListAsync(int page, int pageSize, CancellationToken cancellationToken) =>
         Task.FromResult(OperationResult<PagedResponse<SupplierSummary>>.Success(new PagedResponse<SupplierSummary>([.. Suppliers], page, pageSize, Suppliers.Count)));
 
-    public Task<OperationResult<PagedResponse<SupplierSummary>>> SearchAsync(string? search, int page, int pageSize, CancellationToken cancellationToken)
+    public List<PartyListQuery> Queries { get; } = [];
+
+    public Task<OperationResult<PagedResponse<SupplierSummary>>> SearchAsync(PartyListQuery query, CancellationToken cancellationToken)
     {
+        Queries.Add(query);
         List<SupplierSummary> found = Suppliers
-            .Where(s => string.IsNullOrWhiteSpace(search) || s.Name.Contains(search.Trim(), StringComparison.OrdinalIgnoreCase))
+            .Where(s => string.IsNullOrWhiteSpace(query.Search) || s.Name.Contains(query.Search.Trim(), StringComparison.OrdinalIgnoreCase))
             .ToList();
-        List<SupplierSummary> items = found.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-        return Task.FromResult(OperationResult<PagedResponse<SupplierSummary>>.Success(new PagedResponse<SupplierSummary>(items, page, pageSize, found.Count)));
+        List<SupplierSummary> items = found.Skip((query.Page - 1) * query.PageSize).Take(query.PageSize).ToList();
+        return Task.FromResult(OperationResult<PagedResponse<SupplierSummary>>.Success(new PagedResponse<SupplierSummary>(items, query.Page, query.PageSize, found.Count)));
     }
 
     public Task<OperationResult<SupplierResponse>> GetAsync(Guid id, CancellationToken cancellationToken) =>
@@ -160,12 +163,24 @@ internal sealed class FakeCatalogGateway : ICatalogGateway
     public Task<OperationResult<CatalogReferenceData>> GetReferenceDataAsync(CancellationToken cancellationToken) =>
         Task.FromResult(OperationResult<CatalogReferenceData>.Success(Reference));
 
-    public Task<OperationResult<PagedResponse<CatalogItemSummary>>> ListAsync(string? search, bool includeArchived, int page, int pageSize, CancellationToken cancellationToken)
+    public List<CatalogListQuery> Queries { get; } = [];
+
+    public Task<OperationResult<PagedResponse<CatalogItemSummary>>> ListAsync(CatalogListQuery query, CancellationToken cancellationToken)
     {
+        Queries.Add(query);
+        (string? search, bool includeArchived, int page, int pageSize) = (query.Search, query.IncludeArchived, query.Page, query.PageSize);
         ListCalls.Add((search, includeArchived, pageSize));
-        List<CatalogItemSummary> items = Items
+        IEnumerable<CatalogItemResponse> found = Items
             .Where(i => includeArchived || !i.IsArchived)
-            .Where(i => search is null || i.Reference.Contains(search, StringComparison.OrdinalIgnoreCase) || i.Designation.Contains(search, StringComparison.OrdinalIgnoreCase))
+            .Where(i => query.Kind is null || i.Kind == query.Kind)
+            .Where(i => search is null || i.Reference.Contains(search, StringComparison.OrdinalIgnoreCase) || i.Designation.Contains(search, StringComparison.OrdinalIgnoreCase));
+        Func<CatalogItemResponse, object> key = query.Sort switch
+        {
+            CatalogSortDto.Designation => i => i.Designation,
+            CatalogSortDto.UnitPrice => i => i.UnitPriceExclTax,
+            _ => i => i.Reference,
+        };
+        List<CatalogItemSummary> items = (query.Direction == SortDirectionDto.Descending ? found.OrderByDescending(key) : found.OrderBy(key))
             .Select(i => new CatalogItemSummary(i.Id, i.Reference, i.Designation, i.Description, i.Kind, i.UnitCode, i.UnitPriceExclTax, i.VatRateCode, i.VatRatePercent, i.IsArchived)
             {
                 Version = i.Version,

@@ -43,6 +43,7 @@
                 <input id="catalog-items-archived" type="checkbox" @bind="_includeArchived" @bind:after="ReloadAsync" />
                 @L["Catalog.ShowArchived"]
             </label>
+            <SortSelect Id="catalog-sort" Options="SortOptions" State="_sort" OnSort="ReloadAsync" PhoneOnly="false" />
         </div>
 
         @if (Loading)
@@ -292,7 +293,21 @@
         await base.OnInitializedAsync();
     }
 
-    private void FilterKind(CatalogItemKindDto? kind) => _kind = kind;
+    // La nature et le tri passent au serveur : la liste est paginée.
+    private Task FilterKind(CatalogItemKindDto? kind)
+    {
+        _kind = kind;
+        return ReloadAsync();
+    }
+
+    private readonly SortState<CatalogSortDto> _sort = new(CatalogSortDto.Reference);
+
+    private IReadOnlyList<SortOption<CatalogSortDto>> SortOptions =>
+    [
+        new(CatalogSortDto.Reference, L["Catalog.Column.Reference"]),
+        new(CatalogSortDto.Designation, L["Catalog.Column.Designation"]),
+        new(CatalogSortDto.UnitPrice, L["Catalog.Column.PriceExclTax"], SortDirectionDto.Descending),
+    ];
 
     /// <summary>
     /// Corbeille d'un article : il est archivé, pas effacé. Ses devis et factures le citent, et il revient d'un clic
@@ -354,7 +369,7 @@
     private decimal VatPercentOf(string code) => _referenceData.VatRates.FirstOrDefault(v => v.Code == code)?.Percent ?? 0m;
 
     protected override Task<OperationResult<PagedResponse<CatalogItemSummary>>> LoadPageAsync(string? search, int page, CancellationToken cancellationToken) =>
-        Gateway.ListAsync(search, _includeArchived, page, PageSize, cancellationToken);
+        Gateway.ListAsync(new CatalogListQuery(search, _includeArchived, page, PageSize, _sort.Column, _sort.Direction, _kind), cancellationToken);
 
     protected override Task<OperationResult<CatalogItemResponse>> GetAsync(Guid id, CancellationToken cancellationToken) => Gateway.GetAsync(id, cancellationToken);
 

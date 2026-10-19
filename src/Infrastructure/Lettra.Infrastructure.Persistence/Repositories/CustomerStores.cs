@@ -31,18 +31,26 @@ internal sealed class CustomerRepository(TenantDbSession session) : ICustomerRep
 
 internal sealed class CustomerReadStore(TenantDbSession session) : ICustomerReadStore
 {
-    public async Task<PagedResponse<CustomerSummary>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken)
+    public async Task<PagedResponse<CustomerSummary>> ListAsync(PartyListFilter filter, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(filter);
         LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
-        IQueryable<Customer> query = db.Customers.AsNoTracking().Where(c => !c.IsArchived).WhereSearchKeyContains(search);
+        IQueryable<Customer> query = db.Customers.AsNoTracking().Where(c => !c.IsArchived).WhereSearchKeyContains(filter.Search);
+        if (filter.Kind is { } kind)
+        {
+            query = query.Where(c => c.Kind == kind);
+        }
+
         int total = await query.CountAsync(cancellationToken).ConfigureAwait(false);
+        IOrderedQueryable<Customer> ordered = filter.Sort == PartySortDto.City
+            ? query.By(c => c.BillingAddress.City, filter.Direction).ThenBy(c => c.Name)
+            : query.By(c => c.Name, filter.Direction);
 
         // Les objets-valeurs convertis (Siren) sont projetés tels quels puis aplatis en mémoire.
-        var rows = await query
-            .OrderBy(c => c.Name)
+        var rows = await ordered
             .ThenBy(c => c.Id)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((filter.Page - 1) * filter.PageSize)
+            .Take(filter.PageSize)
             .Select(c => new { c.Id, c.Kind, c.Name, c.Siren, c.BillingAddress.City })
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -50,7 +58,7 @@ internal sealed class CustomerReadStore(TenantDbSession session) : ICustomerRead
         List<CustomerSummary> items = rows
             .Select(r => new CustomerSummary(r.Id.Value, (CustomerKindDto)(int)r.Kind, r.Name, r.Siren?.Value, r.City))
             .ToList();
-        return new PagedResponse<CustomerSummary>(items, page, pageSize, total);
+        return new PagedResponse<CustomerSummary>(items, filter.Page, filter.PageSize, total);
     }
 
     public async Task<CustomerResponse?> GetAsync(CustomerId id, CancellationToken cancellationToken)
