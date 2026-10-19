@@ -9,7 +9,6 @@
   <data name="Catalog.Count" xml:space="preserve"><value>{0} article(s)</value></data>
   <data name="Catalog.ExclTaxShort" xml:space="preserve"><value> HT</value></data>
   <data name="Catalog.Field.Description" xml:space="preserve"><value>Description</value></data>
-  <data name="Catalog.GridMode" xml:space="preserve"><value>Saisie en grille</value></data>
   <data name="Catalog.InclTaxNote" xml:space="preserve"><value>Calculé avec le taux de TVA</value></data>
   <data name="Catalog.NewItem" xml:space="preserve"><value>Nouvel article</value></data>
   <data name="Catalog.NoDescription" xml:space="preserve"><value>Pas de description.</value></data>

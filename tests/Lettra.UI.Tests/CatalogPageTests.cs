@@ -53,6 +53,17 @@ public sealed class CatalogPageTests : BunitContext
     }
 
     [Fact]
+    public void La_grille_propose_de_revenir_a_la_liste()
+    {
+        IRenderedComponent<Catalog> page = Render<Catalog>();
+
+        page.Find("#catalog-view-grid").GetAttribute("aria-current").Should().Be("page");
+        page.Find("#catalog-view-list").HasAttribute("aria-current").Should().BeFalse();
+        page.Find("#catalog-view-list").GetAttribute("href").Should().Be("catalog");
+        page.Find("#catalog-view-list").TextContent.Trim().Should().Be("Liste");
+    }
+
+    [Fact]
     public void Les_entetes_sont_traduits_en_anglais()
     {
         UseCulture("en-US");
@@ -62,6 +73,8 @@ public sealed class CatalogPageTests : BunitContext
         page.FindAll(".lg-head").Select(h => h.TextContent)
             .Should().Equal("Reference", "Description", "Type", "Unit", "Unit price excl. VAT", "VAT", "Unit price incl. VAT");
         page.Find("label[for=catalog-archived]").TextContent.Trim().Should().Be("Show archived items");
+        page.Find("#catalog-view").GetAttribute("aria-label").Should().Be("View");
+        page.Find("#catalog-view-grid").TextContent.Trim().Should().Be("Grid entry");
     }
 
     [Fact]
