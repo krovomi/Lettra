@@ -173,6 +173,32 @@ public sealed class QuoteEditorTests : BunitContext
     }
 
     [Fact]
+    public void La_corbeille_d_une_ligne_la_retire_au_premier_clic_et_enregistre_le_brouillon()
+    {
+        QuoteResponse devis = _quotes.Add(QuoteStatusDto.Draft, null, Conseil, Livre);
+        IRenderedComponent<QuoteEditor> page = Ouvrir(devis.Id);
+        page.WaitForAssertion(() => page.FindAll(".lg-row[data-r]").Should().HaveCount(2));
+
+        page.Find(".lg-row[data-r='0'] .lt-row-delete").GetAttribute("aria-label").Should().Be("Supprimer la ligne 1");
+        page.Find(".lg-row[data-r='0'] .lt-row-delete").Click();
+
+        page.WaitForAssertion(() => page.FindAll(".lg-row[data-r]").Should().ContainSingle());
+        Texte(page, "#total-excl-tax").Should().Be(Fr(30m));
+        page.WaitForAssertion(() => _quotes.Updates.Last().Request.Lines.Should().ContainSingle().Which.Designation.Should().Be("Ouvrage"));
+    }
+
+    [Fact]
+    public void Un_devis_valide_n_a_pas_de_corbeille_sur_ses_lignes()
+    {
+        QuoteResponse devis = _quotes.Add(QuoteStatusDto.Validated, "DEV-2026-0001", Conseil);
+
+        IRenderedComponent<QuoteEditor> page = Ouvrir(devis.Id);
+
+        page.WaitForAssertion(() => page.FindAll(".lg-row[data-r]").Should().HaveCount(1));
+        page.FindAll(".lt-row-delete").Should().BeEmpty();
+    }
+
+    [Fact]
     public void Une_checklist_bloquante_empeche_la_validation_et_liste_les_constats()
     {
         _quotes.Report = BillingFixtures.Blocking;
@@ -358,7 +384,7 @@ public sealed class QuoteEditorTests : BunitContext
 
         Texte(page, "h1").Should().StartWith("Draft quote");
         page.FindAll(".lg-head").Select(h => h.TextContent)
-            .Should().Equal("Ref.", "Description", "Qty", "Unit", "Unit price", "Discount %", "VAT", "Net total");
+            .Should().Equal("Ref.", "Description", "Qty", "Unit", "Unit price", "Discount %", "VAT", "Net total", "Actions");
         Texte(page, ".lettra-checklist-summary").Should().Be("2 item(s) block validation.");
         page.Find(".lg-row[data-r='0'] input.lg-input[data-c='3']").GetAttribute("value").Should().Be("Hour");
     }

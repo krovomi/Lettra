@@ -860,6 +860,9 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                         .HasMaxLength(254)
                         .HasColumnType("nvarchar(254)");
 
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("bit");
+
                     b.Property<int>("Kind")
                         .HasColumnType("int");
 
@@ -955,6 +958,9 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.Property<string>("Iban")
                         .HasMaxLength(34)
                         .HasColumnType("nvarchar(34)");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()

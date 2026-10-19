@@ -78,6 +78,20 @@
                             <span class="lt-record-meta">@item.Reference · @UnitLabel(item.UnitCode)@(item.IsArchived ? $" · {L["Catalog.Archived"]}" : null)</span>
                         </span>
                         <span class="lt-record-side lt-num">@ExplorerText.Money(item.UnitPriceExclTax)<small>@L["Catalog.ExclTaxShort"]</small></span>
+                        <span class="lt-record-action">
+                            @if (item.IsArchived)
+                            {
+                                <RowDelete @ref="RowDeletes[item.Id]" TabIndex="-1" Confirm="false" IconName="archive-restore"
+                                           Label="@string.Format(Culture, L["Catalog.Row.Reactivate"], item.Designation)"
+                                           OnDelete="() => SetRowArchivedAsync(item, false)" />
+                            }
+                            else
+                            {
+                                <RowDelete @ref="RowDeletes[item.Id]" TabIndex="-1" Question="@L["Catalog.Row.Archive.Question"]" ActionText="@L["Catalog.Archive"]"
+                                           Label="@string.Format(Culture, L["Catalog.Row.Archive"], item.Designation)"
+                                           OnDelete="() => SetRowArchivedAsync(item, true)" />
+                            }
+                        </span>
                     </li>
                 }
             </ul>
@@ -279,6 +293,33 @@
     }
 
     private void FilterKind(CatalogItemKindDto? kind) => _kind = kind;
+
+    /// <summary>
+    /// Corbeille d'un article : il est archivé, pas effacé. Ses devis et factures le citent, et il revient d'un clic
+    /// (« Afficher les archivés », puis la flèche de réactivation).
+    /// </summary>
+    private async Task SetRowArchivedAsync(CatalogItemSummary item, bool archived)
+    {
+        OperationResult<CatalogItemResponse> result = await Gateway.SetArchivedAsync(item.Id, item.Version, archived, CancellationToken.None);
+        if (result is not { IsSuccess: true, Value: { } updated })
+        {
+            Errors = result.IsStale ? [new ErrorDetail(ErrorCodes.Concurrency.VersionMismatch)] : result.Errors;
+            await ReloadAsync();
+            return;
+        }
+
+        string message = string.Format(Culture, L[archived ? "Catalog.Row.ArchivedDone" : "Catalog.Reactivated"], updated.Designation);
+        if (SelectedId == item.Id)
+        {
+            await ShowUpdatedAsync(updated, message);
+        }
+        else
+        {
+            Errors = [];
+            Toasts.Show(ToastKind.Success, message);
+            await ReloadAsync();
+        }
+    }
 
     private async Task ToggleArchiveAsync()
     {

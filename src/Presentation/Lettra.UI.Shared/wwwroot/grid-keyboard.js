@@ -227,7 +227,8 @@ export function attachGrid(root, dotnet, options) {
   // Un clic sur une cellule calculée renvoie le focus vers la cellule saisissable active de la ligne.
   function onMouseDown(e) {
     const row = e.target.closest?.(".lg-row[data-r]");
-    if (!row || e.target.closest("input")) return;
+    // La corbeille de la ligne garde son clic (elle ne renvoie pas le focus vers une cellule).
+    if (!row || e.target.closest("input, .lg-row-action")) return;
     e.preventDefault();
     focusCell(Number(row.dataset.r), active.c);
   }

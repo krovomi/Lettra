@@ -1,5 +1,6 @@
 using System.Globalization;
 using Lettra.Contracts.Common;
+using Lettra.UI.Shared.Components.Feedback;
 using Lettra.UI.Shared.Keyboard;
 using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Services;
@@ -322,6 +323,10 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
         {
             GoTo(EditHref(IdOf(items[index])));
         }
+        else if (e.Key == "Delete" && index >= 0 && RowDeletes.TryGetValue(IdOf(items[index]), out RowDelete? trash))
+        {
+            _ = trash.StartAsync();
+        }
     }
 
     private void OnFormFieldChanged(object? sender, FieldChangedEventArgs e) => StateHasChanged();
@@ -471,6 +476,42 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
     protected void GoTo(string href)
     {
         Navigation.NavigateTo(href);
+    }
+
+    // ---------- suppression ----------
+
+    /// <summary>Corbeilles des lignes de la liste, pour la touche Suppr sur la ligne active.</summary>
+    protected Dictionary<Guid, RowDelete> RowDeletes { get; } = [];
+
+    /// <summary>Suppression d'un élément de la liste ; les pages qui n'en offrent pas gardent ce refus.</summary>
+    protected virtual Task<OperationResult<bool>> DeleteAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken) =>
+        Task.FromResult(OperationResult<bool>.Failure(ErrorCodes.Api.Unexpected));
+
+    /// <summary>
+    /// Corbeille d'une ligne, après confirmation : l'élément quitte la liste (et la fiche, s'il y était ouvert), puis le
+    /// toaster le dit (« {Préfixe}.Toast.Deleted »). Fiche ouverte : la version lue protège d'une modification faite entre-temps.
+    /// </summary>
+    protected async Task DeleteRowAsync(TSummary item, string name)
+    {
+        Guid id = IdOf(item);
+        long? version = SelectedId == id && Record is { } open && IdOf(open) == id ? VersionOf(open) : null;
+        OperationResult<bool> deleted = await DeleteAsync(id, version, CancellationToken.None);
+        if (!deleted.IsSuccess)
+        {
+            Errors = deleted.Errors;
+            return;
+        }
+
+        Errors = [];
+        Items.Remove(item);
+        RowDeletes.Remove(id);
+        TotalCount = Math.Max(0, TotalCount - 1);
+        if (SelectedId == id)
+        {
+            GoTo(BasePath);
+        }
+
+        Toasts.Show(ToastKind.Success, string.Format(CultureInfo.CurrentCulture, Text("Toast.Deleted"), name));
     }
 
     // ---------- saisie ----------

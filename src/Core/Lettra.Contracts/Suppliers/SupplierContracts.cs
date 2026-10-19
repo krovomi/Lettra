@@ -67,6 +67,9 @@ public sealed record SupplierResponse(
 {
     /// <summary>Version de concurrence optimiste, renvoyée aussi en <c>ETag</c> ; à renvoyer en <c>If-Match</c> pour modifier.</summary>
     public long Version { get; init; }
+
+    /// <summary>Supprimé des listes, gardé en base comme les clients.</summary>
+    public bool IsArchived { get; init; }
 }
 
 /// <summary>Ligne de la liste des fournisseurs.</summary>

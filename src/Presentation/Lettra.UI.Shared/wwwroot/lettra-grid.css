@@ -217,3 +217,15 @@
 .lg-options li { padding: 4px 12px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lg-options li[aria-selected="true"] { background: var(--lg-focus-bg); outline: 1px solid var(--lg-accent); outline-offset: -1px; }
 .lg-dialog .lg-hint { padding: 6px 12px 10px; font-size: 12px; color: var(--lg-muted); }
+
+/* Corbeille en bout de ligne (lignes d'un devis ou d'une facture en brouillon) : colonne étroite, sans titre visible. */
+.lg-grid { --lg-action-w: calc(var(--lg-row-h) + 12px); }
+.lg-row-action { justify-content: center; border-right: 0; }
+.lg-row-action .lt-icon-button { width: var(--lg-row-h); height: var(--lg-row-h); min-height: 0; color: var(--lg-muted); }
+.lg-row-action .lt-icon-button:hover, .lg-row-action .lt-icon-button:focus-visible { color: var(--color-danger-fg); background: var(--color-danger-bg); }
+@container (max-width: 720px) {
+  .lg-header .lg-row-action { display: none; }
+  .lg-row-action { grid-column: 1 / -1; flex-direction: row; justify-content: flex-end; }
+  .lg-row-action::before { content: none; }
+  .lg-row-action .lt-icon-button { width: 44px; height: 44px; }
+}

@@ -1,0 +1,117 @@
+@* Corbeille en bout de ligne d'un tableau (listes et lignes des pièces) : un clic, puis une confirmation dans la ligne
+   même (Supprimer / Annuler, Échap annule), sans fenêtre par-dessus. Une ligne qui ne se supprime pas (pièce numérotée)
+   garde sa corbeille : le clic explique dans le toaster ce qu'il faut faire à la place. Le clic ne traverse jamais la
+   ligne (il n'ouvre pas la fiche). *@
+@inject IStringLocalizer<SharedResource> L
+@inject ToastService Toasts
+
+@if (_confirming)
+{
+    <span class="lt-row-confirm" role="group" aria-label="@Label" @onkeydown="OnConfirmKeyDown" @onkeydown:stopPropagation="true"
+          @onclick:stopPropagation="true">
+        <span class="lt-row-confirm-text">@(Question ?? L["Row.Delete.Question"])</span>
+        <button type="button" class="lettra-button is-danger lt-row-confirm-yes" @ref="_yes" disabled="@_busy"
+                @onclick="ConfirmAsync" @onclick:stopPropagation="true">@(ActionText ?? L["Row.Delete"])</button>
+        <button type="button" class="lettra-button is-ghost lt-row-confirm-no" @onclick="Cancel" @onclick:stopPropagation="true">@L["Row.Delete.Cancel"]</button>
+    </span>
+}
+else
+{
+    <button type="button" class="lt-icon-button lt-row-delete @(BlockedReason is null ? null : "is-blocked")" @ref="_trigger"
+            aria-label="@Label" title="@(BlockedReason ?? Label)" tabindex="@TabIndex"
+            @onclick="StartAsync" @onclick:stopPropagation="true" @onkeydown:stopPropagation="true">
+        <Icon Name="@IconName" Size="18" />
+    </button>
+}
+
+@code {
+    private ElementReference _yes;
+    private ElementReference _trigger;
+    private bool _confirming;
+    private bool _busy;
+    private bool _focusYes;
+    private bool _focusTrigger;
+
+    /// <summary>Nom lu par le lecteur d'écran et infobulle : « Supprimer le devis DEV-2026-0012 ».</summary>
+    [Parameter, EditorRequired] public string Label { get; set; } = default!;
+
+    /// <summary>Exécutée après confirmation ; la page retire la ligne et affiche le toaster.</summary>
+    [Parameter] public EventCallback OnDelete { get; set; }
+
+    /// <summary>Faux pour les lignes d'une pièce en brouillon : retirées au premier clic, sans confirmation.</summary>
+    [Parameter] public bool Confirm { get; set; } = true;
+
+    /// <summary>Renseigné quand la ligne ne se supprime pas : le clic affiche ce texte (ce qu'il faut faire à la place).</summary>
+    [Parameter] public string? BlockedReason { get; set; }
+
+    [Parameter] public string? Question { get; set; }
+
+    [Parameter] public string? ActionText { get; set; }
+
+    [Parameter] public string IconName { get; set; } = "trash-2";
+
+    /// <summary>-1 dans une liste à option active (la touche Suppr y sert au clavier).</summary>
+    [Parameter] public int? TabIndex { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_focusYes)
+        {
+            _focusYes = false;
+            await _yes.FocusAsync();
+        }
+        else if (_focusTrigger)
+        {
+            _focusTrigger = false;
+            await _trigger.FocusAsync();
+        }
+    }
+
+    /// <summary>Ouvre la confirmation, comme le clic (touche Suppr d'une liste).</summary>
+    public async Task StartAsync()
+    {
+        if (BlockedReason is not null)
+        {
+            Toasts.Show(ToastKind.Info, BlockedReason);
+            return;
+        }
+
+        if (!Confirm)
+        {
+            await OnDelete.InvokeAsync();
+            return;
+        }
+
+        _confirming = true;
+        _focusYes = true;
+        StateHasChanged();
+    }
+
+    private async Task ConfirmAsync()
+    {
+        _busy = true;
+        try
+        {
+            await OnDelete.InvokeAsync();
+        }
+        finally
+        {
+            _busy = false;
+            _confirming = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        _confirming = false;
+        _focusTrigger = true;
+    }
+
+    private void OnConfirmKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            Cancel();
+        }
+    }
+}

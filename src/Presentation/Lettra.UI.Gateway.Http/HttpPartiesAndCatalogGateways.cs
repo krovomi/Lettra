@@ -83,6 +83,9 @@ internal sealed class HttpSuppliersGateway(HttpClient http) : ISuppliersGateway
             ct => http.PutVersionedAsync(HttpCalls.Relative($"api/v1/suppliers/{id}"), expectedVersion, request, ContractsJsonContext.Default.CreateSupplierRequest, ct),
             ContractsJsonContext.Default.SupplierResponse,
             cancellationToken);
+
+    public Task<OperationResult<bool>> DeleteAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken) =>
+        VersionedCalls.DeleteAsync(http, HttpCalls.Relative($"api/v1/suppliers/{id}"), expectedVersion, cancellationToken);
 }
 
 internal sealed class HttpCatalogGateway(HttpClient http) : ICatalogGateway

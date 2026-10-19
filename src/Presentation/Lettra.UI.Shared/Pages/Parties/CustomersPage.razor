@@ -71,6 +71,11 @@
                         {
                             <span class="lettra-status">@L["Customers.Kind.Individual"]</span>
                         }
+                        <span class="lt-record-action">
+                            <RowDelete @ref="RowDeletes[customer.Id]" TabIndex="-1" Question="@L["Customers.Row.Delete.Question"]"
+                                       Label="@string.Format(Culture, L["Customers.Row.Delete"], customer.Name)"
+                                       OnDelete="() => DeleteRowAsync(customer, customer.Name)" />
+                        </span>
                     </li>
                 }
             </ul>
@@ -275,6 +280,9 @@
 
     protected override Task<OperationResult<CustomerResponse>> UpdateAsync(Guid id, long expectedVersion, CreateCustomerRequest form, CancellationToken cancellationToken) =>
         Gateway.UpdateAsync(id, expectedVersion, form, cancellationToken);
+
+    protected override Task<OperationResult<bool>> DeleteAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken) =>
+        Gateway.DeleteAsync(id, expectedVersion, cancellationToken);
 
     protected override CreateCustomerRequest NewForm(string? name) => new() { Name = name ?? string.Empty };
 

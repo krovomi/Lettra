@@ -99,6 +99,10 @@ internal sealed class InProcessSuppliersGateway(IServiceScopeFactory scopes) : I
     public Task<OperationResult<SupplierResponse>> UpdateAsync(Guid id, long expectedVersion, CreateSupplierRequest request, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.WriteThenReadAsync(
             sp, request.ToUpdateCommand(dossier, new SupplierId(id), expectedVersion), new GetSupplierQuery(dossier, new SupplierId(id)), ct), cancellationToken);
+
+    public Task<OperationResult<bool>> DeleteAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(
+            scopes, (sp, dossier, ct) => InProcessCommands.SendAsync(sp, new DeleteSupplierCommand(dossier, new SupplierId(id), expectedVersion), ct), cancellationToken);
 }
 
 internal sealed class InProcessCatalogGateway(IServiceScopeFactory scopes) : ICatalogGateway
