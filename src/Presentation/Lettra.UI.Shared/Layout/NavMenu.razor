@@ -88,6 +88,9 @@
 @code {
     private ElementReference _search;
     private MyAccessResponse? _access;
+    private bool _accessRead;
+    private string? _accessUser;
+    private SessionState? _session;
     private string _query = string.Empty;
     private IReadOnlyList<NavItem> _visible = [];
     private IReadOnlyList<NavItem> _results = [];
@@ -114,16 +117,54 @@
         _path = Navigation.ToBaseRelativePath(Navigation.Uri);
         Refresh();
 
-        // Une seule lecture des droits, et seulement si une entrée en dépend ; tant qu'elle n'est pas revenue, ces entrées restent cachées.
-        if (NavItems.All.Any(i => i.Page is not null) && Services.GetService(typeof(IAdministrationGateway)) is IAdministrationGateway gateway)
+        _session = Services.GetService(typeof(ISessionGateway)) is null ? null : Services.GetService(typeof(SessionState)) as SessionState;
+        if (_session is not null)
         {
-            OperationResult<MyAccessResponse> access = await gateway.GetMyAccessAsync(null, CancellationToken.None);
-            _access = access.IsSuccess ? access.Value : null;
-            Refresh();
+            _session.Changed += OnSessionChanged;
         }
 
+        await LoadAccessAsync();
         await Menu.LoadAsync();
     }
+
+    /// <summary>
+    /// Droits lus une fois par utilisateur, seulement si une entrée en dépend, et après la connexion : avant, l'API
+    /// répondrait 401 dans la console du navigateur. Tant qu'ils ne sont pas revenus, ces entrées restent cachées.
+    /// </summary>
+    private async Task LoadAccessAsync()
+    {
+        if (!NavItems.All.Any(i => i.Page is not null) || Services.GetService(typeof(IAdministrationGateway)) is not IAdministrationGateway gateway)
+        {
+            return;
+        }
+
+        if (_session is not null)
+        {
+            if (_session.Current is null)
+            {
+                await _session.RefreshAsync();
+            }
+
+            if (!_session.IsAuthenticated)
+            {
+                return;
+            }
+        }
+
+        string? user = UserStorageKey.UserOf(_session?.Current);
+        if (_accessRead && user == _accessUser)
+        {
+            return;
+        }
+
+        _accessRead = true;
+        _accessUser = user;
+        OperationResult<MyAccessResponse> access = await gateway.GetMyAccessAsync(null, CancellationToken.None);
+        _access = access.IsSuccess ? access.Value : null;
+        Refresh();
+    }
+
+    private void OnSessionChanged(object? sender, EventArgs e) => _ = InvokeAsync(LoadAccessAsync);
 
     private RenderFragment Section(string key, IReadOnlyList<NavItem> items, string? css) => __builder =>
     {
@@ -272,5 +313,9 @@
     {
         Menu.Changed -= OnMenuChanged;
         Navigation.LocationChanged -= OnLocationChanged;
+        if (_session is not null)
+        {
+            _session.Changed -= OnSessionChanged;
+        }
     }
 }
