@@ -1,6 +1,7 @@
 using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Exports.Application;
+using Lettra.Exports.Application.Banking;
 using Lettra.Exports.Application.EInvoicing.Platform;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,6 +25,13 @@ public static class DependencyInjection
         services.AddScoped<IPlatformTransmissionStore, EfPlatformTransmissionStore>();
         services.AddScoped<IPlatformHistoryReader, EfPlatformHistoryReader>();
         services.AddScoped<IReceivablesReader, EfReceivablesReader>();
+        services.AddScoped<IPaymentRepository, EfPaymentRepository>();
+        services.AddScoped<IBankJournal, EfBankJournal>();
+        services.AddScoped<IBankStatementRepository, EfBankStatementRepository>();
+        services.AddScoped<ILetteringRepository, EfLetteringRepository>();
+        services.AddScoped<IBankingSettingsRepository, EfBankingSettingsRepository>();
+        services.AddScoped<IKnownIbanStore, EfKnownIbanStore>();
+        services.AddScoped<IReceivableDocumentReader, EfReceivableDocumentReader>();
         string platform = configuration?[PlatformKey] ?? "None";
         switch (platform)
         {

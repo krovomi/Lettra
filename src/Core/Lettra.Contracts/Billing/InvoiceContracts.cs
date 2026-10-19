@@ -111,7 +111,8 @@ public sealed record InvoiceResponse(
     DateTimeOffset? ValidatedAt,
     DateTimeOffset? IssuedAt,
     Guid? CreditApprovedBy = null,
-    DateTimeOffset? CreditApprovedAt = null);
+    DateTimeOffset? CreditApprovedAt = null,
+    decimal PaidInclTax = 0m);
 
 /// <summary>Ligne de la liste des factures et avoirs.</summary>
 public sealed record InvoiceSummary(

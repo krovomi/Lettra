@@ -23,6 +23,254 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Lettra.Domain.Banking.BankStatementImport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AccountDisplay")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("Duplicates")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Format")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly?>("From")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Imported")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("ImportedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("ImportedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly?>("To")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BankStatementImports", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Banking.BankStatementLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateOnly>("BookingDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTimeOffset?>("ChangedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ChangedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CounterpartyIbanDisplay")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("CounterpartyIbanHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("CounterpartyName")
+                        .HasMaxLength(140)
+                        .HasColumnType("nvarchar(140)");
+
+                    b.Property<string>("Fingerprint")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<Guid>("ImportId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid?>("PaymentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(140)
+                        .HasColumnType("nvarchar(140)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Fingerprint")
+                        .IsUnique();
+
+                    b.HasIndex("ImportId");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("BankStatementLines", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Banking.BankingSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("WriteOffThreshold")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BankingSettings", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Banking.Lettering", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CancelReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTimeOffset?>("CancelledAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CancelledBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId", "Code")
+                        .IsUnique();
+
+                    b.ToTable("Letterings", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Banking.Payment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<Guid?>("BankLineId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CustomerName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Method")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(140)
+                        .HasColumnType("nvarchar(140)");
+
+                    b.Property<DateOnly?>("ReversalDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("ReversalReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTimeOffset?>("ReversedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ReversedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BankLineId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("Date");
+
+                    b.HasIndex("Number")
+                        .IsUnique();
+
+                    b.ToTable("Payments", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Domain.Billing.CompanyProfile", b =>
                 {
                     b.Property<Guid>("Id")
@@ -222,6 +470,10 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.Property<string>("Number")
                         .HasMaxLength(32)
                         .HasColumnType("nvarchar(32)");
+
+                    b.Property<decimal>("PaidInclTax")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("PaymentTerms")
                         .HasMaxLength(500)
@@ -1081,6 +1333,92 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.ToTable("AiJournal", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Banking.BankJournalLineRecord", b =>
+                {
+                    b.Property<Guid>("EntryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("LineNumber")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Account")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<decimal>("Credit")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("Debit")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal?>("VatRatePercent")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.HasKey("EntryId", "LineNumber");
+
+                    b.ToTable("BankJournalLines", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Banking.BankJournalRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CustomerName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsReversal")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("PaymentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("PieceNumber")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Date");
+
+                    b.HasIndex("PaymentId", "IsReversal")
+                        .IsUnique();
+
+                    b.ToTable("BankJournalEntries", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Banking.KnownCustomerIbanRecord", b =>
+                {
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("IbanHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<long>("LearnedAtMs")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("CustomerId", "IbanHash");
+
+                    b.HasIndex("IbanHash");
+
+                    b.ToTable("KnownCustomerIbans", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Billing.SalesJournalLineRecord", b =>
                 {
                     b.Property<Guid>("EntryId")
@@ -1610,6 +1948,90 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.ToTable("DossierStamp", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Domain.Banking.Lettering", b =>
+                {
+                    b.OwnsMany("Lettra.Domain.Banking.LetteringItem", "Items", b1 =>
+                        {
+                            b1.Property<Guid>("LetteringId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<int>("Kind")
+                                .HasColumnType("int");
+
+                            b1.Property<Guid>("DocumentId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.HasKey("LetteringId", "Kind", "DocumentId");
+
+                            b1.HasIndex("DocumentId");
+
+                            b1.ToTable("LetteringItems", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("LetteringId");
+                        });
+
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Banking.Payment", b =>
+                {
+                    b.OwnsMany("Lettra.Domain.Banking.PaymentAllocation", "Allocations", b1 =>
+                        {
+                            b1.Property<Guid>("PaymentId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<Guid>("InvoiceId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("decimal(18,4)");
+
+                            b1.Property<string>("InvoiceNumber")
+                                .IsRequired()
+                                .HasMaxLength(32)
+                                .HasColumnType("nvarchar(32)");
+
+                            b1.HasKey("PaymentId", "InvoiceId");
+
+                            b1.HasIndex("InvoiceId");
+
+                            b1.ToTable("PaymentAllocations", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("PaymentId");
+                        });
+
+                    b.OwnsMany("Lettra.Domain.Banking.PaymentVatShare", "VatShares", b1 =>
+                        {
+                            b1.Property<Guid>("PaymentId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<Guid>("InvoiceId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<decimal>("VatRatePercent")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("decimal(18,4)");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("decimal(18,4)");
+
+                            b1.HasKey("PaymentId", "InvoiceId", "VatRatePercent");
+
+                            b1.ToTable("PaymentVatShares", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("PaymentId");
+                        });
+
+                    b.Navigation("Allocations");
+
+                    b.Navigation("VatShares");
+                });
+
             modelBuilder.Entity("Lettra.Domain.Billing.Invoice", b =>
                 {
                     b.OwnsMany("Lettra.Domain.Billing.DocumentLine", "Lines", b1 =>
@@ -1888,6 +2310,15 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.Navigation("Entries");
                 });
 
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Banking.BankJournalLineRecord", b =>
+                {
+                    b.HasOne("Lettra.Infrastructure.Persistence.Banking.BankJournalRecord", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("EntryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Billing.SalesJournalLineRecord", b =>
                 {
                     b.HasOne("Lettra.Infrastructure.Persistence.Billing.SalesJournalRecord", null)
@@ -1904,6 +2335,11 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                         .HasForeignKey("TransmissionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Banking.BankJournalRecord", b =>
+                {
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Billing.SalesJournalRecord", b =>

@@ -247,7 +247,8 @@ internal static class InvoiceValidationEffects
                 _ => AccountingDocumentKind.Invoice,
             },
             invoice.RevenueLines,
-            invoice.ComputeTotals());
+            invoice.ComputeTotals(),
+            servicesVatOnReceipt: !invoice.VatOnDebits);
         return new SalesJournalEntry(invoice.Id, invoice.Number!, invoice.IssueDate!.Value, invoice.CustomerId, invoice.Customer.Name, entry);
     }
 }
