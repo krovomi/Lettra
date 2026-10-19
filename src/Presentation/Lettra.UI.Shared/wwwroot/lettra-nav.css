@@ -1,0 +1,211 @@
+/* Menu réglable et aide (NavMenu, HelpPanel) : recherche du menu, sections repliables, favoris, pied de la barre
+   latérale, panneau « Besoin d'aide ? ». Uniquement des jetons de lettra-tokens.css. Décrit dans docs/menu-et-aide.md. */
+
+/* ---------- recherche du menu ---------- */
+.lt-nav-search { flex: none; margin-bottom: var(--space-2); }
+.lt-nav-search-field {
+    display: flex; align-items: center; gap: var(--space-2);
+    min-height: 2.25rem; padding: 0 var(--space-1) 0 var(--space-3);
+    border: 1px solid var(--nav-border); border-radius: var(--radius-md);
+    color: var(--nav-fg-muted);
+    transition: border-color var(--motion-fast) var(--ease-out), background-color var(--motion-fast) var(--ease-out);
+}
+.lt-nav-search-field:focus-within { border-color: var(--nav-active-fg); background: var(--nav-active-bg); color: var(--nav-active-fg); }
+.lt-nav-search-field .lt-icon { flex: none; }
+.lt-nav-search-field input {
+    flex: 1 1 auto; min-width: 0; min-height: 0; padding: var(--space-1) 0;
+    border: 0; background: transparent; color: var(--nav-fg); font: inherit; font-size: var(--text-sm);
+}
+.lt-nav-search-field input::placeholder { color: var(--nav-fg-muted); opacity: 1; }
+.lt-nav-search-field input:focus, .lt-nav-search-field input:focus-visible { outline: none; box-shadow: none; }
+.lt-nav-search-field input::-webkit-search-cancel-button { display: none; }
+.lt-nav-search-clear {
+    display: inline-grid; place-items: center; flex: none; width: 1.75rem; height: 1.75rem; padding: 0;
+    border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--nav-fg-muted); cursor: pointer;
+}
+.lt-nav-search-clear:hover { background: var(--nav-active-bg); color: var(--nav-active-fg); }
+.lt-nav-search-rail { display: none; }
+
+/* ---------- liste qui défile (seule, et jamais en largeur) ---------- */
+.lt-nav-scroll {
+    flex: 1 1 auto; min-height: 0;
+    overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
+    margin-inline: calc(-1 * var(--space-1)); padding: 0 var(--space-1) var(--space-2);
+    scrollbar-width: thin; scrollbar-color: var(--nav-border) transparent;
+}
+.lt-nav-scroll::-webkit-scrollbar { width: 6px; height: 0; }
+.lt-nav-scroll::-webkit-scrollbar-thumb { border-radius: var(--radius-full); background: var(--nav-border); }
+
+/* ---------- sections repliables ---------- */
+.lt-nav-section { margin-top: var(--space-3); }
+.lt-nav-heading { margin: 0 0 2px; }
+.lt-nav-group {
+    display: flex; align-items: center; gap: var(--space-2); width: 100%;
+    min-height: 2rem; padding: var(--space-1) var(--space-2) var(--space-1) var(--space-3);
+    border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--nav-fg-muted);
+    font: inherit; font-size: var(--text-xs); font-weight: var(--weight-bold); letter-spacing: 0.06em; text-transform: uppercase;
+    text-align: left; cursor: pointer;
+}
+.lt-nav-group:hover { color: var(--nav-fg); background: var(--nav-active-bg); }
+.lt-nav-group-title { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lt-nav-chevron { flex: none; transition: transform var(--motion-fast) var(--ease-out); }
+.lt-nav-section.is-collapsed .lt-nav-chevron { transform: rotate(-90deg); }
+.lt-nav-section.is-collapsed .lt-nav-items { display: none; }
+.lt-nav-current-dot { flex: none; width: 0.5rem; height: 0.5rem; border-radius: var(--radius-full); background: var(--nav-active-fg); }
+.lt-nav-favorites .lt-nav-group .lt-nav-group-title::before { content: "★ "; letter-spacing: 0; }
+
+/* ---------- entrées et favoris ---------- */
+.lt-nav-item { position: relative; min-width: 0; }
+/* L'étoile ne réserve pas de place : au survol, elle couvre la fin du libellé, sur le fond de l'entrée survolée. Seul un
+   favori épinglé (section Favoris) garde sa place. */
+.lt-nav-favorites .lt-nav-item:has(.lt-nav-pin) .lt-nav-link { padding-right: 2.25rem; }
+.lt-nav-hint { flex: none; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--nav-fg-muted); font-size: var(--text-xs); font-weight: var(--weight-regular, 400); }
+.lt-nav-pin {
+    position: absolute; top: 50%; right: var(--space-1); transform: translateY(-50%);
+    display: inline-grid; place-items: center; width: 1.75rem; height: 1.75rem; padding: 0;
+    border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--nav-fg-muted); cursor: pointer;
+    opacity: 0; transition: opacity var(--motion-fast) var(--ease-out), color var(--motion-fast) var(--ease-out);
+}
+.lt-nav-item:hover .lt-nav-pin, .lt-nav-pin:focus-visible, .lt-nav-pin.is-pinned { opacity: 1; }
+.lt-nav-item:hover .lt-nav-pin, .lt-nav-pin:focus-visible { background: var(--nav-active-bg); }
+.lt-nav-pin:hover { color: var(--nav-active-fg); background: var(--nav-active-bg); }
+.lt-nav-pin.is-pinned { color: var(--color-warning-fg, var(--nav-active-fg)); }
+.lt-nav-pin.is-pinned .lt-icon { fill: currentColor; }
+/* Hors favoris, l'étoile pleine n'apparaît qu'au survol : la liste reste calme. */
+.lt-nav-section:not(.lt-nav-favorites) .lt-nav-pin.is-pinned { opacity: 0; }
+.lt-nav-section:not(.lt-nav-favorites) .lt-nav-item:hover .lt-nav-pin.is-pinned,
+.lt-nav-section:not(.lt-nav-favorites) .lt-nav-pin.is-pinned:focus-visible { opacity: 1; }
+@media (hover: none) {
+    .lt-nav-pin, .lt-nav-section:not(.lt-nav-favorites) .lt-nav-pin.is-pinned { opacity: 0.6; }
+    .lt-nav-item:has(.lt-nav-pin) .lt-nav-link { padding-right: 2.25rem; }
+}
+
+/* ---------- recherche sans résultat ---------- */
+.lt-nav-empty { margin: var(--space-2) var(--space-3); color: var(--nav-fg-muted); font-size: var(--text-sm); overflow-wrap: anywhere; }
+.lt-nav-fallbacks { display: grid; gap: 2px; margin-top: var(--space-2); padding-top: var(--space-2); border-top: 1px solid var(--nav-border); }
+.lt-nav-fallback { box-sizing: border-box; width: 100%; border: 0; background: transparent; font: inherit; text-align: left; cursor: pointer; color: var(--nav-fg-muted); }
+.lt-nav-fallback .lt-nav-label { white-space: normal; overflow-wrap: anywhere; }
+
+/* ---------- pied de la barre latérale : aide et repli ---------- */
+.lt-sidebar-footer { flex: none; display: grid; gap: 2px; padding-top: var(--space-2); border-top: 1px solid var(--nav-border); }
+.lt-sidebar-action {
+    display: flex; align-items: center; gap: var(--space-3); width: 100%;
+    min-height: 2.5rem; padding: var(--space-2) var(--space-3);
+    border: 0; border-radius: var(--radius-md); background: transparent; color: var(--nav-fg-muted);
+    font: inherit; text-align: left; cursor: pointer;
+}
+.lt-sidebar-action:hover { background: var(--nav-active-bg); color: var(--nav-active-fg); }
+.lt-sidebar-action .lt-icon { flex: none; }
+
+/* ---------- rail (barre repliée, et tablette) : icônes seules ---------- */
+.lt-shell[data-nav="collapsed"] .lt-sidebar :is(.lt-nav-search-field, .lt-nav-heading, .lt-nav-favorites, .lt-nav-pin, .lt-nav-hint) { display: none; }
+.lt-shell[data-nav="collapsed"] .lt-sidebar .lt-nav-search-rail { display: inline-grid; }
+.lt-shell[data-nav="collapsed"] .lt-sidebar .lt-nav-section.is-collapsed .lt-nav-items { display: grid; }
+.lt-shell[data-nav="collapsed"] .lt-sidebar .lt-nav-section { margin-top: var(--space-2); padding-top: var(--space-2); border-top: 1px solid var(--nav-border); }
+.lt-shell[data-nav="collapsed"] .lt-sidebar .lt-nav-item:has(.lt-nav-pin) .lt-nav-link { padding-right: 0; }
+.lt-shell[data-nav="collapsed"] .lt-sidebar .lt-nav-scroll { margin-inline: 0; padding-inline: 0; }
+.lt-nav-search-rail {
+    place-items: center; width: var(--hit); height: var(--hit); padding: 0;
+    border: 1px solid var(--nav-border); border-radius: var(--radius-md); background: transparent; color: var(--nav-fg-muted); cursor: pointer;
+}
+.lt-nav-search-rail:hover { background: var(--nav-active-bg); color: var(--nav-active-fg); }
+@media (max-width: 1199px) {
+    .lt-sidebar :is(.lt-nav-search-field, .lt-nav-heading, .lt-nav-favorites, .lt-nav-pin, .lt-nav-hint) { display: none; }
+    .lt-sidebar .lt-nav-search-rail { display: inline-grid; }
+    .lt-sidebar .lt-nav-section.is-collapsed .lt-nav-items { display: grid; }
+    .lt-sidebar .lt-nav-section { margin-top: var(--space-2); padding-top: var(--space-2); border-top: 1px solid var(--nav-border); }
+    .lt-sidebar .lt-nav-item:has(.lt-nav-pin) .lt-nav-link { padding-right: 0; }
+    .lt-sidebar .lt-nav-scroll { margin-inline: 0; padding-inline: 0; }
+    .lt-sidebar-footer { justify-items: center; }
+}
+
+/* ---------- feuille « Plus » du téléphone ---------- */
+.lt-sheet .lt-nav-search { margin-top: var(--space-3); }
+.lt-sheet .lt-nav-search-field { min-height: var(--hit); border-color: var(--color-border); color: var(--color-fg-muted); }
+.lt-sheet .lt-nav-search-field:focus-within { border-color: var(--color-primary); background: var(--color-surface); color: var(--color-primary); }
+.lt-sheet .lt-nav-search-field input { color: var(--color-fg); font-size: 1rem; }
+.lt-sheet .lt-nav-search-field input::placeholder { color: var(--color-fg-muted); }
+.lt-sheet .lt-nav-scroll { overflow: visible; margin: 0; padding: 0; }
+.lt-sheet .lt-nav-group { min-height: var(--hit); color: var(--color-fg-muted); }
+.lt-sheet .lt-nav-group:hover { background: var(--color-surface-2); color: var(--color-fg); }
+.lt-sheet .lt-nav-current-dot { background: var(--color-primary); }
+.lt-sheet .lt-nav-pin { width: var(--hit); height: var(--hit); }
+.lt-sheet .lt-nav-item:has(.lt-nav-pin) .lt-nav-link { padding-right: calc(var(--hit) + var(--space-1)); }
+.lt-sheet .lt-nav-fallbacks { border-color: var(--color-border); }
+.lt-sheet-help { display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: var(--hit); margin-top: var(--space-3); padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: transparent; color: var(--color-fg); font: inherit; font-weight: var(--weight-medium); text-align: left; cursor: pointer; }
+.lt-sheet-help:hover { background: var(--color-surface-2); }
+.lt-sheet-help .lt-icon { color: var(--color-primary); }
+
+/* ---------- panneau d'aide ---------- */
+.lt-help-backdrop { position: fixed; inset: 0; z-index: 55; background: var(--color-backdrop); animation: lt-help-fade var(--motion-base) var(--ease-out); }
+.lt-help {
+    position: fixed; z-index: 56; top: 0; right: 0; bottom: 0;
+    width: min(30rem, 100vw);
+    display: flex; flex-direction: column;
+    padding-top: var(--safe-top); padding-right: var(--safe-right); padding-bottom: var(--safe-bottom);
+    background: var(--color-surface); color: var(--color-fg);
+    border-left: 1px solid var(--color-border); box-shadow: var(--shadow-lg);
+    animation: lt-help-in var(--motion-base) var(--ease-out);
+}
+@keyframes lt-help-in { from { transform: translateX(1.5rem); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes lt-help-fade { from { opacity: 0; } to { opacity: 1; } }
+.lt-help-header { flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-4) var(--space-4) var(--space-2) var(--space-5); }
+.lt-help-header h2 { display: inline-flex; align-items: center; gap: var(--space-2); margin: 0; font-size: var(--text-lg); }
+.lt-help-header h2 .lt-icon { color: var(--color-primary); }
+.lt-help-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; padding: var(--space-2) var(--space-5) var(--space-5); }
+
+.lt-help-ask label { display: block; margin-bottom: var(--space-1); font-weight: var(--weight-medium); }
+.lt-help-ask-field { display: flex; align-items: center; gap: var(--space-2); padding: 0 var(--space-3); border: 1px solid var(--color-border-strong); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-fg-muted); }
+.lt-help-ask-field:focus-within { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-soft); }
+.lt-help-ask-field input { flex: 1 1 auto; min-width: 0; min-height: var(--hit); border: 0; background: transparent; color: var(--color-fg); font: inherit; }
+.lt-help-ask-field input:focus, .lt-help-ask-field input:focus-visible { outline: none; box-shadow: none; }
+
+.lt-help-actions { display: grid; gap: var(--space-2); margin: var(--space-4) 0; }
+.lt-help-action {
+    display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: var(--hit);
+    padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md);
+    background: var(--color-surface); color: var(--color-fg); font: inherit; text-align: left; cursor: pointer;
+    transition: border-color var(--motion-fast) var(--ease-out), background-color var(--motion-fast) var(--ease-out);
+}
+.lt-help-action:hover { border-color: var(--color-primary); background: var(--color-primary-soft); }
+.lt-help-action > .lt-icon { flex: none; color: var(--color-primary); }
+.lt-help-action > span { flex: 1 1 auto; min-width: 0; display: grid; }
+.lt-help-action small { color: var(--color-fg-muted); font-size: var(--text-xs); }
+.lt-help-action kbd { flex: none; }
+
+.lt-help-section-title { margin: var(--space-4) 0 var(--space-2); color: var(--color-fg-muted); font-size: var(--text-xs); font-weight: var(--weight-bold); letter-spacing: 0.06em; text-transform: uppercase; }
+.lt-help-faq { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--color-border); }
+.lt-help-faq > li { border-bottom: 1px solid var(--color-border); }
+.lt-help-faq summary {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+    min-height: var(--hit); padding: var(--space-2) 0; cursor: pointer; font-weight: var(--weight-medium); list-style: none;
+}
+.lt-help-faq summary::-webkit-details-marker { display: none; }
+.lt-help-faq summary::after {
+    content: ""; flex: none; width: 0.5rem; height: 0.5rem; margin-right: var(--space-1);
+    border-right: 2px solid var(--color-fg-muted); border-bottom: 2px solid var(--color-fg-muted);
+    transform: rotate(45deg); transition: transform var(--motion-fast) var(--ease-out);
+}
+.lt-help-faq details[open] summary::after { transform: rotate(-135deg); }
+.lt-help-faq summary:hover { color: var(--color-primary); }
+.lt-help-answer { padding: 0 0 var(--space-3); color: var(--color-fg); }
+.lt-help-answer p { margin: 0 0 var(--space-2); line-height: 1.55; }
+.lt-help-go { display: inline-flex; align-items: center; gap: var(--space-2); }
+.lt-help-empty { margin-top: var(--space-4); padding: var(--space-4); border: 1px dashed var(--color-border-strong); border-radius: var(--radius-md); }
+.lt-help-empty p { margin: 0 0 var(--space-1); }
+.lt-help-more { margin-top: var(--space-5); }
+.lt-help-keys { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--space-2) var(--space-3); margin: 0 0 var(--space-3); align-items: center; }
+.lt-help-keys dd { margin: 0; color: var(--color-fg-muted); font-size: var(--text-sm); }
+
+/* Téléphone : l'aide prend tout l'écran, au-dessus des onglets. */
+@media (max-width: 767px) {
+    .lt-help { width: 100vw; border-left: 0; padding-left: var(--safe-left); animation: lt-rise var(--motion-base) var(--ease-out); }
+    .lt-help-body { padding-inline: var(--space-4); }
+    .lt-help-header { padding-inline: var(--space-4) var(--space-3); }
+    .lt-help-keys, .lt-help-more .lt-help-section-title, .lt-help-action kbd { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .lt-nav-chevron, .lt-nav-pin, .lt-help-faq summary::after { transition: none; }
+    .lt-help, .lt-help-backdrop { animation: none; }
+}

@@ -5,7 +5,7 @@
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <!-- Tutoriel des premières fois et liste de démarrage : vague 5, lane F. -->
-  <data name="Tour.Help" xml:space="preserve"><value>Tour of this screen</value></data>
+  <data name="Tour.Help" xml:space="preserve"><value>Help and tours</value></data>
   <data name="Tour.Count" xml:space="preserve"><value>Step {0} of {1}</value></data>
   <data name="Tour.Next" xml:space="preserve"><value>Next</value></data>
   <data name="Tour.Previous" xml:space="preserve"><value>Previous</value></data>
@@ -20,15 +20,15 @@
   <data name="Tour.home.welcome.Title" xml:space="preserve"><value>Welcome to Lettra</value></data>
   <data name="Tour.home.welcome.Text" xml:space="preserve"><value>Here is where everything is, in one minute. Arrow keys move back and forth, Esc closes this tour.</value></data>
   <data name="Tour.home.nav.Title" xml:space="preserve"><value>Screens</value></data>
-  <data name="Tour.home.nav.Text" xml:space="preserve"><value>Quotes, invoices, customers, catalogue, FEC: everything starts here. On a phone, the bottom tabs hold the essentials and "More" the rest.</value></data>
+  <data name="Tour.home.nav.Text" xml:space="preserve"><value>Quotes, invoices, customers, catalogue, FEC: everything starts here. Type a few letters at the top of the menu to find a screen, fold sections with their chevron and pin your favourite screens with the star. On a phone, the bottom tabs hold the essentials and "More" the rest.</value></data>
   <data name="Tour.home.search.Title" xml:space="preserve"><value>Find anything with Ctrl+K</value></data>
   <data name="Tour.home.search.Text" xml:space="preserve"><value>Type a document number, a customer name or an action ("new quote Dupont"). Text templates can be inserted from here too.</value></data>
   <data name="Tour.home.starter.Title" xml:space="preserve"><value>Your first steps</value></data>
   <data name="Tour.home.starter.Text" xml:space="preserve"><value>This list ticks itself as you work. Hide it whenever you like.</value></data>
   <data name="Tour.home.appearance.Title" xml:space="preserve"><value>Theme and density</value></data>
   <data name="Tour.home.appearance.Text" xml:space="preserve"><value>Light, dark, slate or high contrast, and a Comfort density for touch or Expert for the keyboard.</value></data>
-  <data name="Tour.home.help.Title" xml:space="preserve"><value>Replay a tour</value></data>
-  <data name="Tour.home.help.Text" xml:space="preserve"><value>Every screen has its own tour, played on your first visit. This button replays it at any time.</value></data>
+  <data name="Tour.home.help.Title" xml:space="preserve"><value>Need help?</value></data>
+  <data name="Tour.home.help.Text" xml:space="preserve"><value>Ask your question here: help answers, replays the tour of the current screen and searches everywhere. It is also at the bottom of the menu.</value></data>
   <data name="Tour.quotes.list.Title" xml:space="preserve"><value>Your quotes</value></data>
   <data name="Tour.quotes.list.Text" xml:space="preserve"><value>Drafts, sent, accepted or invoiced quotes. Click one to open it.</value></data>
   <data name="Tour.quotes.filters.Title" xml:space="preserve"><value>Search and filter</value></data>

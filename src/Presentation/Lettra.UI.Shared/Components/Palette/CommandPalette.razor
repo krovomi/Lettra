@@ -62,12 +62,15 @@
 
     public bool IsOpen => _open;
 
-    public async Task OpenAsync()
+    public Task OpenAsync() => OpenAsync(string.Empty);
+
+    /// <summary>Ouvre la palette sur une recherche déjà tapée (recherche du menu, aide : « Chercher partout »).</summary>
+    public async Task OpenAsync(string query)
     {
         _open = true;
         _focusPending = true;
-        _query = string.Empty;
-        await SearchAsync(string.Empty, CancellationToken.None);
+        _query = query ?? string.Empty;
+        await SearchAsync(_query, CancellationToken.None);
     }
 
     public void Close()

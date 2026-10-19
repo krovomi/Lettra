@@ -48,6 +48,13 @@ public sealed class GuidedTourTests : BunitContext
         b.CloseComponent();
     }));
 
+    // Le bouton « ? » ouvre l'aide, qui relance le tutoriel de l'écran.
+    private static void RejouerLeTutoriel(IRenderedComponent<MainLayout> coque)
+    {
+        coque.Find("#tour-help").Click();
+        coque.Find("#help-tour-start").Click();
+    }
+
     private void NavigateurReel() => _tour.Setup<bool>("canAutoStart").SetResult(true);
 
     // ---------- données des parcours ----------
@@ -168,7 +175,7 @@ public sealed class GuidedTourTests : BunitContext
         IRenderedComponent<MainLayout> coque = Coque();
 
         coque.FindAll("#tour-bubble").Should().BeEmpty("bUnit, Playwright et les captures ne doivent jamais voir la bulle");
-        coque.Find("#tour-help").GetAttribute("aria-label").Should().Be("Tutoriel de cet écran");
+        coque.Find("#tour-help").GetAttribute("aria-label").Should().Be("Aide et tutoriels");
     }
 
     [Fact]
@@ -278,7 +285,7 @@ public sealed class GuidedTourTests : BunitContext
     public void Le_clavier_parcourt_le_tutoriel_et_echap_le_ferme()
     {
         IRenderedComponent<MainLayout> coque = Coque();
-        coque.Find("#tour-help").Click();
+        RejouerLeTutoriel(coque);
         IElement racine() => coque.Find(".lt-tour");
 
         racine().KeyDown("ArrowRight");
@@ -295,7 +302,7 @@ public sealed class GuidedTourTests : BunitContext
     public void La_derniere_etape_termine_le_parcours()
     {
         IRenderedComponent<MainLayout> coque = Coque();
-        coque.Find("#tour-help").Click();
+        RejouerLeTutoriel(coque);
         for (int i = 0; i < 6; i++)
         {
             coque.Find("#tour-next").Click();
@@ -313,7 +320,7 @@ public sealed class GuidedTourTests : BunitContext
         _tour.Setup<TourTargetRect?>("locate", _ => true).SetResult(new TourTargetRect(10, 300, 400, 36, 1440, 900));
         IRenderedComponent<MainLayout> coque = Coque();
 
-        coque.Find("#tour-help").Click();
+        RejouerLeTutoriel(coque);
 
         coque.WaitForAssertion(() => coque.Find(".lt-tour-spot").GetAttribute("style").Should().Be("top: 4px; left: 294px; width: 412px; height: 48px"));
         coque.Find("#tour-bubble").ClassList.Should().Contain("is-below");
