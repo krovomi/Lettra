@@ -143,6 +143,9 @@ LETTRA_SESSION_COOKIE="$(cat /tmp/lettra-k6/session-cookie.txt)" k6 run -e LETTR
 
 Détails : [Voir la télémétrie dans Grafana](deploy/demo/README.md#voir-la-télémétrie-dans-grafana).
 
+Sans Grafana, les mêmes indicateurs se lisent dans Lettra, menu **Pilotage** > **Tableaux de bord** : dans la démo
+Docker, les trois onglets sont remplis pour les trois dossiers ([Tableaux de bord](docs/tableaux-de-bord.md)).
+
 > La CI (job « Démo — télémétrie dans Grafana ») démarre cette pile, vérifie par l'API de Grafana les sources et les
 > tableaux de bord, puis, après deux minutes d'activité k6, que chaque panneau a des données (sauf les deux panneaux
 > PostgreSQL, vides avec SQLite, et quatre panneaux d'administration qui dépendent d'erreurs, de connexions ou de postes
@@ -321,7 +324,7 @@ Le jeu ne s'ajoute jamais à un dossier qui a déjà des devis ou des factures. 
 voir « Repartir de zéro » dans [En cas de problème](#en-cas-de-problème).
 
 **La navigation.** **Accueil**, puis **Ventes** (**Devis**, **Factures**, **Avoirs**), **Tiers** (**Clients**,
-**Fournisseurs**, **Catalogue**), **Comptabilité** (**Journal et balance**, **FEC**) et **Pilotage** (**Alertes**, **Entreprise**). Sur un
+**Fournisseurs**, **Catalogue**), **Comptabilité** (**Journal et balance**, **FEC**) et **Pilotage** (**Tableaux de bord**, **Alertes**, **Entreprise**). Sur un
 ordinateur, le menu est à gauche et se replie en icônes ; sur une tablette, c'est une colonne d'icônes ; sur un
 téléphone, des onglets en bas (Accueil, Devis, Factures, Clients, **Plus** pour le reste). En haut, le champ
 « Rechercher un écran, une pièce, un client… » ouvre la palette de commandes, aussi au clavier avec **Ctrl+K**
@@ -545,6 +548,11 @@ MailPit, à 1440 et 375 px. Non vérifié dans les applications installées.)* D
   leur (« Langue des devis et factures imprimés », « Langue du PDF »). Dates et montants suivent la langue de l'écran :
   jj/mm/aaaa et 15 128,00 en français, mm/dd/yyyy et 15,128.00 en anglais ; chaque champ de date a un calendrier
   (bouton à droite) et accepte aussi 19102026 ou 19/10. Détails : [docs/dates-et-langue.md](docs/dates-et-langue.md).
+- **Tableaux de bord** (menu **Pilotage** > **Tableaux de bord**, `/pilotage`) : les indicateurs des tableaux Grafana dans
+  Lettra, filtrés par les droits de chacun : « Ce dossier » (lecture du dossier), « Mes dossiers » (dossiers lisibles),
+  « Administration » (dossiers administrés, onglet caché sinon) ; aucun montant ni nom de client. Dans la démo Docker,
+  les trois onglets sont remplis pour les trois dossiers ; sur un poste isolé ou relié, seul « Ce dossier » est
+  disponible. Voir [docs/tableaux-de-bord.md](docs/tableaux-de-bord.md).
 - **Équipe et accès** (menu **Pilotage**) : qui travaille dans le cabinet et ce que chacun peut ouvrir. Onglet
   **Personnes** : ajoutez une personne (nom et adresse), puis donnez-lui un accès en trois questions (quel rôle, où,
   jusqu'à quand) ; sa fiche dit en clair ce qu'elle peut faire, page par page. Onglet **Équipes** : regroupez des
@@ -839,7 +847,8 @@ de code, qui échoue sous 88 % des lignes ou 78 % des branches (rapport par asse
 commande locale : [docs/qualite-du-code.md](docs/qualite-du-code.md)), conformité Factur-X, applications MAUI construites et lancées (Windows ; Android sur émulateur ; simulateur iOS ; macOS, non
 bloquant tant qu'il n'est pas signé) avec leurs artefacts, gitleaks, SBOM CycloneDX,
 CodeQL, avis de tiers, images signées (cosign) sur `main`. `.github/workflows/deploy.yml` valide l'IaC, les règles
-d'alerte et l'essai de panne (API arrêtée, astreinte appelée en S1).
+d'alerte et l'essai de panne (API arrêtée, astreinte appelée en S1). Sur une PR, un nouveau push annule l'exécution
+en cours ; sur `main`, chaque fusion garde son exécution complète.
 
 ### Assistant IA
 

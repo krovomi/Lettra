@@ -40,8 +40,10 @@ on:
 permissions:
   contents: read
 
+# Sur une PR, un nouveau push annule l'exécution en cours. Sur main, chaque fusion garde son exécution complète (groupe
+# par commit) : sinon les fusions rapprochées s'annulent et main n'a jamais de CI terminée.
 concurrency:
-  group: voix-${{ github.ref }}
+  group: voix-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
   cancel-in-progress: true
 
 env:
