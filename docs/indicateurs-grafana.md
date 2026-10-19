@@ -101,7 +101,8 @@ publie dans sa ConfigMap.
 
 Avec l'observabilité (voir le README), ouvrir http://localhost:3000, dossier **Lettra**. Le tableau du cabinet
 liste les trois dossiers de démonstration ; cliquer sur un nom ouvre son tableau, ou choisir le dossier en haut du
-tableau du dossier. Les courbes dans le temps se remplissent au fil des collectes (une toutes les 5 minutes).
+tableau du dossier. Les courbes dans le temps se remplissent au fil des collectes (une par minute dans la démo, qui règle
+`Lettra__Kpi__RefreshInterval: "00:01:00"` ; toutes les 5 minutes par défaut).
 
 Vérifié dans la démo Docker, après la mise à jour d'une démo existante (les données de démonstration sont conservées) :
 route 401 sans jeton et 200 avec, cible Prometheus `lettra-kpi` active, aucune collecte en échec, et les trois tableaux
