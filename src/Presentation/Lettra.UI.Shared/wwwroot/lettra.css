@@ -9,6 +9,7 @@
 @import url("lettra-lists.css");
 @import url("lettra-reminders.css");
 @import url("lettra-nav.css");
+@import url("lettra-dates.css");
 
 /* Alias historiques : les composants et la grille écrits avant les jetons les lisent encore. */
 :root {
