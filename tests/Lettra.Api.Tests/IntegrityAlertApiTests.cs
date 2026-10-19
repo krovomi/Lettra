@@ -96,7 +96,8 @@ public sealed class IntegrityAlertApiTests(LettraApiFactory factory) : IClassFix
             [LettraApiFactory.ManagerId, LettraApiFactory.CollaborateurId, LettraApiFactory.AdministrateurCabinetId]);
 
         // Rien du dossier dans la notification : ni numéro, ni montant, ni client, ni identifiant de dossier.
-        string sent = $"{notification.Title}|{notification.Link}|{notification.AlertId}";
+        // L'identifiant de l'alerte est tiré au hasard : il peut contenir « 120 » ou « 240 », on le retire avant de chercher.
+        string sent = $"{notification.Title}|{notification.Link}".Replace(notification.AlertId.ToString(), "<alerte>", StringComparison.OrdinalIgnoreCase);
         sent.Should().NotContainAny("FAC-", "120", "240", "24.0000", CustomerName, LettraApiFactory.DossierId.ToString());
 
         // Le collaborateur la voit dans son dossier, pas au niveau du cabinet ; le manager la prend en charge.

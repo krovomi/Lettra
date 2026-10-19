@@ -13,6 +13,7 @@ using Lettra.Domain.Billing;
 using Lettra.Domain.Common;
 using Lettra.Domain.Pricing;
 using Lettra.Domain.SharedKernel;
+using static Lettra.Api.Infrastructure.HttpResults;
 
 namespace Lettra.Api.Endpoints;
 
@@ -41,6 +42,7 @@ internal static class BillingEndpoints
         MapQuotes(api.MapGroup("/quotes").WithTags("Quotes"));
         MapInvoices(api.MapGroup("/invoices").WithTags("Invoices"));
         MapPriceLists(api.MapGroup("/price-lists").WithTags("PriceLists"));
+        api.MapRecurringInvoices();
         return api;
     }
 
@@ -354,16 +356,6 @@ internal static class BillingEndpoints
         NoContent(await commands.SendAsync(new DeletePriceListCommand(tenant.Current.DossierId, new PriceListId(id)), cancellationToken).ConfigureAwait(false));
 
     // --- Aides
-
-    private static IResult Ok<T>(Result<T> result) => result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
-
-    private static IResult NoContent(Result result) => result.IsSuccess ? TypedResults.NoContent() : result.Errors.ToProblem();
-
-    private static IResult Versioned<T>(Result<T> result, Func<T, long> version) =>
-        result.IsSuccess ? TypedResults.Ok(result.Value).WithETag(version(result.Value)) : result.Errors.ToProblem();
-
-    private static IResult Created<T>(string location, Result<T> result, Func<T, long> version) =>
-        result.IsSuccess ? TypedResults.Created(location, result.Value).WithETag(version(result.Value)) : result.Errors.ToProblem();
 
     private static DossierId DossierOf(IDossierScoped command) => command.Dossier;
 }

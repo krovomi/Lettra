@@ -10,6 +10,7 @@ using Lettra.Domain.Common;
 using Lettra.Exports.Application.Banking;
 using Lettra.Exports.Application.Banking.Statements;
 using Microsoft.AspNetCore.Mvc;
+using static Lettra.Api.Infrastructure.HttpResults;
 
 namespace Lettra.Api.Endpoints;
 
@@ -134,7 +135,7 @@ internal static class BankingEndpoints
     private static async Task<IResult> RecordPaymentAsync(RecordPaymentRequest request, ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken)
     {
         Result<PaymentResponse> result = await commands.SendAsync(new RecordPaymentCommand(tenant.Current.DossierId, request), cancellationToken).ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Created($"/api/v1/payments/{result.Value.Id}", result.Value) : result.Errors.ToProblem();
+        return Created(p => $"/api/v1/payments/{p.Id}", result);
     }
 
     private static async Task<IResult> ReversePaymentAsync(
@@ -176,6 +177,4 @@ internal static class BankingEndpoints
 
     private static async Task<IResult> GetStatusAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken) =>
         Ok(await queries.QueryAsync(new GetBankReconciliationStatusQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false));
-
-    private static IResult Ok<T>(Result<T> result) => result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
 }

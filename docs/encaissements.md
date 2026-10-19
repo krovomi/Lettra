@@ -83,7 +83,7 @@ fois est lettrée au second règlement, avec les deux.
    2. le montant égale le reste dû d'une facture et le nom du client figure dans le libellé ou le nom du payeur
       (formes juridiques ignorées) ;
    3. le montant égale le reste dû et l'IBAN du payeur est déjà connu pour ce client (appris à chaque rapprochement
-      validé ; seule une empreinte de l'IBAN est conservée) ;
+      validé ; seule une empreinte de l'IBAN est conservée, voir « Intégrité et données ») ;
    4. le montant égale la somme de plusieurs factures d'un client reconnu par son nom ou son IBAN.
    Si deux clients sont possibles, Lettra ne propose rien. Un débit (frais, prélèvement fournisseur) n'a jamais de
    proposition.
@@ -113,6 +113,13 @@ n'apparaît que là où les données de démonstration sont autorisées ; l'API 
 - L'enregistrement et la contre-passation d'un encaissement entrent dans la chaîne d'intégrité (événements
   `PaymentRecorded` et `PaymentReversed`, empreinte SHA-256 de l'encaissement). La clôture de période ne compte pas les
   encaissements dans ses totaux de ventes.
+- **IBAN des payeurs** : Lettra ne garde que l'IBAN masqué (pays, clé et quatre derniers caractères) et une empreinte
+  HMAC-SHA256 calculée avec une clé secrète propre au dossier. Cette clé est dérivée (HKDF) de la clé maîtresse du
+  cabinet, celle qui protège déjà les clés des dossiers et de la chaîne d'intégrité ; elle n'est jamais stockée. Lire la
+  base sans la clé maîtresse ne permet donc pas de vérifier un IBAN deviné. Les empreintes de la première version
+  (SHA-256 sans clé) sont converties au premier import ou à la première ouverture du rapprochement, sans connaître les
+  IBAN : l'empreinte avec clé se calcule à partir de l'ancienne, si bien que les IBAN déjà appris restent reconnus.
+  Une future rotation de la clé maîtresse devra reconvertir les empreintes de la même façon.
 - La migration `Encaissements` ajoute les tables et la série de numéros `ENC-` sans toucher aux données existantes
   (SQLite, SQL Server, PostgreSQL).
 - **Hors ligne** : les encaissements se saisissent sur le serveur (navigateur, application reliée au serveur du
@@ -138,6 +145,7 @@ dans le toaster.
 | API de bout en bout (saisie, TVA, lettrage, FEC, intégrité, import CAMT, propositions, validation, contre-passation, droits) | vérifié par `tests/Lettra.Api.Tests/BankingApiTests.cs` |
 | Écrans (répartition, écart soldé, validation unitaire et en masse, écarter, contre-passer, journal) | vérifié par `tests/Lettra.UI.Tests/Banking/BankingPagesTests.cs` |
 | Règles de rapprochement, lettrage, lecture CSV/OFX/CAMT, relevé de démonstration | vérifié par les tests unitaires (`Lettra.Domain.Tests/Banking`, `Lettra.Exports.Tests/Banking`) |
+| Empreintes d'IBAN avec la clé du dossier, conversion des anciennes sans perdre la règle « IBAN connu » | vérifié par `tests/Lettra.Api.Tests/IbanFingerprintApiTests.cs` et `Lettra.Domain.Tests/Banking/IbanFingerprintTests.cs` |
 | Démo Docker dans un navigateur, applications installées | non vérifié à la main dans cette version |
 
 ## Code
@@ -145,7 +153,8 @@ dans le toaster.
 - Domaine : `src/Core/Lettra.Domain/Banking` (encaissement, relevé, rapprochement, lettrage) ; calculs purs :
   `src/Core/Lettra.Calculations/PaymentEntries.cs` et `AccountingEntries.cs` (44574).
 - Cas d'usage : `src/Modules/Exports/Lettra.Exports.Application/Banking` (lecteurs de relevés dans `Statements/`) ;
-  persistance : `src/Modules/Exports/Lettra.Exports.Infrastructure/EfBankingStores.cs` ; TVA à l'encaissement pour les
+  persistance : `src/Modules/Exports/Lettra.Exports.Infrastructure/EfBankingStores.cs` ; clé des empreintes d'IBAN :
+  `src/Modules/Exports/Lettra.Exports.Infrastructure/KeyedIbanFingerprints.cs` ; TVA à l'encaissement pour les
   déclarations : `src/Modules/Exports/Lettra.Exports.Infrastructure/EfVatOnReceiptsSource.cs`.
 - API : `src/Hosts/Lettra.Api/Endpoints/BankingEndpoints.cs` (`/api/v1/payments`, `/api/v1/bank`).
 - Écrans : `src/Presentation/Lettra.UI.Shared/Pages/Banking`, styles `wwwroot/lettra-banking.css`, textes

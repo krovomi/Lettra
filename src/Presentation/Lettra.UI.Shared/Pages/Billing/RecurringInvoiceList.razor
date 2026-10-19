@@ -1,0 +1,209 @@
+@page "/recurring-invoices"
+@using Lettra.UI.Shared.Components.Explorer
+@inject IRecurringInvoicesGateway Recurring
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+@* Factures récurrentes (vague 7) : les modèles (abonnements, honoraires au forfait), leur prochaine facture, et la
+   création des factures dues à la demande. Le Worker fait la même création à intervalle régulier quand il tourne. *@
+
+<PageTitle>@L["Recurring.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Recurring.Title"]</h1>
+        <p class="lettra-muted">@L["Recurring.Subtitle"]</p>
+    </div>
+    <div class="lt-page-actions">
+        <a class="lettra-button" href="recurring-invoices/new" id="recurring-new"><Icon Name="plus" Size="18" /> @L["Recurring.New"]</a>
+    </div>
+</div>
+
+@if (_dueCount > 0)
+{
+    <div class="lettra-banner is-warning" role="status" id="recurring-due">
+        <span>@string.Format(Culture, L[_dueCount == 1 ? "Recurring.Due.One" : "Recurring.Due.Many"], _dueCount)</span>
+        <button type="button" class="lettra-button" id="recurring-run" disabled="@_running" @onclick="RunAsync">
+            <Icon Name="repeat" Size="18" /> @L["Recurring.Run"]
+        </button>
+    </div>
+}
+
+<section class="lettra-card" aria-labelledby="recurring-list-title">
+    <h2 id="recurring-list-title" class="lettra-visually-hidden">@L["Recurring.Title"]</h2>
+    <div class="lettra-toolbar">
+        <div class="lt-filter">
+            <label for="recurring-search">@L["Recurring.Search"]</label>
+            <input id="recurring-search" type="search" @bind="_search" @bind:after="ReloadAsync" autocomplete="off" />
+        </div>
+        <div class="lt-filter">
+            <label for="recurring-state">@L["Billing.Status"]</label>
+            <select id="recurring-state" @bind="_state" @bind:after="ReloadAsync">
+                <option value="">@L["Recurring.State.All"]</option>
+                <option value="active">@L["Recurring.State.Active"]</option>
+                <option value="paused">@L["Recurring.State.Paused"]</option>
+                <option value="due">@L["Recurring.State.Due"]</option>
+            </select>
+        </div>
+        <div class="lt-filter">
+            <label for="recurring-sort">@L["Recurring.Sort"]</label>
+            <select id="recurring-sort" @bind="_sort" @bind:after="ReloadAsync">
+                @foreach (RecurringInvoiceSortDto sort in Enum.GetValues<RecurringInvoiceSortDto>())
+                {
+                    <option value="@sort">@L[$"Recurring.Sort.{sort}"]</option>
+                }
+            </select>
+        </div>
+        <div class="lt-filter">
+            <label for="recurring-descending">@L["Recurring.Order"]</label>
+            <select id="recurring-descending" @bind="_order" @bind:after="ReloadAsync">
+                <option value="asc">@L["Recurring.Order.Ascending"]</option>
+                <option value="desc">@L["Recurring.Order.Descending"]</option>
+            </select>
+        </div>
+    </div>
+
+    <GeneralErrors Errors="_errors" IncludeFieldErrors="true" />
+
+    @if (_page is null)
+    {
+        <ListSkeleton Columns="6" />
+    }
+    else if (_page.Items.Count == 0)
+    {
+        <EmptyState Id="recurring-empty" IconName="repeat" Title="@(IsFiltered ? L["Lists.Empty.FilteredTitle"] : L["Recurring.Empty"])"
+                    Text="@(IsFiltered ? L["Lists.Empty.Filtered"] : L["Recurring.Empty.Text"])">
+            @if (!IsFiltered)
+            {
+                <a class="lettra-button" href="recurring-invoices/new"><Icon Name="plus" Size="18" /> @L["Recurring.New"]</a>
+            }
+        </EmptyState>
+    }
+    else
+    {
+        <table class="lettra-table lettra-documents lt-cards" id="recurring-table">
+            <thead>
+                <tr>
+                    <th scope="col">@L["Recurring.Field.Name"]</th>
+                    <th scope="col">@L["Billing.Column.Customer"]</th>
+                    <th scope="col">@L["Recurring.Field.Frequency"]</th>
+                    <th scope="col">@L["Recurring.NextInvoice"]</th>
+                    <th scope="col">@L["Recurring.Invoices"]</th>
+                    <th scope="col" class="lg-num">@L["Totals.ExclTax"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (RecurringInvoiceSummary template in _page.Items)
+                {
+                    <tr @key="template.Id">
+                        <td>
+                            <a href="@($"recurring-invoices/{template.Id}")">@template.Name</a>
+                            @if (!template.IsActive)
+                            {
+                                <span class="lettra-status is-refused">@L["Recurring.State.Paused"]</span>
+                            }
+                            else if (template.IsDue)
+                            {
+                                <span class="lettra-status is-draft">@L["Recurring.State.Due"]</span>
+                            }
+                            @if (template.ValidateAutomatically)
+                            {
+                                <span class="lettra-status is-validated">@L["Recurring.AutoValidated"]</span>
+                            }
+                            @if (template.RevisionAwaitsIndex)
+                            {
+                                <span class="lettra-status is-expired" title="@L["Recurring.Revision.AwaitsIndex"]">@L["Recurring.Revision.IndexToEnter"]</span>
+                            }
+                        </td>
+                        <td data-label="@L["Billing.Column.Customer"]">@template.CustomerName</td>
+                        <td data-label="@L["Recurring.Field.Frequency"]">@L[$"Recurring.Frequency.{template.Frequency}"]</td>
+                        <td data-label="@L["Recurring.NextInvoice"]">@(template.NextIssueDate?.ToString("d", Culture) ?? "—")</td>
+                        <td data-label="@L["Recurring.Invoices"]">@template.InvoiceCount</td>
+                        <td data-label="@L["Totals.ExclTax"]" class="lg-num">@ExplorerText.Money(template.TotalExclTax)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        @if (_page.TotalCount > _page.PageSize)
+        {
+            <nav class="lt-pager" aria-label="@L["Accounting.Pages"]">
+                <button type="button" class="lettra-button is-secondary" disabled="@(_pageNumber <= 1)" @onclick="() => GoToAsync(_pageNumber - 1)">@L["Accounting.Previous"]</button>
+                <span>@string.Format(Culture, L["Accounting.PageOf"], _pageNumber, PageCount)</span>
+                <button type="button" class="lettra-button is-secondary" disabled="@(_pageNumber >= PageCount)" @onclick="() => GoToAsync(_pageNumber + 1)">@L["Accounting.Next"]</button>
+            </nav>
+        }
+    }
+</section>
+
+@code {
+    private const int PageSize = 50;
+
+    private PagedResponse<RecurringInvoiceSummary>? _page;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private string? _search;
+    private string _state = string.Empty;
+    private RecurringInvoiceSortDto _sort = RecurringInvoiceSortDto.NextIssueDate;
+    private string _order = "asc";
+    private int _pageNumber = 1;
+    private int _dueCount;
+    private bool _running;
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private bool IsFiltered => !string.IsNullOrWhiteSpace(_search) || _state.Length > 0;
+
+    private int PageCount => _page is null ? 1 : Math.Max(1, (int)Math.Ceiling(_page.TotalCount / (double)_page.PageSize));
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private Task ReloadAsync()
+    {
+        _pageNumber = 1;
+        return LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        RecurringInvoiceListQuery query = new(
+            Search: _search,
+            Active: _state switch { "active" => true, "paused" => false, _ => null },
+            DueOnly: _state == "due",
+            Sort: _sort,
+            Descending: _order == "desc",
+            Page: _pageNumber,
+            PageSize: PageSize);
+        OperationResult<PagedResponse<RecurringInvoiceSummary>> result = await Recurring.ListAsync(query, CancellationToken.None);
+        _errors = result.Errors;
+        _page = result.Value ?? new PagedResponse<RecurringInvoiceSummary>([], 1, PageSize, 0);
+
+        OperationResult<PagedResponse<RecurringInvoiceSummary>> due = await Recurring.ListAsync(new RecurringInvoiceListQuery(DueOnly: true, PageSize: 1), CancellationToken.None);
+        _dueCount = due.Value?.TotalCount ?? 0;
+    }
+
+    private async Task GoToAsync(int page)
+    {
+        _pageNumber = page;
+        await LoadAsync();
+    }
+
+    private async Task RunAsync()
+    {
+        _running = true;
+        try
+        {
+            OperationResult<RecurringRunResponse> run = await Recurring.RunAsync(null, CancellationToken.None);
+            if (run.Value is not { } done)
+            {
+                _errors = run.Errors;
+                Toasts.Show(ToastKind.Error, L["Recurring.Toast.RunFailed"].Value);
+                return;
+            }
+
+            RecurringToasts.Show(Toasts, L, done);
+            await LoadAsync();
+        }
+        finally
+        {
+            _running = false;
+        }
+    }
+}

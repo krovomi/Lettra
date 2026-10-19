@@ -7,6 +7,7 @@ using Lettra.Contracts.Common;
 using Lettra.Contracts.Exports;
 using Lettra.Domain.Common;
 using Lettra.Exports.Application.Accounting;
+using Lettra.Exports.Application.AuditKit;
 using Lettra.Exports.Application.Banking;
 using Lettra.Exports.Application.EInvoicing;
 using Lettra.Exports.Application.EInvoicing.Platform;
@@ -70,6 +71,10 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<UpdateFiscalSettingsCommand, Result<FiscalSettingsResponse>>, UpdateFiscalSettingsHandler>();
         services.AddScoped<ICommandHandler<MarkFiscalFilingCommand, Result<FiscalDeadlineResponse>>, MarkFiscalFilingHandler>();
         services.AddScoped<IDossierIndicatorSource, VatToDeclareIndicatorSource>();
+
+        // Kit contrôle fiscal (vague 7) : FEC, attestation d'intégrité, piste d'audit fiable, XML et transmissions.
+        services.AddScoped<AuditKitService>();
+        services.AddScoped<IQueryHandler<GetAuditKitQuery, Result<AuditKitFile>>, GetAuditKitHandler>();
 
         // Envois à la plateforme par l'outbox du serveur (étape 5.4).
         services.AddScoped<IOutboxHandler, PlatformDepositHandler>();

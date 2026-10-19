@@ -132,7 +132,7 @@ public sealed class BankStatementLine : AggregateRoot<Guid>, IVersioned
 
     public string? CounterpartyIbanDisplay { get; private set; }
 
-    /// <summary>Empreinte de l'IBAN de la contrepartie (<see cref="BankText.IbanFingerprint"/>), pour la règle « IBAN déjà connu ».</summary>
+    /// <summary>Empreinte de l'IBAN de la contrepartie (<see cref="BankText.KeyedIbanFingerprint"/>), pour la règle « IBAN déjà connu ».</summary>
     public string? CounterpartyIbanHash { get; private set; }
 
     public string Fingerprint { get; private set; }
@@ -240,14 +240,34 @@ public static class BankText
     public static string? MaskAccount(string? account) =>
         AccountKey(account) is { Length: >= 4 } key ? $"•••• {key[^4..]}" : null;
 
+    /// <summary>Préfixe des empreintes d'IBAN calculées avec la clé du dossier (<see cref="KeyedIbanFingerprint"/>).</summary>
+    public const string KeyedIbanPrefix = "k1";
+
     /// <summary>
-    /// Empreinte d'un IBAN propre au dossier (SHA-256 de l'identifiant du dossier et de l'IBAN normalisé) : elle
-    /// reconnaît un payeur déjà vu sans garder son IBAN en clair.
+    /// Condensé SHA-256 de l'identifiant du dossier et de l'IBAN normalisé. Sans clé, il ne protège pas l'IBAN (on le
+    /// retrouve en essayant des IBAN) : il n'est jamais stocké tel quel, seulement passé à <see cref="KeyedIbanFingerprint"/>.
+    /// C'était l'empreinte stockée avant la clé du dossier.
     /// </summary>
-    public static string? IbanFingerprint(string? iban, Guid dossierId) =>
+    public static string? IbanDigest(string? iban, Guid dossierId) =>
         NormalizeIban(iban) is { } compact
             ? Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes($"lettra-iban|{dossierId:D}|{compact}")))
             : null;
+
+    /// <summary>
+    /// Empreinte stockée d'un IBAN : HMAC-SHA256 du condensé (<see cref="IbanDigest"/>) avec la clé secrète du dossier,
+    /// préfixée de <see cref="KeyedIbanPrefix"/> (64 caractères en tout). Elle reconnaît un payeur déjà vu sans garder
+    /// son IBAN, et sans la clé on ne peut pas confirmer un IBAN deviné. Une empreinte d'avant la clé (le condensé seul)
+    /// se convertit avec la même fonction, sans connaître l'IBAN.
+    /// </summary>
+    public static string KeyedIbanFingerprint(string digest, ReadOnlySpan<byte> key)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(digest);
+        return KeyedIbanPrefix + Convert.ToHexStringLower(HMACSHA256.HashData(key, Encoding.ASCII.GetBytes(digest)))[..62];
+    }
+
+    /// <summary>Vrai pour une empreinte déjà calculée avec la clé du dossier.</summary>
+    public static bool IsKeyedIbanFingerprint(string? fingerprint) =>
+        fingerprint is not null && fingerprint.StartsWith(KeyedIbanPrefix, StringComparison.Ordinal);
 
     /// <summary>Empreinte d'une opération, pour écarter les doublons d'un relevé importé deux fois.</summary>
     public static string TransactionFingerprint(string? accountIban, BankTransaction transaction, int occurrence)

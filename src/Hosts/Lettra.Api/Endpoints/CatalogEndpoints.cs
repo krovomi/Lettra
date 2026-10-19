@@ -10,6 +10,7 @@ using Lettra.Contracts.Common;
 using Lettra.Domain.Catalog;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
+using static Lettra.Api.Infrastructure.HttpResults;
 
 namespace Lettra.Api.Endpoints;
 
@@ -69,7 +70,7 @@ internal static class CatalogEndpoints
     {
         Result<CatalogReferenceData> result = await queries
             .QueryAsync(new GetCatalogReferenceDataQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return Ok(result);
     }
 
     private static async Task<IResult> ListAsync(
@@ -84,7 +85,7 @@ internal static class CatalogEndpoints
         Result<PagedResponse<CatalogItemSummary>> result = await queries
             .QueryAsync(new ListCatalogItemsQuery(tenant.Current.DossierId, search, includeArchived, page, pageSize), cancellationToken)
             .ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return Ok(result);
     }
 
     private static async Task<IResult> GetAsync(Guid id, ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken)
@@ -151,7 +152,7 @@ internal static class CatalogEndpoints
     private static async Task<IResult> ReadAsync(IQueryDispatcher queries, DossierId dossier, CatalogItemId id, CancellationToken cancellationToken)
     {
         Result<CatalogItemResponse> read = await queries.QueryAsync(new GetCatalogItemQuery(dossier, id), cancellationToken).ConfigureAwait(false);
-        return read.IsSuccess ? TypedResults.Ok(read.Value).WithETag(read.Value.Version) : read.Errors.ToProblem();
+        return Versioned(read, v => v.Version);
     }
 
     private static Task<IResult> WriteFailureAsync(

@@ -144,6 +144,15 @@ public sealed class Invoice : BillingDocument<InvoiceId>
     /// </summary>
     public decimal PaidInclTax { get; private set; }
 
+    /// <summary>
+    /// Période facturée (EN 16931 BT-73 et BT-74), posée par la facturation récurrente (vague 7). Hors de la forme
+    /// canonique v1 : elle ne se saisit pas et ne change plus après la création du brouillon.
+    /// </summary>
+    public DateOnly? BillingPeriodStart { get; private set; }
+
+    /// <summary>Fin de la période facturée (BT-74), incluse.</summary>
+    public DateOnly? BillingPeriodEnd { get; private set; }
+
     /// <summary>Empreinte SHA-256 de la forme canonique (<c>Lettra.Contracts.Billing.CanonicalDocument</c>), figée à la validation.</summary>
     public string? ContentHash { get; private set; }
 
@@ -184,6 +193,33 @@ public sealed class Invoice : BillingDocument<InvoiceId>
 
         invoice.Created(userId, now);
         return invoice;
+    }
+
+    /// <summary>Facture brouillon d'une période d'un modèle récurrent : comme <see cref="Create"/>, avec la période facturée.</summary>
+    public static Result<Invoice> CreateForPeriod(
+        InvoiceId id,
+        CustomerId customerId,
+        PartySnapshot customer,
+        InvoiceHeader header,
+        IReadOnlyList<LineDraft> lines,
+        DateOnly periodStart,
+        DateOnly periodEnd,
+        Guid userId,
+        DateTimeOffset now)
+    {
+        if (periodEnd < periodStart)
+        {
+            throw new ArgumentException("La période facturée se termine après son début.", nameof(periodEnd));
+        }
+
+        Result<Invoice> created = Create(id, customerId, customer, header, lines, userId, now);
+        if (created.IsSuccess)
+        {
+            created.Value.BillingPeriodStart = periodStart;
+            created.Value.BillingPeriodEnd = periodEnd;
+        }
+
+        return created;
     }
 
     /// <summary>Facture d'acompte brouillon sur un devis accepté.</summary>

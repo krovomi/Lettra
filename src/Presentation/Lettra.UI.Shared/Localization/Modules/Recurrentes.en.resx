@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.RecurringInvoices" xml:space="preserve"><value>Recurring invoices</value></data>
+  <data name="Invoice.BillingPeriod" xml:space="preserve"><value>Billing period: from {0} to {1}</value></data>
+  <data name="Recurring.Title" xml:space="preserve"><value>Recurring invoices</value></data>
+  <data name="Recurring.Subtitle" xml:space="preserve"><value>Subscriptions and fixed fees: Lettra prepares each invoice when it falls due.</value></data>
+  <data name="Recurring.New" xml:space="preserve"><value>New template</value></data>
+  <data name="Recurring.Due.One" xml:space="preserve"><value>One recurring invoice is due.</value></data>
+  <data name="Recurring.Due.Many" xml:space="preserve"><value>{0} recurring invoices are due.</value></data>
+  <data name="Recurring.Run" xml:space="preserve"><value>Create due invoices</value></data>
+  <data name="Recurring.RunOne" xml:space="preserve"><value>Create the due invoice</value></data>
+  <data name="Recurring.Search" xml:space="preserve"><value>Search templates</value></data>
+  <data name="Recurring.Sort" xml:space="preserve"><value>Sort by</value></data>
+  <data name="Recurring.Sort.NextIssueDate" xml:space="preserve"><value>Next invoice</value></data>
+  <data name="Recurring.Sort.Name" xml:space="preserve"><value>Name</value></data>
+  <data name="Recurring.Sort.Customer" xml:space="preserve"><value>Customer</value></data>
+  <data name="Recurring.Sort.Amount" xml:space="preserve"><value>Amount excl. VAT</value></data>
+  <data name="Recurring.Order" xml:space="preserve"><value>Order</value></data>
+  <data name="Recurring.Order.Ascending" xml:space="preserve"><value>Ascending</value></data>
+  <data name="Recurring.Order.Descending" xml:space="preserve"><value>Descending</value></data>
+  <data name="Recurring.Empty" xml:space="preserve"><value>No recurring invoices</value></data>
+  <data name="Recurring.Empty.Text" xml:space="preserve"><value>Create a template for a customer billed every month, quarter or year.</value></data>
+  <data name="Recurring.NextInvoice" xml:space="preserve"><value>Next invoice</value></data>
+  <data name="Recurring.Invoices" xml:space="preserve"><value>Invoices created</value></data>
+  <data name="Recurring.AutoValidated" xml:space="preserve"><value>Validated automatically</value></data>
+  <data name="Recurring.LinesSummary" xml:space="preserve"><value>{0} line(s), {1} excl. VAT</value></data>
+  <data name="Recurring.State.All" xml:space="preserve"><value>All</value></data>
+  <data name="Recurring.State.Active" xml:space="preserve"><value>Active</value></data>
+  <data name="Recurring.State.Paused" xml:space="preserve"><value>Paused</value></data>
+  <data name="Recurring.State.Due" xml:space="preserve"><value>Due</value></data>
+  <data name="Recurring.Field.Name" xml:space="preserve"><value>Template name</value></data>
+  <data name="Recurring.Field.Name.Placeholder" xml:space="preserve"><value>E.g. Monthly bookkeeping</value></data>
+  <data name="Recurring.Field.Frequency" xml:space="preserve"><value>Frequency</value></data>
+  <data name="Recurring.Field.Timing" xml:space="preserve"><value>Billing</value></data>
+  <data name="Recurring.Field.StartDate" xml:space="preserve"><value>Start</value></data>
+  <data name="Recurring.Field.EndDate" xml:space="preserve"><value>End (optional)</value></data>
+  <data name="Recurring.Field.ValidateAutomatically" xml:space="preserve"><value>Validate invoices automatically</value></data>
+  <data name="Recurring.Field.ValidateAutomatically.Hint" xml:space="preserve"><value>Otherwise each invoice is created as a draft to review. The number is given at validation.</value></data>
+  <data name="Recurring.Field.Subject.Hint" xml:space="preserve"><value>The billed period is added to each invoice's subject.</value></data>
+  <data name="Recurring.Field.Revision" xml:space="preserve"><value>Yearly price revision</value></data>
+  <data name="Recurring.Field.RevisionPercent" xml:space="preserve"><value>Yearly increase (%)</value></data>
+  <data name="Recurring.Field.SyntecReference" xml:space="preserve"><value>Reference Syntec index</value></data>
+  <data name="Recurring.Field.SyntecLatest" xml:space="preserve"><value>Latest known Syntec index</value></data>
+  <data name="Recurring.Frequency.Monthly" xml:space="preserve"><value>Monthly</value></data>
+  <data name="Recurring.Frequency.Quarterly" xml:space="preserve"><value>Quarterly</value></data>
+  <data name="Recurring.Frequency.Yearly" xml:space="preserve"><value>Yearly</value></data>
+  <data name="Recurring.Timing.InAdvance" xml:space="preserve"><value>In advance (start of period)</value></data>
+  <data name="Recurring.Timing.InArrears" xml:space="preserve"><value>In arrears (end of period)</value></data>
+  <data name="Recurring.Revision.None" xml:space="preserve"><value>None</value></data>
+  <data name="Recurring.Revision.FixedPercent" xml:space="preserve"><value>Fixed percentage</value></data>
+  <data name="Recurring.Revision.SyntecIndex" xml:space="preserve"><value>Syntec index</value></data>
+  <data name="Recurring.Revision.AwaitsIndex" xml:space="preserve"><value>The revision awaits the new Syntec index: enter it to revise prices.</value></data>
+  <data name="Recurring.Revision.IndexToEnter" xml:space="preserve"><value>Index to enter</value></data>
+  <data name="Recurring.Revision.Syntec.Hint" xml:space="preserve"><value>Revised prices = price × latest index ÷ reference index, on each contract anniversary.</value></data>
+  <data name="Recurring.Revision.Next" xml:space="preserve"><value>Next revision on {0}.</value></data>
+  <data name="Recurring.Section.Schedule" xml:space="preserve"><value>Schedule</value></data>
+  <data name="Recurring.Section.Revision" xml:space="preserve"><value>Price revision</value></data>
+  <data name="Recurring.ScheduleLocked.Hint" xml:space="preserve"><value>An invoice has already been created: the start date and frequency can no longer change.</value></data>
+  <data name="Recurring.Next.Text" xml:space="preserve"><value>Next invoice on {0}, for the period from {1} to {2}.</value></data>
+  <data name="Recurring.Next.Ended" xml:space="preserve"><value>The contract has ended: no more invoices will be created.</value></data>
+  <data name="Recurring.Next.Paused" xml:space="preserve"><value>The template is paused: no invoices will be created.</value></data>
+  <data name="Recurring.Pause" xml:space="preserve"><value>Pause</value></data>
+  <data name="Recurring.Resume" xml:space="preserve"><value>Resume</value></data>
+  <data name="Recurring.History" xml:space="preserve"><value>Invoices created</value></data>
+  <data name="Recurring.History.Draft" xml:space="preserve"><value>Draft</value></data>
+  <data name="Recurring.History.Period" xml:space="preserve"><value>from {0} to {1}</value></data>
+  <data name="Recurring.History.Deleted" xml:space="preserve"><value>Draft deleted</value></data>
+  <data name="Recurring.History.Revised" xml:space="preserve"><value>Prices revised {0} %</value></data>
+  <data name="Recurring.Toast.Created" xml:space="preserve"><value>Template created.</value></data>
+  <data name="Recurring.Toast.Saved" xml:space="preserve"><value>Template saved.</value></data>
+  <data name="Recurring.Toast.Paused" xml:space="preserve"><value>Template paused.</value></data>
+  <data name="Recurring.Toast.Resumed" xml:space="preserve"><value>Template resumed.</value></data>
+  <data name="Recurring.Toast.Deleted" xml:space="preserve"><value>Template deleted.</value></data>
+  <data name="Recurring.Toast.RunFailed" xml:space="preserve"><value>The invoices could not be created.</value></data>
+  <data name="Recurring.Toast.NothingDue" xml:space="preserve"><value>No invoice is due today.</value></data>
+  <data name="Recurring.Toast.Generated" xml:space="preserve"><value>{0} invoice(s) created, {1} of them validated.</value></data>
+  <data name="Recurring.Toast.LeftAsDraft" xml:space="preserve"><value>{0} invoice(s) left as draft: validation was refused.</value></data>
+  <data name="Recurring.Toast.Failed" xml:space="preserve"><value>“{0}”: {1}</value></data>
+  <data name="Error.RecurringInvoice.NotFound" xml:space="preserve"><value>This recurring invoice template was not found.</value></data>
+  <data name="Error.RecurringInvoice.NameRequired" xml:space="preserve"><value>Give the template a name.</value></data>
+  <data name="Error.RecurringInvoice.NameTooLong" xml:space="preserve"><value>The name must not exceed 120 characters.</value></data>
+  <data name="Error.RecurringInvoice.FrequencyInvalid" xml:space="preserve"><value>Choose a frequency: monthly, quarterly or yearly.</value></data>
+  <data name="Error.RecurringInvoice.TimingInvalid" xml:space="preserve"><value>Choose billing in advance or in arrears.</value></data>
+  <data name="Error.RecurringInvoice.EndBeforeStart" xml:space="preserve"><value>The end must be after the start.</value></data>
+  <data name="Error.RecurringInvoice.RevisionInvalid" xml:space="preserve"><value>Choose a price revision mode.</value></data>
+  <data name="Error.RecurringInvoice.RevisionPercentInvalid" xml:space="preserve"><value>The yearly increase must be above 0 and at most 100 %.</value></data>
+  <data name="Error.RecurringInvoice.SyntecIndexInvalid" xml:space="preserve"><value>Enter a positive Syntec index.</value></data>
+  <data name="Error.RecurringInvoice.ScheduleLocked" xml:space="preserve"><value>An invoice has already been created: the start date and frequency can no longer change.</value></data>
+  <data name="Error.RecurringInvoice.NothingDue" xml:space="preserve"><value>No invoice is due for this template today.</value></data>
+</root>

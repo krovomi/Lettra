@@ -9,6 +9,7 @@ using Lettra.Contracts.Assistant;
 using Lettra.Contracts.Serialization;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
+using static Lettra.Api.Infrastructure.HttpResults;
 
 namespace Lettra.Api.Endpoints;
 
@@ -72,7 +73,7 @@ internal static class AssistantEndpoints
     {
         Result<AiSettingsResponse> result = await queries
             .QueryAsync(new GetAiSettingsQuery(new OrganisationId(cabinetId)), cancellationToken).ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return Ok(result);
     }
 
     private static async Task<IResult> SaveSettingsAsync(
@@ -83,7 +84,7 @@ internal static class AssistantEndpoints
     {
         Result<AiSettingsResponse> result = await commands
             .SendAsync(new SaveAiSettingsCommand(new OrganisationId(cabinetId), request), cancellationToken).ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return Ok(result);
     }
 
     private static async Task<IResult> AskAsync(
@@ -101,7 +102,7 @@ internal static class AssistantEndpoints
     {
         Result<AssistantStatusResponse> result = await queries
             .QueryAsync(new GetAssistantStatusQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return Ok(result);
     }
 
     private static async Task<IResult> JournalAsync(
@@ -113,7 +114,7 @@ internal static class AssistantEndpoints
         Result<IReadOnlyList<AssistantJournalEntry>> result = await queries
             .QueryAsync(new GetAssistantJournalQuery(tenant.Current.DossierId, limit), cancellationToken)
             .ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return Ok(result);
     }
 
     /// <summary>Écrit chaque événement dès qu'il est produit, suivi d'un saut de ligne, et vide le tampon.</summary>
