@@ -1,0 +1,41 @@
+/* Relances (vague 7). Téléphone d'abord ; tablette dès 768px, bureau dès 1200px. Reprend les blocs des encaissements. */
+
+.lt-reminders-callout { margin-bottom: var(--space-4); }
+
+/* Le total dû d'un dossier peut dépasser 100 000 € : plus petit sur téléphone, pour tenir dans sa case. */
+#reminders-stats .lt-banking-stat { min-width: 0; }
+#reminders-stats .is-amount strong { font-size: var(--text-lg); white-space: nowrap; }
+.lt-reminders-preview { margin-bottom: var(--space-4); border-color: var(--color-primary); }
+.lt-reminders-preview h2 { margin: 0; overflow-wrap: anywhere; }
+
+/* Le texte de la relance tel qu'il part : retours à la ligne gardés, jamais de défilement horizontal. */
+.lt-reminders-body { margin: var(--space-3) 0; padding: var(--space-3); border-radius: var(--radius-md); background: var(--color-surface-sunken, var(--color-neutral-bg)); font-family: inherit; font-size: var(--text-sm); line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 24rem; overflow-y: auto; }
+
+/* Montant et pénalités, niveau et date : l'un sous l'autre, aussi dans les cartes du téléphone. */
+.lt-reminders-cell { display: inline-flex; flex-direction: column; align-items: flex-end; text-align: right; white-space: nowrap; }
+td:not(.lg-num) > .lt-reminders-cell { align-items: flex-start; text-align: left; }
+.lt-reminders-cell small { white-space: nowrap; }
+
+@media (max-width: 767px) {
+    .lt-cards td > .lt-reminders-cell { align-items: flex-end; text-align: right; }
+}
+#reminders-table tr.is-due td:first-child { box-shadow: inset 3px 0 0 var(--color-warning-fg); }
+
+.lt-reminders-delays { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); margin-bottom: var(--space-3); }
+.lt-reminders-delays input { width: 100%; }
+.lt-reminders-days { display: flex; align-items: center; gap: var(--space-1); }
+.lt-reminders-days > span { color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+
+.lt-reminders-sent summary { cursor: pointer; min-height: var(--hit); display: flex; align-items: center; overflow-wrap: anywhere; }
+
+@media (min-width: 768px) {
+    .lt-reminders-delays { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    /* Le tableau défile en largeur sur tablette : le client et son adresse gardent une largeur lisible. */
+    #reminders-table td .lt-banking-label { min-width: 18ch; }
+    #reminders-history .lt-reminders-sent { min-width: 24ch; }
+}
+
+@media (min-width: 1200px) {
+    #reminders-stats .is-amount strong { font-size: var(--text-2xl); }
+    .lt-reminders-delays { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}

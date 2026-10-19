@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- Services externes : API Recherche d'entreprises (SIRENE) et VIES (TVA intracommunautaire).
-       Seule la saisie de recherche (nom, SIREN ou numéro de TVA, données publiques) quitte le dossier. -->
+       Seule la saisie de recherche (nom, SIREN ou numéro de TVA, données publiques) quitte le dossier.
+       Envoi d'e-mails par SMTP (coupé par défaut ; MailPit dans la démo). -->
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Lettra.Application\Lettra.Application.csproj" />
   </ItemGroup>
@@ -13,6 +14,7 @@
     <PackageReference Include="Microsoft.Extensions.Http" />
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
     <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
   </ItemGroup>
 
   <ItemGroup>

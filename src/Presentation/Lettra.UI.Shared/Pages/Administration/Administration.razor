@@ -640,7 +640,12 @@
 
     private async Task InvitedAsync(PersonSummary person)
     {
-        _toasts.Show(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.Invited"], person.DisplayName));
+        _toasts.Show(string.Format(CultureInfo.CurrentCulture, L[person.InvitationEmail == InvitationEmailStatusDto.Sent ? "Admin.Toast.InvitedByEmail" : "Admin.Toast.Invited"], person.DisplayName));
+        if (person.InvitationEmail == InvitationEmailStatusDto.Failed)
+        {
+            _toasts.ShowError(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.InvitationFailed"], person.DisplayName));
+        }
+
         await ReloadAsync();
         // Étape suivante naturelle : lui donner un accès.
         Open(Mode.PersonGrant, person.Id);

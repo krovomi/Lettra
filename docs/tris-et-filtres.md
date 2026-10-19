@@ -39,6 +39,8 @@ et dans l'application MAUI, sur tous les appareils.
 | Balance, soldes clients | Client, pièces, débit, crédit, solde (plus gros solde par défaut) | Recherche | Écran |
 | Déclaration européenne de services | Client, ligne, numéro de TVA, montant (ordre du fichier par défaut) | Recherche (client, numéro de TVA) | Écran |
 | Calendrier fiscal | Toujours par date (c'est un calendrier) | Échéance, état | Écran |
+| Relances : factures en retard | Facture, client, échéance, retard, reste dû | Recherche, « À envoyer aujourd'hui seulement » | Écran |
+| Relances : historique | Date, facture, client, niveau | Recherche, niveau, résultat, canal, période | Serveur |
 
 Sur les rapprochements, « Tout sélectionner » et « Valider la sélection » ne portent que sur les lignes que les filtres
 laissent voir : une ligne masquée n'est jamais validée sans avoir été vue.

@@ -7,6 +7,7 @@
 @import url("lettra-banking.css");
 @import url("lettra-tax.css");
 @import url("lettra-lists.css");
+@import url("lettra-reminders.css");
 
 /* Alias historiques : les composants et la grille écrits avant les jetons les lisent encore. */
 :root {

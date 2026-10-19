@@ -17,6 +17,9 @@ public static partial class ErrorCodes
         public const string RoleNotFound = "Administration.RoleNotFound";
         public const string RoleInUse = "Administration.RoleInUse";
         public const string SelfLockout = "Administration.SelfLockout";
+
+        /// <summary>La personne s'est déjà connectée : son invitation n'a plus à être renvoyée.</summary>
+        public const string NotInvited = "Administration.NotInvited";
         public const string NoAccess = "Administration.NoAccess";
     }
 }

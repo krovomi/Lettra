@@ -1,4 +1,5 @@
 using Lettra.Application.Abstractions.Ai;
+using Lettra.Application.Abstractions.Mail;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Messaging;
@@ -31,6 +32,11 @@ public static class DependencyInjection
         // Voix désactivée tant que le déploiement ne choisit pas de moteur (Lettra.Infrastructure.Speech, ou Whisper sur le poste).
         services.TryAddSingleton(SpeechSettings.Disabled);
         services.TryAddSingleton<ISpeechToText, UnavailableSpeechToText>();
+
+        // E-mails : coupés tant que l'infrastructure ne branche pas un serveur SMTP (Lettra:Email).
+        services.TryAddSingleton<IEmailSender, NoEmailSender>();
+        services.TryAddSingleton(new LettraPublicAddress(null));
+
         services.AddScoped<ICommandDispatcher, CommandDispatcher>();
         services.AddScoped<IQueryDispatcher, QueryDispatcher>();
 
@@ -67,6 +73,7 @@ public static class DependencyInjection
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ConcurrencyBehavior<,>));
 
+        services.AddScoped<Features.Administration.InvitationMailer>();
         RegisterImplementations(services, typeof(ICommandHandler<,>));
         RegisterImplementations(services, typeof(IQueryHandler<,>));
         RegisterImplementations(services, typeof(IValidator<>));

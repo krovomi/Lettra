@@ -164,6 +164,23 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Relances_des_factures_echues()
+    {
+        ManualClock clock = new(DateTimeOffset.UtcNow);
+        CapturedEmails emails = new();
+        await using TenantHarness harness = ReminderScenarios.Harness(new SqliteConfigurator(), clock, emails);
+        await ReminderScenarios.RemindersAsync(harness, clock, emails, DatabaseProvider.Sqlite, Database("relances"));
+    }
+
+    [Fact]
+    public async Task Relances_cas_limites_de_la_passe_du_worker()
+    {
+        CapturedEmails emails = new();
+        await using TenantHarness harness = ReminderScenarios.Harness(new SqliteConfigurator(), new ManualClock(DateTimeOffset.UtcNow), emails);
+        await ReminderScenarios.JobEdgesAsync(harness, emails, DatabaseProvider.Sqlite, Database("relances-manuel"), Database("relances-auto"));
+    }
+
+    [Fact]
     public async Task Factures_recurrentes_et_passe_de_fond()
     {
         await using TenantHarness harness = new(new SqliteConfigurator());
@@ -574,6 +591,16 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     }
 
     [SkippableFact]
+    public async Task Relances_des_factures_echues()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        ManualClock clock = new(DateTimeOffset.UtcNow);
+        CapturedEmails emails = new();
+        await using TenantHarness harness = ReminderScenarios.Harness(new PostgreSqlConfigurator(), clock, emails);
+        await ReminderScenarios.RemindersAsync(harness, clock, emails, DatabaseProvider.PostgreSql, Database("relances"));
+    }
+
+    [SkippableFact]
     public async Task Factures_recurrentes_et_passe_de_fond()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
@@ -930,6 +957,16 @@ public sealed class SqlServerTests : IAsyncLifetime
         Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new SqlServerConfigurator());
         await ExportScenarios.BulkExportAsync(harness, DatabaseProvider.SqlServer, Database("fec_a"), Database("fec_b"));
+    }
+
+    [SkippableFact]
+    public async Task Relances_des_factures_echues()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        ManualClock clock = new(DateTimeOffset.UtcNow);
+        CapturedEmails emails = new();
+        await using TenantHarness harness = ReminderScenarios.Harness(new SqlServerConfigurator(), clock, emails);
+        await ReminderScenarios.RemindersAsync(harness, clock, emails, DatabaseProvider.SqlServer, Database("relances"));
     }
 
     [SkippableFact]
