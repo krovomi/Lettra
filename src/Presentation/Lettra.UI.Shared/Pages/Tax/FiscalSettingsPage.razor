@@ -1,0 +1,158 @@
+@page "/tax/settings"
+@inject ITaxGateway Tax
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+@* Réglages fiscaux du dossier : date de clôture, rythme de la CA3, jour limite de la TVA, IS et CFE. Le régime de TVA
+   lui-même reste dans la fiche entreprise. *@
+
+<PageTitle>@L["Tax.Settings.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Tax.Settings.Title"]</h1>
+        <p class="lettra-muted">@L["Tax.Settings.Subtitle"]</p>
+    </div>
+</div>
+
+<TaxTabs />
+<GeneralErrors Errors="_generalErrors" />
+
+@if (_model is null)
+{
+    <ExplorerSkeleton Rows="5" />
+}
+else
+{
+    <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="fiscal-settings" class="lettra-card lettra-form-grid">
+        <fieldset>
+            <legend>@L["Tax.Settings.FiscalYear"]</legend>
+            <div class="lettra-field">
+                <label for="fiscal-end-day">@L["Tax.Settings.YearEndDay"]</label>
+                <InputNumber id="fiscal-end-day" @bind-Value="_model.FiscalYearEndDay" inputmode="numeric" min="1" max="31" />
+            </div>
+            <div class="lettra-field">
+                <label for="fiscal-end-month">@L["Tax.Settings.YearEndMonth"]</label>
+                <InputSelect id="fiscal-end-month" @bind-Value="_model.FiscalYearEndMonth">
+                    @for (int month = 1; month <= 12; month++)
+                    {
+                        <option value="@month">@CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month)</option>
+                    }
+                </InputSelect>
+                <FieldErrors Field="FiscalYearEndDay" ServerErrors="_errors" />
+            </div>
+            <p class="lettra-hint lettra-field-wide">@L["Tax.Settings.FiscalYearHint"]</p>
+        </fieldset>
+
+        <fieldset>
+            <legend>@L["Tax.Settings.Vat"]</legend>
+            <div class="lettra-field">
+                <label for="fiscal-periodicity">@L["Tax.Settings.Periodicity"]</label>
+                <InputSelect id="fiscal-periodicity" @bind-Value="_model.VatPeriodicity">
+                    @foreach (VatPeriodicityDto periodicity in Enum.GetValues<VatPeriodicityDto>())
+                    {
+                        <option value="@periodicity">@L[$"Tax.Periodicity.{periodicity}"]</option>
+                    }
+                </InputSelect>
+            </div>
+            <div class="lettra-field">
+                <label for="fiscal-deadline-day">@L["Tax.Settings.DeadlineDay"]</label>
+                <InputNumber id="fiscal-deadline-day" @bind-Value="_model.VatDeadlineDay" inputmode="numeric" min="15" max="24" />
+                <FieldErrors Field="VatDeadlineDay" ServerErrors="_errors" />
+            </div>
+            <p class="lettra-hint lettra-field-wide">@L["Tax.Settings.DeadlineHint"]</p>
+        </fieldset>
+
+        <fieldset>
+            <legend>@L["Tax.Settings.Other"]</legend>
+            <label class="lettra-check"><InputCheckbox id="fiscal-is" @bind-Value="_model.CorporateIncomeTax" /> @L["Tax.Settings.CorporateIncomeTax"]</label>
+            <label class="lettra-check"><InputCheckbox id="fiscal-cfe" @bind-Value="_model.Cfe" /> @L["Tax.Settings.Cfe"]</label>
+            <p class="lettra-hint lettra-field-wide">@L["Tax.Settings.RegimeHint"] <a href="settings/company">@L["Nav.Company"]</a></p>
+        </fieldset>
+
+        <div class="lt-form-actions">
+            <button type="submit" class="lettra-button" id="fiscal-save" disabled="@_busy">@L["Billing.Command.Save"]</button>
+        </div>
+    </EditForm>
+}
+
+@code {
+    private SettingsModel? _model;
+    private long _version;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private IReadOnlyList<ErrorDetail> _generalErrors = [];
+    private bool _busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        OperationResult<FiscalSettingsResponse> result = await Tax.GetSettingsAsync(CancellationToken.None);
+        if (result is { IsSuccess: true, Value: { } settings })
+        {
+            Show(settings);
+        }
+        else
+        {
+            _generalErrors = result.Errors;
+        }
+    }
+
+    private void Show(FiscalSettingsResponse settings)
+    {
+        _version = settings.Version;
+        _model = new SettingsModel
+        {
+            FiscalYearEndMonth = settings.FiscalYearEndMonth,
+            FiscalYearEndDay = settings.FiscalYearEndDay,
+            VatPeriodicity = settings.VatPeriodicity,
+            VatDeadlineDay = settings.VatDeadlineDay,
+            CorporateIncomeTax = settings.CorporateIncomeTax,
+            Cfe = settings.Cfe,
+        };
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_model is not { } model)
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            OperationResult<FiscalSettingsResponse> saved = await Tax.UpdateSettingsAsync(new UpdateFiscalSettingsRequest(
+                model.FiscalYearEndMonth, model.FiscalYearEndDay, model.VatPeriodicity, model.VatDeadlineDay, model.CorporateIncomeTax, model.Cfe, _version),
+                CancellationToken.None);
+            if (saved is { IsSuccess: true, Value: { } settings })
+            {
+                _errors = [];
+                _generalErrors = [];
+                Show(settings);
+                Toasts.Show(ToastKind.Success, L["Tax.Toast.SettingsSaved"].Value);
+            }
+            else
+            {
+                _errors = saved.Errors;
+                _generalErrors = [.. saved.Errors.Where(e => e.Target is null)];
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private sealed class SettingsModel
+    {
+        public int FiscalYearEndMonth { get; set; } = 12;
+
+        public int FiscalYearEndDay { get; set; } = 31;
+
+        public VatPeriodicityDto VatPeriodicity { get; set; } = VatPeriodicityDto.Monthly;
+
+        public int VatDeadlineDay { get; set; } = 15;
+
+        public bool CorporateIncomeTax { get; set; } = true;
+
+        public bool Cfe { get; set; } = true;
+    }
+}

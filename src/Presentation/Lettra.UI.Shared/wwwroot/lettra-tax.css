@@ -1,0 +1,75 @@
+/* Déclarations (/tax) : brouillon de TVA, DES, calendrier fiscal. Comme lettra.css, aucune valeur de couleur : tout vient
+   des jetons, ce qui fait marcher les quatre thèmes. Trois largeurs : ordinateur (tableaux, échéances sur une ligne),
+   tablette (mêmes blocs, plus serrés), téléphone (tableaux en cartes via lt-cards, échéances empilées, cibles de 44 px). */
+
+/* ---------- En-tête de période ---------- */
+.lt-tax-head { display: grid; gap: var(--space-3); }
+.lt-tax-head > .lettra-banner, .lt-tax-due > .lettra-banner { margin-bottom: 0; }
+.lt-tax-nav { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.lt-tax-nav > .lettra-button { flex: none; min-width: var(--hit, 2.75rem); min-height: var(--hit, 2.75rem); justify-content: center; }
+.lt-tax-period { flex: 1; min-width: 0; text-align: center; }
+.lt-tax-period h2 { margin: 0; font-size: var(--text-xl); overflow-wrap: anywhere; }
+.lt-tax-period p { margin: var(--space-1) 0 0; }
+.lt-tax-due { display: grid; }
+
+/* ---------- Contrôles ---------- */
+.lt-tax-checks ul { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.lt-tax-check { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-2); }
+.lt-tax-check-icon { display: inline-grid; place-items: center; flex: none; width: 2rem; height: 2rem; border-radius: var(--radius-full); background: var(--color-neutral-bg); color: var(--color-neutral-fg); }
+.lt-tax-check.is-ok .lt-tax-check-icon { background: var(--color-success-bg); color: var(--color-success-fg); }
+.lt-tax-check.is-warning { border-color: var(--color-warning); }
+.lt-tax-check.is-warning .lt-tax-check-icon { background: var(--color-warning-bg); color: var(--color-warning-fg); }
+.lt-tax-check.is-blocking { border-color: var(--color-danger); background: var(--color-danger-bg); }
+.lt-tax-check.is-blocking .lt-tax-check-icon { background: var(--color-surface); color: var(--color-danger-fg); }
+.lt-tax-check-text { display: grid; gap: var(--space-1); min-width: 0; padding-top: var(--space-1); }
+.lt-tax-check-pieces { color: var(--color-fg-muted); font-size: var(--text-sm); overflow-wrap: anywhere; }
+
+/* ---------- Cases et pièces ---------- */
+.lt-tax-boxes { width: 100%; margin-bottom: var(--space-4); }
+.lt-tax-boxes td:last-child { width: 1%; white-space: nowrap; text-align: right; }
+.lt-tax-toggle { min-height: 2.25rem; font-size: var(--text-sm); }
+.lt-tax-boxes tr.is-open > td { background: var(--color-primary-soft); }
+.lt-tax-detail-row > td { padding: var(--space-2) var(--space-3) var(--space-4); background: var(--color-surface-2); }
+.lt-tax-sources { width: 100%; font-size: var(--text-sm); }
+.lt-tax-kind { margin-left: var(--space-1); color: var(--color-fg-muted); font-size: var(--text-xs); }
+
+/* ---------- Calendrier ---------- */
+.lt-tax-month h2 { margin: 0 0 var(--space-3); text-transform: capitalize; }
+.lt-tax-deadlines { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.lt-tax-deadline { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-3) var(--space-4); padding: var(--space-3); border: 1px solid var(--color-border); border-left-width: 4px; border-radius: var(--radius-md); background: var(--color-surface); }
+.lt-tax-deadline.is-danger { border-left-color: var(--color-danger); }
+.lt-tax-deadline.is-warning { border-left-color: var(--color-warning); }
+.lt-tax-deadline.is-success { border-left-color: var(--color-success); background: var(--color-surface-2); }
+.lt-tax-deadline.is-neutral { border-left-color: var(--color-border-strong); }
+.lt-tax-deadline-date { display: grid; place-items: center; width: 3.25rem; padding: var(--space-1) 0; border-radius: var(--radius-md); background: var(--color-surface-2); line-height: 1.1; }
+.lt-tax-deadline-day { font-size: var(--text-xl); font-weight: var(--weight-bold); font-variant-numeric: tabular-nums; }
+.lt-tax-deadline-weekday { color: var(--color-fg-muted); font-size: var(--text-xs); text-transform: capitalize; }
+.lt-tax-deadline-text { display: grid; gap: var(--space-1); min-width: 0; }
+.lt-tax-note { color: var(--color-fg-muted); font-size: var(--text-sm); }
+.lt-tax-deadline-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--space-2); }
+.lt-tax-state { display: inline-flex; align-items: center; min-height: 1.75rem; padding: 0 var(--space-2); border-radius: var(--radius-full); background: var(--color-neutral-bg); color: var(--color-neutral-fg); font-size: var(--text-xs); font-weight: var(--weight-medium); white-space: nowrap; }
+.lt-tax-deadline.is-danger .lt-tax-state { background: var(--color-danger-bg); color: var(--color-danger-fg); }
+.lt-tax-deadline.is-warning .lt-tax-state { background: var(--color-warning-bg); color: var(--color-warning-fg); }
+.lt-tax-deadline.is-success .lt-tax-state { background: var(--color-success-bg); color: var(--color-success-fg); }
+
+/* ---------- Tablette ---------- */
+@media (max-width: 1023px) {
+    .lt-tax-deadline { grid-template-columns: auto minmax(0, 1fr); }
+    .lt-tax-deadline-actions { grid-column: 1 / -1; justify-content: flex-start; }
+}
+
+/* ---------- Téléphone ---------- */
+@media (max-width: 767px) {
+    .lt-tax-period h2 { font-size: var(--text-lg); }
+    .lt-tax-boxes td:last-child { width: auto; text-align: left; }
+    .lt-tax-boxes td:last-child > .lt-tax-toggle, .lt-tax-deadline-actions > .lettra-button { flex: 1; min-height: var(--hit, 2.75rem); justify-content: center; }
+    .lt-tax-detail-row { padding: 0 !important; border: 0 !important; box-shadow: none !important; background: transparent !important; }
+    .lt-tax-detail-row > td { display: block; padding: 0; background: transparent; }
+    .lt-tax-detail-row > td::before { content: none; }
+    .lt-tax-sources tr { background: var(--color-surface-2); }
+    .lt-tax-deadline-actions { display: grid; grid-template-columns: minmax(0, 1fr); }
+    .lt-tax-deadline-actions > .lt-tax-state { justify-self: start; }
+    .lettra-banner > .lettra-button { flex: 1 1 100%; margin-left: 0; min-height: var(--hit, 2.75rem); justify-content: center; }
+}
+
+@media (pointer: coarse) { .lt-tax-toggle { min-height: var(--hit, 2.75rem); } }

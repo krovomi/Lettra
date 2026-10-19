@@ -27,6 +27,7 @@ public static class NavItems
         new("catalog", "Nav.Catalog", "package", "Nav.Group.Parties"),
         new("accounting", "Nav.Accounting", "book-open", "Nav.Group.Accounting"),
         new("exports/fec", "Nav.Fec", "file-spreadsheet", "Nav.Group.Accounting"),
+        new("tax", "Nav.Tax", "calendar-clock", "Nav.Group.Accounting"),
         new("alerts", "Nav.Alerts", "bell", "Nav.Group.Settings"),
         new("settings/company", "Nav.Company", "building-2", "Nav.Group.Settings", Match: NavLinkMatch.All),
         new("admin", "Nav.Admin", "shield-check", "Nav.Group.Settings", Page: AccessAreaDto.Administration),

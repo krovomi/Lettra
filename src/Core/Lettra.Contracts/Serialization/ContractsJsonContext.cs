@@ -20,6 +20,7 @@ using Lettra.Contracts.Rights;
 using Lettra.Contracts.Speech;
 using Lettra.Contracts.Suppliers;
 using Lettra.Contracts.Sync;
+using Lettra.Contracts.Tax;
 using Lettra.Contracts.Exports;
 
 namespace Lettra.Contracts.Serialization;
@@ -120,4 +121,12 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(DemoSeedResponse))]
 [JsonSerializable(typeof(SpeechStatusResponse))]
 [JsonSerializable(typeof(TranscriptionResponse))]
+[JsonSerializable(typeof(VatReturnResponse))]
+[JsonSerializable(typeof(DesResponse))]
+[JsonSerializable(typeof(FiscalCalendarResponse))]
+[JsonSerializable(typeof(FiscalSettingsResponse))]
+[JsonSerializable(typeof(UpdateFiscalSettingsRequest))]
+[JsonSerializable(typeof(MarkFiscalFilingRequest))]
+[JsonSerializable(typeof(FiscalDeadlineResponse))]
+[JsonSerializable(typeof(IReadOnlyList<FiscalDeadlineResponse>))]
 public sealed partial class ContractsJsonContext : JsonSerializerContext;

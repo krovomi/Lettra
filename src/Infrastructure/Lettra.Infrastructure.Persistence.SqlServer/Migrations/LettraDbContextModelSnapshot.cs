@@ -1591,6 +1591,62 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.ToTable("SyncState", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Tax.FiscalFilingRecord", b =>
+                {
+                    b.Property<int>("Obligation")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("PeriodStart")
+                        .HasColumnType("date");
+
+                    b.Property<long>("FiledAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("FiledBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Obligation", "PeriodStart");
+
+                    b.ToTable("FiscalFilings", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Tax.FiscalSettingsRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("Cfe")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CorporateIncomeTax")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("FiscalYearEndDay")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FiscalYearEndMonth")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly?>("TrackedFrom")
+                        .HasColumnType("date");
+
+                    b.Property<long>("UpdatedAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("VatDeadlineDay")
+                        .HasColumnType("int");
+
+                    b.Property<int>("VatPeriodicity")
+                        .HasColumnType("int");
+
+                    b.Property<long>("Version")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FiscalSettings", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Tenancy.DossierStamp", b =>
                 {
                     b.Property<int>("Id")
