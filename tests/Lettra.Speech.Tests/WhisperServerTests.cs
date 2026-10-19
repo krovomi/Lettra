@@ -118,6 +118,25 @@ public sealed class WhisperServerTests
         result.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Speech.EngineUnavailable);
     }
 
+    [Fact]
+    public async Task Un_serveur_qui_repond_sur_sa_racine_est_pret()
+    {
+        RecordingHandler handler = new(HttpStatusCode.OK, "<html></html>");
+
+        bool ready = await Engine(handler).IsReadyAsync(CancellationToken.None);
+
+        ready.Should().BeTrue();
+        handler.Uri.Should().Be(new Uri("http://whisper:8080/"));
+    }
+
+    [Fact]
+    public async Task Un_serveur_qui_charge_son_modele_n_est_pas_pret() =>
+        (await Engine(new RecordingHandler(HttpStatusCode.ServiceUnavailable, "")).IsReadyAsync(CancellationToken.None)).Should().BeFalse();
+
+    [Fact]
+    public async Task Un_serveur_qui_n_ecoute_pas_encore_n_est_pas_pret() =>
+        (await Engine(new RecordingHandler(new HttpRequestException("refusé"))).IsReadyAsync(CancellationToken.None)).Should().BeFalse();
+
     private static SpeechAudio Audio() => SpeechAudio.FromWav(SpeechAudio.EncodeWav(SpeechAudioTests.Tone(0.5)), 30).Value;
 
     private static WhisperServerSpeechToText Engine(RecordingHandler handler) => new(

@@ -11,9 +11,11 @@
   <data name="Voice.State.NotConfigured" xml:space="preserve"><value>Dictation is not enabled on this deployment. You can type everything: voice is an option, never a requirement.</value></data>
   <data name="Voice.State.HowToEnable" xml:space="preserve"><value>It runs on a Whisper engine installed in your cell or on this device, so your voice never leaves Lettra. An administrator turns it on in the settings (see "Voice" in the documentation).</value></data>
   <data name="Voice.State.Unreachable" xml:space="preserve"><value>Cannot reach the server to check whether dictation is available. Check the connection and try again.</value></data>
+  <data name="Voice.State.Starting" xml:space="preserve"><value>Dictation is getting ready: the Whisper engine is loading its model (on first start it downloads it, 142 MB). It will be available in a few minutes without reloading the page. Meanwhile, type with the keyboard.</value></data>
   <data name="Voice.State.Unknown" xml:space="preserve"><value>Checking dictation…</value></data>
   <data name="Voice.Retry" xml:space="preserve"><value>Try again</value></data>
   <data name="Voice.Error.Unsupported" xml:space="preserve"><value>This browser does not give access to the microphone. Try a recent browser or the installed app.</value></data>
+  <data name="Voice.Error.InsecureContext" xml:space="preserve"><value>The microphone is only available over https:// or on http://localhost. On this computer, open Lettra at http://localhost:8080; from a phone or another computer, use the local network https:// address.</value></data>
   <data name="Voice.Error.Denied" xml:space="preserve"><value>Microphone access was denied. Allow it in the browser or device settings, then try again.</value></data>
   <data name="Voice.Error.NoDevice" xml:space="preserve"><value>No microphone was found on this device.</value></data>
   <data name="Voice.Error.Recorder" xml:space="preserve"><value>Recording could not start. Try again.</value></data>

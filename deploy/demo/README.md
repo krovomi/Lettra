@@ -81,6 +81,12 @@ ou F8 maintenue (voir `docs/aide-a-la-saisie.md`).
   sans lui. Sans session, `/bff/user` répond 200 avec `isAuthenticated: false` et aucun écran ne lit le dossier avant
   la connexion. Hors ligne, l'application n'envoie pas de requête à l'API : les écrans affichent « serveur
   injoignable » et les devis et factures continuent dans les brouillons de l'appareil.
+- **Mise à jour** : une nouvelle version publiée (`git pull` puis `up --build`) prend la main dès qu'elle est en cache,
+  sans attendre la fermeture des onglets (`skipWaiting` et `clients.claim` dans `service-worker.published.js`).
+  `pwa.js` recharge alors la page si elle est ouverte depuis moins de dix secondes et que rien n'a été saisi ; sinon il
+  affiche « Nouvelle version de Lettra disponible » avec **Recharger**. Il cherche aussi une nouvelle version au retour
+  sur l'onglet, au retour du réseau et tous les quarts d'heure. La CI le vérifie à chaque mise à jour de la démo
+  (`e2e/mise-a-jour.mjs`, avec un onglet resté ouvert et un onglet ouvert juste après).
 - Si une erreur « Uncaught (in promise) TypeError: Failed to fetch at fromShell » apparaît encore, c'est l'ancien
   service worker : fermer tous les onglets de Lettra puis rouvrir (ou DevTools → *Application* → *Service workers* →
   *Unregister*).
