@@ -171,17 +171,14 @@ internal sealed class ValidateInvoiceHandler(
 
     private async Task<Result<(Invoice Invoice, CompanyProfile Profile)>> LoadAsync(ValidateInvoiceCommand command, CancellationToken cancellationToken)
     {
-        Invoice? invoice = await invoices.FindAsync(command.InvoiceId, cancellationToken).ConfigureAwait(false);
-        if (invoice is null)
+        Result<Invoice> loaded = Concurrency.Load(
+            await invoices.FindAsync(command.InvoiceId, cancellationToken).ConfigureAwait(false), InvoiceErrors.NotFound, command.ExpectedVersion);
+        if (loaded.IsFailure)
         {
-            return InvoiceErrors.NotFound;
+            return Result<(Invoice, CompanyProfile)>.Failure(loaded.Errors);
         }
 
-        Result version = Concurrency.Check(invoice, command.ExpectedVersion);
-        if (version.IsFailure)
-        {
-            return Result<(Invoice, CompanyProfile)>.Failure(version.Errors);
-        }
+        Invoice invoice = loaded.Value;
 
         if (!invoice.IsDraft)
         {

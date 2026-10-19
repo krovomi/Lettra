@@ -70,6 +70,9 @@ Après la PR 2 (branche du 19 octobre, 3 589 tests) : **91,3 % des lignes** (31 
 passerelles HTTP 94,4 % (51,1 %), supervision infrastructure 96,2 % (77,2 %), serveur de
 synchronisation 99,6 % (83,6 %), API 90,8 %, Application 92,9 %, Domaine 90,9 %.
 
+Après la PR 3 (#139, 3 858 tests) : **91,8 % des lignes** (35 496 / 38 667) et **81,6 % des
+branches** (13 829 / 16 949).
+
 Les autres assemblies (IA, voix, identité, impression, données de démonstration, observabilité)
 sont entre 90 et 100 %.
 
@@ -165,7 +168,7 @@ Chaque écart a été vérifié dans le code. Les chemins sont relatifs à `src/
 |---|---|---|
 | A1 | Calcul de l'acompte, « seuls les brouillons se suppriment », détachement de la facture finale du devis : règles écrites dans les handlers. | `QuoteFeatures.cs:242, 395-400`, `InvoiceFeatures.cs:286-296, 374-379` |
 | A2 | Approbation d'un avoir : le handler renvoie une erreur, l'entité lève une exception pour le même cas. | `InvoiceFeatures.cs:416`, `Domain/Billing/Invoice.cs:534-537` |
-| A3 | Rôles et affectations : simples records, toutes les règles dans les handlers. | `Application/Abstractions/Identity/Authorization.cs:64, 70`, `Features/Rights/RightsCommands.cs:160-215`, `Features/Administration/AdministrationCommands.cs:166-226` |
+| A3 | Rôles et affectations : simples records, toutes les règles dans les handlers. | `Application/Abstractions/Identity/Authorization.cs:64, 70`, `Features/Rights/RightsCommands.cs:160-215`, `Features/Administration/AdministrationCommands.cs:166-226` (portée et échéance dans `RoleDefinition.AllowsScope` et `AcceptsExpiry` ; corrigé, PR 3) |
 | A4 | Les endpoints de synchronisation et de démonstration contournent le médiateur (permissions refaites à la main, second conteneur de services à chaque appel). | `Hosts/Lettra.Api/Endpoints/SyncEndpoints.cs:136-153`, `DemoEndpoints.cs:38-54` |
 | A5 | Interface Blazor : `IServiceProvider.GetService(...)` (localisateur de services) dans 23 composants. | `Presentation/Lettra.UI.Shared` |
 | A6 | État statique modifiable `ExplorerSettings.SearchDelay`, modifié par les tests. | `Presentation/Lettra.UI.Shared/Components/Explorer/RecordExplorerPage.cs:19` |
@@ -199,12 +202,13 @@ Aucun test existant n'est retiré, désactivé ni affaibli.
 |---|---|---|
 | 1 | Ce document et le script `build/couverture/fusionner.py` ; API : `HttpResults` remplace les ternaires `Result` → HTTP recopiés (R1) ; défauts D1 et D3 corrigés ; parité des codes d'erreur étendue à `Supervision.Domain` (A8). | Fusionnée (PR #119) |
 | 2 | Doublons transverses : calendrier légal unique `LegalCalendar` (R3), liste UE et devise uniques (R11), boucle unique des tâches de fond `PeriodicPass` sur l'horloge injectée (R10), textes des mentions légales partagés (D2), « écrire puis relire » unique dans les passerelles en processus (R2), règles d'acompte et de suppression dans les entités (A1), défauts D6 et D7, tests de parité de toutes les passerelles (68 cas, HTTP et en direct). | Fusionnée (PR #129, réparée par #134) |
-| 3 | Rôles : portée et échéance d'un rôle portées par `RoleDefinition` (A3, la règle était recopiée dans l'attribution et dans le calcul des droits) ; passerelles HTTP : délai d'attente traité comme une coupure (D4) ; tests. | En cours |
+| 3 | Rôles : portée et échéance d'un rôle portées par `RoleDefinition` (A3, la règle était recopiée dans l'attribution et dans le calcul des droits) ; passerelles HTTP : délai d'attente traité comme une coupure (D4) ; tests. | Fusionnée (PR #139) |
 | 4 | Tests d'infrastructure : tâche de la vue cabinet et ses sources, serveur de synchronisation (rejeu après écriture concurrente), webhook de supervision, annuaire d'autorisations (83 cas). Livrés avec la PR 2. | Fusionnée avec la PR 2 |
 | 5 | API : recherche normalisée (R12), tests. Après le fil « Tris et filtres sur les listes ». | À faire |
 | 6 | Application : chargement versionné (R5), validateurs paginés (R7, après les tris), fin de validation de facture (R8), règlement (R4, S1), `IValidator` dans Exports (A7), tests. | À faire |
 | 7 | Conformité : découpage de `ComplianceChecker.Check` (S3). | À faire |
 | 8 | Interface Blazor : horloge injectée (D5), fin du localisateur de services (A5, A6), base commune des éditeurs (R9), tests bUnit. | À faire |
 
-Seuil de couverture proposé pour la CI, une fois ces PR fusionnées : 85 % des lignes et 75 % des
-branches au global, sans régression d'une PR à l'autre.
+Seuil de couverture appliqué par la CI depuis la PR #136 : 88 % des lignes et 78 % des branches au
+global (`fusionner.py --seuil-lignes 88 --seuil-branches 78`) ; chaque PR garde au moins le niveau
+de chaque assembly.

@@ -172,19 +172,16 @@ internal sealed class UpdatePriceListHandler(
     public async Task<Result> HandleAsync(UpdatePriceListCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
-        PriceList? list = await lists.FindAsync(command.PriceListId, cancellationToken).ConfigureAwait(false);
-        if (list is null)
+        Result<PriceList> loaded = Concurrency.Load(
+            await lists.FindAsync(command.PriceListId, cancellationToken).ConfigureAwait(false), PriceListErrors.NotFound, command.ExpectedVersion);
+        if (loaded.IsFailure)
         {
-            return PriceListErrors.NotFound;
+            return Result.Failure(loaded.Errors);
         }
 
-        Result result = Concurrency.Check(list, command.ExpectedVersion);
-        if (result.IsFailure)
-        {
-            return result;
-        }
+        PriceList list = loaded.Value;
 
-        result = await PriceListReferences.CheckAsync(references, command.Data, cancellationToken).ConfigureAwait(false);
+        Result result = await PriceListReferences.CheckAsync(references, command.Data, cancellationToken).ConfigureAwait(false);
         if (result.IsFailure)
         {
             return result;

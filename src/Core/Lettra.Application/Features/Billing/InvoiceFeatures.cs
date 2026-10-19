@@ -235,17 +235,14 @@ internal sealed class UpdateInvoiceHandler(
     public async Task<Result> HandleAsync(UpdateInvoiceCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
-        Invoice? invoice = await invoices.FindAsync(command.InvoiceId, cancellationToken).ConfigureAwait(false);
-        if (invoice is null)
+        Result<Invoice> loaded = Concurrency.Load(
+            await invoices.FindAsync(command.InvoiceId, cancellationToken).ConfigureAwait(false), InvoiceErrors.NotFound, command.ExpectedVersion);
+        if (loaded.IsFailure)
         {
-            return InvoiceErrors.NotFound;
+            return Result.Failure(loaded.Errors);
         }
 
-        Result result = Concurrency.Check(invoice, command.ExpectedVersion);
-        if (result.IsFailure)
-        {
-            return result;
-        }
+        Invoice invoice = loaded.Value;
 
         Result<PartySnapshot> customer = await BillingLoads.CustomerSnapshotAsync(customers, command.Data.CustomerId, cancellationToken).ConfigureAwait(false);
         if (customer.IsFailure)
@@ -253,7 +250,7 @@ internal sealed class UpdateInvoiceHandler(
             return Result.Failure(customer.Errors);
         }
 
-        result = invoice.Update(
+        Result result = invoice.Update(
             new CustomerId(command.Data.CustomerId),
             customer.Value,
             command.Data.ToHeader(),
@@ -280,17 +277,14 @@ internal sealed class DeleteInvoiceHandler(
     public async Task<Result> HandleAsync(DeleteInvoiceCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
-        Invoice? invoice = await invoices.FindAsync(command.InvoiceId, cancellationToken).ConfigureAwait(false);
-        if (invoice is null)
+        Result<Invoice> loaded = Concurrency.Load(
+            await invoices.FindAsync(command.InvoiceId, cancellationToken).ConfigureAwait(false), InvoiceErrors.NotFound, command.ExpectedVersion);
+        if (loaded.IsFailure)
         {
-            return InvoiceErrors.NotFound;
+            return Result.Failure(loaded.Errors);
         }
 
-        Result version = Concurrency.Check(invoice, command.ExpectedVersion);
-        if (version.IsFailure)
-        {
-            return version;
-        }
+        Invoice invoice = loaded.Value;
 
         Result deletable = invoice.CanBeDeleted();
         if (deletable.IsFailure)
@@ -329,20 +323,17 @@ internal sealed class IssueInvoiceHandler(
 
     private async Task<Result> IssueAsync(IssueInvoiceCommand command, CancellationToken cancellationToken)
     {
-        Invoice? invoice = await invoices.FindAsync(command.InvoiceId, cancellationToken).ConfigureAwait(false);
-        if (invoice is null)
+        Result<Invoice> loaded = Concurrency.Load(
+            await invoices.FindAsync(command.InvoiceId, cancellationToken).ConfigureAwait(false), InvoiceErrors.NotFound, command.ExpectedVersion);
+        if (loaded.IsFailure)
         {
-            return InvoiceErrors.NotFound;
+            return Result.Failure(loaded.Errors);
         }
 
-        Result result = Concurrency.Check(invoice, command.ExpectedVersion);
-        if (result.IsFailure)
-        {
-            return result;
-        }
+        Invoice invoice = loaded.Value;
 
         // Séparation des tâches : l'auteur de la saisie n'émet pas (la validation a déjà écarté ses modificateurs).
-        result = await duties.EnsureCanIssueAsync([invoice.CreatedBy], cancellationToken).ConfigureAwait(false);
+        Result result = await duties.EnsureCanIssueAsync([invoice.CreatedBy], cancellationToken).ConfigureAwait(false);
         if (result.IsFailure)
         {
             return result;
@@ -411,24 +402,21 @@ internal sealed class ApproveCreditNoteHandler(
     public async Task<Result> HandleAsync(ApproveCreditNoteCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
-        Invoice? invoice = await invoices.FindAsync(command.InvoiceId, cancellationToken).ConfigureAwait(false);
-        if (invoice is null)
+        Result<Invoice> loaded = Concurrency.Load(
+            await invoices.FindAsync(command.InvoiceId, cancellationToken).ConfigureAwait(false), InvoiceErrors.NotFound, command.ExpectedVersion);
+        if (loaded.IsFailure)
         {
-            return InvoiceErrors.NotFound;
+            return Result.Failure(loaded.Errors);
         }
 
-        Result result = Concurrency.Check(invoice, command.ExpectedVersion);
-        if (result.IsFailure)
-        {
-            return result;
-        }
+        Invoice invoice = loaded.Value;
 
         if (invoice.Kind != InvoiceKind.CreditNote)
         {
             return SegregationOfDutiesErrors.NotACreditNote;
         }
 
-        result = await duties.EnsureCanApproveCreditNoteAsync(invoice.CreatedBy, cancellationToken).ConfigureAwait(false);
+        Result result = await duties.EnsureCanApproveCreditNoteAsync(invoice.CreatedBy, cancellationToken).ConfigureAwait(false);
         if (result.IsFailure)
         {
             return result;

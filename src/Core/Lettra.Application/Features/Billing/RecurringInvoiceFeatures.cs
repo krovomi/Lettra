@@ -183,17 +183,14 @@ internal sealed class UpdateRecurringInvoiceHandler(
     public async Task<Result> HandleAsync(UpdateRecurringInvoiceCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
-        RecurringInvoice? template = await templates.FindAsync(command.RecurringInvoiceId, cancellationToken).ConfigureAwait(false);
-        if (template is null)
+        Result<RecurringInvoice> loaded = Concurrency.Load(
+            await templates.FindAsync(command.RecurringInvoiceId, cancellationToken).ConfigureAwait(false), RecurringInvoiceErrors.NotFound, command.ExpectedVersion);
+        if (loaded.IsFailure)
         {
-            return RecurringInvoiceErrors.NotFound;
+            return Result.Failure(loaded.Errors);
         }
 
-        Result result = Concurrency.Check(template, command.ExpectedVersion);
-        if (result.IsFailure)
-        {
-            return result;
-        }
+        RecurringInvoice template = loaded.Value;
 
         Result<PartySnapshot> customer = await BillingLoads.CustomerSnapshotAsync(customers, command.Data.CustomerId, cancellationToken).ConfigureAwait(false);
         if (customer.IsFailure)
@@ -201,7 +198,7 @@ internal sealed class UpdateRecurringInvoiceHandler(
             return Result.Failure(customer.Errors);
         }
 
-        result = template.Update(command.Data.ToDraft(), user.UserId, clock.GetUtcNow());
+        Result result = template.Update(command.Data.ToDraft(), user.UserId, clock.GetUtcNow());
         if (result.IsFailure)
         {
             return result;
@@ -221,17 +218,14 @@ internal sealed class SetRecurringInvoiceActiveHandler(
     public async Task<Result> HandleAsync(SetRecurringInvoiceActiveCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
-        RecurringInvoice? template = await templates.FindAsync(command.RecurringInvoiceId, cancellationToken).ConfigureAwait(false);
-        if (template is null)
+        Result<RecurringInvoice> loaded = Concurrency.Load(
+            await templates.FindAsync(command.RecurringInvoiceId, cancellationToken).ConfigureAwait(false), RecurringInvoiceErrors.NotFound, command.ExpectedVersion);
+        if (loaded.IsFailure)
         {
-            return RecurringInvoiceErrors.NotFound;
+            return Result.Failure(loaded.Errors);
         }
 
-        Result result = Concurrency.Check(template, command.ExpectedVersion);
-        if (result.IsFailure)
-        {
-            return result;
-        }
+        RecurringInvoice template = loaded.Value;
 
         template.SetActive(command.IsActive, user.UserId, clock.GetUtcNow());
         await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -245,17 +239,14 @@ internal sealed class DeleteRecurringInvoiceHandler(IRecurringInvoiceRepository 
     public async Task<Result> HandleAsync(DeleteRecurringInvoiceCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
-        RecurringInvoice? template = await templates.FindAsync(command.RecurringInvoiceId, cancellationToken).ConfigureAwait(false);
-        if (template is null)
+        Result<RecurringInvoice> loaded = Concurrency.Load(
+            await templates.FindAsync(command.RecurringInvoiceId, cancellationToken).ConfigureAwait(false), RecurringInvoiceErrors.NotFound, command.ExpectedVersion);
+        if (loaded.IsFailure)
         {
-            return RecurringInvoiceErrors.NotFound;
+            return Result.Failure(loaded.Errors);
         }
 
-        Result result = Concurrency.Check(template, command.ExpectedVersion);
-        if (result.IsFailure)
-        {
-            return result;
-        }
+        RecurringInvoice template = loaded.Value;
 
         await templates.RemoveAsync(template, cancellationToken).ConfigureAwait(false);
         await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
