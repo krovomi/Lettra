@@ -75,6 +75,8 @@ public sealed class AuditKitPageTests : BunitContext
         page.Find("#audit-kit-fingerprint").TextContent.Should().Be(_kits.ManifestSha256);
         this.ToastText().Should().Be("Kit contrôle fiscal téléchargé.");
 
+        // Le bouton se réactive au rendu qui suit la fin de la préparation, parfois après l'apparition du résultat.
+        page.WaitForAssertion(() => page.Find("#audit-kit-download").HasAttribute("disabled").Should().BeFalse());
         page.Find("#audit-kit-download").Click();
         _files.Files.Should().HaveCount(2, "le même kit se télécharge à nouveau sans repasser par le serveur");
         _kits.Periods.Should().HaveCount(1);
