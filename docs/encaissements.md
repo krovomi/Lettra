@@ -104,6 +104,9 @@ n'apparaît que là où les données de démonstration sont autorisées ; l'API 
   l'encaissement.
 - `GET /api/v1/bank/status` donne, pour la vue cabinet multi-dossiers, la date du dernier import, le nombre d'opérations
   à rapprocher et la plus ancienne d'entre elles. Compteurs seulement, aucun montant.
+- Dans la **Vue cabinet**, la colonne « relevé non rapproché » compte les opérations à rapprocher de chaque dossier :
+  en attente les 15 premiers jours, « à traiter » ensuite, « urgent » au-delà de 30 jours (source
+  `BankUnreconciledIndicatorSource`). Les factures soldées par des encaissements ne comptent plus dans les retards.
 
 ## Intégrité et données
 
