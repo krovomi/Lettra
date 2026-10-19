@@ -7,6 +7,11 @@ const TargetRate = 16000;
 let session = null;
 let pushToTalk = null;
 
+// Contexte sécurisé (https:// ou http://localhost) : ailleurs, le navigateur ne donne jamais le micro à la page.
+export function secureContext() {
+  return window.isSecureContext !== false;
+}
+
 export function supported() {
   return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && (window.AudioContext || window.webkitAudioContext));
 }
