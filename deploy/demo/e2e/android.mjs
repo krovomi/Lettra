@@ -89,6 +89,9 @@ async function keycloakPage(timeout) {
         await sleep(2_000);
     }
     await shot('echec-keycloak');
+    for (const command of ['getprop ro.debuggable', 'cat /data/local/tmp/chrome-command-line', 'grep -i devtools /proc/net/unix',
+        'dumpsys window | grep -E "mCurrentFocus|mFocusedApp"'])
+        log(`${command} :\n${(await device.shell(command).then(b => b.toString()).catch(e => String(e))).trim()}`);
     if (browser) for (const page of browser.contexts().flatMap(c => c.pages())) await dumpPage(page);
     throw new Error(`page de connexion Keycloak : introuvable après ${timeout / 1000} s dans Chrome.`);
 }
@@ -126,6 +129,8 @@ await shot('session-serveur');
 const devtools = 'lettra_devtools_remote';
 await device.shell('am force-stop com.android.chrome');
 await device.shell(`echo "_ --disable-fre --no-default-browser-check --no-first-run --remote-debugging-socket-name=${devtools}" > /data/local/tmp/chrome-command-line`);
+// Sur une image non « debuggable », Chrome ne lit ce fichier que s'il est l'application de débogage.
+await device.shell('am set-debug-app --persistent com.android.chrome');
 execFileSync('adb', ['forward', 'tcp:9333', `localabstract:${devtools}`]);
 await device.tap({ text: /^(Sign in|Se connecter)$/ });
 const keycloak = await keycloakPage(90_000);
