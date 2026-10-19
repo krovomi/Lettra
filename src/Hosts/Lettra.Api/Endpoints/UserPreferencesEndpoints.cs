@@ -20,6 +20,7 @@ internal static class UserPreferencesEndpoints
         RouteGroupBuilder group = app.MapGroup(Path)
             .RequireAuthorization(LettraPolicies.User)
             .AddEndpointFilter<CsrfEndpointFilter>()
+            .ForOwnAccountOnly()
             .WithTags("Preferences");
 
         group.MapGet("/", GetAsync)
