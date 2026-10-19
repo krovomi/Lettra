@@ -144,3 +144,20 @@ public static class GroupPermissionEndpointExtensions
         return builder.WithMetadata(new RequiredPermissionMetadata(permission));
     }
 }
+
+/// <summary>
+/// Route personnelle (<c>/api/v1/me/…</c>), hors de tout dossier : aucune permission à vérifier, le cas d'usage
+/// (<c>[PublicUseCase]</c>) ne lit et n'écrit que le compte de la session. Seule exception admise à la permission
+/// déclarée (annexe F §4), et seulement sous <c>/api/v1/me/</c>.
+/// </summary>
+public sealed record OwnAccountOnlyMetadata;
+
+public static class OwnAccountEndpointExtensions
+{
+    /// <summary>Déclare les routes du groupe comme personnelles : l'authentification suffit, l'identité vient de la session.</summary>
+    public static RouteGroupBuilder ForOwnAccountOnly(this RouteGroupBuilder builder)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        return builder.WithMetadata(new OwnAccountOnlyMetadata());
+    }
+}
