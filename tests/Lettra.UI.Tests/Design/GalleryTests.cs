@@ -125,6 +125,42 @@ public sealed class GalleryTests : BunitContext
     }
 
     [Fact]
+    public void Galerie_du_menu_et_de_l_aide_pour_les_captures()
+    {
+        string? dossier = Environment.GetEnvironmentVariable("LETTRA_GALLERY_DIR");
+        if (string.IsNullOrEmpty(dossier))
+        {
+            return;
+        }
+
+        Directory.CreateDirectory(dossier);
+        Donnees();
+        Ecrire(dossier, "menu-regle", "invoices", Page<InvoiceList>(), coque =>
+        {
+            coque.Find("button[aria-label='Épingler Catalogue dans les favoris']").Click();
+            coque.Find("button[aria-label='Épingler Rapprochement bancaire dans les favoris']").Click();
+            coque.Find(".lt-sidebar [data-group='Nav.Group.Sales'] .lt-nav-group").Click();
+            coque.Find(".lt-sidebar [data-group='Nav.Group.Parties'] .lt-nav-group").Click();
+        });
+        Ecrire(dossier, "menu-recherche", "", Page<Home>(), coque => coque.Find("#nav-filter").Input("tva"));
+        Ecrire(dossier, "menu-recherche-vide", "", Page<Home>(), coque => coque.Find("#nav-filter").Input("Dupont"));
+        Ecrire(dossier, "menu-plus-recherche", "", Page<Home>(), coque =>
+        {
+            coque.Find("#tab-more").Click();
+            coque.Find("#more-filter").Input("fac");
+        });
+        Ecrire(dossier, "aide", "invoices", Page<InvoiceList>(), coque => coque.Find("#tour-help").Click());
+        Ecrire(dossier, "aide-question", "", Page<Home>(), coque =>
+        {
+            coque.Find("#tour-help").Click();
+            coque.Find("#help-query").Input("je veux annuler ma facture");
+        });
+        // En dernier : le repli en rail est retenu pour les pages suivantes.
+        Services.GetRequiredService<Lettra.UI.Shared.Onboarding.HelpPanelState>().Close();
+        Ecrire(dossier, "menu-rail", "", Page<Home>(), coque => coque.Find("#nav-collapse").Click());
+    }
+
+    [Fact]
     public void Galerie_d_un_dossier_vide_pour_les_captures()
     {
         string? dossier = Environment.GetEnvironmentVariable("LETTRA_GALLERY_DIR");
@@ -145,15 +181,21 @@ public sealed class GalleryTests : BunitContext
         b.CloseComponent();
     };
 
-    private void Ecrire(string dossier, string nom, string route, RenderFragment page, string? clic = null)
+    private void Ecrire(string dossier, string nom, string route, RenderFragment page, string? clic = null) =>
+        Ecrire(dossier, nom, route, page, coque =>
+        {
+            if (clic is not null)
+            {
+                coque.Find(clic).Click();
+            }
+        });
+
+    private void Ecrire(string dossier, string nom, string route, RenderFragment page, Action<IRenderedComponent<MainLayout>> preparer)
     {
         Services.GetRequiredService<NavigationManager>().NavigateTo(route);
         IRenderedComponent<MainLayout> coque = Render<MainLayout>(p => p.Add(l => l.Body, page));
         coque.WaitForState(() => coque.FindAll(".lt-skeleton, .lettra-loading").Count == 0, TimeSpan.FromSeconds(5));
-        if (clic is not null)
-        {
-            coque.Find(clic).Click();
-        }
+        preparer(coque);
 
         foreach (string theme in Themes)
         {

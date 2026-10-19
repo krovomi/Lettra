@@ -57,7 +57,7 @@
     --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
 
     /* Gabarit de la coquille : barre latérale, rail (tablette), barre du haut, onglets (téléphone). */
-    --sidebar-w: 15.5rem;
+    --sidebar-w: 16.5rem;
     --rail-w: 4.75rem;
     --topbar-h: 3.75rem;
     --tabbar-h: 4rem;

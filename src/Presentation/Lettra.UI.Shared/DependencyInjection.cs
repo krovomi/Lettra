@@ -38,6 +38,10 @@ public static class DependencyInjection
         services.AddScoped<GuidedTours>();
         services.AddScoped<StarterProgress>();
         services.AddScoped<ICommandPaletteProvider, TourPaletteProvider>();
+        // Menu réglable (sections repliées, favoris) et aide sans IA (questions fréquentes).
+        services.AddScoped<Layout.NavMenuState>();
+        services.AddScoped<HelpPanelState>();
+        services.AddScoped<ICommandPaletteProvider, HelpPaletteProvider>();
         services.AddScoped<TypingAssist>();
         services.AddScoped<TypingHistory>();
         services.AddScoped<PostalCodes>();
