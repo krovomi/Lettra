@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Dates.Placeholder" xml:space="preserve"><value>jj/mm/aaaa</value></data>
+  <data name="Dates.Invalid" xml:space="preserve"><value>Date non reconnue : saisir jj/mm/aaaa, par exemple 19/10/2026.</value></data>
+  <data name="Dates.Range.Between" xml:space="preserve"><value>Choisir une date entre le {0} et le {1}.</value></data>
+  <data name="Dates.Range.After" xml:space="preserve"><value>Choisir une date à partir du {0}.</value></data>
+  <data name="Dates.Range.Before" xml:space="preserve"><value>Choisir une date jusqu'au {0}.</value></data>
+  <data name="Dates.Calendar.Open" xml:space="preserve"><value>Ouvrir le calendrier</value></data>
+  <data name="Dates.Calendar.Label" xml:space="preserve"><value>Choisir une date</value></data>
+  <data name="Dates.Calendar.Previous" xml:space="preserve"><value>Mois précédent</value></data>
+  <data name="Dates.Calendar.Next" xml:space="preserve"><value>Mois suivant</value></data>
+  <data name="Dates.Calendar.Today" xml:space="preserve"><value>Aujourd'hui</value></data>
+  <data name="Dates.Calendar.Close" xml:space="preserve"><value>Fermer</value></data>
+</root>

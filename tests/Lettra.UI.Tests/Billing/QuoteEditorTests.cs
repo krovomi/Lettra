@@ -59,7 +59,7 @@ public sealed class QuoteEditorTests : BunitContext
 
     private static void UseCulture(string name) => LettraCultures.Apply(CultureInfo.GetCultureInfo(name));
 
-    private static string Fr(decimal value) => GridNumber.FormatAmount(value, CultureInfo.GetCultureInfo("fr-FR"));
+    private static string Fr(decimal value) => GridNumber.FormatAmount(value, LettraCultures.ForScreen(CultureInfo.GetCultureInfo("fr-FR")));
 
     private IRenderedComponent<QuoteEditor> Ouvrir(Guid? id = null) =>
         Render<QuoteEditor>(p => p.Add(e => e.Id, id).Add(e => e.AutosaveDelay, TimeSpan.Zero));
@@ -93,9 +93,10 @@ public sealed class QuoteEditorTests : BunitContext
         page.WaitForAssertion(() => page.FindAll(".lg-row[data-r]").Should().HaveCount(1));
         foreach (string champ in new[] { "#valid-until", "#vat-regime", "#subject", "#notes" })
         {
-            // Un champ assisté (objet, notes) est enveloppé (suggestions, micro) : le champ empilé est le parent de l'enveloppe.
+            // Un champ assisté (objet, notes) est enveloppé (suggestions, micro), une date aussi (calendrier) : le champ
+            // empilé est le parent de l'enveloppe.
             AngleSharp.Dom.IElement element = page.Find(champ);
-            AngleSharp.Dom.IElement parent = (element.Closest(".lt-assist") ?? element).ParentElement!;
+            AngleSharp.Dom.IElement parent = (element.Closest(".lt-assist") ?? element.Closest(".lt-date") ?? element).ParentElement!;
             parent.ClassList.Should().Contain("lettra-field", $"{champ} a son libellé au-dessus, sur toute la largeur de sa colonne");
         }
 

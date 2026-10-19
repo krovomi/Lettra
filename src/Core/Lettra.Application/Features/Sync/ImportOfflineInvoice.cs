@@ -104,11 +104,7 @@ internal sealed class ImportOfflineInvoiceHandler(
         // Une pièce débloquée a été remise au client telle quelle : elle se corrige par un avoir, pas en la refusant.
         if (report.BlocksValidation && !released)
         {
-            return Result<SyncIntentOutcome>.Failure(
-            [
-                BillingErrors.NotCompliant,
-                .. report.Errors.Select(f => Error.Validation(f.Code, f.Line is { } line ? $"Lines[{line - 1}]" : null)),
-            ]);
+            return Result<SyncIntentOutcome>.Failure(InvoiceValidationEffects.Blocked(report).Errors);
         }
 
         // Même forme canonique, même empreinte : la pièce reçue est bien celle que le poste a remise au client.
@@ -130,16 +126,8 @@ internal sealed class ImportOfflineInvoiceHandler(
 
         // Rechaînage au serveur après vérification (ADR-0007, tranché en phase 4) : une seule chaîne par dossier, où la
         // pièce du poste prend sa place à sa réception ; sa série est contrôlée à part, sans trou, comme FAC.
-        Result<long> journaled = await journal.AppendAsync(
-            InvoiceJournal.EventOf(invoice, invoice.Kind == InvoiceKind.CreditNote ? JournalEntryKind.CreditNoteValidated : JournalEntryKind.InvoiceValidated),
-            cancellationToken).ConfigureAwait(false);
-        if (journaled.IsFailure)
-        {
-            return Result<SyncIntentOutcome>.Failure(journaled.Errors);
-        }
-
-        await salesJournal.AddAsync(InvoiceValidationEffects.SalesEntryOf(invoice), cancellationToken).ConfigureAwait(false);
-        return SyncIntentOutcome.Applied;
+        Result recorded = await InvoiceValidationEffects.RecordAsync(invoice, journal, salesJournal, cancellationToken).ConfigureAwait(false);
+        return recorded.IsFailure ? Result<SyncIntentOutcome>.Failure(recorded.Errors) : SyncIntentOutcome.Applied;
     }
 
     private static InvoiceReplica ToReplica(ValidatedInvoiceFact fact, Guid deviceId)
