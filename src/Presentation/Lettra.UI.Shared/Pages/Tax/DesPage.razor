@@ -1,0 +1,207 @@
+@page "/tax/des"
+@inject ITaxGateway Tax
+@inject IFileDownloader Files
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+@inject IServiceProvider Services
+@* Déclaration européenne de services du mois : une ligne par client de l'Union, son numéro de TVA et le montant HT
+   arrondi à l'euro. Le fichier se dépose soi-même sur le service en ligne des douanes. *@
+
+<PageTitle>@L["Tax.Des.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Tax.Des.Title"]</h1>
+        <p class="lettra-muted">@L["Tax.Des.Subtitle"]</p>
+    </div>
+</div>
+
+<TaxTabs />
+<GeneralErrors Errors="_errors" />
+
+@if (_des is null)
+{
+    <ExplorerSkeleton Rows="5" />
+}
+else
+{
+    DesResponse des = _des;
+    DateOnly month = new(des.Year, des.Month, 1);
+    <section class="lt-panel lt-tax-head" aria-labelledby="des-period">
+        <div class="lt-tax-nav">
+            <a class="lettra-button is-ghost" href="@Href(month.AddMonths(-1))" id="des-previous" aria-label="@L["Tax.Period.Previous"]"><Icon Name="chevrons-left" Size="18" /></a>
+            <div class="lt-tax-period">
+                <h2 id="des-period">@TaxText.Month(month)</h2>
+                <p class="lettra-muted">@string.Format(CultureInfo.CurrentCulture, L["Tax.Des.Count"], des.Lines.Count)</p>
+            </div>
+            <a class="lettra-button is-ghost" href="@Href(month.AddMonths(1))" id="des-next" aria-label="@L["Tax.Period.Next"]"><Icon Name="chevrons-right" Size="18" /></a>
+        </div>
+
+        @if (des.Lines.Count > 0)
+        {
+            @if (des.FiledAt is { } filed)
+            {
+                <p class="lettra-banner is-success" id="des-filed">
+                    <Icon Name="badge-check" Size="18" /> @string.Format(CultureInfo.CurrentCulture, L["Tax.Filed.On"], filed.ToLocalTime().ToString("d", CultureInfo.CurrentCulture))
+                    <button type="button" class="lettra-button is-secondary" id="des-unfile" disabled="@_busy" @onclick="() => MarkAsync(false)">@L["Tax.Filed.Undo"]</button>
+                </p>
+            }
+            else
+            {
+                <p class="lettra-banner is-warning" id="des-due">
+                    <Icon Name="calendar-clock" Size="18" /> @string.Format(CultureInfo.CurrentCulture, L["Tax.DueOn"], TaxText.Day(des.DueDate))
+                    <button type="button" class="lettra-button" id="des-file" disabled="@_busy" @onclick="() => MarkAsync(true)">@L["Tax.Filed.Mark"]</button>
+                </p>
+            }
+        }
+    </section>
+
+    <TaxChecks Checks="des.Checks" Id="des-checks" />
+
+    <section class="lt-panel" aria-labelledby="des-lines-title">
+        <div class="lt-panel-head">
+            <h2 id="des-lines-title">@L["Tax.Des.Lines"]</h2>
+            @if (des.Lines.Count > 0)
+            {
+                <button type="button" class="lettra-button is-secondary" id="des-download" disabled="@_busy" @onclick="DownloadAsync"><Icon Name="file-spreadsheet" Size="18" /> @L["Tax.Des.Download"]</button>
+            }
+        </div>
+        @if (des.Lines.Count == 0)
+        {
+            <EmptyState Id="des-empty" IconName="circle-check" Title="@L["Tax.Des.Empty"]" Text="@L["Tax.Des.EmptyText"]" />
+        }
+        else
+        {
+            <table class="lettra-table lt-cards lt-tax-boxes" id="des-table">
+                <thead>
+                    <tr>
+                        <th scope="col">@L["Billing.Column.Customer"]</th>
+                        <th scope="col">@L["Tax.Des.Line"]</th>
+                        <th scope="col">@L["Tax.Des.VatNumber"]</th>
+                        <th scope="col" class="lg-num">@L["Tax.Des.Amount"]</th>
+                        <th scope="col"><span class="lettra-visually-hidden">@L["Tax.Box.Detail"]</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (DesLineResponse line in des.Lines)
+                    {
+                        string id = $"des-line-{line.LineNumber}";
+                        bool open = _open.Contains(id);
+                        <tr id="@id">
+                            <td>@line.CustomerName</td>
+                            <td data-label="@L["Tax.Des.Line"]">@line.LineNumber</td>
+                            <td data-label="@L["Tax.Des.VatNumber"]"><code>@line.CustomerVatNumber</code></td>
+                            <td class="lg-num" data-label="@L["Tax.Des.Amount"]">@TaxText.Euros(line.Amount)</td>
+                            <td>
+                                <button type="button" class="lettra-button is-secondary lt-tax-toggle" id="@($"{id}-toggle")" aria-expanded="@(open ? "true" : "false")" aria-controls="@($"{id}-detail")" @onclick="() => Toggle(id)">
+                                    <Icon Name="@(open ? "chevron-down" : "chevron-right")" Size="16" /> @string.Format(CultureInfo.CurrentCulture, L["Tax.Box.Pieces"], line.Sources.Count)
+                                </button>
+                            </td>
+                        </tr>
+                        @if (open)
+                        {
+                            <tr class="lt-tax-detail-row" id="@($"{id}-detail")">
+                                <td colspan="5"><TaxSources Sources="line.Sources" ShowVat="false" Id="@($"{id}-sources")" Caption="@line.CustomerName" /></td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th scope="row" colspan="3">@L["Accounting.Total"]</th>
+                        <td class="lg-num" id="des-total">@TaxText.Euros(des.Total)</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        }
+    </section>
+
+    <p class="lettra-hint" id="des-disclaimer">@L["Tax.Des.Disclaimer"]</p>
+}
+
+@code {
+    private DesResponse? _des;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private readonly HashSet<string> _open = [];
+    private bool _busy;
+
+    [SupplyParameterFromQuery(Name = "month")] public string? Month { get; set; }
+
+    private DateOnly Today => DateOnly.FromDateTime((Services.GetService<TimeProvider>() ?? TimeProvider.System).GetLocalNow().DateTime);
+
+    /// <summary>Par défaut, le mois écoulé : c'est sa DES qu'on dépose ce mois-ci.</summary>
+    private DateOnly Requested =>
+        DateOnly.TryParseExact(Month + "-01", "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly day)
+            ? day
+            : new DateOnly(Today.Year, Today.Month, 1).AddMonths(-1);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _open.Clear();
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _errors = [];
+        OperationResult<DesResponse> result = await Tax.GetDesAsync(Requested.Year, Requested.Month, CancellationToken.None);
+        _des = result.Value ?? new DesResponse(Requested.Year, Requested.Month, Requested, [], 0m, [], null);
+        _errors = result.Errors;
+    }
+
+    private static string Href(DateOnly month) => $"tax/des?month={month:yyyy-MM}";
+
+    private void Toggle(string id)
+    {
+        if (!_open.Remove(id))
+        {
+            _open.Add(id);
+        }
+    }
+
+    private async Task DownloadAsync()
+    {
+        _busy = true;
+        try
+        {
+            OperationResult<DesDocument> file = await Tax.ExportDesAsync(Requested.Year, Requested.Month, CancellationToken.None);
+            if (file is { IsSuccess: true, Value: { } document })
+            {
+                await Files.DownloadAsync(document.FileName, "text/csv", document.Content, CancellationToken.None);
+                Toasts.Show(ToastKind.Success, L["Tax.Toast.Downloaded"].Value);
+            }
+            else
+            {
+                _errors = file.Errors;
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task MarkAsync(bool filed)
+    {
+        _busy = true;
+        try
+        {
+            OperationResult<FiscalDeadlineResponse> marked = await Tax.MarkFilingAsync(
+                new MarkFiscalFilingRequest(FiscalObligationDto.Des, new DateOnly(Requested.Year, Requested.Month, 1), filed), CancellationToken.None);
+            if (marked.IsSuccess)
+            {
+                Toasts.Show(ToastKind.Success, L[filed ? "Tax.Toast.Filed" : "Tax.Toast.Unfiled"].Value);
+                await LoadAsync();
+            }
+            else
+            {
+                _errors = marked.Errors;
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

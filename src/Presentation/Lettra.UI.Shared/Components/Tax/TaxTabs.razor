@@ -1,0 +1,9 @@
+@* Onglets des déclarations : TVA, DES, calendrier fiscal et réglages. *@
+@inject IStringLocalizer<SharedResource> L
+
+<nav class="lt-subnav" aria-label="@L["Nav.Tax"]">
+    <NavLink class="lt-subnav-link" href="tax/vat" Match="NavLinkMatch.Prefix" id="tab-vat"><Icon Name="receipt" Size="18" /> @L["Tax.Vat.Tab"]</NavLink>
+    <NavLink class="lt-subnav-link" href="tax/des" Match="NavLinkMatch.Prefix" id="tab-des"><Icon Name="send" Size="18" /> @L["Tax.Des.Tab"]</NavLink>
+    <NavLink class="lt-subnav-link" href="tax/calendar" Match="NavLinkMatch.Prefix" id="tab-calendar"><Icon Name="calendar-clock" Size="18" /> @L["Tax.Calendar.Tab"]</NavLink>
+    <NavLink class="lt-subnav-link" href="tax/settings" Match="NavLinkMatch.Prefix" id="tab-settings"><Icon Name="pencil" Size="18" /> @L["Tax.Settings.Tab"]</NavLink>
+</nav>
