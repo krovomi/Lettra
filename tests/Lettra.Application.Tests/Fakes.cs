@@ -8,6 +8,7 @@ using Lettra.Contracts.Customers;
 using Lettra.Domain.Common;
 using Lettra.Domain.Parties;
 using Lettra.Domain.SharedKernel;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Lettra.Application.Tests;
@@ -139,4 +140,55 @@ internal sealed class EmptyDossierDirectory : IDossierDirectory
 {
     public Task<IReadOnlyList<Lettra.Contracts.Dossiers.DossierSummary>> ListAsync(OrganisationId organisation, CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<Lettra.Contracts.Dossiers.DossierSummary>>([]);
+}
+
+/// <summary>Vue cabinet en mémoire : indicateurs rangés, recalcul qui ne fait rien, coches de revue.</summary>
+internal sealed class InMemoryCabinetStores :
+    Lettra.Application.Abstractions.Cabinet.IDossierIndicatorStore,
+    Lettra.Application.Abstractions.Cabinet.IDossierIndicatorRefresher,
+    Lettra.Application.Abstractions.Cabinet.IDossierReviewStore
+{
+    private readonly ConcurrentDictionary<DossierId, Lettra.Application.Abstractions.Cabinet.StoredDossierIndicators> _indicators = new();
+    private readonly ConcurrentDictionary<(string Period, string Item), Lettra.Domain.Review.DossierReviewMark> _marks = new();
+
+    public Task ReplaceAsync(DossierId dossier, IReadOnlyList<Lettra.Application.Abstractions.Cabinet.DossierIndicator> indicators, DateTimeOffset computedAt, CancellationToken cancellationToken)
+    {
+        _indicators[dossier] = new(dossier, computedAt, indicators);
+        return Task.CompletedTask;
+    }
+
+    public Task<IReadOnlyList<Lettra.Application.Abstractions.Cabinet.StoredDossierIndicators>> ReadAsync(IReadOnlyCollection<DossierId> dossiers, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<Lettra.Application.Abstractions.Cabinet.StoredDossierIndicators>>(
+            [.. dossiers.Where(_indicators.ContainsKey).Select(d => _indicators[d])]);
+
+    public Task<Lettra.Application.Abstractions.Cabinet.IndicatorRefreshOutcome> RefreshAsync(IReadOnlyCollection<DossierId> dossiers, CancellationToken cancellationToken) =>
+        Task.FromResult(new Lettra.Application.Abstractions.Cabinet.IndicatorRefreshOutcome(0, 0));
+
+    public Task<IReadOnlyList<Lettra.Domain.Review.DossierReviewMark>> ListAsync(Lettra.Domain.Review.ReviewPeriod period, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<Lettra.Domain.Review.DossierReviewMark>>([.. _marks.Values.Where(m => m.Period == period.ToString())]);
+
+    public Task SaveAsync(Lettra.Domain.Review.DossierReviewMark mark, CancellationToken cancellationToken)
+    {
+        _marks[(mark.Period, mark.ItemKey)] = mark;
+        return Task.CompletedTask;
+    }
+
+    public Task RemoveAsync(Lettra.Domain.Review.ReviewPeriod period, string itemKey, CancellationToken cancellationToken)
+    {
+        _marks.TryRemove((period.ToString(), itemKey), out _);
+        return Task.CompletedTask;
+    }
+}
+
+internal static class CabinetFakesRegistration
+{
+    /// <summary>Les ports de la vue cabinet, pour que le conteneur des tests se valide.</summary>
+    public static IServiceCollection AddCabinetFakes(this IServiceCollection services)
+    {
+        InMemoryCabinetStores stores = new();
+        services.AddSingleton<Lettra.Application.Abstractions.Cabinet.IDossierIndicatorStore>(stores);
+        services.AddSingleton<Lettra.Application.Abstractions.Cabinet.IDossierIndicatorRefresher>(stores);
+        services.AddSingleton<Lettra.Application.Abstractions.Cabinet.IDossierReviewStore>(stores);
+        return services;
+    }
 }

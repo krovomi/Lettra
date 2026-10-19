@@ -16,6 +16,7 @@ using Lettra.UI.Shared.Pages.CatalogItems;
 using Lettra.UI.Shared.Pages.Parties;
 using Lettra.UI.Shared.Services;
 using Lettra.UI.Tests.Billing;
+using Lettra.UI.Tests.Cabinet;
 using Lettra.UI.Tests.Consultation;
 using Lettra.UI.Tests.Security;
 using Microsoft.AspNetCore.Components;
@@ -50,6 +51,7 @@ public sealed class GalleryTests : BunitContext
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddLettraUi();
+        Services.AddCabinetFakes();
         Services.AddSingleton<IInvoicesGateway>(_invoices);
         Services.AddSingleton<IQuotesGateway>(_quotes);
         Services.AddSingleton<ICustomersGateway>(_customers);

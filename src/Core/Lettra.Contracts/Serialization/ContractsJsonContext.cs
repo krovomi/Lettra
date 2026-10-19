@@ -4,7 +4,9 @@ using Lettra.Contracts.Accounting;
 using Lettra.Contracts.Administration;
 using Lettra.Contracts.Alerts;
 using Lettra.Contracts.Assistant;
+using Lettra.Contracts.Banking;
 using Lettra.Contracts.Billing;
+using Lettra.Contracts.Cabinet;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Customers;
@@ -71,6 +73,10 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(CreateDossierRequest))]
 [JsonSerializable(typeof(DossierSummary))]
 [JsonSerializable(typeof(IReadOnlyList<DossierSummary>))]
+[JsonSerializable(typeof(CabinetOverviewResponse))]
+[JsonSerializable(typeof(CabinetOverviewRefreshResponse))]
+[JsonSerializable(typeof(DossierReviewResponse))]
+[JsonSerializable(typeof(SetDossierReviewItemRequest))]
 [JsonSerializable(typeof(SetUserAccountRequest))]
 [JsonSerializable(typeof(CreateGroupRequest))]
 [JsonSerializable(typeof(GroupSummary))]
@@ -121,6 +127,21 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(DemoSeedResponse))]
 [JsonSerializable(typeof(SpeechStatusResponse))]
 [JsonSerializable(typeof(TranscriptionResponse))]
+[JsonSerializable(typeof(RecordPaymentRequest))]
+[JsonSerializable(typeof(ReversePaymentRequest))]
+[JsonSerializable(typeof(PaymentResponse))]
+[JsonSerializable(typeof(PagedResponse<PaymentSummary>))]
+[JsonSerializable(typeof(IReadOnlyList<OpenInvoiceResponse>))]
+[JsonSerializable(typeof(ImportBankStatementRequest))]
+[JsonSerializable(typeof(BankImportResponse))]
+[JsonSerializable(typeof(ReconciliationResponse))]
+[JsonSerializable(typeof(ConfirmMatchesRequest))]
+[JsonSerializable(typeof(ConfirmMatchesResponse))]
+[JsonSerializable(typeof(IgnoreBankLineRequest))]
+[JsonSerializable(typeof(BankLineResponse))]
+[JsonSerializable(typeof(BankingSettingsResponse))]
+[JsonSerializable(typeof(UpdateBankingSettingsRequest))]
+[JsonSerializable(typeof(BankReconciliationStatusResponse))]
 [JsonSerializable(typeof(VatReturnResponse))]
 [JsonSerializable(typeof(DesResponse))]
 [JsonSerializable(typeof(FiscalCalendarResponse))]

@@ -88,6 +88,7 @@ public static class DependencyInjection
         services.AddSingleton<IReceivablesGateway, InProcessReceivablesGateway>();
         services.AddSingleton<IFecGateway, InProcessFecGateway>();
         services.AddSingleton<IAccountingGateway, InProcessAccountingGateway>();
+        services.AddSingleton<IBankingGateway, InProcessBankingGateway>();
         services.AddSingleton<ITaxGateway, InProcessTaxGateway>();
         services.AddSingleton<IBillingSettingsGateway, InProcessBillingSettingsGateway>();
         services.AddSingleton<IPriceListsGateway, InProcessPriceListsGateway>();
@@ -95,6 +96,7 @@ public static class DependencyInjection
         services.AddSingleton<IAssistantGateway, InProcessAssistantGateway>();
         services.AddSingleton<ISpeechGateway, InProcessSpeechGateway>();
         services.AddSingleton<IAdministrationGateway, InProcessAdministrationGateway>();
+        services.AddSingleton<ICabinetGateway, InProcessCabinetGateway>();
         return services;
     }
 }

@@ -1,0 +1,118 @@
+@page "/payments"
+@inject IBankingGateway Banking
+@inject IStringLocalizer<SharedResource> L
+@* Encaissements (vague 6) : la liste des règlements reçus, du plus récent au plus ancien, avec leur code de lettrage. *@
+
+<PageTitle>@L["Payments.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Payments.Title"]</h1>
+        <p class="lettra-muted">@L["Payments.Subtitle"]</p>
+    </div>
+    <div class="lt-page-actions">
+        <a class="lettra-button is-secondary" href="bank" id="payments-to-bank"><Icon Name="landmark" Size="18" /> @L["Nav.Bank"]</a>
+        <a class="lettra-button" href="payments/new" id="payments-new"><Icon Name="plus" Size="18" /> @L["Payments.New"]</a>
+    </div>
+</div>
+
+<section class="lettra-card" aria-labelledby="payments-list-title">
+    <h2 id="payments-list-title" class="lettra-visually-hidden">@L["Payments.Title"]</h2>
+    <div class="lettra-toolbar">
+        <div class="lt-filter">
+            <label for="payments-search">@L["Payments.Search"]</label>
+            <input id="payments-search" type="search" @bind="_search" @bind:after="LoadAsync" autocomplete="off" />
+        </div>
+    </div>
+
+    <GeneralErrors Errors="_errors" IncludeFieldErrors="true" />
+
+    @if (_page is null)
+    {
+        <ListSkeleton Columns="7" />
+    }
+    else if (_page.Items.Count == 0)
+    {
+        <EmptyState Id="payments-empty" IconName="hand-coins" Title="@L["Payments.Empty"]" Text="@L["Payments.Empty.Text"]">
+            <a class="lettra-button" href="payments/new"><Icon Name="plus" Size="18" /> @L["Payments.New"]</a>
+            <a class="lettra-button is-secondary" href="bank">@L["Bank.Import"]</a>
+        </EmptyState>
+    }
+    else
+    {
+        <table class="lettra-table lettra-documents lt-cards" id="payments-table">
+            <thead>
+                <tr>
+                    <th scope="col">@L["Payments.Number"]</th>
+                    <th scope="col">@L["Billing.Column.Date"]</th>
+                    <th scope="col">@L["Billing.Column.Customer"]</th>
+                    <th scope="col">@L["Payments.Method"]</th>
+                    <th scope="col">@L["Payments.Invoices"]</th>
+                    <th scope="col">@L["Payments.Lettering"]</th>
+                    <th scope="col" class="lg-num">@L["Payments.Amount"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (PaymentSummary payment in _page.Items)
+                {
+                    <tr @key="payment.Id">
+                        <td>
+                            <a href="@($"payments/{payment.Id}")">@payment.Number</a>
+                            @if (payment.Status == PaymentStatusDto.Reversed)
+                            {
+                                <span class="lettra-status is-refused">@L["PaymentStatus.Reversed"]</span>
+                            }
+                        </td>
+                        <td data-label="@L["Billing.Column.Date"]">@payment.Date.ToString("d", Culture)</td>
+                        <td data-label="@L["Billing.Column.Customer"]">@payment.CustomerName</td>
+                        <td data-label="@L["Payments.Method"]">@L[$"PaymentMethod.{payment.Method}"]</td>
+                        <td data-label="@L["Payments.Invoices"]">@string.Join(", ", payment.InvoiceNumbers)</td>
+                        <td data-label="@L["Payments.Lettering"]">
+                            @if (payment.LetteringCode is { } letter)
+                            {
+                                <span class="lt-lettering" title="@L["Payments.Lettering.Hint"]">@letter</span>
+                            }
+                        </td>
+                        <td data-label="@L["Payments.Amount"]" class="lg-num">@ExplorerText.Money(payment.Amount)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        @if (_page.TotalCount > _page.PageSize)
+        {
+            <nav class="lt-pager" aria-label="@L["Accounting.Pages"]">
+                <button type="button" class="lettra-button is-secondary" disabled="@(_pageNumber <= 1)" @onclick="() => GoToAsync(_pageNumber - 1)">@L["Accounting.Previous"]</button>
+                <span>@string.Format(Culture, L["Accounting.PageOf"], _pageNumber, PageCount)</span>
+                <button type="button" class="lettra-button is-secondary" disabled="@(_pageNumber >= PageCount)" @onclick="() => GoToAsync(_pageNumber + 1)">@L["Accounting.Next"]</button>
+            </nav>
+        }
+    }
+</section>
+
+@code {
+    private const int PageSize = 50;
+
+    private PagedResponse<PaymentSummary>? _page;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private string? _search;
+    private int _pageNumber = 1;
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private int PageCount => _page is null ? 1 : Math.Max(1, (int)Math.Ceiling(_page.TotalCount / (double)_page.PageSize));
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        OperationResult<PagedResponse<PaymentSummary>> result = await Banking.ListPaymentsAsync(new PaymentListQuery(Search: _search, Page: _pageNumber, PageSize: PageSize), CancellationToken.None);
+        _errors = result.Errors;
+        _page = result.Value ?? new PagedResponse<PaymentSummary>([], 1, PageSize, 0);
+    }
+
+    private async Task GoToAsync(int page)
+    {
+        _pageNumber = page;
+        await LoadAsync();
+    }
+}

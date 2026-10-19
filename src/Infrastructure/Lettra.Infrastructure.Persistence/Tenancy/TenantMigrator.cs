@@ -111,6 +111,7 @@ public sealed class TenantMigrator(IDossierDbContextFactory factory, TimeProvide
     [
         (NumberSeriesCodes.Invoices, "FAC-"),
         (NumberSeriesCodes.Quotes, "DEV-"),
+        (NumberSeriesCodes.Payments, "ENC-"),
     ];
 }
 

@@ -43,6 +43,9 @@ public static class DependencyInjection
         services.TryAddScoped<ISyncDeviceRegistry, NoSyncDeviceRegistry>();
         services.AddScoped<DossierIntegrityService>();
 
+        // Vue cabinet : les dossiers accessibles, partagés par le sélecteur et le tableau de supervision.
+        services.AddScoped<Features.Dossiers.AccessibleDossiers>();
+
         // Hors du mode 1, les cas d'usage de session locale répondent « non pris en charge ».
         services.TryAddSingleton<ILocalAccounts, NoLocalAccounts>();
 

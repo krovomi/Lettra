@@ -13,6 +13,7 @@ using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Pages.Billing;
 using Lettra.UI.Shared.Services;
 using Microsoft.AspNetCore.Components;
+using Lettra.UI.Tests.Cabinet;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.UI.Tests.Billing;
@@ -32,6 +33,7 @@ public sealed class InvoiceEditorTests : BunitContext
         _platform = new FakePlatformTransmissionGateway(_invoices);
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddLettraUi();
+        Services.AddCabinetFakes();
         Services.AddSingleton<IInvoicesGateway>(_invoices);
         Services.AddSingleton<IPlatformTransmissionGateway>(_platform);
         Services.AddSingleton<IBillingSettingsGateway>(_settings);
@@ -289,6 +291,7 @@ public sealed class BillingListTests : BunitContext
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddLettraUi();
+        Services.AddCabinetFakes();
         Services.AddSingleton<IInvoicesGateway>(_invoices);
         Services.AddSingleton<IQuotesGateway>(_quotes);
         LettraCultures.Apply(CultureInfo.GetCultureInfo("fr-FR"));
@@ -344,6 +347,7 @@ public sealed class CompanySettingsTests : BunitContext
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddLettraUi();
+        Services.AddCabinetFakes();
         Services.AddSingleton<IBillingSettingsGateway>(_settings);
         Services.AddSingleton<IDirectoryGateway>(new FakeDirectoryGateway());
         LettraCultures.Apply(CultureInfo.GetCultureInfo("fr-FR"));
@@ -388,6 +392,7 @@ public sealed class CommandPaletteTests : BunitContext
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddLettraUi();
+        Services.AddCabinetFakes();
         Services.AddSingleton<IInvoicesGateway>(_invoices);
         Services.AddSingleton<IQuotesGateway>(new FakeQuotesGateway());
         Services.AddSingleton<ICustomersGateway>(_customers);
@@ -460,6 +465,7 @@ public sealed class DensityTests : BunitContext
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddLettraUi();
+        Services.AddCabinetFakes();
     }
 
     [Fact]

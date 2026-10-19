@@ -26,6 +26,7 @@ internal static class ExportEndpoints
 
         // La consultation du journal des ventes lit les mêmes écritures que le FEC : mêmes module et branchement.
         api.MapAccounting();
+        api.MapBanking();
 
         // Les déclarations fiscales lisent les mêmes pièces et le même journal.
         api.MapTax();

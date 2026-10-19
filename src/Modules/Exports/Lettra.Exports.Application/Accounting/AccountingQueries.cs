@@ -61,8 +61,8 @@ public static class AccountingErrors
 }
 
 /// <summary>
-/// Vues de consultation calculées à partir des écritures du journal des ventes, comme le FEC : rien n'est recalculé,
-/// les lignes sont celles enregistrées à la validation des pièces. Fonctions pures, testées sans base.
+/// Vues de consultation calculées à partir des écritures des journaux de ventes et de banque, comme le FEC : rien n'est
+/// recalculé, les lignes sont celles enregistrées à la validation des pièces et à l'enregistrement des encaissements. Fonctions pures, testées sans base.
 /// </summary>
 public static class AccountingViews
 {
@@ -144,7 +144,7 @@ public static class AccountingViews
                 running += line.Debit - line.Credit;
                 lines.Add(new LedgerLineResponse(
                     entry.Date, entry.InvoiceId, (InvoiceKindDto)(int)entry.Kind, entry.PieceNumber, entry.CustomerId, entry.CustomerName,
-                    line.Debit, line.Credit, running));
+                    line.Debit, line.Credit, running, entry.JournalCode, line.Account == SalesAccounts.Customers ? entry.LetteringCode : null));
             }
         }
 
@@ -159,7 +159,10 @@ public static class AccountingViews
         entry.CustomerId,
         entry.CustomerName,
         entry.Lines.Sum(l => l.Debit),
-        entry.Lines.Select(l => new JournalLineResponse(l.Account, l.Debit, l.Credit, l.VatRatePercent)).ToList());
+        entry.Lines.Select(l => new JournalLineResponse(l.Account, l.Debit, l.Credit, l.VatRatePercent)).ToList(),
+        entry.JournalCode,
+        entry.LetteringCode,
+        entry.IsReversal);
 
     /// <summary>Majuscules sans accents : « Société » et « societe » se trouvent l'une l'autre.</summary>
     private static string Fold(string text)

@@ -10,6 +10,7 @@ using Lettra.UI.Tests.Consultation;
 using Microsoft.AspNetCore.Components;
 using Lettra.UI.Shared.Typing;
 using Lettra.UI.Abstractions;
+using Lettra.UI.Tests.Cabinet;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.UI.Tests.Typing;
@@ -32,6 +33,7 @@ public sealed class SmartInputTests : BunitContext
         JSInterop.Mode = JSRuntimeMode.Loose;
         _assist = JSInterop.SetupModule(AssistModule.Path);
         Services.AddLettraUi();
+        Services.AddCabinetFakes();
         LettraCultures.Apply(CultureInfo.GetCultureInfo("fr-FR"));
     }
 

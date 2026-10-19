@@ -86,7 +86,7 @@
                 @foreach (JournalEntryResponse entry in _journal.Items)
                 {
                     bool open = IsOpen(entry);
-                    <tbody @key="entry.InvoiceId" class="lt-journal-entry @(open ? "is-open" : null)">
+                    <tbody @key="KeyOf(entry)" class="lt-journal-entry @(open ? "is-open" : null)">
                         <tr class="lt-journal-head">
                             <td>
                                 <button type="button" class="lt-icon-button lt-disclosure" aria-expanded="@(open ? "true" : "false")"
@@ -95,8 +95,14 @@
                                 </button>
                             </td>
                             <td>@entry.Date.ToString("d", Culture)</td>
-                            <td><a href="@($"invoices/{entry.InvoiceId}")">@entry.PieceNumber</a></td>
-                            <td>@L[$"InvoiceKind.{entry.Kind}"]</td>
+                            <td>
+                                <a href="@(IsBank(entry) ? $"payments/{entry.InvoiceId}" : $"invoices/{entry.InvoiceId}")">@entry.PieceNumber</a>
+                                @if (entry.LetteringCode is { } letter)
+                                {
+                                    <span class="lt-lettering" title="@L["Payments.Lettering.Hint"]">@letter</span>
+                                }
+                            </td>
+                            <td>@KindLabel(entry)</td>
                             <td><a href="@($"customers/{entry.CustomerId}")">@entry.CustomerName</a></td>
                             <td class="lg-num">@ExplorerText.Money(entry.Amount)</td>
                             <td class="lg-num">@ExplorerText.Money(entry.Lines.Sum(l => l.Credit))</td>
@@ -155,7 +161,7 @@
 @code {
     private const int PageSize = 50;
 
-    private readonly HashSet<Guid> _open = [];
+    private readonly HashSet<(Guid Id, bool IsReversal)> _open = [];
     private AccountingPeriod _period;
     private SalesJournalResponse? _journal;
     private IReadOnlyList<ErrorDetail> _errors = [];
@@ -257,13 +263,13 @@
         await LoadAsync();
     }
 
-    private bool IsOpen(JournalEntryResponse entry) => _expandAll || _open.Contains(entry.InvoiceId);
+    private bool IsOpen(JournalEntryResponse entry) => _expandAll || _open.Contains(KeyOf(entry));
 
     private void Toggle(JournalEntryResponse entry)
     {
-        if (!_open.Remove(entry.InvoiceId))
+        if (!_open.Remove(KeyOf(entry)))
         {
-            _open.Add(entry.InvoiceId);
+            _open.Add(KeyOf(entry));
         }
     }
 
@@ -283,6 +289,15 @@
 
     private string LedgerHref(string account, Guid? customer) =>
         $"accounting/accounts/{account}?{_period.Query}{(customer is Guid id ? $"&customer={id}" : null)}";
+
+    /// <summary>Un encaissement et sa contre-passation portent le même identifiant (celui de l'encaissement).</summary>
+    private static (Guid Id, bool IsReversal) KeyOf(JournalEntryResponse entry) => (entry.InvoiceId, entry.IsReversal);
+
+    private static bool IsBank(JournalEntryResponse entry) => entry.JournalCode == PaymentAccounts.JournalCode;
+
+    private string KindLabel(JournalEntryResponse entry) => IsBank(entry)
+        ? L[entry.IsReversal ? "Accounting.Journal.PaymentReversal" : "Accounting.Journal.Payment"]
+        : L[$"InvoiceKind.{entry.Kind}"];
 
     private string AccountLabel(string account)
     {

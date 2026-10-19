@@ -1,4 +1,5 @@
 using Lettra.Application.Abstractions.Ai;
+using Lettra.Application.Abstractions.Cabinet;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Infrastructure.Persistence.Catalog;
@@ -48,6 +49,8 @@ public static class DependencyInjection
 
         // Remplace la politique « aucune » du mode 1 enregistrée par AddApplication.
         services.AddSingleton<IOrganisationPolicyStore, CatalogOrganisationPolicyStore>();
+        // Vue cabinet : les indicateurs des dossiers dans le catalogue (remplace le magasin en mémoire du poste).
+        services.Replace(ServiceDescriptor.Singleton<IDossierIndicatorStore, CatalogDossierIndicatorStore>());
         services.AddSingleton<CatalogInitializer>();
         services.AddSingleton<DossierMigrationOrchestrator>();
         return services;

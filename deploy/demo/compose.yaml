@@ -111,8 +111,9 @@ services:
       # l'utilisateur de démonstration, au premier démarrage seulement (environ 25 s ; ignoré si le dossier a des pièces).
       Lettra__Demo__Seed: "true"
       Lettra__Demo__UserId: 0199e3a0-0000-7000-8000-0000000de001
-      # Le manager du cabinet ne crée pas de dossier sur le serveur : le dossier configuré suffit.
-      Lettra__Demo__AdditionalDossiers: "0"
+      # Deux dossiers de plus dans le cabinet (Bâti Rénov' Lemoine, Négoce Méditerranée Distribution) pour la vue cabinet
+      # et le sélecteur de dossier. Créés une seule fois, y compris dans une démo déjà remplie ; rien n'est vidé.
+      Lettra__Demo__AdditionalDossiers: "2"
       # Voix : serveur whisper.cpp de la démonstration, joint par le réseau Docker. L'audio ne sort pas du poste.
       Lettra__Speech__Engine: WhisperServer
       Lettra__Speech__WhisperServer__Endpoint: http://whisper:8080/

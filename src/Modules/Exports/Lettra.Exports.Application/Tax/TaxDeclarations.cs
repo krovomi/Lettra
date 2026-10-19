@@ -212,7 +212,9 @@ public sealed class TaxDeclarations(
         }
 
         IReadOnlyList<VatReceiptAllocation> allocations = await receipts.ReadAsync(from, to, cancellationToken).ConfigureAwait(false);
-        return (VatOperations.WithReceipts(operations, allocations, pieces.ToDictionary(p => p.InvoiceId)), pieces);
+        IReadOnlySet<Guid> deferred = await receipts.ReadDeferredAsync(
+            [.. operations.Where(o => o.DueOnReceipt).Select(o => o.InvoiceId).Distinct()], cancellationToken).ConfigureAwait(false);
+        return (VatOperations.WithReceipts(operations, allocations, pieces.ToDictionary(p => p.InvoiceId), deferred), pieces);
     }
 
     private static Result<VatDeclarationRegime> RegimeOf(CompanyProfile? profile) =>

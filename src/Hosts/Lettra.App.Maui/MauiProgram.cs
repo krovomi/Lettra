@@ -4,6 +4,7 @@ using Lettra.Bootstrap;
 #if LETTRA_DEMO
 using Lettra.DemoData;
 #endif
+using Lettra.Domain.SharedKernel;
 using Lettra.Infrastructure.Persistence.Security;
 using Lettra.Infrastructure.Persistence.Sqlite.Local;
 using Lettra.Infrastructure.Speech.OnDevice;
@@ -117,9 +118,12 @@ public static class MauiProgram
         return app;
     }
 
-    /// <summary>Le dossier ouvert sur le poste, tenu par le registre local.</summary>
-    private sealed class ActiveDossierSelection(LocalDossierRegistry registry) : IDossierSelection
+    /// <summary>Le dossier ouvert sur le poste, tenu par le registre local ; le sélecteur de dossier en change.</summary>
+    private sealed class ActiveDossierSelection(LocalDossierRegistry registry) : ISelectableDossierSelection
     {
         public Guid? CurrentDossierId => registry.ActiveDossierId;
+
+        public Task SelectAsync(Guid dossierId, CancellationToken cancellationToken) =>
+            registry.SetActiveAsync(new DossierId(dossierId), cancellationToken);
     }
 }
