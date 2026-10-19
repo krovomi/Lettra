@@ -7,7 +7,7 @@
 @inject IInvoicesGateway Invoices
 @inject IQuotesGateway Quotes
 @inject IAccountingGateway Accounting
-@inject IServiceProvider Services
+@inject TimeProvider Clock
 @* Clients : liste et fiche sur un seul écran (consultation), saisie dans la fiche (Nouveau, Modifier, Échap). *@
 
 <PageTitle>@L["Customers.Title"] · Lettra</PageTitle>
@@ -282,7 +282,7 @@
 
     protected override ElementReference? FirstField => _fields?.FirstField;
 
-    private DateOnly Today => DateOnly.FromDateTime((Services.GetService<TimeProvider>() ?? TimeProvider.System).GetLocalNow().DateTime);
+    private DateOnly Today => Clock.LocalToday();
 
     private string LedgerHref(Guid id) => $"accounting/accounts/{SalesAccounts.Customers}?customer={id}";
 

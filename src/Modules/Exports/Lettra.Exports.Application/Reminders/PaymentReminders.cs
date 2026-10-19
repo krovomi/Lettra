@@ -10,6 +10,7 @@ using Lettra.Domain.Common;
 using Lettra.Domain.Reminders;
 using Lettra.Domain.SharedKernel;
 using Lettra.Exports.Application.Banking;
+using Lettra.Application.Features;
 
 namespace Lettra.Exports.Application.Reminders;
 
@@ -287,7 +288,7 @@ internal sealed class RunDueRemindersHandler(PaymentReminderService service, ICu
 internal sealed class ListPaymentRemindersHandler(IPaymentReminderRepository reminders)
     : IQueryHandler<ListPaymentRemindersQuery, Result<PagedResponse<PaymentReminderResponse>>>
 {
-    public const int MaxPageSize = 200;
+    public const int MaxPageSize = Paging.MaxPageSize;
 
     public async Task<Result<PagedResponse<PaymentReminderResponse>>> HandleAsync(ListPaymentRemindersQuery query, CancellationToken cancellationToken)
     {

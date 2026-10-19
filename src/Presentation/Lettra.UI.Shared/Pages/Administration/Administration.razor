@@ -4,6 +4,7 @@
 @inject IDossierSelection Selection
 @inject IStringLocalizer<SharedResource> L
 @inject NavigationManager Navigation
+@inject TimeProvider Clock
 
 @* Espace « Équipe et accès » : pour les administrateurs, qui ne sont pas forcément techniciens. Trois onglets en langage
    simple (Personnes, Équipes, Rôles et pages), une fiche latérale par personne ou par équipe, des gestes qui se défont
@@ -80,7 +81,7 @@
             </button>
             <div class="lt-kpi" id="kpi-temporary">
                 <span class="lt-kpi-head">@L["Admin.Kpi.Temporary"]<span class="lt-kpi-icon"><Icon Name="calendar-clock" /></span></span>
-                <span class="lt-kpi-value">@view.TemporaryCount(DateTimeOffset.Now)</span>
+                <span class="lt-kpi-value">@view.TemporaryCount(Clock.GetUtcNow())</span>
                 <span class="lt-kpi-note">@L["Admin.Kpi.TemporaryNote"]</span>
             </div>
         </section>

@@ -2,7 +2,7 @@
 @inject IAccountingGateway Accounting
 @inject NavigationManager Navigation
 @inject IStringLocalizer<SharedResource> L
-@inject IServiceProvider Services
+@inject TimeProvider Clock
 @* Balance de la période : comptes généraux, puis balance auxiliaire des clients. Chaque ligne ouvre son grand livre. *@
 
 <PageTitle>@L["Accounting.Balance.Title"] · Lettra</PageTitle>
@@ -179,7 +179,7 @@
 
     private static CultureInfo Culture => CultureInfo.CurrentCulture;
 
-    private DateOnly Today => DateOnly.FromDateTime((Services.GetService<TimeProvider>() ?? TimeProvider.System).GetLocalNow().DateTime);
+    private DateOnly Today => Clock.LocalToday();
 
     /// <summary>Chiffre d'affaires HT : les comptes de produits (classe 7), au crédit moins au débit.</summary>
     private decimal Revenue => _balance?.Accounts.Where(a => AccountNames.IsRevenue(a.Account)).Sum(a => a.Credit - a.Debit) ?? 0m;

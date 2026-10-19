@@ -3,7 +3,7 @@
 @inject IFileDownloader Files
 @inject ToastService Toasts
 @inject IStringLocalizer<SharedResource> L
-@inject IServiceProvider Services
+@inject TimeProvider Clock
 @* Déclaration européenne de services du mois : une ligne par client de l'Union, son numéro de TVA et le montant HT
    arrondi à l'euro. Le fichier se dépose soi-même sur le service en ligne des douanes. *@
 
@@ -172,7 +172,7 @@ else
 
     [SupplyParameterFromQuery(Name = "month")] public string? Month { get; set; }
 
-    private DateOnly Today => DateOnly.FromDateTime((Services.GetService<TimeProvider>() ?? TimeProvider.System).GetLocalNow().DateTime);
+    private DateOnly Today => Clock.LocalToday();
 
     /// <summary>Par défaut, le mois écoulé : c'est sa DES qu'on dépose ce mois-ci.</summary>
     private DateOnly Requested =>

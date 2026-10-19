@@ -5,6 +5,7 @@
 @inject IStringLocalizer<SharedResource> L
 @inject IServiceProvider Services
 @inject ToastService Toasts
+@inject TimeProvider Clock
 
 @* Tableau de bord d'accueil (vague 5, lanes B et E) : chiffre d'affaires HT du mois et des six derniers mois, devis en
    attente de réponse, brouillons à finaliser, pièces récentes (calculés à partir des listes), factures en retard et
@@ -260,7 +261,7 @@ else
     private static CultureInfo Culture => CultureInfo.CurrentCulture;
 
     // Horloge de l'hôte si elle est fournie (tests), sinon l'heure locale de l'appareil.
-    private DateOnly Today => DateOnly.FromDateTime((Services.GetService<TimeProvider>() ?? TimeProvider.System).GetLocalNow().DateTime);
+    private DateOnly Today => Clock.LocalToday();
 
     protected override async Task OnInitializedAsync()
     {

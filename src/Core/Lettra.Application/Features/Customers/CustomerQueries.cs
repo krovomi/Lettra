@@ -39,16 +39,7 @@ internal sealed class ListCustomersValidator : IValidator<ListCustomersQuery>
     public IReadOnlyList<Error> Validate(ListCustomersQuery instance)
     {
         ArgumentNullException.ThrowIfNull(instance);
-        List<Error> errors = [];
-        if (instance.Page < 1)
-        {
-            errors.Add(Error.Validation(ErrorCodes.Validation.Invalid, nameof(instance.Page)));
-        }
-
-        if (instance.PageSize is < 1 or > ListCustomersQuery.MaxPageSize)
-        {
-            errors.Add(Error.Validation(ErrorCodes.Validation.Invalid, nameof(instance.PageSize)));
-        }
+        List<Error> errors = [.. Paging.Validate(instance.Page, instance.PageSize, ListCustomersQuery.MaxPageSize)];
 
         if (instance.Search is { Length: > ListCustomersQuery.MaxSearchLength })
         {

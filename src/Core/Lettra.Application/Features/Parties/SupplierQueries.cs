@@ -21,7 +21,7 @@ public sealed record ListSuppliersQuery(
 {
     public const int MaxSearchLength = 100;
 
-    public const int MaxPageSize = 200;
+    public const int MaxPageSize = Paging.MaxPageSize;
 
     public Permission Permission => Permission.TiersConsulter;
 }
@@ -67,25 +67,5 @@ internal sealed class GetSupplierHandler(ISupplierReadStore store)
         ArgumentNullException.ThrowIfNull(query);
         SupplierResponse? supplier = await store.GetAsync(query.SupplierId, cancellationToken).ConfigureAwait(false);
         return supplier is null ? SupplierErrors.NotFound : supplier;
-    }
-}
-
-/// <summary>Contrôle commun des paramètres de pagination.</summary>
-internal static class Paging
-{
-    public static IReadOnlyList<Error> Validate(int page, int pageSize, int maxPageSize)
-    {
-        List<Error> errors = [];
-        if (page < 1)
-        {
-            errors.Add(Error.Validation(ErrorCodes.Validation.Invalid, "Page"));
-        }
-
-        if (pageSize < 1 || pageSize > maxPageSize)
-        {
-            errors.Add(Error.Validation(ErrorCodes.Validation.Invalid, "PageSize"));
-        }
-
-        return errors;
     }
 }

@@ -2,6 +2,7 @@
    le récapitulatif dit en une phrase ce que la personne pourra faire. *@
 @inject IStringLocalizer<SharedResource> L
 @inject IAdministrationGateway Gateway
+@inject TimeProvider Clock
 
 <div class="la-grant" id="grant-form">
     <fieldset class="la-step">
@@ -138,7 +139,7 @@
 
     [Parameter] public EventCallback OnCancel { get; set; }
 
-    private static DateOnly Today => DateOnly.FromDateTime(DateTime.Today);
+    private DateOnly Today => Clock.LocalToday();
 
     /// <summary>Le portail client n'est pas un rôle de collaborateur : il ne se donne pas d'ici.</summary>
     private IEnumerable<RoleDescription> Roles => View.Overview.Roles.Where(r => r.Key != "client-portail");

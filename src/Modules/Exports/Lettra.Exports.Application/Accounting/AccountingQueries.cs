@@ -8,6 +8,7 @@ using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
+using Lettra.Application.Features;
 
 namespace Lettra.Exports.Application.Accounting;
 
@@ -25,7 +26,7 @@ public sealed record GetSalesJournalQuery(
     int Page = 1,
     int PageSize = 50) : IQuery<Result<SalesJournalResponse>>, IRequirePermission
 {
-    public const int MaxPageSize = 200;
+    public const int MaxPageSize = Paging.MaxPageSize;
 
     public const int MaxSearchLength = 100;
 
@@ -186,16 +187,7 @@ internal sealed class GetSalesJournalHandler(ISalesJournalReader journal) : IQue
     public async Task<Result<SalesJournalResponse>> HandleAsync(GetSalesJournalQuery query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
-        List<Error> errors = [.. AccountingViews.ValidatePeriod(query.From, query.To).Errors];
-        if (query.Page < 1)
-        {
-            errors.Add(Error.Validation(ErrorCodes.Validation.Invalid, nameof(query.Page)));
-        }
-
-        if (query.PageSize is < 1 or > GetSalesJournalQuery.MaxPageSize)
-        {
-            errors.Add(Error.Validation(ErrorCodes.Validation.Invalid, nameof(query.PageSize)));
-        }
+        List<Error> errors = [.. AccountingViews.ValidatePeriod(query.From, query.To).Errors, .. Paging.Validate(query.Page, query.PageSize)];
 
         if (query.Search is { Length: > GetSalesJournalQuery.MaxSearchLength })
         {

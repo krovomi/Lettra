@@ -16,7 +16,7 @@ namespace Lettra.Application.Features.Pricing;
 public sealed record ListPriceListsQuery(DossierId Dossier, int Page = 1, int PageSize = 50)
     : IQuery<Result<PagedResponse<PriceListSummary>>>, IRequirePermission
 {
-    public const int MaxPageSize = 200;
+    public const int MaxPageSize = Paging.MaxPageSize;
 
     public Permission Permission => Permission.CatalogueConsulter;
 }

@@ -2,7 +2,7 @@
 @inject ITaxGateway Tax
 @inject ToastService Toasts
 @inject IStringLocalizer<SharedResource> L
-@inject IServiceProvider Services
+@inject TimeProvider Clock
 @* Calendrier fiscal du dossier : échéances de l'année calculées à partir du régime de TVA et des réglages, chacune
    marquée « déposée » quand c'est fait. Les échéances proches et dépassées arrivent aussi au centre d'alertes. *@
 
@@ -145,7 +145,7 @@ else
 
     [SupplyParameterFromQuery(Name = "year")] public int? RequestedYear { get; set; }
 
-    private DateOnly Today => DateOnly.FromDateTime((Services.GetService<TimeProvider>() ?? TimeProvider.System).GetLocalNow().DateTime);
+    private DateOnly Today => Clock.LocalToday();
 
     private int Year => RequestedYear is >= 2000 and <= 2100 ? RequestedYear.Value : Today.Year;
 
