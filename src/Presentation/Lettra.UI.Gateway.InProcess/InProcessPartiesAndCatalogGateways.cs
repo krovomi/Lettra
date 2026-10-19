@@ -103,7 +103,7 @@ internal sealed class InProcessSuppliersGateway(IServiceScopeFactory scopes) : I
         InProcessScope.RunAsync(
             scopes,
             (sp, dossier, ct) => InProcessScope.QueryAsync(
-                sp, new ListSuppliersQuery(dossier, query.Page, query.PageSize, string.IsNullOrWhiteSpace(query.Search) ? null : query.Search.Trim(), query.Sort, query.Direction), ct),
+                sp, new ListSuppliersQuery(dossier, query.Page, query.PageSize, ListSearch.Normalize(query.Search), query.Sort, query.Direction), ct),
             cancellationToken);
 
     public Task<OperationResult<SupplierResponse>> GetAsync(Guid id, CancellationToken cancellationToken) =>

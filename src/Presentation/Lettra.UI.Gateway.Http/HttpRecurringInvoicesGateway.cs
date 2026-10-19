@@ -53,9 +53,9 @@ internal sealed class HttpRecurringInvoicesGateway(HttpClient http) : IRecurring
     private static string ListQuery(RecurringInvoiceListQuery query)
     {
         StringBuilder text = new(string.Create(CultureInfo.InvariantCulture, $"page={query.Page}&pageSize={query.PageSize}&sort={query.Sort}"));
-        if (!string.IsNullOrWhiteSpace(query.Search))
+        if (ListSearch.Normalize(query.Search) is { } search)
         {
-            text.Append("&search=").Append(Uri.EscapeDataString(query.Search.Trim()));
+            text.Append("&search=").Append(Uri.EscapeDataString(search));
         }
 
         if (query.CustomerId is { } customer)

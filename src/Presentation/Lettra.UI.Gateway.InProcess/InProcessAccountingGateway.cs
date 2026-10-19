@@ -13,8 +13,8 @@ internal sealed class InProcessAccountingGateway(IServiceScopeFactory scopes) : 
     {
         ArgumentNullException.ThrowIfNull(query);
         return InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetSalesJournalQuery(
-            dossier, query.From, query.To, string.IsNullOrWhiteSpace(query.Search) ? null : query.Search.Trim(),
-            string.IsNullOrWhiteSpace(query.Account) ? null : query.Account.Trim(), query.CustomerId, query.Page, query.PageSize), ct), cancellationToken);
+            dossier, query.From, query.To, ListSearch.Normalize(query.Search),
+            ListSearch.Normalize(query.Account), query.CustomerId, query.Page, query.PageSize), ct), cancellationToken);
     }
 
     public Task<OperationResult<TrialBalanceResponse>> GetBalanceAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken) =>

@@ -73,7 +73,7 @@ internal sealed class ListCatalogItemsHandler(ICatalogItemReadStore store)
     public async Task<Result<PagedResponse<CatalogItemSummary>>> HandleAsync(ListCatalogItemsQuery query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
-        string? search = string.IsNullOrWhiteSpace(query.Search) ? null : query.Search.Trim();
+        string? search = ListSearch.Normalize(query.Search);
         CatalogItemFilter filter = new(search, query.IncludeArchived, query.Page, query.PageSize, query.Sort, query.Direction, (CatalogItemKind?)(int?)query.Kind);
         return await store.ListAsync(filter, cancellationToken)
             .ConfigureAwait(false);

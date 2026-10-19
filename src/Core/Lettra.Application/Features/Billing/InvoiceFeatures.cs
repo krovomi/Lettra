@@ -147,7 +147,7 @@ internal sealed class ListInvoicesHandler(IInvoiceReadStore store)
     {
         ArgumentNullException.ThrowIfNull(query);
         BillingListFilter filter = new(
-            string.IsNullOrWhiteSpace(query.Search) ? null : query.Search.Trim(),
+            ListSearch.Normalize(query.Search),
             query.CustomerId is { } customer ? new CustomerId(customer) : null,
             query.From,
             query.To,

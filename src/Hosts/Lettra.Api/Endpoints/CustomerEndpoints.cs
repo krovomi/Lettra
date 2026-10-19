@@ -90,7 +90,7 @@ internal static class CustomerEndpoints
     {
         Result<PagedResponse<CustomerSummary>> result = await queries
             .QueryAsync(
-                new ListCustomersQuery(tenant.Current.DossierId, page, pageSize, string.IsNullOrWhiteSpace(search) ? null : search.Trim(), sort, direction, kind),
+                new ListCustomersQuery(tenant.Current.DossierId, page, pageSize, ListSearch.Normalize(search), sort, direction, kind),
                 cancellationToken)
             .ConfigureAwait(false);
         return Ok(result);
