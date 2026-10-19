@@ -115,9 +115,8 @@ Chaque écart a été vérifié dans le code. Les chemins sont relatifs à `src/
 | D1 | Un conflit de version sur une alerte lève `DbUpdateConcurrencyException`, non traduit par `ConcurrencyBehavior` (qui n'attrape que `ConcurrencyConflictException`) : erreur 500 au lieu d'un 412. | `Modules/Supervision/Lettra.Supervision.Infrastructure/EfAlertStore.cs:108`, `Core/Lettra.Application/Behaviors/ConcurrencyBehavior.cs:21` | Lever `ConcurrencyConflictException`, comme `DocumentNumbering`. |
 | D2 | Les mentions légales sont repérées par recherche de mots dans le texte généré. | `Core/Lettra.Calculations/Compliance/ComplianceChecker.cs:168, 217, 245`, `Core/Lettra.Domain/Billing/Invoice.cs:172, 621` | Codes de mention structurés dans `ComplianceDocument` ; le texte ne sert qu'à l'impression. |
 | D3 | `SyncCenter.OnSourceChanged` est un `async void` qui avale toute exception sans la journaliser. | `Modules/Sync/Lettra.Sync.Client/SyncCenter.cs:178-188` | Journaliser l'exception. |
-| D4 | Les outils de l'assistant qui échouent ne laissent aucune trace. | `Ai/Lettra.Ai.Orchestration/AccountingAssistant.cs:239-243` | Journaliser le type d'exception. |
-| D5 | Un délai d'attente HTTP devient une exception à l'écran pour la plupart des passerelles, mais « serveur injoignable » pour d'autres. | `Presentation/Lettra.UI.Gateway.Http/HttpPartiesAndCatalogGateways.cs:25`, `HttpBillingGateways.cs:37` contre `HttpCabinetGateway.cs:50` | Un seul filtre d'exception partagé. |
-| D6 | Plusieurs écrans prennent la date du poste (`DateTime.Today`, `DateTimeOffset.Now`) au lieu de `TimeProvider`. | `Presentation/Lettra.UI.Shared` : `DossierReviewPage.razor:101`, `CabinetPage.razor:285`, `FecExport.razor:96`, `GrantAccessForm.razor:141`, `PlatformTransmissionPanel.razor:108`, `Administration.razor:83` | Une horloge d'interface injectée. |
+| D4 | Un délai d'attente HTTP devient une exception à l'écran pour la plupart des passerelles, mais « serveur injoignable » pour d'autres. | `Presentation/Lettra.UI.Gateway.Http/HttpPartiesAndCatalogGateways.cs:25`, `HttpBillingGateways.cs:37` contre `HttpCabinetGateway.cs:50` | Un seul filtre d'exception partagé. |
+| D5 | Plusieurs écrans prennent la date du poste (`DateTime.Today`, `DateTimeOffset.Now`) au lieu de `TimeProvider`. | `Presentation/Lettra.UI.Shared` : `DossierReviewPage.razor:101`, `CabinetPage.razor:285`, `FecExport.razor:96`, `GrantAccessForm.razor:141`, `PlatformTransmissionPanel.razor:108`, `Administration.razor:83` | Une horloge d'interface injectée. |
 
 ### Duplication (DRY)
 
@@ -174,14 +173,14 @@ Aucun test existant n'est retiré, désactivé ni affaibli.
 
 | PR | Contenu | État |
 |---|---|---|
-| 1 | Ce document et le script `build/couverture/fusionner.py`. | En cours |
+| 1 | Ce document et le script `build/couverture/fusionner.py` ; API : `HttpResults` remplace les ternaires `Result` → HTTP recopiés (R1) ; défauts D1 et D3 corrigés ; parité des codes d'erreur étendue à `Supervision.Domain` (A8). | En revue (PR #119) |
 | 2 | Domaine : calendrier légal unique (R3), constantes EUR et UE (R11), approbation d'avoir (A2), règles d'acompte et de suppression dans les entités (A1), tests. | À faire |
 | 3 | Application : `Result` (`Bind`, conversion, R6), chargement versionné (R5), validateurs paginés (R7), fin de validation de facture (R8), règlement (R4, S1), `IValidator` dans Exports (A7), tests. | À faire |
-| 4 | Supervision et synchronisation : D1, D3, A8, tâches périodiques avec `TimeProvider` (R10), tests d'`EfAlertStore`. | À faire |
-| 5 | API : extensions `Result` → HTTP (R1), « écrire puis relire » unique (R2), recherche normalisée (R12), tests. | À faire |
-| 6 | Passerelles HTTP et en processus : appels partagés (D5), tests de toutes les passerelles (objectif > 90 %). | À faire |
+| 4 | Tâches périodiques avec `TimeProvider` (R10), tests d'`EfAlertStore` et des tâches de fond. | À faire |
+| 5 | API : « écrire puis relire » unique (R2), recherche normalisée (R12), tests. | À faire |
+| 6 | Passerelles HTTP et en processus : appels partagés (D4), tests de toutes les passerelles (objectif > 90 %). | À faire |
 | 7 | Conformité : codes de mention structurés (D2), découpage de `ComplianceChecker.Check` (S3). | À faire |
-| 8 | Interface Blazor : horloge injectée (D6), fin du localisateur de services (A5, A6), base commune des éditeurs (R9), tests bUnit. | À faire |
+| 8 | Interface Blazor : horloge injectée (D5), fin du localisateur de services (A5, A6), base commune des éditeurs (R9), tests bUnit. | À faire |
 
 Seuil de couverture proposé pour la CI, une fois ces PR fusionnées : 85 % des lignes et 75 % des
 branches au global, sans régression d'une PR à l'autre.

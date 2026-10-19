@@ -2,6 +2,7 @@ using Lettra.Application;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Messaging;
+using Lettra.Application.Abstractions.Persistence;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Authorization;
 using Lettra.Contracts.Alerts;
@@ -105,6 +106,27 @@ public sealed class DossierAlertTests : IAsyncLifetime
         notification.Link.ToString().Should().Be($"https://localhost/alertes/{notification.AlertId}");
         recipients.Select(r => Guid.Parse(r.Id)).Should().BeEquivalentTo([_collaborator, _manager, _admin]);
         recipients.Select(r => Guid.Parse(r.Id)).Should().NotContain([_otherGroupCollaborator, _portal, _suspended, _otherCabinetManager]);
+    }
+
+    [Fact]
+    public async Task Deux_modifications_concurrentes_d_une_alerte_se_voient_comme_un_conflit_de_version()
+    {
+        await PublishAsync(DossierAlertRule.IntegrityChainCompromised, firing: true, T0);
+        await using AsyncServiceScope first = _services.CreateAsyncScope();
+        await using AsyncServiceScope second = _services.CreateAsyncScope();
+        IAlertStore firstStore = first.ServiceProvider.GetRequiredService<IAlertStore>();
+        IAlertStore secondStore = second.ServiceProvider.GetRequiredService<IAlertStore>();
+        Alert stale = (await firstStore.ListActiveAsync(default)).Should().ContainSingle().Subject;
+        Alert fresh = (await secondStore.GetAsync(stale.Id, default))!;
+
+        fresh.Acknowledge(Actor.Human(_manager), T0.AddMinutes(1)).IsSuccess.Should().BeTrue();
+        await secondStore.SaveAsync(fresh, default);
+        stale.Resolve(Actor.Human(_admin), T0.AddMinutes(2)).IsSuccess.Should().BeTrue();
+        Func<Task> overwrite = () => firstStore.SaveAsync(stale, default);
+
+        // Le pipeline traduit cette exception en Concurrency.VersionMismatch (ConcurrencyBehavior) : jamais une 500.
+        await overwrite.Should().ThrowAsync<ConcurrencyConflictException>();
+        (await secondStore.GetAsync(stale.Id, default))!.State.Should().Be(Domain.AlertState.Acknowledged);
     }
 
     [Fact]
