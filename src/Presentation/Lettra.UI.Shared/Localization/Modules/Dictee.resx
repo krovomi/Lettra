@@ -11,9 +11,11 @@
   <data name="Voice.State.NotConfigured" xml:space="preserve"><value>La dictée n'est pas activée sur ce déploiement. Vous pouvez tout saisir au clavier : la voix est un choix, jamais une obligation.</value></data>
   <data name="Voice.State.HowToEnable" xml:space="preserve"><value>Elle fonctionne avec un moteur Whisper installé dans votre cellule ou sur ce poste, pour que votre voix ne quitte jamais Lettra. L'administrateur l'active dans les réglages (voir « Voix » dans la documentation).</value></data>
   <data name="Voice.State.Unreachable" xml:space="preserve"><value>Impossible de joindre le serveur pour savoir si la dictée est disponible. Vérifiez la connexion puis réessayez.</value></data>
+  <data name="Voice.State.Starting" xml:space="preserve"><value>La dictée se prépare : le moteur Whisper charge son modèle (au premier démarrage, il le télécharge, 142 Mo). Elle sera disponible dans quelques minutes, sans recharger la page. En attendant, saisissez au clavier.</value></data>
   <data name="Voice.State.Unknown" xml:space="preserve"><value>Vérification de la dictée…</value></data>
   <data name="Voice.Retry" xml:space="preserve"><value>Réessayer</value></data>
   <data name="Voice.Error.Unsupported" xml:space="preserve"><value>Ce navigateur ne donne pas accès au micro. Essayez un navigateur récent ou l'application installée.</value></data>
+  <data name="Voice.Error.InsecureContext" xml:space="preserve"><value>Le micro n'est accessible qu'en https:// ou sur http://localhost. Sur ce poste, ouvrez Lettra par http://localhost:8080 ; depuis un téléphone ou un autre poste, utilisez l'adresse https:// du réseau local.</value></data>
   <data name="Voice.Error.Denied" xml:space="preserve"><value>L'accès au micro a été refusé. Autorisez-le dans les réglages du navigateur ou de l'appareil, puis recommencez.</value></data>
   <data name="Voice.Error.NoDevice" xml:space="preserve"><value>Aucun micro n'a été trouvé sur cet appareil.</value></data>
   <data name="Voice.Error.Recorder" xml:space="preserve"><value>L'enregistrement n'a pas pu démarrer. Recommencez.</value></data>

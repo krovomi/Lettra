@@ -152,6 +152,7 @@ public sealed class SpeechApiTests(LettraApiFactory factory) : IClassFixture<Let
         status.Enabled.Should().BeTrue();
         status.Engine.Should().Be("whisper-serveur");
         status.OnDevice.Should().BeFalse();
+        status.Ready.Should().BeFalse("l'interface dit que le moteur se prépare au lieu de laisser parler pour rien");
         response.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
         (await ProblemAsync(response)).Code.Should().Be(ErrorCodes.Speech.EngineUnavailable);
     }

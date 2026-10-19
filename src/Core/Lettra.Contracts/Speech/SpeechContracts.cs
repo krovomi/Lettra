@@ -22,7 +22,9 @@ public enum SpeechMode
 /// <param name="OnDevice">Vrai si la transcription se fait sur l'appareil, sans réseau.</param>
 /// <param name="Languages">Langues acceptées (codes ISO 639-1), la première par défaut.</param>
 /// <param name="MaxSeconds">Durée maximale d'un enregistrement.</param>
-public sealed record SpeechStatusResponse(bool Enabled, string? Engine, bool OnDevice, IReadOnlyList<string> Languages, int MaxSeconds)
+/// <param name="Ready">Faux tant que le moteur prépare son modèle (premier démarrage du serveur Whisper) : la voix est
+/// configurée mais ne transcrit pas encore.</param>
+public sealed record SpeechStatusResponse(bool Enabled, string? Engine, bool OnDevice, IReadOnlyList<string> Languages, int MaxSeconds, bool Ready = true)
 {
     /// <summary>Format attendu : WAV PCM 16 bits, mono, 16 kHz (celui de Whisper).</summary>
     public const int SampleRate = 16_000;
