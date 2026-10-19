@@ -112,6 +112,12 @@ services:
       # Factures récurrentes : sans Worker, l'API crée les factures dues toutes les 15 minutes sous un compte de service
       # fictif, déclaré au registre des droits avec un rôle limité à la facturation (pas de compte Keycloak : personne
       # ne s'y connecte). La validation automatique d'un modèle passe par la séparation des tâches du cabinet.
+      # Vue cabinet et indicateurs : premier calcul 15 s après le démarrage plutôt qu'au bout de 2 minutes (la base
+      # Catalog et les données de démonstration sont prêtes avant que l'API écoute), indicateurs recollectés chaque
+      # minute plutôt que toutes les 5 : sur une démonstration neuve, « Tableaux de bord » et Grafana ont les compteurs
+      # de la vue cabinet dès la première minute.
+      Lettra__CabinetOverview__InitialDelay: "00:00:15"
+      Lettra__Kpi__RefreshInterval: "00:01:00"
       Lettra__Worker__RecurringInvoices__ServiceAccountId: 0199e3a0-0000-7000-8000-0000000005e1
       Lettra__Worker__RecurringInvoices__InitialDelay: "00:01:00"
       Lettra__Worker__RecurringInvoices__Interval: "00:15:00"

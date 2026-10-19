@@ -137,9 +137,12 @@ public sealed class AuthenticationApiTests(LettraApiFactory factory) : IClassFix
             .Where(e => e.RoutePattern.RawText?.StartsWith("/api/", StringComparison.Ordinal) == true);
 
         routes.Should().NotBeEmpty();
-        routes.Where(e => e.Metadata.GetMetadata<RequiredPermissionMetadata>() is null)
+        routes.Where(e => e.Metadata.GetMetadata<RequiredPermissionMetadata>() is null && e.Metadata.GetMetadata<OwnAccountOnlyMetadata>() is null)
             .Select(e => e.RoutePattern.RawText)
             .Should().BeEmpty("annexe F §4 : la permission est vérifiée à l'entrée de l'API");
+        routes.Where(e => e.Metadata.GetMetadata<OwnAccountOnlyMetadata>() is not null)
+            .Select(e => e.RoutePattern.RawText)
+            .Should().NotBeEmpty().And.OnlyContain(r => r!.StartsWith("/api/v1/me/", StringComparison.Ordinal), "seules les routes personnelles se passent de permission");
     }
 
     [Theory]
