@@ -27,6 +27,9 @@ internal static class ExportEndpoints
         // La consultation du journal des ventes lit les mêmes écritures que le FEC : mêmes module et branchement.
         api.MapAccounting();
 
+        // Les déclarations fiscales lisent les mêmes pièces et le même journal.
+        api.MapTax();
+
         group.MapGet("/fec", ExportFecAsync)
             .RequirePermission(Permission.FecExporter)
             .WithName("ExportFec")

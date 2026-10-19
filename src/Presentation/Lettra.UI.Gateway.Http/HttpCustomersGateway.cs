@@ -66,6 +66,9 @@ internal sealed class HttpCustomersGateway(HttpClient http) : ICustomersGateway
             ct => http.PutVersionedAsync(HttpCalls.Relative($"api/v1/customers/{id}"), expectedVersion, request, ContractsJsonContext.Default.CreateCustomerRequest, ct),
             ContractsJsonContext.Default.CustomerResponse,
             cancellationToken);
+
+    public Task<OperationResult<bool>> DeleteAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken) =>
+        VersionedCalls.DeleteAsync(http, HttpCalls.Relative($"api/v1/customers/{id}"), expectedVersion, cancellationToken);
 }
 
 /// <summary>Traduit une réponse HTTP en <see cref="OperationResult{T}"/> : corps typé, ou codes d'erreur du <c>ProblemResponse</c>.</summary>
@@ -238,6 +241,7 @@ public static class DependencyInjection
         Configure(services.AddHttpClient<IDemoDataGateway, HttpDemoDataGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IFecGateway, HttpFecGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IAccountingGateway, HttpAccountingGateway>(client => client.BaseAddress = apiBaseAddress));
+        Configure(services.AddHttpClient<ITaxGateway, HttpTaxGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IBillingSettingsGateway, HttpBillingSettingsGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IPriceListsGateway, HttpPriceListsGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IAlertsGateway, HttpAlertsGateway>(client => client.BaseAddress = apiBaseAddress));

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <!-- Suppression d'une ligne en un clic (corbeille en bout de ligne) : listes de pièces, tiers, catalogue, lignes des pièces. -->
+  <data name="Row.Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Row.Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Row.Delete.Question" xml:space="preserve"><value>Delete this row?</value></data>
+  <data name="Row.Delete.KeyHint" xml:space="preserve"><value>Enter to confirm, Escape to cancel.</value></data>
+  <data name="Row.Delete.Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Row.Delete.Line" xml:space="preserve"><value>Delete line {0}</value></data>
+  <data name="Quotes.Row.Delete" xml:space="preserve"><value>Delete quote {0} ({1})</value></data>
+  <data name="Quotes.Row.Delete.Blocked" xml:space="preserve"><value>A validated quote cannot be deleted: it keeps its number. Open it to mark it refused, or let it expire.</value></data>
+  <data name="Invoices.Row.Delete" xml:space="preserve"><value>Delete document {0} ({1})</value></data>
+  <data name="Invoices.Row.Delete.Blocked" xml:space="preserve"><value>A validated invoice cannot be deleted (French anti-fraud law): open it and issue a credit note to cancel it.</value></data>
+  <data name="Invoices.Row.Delete.BlockedCreditNote" xml:space="preserve"><value>A validated credit note cannot be deleted (French anti-fraud law): it stays in the invoice series.</value></data>
+  <data name="Customers.Row.Delete" xml:space="preserve"><value>Delete customer {0}</value></data>
+  <data name="Customers.Row.Delete.Question" xml:space="preserve"><value>Delete this customer?</value></data>
+  <data name="Customers.Toast.Deleted" xml:space="preserve"><value>Customer “{0}” deleted. Their quotes and invoices remain available.</value></data>
+  <data name="Suppliers.Row.Delete" xml:space="preserve"><value>Delete supplier {0}</value></data>
+  <data name="Suppliers.Row.Delete.Question" xml:space="preserve"><value>Delete this supplier?</value></data>
+  <data name="Suppliers.Toast.Deleted" xml:space="preserve"><value>Supplier “{0}” deleted.</value></data>
+  <data name="Catalog.Row.Archive" xml:space="preserve"><value>Archive item {0}</value></data>
+  <data name="Catalog.Row.Archive.Question" xml:space="preserve"><value>Archive this item?</value></data>
+  <data name="Catalog.Row.Reactivate" xml:space="preserve"><value>Reactivate item {0}</value></data>
+  <data name="Catalog.Row.ArchivedDone" xml:space="preserve"><value>Item “{0}” archived: find it again with “Show archived items”.</value></data>
+</root>

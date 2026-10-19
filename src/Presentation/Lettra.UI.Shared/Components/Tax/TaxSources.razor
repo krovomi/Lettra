@@ -1,0 +1,50 @@
+@* Les pièces derrière une case ou une ligne : chacune ouvre sa facture, son acompte ou son avoir. *@
+@inject IStringLocalizer<SharedResource> L
+
+@if (Sources.Count == 0)
+{
+    <p class="lettra-hint" id="@Id">@L["Tax.Sources.Empty"]</p>
+}
+else
+{
+    <table class="lettra-table lt-cards lt-tax-sources" id="@Id">
+        <caption class="lettra-visually-hidden">@Caption</caption>
+        <thead>
+            <tr>
+                <th scope="col">@L["Tax.Sources.Piece"]</th>
+                <th scope="col">@L["Tax.Sources.Date"]</th>
+                <th scope="col">@L["Billing.Column.Customer"]</th>
+                <th scope="col" class="lg-num">@L["Tax.Sources.Base"]</th>
+                @if (ShowVat)
+                {
+                    <th scope="col" class="lg-num">@L["Tax.Sources.Vat"]</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (TaxSourceResponse source in Sources)
+            {
+                <tr>
+                    <td><a href="@TaxText.PieceHref(source)">@source.PieceNumber</a> <span class="lt-tax-kind">@L[$"Tax.Kind.{source.Kind}"]</span></td>
+                    <td data-label="@L["Tax.Sources.Date"]">@source.Date.ToString("d", CultureInfo.CurrentCulture)</td>
+                    <td data-label="@L["Billing.Column.Customer"]">@source.CustomerName</td>
+                    <td class="lg-num" data-label="@L["Tax.Sources.Base"]">@TaxText.Exact(source.BaseExclTax)</td>
+                    @if (ShowVat)
+                    {
+                        <td class="lg-num" data-label="@L["Tax.Sources.Vat"]">@TaxText.Exact(source.VatAmount)</td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<TaxSourceResponse> Sources { get; set; } = [];
+
+    [Parameter] public bool ShowVat { get; set; } = true;
+
+    [Parameter] public string? Id { get; set; }
+
+    [Parameter] public string? Caption { get; set; }
+}

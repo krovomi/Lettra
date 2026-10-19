@@ -93,7 +93,7 @@ public interface IIntegrityKeyring
     Task<IReadOnlyList<IntegrityKeyVersion>> ListAsync(CancellationToken cancellationToken);
 }
 
-/// <summary>Les deux règles d'alerte de dossier de la chaîne (annexe G §5 et §6).</summary>
+/// <summary>Les règles d'alerte de dossier : la chaîne anti-fraude (annexe G §5 et §6) et le calendrier fiscal.</summary>
 public enum DossierAlertRule
 {
     /// <summary>Écart dans la chaîne anti-fraude : S1, conformité.</summary>
@@ -101,6 +101,12 @@ public enum DossierAlertRule
 
     /// <summary>Trou dans la numérotation d'une série : S2, conformité.</summary>
     NumberingGap = 2,
+
+    /// <summary>Une échéance fiscale (TVA, DES, IS, CFE) tombe dans les 7 jours et n'est pas marquée déposée : S3, conformité.</summary>
+    FiscalDeadlineSoon = 3,
+
+    /// <summary>Une échéance fiscale suivie est dépassée sans être marquée déposée : S2, conformité.</summary>
+    FiscalDeadlineOverdue = 4,
 }
 
 /// <summary>

@@ -34,7 +34,7 @@ internal sealed class CustomerReadStore(TenantDbSession session) : ICustomerRead
     public async Task<PagedResponse<CustomerSummary>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken)
     {
         LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
-        IQueryable<Customer> query = db.Customers.AsNoTracking().WhereSearchKeyContains(search);
+        IQueryable<Customer> query = db.Customers.AsNoTracking().Where(c => !c.IsArchived).WhereSearchKeyContains(search);
         int total = await query.CountAsync(cancellationToken).ConfigureAwait(false);
 
         // Les objets-valeurs convertis (Siren) sont projetés tels quels puis aplatis en mémoire.

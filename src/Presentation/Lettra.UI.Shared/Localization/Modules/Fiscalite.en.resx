@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.Tax" xml:space="preserve"><value>Tax returns</value></data>
+  <data name="Tax.Vat.Tab" xml:space="preserve"><value>VAT</value></data>
+  <data name="Tax.Des.Tab" xml:space="preserve"><value>ESL</value></data>
+  <data name="Tax.Calendar.Tab" xml:space="preserve"><value>Tax calendar</value></data>
+  <data name="Tax.Settings.Tab" xml:space="preserve"><value>Tax settings</value></data>
+  <data name="Tax.Vat.Title" xml:space="preserve"><value>VAT return</value></data>
+  <data name="Tax.Vat.Subtitle" xml:space="preserve"><value>Draft of the sales part, computed from validated documents. Nothing is sent to the tax office.</value></data>
+  <data name="Tax.Period.Previous" xml:space="preserve"><value>Previous period</value></data>
+  <data name="Tax.Period.Next" xml:space="preserve"><value>Next period</value></data>
+  <data name="Tax.Period.Quarter" xml:space="preserve"><value>Q{0} {1}</value></data>
+  <data name="Tax.Period.Range" xml:space="preserve"><value>From {0} to {1}</value></data>
+  <data name="Tax.Form.Ca3" xml:space="preserve"><value>CA3 (form 3310-CA3-SD), standard regime</value></data>
+  <data name="Tax.Form.Ca12" xml:space="preserve"><value>Annual CA12 (form 3517-S-SD), simplified regime</value></data>
+  <data name="Tax.DueOn" xml:space="preserve"><value>To be filed by {0}.</value></data>
+  <data name="Tax.Filed.On" xml:space="preserve"><value>Marked as filed on {0}.</value></data>
+  <data name="Tax.Filed.Mark" xml:space="preserve"><value>Mark as filed</value></data>
+  <data name="Tax.Filed.Undo" xml:space="preserve"><value>Undo filed</value></data>
+  <data name="Tax.Vat.Figures" xml:space="preserve"><value>Return figures</value></data>
+  <data name="Tax.Box.GrossTotal" xml:space="preserve"><value>Gross VAT due</value></data>
+  <data name="Tax.Box.DeductibleTotal" xml:space="preserve"><value>Deductible VAT</value></data>
+  <data name="Tax.Vat.DeductibleNote" xml:space="preserve"><value>Purchases not tracked yet: enter it yourself.</value></data>
+  <data name="Tax.Box.Credit" xml:space="preserve"><value>VAT credit</value></data>
+  <data name="Tax.Box.NetDue" xml:space="preserve"><value>Net VAT due</value></data>
+  <data name="Tax.Vat.NetNote" xml:space="preserve"><value>Before deductible VAT.</value></data>
+  <data name="Tax.Vat.Boxes" xml:space="preserve"><value>Return boxes</value></data>
+  <data name="Tax.Vat.BoxesHint" xml:space="preserve"><value>Amounts rounded to the euro, as on the form. Open a box to see the documents behind it, to the cent.</value></data>
+  <data name="Tax.Section.Taxable" xml:space="preserve"><value>Taxable transactions</value></data>
+  <data name="Tax.Section.NonTaxable" xml:space="preserve"><value>Non-taxable transactions</value></data>
+  <data name="Tax.Section.Gross" xml:space="preserve"><value>Gross VAT by rate</value></data>
+  <data name="Tax.Section.Totals" xml:space="preserve"><value>Totals</value></data>
+  <data name="Tax.Section.Excluded" xml:space="preserve"><value>Not declared</value></data>
+  <data name="Tax.Box.Label" xml:space="preserve"><value>Box</value></data>
+  <data name="Tax.Box.Line" xml:space="preserve"><value>Line</value></data>
+  <data name="Tax.Box.LineUnknown" xml:space="preserve"><value>To be mapped</value></data>
+  <data name="Tax.Box.Base" xml:space="preserve"><value>Net base</value></data>
+  <data name="Tax.Box.Vat" xml:space="preserve"><value>VAT</value></data>
+  <data name="Tax.Box.Detail" xml:space="preserve"><value>Detail</value></data>
+  <data name="Tax.Box.Pieces" xml:space="preserve"><value>{0} document(s)</value></data>
+  <data name="Tax.Box.A1" xml:space="preserve"><value>Sales, services</value></data>
+  <data name="Tax.Box.E1" xml:space="preserve"><value>Exports outside the EU</value></data>
+  <data name="Tax.Box.E2" xml:space="preserve"><value>Other non-taxable transactions (exemptions, reverse charge, intra-EU services)</value></data>
+  <data name="Tax.Box.F2" xml:space="preserve"><value>Intra-EU supplies to a taxable person</value></data>
+  <data name="Tax.Box.Rate20" xml:space="preserve"><value>Standard rate 20%</value></data>
+  <data name="Tax.Box.Rate10" xml:space="preserve"><value>Intermediate rate 10%</value></data>
+  <data name="Tax.Box.Rate55" xml:space="preserve"><value>Reduced rate 5.5%</value></data>
+  <data name="Tax.Box.Rate21" xml:space="preserve"><value>Special rate 2.1% (line to be confirmed)</value></data>
+  <data name="Tax.Box.RateOther" xml:space="preserve"><value>Rate {0}% (to be checked)</value></data>
+  <data name="Tax.Box.OutOfScope" xml:space="preserve"><value>VAT exemption scheme, out of scope and disbursements</value></data>
+  <data name="Tax.Installments.Title" xml:space="preserve"><value>CA12 instalments</value></data>
+  <data name="Tax.Installments.Hint" xml:space="preserve"><value>Based on the previous year's sales VAT. No instalment when it is below €1,000.</value></data>
+  <data name="Tax.Installments.Number" xml:space="preserve"><value>Instalment</value></data>
+  <data name="Tax.Installments.Due" xml:space="preserve"><value>Due date</value></data>
+  <data name="Tax.Installments.Amount" xml:space="preserve"><value>Amount</value></data>
+  <data name="Tax.Installments.Label" xml:space="preserve"><value>Instalment {0} ({1}%)</value></data>
+  <data name="Tax.Installments.Exempt" xml:space="preserve"><value>Not due</value></data>
+  <data name="Tax.Vat.Disclaimer" xml:space="preserve"><value>Box mapping to be reviewed by the accountant before any filing. Filing is done on impots.gouv or by your EDI partner: Lettra sends nothing.</value></data>
+  <data name="Tax.Toast.Filed" xml:space="preserve"><value>Deadline marked as filed.</value></data>
+  <data name="Tax.Toast.Unfiled" xml:space="preserve"><value>Filed mark removed.</value></data>
+  <data name="Tax.Toast.Downloaded" xml:space="preserve"><value>ESL file downloaded.</value></data>
+  <data name="Tax.Toast.SettingsSaved" xml:space="preserve"><value>Tax settings saved.</value></data>
+  <data name="Tax.Checks.Title" xml:space="preserve"><value>Checks before filing</value></data>
+  <data name="Tax.Severity.Ok" xml:space="preserve"><value>OK</value></data>
+  <data name="Tax.Severity.Warning" xml:space="preserve"><value>To check</value></data>
+  <data name="Tax.Severity.Blocking" xml:space="preserve"><value>To fix</value></data>
+  <data name="Tax.Check.JournalMatch.Ok" xml:space="preserve"><value>The return's VAT matches account 44571 in the books ({0}).</value></data>
+  <data name="Tax.Check.JournalMatch.Blocking" xml:space="preserve"><value>Mismatch with the books: account 44571 shows {0}, the return {1}.</value></data>
+  <data name="Tax.Check.Drafts.Ok" xml:space="preserve"><value>No invoice draft pending.</value></data>
+  <data name="Tax.Check.Drafts.Warning" xml:space="preserve"><value>{2} invoice draft(s) created before the end of the period are not validated: they are not in the return.</value></data>
+  <data name="Tax.Check.NotTransmitted.Ok" xml:space="preserve"><value>All invoices to French businesses have been sent to the platform.</value></data>
+  <data name="Tax.Check.NotTransmitted.Warning" xml:space="preserve"><value>{2} invoice(s) to French businesses have not been sent to the accredited platform yet.</value></data>
+  <data name="Tax.Check.VatOnReceipts" xml:space="preserve"><value>{2} service document(s) without the accrual option: their VAT is due on payment. Counted here at invoice date until payments are tracked.</value></data>
+  <data name="Tax.Check.OtherRate" xml:space="preserve"><value>{2} document(s) at a rate with no known line on the form: to allocate by hand.</value></data>
+  <data name="Tax.Check.DeductibleMissing" xml:space="preserve"><value>Deductible VAT (purchases, fixed assets) is not computed yet: enter it yourself.</value></data>
+  <data name="Tax.Check.DesVatNumberMissing.Ok" xml:space="preserve"><value>All EU customers have a VAT number.</value></data>
+  <data name="Tax.Check.DesVatNumberMissing.Blocking" xml:space="preserve"><value>{2} document(s) for an EU customer with no VAT number: complete the customer record, the line cannot be declared.</value></data>
+  <data name="Tax.Check.DesCustomerNotEu" xml:space="preserve"><value>{2} reverse-charge service(s) for a customer outside the EU: no ESL, check the document's VAT regime.</value></data>
+  <data name="Tax.Check.DesNegative" xml:space="preserve"><value>A customer has more credit notes than services this month: the correction is declared for the original month.</value></data>
+  <data name="Tax.Sources.Empty" xml:space="preserve"><value>No document.</value></data>
+  <data name="Tax.Sources.Piece" xml:space="preserve"><value>Document</value></data>
+  <data name="Tax.Sources.Date" xml:space="preserve"><value>Date</value></data>
+  <data name="Tax.Sources.Base" xml:space="preserve"><value>Net base</value></data>
+  <data name="Tax.Sources.Vat" xml:space="preserve"><value>VAT</value></data>
+  <data name="Tax.Kind.Invoice" xml:space="preserve"><value>invoice</value></data>
+  <data name="Tax.Kind.DownPayment" xml:space="preserve"><value>down payment</value></data>
+  <data name="Tax.Kind.CreditNote" xml:space="preserve"><value>credit note</value></data>
+  <data name="Tax.Setup.Tax.ProfileMissing.Title" xml:space="preserve"><value>Fill in the company details first</value></data>
+  <data name="Tax.Setup.Tax.ProfileMissing.Text" xml:space="preserve"><value>The company's VAT regime decides the return: CA3 or CA12.</value></data>
+  <data name="Tax.Setup.Tax.RegimeMissing.Title" xml:space="preserve"><value>Choose the VAT return regime</value></data>
+  <data name="Tax.Setup.Tax.RegimeMissing.Text" xml:space="preserve"><value>In the company details: standard (CA3), simplified (CA12) or mini-réel.</value></data>
+  <data name="Tax.Setup.Tax.VatFranchise.Title" xml:space="preserve"><value>No VAT return</value></data>
+  <data name="Tax.Setup.Tax.VatFranchise.Text" xml:space="preserve"><value>The company uses the VAT exemption scheme: it collects no VAT and files neither CA3 nor CA12.</value></data>
+  <data name="Tax.Setup.OpenCompany" xml:space="preserve"><value>Open company details</value></data>
+  <data name="Tax.Des.Title" xml:space="preserve"><value>EC Sales List for services</value></data>
+  <data name="Tax.Des.Subtitle" xml:space="preserve"><value>Services to EU businesses, where the customer pays the VAT.</value></data>
+  <data name="Tax.Des.Count" xml:space="preserve"><value>{0} customer(s) to declare</value></data>
+  <data name="Tax.Des.Lines" xml:space="preserve"><value>Declaration lines</value></data>
+  <data name="Tax.Des.Download" xml:space="preserve"><value>Download the file</value></data>
+  <data name="Tax.Des.Empty" xml:space="preserve"><value>No ESL this month</value></data>
+  <data name="Tax.Des.EmptyText" xml:space="preserve"><value>No service to an EU business is dated this month.</value></data>
+  <data name="Tax.Des.Line" xml:space="preserve"><value>Line</value></data>
+  <data name="Tax.Des.VatNumber" xml:space="preserve"><value>Customer VAT number</value></data>
+  <data name="Tax.Des.Amount" xml:space="preserve"><value>Net amount</value></data>
+  <data name="Tax.Des.Disclaimer" xml:space="preserve"><value>You upload the file yourself to the customs online service; check its format before a first real filing.</value></data>
+  <data name="Tax.Calendar.Title" xml:space="preserve"><value>Tax calendar</value></data>
+  <data name="Tax.Calendar.Subtitle" xml:space="preserve"><value>The client file's deadlines, computed from the VAT regime and tax settings.</value></data>
+  <data name="Tax.Calendar.Defaults" xml:space="preserve"><value>Default settings: year end on 31 December, VAT on the 15th, corporate tax and CFE. Check them so that late tracking starts.</value></data>
+  <data name="Tax.Calendar.CheckSettings" xml:space="preserve"><value>Check the settings</value></data>
+  <data name="Tax.Calendar.Empty" xml:space="preserve"><value>No deadline this year</value></data>
+  <data name="Tax.Calendar.Open" xml:space="preserve"><value>Open</value></data>
+  <data name="Tax.Calendar.Disclaimer" xml:space="preserve"><value>Lettra shows the earliest possible date; your impots.gouv business account gives the exact one. Upcoming deadlines also reach the alert centre.</value></data>
+  <data name="Tax.Obligation.VatReturnCa3" xml:space="preserve"><value>VAT return (CA3)</value></data>
+  <data name="Tax.Obligation.VatReturnCa12" xml:space="preserve"><value>Annual VAT return (CA12)</value></data>
+  <data name="Tax.Obligation.VatInstallment" xml:space="preserve"><value>VAT instalment</value></data>
+  <data name="Tax.Obligation.Des" xml:space="preserve"><value>EC Sales List for services</value></data>
+  <data name="Tax.Obligation.Cfe" xml:space="preserve"><value>Business property tax (CFE)</value></data>
+  <data name="Tax.Obligation.CorporateTaxInstallment" xml:space="preserve"><value>Corporate tax instalment</value></data>
+  <data name="Tax.Obligation.CorporateTaxBalance" xml:space="preserve"><value>Corporate tax balance</value></data>
+  <data name="Tax.Obligation.TaxReturn" xml:space="preserve"><value>Annual tax return</value></data>
+  <data name="Tax.Note.VatDeadlineDay" xml:space="preserve"><value>The {0}th of the month, per settings.</value></data>
+  <data name="Tax.Note.Ca12" xml:space="preserve"><value>Second working day after 1 May.</value></data>
+  <data name="Tax.Note.Ca12NonCalendar" xml:space="preserve"><value>Three months after year end.</value></data>
+  <data name="Tax.Note.InstallmentUnknown" xml:space="preserve"><value>Amount unknown: no document in the previous year.</value></data>
+  <data name="Tax.Note.InstallmentExempt" xml:space="preserve"><value>Not due: previous year's VAT below €1,000.</value></data>
+  <data name="Tax.Note.Installment55" xml:space="preserve"><value>55% of the previous year's VAT.</value></data>
+  <data name="Tax.Note.Installment40" xml:space="preserve"><value>40% of the previous year's VAT.</value></data>
+  <data name="Tax.Note.CorporateTaxThreshold" xml:space="preserve"><value>No instalment if the previous year's corporate tax is below €3,000.</value></data>
+  <data name="Tax.Note.Des" xml:space="preserve"><value>Tenth working day of the month.</value></data>
+  <data name="Tax.State.Upcoming" xml:space="preserve"><value>Upcoming</value></data>
+  <data name="Tax.State.DueSoon" xml:space="preserve"><value>Within 7 days</value></data>
+  <data name="Tax.State.Overdue" xml:space="preserve"><value>Overdue</value></data>
+  <data name="Tax.State.Filed" xml:space="preserve"><value>Filed</value></data>
+  <data name="Tax.State.Exempt" xml:space="preserve"><value>Not due</value></data>
+  <data name="Tax.State.Past" xml:space="preserve"><value>Past</value></data>
+  <data name="Tax.Regime.Franchise" xml:space="preserve"><value>VAT exemption scheme</value></data>
+  <data name="Tax.Regime.Unknown" xml:space="preserve"><value>VAT regime not set</value></data>
+  <data name="Tax.Settings.Title" xml:space="preserve"><value>Tax settings</value></data>
+  <data name="Tax.Settings.Subtitle" xml:space="preserve"><value>What sets the dates of the tax calendar and drafts.</value></data>
+  <data name="Tax.Settings.FiscalYear" xml:space="preserve"><value>Financial year</value></data>
+  <data name="Tax.Settings.YearEndDay" xml:space="preserve"><value>Year-end day</value></data>
+  <data name="Tax.Settings.YearEndMonth" xml:space="preserve"><value>Year-end month</value></data>
+  <data name="Tax.Settings.FiscalYearHint" xml:space="preserve"><value>31 December for a calendar year.</value></data>
+  <data name="Tax.Settings.Vat" xml:space="preserve"><value>VAT</value></data>
+  <data name="Tax.Settings.Periodicity" xml:space="preserve"><value>CA3 frequency</value></data>
+  <data name="Tax.Settings.DeadlineDay" xml:space="preserve"><value>VAT deadline day</value></data>
+  <data name="Tax.Settings.DeadlineHint" xml:space="preserve"><value>Between the 15th and the 24th depending on the company: the exact date is in the impots.gouv business account. 15 by default, the earliest.</value></data>
+  <data name="Tax.Settings.Other" xml:space="preserve"><value>Other taxes</value></data>
+  <data name="Tax.Settings.CorporateIncomeTax" xml:space="preserve"><value>Subject to corporate tax (instalments, balance, annual return)</value></data>
+  <data name="Tax.Settings.Cfe" xml:space="preserve"><value>Liable for CFE (15 December)</value></data>
+  <data name="Tax.Settings.RegimeHint" xml:space="preserve"><value>The VAT regime (CA3 or CA12) is set in the company details:</value></data>
+  <data name="Tax.Periodicity.Monthly" xml:space="preserve"><value>Monthly</value></data>
+  <data name="Tax.Periodicity.Quarterly" xml:space="preserve"><value>Quarterly (annual VAT under €4,000)</value></data>
+  <data name="Error.Tax.ProfileMissing" xml:space="preserve"><value>Fill in the company details first.</value></data>
+  <data name="Error.Tax.VatFranchise" xml:space="preserve"><value>The company uses the VAT exemption scheme: no return.</value></data>
+  <data name="Error.Tax.RegimeMissing" xml:space="preserve"><value>Choose the VAT return regime in the company details.</value></data>
+  <data name="Error.Tax.PeriodInvalid" xml:space="preserve"><value>This period is not a filing period.</value></data>
+  <data name="Error.Tax.FiscalYearEndInvalid" xml:space="preserve"><value>This year-end date does not exist.</value></data>
+  <data name="Error.Tax.DeadlineDayInvalid" xml:space="preserve"><value>The VAT deadline day is between the 15th and the 24th.</value></data>
+  <data name="Error.Tax.DeadlineUnknown" xml:space="preserve"><value>This deadline is not in the client file's calendar.</value></data>
+  <data name="Alerts.Rule.fiscal-echeance-proche" xml:space="preserve"><value>Tax deadline of a client file within 7 days</value></data>
+  <data name="Alerts.Rule.fiscal-echeance-depassee" xml:space="preserve"><value>Tax deadline of a client file overdue</value></data>
+</root>

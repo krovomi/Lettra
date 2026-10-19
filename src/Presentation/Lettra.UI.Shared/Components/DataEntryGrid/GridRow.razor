@@ -19,6 +19,16 @@
             }
         </div>
     }
+    @if (DeleteLabelFormat is not null)
+    {
+        <div class="lg-cell lg-row-action" role="gridcell">
+            @if (!ReadOnly)
+            {
+                <RowDelete Label="@string.Format(CultureInfo.CurrentCulture, DeleteLabelFormat, Index + 1)" Confirm="false" TabIndex="-1"
+                           OnDelete="() => OnDelete.InvokeAsync(Index)" />
+            }
+        </div>
+    }
 </div>
 
 @code {
@@ -37,6 +47,11 @@
 
     [Parameter] public string? CssClass { get; set; }
 
+    /// <summary>Libellé de la corbeille ({0} = numéro de ligne) ; <c>null</c> : pas de corbeille.</summary>
+    [Parameter] public string? DeleteLabelFormat { get; set; }
+
+    [Parameter] public EventCallback<int> OnDelete { get; set; }
+
     [CascadingParameter] public IGridRowRegistry<TItem>? Registry { get; set; }
 
     private TItem _item = default!;
@@ -46,6 +61,7 @@
     private string? _renderedCss;
     private IReadOnlyList<GridColumn<TItem>>? _renderedColumns;
     private string? _renderedLabelFormat;
+    private string? _renderedDeleteFormat;
 
     protected override void OnInitialized() => Registry?.Attach(RowKey, this);
 
@@ -60,7 +76,8 @@
 
     protected override bool ShouldRender() =>
         !ReferenceEquals(_renderedItem, _item) || _renderedIndex != Index || _renderedReadOnly != ReadOnly
-        || _renderedCss != CssClass || !ReferenceEquals(_renderedColumns, Columns) || _renderedLabelFormat != CellLabelFormat;
+        || _renderedCss != CssClass || !ReferenceEquals(_renderedColumns, Columns) || _renderedLabelFormat != CellLabelFormat
+        || _renderedDeleteFormat != DeleteLabelFormat;
 
     protected override void OnAfterRender(bool firstRender)
     {
@@ -70,6 +87,7 @@
         _renderedCss = CssClass;
         _renderedColumns = Columns;
         _renderedLabelFormat = CellLabelFormat;
+        _renderedDeleteFormat = DeleteLabelFormat;
     }
 
     public void Dispose() => Registry?.Detach(RowKey, this);

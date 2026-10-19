@@ -64,6 +64,26 @@ internal sealed class FakeSuppliersGateway : ISuppliersGateway
             ? OperationResult<SupplierResponse>.Success(supplier)
             : OperationResult<SupplierResponse>.Failure(ErrorCodes.Supplier.NotFound));
 
+    public List<(Guid Id, long? ExpectedVersion)> Deletes { get; } = [];
+
+    public Task<OperationResult<bool>> DeleteAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken)
+    {
+        Deletes.Add((id, expectedVersion));
+        if (TakeErrors() is { } errors)
+        {
+            return Task.FromResult(OperationResult<bool>.Failure(errors));
+        }
+
+        if (!Records.TryGetValue(id, out SupplierResponse? current))
+        {
+            return Task.FromResult(OperationResult<bool>.Failure(ErrorCodes.Supplier.NotFound));
+        }
+
+        Records[id] = current with { IsArchived = true, Version = current.Version + 1 };
+        Suppliers.RemoveAll(s => s.Id == id);
+        return Task.FromResult(OperationResult<bool>.Success(true));
+    }
+
     public Task<OperationResult<SupplierResponse>> UpdateAsync(Guid id, long expectedVersion, CreateSupplierRequest request, CancellationToken cancellationToken)
     {
         Updates.Add((id, expectedVersion, request with { }));
