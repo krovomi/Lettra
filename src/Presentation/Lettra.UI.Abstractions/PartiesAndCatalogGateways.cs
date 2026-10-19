@@ -24,12 +24,25 @@ public interface ISuppliersGateway
     Task<OperationResult<bool>> DeleteAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken);
 }
 
+/// <summary>
+/// Critères de la liste des articles : référence ou désignation contenant <paramref name="Search"/>, archivés compris sur
+/// demande, nature, tri (par défaut la référence, de A à Z).
+/// </summary>
+public sealed record CatalogListQuery(
+    string? Search = null,
+    bool IncludeArchived = false,
+    int Page = 1,
+    int PageSize = 50,
+    CatalogSortDto Sort = CatalogSortDto.Reference,
+    SortDirectionDto Direction = SortDirectionDto.Ascending,
+    CatalogItemKindDto? Kind = null);
+
 /// <summary>Écran Catalogue, et liste de choix F4 des futurs écrans Devis et Factures.</summary>
 public interface ICatalogGateway
 {
     Task<OperationResult<CatalogReferenceData>> GetReferenceDataAsync(CancellationToken cancellationToken);
 
-    Task<OperationResult<PagedResponse<CatalogItemSummary>>> ListAsync(string? search, bool includeArchived, int page, int pageSize, CancellationToken cancellationToken);
+    Task<OperationResult<PagedResponse<CatalogItemSummary>>> ListAsync(CatalogListQuery query, CancellationToken cancellationToken);
 
     Task<OperationResult<CatalogItemResponse>> GetAsync(Guid id, CancellationToken cancellationToken);
 

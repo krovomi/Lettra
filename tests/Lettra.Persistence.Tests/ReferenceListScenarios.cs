@@ -1,17 +1,20 @@
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Tenancy;
+using Lettra.Application.Features.Catalog;
 using Lettra.Application.Features.Customers;
 using Lettra.Application.Features.Parties;
+using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
+using Lettra.Domain.Catalog;
 using Lettra.Domain.Parties;
 using Lettra.Domain.SharedKernel;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.Persistence.Tests;
 
-/// <summary>Tri par nom ou par ville et filtre de nature des listes de clients et de fournisseurs, sur les trois providers.</summary>
-internal static class PartyListScenarios
+/// <summary>Tri et filtre de nature des listes de clients, de fournisseurs et d'articles, sur les trois providers.</summary>
+internal static class ReferenceListScenarios
 {
     // Une entreprise a besoin de son SIREN et de son SIRET (numéros réels valides), un particulier non.
     private static Customer.Draft Customer(CustomerKind kind, string name, string city, string? siren, string? siret) =>
@@ -66,5 +69,38 @@ internal static class PartyListScenarios
         (await SuppliersAsync(new ListSuppliersQuery(dossier, Sort: PartySortDto.City))).Should().Equal("Électricité Générale", "Papeterie Dupuis");
         (await SuppliersAsync(new ListSuppliersQuery(dossier, Sort: PartySortDto.City, Direction: SortDirectionDto.Descending)))
             .Should().Equal("Papeterie Dupuis", "Électricité Générale");
+    }
+
+    private static CatalogItem.Draft Item(string reference, string designation, CatalogItemKind kind, decimal price) =>
+        new(reference, designation, null, kind, kind == CatalogItemKind.Service ? "HUR" : "C62", price, "FR-20");
+
+    public static async Task CatalogSortAndKindAsync(TenantHarness harness, DatabaseProvider provider, string connectionString)
+    {
+        DossierId dossier = harness.AddDossier(provider, connectionString);
+        await using AsyncServiceScope scope = await harness.OpenAsync(dossier);
+        ICommandDispatcher commands = scope.ServiceProvider.GetRequiredService<ICommandDispatcher>();
+        foreach (CatalogItem.Draft item in new[]
+        {
+            Item("PRES-1", "Tenue comptable", CatalogItemKind.Service, 150m),
+            Item("CONS-1", "Écriture de bilan", CatalogItemKind.Service, 1200.5m),
+            Item("FOUR-1", "Classeur", CatalogItemKind.Good, 4.9m),
+        })
+        {
+            (await commands.SendAsync(new CreateCatalogItemCommand(dossier, item), default)).IsSuccess.Should().BeTrue();
+        }
+
+        IQueryDispatcher queries = scope.ServiceProvider.GetRequiredService<IQueryDispatcher>();
+        async Task<string[]> ReferencesAsync(ListCatalogItemsQuery query) => [.. (await queries.QueryAsync(query, default)).Value.Items.Select(i => i.Reference)];
+
+        (await ReferencesAsync(new ListCatalogItemsQuery(dossier))).Should().Equal("CONS-1", "FOUR-1", "PRES-1");
+        (await ReferencesAsync(new ListCatalogItemsQuery(dossier, Direction: SortDirectionDto.Descending))).Should().Equal("PRES-1", "FOUR-1", "CONS-1");
+
+        // « Écriture » se range à E, sans accent, sur les trois bases.
+        (await ReferencesAsync(new ListCatalogItemsQuery(dossier, Sort: CatalogSortDto.Designation))).Should().Equal("FOUR-1", "CONS-1", "PRES-1");
+        (await ReferencesAsync(new ListCatalogItemsQuery(dossier, Sort: CatalogSortDto.UnitPrice, Direction: SortDirectionDto.Descending)))
+            .Should().Equal("CONS-1", "PRES-1", "FOUR-1");
+        (await ReferencesAsync(new ListCatalogItemsQuery(dossier, Sort: CatalogSortDto.UnitPrice, Kind: CatalogItemKindDto.Service)))
+            .Should().Equal("PRES-1", "CONS-1");
+        (await queries.QueryAsync(new ListCatalogItemsQuery(dossier, Kind: CatalogItemKindDto.Good), default)).Value.TotalCount.Should().Be(1);
     }
 }

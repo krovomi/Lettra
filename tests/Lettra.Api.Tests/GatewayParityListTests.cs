@@ -69,4 +69,26 @@ public sealed partial class GatewayParityTests
         supplierList.Value!.Items.Should().NotBeEmpty().And.OnlyContain(s => s.Name == "Minoterie Dupuis");
         refused.Errors.Should().ContainSingle().Which.Should().Be(new ErrorDetail(ErrorCodes.Validation.Invalid, "Sort"));
     }
+
+    [Theory]
+    [MemberData(nameof(Transports))]
+    public async Task Lister_les_articles_tries_par_prix_et_filtres_par_nature(string transport)
+    {
+        await using ServiceProvider services = Gateway(transport);
+        ICatalogGateway catalog = services.GetRequiredService<ICatalogGateway>();
+        string prefix = "TRI" + Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
+        (await catalog.CreateAsync(PartiesAndCatalogApiTests.Conseil(prefix + "-A") with { UnitPriceExclTax = 300m }, default)).IsSuccess.Should().BeTrue();
+        (await catalog.CreateAsync(PartiesAndCatalogApiTests.Conseil(prefix + "-B") with { UnitPriceExclTax = 20.5m }, default)).IsSuccess.Should().BeTrue();
+        (await catalog.CreateAsync(PartiesAndCatalogApiTests.Conseil(prefix + "-C") with
+        {
+            Designation = "Classeur", Kind = CatalogItemKindDto.Good, UnitCode = "C62", UnitPriceExclTax = 4m,
+        }, default)).IsSuccess.Should().BeTrue();
+
+        OperationResult<PagedResponse<CatalogItemSummary>> serviceItems = await catalog.ListAsync(
+            new CatalogListQuery(prefix, Sort: CatalogSortDto.UnitPrice, Direction: SortDirectionDto.Descending, Kind: CatalogItemKindDto.Service), default);
+        OperationResult<PagedResponse<CatalogItemSummary>> refused = await catalog.ListAsync(new CatalogListQuery(Kind: (CatalogItemKindDto)9), default);
+
+        serviceItems.Value!.Items.Select(i => i.Reference).Should().Equal(prefix + "-A", prefix + "-B");
+        refused.Errors.Should().ContainSingle().Which.Should().Be(new ErrorDetail(ErrorCodes.Validation.Invalid, "Kind"));
+    }
 }

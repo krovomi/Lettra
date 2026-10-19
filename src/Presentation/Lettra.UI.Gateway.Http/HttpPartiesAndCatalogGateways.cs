@@ -39,10 +39,10 @@ internal static class HttpCalls
         string text = string.Create(CultureInfo.InvariantCulture, $"page={query.Page}&pageSize={query.PageSize}") + SearchParameter(query.Search);
         if (query.Sort != PartySortDto.Name || query.Direction != SortDirectionDto.Ascending)
         {
-            text += $"&sort={query.Sort}&direction={query.Direction}";
+            text += string.Create(CultureInfo.InvariantCulture, $"&sort={query.Sort}&direction={query.Direction}");
         }
 
-        return query.Kind is { } kind ? $"{text}&kind={kind}" : text;
+        return query.Kind is { } kind ? string.Create(CultureInfo.InvariantCulture, $"{text}&kind={kind}") : text;
     }
 
     public static Uri Relative(FormattableString uri) => new(string.Create(CultureInfo.InvariantCulture, $"{uri}"), UriKind.Relative);
@@ -109,12 +109,24 @@ internal sealed class HttpCatalogGateway(HttpClient http) : ICatalogGateway
             ContractsJsonContext.Default.CatalogReferenceData,
             cancellationToken);
 
-    public Task<OperationResult<PagedResponse<CatalogItemSummary>>> ListAsync(string? search, bool includeArchived, int page, int pageSize, CancellationToken cancellationToken)
+    public Task<OperationResult<PagedResponse<CatalogItemSummary>>> ListAsync(CatalogListQuery query, CancellationToken cancellationToken)
     {
-        string query = string.IsNullOrWhiteSpace(search) ? string.Empty : "&search=" + Uri.EscapeDataString(search.Trim());
-        string archived = includeArchived ? "true" : "false";
+        ArgumentNullException.ThrowIfNull(query);
+        string archived = query.IncludeArchived ? "true" : "false";
+        string text = string.Create(CultureInfo.InvariantCulture, $"page={query.Page}&pageSize={query.PageSize}&includeArchived={archived}")
+            + HttpCalls.SearchParameter(query.Search);
+        if (query.Sort != CatalogSortDto.Reference || query.Direction != SortDirectionDto.Ascending)
+        {
+            text += string.Create(CultureInfo.InvariantCulture, $"&sort={query.Sort}&direction={query.Direction}");
+        }
+
+        if (query.Kind is { } kind)
+        {
+            text += string.Create(CultureInfo.InvariantCulture, $"&kind={kind}");
+        }
+
         return HttpCalls.SendAsync(
-            ct => http.GetAsync(HttpCalls.Relative($"api/v1/catalog/items?page={page}&pageSize={pageSize}&includeArchived={archived}{query}"), ct),
+            ct => http.GetAsync(new Uri("api/v1/catalog/items?" + text, UriKind.Relative), ct),
             ContractsJsonContext.Default.PagedResponseCatalogItemSummary,
             cancellationToken);
     }

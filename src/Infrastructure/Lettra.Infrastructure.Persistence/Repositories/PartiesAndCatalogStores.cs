@@ -106,9 +106,22 @@ internal sealed class CatalogItemReadStore(TenantDbSession session) : ICatalogIt
             query = query.Where(i => i.ReferenceKey.Contains(reference) || EF.Property<string>(i, SearchKey.PropertyName).Contains(designation));
         }
 
+        if (filter.Kind is { } kind)
+        {
+            query = query.Where(i => i.Kind == kind);
+        }
+
         int total = await query.CountAsync(cancellationToken).ConfigureAwait(false);
-        List<CatalogItem> rows = await query
-            .OrderBy(i => i.ReferenceKey)
+
+        // Désignation comparée sur sa forme normalisée, prix en réel (SQLite ne trie pas les decimal) : même ordre sur
+        // les trois providers ; la référence, unique, départage.
+        IOrderedQueryable<CatalogItem> ordered = filter.Sort switch
+        {
+            CatalogSortDto.Designation => query.By(i => EF.Property<string>(i, SearchKey.PropertyName), filter.Direction).ThenBy(i => i.ReferenceKey),
+            CatalogSortDto.UnitPrice => query.By(i => (double)i.UnitPriceExclTax, filter.Direction).ThenBy(i => i.ReferenceKey),
+            _ => query.By(i => i.ReferenceKey, filter.Direction),
+        };
+        List<CatalogItem> rows = await ordered
             .Skip((filter.Page - 1) * filter.PageSize)
             .Take(filter.PageSize)
             .ToListAsync(cancellationToken)

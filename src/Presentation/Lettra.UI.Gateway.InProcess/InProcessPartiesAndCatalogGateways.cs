@@ -111,10 +111,11 @@ internal sealed class InProcessCatalogGateway(IServiceScopeFactory scopes) : ICa
     public Task<OperationResult<CatalogReferenceData>> GetReferenceDataAsync(CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetCatalogReferenceDataQuery(dossier), ct), cancellationToken);
 
-    public Task<OperationResult<PagedResponse<CatalogItemSummary>>> ListAsync(string? search, bool includeArchived, int page, int pageSize, CancellationToken cancellationToken) =>
+    public Task<OperationResult<PagedResponse<CatalogItemSummary>>> ListAsync(CatalogListQuery query, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(
             scopes,
-            (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new ListCatalogItemsQuery(dossier, search, includeArchived, page, pageSize), ct),
+            (sp, dossier, ct) => InProcessScope.QueryAsync(
+                sp, new ListCatalogItemsQuery(dossier, query.Search, query.IncludeArchived, query.Page, query.PageSize, query.Sort, query.Direction, query.Kind), ct),
             cancellationToken);
 
     public Task<OperationResult<CatalogItemResponse>> GetAsync(Guid id, CancellationToken cancellationToken) =>

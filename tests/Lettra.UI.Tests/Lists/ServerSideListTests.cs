@@ -1,5 +1,6 @@
 using System.Globalization;
 using Bunit;
+using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
 using Lettra.Contracts.Suppliers;
@@ -7,6 +8,7 @@ using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
 using Lettra.UI.Shared.Components.Explorer;
 using Lettra.UI.Shared.Localization;
+using Lettra.UI.Shared.Pages.CatalogItems;
 using Lettra.UI.Shared.Pages.Parties;
 using Lettra.UI.Shared.Typing;
 using Lettra.UI.Tests.Billing;
@@ -18,7 +20,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Lettra.UI.Tests.Lists;
 
 /// <summary>
-/// Listes paginées hors pièces (clients, fournisseurs) : le tri et les filtres partent au serveur, la liste se relit
+/// Listes paginées hors pièces (clients, fournisseurs, articles) : le tri et les filtres partent au serveur, la liste se relit
 /// depuis la première page.
 /// </summary>
 [Collection("culture")]
@@ -91,5 +93,29 @@ public sealed class ServerSideListTests : BunitContext
 
         page.WaitForAssertion(() => suppliers.Queries[^1].Should().Be(new PartyListQuery(null, 1, 50, PartySortDto.City)));
         page.Find("#suppliers-sort").GetAttribute("value").Should().Be("City:Ascending");
+    }
+
+    [Fact]
+    public void Les_articles_se_trient_par_prix_et_la_nature_part_au_serveur()
+    {
+        FakeCatalogGateway catalog = new();
+        catalog.Add("TENUE", "Tenue comptable", 450m);
+        catalog.Add("BILAN", "Bilan annuel", 1800m);
+        catalog.Add("PAIE", "Bulletin de paie", 25m);
+        Services.AddSingleton<ICatalogGateway>(catalog);
+        IRenderedComponent<CatalogPage> page = Open<CatalogPage>("catalog");
+        string[] Designations() => [.. page.FindAll("#catalog-items-list .lt-record-title").Select(t => t.TextContent)];
+
+        catalog.Queries[^1].Should().Be(new CatalogListQuery(null, false, 1, 50));
+
+        page.Find("#catalog-sort").Change("UnitPrice:Descending");
+        page.WaitForAssertion(() => catalog.Queries[^1].Should().Match<CatalogListQuery>(q => q.Sort == CatalogSortDto.UnitPrice && q.Direction == SortDirectionDto.Descending));
+        page.FindAll("#catalog-items-list .lt-record").Select(r => r.TextContent).First().Should().Contain("Bilan annuel");
+
+        page.Find("#catalog-kind-good").Click();
+        page.WaitForAssertion(() => catalog.Queries[^1].Kind.Should().Be(CatalogItemKindDto.Good));
+        catalog.Queries[^1].Sort.Should().Be(CatalogSortDto.UnitPrice, "le tri choisi est gardé");
+        page.Find("#catalog-items-empty").Should().NotBeNull("aucun bien dans ce catalogue");
+        Designations().Should().BeEmpty();
     }
 }
