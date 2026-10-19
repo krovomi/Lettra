@@ -12,11 +12,22 @@ public interface ISupplierRepository
     Task<Supplier?> FindAsync(SupplierId id, CancellationToken cancellationToken);
 }
 
+/// <summary>
+/// Critères d'une page de clients ou de fournisseurs : nom contenant <see cref="Search"/> (sans accents ni casse), tri,
+/// et pour les clients seulement, leur nature (<see cref="Kind"/>).
+/// </summary>
+public sealed record PartyListFilter(
+    string? Search,
+    int Page,
+    int PageSize,
+    PartySortDto Sort = PartySortDto.Name,
+    SortDirectionDto Direction = SortDirectionDto.Ascending,
+    CustomerKind? Kind = null);
+
 /// <summary>Lecture des fournisseurs : projection directe en contrats.</summary>
 public interface ISupplierReadStore
 {
-    /// <summary>Fournisseurs dont le nom contient <paramref name="search"/>, sans tenir compte des accents ni de la casse.</summary>
-    Task<PagedResponse<SupplierSummary>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken);
+    Task<PagedResponse<SupplierSummary>> ListAsync(PartyListFilter filter, CancellationToken cancellationToken);
 
     Task<SupplierResponse?> GetAsync(SupplierId id, CancellationToken cancellationToken);
 }

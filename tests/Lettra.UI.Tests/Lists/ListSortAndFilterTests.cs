@@ -80,6 +80,30 @@ public sealed class ListSortAndFilterTests : BunitContext
         ListSorting.Sort(rows, new SortState<Column>(Column.Name), new Dictionary<Column, Func<Row, object?>>()).Should().Equal(rows);
     }
 
+    [Theory]
+    [InlineData("Atelier Éole", "eole", true)]
+    [InlineData("Atelier Éole", "  ATELIER ", true)]
+    [InlineData("Atelier Éole", "garage", false)]
+    [InlineData(null, "eole", false)]
+    [InlineData(null, " ", true)]
+    public void La_recherche_a_l_ecran_ignore_casse_accents_et_espaces(string? text, string search, bool expected) =>
+        ListSorting.Matches(text, search).Should().Be(expected);
+
+    [Fact]
+    public void Une_colonne_peut_etre_un_texte_et_l_ordre_d_origine_revient_apres_reinitialisation()
+    {
+        SortState<string> state = new(string.Empty);
+        string[] rows = ["b", "a", "c"];
+        Dictionary<string, Func<string, object?>> keys = new(StringComparer.Ordinal) { ["lettre"] = r => r };
+
+        ListSorting.Sort(rows, state, keys).Should().Equal("b", "a", "c");
+        state.Set("lettre", SortDirectionDto.Descending);
+        ListSorting.Sort(rows, state, keys).Should().Equal("c", "b", "a");
+        state.Reset();
+        state.IsChanged.Should().BeFalse();
+        ListSorting.Sort(rows, state, keys).Should().Equal("b", "a", "c");
+    }
+
     [Fact]
     public void L_en_tete_triable_annonce_son_sens_et_previent_la_liste()
     {

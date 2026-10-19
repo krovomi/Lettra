@@ -12,9 +12,18 @@ namespace Lettra.Application.Features.Catalog;
 
 /// <summary>
 /// Lister les articles : écran Catalogue (archivés compris sur demande) et liste de choix F4 des devis et
-/// factures (articles actifs, filtrés par référence ou désignation).
+/// factures (articles actifs, filtrés par référence ou désignation). Tri par référence, désignation ou prix ; filtre de
+/// nature (bien ou service).
 /// </summary>
-public sealed record ListCatalogItemsQuery(DossierId Dossier, string? Search = null, bool IncludeArchived = false, int Page = 1, int PageSize = 50)
+public sealed record ListCatalogItemsQuery(
+    DossierId Dossier,
+    string? Search = null,
+    bool IncludeArchived = false,
+    int Page = 1,
+    int PageSize = 50,
+    CatalogSortDto Sort = CatalogSortDto.Reference,
+    SortDirectionDto Direction = SortDirectionDto.Ascending,
+    CatalogItemKindDto? Kind = null)
     : IQuery<Result<PagedResponse<CatalogItemSummary>>>, IRequirePermission
 {
     public const int MaxPageSize = 500;
@@ -48,6 +57,12 @@ internal sealed class ListCatalogItemsValidator : IValidator<ListCatalogItemsQue
             errors.Add(Error.Validation(ErrorCodes.Validation.TooLong, nameof(instance.Search)));
         }
 
+        if (instance.Kind is { } kind && !Enum.IsDefined(kind))
+        {
+            errors.Add(Error.Validation(ErrorCodes.Validation.Invalid, nameof(instance.Kind)));
+        }
+
+        errors.AddRange(ListSortRules.Validate(instance.Sort, instance.Direction));
         return errors;
     }
 }
@@ -59,7 +74,8 @@ internal sealed class ListCatalogItemsHandler(ICatalogItemReadStore store)
     {
         ArgumentNullException.ThrowIfNull(query);
         string? search = string.IsNullOrWhiteSpace(query.Search) ? null : query.Search.Trim();
-        return await store.ListAsync(new CatalogItemFilter(search, query.IncludeArchived, query.Page, query.PageSize), cancellationToken)
+        CatalogItemFilter filter = new(search, query.IncludeArchived, query.Page, query.PageSize, query.Sort, query.Direction, (CatalogItemKind?)(int?)query.Kind);
+        return await store.ListAsync(filter, cancellationToken)
             .ConfigureAwait(false);
     }
 }

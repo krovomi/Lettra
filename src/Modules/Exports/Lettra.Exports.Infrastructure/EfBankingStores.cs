@@ -1,4 +1,7 @@
+using System.Globalization;
 using Lettra.Calculations;
+using Lettra.Contracts.Banking;
+using Lettra.Contracts.Common;
 using Lettra.Domain.Banking;
 using Lettra.Domain.Billing;
 using Lettra.Domain.SharedKernel;
@@ -62,17 +65,32 @@ internal sealed class EfPaymentRepository(TenantDbSession session) : IPaymentRep
 
         List<Payment> all = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
         string? search = string.IsNullOrWhiteSpace(filter.Search) ? null : filter.Search.Trim();
-        List<Payment> matching =
-        [
-            .. all.Where(p => search is null
-                    || p.Number.Contains(search, StringComparison.OrdinalIgnoreCase)
-                    || p.CustomerName.Contains(search, StringComparison.CurrentCultureIgnoreCase)
-                    || (p.Reference?.Contains(search, StringComparison.CurrentCultureIgnoreCase) ?? false)
-                    || p.Allocations.Any(a => a.InvoiceNumber.Contains(search, StringComparison.OrdinalIgnoreCase)))
-                .OrderByDescending(p => p.Date)
-                .ThenByDescending(p => p.Number, StringComparer.Ordinal),
-        ];
+        IEnumerable<Payment> found = all
+            .Where(p => search is null
+                || p.Number.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || p.CustomerName.Contains(search, StringComparison.CurrentCultureIgnoreCase)
+                || (p.Reference?.Contains(search, StringComparison.CurrentCultureIgnoreCase) ?? false)
+                || p.Allocations.Any(a => a.InvoiceNumber.Contains(search, StringComparison.OrdinalIgnoreCase)))
+            .Where(p => (filter.MinAmount is null || p.Amount >= filter.MinAmount) && (filter.MaxAmount is null || p.Amount <= filter.MaxAmount));
+        List<Payment> matching = [.. Sort(found, filter.Sort, filter.Direction == SortDirectionDto.Descending)];
         return ([.. matching.Skip((filter.Page - 1) * filter.PageSize).Take(filter.PageSize)], matching.Count);
+    }
+
+    /// <summary>
+    /// Tri en mémoire, comme la recherche (les encaissements d'un dossier tiennent en mémoire) : textes sans casse ni
+    /// accents, puis le numéro, du plus récent au plus ancien, départage.
+    /// </summary>
+    private static IEnumerable<Payment> Sort(IEnumerable<Payment> payments, PaymentSortDto sort, bool descending)
+    {
+        StringComparer text = StringComparer.Create(CultureInfo.CurrentCulture, CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace);
+        IOrderedEnumerable<Payment> ordered = sort switch
+        {
+            PaymentSortDto.Number => descending ? payments.OrderByDescending(p => p.Number, StringComparer.Ordinal) : payments.OrderBy(p => p.Number, StringComparer.Ordinal),
+            PaymentSortDto.Customer => descending ? payments.OrderByDescending(p => p.CustomerName, text) : payments.OrderBy(p => p.CustomerName, text),
+            PaymentSortDto.Amount => descending ? payments.OrderByDescending(p => p.Amount) : payments.OrderBy(p => p.Amount),
+            _ => descending ? payments.OrderByDescending(p => p.Date) : payments.OrderBy(p => p.Date),
+        };
+        return ordered.ThenByDescending(p => p.Number, StringComparer.Ordinal);
     }
 
     public async Task<IReadOnlyDictionary<Guid, string>> NumbersAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken)

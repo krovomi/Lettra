@@ -34,6 +34,17 @@
                    placeholder="@L["Customers.Search"]" autocomplete="off" />
             <kbd>F3</kbd>
         </div>
+        <div class="lt-explorer-filters" id="customers-filters">
+            <div class="lt-filter">
+                <label for="customers-kind">@L["Lists.Filter.Kind"]</label>
+                <select id="customers-kind" value="@_kind" @onchange="ChangeKindAsync">
+                    <option value="">@L["Lists.AllCustomerKinds"]</option>
+                    <option value="@CustomerKindDto.Company">@L["Customers.Kind.Company"]</option>
+                    <option value="@CustomerKindDto.Individual">@L["Customers.Kind.Individual"]</option>
+                </select>
+            </div>
+            <SortSelect Id="customers-sort" Options="SortOptions" State="_sort" OnSort="ReloadAsync" PhoneOnly="false" />
+        </div>
 
         @if (Loading)
         {
@@ -42,7 +53,12 @@
         else if (Items.Count == 0)
         {
             <div class="lt-explorer-empty" id="customers-empty">
-                @if (string.IsNullOrWhiteSpace(Search))
+                @if (_kind is not null)
+                {
+                    <p>@L["Lists.Empty.Filtered"]</p>
+                    <button type="button" class="lettra-button is-secondary" id="customers-empty-reset" @onclick="() => ChangeKindAsync(new ChangeEventArgs())">@L["Lists.Filters.Reset"]</button>
+                }
+                else if (string.IsNullOrWhiteSpace(Search))
                 {
                     <p>@L["Customers.List.Empty"]</p>
                     <a class="lettra-button" href="@NewHref">@L["Customers.New"]</a>
@@ -270,8 +286,21 @@
 
     private string LedgerHref(Guid id) => $"accounting/accounts/{SalesAccounts.Customers}?customer={id}";
 
+    // Tri et nature passent au serveur : la liste est paginée.
+    private readonly SortState<PartySortDto> _sort = new(PartySortDto.Name);
+    private CustomerKindDto? _kind;
+
+    private IReadOnlyList<SortOption<PartySortDto>> SortOptions =>
+        [new(PartySortDto.Name, L["Lists.Sort.Name"]), new(PartySortDto.City, L["Lists.Sort.City"])];
+
+    private Task ChangeKindAsync(ChangeEventArgs args)
+    {
+        _kind = Enum.TryParse(args.Value?.ToString(), out CustomerKindDto kind) ? kind : null;
+        return ReloadAsync();
+    }
+
     protected override Task<OperationResult<PagedResponse<CustomerSummary>>> LoadPageAsync(string? search, int page, CancellationToken cancellationToken) =>
-        Gateway.SearchAsync(search, page, PageSize, cancellationToken);
+        Gateway.SearchAsync(new PartyListQuery(search, page, PageSize, _sort.Column, _sort.Direction, _kind), cancellationToken);
 
     protected override Task<OperationResult<CustomerResponse>> GetAsync(Guid id, CancellationToken cancellationToken) => Gateway.GetAsync(id, cancellationToken);
 

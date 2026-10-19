@@ -9,8 +9,14 @@ using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Application.Features.Parties;
 
-/// <summary>Lister les fournisseurs du dossier, par page, filtrés sur le nom (sans accents ni casse).</summary>
-public sealed record ListSuppliersQuery(DossierId Dossier, int Page = 1, int PageSize = 50, string? Search = null)
+/// <summary>Lister les fournisseurs du dossier, par page, filtrés sur le nom (sans accents ni casse), triés.</summary>
+public sealed record ListSuppliersQuery(
+    DossierId Dossier,
+    int Page = 1,
+    int PageSize = 50,
+    string? Search = null,
+    PartySortDto Sort = PartySortDto.Name,
+    SortDirectionDto Direction = SortDirectionDto.Ascending)
     : IQuery<Result<PagedResponse<SupplierSummary>>>, IRequirePermission
 {
     public const int MaxSearchLength = 100;
@@ -38,6 +44,7 @@ internal sealed class ListSuppliersValidator : IValidator<ListSuppliersQuery>
             errors.Add(Error.Validation(ErrorCodes.Validation.TooLong, nameof(instance.Search)));
         }
 
+        errors.AddRange(ListSortRules.Validate(instance.Sort, instance.Direction));
         return errors;
     }
 }
@@ -48,7 +55,7 @@ internal sealed class ListSuppliersHandler(ISupplierReadStore store)
     public async Task<Result<PagedResponse<SupplierSummary>>> HandleAsync(ListSuppliersQuery query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
-        return await store.ListAsync(query.Search, query.Page, query.PageSize, cancellationToken).ConfigureAwait(false);
+        return await store.ListAsync(new PartyListFilter(query.Search, query.Page, query.PageSize, query.Sort, query.Direction), cancellationToken).ConfigureAwait(false);
     }
 }
 

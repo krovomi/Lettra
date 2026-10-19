@@ -4,6 +4,18 @@ using Lettra.Contracts.Customers;
 namespace Lettra.UI.Abstractions;
 
 /// <summary>
+/// Critères des listes de clients et de fournisseurs : nom contenant <paramref name="Search"/> (sans accents ni casse),
+/// tri (par défaut le nom, de A à Z) et, pour les clients seulement, leur nature.
+/// </summary>
+public sealed record PartyListQuery(
+    string? Search = null,
+    int Page = 1,
+    int PageSize = 50,
+    PartySortDto Sort = PartySortDto.Name,
+    SortDirectionDto Direction = SortDirectionDto.Ascending,
+    CustomerKindDto? Kind = null);
+
+/// <summary>
 /// Le seul contrat que l'écran Clients connaît. Deux implémentations : in-process (MAUI, modes 1 et 4)
 /// et HTTP (WASM, MAUI modes 2, 3 et 5). Même résultat, même codes d'erreur.
 /// </summary>
@@ -15,8 +27,8 @@ public interface ICustomersGateway
 
     Task<OperationResult<CustomerResponse>> GetAsync(Guid id, CancellationToken cancellationToken);
 
-    /// <summary>Liste filtrée sur le nom, sans accents ni casse (page de consultation).</summary>
-    Task<OperationResult<PagedResponse<CustomerSummary>>> SearchAsync(string? search, int page, int pageSize, CancellationToken cancellationToken);
+    /// <summary>Liste filtrée, triée et paginée de la page de consultation.</summary>
+    Task<OperationResult<PagedResponse<CustomerSummary>>> SearchAsync(PartyListQuery query, CancellationToken cancellationToken);
 
     /// <summary>
     /// Modifie un client à partir de la version lue (ADR-0013). Si quelqu'un l'a modifié entre-temps : échec

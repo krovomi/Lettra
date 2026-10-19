@@ -1,4 +1,4 @@
-@typeparam TColumn where TColumn : struct, Enum
+@typeparam TColumn where TColumn : notnull
 @inject IStringLocalizer<SharedResource> L
 @* En-tête de colonne triable : un bouton (clavier, lecteur d'écran) et aria-sort sur la cellule. Sur téléphone, les
    listes en cartes masquent les en-têtes : SortSelect prend le relais. *@

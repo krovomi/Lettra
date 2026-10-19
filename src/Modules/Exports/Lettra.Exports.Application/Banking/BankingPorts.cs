@@ -1,4 +1,6 @@
 using Lettra.Calculations;
+using Lettra.Contracts.Banking;
+using Lettra.Contracts.Common;
 using Lettra.Domain.Banking;
 using Lettra.Domain.Billing;
 using Lettra.Domain.SharedKernel;
@@ -40,8 +42,18 @@ public sealed record BankReconciliationStatus(
     DateOnly? OldestPendingDate,
     DateTimeOffset? LastMatchedAt);
 
-/// <summary>Filtre de la liste des encaissements.</summary>
-public sealed record PaymentListFilter(DateOnly? From, DateOnly? To, CustomerId? Customer, string? Search, int Page, int PageSize);
+/// <summary>Filtre et tri de la liste des encaissements ; les montants sont bornes comprises.</summary>
+public sealed record PaymentListFilter(
+    DateOnly? From,
+    DateOnly? To,
+    CustomerId? Customer,
+    string? Search,
+    int Page,
+    int PageSize,
+    PaymentSortDto Sort = PaymentSortDto.Date,
+    SortDirectionDto Direction = SortDirectionDto.Descending,
+    decimal? MinAmount = null,
+    decimal? MaxAmount = null);
 
 /// <summary>Dépôt des encaissements (base du dossier).</summary>
 public interface IPaymentRepository

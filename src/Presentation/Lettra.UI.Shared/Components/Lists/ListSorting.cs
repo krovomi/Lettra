@@ -10,7 +10,7 @@ namespace Lettra.UI.Shared.Components.Lists;
 public static class ListSorting
 {
     public static IReadOnlyList<T> Sort<T, TColumn>(IEnumerable<T> items, SortState<TColumn> state, IReadOnlyDictionary<TColumn, Func<T, object?>> keys)
-        where TColumn : struct, Enum
+        where TColumn : notnull
     {
         ArgumentNullException.ThrowIfNull(items);
         ArgumentNullException.ThrowIfNull(state);
@@ -23,6 +23,11 @@ public static class ListSorting
         ValueComparer comparer = new(state.Descending);
         return [.. items.OrderBy(key, comparer)];
     }
+
+    /// <summary>Recherche à l'écran : <paramref name="search"/> contenu dans <paramref name="text"/>, sans casse ni accents.</summary>
+    public static bool Matches(string? text, string? search) =>
+        string.IsNullOrWhiteSpace(search)
+        || (text is not null && CultureInfo.CurrentCulture.CompareInfo.IndexOf(text, search.Trim(), CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace) >= 0);
 
     /// <summary>Compare deux valeurs d'une même colonne ; le sens ne s'applique qu'aux valeurs présentes.</summary>
     private sealed class ValueComparer(bool descending) : IComparer<object?>

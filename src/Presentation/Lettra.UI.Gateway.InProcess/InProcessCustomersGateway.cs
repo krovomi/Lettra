@@ -48,9 +48,11 @@ internal sealed class InProcessCustomersGateway(IServiceScopeFactory scopes) : I
             return result.ToOperationResult();
         }, cancellationToken);
 
-    public Task<OperationResult<PagedResponse<CustomerSummary>>> SearchAsync(string? search, int page, int pageSize, CancellationToken cancellationToken) =>
+    public Task<OperationResult<PagedResponse<CustomerSummary>>> SearchAsync(PartyListQuery query, CancellationToken cancellationToken) =>
         RunAsync((sp, dossier, ct) => InProcessScope.QueryAsync(
-            sp, new ListCustomersQuery(dossier, page, pageSize, string.IsNullOrWhiteSpace(search) ? null : search.Trim()), ct), cancellationToken);
+            sp,
+            new ListCustomersQuery(dossier, query.Page, query.PageSize, string.IsNullOrWhiteSpace(query.Search) ? null : query.Search.Trim(), query.Sort, query.Direction, query.Kind),
+            ct), cancellationToken);
 
     public Task<OperationResult<CustomerResponse>> UpdateAsync(Guid id, long expectedVersion, CreateCustomerRequest request, CancellationToken cancellationToken) =>
         RunAsync((sp, dossier, ct) => InProcessScope.WriteThenReadAsync(
