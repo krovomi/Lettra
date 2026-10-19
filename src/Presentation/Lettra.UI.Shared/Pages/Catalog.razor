@@ -148,7 +148,7 @@
     {
         _loading = true;
         OperationResult<PagedResponse<CatalogItemSummary>> result =
-            await Gateway.ListAsync(string.IsNullOrWhiteSpace(_search) ? null : _search.Trim(), _includeArchived, 1, PageSize, CancellationToken.None);
+            await Gateway.ListAsync(new CatalogListQuery(string.IsNullOrWhiteSpace(_search) ? null : _search.Trim(), _includeArchived, PageSize: PageSize), CancellationToken.None);
         if (result.IsSuccess && result.Value is not null)
         {
             _rows = result.Value.Items.Select(CatalogRow.From).ToList();

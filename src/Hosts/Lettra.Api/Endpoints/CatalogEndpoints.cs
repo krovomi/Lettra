@@ -80,10 +80,13 @@ internal static class CatalogEndpoints
         string? search = null,
         bool includeArchived = false,
         int page = 1,
-        int pageSize = 50)
+        int pageSize = 50,
+        CatalogSortDto sort = CatalogSortDto.Reference,
+        SortDirectionDto direction = SortDirectionDto.Ascending,
+        CatalogItemKindDto? kind = null)
     {
         Result<PagedResponse<CatalogItemSummary>> result = await queries
-            .QueryAsync(new ListCatalogItemsQuery(tenant.Current.DossierId, search, includeArchived, page, pageSize), cancellationToken)
+            .QueryAsync(new ListCatalogItemsQuery(tenant.Current.DossierId, search, includeArchived, page, pageSize, sort, direction, kind), cancellationToken)
             .ConfigureAwait(false);
         return Ok(result);
     }

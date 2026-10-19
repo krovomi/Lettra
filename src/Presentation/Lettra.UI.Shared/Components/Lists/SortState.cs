@@ -3,16 +3,16 @@ using Lettra.Contracts.Common;
 namespace Lettra.UI.Shared.Components.Lists;
 
 /// <summary>Une colonne triable d'une liste : son libellé et le sens du premier clic (dates et montants : décroissant).</summary>
-/// <typeparam name="TColumn">Colonnes de la liste, une énumération (celle du contrat quand le tri se fait sur le serveur).</typeparam>
+/// <typeparam name="TColumn">Colonnes de la liste : une énumération (celle du contrat quand le tri se fait sur le serveur), ou une clé texte pour des colonnes qui dépendent des données.</typeparam>
 public sealed record SortOption<TColumn>(TColumn Column, string Label, SortDirectionDto FirstDirection = SortDirectionDto.Ascending)
-    where TColumn : struct, Enum;
+    where TColumn : notnull;
 
 /// <summary>
 /// Tri courant d'une liste. Un clic sur la colonne déjà triée inverse le sens ; un clic sur une autre colonne la trie
 /// dans son sens naturel (<see cref="SortOption{TColumn}.FirstDirection"/>).
 /// </summary>
 public sealed class SortState<TColumn>(TColumn column, SortDirectionDto direction = SortDirectionDto.Ascending)
-    where TColumn : struct, Enum
+    where TColumn : notnull
 {
     private readonly TColumn _initialColumn = column;
     private readonly SortDirectionDto _initialDirection = direction;

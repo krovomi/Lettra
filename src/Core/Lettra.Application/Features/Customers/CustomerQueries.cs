@@ -9,8 +9,15 @@ using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Application.Features.Customers;
 
-/// <summary>Lister les clients du dossier, par page, filtrés sur le nom (sans accents ni casse).</summary>
-public sealed record ListCustomersQuery(DossierId Dossier, int Page = 1, int PageSize = 50, string? Search = null)
+/// <summary>Lister les clients du dossier, par page, filtrés sur le nom (sans accents ni casse) et la nature, triés.</summary>
+public sealed record ListCustomersQuery(
+    DossierId Dossier,
+    int Page = 1,
+    int PageSize = 50,
+    string? Search = null,
+    PartySortDto Sort = PartySortDto.Name,
+    SortDirectionDto Direction = SortDirectionDto.Ascending,
+    CustomerKindDto? Kind = null)
     : IQuery<Result<PagedResponse<CustomerSummary>>>, IRequirePermission
 {
     public const int MaxSearchLength = 100;
@@ -48,6 +55,12 @@ internal sealed class ListCustomersValidator : IValidator<ListCustomersQuery>
             errors.Add(Error.Validation(ErrorCodes.Validation.TooLong, nameof(instance.Search)));
         }
 
+        if (instance.Kind is { } kind && !Enum.IsDefined(kind))
+        {
+            errors.Add(Error.Validation(ErrorCodes.Validation.Invalid, nameof(instance.Kind)));
+        }
+
+        errors.AddRange(ListSortRules.Validate(instance.Sort, instance.Direction));
         return errors;
     }
 }
@@ -58,7 +71,8 @@ internal sealed class ListCustomersHandler(ICustomerReadStore store)
     public async Task<Result<PagedResponse<CustomerSummary>>> HandleAsync(ListCustomersQuery query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
-        return await store.ListAsync(query.Search, query.Page, query.PageSize, cancellationToken).ConfigureAwait(false);
+        PartyListFilter filter = new(query.Search, query.Page, query.PageSize, query.Sort, query.Direction, (CustomerKind?)(int?)query.Kind);
+        return await store.ListAsync(filter, cancellationToken).ConfigureAwait(false);
     }
 }
 

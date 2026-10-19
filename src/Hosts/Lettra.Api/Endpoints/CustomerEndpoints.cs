@@ -83,10 +83,15 @@ internal static class CustomerEndpoints
         CancellationToken cancellationToken,
         int page = 1,
         int pageSize = 50,
-        string? search = null)
+        string? search = null,
+        PartySortDto sort = PartySortDto.Name,
+        SortDirectionDto direction = SortDirectionDto.Ascending,
+        CustomerKindDto? kind = null)
     {
         Result<PagedResponse<CustomerSummary>> result = await queries
-            .QueryAsync(new ListCustomersQuery(tenant.Current.DossierId, page, pageSize, string.IsNullOrWhiteSpace(search) ? null : search.Trim()), cancellationToken)
+            .QueryAsync(
+                new ListCustomersQuery(tenant.Current.DossierId, page, pageSize, string.IsNullOrWhiteSpace(search) ? null : search.Trim(), sort, direction, kind),
+                cancellationToken)
             .ConfigureAwait(false);
         return Ok(result);
     }

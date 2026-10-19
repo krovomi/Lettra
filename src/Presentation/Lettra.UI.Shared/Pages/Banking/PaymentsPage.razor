@@ -18,18 +18,31 @@
 
 <section class="lettra-card" aria-labelledby="payments-list-title">
     <h2 id="payments-list-title" class="lettra-visually-hidden">@L["Payments.Title"]</h2>
-    <div class="lettra-toolbar">
-        <div class="lt-filter">
-            <label for="payments-search">@L["Payments.Search"]</label>
-            <input id="payments-search" type="search" @bind="_search" @bind:after="LoadAsync" autocomplete="off" />
-        </div>
-    </div>
+    <ListFilterBar Id="payments-filters" ActiveCount="ActiveFilters" OnReset="ResetFiltersAsync">
+        <ChildContent>
+            <div class="lt-filter">
+                <label for="payments-search">@L["Payments.Search"]</label>
+                <input id="payments-search" type="search" @bind="_search" @bind:after="ReloadAsync" autocomplete="off" />
+            </div>
+        </ChildContent>
+        <More>
+            <DateRangeFilter Id="payments-dates" Label="@L["Billing.Column.Date"]" @bind-From="_from" @bind-To="_to" OnChange="ReloadAsync" />
+            <AmountRangeFilter Id="payments-amount" Label="@L["Payments.Amount"]" @bind-Min="_min" @bind-Max="_max" OnChange="ReloadAsync" />
+            <SortSelect Id="payments-sort" Options="SortOptions" State="_sort" OnSort="ReloadAsync" />
+        </More>
+    </ListFilterBar>
 
     <GeneralErrors Errors="_errors" IncludeFieldErrors="true" />
 
     @if (_page is null)
     {
         <ListSkeleton Columns="7" />
+    }
+    else if (_page.Items.Count == 0 && ActiveFilters > 0)
+    {
+        <EmptyState Id="payments-filtered-empty" IconName="search" Title="@L["Lists.Empty.FilteredTitle"]" Text="@L["Lists.Empty.Filtered"]">
+            <button type="button" class="lettra-button is-secondary" id="payments-empty-reset" @onclick="ResetFiltersAsync">@L["Lists.Filters.Reset"]</button>
+        </EmptyState>
     }
     else if (_page.Items.Count == 0)
     {
@@ -40,44 +53,46 @@
     }
     else
     {
-        <table class="lettra-table lettra-documents lt-cards" id="payments-table">
-            <thead>
-                <tr>
-                    <th scope="col">@L["Payments.Number"]</th>
-                    <th scope="col">@L["Billing.Column.Date"]</th>
-                    <th scope="col">@L["Billing.Column.Customer"]</th>
-                    <th scope="col">@L["Payments.Method"]</th>
-                    <th scope="col">@L["Payments.Invoices"]</th>
-                    <th scope="col">@L["Payments.Lettering"]</th>
-                    <th scope="col" class="lg-num">@L["Payments.Amount"]</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (PaymentSummary payment in _page.Items)
-                {
-                    <tr @key="payment.Id">
-                        <td>
-                            <a href="@($"payments/{payment.Id}")">@payment.Number</a>
-                            @if (payment.Status == PaymentStatusDto.Reversed)
-                            {
-                                <span class="lettra-status is-refused">@L["PaymentStatus.Reversed"]</span>
-                            }
-                        </td>
-                        <td data-label="@L["Billing.Column.Date"]">@payment.Date.ToString("d", Culture)</td>
-                        <td data-label="@L["Billing.Column.Customer"]">@payment.CustomerName</td>
-                        <td data-label="@L["Payments.Method"]">@L[$"PaymentMethod.{payment.Method}"]</td>
-                        <td data-label="@L["Payments.Invoices"]">@string.Join(", ", payment.InvoiceNumbers)</td>
-                        <td data-label="@L["Payments.Lettering"]">
-                            @if (payment.LetteringCode is { } letter)
-                            {
-                                <span class="lt-lettering" title="@L["Payments.Lettering.Hint"]">@letter</span>
-                            }
-                        </td>
-                        <td data-label="@L["Payments.Amount"]" class="lg-num">@ExplorerText.Money(payment.Amount)</td>
+        <div class="lt-list-scroll">
+            <table class="lettra-table lettra-documents lt-cards" id="payments-table">
+                <thead>
+                    <tr>
+                        <SortHeader Option="Column(PaymentSortDto.Number)" State="_sort" OnSort="ReloadAsync" Id="payments-sort-number" />
+                        <SortHeader Option="Column(PaymentSortDto.Date)" State="_sort" OnSort="ReloadAsync" Id="payments-sort-date" />
+                        <SortHeader Option="Column(PaymentSortDto.Customer)" State="_sort" OnSort="ReloadAsync" Id="payments-sort-customer" />
+                        <th scope="col">@L["Payments.Method"]</th>
+                        <th scope="col">@L["Payments.Invoices"]</th>
+                        <th scope="col">@L["Payments.Lettering"]</th>
+                        <SortHeader Option="Column(PaymentSortDto.Amount)" State="_sort" OnSort="ReloadAsync" Id="payments-sort-amount" Class="lg-num" />
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (PaymentSummary payment in _page.Items)
+                    {
+                        <tr @key="payment.Id">
+                            <td>
+                                <a href="@($"payments/{payment.Id}")">@payment.Number</a>
+                                @if (payment.Status == PaymentStatusDto.Reversed)
+                                {
+                                    <span class="lettra-status is-refused">@L["PaymentStatus.Reversed"]</span>
+                                }
+                            </td>
+                            <td data-label="@L["Billing.Column.Date"]">@payment.Date.ToString("d", Culture)</td>
+                            <td data-label="@L["Billing.Column.Customer"]">@payment.CustomerName</td>
+                            <td data-label="@L["Payments.Method"]">@L[$"PaymentMethod.{payment.Method}"]</td>
+                            <td data-label="@L["Payments.Invoices"]">@string.Join(", ", payment.InvoiceNumbers)</td>
+                            <td data-label="@L["Payments.Lettering"]">
+                                @if (payment.LetteringCode is { } letter)
+                                {
+                                    <span class="lt-lettering" title="@L["Payments.Lettering.Hint"]">@letter</span>
+                                }
+                            </td>
+                            <td data-label="@L["Payments.Amount"]" class="lg-num">@ExplorerText.Money(payment.Amount)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
         @if (_page.TotalCount > _page.PageSize)
         {
             <nav class="lt-pager" aria-label="@L["Accounting.Pages"]">
@@ -95,7 +110,26 @@
     private PagedResponse<PaymentSummary>? _page;
     private IReadOnlyList<ErrorDetail> _errors = [];
     private string? _search;
+    private DateOnly? _from;
+    private DateOnly? _to;
+    private decimal? _min;
+    private decimal? _max;
     private int _pageNumber = 1;
+
+    // Tri sur le serveur (liste paginée) : la date, la plus récente en tête, par défaut.
+    private readonly SortState<PaymentSortDto> _sort = new(PaymentSortDto.Date, SortDirectionDto.Descending);
+
+    private IReadOnlyList<SortOption<PaymentSortDto>> SortOptions =>
+    [
+        new(PaymentSortDto.Number, L["Payments.Number"]),
+        new(PaymentSortDto.Date, L["Billing.Column.Date"], SortDirectionDto.Descending),
+        new(PaymentSortDto.Customer, L["Billing.Column.Customer"]),
+        new(PaymentSortDto.Amount, L["Payments.Amount"], SortDirectionDto.Descending),
+    ];
+
+    private SortOption<PaymentSortDto> Column(PaymentSortDto column) => SortOptions.First(o => o.Column == column);
+
+    private int ActiveFilters => new object?[] { string.IsNullOrWhiteSpace(_search) ? null : _search, _from, _to, _min, _max }.Count(f => f is not null);
 
     private static CultureInfo Culture => CultureInfo.CurrentCulture;
 
@@ -105,9 +139,19 @@
 
     private async Task LoadAsync()
     {
-        OperationResult<PagedResponse<PaymentSummary>> result = await Banking.ListPaymentsAsync(new PaymentListQuery(Search: _search, Page: _pageNumber, PageSize: PageSize), CancellationToken.None);
+        OperationResult<PagedResponse<PaymentSummary>> result = await Banking.ListPaymentsAsync(
+            new PaymentListQuery(_from, _to, null, _search, _pageNumber, PageSize, _sort.Column, _sort.Direction, _min, _max), CancellationToken.None);
         _errors = result.Errors;
         _page = result.Value ?? new PagedResponse<PaymentSummary>([], 1, PageSize, 0);
+    }
+
+    /// <summary>Un filtre ou un tri changé repart de la première page.</summary>
+    private Task ReloadAsync() => GoToAsync(1);
+
+    private Task ResetFiltersAsync()
+    {
+        (_search, _from, _to, _min, _max) = (null, null, null, null, null);
+        return ReloadAsync();
     }
 
     private async Task GoToAsync(int page)

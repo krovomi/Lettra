@@ -80,9 +80,32 @@
         </div>
     </div>
 
+    @if (_view is not null && _view.Lines.Count > 0)
+    {
+        <ListFilterBar Id="bank-filters" ActiveCount="ActiveFilters" OnReset="ResetFilters">
+            <ChildContent>
+                <div class="lt-filter">
+                    <label for="bank-search">@L["Lists.Search"]</label>
+                    <input id="bank-search" type="search" @bind="_search" @bind:event="oninput" autocomplete="off" />
+                </div>
+            </ChildContent>
+            <More>
+                <DateRangeFilter Id="bank-dates" Label="@L["Billing.Column.Date"]" @bind-From="_from" @bind-To="_to" />
+                <AmountRangeFilter Id="bank-amount" Label="@L["Payments.Amount"]" @bind-Min="_min" @bind-Max="_max" />
+                <SortSelect Id="bank-sort" Options="SortOptions" State="_sort" OnSort="StateHasChanged" DefaultLabel="@L["Lists.Sort.Statement"]" />
+            </More>
+        </ListFilterBar>
+    }
+
     @if (_view is null)
     {
         <ListSkeleton Columns="5" />
+    }
+    else if (Shown.Count == 0 && ActiveFilters > 0)
+    {
+        <EmptyState Id="bank-filtered-empty" IconName="search" Title="@L["Lists.Empty.FilteredTitle"]" Text="@L["Lists.Empty.Filtered"]">
+            <button type="button" class="lettra-button is-secondary" id="bank-empty-reset" @onclick="ResetFilters">@L["Lists.Filters.Reset"]</button>
+        </EmptyState>
     }
     else if (Shown.Count == 0)
     {
@@ -95,104 +118,106 @@
         {
             <div class="lt-banking-bulk" id="bank-bulk">
                 <label class="lt-banking-check">
-                    <input type="checkbox" id="bank-select-all" checked="@(_selected.Count == Proposed.Count)" @onchange="SelectAll" />
+                    <input type="checkbox" id="bank-select-all" checked="@(SelectedLines.Count == Proposed.Count)" @onchange="SelectAll" />
                     @string.Format(Culture, L["Bank.SelectProposals"], Proposed.Count)
                 </label>
-                <button type="button" class="lettra-button" id="bank-confirm-selected" disabled="@(_selected.Count == 0 || _busy)" @onclick="() => ConfirmAsync(SelectedLines)">
-                    <Icon Name="check" Size="18" /> @string.Format(Culture, L["Bank.ConfirmSelected"], _selected.Count)
+                <button type="button" class="lettra-button" id="bank-confirm-selected" disabled="@(SelectedLines.Count == 0 || _busy)" @onclick="() => ConfirmAsync(SelectedLines)">
+                    <Icon Name="check" Size="18" /> @string.Format(Culture, L["Bank.ConfirmSelected"], SelectedLines.Count)
                 </button>
             </div>
         }
-        <table class="lettra-table lt-cards lt-banking-lines" id="bank-lines">
-            <thead>
-                <tr>
-                    <th scope="col">@L["Bank.Operation"]</th>
-                    <th scope="col">@L["Billing.Column.Date"]</th>
-                    <th scope="col" class="lg-num">@L["Payments.Amount"]</th>
-                    <th scope="col">@L["Bank.Proposal"]</th>
-                    <th scope="col"><span class="lettra-visually-hidden">@L["Bank.Actions"]</span></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (BankLineResponse line in Shown)
-                {
-                    <tr @key="line.Id" class="lt-banking-line @(line.Amount < 0 ? "is-debit" : null)">
-                        <td>
-                            <div class="lt-banking-label">
-                                @if (line.Proposal is not null && line.Status == BankLineStatusDto.Pending)
-                                {
-                                    <input type="checkbox" aria-label="@string.Format(Culture, L["Bank.SelectLine"], line.Label)" checked="@_selected.Contains(line.Id)" @onchange="e => Select(line, e)" />
-                                }
-                                <span>
-                                    <strong>@line.Label</strong>
-                                    @if (line.CounterpartyName is not null || line.CounterpartyIban is not null)
-                                    {
-                                        <small class="lettra-muted">@string.Join(" · ", new[] { line.CounterpartyName, line.CounterpartyIban }.Where(t => t is not null))</small>
-                                    }
-                                </span>
-                            </div>
-                        </td>
-                        <td data-label="@L["Billing.Column.Date"]">@line.BookingDate.ToString("d", Culture)</td>
-                        <td data-label="@L["Payments.Amount"]" class="lg-num lt-banking-money">@ExplorerText.Money(line.Amount)</td>
-                        <td data-label="@L["Bank.Proposal"]">
-                            @switch (line.Status)
-                            {
-                                case BankLineStatusDto.Matched:
-                                    <span class="lettra-status is-issued"><Icon Name="check" Size="14" /> @L["Bank.Status.Matched"]</span>
-                                    @if (line.PaymentId is Guid paymentId)
-                                    {
-                                        <a href="@($"payments/{paymentId}")"> @line.PaymentNumber</a>
-                                    }
-                                    break;
-                                case BankLineStatusDto.Ignored:
-                                    <span class="lettra-status">@L["Bank.Status.Ignored"]</span>
-                                    break;
-                                default:
-                                    @if (line.Proposal is { } proposal)
-                                    {
-                                        <div class="lt-banking-proposal">
-                                            <strong>@proposal.CustomerName</strong>
-                                            <span>@string.Join(", ", proposal.Allocations.Select(a => $"{a.Number} ({ExplorerText.Money(a.Amount)})"))</span>
-                                            <small class="lettra-muted"><Icon Name="info" Size="14" /> @L[$"MatchRule.{proposal.Rule}"] : @proposal.Evidence</small>
-                                            @if (proposal.WriteOff != 0m)
-                                            {
-                                                <small class="lt-banking-writeoff">@string.Format(Culture, L["Bank.WriteOff"], ExplorerText.Money(Math.Abs(proposal.WriteOff)))</small>
-                                            }
-                                        </div>
-                                    }
-                                    else if (line.Amount < 0)
-                                    {
-                                        <span class="lettra-muted">@L["Bank.Debit"]</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="lettra-muted">@L["Bank.NoProposal"]</span>
-                                    }
-                                    break;
-                            }
-                        </td>
-                        <td class="lt-banking-line-actions">
-                            @if (line.Status == BankLineStatusDto.Pending)
-                            {
-                                @if (line.Proposal is not null)
-                                {
-                                    <button type="button" class="lettra-button is-small" disabled="@_busy" @onclick="() => ConfirmAsync([line])">@L["Bank.Confirm"]</button>
-                                }
-                                @if (line.Amount > 0)
-                                {
-                                    <a class="lettra-button is-small is-secondary" href="@($"payments/new?line={line.Id}")">@L["Bank.Allocate"]</a>
-                                }
-                                <button type="button" class="lettra-button is-small is-ghost" disabled="@_busy" @onclick="() => IgnoreAsync(line, true)">@L["Bank.Ignore"]</button>
-                            }
-                            else if (line.Status == BankLineStatusDto.Ignored)
-                            {
-                                <button type="button" class="lettra-button is-small is-ghost" disabled="@_busy" @onclick="() => IgnoreAsync(line, false)">@L["Bank.Restore"]</button>
-                            }
-                        </td>
+        <div class="lt-list-scroll">
+            <table class="lettra-table lt-cards lt-banking-lines" id="bank-lines">
+                <thead>
+                    <tr>
+                        <SortHeader Option="SortOptions[0]" State="_sort" OnSort="StateHasChanged" Id="bank-sort-label" />
+                        <SortHeader Option="SortOptions[1]" State="_sort" OnSort="StateHasChanged" Id="bank-sort-date" />
+                        <SortHeader Option="SortOptions[2]" State="_sort" OnSort="StateHasChanged" Id="bank-sort-amount" Class="lg-num" />
+                        <th scope="col">@L["Bank.Proposal"]</th>
+                        <th scope="col"><span class="lettra-visually-hidden">@L["Bank.Actions"]</span></th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (BankLineResponse line in Shown)
+                    {
+                        <tr @key="line.Id" class="lt-banking-line @(line.Amount < 0 ? "is-debit" : null)">
+                            <td>
+                                <div class="lt-banking-label">
+                                    @if (line.Proposal is not null && line.Status == BankLineStatusDto.Pending)
+                                    {
+                                        <input type="checkbox" aria-label="@string.Format(Culture, L["Bank.SelectLine"], line.Label)" checked="@_selected.Contains(line.Id)" @onchange="e => Select(line, e)" />
+                                    }
+                                    <span>
+                                        <strong>@line.Label</strong>
+                                        @if (line.CounterpartyName is not null || line.CounterpartyIban is not null)
+                                        {
+                                            <small class="lettra-muted">@string.Join(" · ", new[] { line.CounterpartyName, line.CounterpartyIban }.Where(t => t is not null))</small>
+                                        }
+                                    </span>
+                                </div>
+                            </td>
+                            <td data-label="@L["Billing.Column.Date"]">@line.BookingDate.ToString("d", Culture)</td>
+                            <td data-label="@L["Payments.Amount"]" class="lg-num lt-banking-money">@ExplorerText.Money(line.Amount)</td>
+                            <td data-label="@L["Bank.Proposal"]">
+                                @switch (line.Status)
+                                {
+                                    case BankLineStatusDto.Matched:
+                                        <span class="lettra-status is-issued"><Icon Name="check" Size="14" /> @L["Bank.Status.Matched"]</span>
+                                        @if (line.PaymentId is Guid paymentId)
+                                        {
+                                            <a href="@($"payments/{paymentId}")"> @line.PaymentNumber</a>
+                                        }
+                                        break;
+                                    case BankLineStatusDto.Ignored:
+                                        <span class="lettra-status">@L["Bank.Status.Ignored"]</span>
+                                        break;
+                                    default:
+                                        @if (line.Proposal is { } proposal)
+                                        {
+                                            <div class="lt-banking-proposal">
+                                                <strong>@proposal.CustomerName</strong>
+                                                <span>@string.Join(", ", proposal.Allocations.Select(a => $"{a.Number} ({ExplorerText.Money(a.Amount)})"))</span>
+                                                <small class="lettra-muted"><Icon Name="info" Size="14" /> @L[$"MatchRule.{proposal.Rule}"] : @proposal.Evidence</small>
+                                                @if (proposal.WriteOff != 0m)
+                                                {
+                                                    <small class="lt-banking-writeoff">@string.Format(Culture, L["Bank.WriteOff"], ExplorerText.Money(Math.Abs(proposal.WriteOff)))</small>
+                                                }
+                                            </div>
+                                        }
+                                        else if (line.Amount < 0)
+                                        {
+                                            <span class="lettra-muted">@L["Bank.Debit"]</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="lettra-muted">@L["Bank.NoProposal"]</span>
+                                        }
+                                        break;
+                                }
+                            </td>
+                            <td class="lt-banking-line-actions">
+                                @if (line.Status == BankLineStatusDto.Pending)
+                                {
+                                    @if (line.Proposal is not null)
+                                    {
+                                        <button type="button" class="lettra-button is-small" disabled="@_busy" @onclick="() => ConfirmAsync([line])">@L["Bank.Confirm"]</button>
+                                    }
+                                    @if (line.Amount > 0)
+                                    {
+                                        <a class="lettra-button is-small is-secondary" href="@($"payments/new?line={line.Id}")">@L["Bank.Allocate"]</a>
+                                    }
+                                    <button type="button" class="lettra-button is-small is-ghost" disabled="@_busy" @onclick="() => IgnoreAsync(line, true)">@L["Bank.Ignore"]</button>
+                                }
+                                else if (line.Status == BankLineStatusDto.Ignored)
+                                {
+                                    <button type="button" class="lettra-button is-small is-ghost" disabled="@_busy" @onclick="() => IgnoreAsync(line, false)">@L["Bank.Restore"]</button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     }
 </section>
 
@@ -215,11 +240,52 @@
 
     private static CultureInfo Culture => CultureInfo.CurrentCulture;
 
-    private IReadOnlyList<BankLineResponse> Shown =>
-        _view is null ? [] : _showAll ? _view.Lines : [.. _view.Lines.Where(l => l.Status == BankLineStatusDto.Pending)];
+    private IReadOnlyList<BankLineResponse> Shown => ListSorting.Sort(
+        Filtered.Where(l => _showAll || l.Status == BankLineStatusDto.Pending), _sort, SortKeys);
 
-    private IReadOnlyList<BankLineResponse> Proposed =>
-        _view is null ? [] : [.. _view.Lines.Where(l => l.Status == BankLineStatusDto.Pending && l.Proposal is not null)];
+    /// <summary>« Tout sélectionner » et « Valider » ne portent que sur les propositions que les filtres laissent voir.</summary>
+    private IReadOnlyList<BankLineResponse> Proposed => [.. Filtered.Where(l => l.Status == BankLineStatusDto.Pending && l.Proposal is not null)];
+
+    private string? _search;
+    private DateOnly? _from;
+    private DateOnly? _to;
+    private decimal? _min;
+    private decimal? _max;
+
+    // Ordre du relevé tant qu'aucune colonne n'est triée.
+    private readonly SortState<BankColumn> _sort = new(BankColumn.Statement);
+
+    private enum BankColumn
+    {
+        Statement,
+        Label,
+        Date,
+        Amount,
+    }
+
+    private IReadOnlyList<SortOption<BankColumn>> SortOptions =>
+    [
+        new(BankColumn.Label, L["Bank.Operation"]),
+        new(BankColumn.Date, L["Billing.Column.Date"], SortDirectionDto.Descending),
+        new(BankColumn.Amount, L["Payments.Amount"], SortDirectionDto.Descending),
+    ];
+
+    private static readonly Dictionary<BankColumn, Func<BankLineResponse, object?>> SortKeys = new()
+    {
+        [BankColumn.Label] = l => l.Label,
+        [BankColumn.Date] = l => l.BookingDate,
+        [BankColumn.Amount] = l => l.Amount,
+    };
+
+    private IEnumerable<BankLineResponse> Filtered => (_view?.Lines ?? [])
+        .Where(l => string.IsNullOrWhiteSpace(_search) || ListSorting.Matches(l.Label, _search) || ListSorting.Matches(l.CounterpartyName, _search)
+                    || ListSorting.Matches(l.Proposal?.CustomerName, _search))
+        .Where(l => (_from is null || l.BookingDate >= _from) && (_to is null || l.BookingDate <= _to))
+        .Where(l => (_min is null || l.Amount >= _min) && (_max is null || l.Amount <= _max));
+
+    private int ActiveFilters => new object?[] { string.IsNullOrWhiteSpace(_search) ? null : _search, _from, _to, _min, _max }.Count(f => f is not null);
+
+    private void ResetFilters() => (_search, _from, _to, _min, _max) = (null, null, null, null, null);
 
     private IReadOnlyList<BankLineResponse> SelectedLines => [.. Proposed.Where(l => _selected.Contains(l.Id))];
 

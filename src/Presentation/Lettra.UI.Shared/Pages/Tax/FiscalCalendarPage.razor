@@ -53,7 +53,36 @@ else
     }
     else
     {
-        @foreach (IGrouping<int, FiscalDeadlineResponse> month in calendar.Deadlines.GroupBy(d => d.DueDate.Month))
+        @* Un calendrier reste dans l'ordre des dates : on filtre les échéances, on ne les retrie pas. *@
+        <ListFilterBar Id="calendar-filters" ActiveCount="ActiveFilters" OnReset="ResetFilters">
+            <div class="lt-filter">
+                <label for="calendar-obligation">@L["Lists.Filter.Obligation"]</label>
+                <select id="calendar-obligation" @bind="_obligation">
+                    <option value="">@L["Lists.AllObligations"]</option>
+                    @foreach (FiscalObligationDto obligation in calendar.Deadlines.Select(d => d.Obligation).Distinct().Order())
+                    {
+                        <option value="@obligation">@L[$"Tax.Obligation.{obligation}"]</option>
+                    }
+                </select>
+            </div>
+            <div class="lt-filter">
+                <label for="calendar-state">@L["Lists.Filter.State"]</label>
+                <select id="calendar-state" @bind="_state">
+                    <option value="">@L["Lists.AllStates"]</option>
+                    @foreach (FiscalDeadlineStateDto state in calendar.Deadlines.Select(d => d.State).Distinct().Order())
+                    {
+                        <option value="@state">@L[$"Tax.State.{state}"]</option>
+                    }
+                </select>
+            </div>
+        </ListFilterBar>
+        @if (!VisibleDeadlines.Any())
+        {
+            <EmptyState Id="calendar-filtered-empty" IconName="search" Title="@L["Lists.Empty.FilteredTitle"]" Text="@L["Lists.Empty.Filtered"]">
+                <button type="button" class="lettra-button is-secondary" id="calendar-empty-reset" @onclick="ResetFilters">@L["Lists.Filters.Reset"]</button>
+            </EmptyState>
+        }
+        @foreach (IGrouping<int, FiscalDeadlineResponse> month in VisibleDeadlines.GroupBy(d => d.DueDate.Month))
         {
             DateOnly first = new(Year, month.Key, 1);
             <section class="lt-panel lt-tax-month" aria-labelledby="@($"calendar-month-{month.Key}")">
@@ -104,6 +133,15 @@ else
     private IReadOnlyList<ErrorDetail> _errors = [];
     private IReadOnlyList<ErrorDetail> _setup = [];
     private bool _busy;
+    private FiscalObligationDto? _obligation;
+    private FiscalDeadlineStateDto? _state;
+
+    private IEnumerable<FiscalDeadlineResponse> VisibleDeadlines => (_calendar?.Deadlines ?? [])
+        .Where(d => (_obligation is null || d.Obligation == _obligation) && (_state is null || d.State == _state));
+
+    private int ActiveFilters => (_obligation is null ? 0 : 1) + (_state is null ? 0 : 1);
+
+    private void ResetFilters() => (_obligation, _state) = (null, null);
 
     [SupplyParameterFromQuery(Name = "year")] public int? RequestedYear { get; set; }
 

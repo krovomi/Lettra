@@ -65,6 +65,7 @@ else
                 <label class="lettra-visually-hidden" for="cabinet-search">@L["Cabinet.Search"]</label>
                 <input id="cabinet-search" class="lettra-input" type="search" autocomplete="off" placeholder="@L["Cabinet.Search"]" @bind="_query" @bind:event="oninput" />
                 <label class="lt-chip"><input type="checkbox" id="cabinet-urgent" @bind="_onlyToHandle" /> @L["Cabinet.OnlyToHandle"]</label>
+                <SortSelect Id="cabinet-sort" Options="SortOptions" State="_sort" OnSort="StateHasChanged" DefaultLabel="@L["Lists.Sort.Urgency"]" />
             </div>
         </div>
 
@@ -80,10 +81,10 @@ else
                 <caption class="lettra-visually-hidden">@L["Cabinet.List.Caption"]</caption>
                 <thead>
                     <tr>
-                        <th scope="col">@L["Cabinet.Field.Dossier"]</th>
-                        @foreach (string key in Columns)
+                        <SortHeader Option="SortOptions[0]" State="_sort" OnSort="StateHasChanged" Id="cabinet-sort-dossier" />
+                        @foreach (SortOption<string> option in SortOptions.Skip(1))
                         {
-                            <th scope="col" class="lg-num">@Label(key)</th>
+                            <SortHeader Option="option" State="_sort" OnSort="StateHasChanged" Id="@($"cabinet-sort-{option.Column.Replace('.', '-')}")" Class="lg-num" />
                         }
                         <th scope="col"><span class="lettra-visually-hidden">@L["Cabinet.Field.Actions"]</span></th>
                     </tr>
@@ -181,12 +182,31 @@ else
         }
     }
 
-    private IReadOnlyList<DossierOverviewRow> Rows =>
+    // Clé vide : l'ordre d'urgence du serveur, tant que l'utilisateur n'a pas trié une colonne.
+    private readonly SortState<string> _sort = new(string.Empty);
+
+    private const string DossierColumn = "dossier";
+
+    /// <summary>Le dossier puis une colonne par indicateur présent ; les nombres se trient d'abord du plus grand.</summary>
+    private IReadOnlyList<SortOption<string>> SortOptions =>
     [
-        .. (_overview?.Dossiers ?? [])
-            .Where(d => !_onlyToHandle || d.Level >= IndicatorLevelDto.Warning)
-            .Where(d => Components.Palette.PaletteMatcher.Score(d.Name, _query ?? string.Empty) > 0),
+        new(DossierColumn, L["Cabinet.Field.Dossier"]),
+        .. Columns.Select(key => new SortOption<string>(key, Label(key), SortDirectionDto.Descending)),
     ];
+
+    private IReadOnlyList<DossierOverviewRow> Rows
+    {
+        get
+        {
+            IEnumerable<DossierOverviewRow> rows = (_overview?.Dossiers ?? [])
+                .Where(d => !_onlyToHandle || d.Level >= IndicatorLevelDto.Warning)
+                .Where(d => Components.Palette.PaletteMatcher.Score(d.Name, _query ?? string.Empty) > 0);
+            Dictionary<string, Func<DossierOverviewRow, object?>> keys = Columns.ToDictionary(
+                key => key, key => (Func<DossierOverviewRow, object?>)(row => Indicator(row, key)?.Count), StringComparer.Ordinal);
+            keys[DossierColumn] = row => row.Name;
+            return ListSorting.Sort(rows, _sort, keys);
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {

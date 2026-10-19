@@ -30,6 +30,9 @@
                    placeholder="@L["Suppliers.Search"]" autocomplete="off" />
             <kbd>F3</kbd>
         </div>
+        <div class="lt-explorer-filters" id="suppliers-filters">
+            <SortSelect Id="suppliers-sort" Options="SortOptions" State="_sort" OnSort="ReloadAsync" PhoneOnly="false" />
+        </div>
 
         @if (Loading)
         {
@@ -189,8 +192,14 @@
 
     protected override ElementReference? FirstField => _fields?.FirstField;
 
+    // Le tri passe au serveur : la liste est paginée.
+    private readonly SortState<PartySortDto> _sort = new(PartySortDto.Name);
+
+    private IReadOnlyList<SortOption<PartySortDto>> SortOptions =>
+        [new(PartySortDto.Name, L["Lists.Sort.Name"]), new(PartySortDto.City, L["Lists.Sort.City"])];
+
     protected override Task<OperationResult<PagedResponse<SupplierSummary>>> LoadPageAsync(string? search, int page, CancellationToken cancellationToken) =>
-        Gateway.SearchAsync(search, page, PageSize, cancellationToken);
+        Gateway.SearchAsync(new PartyListQuery(search, page, PageSize, _sort.Column, _sort.Direction), cancellationToken);
 
     protected override Task<OperationResult<SupplierResponse>> GetAsync(Guid id, CancellationToken cancellationToken) => Gateway.GetAsync(id, cancellationToken);
 
