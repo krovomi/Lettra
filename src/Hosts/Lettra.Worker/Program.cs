@@ -15,8 +15,9 @@ using Microsoft.Extensions.Hosting;
 // de toutes les bases de dossiers par vagues (canari d'abord, avec bail et reprise), passe d'escalade de la Supervision,
 // passe de nuit de la chaîne anti-fraude (clôtures et contrôle d'intégrité de chaque dossier), export FEC en masse et
 // passe de l'outbox (envois à la plateforme agréée mis en file pendant une panne), alertes du calendrier fiscal
-// (échéances proches et dépassées), passe de nuit de la vue cabinet (compteurs de chaque dossier) et factures
-// récurrentes dues. La plateforme est celle de l'API : même réglage Lettra:EInvoicing:Platform.
+// (échéances proches et dépassées), passe de nuit de la vue cabinet (compteurs de chaque dossier), factures
+// récurrentes dues et relances des factures échues (envoi automatique, si un serveur d'e-mail est réglé). La plateforme
+// est celle de l'API : même réglage Lettra:EInvoicing:Platform.
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddLettra(builder.Configuration);
@@ -39,6 +40,7 @@ builder.Services.AddOutboxDispatch(builder.Configuration, (services, token) => s
 builder.Services.AddFiscalDeadlineAlerts(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
 builder.Services.AddCabinetOverviewJob(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
 builder.Services.AddRecurringInvoicing(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
+builder.Services.AddPaymentReminders(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
 
 using IHost host = builder.Build();
 await host.RunAsync().ConfigureAwait(false);
