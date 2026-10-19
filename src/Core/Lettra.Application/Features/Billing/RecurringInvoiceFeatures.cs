@@ -24,7 +24,7 @@ public sealed record ListRecurringInvoicesQuery(
     int Page = 1,
     int PageSize = 50) : IQuery<Result<PagedResponse<RecurringInvoiceSummary>>>, IRequirePermission
 {
-    public const int MaxPageSize = 200;
+    public const int MaxPageSize = Paging.MaxPageSize;
     public const int MaxSearchLength = 100;
 
     public Permission Permission => Permission.DossierLire;

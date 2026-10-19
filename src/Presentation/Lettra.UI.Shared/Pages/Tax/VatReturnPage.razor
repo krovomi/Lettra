@@ -4,7 +4,7 @@
 @inject NavigationManager Navigation
 @inject ToastService Toasts
 @inject IStringLocalizer<SharedResource> L
-@inject IServiceProvider Services
+@inject TimeProvider Clock
 @* Brouillon de CA3 ou de CA12 (partie ventes) : chaque case s'ouvre sur les pièces qui la composent. Rien n'est
    déposé : le brouillon se recopie sur impots.gouv ou dans le logiciel de télédéclaration du cabinet. *@
 
@@ -167,7 +167,7 @@ else
 
     [SupplyParameterFromQuery(Name = "date")] public string? Date { get; set; }
 
-    private DateOnly Today => DateOnly.FromDateTime((Services.GetService<TimeProvider>() ?? TimeProvider.System).GetLocalNow().DateTime);
+    private DateOnly Today => Clock.LocalToday();
 
     /// <summary>Par défaut, la période qui vient de se terminer : c'est elle qu'on déclare ce mois-ci.</summary>
     private DateOnly Requested =>

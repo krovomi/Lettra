@@ -6,6 +6,7 @@
 @inject NavigationManager Navigation
 @inject ToastService Toasts
 @inject IStringLocalizer<SharedResource> L
+@inject TimeProvider Clock
 
 @* Revue du dossier ouvert : une liste de contrôle par mois (ou trimestre) que le collaborateur coche, avec qui et quand.
    Le mois écoulé par défaut. À côté de chaque point, l'indicateur de la vue cabinet qui l'éclaire (rejets, retards,
@@ -98,7 +99,7 @@ else
     private string? _loadedPeriod;
     private int _revision;
 
-    private static DateOnly Today => DateOnly.FromDateTime(DateTime.Today);
+    private DateOnly Today => Clock.LocalToday();
 
     /// <summary>Par défaut le mois écoulé : la revue se fait en début de mois.</summary>
     private string CurrentPeriod => Period ?? Months[0].Key;
