@@ -3,6 +3,7 @@
 @inject IFecGateway Fec
 @inject IFileDownloader Files
 @inject IStringLocalizer<SharedResource> L
+@inject TimeProvider Clock
 
 @* Fichier des écritures comptables (phase 5) : export sur un exercice, puis rapport du validateur intégré sur le
    fichier remis. Le même validateur contrôle un FEC venu d'un autre logiciel. *@
@@ -93,14 +94,22 @@
 
     private const string FecMimeType = "text/plain";
 
-    private DateOnly _from = new(DateTime.Today.Year, 1, 1);
-    private DateOnly _to = new(DateTime.Today.Year, 12, 31);
+    private DateOnly _from;
+    private DateOnly _to;
     private IReadOnlyList<ErrorDetail> _errors = [];
     private FecValidationResponse? _report;
     private string? _exported;
     private bool _busy;
 
     private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    /// <summary>Par défaut, l'exercice civil en cours.</summary>
+    protected override void OnInitialized()
+    {
+        int year = Clock.LocalToday().Year;
+        _from = new DateOnly(year, 1, 1);
+        _to = new DateOnly(year, 12, 31);
+    }
 
     private async Task ExportAsync()
     {

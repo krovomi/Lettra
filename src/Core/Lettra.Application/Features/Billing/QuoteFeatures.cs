@@ -29,7 +29,7 @@ public sealed record ListQuotesQuery(
     decimal? MinAmount = null,
     decimal? MaxAmount = null) : IQuery<Result<PagedResponse<QuoteSummary>>>, IRequirePermission
 {
-    public const int MaxPageSize = 200;
+    public const int MaxPageSize = Paging.MaxPageSize;
     public const int MaxSearchLength = 100;
 
     public Permission Permission => Permission.DossierLire;

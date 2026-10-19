@@ -5,6 +5,7 @@
 @inject NavigationManager Navigation
 @inject ToastService Toasts
 @inject IStringLocalizer<SharedResource> L
+@inject TimeProvider Clock
 
 @* Vue cabinet : un tableau de supervision des dossiers que l'utilisateur peut ouvrir, les plus urgents d'abord. Les
    compteurs sont ceux de la nuit (ou du dernier « Actualiser ») : la page ne lit que le registre des indicateurs, sans
@@ -355,7 +356,7 @@ else
         }
 
         DateTimeOffset local = value.ToLocalTime();
-        return local.Date == DateTime.Today
+        return DateOnly.FromDateTime(local.Date) == Clock.LocalToday()
             ? string.Format(CultureInfo.CurrentCulture, L["Cabinet.TodayAt"], local.ToString("t", CultureInfo.CurrentCulture))
             : local.ToString("g", CultureInfo.CurrentCulture);
     }

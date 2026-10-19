@@ -5,6 +5,7 @@
 @inject NavigationManager Navigation
 @inject ToastService Toasts
 @inject IStringLocalizer<SharedResource> L
+@inject TimeProvider Clock
 @* Modèle de facture récurrente (vague 7) : client, lignes, périodicité, révision annuelle, validation automatique.
    Enregistrement explicite (pas de brouillon automatique) : un modèle ne produit rien tant qu'il n'est pas complet. *@
 
@@ -235,7 +236,7 @@ else
 @code {
     [Parameter] public Guid? Id { get; set; }
 
-    private SaveRecurringInvoiceRequest _request = NewRequest();
+    private SaveRecurringInvoiceRequest _request = new();
     private RecurringInvoiceResponse? _template;
     private List<DocumentLineRow> _lines = [];
     private BillingReferenceData _reference = new([], [], []);
@@ -263,6 +264,8 @@ else
 
     private string LinesSummary => string.Format(Culture, L["Recurring.LinesSummary"], _lines.Count(l => !l.IsIncomplete), GridNumber.FormatAmount(_totals.TotalExclTax, Culture));
 
+    protected override void OnInitialized() => _request = NewRequest();
+
     protected override async Task OnParametersSetAsync()
     {
         if (_loadedId == Id && !_loading)
@@ -274,9 +277,9 @@ else
         await LoadAsync();
     }
 
-    private static SaveRecurringInvoiceRequest NewRequest()
+    private SaveRecurringInvoiceRequest NewRequest()
     {
-        DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+        DateOnly today = Clock.LocalToday();
         return new SaveRecurringInvoiceRequest { StartDate = new DateOnly(today.Year, today.Month, 1) };
     }
 

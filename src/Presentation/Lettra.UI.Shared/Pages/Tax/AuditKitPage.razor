@@ -6,7 +6,7 @@
 @inject IFileDownloader Files
 @inject ToastService Toasts
 @inject IStringLocalizer<SharedResource> L
-@inject IServiceProvider Services
+@inject TimeProvider Clock
 @* Kit contrôle fiscal (vague 7) : le serveur rassemble le FEC, l'attestation d'intégrité, la piste d'audit fiable, le
    XML des pièces et les transmissions à la plateforme ; l'écran y ajoute le PDF Factur-X de chaque pièce, rendu comme
    depuis la fiche de la facture, puis télécharge l'archive. Rien n'est envoyé à l'administration. *@
@@ -105,7 +105,7 @@
     private int? _total;
     private bool _busy;
 
-    private DateOnly Today => DateOnly.FromDateTime((Services.GetService<TimeProvider>() ?? TimeProvider.System).GetLocalNow().DateTime);
+    private DateOnly Today => Clock.LocalToday();
 
     /// <summary>Par défaut, l'année civile en cours, comme l'export FEC.</summary>
     protected override void OnInitialized()

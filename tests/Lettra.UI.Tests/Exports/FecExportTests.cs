@@ -84,14 +84,15 @@ public sealed class FecExportTests : BunitContext
     }
 
     [Fact]
-    public void L_exercice_par_defaut_est_l_annee_civile_en_cours()
+    public void L_exercice_par_defaut_est_l_annee_civile_de_l_horloge_injectee()
     {
+        // Une année que l'horloge du poste ne donne pas : l'écran lit bien l'horloge injectée.
+        Services.AddSingleton<TimeProvider>(new Security.ManualClock(new DateTimeOffset(2031, 6, 15, 10, 0, 0, TimeSpan.Zero)));
         IRenderedComponent<FecExport> page = Render<FecExport>();
 
         page.Find("#fec-export").Click();
 
-        int year = DateTime.Today.Year;
-        _fec.Exports.Should().Equal((new DateOnly(year, 1, 1), new DateOnly(year, 12, 31)));
+        _fec.Exports.Should().Equal((new DateOnly(2031, 1, 1), new DateOnly(2031, 12, 31)));
     }
 
     [Fact]

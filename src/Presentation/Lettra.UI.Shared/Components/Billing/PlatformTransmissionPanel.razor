@@ -3,6 +3,7 @@
 @inject IPlatformTransmissionGateway Transmissions
 @inject ToastService Toasts
 @inject IStringLocalizer<SharedResource> L
+@inject TimeProvider Clock
 
 <section id="platform" class="lettra-platform" aria-labelledby="platform-title">
     <h2 id="platform-title">@L["Platform.Title"]</h2>
@@ -105,10 +106,12 @@
     private bool _busy;
     private bool _notConfigured;
     private EInvoiceFormatDto _format = EInvoiceFormatDto.Cii;
-    private DateOnly _paymentDate = DateOnly.FromDateTime(DateTime.Today);
+    private DateOnly _paymentDate;
     private string? _paymentAmount;
 
     private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    protected override void OnInitialized() => _paymentDate = Clock.LocalToday();
 
     protected override async Task OnParametersSetAsync()
     {
