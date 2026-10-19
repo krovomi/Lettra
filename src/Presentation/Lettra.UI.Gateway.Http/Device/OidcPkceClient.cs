@@ -37,11 +37,13 @@ public sealed class OidcPkceClient(HttpClient http, DeviceSignInOptions options,
         string verifier = RandomToken();
         string state = RandomToken();
         string nonce = RandomToken();
+        // Adresse telle qu'enregistrée dans le realm : Uri.ToString() ajouterait « / » à fr.lettra.app://callback, refusé
+        // par Keycloak (« Invalid parameter: redirect_uri »).
         Uri redirect = browser.PrepareRedirectUri();
         Uri authorize = new(endpoints.Authorization + "?" + Form(
             ("response_type", "code"),
             ("client_id", options.ClientId),
-            ("redirect_uri", redirect.ToString()),
+            ("redirect_uri", redirect.OriginalString),
             ("scope", options.Scope),
             ("state", state),
             ("nonce", nonce),
@@ -60,7 +62,7 @@ public sealed class OidcPkceClient(HttpClient http, DeviceSignInOptions options,
         TokenResult result = await RequestTokensAsync(endpoints, cancellationToken,
             ("grant_type", "authorization_code"),
             ("code", code),
-            ("redirect_uri", redirect.ToString()),
+            ("redirect_uri", redirect.OriginalString),
             ("client_id", options.ClientId),
             ("code_verifier", verifier)).ConfigureAwait(false);
         if (result.Tokens is null)
