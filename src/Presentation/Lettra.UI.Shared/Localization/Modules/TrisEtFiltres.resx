@@ -19,4 +19,14 @@
   <data name="Lists.Range.MaxOf" xml:space="preserve"><value>{0}, maximum</value></data>
   <data name="Lists.Filter.IssueDate" xml:space="preserve"><value>Date d'émission</value></data>
   <data name="Lists.Filter.AmountInclTax" xml:space="preserve"><value>Montant TTC (€)</value></data>
+  <data name="Lists.Search" xml:space="preserve"><value>Chercher</value></data>
+  <data name="Lists.Sort.Default" xml:space="preserve"><value>Ordre habituel (gravité puis date)</value></data>
+  <data name="Lists.Sort.Urgency" xml:space="preserve"><value>Les plus urgents d'abord</value></data>
+  <data name="Lists.Sort.Name" xml:space="preserve"><value>Nom</value></data>
+  <data name="Lists.Sort.Arrival" xml:space="preserve"><value>Date d'arrivée</value></data>
+  <data name="Lists.Sort.Accesses" xml:space="preserve"><value>Nombre d'accès</value></data>
+  <data name="Lists.Sort.Members" xml:space="preserve"><value>Nombre de membres</value></data>
+  <data name="Lists.Sort.Dossiers" xml:space="preserve"><value>Nombre de dossiers</value></data>
+  <data name="Lists.AllSeverities" xml:space="preserve"><value>Toutes les gravités</value></data>
+  <data name="Lists.AllStates" xml:space="preserve"><value>Tous les états</value></data>
 </root>

@@ -19,4 +19,14 @@
   <data name="Lists.Range.MaxOf" xml:space="preserve"><value>{0}, maximum</value></data>
   <data name="Lists.Filter.IssueDate" xml:space="preserve"><value>Issue date</value></data>
   <data name="Lists.Filter.AmountInclTax" xml:space="preserve"><value>Amount incl. VAT (€)</value></data>
+  <data name="Lists.Search" xml:space="preserve"><value>Search</value></data>
+  <data name="Lists.Sort.Default" xml:space="preserve"><value>Usual order (severity, then date)</value></data>
+  <data name="Lists.Sort.Urgency" xml:space="preserve"><value>Most urgent first</value></data>
+  <data name="Lists.Sort.Name" xml:space="preserve"><value>Name</value></data>
+  <data name="Lists.Sort.Arrival" xml:space="preserve"><value>Date added</value></data>
+  <data name="Lists.Sort.Accesses" xml:space="preserve"><value>Number of accesses</value></data>
+  <data name="Lists.Sort.Members" xml:space="preserve"><value>Number of members</value></data>
+  <data name="Lists.Sort.Dossiers" xml:space="preserve"><value>Number of dossiers</value></data>
+  <data name="Lists.AllSeverities" xml:space="preserve"><value>All severities</value></data>
+  <data name="Lists.AllStates" xml:space="preserve"><value>All states</value></data>
 </root>
