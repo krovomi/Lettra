@@ -28,7 +28,7 @@ public sealed class CatalogPageTests : BunitContext
 
     private static void UseCulture(string name) => LettraCultures.Apply(CultureInfo.GetCultureInfo(name));
 
-    private static string Fr(decimal value) => GridNumber.FormatPrice(value, CultureInfo.GetCultureInfo("fr-FR"));
+    private static string Fr(decimal value) => GridNumber.FormatPrice(value, LettraCultures.ForScreen(CultureInfo.GetCultureInfo("fr-FR")));
 
     private static string Cellule(IRenderedComponent<Catalog> page, int row, int col) =>
         page.Find($"input.lg-input[data-r='{row}'][data-c='{col}']").GetAttribute("value") ?? string.Empty;

@@ -59,7 +59,7 @@ public sealed class QuoteEditorTests : BunitContext
 
     private static void UseCulture(string name) => LettraCultures.Apply(CultureInfo.GetCultureInfo(name));
 
-    private static string Fr(decimal value) => GridNumber.FormatAmount(value, CultureInfo.GetCultureInfo("fr-FR"));
+    private static string Fr(decimal value) => GridNumber.FormatAmount(value, LettraCultures.ForScreen(CultureInfo.GetCultureInfo("fr-FR")));
 
     private IRenderedComponent<QuoteEditor> Ouvrir(Guid? id = null) =>
         Render<QuoteEditor>(p => p.Add(e => e.Id, id).Add(e => e.AutosaveDelay, TimeSpan.Zero));

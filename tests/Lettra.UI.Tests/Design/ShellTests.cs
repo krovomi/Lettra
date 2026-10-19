@@ -195,7 +195,7 @@ public sealed class ShellTests : BunitContext
 
         IRenderedComponent<Home> accueil = Render<Home>();
 
-        accueil.WaitForAssertion(() => accueil.Find("#kpi-overdue .lt-kpi-value").TextContent.Should().Be("4\u202F250 €"));
+        accueil.WaitForAssertion(() => accueil.Find("#kpi-overdue .lt-kpi-value").TextContent.Should().Be("4\u00A0250 €"));
         accueil.Find("#kpi-overdue").ClassList.Should().Contain("is-alert");
         accueil.Find("#kpi-overdue .lt-kpi-note").TextContent.Should().Be("3 à relancer, TTC restant dû");
         accueil.FindAll("#kpi-invoices").Should().BeEmpty("le retard remplace le nombre de factures du mois");
