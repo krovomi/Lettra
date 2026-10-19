@@ -1,9 +1,11 @@
 @* Lance le parcours de l'écran à la première visite (une fois, par utilisateur et par version du parcours), et celui de
-   l'assistant à sa première ouverture. Posé une fois dans la coque (MainLayout). *@
+   l'assistant à sa première ouverture. Posé une fois dans la coque (MainLayout). Jamais avant l'ouverture de la
+   session : le voile du parcours couvrirait l'écran de connexion et intercepterait le bouton « Se connecter ». *@
 @implements IAsyncDisposable
 @inject GuidedTours Tours
 @inject NavigationManager Navigation
 @inject AssistantPanelState Assistant
+@inject SessionState Session
 @inject IJSRuntime JS
 
 <GuidedTour />
@@ -12,11 +14,13 @@
     private IJSObjectReference? _module;
     private bool? _canAutoStart;
     private bool _assistantWasOpen;
+    private bool _starting;
 
     protected override void OnInitialized()
     {
         Navigation.LocationChanged += OnLocationChanged;
         Assistant.Changed += OnAssistantChanged;
+        Session.Changed += OnSessionChanged;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -30,6 +34,10 @@
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e) =>
         _ = InvokeAsync(() => AutoStartAsync(TourCatalog.ForPath(Navigation.ToBaseRelativePath(e.Location))));
 
+    // La session s'ouvre (connexion, déverrouillage) : le parcours de l'écran affiché peut alors commencer.
+    private void OnSessionChanged(object? sender, EventArgs e) =>
+        _ = InvokeAsync(() => AutoStartAsync(TourCatalog.ForPath(Navigation.ToBaseRelativePath(Navigation.Uri))));
+
     private void OnAssistantChanged(object? sender, EventArgs e)
     {
         bool opened = Assistant.IsOpen && !_assistantWasOpen;
@@ -42,13 +50,25 @@
 
     private async Task AutoStartAsync(TourDefinition? tour)
     {
-        if (tour is null || Tours.Active is not null || !await CanAutoStartAsync())
+        if (tour is null || _starting || Tours.Active is not null || !Session.IsAuthenticated || OnSessionScreen()
+            || !await CanAutoStartAsync())
         {
             return;
         }
 
-        await Tours.StartIfNewAsync(tour);
+        _starting = true;   // navigation et lecture de session arrivent ensemble : un seul démarrage
+        try
+        {
+            await Tours.StartIfNewAsync(tour);
+        }
+        finally
+        {
+            _starting = false;
+        }
     }
+
+    private bool OnSessionScreen() =>
+        Navigation.ToBaseRelativePath(Navigation.Uri).StartsWith("session", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Jamais sans navigateur (tests bUnit, prérendu) ni sous un navigateur piloté (tests Playwright).</summary>
     private async Task<bool> CanAutoStartAsync()
@@ -79,6 +99,7 @@
     {
         Navigation.LocationChanged -= OnLocationChanged;
         Assistant.Changed -= OnAssistantChanged;
+        Session.Changed -= OnSessionChanged;
         if (_module is not null)
         {
             try
