@@ -16,7 +16,8 @@ namespace Lettra.Persistence.Tests;
 
 /// <summary>
 /// Passe de fond des factures récurrentes, sans base : sans identité de service rien n'est créé, un dossier en échec
-/// n'arrête pas les autres, un catalogue illisible ne fait rien, la passe se coupe par la configuration.
+/// n'arrête pas les autres, un catalogue illisible ne fait rien, la passe se coupe par la configuration, et un hôte
+/// sans identité (l'API sans Worker) fait agir la passe sous son propre compte de service.
 /// </summary>
 public sealed class RecurringInvoiceJobTests
 {
@@ -109,5 +110,97 @@ public sealed class RecurringInvoiceJobTests
         await using ServiceProvider provider = services.AddLogging().BuildServiceProvider();
         provider.GetRequiredService<IOptions<RecurringInvoiceJobOptions>>().Value.Enabled.Should().BeFalse();
         provider.GetServices<IHostedService>().Should().ContainSingle().Which.Should().BeOfType<RecurringInvoiceJob>();
+    }
+
+    /// <summary>Note l'identité vue par le cas d'usage, dans la portée de la passe.</summary>
+    private sealed class RecordingDispatcher(ICurrentUser user, List<Guid> seen) : ICommandDispatcher
+    {
+        public Task<TResult> SendAsync<TResult>(ICommand<TResult> command, CancellationToken cancellationToken)
+        {
+            seen.Add(user.UserId);
+            return Task.FromResult((TResult)(object)Result<RecurringRunResponse>.Success(new RecurringRunResponse([], [])));
+        }
+    }
+
+    private static ServiceProvider ApiHost(Guid? serviceAccount, List<Guid> seen, Action<IServiceCollection>? hostIdentity = null)
+    {
+        ServiceCollection services = new();
+        services.AddLogging();
+        services.AddScoped<TenantContext>();
+        services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());
+        (hostIdentity ?? (s => s.AddScoped<ICurrentUser>(_ => new Identity(false))))(services);
+        services.AddScoped<ICommandDispatcher>(sp => new RecordingDispatcher(sp.GetRequiredService<ICurrentUser>(), seen));
+        Dictionary<string, string?> settings = new() { ["Lettra:Worker:RecurringInvoices:InitialDelay"] = "00:00:00" };
+        if (serviceAccount is Guid account)
+        {
+            settings["Lettra:Worker:RecurringInvoices:ServiceAccountId"] = account.ToString();
+        }
+
+        services.AddRecurringInvoicing(new ConfigurationBuilder().AddInMemoryCollection(settings).Build(), Returning(First, Second));
+        return services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
+    }
+
+    [Fact]
+    public async Task Une_API_sans_Worker_cree_les_factures_sous_le_compte_de_service_de_la_passe()
+    {
+        Guid account = Guid.CreateVersion7();
+        List<Guid> seen = [];
+        await using ServiceProvider provider = ApiHost(account, seen);
+
+        (int created, int validated, int failed) = await provider.GetRequiredService<RecurringInvoiceJob>().RunPassAsync(default);
+
+        (created, validated, failed).Should().Be((0, 0, 0));
+        seen.Should().Equal(account, account);
+        await using AsyncServiceScope request = provider.CreateAsyncScope();
+        request.ServiceProvider.GetRequiredService<ICurrentUser>().IsAuthenticated.Should().BeFalse(
+            "hors d'une passe, une requête reste sous l'identité de l'hôte");
+    }
+
+    [Fact]
+    public async Task Sans_compte_de_service_la_passe_garde_l_identite_de_l_hote()
+    {
+        List<Guid> seen = [];
+        Identity worker = new(true);
+        await using ServiceProvider provider = ApiHost(null, seen, s => s.AddSingleton<ICurrentUser>(worker));
+
+        await provider.GetRequiredService<RecurringInvoiceJob>().RunPassAsync(default);
+
+        seen.Should().Equal(worker.UserId, worker.UserId);
+        provider.GetService<RecurringJobActor>().Should().BeNull();
+    }
+
+    [Fact]
+    public async Task L_identite_de_l_hote_enregistree_par_type_reste_celle_des_requetes()
+    {
+        List<Guid> seen = [];
+        await using ServiceProvider provider = ApiHost(Guid.CreateVersion7(), seen, s => s.AddScoped<ICurrentUser, AnonymousHost>());
+        await using AsyncServiceScope request = provider.CreateAsyncScope();
+
+        ICurrentUser user = request.ServiceProvider.GetRequiredService<ICurrentUser>();
+
+        user.IsAuthenticated.Should().BeFalse();
+        user.UserId.Should().Be(AnonymousHost.Id);
+    }
+
+    [Fact]
+    public void Un_compte_de_service_sans_identite_d_hote_enregistree_est_refuse()
+    {
+        Action register = () => new ServiceCollection().AddRecurringInvoicing(
+            new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Lettra:Worker:RecurringInvoices:ServiceAccountId"] = Guid.CreateVersion7().ToString(),
+            }).Build(),
+            Returning());
+
+        register.Should().Throw<InvalidOperationException>().WithMessage("*ICurrentUser*");
+    }
+
+    private sealed class AnonymousHost : ICurrentUser
+    {
+        public static readonly Guid Id = Guid.CreateVersion7();
+
+        public bool IsAuthenticated => false;
+
+        public Guid UserId => Id;
     }
 }

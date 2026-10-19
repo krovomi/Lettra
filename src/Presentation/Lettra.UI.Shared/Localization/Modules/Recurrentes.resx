@@ -14,14 +14,6 @@
   <data name="Recurring.Run" xml:space="preserve"><value>Créer les factures dues</value></data>
   <data name="Recurring.RunOne" xml:space="preserve"><value>Créer la facture due</value></data>
   <data name="Recurring.Search" xml:space="preserve"><value>Rechercher un modèle</value></data>
-  <data name="Recurring.Sort" xml:space="preserve"><value>Trier par</value></data>
-  <data name="Recurring.Sort.NextIssueDate" xml:space="preserve"><value>Prochaine facture</value></data>
-  <data name="Recurring.Sort.Name" xml:space="preserve"><value>Nom</value></data>
-  <data name="Recurring.Sort.Customer" xml:space="preserve"><value>Client</value></data>
-  <data name="Recurring.Sort.Amount" xml:space="preserve"><value>Montant HT</value></data>
-  <data name="Recurring.Order" xml:space="preserve"><value>Ordre</value></data>
-  <data name="Recurring.Order.Ascending" xml:space="preserve"><value>Croissant</value></data>
-  <data name="Recurring.Order.Descending" xml:space="preserve"><value>Décroissant</value></data>
   <data name="Recurring.Empty" xml:space="preserve"><value>Aucune facture récurrente</value></data>
   <data name="Recurring.Empty.Text" xml:space="preserve"><value>Créez un modèle pour un client facturé chaque mois, trimestre ou année.</value></data>
   <data name="Recurring.NextInvoice" xml:space="preserve"><value>Prochaine facture</value></data>
