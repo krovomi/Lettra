@@ -87,7 +87,7 @@ jobs:
           node android.mjs "$(cat "$SORTIE/client.txt")" || status=$?
           adb logcat -d > "$SORTIE/android/logcat.txt" || true
           if [ "$status" != 0 ]; then
-            grep -E 'AndroidRuntime|monodroid|mono-rt|DOTNET|fr\.lettra|Lettra|chromium' "$SORTIE/android/logcat.txt" | tail -n 120 || true
+            grep -E 'AndroidRuntime|monodroid|mono-rt|DOTNET|fr\.lettra|Lettra|ActivityTaskManager: (START|Displayed)|com\.android\.chrome|cr_' "$SORTIE/android/logcat.txt" | grep -v SandboxedProcessService | tail -n 150 || true
             exit "$status"
           fi
           node appareil.mjs voir "$(cat "$SORTIE/client-appareil.txt")"
