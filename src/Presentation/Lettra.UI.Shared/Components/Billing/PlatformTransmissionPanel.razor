@@ -64,7 +64,7 @@
                 <fieldset id="platform-payment" class="lettra-inline">
                     <legend>@L["Platform.Payment.Title"]</legend>
                     <label for="payment-date">@L["Platform.Payment.Date"]</label>
-                    <input id="payment-date" type="date" @bind="_paymentDate" />
+                    <DateField Id="payment-date" Value="_paymentDate" ValueChanged="d => _paymentDate = d ?? _paymentDate" required />
                     <label for="payment-amount">@L["Platform.Payment.Amount"]</label>
                     <input id="payment-amount" inputmode="decimal" class="lg-num" @bind="_paymentAmount" />
                     <button type="button" id="payment-report" class="lettra-button is-secondary" disabled="@_busy" @onclick="ReportPaymentAsync">@L["Platform.Payment.Report"]</button>

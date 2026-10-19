@@ -45,8 +45,7 @@ else
 
                     <div class="lettra-field">
                         <label for="valid-until">@L["Quote.Field.ValidUntil"]</label>
-                        <input id="valid-until" type="date" @ref="_validUntil" disabled="@IsReadOnly"
-                               value="@_request.ValidUntil?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" @onchange="ValidUntilChangedAsync" />
+                        <DateField Id="valid-until" @ref="_validUntil" Disabled="IsReadOnly" Value="_request.ValidUntil" ValueChanged="ValidUntilChangedAsync" />
                     </div>
 
                     <div class="lettra-field">
@@ -161,7 +160,7 @@ else
     private DocumentLinesGrid? _linesGrid;
     private Collapsible? _mainBlock;
     private Collapsible? _linesBlock;
-    private ElementReference _validUntil;
+    private DateField? _validUntil;
     private Guid? _loadedId;
     private OfflineDrafts? _drafts;
     private Guid? _localId;
@@ -371,9 +370,9 @@ else
         _pdfCulture = customer.Value?.PreferredLanguage ?? "fr-FR";
     }
 
-    private async Task ValidUntilChangedAsync(ChangeEventArgs e)
+    private async Task ValidUntilChangedAsync(DateOnly? date)
     {
-        _request.ValidUntil = DateOnly.TryParse(e.Value?.ToString(), CultureInfo.InvariantCulture, out DateOnly date) ? date : null;
+        _request.ValidUntil = date;
         await ScheduleSaveAsync();
     }
 
@@ -686,7 +685,7 @@ else
                 break;
             case ErrorCodes.Mention.DueDate:
                 await ExpandAsync(_mainBlock);
-                await FocusAsync(_validUntil);
+                await FocusAsync(_validUntil?.Element ?? default);
                 break;
             default:
                 await ExpandAsync(_linesBlock);

@@ -27,10 +27,10 @@
     <h2 id="audit-kit-period">@L["AuditKit.Period"]</h2>
     <div class="lt-audit-kit-form">
         <label for="audit-kit-from">@L["Fec.Period.From"]
-            <input id="audit-kit-from" type="date" @bind="_from" disabled="@_busy" />
+            <DateField Id="audit-kit-from" Value="_from" ValueChanged="d => _from = d ?? _from" Disabled="_busy" required />
         </label>
         <label for="audit-kit-to">@L["Fec.Period.To"]
-            <input id="audit-kit-to" type="date" @bind="_to" disabled="@_busy" />
+            <DateField Id="audit-kit-to" Value="_to" ValueChanged="d => _to = d ?? _to" Disabled="_busy" required />
         </label>
         <button type="button" id="audit-kit-prepare" class="lettra-button" disabled="@_busy" @onclick="PrepareAsync">
             <Icon Name="shield-check" Size="18" /> @L["AuditKit.Prepare"]

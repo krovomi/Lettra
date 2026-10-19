@@ -93,9 +93,10 @@ public sealed class QuoteEditorTests : BunitContext
         page.WaitForAssertion(() => page.FindAll(".lg-row[data-r]").Should().HaveCount(1));
         foreach (string champ in new[] { "#valid-until", "#vat-regime", "#subject", "#notes" })
         {
-            // Un champ assisté (objet, notes) est enveloppé (suggestions, micro) : le champ empilé est le parent de l'enveloppe.
+            // Un champ assisté (objet, notes) est enveloppé (suggestions, micro), une date aussi (calendrier) : le champ
+            // empilé est le parent de l'enveloppe.
             AngleSharp.Dom.IElement element = page.Find(champ);
-            AngleSharp.Dom.IElement parent = (element.Closest(".lt-assist") ?? element).ParentElement!;
+            AngleSharp.Dom.IElement parent = (element.Closest(".lt-assist") ?? element.Closest(".lt-date") ?? element).ParentElement!;
             parent.ClassList.Should().Contain("lettra-field", $"{champ} a son libellé au-dessus, sur toute la largeur de sa colonne");
         }
 

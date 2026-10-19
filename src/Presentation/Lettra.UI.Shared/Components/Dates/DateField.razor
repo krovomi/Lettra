@@ -1,0 +1,146 @@
+@* Champ de date dans la langue de l'écran (jj/mm/aaaa en français, mm/dd/yyyy en anglais), avec un calendrier.
+   Remplace <input type="date">, dont le format suit la langue du navigateur ou du système et non celle de Lettra.
+   Voir docs/dates-et-langue.md. *@
+@inject IStringLocalizer<SharedResource> L
+@using Microsoft.Extensions.DependencyInjection
+@inject IServiceProvider Services
+
+<div class="lt-date @(_open ? "is-open" : null)">
+    <div class="lt-date-control">
+        <input type="text" id="@Id" @ref="_input" @attributes="AdditionalAttributes" value="@_text" @onchange="ChangeAsync"
+               inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="@L["Dates.Placeholder"]"
+               disabled="@Disabled" readonly="@ReadOnly" aria-invalid="@(_error is null ? null : "true")"
+               aria-describedby="@(_error is null ? null : ErrorId)" />
+        <button type="button" class="lt-icon-button lt-date-toggle" id="@($"{BaseId}-calendar-toggle")" @ref="_toggle"
+                disabled="@(Disabled || ReadOnly)" aria-haspopup="dialog" aria-expanded="@(_open ? "true" : "false")"
+                aria-controls="@(_open ? CalendarId : null)" aria-label="@L["Dates.Calendar.Open"]" @onclick="Toggle">
+            <Icon Name="calendar" Size="18" />
+        </button>
+        @if (_open)
+        {
+            <DateCalendar Id="@CalendarId" Label="@L["Dates.Calendar.Label"]" Value="Value" Min="Min" Max="Max" Today="Today"
+                          OnPick="PickAsync" OnClose="CloseAsync" />
+        }
+    </div>
+    @if (_error is not null)
+    {
+        <span class="lt-date-error validation-message" id="@ErrorId">@_error</span>
+    }
+</div>
+
+@code {
+    [Parameter] public string? Id { get; set; }
+
+    [Parameter] public DateOnly? Value { get; set; }
+
+    [Parameter] public EventCallback<DateOnly?> ValueChanged { get; set; }
+
+    [Parameter] public DateOnly? Min { get; set; }
+
+    [Parameter] public DateOnly? Max { get; set; }
+
+    [Parameter] public bool Disabled { get; set; }
+
+    [Parameter] public bool ReadOnly { get; set; }
+
+    /// <summary>Autres attributs du champ texte : aria-label, required, title…</summary>
+    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private readonly string _generatedId = "date-" + Guid.NewGuid().ToString("N")[..8];
+    private ElementReference _input;
+    private ElementReference _toggle;
+    private string _text = string.Empty;
+    private string? _error;
+    private bool _open;
+
+    /// <summary>Le champ texte, pour y placer le curseur.</summary>
+    public ElementReference Element => _input;
+
+    private string BaseId => string.IsNullOrEmpty(Id) ? _generatedId : Id;
+
+    private string ErrorId => $"{BaseId}-error";
+
+    private string CalendarId => $"{BaseId}-calendar";
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private DateOnly Today => DateOnly.FromDateTime((Services.GetService<TimeProvider>() ?? TimeProvider.System).GetLocalNow().DateTime);
+
+    protected override void OnParametersSet()
+    {
+        // Une saisie invalide reste affichée pour être corrigée ; sinon le champ montre la valeur reçue.
+        if (_error is null)
+        {
+            _text = DateText.Format(Value, Culture);
+        }
+    }
+
+    private async Task ChangeAsync(ChangeEventArgs e)
+    {
+        string typed = e.Value?.ToString() ?? string.Empty;
+        if (!DateText.TryParse(typed, Culture, Today, out DateOnly? date))
+        {
+            _text = typed;
+            _error = L["Dates.Invalid"];
+            return;
+        }
+
+        if (date is { } day && ((Min is { } min && day < min) || (Max is { } max && day > max)))
+        {
+            _text = typed;
+            _error = OutOfRange();
+            return;
+        }
+
+        await CommitAsync(date);
+    }
+
+    private async Task PickAsync(DateOnly day)
+    {
+        _open = false;
+        await CommitAsync(day);
+        await FocusAsync(_input);
+    }
+
+    private async Task CommitAsync(DateOnly? date)
+    {
+        _error = null;
+        _text = DateText.Format(date, Culture);
+        if (date != Value)
+        {
+            await ValueChanged.InvokeAsync(date);
+        }
+
+        // Le parent peut refuser la valeur (date obligatoire effacée) : le champ remontre alors celle qu'il garde. Une
+        // valeur acceptée revient, elle, par les paramètres.
+        _text = DateText.Format(Value, Culture);
+    }
+
+    private void Toggle() => _open = !_open;
+
+    private async Task CloseAsync()
+    {
+        _open = false;
+        await FocusAsync(_toggle);
+    }
+
+    private string OutOfRange() => (Min, Max) switch
+    {
+        ({ } min, { } max) => string.Format(Culture, L["Dates.Range.Between"], DateText.Format(min, Culture), DateText.Format(max, Culture)),
+        ({ } min, null) => string.Format(Culture, L["Dates.Range.After"], DateText.Format(min, Culture)),
+        (null, { } max) => string.Format(Culture, L["Dates.Range.Before"], DateText.Format(max, Culture)),
+        _ => L["Dates.Invalid"],
+    };
+
+    private static async Task FocusAsync(ElementReference element)
+    {
+        try
+        {
+            await element.FocusAsync();
+        }
+        catch (InvalidOperationException)
+        {
+            // Rendu sans navigateur (tests) : rien à focaliser.
+        }
+    }
+}
