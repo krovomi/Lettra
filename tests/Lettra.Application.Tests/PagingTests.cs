@@ -1,5 +1,4 @@
 using Lettra.Application.Features;
-using Lettra.Domain.Common;
 
 namespace Lettra.Application.Tests;
 

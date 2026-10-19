@@ -18,7 +18,9 @@ internal sealed class TenantHarness : IAsyncDisposable
     private readonly ServiceProvider _root;
     private readonly Dictionary<DossierId, (TenantDescriptor Descriptor, string ConnectionString)> _dossiers = [];
 
-    /// <param name="syntheticDocuments">
+    /// <param name="configurator"></param>
+
+    /// <param name="clock"></param>    /// <param name="syntheticDocuments">
     /// Vrai pour les scénarios de la chaîne anti-fraude qui journalisent des pièces fictives, sans facture en base : les
     /// pièces ne sont alors pas comparées, comme avant le branchement du module des pièces.
     /// </param>

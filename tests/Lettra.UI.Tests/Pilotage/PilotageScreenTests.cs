@@ -9,7 +9,6 @@ using Lettra.UI.Shared;
 using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Pages.Pilotage;
 using Lettra.UI.Tests.Cabinet;
-using Lettra.UI.Tests.Security;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 

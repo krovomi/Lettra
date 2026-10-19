@@ -1,4 +1,3 @@
-using System.Net.Http.Json;
 using System.Text.Json;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Dossiers;

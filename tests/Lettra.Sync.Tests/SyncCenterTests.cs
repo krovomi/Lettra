@@ -1,5 +1,4 @@
 using Lettra.Application.Abstractions.Identity;
-using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
 using Lettra.UI.Abstractions;
 using static Lettra.Sync.Tests.SynchronisationTests;

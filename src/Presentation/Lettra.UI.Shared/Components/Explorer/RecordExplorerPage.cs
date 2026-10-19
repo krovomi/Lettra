@@ -111,10 +111,7 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
 
             if (_formContext is null || !ReferenceEquals(_formContext.Model, Form))
             {
-                if (_formContext is not null)
-                {
-                    _formContext.OnFieldChanged -= OnFormFieldChanged;
-                }
+                _formContext?.OnFieldChanged -= OnFormFieldChanged;
 
                 _formContext = new EditContext(Form);
                 _formContext.OnFieldChanged += OnFormFieldChanged;
@@ -679,10 +676,7 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
         if (disposing)
         {
             Navigation.LocationChanged -= OnLocationChanged;
-            if (_formContext is not null)
-            {
-                _formContext.OnFieldChanged -= OnFormFieldChanged;
-            }
+            _formContext?.OnFieldChanged -= OnFormFieldChanged;
 
             _searchDebounce?.Cancel();
             _searchDebounce?.Dispose();

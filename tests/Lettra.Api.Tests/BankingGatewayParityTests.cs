@@ -32,7 +32,10 @@ public sealed class BankingGatewayParityTests(LettraApiFactory factory) : IClass
         OperationResult<PaymentResponse> recorded = await bank.RecordPaymentAsync(
             new RecordPaymentRequest
             {
-                CustomerId = invoice.CustomerId, Date = Today, Amount = 120m, Method = PaymentMethodDto.Transfer,
+                CustomerId = invoice.CustomerId,
+                Date = Today,
+                Amount = 120m,
+                Method = PaymentMethodDto.Transfer,
                 Allocations = [new PaymentAllocationRequest(invoice.Id, 120m)],
             },
             default);

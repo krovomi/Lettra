@@ -5,7 +5,6 @@ using Lettra.Application.Features.Customers;
 using Lettra.Application.Features.Parties;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
-using Lettra.Contracts.Suppliers;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
 
@@ -35,13 +34,13 @@ internal sealed class AiDossierContext(IQueryDispatcher queries, ICompanyFactsSo
         await CollectAsync(
             page => new ListCustomersQuery(dossier, page, ListCustomersQuery.MaxPageSize),
             ListCustomersQuery.MaxPageSize,
-            (CustomerSummary c) => Identities(c.Kind == CustomerKindDto.Individual ? IdentityKind.Person : IdentityKind.Client, c.Name, c.Siren),
+            c => Identities(c.Kind == CustomerKindDto.Individual ? IdentityKind.Person : IdentityKind.Client, c.Name, c.Siren),
             identities,
             cancellationToken).ConfigureAwait(false);
         await CollectAsync(
             page => new ListSuppliersQuery(dossier, page, ListSuppliersQuery.MaxPageSize),
             ListSuppliersQuery.MaxPageSize,
-            (SupplierSummary s) => Identities(IdentityKind.Client, s.Name, s.Siren),
+            s => Identities(IdentityKind.Client, s.Name, s.Siren),
             identities,
             cancellationToken).ConfigureAwait(false);
         return identities;

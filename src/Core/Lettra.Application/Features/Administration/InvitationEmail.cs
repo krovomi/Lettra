@@ -1,7 +1,6 @@
-using Lettra.Application.Abstractions.Mail;
 using Lettra.Application.Abstractions.Identity;
+using Lettra.Application.Abstractions.Mail;
 using Lettra.Application.Abstractions.Messaging;
-using Lettra.Application.Authorization;
 using Lettra.Contracts.Administration;
 using Lettra.Contracts.Common;
 using Lettra.Domain.Common;

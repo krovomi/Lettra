@@ -1,5 +1,4 @@
 using System.Xml.Linq;
-using FluentAssertions;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Exports;
 using Lettra.Exports.Application.EInvoicing;

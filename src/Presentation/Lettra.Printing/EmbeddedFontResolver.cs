@@ -22,10 +22,7 @@ internal sealed class EmbeddedFontResolver : IFontResolver
     {
         lock (Gate)
         {
-            if (GlobalFontSettings.FontResolver is null)
-            {
-                GlobalFontSettings.FontResolver = new EmbeddedFontResolver();
-            }
+            GlobalFontSettings.FontResolver ??= new EmbeddedFontResolver();
         }
     }
 

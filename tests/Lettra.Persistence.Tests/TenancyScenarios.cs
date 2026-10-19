@@ -1,7 +1,7 @@
+using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Persistence;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Features.Customers;
-using Lettra.Application.Abstractions.Messaging;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
 using Lettra.Domain.Common;

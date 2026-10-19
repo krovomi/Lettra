@@ -5,7 +5,6 @@ using Lettra.UI.Shared;
 using Lettra.UI.Shared.Layout;
 using Lettra.UI.Shared.Onboarding;
 using Lettra.UI.Shared.Services;
-using Lettra.UI.Tests.Security;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.Extensions.DependencyInjection;
 

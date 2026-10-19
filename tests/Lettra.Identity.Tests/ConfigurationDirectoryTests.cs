@@ -129,7 +129,7 @@ public sealed class ConfigurationDirectoryTests
         profile.Assignments.Should().BeEmpty();
     }
 
-    public static TheoryData<Guid> StrangerOrHomeless => new() { Stranger, Homeless };
+    public static TheoryData<Guid> StrangerOrHomeless => [Stranger, Homeless];
 
     [Fact]
     public async Task Chemin_de_la_plateforme_et_d_un_cabinet()

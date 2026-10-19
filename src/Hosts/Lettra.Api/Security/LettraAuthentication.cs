@@ -2,7 +2,6 @@ using System.Diagnostics;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Diagnostics;
 using Lettra.Infrastructure.Identity.Oidc;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;

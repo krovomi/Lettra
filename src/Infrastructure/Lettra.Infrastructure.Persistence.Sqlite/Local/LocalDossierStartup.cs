@@ -1,4 +1,3 @@
-using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
 

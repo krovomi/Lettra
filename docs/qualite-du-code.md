@@ -192,6 +192,63 @@ Ce qui est propre : `Lettra.Calculations`, le module Supervision (petit et cohé
 composition par mode de déploiement, l'identité, la voix, l'impression, les trois fournisseurs
 EF (fins, duplication légère).
 
+## Base propre
+
+Depuis la PR 7, la compilation (`TreatWarningsAsErrors`, analyseurs .NET en mode `Recommended`,
+`EnforceCodeStyleInBuild`) ne laisse passer ni avertissement ni message de l'IDE de la liste
+ci-dessous : chacun est une erreur de build, en local comme en CI. Les règles sont dans
+`.editorconfig`, section « Base propre ».
+
+| Règle | Ce qu'elle refuse |
+|---|---|
+| IDE0005 | `using` inutile (demande `GenerateDocumentationFile`, activé aussi pour les tests, sans exiger de commentaires : CS1591 reste ignoré). |
+| IDE0051, IDE0052, IDE0059, IDE0060 | Membre privé jamais utilisé ou jamais lu, affectation inutile, paramètre inutilisé. |
+| IDE0004, IDE0035, IDE0370 | Conversion inutile, code inaccessible, `!` superflu. |
+| IDE0055 | Mise en forme (indentation, espaces, retours à la ligne). Les blocs de `case` ne sont pas indentés (`csharp_indent_case_contents_when_block = false`), comme le code existant. |
+| IDE0028, IDE0300, IDE0301 | Initialisation de collection en expression de collection (`[a, b]`, `[]`). |
+| IDE0031, IDE0039, IDE0062, IDE0066, IDE0074, IDE0078, IDE0120, IDE0340, IDE0350 | Simplifications : `?.`, fonction locale plutôt que lambda, fonction locale `static`, expression `switch`, affectation composée, filtre de motif, `Where(...).Any()` → `Any(...)`, type générique non lié, lambda typée implicitement. |
+
+Corrections de la PR 7 (160 fichiers ; couverture ensuite : 92,2 % des lignes, 82,1 % des branches) : 129 `using` inutiles retirés, une trentaine
+d'initialisations en expressions de collection, 2 paramètres inutilisés supprimés (`DemoScenarioGenerator.Customers`,
+`RecordPaymentHandler.RecordWithNumberAsync`), mise en forme. Un constructeur réservé à EF n'est appelé que par réflexion : IDE0051 le croit inutile. Le
+constructeur métier le reprend donc (`: this(id)`, comme `CatalogItem`), ce qui le rend utilisé sans
+suppression (`Customer`, `Supplier`). Aucun comportement ne change ; toute
+la suite de tests passe.
+
+Règles volontairement non imposées, car ce sont des préférences de style sans gain de justesse et
+le code ne les suit pas uniformément : IDE0008 / `var` (type explicite), IDE0010 et IDE0072 (cas
+manquants d'un `switch`, couverts par les tests), IDE0021 à IDE0024 et IDE0061 (corps
+d'expression), IDE0022, IDE0046 (`if` → expression conditionnelle, souvent moins lisible),
+IDE0047 / IDE0048 (parenthèses), IDE0058 (valeur de retour ignorée : chaque appel fluide devrait
+s'écrire `_ = ...`), IDE0290 (constructeur principal), IDE0305 (`.ToList()` / `.ToArray()` en `[.. requête]` : pas plus
+lisible, et le compilateur déplie la décomposition en code à branches, ce qui ajoutait 3 700 branches
+fictives à la mesure et faisait passer la couverture des branches de 81,9 % à 77,3 %).
+
+Exceptions :
+
+- **Migrations EF** (`Migrations`, `CatalogMigrations`, `SupervisionMigrations`) : code généré,
+  aucune analyse.
+- **Application MAUI** (`src/Hosts/Lettra.App.Maui`) : ces règles y restent des suggestions. Elle ne
+  se compile qu'avec les charges de travail Android, iOS, Windows et macOS, présentes seulement sur
+  les machines de la CI ; elle sera nettoyée à la main puis passée en erreur dans une PR vérifiée
+  par la CI.
+
+Suppressions d'avertissements restantes, chacune justifiée sur place :
+
+| Où | Avertissement | Pourquoi |
+|---|---|---|
+| `Directory.Build.props:18` | CS1591 | Commentaires XML non exigés (seuls les types publics importants sont documentés). |
+| `Directory.Build.props:38` (tests) | CA1707, CA2007, CA1515, CA1861, CA2000, CA1062, CA1001, CA1812 | Conventions des tests : noms en phrases avec `_`, pas de `ConfigureAwait`, classes de test publiques, tableaux en ligne dans les `InlineData`, objets jetables gérés par xUnit. |
+| `Lettra.Api.csproj:7`, `Lettra.Web.csproj:8`, `Lettra.App.Maui.csproj:25` | CA1515 (et CA1848 pour MAUI) | `Program` et les types d'hôte restent publics pour `WebApplicationFactory` et MAUI. |
+| `Lettra.DemoData.csproj:8` | CA5394 | `Random` à graine fixe : le jeu de démonstration doit être reproductible, ce n'est pas de la sécurité. |
+| `SharedResource.cs:8`, `DiagnosticsResource.cs:7` | CA1052 | Types marqueurs de `IStringLocalizer<T>` : un type `static` ne peut pas être argument générique. |
+| `SyncCenter.cs:187`, `GridBenchmark.razor:158`, `DemoSeeding.cs:99`, `ConnectedDevice.cs:92` | CA1031 | Évènement, page de diagnostic et cycles de fond : une erreur est journalisée ou affichée, jamais fatale. |
+| `SqlServerConfigurator.cs:66, 85`, `PostgreSqlConfigurator.cs:83, 101` | CA2100 | Nom de base validé par `Quote` (lettres, chiffres, souligné) ; le DDL ne prend pas de paramètres. |
+| `SyncReplica.cs:172`, `AccentInsensitiveSearchScenarios.cs:55` | EF1002 | Noms de tables tirés du modèle EF ou fixes, jamais d'une saisie. |
+| `BillingStores.cs:177`, `RecurringInvoiceStores.cs:134` | CA1304, CA1311, CA1862 | Arbre d'expression traduit en `UPPER(...)` SQL, jamais exécuté en .NET. |
+| `WhisperModelStore.cs:129` et deux tests de la voix | CA5350 | whisper.cpp ne publie que des SHA-1 : contrôle d'intégrité, doublé d'un SHA-256 épinglé. |
+| `RedactionTests.cs:129` | CA1848, CA2254 | Le test simule volontairement un journal mal écrit. |
+
 ## Plan
 
 Une PR par couche, petite, verte en CI et assignée à Leub. Chaque refactorisation commence par
@@ -205,7 +262,8 @@ Aucun test existant n'est retiré, désactivé ni affaibli.
 | 3 | Rôles : portée et échéance d'un rôle portées par `RoleDefinition` (A3, la règle était recopiée dans l'attribution et dans le calcul des droits) ; passerelles HTTP : délai d'attente traité comme une coupure (D4) ; tests. | Fusionnée (PR #139) |
 | 4 | Tests d'infrastructure : tâche de la vue cabinet et ses sources, serveur de synchronisation (rejeu après écriture concurrente), webhook de supervision, annuaire d'autorisations (83 cas). Livrés avec la PR 2. | Fusionnée avec la PR 2 |
 | 5 | Listes paginées : une seule règle de page et de taille (R7) ; interface : horloge injectée (D5) ; tests. | Fusionnée (PR #145) |
-| 5 bis | Recherche normalisée en un seul endroit (R12), découpage du contrôle des mentions (S3), tests. | En cours |
+| 5 bis | Recherche normalisée en un seul endroit (R12), découpage du contrôle des mentions (S3), tests. | Fusionnée (PR #146) |
+| 7 | Base propre : règles de l'IDE bloquantes (using inutiles, code mort, mise en forme, simplifications), 160 fichiers corrigés, suppressions d'avertissements revues (voir « Base propre »). | En cours |
 | 6 | Application : chargement versionné (R5), fin de validation de facture (R8), saisie d'un encaissement (R4, S1, premier `IValidator` d'Exports pour A7), tests. | Fusionnée (PR #141) |
 | 8 | Interface Blazor : fin du localisateur de services (A5, A6), base commune des éditeurs (R9), tests bUnit. | À faire |
 

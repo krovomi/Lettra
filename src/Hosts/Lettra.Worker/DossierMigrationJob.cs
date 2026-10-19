@@ -1,7 +1,5 @@
-using Lettra.Supervision.Infrastructure;
 using Lettra.Infrastructure.Catalog;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Lettra.Supervision.Infrastructure;
 using Microsoft.Extensions.Options;
 
 namespace Lettra.Worker;

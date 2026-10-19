@@ -24,7 +24,7 @@ public sealed class PartyListTests
     [Fact]
     public void Colonne_sens_ou_nature_inconnus_refuses()
     {
-        new ListCustomersValidator().Validate(new ListCustomersQuery(Dossier, Sort: (PartySortDto)9, Direction: (SortDirectionDto)0, Kind: (CustomerKindDto)7))
+        new ListCustomersValidator().Validate(new ListCustomersQuery(Dossier, Sort: (PartySortDto)9, Direction: 0, Kind: (CustomerKindDto)7))
             .Select(e => e.Target).Should().Equal("Kind", "Sort", "Direction");
         new ListSuppliersValidator().Validate(new ListSuppliersQuery(Dossier, Direction: (SortDirectionDto)3))
             .Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Validation.Invalid);

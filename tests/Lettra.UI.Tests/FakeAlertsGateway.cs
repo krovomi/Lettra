@@ -30,7 +30,7 @@ internal sealed class FakeAlertsGateway : IAlertsGateway
         AlertSummary[] open = [.. Alerts.Select(a => a.Alert).Where(a => includeClosed || a.State != AlertState.Closed)];
         AlertSeverityCounter[] counters = [.. Enum.GetValues<AlertSeverity>().Select(s => new AlertSeverityCounter(
             s, open.Count(a => a.Severity == s && a.State is AlertState.New or AlertState.Acknowledged),
-            open.Where(a => a.Severity == s && a.State == AlertState.New).Select(a => (DateTimeOffset?)a.OpenedAt).Min()))];
+            open.Where(a => a.Severity == s && a.State == AlertState.New).Min(a => (DateTimeOffset?)a.OpenedAt)))];
         return Task.FromResult(OperationResult<AlertCentreResponse>.Success(new AlertCentreResponse(counters, open)));
     }
 

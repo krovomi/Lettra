@@ -29,7 +29,7 @@ internal static class ResultFactory
         }
 
         MethodInfo method = FailureMethods.GetOrAdd(type, static t =>
-            t.GetMethod(nameof(Result<object>.Failure), [typeof(IReadOnlyList<Error>)])!);
+            t.GetMethod(nameof(Result<>.Failure), [typeof(IReadOnlyList<Error>)])!);
         return (TResult)method.Invoke(null, [errors])!;
     }
 

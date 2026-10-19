@@ -1,7 +1,6 @@
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Persistence;
-using Lettra.Application.Features.Parties;
 using Lettra.Application.Mapping;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Pricing;

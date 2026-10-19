@@ -10,7 +10,6 @@ using Lettra.UI.Abstractions;
 using Lettra.UI.Gateway.Http;
 using Lettra.UI.Gateway.Http.Device;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -220,7 +219,8 @@ public sealed class SharedServerTests(LettraApiFactory factory) : IClassFixture<
             "/api/v1/dossiers" => Json($$"""[{"id":"{{premier}}","name":"Premier"},{"id":"{{navigateur}}","name":"Navigateur"}]"""),
             "/appsettings.json" => Json($$$"""{"Lettra":{"DossierId":"{{{navigateur}}}"}}"""),
             _ => new HttpResponseMessage(HttpStatusCode.NotFound),
-        })) { BaseAddress = new Uri("https://lettra.example/") }, selection);
+        }))
+        { BaseAddress = new Uri("https://lettra.example/") }, selection);
 
         OperationResult<Guid> chosen = await chooser.ChooseAsync(CancellationToken.None);
 
@@ -234,7 +234,8 @@ public sealed class SharedServerTests(LettraApiFactory factory) : IClassFixture<
         SharedServerDossierSelection selection = new(null, _ => { });
         SharedServerDossierChooser chooser = new(new HttpClient(new Answers(request => request.RequestUri!.AbsolutePath == "/api/v1/dossiers"
             ? Json("[]")
-            : new HttpResponseMessage(HttpStatusCode.NotFound))) { BaseAddress = new Uri("https://lettra.example/") }, selection);
+            : new HttpResponseMessage(HttpStatusCode.NotFound)))
+        { BaseAddress = new Uri("https://lettra.example/") }, selection);
 
         OperationResult<Guid> chosen = await chooser.ChooseAsync(CancellationToken.None);
 

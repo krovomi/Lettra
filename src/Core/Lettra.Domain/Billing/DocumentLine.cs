@@ -138,7 +138,7 @@ public sealed class DocumentLine
             errors.Add(BillingErrors.Line(BillingErrors.LineQuantityInvalidCode, index, "Quantity"));
         }
 
-        if (draft.UnitPriceExclTax < 0m || draft.UnitPriceExclTax > CatalogItem.MaxUnitPrice)
+        if (draft.UnitPriceExclTax is < 0m or > CatalogItem.MaxUnitPrice)
         {
             errors.Add(BillingErrors.Line(BillingErrors.LinePriceInvalidCode, index, "UnitPriceExclTax"));
         }

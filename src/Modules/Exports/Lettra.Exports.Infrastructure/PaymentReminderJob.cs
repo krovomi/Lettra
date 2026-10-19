@@ -1,5 +1,5 @@
-using Lettra.Application.Abstractions.Mail;
 using Lettra.Application.Abstractions.Identity;
+using Lettra.Application.Abstractions.Mail;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Contracts.Reminders;
 using Lettra.Domain.Common;

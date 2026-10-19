@@ -52,15 +52,15 @@ public sealed class CustomerTests
 
         IReadOnlyList<Error> errors = Customer.Create(CustomerId.New(), draft, Now).Errors;
 
-        errors.Select(e => (e.Code, e.Target)).Should().BeEquivalentTo(new[]
-        {
-            (CustomerErrors.NameRequiredCode, (string?)"Name"),
+        errors.Select(e => (e.Code, e.Target)).Should().BeEquivalentTo(
+        [
+            (CustomerErrors.NameRequiredCode, "Name"),
             (SharedKernelErrors.SiretInvalidCode, "Siret"),
             (SharedKernelErrors.EmailInvalidCode, "Email"),
             (SharedKernelErrors.AddressLineRequiredCode, "Line1"),
             (SharedKernelErrors.CityRequiredCode, "City"),
             (SharedKernelErrors.PostalCodeInvalidCode, "PostalCode"),
-        });
+        ]);
     }
 
     [Fact]

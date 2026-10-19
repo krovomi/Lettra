@@ -27,11 +27,8 @@ public sealed class NavMenuState
         ArgumentNullException.ThrowIfNull(services);
         _preferences = preferences;
         _session = services.GetService<ISessionGateway>() is null ? null : services.GetService<SessionState>();
-        if (_session is not null)
-        {
-            // Un autre utilisateur ouvre sa session sur le poste : son propre menu revient.
-            _session.Changed += (_, _) => _ = LoadAsync();
-        }
+        // Un autre utilisateur ouvre sa session sur le poste : son propre menu revient.
+        _session?.Changed += (_, _) => _ = LoadAsync();
     }
 
     public event EventHandler? Changed;

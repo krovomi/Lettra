@@ -4,7 +4,6 @@ using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Outbox;
 using Lettra.Application.Abstractions.Persistence;
 using Lettra.Application.Features.Billing;
-using Lettra.Application.Mapping;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Exports;
 using Lettra.Domain.Billing;

@@ -33,9 +33,18 @@ public sealed class TaxApiTests(LettraApiFactory factory) : IClassFixture<Lettra
             Content = JsonContent.Create(
                 new SaveCompanyProfileRequest
                 {
-                    Name = current.Name, LegalForm = current.LegalForm, ShareCapital = current.ShareCapital, Siren = current.Siren, Rcs = current.Rcs,
-                    VatNumber = current.VatNumber, AddressLine1 = current.AddressLine1, PostalCode = current.PostalCode, City = current.City,
-                    LatePenaltyRate = current.LatePenaltyRate, EarlyPaymentDiscount = current.EarlyPaymentDiscount, VatDeclarationRegime = regime,
+                    Name = current.Name,
+                    LegalForm = current.LegalForm,
+                    ShareCapital = current.ShareCapital,
+                    Siren = current.Siren,
+                    Rcs = current.Rcs,
+                    VatNumber = current.VatNumber,
+                    AddressLine1 = current.AddressLine1,
+                    PostalCode = current.PostalCode,
+                    City = current.City,
+                    LatePenaltyRate = current.LatePenaltyRate,
+                    EarlyPaymentDiscount = current.EarlyPaymentDiscount,
+                    VatDeclarationRegime = regime,
                 },
                 ContractsJsonContext.Default.SaveCompanyProfileRequest),
         };

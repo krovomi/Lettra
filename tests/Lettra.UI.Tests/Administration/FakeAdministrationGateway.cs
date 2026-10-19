@@ -1,6 +1,5 @@
 using Lettra.Contracts.Administration;
 using Lettra.Contracts.Common;
-using Lettra.Contracts.Dossiers;
 using Lettra.Contracts.Rights;
 using Lettra.UI.Abstractions;
 

@@ -33,7 +33,7 @@ internal sealed class EfBillingKpiReader(TenantDbSession session) : IBillingKpiR
             .ToListAsync(cancellationToken).ConfigureAwait(false);
         var events = transmissions
             .SelectMany(t => t.Events.Select(e => (t.InvoiceId, e.Status, e.Amount)))
-            .Where(e => e.Status == (int)PlatformStatusDto.Collected || e.Status == (int)PlatformStatusDto.Refused)
+            .Where(e => e.Status is ((int)PlatformStatusDto.Collected) or ((int)PlatformStatusDto.Refused))
             .ToList();
         Dictionary<Guid, decimal> collected = events
             .Where(e => e.Status == (int)PlatformStatusDto.Collected)

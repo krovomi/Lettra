@@ -228,17 +228,17 @@ internal static class CatalogScenarios
         profile!.State.Should().Be(AccountState.Active);
         profile.Cabinet.Should().Be(CatalogHarness.Organisation);
         profile.Groups.Should().Equal(new GroupId(CatalogHarness.Group));
-        profile.Assignments.Should().BeEquivalentTo(new[]
-        {
+        profile.Assignments.Should().BeEquivalentTo(
+        [
             new RoleAssignment(new SubjectRef(SubjectKind.User, CatalogHarness.Member), "auditeur",
                 new AuthorizationScope(ScopeKind.Dossier, CatalogHarness.AuditedDossier), DateTimeOffset.Parse("2027-01-31T00:00:00Z", CultureInfo.InvariantCulture)),
             new RoleAssignment(new SubjectRef(SubjectKind.Group, CatalogHarness.Group), "collaborateur",
                 AuthorizationScope.ForGroup(new GroupId(CatalogHarness.Group))),
-        });
+        ]);
         RoleDefinition stagiaire = profile.CustomRoles.Should().ContainSingle().Subject;
         stagiaire.Key.Should().Be("stagiaire");
         stagiaire.RequiresExpiry.Should().BeTrue();
-        stagiaire.Permissions.Should().BeEquivalentTo(new[] { Permission.TiersConsulter, Permission.CatalogueConsulter });
+        stagiaire.Permissions.Should().BeEquivalentTo([Permission.TiersConsulter, Permission.CatalogueConsulter]);
 
         (await directory.FindUserAsync(Guid.CreateVersion7(), default)).Should().BeNull();
 
@@ -256,7 +256,7 @@ internal static class CatalogScenarios
         // Tous les dossiers du cabinet situés d'un coup : mêmes chemins que dossier par dossier, l'inconnu omis.
         IReadOnlyList<ScopePath> paths = await directory.GetDossierPathsAsync(
             CatalogHarness.Organisation, [inGroup, outOfGroup, new DossierId(Guid.CreateVersion7())], default);
-        paths.Select(p => p.Target).Should().BeEquivalentTo(new[] { AuthorizationScope.ForDossier(inGroup), AuthorizationScope.ForDossier(outOfGroup) });
+        paths.Select(p => p.Target).Should().BeEquivalentTo([AuthorizationScope.ForDossier(inGroup), AuthorizationScope.ForDossier(outOfGroup)]);
         paths.Single(p => p.Target.Id == inGroup.Value).Ancestors.Should().Equal(
             AuthorizationScope.ForDossier(inGroup), AuthorizationScope.ForGroup(new GroupId(CatalogHarness.Group)), cabinet, AuthorizationScope.Plateforme);
         (await directory.GetDossierPathsAsync(new OrganisationId(CatalogHarness.OtherCabinet), [inGroup], default)).Should().BeEmpty();

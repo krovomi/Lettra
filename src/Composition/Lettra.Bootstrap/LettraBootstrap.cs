@@ -150,7 +150,7 @@ public static class LettraBootstrap
     {
         DatabaseProvider provider = configuration.GetValue("Lettra:Catalog:Provider", DatabaseProvider.Sqlite);
         string name = configuration.GetValue<string?>("Lettra:Supervision:ConnectionStringName")
-            ?? configuration.GetValue("Lettra:Catalog:ConnectionStringName", "Catalog")!;
+            ?? configuration.GetValue("Lettra:Catalog:ConnectionStringName", "Catalog");
         string connectionString = configuration.GetConnectionString(name)
             ?? throw new InvalidOperationException($"ConnectionStrings:{name} (base de supervision) est obligatoire.");
         switch (provider)
@@ -176,7 +176,7 @@ public static class LettraBootstrap
     private static Action<DbContextOptionsBuilder> CatalogDatabase(IConfiguration configuration) => builder =>
     {
         DatabaseProvider provider = configuration.GetValue("Lettra:Catalog:Provider", DatabaseProvider.Sqlite);
-        string name = configuration.GetValue("Lettra:Catalog:ConnectionStringName", "Catalog")!;
+        string name = configuration.GetValue("Lettra:Catalog:ConnectionStringName", "Catalog");
         string connectionString = configuration.GetConnectionString(name)
             ?? throw new InvalidOperationException($"ConnectionStrings:{name} (base Catalog) est obligatoire.");
         switch (provider)

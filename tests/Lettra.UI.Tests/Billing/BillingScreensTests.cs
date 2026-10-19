@@ -12,8 +12,8 @@ using Lettra.UI.Shared.Keyboard;
 using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Pages.Billing;
 using Lettra.UI.Shared.Services;
-using Microsoft.AspNetCore.Components;
 using Lettra.UI.Tests.Cabinet;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.UI.Tests.Billing;

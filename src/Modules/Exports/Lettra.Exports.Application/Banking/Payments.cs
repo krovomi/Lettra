@@ -5,7 +5,6 @@ using Lettra.Application.Abstractions.Persistence;
 using Lettra.Calculations;
 using Lettra.Contracts.Banking;
 using Lettra.Contracts.Common;
-using Lettra.Contracts.Exports;
 using Lettra.Domain.Banking;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Common;
@@ -58,7 +57,7 @@ internal sealed class RecordPaymentHandler(
         PaymentId id = PaymentId.New();
         Result<PaymentId> recorded = await numbering.ExecuteWithNextNumberAsync(
             Payment.Series,
-            (number, ct) => RecordWithNumberAsync(command.Dossier, request, id, number, customer.Name, threshold, ct),
+            (number, ct) => RecordWithNumberAsync(request, id, number, customer.Name, threshold, ct),
             cancellationToken).ConfigureAwait(false);
         if (recorded.IsFailure)
         {
@@ -71,7 +70,7 @@ internal sealed class RecordPaymentHandler(
     }
 
     private async Task<Result<PaymentId>> RecordWithNumberAsync(
-        DossierId dossier, RecordPaymentRequest request, PaymentId id, string number, string customerName, decimal threshold, CancellationToken cancellationToken)
+        RecordPaymentRequest request, PaymentId id, string number, string customerName, decimal threshold, CancellationToken cancellationToken)
     {
         // Rejouable : tout est relu, le suivi des entités ayant été vidé par la numérotation.
         DateTimeOffset now = clock.GetUtcNow();

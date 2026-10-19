@@ -1,7 +1,7 @@
 using Lettra.Application.Abstractions.Ai;
-using Lettra.Application.Abstractions.Mail;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Integrity;
+using Lettra.Application.Abstractions.Mail;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Preferences;
 using Lettra.Application.Abstractions.Speech;
@@ -9,8 +9,8 @@ using Lettra.Application.Abstractions.Sync;
 using Lettra.Application.Authorization;
 using Lettra.Application.Behaviors;
 using Lettra.Application.Features.Integrity;
-using Lettra.Domain.Integrity;
 using Lettra.Application.Messaging;
+using Lettra.Domain.Integrity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 

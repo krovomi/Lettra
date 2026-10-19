@@ -6,7 +6,6 @@ using Lettra.Application.Features.Kpi;
 using Lettra.Domain.SharedKernel;
 using Lettra.Infrastructure.Catalog.Kpi;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 

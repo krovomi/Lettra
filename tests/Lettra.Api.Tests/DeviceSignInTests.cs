@@ -317,7 +317,7 @@ public sealed class DeviceSignInTests : IDisposable
 
         private string IdToken()
         {
-            string Part(object value) => Base64Url.EncodeToString(JsonSerializer.SerializeToUtf8Bytes(value));
+            static string Part(object value) => Base64Url.EncodeToString(JsonSerializer.SerializeToUtf8Bytes(value));
             return Part(new { alg = "RS256", typ = "JWT" }) + "." + Part(new Dictionary<string, object>
             {
                 ["iss"] = Authority,

@@ -52,7 +52,11 @@ public sealed partial class GatewayParityTests
         (await customers.CreateAsync(CustomerApiTests.Martin(), default)).IsSuccess.Should().BeTrue();
         (await customers.CreateAsync(new CreateCustomerRequest
         {
-            Kind = CustomerKindDto.Individual, Name = "Zoé Lambert", AddressLine1 = "2 quai des Chartrons", PostalCode = "33000", City = "Bordeaux",
+            Kind = CustomerKindDto.Individual,
+            Name = "Zoé Lambert",
+            AddressLine1 = "2 quai des Chartrons",
+            PostalCode = "33000",
+            City = "Bordeaux",
         }, default)).IsSuccess.Should().BeTrue();
         (await suppliers.CreateAsync(PartiesAndCatalogApiTests.Dupuis(), default)).IsSuccess.Should().BeTrue();
 
@@ -82,7 +86,10 @@ public sealed partial class GatewayParityTests
         (await catalog.CreateAsync(PartiesAndCatalogApiTests.Conseil(prefix + "-B") with { UnitPriceExclTax = 20.5m }, default)).IsSuccess.Should().BeTrue();
         (await catalog.CreateAsync(PartiesAndCatalogApiTests.Conseil(prefix + "-C") with
         {
-            Designation = "Classeur", Kind = CatalogItemKindDto.Good, UnitCode = "C62", UnitPriceExclTax = 4m,
+            Designation = "Classeur",
+            Kind = CatalogItemKindDto.Good,
+            UnitCode = "C62",
+            UnitPriceExclTax = 4m,
         }, default)).IsSuccess.Should().BeTrue();
 
         OperationResult<PagedResponse<CatalogItemSummary>> serviceItems = await catalog.ListAsync(
@@ -116,7 +123,11 @@ public sealed partial class GatewayParityTests
             OperationResult<PaymentResponse> recorded = await banking.RecordPaymentAsync(
                 new RecordPaymentRequest
                 {
-                    CustomerId = customer, Date = today, Amount = amount, Method = PaymentMethodDto.Transfer, Allocations = [new PaymentAllocationRequest(invoice.Id, amount)],
+                    CustomerId = customer,
+                    Date = today,
+                    Amount = amount,
+                    Method = PaymentMethodDto.Transfer,
+                    Allocations = [new PaymentAllocationRequest(invoice.Id, amount)],
                 },
                 default);
             recorded.IsSuccess.Should().BeTrue(string.Join(", ", recorded.Errors.Select(e => e.Code)));

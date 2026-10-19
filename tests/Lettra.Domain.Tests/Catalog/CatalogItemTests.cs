@@ -36,15 +36,15 @@ public sealed class CatalogItemTests
     [Fact]
     public void Toutes_les_erreurs_sont_remontees_ensemble() =>
         CatalogItem.Create(CatalogItemId.New(), new CatalogItem.Draft("REF 01", "", null, (CatalogItemKind)9, "XYZ", -1m, "FR-19"), Now)
-            .Errors.Select(e => (e.Code, e.Target)).Should().BeEquivalentTo(new[]
-            {
-                (CatalogItemErrors.ReferenceInvalidCode, (string?)nameof(CatalogItem.Reference)),
+            .Errors.Select(e => (e.Code, e.Target)).Should().BeEquivalentTo(
+            [
+                (CatalogItemErrors.ReferenceInvalidCode, nameof(CatalogItem.Reference)),
                 (CatalogItemErrors.DesignationRequiredCode, nameof(CatalogItem.Designation)),
                 (CatalogItemErrors.KindInvalidCode, nameof(CatalogItem.Kind)),
                 (CatalogItemErrors.UnitUnknownCode, nameof(CatalogItem.Unit)),
                 (SharedKernelErrors.VatRateUnknownCode, nameof(CatalogItem.VatRate)),
                 (CatalogItemErrors.PriceNegativeCode, nameof(CatalogItem.UnitPriceExclTax)),
-            });
+            ]);
 
     [Fact]
     public void Un_prix_trop_grand_est_refuse() =>

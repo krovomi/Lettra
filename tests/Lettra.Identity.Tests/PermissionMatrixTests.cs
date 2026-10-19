@@ -58,7 +58,7 @@ public sealed class PermissionMatrixTests
 
     public static TheoryData<string, Permission, Relation> Cases()
     {
-        TheoryData<string, Permission, Relation> data = new();
+        TheoryData<string, Permission, Relation> data = [];
         foreach (string role in RoleTemplates.All.Keys.Order(StringComparer.Ordinal))
         {
             foreach (Permission permission in Enum.GetValues<Permission>())

@@ -3,7 +3,6 @@ using Bunit;
 using Lettra.UI.Shared;
 using Lettra.UI.Shared.Components.Lists;
 using Lettra.UI.Shared.Localization;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.UI.Tests.Lists;
 

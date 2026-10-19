@@ -9,7 +9,6 @@ using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Pages.Billing;
 using Lettra.UI.Tests.Billing;
 using Lettra.UI.Tests.Cabinet;
-using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.UI.Tests.Lists;
@@ -192,8 +191,8 @@ public sealed class ListSortAndFilterTests : BunitContext
             .Add(b => b.Id, "f")
             .Add(b => b.ActiveCount, 2)
             .Add(b => b.OnReset, () => resets++)
-            .Add(b => b.ChildContent, (RenderFragment)(b => b.AddMarkupContent(0, "<input id='q' />")))
-            .Add(b => b.More, (RenderFragment)(b => b.AddMarkupContent(0, "<select id='s'></select>"))));
+            .Add(b => b.ChildContent, b => b.AddMarkupContent(0, "<input id='q' />"))
+            .Add(b => b.More, b => b.AddMarkupContent(0, "<select id='s'></select>")));
 
         bar.Find("#f-toggle").GetAttribute("aria-expanded").Should().Be("false");
         bar.Find(".lt-filter-count").TextContent.Should().Be("2");

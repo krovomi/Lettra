@@ -19,7 +19,7 @@ namespace Lettra.UI.Tests.Typing;
 [Collection("culture")]
 public sealed class EditorAssistTests : BunitContext
 {
-    private const int Reference = 0, Designation = 1, Quantite = 2, Unite = 3, Prix = 4;
+    private const int Designation = 1, Quantite = 2, Unite = 3, Prix = 4;
 
     private readonly FakeQuotesGateway _quotes = new();
     private readonly FakeInvoicesGateway _invoices = new();

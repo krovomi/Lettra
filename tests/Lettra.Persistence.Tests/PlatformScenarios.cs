@@ -3,12 +3,12 @@ using Lettra.Application.Abstractions.Outbox;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Features.Billing;
 using Lettra.Application.Features.Customers;
+using Lettra.Application.Features.Integrity;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Exports;
 using Lettra.Domain.Billing;
-using Lettra.Application.Features.Integrity;
 using Lettra.Domain.Common;
 using Lettra.Domain.Integrity;
 using Lettra.Domain.Parties;
@@ -242,7 +242,11 @@ internal static class PlatformScenarios
             Guid abroadTransmission = (await db.Set<PlatformTransmissionRecord>().AsNoTracking().SingleAsync(t => t.InvoiceId == abroad.Value)).Id;
             db.Add(new PlatformStatusEventRecord
             {
-                TransmissionId = abroadTransmission, Sequence = 1, Status = (int)PlatformStatusDto.Collected, AtMs = 1, Amount = 1m,
+                TransmissionId = abroadTransmission,
+                Sequence = 1,
+                Status = (int)PlatformStatusDto.Collected,
+                AtMs = 1,
+                Amount = 1m,
             });
             await db.SaveChangesAsync();
             (await scope.ServiceProvider.GetRequiredService<DossierIntegrityService>().VerifyAsync(default)).Value

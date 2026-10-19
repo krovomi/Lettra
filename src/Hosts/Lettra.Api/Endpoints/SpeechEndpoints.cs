@@ -8,7 +8,6 @@ using Lettra.Application.Features.Speech;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Speech;
 using Lettra.Domain.Common;
-using Lettra.Domain.SharedKernel;
 using static Lettra.Api.Infrastructure.HttpResults;
 
 namespace Lettra.Api.Endpoints;

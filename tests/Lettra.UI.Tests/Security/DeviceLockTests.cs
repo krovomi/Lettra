@@ -2,12 +2,10 @@ using System.Globalization;
 using Bunit;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
-using Lettra.UI.Shared.Components;
 using Lettra.UI.Shared.Components.Security;
 using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Pages.Security;
 using Lettra.UI.Shared.Security;
-using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.UI.Tests.Security;

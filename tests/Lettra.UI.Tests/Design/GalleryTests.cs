@@ -252,7 +252,7 @@ public sealed class GalleryTests : BunitContext
     /// <summary>Six mois d'activité fictive ; rend l'identifiant d'une facture émise.</summary>
     private Guid Donnees()
     {
-        DocumentLineRequest Ligne(string designation, decimal quantite, decimal prix) =>
+        static DocumentLineRequest Ligne(string designation, decimal quantite, decimal prix) =>
             new() { Designation = designation, UnitCode = "HUR", Quantity = quantite, UnitPriceExclTax = prix };
 
         foreach ((string nom, int i) in Clients.Select((n, i) => (n, i)))

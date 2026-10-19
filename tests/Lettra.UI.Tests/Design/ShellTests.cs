@@ -3,7 +3,6 @@ using System.Reflection;
 using AngleSharp.Dom;
 using Bunit;
 using Lettra.Contracts.Billing;
-using Lettra.Contracts.Common;
 using Lettra.Contracts.Demo;
 using Lettra.Contracts.Exports;
 using Lettra.Contracts.Identity;
@@ -15,9 +14,9 @@ using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Pages;
 using Lettra.UI.Shared.Services;
 using Lettra.UI.Tests.Billing;
+using Lettra.UI.Tests.Cabinet;
 using Lettra.UI.Tests.Security;
 using Microsoft.AspNetCore.Components;
-using Lettra.UI.Tests.Cabinet;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.UI.Tests.Design;
@@ -98,7 +97,7 @@ public sealed class ShellTests : BunitContext
         coque.Find("#appearance-panel input[value=Dark]").HasAttribute("checked").Should().BeTrue();
 
         coque.Find("#appearance-panel input[value=System]").Change(true);
-        _module.Invocations.Where(i => i.Identifier == "applyTheme").Last().Arguments.Should().Equal([null], "suivre le système retire data-theme");
+        _module.Invocations.Last(i => i.Identifier == "applyTheme").Arguments.Should().Equal([null], "suivre le système retire data-theme");
     }
 
     [Fact]

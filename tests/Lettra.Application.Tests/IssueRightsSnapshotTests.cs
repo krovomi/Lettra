@@ -65,12 +65,12 @@ public sealed class IssueRightsSnapshotTests
     {
         public ValueTask<IReadOnlySet<Permission>> GetEffectiveAsync(Guid userId, AuthorizationScope scope, CancellationToken cancellationToken)
         {
-            IReadOnlySet<Permission> granted = scope.Id == Ouvert.Value
-                ? new HashSet<Permission> { Permission.TiersConsulter, Permission.FactureSaisir, Permission.AlertesLire }
+            HashSet<Permission> granted = scope.Id == Ouvert.Value
+                ? [Permission.TiersConsulter, Permission.FactureSaisir, Permission.AlertesLire]
                 : scope.Id == AdministrationSeule.Value
-                    ? new HashSet<Permission> { Permission.DossierAdministrer }
-                    : new HashSet<Permission>();
-            return ValueTask.FromResult(granted);
+                    ? [Permission.DossierAdministrer]
+                    : [];
+            return ValueTask.FromResult<IReadOnlySet<Permission>>(granted);
         }
     }
 

@@ -2,7 +2,6 @@ using System.Globalization;
 using System.Text.Json;
 using Bunit;
 using Lettra.Contracts.Billing;
-using Lettra.Contracts.Customers;
 using Lettra.Contracts.Identity;
 using Lettra.Contracts.Preferences;
 using Lettra.Contracts.Serialization;

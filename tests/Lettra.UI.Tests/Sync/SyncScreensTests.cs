@@ -5,8 +5,8 @@ using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
 using Lettra.UI.Shared.Components.Sync;
 using Lettra.UI.Shared.Localization;
-using Lettra.UI.Shared.Services;
 using Lettra.UI.Shared.Pages.Sync;
+using Lettra.UI.Shared.Services;
 using Lettra.UI.Shared.Sync;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
@@ -259,7 +259,7 @@ public sealed class SyncScreensTests : BunitContext
         page.Find("button.apply").Click();
 
         page.WaitForAssertion(() => this.ToastText().Should().Be("Conflit résolu."));
-        _sync.Resolutions.Should().ContainSingle().Which.Should().BeEquivalentTo(new[] { new SyncFieldChoice(email, true), new SyncFieldChoice(ville, false) });
+        _sync.Resolutions.Should().ContainSingle().Which.Should().BeEquivalentTo([new SyncFieldChoice(email, true), new SyncFieldChoice(ville, false)]);
         page.Find("#sync-conflicts-empty").Should().NotBeNull();
     }
 

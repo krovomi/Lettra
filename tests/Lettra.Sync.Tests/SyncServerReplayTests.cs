@@ -1,7 +1,5 @@
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Persistence;
-using Lettra.Application.Abstractions.Sync;
-using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Features.Catalog;
 using Lettra.Application.Features.Customers;
 using Lettra.Application.Features.Parties;
@@ -68,8 +66,6 @@ public sealed class SyncServerReplayTests : IAsyncLifetime
     }
 
     private static IEnumerable<string> Codes<T>(Result<T> result) => result.Errors.Select(e => e.Code);
-
-    private static IEnumerable<string> Codes(SyncIntentResult result) => result.Errors.Select(e => e.Code);
 
     private DateTimeOffset Now => _clock.Now;
 

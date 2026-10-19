@@ -2,7 +2,6 @@ using Bunit;
 using Lettra.UI.Shared;
 using Lettra.UI.Shared.Components.Feedback;
 using Lettra.UI.Shared.Services;
-using Microsoft.AspNetCore.Components;
 
 namespace Lettra.UI.Tests.Design;
 
@@ -24,7 +23,7 @@ public sealed class CollapsibleTests : BunitContext
         .Add(c => c.Title, "Notes")
         .Add(c => c.Summary, "Aucune note")
         .Add(c => c.InitiallyOpen, initiallyOpen)
-        .Add(c => c.ChildContent, (RenderFragment)(b => b.AddMarkupContent(0, "<textarea id=\"notes\"></textarea>"))));
+        .Add(c => c.ChildContent, b => b.AddMarkupContent(0, "<textarea id=\"notes\"></textarea>")));
 
     [Fact]
     public void Le_titre_replie_le_bloc_montre_son_resume_et_retient_le_choix()

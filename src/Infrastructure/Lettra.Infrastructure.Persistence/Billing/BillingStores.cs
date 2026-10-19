@@ -9,7 +9,6 @@ using Lettra.Domain.Banking;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Catalog;
 using Lettra.Domain.Common;
-using Lettra.Domain.Integrity;
 using Lettra.Domain.Pricing;
 using Lettra.Domain.SharedKernel;
 using Lettra.Infrastructure.Persistence.Tenancy;

@@ -93,8 +93,14 @@ internal sealed class FakeRecurringInvoicesGateway : IRecurringInvoicesGateway
         (List<DocumentLineResponse> lines, DocumentTotalsResponse totals) = BillingFixtures.Compute(request.Lines, request.VatRegime);
         RecurringInvoiceResponse saved = Template(request.Name) with
         {
-            Id = id ?? Guid.CreateVersion7(), CustomerId = request.CustomerId, Lines = lines, Totals = totals, Frequency = request.Frequency,
-            ValidateAutomatically = request.ValidateAutomatically, Revision = request.Revision, RevisionPercent = request.RevisionPercent,
+            Id = id ?? Guid.CreateVersion7(),
+            CustomerId = request.CustomerId,
+            Lines = lines,
+            Totals = totals,
+            Frequency = request.Frequency,
+            ValidateAutomatically = request.ValidateAutomatically,
+            Revision = request.Revision,
+            RevisionPercent = request.RevisionPercent,
         };
         Templates.RemoveAll(t => t.Id == saved.Id);
         Templates.Add(saved);

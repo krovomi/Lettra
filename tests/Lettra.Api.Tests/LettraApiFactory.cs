@@ -4,8 +4,8 @@ using System.Text;
 using Lettra.Api.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -90,7 +90,7 @@ public sealed class LettraApiFactory : WebApplicationFactory<Program>
     /// <summary>Utilisateurs du test : manager, administrateur et collaborateur du cabinet, client du portail, administrateur d'un autre cabinet, compte suspendu.</summary>
     private static Dictionary<string, string?> AuthorizationSettings()
     {
-        Dictionary<string, string?> s = new();
+        Dictionary<string, string?> s = [];
         void User(int i, Guid id, Guid cabinet, string role, string scope, Guid scopeId, string state = "Active")
         {
             string p = $"Lettra:Authorization:Users:{i}:";
@@ -118,7 +118,7 @@ public sealed class LettraApiFactory : WebApplicationFactory<Program>
         {
             ["sub"] = userId.ToString(),
             ["preferred_username"] = "test",
-            ["amr"] = mfa ? new[] { "pwd", "otp" } : new[] { "pwd" },
+            ["amr"] = mfa ? new[] { "pwd", "otp" } : ["pwd"],
             ["organization"] = new Dictionary<string, object> { ["cabinet"] = new Dictionary<string, object> { ["id"] = (cabinet ?? CabinetId).ToString() } },
         };
         return new JsonWebTokenHandler().CreateToken(new SecurityTokenDescriptor
