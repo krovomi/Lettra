@@ -65,6 +65,11 @@ de modèle) et les bibliothèques tierces.
 | Lettra.UI.Gateway.Http | 51,1 % | 58,8 % |
 | Lettra.UI.Gateway.InProcess | 50,9 % | 30,8 % |
 
+Après la PR 2 (branche du 19 octobre, 3 589 tests) : **91,3 % des lignes** (31 693 / 34 731) et
+**80,5 % des branches** (12 421 / 15 422). Passerelles en processus 84,7 % (50,9 % avant),
+passerelles HTTP 94,4 % (51,1 %), supervision infrastructure 96,2 % (77,2 %), serveur de
+synchronisation 99,6 % (83,6 %), API 90,8 %, Application 92,9 %, Domaine 90,9 %.
+
 Les autres assemblies (IA, voix, identité, impression, données de démonstration, observabilité)
 sont entre 90 et 100 %.
 
@@ -191,8 +196,8 @@ Aucun test existant n'est retiré, désactivé ni affaibli.
 | PR | Contenu | État |
 |---|---|---|
 | 1 | Ce document et le script `build/couverture/fusionner.py` ; API : `HttpResults` remplace les ternaires `Result` → HTTP recopiés (R1) ; défauts D1 et D3 corrigés ; parité des codes d'erreur étendue à `Supervision.Domain` (A8). | En revue (PR #119) |
-| 2 | Doublons transverses : calendrier légal unique `LegalCalendar` (R3), liste UE et devise uniques (R11), boucle unique des tâches de fond `PeriodicPass` sur l'horloge injectée (R10), textes des mentions légales partagés (D2), « écrire puis relire » unique dans les passerelles en processus (R2), défauts D6 et D7, tests de parité de toutes les passerelles (68 cas, HTTP et en direct). | En cours |
-| 3 | Domaine et application : règles d'acompte et de suppression dans les entités (A1), rôles (A3), chargement versionné (R5), validateurs paginés (R7), fin de validation de facture (R8), règlement (R4, S1), `IValidator` dans Exports (A7), tests. | À faire |
+| 2 | Doublons transverses : calendrier légal unique `LegalCalendar` (R3), liste UE et devise uniques (R11), boucle unique des tâches de fond `PeriodicPass` sur l'horloge injectée (R10), textes des mentions légales partagés (D2), « écrire puis relire » unique dans les passerelles en processus (R2), règles d'acompte et de suppression dans les entités (A1), défauts D6 et D7, tests de parité de toutes les passerelles (68 cas, HTTP et en direct). | En cours |
+| 3 | Domaine et application : rôles (A3), chargement versionné (R5), validateurs paginés (R7), fin de validation de facture (R8), règlement (R4, S1), `IValidator` dans Exports (A7), tests. | À faire |
 | 4 | Tests d'infrastructure : tâche de la vue cabinet et ses sources, serveur de synchronisation (rejeu après écriture concurrente), webhook de supervision, annuaire d'autorisations (83 cas). Livrés avec la PR 2. | En cours |
 | 5 | API : recherche normalisée (R12), tests. Après le fil « Tris et filtres sur les listes ». | À faire |
 | 6 | Passerelles HTTP : gestion d'erreurs partagée (D4), tests de toutes les passerelles (objectif > 90 %). Après la PR du kit de contrôle fiscal. | À faire |

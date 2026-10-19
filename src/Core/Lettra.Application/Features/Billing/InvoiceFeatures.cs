@@ -292,9 +292,10 @@ internal sealed class DeleteInvoiceHandler(
             return version;
         }
 
-        if (!invoice.IsDraft)
+        Result deletable = invoice.CanBeDeleted();
+        if (deletable.IsFailure)
         {
-            return BillingErrors.NotDraft;
+            return deletable;
         }
 
         // Supprimer la facture finale brouillon rend le devis à nouveau facturable.

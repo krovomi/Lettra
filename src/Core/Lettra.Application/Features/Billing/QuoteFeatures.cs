@@ -248,9 +248,10 @@ internal sealed class DeleteQuoteHandler(IQuoteRepository quotes, IUnitOfWork un
             return version;
         }
 
-        if (!quote.IsDraft)
+        Result deletable = quote.CanBeDeleted();
+        if (deletable.IsFailure)
         {
-            return BillingErrors.NotDraft;
+            return deletable;
         }
 
         await quotes.RemoveAsync(quote, cancellationToken).ConfigureAwait(false);
@@ -401,12 +402,13 @@ internal sealed class CreateDownPaymentHandler(
             return QuoteErrors.NotFound;
         }
 
-        if (quote.TotalInclTax <= 0m)
+        Result<decimal> share = quote.DownPaymentRatio(command.Data.Percent, command.Data.AmountInclTax);
+        if (share.IsFailure)
         {
-            return BillingErrors.DownPaymentInvalid;
+            return Result<InvoiceId>.Failure(share.Errors);
         }
 
-        decimal ratio = command.Data.Percent is { } percent ? percent / 100m : command.Data.AmountInclTax!.Value / quote.TotalInclTax;
+        decimal ratio = share.Value;
         Result<Invoice> created = Invoice.CreateDownPayment(
             InvoiceId.New(),
             quote,

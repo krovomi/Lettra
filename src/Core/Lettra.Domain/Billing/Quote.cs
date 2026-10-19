@@ -138,6 +138,22 @@ public sealed class Quote : BillingDocument<QuoteId>
         return Result.Success();
     }
 
+    /// <summary>Part du devis que représente un acompte, demandé en pourcentage ou en montant TTC.</summary>
+    public Result<decimal> DownPaymentRatio(decimal? percent, decimal? amountInclTax)
+    {
+        if (TotalInclTax <= 0m)
+        {
+            return BillingErrors.DownPaymentInvalid;
+        }
+
+        return (percent, amountInclTax) switch
+        {
+            ({ } p, null) => p / 100m,
+            (null, { } amount) => amount / TotalInclTax,
+            _ => BillingErrors.DownPaymentInvalid,
+        };
+    }
+
     /// <summary>Vérifie qu'un acompte de ce montant TTC est encore possible.</summary>
     public Result CanTakeDownPayment(decimal amountInclTax)
     {
