@@ -488,8 +488,11 @@ en brouillon, ou validées si vous cochez « Valider automatiquement les facture
 validation. Pour l'essayer, choisissez un début deux mois en arrière : le bandeau propose **Créer les factures dues**
 et en crée trois. Chacune porte sa période (« Période facturée : du … au … »), reprise dans le Factur-X et l'UBL. Un
 modèle se met en pause, se reprend et se supprime ; les factures déjà créées restent. Le Worker crée les factures dues
-toutes les 6 heures, sous son compte de service (qui doit avoir FactureSaisir et FactureValider) ; la démo n'a pas de
-Worker, on les crée depuis l'écran. *(Vérifié : démo Docker dans Chromium à 375, 768 et 1440 px, et tests
+toutes les 6 heures, sous son compte de service (qui doit avoir FactureSaisir et FactureValider). Dans la démo, l'API
+crée elle-même les factures dues : une minute après son démarrage puis toutes les 15 minutes, sous le compte fictif
+« Facturation récurrente (automatique) ». Un modèle dont le début est passé a donc ses factures sans clic, au plus tard
+15 minutes après l'enregistrement (le bouton « Créer les factures dues » reste disponible). Sans Worker ni compte de
+service, rien ne se crée tout seul. *(Vérifié : démo Docker dans Chromium à 375, 768 et 1440 px, et tests
 automatiques sur SQLite, PostgreSQL et SQL Server ; non vérifié dans les applications installées. Les modèles ne se
 synchronisent pas entre appareils.)* Détails : [docs/factures-recurrentes.md](docs/factures-recurrentes.md).
 
