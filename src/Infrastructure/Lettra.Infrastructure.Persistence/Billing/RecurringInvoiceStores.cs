@@ -132,9 +132,10 @@ internal sealed class RecurringInvoiceReadStore(TenantDbSession session) : IRecu
         {
             string term = search.ToUpperInvariant();
 #pragma warning disable CA1304, CA1311, CA1862 // Arbre d'expression traduit en UPPER(...) SQL : jamais exécuté en .NET.
-            query = query.Where(x => x.Template.Name.ToUpper().Contains(term)
-                || (x.Template.Subject ?? string.Empty).ToUpper().Contains(term)
-                || (x.CustomerName ?? string.Empty).ToUpper().Contains(term));
+            // UPPER de SQLite ignore les accents : le texte tel que saisi est aussi cherché (« parité »).
+            query = query.Where(x => x.Template.Name.ToUpper().Contains(term) || x.Template.Name.Contains(search)
+                || (x.Template.Subject ?? string.Empty).ToUpper().Contains(term) || (x.Template.Subject ?? string.Empty).Contains(search)
+                || (x.CustomerName ?? string.Empty).ToUpper().Contains(term) || (x.CustomerName ?? string.Empty).Contains(search));
 #pragma warning restore CA1304, CA1311, CA1862
         }
 
