@@ -42,6 +42,7 @@ public sealed class NavigationPaletteProvider(
             Go(screens, "Nav.Fec", "exports/fec"),
             Go(screens, "Nav.Alerts", "alerts"),
             Go(screens, "Nav.Company", "settings/company"),
+            Go(screens, "Nav.Preferences", "settings/preferences"),
         ];
         // Thèmes : au clavier comme depuis le menu Apparence.
         items.AddRange(Enum.GetValues<UiTheme>().Select(theme => new PaletteItem(

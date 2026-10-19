@@ -1,0 +1,49 @@
+@inject IServiceProvider Services
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+@* « Retenir par défaut » sous un champ de saisie : la valeur saisie devient celle des prochaines pièces du dossier
+   (« Mes préférences »). Affiché seulement quand la valeur diffère de celle déjà retenue. *@
+
+@if (Visible)
+{
+    <p class="lt-remember">
+        <button type="button" class="lettra-link" @onclick="RememberAsync" disabled="@_busy" aria-describedby="@DescribedBy">
+            <Icon Name="pin" Size="14" />
+            @L["Preferences.Remember"]
+        </button>
+    </p>
+}
+
+@code {
+    /// <summary>Valeur saisie dans le champ.</summary>
+    [Parameter] public string? Value { get; set; }
+
+    [Parameter, EditorRequired] public RememberedField Field { get; set; }
+
+    [Parameter] public bool Disabled { get; set; }
+
+    /// <summary>Identifiant du champ concerné, lu par les lecteurs d'écran.</summary>
+    [Parameter] public string? DescribedBy { get; set; }
+
+    private bool _busy;
+
+    private EntryPreferences? Preferences => EntryPreferences.From(Services);
+
+    private bool Visible =>
+        !Disabled && Preferences is { DossierId: not null } preferences && !string.IsNullOrWhiteSpace(Value)
+        && !string.Equals(Value.Trim(), RememberedFields.Read(preferences.Defaults, Field), StringComparison.Ordinal);
+
+    private async Task RememberAsync()
+    {
+        if (Preferences is not { } preferences || string.IsNullOrWhiteSpace(Value))
+        {
+            return;
+        }
+
+        _busy = true;
+        string value = Value.Trim();
+        bool saved = await preferences.RememberAsync(d => RememberedFields.Write(d, Field, value));
+        _busy = false;
+        Toasts.Show(saved ? ToastKind.Success : ToastKind.Error, L[saved ? "Preferences.Toast.Remembered" : "Preferences.Toast.Failed"].Value);
+    }
+}

@@ -385,6 +385,28 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.CatalogMigrations
                     b.ToTable("UserAccounts", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogUserPreferences", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Document")
+                        .IsRequired()
+                        .HasMaxLength(200000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("UserPreferences", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogAiSettings", b =>
                 {
                     b.HasOne("Lettra.Infrastructure.Persistence.Catalog.CatalogOrganisation", null)

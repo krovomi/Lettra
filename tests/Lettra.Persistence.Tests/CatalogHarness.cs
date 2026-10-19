@@ -3,9 +3,12 @@ using System.Security.Cryptography;
 using Lettra.Application;
 using Lettra.Application.Abstractions.External;
 using Lettra.Application.Abstractions.Identity;
+using Lettra.Application.Abstractions.Persistence;
+using Lettra.Application.Abstractions.Preferences;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Contracts.Directory;
 using Lettra.Domain.Common;
+using Lettra.Domain.Preferences;
 using Lettra.Domain.SharedKernel;
 using Lettra.Infrastructure.Catalog;
 using Lettra.Infrastructure.Persistence;
@@ -332,6 +335,58 @@ internal static class CatalogScenarios
         await using CatalogDbContext db = await harness.Services.GetRequiredService<IDbContextFactory<CatalogDbContext>>().CreateDbContextAsync();
         CatalogOrganisationPolicy row = await db.OrganisationPolicies.SingleAsync();
         row.UpdatedBy.Should().Be(admin);
+    }
+
+    public static async Task UserPreferencesAsync(CatalogHarness harness)
+    {
+        await harness.Services.InitializeCatalogAsync(migrate: true, default);
+        IUserPreferencesStore store = harness.Services.GetRequiredService<IUserPreferencesStore>();
+        store.IsAvailable.Should().BeTrue();
+        Guid user = Guid.CreateVersion7();
+        Guid dossier = Guid.CreateVersion7();
+        Guid customer = Guid.CreateVersion7();
+        DateTimeOffset now = DateTimeOffset.Parse("2026-10-19T09:00:00Z", CultureInfo.InvariantCulture);
+        (await store.FindAsync(user, default)).Should().BeNull();
+
+        UserPreferences preferences = UserPreferences.Empty(user);
+        preferences.Change(
+            new WorkspacePreferences { Theme = "Dark", Language = "en-US", HomePage = "billing/invoices", NavFavorites = ["billing/quotes"], RankByUsage = false },
+            [new EntryDefaults { DossierId = dossier, VatRateCode = "FR-20", PaymentTerms = "Paiement à 30 jours", QuoteValidityDays = 45 }],
+            now).IsSuccess.Should().BeTrue();
+        preferences.RecordUse(dossier, UsageKind.Customer, customer, now);
+        Result<UserPreferences> first = await store.SaveAsync(preferences, default);
+        first.IsSuccess.Should().BeTrue();
+        first.Value.Version.Should().Be(1);
+
+        UserPreferences read = (await store.FindAsync(user, default))!;
+        read.Version.Should().Be(1);
+        read.Workspace.Theme.Should().Be("Dark");
+        read.Workspace.Language.Should().Be("en-US");
+        read.Workspace.HomePage.Should().Be("billing/invoices");
+        read.Workspace.NavFavorites.Should().Equal("billing/quotes");
+        read.Workspace.RankByUsage.Should().BeFalse();
+        read.DefaultsFor(dossier).Should().Be(new EntryDefaults { DossierId = dossier, VatRateCode = "FR-20", PaymentTerms = "Paiement à 30 jours", QuoteValidityDays = 45 });
+        read.Ranked(dossier, UsageKind.Customer).Should().Equal(new UsageEntry(UsageKind.Customer, customer, 1, now));
+
+        // Un autre appareil a écrit depuis la lecture : la seconde écriture à la même version est refusée.
+        read.RecordUse(dossier, UsageKind.Customer, customer, now);
+        (await store.SaveAsync(read, default)).Value.Version.Should().Be(2);
+        (await store.SaveAsync(read, default)).Errors.Should().ContainSingle().Which.Code.Should().Be(ConcurrencyErrors.VersionMismatchCode);
+        (await store.SaveAsync(UserPreferences.Empty(user), default)).Errors.Should().ContainSingle().Which.Code.Should().Be(ConcurrencyErrors.VersionMismatchCode);
+
+        await using (CatalogDbContext db = await harness.Services.GetRequiredService<IDbContextFactory<CatalogDbContext>>().CreateDbContextAsync())
+        {
+            CatalogUserPreferences row = await db.UserPreferences.SingleAsync();
+            row.Document.Should().Contain("\"theme\":\"Dark\"");
+            row.Version.Should().Be(2);
+            row.Document = "{ pas du json";
+            await db.SaveChangesAsync();
+        }
+
+        UserPreferences unreadable = (await store.FindAsync(user, default))!;
+        unreadable.Workspace.Should().Be(WorkspacePreferences.Empty, "un document illisible revient aux réglages de départ");
+        unreadable.Version.Should().Be(2);
+        (await store.FindAsync(Guid.CreateVersion7(), default)).Should().BeNull("chacun n'a que sa ligne");
     }
 
     public static async Task UnknownOrganisationAsync(CatalogHarness harness)
