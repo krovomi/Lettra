@@ -44,7 +44,7 @@ garde les indicateurs de gestion de ses propres dossiers.
 
 | Taille | Rendu |
 |---|---|
-| Ordinateur (≥ 1200 px) | indicateurs en grille, les deux graphiques côte à côte, tableaux complets avec tri par en-tête |
+| Ordinateur (≥ 1200 px) | indicateurs en grille, les deux graphiques côte à côte, tableaux complets avec tri par en-tête (en-têtes sur deux lignes au besoin, « Voir » toujours visible) |
 | Tablette (768 à 1199 px) | graphiques l'un sous l'autre, tableaux qui défilent de côté dans leur cadre |
 | Téléphone (< 768 px) | deux indicateurs par ligne, onglets qui défilent, une carte par dossier et tri par liste déroulante ; les valeurs au-dessus des barres sont masquées (le titre donne l'unité) |
 
@@ -55,6 +55,8 @@ erreur dans la console ; l'entrée est dans la section « Pilotage » du menu. L
 | Mes dossiers, téléphone | Administration, tablette |
 |---|---|
 | ![](captures/tableaux-de-bord/pilotage-dossiers-telephone.png) | ![](captures/tableaux-de-bord/pilotage-administration-tablette.png) |
+
+![Mes dossiers, sur ordinateur](captures/tableaux-de-bord/pilotage-dossiers-ordinateur.png)
 
 ## Code
 

@@ -29,7 +29,8 @@
 .lt-pilotage-todo a { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); min-height: var(--hit); padding: var(--space-2); margin: 0 calc(-1 * var(--space-2)); border-radius: var(--radius-sm); color: var(--color-fg); text-decoration: none; overflow-wrap: anywhere; }
 .lt-pilotage-todo a:hover { background: var(--color-neutral-bg); }
 
-.lt-pilotage-table td:first-child { overflow-wrap: anywhere; }
+/* Le nom du dossier est l'en-tête de sa ligne : texte courant, pas le style des en-têtes de colonnes. */
+.lt-pilotage-table tbody th[scope="row"] { background: transparent; color: var(--color-fg); font-size: var(--text-sm); font-weight: var(--weight-medium); letter-spacing: normal; text-transform: none; text-align: left; overflow-wrap: anywhere; }
 .lt-pilotage-filters { flex-wrap: wrap; gap: var(--space-3); }
 .lt-pilotage-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); width: 100%; }
 .lt-pilotage-tools .lettra-input { width: 100%; }
@@ -40,7 +41,10 @@
     .lt-kpis.lt-pilotage-kpis { grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: var(--space-3); }
     .lt-pilotage-chart { gap: var(--space-2); height: 12rem; }
     .lt-pilotage-chart .lt-bar-value { display: block; font-size: 0.625rem; }
-    .lt-pilotage-table td:first-child { min-width: 16ch; }
+    /* En-têtes sur deux lignes au besoin : le tableau tient dans son cadre, « Voir » compris. */
+    .lettra-table.lt-pilotage-table th { white-space: normal; }
+    .lettra-table.lt-pilotage-table thead .lt-sort { padding-inline: var(--space-2); }
+    .lt-pilotage-table tbody th[scope="row"] { min-width: 12rem; }
     .lt-pilotage-tools { width: auto; }
     .lt-pilotage-tools .lettra-input { width: min(18rem, 100%); }
     .lt-pilotage-actions { white-space: nowrap; }
