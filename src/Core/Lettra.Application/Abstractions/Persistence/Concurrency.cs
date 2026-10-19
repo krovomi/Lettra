@@ -61,4 +61,20 @@ public static class Concurrency
             ? Result.Success()
             : ConcurrencyErrors.VersionMismatch;
     }
+
+    /// <summary>
+    /// Le préambule des commandes versionnées : le document chargé, ou <paramref name="notFound"/> s'il n'existe pas,
+    /// ou <see cref="ConcurrencyErrors.VersionMismatch"/> s'il a changé depuis la version lue.
+    /// </summary>
+    public static Result<T> Load<T>(T? document, Error notFound, long? expectedVersion)
+        where T : class, IVersioned
+    {
+        if (document is null)
+        {
+            return notFound;
+        }
+
+        Result version = Check(document, expectedVersion);
+        return version.IsFailure ? Result<T>.Failure(version.Errors) : document;
+    }
 }

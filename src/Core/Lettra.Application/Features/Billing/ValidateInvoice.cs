@@ -66,7 +66,7 @@ internal sealed class ValidateInvoiceHandler(
         ComplianceReport draftReport = ComplianceChecker.Check(precheck.Value.Invoice.ToComplianceDocument(precheck.Value.Profile.ToSellerTerms()), today);
         if (draftReport.BlocksValidation)
         {
-            return Blocked(draftReport);
+            return InvoiceValidationEffects.Blocked(draftReport);
         }
 
         // Sur un poste hors ligne, la pièce se numérote dans la série du poste (ADR-0007) ; null sur le serveur.
@@ -122,7 +122,7 @@ internal sealed class ValidateInvoiceHandler(
         ComplianceReport report = ComplianceChecker.Check(invoice.ToComplianceDocument(null), today);
         if (report.BlocksValidation)
         {
-            return Result<bool>.Failure(Blocked(report).Errors);
+            return Result<bool>.Failure(InvoiceValidationEffects.Blocked(report).Errors);
         }
 
         result = await InvoiceValidationEffects.ApplyToRelatedDocumentsAsync(invoice, invoices, quotes, user.UserId, now, cancellationToken).ConfigureAwait(false);
@@ -132,16 +132,8 @@ internal sealed class ValidateInvoiceHandler(
         }
 
         invoice.Seal(CanonicalDocument.ComputeHash(invoice.ToResponse()), now);
-        Result<long> journaled = await journal.AppendAsync(
-            InvoiceJournal.EventOf(invoice, invoice.Kind == InvoiceKind.CreditNote ? JournalEntryKind.CreditNoteValidated : JournalEntryKind.InvoiceValidated),
-            cancellationToken).ConfigureAwait(false);
-        if (journaled.IsFailure)
-        {
-            return Result<bool>.Failure(journaled.Errors);
-        }
-
-        await salesJournal.AddAsync(InvoiceValidationEffects.SalesEntryOf(invoice), cancellationToken).ConfigureAwait(false);
-        return true;
+        result = await InvoiceValidationEffects.RecordAsync(invoice, journal, salesJournal, cancellationToken).ConfigureAwait(false);
+        return result.IsFailure ? Result<bool>.Failure(result.Errors) : true;
     }
 
     /// <summary>
@@ -171,17 +163,14 @@ internal sealed class ValidateInvoiceHandler(
 
     private async Task<Result<(Invoice Invoice, CompanyProfile Profile)>> LoadAsync(ValidateInvoiceCommand command, CancellationToken cancellationToken)
     {
-        Invoice? invoice = await invoices.FindAsync(command.InvoiceId, cancellationToken).ConfigureAwait(false);
-        if (invoice is null)
+        Result<Invoice> loaded = Concurrency.Load(
+            await invoices.FindAsync(command.InvoiceId, cancellationToken).ConfigureAwait(false), InvoiceErrors.NotFound, command.ExpectedVersion);
+        if (loaded.IsFailure)
         {
-            return InvoiceErrors.NotFound;
+            return Result<(Invoice, CompanyProfile)>.Failure(loaded.Errors);
         }
 
-        Result version = Concurrency.Check(invoice, command.ExpectedVersion);
-        if (version.IsFailure)
-        {
-            return Result<(Invoice, CompanyProfile)>.Failure(version.Errors);
-        }
+        Invoice invoice = loaded.Value;
 
         if (!invoice.IsDraft)
         {
@@ -192,13 +181,6 @@ internal sealed class ValidateInvoiceHandler(
         return profile is null ? BillingErrors.CompanyProfileMissing : (invoice, profile);
     }
 
-    /// <summary>Le refus porte le code général puis une erreur par mention manquante (cible = ligne le cas échéant).</summary>
-    private static Result Blocked(ComplianceReport report) =>
-        Result.Failure(
-        [
-            BillingErrors.NotCompliant,
-            .. report.Errors.Select(f => Error.Validation(f.Code, f.Line is { } line ? $"Lines[{line - 1}]" : null)),
-        ]);
 }
 
 /// <summary>
@@ -234,6 +216,30 @@ internal static class InvoiceValidationEffects
             quote.RegisterDownPayment(invoice.TotalInclTax, userId, now);
         }
 
+        return Result.Success();
+    }
+
+    /// <summary>Le refus porte le code général puis une erreur par mention manquante (cible = ligne le cas échéant).</summary>
+    public static Result Blocked(ComplianceReport report) =>
+        Result.Failure(
+        [
+            BillingErrors.NotCompliant,
+            .. report.Errors.Select(f => Error.Validation(f.Code, f.Line is { } line ? $"Lines[{line - 1}]" : null)),
+        ]);
+
+    /// <summary>Inscription de la pièce scellée au journal d'intégrité chaîné, puis son écriture au journal des ventes.</summary>
+    public static async Task<Result> RecordAsync(
+        Invoice invoice, IIntegrityJournal journal, ISalesJournal salesJournal, CancellationToken cancellationToken)
+    {
+        Result<long> journaled = await journal.AppendAsync(
+            InvoiceJournal.EventOf(invoice, invoice.Kind == InvoiceKind.CreditNote ? JournalEntryKind.CreditNoteValidated : JournalEntryKind.InvoiceValidated),
+            cancellationToken).ConfigureAwait(false);
+        if (journaled.IsFailure)
+        {
+            return Result.Failure(journaled.Errors);
+        }
+
+        await salesJournal.AddAsync(SalesEntryOf(invoice), cancellationToken).ConfigureAwait(false);
         return Result.Success();
     }
 

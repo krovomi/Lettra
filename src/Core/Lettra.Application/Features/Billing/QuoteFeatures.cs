@@ -201,17 +201,14 @@ internal sealed class UpdateQuoteHandler(
     public async Task<Result> HandleAsync(UpdateQuoteCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
-        Quote? quote = await quotes.FindAsync(command.QuoteId, cancellationToken).ConfigureAwait(false);
-        if (quote is null)
+        Result<Quote> loaded = Concurrency.Load(
+            await quotes.FindAsync(command.QuoteId, cancellationToken).ConfigureAwait(false), QuoteErrors.NotFound, command.ExpectedVersion);
+        if (loaded.IsFailure)
         {
-            return QuoteErrors.NotFound;
+            return Result.Failure(loaded.Errors);
         }
 
-        Result version = Concurrency.Check(quote, command.ExpectedVersion);
-        if (version.IsFailure)
-        {
-            return version;
-        }
+        Quote quote = loaded.Value;
 
         Result<QuoteDraft> draft = await QuoteDrafts.BuildAsync(customers, command.Data, cancellationToken).ConfigureAwait(false);
         if (draft.IsFailure)
@@ -236,17 +233,14 @@ internal sealed class DeleteQuoteHandler(IQuoteRepository quotes, IUnitOfWork un
     public async Task<Result> HandleAsync(DeleteQuoteCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
-        Quote? quote = await quotes.FindAsync(command.QuoteId, cancellationToken).ConfigureAwait(false);
-        if (quote is null)
+        Result<Quote> loaded = Concurrency.Load(
+            await quotes.FindAsync(command.QuoteId, cancellationToken).ConfigureAwait(false), QuoteErrors.NotFound, command.ExpectedVersion);
+        if (loaded.IsFailure)
         {
-            return QuoteErrors.NotFound;
+            return Result.Failure(loaded.Errors);
         }
 
-        Result version = Concurrency.Check(quote, command.ExpectedVersion);
-        if (version.IsFailure)
-        {
-            return version;
-        }
+        Quote quote = loaded.Value;
 
         Result deletable = quote.CanBeDeleted();
         if (deletable.IsFailure)
@@ -326,17 +320,14 @@ internal sealed class ValidateQuoteHandler(
 
     private async Task<Result<Quote>> LoadAsync(ValidateQuoteCommand command, CancellationToken cancellationToken)
     {
-        Quote? quote = await quotes.FindAsync(command.QuoteId, cancellationToken).ConfigureAwait(false);
-        if (quote is null)
+        Result<Quote> loaded = Concurrency.Load(
+            await quotes.FindAsync(command.QuoteId, cancellationToken).ConfigureAwait(false), QuoteErrors.NotFound, command.ExpectedVersion);
+        if (loaded.IsFailure)
         {
-            return QuoteErrors.NotFound;
+            return Result<Quote>.Failure(loaded.Errors);
         }
 
-        Result version = Concurrency.Check(quote, command.ExpectedVersion);
-        if (version.IsFailure)
-        {
-            return Result<Quote>.Failure(version.Errors);
-        }
+        Quote quote = loaded.Value;
 
         return quote.IsDraft ? quote : BillingErrors.NotDraft;
     }
@@ -351,19 +342,16 @@ internal sealed class SetQuoteOutcomeHandler(
     public async Task<Result> HandleAsync(SetQuoteOutcomeCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
-        Quote? quote = await quotes.FindAsync(command.QuoteId, cancellationToken).ConfigureAwait(false);
-        if (quote is null)
+        Result<Quote> loaded = Concurrency.Load(
+            await quotes.FindAsync(command.QuoteId, cancellationToken).ConfigureAwait(false), QuoteErrors.NotFound, command.ExpectedVersion);
+        if (loaded.IsFailure)
         {
-            return QuoteErrors.NotFound;
+            return Result.Failure(loaded.Errors);
         }
 
-        Result result = Concurrency.Check(quote, command.ExpectedVersion);
-        if (result.IsFailure)
-        {
-            return result;
-        }
+        Quote quote = loaded.Value;
 
-        result = quote.SetOutcome(command.Accepted, user.UserId, clock.GetUtcNow());
+        Result result = quote.SetOutcome(command.Accepted, user.UserId, clock.GetUtcNow());
         if (result.IsFailure)
         {
             return result;
