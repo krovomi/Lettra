@@ -3,16 +3,22 @@ using Bunit;
 using Lettra.Contracts.Alerts;
 using Lettra.Contracts.Customers;
 using Lettra.Contracts.Identity;
+using Lettra.Contracts.Tax;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
+using Lettra.UI.Shared.Components.Tax;
 using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Pages;
 using Lettra.UI.Shared.Pages.Accounting;
 using Lettra.UI.Shared.Pages.Cabinet;
+using Lettra.UI.Shared.Pages.Tax;
+using Lettra.UI.Shared.Services;
 using Lettra.UI.Tests.Administration;
+using Lettra.UI.Tests.Billing;
 using Lettra.UI.Tests.Cabinet;
 using Lettra.UI.Tests.Consultation;
 using Lettra.UI.Tests.Security;
+using Lettra.UI.Tests.Tax;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using AdminPage = Lettra.UI.Shared.Pages.Administration.Administration;
@@ -148,5 +154,57 @@ public sealed class ClientSideListTests : BunitContext
         Customers().Should().Equal("Dupont SARL");
         page.Find("#balance-customers-filters-reset").Click();
         Customers().Should().HaveCount(2);
+    }
+
+    private IRenderedComponent<TPage> OpenTax<TPage>(FakeTaxGateway tax, string route)
+        where TPage : IComponent
+    {
+        Services.AddSingleton<ITaxGateway>(tax);
+        Services.AddSingleton<IFileDownloader>(new FakeFileDownloader());
+        Services.AddSingleton<TimeProvider>(new ManualClock(new DateTimeOffset(2026, 10, 9, 10, 0, 0, TimeSpan.Zero)));
+        Services.GetRequiredService<NavigationManager>().NavigateTo(route);
+        IRenderedComponent<TPage> page = Render<TPage>();
+        page.WaitForState(() => page.FindAll(".lt-skeleton").Count == 0);
+        return page;
+    }
+
+    [Fact]
+    public void La_des_se_cherche_et_se_trie_sans_changer_son_total()
+    {
+        FakeTaxGateway tax = new();
+        tax.ExtraDesLines.Add(new DesLineResponse(2, "BE0123456789", "BE", Guid.Empty, "Atelier Bruxelles", 3200m, []));
+        IRenderedComponent<DesPage> page = OpenTax<DesPage>(tax, "tax/des?month=2026-09");
+        string[] Lines() => [.. page.FindAll("#des-table tbody tr").Select(r => r.Id ?? string.Empty)];
+
+        Lines().Should().Equal(["des-line-1", "des-line-2"], "l'ordre du fichier déposé vient par défaut");
+
+        page.Find("#des-sort-amount").Click();
+        Lines().Should().Equal("des-line-2", "des-line-1");
+        page.Find("#des-sort-customer").Click();
+        Lines().Should().Equal(["des-line-2", "des-line-1"], "Atelier vient avant Berlin");
+
+        page.Find("#des-search").Input("de123");
+        Lines().Should().Equal("des-line-1");
+        page.Find("#des-total").TextContent.Should().Be(TaxText.Euros(1401m), "le total est celui de la déclaration");
+    }
+
+    [Fact]
+    public void Le_calendrier_fiscal_se_filtre_par_echeance_et_par_etat()
+    {
+        IRenderedComponent<FiscalCalendarPage> page = OpenTax<FiscalCalendarPage>(new FakeTaxGateway(), "tax/calendar?year=2026");
+        int Deadlines() => page.FindAll(".lt-tax-deadline").Count;
+
+        Deadlines().Should().Be(3);
+
+        page.Find("#calendar-obligation").Change(nameof(FiscalObligationDto.Cfe));
+        Deadlines().Should().Be(1);
+        page.Find("#calendar-month-12").Should().NotBeNull();
+        page.FindAll("#calendar-month-10").Should().BeEmpty("un mois sans échéance retenue disparaît");
+
+        page.Find("#calendar-state").Change(nameof(FiscalDeadlineStateDto.DueSoon));
+        page.Find("#calendar-filtered-empty").TextContent.Should().Contain("Aucun résultat");
+
+        page.Find("#calendar-empty-reset").Click();
+        Deadlines().Should().Be(3);
     }
 }

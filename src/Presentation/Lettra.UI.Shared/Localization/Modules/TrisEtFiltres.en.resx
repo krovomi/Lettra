@@ -29,4 +29,7 @@
   <data name="Lists.Sort.Dossiers" xml:space="preserve"><value>Number of dossiers</value></data>
   <data name="Lists.AllSeverities" xml:space="preserve"><value>All severities</value></data>
   <data name="Lists.AllStates" xml:space="preserve"><value>All states</value></data>
+  <data name="Lists.Filter.Obligation" xml:space="preserve"><value>Deadline</value></data>
+  <data name="Lists.Filter.State" xml:space="preserve"><value>Status</value></data>
+  <data name="Lists.AllObligations" xml:space="preserve"><value>All deadlines</value></data>
 </root>

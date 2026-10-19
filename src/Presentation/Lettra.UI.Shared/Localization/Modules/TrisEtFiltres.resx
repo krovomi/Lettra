@@ -29,4 +29,7 @@
   <data name="Lists.Sort.Dossiers" xml:space="preserve"><value>Nombre de dossiers</value></data>
   <data name="Lists.AllSeverities" xml:space="preserve"><value>Toutes les gravités</value></data>
   <data name="Lists.AllStates" xml:space="preserve"><value>Tous les états</value></data>
+  <data name="Lists.Filter.Obligation" xml:space="preserve"><value>Échéance</value></data>
+  <data name="Lists.Filter.State" xml:space="preserve"><value>État</value></data>
+  <data name="Lists.AllObligations" xml:space="preserve"><value>Toutes les échéances</value></data>
 </root>
