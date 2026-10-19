@@ -47,6 +47,8 @@ internal static class IconPaths
         ["refresh-cw"] = "<path d='M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8'/> <path d='M21 3v5h-5'/> <path d='M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16'/> <path d='M8 16H3v5'/>",
         ["repeat"] = "<path d='m17 2 4 4-4 4'/> <path d='M3 11v-1a4 4 0 0 1 4-4h14'/> <path d='m7 22-4-4 4-4'/> <path d='M21 13v1a4 4 0 0 1-4 4H3'/>",
         ["rows-3"] = "<rect width='18' height='18' x='3' y='3' rx='2'/> <path d='M21 9H3'/> <path d='M21 15H3'/>",
+        ["list"] = "<path d='M3 6h.01'/> <path d='M3 12h.01'/> <path d='M3 18h.01'/> <path d='M8 6h13'/> <path d='M8 12h13'/> <path d='M8 18h13'/>",
+        ["table"] = "<path d='M12 3v18'/> <rect width='18' height='18' x='3' y='3' rx='2'/> <path d='M3 9h18'/> <path d='M3 15h18'/>",
         ["inbox"] = "<polyline points='22 12 16 12 14 15 10 15 8 12 2 12'/> <path d='M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z'/>",
         ["hand-coins"] = "<path d='M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17'/> <path d='m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9'/> <path d='m2 16 6 6'/> <circle cx='16' cy='9' r='2.9'/> <circle cx='6' cy='5' r='3'/>",
         // Espace « Équipe et accès ».

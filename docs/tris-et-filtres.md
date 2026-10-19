@@ -55,6 +55,20 @@ Restent volontairement dans leur ordre :
 - **Grille de saisie du catalogue** (`catalog/grid`) : grille d'édition au clavier, dans l'ordre des références ; la
   fiche Catalogue (`catalog`) trie et filtre.
 
+## Basculer entre la liste et la saisie en grille
+
+Un écran qui offre aussi une saisie en grille (aujourd'hui le Catalogue) affiche dans son en-tête, sur ses deux pages,
+la bascule `ViewModeSwitch` (`Components/Lists`) : « Liste » et « Saisie en grille ». La vue en cours est en relief
+(`aria-current="page"`), l'autre se choisit d'un clic, dans les deux sens et à tout moment. Ce sont des liens : chaque
+mode garde son adresse (`catalog`, `catalog/grid`), donc favoris et retour arrière fonctionnent. Sur téléphone la
+bascule prend toute la largeur, avec des cibles de 44 px.
+
+```razor
+<ViewModeSwitch Current="ViewMode.Grid" ListHref="catalog" GridHref="catalog/grid" Id="catalog-view" />
+```
+
+Tout nouvel écran qui ajoute une saisie en grille place cette bascule au même endroit sur ses deux pages.
+
 ## Tri et filtres sur le serveur
 
 Une liste paginée ou qui grandit (pièces, encaissements) trie et filtre sur le serveur ; une liste chargée en entier

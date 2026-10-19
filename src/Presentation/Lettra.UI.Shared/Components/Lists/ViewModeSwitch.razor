@@ -1,0 +1,22 @@
+@inject IStringLocalizer<SharedResource> L
+@* Bascule entre l'affichage en liste (avec fiche) et la saisie en grille d'un même écran. Les deux pages l'affichent
+   au même endroit, la vue en cours est marquée : on change de mode à tout moment, dans les deux sens. Liens et non
+   boutons : chaque mode garde son adresse (favoris, retour arrière). Décrit dans docs/tris-et-filtres.md. *@
+
+<nav class="lt-segmented lt-view-switch" aria-label="@L["Lists.View.Label"]" id="@Id">
+    <a href="@ListHref" id="@($"{Id}-list")" aria-current="@(Current == ViewMode.List ? "page" : null)"><Icon Name="list" Size="16" /> @L["Lists.View.List"]</a>
+    <a href="@GridHref" id="@($"{Id}-grid")" aria-current="@(Current == ViewMode.Grid ? "page" : null)"><Icon Name="table" Size="16" /> @L["Lists.View.Grid"]</a>
+</nav>
+
+@code {
+    /// <summary>Vue affichée par la page qui porte la bascule.</summary>
+    [Parameter, EditorRequired] public ViewMode Current { get; set; }
+
+    /// <summary>Adresse de l'affichage en liste.</summary>
+    [Parameter, EditorRequired] public string ListHref { get; set; } = string.Empty;
+
+    /// <summary>Adresse de la saisie en grille.</summary>
+    [Parameter, EditorRequired] public string GridHref { get; set; } = string.Empty;
+
+    [Parameter] public string Id { get; set; } = "view-switch";
+}
