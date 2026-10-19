@@ -54,12 +54,19 @@ async function shot(name) {
 // L'identifiant HTML d'un élément de la page (WebView) ou de Keycloak (Chrome) devient son identifiant d'accessibilité.
 const id = name => ({ res: new RegExp(`(^|[:/])${name}$`) });
 async function visible(selector, timeout) {
-    try { await device.wait(selector, { timeout }); return true; } catch { return false; }
+    try { await device.wait(selector, { timeout }); return true; } catch (error) {
+        if (!/timeout/i.test(String(error?.message))) log(`attente interrompue : ${error?.message}`);
+        return false;
+    }
 }
 async function waitFor(selector, what, timeout = 60_000) {
     if (!(await visible(selector, timeout))) {
         await shot(`echec-${what}`);
-        writeFileSync(join(shots, `echec-${what}.xml`), await device.shell('uiautomator dump /dev/tty').then(b => b.toString()).catch(() => ''));
+        const tree = await device.shell('uiautomator dump /dev/tty').then(b => b.toString()).catch(e => String(e));
+        writeFileSync(join(shots, `echec-${what}.xml`), tree);
+        // L'arbre résumé dans le journal de la CI (identifiants, textes, descriptions).
+        for (const m of tree.matchAll(/<node [^>]*?text="([^"]*)"[^>]*?resource-id="([^"]*)"[^>]*?class="([^"]*)"[^>]*?content-desc="([^"]*)"/g))
+            if (m[1] || m[2] || m[4]) console.log(`  ${m[3]} id=${m[2]} text=${m[1]} desc=${m[4]}`);
         throw new Error(`${what} : introuvable après ${timeout / 1000} s (capture et arbre dans ${shots}).`);
     }
 }
