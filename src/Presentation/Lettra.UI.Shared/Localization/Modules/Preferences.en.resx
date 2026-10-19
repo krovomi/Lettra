@@ -18,9 +18,9 @@
   <data name="Preferences.HomePage" xml:space="preserve"><value>Start screen</value></data>
   <data name="Preferences.HomePage.Hint" xml:space="preserve"><value>Opened when you sign in, instead of the dashboard.</value></data>
   <data name="Preferences.Section.Entry" xml:space="preserve"><value>Entry defaults</value></data>
-  <data name="Preferences.Entry.Intro" xml:space="preserve"><value>Pre-filled in your new documents in {0}. You can still change them on each document.</value></data>
+  <data name="Preferences.Entry.Intro" xml:space="preserve"><value>Pre-filled in your new documents: {0}. You can still change them on each document.</value></data>
   <data name="Preferences.Entry.NoDossier" xml:space="preserve"><value>Open a client file to set its entry defaults.</value></data>
-  <data name="Preferences.Entry.ThisDossier" xml:space="preserve"><value>this client file</value></data>
+  <data name="Preferences.Entry.ThisDossier" xml:space="preserve"><value>open client file</value></data>
   <data name="Preferences.Entry.Vat" xml:space="preserve"><value>VAT on new lines</value></data>
   <data name="Preferences.Entry.Unit" xml:space="preserve"><value>Unit on new lines</value></data>
   <data name="Preferences.Entry.Usual" xml:space="preserve"><value>Usual</value></data>

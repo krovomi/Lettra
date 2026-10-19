@@ -4,6 +4,14 @@ Lettra retient ce que chaque utilisateur règle ou choisit souvent, pour allége
 qui sert au quotidien. Tout se voit, se règle et s'efface dans **Paramètres › Mes préférences**
 (`/settings/preferences`, menu « Paramètres », palette Ctrl+K « Mes préférences »).
 
+![Mes préférences sur ordinateur](captures/preferences/mes-preferences.light.1440.png)
+
+| Téléphone (thème sombre) | Accueil, « Reprendre où j'en étais » (tablette) |
+|---|---|
+| ![Mes préférences sur téléphone](captures/preferences/mes-preferences.dark.375.png) | ![Reprendre où j'en étais](captures/preferences/accueil-reprendre.light.768.png) |
+
+Captures produites par `GalleryTests.Galerie_des_preferences_pour_les_captures` et `build/design-captures.cjs`.
+
 ## Ce qui est retenu
 
 | Préférence | Où elle sert | Portée |

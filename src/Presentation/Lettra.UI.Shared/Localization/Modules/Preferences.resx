@@ -18,9 +18,9 @@
   <data name="Preferences.HomePage" xml:space="preserve"><value>Écran d'accueil</value></data>
   <data name="Preferences.HomePage.Hint" xml:space="preserve"><value>Ouvert à la connexion, à la place du tableau de bord.</value></data>
   <data name="Preferences.Section.Entry" xml:space="preserve"><value>Valeurs de saisie</value></data>
-  <data name="Preferences.Entry.Intro" xml:space="preserve"><value>Pré-remplies dans vos nouvelles pièces du dossier {0}. Toujours modifiables sur la pièce.</value></data>
+  <data name="Preferences.Entry.Intro" xml:space="preserve"><value>Pré-remplies dans vos nouvelles pièces : {0}. Toujours modifiables sur la pièce.</value></data>
   <data name="Preferences.Entry.NoDossier" xml:space="preserve"><value>Ouvrez un dossier pour régler ses valeurs de saisie.</value></data>
-  <data name="Preferences.Entry.ThisDossier" xml:space="preserve"><value>ce dossier</value></data>
+  <data name="Preferences.Entry.ThisDossier" xml:space="preserve"><value>dossier ouvert</value></data>
   <data name="Preferences.Entry.Vat" xml:space="preserve"><value>TVA des nouvelles lignes</value></data>
   <data name="Preferences.Entry.Unit" xml:space="preserve"><value>Unité des nouvelles lignes</value></data>
   <data name="Preferences.Entry.Usual" xml:space="preserve"><value>Habituelle</value></data>

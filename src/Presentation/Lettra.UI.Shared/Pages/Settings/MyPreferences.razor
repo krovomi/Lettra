@@ -195,12 +195,20 @@ else
     private string? _invoiceNotes;
     private string? _quoteNotes;
 
-    private string DossierName => Services.GetService<Lettra.UI.Shared.Cabinet.CurrentDossier>()?.Name ?? L["Preferences.Entry.ThisDossier"];
+    private Lettra.UI.Shared.Cabinet.CurrentDossier? _dossiers;
+
+    private string DossierName => _dossiers?.Name ?? L["Preferences.Entry.ThisDossier"];
 
     protected override async Task OnInitializedAsync()
     {
         Account.Changed += OnAccountChanged;
         Appearance.Changed += OnAccountChanged;
+        _dossiers = Services.GetService<Lettra.UI.Shared.Cabinet.CurrentDossier>();
+        if (_dossiers is not null)
+        {
+            _dossiers.Changed += OnAccountChanged;   // le nom du dossier arrive après la page
+        }
+
         await Account.EnsureLoadedAsync();
         _dossierId = EntryPreferences.From(Services)?.DossierId;
         if (Services.GetService<IBillingSettingsGateway>() is { } settings)
@@ -307,5 +315,9 @@ else
     {
         Account.Changed -= OnAccountChanged;
         Appearance.Changed -= OnAccountChanged;
+        if (_dossiers is not null)
+        {
+            _dossiers.Changed -= OnAccountChanged;
+        }
     }
 }
