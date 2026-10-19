@@ -9,7 +9,7 @@ cellule ou du poste (ADR-0011, ADR-0012), et aucune n'appelle un service payant.
 
 | Quoi | Comment |
 |---|---|
-| Démarrage | La première fois qu'un utilisateur ouvre un écran, une bulle le présente en 3 à 8 étapes. Elle ne revient plus ensuite, sauf si le parcours change de version. |
+| Démarrage | La première fois qu'un utilisateur ouvre un écran, une bulle le présente en 3 à 8 étapes. Elle ne revient plus ensuite, sauf si le parcours change de version. Rien ne démarre avant l'ouverture de la session : l'écran de connexion reste libre, et l'accueil se présente juste après la connexion. |
 | Rejouer | Bouton **?** de la barre du haut (« Tutoriel de cet écran »), ou Ctrl+K puis « Tutoriel de cet écran ». |
 | Tout revoir | Menu Apparence, **Réinitialiser les tutoriels** (ou Ctrl+K, « Réinitialiser les tutoriels »). |
 | Clavier | Flèches gauche et droite pour reculer et avancer, Échap pour fermer, même si le focus n'est pas encore dans la bulle. |
@@ -31,6 +31,11 @@ Où c'est rangé :
   +1** pour que ceux qui l'ont déjà vu le revoient.
 - Le tutoriel ne démarre jamais seul sous un navigateur piloté (Playwright, captures du design) : il couvrirait
   l'écran testé. Le bouton **?** marche partout.
+- Il ne démarre pas non plus seul tant que la session n'est pas ouverte, ni sur l'écran de session (`TourHost` lit
+  `SessionState` et repart quand la session s'ouvre). Sans cette garde, sur un vrai appareil (WebView Android, iOS,
+  Windows, macOS, navigateur), la visite de l'accueil partait avant la lecture de la session, restait affichée sur
+  l'écran de connexion et son voile captait le toucher sur « Se connecter ». Toutes les coques passent par le même
+  `MainLayout` de `Lettra.UI.Shared`, donc la même garde.
 
 ![Étape « Les écrans » sur ordinateur](captures/accompagnement/tour-accueil-2-1440.png)
 
@@ -104,6 +109,7 @@ phrase, pas mot à mot : Whisper transcrit un enregistrement entier.
 | Tests bUnit : parcours, placement, mémoire et versions, liste de démarrage, champ assisté, modèles, codes postaux, saisie rapide, F4, habitudes du client, micro, panneau, F8, commandes, voix désactivée ou injoignable | CI, Linux | 351 tests de `Lettra.UI.Tests` verts |
 | Latence des suggestions (commune, dossier de 5 000 pièces) | CI, Linux | moins de 100 ms (médiane de cinq, après un premier appel) |
 | Parité des clés FR et EN | `Lettra.Architecture.Tests` | vert |
+| Démo Docker, Chromium sans indicateur de navigateur piloté (`navigator.webdriver` faux, comme une WebView) : aucun voile de visite sur l'écran de session, visite « Bienvenue dans Lettra » affichée juste après la connexion Keycloak | Chromium, Linux, 1440 et 375 px | vérifié |
 | Navigateur réel, application publiée (WASM) : tutoriel à 1440, 768 et 375 px (thème sombre au téléphone), Échap, mémoire après rechargement, bouton **?**, code postal vers ville, modèles « / » | Chromium (Playwright), Linux | vérifié |
 | Voix dans Chromium avec un micro simulé : micro d'un champ, onde et texte inséré, F8 hors champ, commande affichée puis exécutée, WAV reçu par le serveur (RIFF, mono, 16 000 Hz, 16 bits) | Chromium, Linux, serveur de test à la place de l'API | vérifié à 1440 et 375 px |
 | Démo Docker de bout en bout (Keycloak, API, application publiée) avec un serveur remplaçant whisper.cpp (mêmes routes, texte fixe) : statut `Ready: false` pendant le « chargement du modèle », panneau « La dictée se prépare » sans micro dans les champs, micro apparu seul 9 s après la fin du chargement, dictée dans l'Objet d'un nouveau devis (transcription 200, texte inséré) | Chromium, Linux, 1280 px | vérifié |
