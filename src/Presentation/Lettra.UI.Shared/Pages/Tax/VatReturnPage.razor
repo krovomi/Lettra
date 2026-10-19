@@ -162,6 +162,7 @@ else
     private IReadOnlyList<ErrorDetail> _errors = [];
     private IReadOnlyList<ErrorDetail> _setup = [];
     private readonly HashSet<string> _open = [];
+    private OperationResult<FiscalCalendarResponse>? _regime;
     private bool _busy;
 
     [SupplyParameterFromQuery(Name = "date")] public string? Date { get; set; }
@@ -174,6 +175,16 @@ else
             ? day
             : new DateOnly(Today.Year, Today.Month, 1).AddDays(-1);
 
+    protected override void OnInitialized()
+    {
+        // « /tax » ouvre l'onglet TVA : l'adresse devient « /tax/vat » pour que l'onglet soit marqué actif.
+        string path = Navigation.ToBaseRelativePath(Navigation.Uri).Split('?', '#')[0].TrimEnd('/');
+        if (path == "tax")
+        {
+            Navigation.NavigateTo("tax/vat" + new Uri(Navigation.Uri).Query, replace: true);
+        }
+    }
+
     protected override async Task OnParametersSetAsync()
     {
         _open.Clear();
@@ -183,6 +194,15 @@ else
     private async Task LoadAsync()
     {
         _errors = [];
+
+        // Sans régime de TVA (ou en franchise), l'écran le dit sans demander un brouillon que le serveur refuserait.
+        _regime ??= await Tax.GetCalendarAsync(Today, Today, CancellationToken.None);
+        if (_regime is { IsSuccess: true, Value: { } known } && (known.VatFranchise || known.Regime is null))
+        {
+            _setup = [new ErrorDetail(known.VatFranchise ? ErrorCodes.Tax.VatFranchise : ErrorCodes.Tax.RegimeMissing)];
+            return;
+        }
+
         OperationResult<VatReturnResponse> result = await Tax.GetVatReturnAsync(Requested, CancellationToken.None);
         if (result is { IsSuccess: true, Value: { } vat })
         {

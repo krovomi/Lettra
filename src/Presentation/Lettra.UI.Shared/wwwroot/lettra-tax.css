@@ -27,6 +27,7 @@
 /* ---------- Cases et pièces ---------- */
 .lt-tax-boxes { width: 100%; margin-bottom: var(--space-4); }
 .lt-tax-boxes td:last-child { width: 1%; white-space: nowrap; text-align: right; }
+.lt-tax-boxes td:nth-child(2) { white-space: nowrap; }
 .lt-tax-toggle { min-height: 2.25rem; font-size: var(--text-sm); }
 .lt-tax-boxes tr.is-open > td { background: var(--color-primary-soft); }
 .lt-tax-detail-row > td { padding: var(--space-2) var(--space-3) var(--space-4); background: var(--color-surface-2); }
@@ -62,6 +63,7 @@
 @media (max-width: 767px) {
     .lt-tax-period h2 { font-size: var(--text-lg); }
     .lt-tax-boxes td:last-child { width: auto; text-align: left; }
+    .lt-tax-boxes td:nth-child(2) { white-space: normal; }
     .lt-tax-boxes td:last-child > .lt-tax-toggle, .lt-tax-deadline-actions > .lettra-button { flex: 1; min-height: var(--hit, 2.75rem); justify-content: center; }
     .lt-tax-detail-row { padding: 0 !important; border: 0 !important; box-shadow: none !important; background: transparent !important; }
     .lt-tax-detail-row > td { display: block; padding: 0; background: transparent; }

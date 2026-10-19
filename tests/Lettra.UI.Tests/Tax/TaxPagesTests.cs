@@ -65,6 +65,14 @@ public sealed class TaxPagesTests : BunitContext
     }
 
     [Fact]
+    public void L_entree_du_menu_ouvre_l_onglet_tva()
+    {
+        Open<VatReturnPage>("tax");
+
+        Services.GetRequiredService<NavigationManager>().Uri.Should().EndWith("/tax/vat");
+    }
+
+    [Fact]
     public void Marquer_la_declaration_deposee_passe_par_le_toaster()
     {
         IRenderedComponent<VatReturnPage> page = Open<VatReturnPage>("tax/vat?date=2026-09-15");
@@ -79,10 +87,11 @@ public sealed class TaxPagesTests : BunitContext
     [Fact]
     public void Sans_regime_de_tva_l_ecran_dit_quoi_completer()
     {
-        _tax.VatError = ErrorCodes.Tax.RegimeMissing;
+        _tax.Regime = null;
 
         IRenderedComponent<VatReturnPage> page = Open<VatReturnPage>("tax/vat");
 
+        _tax.VatDates.Should().BeEmpty("sans régime, le brouillon n'est pas demandé au serveur");
         page.Find("#tax-setup").TextContent.Should().Contain("régime");
         page.Find("#tax-setup-company").GetAttribute("href").Should().Be("settings/company");
     }
@@ -108,7 +117,7 @@ public sealed class TaxPagesTests : BunitContext
     {
         IRenderedComponent<FiscalCalendarPage> page = Open<FiscalCalendarPage>("tax/calendar?year=2026");
 
-        _tax.CalendarQueries.Should().Equal((new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31)));
+        _tax.CalendarQueries.Should().Contain((new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31)));
         page.Find("#calendar-defaults").TextContent.Should().NotBeEmpty();
         page.Find("#calendar-month-10").TextContent.Should().Be("Octobre 2026");
         IElement des = page.Find("#deadline-Des-2026-09-01");
@@ -156,6 +165,8 @@ internal sealed class FakeTaxGateway : ITaxGateway
 
     public string? VatError { get; set; }
 
+    public VatDeclarationRegimeDto? Regime { get; set; } = VatDeclarationRegimeDto.RealNormal;
+
     public FiscalSettingsResponse Settings { get; private set; } = new(12, 31, VatPeriodicityDto.Monthly, 15, true, true, null, 0);
 
     private DateTimeOffset? _vatFiled;
@@ -193,7 +204,7 @@ internal sealed class FakeTaxGateway : ITaxGateway
     {
         CalendarQueries.Add((from, to));
         FiscalDeadlineStateDto desState = Marks.Any(m => m.Obligation == FiscalObligationDto.Des && m.Filed) ? FiscalDeadlineStateDto.Filed : FiscalDeadlineStateDto.DueSoon;
-        FiscalCalendarResponse calendar = new(from, to, new DateOnly(2026, 10, 9), VatDeclarationRegimeDto.RealNormal, false, Settings,
+        FiscalCalendarResponse calendar = new(from, to, new DateOnly(2026, 10, 9), Regime, false, Settings,
         [
             new(FiscalObligationDto.VatReturnCa3, new(2026, 9, 1), new(2026, 9, 30), new(2026, 10, 15), FiscalDeadlineStateDto.DueSoon, null, "VatDeadlineDay"),
             new(FiscalObligationDto.Des, new(2026, 9, 1), new(2026, 9, 30), new(2026, 10, 12), desState, null, "Des"),

@@ -28,7 +28,7 @@ else
             <legend>@L["Tax.Settings.FiscalYear"]</legend>
             <div class="lettra-field">
                 <label for="fiscal-end-day">@L["Tax.Settings.YearEndDay"]</label>
-                <InputNumber id="fiscal-end-day" @bind-Value="_model.FiscalYearEndDay" inputmode="numeric" min="1" max="31" />
+                <InputNumber id="fiscal-end-day" @bind-Value="_model.FiscalYearEndDay" inputmode="numeric" />
             </div>
             <div class="lettra-field">
                 <label for="fiscal-end-month">@L["Tax.Settings.YearEndMonth"]</label>
@@ -56,7 +56,7 @@ else
             </div>
             <div class="lettra-field">
                 <label for="fiscal-deadline-day">@L["Tax.Settings.DeadlineDay"]</label>
-                <InputNumber id="fiscal-deadline-day" @bind-Value="_model.VatDeadlineDay" inputmode="numeric" min="15" max="24" />
+                <InputNumber id="fiscal-deadline-day" @bind-Value="_model.VatDeadlineDay" inputmode="numeric" />
                 <FieldErrors Field="VatDeadlineDay" ServerErrors="_errors" />
             </div>
             <p class="lettra-hint lettra-field-wide">@L["Tax.Settings.DeadlineHint"]</p>
