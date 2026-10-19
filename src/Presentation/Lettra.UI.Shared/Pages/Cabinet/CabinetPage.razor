@@ -8,7 +8,7 @@
 
 @* Vue cabinet : un tableau de supervision des dossiers que l'utilisateur peut ouvrir, les plus urgents d'abord. Les
    compteurs sont ceux de la nuit (ou du dernier « Actualiser ») : la page ne lit que le registre des indicateurs, sans
-   ouvrir les dossiers. Ordinateur : tableau ; téléphone : une carte par dossier, dans le même ordre d'urgence. Les
+   ouvrir les dossiers. Grand écran : tableau ; tablette et téléphone : une carte par dossier, dans le même ordre. Les
    indicateurs des autres modules (TVA, banque) prennent leur colonne d'eux-mêmes dès qu'un dossier en a. *@
 
 <PageTitle>@L["Cabinet.Title"] · Lettra</PageTitle>
@@ -40,8 +40,8 @@ else
     <section aria-labelledby="cabinet-kpis-title">
         <h2 id="cabinet-kpis-title" class="lettra-visually-hidden">@L["Cabinet.Kpis"]</h2>
         <ul class="lt-kpis lt-cabinet-kpis">
-            <li class="lt-kpi">
-                <span class="lt-kpi-head">@L["Cabinet.Kpi.ToHandle"]</span>
+            <li class="lt-kpi @(ToHandle > 0 ? "is-alert" : null)">
+                <span class="lt-kpi-head">@L["Cabinet.Kpi.ToHandle"]<span class="lt-kpi-icon"><Icon Name="triangle-alert" /></span></span>
                 <span class="lt-kpi-value">@ToHandle.ToString("N0", CultureInfo.CurrentCulture)</span>
                 <span class="lt-kpi-note">@string.Format(CultureInfo.CurrentCulture, L["Cabinet.Kpi.OutOf"], _overview.Dossiers.Count)</span>
             </li>
@@ -49,8 +49,8 @@ else
             {
                 int total = _overview.Dossiers.Sum(d => Indicator(d, key)?.Count ?? 0);
                 int dossiers = _overview.Dossiers.Count(d => Indicator(d, key)?.Count > 0);
-                <li class="lt-kpi">
-                    <span class="lt-kpi-head">@Label(key)</span>
+                <li class="lt-kpi @(total > 0 ? "is-alert" : null)">
+                    <span class="lt-kpi-head">@Label(key)<span class="lt-kpi-icon"><Icon Name="@IconOf(key)" /></span></span>
                     <span class="lt-kpi-value">@total.ToString("N0", CultureInfo.CurrentCulture)</span>
                     <span class="lt-kpi-note">@string.Format(CultureInfo.CurrentCulture, L["Cabinet.Kpi.InDossiers"], dossiers)</span>
                 </li>
@@ -58,16 +58,25 @@ else
         </ul>
     </section>
 
-    <section aria-labelledby="cabinet-list-title" class="lt-panel">
-        <div class="lt-panel-head lt-cabinet-filters">
-            <h2 id="cabinet-list-title">@L["Cabinet.List.Title"]</h2>
-            <div class="lt-cabinet-tools">
-                <label class="lettra-visually-hidden" for="cabinet-search">@L["Cabinet.Search"]</label>
-                <input id="cabinet-search" class="lettra-input" type="search" autocomplete="off" placeholder="@L["Cabinet.Search"]" @bind="_query" @bind:event="oninput" />
-                <label class="lt-chip"><input type="checkbox" id="cabinet-urgent" @bind="_onlyToHandle" /> @L["Cabinet.OnlyToHandle"]</label>
-                <SortSelect Id="cabinet-sort" Options="SortOptions" State="_sort" OnSort="StateHasChanged" DefaultLabel="@L["Lists.Sort.Urgency"]" />
-            </div>
+    @* Le panneau est un conteneur : tableau quand il a la place (grand écran), cartes sinon (tablette, téléphone, menu
+       latéral déplié sur un petit écran), sans défilement de côté. *@
+    <section aria-labelledby="cabinet-list-title" class="lt-panel lt-cabinet-panel">
+        <div class="lt-panel-head">
+            <h2 id="cabinet-list-title">@L["Cabinet.List.Title"] <span class="lt-cabinet-count">@Rows.Count</span></h2>
         </div>
+        <ListFilterBar Id="cabinet-filters" ActiveCount="ActiveFilters" OnReset="ResetFilters">
+            <ChildContent>
+                <div class="lt-filter">
+                    <label for="cabinet-search">@L["Cabinet.Search"]</label>
+                    <input id="cabinet-search" type="search" autocomplete="off" @bind="_query" @bind:event="oninput" />
+                </div>
+                <label class="lt-chip lt-cabinet-urgent"><input type="checkbox" id="cabinet-urgent" @bind="_onlyToHandle" /> @L["Cabinet.OnlyToHandle"]</label>
+            </ChildContent>
+            <More>
+                @* Visible dès que les lignes sont des cartes (plus d'en-têtes de colonnes pour trier). *@
+                <SortSelect Id="cabinet-sort" Options="SortOptions" State="_sort" OnSort="StateHasChanged" DefaultLabel="@L["Lists.Sort.Urgency"]" PhoneOnly="false" />
+            </More>
+        </ListFilterBar>
 
         @if (Rows.Count == 0)
         {
@@ -75,9 +84,8 @@ else
         }
         else
         {
-            @* Tablette : le tableau défile de côté plutôt que de déborder ; téléphone : une carte par dossier. *@
-            <div class="lt-cabinet-scroll">
-            <table class="lettra-table lt-cards lt-cabinet-table">
+            <div class="lt-list-scroll">
+            <table class="lettra-table lt-cabinet-table">
                 <caption class="lettra-visually-hidden">@L["Cabinet.List.Caption"]</caption>
                 <thead>
                     <tr>
@@ -92,35 +100,45 @@ else
                 <tbody>
                     @foreach (DossierOverviewRow row in Rows)
                     {
-                        <tr @key="row.DossierId" class="lt-level-@row.Level.ToString().ToLowerInvariant()" aria-current="@(row.DossierId == Dossiers.Id ? "true" : null)">
+                        bool allClear = Columns.All(key => (Indicator(row, key)?.Count ?? 0) == 0);
+                        <tr @key="row.DossierId" data-level="@row.Level" aria-current="@(row.DossierId == Dossiers.Id ? "true" : null)">
                             <th scope="row">
                                 @* Le flex sur un bloc intérieur : la cellule reste une cellule de tableau (bordures alignées). *@
                                 <div class="lt-cabinet-name">
-                                    <span class="lt-level-dot" data-level="@row.Level" aria-hidden="true"></span>
+                                    <span class="lt-cabinet-avatar" aria-hidden="true">@Initials(row.Name)</span>
                                     <span class="lt-cabinet-label">
-                                        <span>@row.Name</span>
-                                        <span class="lt-cabinet-when">@ComputedLine(row.ComputedAt)</span>
+                                        <span class="lt-cabinet-dossier">@row.Name</span>
+                                        <span class="lt-cabinet-meta">
+                                            <span class="lt-level-badge" data-level="@row.Level">@L["Cabinet.Level." + row.Level]</span>
+                                            <span class="lt-cabinet-when">@ComputedLine(row.ComputedAt)</span>
+                                        </span>
                                     </span>
-                                    <span class="lt-level-text">@L["Cabinet.Level." + row.Level]</span>
                                 </div>
                             </th>
                             @foreach (string key in Columns)
                             {
                                 DossierIndicatorDto? indicator = Indicator(row, key);
-                                <td class="lg-num" data-label="@Label(key)">
+                                <td class="lg-num @(indicator is null || indicator.Count == 0 ? "is-clear" : null)" data-label="@Label(key)">
                                     @if (indicator is null)
                                     {
                                         <span class="lettra-muted" title="@L["Cabinet.NotAvailable"]">—</span>
                                     }
                                     else
                                     {
-                                        <span class="lt-indicator" data-level="@indicator.Level">@indicator.Count.ToString("N0", CultureInfo.CurrentCulture)</span>
-                                        @if (indicator.DueOn is DateOnly due && indicator.Count > 0)
-                                        {
-                                            <span class="lt-indicator-due">@string.Format(CultureInfo.CurrentCulture, L[DueKey(key)], due.ToString("d MMM", CultureInfo.CurrentCulture).Replace(' ', '\u00A0'))</span>
-                                        }
+                                        <span class="lt-cabinet-cell">
+                                            <span class="lt-indicator @(indicator.Count == 0 ? "is-zero" : null)" data-level="@indicator.Level">@indicator.Count.ToString("N0", CultureInfo.CurrentCulture)</span>
+                                            @if (indicator.DueOn is DateOnly due && indicator.Count > 0)
+                                            {
+                                                <span class="lt-indicator-due">@string.Format(CultureInfo.CurrentCulture, L[DueKey(key)], due.ToString("d MMM", CultureInfo.CurrentCulture).Replace(' ', '\u00A0'))</span>
+                                            }
+                                        </span>
                                     }
                                 </td>
+                            }
+                            @if (allClear)
+                            {
+                                @* Cartes seulement : les compteurs à zéro y sont masqués, une ligne dit que tout est à jour. *@
+                                <td class="lt-cabinet-clear"><Icon Name="circle-check" Size="16" /> @L["Cabinet.AllClear"]</td>
                             }
                             <td class="lt-cabinet-actions">
                                 @if (Dossiers.CanSwitch || row.DossierId == Dossiers.Id)
@@ -128,8 +146,8 @@ else
                                     <button type="button" class="lettra-button is-secondary is-small" @onclick="() => OpenAsync(row, string.Empty)">
                                         <Icon Name="folder" Size="16" /> @L["Cabinet.Open"]
                                     </button>
-                                    <button type="button" class="lettra-button is-ghost is-small" @onclick='() => OpenAsync(row, "review")'>
-                                        <Icon Name="list-checks" Size="16" /> @L["Cabinet.Review"]
+                                    <button type="button" class="lettra-button is-ghost is-small lt-cabinet-review" title="@L["Cabinet.Review.Title"]" @onclick='() => OpenAsync(row, "review")'>
+                                        <Icon Name="list-checks" Size="16" /> <span class="lt-cabinet-review-text">@L["Cabinet.Review"]</span>
                                     </button>
                                 }
                             </td>
@@ -283,6 +301,33 @@ else
 
         Navigation.NavigateTo(path);
     }
+
+    private int ActiveFilters => (string.IsNullOrWhiteSpace(_query) ? 0 : 1) + (_onlyToHandle ? 1 : 0);
+
+    private void ResetFilters()
+    {
+        _query = null;
+        _onlyToHandle = false;
+    }
+
+    /// <summary>Les initiales des deux premiers mots en majuscule (« Bâti Rénov' Lemoine » : BR), pour la pastille.</summary>
+    public static string Initials(string name)
+    {
+        string[] words = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        IEnumerable<string> capitals = words.Where(w => char.IsUpper(w[0])).DefaultIfEmpty(words.FirstOrDefault() ?? "?").Take(2);
+        return string.Concat(capitals.Select(w => char.ToUpper(w[0], CultureInfo.CurrentCulture)));
+    }
+
+    private static string IconOf(string key) => key switch
+    {
+        DossierIndicatorKeys.OverdueInvoices => "receipt",
+        DossierIndicatorKeys.PlatformRejections => "circle-alert",
+        DossierIndicatorKeys.VatToDeclare => "landmark",
+        DossierIndicatorKeys.BankUnreconciled => "hand-coins",
+        DossierIndicatorKeys.OpenAlerts => "bell",
+        DossierIndicatorKeys.ReviewPending => "list-checks",
+        _ => "layers",
+    };
 
     private static DossierIndicatorDto? Indicator(DossierOverviewRow row, string key) => row.Indicators.FirstOrDefault(i => i.Key == key);
 
