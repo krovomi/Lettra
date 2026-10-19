@@ -1,5 +1,6 @@
 using Lettra.Application.Abstractions.Cabinet;
 using Lettra.Application.Abstractions.Tenancy;
+using Lettra.Infrastructure.Persistence.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -29,6 +30,7 @@ internal sealed partial class CabinetOverviewJob(
     IServiceProvider services,
     Func<IServiceProvider, CancellationToken, Task<IReadOnlyList<TenantDescriptor>>> listDossiers,
     IOptions<CabinetOverviewJobOptions> options,
+    TimeProvider clock,
     ILogger<CabinetOverviewJob> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -39,13 +41,7 @@ internal sealed partial class CabinetOverviewJob(
             return;
         }
 
-        await Task.Delay(settings.InitialDelay, stoppingToken).ConfigureAwait(false);
-        using PeriodicTimer timer = new(settings.Interval);
-        do
-        {
-            await RunPassAsync(stoppingToken).ConfigureAwait(false);
-        }
-        while (await timer.WaitForNextTickAsync(stoppingToken).ConfigureAwait(false));
+        await PeriodicPass.RunAsync(settings.InitialDelay, settings.Interval, clock, RunPassAsync, stoppingToken).ConfigureAwait(false);
     }
 
     internal async Task<IndicatorRefreshOutcome> RunPassAsync(CancellationToken cancellationToken)
@@ -86,7 +82,8 @@ public static class CabinetOverviewHosting
         ArgumentNullException.ThrowIfNull(configuration);
         services.AddOptions<CabinetOverviewJobOptions>().Bind(configuration.GetSection(CabinetOverviewJobOptions.SectionName));
         services.AddHostedService(sp => new CabinetOverviewJob(
-            sp, listDossiers, sp.GetRequiredService<IOptions<CabinetOverviewJobOptions>>(), sp.GetRequiredService<ILogger<CabinetOverviewJob>>()));
+            sp, listDossiers, sp.GetRequiredService<IOptions<CabinetOverviewJobOptions>>(),
+            sp.GetRequiredService<TimeProvider>(), sp.GetRequiredService<ILogger<CabinetOverviewJob>>()));
         return services;
     }
 }

@@ -30,12 +30,13 @@ internal sealed partial class DossierMigrationJob(
     DossierMigrationOrchestrator orchestrator,
     IOptions<DossierMigrationJobOptions> options,
     IHostApplicationLifetime lifetime,
+    TimeProvider clock,
     ILogger<DossierMigrationJob> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         DossierMigrationJobOptions settings = options.Value;
-        using PeriodicTimer timer = new(settings.Interval);
+        using PeriodicTimer timer = new(settings.Interval, clock);
         do
         {
             bool healthy = await RunPassAsync(settings, stoppingToken).ConfigureAwait(false);
