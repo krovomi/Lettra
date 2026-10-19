@@ -32,4 +32,5 @@
   <data name="Lists.Filter.Obligation" xml:space="preserve"><value>Échéance</value></data>
   <data name="Lists.Filter.State" xml:space="preserve"><value>État</value></data>
   <data name="Lists.AllObligations" xml:space="preserve"><value>Toutes les échéances</value></data>
+  <data name="Lists.Sort.Statement" xml:space="preserve"><value>Ordre du relevé</value></data>
 </root>

@@ -1,6 +1,7 @@
 using System.Globalization;
 using Bunit;
 using Lettra.Contracts.Alerts;
+using Lettra.Contracts.Banking;
 using Lettra.Contracts.Customers;
 using Lettra.Contracts.Identity;
 using Lettra.Contracts.Tax;
@@ -10,10 +11,12 @@ using Lettra.UI.Shared.Components.Tax;
 using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Pages;
 using Lettra.UI.Shared.Pages.Accounting;
+using Lettra.UI.Shared.Pages.Banking;
 using Lettra.UI.Shared.Pages.Cabinet;
 using Lettra.UI.Shared.Pages.Tax;
 using Lettra.UI.Shared.Services;
 using Lettra.UI.Tests.Administration;
+using Lettra.UI.Tests.Banking;
 using Lettra.UI.Tests.Billing;
 using Lettra.UI.Tests.Cabinet;
 using Lettra.UI.Tests.Consultation;
@@ -206,5 +209,56 @@ public sealed class ClientSideListTests : BunitContext
 
         page.Find("#calendar-empty-reset").Click();
         Deadlines().Should().Be(3);
+    }
+
+    [Fact]
+    public void Le_rapprochement_se_filtre_et_la_validation_en_masse_ne_porte_que_sur_les_lignes_visibles()
+    {
+        FakeBankingGateway banking = new();
+        BankLineResponse Line(string label, decimal amount, int day, string? customer = null)
+        {
+            Guid customerId = Guid.CreateVersion7();
+            BankLineResponse line = new(Guid.CreateVersion7(), 1, new DateOnly(2026, 10, day), amount, label, null, null, null, BankLineStatusDto.Pending, null, null,
+                customer is null
+                    ? null
+                    : new MatchProposalResponse(MatchRuleDto.InvoiceNumber, customerId, customer, [new ProposedAllocationResponse(Guid.CreateVersion7(), "F-" + day, amount)], 0m, "F-" + day));
+            banking.Lines.Add(line);
+            return line;
+        }
+
+        Line("VIR DUPONT", 1200m, 12, "Dupont SARL");
+        BankLineResponse martin = Line("VIR MARTIN", 80m, 3, "Boulangerie Martin");
+        Line("FRAIS TENUE DE COMPTE", -12.5m, 5);
+        Services.AddSingleton<IBankingGateway>(banking);
+        Services.AddSingleton<IAccountingGateway>(new FakeAccountingGateway());
+        Services.AddSingleton<ICustomersGateway>(new FakeCustomersGateway());
+        Services.AddSingleton<TimeProvider>(new ManualClock(new DateTimeOffset(2026, 10, 16, 12, 0, 0, TimeSpan.Zero)));
+        Services.GetRequiredService<NavigationManager>().NavigateTo("bank");
+        IRenderedComponent<ReconciliationPage> page = Render<ReconciliationPage>();
+        page.WaitForState(() => page.FindAll(".lt-skeleton").Count == 0);
+        string[] Labels() => [.. page.FindAll("#bank-lines tbody strong:first-child").Select(s => s.TextContent)
+            .Where(t => t.StartsWith("VIR", StringComparison.Ordinal) || t.StartsWith("FRAIS", StringComparison.Ordinal))];
+
+        Labels().Should().Equal(["VIR DUPONT", "VIR MARTIN", "FRAIS TENUE DE COMPTE"], "l'ordre du relevé par défaut");
+
+        page.Find("#bank-sort-date").Click();
+        Labels().Should().Equal("VIR DUPONT", "FRAIS TENUE DE COMPTE", "VIR MARTIN");
+        page.Find("#bank-sort-amount").Click();
+        Labels().Should().Equal("VIR DUPONT", "VIR MARTIN", "FRAIS TENUE DE COMPTE");
+
+        page.Find("#bank-search").Input("boulangerie");
+        Labels().Should().Equal("VIR MARTIN");
+        page.Find("#bank-select-all").Change(true);
+        page.Find("#bank-confirm-selected").Click();
+        page.WaitForAssertion(() => banking.Confirmations.Should().ContainSingle().Which.Items.Should().ContainSingle()
+            .Which.BankLineId.Should().Be(martin.Id, "une ligne masquée par la recherche n'est jamais validée"));
+
+        page.Find("#bank-search").Input(string.Empty);
+        page.Find("#bank-amount-max").Change("0");
+        Labels().Should().Equal("FRAIS TENUE DE COMPTE");
+        page.Find("#bank-dates-from").Change("2026-10-06");
+        page.Find("#bank-filtered-empty").Should().NotBeNull();
+        page.Find("#bank-empty-reset").Click();
+        Labels().Should().HaveCount(2, "la ligne validée a quitté les opérations à traiter");
     }
 }

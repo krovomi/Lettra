@@ -32,4 +32,5 @@
   <data name="Lists.Filter.Obligation" xml:space="preserve"><value>Deadline</value></data>
   <data name="Lists.Filter.State" xml:space="preserve"><value>Status</value></data>
   <data name="Lists.AllObligations" xml:space="preserve"><value>All deadlines</value></data>
+  <data name="Lists.Sort.Statement" xml:space="preserve"><value>Statement order</value></data>
 </root>
