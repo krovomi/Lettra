@@ -107,6 +107,27 @@ services:
       Lettra__Authorization__Users__0__Assignments__1__Role: administrateur-cabinet
       Lettra__Authorization__Users__0__Assignments__1__Scope: Cabinet
       Lettra__Authorization__Users__0__Assignments__1__ScopeId: 0199e3a0-0000-7000-8000-0000000000c1
+      # Factures récurrentes : sans Worker, l'API crée les factures dues toutes les 15 minutes sous un compte de service
+      # fictif, déclaré au registre des droits avec un rôle limité à la facturation (pas de compte Keycloak : personne
+      # ne s'y connecte). La validation automatique d'un modèle passe par la séparation des tâches du cabinet.
+      Lettra__Worker__RecurringInvoices__ServiceAccountId: 0199e3a0-0000-7000-8000-0000000005e1
+      Lettra__Worker__RecurringInvoices__InitialDelay: "00:01:00"
+      Lettra__Worker__RecurringInvoices__Interval: "00:15:00"
+      Lettra__Authorization__Roles__0__Cabinet: 0199e3a0-0000-7000-8000-0000000000c1
+      Lettra__Authorization__Roles__0__Key: facturation-recurrente
+      Lettra__Authorization__Roles__0__WidestScope: Cabinet
+      Lettra__Authorization__Roles__0__Permissions__0: DossierLire
+      Lettra__Authorization__Roles__0__Permissions__1: TiersConsulter
+      Lettra__Authorization__Roles__0__Permissions__2: CatalogueConsulter
+      Lettra__Authorization__Roles__0__Permissions__3: FactureSaisir
+      Lettra__Authorization__Roles__0__Permissions__4: FactureValider
+      Lettra__Authorization__Users__1__Id: 0199e3a0-0000-7000-8000-0000000005e1
+      Lettra__Authorization__Users__1__Cabinet: 0199e3a0-0000-7000-8000-0000000000c1
+      Lettra__Authorization__Users__1__State: Active
+      Lettra__Authorization__Users__1__DisplayName: Facturation récurrente (automatique)
+      Lettra__Authorization__Users__1__Assignments__0__Role: facturation-recurrente
+      Lettra__Authorization__Users__1__Assignments__0__Scope: Cabinet
+      Lettra__Authorization__Users__1__Assignments__0__ScopeId: 0199e3a0-0000-7000-8000-0000000000c1
       # Jeu « Cabinet Démo » (Lettra.DemoData) : un an d'activité dans le dossier de démonstration, au nom de
       # l'utilisateur de démonstration, au premier démarrage seulement (environ 25 s ; ignoré si le dossier a des pièces).
       Lettra__Demo__Seed: "true"
