@@ -317,7 +317,7 @@ public sealed class OfflineDraftEditorTests : BunitContext
         page = Render<QuoteEditor>(p => p.Add(e => e.LocalId, brouillon.LocalId).Add(e => e.AutosaveDelay, TimeSpan.Zero));
         page.WaitForAssertion(() => this.ToastText().Should().Contain("repris de cet appareil"));
         page.FindAll(".lg-row[data-r]").Should().HaveCount(1);
-        page.Find("#total-excl-tax").TextContent.Trim().Should().Be(GridNumber.FormatAmount(1200m, CultureInfo.GetCultureInfo("fr-FR")));
+        page.Find("#total-excl-tax").TextContent.Trim().Should().Be(GridNumber.FormatAmount(1200m, LettraCultures.ForScreen(CultureInfo.GetCultureInfo("fr-FR"))));
 
         // Le bandeau tente l'envoi à l'ouverture : toujours pas de réseau, le brouillon attend.
         IRenderedComponent<OfflineDraftsBanner> bandeau = Render<OfflineDraftsBanner>();

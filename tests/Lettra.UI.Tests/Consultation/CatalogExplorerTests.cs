@@ -46,7 +46,17 @@ public sealed class CatalogExplorerTests : BunitContext
         page.Find("#catalog-sheet-title").TextContent.Should().Contain("Tenue comptable");
         page.Find("#catalog-kpi-excl").TextContent.Should().Contain(ExplorerText.Money(450m));
         page.Find("#catalog-kpi-incl").TextContent.Should().Contain(ExplorerText.Money(540m));
-        page.Find("#catalog-grid-link").GetAttribute("href").Should().Be("catalog/grid");
+        page.Find("#catalog-view-grid").GetAttribute("href").Should().Be("catalog/grid");
+    }
+
+    [Fact]
+    public void La_bascule_marque_la_liste_et_mene_a_la_grille()
+    {
+        IRenderedComponent<CatalogPage> page = Open("catalog");
+
+        page.Find("#catalog-view-list").GetAttribute("aria-current").Should().Be("page");
+        page.Find("#catalog-view-grid").HasAttribute("aria-current").Should().BeFalse();
+        page.Find("#catalog-view-grid").TextContent.Trim().Should().Be("Saisie en grille");
     }
 
     [Fact]

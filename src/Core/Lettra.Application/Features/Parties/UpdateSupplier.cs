@@ -22,17 +22,14 @@ internal sealed class UpdateSupplierHandler(
     public async Task<Result> HandleAsync(UpdateSupplierCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
-        Supplier? supplier = await suppliers.FindAsync(command.SupplierId, cancellationToken).ConfigureAwait(false);
-        if (supplier is null)
+        Result<Supplier> loaded = Concurrency.Load(
+            await suppliers.FindAsync(command.SupplierId, cancellationToken).ConfigureAwait(false), SupplierErrors.NotFound, command.ExpectedVersion);
+        if (loaded.IsFailure)
         {
-            return SupplierErrors.NotFound;
+            return Result.Failure(loaded.Errors);
         }
 
-        Result fresh = Concurrency.Check(supplier, command.ExpectedVersion);
-        if (fresh.IsFailure)
-        {
-            return fresh;
-        }
+        Supplier supplier = loaded.Value;
 
         Result updated = supplier.Update(command.Data, clock.GetUtcNow());
         if (updated.IsFailure)

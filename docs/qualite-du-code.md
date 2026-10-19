@@ -70,6 +70,9 @@ Après la PR 2 (branche du 19 octobre, 3 589 tests) : **91,3 % des lignes** (31 
 passerelles HTTP 94,4 % (51,1 %), supervision infrastructure 96,2 % (77,2 %), serveur de
 synchronisation 99,6 % (83,6 %), API 90,8 %, Application 92,9 %, Domaine 90,9 %.
 
+Après la PR 3 (#139, 3 858 tests) : **91,8 % des lignes** (35 496 / 38 667) et **81,6 % des
+branches** (13 829 / 16 949).
+
 Les autres assemblies (IA, voix, identité, impression, données de démonstration, observabilité)
 sont entre 90 et 100 %.
 
@@ -125,7 +128,7 @@ Chaque écart a été vérifié dans le code. Les chemins sont relatifs à `src/
 | D1 | Un conflit de version sur une alerte lève `DbUpdateConcurrencyException`, non traduit par `ConcurrencyBehavior` (qui n'attrape que `ConcurrencyConflictException`) : erreur 500 au lieu d'un 412. | `Modules/Supervision/Lettra.Supervision.Infrastructure/EfAlertStore.cs:108`, `Core/Lettra.Application/Behaviors/ConcurrencyBehavior.cs:21` | Lever `ConcurrencyConflictException`, comme `DocumentNumbering`. |
 | D2 | Les mentions légales sont repérées par recherche de mots dans le texte généré. | `Core/Lettra.Calculations/Compliance/ComplianceChecker.cs:168, 217, 245`, `Core/Lettra.Domain/Billing/Invoice.cs:172, 621` | Textes et prédicats de reconnaissance au même endroit (`LegalMentionTexts`) : le texte imprimé et sa vérification ne peuvent plus diverger. Des codes structurés demanderaient de changer le format des pièces enregistrées, pour un gain faible. |
 | D3 | `SyncCenter.OnSourceChanged` est un `async void` qui avale toute exception sans la journaliser. | `Modules/Sync/Lettra.Sync.Client/SyncCenter.cs:178-188` | Journaliser l'exception. |
-| D4 | Un délai d'attente HTTP devient une exception à l'écran pour la plupart des passerelles, mais « serveur injoignable » pour d'autres. | `Presentation/Lettra.UI.Gateway.Http/HttpPartiesAndCatalogGateways.cs:25`, `HttpBillingGateways.cs:37` contre `HttpCabinetGateway.cs:50` | Un seul filtre d'exception partagé. |
+| D4 | Un délai d'attente HTTP devient une exception à l'écran pour la plupart des passerelles, mais « serveur injoignable » pour d'autres. | `Presentation/Lettra.UI.Gateway.Http/HttpPartiesAndCatalogGateways.cs:25`, `HttpBillingGateways.cs:37` contre `HttpCabinetGateway.cs:50` | Un seul filtre `HttpCalls.IsUnreachable` (erreur réseau ou délai dépassé), une annulation voulue par l'écran remonte (corrigé, PR 3). |
 | D5 | Plusieurs écrans prennent la date du poste (`DateTime.Today`, `DateTimeOffset.Now`) au lieu de `TimeProvider`. | `Presentation/Lettra.UI.Shared` : `DossierReviewPage.razor:101`, `CabinetPage.razor:285`, `FecExport.razor:96`, `GrantAccessForm.razor:141`, `PlatformTransmissionPanel.razor:108`, `Administration.razor:83` | Une horloge d'interface injectée. |
 | D6 | Supprimer un devis ou une facture avec une version périmée : en direct, refus « conflit de version » ; par HTTP, une `JsonException` remonte jusqu'à l'écran, car la pièce jointe au 412 est relue comme un `ProblemResponse`. Trouvé par les tests de parité des passerelles. | `Presentation/Lettra.UI.Gateway.Http/HttpBillingGateways.cs:33`, `HttpCustomersGateway.cs:96` | Pièce jointe illisible ignorée, le refus garde son code (corrigé, PR 2). |
 | D7 | Une charge Alertmanager en JSON illisible faisait répondre 500 ; Alertmanager rejoue les 5xx, donc la charge revenait sans fin. | `Modules/Supervision/Lettra.Supervision.Infrastructure/SupervisionEndpoints.cs:41` | Répondre 400 (corrigé, PR 2). |
@@ -137,11 +140,11 @@ Chaque écart a été vérifié dans le code. Les chemins sont relatifs à `src/
 | R1 | `result.IsSuccess ? TypedResults.Ok(...) : result.Errors.ToProblem()` écrit environ 55 fois, plus 4 aides privées équivalentes. | `Hosts/Lettra.Api/Endpoints/*` (`BillingEndpoints.cs:350`, `BankingEndpoints.cs:180`, `ExportEndpoints.cs:159`, `AdministrationEndpoints.cs:121`) |
 | R2 | « Écrire, relire, joindre la version courante en cas de conflit » en 4 exemplaires, dont deux identiques ligne à ligne. | `Presentation/Lettra.UI.Gateway.InProcess/InProcessPartiesAndCatalogGateways.cs:53` et `InProcessBillingGateways.cs:24`, `Hosts/Lettra.Api/Infrastructure/ConcurrencyResults.cs:71` |
 | R3 | « Aujourd'hui à Paris » calculé 4 fois, avec deux politiques de repli différentes ; « Europe/Paris » écrit dans 10 fichiers. | `Core/Lettra.Application/Features/Billing/BillingSupport.cs:10`, `Modules/Exports/Lettra.Exports.Application/Banking/BankingFeatures.cs:106`, `Tax/TaxQueries.cs:200`, `EInvoicing/Platform/Receivables.cs:82` |
-| R4 | Validation d'un règlement écrite dans le handler et dans l'entité. | `Modules/Exports/Lettra.Exports.Application/Banking/Payments.cs:83-133` et `Core/Lettra.Domain/Banking/Payment.cs:142-157, 243-271` |
-| R5 | Préambule « charger, introuvable, vérifier la version, brouillon ? » copié dans une dizaine de handlers ; `IVersionedCommand` n'est utilisé par rien. | `Core/Lettra.Application/Features/Billing/QuoteFeatures.cs:195, 230, 319, 344`, `InvoiceFeatures.cs:229, 274, 322, 404` |
+| R4 | Validation d'un règlement écrite dans le handler et dans l'entité. | `Modules/Exports/Lettra.Exports.Application/Banking/Payments.cs:83-133` et `Core/Lettra.Domain/Banking/Payment.cs:142-157, 243-271` (montant recevable unique `Payment.IsValidAmount`, saisie contrôlée par `RecordPaymentValidator` ; corrigé, PR 4) |
+| R5 | Préambule « charger, introuvable, vérifier la version, brouillon ? » copié dans une dizaine de handlers ; `IVersionedCommand` n'est utilisé par rien. | `Core/Lettra.Application/Features/Billing/QuoteFeatures.cs:195, 230, 319, 344`, `InvoiceFeatures.cs:229, 274, 322, 404` (`Concurrency.Load` dans 17 handlers ; corrigé, PR 4) |
 | R6 | 83 réemballages `Result<T>.Failure(x.Errors)` faute de conversion et de `Bind` sur `Result`. | `Core/Lettra.Domain/Common/Result.cs:58-108` |
 | R7 | Validateurs de liste paginée identiques ; `MaxPageSize = 200` redéclaré 7 fois. | `QuoteFeatures.cs:97`, `InvoiceFeatures.cs:123`, `SupplierQueries.cs:35`, `CatalogQueries.cs:45` |
-| R8 | Fin de validation d'une facture dupliquée entre validation en ligne et import hors ligne. | `Features/Billing/ValidateInvoice.cs:133-143, 195-200`, `Features/Sync/ImportOfflineInvoice.cs:107-142` |
+| R8 | Fin de validation d'une facture dupliquée entre validation en ligne et import hors ligne. | `Features/Billing/ValidateInvoice.cs:133-143, 195-200`, `Features/Sync/ImportOfflineInvoice.cs:107-142` (`InvoiceValidationEffects.Blocked` et `RecordAsync` ; corrigé, PR 4) |
 | R9 | Éditeurs de devis et de facture : une dizaine de méthodes copiées (prix, brouillon local, PDF, focus). | `Presentation/Lettra.UI.Shared/Pages/Billing/InvoiceEditor.razor` (836 lignes), `QuoteEditor.razor` (724 lignes) |
 | R10 | Squelette de tâche périodique recopié 6 fois, sans `TimeProvider` pour `PeriodicTimer`. | `IntegrityCheckJob`, `FiscalDeadlineAlertJob`, `CabinetOverviewJob`, `OutboxDispatchJob`, `DossierMigrationJob`, `EscalationJob` |
 | R11 | Liste des États membres de l'UE en deux exemplaires ; « EUR » défini de 4 façons. | `Calculations/Compliance/ComplianceChecker.cs:102`, `Exports.Application/Tax/DesCalculator.cs:26` |
@@ -151,7 +154,7 @@ Chaque écart a été vérifié dans le code. Les chemins sont relatifs à `src/
 
 | # | Écart | Où |
 |---|---|---|
-| S1 | `RecordPaymentHandler` : 16 dépendances, une méthode de 100 lignes qui fait six choses, et une commande imbriquée. | `Exports.Application/Banking/Payments.cs:33-271` |
+| S1 | `RecordPaymentHandler` : 16 dépendances, une méthode de 100 lignes qui fait six choses, et une commande imbriquée. | `Exports.Application/Banking/Payments.cs:33-271` (saisie et déclaration à la plateforme sorties du handler (`RecordPaymentValidator`, `PaymentPlatformReporter`), 14 dépendances au lieu de 16 ; partiel, PR 4) |
 | S2 | `SyncCoordinator.RunInDossierAsync` : 150 lignes, compteurs mutables capturés dans des closures. | `Modules/Sync/Lettra.Sync.Client/SyncCoordinator.cs:302` |
 | S3 | `ComplianceChecker.Check` : 150 lignes, à découper par rubrique (vendeur, client, pièce, lignes, paiement) avec D2. | `Calculations/Compliance/ComplianceChecker.cs:106` |
 | S4 | `AccountingAssistant.AskAsync` : 112 lignes (politique, pseudonymisation, contexte, boucle d'outils). | `Ai/Lettra.Ai.Orchestration/AccountingAssistant.cs:28` |
@@ -165,11 +168,11 @@ Chaque écart a été vérifié dans le code. Les chemins sont relatifs à `src/
 |---|---|---|
 | A1 | Calcul de l'acompte, « seuls les brouillons se suppriment », détachement de la facture finale du devis : règles écrites dans les handlers. | `QuoteFeatures.cs:242, 395-400`, `InvoiceFeatures.cs:286-296, 374-379` |
 | A2 | Approbation d'un avoir : le handler renvoie une erreur, l'entité lève une exception pour le même cas. | `InvoiceFeatures.cs:416`, `Domain/Billing/Invoice.cs:534-537` |
-| A3 | Rôles et affectations : simples records, toutes les règles dans les handlers. | `Application/Abstractions/Identity/Authorization.cs:64, 70`, `Features/Rights/RightsCommands.cs:160-215`, `Features/Administration/AdministrationCommands.cs:166-226` |
+| A3 | Rôles et affectations : simples records, toutes les règles dans les handlers. | `Application/Abstractions/Identity/Authorization.cs:64, 70`, `Features/Rights/RightsCommands.cs:160-215`, `Features/Administration/AdministrationCommands.cs:166-226` (portée et échéance dans `RoleDefinition.AllowsScope` et `AcceptsExpiry` ; corrigé, PR 3) |
 | A4 | Les endpoints de synchronisation et de démonstration contournent le médiateur (permissions refaites à la main, second conteneur de services à chaque appel). | `Hosts/Lettra.Api/Endpoints/SyncEndpoints.cs:136-153`, `DemoEndpoints.cs:38-54` |
 | A5 | Interface Blazor : `IServiceProvider.GetService(...)` (localisateur de services) dans 23 composants. | `Presentation/Lettra.UI.Shared` |
 | A6 | État statique modifiable `ExplorerSettings.SearchDelay`, modifié par les tests. | `Presentation/Lettra.UI.Shared/Components/Explorer/RecordExplorerPage.cs:19` |
-| A7 | Les modules Exports (64 handlers) et Supervision (10) n'ont aucun `IValidator` : la validation des requêtes est écrite dans les handlers. | `Exports.Application/Banking/Payments.cs:83`, `BankStatements.cs:32-50`, `Tax/TaxDeclarations.cs:107` |
+| A7 | Les modules Exports (64 handlers) et Supervision (10) n'ont aucun `IValidator` : la validation des requêtes est écrite dans les handlers. | `Exports.Application/Banking/Payments.cs:83`, `BankStatements.cs:32-50`, `Tax/TaxDeclarations.cs:107` (premier validateur du module : `RecordPaymentValidator` ; les autres handlers suivront, PR 4) |
 | A8 | Le test de parité des codes d'erreur ne couvre pas `Supervision.Domain`. | `tests/Lettra.Architecture.Tests/ErrorCodeAndResourceTests.cs:29` |
 
 Écarts constatés par les tests de parité, identiques sur les deux transports, à revoir plus tard :
@@ -197,14 +200,15 @@ Aucun test existant n'est retiré, désactivé ni affaibli.
 
 | PR | Contenu | État |
 |---|---|---|
-| 1 | Ce document et le script `build/couverture/fusionner.py` ; API : `HttpResults` remplace les ternaires `Result` → HTTP recopiés (R1) ; défauts D1 et D3 corrigés ; parité des codes d'erreur étendue à `Supervision.Domain` (A8). | En revue (PR #119) |
-| 2 | Doublons transverses : calendrier légal unique `LegalCalendar` (R3), liste UE et devise uniques (R11), boucle unique des tâches de fond `PeriodicPass` sur l'horloge injectée (R10), textes des mentions légales partagés (D2), « écrire puis relire » unique dans les passerelles en processus (R2), règles d'acompte et de suppression dans les entités (A1), défauts D6 et D7, tests de parité de toutes les passerelles (68 cas, HTTP et en direct). | En cours |
-| 3 | Domaine et application : rôles (A3), chargement versionné (R5), validateurs paginés (R7), fin de validation de facture (R8), règlement (R4, S1), `IValidator` dans Exports (A7), tests. | À faire |
-| 4 | Tests d'infrastructure : tâche de la vue cabinet et ses sources, serveur de synchronisation (rejeu après écriture concurrente), webhook de supervision, annuaire d'autorisations (83 cas). Livrés avec la PR 2. | En cours |
+| 1 | Ce document et le script `build/couverture/fusionner.py` ; API : `HttpResults` remplace les ternaires `Result` → HTTP recopiés (R1) ; défauts D1 et D3 corrigés ; parité des codes d'erreur étendue à `Supervision.Domain` (A8). | Fusionnée (PR #119) |
+| 2 | Doublons transverses : calendrier légal unique `LegalCalendar` (R3), liste UE et devise uniques (R11), boucle unique des tâches de fond `PeriodicPass` sur l'horloge injectée (R10), textes des mentions légales partagés (D2), « écrire puis relire » unique dans les passerelles en processus (R2), règles d'acompte et de suppression dans les entités (A1), défauts D6 et D7, tests de parité de toutes les passerelles (68 cas, HTTP et en direct). | Fusionnée (PR #129, réparée par #134) |
+| 3 | Rôles : portée et échéance d'un rôle portées par `RoleDefinition` (A3, la règle était recopiée dans l'attribution et dans le calcul des droits) ; passerelles HTTP : délai d'attente traité comme une coupure (D4) ; tests. | Fusionnée (PR #139) |
+| 4 | Tests d'infrastructure : tâche de la vue cabinet et ses sources, serveur de synchronisation (rejeu après écriture concurrente), webhook de supervision, annuaire d'autorisations (83 cas). Livrés avec la PR 2. | Fusionnée avec la PR 2 |
 | 5 | API : recherche normalisée (R12), tests. Après le fil « Tris et filtres sur les listes ». | À faire |
-| 6 | Passerelles HTTP : gestion d'erreurs partagée (D4), tests de toutes les passerelles (objectif > 90 %). Après la PR du kit de contrôle fiscal. | À faire |
+| 6 | Application : chargement versionné (R5), fin de validation de facture (R8), saisie d'un encaissement (R4, S1, premier `IValidator` d'Exports pour A7), tests. Validateurs paginés (R7) et autres validateurs Exports dans une PR suivante. | En cours |
 | 7 | Conformité : découpage de `ComplianceChecker.Check` (S3). | À faire |
 | 8 | Interface Blazor : horloge injectée (D5), fin du localisateur de services (A5, A6), base commune des éditeurs (R9), tests bUnit. | À faire |
 
-Seuil de couverture proposé pour la CI, une fois ces PR fusionnées : 85 % des lignes et 75 % des
-branches au global, sans régression d'une PR à l'autre.
+Seuil de couverture appliqué par la CI depuis la PR #136 : 88 % des lignes et 78 % des branches au
+global (`fusionner.py --seuil-lignes 88 --seuil-branches 78`) ; chaque PR garde au moins le niveau
+de chaque assembly.

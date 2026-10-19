@@ -4,7 +4,8 @@
 @page "/catalog/{Id:guid}/edit"
 @inherits RecordExplorerPage<CatalogItemSummary, CatalogItemResponse, SaveCatalogItemRequest>
 @inject ICatalogGateway Gateway
-@* Articles : liste filtrée et fiche sur un seul écran ; la saisie rapide en grille reste sur /catalog/grid. *@
+@* Articles : liste filtrée et fiche sur un seul écran ; la saisie rapide en grille reste sur /catalog/grid,
+   la bascule de l'en-tête passe d'un affichage à l'autre. *@
 
 <PageTitle>@L["Catalog.Title"] · Lettra</PageTitle>
 
@@ -17,7 +18,7 @@
         <p class="lettra-muted" id="catalog-count">@string.Format(Culture, L["Catalog.Count"], TotalCount)</p>
     </div>
     <div class="lt-page-actions">
-        <a class="lettra-button is-secondary" href="catalog/grid" id="catalog-grid-link"><Icon Name="rows-3" Size="18" /> @L["Catalog.GridMode"]</a>
+        <ViewModeSwitch Current="ViewMode.List" ListHref="catalog" GridHref="catalog/grid" Id="catalog-view" />
         <a class="lettra-button" href="@NewHref" id="catalog-new-item" data-tour="catalog-new"><Icon Name="plus" Size="18" /> @L["Catalog.NewItem"] <kbd>@L["Explorer.Key.Insert"]</kbd></a>
     </div>
 </div>

@@ -5,7 +5,12 @@
 
 <PageTitle>@L["Catalog.Title"] · Lettra</PageTitle>
 
-<h1 tabindex="-1">@L["Catalog.Title"]</h1>
+<div class="lt-page-header">
+    <h1 tabindex="-1">@L["Catalog.Title"]</h1>
+    <div class="lt-page-actions">
+        <ViewModeSwitch Current="ViewMode.Grid" ListHref="catalog" GridHref="catalog/grid" Id="catalog-view" />
+    </div>
+</div>
 
 <GlobalShortcuts Scope="_pageScope" />
 

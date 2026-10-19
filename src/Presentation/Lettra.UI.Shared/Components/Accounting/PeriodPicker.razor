@@ -12,9 +12,9 @@
     </div>
     <div class="lt-period-dates">
         <label for="period-from">@L["Accounting.Period.From"]</label>
-        <input id="period-from" type="date" value="@AccountingPeriod.Day(Period.From)" @onchange="e => ChangeDay(e, isFrom: true)" />
+        <DateField Id="period-from" Value="Period.From" ValueChanged="d => ChangeDay(d, isFrom: true)" required />
         <label for="period-to">@L["Accounting.Period.To"]</label>
-        <input id="period-to" type="date" value="@AccountingPeriod.Day(Period.To)" @onchange="e => ChangeDay(e, isFrom: false)" />
+        <DateField Id="period-to" Value="Period.To" ValueChanged="d => ChangeDay(d, isFrom: false)" required />
     </div>
 </div>
 
@@ -27,9 +27,9 @@
 
     private Task Change(AccountingPeriod period) => PeriodChanged.InvokeAsync(period);
 
-    private Task ChangeDay(ChangeEventArgs e, bool isFrom)
+    private Task ChangeDay(DateOnly? date, bool isFrom)
     {
-        if (!DateOnly.TryParseExact(e.Value?.ToString(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly day))
+        if (date is not { } day)
         {
             return Task.CompletedTask;
         }

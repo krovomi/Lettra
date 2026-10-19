@@ -136,6 +136,7 @@
     ];
 
     private DotNetObjectReference<VoiceHost>? _self;
+    private SessionState? _session;
     private ElementReference _panel;
     private bool _panelWasOpen;
     private VoiceOutcome? _outcome;
@@ -171,13 +172,39 @@
     {
         Voice.Changed += OnVoiceChanged;
         Voice.Completed += OnCompleted;
+        _session = Services.GetService(typeof(ISessionGateway)) is null ? null : Services.GetService(typeof(SessionState)) as SessionState;
+        if (_session is not null)
+        {
+            _session.Changed += OnSessionChanged;
+        }
     }
+
+    /// <summary>État de la voix lu après la connexion : avant, l'API répondrait 401 dans la console du navigateur.</summary>
+    private async Task LoadVoiceAsync()
+    {
+        if (_session is not null)
+        {
+            if (_session.Current is null)
+            {
+                await _session.RefreshAsync();
+            }
+
+            if (!_session.IsAuthenticated)
+            {
+                return;
+            }
+        }
+
+        await Voice.LoadAsync();
+    }
+
+    private void OnSessionChanged(object? sender, EventArgs e) => _ = InvokeAsync(LoadVoiceAsync);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await Voice.LoadAsync();
+            await LoadVoiceAsync();
             if (await Voice.ModuleAsync() is { } module)
             {
                 _self = DotNetObjectReference.Create(this);
@@ -448,6 +475,11 @@
     {
         Voice.Changed -= OnVoiceChanged;
         Voice.Completed -= OnCompleted;
+        if (_session is not null)
+        {
+            _session.Changed -= OnSessionChanged;
+        }
+
         _flashTimer?.Cancel();
         _flashTimer?.Dispose();
         if (_self is not null && await Voice.ModuleAsync() is { } module)

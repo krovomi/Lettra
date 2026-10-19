@@ -12,8 +12,6 @@ using Lettra.Domain.Common;
 using Lettra.Domain.Integrity;
 using Lettra.Domain.Parties;
 using Lettra.Domain.SharedKernel;
-using Lettra.Exports.Application.EInvoicing.Platform;
-using Microsoft.Extensions.Logging;
 
 namespace Lettra.Exports.Application.Banking;
 
@@ -30,7 +28,7 @@ namespace Lettra.Exports.Application.Banking;
 /// Après l'enregistrement, l'encaissement est déclaré à la plateforme agréée pour chaque facture qui y a été
 /// transmise ; un échec n'annule pas l'encaissement (la déclaration se refait depuis la facture).
 /// </summary>
-internal sealed partial class RecordPaymentHandler(
+internal sealed class RecordPaymentHandler(
     IInvoiceRepository invoices,
     ICustomerRepository customers,
     IPaymentRepository payments,
@@ -42,22 +40,14 @@ internal sealed partial class RecordPaymentHandler(
     IReceivableDocumentReader receivables,
     IDocumentNumbering numbering,
     IIntegrityJournal journal,
-    IPlatformTransmissionStore transmissions,
-    ICommandDispatcher commands,
+    PaymentPlatformReporter platform,
     ICurrentUser user,
-    TimeProvider clock,
-    ILogger<RecordPaymentHandler> logger) : ICommandHandler<RecordPaymentCommand, Result<PaymentResponse>>
+    TimeProvider clock) : ICommandHandler<RecordPaymentCommand, Result<PaymentResponse>>
 {
     public async Task<Result<PaymentResponse>> HandleAsync(RecordPaymentCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
         RecordPaymentRequest request = command.Request ?? new RecordPaymentRequest();
-        List<Error> errors = Precheck(request, LegalCalendar.Today(clock));
-        if (errors.Count > 0)
-        {
-            return Result<PaymentResponse>.Failure(errors);
-        }
-
         Customer? customer = await customers.FindAsync(new CustomerId(request.CustomerId), cancellationToken).ConfigureAwait(false);
         if (customer is null)
         {
@@ -75,61 +65,9 @@ internal sealed partial class RecordPaymentHandler(
             return Result<PaymentResponse>.Failure(recorded.Errors);
         }
 
-        int reported = await ReportToPlatformAsync(command.Dossier, request, cancellationToken).ConfigureAwait(false);
+        int reported = await platform.ReportAsync(command.Dossier, request, cancellationToken).ConfigureAwait(false);
         Result<PaymentResponse> response = await PaymentViews.LoadAsync(recorded.Value, payments, bankJournal, letterings, cancellationToken).ConfigureAwait(false);
         return response.IsSuccess ? response.Value with { PlatformReports = reported } : response;
-    }
-
-    internal static List<Error> Precheck(RecordPaymentRequest request, DateOnly today)
-    {
-        List<Error> errors = [];
-        if (request.Amount <= 0m || decimal.Round(request.Amount, 2) != request.Amount)
-        {
-            errors.Add(PaymentErrors.AmountInvalid);
-        }
-
-        if (request.Date == default || request.Date.Year < 2000 || request.Date > today)
-        {
-            errors.Add(PaymentErrors.DateInvalid);
-        }
-
-        if (!Enum.IsDefined(request.Method))
-        {
-            errors.Add(PaymentErrors.MethodInvalid);
-        }
-
-        if (request.Reference is { Length: > Payment.MaxReferenceLength })
-        {
-            errors.Add(PaymentErrors.ReferenceTooLong);
-        }
-
-        IReadOnlyList<PaymentAllocationRequest> allocations = request.Allocations ?? [];
-        if (allocations.Count == 0)
-        {
-            errors.Add(PaymentErrors.AllocationsRequired);
-        }
-        else if (allocations.Count > Payment.MaxAllocations)
-        {
-            errors.Add(PaymentErrors.TooManyAllocations);
-        }
-        else
-        {
-            for (int i = 0; i < allocations.Count; i++)
-            {
-                if (allocations[i] is null || allocations[i].InvoiceId == Guid.Empty || allocations[i].Amount <= 0m
-                    || decimal.Round(allocations[i].Amount, 2) != allocations[i].Amount)
-                {
-                    errors.Add(PaymentErrors.AllocationInvalid(i));
-                }
-            }
-
-            if (allocations.Where(a => a is not null).GroupBy(a => a.InvoiceId).Any(g => g.Count() > 1))
-            {
-                errors.Add(PaymentErrors.AllocationDuplicate);
-            }
-        }
-
-        return errors;
     }
 
     private async Task<Result<PaymentId>> RecordWithNumberAsync(
@@ -233,41 +171,6 @@ internal sealed partial class RecordPaymentHandler(
         await PaymentLettering.LetterAsync(customerId, payment, outstandingNow, receivables, payments, letterings, user.UserId, now, cancellationToken).ConfigureAwait(false);
         return payment.Id;
     }
-
-    private async Task<int> ReportToPlatformAsync(DossierId dossier, RecordPaymentRequest request, CancellationToken cancellationToken)
-    {
-        int reported = 0;
-        foreach (PaymentAllocationRequest allocation in request.Allocations)
-        {
-            PlatformTransmission? transmission = await transmissions.FindLatestAsync(allocation.InvoiceId, cancellationToken).ConfigureAwait(false);
-            if (transmission?.Reference is null || transmission.Status == PlatformStatusDto.Rejected || transmission.IsFinal)
-            {
-                continue;
-            }
-
-            decimal amount = Math.Min(allocation.Amount, transmission.RemainingToCollect);
-            if (amount <= 0m)
-            {
-                continue;
-            }
-
-            Result<PlatformTransmissionResponse> sent = await commands.SendAsync(
-                new ReportPaymentCommand(dossier, new InvoiceId(allocation.InvoiceId), request.Date, amount), cancellationToken).ConfigureAwait(false);
-            if (sent.IsSuccess)
-            {
-                reported++;
-            }
-            else
-            {
-                LogNotReported(logger, string.Join(", ", sent.Errors.Select(e => e.Code)));
-            }
-        }
-
-        return reported;
-    }
-
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Encaissement non déclaré à la plateforme pour une facture : {Codes}")]
-    private static partial void LogNotReported(ILogger logger, string codes);
 }
 
 /// <summary>La contre-passation d'un encaissement, en une transaction avec son entrée au journal inaltérable.</summary>

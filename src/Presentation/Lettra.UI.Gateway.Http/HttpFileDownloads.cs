@@ -26,7 +26,7 @@ internal static class HttpFileDownloads
                 .ConfigureAwait(false);
             return OperationResult<T>.Failure(problem.Errors);
         }
-        catch (HttpRequestException)
+        catch (Exception e) when (HttpCalls.IsUnreachable(e, cancellationToken))
         {
             return OperationResult<T>.Failure(ErrorCodes.Api.Unreachable);
         }

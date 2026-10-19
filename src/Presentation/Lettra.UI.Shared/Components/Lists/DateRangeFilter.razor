@@ -4,11 +4,11 @@
 <fieldset class="lt-filter lt-range" id="@Id">
     <legend>@Label</legend>
     <div class="lt-range-fields">
-        <input type="date" id="@($"{Id}-from")" value="@Format(From)" max="@Format(To)" @onchange="e => ChangeAsync(e, FromChanged)"
-               aria-label="@string.Format(CultureInfo.CurrentCulture, L["Lists.Range.From"], Label)" />
+        <DateField Id="@($"{Id}-from")" Value="From" Max="To" ValueChanged="d => ChangeAsync(d, FromChanged)"
+                   aria-label="@string.Format(CultureInfo.CurrentCulture, L["Lists.Range.From"], Label)" />
         <span aria-hidden="true">–</span>
-        <input type="date" id="@($"{Id}-to")" value="@Format(To)" min="@Format(From)" @onchange="e => ChangeAsync(e, ToChanged)"
-               aria-label="@string.Format(CultureInfo.CurrentCulture, L["Lists.Range.To"], Label)" />
+        <DateField Id="@($"{Id}-to")" Value="To" Min="From" ValueChanged="d => ChangeAsync(d, ToChanged)"
+                   aria-label="@string.Format(CultureInfo.CurrentCulture, L["Lists.Range.To"], Label)" />
     </div>
 </fieldset>
 
@@ -28,13 +28,8 @@
     /// <summary>Appelé après chaque changement de borne : relire la liste.</summary>
     [Parameter] public EventCallback OnChange { get; set; }
 
-    private static string? Format(DateOnly? date) => date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-
-    private async Task ChangeAsync(ChangeEventArgs args, EventCallback<DateOnly?> changed)
+    private async Task ChangeAsync(DateOnly? date, EventCallback<DateOnly?> changed)
     {
-        DateOnly? date = DateOnly.TryParseExact(args.Value?.ToString(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly parsed)
-            ? parsed
-            : null;
         await changed.InvokeAsync(date);
         await OnChange.InvokeAsync();
     }

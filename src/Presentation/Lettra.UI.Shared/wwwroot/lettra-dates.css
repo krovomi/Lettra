@@ -1,0 +1,97 @@
+/* Champ de date dans la langue de l'écran et son calendrier (Components/Dates, docs/dates-et-langue.md). Couleurs :
+   jetons de lettra-tokens.css uniquement. */
+.lt-date { display: inline-grid; gap: var(--space-1); min-width: 0; width: min(100%, 12rem); vertical-align: middle; }
+/* Dans une colonne de formulaire ou une fourchette, le champ prend toute la largeur, comme les autres champs. */
+:is(.lettra-field, .lt-field, .lt-range-fields, .la-field) > .lt-date { width: 100%; }
+.lt-date-control { position: relative; display: block; min-width: 0; }
+.lt-date-control > input { width: 100%; min-width: 0; max-width: 100%; padding-right: 2.5rem; font-variant-numeric: tabular-nums; }
+.lt-date .lt-date-toggle { position: absolute; top: 2px; right: 2px; bottom: 2px; width: 2.25rem; height: auto; min-height: 0; margin: 0; border-radius: var(--radius-sm); }
+.lt-date-error { font-size: var(--text-sm); }
+
+.lt-date-backdrop { position: fixed; inset: 0; z-index: 40; }
+.lt-date-calendar {
+    position: absolute;
+    top: calc(100% + var(--space-1));
+    left: 0;
+    z-index: 41;
+    width: 19rem;
+    max-width: calc(100vw - 2 * var(--space-3));
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    color: var(--color-fg);
+    box-shadow: var(--shadow-lg);
+    animation: lt-pop var(--motion-base) var(--ease-out);
+}
+.lt-date-calendar.is-end { left: auto; right: 0; }
+.lt-date-calendar-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-2); }
+.lt-date-calendar-head strong { font-weight: var(--weight-bold); }
+.lt-date-grid { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.lt-date-grid th { padding: var(--space-1) 0; font-size: var(--text-xs); font-weight: var(--weight-medium); color: var(--color-fg-muted); text-align: center; text-transform: capitalize; }
+.lt-date-grid td { padding: 1px; text-align: center; }
+.lt-date-calendar .lt-date-day {
+    display: inline-grid;
+    place-items: center;
+    width: 100%;
+    aspect-ratio: 1;
+    max-width: 2.5rem;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--radius-full);
+    background: transparent;
+    color: var(--color-fg);
+    font: inherit;
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+    text-decoration: none;
+    cursor: pointer;
+}
+.lt-date-calendar .lt-date-day:hover:not(:disabled) { background: var(--color-surface-2); }
+.lt-date-calendar .lt-date-day:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 1px; }
+.lt-date-calendar .lt-date-day.is-outside { color: var(--color-fg-muted); opacity: 0.7; }
+.lt-date-calendar .lt-date-day.is-today { border-color: var(--color-primary); font-weight: var(--weight-medium); }
+.lt-date-calendar .lt-date-day.is-selected { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-on-primary); }
+.lt-date-calendar .lt-date-day:disabled { opacity: 0.35; cursor: not-allowed; }
+.lt-date-calendar-foot { display: flex; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-2); }
+.lt-date-calendar-foot .lettra-link { margin: 0; min-height: 0; }
+
+/* Téléphone : le calendrier devient une feuille en bas de l'écran, au-dessus d'un voile, avec des jours au doigt. */
+@media (max-width: 40rem) {
+    .lt-date-backdrop { z-index: 50; background: var(--color-backdrop); }
+    .lt-date-calendar, .lt-date-calendar.is-end {
+        position: fixed;
+        top: auto;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 51;
+        width: auto;
+        max-width: none;
+        padding: var(--space-4) var(--space-4) calc(var(--space-4) + var(--safe-bottom));
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        animation: lt-rise var(--motion-base) var(--ease-out);
+    }
+    .lt-date-calendar .lt-date-day { max-width: var(--hit); font-size: var(--text-base); }
+    .lt-date-calendar-foot .lettra-link { min-height: var(--hit); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .lt-date-calendar { animation: none; }
+}
+
+/* Boutons à icône du champ et du calendrier : une barre d'outils (filtres des listes) donne à ses boutons nus le style
+   primaire ; ceux-ci restent discrets partout. */
+.lt-date .lt-date-toggle, .lt-date-calendar .lt-icon-button {
+    display: inline-grid; place-items: center; padding: 0; margin: 0; min-height: 0;
+    border: 1px solid transparent; background: transparent; color: var(--color-fg-muted); font: inherit;
+}
+.lt-date-calendar .lt-icon-button { width: 2.25rem; height: 2.25rem; border-radius: var(--radius-md); }
+.lt-date .lt-date-toggle:hover:not(:disabled), .lt-date .lt-date-toggle[aria-expanded="true"],
+.lt-date-calendar .lt-icon-button:hover { background: var(--color-surface-2); border-color: transparent; color: var(--color-fg); }
+.lt-date .lt-date-toggle:focus-visible, .lt-date-calendar .lt-icon-button:focus-visible { outline: 2px solid var(--color-focus); outline-offset: -2px; }
+@media (max-width: 40rem) {
+    .lt-date-calendar .lt-icon-button { width: var(--hit); height: var(--hit); }
+}

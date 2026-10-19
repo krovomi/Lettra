@@ -64,8 +64,7 @@ else
 
                     <div class="lettra-field">
                         <label for="due-date">@L["Invoice.Field.DueDate"]</label>
-                        <input id="due-date" type="date" @ref="_dueDate" disabled="@IsReadOnly"
-                               value="@Iso(_request.DueDate)" @onchange="e => DateChangedAsync(e, d => _request.DueDate = d)" />
+                        <DateField Id="due-date" @ref="_dueDate" Disabled="IsReadOnly" Value="_request.DueDate" ValueChanged="d => DateChangedAsync(d, v => _request.DueDate = v)" />
                     </div>
 
                     <div class="lettra-field">
@@ -91,8 +90,7 @@ else
                 <div class="lettra-document-header">
                     <div class="lettra-field">
                         <label for="delivery-date">@L["Invoice.Field.DeliveryDate"]</label>
-                        <input id="delivery-date" type="date" @ref="_deliveryDate" disabled="@IsReadOnly"
-                               value="@Iso(_request.DeliveryDate)" @onchange="e => DateChangedAsync(e, d => _request.DeliveryDate = d)" />
+                        <DateField Id="delivery-date" @ref="_deliveryDate" Disabled="IsReadOnly" Value="_request.DeliveryDate" ValueChanged="d => DateChangedAsync(d, v => _request.DeliveryDate = v)" />
                     </div>
 
                     <div class="lettra-field lettra-field-wide">
@@ -229,8 +227,8 @@ else
     private Collapsible? _mainBlock;
     private Collapsible? _deliveryBlock;
     private Collapsible? _linesBlock;
-    private ElementReference _deliveryDate;
-    private ElementReference _dueDate;
+    private DateField? _deliveryDate;
+    private DateField? _dueDate;
     private ElementReference _deliveryAddress;
     private Guid? _loadedId;
     private OfflineDrafts? _drafts;
@@ -274,8 +272,6 @@ else
     private string StatusText => L[$"InvoiceStatus.{_invoice?.Status ?? InvoiceStatusDto.Draft}"];
 
     private string StatusKind => (_invoice?.Status ?? InvoiceStatusDto.Draft).ToString().ToLowerInvariant();
-
-    private static string? Iso(DateOnly? date) => date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
     protected override void OnInitialized()
     {
@@ -456,9 +452,9 @@ else
         _pdfCulture = customer.Value?.PreferredLanguage ?? "fr-FR";
     }
 
-    private async Task DateChangedAsync(ChangeEventArgs e, Action<DateOnly?> set)
+    private async Task DateChangedAsync(DateOnly? date, Action<DateOnly?> set)
     {
-        set(DateOnly.TryParse(e.Value?.ToString(), CultureInfo.InvariantCulture, out DateOnly date) ? date : null);
+        set(date);
         await ScheduleSaveAsync();
     }
 
@@ -794,11 +790,11 @@ else
                 break;
             case ErrorCodes.Mention.DeliveryDate:
                 await ExpandAsync(_deliveryBlock);
-                await FocusAsync(_deliveryDate);
+                await FocusAsync(_deliveryDate?.Element ?? default);
                 break;
             case ErrorCodes.Mention.DueDate:
                 await ExpandAsync(_mainBlock);
-                await FocusAsync(_dueDate);
+                await FocusAsync(_dueDate?.Element ?? default);
                 break;
             case ErrorCodes.Mention.DeliveryAddress:
                 await ExpandAsync(_deliveryBlock);
