@@ -40,9 +40,32 @@ public static class LettraCultures
     /// <summary>Applique la culture à toute l'application (formats 1 234,56 € et 14/10/2026 en français).</summary>
     public static void Apply(System.Globalization.CultureInfo culture)
     {
-        System.Globalization.CultureInfo.DefaultThreadCurrentCulture = culture;
-        System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = culture;
-        System.Globalization.CultureInfo.CurrentCulture = culture;
-        System.Globalization.CultureInfo.CurrentUICulture = culture;
+        System.Globalization.CultureInfo screen = ForScreen(culture);
+        System.Globalization.CultureInfo.DefaultThreadCurrentCulture = screen;
+        System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = screen;
+        System.Globalization.CultureInfo.CurrentCulture = screen;
+        System.Globalization.CultureInfo.CurrentUICulture = screen;
+    }
+
+    /// <summary>
+    /// Culture des écrans : la même, sauf le séparateur des milliers. Le français l'écrit avec une espace fine insécable
+    /// (U+202F), presque invisible dans la police de Lettra (« 15128,00 ») : les écrans prennent l'espace insécable
+    /// (U+00A0, « 15 128,00 »). Les PDF, les exports et l'API gardent leurs propres formats.
+    /// </summary>
+    public static System.Globalization.CultureInfo ForScreen(System.Globalization.CultureInfo culture)
+    {
+        ArgumentNullException.ThrowIfNull(culture);
+        const string Thin = "\u202F", Space = "\u00A0";
+        System.Globalization.NumberFormatInfo numbers = culture.NumberFormat;
+        if (numbers.NumberGroupSeparator != Thin && numbers.CurrencyGroupSeparator != Thin && numbers.PercentGroupSeparator != Thin)
+        {
+            return culture;
+        }
+
+        System.Globalization.CultureInfo screen = (System.Globalization.CultureInfo)culture.Clone();
+        screen.NumberFormat.NumberGroupSeparator = numbers.NumberGroupSeparator.Replace(Thin, Space, StringComparison.Ordinal);
+        screen.NumberFormat.CurrencyGroupSeparator = numbers.CurrencyGroupSeparator.Replace(Thin, Space, StringComparison.Ordinal);
+        screen.NumberFormat.PercentGroupSeparator = numbers.PercentGroupSeparator.Replace(Thin, Space, StringComparison.Ordinal);
+        return System.Globalization.CultureInfo.ReadOnly(screen);
     }
 }

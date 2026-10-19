@@ -52,7 +52,7 @@ else
                 </div>
                 <div class="lt-field">
                     <label for="payment-date">@L["Billing.Column.Date"]</label>
-                    <input id="payment-date" type="date" @bind="_date" max="@Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" readonly="@(_line is not null)" required />
+                    <DateField Id="payment-date" Value="_date" ValueChanged="d => _date = d ?? _date" Max="Today" ReadOnly="@(_line is not null)" required />
                 </div>
                 <div class="lt-field">
                     <label for="payment-amount">@L["Payments.AmountReceived"]</label>

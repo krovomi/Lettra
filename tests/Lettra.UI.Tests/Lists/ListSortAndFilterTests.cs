@@ -158,9 +158,12 @@ public sealed class ListSortAndFilterTests : BunitContext
             .Add(d => d.To, to).Add(d => d.ToChanged, v => to = v)
             .Add(d => d.OnChange, () => changes++));
 
-        dates.Find("#dates-from").GetAttribute("max").Should().Be("2026-12-31");
         dates.Find("#dates-from").GetAttribute("aria-label").Should().Be("Date d'émission, à partir du");
-        dates.Find("#dates-from").Change("2026-01-15");
+        dates.Find("#dates-to").GetAttribute("value").Should().Be("31/12/2026");
+        dates.Find("#dates-from").Change("2027-01-15");
+        from.Should().BeNull("une date après la borne de fin est refusée");
+        dates.Find("#dates-from").GetAttribute("aria-invalid").Should().Be("true");
+        dates.Find("#dates-from").Change("15/01/2026");
         dates.Find("#dates-to").Change(string.Empty);
         from.Should().Be(new DateOnly(2026, 1, 15));
         to.Should().BeNull();

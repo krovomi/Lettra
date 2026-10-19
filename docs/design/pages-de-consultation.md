@@ -22,8 +22,8 @@ passe en saisie dans la même fiche, sans changer d'écran. Pages concernées : 
 - Une fiche modifiée par quelqu'un d'autre pendant la saisie (refus 412, ADR-0013) : « Garder mes valeurs et
   enregistrer » ou « Reprendre ses valeurs ».
 - Après **Créer** ou **Enregistrer**, la fiche revient en lecture, à jour, et la liste est relue.
-- L'ancienne grille du catalogue reste disponible (**Saisie en grille**, `/catalog/grid`) pour saisir beaucoup
-  d'articles au clavier.
+- La grille du catalogue reste disponible pour saisir beaucoup d'articles au clavier : la bascule « Liste » /
+  « Saisie en grille » de l'en-tête passe d'un affichage à l'autre dans les deux sens (`/catalog`, `/catalog/grid`).
 
 ## Des fiches légères
 

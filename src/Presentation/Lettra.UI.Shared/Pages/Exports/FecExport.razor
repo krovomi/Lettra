@@ -19,9 +19,9 @@
     <h2 id="fec-period-title">@L["Fec.Period.Title"]</h2>
     <div class="lettra-inline">
         <label for="fec-from">@L["Fec.Period.From"]</label>
-        <input id="fec-from" type="date" @bind="_from" />
+        <DateField Id="fec-from" Value="_from" ValueChanged="d => _from = d ?? _from" required />
         <label for="fec-to">@L["Fec.Period.To"]</label>
-        <input id="fec-to" type="date" @bind="_to" />
+        <DateField Id="fec-to" Value="_to" ValueChanged="d => _to = d ?? _to" required />
         <button type="button" id="fec-export" class="lettra-button" disabled="@_busy" @onclick="ExportAsync">@L["Fec.Export"]</button>
     </div>
 

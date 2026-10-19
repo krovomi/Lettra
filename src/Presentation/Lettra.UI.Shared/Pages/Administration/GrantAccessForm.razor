@@ -88,7 +88,7 @@
             {
                 <label class="la-field">
                     <span>@L["Admin.Grant.LastDay"]</span>
-                    <input id="grant-until-date" type="date" @bind="_until" min="@Today.AddDays(1).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" />
+                    <DateField Id="grant-until-date" @bind-Value="_until" Min="Today.AddDays(1)" />
                 </label>
             }
             @if (chosen.RequiresExpiry)

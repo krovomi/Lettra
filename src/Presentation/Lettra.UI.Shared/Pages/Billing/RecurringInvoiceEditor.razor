@@ -86,12 +86,12 @@ else
                     </div>
                     <div class="lettra-field">
                         <label for="start-date">@L["Recurring.Field.StartDate"]</label>
-                        <input id="start-date" type="date" value="@Iso(_request.StartDate)" disabled="@(_busy || ScheduleLocked)"
-                               @onchange="e => _request.StartDate = Parse(e) ?? _request.StartDate" />
+                        <DateField Id="start-date" Value="_request.StartDate" Disabled="@(_busy || ScheduleLocked)"
+                                   ValueChanged="d => _request.StartDate = d ?? _request.StartDate" required />
                     </div>
                     <div class="lettra-field">
                         <label for="end-date">@L["Recurring.Field.EndDate"]</label>
-                        <input id="end-date" type="date" value="@Iso(_request.EndDate)" disabled="@_busy" @onchange="e => _request.EndDate = Parse(e)" />
+                        <DateField Id="end-date" @bind-Value="_request.EndDate" Disabled="_busy" />
                         <FieldErrors ServerErrors="_errors" Field="EndDate" />
                     </div>
                     @if (ScheduleLocked)
@@ -451,9 +451,4 @@ else
         Show(result.Value);
         return true;
     }
-
-    private static string? Iso(DateOnly? date) => date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-
-    private static DateOnly? Parse(ChangeEventArgs e) =>
-        DateOnly.TryParse(e.Value?.ToString(), CultureInfo.InvariantCulture, out DateOnly date) ? date : null;
 }
