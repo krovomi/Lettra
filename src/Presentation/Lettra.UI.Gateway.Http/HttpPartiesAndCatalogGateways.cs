@@ -37,7 +37,7 @@ internal static class HttpCalls
 
     /// <summary>Paramètre <c>&amp;search=</c> échappé, vide sans recherche.</summary>
     public static string SearchParameter(string? search) =>
-        string.IsNullOrWhiteSpace(search) ? string.Empty : "&search=" + Uri.EscapeDataString(search.Trim());
+        ListSearch.Normalize(search) is { } text ? "&search=" + Uri.EscapeDataString(text) : string.Empty;
 
     /// <summary>Paramètres d'une liste de clients ou de fournisseurs ; le tri n'apparaît que s'il diffère du nom de A à Z.</summary>
     public static string PartyListParameters(PartyListQuery query)

@@ -83,7 +83,7 @@ public static class AccountingViews
         IReadOnlyList<SalesJournalExportEntry> entries, DateOnly from, DateOnly to, string? search, string? account, Guid? customerId, int page, int pageSize)
     {
         ArgumentNullException.ThrowIfNull(entries);
-        string? needle = string.IsNullOrWhiteSpace(search) ? null : Fold(search.Trim());
+        string? needle = ListSearch.Normalize(search) is { } text ? Fold(text) : null;
         List<SalesJournalExportEntry> kept = entries
             .Where(e => customerId is null || e.CustomerId == customerId)
             .Where(e => account is null || e.Lines.Any(l => l.Account == account))

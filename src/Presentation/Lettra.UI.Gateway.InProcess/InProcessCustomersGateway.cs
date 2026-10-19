@@ -34,7 +34,7 @@ internal sealed class InProcessCustomersGateway(IServiceScopeFactory scopes) : I
     public Task<OperationResult<PagedResponse<CustomerSummary>>> SearchAsync(PartyListQuery query, CancellationToken cancellationToken) =>
         RunAsync((sp, dossier, ct) => InProcessScope.QueryAsync(
             sp,
-            new ListCustomersQuery(dossier, query.Page, query.PageSize, string.IsNullOrWhiteSpace(query.Search) ? null : query.Search.Trim(), query.Sort, query.Direction, query.Kind),
+            new ListCustomersQuery(dossier, query.Page, query.PageSize, ListSearch.Normalize(query.Search), query.Sort, query.Direction, query.Kind),
             ct), cancellationToken);
 
     public Task<OperationResult<CustomerResponse>> UpdateAsync(Guid id, long expectedVersion, CreateCustomerRequest request, CancellationToken cancellationToken) =>

@@ -16,7 +16,7 @@ internal sealed class InProcessBankingGateway(IServiceScopeFactory scopes) : IBa
     {
         ArgumentNullException.ThrowIfNull(query);
         return InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new ListPaymentsQuery(
-            dossier, query.From, query.To, query.CustomerId, string.IsNullOrWhiteSpace(query.Search) ? null : query.Search.Trim(), query.Page, query.PageSize,
+            dossier, query.From, query.To, query.CustomerId, ListSearch.Normalize(query.Search), query.Page, query.PageSize,
             query.Sort, query.Direction, query.MinAmount, query.MaxAmount), ct), cancellationToken);
     }
 

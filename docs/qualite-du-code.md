@@ -148,7 +148,7 @@ Chaque écart a été vérifié dans le code. Les chemins sont relatifs à `src/
 | R9 | Éditeurs de devis et de facture : une dizaine de méthodes copiées (prix, brouillon local, PDF, focus). | `Presentation/Lettra.UI.Shared/Pages/Billing/InvoiceEditor.razor` (836 lignes), `QuoteEditor.razor` (724 lignes) |
 | R10 | Squelette de tâche périodique recopié 6 fois, sans `TimeProvider` pour `PeriodicTimer`. | `IntegrityCheckJob`, `FiscalDeadlineAlertJob`, `CabinetOverviewJob`, `OutboxDispatchJob`, `DossierMigrationJob`, `EscalationJob` |
 | R11 | Liste des États membres de l'UE en deux exemplaires ; « EUR » défini de 4 façons. | `Calculations/Compliance/ComplianceChecker.cs:102`, `Exports.Application/Tax/DesCalculator.cs:26` |
-| R12 | Normalisation de la recherche écrite 10 fois, et pas partout pareil (les devis ne retirent pas les espaces). | endpoints et passerelles |
+| R12 | Normalisation de la recherche écrite 10 fois, et pas partout pareil (les devis ne retirent pas les espaces). | endpoints et passerelles (`ListSearch.Normalize` dans les endpoints, les passerelles et les cas d'usage, devis compris ; la base ignore accents et casse ; corrigé, PR 6) |
 
 ### Responsabilité unique, ouverture / fermeture
 
@@ -156,7 +156,7 @@ Chaque écart a été vérifié dans le code. Les chemins sont relatifs à `src/
 |---|---|---|
 | S1 | `RecordPaymentHandler` : 16 dépendances, une méthode de 100 lignes qui fait six choses, et une commande imbriquée. | `Exports.Application/Banking/Payments.cs:33-271` (saisie et déclaration à la plateforme sorties du handler (`RecordPaymentValidator`, `PaymentPlatformReporter`), 14 dépendances au lieu de 16 ; partiel, PR 4) |
 | S2 | `SyncCoordinator.RunInDossierAsync` : 150 lignes, compteurs mutables capturés dans des closures. | `Modules/Sync/Lettra.Sync.Client/SyncCoordinator.cs:302` |
-| S3 | `ComplianceChecker.Check` : 150 lignes, à découper par rubrique (vendeur, client, pièce, lignes, paiement) avec D2. | `Calculations/Compliance/ComplianceChecker.cs:106` |
+| S3 | `ComplianceChecker.Check` : 150 lignes, à découper par rubrique (vendeur, client, pièce, lignes, paiement) avec D2. | `Calculations/Compliance/ComplianceChecker.cs:106` (une méthode par rubrique : émetteur, client, pièce, lignes, TVA et avoir, paiement ; ordre des constats inchangé ; corrigé, PR 6) |
 | S4 | `AccountingAssistant.AskAsync` : 112 lignes (politique, pseudonymisation, contexte, boucle d'outils). | `Ai/Lettra.Ai.Orchestration/AccountingAssistant.cs:28` |
 | S5 | `SyncOutboxBehavior` : `switch` sur 9 types de commandes ; une nouvelle commande synchronisable est ignorée sans erreur. | `Modules/Sync/Lettra.Sync.Client/SyncOutboxBehavior.cs:46, 64-150` |
 | S6 | `BusinessMetrics` repère les commandes par leur nom de type écrit en chaîne. | `Core/Lettra.Application/Diagnostics/BusinessMetrics.cs:18-73` |
@@ -204,10 +204,9 @@ Aucun test existant n'est retiré, désactivé ni affaibli.
 | 2 | Doublons transverses : calendrier légal unique `LegalCalendar` (R3), liste UE et devise uniques (R11), boucle unique des tâches de fond `PeriodicPass` sur l'horloge injectée (R10), textes des mentions légales partagés (D2), « écrire puis relire » unique dans les passerelles en processus (R2), règles d'acompte et de suppression dans les entités (A1), défauts D6 et D7, tests de parité de toutes les passerelles (68 cas, HTTP et en direct). | Fusionnée (PR #129, réparée par #134) |
 | 3 | Rôles : portée et échéance d'un rôle portées par `RoleDefinition` (A3, la règle était recopiée dans l'attribution et dans le calcul des droits) ; passerelles HTTP : délai d'attente traité comme une coupure (D4) ; tests. | Fusionnée (PR #139) |
 | 4 | Tests d'infrastructure : tâche de la vue cabinet et ses sources, serveur de synchronisation (rejeu après écriture concurrente), webhook de supervision, annuaire d'autorisations (83 cas). Livrés avec la PR 2. | Fusionnée avec la PR 2 |
-| 5 | Listes paginées : une seule règle de page et de taille (R7) ; interface : horloge injectée (D5) ; tests. | En cours |
-| 5 bis | API : recherche normalisée (R12), tests. | À faire |
+| 5 | Listes paginées : une seule règle de page et de taille (R7) ; interface : horloge injectée (D5) ; tests. | Fusionnée (PR #145) |
+| 5 bis | Recherche normalisée en un seul endroit (R12), découpage du contrôle des mentions (S3), tests. | En cours |
 | 6 | Application : chargement versionné (R5), fin de validation de facture (R8), saisie d'un encaissement (R4, S1, premier `IValidator` d'Exports pour A7), tests. | Fusionnée (PR #141) |
-| 7 | Conformité : découpage de `ComplianceChecker.Check` (S3). | À faire |
 | 8 | Interface Blazor : fin du localisateur de services (A5, A6), base commune des éditeurs (R9), tests bUnit. | À faire |
 
 Seuil de couverture appliqué par la CI depuis la PR #136 : 88 % des lignes et 78 % des branches au
