@@ -6,7 +6,7 @@ Logiciel de devis et de factures pour les cabinets d'experts-comptables : une ba
 > **Prototype interne.** Lettra se présente aujourd'hui en interne, sur **données fictives uniquement**. La plateforme
 > agréée est **simulée** : rien ne quitte l'ordinateur. Ne saisissez aucune donnée réelle de client.
 
-- [Choisir sa façon d'essayer](#choisir-sa-façon-dessayer) : navigateur, Windows, Android, iPhone, Mac
+- [Choisir sa façon d'essayer](#choisir-sa-façon-dessayer) : Navigateur, Windows, Android, iPhone, Mac
 - [Premier usage, pas à pas](#premier-usage-pas-à-pas)
 - [Ce que la démo ne fait pas encore](#ce-que-la-démo-ne-fait-pas-encore)
 - [En cas de problème](#en-cas-de-problème)
