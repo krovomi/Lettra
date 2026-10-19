@@ -20,6 +20,7 @@ using Lettra.Contracts.Directory;
 using Lettra.Contracts.Dossiers;
 using Lettra.Contracts.Pilotage;
 using Lettra.Contracts.Pricing;
+using Lettra.Contracts.Preferences;
 using Lettra.Contracts.Rights;
 using Lettra.Contracts.Speech;
 using Lettra.Contracts.Suppliers;
@@ -121,6 +122,9 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(ChangeAlertSeverityRequest))]
 [JsonSerializable(typeof(SaveAiSettingsRequest))]
 [JsonSerializable(typeof(AiSettingsResponse))]
+[JsonSerializable(typeof(UserPreferencesResponse))]
+[JsonSerializable(typeof(SaveUserPreferencesRequest))]
+[JsonSerializable(typeof(RecordUsageRequest))]
 [JsonSerializable(typeof(SegregationOfDutiesSettings))]
 [JsonSerializable(typeof(DocumentPresence))]
 [JsonSerializable(typeof(SyncIntent))]

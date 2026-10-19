@@ -98,6 +98,7 @@ else
                         <SmartInput Id="payment-terms" Voice="@(!IsReadOnly)" VoiceLabel="@L["Invoice.Field.PaymentTerms"]" disabled="@IsReadOnly" Value="@_request.PaymentTerms" maxlength="500" placeholder="@_company?.PaymentTerms"
                                     OnCommitted="v => TextCommittedAsync(v, t => _request.PaymentTerms = t)" Templates="TextFieldKind.PaymentTerms"
                                     Spellcheck="true" Tidy="true" data-tour="payment-terms" />
+                        <RememberDefault Value="@_request.PaymentTerms" Field="RememberedField.PaymentTerms" Disabled="IsReadOnly" DescribedBy="payment-terms" />
                     </div>
 
                     <div class="lettra-field lettra-field-wide">
@@ -128,6 +129,7 @@ else
                     <label for="notes" class="lettra-visually-hidden">@L["Billing.Field.Notes"]</label>
                     <SmartInput Id="notes" Voice="@(!IsReadOnly)" VoiceLabel="@L["Billing.Field.Notes"]" Multiline="true" Rows="3" disabled="@IsReadOnly" Value="@_request.Notes" maxlength="4000"
                                 OnCommitted="v => TextCommittedAsync(v, t => _request.Notes = t)" Templates="TextFieldKind.InvoiceNotes" Spellcheck="true" Tidy="true" />
+                    <RememberDefault Value="@_request.Notes" Field="RememberedField.InvoiceNotes" Disabled="IsReadOnly" DescribedBy="notes" />
                 </div>
             </Collapsible>
         </div>
@@ -327,6 +329,8 @@ else
             }
 
             Show(loaded.Value);
+            // Pièce ouverte : proposée dans « Reprendre où j'en étais » (accueil, palette).
+            _ = EntryPreferences.From(Services)?.RecordUseAsync(UsageKindDto.Invoice, id);
             await RestoreAsync(serverId: id, localId: null);
             await CheckAsync();
             if (Action == "credit-note")
@@ -353,6 +357,14 @@ else
         {
             _invoice = null;
             _request = new SaveInvoiceRequest { VatRegime = _company?.VatFranchise == true ? VatRegimeDto.Franchise : VatRegimeDto.Standard };
+            // Valeurs retenues par l'utilisateur pour ce dossier (« Mes préférences ») ; vides, rien ne change.
+            if (EntryPreferences.From(Services) is { } entry)
+            {
+                EntryDefaultsDto defaults = await entry.DefaultsAsync();
+                _request.PaymentTerms = defaults.PaymentTerms;
+                _request.Notes = defaults.InvoiceNotes;
+            }
+
             _lines = [];
             _compliance = null;
             _customerName = null;
@@ -436,6 +448,7 @@ else
     {
         _request.CustomerId = customer.Id;
         _customerName = customer.Name;
+        _ = EntryPreferences.From(Services)?.RecordUseAsync(UsageKindDto.Customer, customer.Id);
         await PreselectPdfLanguageAsync();
         await ScheduleSaveAsync();
     }

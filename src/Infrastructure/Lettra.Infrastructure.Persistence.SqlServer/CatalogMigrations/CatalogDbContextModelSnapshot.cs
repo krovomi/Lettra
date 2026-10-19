@@ -392,6 +392,28 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.CatalogMigrations
                     b.ToTable("UserAccounts", "catalog");
                 });
 
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogUserPreferences", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Document")
+                        .IsRequired()
+                        .HasMaxLength(200000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("UserPreferences", "catalog");
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogAiSettings", b =>
                 {
                     b.HasOne("Lettra.Infrastructure.Persistence.Catalog.CatalogOrganisation", null)

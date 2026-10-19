@@ -175,6 +175,38 @@ public sealed class GalleryTests : BunitContext
         Ecrire(dossier, "devis-vide", "quotes", Page<QuoteList>());
     }
 
+    [Fact]
+    public void Galerie_des_preferences_pour_les_captures()
+    {
+        string? dossier = Environment.GetEnvironmentVariable("LETTRA_GALLERY_DIR");
+        if (string.IsNullOrEmpty(dossier))
+        {
+            return;
+        }
+
+        Directory.CreateDirectory(dossier);
+        Guid facture = Donnees();
+        Guid boulangerie = FakeCabinetGateway.Boulangerie;
+        DateTimeOffset maintenant = new(2026, 10, 16, 11, 0, 0, TimeSpan.Zero);
+        Preferences.FakeUserPreferencesGateway compte = new()
+        {
+            Stored = new Contracts.Preferences.UserPreferencesResponse(
+                new Contracts.Preferences.WorkspacePreferencesDto { HomePage = null },
+                [new Contracts.Preferences.EntryDefaultsDto { DossierId = boulangerie, Unit = "HUR", QuoteValidityDays = 45, PaymentTerms = "Paiement à 30 jours fin de mois." }],
+                [new Contracts.Preferences.DossierUsageDto(boulangerie,
+                [
+                    new(Contracts.Preferences.UsageKindDto.Invoice, facture, 3, maintenant),
+                    new(Contracts.Preferences.UsageKindDto.Quote, _quotes.Quotes.Keys.First(), 1, maintenant.AddHours(-2)),
+                    new(Contracts.Preferences.UsageKindDto.Customer, _customers.Customers[2].Id, 6, maintenant),
+                ])],
+                4,
+                maintenant),
+        };
+        Services.AddSingleton<Lettra.UI.Abstractions.IUserPreferencesGateway>(compte);
+        Ecrire(dossier, "mes-preferences", "settings/preferences", Page<Lettra.UI.Shared.Pages.Settings.MyPreferences>());
+        Ecrire(dossier, "accueil-reprendre", "", Page<Home>());
+    }
+
     private static RenderFragment Page<TPage>() where TPage : IComponent => b =>
     {
         b.OpenComponent<TPage>(0);

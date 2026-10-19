@@ -80,6 +80,7 @@ else
                     <label for="notes" class="lettra-visually-hidden">@L["Billing.Field.Notes"]</label>
                     <SmartInput Id="notes" Voice="@(!IsReadOnly)" VoiceLabel="@L["Billing.Field.Notes"]" Multiline="true" Rows="3" disabled="@IsReadOnly" Value="@_request.Notes" maxlength="4000" OnCommitted="NotesChangedAsync"
                                 Templates="TextFieldKind.QuoteNotes" Spellcheck="true" Tidy="true" data-tour="notes" />
+                    <RememberDefault Value="@_request.Notes" Field="RememberedField.QuoteNotes" Disabled="IsReadOnly" DescribedBy="notes" />
                 </div>
             </Collapsible>
         </div>
@@ -242,6 +243,8 @@ else
             }
 
             Show(loaded.Value, replaceLines: true);
+            // Pièce ouverte : proposée dans « Reprendre où j'en étais » (accueil, palette).
+            _ = EntryPreferences.From(Services)?.RecordUseAsync(UsageKindDto.Quote, id);
             await RestoreAsync(serverId: id, localId: null);
             await CheckAsync();
         }
@@ -264,6 +267,17 @@ else
         {
             _quote = null;
             _request = new SaveQuoteRequest { VatRegime = _company?.VatFranchise == true ? VatRegimeDto.Franchise : VatRegimeDto.Standard };
+            // Valeurs retenues par l'utilisateur pour ce dossier (« Mes préférences ») ; vides, rien ne change.
+            if (EntryPreferences.From(Services) is { } entry)
+            {
+                EntryDefaultsDto defaults = await entry.DefaultsAsync();
+                _request.Notes = defaults.QuoteNotes;
+                if (defaults.QuoteValidityDays is int days)
+                {
+                    _request.ValidUntil = DateOnly.FromDateTime((Services.GetService<TimeProvider>() ?? TimeProvider.System).GetLocalNow().Date).AddDays(days);
+                }
+            }
+
             _lines = [];
             _compliance = null;
             _customerName = null;
@@ -354,6 +368,7 @@ else
     {
         _request.CustomerId = customer.Id;
         _customerName = customer.Name;
+        _ = EntryPreferences.From(Services)?.RecordUseAsync(UsageKindDto.Customer, customer.Id);
         await PreselectPdfLanguageAsync();
         await ScheduleSaveAsync();
     }

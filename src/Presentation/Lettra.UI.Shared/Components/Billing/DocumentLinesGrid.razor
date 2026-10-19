@@ -5,6 +5,7 @@
 @inject TypingHistory History
 @inject IJSRuntime JS
 @inject VoiceCommands Voice
+@inject IServiceProvider Services
 @* Lignes d'un devis ou d'une facture sur la grille clavier : F4 ouvre l'article, l'unité ou la TVA ; Insert ajoute une
    ligne, Ctrl+Suppr la retire ; Entrée sur la dernière cellule crée la ligne suivante. Les totaux sont tenus ligne par
    ligne ; la pièce est enregistrée par la page (brouillon), pas à chaque cellule. *@
@@ -141,9 +142,14 @@
     {
         _totals.Replace(change.Before.ToInput(Regime), change.After.ToInput(Regime));
         await OnTotalsChanged.InvokeAsync(_totals.Totals);
-        if (change.After.CatalogItemId is not null && change.After.CatalogItemId != change.Before.CatalogItemId)
+        if (change.After.CatalogItemId is Guid chosen && change.After.CatalogItemId != change.Before.CatalogItemId)
         {
             await ApplyCustomerPriceAsync(change.Row);
+            // Compté pour remonter en tête de la liste F4 la prochaine fois ; l'écriture ne retient pas la saisie.
+            if (EntryPreferences.From(Services) is { } preferences)
+            {
+                _ = preferences.RecordUseAsync(UsageKindDto.CatalogItem, chosen);
+            }
         }
 
         await OnLinesChanged.InvokeAsync();
@@ -151,8 +157,15 @@
 
     private async Task AddLineAsync()
     {
-        VatRateOption rate = ReferenceData.VatRates.FirstOrDefault(r => r.Code == FallbackRate.Code) ?? ReferenceData.VatRates.FirstOrDefault() ?? FallbackRate;
+        // Taux et unité retenus par l'utilisateur pour ce dossier (« Mes préférences »), sinon 20 % à l'unité.
+        EntryDefaultsDto defaults = EntryPreferences.From(Services)?.Defaults ?? new EntryDefaultsDto();
+        VatRateOption rate = ReferenceData.VatRates.FirstOrDefault(r => r.Code == defaults.VatRateCode)
+            ?? ReferenceData.VatRates.FirstOrDefault(r => r.Code == FallbackRate.Code) ?? ReferenceData.VatRates.FirstOrDefault() ?? FallbackRate;
         DocumentLineRow line = DocumentLineRow.New(rate);
+        if (!string.IsNullOrEmpty(defaults.Unit))
+        {
+            line = line with { UnitCode = defaults.Unit };
+        }
         Lines.Add(line);
         _totals.Add(line.ToInput(Regime));
         _grid?.Refresh();
@@ -275,9 +288,13 @@
 
     private static string OptionText(ChoiceOption option) => option.Label;
 
+    /// <summary>Articles du catalogue, ceux que l'utilisateur ajoute le plus souvent en tête.</summary>
     private List<ChoiceOption> ItemOptions() =>
-        [.. _catalog.Select(i => new ChoiceOption(i.Reference,
+        [.. RankedCatalog().Select(i => new ChoiceOption(i.Reference,
             $"{i.Reference} · {i.Designation} · {GridNumber.FormatPrice(i.UnitPriceExclTax, Culture)}"))];
+
+    private IReadOnlyList<CatalogItemSummary> RankedCatalog() =>
+        EntryPreferences.From(Services) is { } preferences ? preferences.Rank(_catalog, i => i.Id, UsageKindDto.CatalogItem) : _catalog;
 
     /// <summary>F4 sur la désignation (vague 5, lane F) : celle du catalogue, puis celles déjà écrites pour l'article.</summary>
     private async Task<List<ChoiceOption>> DesignationOptionsAsync(DocumentLineRow row)

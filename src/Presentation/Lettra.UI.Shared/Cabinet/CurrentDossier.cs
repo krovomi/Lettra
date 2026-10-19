@@ -47,6 +47,34 @@ public sealed class CurrentDossier(ICabinetGateway gateway, IDossierSelection se
 
     public bool IsFavourite(Guid dossierId) => _favourites.Contains(dossierId);
 
+    /// <summary>Identifiants des favoris et des récents, tels que le compte de l'utilisateur les retient.</summary>
+    public IReadOnlyList<Guid> FavouriteIds => _favourites;
+
+    public IReadOnlyList<Guid> RecentIds => _recents;
+
+    /// <summary>
+    /// Reprend les favoris et récents rangés dans le compte (réglés sur un autre appareil) et les retient aussi sur
+    /// celui-ci. Les dossiers devenus inaccessibles sont écartés.
+    /// </summary>
+    public async Task AdoptAsync(IEnumerable<Guid> favourites, IEnumerable<Guid> recents)
+    {
+        ArgumentNullException.ThrowIfNull(favourites);
+        ArgumentNullException.ThrowIfNull(recents);
+        await EnsureLoadedAsync().ConfigureAwait(false);
+        List<Guid> adoptedFavourites = [.. favourites.Distinct().Where(id => Find(id) is not null)];
+        List<Guid> adoptedRecents = [.. recents.Distinct().Where(id => Find(id) is not null).Take(MaxRecents + 1)];
+        if (adoptedFavourites.SequenceEqual(_favourites) && adoptedRecents.SequenceEqual(_recents))
+        {
+            return;
+        }
+
+        _favourites = adoptedFavourites;
+        _recents = adoptedRecents;
+        await preferences.WriteAsync(FavouritesKey, Join(_favourites)).ConfigureAwait(false);
+        await preferences.WriteAsync(RecentsKey, Join(_recents)).ConfigureAwait(false);
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+
     /// <summary>Une seule lecture par session ; <paramref name="reload"/> la refait (après une création de dossier).</summary>
     public Task EnsureLoadedAsync(bool reload = false)
     {
