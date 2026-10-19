@@ -120,6 +120,7 @@ Chaque écart a été vérifié dans le code. Les chemins sont relatifs à `src/
 | D3 | `SyncCenter.OnSourceChanged` est un `async void` qui avale toute exception sans la journaliser. | `Modules/Sync/Lettra.Sync.Client/SyncCenter.cs:178-188` | Journaliser l'exception. |
 | D4 | Un délai d'attente HTTP devient une exception à l'écran pour la plupart des passerelles, mais « serveur injoignable » pour d'autres. | `Presentation/Lettra.UI.Gateway.Http/HttpPartiesAndCatalogGateways.cs:25`, `HttpBillingGateways.cs:37` contre `HttpCabinetGateway.cs:50` | Un seul filtre d'exception partagé. |
 | D5 | Plusieurs écrans prennent la date du poste (`DateTime.Today`, `DateTimeOffset.Now`) au lieu de `TimeProvider`. | `Presentation/Lettra.UI.Shared` : `DossierReviewPage.razor:101`, `CabinetPage.razor:285`, `FecExport.razor:96`, `GrantAccessForm.razor:141`, `PlatformTransmissionPanel.razor:108`, `Administration.razor:83` | Une horloge d'interface injectée. |
+| D6 | Supprimer un devis ou une facture avec une version périmée : en direct, refus « conflit de version » ; par HTTP, une `JsonException` remonte jusqu'à l'écran, car la pièce jointe au 412 est relue comme un `ProblemResponse`. Trouvé par les tests de parité des passerelles. | `Presentation/Lettra.UI.Gateway.Http/HttpBillingGateways.cs:33`, `HttpCustomersGateway.cs:96` | Pièce jointe illisible ignorée, le refus garde son code (corrigé, PR 2). |
 
 ### Duplication (DRY)
 
@@ -163,6 +164,11 @@ Chaque écart a été vérifié dans le code. Les chemins sont relatifs à `src/
 | A7 | Les modules Exports (64 handlers) et Supervision (10) n'ont aucun `IValidator` : la validation des requêtes est écrite dans les handlers. | `Exports.Application/Banking/Payments.cs:83`, `BankStatements.cs:32-50`, `Tax/TaxDeclarations.cs:107` |
 | A8 | Le test de parité des codes d'erreur ne couvre pas `Supervision.Domain`. | `tests/Lettra.Architecture.Tests/ErrorCodeAndResourceTests.cs:29` |
 
+Écarts constatés par les tests de parité, identiques sur les deux transports, à revoir plus tard :
+un conflit de version sur les paramètres fiscaux répond 409 sans les paramètres actuels (les
+autres pièces joignent la version actuelle) ; un relevé bancaire de format inconnu est refusé avec
+`BankStatement.CsvColumnsInvalid` plutôt que `FormatUnknown`.
+
 A2 (approbation d'avoir) et R6 (réemballages de `Result`) sont de faible valeur : la double
 vérification d'A2 est une défense en profondeur, et un `Bind` sur `Result` rendrait les handlers
 moins lisibles qu'aujourd'hui (KISS). Ils restent listés mais ne seront traités que s'ils gênent.
@@ -181,7 +187,7 @@ Aucun test existant n'est retiré, désactivé ni affaibli.
 | PR | Contenu | État |
 |---|---|---|
 | 1 | Ce document et le script `build/couverture/fusionner.py` ; API : `HttpResults` remplace les ternaires `Result` → HTTP recopiés (R1) ; défauts D1 et D3 corrigés ; parité des codes d'erreur étendue à `Supervision.Domain` (A8). | En revue (PR #119) |
-| 2 | Doublons transverses : calendrier légal unique `LegalCalendar` (R3), liste UE et devise uniques (R11), boucle unique des tâches de fond `PeriodicPass` sur l'horloge injectée (R10), textes des mentions légales partagés (D2), « écrire puis relire » unique dans les passerelles en processus (R2), tests. | En cours |
+| 2 | Doublons transverses : calendrier légal unique `LegalCalendar` (R3), liste UE et devise uniques (R11), boucle unique des tâches de fond `PeriodicPass` sur l'horloge injectée (R10), textes des mentions légales partagés (D2), « écrire puis relire » unique dans les passerelles en processus (R2), défaut D6, tests de parité de toutes les passerelles (68 cas, HTTP et en direct). | En cours |
 | 3 | Domaine et application : règles d'acompte et de suppression dans les entités (A1), rôles (A3), chargement versionné (R5), validateurs paginés (R7), fin de validation de facture (R8), règlement (R4, S1), `IValidator` dans Exports (A7), tests. | À faire |
 | 4 | Tests d'infrastructure : tâche de la vue cabinet et ses sources, serveur de synchronisation, webhook de supervision, annuaire d'autorisations. | En cours |
 | 5 | API : recherche normalisée (R12), tests. Après le fil « Tris et filtres sur les listes ». | À faire |

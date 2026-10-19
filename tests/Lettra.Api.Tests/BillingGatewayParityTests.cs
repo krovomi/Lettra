@@ -72,7 +72,7 @@ public sealed class BillingGatewayParityTests(LettraApiFactory factory) : IClass
         Guid customer = await CustomerAsync(services);
         QuoteResponse draft = (await quotes.CreateAsync(new SaveQuoteRequest { CustomerId = customer, Lines = [GatewayHarness.Conseil()] }, default)).Value!;
 
-        await StaleDeleteAsync(transport, () => quotes.DeleteAsync(draft.Id, draft.Version + 1, default));
+        await StaleDeleteAsync(() => quotes.DeleteAsync(draft.Id, draft.Version + 1, default));
         OperationResult<bool> deleted = await quotes.DeleteAsync(draft.Id, draft.Version, default);
         OperationResult<QuoteResponse> missing = await quotes.GetAsync(draft.Id, default);
         OperationResult<QuoteResponse> missingValidate = await quotes.ValidateAsync(Guid.CreateVersion7(), null, default);
@@ -104,7 +104,7 @@ public sealed class BillingGatewayParityTests(LettraApiFactory factory) : IClass
             draft.Id, new SaveInvoiceRequest { CustomerId = customer, Lines = [GatewayHarness.Conseil()] }, draft.Version, default);
         OperationResult<ComplianceReportResponse> check = await invoices.CheckAsync(draft.Id, default);
         OperationResult<InvoiceResponse> notCredit = await invoices.ApproveCreditAsync(draft.Id, updated.Value!.Version, default);
-        await StaleDeleteAsync(transport, () => invoices.DeleteAsync(draft.Id, draft.Version, default));
+        await StaleDeleteAsync(() => invoices.DeleteAsync(draft.Id, draft.Version, default));
         OperationResult<PagedResponse<InvoiceSummary>> drafts = await invoices.ListAsync(
             new BillingListQuery(CustomerId: customer), InvoiceKindDto.Invoice, InvoiceStatusDto.Draft, default);
 
@@ -216,23 +216,12 @@ public sealed class BillingGatewayParityTests(LettraApiFactory factory) : IClass
     }
 
     /// <summary>
-    /// Suppression d'une pièce avec une version périmée. En direct : refus Concurrency.VersionMismatch. Par HTTP, ÉCART
-    /// ACTUEL (bogue, non corrigé ici) : le 412 joint la pièce actuelle, que VersionedCalls.DeleteAsync
-    /// (HttpBillingGateways.cs:33) fait relire comme un ProblemResponse par ToOperationResultAsync
-    /// (HttpCustomersGateway.cs:97) ; le champ « status » texte du devis ou de la facture n'entre pas dans l'entier du
-    /// ProblemResponse, et la JsonException remonte jusqu'à l'écran au lieu d'un refus.
+    /// Suppression d'une pièce avec une version périmée : refus Concurrency.VersionMismatch sur les deux transports.
+    /// Par HTTP, le 412 joint la pièce actuelle, que la suppression ne sait pas lire comme un ProblemResponse ;
+    /// avant correction, la JsonException remontait jusqu'à l'écran.
     /// </summary>
-    private static async Task StaleDeleteAsync(string transport, Func<Task<OperationResult<bool>>> delete)
-    {
-        if (transport == "http")
-        {
-            await delete.Should().ThrowAsync<System.Text.Json.JsonException>();
-        }
-        else
-        {
-            (await delete()).Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Concurrency.VersionMismatch);
-        }
-    }
+    private static async Task StaleDeleteAsync(Func<Task<OperationResult<bool>>> delete) =>
+        (await delete()).Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Concurrency.VersionMismatch);
 
     [Fact]
     public async Task Par_http_le_jeu_de_demonstration_est_ferme_sur_l_api_de_test()
