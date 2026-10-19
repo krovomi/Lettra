@@ -88,8 +88,13 @@ internal sealed class FakeAdministrationGateway : IAdministrationGateway
 
     public SaveCustomRoleRequest? LastRole { get; private set; }
 
-    public Task<OperationResult<MyAccessResponse>> GetMyAccessAsync(Guid? dossierId, CancellationToken cancellationToken) =>
-        Task.FromResult(OperationResult<MyAccessResponse>.Success(new MyAccessResponse(CabinetId, CanAdminister, CanAdminister ? Templates["manager"].Areas : [])));
+    public int AccessReads { get; private set; }
+
+    public Task<OperationResult<MyAccessResponse>> GetMyAccessAsync(Guid? dossierId, CancellationToken cancellationToken)
+    {
+        AccessReads++;
+        return Task.FromResult(OperationResult<MyAccessResponse>.Success(new MyAccessResponse(CabinetId, CanAdminister, CanAdminister ? Templates["manager"].Areas : [])));
+    }
 
     public Task<OperationResult<AdministrationOverview>> GetOverviewAsync(Guid cabinetId, CancellationToken cancellationToken)
     {
