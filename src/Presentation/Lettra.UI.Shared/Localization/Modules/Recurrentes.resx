@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.RecurringInvoices" xml:space="preserve"><value>Factures récurrentes</value></data>
+  <data name="Invoice.BillingPeriod" xml:space="preserve"><value>Période facturée : du {0} au {1}</value></data>
+  <data name="Recurring.Title" xml:space="preserve"><value>Factures récurrentes</value></data>
+  <data name="Recurring.Subtitle" xml:space="preserve"><value>Les abonnements et honoraires au forfait : Lettra prépare chaque facture à son échéance.</value></data>
+  <data name="Recurring.New" xml:space="preserve"><value>Nouveau modèle</value></data>
+  <data name="Recurring.Due.One" xml:space="preserve"><value>Une facture récurrente est à créer.</value></data>
+  <data name="Recurring.Due.Many" xml:space="preserve"><value>{0} factures récurrentes sont à créer.</value></data>
+  <data name="Recurring.Run" xml:space="preserve"><value>Créer les factures dues</value></data>
+  <data name="Recurring.RunOne" xml:space="preserve"><value>Créer la facture due</value></data>
+  <data name="Recurring.Search" xml:space="preserve"><value>Rechercher un modèle</value></data>
+  <data name="Recurring.Sort" xml:space="preserve"><value>Trier par</value></data>
+  <data name="Recurring.Sort.NextIssueDate" xml:space="preserve"><value>Prochaine facture</value></data>
+  <data name="Recurring.Sort.Name" xml:space="preserve"><value>Nom</value></data>
+  <data name="Recurring.Sort.Customer" xml:space="preserve"><value>Client</value></data>
+  <data name="Recurring.Sort.Amount" xml:space="preserve"><value>Montant HT</value></data>
+  <data name="Recurring.Order" xml:space="preserve"><value>Ordre</value></data>
+  <data name="Recurring.Order.Ascending" xml:space="preserve"><value>Croissant</value></data>
+  <data name="Recurring.Order.Descending" xml:space="preserve"><value>Décroissant</value></data>
+  <data name="Recurring.Empty" xml:space="preserve"><value>Aucune facture récurrente</value></data>
+  <data name="Recurring.Empty.Text" xml:space="preserve"><value>Créez un modèle pour un client facturé chaque mois, trimestre ou année.</value></data>
+  <data name="Recurring.NextInvoice" xml:space="preserve"><value>Prochaine facture</value></data>
+  <data name="Recurring.Invoices" xml:space="preserve"><value>Factures créées</value></data>
+  <data name="Recurring.AutoValidated" xml:space="preserve"><value>Validation automatique</value></data>
+  <data name="Recurring.LinesSummary" xml:space="preserve"><value>{0} ligne(s), {1} HT</value></data>
+  <data name="Recurring.State.All" xml:space="preserve"><value>Tous</value></data>
+  <data name="Recurring.State.Active" xml:space="preserve"><value>Actif</value></data>
+  <data name="Recurring.State.Paused" xml:space="preserve"><value>En pause</value></data>
+  <data name="Recurring.State.Due" xml:space="preserve"><value>À facturer</value></data>
+  <data name="Recurring.Field.Name" xml:space="preserve"><value>Nom du modèle</value></data>
+  <data name="Recurring.Field.Name.Placeholder" xml:space="preserve"><value>Ex. : Tenue comptable mensuelle</value></data>
+  <data name="Recurring.Field.Frequency" xml:space="preserve"><value>Fréquence</value></data>
+  <data name="Recurring.Field.Timing" xml:space="preserve"><value>Facturation</value></data>
+  <data name="Recurring.Field.StartDate" xml:space="preserve"><value>Début</value></data>
+  <data name="Recurring.Field.EndDate" xml:space="preserve"><value>Fin (facultative)</value></data>
+  <data name="Recurring.Field.ValidateAutomatically" xml:space="preserve"><value>Valider automatiquement les factures</value></data>
+  <data name="Recurring.Field.ValidateAutomatically.Hint" xml:space="preserve"><value>Sinon, chaque facture est créée en brouillon à relire. Le numéro est attribué à la validation.</value></data>
+  <data name="Recurring.Field.Subject.Hint" xml:space="preserve"><value>La période facturée est ajoutée à l'objet de chaque facture.</value></data>
+  <data name="Recurring.Field.Revision" xml:space="preserve"><value>Révision annuelle des prix</value></data>
+  <data name="Recurring.Field.RevisionPercent" xml:space="preserve"><value>Hausse annuelle (%)</value></data>
+  <data name="Recurring.Field.SyntecReference" xml:space="preserve"><value>Indice Syntec de référence</value></data>
+  <data name="Recurring.Field.SyntecLatest" xml:space="preserve"><value>Dernier indice Syntec connu</value></data>
+  <data name="Recurring.Frequency.Monthly" xml:space="preserve"><value>Mensuelle</value></data>
+  <data name="Recurring.Frequency.Quarterly" xml:space="preserve"><value>Trimestrielle</value></data>
+  <data name="Recurring.Frequency.Yearly" xml:space="preserve"><value>Annuelle</value></data>
+  <data name="Recurring.Timing.InAdvance" xml:space="preserve"><value>À échoir (début de période)</value></data>
+  <data name="Recurring.Timing.InArrears" xml:space="preserve"><value>Échu (fin de période)</value></data>
+  <data name="Recurring.Revision.None" xml:space="preserve"><value>Aucune</value></data>
+  <data name="Recurring.Revision.FixedPercent" xml:space="preserve"><value>Pourcentage fixe</value></data>
+  <data name="Recurring.Revision.SyntecIndex" xml:space="preserve"><value>Indice Syntec</value></data>
+  <data name="Recurring.Revision.AwaitsIndex" xml:space="preserve"><value>La révision attend le nouvel indice Syntec : saisissez-le pour réviser les prix.</value></data>
+  <data name="Recurring.Revision.IndexToEnter" xml:space="preserve"><value>Indice à saisir</value></data>
+  <data name="Recurring.Revision.Syntec.Hint" xml:space="preserve"><value>Prix révisés = prix × dernier indice ÷ indice de référence, à chaque anniversaire du contrat.</value></data>
+  <data name="Recurring.Revision.Next" xml:space="preserve"><value>Prochaine révision le {0}.</value></data>
+  <data name="Recurring.Section.Schedule" xml:space="preserve"><value>Échéancier</value></data>
+  <data name="Recurring.Section.Revision" xml:space="preserve"><value>Révision des prix</value></data>
+  <data name="Recurring.ScheduleLocked.Hint" xml:space="preserve"><value>Une facture a déjà été créée : le début et la fréquence ne peuvent plus changer.</value></data>
+  <data name="Recurring.Next.Text" xml:space="preserve"><value>Prochaine facture le {0}, pour la période du {1} au {2}.</value></data>
+  <data name="Recurring.Next.Ended" xml:space="preserve"><value>Le contrat est terminé : plus aucune facture ne sera créée.</value></data>
+  <data name="Recurring.Next.Paused" xml:space="preserve"><value>Le modèle est en pause : aucune facture ne sera créée.</value></data>
+  <data name="Recurring.Pause" xml:space="preserve"><value>Mettre en pause</value></data>
+  <data name="Recurring.Resume" xml:space="preserve"><value>Reprendre</value></data>
+  <data name="Recurring.History" xml:space="preserve"><value>Factures créées</value></data>
+  <data name="Recurring.History.Draft" xml:space="preserve"><value>Brouillon</value></data>
+  <data name="Recurring.History.Period" xml:space="preserve"><value>du {0} au {1}</value></data>
+  <data name="Recurring.History.Deleted" xml:space="preserve"><value>Brouillon supprimé</value></data>
+  <data name="Recurring.History.Revised" xml:space="preserve"><value>Prix révisés {0} %</value></data>
+  <data name="Recurring.Toast.Created" xml:space="preserve"><value>Modèle créé.</value></data>
+  <data name="Recurring.Toast.Saved" xml:space="preserve"><value>Modèle enregistré.</value></data>
+  <data name="Recurring.Toast.Paused" xml:space="preserve"><value>Modèle mis en pause.</value></data>
+  <data name="Recurring.Toast.Resumed" xml:space="preserve"><value>Modèle repris.</value></data>
+  <data name="Recurring.Toast.Deleted" xml:space="preserve"><value>Modèle supprimé.</value></data>
+  <data name="Recurring.Toast.RunFailed" xml:space="preserve"><value>Les factures n'ont pas pu être créées.</value></data>
+  <data name="Recurring.Toast.NothingDue" xml:space="preserve"><value>Aucune facture n'est à créer aujourd'hui.</value></data>
+  <data name="Recurring.Toast.Generated" xml:space="preserve"><value>{0} facture(s) créée(s), dont {1} validée(s).</value></data>
+  <data name="Recurring.Toast.LeftAsDraft" xml:space="preserve"><value>{0} facture(s) laissée(s) en brouillon : la validation a été refusée.</value></data>
+  <data name="Recurring.Toast.Failed" xml:space="preserve"><value>« {0} » : {1}</value></data>
+  <data name="Error.RecurringInvoice.NotFound" xml:space="preserve"><value>Ce modèle de facture récurrente est introuvable.</value></data>
+  <data name="Error.RecurringInvoice.NameRequired" xml:space="preserve"><value>Donnez un nom au modèle.</value></data>
+  <data name="Error.RecurringInvoice.NameTooLong" xml:space="preserve"><value>Le nom ne doit pas dépasser 120 caractères.</value></data>
+  <data name="Error.RecurringInvoice.FrequencyInvalid" xml:space="preserve"><value>Choisissez une fréquence : mensuelle, trimestrielle ou annuelle.</value></data>
+  <data name="Error.RecurringInvoice.TimingInvalid" xml:space="preserve"><value>Choisissez une facturation à échoir ou échue.</value></data>
+  <data name="Error.RecurringInvoice.EndBeforeStart" xml:space="preserve"><value>La fin doit être postérieure au début.</value></data>
+  <data name="Error.RecurringInvoice.RevisionInvalid" xml:space="preserve"><value>Choisissez un mode de révision des prix.</value></data>
+  <data name="Error.RecurringInvoice.RevisionPercentInvalid" xml:space="preserve"><value>La hausse annuelle doit être supérieure à 0 et au plus de 100 %.</value></data>
+  <data name="Error.RecurringInvoice.SyntecIndexInvalid" xml:space="preserve"><value>Saisissez un indice Syntec positif.</value></data>
+  <data name="Error.RecurringInvoice.ScheduleLocked" xml:space="preserve"><value>Une facture a déjà été créée : le début et la fréquence ne peuvent plus changer.</value></data>
+  <data name="Error.RecurringInvoice.NothingDue" xml:space="preserve"><value>Aucune facture n'est à créer pour ce modèle aujourd'hui.</value></data>
+</root>
