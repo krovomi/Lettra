@@ -10,14 +10,21 @@ using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Application.Abstractions.Persistence;
 
-/// <summary>Critères communs des listes de devis et de factures (dates d'émission bornes comprises).</summary>
+/// <summary>
+/// Critères communs des listes de devis et de factures (dates d'émission et montants TTC bornes comprises), avec la
+/// colonne et le sens du tri.
+/// </summary>
 public sealed record BillingListFilter(
     string? Search,
     CustomerId? Customer,
     DateOnly? From,
     DateOnly? To,
     int Page,
-    int PageSize);
+    int PageSize,
+    BillingSortDto Sort = BillingSortDto.IssueDate,
+    SortDirectionDto Direction = SortDirectionDto.Descending,
+    decimal? MinAmount = null,
+    decimal? MaxAmount = null);
 
 public interface IQuoteRepository
 {

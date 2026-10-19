@@ -22,7 +22,11 @@ public sealed record ListInvoicesQuery(
     InvoiceKindDto? Kind = null,
     InvoiceStatusDto? Status = null,
     int Page = 1,
-    int PageSize = 50) : IQuery<Result<PagedResponse<InvoiceSummary>>>, IRequirePermission
+    int PageSize = 50,
+    BillingSortDto Sort = BillingSortDto.IssueDate,
+    SortDirectionDto Direction = SortDirectionDto.Descending,
+    decimal? MinAmount = null,
+    decimal? MaxAmount = null) : IQuery<Result<PagedResponse<InvoiceSummary>>>, IRequirePermission
 {
     public const int MaxPageSize = 200;
     public const int MaxSearchLength = 100;
@@ -126,6 +130,7 @@ internal sealed class ListInvoicesValidator : IValidator<ListInvoicesQuery>
     {
         ArgumentNullException.ThrowIfNull(instance);
         List<Error> errors = [.. Paging.Validate(instance.Page, instance.PageSize, ListInvoicesQuery.MaxPageSize)];
+        errors.AddRange(BillingListing.Validate(instance.Sort, instance.Direction, instance.MinAmount, instance.MaxAmount));
         if (instance.Search is { Length: > ListInvoicesQuery.MaxSearchLength })
         {
             errors.Add(Error.Validation(ErrorCodes.Validation.TooLong, nameof(instance.Search)));
@@ -147,7 +152,11 @@ internal sealed class ListInvoicesHandler(IInvoiceReadStore store)
             query.From,
             query.To,
             query.Page,
-            query.PageSize);
+            query.PageSize,
+            query.Sort,
+            query.Direction,
+            query.MinAmount,
+            query.MaxAmount);
         return await store.ListAsync(filter, (InvoiceKind?)(int?)query.Kind, (InvoiceStatus?)(int?)query.Status, cancellationToken)
             .ConfigureAwait(false);
     }

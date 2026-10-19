@@ -207,7 +207,7 @@ public sealed class BankingApiTests(LettraApiFactory factory) : IClassFixture<Le
         refused.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
-    internal static string Camt(DateOnly day, decimal amount, string label) => $"""
+    internal static string Camt(DateOnly day, decimal amount, string label, string debtor = "Martin SARL") => $"""
         <?xml version="1.0" encoding="UTF-8"?>
         <Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.053.001.08">
           <BkToCstmrStmt>
@@ -222,7 +222,7 @@ public sealed class BankingApiTests(LettraApiFactory factory) : IClassFixture<Le
                 <BookgDt><Dt>{day:yyyy-MM-dd}</Dt></BookgDt>
                 <AcctSvcrRef>REF-{label.GetHashCode(StringComparison.Ordinal):X}</AcctSvcrRef>
                 <NtryDtls><TxDtls>
-                  <RltdPties><Dbtr><Pty><Nm>Martin SARL</Nm></Pty></Dbtr><DbtrAcct><Id><IBAN>FR7630004000031234567890143</IBAN></Id></DbtrAcct></RltdPties>
+                  <RltdPties><Dbtr><Pty><Nm>{debtor}</Nm></Pty></Dbtr><DbtrAcct><Id><IBAN>FR7630004000031234567890143</IBAN></Id></DbtrAcct></RltdPties>
                   <RmtInf><Ustrd>{label}</Ustrd></RmtInf>
                 </TxDtls></NtryDtls>
               </Ntry>

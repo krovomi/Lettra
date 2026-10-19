@@ -6,6 +6,7 @@ using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Contracts.Accounting;
 using Lettra.Domain.Common;
 using Lettra.Exports.Application.Accounting;
+using static Lettra.Api.Infrastructure.HttpResults;
 
 namespace Lettra.Api.Endpoints;
 
@@ -57,7 +58,7 @@ internal static class AccountingEndpoints
                 tenant.Current.DossierId, from, to, string.IsNullOrWhiteSpace(search) ? null : search.Trim(),
                 string.IsNullOrWhiteSpace(account) ? null : account.Trim(), customerId, page, pageSize), cancellationToken)
             .ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return Ok(result);
     }
 
     private static async Task<IResult> GetBalanceAsync(DateOnly from, DateOnly to, ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken)
@@ -65,7 +66,7 @@ internal static class AccountingEndpoints
         Result<TrialBalanceResponse> result = await queries
             .QueryAsync(new GetTrialBalanceQuery(tenant.Current.DossierId, from, to), cancellationToken)
             .ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return Ok(result);
     }
 
     private static async Task<IResult> GetLedgerAsync(
@@ -74,6 +75,6 @@ internal static class AccountingEndpoints
         Result<AccountLedgerResponse> result = await queries
             .QueryAsync(new GetAccountLedgerQuery(tenant.Current.DossierId, account, from, to, customerId), cancellationToken)
             .ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return Ok(result);
     }
 }

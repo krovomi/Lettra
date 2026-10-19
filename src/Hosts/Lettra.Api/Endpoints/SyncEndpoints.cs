@@ -9,6 +9,7 @@ using Lettra.Application.Features.Sync;
 using Lettra.Contracts.Sync;
 using Lettra.Domain.Common;
 using Lettra.Sync.Server;
+using static Lettra.Api.Infrastructure.HttpResults;
 
 namespace Lettra.Api.Endpoints;
 
@@ -103,31 +104,31 @@ internal static class SyncEndpoints
     private static async Task<IResult> ListDevicesAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken)
     {
         Result<IReadOnlyList<SyncDeviceResponse>> result = await queries.QueryAsync(new ListSyncDevicesQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return Ok(result);
     }
 
     private static async Task<IResult> RevokeDeviceAsync(Guid deviceId, ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken)
     {
         Result result = await commands.SendAsync(new RevokeSyncDeviceCommand(tenant.Current.DossierId, deviceId), cancellationToken).ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.NoContent() : result.Errors.ToProblem();
+        return NoContent(result);
     }
 
     private static async Task<IResult> ReleaseDeviceSeriesAsync(Guid deviceId, ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken)
     {
         Result<ReleaseDeviceSeriesResponse> result = await commands.SendAsync(new ReleaseDeviceSeriesCommand(tenant.Current.DossierId, deviceId), cancellationToken).ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return Ok(result);
     }
 
     private static async Task<IResult> GetPolicyAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken)
     {
         Result<SyncPolicyResponse> result = await queries.QueryAsync(new GetSyncPolicyQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return Ok(result);
     }
 
     private static async Task<IResult> SavePolicyAsync(SaveSyncPolicyRequest request, ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken)
     {
         Result<SyncPolicyResponse> result = await commands.SendAsync(new SaveSyncPolicyCommand(tenant.Current.DossierId, request), cancellationToken).ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return Ok(result);
     }
 
     /// <summary>Le poste qui appelle (en-tête <see cref="SyncHttp.DeviceHeader"/>), s'il se nomme.</summary>
@@ -137,18 +138,18 @@ internal static class SyncEndpoints
     private static async Task<IResult> OpenDeviceSeriesAsync(OpenDeviceSeriesRequest request, SyncServer sync, CancellationToken cancellationToken)
     {
         Result<OpenDeviceSeriesResponse> result = await sync.OpenDeviceSeriesAsync(request, cancellationToken).ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return Ok(result);
     }
 
     private static async Task<IResult> PushAsync(PushSyncIntentsRequest request, SyncServer sync, CancellationToken cancellationToken)
     {
         Result<PushSyncIntentsResponse> result = await sync.PushAsync(request, cancellationToken).ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return Ok(result);
     }
 
     private static async Task<IResult> PullAsync(HttpContext http, SyncServer sync, CancellationToken cancellationToken, string? token = null, int limit = 500)
     {
         Result<SyncChangesResponse> result = await sync.PullAsync(token, limit, cancellationToken, DeviceOf(http)).ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return Ok(result);
     }
 }

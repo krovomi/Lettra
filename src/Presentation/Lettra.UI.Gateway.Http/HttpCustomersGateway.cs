@@ -247,6 +247,7 @@ public static class DependencyInjection
         Configure(services.AddHttpClient<IReceivablesGateway, HttpReceivablesGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IDemoDataGateway, HttpDemoDataGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IFecGateway, HttpFecGateway>(client => client.BaseAddress = apiBaseAddress));
+        Configure(services.AddHttpClient<IAuditKitGateway, HttpAuditKitGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IAccountingGateway, HttpAccountingGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IBankingGateway, HttpBankingGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<ICabinetGateway, HttpCabinetGateway>(client => client.BaseAddress = apiBaseAddress));

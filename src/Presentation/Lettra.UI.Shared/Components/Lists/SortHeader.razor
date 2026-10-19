@@ -1,0 +1,35 @@
+@typeparam TColumn where TColumn : struct, Enum
+@inject IStringLocalizer<SharedResource> L
+@* En-tête de colonne triable : un bouton (clavier, lecteur d'écran) et aria-sort sur la cellule. Sur téléphone, les
+   listes en cartes masquent les en-têtes : SortSelect prend le relais. *@
+
+<th scope="col" class="lt-sort-th @Class" aria-sort="@State.AriaSort(Option.Column)">
+    <button type="button" class="lt-sort @(IsActive ? "is-active" : null)" id="@Id" @onclick="SortAsync"
+            title="@string.Format(CultureInfo.CurrentCulture, L["Lists.Sort.By"], Option.Label)">
+        <span>@Option.Label</span>
+        <Icon Name="@IconName" Size="14" Class="lt-sort-icon" />
+    </button>
+</th>
+
+@code {
+    [Parameter, EditorRequired] public SortOption<TColumn> Option { get; set; } = default!;
+
+    [Parameter, EditorRequired] public SortState<TColumn> State { get; set; } = default!;
+
+    /// <summary>Appelé après le changement de tri : relire la page (tri serveur) ou retrier à l'écran.</summary>
+    [Parameter] public EventCallback OnSort { get; set; }
+
+    [Parameter] public string? Class { get; set; }
+
+    [Parameter] public string? Id { get; set; }
+
+    private bool IsActive => EqualityComparer<TColumn>.Default.Equals(State.Column, Option.Column);
+
+    private string IconName => !IsActive ? "chevrons-up-down" : State.Descending ? "arrow-down" : "arrow-up";
+
+    private Task SortAsync()
+    {
+        State.Toggle(Option.Column, Option.FirstDirection);
+        return OnSort.InvokeAsync();
+    }
+}

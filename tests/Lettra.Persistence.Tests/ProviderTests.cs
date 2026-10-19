@@ -135,6 +135,13 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Listes_de_pieces_triees_et_bornees_par_montant()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await BillingListScenarios.SortAndAmountRangeAsync(harness, DatabaseProvider.Sqlite, Database("tri"));
+    }
+
+    [Fact]
     public async Task Fec_des_pieces_validees()
     {
         await using TenantHarness harness = new(new SqliteConfigurator());
@@ -167,6 +174,13 @@ public sealed class SqliteTests : IDisposable
     {
         await using TenantHarness harness = new(new SqliteConfigurator());
         await EInvoiceScenarios.SamplesAsync(harness, DatabaseProvider.Sqlite, Database("einvoice"), Database("einvoice-franchise"));
+    }
+
+    [Fact]
+    public async Task Kit_controle_fiscal_d_une_periode()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator(), simulatedPlatform: true);
+        await AuditKitScenarios.KitAsync(harness, DatabaseProvider.Sqlite, Database("kit"));
     }
 
     [Fact]
@@ -502,6 +516,14 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     }
 
     [SkippableFact]
+    public async Task Listes_de_pieces_triees_et_bornees_par_montant()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new PostgreSqlConfigurator());
+        await BillingListScenarios.SortAndAmountRangeAsync(harness, DatabaseProvider.PostgreSql, Database("tri"));
+    }
+
+    [SkippableFact]
     public async Task Fec_des_pieces_validees()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
@@ -539,6 +561,14 @@ public sealed class PostgreSqlTests : IAsyncLifetime
         Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new PostgreSqlConfigurator(), simulatedPlatform: true);
         await PlatformScenarios.TransmissionAsync(harness, DatabaseProvider.PostgreSql, Database("pa"));
+    }
+
+    [SkippableFact]
+    public async Task Kit_controle_fiscal_d_une_periode()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new PostgreSqlConfigurator(), simulatedPlatform: true);
+        await AuditKitScenarios.KitAsync(harness, DatabaseProvider.PostgreSql, Database("kit"));
     }
 
     [SkippableFact]
@@ -816,6 +846,14 @@ public sealed class SqlServerTests : IAsyncLifetime
     }
 
     [SkippableFact]
+    public async Task Listes_de_pieces_triees_et_bornees_par_montant()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new SqlServerConfigurator());
+        await BillingListScenarios.SortAndAmountRangeAsync(harness, DatabaseProvider.SqlServer, Database("tri"));
+    }
+
+    [SkippableFact]
     public async Task Fec_des_pieces_validees()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
@@ -853,6 +891,14 @@ public sealed class SqlServerTests : IAsyncLifetime
         Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new SqlServerConfigurator(), simulatedPlatform: true);
         await PlatformScenarios.TransmissionAsync(harness, DatabaseProvider.SqlServer, Database("pa"));
+    }
+
+    [SkippableFact]
+    public async Task Kit_controle_fiscal_d_une_periode()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new SqlServerConfigurator(), simulatedPlatform: true);
+        await AuditKitScenarios.KitAsync(harness, DatabaseProvider.SqlServer, Database("kit"));
     }
 
     [SkippableFact]

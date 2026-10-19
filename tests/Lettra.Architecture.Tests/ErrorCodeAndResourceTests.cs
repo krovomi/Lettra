@@ -25,9 +25,9 @@ public sealed class ErrorCodeAndResourceTests
             .Select(f => (string)f.GetRawConstantValue()!)
             .Concat(type.GetNestedTypes().SelectMany(ConstantsOf));
 
-    /// <summary>Codes émis par le domaine et l'application : les constantes <c>*Code</c> des classes <c>*Errors</c>.</summary>
+    /// <summary>Codes émis par les domaines et les applications : les constantes <c>*Code</c> des classes <c>*Errors</c>.</summary>
     private static IEnumerable<string> EmittedCodes() =>
-        new[] { Assemblies.Domain, Assemblies.Application, Assemblies.ExportsApplication }
+        new[] { Assemblies.Domain, Assemblies.Application, Assemblies.ExportsApplication, Assemblies.SupervisionDomain }
             .SelectMany(a => a.GetTypes())
             .Where(t => t.Name.EndsWith("Errors", StringComparison.Ordinal))
             .SelectMany(t => t.GetFields(BindingFlags.Public | BindingFlags.Static)

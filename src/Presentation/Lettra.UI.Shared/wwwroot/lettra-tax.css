@@ -75,3 +75,14 @@
 }
 
 @media (pointer: coarse) { .lt-tax-toggle { min-height: var(--hit, 2.75rem); } }
+
+/* Kit contrôle fiscal : période et bouton sur une ligne, empilés sur téléphone ; l'empreinte se coupe partout. */
+.lt-audit-kit { display: grid; gap: var(--space-3); }
+.lt-audit-kit > .lettra-banner { margin-bottom: 0; }
+.lt-audit-kit-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3); }
+.lt-audit-kit-form label { display: grid; gap: var(--space-1); }
+.lt-audit-kit-hash { overflow-wrap: anywhere; word-break: break-all; }
+@media (max-width: 767px) {
+    .lt-audit-kit-form > label, .lt-audit-kit-form > .lettra-button { flex: 1 1 100%; }
+    .lt-audit-kit > .lettra-button { width: 100%; }
+}

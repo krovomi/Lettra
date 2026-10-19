@@ -113,6 +113,24 @@ public interface IBankingSettingsRepository
 }
 
 /// <summary>IBAN déjà vus pour les clients (empreintes).</summary>
+/// <summary>
+/// Empreintes des IBAN de contrepartie, calculées avec la clé secrète du dossier (HMAC-SHA256, voir
+/// <see cref="BankText.KeyedIbanFingerprint"/>). La clé vient de la clé maîtresse du cabinet ; sans elle, aucune
+/// empreinte n'est calculée et la règle « IBAN déjà connu » ne s'applique pas.
+/// </summary>
+public interface IIbanFingerprints
+{
+    /// <summary>Empreinte de l'IBAN pour le dossier courant ; <c>null</c> sans IBAN valable ou sans clé.</summary>
+    ValueTask<string?> FingerprintAsync(string? iban, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Convertit les empreintes enregistrées avant la clé du dossier (SHA-256 sans clé) des opérations de relevé et des
+    /// IBAN connus, sans connaître les IBAN : rien n'est perdu, les rapprochements continuent de les reconnaître.
+    /// Idempotent ; renvoie le nombre d'empreintes converties.
+    /// </summary>
+    Task<int> UpgradeLegacyAsync(CancellationToken cancellationToken);
+}
+
 public interface IKnownIbanStore
 {
     Task<IReadOnlyList<KnownIban>> ListAsync(CancellationToken cancellationToken);

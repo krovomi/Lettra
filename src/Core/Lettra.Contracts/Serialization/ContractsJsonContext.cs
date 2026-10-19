@@ -101,6 +101,8 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(IReadOnlyList<AssistantJournalEntry>))]
 [JsonSerializable(typeof(IntegrityReportResponse))]
 [JsonSerializable(typeof(FecValidationResponse))]
+[JsonSerializable(typeof(AuditKitManifestResponse))]
+[JsonSerializable(typeof(AuditKitAttestationResponse))]
 [JsonSerializable(typeof(SalesJournalResponse))]
 [JsonSerializable(typeof(TrialBalanceResponse))]
 [JsonSerializable(typeof(AccountLedgerResponse))]
