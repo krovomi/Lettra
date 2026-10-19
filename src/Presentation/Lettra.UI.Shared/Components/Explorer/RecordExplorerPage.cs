@@ -247,7 +247,7 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
     protected async Task ReloadAsync()
     {
         Loading = true;
-        OperationResult<PagedResponse<TSummary>> result = await LoadPageAsync(Normalized(_search), 1, CancellationToken.None);
+        OperationResult<PagedResponse<TSummary>> result = await LoadPageAsync(ListSearch.Normalize(_search), 1, CancellationToken.None);
         Items.Clear();
         if (result is { IsSuccess: true, Value: { } page })
         {
@@ -266,7 +266,7 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
     protected async Task LoadMoreAsync()
     {
         int next = (Items.Count / PageSize) + 1;
-        OperationResult<PagedResponse<TSummary>> result = await LoadPageAsync(Normalized(_search), next, CancellationToken.None);
+        OperationResult<PagedResponse<TSummary>> result = await LoadPageAsync(ListSearch.Normalize(_search), next, CancellationToken.None);
         if (result is { IsSuccess: true, Value: { } page })
         {
             Items.AddRange(page.Items);
@@ -490,8 +490,6 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
 
         return null;
     }
-
-    private static string? Normalized(string? search) => string.IsNullOrWhiteSpace(search) ? null : search.Trim();
 
     protected void GoTo(string href)
     {

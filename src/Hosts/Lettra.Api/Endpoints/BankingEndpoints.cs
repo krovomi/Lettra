@@ -128,7 +128,7 @@ internal static class BankingEndpoints
         decimal? maxAmount = null) =>
         Ok(await queries.QueryAsync(
             new ListPaymentsQuery(
-                tenant.Current.DossierId, from, to, customerId, string.IsNullOrWhiteSpace(search) ? null : search.Trim(), page, pageSize,
+                tenant.Current.DossierId, from, to, customerId, ListSearch.Normalize(search), page, pageSize,
                 sort, direction, minAmount, maxAmount),
             cancellationToken).ConfigureAwait(false));
 

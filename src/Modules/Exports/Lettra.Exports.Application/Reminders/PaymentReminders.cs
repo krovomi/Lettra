@@ -303,7 +303,7 @@ internal sealed class ListPaymentRemindersHandler(IPaymentReminderRepository rem
             (ReminderChannel?)query.Channel,
             query.From,
             query.To,
-            string.IsNullOrWhiteSpace(query.Search) ? null : query.Search.Trim(),
+            ListSearch.Normalize(query.Search),
             query.Sort,
             query.Descending,
             page,

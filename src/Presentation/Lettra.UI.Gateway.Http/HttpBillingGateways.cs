@@ -43,7 +43,7 @@ internal static class VersionedCalls
     {
         ArgumentNullException.ThrowIfNull(query);
         StringBuilder text = new(string.Create(CultureInfo.InvariantCulture, $"page={query.Page}&pageSize={query.PageSize}"));
-        Append(text, "search", string.IsNullOrWhiteSpace(query.Search) ? null : query.Search.Trim());
+        Append(text, "search", ListSearch.Normalize(query.Search));
         Append(text, "customerId", query.CustomerId?.ToString());
         Append(text, "from", query.From?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
         Append(text, "to", query.To?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));

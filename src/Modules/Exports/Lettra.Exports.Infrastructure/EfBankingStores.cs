@@ -64,7 +64,7 @@ internal sealed class EfPaymentRepository(TenantDbSession session) : IPaymentRep
         }
 
         List<Payment> all = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
-        string? search = string.IsNullOrWhiteSpace(filter.Search) ? null : filter.Search.Trim();
+        string? search = ListSearch.Normalize(filter.Search);
         IEnumerable<Payment> found = all
             .Where(p => search is null
                 || p.Number.Contains(search, StringComparison.OrdinalIgnoreCase)

@@ -90,7 +90,7 @@ internal static class SupplierEndpoints
     {
         Result<PagedResponse<SupplierSummary>> result = await queries
             .QueryAsync(
-                new ListSuppliersQuery(tenant.Current.DossierId, page, pageSize, string.IsNullOrWhiteSpace(search) ? null : search.Trim(), sort, direction),
+                new ListSuppliersQuery(tenant.Current.DossierId, page, pageSize, ListSearch.Normalize(search), sort, direction),
                 cancellationToken)
             .ConfigureAwait(false);
         return Ok(result);
