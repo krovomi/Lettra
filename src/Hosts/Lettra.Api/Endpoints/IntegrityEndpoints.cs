@@ -51,6 +51,9 @@ internal static class IntegrityEndpoints
 
         // Revue de dossier (vue cabinet) : dans le dossier ouvert, comme la chaîne.
         api.MapDossierReview();
+
+        // Tableau de bord du dossier ouvert (docs/tableaux-de-bord.md).
+        api.MapDossierPilotage();
         return group;
     }
 

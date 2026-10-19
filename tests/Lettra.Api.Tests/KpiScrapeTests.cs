@@ -61,6 +61,17 @@ public sealed class KpiScrapeTests
         (await response.Content.ReadAsStringAsync()).Should().Contain("lettra_kpi_dso_days{dossier_id=\"").And.Contain(",dossier=\"Dossier test\"} 30");
     }
 
+    [Fact]
+    public async Task Une_cellule_d_exploitation_seule_ne_publie_pas_les_indicateurs_de_gestion()
+    {
+        KpiSnapshot snapshot = await new FixedSnapshot().GetAsync(default);
+        KpiSnapshot withOperations = snapshot with { Samples = [.. snapshot.Samples, new KpiSample(KpiMetrics.DatabaseSize, 4096)] };
+
+        KpiEndpoints.Published(withOperations, new KpiOptions { BusinessIndicators = true }).Should().BeSameAs(withOperations);
+        KpiEndpoints.Published(withOperations, new KpiOptions { BusinessIndicators = false }).Samples
+            .Select(s => s.Metric).Should().Equal(KpiMetrics.DatabaseSize);
+    }
+
     private static async Task<WebApplication> HostAsync(string? token)
     {
         WebApplicationBuilder builder = WebApplication.CreateBuilder();

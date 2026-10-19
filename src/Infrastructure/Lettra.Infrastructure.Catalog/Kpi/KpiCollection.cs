@@ -29,8 +29,9 @@ public sealed class KpiOptions
     public TimeSpan RefreshInterval { get; set; } = TimeSpan.FromMinutes(5);
 
     /// <summary>
-    /// Publie aussi les indicateurs de gestion des dossiers (ventes, devis, vue cabinet). Faux pour une cellule SaaS dont
-    /// le Grafana ne sert qu'à l'exploitant : il garde alors les indicateurs d'exploitation seulement.
+    /// Publie aussi vers Prometheus les indicateurs de gestion des dossiers (ventes, devis, vue cabinet). Faux pour une
+    /// cellule SaaS dont le Grafana ne sert qu'à l'exploitant : il n'en reçoit alors que l'exploitation. Les tableaux de
+    /// bord dans Lettra, qui appliquent les droits de chacun, les montrent toujours.
     /// </summary>
     public bool BusinessIndicators { get; set; } = true;
 }
@@ -87,7 +88,7 @@ internal sealed partial class KpiSnapshotCollector(
     {
         long started = Stopwatch.GetTimestamp();
         DateTimeOffset now = clock.GetUtcNow();
-        DateOnly today = ParisCalendar.Today(now);
+        DateOnly today = LegalCalendar.DateOf(now);
         IReadOnlyList<KpiDossier> dossiers = await ActiveDossiersAsync(cancellationToken).ConfigureAwait(false);
         List<KpiSample> samples = [];
         int failures = 0;
@@ -146,11 +147,6 @@ internal sealed partial class KpiSnapshotCollector(
                 failures++;
                 LogCellSourceFailed(source.GetType().Name, exception);
             }
-        }
-
-        if (!options.Value.BusinessIndicators)
-        {
-            samples.RemoveAll(s => KpiMetrics.Business.Contains(s.Metric));
         }
 
         samples.Add(new KpiSample(KpiMetrics.CollectionDuration, Stopwatch.GetElapsedTime(started).TotalSeconds));
@@ -233,26 +229,6 @@ internal sealed class CatalogKpiSource(IDbContextFactory<CatalogDbContext> catal
         }
 
         return samples;
-    }
-}
-
-/// <summary>« Aujourd'hui » des indicateurs : le jour à Paris, comme les échéances et les pièces.</summary>
-internal static class ParisCalendar
-{
-    private static readonly TimeZoneInfo Paris = Find();
-
-    public static DateOnly Today(DateTimeOffset now) => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, Paris).DateTime);
-
-    private static TimeZoneInfo Find()
-    {
-        try
-        {
-            return TimeZoneInfo.FindSystemTimeZoneById("Europe/Paris");
-        }
-        catch (Exception exception) when (exception is TimeZoneNotFoundException or InvalidTimeZoneException)
-        {
-            return TimeZoneInfo.Utc;
-        }
     }
 }
 

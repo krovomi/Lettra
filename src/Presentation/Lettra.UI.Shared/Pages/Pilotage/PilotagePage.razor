@@ -1,0 +1,322 @@
+@page "/pilotage"
+@using Lettra.Contracts.Cabinet
+@using Lettra.Contracts.Pilotage
+@using Lettra.UI.Shared.Cabinet
+@implements IDisposable
+@inject IPilotageGateway Gateway
+@inject CurrentDossier Dossiers
+@inject NavigationManager Navigation
+@inject ToastService Toasts
+@inject TimeProvider Clock
+@inject IStringLocalizer<SharedResource> L
+
+@* Tableaux de bord (docs/tableaux-de-bord.md) : les indicateurs des tableaux Grafana, dans Lettra et avec ses droits.
+   « Ce dossier » est calculé à l'instant dans le dossier ouvert ; « Mes dossiers » ne montre que les dossiers que
+   l'utilisateur peut ouvrir, et « Administration » (onglet affiché seulement s'il en administre) ceux qu'il administre :
+   le serveur filtre dossier par dossier, l'écran n'affiche que ce qu'il reçoit. Ratios, délais et indices : aucun
+   montant, aucun nom de client. *@
+
+<PageTitle>@L["Pilotage.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Pilotage.Title"]</h1>
+        <p>@Subtitle</p>
+    </div>
+    <div class="lt-page-actions">
+        <button type="button" id="pilotage-refresh" class="lettra-button is-secondary" disabled="@_loading" @onclick="ReloadAsync">
+            <Icon Name="refresh-cw" Size="18" /> @L[_loading ? "Pilotage.Refreshing" : "Pilotage.Refresh"]
+        </button>
+    </div>
+</div>
+
+<div class="la-tabs lt-pilotage-tabs" role="tablist" aria-label="@L["Pilotage.Title"]">
+    @foreach (PilotageTab tab in VisibleTabs)
+    {
+        string id = tab.ToString().ToLowerInvariant();
+        <button type="button" role="tab" id="pilotage-tab-@id" aria-selected="@(_tab == tab ? "true" : "false")" aria-controls="pilotage-panel-@id"
+                class="la-tab @(_tab == tab ? "is-active" : null)" @onclick="() => SetTab(tab)">
+            <Icon Name="@TabIcon(tab)" Size="18" />
+            <span>@L[$"Pilotage.Tab.{tab}"]</span>
+        </button>
+    }
+</div>
+
+<GeneralErrors Errors="_errors" />
+
+<div role="tabpanel" id="pilotage-panel-@_tab.ToString().ToLowerInvariant()" aria-labelledby="pilotage-tab-@_tab.ToString().ToLowerInvariant()" class="lt-pilotage-panel">
+    @switch (_tab)
+    {
+        case PilotageTab.Dossier:
+            @DossierPanel
+            break;
+        case PilotageTab.Dossiers:
+            @CabinetPanel
+            break;
+        case PilotageTab.Administration:
+            @AdministrationPanel
+            break;
+    }
+</div>
+
+<p class="lettra-hint">@L["Pilotage.Footnote"]</p>
+
+@code {
+    private RenderFragment DossierPanel => __builder =>
+    {
+        if (_dossier is not { } response)
+        {
+            if (_dossierError is { } error)
+            {
+                <EmptyState Id="pilotage-dossier-unavailable" IconName="folder" Title="@L["Pilotage.Dossier.Unavailable"]" Text="@L.Error(error.Code)" />
+            }
+            else
+            {
+                <ListSkeleton Rows="3" Columns="4" />
+            }
+
+            return;
+        }
+
+        DossierPilotageDto d = response.Dossier;
+        <section aria-labelledby="pilotage-clients-title">
+            <h2 id="pilotage-clients-title" class="lt-pilotage-heading">@L["Pilotage.Section.Clients"]</h2>
+            <ul class="lt-kpis lt-pilotage-kpis">
+                @Kpi("pilotage-dso", "Pilotage.Kpi.Dso", PilotageDisplay.Days(d.DaysSalesOutstanding, Culture), PilotageDisplay.Dso(d.DaysSalesOutstanding), "Pilotage.Kpi.Dso.Help")
+                @Kpi("pilotage-overdue", "Pilotage.Kpi.Overdue", PilotageDisplay.Percent(d.OverdueReceivablesRatio, Culture), PilotageDisplay.Overdue(d.OverdueReceivablesRatio), "Pilotage.Kpi.Overdue.Help")
+                @Kpi("pilotage-collection", "Pilotage.Kpi.Collection", PilotageDisplay.Percent(d.CollectionRatio, Culture), PilotageDisplay.Collection(d.CollectionRatio), "Pilotage.Kpi.Collection.Help")
+                @Kpi("pilotage-customers", "Pilotage.Kpi.Customers", d.ActiveCustomers.ToString("N0", Culture), IndicatorLevelDto.Ok, "Pilotage.Kpi.Customers.Help")
+                @Kpi("pilotage-top", "Pilotage.Kpi.TopCustomer", PilotageDisplay.Percent(d.TopCustomerShareRatio, Culture), PilotageDisplay.Concentration(d.TopCustomerShareRatio), "Pilotage.Kpi.TopCustomer.Help")
+            </ul>
+        </section>
+
+        <section aria-labelledby="pilotage-sales-title">
+            <h2 id="pilotage-sales-title" class="lt-pilotage-heading">@L["Pilotage.Section.Sales"]</h2>
+            <ul class="lt-kpis lt-pilotage-kpis">
+                @Kpi("pilotage-trend", "Pilotage.Kpi.Trend", PilotageDisplay.SignedPercent(d.RevenueTrendRatio, Culture), PilotageDisplay.Trend(d.RevenueTrendRatio), "Pilotage.Kpi.Trend.Help")
+                @Kpi("pilotage-conversion", "Pilotage.Kpi.Conversion", PilotageDisplay.Percent(d.QuoteConversionRatio, Culture), IndicatorLevelDto.Ok, "Pilotage.Kpi.Conversion.Help")
+                @Kpi("pilotage-pending", "Pilotage.Kpi.Pending", d.QuotesPending.ToString("N0", Culture), IndicatorLevelDto.Ok, "Pilotage.Kpi.Pending.Help")
+                @Kpi("pilotage-expiring", "Pilotage.Kpi.Expiring", d.QuotesExpiringSoon.ToString("N0", Culture), d.QuotesExpiringSoon > 0 ? IndicatorLevelDto.Warning : IndicatorLevelDto.Ok, "Pilotage.Kpi.Expiring.Help")
+            </ul>
+        </section>
+
+        <div class="lt-pilotage-charts">
+            @MonthlyChart("pilotage-chart-index", "Pilotage.Chart.Index", "Pilotage.Chart.Index.Unit", d.Months, m => m.RevenueIndex ?? 0, m => m.RevenueIndex is double i ? i.ToString("N0", Culture) : "—")
+            @MonthlyChart("pilotage-chart-invoices", "Pilotage.Chart.Invoices", "Pilotage.Chart.Invoices.Unit", d.Months, m => m.InvoicesIssued, m => m.InvoicesIssued.ToString("N0", Culture))
+        </div>
+
+        <section class="lt-panel" aria-labelledby="pilotage-todo-title" id="pilotage-todo">
+            <div class="lt-panel-head">
+                <h2 id="pilotage-todo-title">@L["Pilotage.Section.ToDo"]</h2>
+                <span class="lettra-hint">@ToDoLine(response.ToDoComputedAt)</span>
+            </div>
+            @if (response.ToDo.Count == 0)
+            {
+                <p class="lettra-muted">@L["Pilotage.ToDo.Never"]</p>
+            }
+            else
+            {
+                <ul class="lt-pilotage-todo" role="list">
+                    @foreach (DossierIndicatorDto indicator in response.ToDo)
+                    {
+                        <li data-level="@indicator.Level">
+                            <a href="@ToDoHref(indicator.Key)">
+                                <span class="lt-indicator" data-level="@indicator.Level">@indicator.Count.ToString("N0", Culture)</span>
+                                <span>@IndicatorLabel(indicator.Key)</span>
+                                <Icon Name="chevron-right" Size="16" />
+                            </a>
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+    };
+
+    private RenderFragment CabinetPanel => __builder =>
+    {
+        if (_cabinet is not { } cabinet)
+        {
+            <ListSkeleton Rows="4" Columns="6" />
+            return;
+        }
+
+        if (!cabinet.Available)
+        {
+            <EmptyState Id="pilotage-cabinet-unavailable" IconName="server" Title="@L["Pilotage.Unavailable"]" Text="@L["Pilotage.Unavailable.Text"]" />
+            return;
+        }
+
+        if (cabinet.Dossiers.Count == 0)
+        {
+            <EmptyState Id="pilotage-cabinet-empty" IconName="folder" Title="@L["Pilotage.Dossiers.Empty"]" />
+            return;
+        }
+
+        IReadOnlyList<DossierPilotageDto> all = cabinet.Dossiers;
+        double[] dso = [.. all.Where(r => r.DaysSalesOutstanding is not null).Select(r => r.DaysSalesOutstanding!.Value)];
+        <section aria-labelledby="pilotage-dossiers-kpis">
+            <h2 id="pilotage-dossiers-kpis" class="lettra-visually-hidden">@L["Pilotage.Tab.Dossiers"]</h2>
+            <ul class="lt-kpis lt-pilotage-kpis">
+                @Kpi("pilotage-dossiers-count", "Pilotage.Dossiers.Count", all.Count.ToString("N0", Culture), IndicatorLevelDto.Ok, null)
+                @Kpi("pilotage-dossiers-dso", "Pilotage.Dossiers.Dso", PilotageDisplay.Days(dso.Length == 0 ? null : dso.Average(), Culture), PilotageDisplay.Dso(dso.Length == 0 ? null : dso.Average()), "Pilotage.Dossiers.Dso.Help")
+                @Kpi("pilotage-dossiers-late", "Pilotage.Dossiers.Late", all.Count(r => PilotageDisplay.Overdue(r.OverdueReceivablesRatio) >= IndicatorLevelDto.Warning).ToString("N0", Culture),
+                     all.Any(r => PilotageDisplay.Overdue(r.OverdueReceivablesRatio) == IndicatorLevelDto.Critical) ? IndicatorLevelDto.Critical : IndicatorLevelDto.Ok, "Pilotage.Dossiers.Late.Help")
+            </ul>
+        </section>
+
+        <section class="lt-panel" aria-labelledby="pilotage-dossiers-title">
+            <div class="lt-panel-head lt-pilotage-filters">
+                <h2 id="pilotage-dossiers-title">@L["Pilotage.Dossiers.Title"]</h2>
+                <div class="lt-pilotage-tools">
+                    <label class="lettra-visually-hidden" for="pilotage-search">@L["Pilotage.Search"]</label>
+                    <input id="pilotage-search" class="lettra-input" type="search" autocomplete="off" placeholder="@L["Pilotage.Search"]" @bind="_query" @bind:event="oninput" />
+                    <SortSelect Id="pilotage-sort" Options="DossierSortOptions" State="_dossierSort" OnSort="StateHasChanged" />
+                </div>
+            </div>
+            @if (DossierRows.Count == 0)
+            {
+                <EmptyState Id="pilotage-dossiers-filtered" IconName="search" Title="@L["Pilotage.Filtered.Empty"]" />
+            }
+            else
+            {
+                <div class="lt-list-scroll">
+                    <table class="lettra-table lt-cards lt-pilotage-table" id="pilotage-dossiers">
+                        <caption class="lettra-visually-hidden">@L["Pilotage.Dossiers.Title"]</caption>
+                        <thead>
+                            <tr>
+                                <SortHeader Option="DossierSortOptions[0]" State="_dossierSort" OnSort="StateHasChanged" Id="pilotage-sort-name" />
+                                @foreach (SortOption<string> option in DossierSortOptions.Skip(1))
+                                {
+                                    <SortHeader Option="option" State="_dossierSort" OnSort="StateHasChanged" Id="@($"pilotage-sort-{option.Column}")" Class="lg-num" />
+                                }
+                                <th scope="col"><span class="lettra-visually-hidden">@L["Pilotage.Field.Actions"]</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (DossierPilotageDto row in DossierRows)
+                            {
+                                <tr @key="row.DossierId" aria-current="@(row.DossierId == Dossiers.Id ? "true" : null)">
+                                    <th scope="row">@row.Name</th>
+                                    <td class="lg-num" data-label="@L["Pilotage.Field.Dso"]"><span class="lt-indicator" data-level="@PilotageDisplay.Dso(row.DaysSalesOutstanding)">@PilotageDisplay.Days(row.DaysSalesOutstanding, Culture)</span></td>
+                                    <td class="lg-num" data-label="@L["Pilotage.Field.Overdue"]"><span class="lt-indicator" data-level="@PilotageDisplay.Overdue(row.OverdueReceivablesRatio)">@PilotageDisplay.Percent(row.OverdueReceivablesRatio, Culture)</span></td>
+                                    <td class="lg-num" data-label="@L["Pilotage.Field.Collection"]"><span class="lt-indicator" data-level="@PilotageDisplay.Collection(row.CollectionRatio)">@PilotageDisplay.Percent(row.CollectionRatio, Culture)</span></td>
+                                    <td class="lg-num" data-label="@L["Pilotage.Field.Trend"]"><span class="lt-indicator" data-level="@PilotageDisplay.Trend(row.RevenueTrendRatio)">@PilotageDisplay.SignedPercent(row.RevenueTrendRatio, Culture)</span></td>
+                                    <td class="lg-num" data-label="@L["Pilotage.Field.Customers"]">@row.ActiveCustomers.ToString("N0", Culture)</td>
+                                    <td class="lg-num" data-label="@L["Pilotage.Field.Conversion"]">@PilotageDisplay.Percent(row.QuoteConversionRatio, Culture)</td>
+                                    <td class="lt-pilotage-actions">
+                                        @if (Dossiers.CanSwitch || row.DossierId == Dossiers.Id)
+                                        {
+                                            <button type="button" class="lettra-button is-secondary is-small" @onclick="() => OpenAsync(row)">
+                                                <Icon Name="chart-column" Size="16" /> @L["Pilotage.Open"]
+                                            </button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    };
+
+    private RenderFragment AdministrationPanel => __builder =>
+    {
+        if (_administration is not { Available: true } administration)
+        {
+            <ListSkeleton Rows="3" Columns="6" />
+            return;
+        }
+
+        IReadOnlyList<DossierOperationsDto> all = administration.Dossiers;
+        double? oldestNightly = all.Where(r => r.CabinetIndicatorAgeSeconds is not null).Select(r => r.CabinetIndicatorAgeSeconds).Max();
+        <section aria-labelledby="pilotage-admin-kpis">
+            <h2 id="pilotage-admin-kpis" class="lettra-visually-hidden">@L["Pilotage.Tab.Administration"]</h2>
+            <ul class="lt-kpis lt-pilotage-kpis">
+                @Kpi("pilotage-admin-dossiers", "Pilotage.Admin.Dossiers", all.Count.ToString("N0", Culture), IndicatorLevelDto.Ok, null)
+                @Kpi("pilotage-admin-size", "Pilotage.Admin.Size", PilotageDisplay.Bytes(all.Sum(r => r.DatabaseSizeBytes ?? 0), Culture), IndicatorLevelDto.Ok, "Pilotage.Admin.Size.Help")
+                @Kpi("pilotage-admin-silent", "Pilotage.Admin.Silent", all.Sum(r => r.SilentDevices).ToString("N0", Culture), PilotageDisplay.Silent(all.Sum(r => r.SilentDevices)), "Pilotage.Admin.Silent.Help")
+                @Kpi("pilotage-admin-nightly", "Pilotage.Admin.Nightly", PilotageDisplay.Duration(oldestNightly, Culture), PilotageDisplay.NightlyAge(oldestNightly), "Pilotage.Admin.Nightly.Help")
+            </ul>
+        </section>
+
+        <section class="lt-panel" aria-labelledby="pilotage-admin-title">
+            <div class="lt-panel-head lt-pilotage-filters">
+                <h2 id="pilotage-admin-title">@L["Pilotage.Admin.Title"]</h2>
+                <div class="lt-pilotage-tools">
+                    <SortSelect Id="pilotage-admin-sort" Options="AdminSortOptions" State="_adminSort" OnSort="StateHasChanged" />
+                </div>
+            </div>
+            <div class="lt-list-scroll">
+                <table class="lettra-table lt-cards lt-pilotage-table" id="pilotage-admin">
+                    <caption class="lettra-visually-hidden">@L["Pilotage.Admin.Title"]</caption>
+                    <thead>
+                        <tr>
+                            <SortHeader Option="AdminSortOptions[0]" State="_adminSort" OnSort="StateHasChanged" Id="pilotage-admin-sort-name" />
+                            @foreach (SortOption<string> option in AdminSortOptions.Skip(1))
+                            {
+                                <SortHeader Option="option" State="_adminSort" OnSort="StateHasChanged" Id="@($"pilotage-admin-sort-{option.Column}")" Class="lg-num" />
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (DossierOperationsDto row in AdminRows)
+                        {
+                            <tr @key="row.DossierId">
+                                <th scope="row">@row.Name</th>
+                                <td class="lg-num" data-label="@L["Pilotage.Field.Size"]">@PilotageDisplay.Bytes(row.DatabaseSizeBytes, Culture)</td>
+                                <td class="lg-num" data-label="@L["Pilotage.Field.Devices"]">@row.ActiveDevices.ToString("N0", Culture)</td>
+                                <td class="lg-num" data-label="@L["Pilotage.Field.Revoked"]">@row.RevokedDevices.ToString("N0", Culture)</td>
+                                <td class="lg-num" data-label="@L["Pilotage.Field.Silent"]"><span class="lt-indicator" data-level="@PilotageDisplay.Silent(row.SilentDevices)">@row.SilentDevices.ToString("N0", Culture)</span></td>
+                                <td class="lg-num" data-label="@L["Pilotage.Field.LongestSilence"]">@PilotageDisplay.Duration(row.OldestDeviceSyncAgeSeconds, Culture)</td>
+                                <td class="lg-num" data-label="@L["Pilotage.Field.Nightly"]"><span class="lt-indicator" data-level="@PilotageDisplay.NightlyAge(row.CabinetIndicatorAgeSeconds)">@PilotageDisplay.Duration(row.CabinetIndicatorAgeSeconds, Culture)</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    };
+
+    private RenderFragment Kpi(string id, string label, string value, IndicatorLevelDto level, string? help) => __builder =>
+    {
+        <li class="lt-kpi lt-pilotage-kpi" id="@id" data-level="@level">
+            <span class="lt-kpi-head">@L[label]</span>
+            <span class="lt-kpi-value">@value</span>
+            @if (help is not null)
+            {
+                <span class="lt-kpi-note">@L[help]</span>
+            }
+        </li>
+    };
+
+    private RenderFragment MonthlyChart(string id, string title, string unit, IReadOnlyList<MonthlyActivityDto> months, Func<MonthlyActivityDto, double> value, Func<MonthlyActivityDto, string> text) => __builder =>
+    {
+        double max = months.Count == 0 ? 0 : months.Max(value);
+        <section class="lt-panel" aria-labelledby="@(id)-title">
+            <div class="lt-panel-head">
+                <h2 id="@(id)-title">@L[title]</h2>
+                <span class="lettra-hint">@L[unit]</span>
+            </div>
+            <div class="lt-chart lt-pilotage-chart" id="@id" style="--bars: @months.Count" aria-hidden="true">
+                @foreach (MonthlyActivityDto month in months)
+                {
+                    <div class="lt-bar @(month == months[^1] ? "is-current" : null)">
+                        <span class="lt-bar-value">@text(month)</span>
+                        <span class="lt-bar-fill" style="--h: @PilotageDisplay.BarHeight(value(month), max)"></span>
+                        <span class="lt-bar-label">@PilotageDisplay.Month(month.Month, false, Culture)</span>
+                    </div>
+                }
+            </div>
+            <table class="lettra-visually-hidden">
+                <caption>@L[title]</caption>
+                <tbody>
+                    @foreach (MonthlyActivityDto month in months)
+                    {
+                        <tr><th scope="row">@PilotageDisplay.Month(month.Month, true, Culture)</th><td>@text(month)</td></tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    };
+}
