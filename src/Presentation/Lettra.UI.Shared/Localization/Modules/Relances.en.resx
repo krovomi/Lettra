@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.Reminders" xml:space="preserve"><value>Reminders</value></data>
+  <data name="Reminders.Title" xml:space="preserve"><value>Payment reminders</value></data>
+  <data name="Reminders.Subtitle" xml:space="preserve"><value>Overdue unpaid invoices, reminders to send and history.</value></data>
+  <data name="Reminders.RunDue" xml:space="preserve"><value>Send today's reminders ({0})</value></data>
+  <data name="Reminders.NoEmail" xml:space="preserve"><value>This installation does not send emails. Remind your customers yourself (letter, phone, your own mailbox), then record each reminder here.</value></data>
+  <data name="Reminders.Stat.Overdue" xml:space="preserve"><value>Overdue invoices</value></data>
+  <data name="Reminders.Stat.Outstanding" xml:space="preserve"><value>Outstanding</value></data>
+  <data name="Reminders.Stat.DueToday" xml:space="preserve"><value>Reminders due today</value></data>
+  <data name="Reminders.Stat.Auto" xml:space="preserve"><value>Automatic sending</value></data>
+  <data name="Reminders.Auto.On" xml:space="preserve"><value>On</value></data>
+  <data name="Reminders.Auto.Off" xml:space="preserve"><value>Off</value></data>
+  <data name="Reminders.Preview.Title" xml:space="preserve"><value>{0} for invoice {1}</value></data>
+  <data name="Reminders.Preview.To" xml:space="preserve"><value>To</value></data>
+  <data name="Reminders.Preview.Language" xml:space="preserve"><value>Language</value></data>
+  <data name="Reminders.Preview.Subject" xml:space="preserve"><value>Subject</value></data>
+  <data name="Reminders.Language.Fr" xml:space="preserve"><value>French</value></data>
+  <data name="Reminders.Language.En" xml:space="preserve"><value>English</value></data>
+  <data name="Reminders.NoCustomerEmail" xml:space="preserve"><value>No email address</value></data>
+  <data name="Reminders.SendEmail" xml:space="preserve"><value>Send by email</value></data>
+  <data name="Reminders.MarkManual" xml:space="preserve"><value>Record as sent</value></data>
+  <data name="Reminders.Manual.Hint" xml:space="preserve"><value>“Record as sent” keeps track of a reminder made by letter, phone or your own mailbox: copy the text above if needed.</value></data>
+  <data name="Reminders.Invoices" xml:space="preserve"><value>Overdue invoices</value></data>
+  <data name="Reminders.Empty" xml:space="preserve"><value>No overdue invoices</value></data>
+  <data name="Reminders.Empty.Text" xml:space="preserve"><value>Overdue unpaid invoices will appear here, with the reminder to send.</value></data>
+  <data name="Reminders.DueDate" xml:space="preserve"><value>Due date</value></data>
+  <data name="Reminders.DaysLate" xml:space="preserve"><value>Overdue</value></data>
+  <data name="Reminders.Days" xml:space="preserve"><value>{0} d</value></data>
+  <data name="Reminders.Outstanding" xml:space="preserve"><value>Outstanding</value></data>
+  <data name="Reminders.Penalty" xml:space="preserve"><value>+ {0} penalties</value></data>
+  <data name="Reminders.Penalty.Hint" xml:space="preserve"><value>Late interest at the invoice rate and the €40 fixed recovery fee (business customer): suggested, never invoiced automatically.</value></data>
+  <data name="Reminders.Last" xml:space="preserve"><value>Last reminder</value></data>
+  <data name="Reminders.Next" xml:space="preserve"><value>Next</value></data>
+  <data name="Reminders.None" xml:space="preserve"><value>None</value></data>
+  <data name="Reminders.AllSent" xml:space="preserve"><value>All sent</value></data>
+  <data name="Reminders.DueTodayBadge" xml:space="preserve"><value>Today</value></data>
+  <data name="Reminders.Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Reminders.Open" xml:space="preserve"><value>View reminder</value></data>
+  <data name="Reminders.Settings" xml:space="preserve"><value>Reminder schedule</value></data>
+  <data name="Reminders.Settings.Summary" xml:space="preserve"><value>Levels at {0}</value></data>
+  <data name="Reminders.Settings.Hint" xml:space="preserve"><value>Days after the due date when each level is due. Levels follow one another.</value></data>
+  <data name="Reminders.Settings.Gap" xml:space="preserve"><value>Minimum days between two reminders</value></data>
+  <data name="Reminders.Settings.Auto" xml:space="preserve"><value>Automatically email the reminders due every day</value></data>
+  <data name="Reminders.Settings.Auto.Hint" xml:space="preserve"><value>Only customers with an email address are reminded automatically; the others stay to be reminded by hand.</value></data>
+  <data name="Reminders.Settings.Save" xml:space="preserve"><value>Save the schedule</value></data>
+  <data name="Reminders.History" xml:space="preserve"><value>Reminder history</value></data>
+  <data name="Reminders.History.Search" xml:space="preserve"><value>Search (invoice, customer, subject, address)</value></data>
+  <data name="Reminders.History.Level" xml:space="preserve"><value>Level</value></data>
+  <data name="Reminders.History.Outcome" xml:space="preserve"><value>Result</value></data>
+  <data name="Reminders.History.Channel" xml:space="preserve"><value>Channel</value></data>
+  <data name="Reminders.History.From" xml:space="preserve"><value>From</value></data>
+  <data name="Reminders.History.To" xml:space="preserve"><value>To</value></data>
+  <data name="Reminders.History.All" xml:space="preserve"><value>All</value></data>
+  <data name="Reminders.History.Sort" xml:space="preserve"><value>Sort by</value></data>
+  <data name="Reminders.History.Automatic" xml:space="preserve"><value>automatic</value></data>
+  <data name="Reminders.History.SentTo" xml:space="preserve"><value>Sent to {0}</value></data>
+  <data name="Reminders.History.Empty" xml:space="preserve"><value>No reminders</value></data>
+  <data name="Reminders.History.Empty.Text" xml:space="preserve"><value>Every reminder sent or recorded is kept here, with its text.</value></data>
+  <data name="Reminders.Sort.Date" xml:space="preserve"><value>Date</value></data>
+  <data name="Reminders.Sort.Invoice" xml:space="preserve"><value>Invoice</value></data>
+  <data name="Reminders.Sort.Customer" xml:space="preserve"><value>Customer</value></data>
+  <data name="Reminders.Sort.Level" xml:space="preserve"><value>Level</value></data>
+  <data name="Reminders.Sort.Descending" xml:space="preserve"><value>Descending</value></data>
+  <data name="Reminders.Sort.Ascending" xml:space="preserve"><value>Ascending</value></data>
+  <data name="Reminders.Toast.Sent" xml:space="preserve"><value>{0} for invoice {1} sent to {2}.</value></data>
+  <data name="Reminders.Toast.Noted" xml:space="preserve"><value>{0} for invoice {1} recorded as sent.</value></data>
+  <data name="Reminders.Toast.Run" xml:space="preserve"><value>{0} reminder(s) sent, {1} failed, {2} customer(s) without an email address.</value></data>
+  <data name="Reminders.Toast.SettingsSaved" xml:space="preserve"><value>Reminder schedule saved.</value></data>
+  <data name="ReminderLevel.Friendly" xml:space="preserve"><value>Friendly reminder</value></data>
+  <data name="ReminderLevel.Reminder" xml:space="preserve"><value>Reminder</value></data>
+  <data name="ReminderLevel.Final" xml:space="preserve"><value>Final reminder</value></data>
+  <data name="ReminderLevel.FormalNotice" xml:space="preserve"><value>Formal notice</value></data>
+  <data name="ReminderOutcome.Sent" xml:space="preserve"><value>Sent</value></data>
+  <data name="ReminderOutcome.Failed" xml:space="preserve"><value>Failed</value></data>
+  <data name="ReminderChannel.Email" xml:space="preserve"><value>Email</value></data>
+  <data name="ReminderChannel.Manual" xml:space="preserve"><value>By hand</value></data>
+  <data name="Error.Email.NotConfigured" xml:space="preserve"><value>This installation does not send emails: contact the person yourself.</value></data>
+  <data name="Error.Email.SendFailed" xml:space="preserve"><value>The email was not sent: the mail server refused it or did not answer. Try again later.</value></data>
+  <data name="Error.Reminders.DelaysInvalid" xml:space="preserve"><value>Delays must increase from one level to the next, from 1 to 365 days.</value></data>
+  <data name="Error.Reminders.GapInvalid" xml:space="preserve"><value>The gap between two reminders is 1 to 90 days.</value></data>
+  <data name="Error.Reminders.InvoiceNotOverdue" xml:space="preserve"><value>This invoice is no longer overdue (paid, or not due yet).</value></data>
+  <data name="Error.Reminders.CustomerEmailMissing" xml:space="preserve"><value>The customer has no email address: remind them yourself, then record the reminder.</value></data>
+  <data name="Error.Reminders.NoLevelLeft" xml:space="preserve"><value>All reminders for this invoice have already been made.</value></data>
+  <data name="Error.Reminders.CompanyProfileMissing" xml:space="preserve"><value>Fill in the company profile first: the reminder must say who signs it.</value></data>
+  <data name="Error.Administration.NotInvited" xml:space="preserve"><value>This person has already signed in: no invitation needed.</value></data>
+  <data name="Reminders.Invoices.Search" xml:space="preserve"><value>Search (invoice, customer, address)</value></data>
+  <data name="Reminders.Invoices.DueOnly" xml:space="preserve"><value>Due today only</value></data>
+  <data name="Reminders.Invoices.Sort.Overdue" xml:space="preserve"><value>Days overdue</value></data>
+  <data name="Reminders.Invoices.Sort.DueDate" xml:space="preserve"><value>Due date</value></data>
+  <data name="Reminders.Invoices.Sort.Outstanding" xml:space="preserve"><value>Outstanding</value></data>
+  <data name="Reminders.Invoices.Sort.Customer" xml:space="preserve"><value>Customer</value></data>
+  <data name="Reminders.Invoices.Sort.Number" xml:space="preserve"><value>Invoice</value></data>
+  <data name="Reminders.Invoices.NoMatch" xml:space="preserve"><value>No invoice matches these filters.</value></data>
+  <data name="Reminders.Invoices.Count" xml:space="preserve"><value>{0} of {1} invoice(s)</value></data>
+</root>

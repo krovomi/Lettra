@@ -11,6 +11,8 @@ using Lettra.Exports.Application.Banking;
 using Lettra.Exports.Application.EInvoicing;
 using Lettra.Exports.Application.EInvoicing.Platform;
 using Lettra.Exports.Application.Fec;
+using Lettra.Exports.Application.Reminders;
+using Lettra.Contracts.Reminders;
 using Lettra.Exports.Application.Tax;
 using Lettra.Contracts.Tax;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -70,6 +72,16 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<UpdateFiscalSettingsCommand, Result<FiscalSettingsResponse>>, UpdateFiscalSettingsHandler>();
         services.AddScoped<ICommandHandler<MarkFiscalFilingCommand, Result<FiscalDeadlineResponse>>, MarkFiscalFilingHandler>();
         services.AddScoped<IDossierIndicatorSource, VatToDeclareIndicatorSource>();
+
+        // Relances des factures échues (vague 7) : scénario, textes FR/EN, envoi par le port e-mail et historique.
+        services.AddScoped<PaymentReminderService>();
+        services.AddScoped<IQueryHandler<GetReminderOverviewQuery, Result<ReminderOverviewResponse>>, GetReminderOverviewHandler>();
+        services.AddScoped<IQueryHandler<GetReminderPreviewQuery, Result<ReminderPreviewResponse>>, GetReminderPreviewHandler>();
+        services.AddScoped<ICommandHandler<SendReminderCommand, Result<PaymentReminderResponse>>, SendReminderHandler>();
+        services.AddScoped<ICommandHandler<RunDueRemindersCommand, Result<RunRemindersResponse>>, RunDueRemindersHandler>();
+        services.AddScoped<IQueryHandler<ListPaymentRemindersQuery, Result<PagedResponse<PaymentReminderResponse>>>, ListPaymentRemindersHandler>();
+        services.AddScoped<IQueryHandler<GetReminderSettingsQuery, Result<ReminderSettingsResponse>>, GetReminderSettingsHandler>();
+        services.AddScoped<ICommandHandler<UpdateReminderSettingsCommand, Result<ReminderSettingsResponse>>, UpdateReminderSettingsHandler>();
 
         // Envois à la plateforme par l'outbox du serveur (étape 5.4).
         services.AddScoped<IOutboxHandler, PlatformDepositHandler>();

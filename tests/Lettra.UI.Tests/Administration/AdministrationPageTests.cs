@@ -124,6 +124,39 @@ public sealed class AdministrationPageTests : BunitContext
         page.FindAll(".la-cards .la-card").Should().HaveCount(7);
     }
 
+    [Theory]
+    [InlineData(InvitationEmailStatusDto.Sent, "Zoé Petit est ajouté(e) et a reçu une invitation par e-mail.")]
+    [InlineData(InvitationEmailStatusDto.NotConfigured, "Zoé Petit est ajouté(e). Choisissez")]
+    [InlineData(InvitationEmailStatusDto.Failed, "L'e-mail d'invitation n'est pas parti pour Zoé Petit.")]
+    public void Le_message_d_ajout_dit_si_l_invitation_est_partie_par_e_mail(InvitationEmailStatusDto status, string expected)
+    {
+        _gateway.InvitationEmail = status;
+        IRenderedComponent<AdminPage> page = Render<AdminPage>();
+
+        page.Find("#admin-invite").Click();
+        page.Find("#person-name").Change("Zoé Petit");
+        page.Find("#person-email").Change("zoe.petit@cabinet-demo.example");
+        page.Find("#person-form").Submit();
+
+        page.WaitForAssertion(() => page.FindAll(".la-toast span").Select(t => t.TextContent).Should().Contain(t => t.StartsWith(expected, StringComparison.Ordinal)));
+    }
+
+    [Theory]
+    [InlineData(InvitationEmailStatusDto.Sent, "Invitation renvoyée à Inès (")]
+    [InlineData(InvitationEmailStatusDto.NotConfigured, "Cette installation n'envoie pas d'e-mails : prévenez Inès vous-même.")]
+    [InlineData(InvitationEmailStatusDto.Failed, "L'e-mail d'invitation n'est pas parti pour Inès.")]
+    public void Une_invitation_en_attente_se_renvoie_depuis_la_fiche(InvitationEmailStatusDto status, string expected)
+    {
+        _gateway.InvitationEmail = status;
+        IRenderedComponent<AdminPage> page = Render<AdminPage>();
+        page.Find($"#person-{FakeAdministrationGateway.Ines}").Click();
+
+        page.Find("#person-resend").Click();
+
+        _gateway.Calls.Should().Contain($"resend {FakeAdministrationGateway.Ines}");
+        page.WaitForAssertion(() => page.FindAll(".la-toast span").Select(t => t.TextContent).Should().Contain(t => t.StartsWith(expected, StringComparison.Ordinal)));
+    }
+
     [Fact]
     public void Une_adresse_deja_prise_s_explique_sous_le_champ()
     {

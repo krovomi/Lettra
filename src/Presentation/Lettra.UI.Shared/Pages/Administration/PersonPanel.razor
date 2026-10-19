@@ -20,7 +20,15 @@
 
 @if (Person.State == AccountStateDto.Invited)
 {
-    <p class="la-callout"><Icon Name="mail" Size="16" />@string.Format(CultureInfo.CurrentCulture, L["Admin.Person.InvitedHint"], View.FirstNameOf(Person))</p>
+    <div class="la-callout">
+        <p><Icon Name="mail" Size="16" />@string.Format(CultureInfo.CurrentCulture, L["Admin.Person.InvitedHint"], View.FirstNameOf(Person))</p>
+        @if (CanManage && !View.Overview.Can.ReadOnly)
+        {
+            <button type="button" class="lettra-button is-secondary la-small" id="person-resend" disabled="@_resending" @onclick="ResendAsync">
+                <Icon Name="send" Size="16" />@L["Admin.Person.ResendInvitation"]
+            </button>
+        }
+    </div>
 }
 else if (Person.State != AccountStateDto.Active)
 {
@@ -128,11 +136,39 @@ else if (Person.State != AccountStateDto.Active)
 
     private bool CanManage => View.Overview.Can.ManagePeople;
 
+    private bool _resending;
+
     private IReadOnlyList<AreaAccess> Effective => View.EffectiveAreas(Person, Now);
 
     private IEnumerable<TeamSummary> JoinableTeams => View.Overview.Can.ReadOnly
         ? []
         : View.Overview.Teams.Where(t => t.CanManage && !Person.TeamIds.Contains(t.Id));
+
+    private async Task ResendAsync()
+    {
+        _resending = true;
+        OperationResult<InvitationEmailResponse> sent = await Gateway.ResendInvitationAsync(View.Overview.CabinetId, Person.Id, CancellationToken.None);
+        _resending = false;
+        if (!sent.IsSuccess || sent.Value is not { } result)
+        {
+            Toasts.ShowError(L.Error(sent.Errors[0].Code));
+            return;
+        }
+
+        string name = View.FirstNameOf(Person);
+        switch (result.Status)
+        {
+            case InvitationEmailStatusDto.Sent:
+                Toasts.Show(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.InvitationSent"], name, Person.Email));
+                break;
+            case InvitationEmailStatusDto.NotConfigured:
+                Toasts.ShowError(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.InvitationNoEmail"], name));
+                break;
+            default:
+                Toasts.ShowError(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.InvitationFailed"], name));
+                break;
+        }
+    }
 
     private string Until(RoleAssignmentSummary assignment) => assignment.ExpiresAt is { } end
         ? " · " + string.Format(CultureInfo.CurrentCulture, L["Admin.UntilDate"], end.ToLocalTime().ToString("d", CultureInfo.CurrentCulture))

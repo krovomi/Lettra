@@ -77,7 +77,7 @@
   <data name="Admin.Person.NamePlaceholder" xml:space="preserve"><value>For example: Lea Martin</value></data>
   <data name="Admin.Person.Email" xml:space="preserve"><value>Email address</value></data>
   <data name="Admin.Person.EmailPlaceholder" xml:space="preserve"><value>lea.martin@firm.com</value></data>
-  <data name="Admin.Person.InviteHint" xml:space="preserve"><value>Lettra sends no email in this prototype: let the person know yourself.</value></data>
+  <data name="Admin.Person.InviteHint" xml:space="preserve"><value>Lettra emails an invitation when email sending is enabled on this installation; otherwise, let the person know yourself.</value></data>
   <data name="Admin.Person.Invite" xml:space="preserve"><value>Add</value></data>
   <data name="Admin.Team.New" xml:space="preserve"><value>New team</value></data>
   <data name="Admin.Team.NewSubtitle" xml:space="preserve"><value>Give it a clear name; you will then add people and client files.</value></data>
@@ -221,4 +221,9 @@
   <data name="Error.Administration.RoleInUse" xml:space="preserve"><value>This role is still given to people or teams.</value></data>
   <data name="Error.Administration.SelfLockout" xml:space="preserve"><value>You cannot remove your own administration rights.</value></data>
   <data name="Error.Administration.NoAccess" xml:space="preserve"><value>You do not have access to this area.</value></data>
+  <data name="Admin.Person.ResendInvitation" xml:space="preserve"><value>Resend the invitation</value></data>
+  <data name="Admin.Toast.InvitedByEmail" xml:space="preserve"><value>{0} has been added and received an invitation by email. Now choose what this person can do.</value></data>
+  <data name="Admin.Toast.InvitationSent" xml:space="preserve"><value>Invitation sent again to {0} ({1}).</value></data>
+  <data name="Admin.Toast.InvitationNoEmail" xml:space="preserve"><value>This installation does not send emails: let {0} know yourself.</value></data>
+  <data name="Admin.Toast.InvitationFailed" xml:space="preserve"><value>The invitation email to {0} was not sent. Try again with “Resend the invitation”, or let the person know yourself.</value></data>
 </root>

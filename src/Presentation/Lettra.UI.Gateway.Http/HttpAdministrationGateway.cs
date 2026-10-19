@@ -27,6 +27,12 @@ internal sealed class HttpAdministrationGateway(HttpClient http) : IAdministrati
             Json.PersonSummary,
             cancellationToken);
 
+    public Task<OperationResult<InvitationEmailResponse>> ResendInvitationAsync(Guid cabinetId, Guid userId, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.PostAsync(HttpCalls.Relative($"api/v1/cabinets/{cabinetId}/personnes/{userId}/invitation"), null, ct),
+            Json.InvitationEmailResponse,
+            cancellationToken);
+
     public Task<OperationResult<bool>> UpdatePersonAsync(Guid cabinetId, Guid userId, UpdatePersonRequest request, CancellationToken cancellationToken) =>
         NoContentAsync(ct => http.PutAsJsonAsync(HttpCalls.Relative($"api/v1/cabinets/{cabinetId}/personnes/{userId}"), request, Json.UpdatePersonRequest, ct), cancellationToken);
 

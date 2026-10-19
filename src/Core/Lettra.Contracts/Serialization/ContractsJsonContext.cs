@@ -5,6 +5,7 @@ using Lettra.Contracts.Administration;
 using Lettra.Contracts.Alerts;
 using Lettra.Contracts.Assistant;
 using Lettra.Contracts.Banking;
+using Lettra.Contracts.Reminders;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Cabinet;
 using Lettra.Contracts.Common;
@@ -150,4 +151,13 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(MarkFiscalFilingRequest))]
 [JsonSerializable(typeof(FiscalDeadlineResponse))]
 [JsonSerializable(typeof(IReadOnlyList<FiscalDeadlineResponse>))]
+[JsonSerializable(typeof(ReminderSettingsResponse))]
+[JsonSerializable(typeof(UpdateReminderSettingsRequest))]
+[JsonSerializable(typeof(ReminderOverviewResponse))]
+[JsonSerializable(typeof(ReminderPreviewResponse))]
+[JsonSerializable(typeof(SendReminderRequest))]
+[JsonSerializable(typeof(PaymentReminderResponse))]
+[JsonSerializable(typeof(PagedResponse<PaymentReminderResponse>))]
+[JsonSerializable(typeof(RunRemindersResponse))]
+[JsonSerializable(typeof(InvitationEmailResponse))]
 public sealed partial class ContractsJsonContext : JsonSerializerContext;

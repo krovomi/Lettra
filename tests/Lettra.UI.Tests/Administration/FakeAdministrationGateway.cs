@@ -112,6 +112,15 @@ internal sealed class FakeAdministrationGateway : IAdministrationGateway
         return Task.FromResult(OperationResult<AdministrationOverview>.Success(overview));
     }
 
+    /// <summary>Sort de l'e-mail d'invitation que le faux serveur annonce.</summary>
+    public InvitationEmailStatusDto InvitationEmail { get; set; } = InvitationEmailStatusDto.Sent;
+
+    public Task<OperationResult<InvitationEmailResponse>> ResendInvitationAsync(Guid cabinetId, Guid userId, CancellationToken cancellationToken)
+    {
+        Calls.Add($"resend {userId}");
+        return Task.FromResult(OperationResult<InvitationEmailResponse>.Success(new InvitationEmailResponse(userId, InvitationEmail)));
+    }
+
     public Task<OperationResult<PersonSummary>> InviteAsync(Guid cabinetId, InvitePersonRequest request, CancellationToken cancellationToken)
     {
         Calls.Add($"invite {request.Email}");
@@ -122,7 +131,7 @@ internal sealed class FakeAdministrationGateway : IAdministrationGateway
 
         PersonRow row = new(Guid.CreateVersion7(), request.DisplayName.Trim(), request.Email.Trim(), AccountStateDto.Invited);
         _people.Add(row);
-        return Task.FromResult(OperationResult<PersonSummary>.Success(new PersonSummary(row.Id, row.Name, row.Email, row.State, DateTimeOffset.UnixEpoch, [], [], false)));
+        return Task.FromResult(OperationResult<PersonSummary>.Success(new PersonSummary(row.Id, row.Name, row.Email, row.State, DateTimeOffset.UnixEpoch, [], [], false, InvitationEmail)));
     }
 
     public Task<OperationResult<bool>> UpdatePersonAsync(Guid cabinetId, Guid userId, UpdatePersonRequest request, CancellationToken cancellationToken)

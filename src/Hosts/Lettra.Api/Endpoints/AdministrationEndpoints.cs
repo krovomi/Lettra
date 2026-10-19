@@ -33,6 +33,18 @@ internal static class AdministrationEndpoints
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status403Forbidden);
 
+        cabinet.MapPost("/personnes/{userId:guid}/invitation", async (Guid cabinetId, Guid userId, ICommandDispatcher commands, CancellationToken ct) =>
+            {
+                Result<InvitationEmailResponse> result = await commands
+                    .SendAsync(new ResendInvitationCommand(new OrganisationId(cabinetId), userId), ct).ConfigureAwait(false);
+                return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+            })
+            .RequireCabinetPermission(Permission.UtilisateursGerer)
+            .WithName("ResendInvitation")
+            .Produces<InvitationEmailResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
         cabinet.MapPut("/personnes/{userId:guid}", (Guid cabinetId, Guid userId, UpdatePersonRequest request, ICommandDispatcher commands, CancellationToken ct) =>
                 SendAsync(commands, new UpdatePersonCommand(new OrganisationId(cabinetId), userId, request.DisplayName, request.Email), ct))
             .RequireCabinetPermission(Permission.UtilisateursGerer)

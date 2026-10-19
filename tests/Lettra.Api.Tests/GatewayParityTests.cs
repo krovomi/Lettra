@@ -7,6 +7,7 @@ using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
 using Lettra.Contracts.Exports;
+using Lettra.Contracts.Reminders;
 using Lettra.Infrastructure.Persistence.Security;
 using Lettra.Infrastructure.Persistence.Sqlite.Local;
 using Lettra.UI.Abstractions;
@@ -124,6 +125,30 @@ public sealed class GatewayParityTests(LettraApiFactory factory) : IClassFixture
         OperationResult<PagedResponse<CustomerSummary>> result = await services.GetRequiredService<ICustomersGateway>().ListAsync(1, 10, default);
 
         result.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Tenancy.DossierNotFound);
+    }
+
+    [Theory]
+    [MemberData(nameof(Transports))]
+    public async Task Relances_memes_reponses_et_memes_refus(string transport)
+    {
+        await using ServiceProvider services = Gateway(transport);
+        IRemindersGateway reminders = services.GetRequiredService<IRemindersGateway>();
+        Guid unknown = Guid.CreateVersion7();
+
+        (await reminders.GetOverviewAsync(default)).Value!.Settings.EmailConfigured.Should().BeFalse();
+        (await reminders.GetPreviewAsync(unknown, default)).Errors.Single().Code.Should().Be(ErrorCodes.Reminders.InvoiceNotOverdue);
+        (await reminders.SendAsync(unknown, ReminderChannelDto.Manual, default)).Errors.Single().Code.Should().Be(ErrorCodes.Reminders.InvoiceNotOverdue);
+        (await reminders.RunDueAsync(default)).Errors.Single().Code.Should().Be(ErrorCodes.Email.NotConfigured);
+
+        OperationResult<PagedResponse<PaymentReminderResponse>> history = await reminders.ListHistoryAsync(new ReminderHistoryQuery(
+            unknown, ReminderLevelDto.Final, ReminderOutcomeDto.Failed, ReminderChannelDto.Email, new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31),
+            "Dupont & fils", ReminderSortDto.Level, false, 1, 10), default);
+        history.IsSuccess.Should().BeTrue();
+        history.Value!.TotalCount.Should().Be(0);
+
+        (await reminders.UpdateSettingsAsync(new UpdateReminderSettingsRequest { Delays = [3, 3, 30, 45] }, default))
+            .Errors.Single().Code.Should().Be(ErrorCodes.Reminders.DelaysInvalid);
+        (await reminders.UpdateSettingsAsync(new UpdateReminderSettingsRequest { Delays = [4, 16, 31, 46] }, default)).Value!.Delays.Should().Equal(4, 16, 31, 46);
     }
 
     [Theory]

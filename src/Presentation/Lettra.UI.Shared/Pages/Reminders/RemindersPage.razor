@@ -1,0 +1,560 @@
+@page "/reminders"
+@inject IRemindersGateway Reminders
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+@* Relances (vague 7) : les factures échues non soldées et leur prochain niveau, l'aperçu du texte avant l'envoi, l'envoi
+   par e-mail ou la relance notée à la main, l'envoi des relances du jour, le scénario du dossier et l'historique. *@
+
+<PageTitle>@L["Reminders.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Reminders.Title"]</h1>
+        <p class="lettra-muted">@L["Reminders.Subtitle"]</p>
+    </div>
+    <div class="lt-page-actions">
+        <a class="lettra-button is-secondary" href="payments" id="reminders-to-payments"><Icon Name="hand-coins" Size="18" /> @L["Payments.Title"]</a>
+        <button type="button" class="lettra-button" id="reminders-run" disabled="@(_busy || !CanRun)" @onclick="RunDueAsync">
+            <Icon Name="send" Size="18" /> @string.Format(Culture, L["Reminders.RunDue"], _overview?.DueToday ?? 0)
+        </button>
+    </div>
+</div>
+
+<GeneralErrors Errors="_errors" IncludeFieldErrors="true" />
+
+@if (_overview is { Settings.EmailConfigured: false })
+{
+    <p class="la-callout lt-reminders-callout" id="reminders-no-email"><Icon Name="info" Size="16" /> @L["Reminders.NoEmail"]</p>
+}
+
+<div class="lt-banking-stats" id="reminders-stats">
+    <div class="lt-banking-stat is-pending"><span>@L["Reminders.Stat.Overdue"]</span><strong id="reminders-overdue">@(_overview?.Invoices.Count ?? 0)</strong></div>
+    <div class="lt-banking-stat is-amount"><span>@L["Reminders.Stat.Outstanding"]</span><strong>@ExplorerText.Money(_overview?.Invoices.Sum(i => i.Outstanding) ?? 0m)</strong></div>
+    <div class="lt-banking-stat is-proposed"><span>@L["Reminders.Stat.DueToday"]</span><strong id="reminders-due">@(_overview?.DueToday ?? 0)</strong></div>
+    <div class="lt-banking-stat"><span>@L["Reminders.Stat.Auto"]</span><strong>@L[_overview?.Settings.AutoSend == true ? "Reminders.Auto.On" : "Reminders.Auto.Off"]</strong></div>
+</div>
+
+@if (_preview is { } preview && _selected is { } selected)
+{
+    <section class="lettra-card lt-reminders-preview" id="reminders-preview" aria-labelledby="reminders-preview-title">
+        <div class="lt-banking-section-head">
+            <h2 id="reminders-preview-title">@string.Format(Culture, L["Reminders.Preview.Title"], L[$"ReminderLevel.{preview.Level}"], selected.Number)</h2>
+            <button type="button" class="lettra-button is-ghost is-small" aria-label="@L["Shell.Close"]" @onclick="ClosePreview"><Icon Name="x" Size="18" /></button>
+        </div>
+        <dl class="lt-banking-summary">
+            <div><dt>@L["Reminders.Preview.To"]</dt><dd id="reminders-preview-to">@(preview.Recipient ?? L["Reminders.NoCustomerEmail"])</dd></div>
+            <div><dt>@L["Reminders.Preview.Language"]</dt><dd>@L[preview.Language.StartsWith("en", StringComparison.Ordinal) ? "Reminders.Language.En" : "Reminders.Language.Fr"]</dd></div>
+            <div><dt>@L["Reminders.Preview.Subject"]</dt><dd id="reminders-preview-subject">@preview.Subject</dd></div>
+        </dl>
+        <pre class="lt-reminders-body" id="reminders-preview-body">@preview.Body</pre>
+        <div class="la-actions lt-banking-actions">
+            @if (preview.Recipient is not null && _overview!.Settings.EmailConfigured)
+            {
+                <button type="button" class="lettra-button" id="reminders-send" disabled="@_busy" @onclick="() => SendAsync(ReminderChannelDto.Email)">
+                    <Icon Name="send" Size="18" /> @L["Reminders.SendEmail"]
+                </button>
+            }
+            <button type="button" class="lettra-button is-secondary" id="reminders-manual" disabled="@_busy" @onclick="() => SendAsync(ReminderChannelDto.Manual)">
+                <Icon Name="check" Size="18" /> @L["Reminders.MarkManual"]
+            </button>
+        </div>
+        <p class="lettra-hint">@L["Reminders.Manual.Hint"]</p>
+    </section>
+}
+
+<section class="lettra-card" aria-labelledby="reminders-invoices-title">
+    <h2 id="reminders-invoices-title">@L["Reminders.Invoices"]</h2>
+    @if (_overview is null)
+    {
+        <ListSkeleton Columns="7" />
+    }
+    else if (_overview.Invoices.Count == 0)
+    {
+        <EmptyState Id="reminders-empty" IconName="circle-check" Title="@L["Reminders.Empty"]" Text="@L["Reminders.Empty.Text"]" />
+    }
+    else
+    {
+        <div class="lettra-toolbar lt-reminders-filters">
+            <div class="lt-filter">
+                <label for="reminders-invoices-search">@L["Reminders.Invoices.Search"]</label>
+                <input id="reminders-invoices-search" type="search" @bind="_invoiceSearch" @bind:event="oninput" @bind:after="() => _invoicePage = 1" autocomplete="off" />
+            </div>
+            <div class="lt-filter">
+                <label for="reminders-invoices-sort">@L["Reminders.History.Sort"]</label>
+                <select id="reminders-invoices-sort" @bind="_invoiceSort" @bind:after="() => _invoicePage = 1">
+                    @foreach (InvoiceSort sort in Enum.GetValues<InvoiceSort>())
+                    {
+                        <option value="@sort">@L[$"Reminders.Invoices.Sort.{sort}"]</option>
+                    }
+                </select>
+            </div>
+            <button type="button" class="lettra-button is-secondary" id="reminders-invoices-direction" aria-pressed="@(_invoiceDescending ? "true" : "false")" @onclick="() => { _invoiceDescending = !_invoiceDescending; _invoicePage = 1; }">
+                @L[_invoiceDescending ? "Reminders.Sort.Descending" : "Reminders.Sort.Ascending"]
+            </button>
+            <label class="lt-banking-check">
+                <input type="checkbox" id="reminders-invoices-due" @bind="_dueOnly" @bind:after="() => _invoicePage = 1" />
+                <span>@L["Reminders.Invoices.DueOnly"]</span>
+            </label>
+        </div>
+        <p class="lettra-muted" id="reminders-invoices-count">@string.Format(Culture, L["Reminders.Invoices.Count"], FilteredInvoices.Count, _overview.Invoices.Count)</p>
+    }
+    @if (_overview is { Invoices.Count: > 0 } && FilteredInvoices.Count == 0)
+    {
+        <p class="lettra-muted" id="reminders-invoices-nomatch">@L["Reminders.Invoices.NoMatch"]</p>
+    }
+    else if (_overview is { Invoices.Count: > 0 })
+    {
+        <table class="lettra-table lettra-documents lt-cards" id="reminders-table">
+            <thead>
+                <tr>
+                    <th scope="col">@L["Billing.Column.Number"]</th>
+                    <th scope="col">@L["Billing.Column.Customer"]</th>
+                    <th scope="col">@L["Reminders.DueDate"]</th>
+                    <th scope="col" class="lg-num">@L["Reminders.DaysLate"]</th>
+                    <th scope="col" class="lg-num">@L["Reminders.Outstanding"]</th>
+                    <th scope="col">@L["Reminders.Last"]</th>
+                    <th scope="col">@L["Reminders.Next"]</th>
+                    <th scope="col"><span class="lettra-visually-hidden">@L["Reminders.Actions"]</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (ReminderInvoiceResponse invoice in FilteredInvoices.Skip((_invoicePage - 1) * PageSize).Take(PageSize))
+                {
+                    <tr @key="invoice.InvoiceId" class="@(invoice.DueToday ? "is-due" : null)">
+                        <td><a href="@($"invoices/{invoice.InvoiceId}")">@invoice.Number</a></td>
+                        <td data-label="@L["Billing.Column.Customer"]">
+                            <span class="lt-banking-label">
+                                <span>@invoice.CustomerName</span>
+                                <small class="lettra-muted">@(invoice.CustomerEmail ?? L["Reminders.NoCustomerEmail"])</small>
+                            </span>
+                        </td>
+                        <td data-label="@L["Reminders.DueDate"]">@invoice.DueDate.ToString("d", Culture)</td>
+                        <td data-label="@L["Reminders.DaysLate"]" class="lg-num">@string.Format(Culture, L["Reminders.Days"], invoice.DaysOverdue)</td>
+                        <td data-label="@L["Reminders.Outstanding"]" class="lg-num">
+                            <span class="lt-reminders-cell">
+                                <span>@ExplorerText.Money(invoice.Outstanding)</span>
+                                @if (invoice.PenaltyInterest + invoice.RecoveryIndemnity > 0m)
+                                {
+                                    <small class="lettra-muted" title="@L["Reminders.Penalty.Hint"]">@string.Format(Culture, L["Reminders.Penalty"], ExplorerText.Money(invoice.PenaltyInterest + invoice.RecoveryIndemnity))</small>
+                                }
+                            </span>
+                        </td>
+                        <td data-label="@L["Reminders.Last"]">
+                            @if (invoice.LastLevel is { } last)
+                            {
+                                <span class="lt-reminders-cell">
+                                    <span>@L[$"ReminderLevel.{last}"]</span>
+                                    <small class="lettra-muted">@invoice.LastSentAt?.ToLocalTime().ToString("d", Culture)</small>
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="lettra-muted">@L["Reminders.None"]</span>
+                            }
+                        </td>
+                        <td data-label="@L["Reminders.Next"]">
+                            @if (invoice.NextLevel is { } next)
+                            {
+                                <span>@L[$"ReminderLevel.{next}"]</span>
+                                @if (invoice.DueToday)
+                                {
+                                    <span class="lettra-status is-draft">@L["Reminders.DueTodayBadge"]</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="lettra-muted">@L["Reminders.AllSent"]</span>
+                            }
+                        </td>
+                        <td class="lt-banking-line-actions">
+                            @if (invoice.NextLevel is not null)
+                            {
+                                <button type="button" class="lettra-button is-secondary is-small" id="@($"reminders-open-{invoice.Number}")" disabled="@_busy" @onclick="() => OpenPreviewAsync(invoice)">
+                                    <Icon Name="eye" Size="16" /> @L["Reminders.Open"]
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        @if (FilteredInvoices.Count > PageSize)
+        {
+            <nav class="lt-pager" aria-label="@L["Accounting.Pages"]" id="reminders-invoices-pager">
+                <button type="button" class="lettra-button is-secondary" disabled="@(_invoicePage <= 1)" @onclick="() => _invoicePage--">@L["Accounting.Previous"]</button>
+                <span>@string.Format(Culture, L["Accounting.PageOf"], _invoicePage, InvoicePageCount)</span>
+                <button type="button" class="lettra-button is-secondary" disabled="@(_invoicePage >= InvoicePageCount)" @onclick="() => _invoicePage++">@L["Accounting.Next"]</button>
+            </nav>
+        }
+    }
+</section>
+
+<Collapsible Id="reminders-settings" Title="@L["Reminders.Settings"]" InitiallyOpen="false" Summary="@SettingsSummary">
+    <p class="lettra-muted">@L["Reminders.Settings.Hint"]</p>
+    <div class="lt-reminders-delays">
+        @for (int i = 0; i < 4; i++)
+        {
+            int index = i;
+            <label class="la-field">
+                <span>@L[$"ReminderLevel.{(ReminderLevelDto)(index + 1)}"]</span>
+                <span class="lt-reminders-days">
+                    <span aria-hidden="true">J+</span>
+                    <input id="@($"reminders-delay-{index + 1}")" type="number" min="1" max="365" inputmode="numeric" value="@_delays[index]" @onchange="e => _delays[index] = ParseInt(e.Value)" />
+                </span>
+            </label>
+        }
+        <label class="la-field">
+            <span>@L["Reminders.Settings.Gap"]</span>
+            <input id="reminders-gap" type="number" min="1" max="90" inputmode="numeric" @bind="_gap" />
+        </label>
+    </div>
+    <label class="lt-banking-check">
+        <input type="checkbox" id="reminders-auto" @bind="_autoSend" />
+        <span>@L["Reminders.Settings.Auto"]</span>
+    </label>
+    <p class="lettra-hint">@L["Reminders.Settings.Auto.Hint"]</p>
+    <div class="la-actions">
+        <button type="button" class="lettra-button" id="reminders-settings-save" disabled="@_busy" @onclick="SaveSettingsAsync"><Icon Name="check" Size="18" /> @L["Reminders.Settings.Save"]</button>
+    </div>
+</Collapsible>
+
+<section class="lettra-card" aria-labelledby="reminders-history-title">
+    <h2 id="reminders-history-title">@L["Reminders.History"]</h2>
+    <div class="lettra-toolbar lt-reminders-filters">
+        <div class="lt-filter">
+            <label for="reminders-search">@L["Reminders.History.Search"]</label>
+            <input id="reminders-search" type="search" @bind="_search" @bind:after="ReloadHistoryAsync" autocomplete="off" />
+        </div>
+        <div class="lt-filter">
+            <label for="reminders-filter-level">@L["Reminders.History.Level"]</label>
+            <select id="reminders-filter-level" @bind="_level" @bind:after="ReloadHistoryAsync">
+                <option value="">@L["Reminders.History.All"]</option>
+                @foreach (ReminderLevelDto level in Enum.GetValues<ReminderLevelDto>())
+                {
+                    <option value="@level">@L[$"ReminderLevel.{level}"]</option>
+                }
+            </select>
+        </div>
+        <div class="lt-filter">
+            <label for="reminders-filter-outcome">@L["Reminders.History.Outcome"]</label>
+            <select id="reminders-filter-outcome" @bind="_outcome" @bind:after="ReloadHistoryAsync">
+                <option value="">@L["Reminders.History.All"]</option>
+                @foreach (ReminderOutcomeDto outcome in Enum.GetValues<ReminderOutcomeDto>())
+                {
+                    <option value="@outcome">@L[$"ReminderOutcome.{outcome}"]</option>
+                }
+            </select>
+        </div>
+        <div class="lt-filter">
+            <label for="reminders-filter-channel">@L["Reminders.History.Channel"]</label>
+            <select id="reminders-filter-channel" @bind="_channel" @bind:after="ReloadHistoryAsync">
+                <option value="">@L["Reminders.History.All"]</option>
+                @foreach (ReminderChannelDto channel in Enum.GetValues<ReminderChannelDto>())
+                {
+                    <option value="@channel">@L[$"ReminderChannel.{channel}"]</option>
+                }
+            </select>
+        </div>
+        <div class="lt-filter">
+            <label for="reminders-filter-from">@L["Reminders.History.From"]</label>
+            <input id="reminders-filter-from" type="date" @bind="_from" @bind:after="ReloadHistoryAsync" />
+        </div>
+        <div class="lt-filter">
+            <label for="reminders-filter-to">@L["Reminders.History.To"]</label>
+            <input id="reminders-filter-to" type="date" @bind="_to" @bind:after="ReloadHistoryAsync" />
+        </div>
+        <div class="lt-filter">
+            <label for="reminders-sort">@L["Reminders.History.Sort"]</label>
+            <select id="reminders-sort" @bind="_sort" @bind:after="ReloadHistoryAsync">
+                @foreach (ReminderSortDto sort in Enum.GetValues<ReminderSortDto>())
+                {
+                    <option value="@sort">@L[$"Reminders.Sort.{sort}"]</option>
+                }
+            </select>
+        </div>
+        <button type="button" class="lettra-button is-secondary" id="reminders-sort-direction" aria-pressed="@(_descending ? "true" : "false")" @onclick="ToggleDirectionAsync">
+            @L[_descending ? "Reminders.Sort.Descending" : "Reminders.Sort.Ascending"]
+        </button>
+    </div>
+
+    @if (_history is null)
+    {
+        <ListSkeleton Columns="6" />
+    }
+    else if (_history.Items.Count == 0)
+    {
+        <EmptyState Id="reminders-history-empty" IconName="mail" Title="@L["Reminders.History.Empty"]" Text="@L["Reminders.History.Empty.Text"]" />
+    }
+    else
+    {
+        <table class="lettra-table lettra-documents lt-cards" id="reminders-history">
+            <thead>
+                <tr>
+                    <th scope="col">@L["Billing.Column.Date"]</th>
+                    <th scope="col">@L["Billing.Column.Number"]</th>
+                    <th scope="col">@L["Billing.Column.Customer"]</th>
+                    <th scope="col">@L["Reminders.History.Level"]</th>
+                    <th scope="col">@L["Reminders.History.Channel"]</th>
+                    <th scope="col">@L["Reminders.History.Outcome"]</th>
+                    <th scope="col">@L["Reminders.Preview.Subject"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (PaymentReminderResponse reminder in _history.Items)
+                {
+                    <tr @key="reminder.Id">
+                        <td>@reminder.OccurredAt.ToLocalTime().ToString("g", Culture)</td>
+                        <td data-label="@L["Billing.Column.Number"]"><a href="@($"invoices/{reminder.InvoiceId}")">@reminder.InvoiceNumber</a></td>
+                        <td data-label="@L["Billing.Column.Customer"]">@reminder.CustomerName</td>
+                        <td data-label="@L["Reminders.History.Level"]">@L[$"ReminderLevel.{reminder.Level}"]</td>
+                        <td data-label="@L["Reminders.History.Channel"]">
+                            @L[$"ReminderChannel.{reminder.Channel}"]
+                            @if (reminder.Trigger == ReminderTriggerDto.Schedule)
+                            {
+                                <small class="lettra-muted">@L["Reminders.History.Automatic"]</small>
+                            }
+                        </td>
+                        <td data-label="@L["Reminders.History.Outcome"]">
+                            <span class="lettra-status @(reminder.Outcome == ReminderOutcomeDto.Sent ? "is-issued" : "is-refused")">@L[$"ReminderOutcome.{reminder.Outcome}"]</span>
+                        </td>
+                        <td data-label="@L["Reminders.Preview.Subject"]">
+                            <details class="lt-reminders-sent">
+                                <summary>@reminder.Subject</summary>
+                                @if (reminder.Recipient is { } to)
+                                {
+                                    <p class="lettra-muted">@string.Format(Culture, L["Reminders.History.SentTo"], to)</p>
+                                }
+                                <pre class="lt-reminders-body">@reminder.Body</pre>
+                            </details>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        @if (_history.TotalCount > _history.PageSize)
+        {
+            <nav class="lt-pager" aria-label="@L["Accounting.Pages"]">
+                <button type="button" class="lettra-button is-secondary" disabled="@(_page <= 1)" @onclick="() => GoToAsync(_page - 1)">@L["Accounting.Previous"]</button>
+                <span>@string.Format(Culture, L["Accounting.PageOf"], _page, PageCount)</span>
+                <button type="button" class="lettra-button is-secondary" disabled="@(_page >= PageCount)" @onclick="() => GoToAsync(_page + 1)">@L["Accounting.Next"]</button>
+            </nav>
+        }
+    }
+</section>
+
+@code {
+    private const int PageSize = 25;
+
+    private ReminderOverviewResponse? _overview;
+    private PagedResponse<PaymentReminderResponse>? _history;
+    private ReminderInvoiceResponse? _selected;
+    private ReminderPreviewResponse? _preview;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private bool _busy;
+
+    private readonly int[] _delays = [3, 15, 30, 45];
+    private int _gap = 7;
+    private bool _autoSend;
+
+    private string? _search;
+    private ReminderLevelDto? _level;
+    private ReminderOutcomeDto? _outcome;
+    private ReminderChannelDto? _channel;
+    private DateOnly? _from;
+    private DateOnly? _to;
+    private ReminderSortDto _sort = ReminderSortDto.Date;
+    private bool _descending = true;
+    private int _page = 1;
+
+    private string? _invoiceSearch;
+    private bool _dueOnly;
+    private InvoiceSort _invoiceSort = InvoiceSort.Overdue;
+    private bool _invoiceDescending = true;
+    private int _invoicePage = 1;
+
+    /// <summary>Tris de la liste des factures en retard, chargée en entier (un dossier en a quelques dizaines).</summary>
+    private enum InvoiceSort
+    {
+        Overdue,
+        DueDate,
+        Outstanding,
+        Customer,
+        Number,
+    }
+
+    private IReadOnlyList<ReminderInvoiceResponse> FilteredInvoices
+    {
+        get
+        {
+            IEnumerable<ReminderInvoiceResponse> rows = _overview?.Invoices ?? [];
+            if (_dueOnly)
+            {
+                rows = rows.Where(i => i.DueToday);
+            }
+
+            if (!string.IsNullOrWhiteSpace(_invoiceSearch))
+            {
+                string search = _invoiceSearch.Trim();
+                CompareInfo compare = CultureInfo.InvariantCulture.CompareInfo;
+                const CompareOptions options = CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace;
+                rows = rows.Where(i => compare.IndexOf(i.Number, search, options) >= 0
+                    || compare.IndexOf(i.CustomerName, search, options) >= 0
+                    || (i.CustomerEmail is string email && compare.IndexOf(email, search, options) >= 0));
+            }
+
+            Func<ReminderInvoiceResponse, IComparable> key = _invoiceSort switch
+            {
+                InvoiceSort.DueDate => i => i.DueDate,
+                InvoiceSort.Outstanding => i => i.Outstanding,
+                InvoiceSort.Customer => i => i.CustomerName,
+                InvoiceSort.Number => i => i.Number,
+                _ => i => i.DaysOverdue,
+            };
+            return [.. _invoiceDescending ? rows.OrderByDescending(key) : rows.OrderBy(key)];
+        }
+    }
+
+    private int InvoicePageCount => Math.Max(1, (int)Math.Ceiling(FilteredInvoices.Count / (double)PageSize));
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private bool CanRun => _overview is { Settings.EmailConfigured: true, DueToday: > 0 };
+
+    private int PageCount => _history is null ? 1 : Math.Max(1, (int)Math.Ceiling(_history.TotalCount / (double)_history.PageSize));
+
+    private string SettingsSummary => _overview is null
+        ? string.Empty
+        : string.Format(Culture, L["Reminders.Settings.Summary"], string.Join(" · ", _overview.Settings.Delays.Select(d => "J+" + d.ToString(Culture))));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOverviewAsync();
+        await LoadHistoryAsync();
+    }
+
+    private async Task LoadOverviewAsync()
+    {
+        OperationResult<ReminderOverviewResponse> result = await Reminders.GetOverviewAsync(CancellationToken.None);
+        _errors = result.Errors;
+        _overview = result.Value ?? new ReminderOverviewResponse([], new ReminderSettingsResponse(false, [3, 15, 30, 45], 7, false, 0), 0);
+        for (int i = 0; i < Math.Min(4, _overview.Settings.Delays.Count); i++)
+        {
+            _delays[i] = _overview.Settings.Delays[i];
+        }
+
+        _gap = _overview.Settings.MinimumGapDays;
+        _autoSend = _overview.Settings.AutoSend;
+    }
+
+    private async Task LoadHistoryAsync()
+    {
+        OperationResult<PagedResponse<PaymentReminderResponse>> result = await Reminders.ListHistoryAsync(
+            new ReminderHistoryQuery(null, _level, _outcome, _channel, _from, _to, _search, _sort, _descending, _page, PageSize), CancellationToken.None);
+        _history = result.Value ?? new PagedResponse<PaymentReminderResponse>([], 1, PageSize, 0);
+        if (!result.IsSuccess)
+        {
+            _errors = result.Errors;
+        }
+    }
+
+    private Task ReloadHistoryAsync()
+    {
+        _page = 1;
+        return LoadHistoryAsync();
+    }
+
+    private Task ToggleDirectionAsync()
+    {
+        _descending = !_descending;
+        return ReloadHistoryAsync();
+    }
+
+    private async Task GoToAsync(int page)
+    {
+        _page = page;
+        await LoadHistoryAsync();
+    }
+
+    private async Task OpenPreviewAsync(ReminderInvoiceResponse invoice)
+    {
+        _busy = true;
+        OperationResult<ReminderPreviewResponse> preview = await Reminders.GetPreviewAsync(invoice.InvoiceId, CancellationToken.None);
+        _busy = false;
+        if (!preview.IsSuccess)
+        {
+            Toasts.Show(ToastKind.Error, L.Error(preview.Errors[0].Code));
+            return;
+        }
+
+        _selected = invoice;
+        _preview = preview.Value;
+    }
+
+    private void ClosePreview()
+    {
+        _selected = null;
+        _preview = null;
+    }
+
+    private async Task SendAsync(ReminderChannelDto channel)
+    {
+        if (_selected is not { } invoice)
+        {
+            return;
+        }
+
+        _busy = true;
+        OperationResult<PaymentReminderResponse> sent = await Reminders.SendAsync(invoice.InvoiceId, channel, CancellationToken.None);
+        _busy = false;
+        if (sent.IsSuccess && sent.Value is { } reminder)
+        {
+            string key = channel == ReminderChannelDto.Email ? "Reminders.Toast.Sent" : "Reminders.Toast.Noted";
+            Toasts.Show(ToastKind.Success, string.Format(Culture, L[key], L[$"ReminderLevel.{reminder.Level}"], reminder.InvoiceNumber, reminder.Recipient));
+            ClosePreview();
+        }
+        else
+        {
+            Toasts.Show(ToastKind.Error, L.Error(sent.Errors[0].Code));
+        }
+
+        await LoadOverviewAsync();
+        await ReloadHistoryAsync();
+    }
+
+    private async Task RunDueAsync()
+    {
+        _busy = true;
+        OperationResult<RunRemindersResponse> run = await Reminders.RunDueAsync(CancellationToken.None);
+        _busy = false;
+        if (run.IsSuccess && run.Value is { } done)
+        {
+            Toasts.Show(done.Failed > 0 ? ToastKind.Warning : ToastKind.Success, string.Format(Culture, L["Reminders.Toast.Run"], done.Sent, done.Failed, done.WithoutEmail));
+        }
+        else
+        {
+            Toasts.Show(ToastKind.Error, L.Error(run.Errors[0].Code));
+        }
+
+        await LoadOverviewAsync();
+        await ReloadHistoryAsync();
+    }
+
+    private async Task SaveSettingsAsync()
+    {
+        _busy = true;
+        OperationResult<ReminderSettingsResponse> saved = await Reminders.UpdateSettingsAsync(
+            new UpdateReminderSettingsRequest { AutoSend = _autoSend, Delays = [.. _delays], MinimumGapDays = _gap }, CancellationToken.None);
+        _busy = false;
+        if (saved.IsSuccess)
+        {
+            Toasts.Show(ToastKind.Success, L["Reminders.Toast.SettingsSaved"]);
+            await LoadOverviewAsync();
+        }
+        else
+        {
+            Toasts.Show(ToastKind.Error, L.Error(saved.Errors[0].Code));
+        }
+    }
+
+    private static int ParseInt(object? value) => int.TryParse(value?.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed) ? parsed : 0;
+}
