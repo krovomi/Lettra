@@ -177,6 +177,42 @@ public sealed class GatewayParityTests(LettraApiFactory factory) : IClassFixture
 
     [Theory]
     [MemberData(nameof(Transports))]
+    public async Task Facturer_un_modele_recurrent_puis_le_mettre_en_pause_et_le_supprimer(string transport)
+    {
+        await using ServiceProvider services = Gateway(transport);
+        IRecurringInvoicesGateway recurring = services.GetRequiredService<IRecurringInvoicesGateway>();
+        Guid customer = (await services.GetRequiredService<ICustomersGateway>().CreateAsync(CustomerApiTests.Martin(), default)).Value!.Id;
+        DateOnly start = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1);
+        SaveRecurringInvoiceRequest request = new()
+        {
+            Name = "Forfait parité",
+            CustomerId = customer,
+            Lines = [new DocumentLineRequest { Designation = "Tenue", Quantity = 1, UnitPriceExclTax = 90m, UnitCode = "C62", Kind = CatalogItemKindDto.Service }],
+            StartDate = start,
+        };
+
+        RecurringInvoiceResponse created = (await recurring.CreateAsync(request, default)).Value!;
+        OperationResult<RecurringRunResponse> run = await recurring.RunAsync(created.Id, default);
+        RecurringInvoiceResponse generated = (await recurring.GetAsync(created.Id, default)).Value!;
+        request.Frequency = RecurrenceFrequencyDto.Quarterly;
+        OperationResult<RecurringInvoiceResponse> locked = await recurring.UpdateAsync(created.Id, request, generated.Version, default);
+        OperationResult<RecurringInvoiceResponse> stale = await recurring.SetActiveAsync(created.Id, false, created.Version, default);
+        OperationResult<RecurringInvoiceResponse> paused = await recurring.SetActiveAsync(created.Id, false, generated.Version, default);
+        OperationResult<PagedResponse<RecurringInvoiceSummary>> list = await recurring.ListAsync(new RecurringInvoiceListQuery(Search: "parité", Active: false), default);
+
+        run.Value!.Created.Should().ContainSingle().Which.PeriodStart.Should().Be(start);
+        generated.Occurrences.Should().ContainSingle().Which.InvoiceStatus.Should().Be(InvoiceStatusDto.Draft);
+        locked.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.RecurringInvoice.ScheduleLocked);
+        stale.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Concurrency.VersionMismatch);
+        paused.Value!.IsActive.Should().BeFalse();
+        list.Value!.Items.Should().Contain(i => i.Id == created.Id);
+        (await recurring.RunAsync(created.Id, default)).Value!.CreatedCount.Should().Be(0);
+        (await recurring.DeleteAsync(created.Id, paused.Value.Version, default)).Value.Should().BeTrue();
+        (await recurring.GetAsync(created.Id, default)).Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.RecurringInvoice.NotFound);
+    }
+
+    [Theory]
+    [MemberData(nameof(Transports))]
     public async Task Transmettre_a_la_plateforme_puis_declarer_un_encaissement_partiel(string transport)
     {
         await using ServiceProvider services = Gateway(transport);

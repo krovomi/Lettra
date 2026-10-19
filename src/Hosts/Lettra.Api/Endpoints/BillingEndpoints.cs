@@ -42,6 +42,7 @@ internal static class BillingEndpoints
         MapQuotes(api.MapGroup("/quotes").WithTags("Quotes"));
         MapInvoices(api.MapGroup("/invoices").WithTags("Invoices"));
         MapPriceLists(api.MapGroup("/price-lists").WithTags("PriceLists"));
+        api.MapRecurringInvoices();
         return api;
     }
 

@@ -388,6 +388,12 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<DateOnly?>("BillingPeriodEnd")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("BillingPeriodStart")
+                        .HasColumnType("date");
+
                     b.Property<string>("ContentHash")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
@@ -866,6 +872,105 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .IsUnique();
 
                     b.ToTable("Quotes", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Billing.RecurringInvoice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Frequency")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("GeneratedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("LastModifiedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<DateOnly?>("NextIssueDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("NextRevisionDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("PaymentTerms")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("Revision")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("RevisionPercent")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Subject")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<decimal?>("SyntecLatestIndex")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<decimal?>("SyntecReferenceIndex")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<int>("Timing")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("TotalExclTax")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("ValidateAutomatically")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("VatRegime")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("IsActive", "NextIssueDate");
+
+                    b.ToTable("RecurringInvoices", (string)null);
                 });
 
             modelBuilder.Entity("Lettra.Domain.Catalog.CatalogItem", b =>
@@ -2343,6 +2448,119 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.Navigation("Lines");
 
                     b.Navigation("VatSummaries");
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Billing.RecurringInvoice", b =>
+                {
+                    b.OwnsMany("Lettra.Domain.Billing.DocumentLine", "Lines", b1 =>
+                        {
+                            b1.Property<Guid>("RecurringInvoiceId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<int>("Position")
+                                .HasColumnType("integer");
+
+                            b1.Property<Guid?>("CatalogItemId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Description")
+                                .HasMaxLength(2000)
+                                .HasColumnType("character varying(2000)");
+
+                            b1.Property<string>("Designation")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)");
+
+                            b1.Property<decimal>("DiscountPercent")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("numeric(18,4)");
+
+                            b1.Property<int>("Nature")
+                                .HasColumnType("integer");
+
+                            b1.Property<decimal>("Quantity")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("numeric(18,4)");
+
+                            b1.Property<string>("Reference")
+                                .HasMaxLength(50)
+                                .HasColumnType("character varying(50)");
+
+                            b1.Property<decimal>("TotalExclTax")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("numeric(18,4)");
+
+                            b1.Property<string>("UnitCode")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)");
+
+                            b1.Property<decimal>("UnitPriceExclTax")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("numeric(18,4)");
+
+                            b1.Property<string>("VatCategory")
+                                .IsRequired()
+                                .HasMaxLength(2)
+                                .HasColumnType("character varying(2)");
+
+                            b1.Property<string>("VatExemptionCode")
+                                .HasMaxLength(30)
+                                .HasColumnType("character varying(30)");
+
+                            b1.Property<string>("VatRateCode")
+                                .IsRequired()
+                                .HasMaxLength(10)
+                                .HasColumnType("character varying(10)");
+
+                            b1.Property<decimal>("VatRatePercent")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("numeric(18,4)");
+
+                            b1.HasKey("RecurringInvoiceId", "Position");
+
+                            b1.ToTable("RecurringInvoiceLines", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("RecurringInvoiceId");
+                        });
+
+                    b.OwnsMany("Lettra.Domain.Billing.RecurringOccurrence", "Occurrences", b1 =>
+                        {
+                            b1.Property<Guid>("RecurringInvoiceId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<DateOnly>("PeriodStart")
+                                .HasColumnType("date");
+
+                            b1.Property<DateTimeOffset>("CreatedAt")
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.Property<Guid>("InvoiceId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<DateOnly>("PeriodEnd")
+                                .HasColumnType("date");
+
+                            b1.Property<decimal?>("RevisionCoefficient")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("numeric(18,4)");
+
+                            b1.HasKey("RecurringInvoiceId", "PeriodStart");
+
+                            b1.HasIndex("InvoiceId")
+                                .IsUnique();
+
+                            b1.ToTable("RecurringInvoiceOccurrences", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("RecurringInvoiceId");
+                        });
+
+                    b.Navigation("Lines");
+
+                    b.Navigation("Occurrences");
                 });
 
             modelBuilder.Entity("Lettra.Domain.Pricing.PriceList", b =>

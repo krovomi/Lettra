@@ -452,6 +452,8 @@ internal static class BillingRegistration
         services.AddScoped<IBillingReferenceChecker, BillingReferenceChecker>();
         services.AddScoped<IJournaledDocumentReader, JournaledDocumentReader>();
         services.AddScoped<IBillingTransaction, BillingTransaction>();
+        services.AddScoped<IRecurringInvoiceRepository, RecurringInvoiceRepository>();
+        services.AddScoped<IRecurringInvoiceReadStore, RecurringInvoiceReadStore>();
         return services;
     }
 }
