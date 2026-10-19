@@ -549,6 +549,10 @@ données. Sauvegarder les données du navigateur avant une manipulation risquée
 `docker run --rm -v lettra-demo_lettra-donnees:/donnees -v "${PWD}:/sauvegarde" busybox tar czf /sauvegarde/lettra-donnees.tgz -C /donnees .`
 (démo arrêtée). La version qui apporte le serveur commun corrige le realm Keycloak : après cette mise à jour,
 l'enrôlement du code à usage unique de l'utilisateur fictif est à refaire une fois. Les données Lettra sont conservées.
+Le navigateur prend la nouvelle version tout seul, sans fermer ses onglets : un onglet ouvert dans les dix secondes qui
+suivent se recharge de lui-même ; un onglet déjà ouvert affiche « Nouvelle version de Lettra disponible » avec un
+bouton **Recharger**, pour ne jamais perdre une saisie en cours. Seule exception, la première fois après une version
+d'avant le 19 octobre 2026 : appuyez une fois sur F5 (ou fermez et rouvrez la fenêtre installée).
 Sous Windows, fermez Lettra, téléchargez le nouvel artefact et remplacez le dossier extrait : vos
 données, rangées ailleurs, sont conservées. Sous Android, `adb install -r` installe la nouvelle version par-dessus
 l'ancienne et garde les données : les APK de la CI sont signés avec la même clé de démonstration
