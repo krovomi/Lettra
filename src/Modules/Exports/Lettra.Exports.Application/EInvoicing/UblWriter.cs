@@ -33,6 +33,11 @@ internal static class UblWriter
                 // En UBL, le code sujet précède le texte : « #PMT#… » (convention EN 16931 reprise par la XP Z12-012).
                 invoice.Notes.Select(n => new XElement(Cbc + "Note", n.SubjectCode is { } code ? $"#{code}#{n.Content}" : n.Content)),
                 new XElement(Cbc + "DocumentCurrencyCode", invoice.Currency),
+                invoice.PeriodStart is { } periodStart && invoice.PeriodEnd is { } periodEnd
+                    ? new XElement(Cac + "InvoicePeriod",
+                        new XElement(Cbc + "StartDate", EInvoice.IsoDate(periodStart)),
+                        new XElement(Cbc + "EndDate", EInvoice.IsoDate(periodEnd)))
+                    : null,
                 invoice.PurchaseOrderReference is { } order ? new XElement(Cac + "OrderReference", new XElement(Cbc + "ID", order)) : null,
                 invoice.PrecedingInvoiceNumber is { } preceding
                     ? new XElement(Cac + "BillingReference", new XElement(Cac + "InvoiceDocumentReference",

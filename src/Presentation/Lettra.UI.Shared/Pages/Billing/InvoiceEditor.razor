@@ -53,6 +53,10 @@ else
                     {
                         <p class="lettra-field lettra-muted">@string.Format(CultureInfo.CurrentCulture, L["Invoice.CreditOf"], credited)</p>
                     }
+                    @if (_invoice is { BillingPeriodStart: { } periodStart, BillingPeriodEnd: { } periodEnd })
+                    {
+                        <p class="lettra-field lettra-muted" id="billing-period">@string.Format(CultureInfo.CurrentCulture, L["Invoice.BillingPeriod"], periodStart.ToString("d", CultureInfo.CurrentCulture), periodEnd.ToString("d", CultureInfo.CurrentCulture))</p>
+                    }
                     @if (_invoice?.CreditApprovedAt is { } approvedAt)
                     {
                         <p class="lettra-field lettra-muted" id="credit-approved">@string.Format(CultureInfo.CurrentCulture, L["Invoice.CreditApproved"], approvedAt.ToLocalTime().ToString("d", CultureInfo.CurrentCulture))</p>
