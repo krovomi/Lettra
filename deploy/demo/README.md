@@ -191,7 +191,12 @@ docker compose -f deploy/demo/compose.yaml -f deploy/demo/compose.observabilite.
 ```
 
 Puis ouvrir **http://localhost:3000/** : Grafana s'ouvre sans connexion, en lecture seule, sur « Lettra · Activité ».
-Les trois tableaux de bord sont dans le dossier **Lettra** (menu *Dashboards*), et le bandeau de chacun mène aux autres.
+Les six tableaux de bord sont dans le dossier **Lettra** (menu *Dashboards*), et le bandeau de chacun mène aux autres.
+
+Les tableaux « Pilotage du cabinet », « Pilotage d'un dossier » et « Administration » lisent les indicateurs que l'API
+expose sur `/internal/kpi/metrics` (tâche Prometheus `lettra-kpi`, jeton fictif `demo-indicateurs-fictif-2026` présent
+dans `observabilite/prometheus.yml` et dans `compose.observabilite.yaml`). Sans jeton réglé, la route n'existe pas.
+Détails et limites (droits par dossier, comptes Grafana) : [docs/indicateurs-grafana.md](../../docs/indicateurs-grafana.md).
 
 | Tableau de bord | Ce qu'il montre |
 |---|---|

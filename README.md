@@ -121,10 +121,18 @@ Loki, comme dans une cellule) :
 docker compose -f deploy/demo/compose.yaml -f deploy/demo/compose.observabilite.yaml up -d --build --wait
 ```
 
-Puis **http://localhost:3000/**, sans connexion : trois tableaux de bord dans le dossier « Lettra », **Activité**
-(requêtes, latence, erreurs, outbox, synchronisations, connexions, assistant), **Métier** (devis, factures, avoirs,
-transmissions, FEC, en nombres seulement) et **Objectifs de service** (disponibilité, latence, alertes). Pour remplir
-les courbes, dix minutes d'activité fictive avec k6, une fois la session ouverte
+Puis **http://localhost:3000/**, sans connexion : six tableaux de bord dans le dossier « Lettra ». Trois pour piloter :
+**Pilotage du cabinet** (tous les dossiers d'un coup d'œil : délai de paiement des clients, créances en retard, TVA à
+déclarer, banque à rapprocher ; un clic sur un dossier ouvre son tableau), **Pilotage d'un dossier** (clients et
+encaissements, activité mois par mois, devis, ce qui reste à faire) et **Administration** (erreurs et lenteurs,
+connexions refusées, alertes graves, postes qui ne se synchronisent plus, comptes, dossiers, place occupée). Trois pour
+la technique : **Activité** (requêtes, latence, erreurs, outbox, synchronisations, connexions, assistant), **Métier**
+(devis, factures, avoirs, transmissions, FEC, en nombres seulement) et **Objectifs de service** (disponibilité, latence,
+alertes). Les tableaux de pilotage se remplissent seuls à partir des dossiers de démonstration (une collecte toutes les
+5 minutes) ; ils ne publient que des ratios, des délais, des indices et des compteurs, jamais un montant ni un nom de
+client ([Indicateurs de pilotage dans Grafana](docs/indicateurs-grafana.md)). Tableaux de pilotage **vérifiés** dans la
+démo Docker à 390 px (téléphone), 820 px (tablette) et 1440 px (ordinateur) : aucun panneau vide, aucun défilement de
+côté. Pour remplir les courbes techniques, dix minutes d'activité fictive avec k6, une fois la session ouverte
 ([commandes complètes](deploy/demo/README.md#remplir-les-courbes--activité-de-démonstration-k6)) :
 
 ```bash
@@ -135,8 +143,9 @@ Détails : [Voir la télémétrie dans Grafana](deploy/demo/README.md#voir-la-t�
 
 > La CI (job « Démo — télémétrie dans Grafana ») démarre cette pile, vérifie par l'API de Grafana les sources et les
 > tableaux de bord, puis, après deux minutes d'activité k6, que chaque panneau a des données (sauf les deux panneaux
-> PostgreSQL, vides avec SQLite), qu'un exemplaire mène à une trace et à ses journaux, et que les alertes de la cellule
-> sont visibles. L'affichage dans un navigateur n'est pas vérifié.
+> PostgreSQL, vides avec SQLite, et quatre panneaux d'administration qui dépendent d'erreurs, de connexions ou de postes
+> installés que la démo ne garantit pas), qu'un exemplaire mène à une trace et à ses journaux, et que les alertes de
+> la cellule sont visibles. L'affichage dans un navigateur n'est pas vérifié.
 
 ### Application Windows
 

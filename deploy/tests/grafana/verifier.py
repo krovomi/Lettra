@@ -28,16 +28,22 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-TABLEAUX = {"lettra-slo": "Lettra · Objectifs de service", "lettra-activite": "Lettra · Activité", "lettra-metier": "Lettra · Métier"}
+TABLEAUX = {"lettra-slo": "Lettra · Objectifs de service", "lettra-activite": "Lettra · Activité", "lettra-metier": "Lettra · Métier",
+            "lettra-pilotage-cabinet": "Lettra · Pilotage du cabinet", "lettra-pilotage-dossier": "Lettra · Pilotage d'un dossier",
+            "lettra-administration": "Lettra · Administration"}
 
 # Panneaux sans données dans la démonstration, et pourquoi. Tout autre panneau vide fait échouer la vérification.
 SANS_DONNEES_EN_DEMO = {
     ("lettra-slo", "PgBouncer : clients en attente (dossiers actifs au-delà du budget)"): "pas de PostgreSQL ni de PgBouncer (SQLite)",
     ("lettra-slo", "Connexions PostgreSQL utilisées / max_connections"): "pas de PostgreSQL (SQLite)",
+    ("lettra-administration", "Requêtes et erreurs de l'API"): "aucune erreur 5xx attendue",
+    ("lettra-administration", "Connexions refusées (24 h)"): "aucun échec de connexion n'est garanti",
+    ("lettra-administration", "Connexions réussies et refusées"): "aucune connexion n'est garantie",
+    ("lettra-administration", "Postes synchronisés par dossier"): "aucune application installée reliée au serveur",
 }
 
 # Variables de Grafana remplacées pour interroger les sources directement.
-VARIABLES = {"$__rate_interval": "2m", "$__interval": "1m", "$__range": "1h"}
+VARIABLES = {"$__rate_interval": "2m", "$__interval": "1m", "$__range": "1h", '="$dossier"': '=~".+"'}
 
 
 class Grafana:
