@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Reflection;
 using AngleSharp.Dom;
 using Bunit;
+using Lettra.Contracts.Common;
 using Lettra.Contracts.Identity;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
@@ -193,6 +194,69 @@ public sealed class GuidedTourTests : BunitContext
         _ui.Invocations.Should().Contain(i => i.Identifier == "writePreference"
             && ((string)i.Arguments[0]!).StartsWith("lettra.tours.", StringComparison.Ordinal) && Equals(i.Arguments[1], "home:2"));
         _tour.Invocations.Should().Contain(i => i.Identifier == "restoreFocus");
+    }
+
+    [Fact]
+    public async Task Sans_session_ouverte_le_parcours_ne_couvre_pas_l_ecran_de_connexion()
+    {
+        // Un vrai appareil (WebView Android, iOS, Windows, macOS, navigateur) : la session se lit par le réseau, après le
+        // premier rendu. Sans session, l'écran de connexion s'affiche et le voile du parcours ne doit pas couvrir
+        // « Se connecter ».
+        NavigateurReel();
+        SlowSessionGateway sessions = new();
+        Services.AddSingleton<ISessionGateway>(sessions);
+        NavigationManager navigation = Services.GetRequiredService<NavigationManager>();
+
+        IRenderedComponent<MainLayout> coque = Coque();
+        coque.FindAll(".lt-tour").Should().BeEmpty("la session n'est pas encore lue");
+
+        await coque.InvokeAsync(() => sessions.Answer(authenticated: false));
+        coque.WaitForAssertion(() => navigation.Uri.Should().Be("http://localhost/session"));
+        coque.FindAll(".lt-tour").Should().BeEmpty("le parcours ne démarre pas sur l'écran de connexion");
+    }
+
+    [Fact]
+    public async Task Le_parcours_d_accueil_demarre_une_fois_la_session_ouverte()
+    {
+        NavigateurReel();
+        SlowSessionGateway sessions = new();
+        Services.AddSingleton<ISessionGateway>(sessions);
+
+        IRenderedComponent<MainLayout> coque = Coque();
+        coque.FindAll(".lt-tour").Should().BeEmpty();
+
+        await coque.InvokeAsync(() => sessions.Answer(authenticated: true));
+        coque.WaitForAssertion(() => coque.Find("#tour-title").TextContent.Should().Be("Bienvenue dans Lettra"));
+        _tour.Invocations.Count(i => i.Identifier == "canAutoStart").Should().Be(1);
+    }
+
+    /// <summary>Session lue par le réseau : la réponse arrive après le premier rendu, comme sur un appareil.</summary>
+    private sealed class SlowSessionGateway : ISessionGateway
+    {
+        private TaskCompletionSource<OperationResult<SessionResponse>> _pending = new();
+
+        public string? SignInPath => "/bff/login";
+
+        public void Answer(bool authenticated)
+        {
+            TaskCompletionSource<OperationResult<SessionResponse>> pending = _pending;
+            _pending = new();
+            _pending.SetResult(Read(authenticated));
+            pending.SetResult(Read(authenticated));
+        }
+
+        private static OperationResult<SessionResponse> Read(bool authenticated) => OperationResult<SessionResponse>.Success(
+            new SessionResponse(authenticated, SessionModeDto.Oidc, authenticated ? "Claire Martin" : null, false));
+
+        public Task<OperationResult<SessionResponse>> GetAsync(CancellationToken cancellationToken) => _pending.Task;
+
+        public Task<OperationResult<SessionResponse>> CreateLocalAccountAsync(CreateLocalAccountRequest request, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<OperationResult<SessionResponse>> UnlockAsync(UnlockLocalSessionRequest request, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<OperationResult<SessionResponse>> LockAsync(CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 
     [Fact]
