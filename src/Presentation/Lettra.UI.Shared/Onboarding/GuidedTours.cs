@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Shared.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -137,16 +136,7 @@ public sealed class GuidedTours(DevicePreferences preferences, IServiceProvider 
     /// Clé de stockage propre à l'utilisateur : empreinte de son nom et du mode de session, pour que deux personnes sur
     /// le même poste aient chacune leurs tutoriels, sans écrire leur nom en clair.
     /// </summary>
-    public static string StorageKey(string? user)
-    {
-        uint hash = 2166136261;
-        foreach (byte b in Encoding.UTF8.GetBytes(user ?? string.Empty))
-        {
-            hash = (hash ^ b) * 16777619;
-        }
-
-        return KeyPrefix + hash.ToString("x8", CultureInfo.InvariantCulture);
-    }
+    public static string StorageKey(string? user) => KeyPrefix + UserStorageKey.Hash(user);
 
     private async Task<Dictionary<string, int>> LoadAsync()
     {
@@ -176,7 +166,7 @@ public sealed class GuidedTours(DevicePreferences preferences, IServiceProvider 
         try
         {
             var result = await session.GetAsync(CancellationToken.None).ConfigureAwait(false);
-            return result.Value is { IsAuthenticated: true } response ? $"{response.Mode}|{response.DisplayName}" : null;
+            return UserStorageKey.UserOf(result.Value);
         }
         catch (HttpRequestException)
         {

@@ -1,44 +1,193 @@
-@* Liste de navigation partagée par la barre latérale et la feuille « Plus » du téléphone. En rail, les libellés restent
-   lisibles par le lecteur d'écran et s'affichent en info-bulle. *@
+@* Menu partagé par la barre latérale et la feuille « Plus » du téléphone, réglable par l'utilisateur :
+   - une recherche en tête filtre les écrans (libellés et mots-clés, sans accents) ; Entrée ouvre le premier, Échap
+     efface, et « Chercher partout » ou « Poser la question à l'aide » prennent le relais quand le menu ne suffit pas ;
+   - chaque section se replie par son chevron ; un point signale l'écran affiché dans une section repliée ;
+   - l'étoile épingle un écran dans « Favoris », en tête.
+   Réglages retenus par utilisateur et par appareil (NavMenuState). En rail (barre repliée, tablette), les icônes
+   restent toutes visibles, sans titres de section, et la recherche devient une loupe qui ouvre Ctrl+K. *@
 @using Lettra.Contracts.Administration
+@implements IDisposable
 @inject IStringLocalizer<SharedResource> L
 @inject IServiceProvider Services
+@inject NavMenuState Menu
+@inject HelpPanelState Help
+@inject NavigationManager Navigation
 
-<ul class="lt-nav" role="list">
-    @foreach (IGrouping<string?, NavItem> group in NavItems.Groups(Items.Where(Visible)))
-    {
-        @if (group.Key is { } title)
+<div class="lt-nav-search" role="search">
+    <div class="lt-nav-search-field">
+        <Icon Name="search" Size="16" />
+        <input @ref="_search" id="@($"{Id}-filter")" type="search" value="@_query" @oninput="OnInput" @onkeydown="OnSearchKeyDown" @onkeydown:stopPropagation="Filtering"
+               autocomplete="off" spellcheck="false" enterkeyhint="go" aria-label="@L["Nav.Search.Label"]" placeholder="@L["Nav.Search.Placeholder"]"
+               aria-controls="@($"{Id}-results")" />
+        @if (Filtering)
         {
-            <li class="lt-nav-group" aria-hidden="true">@L[title]</li>
+            <button type="button" class="lt-nav-search-clear" aria-label="@L["Nav.Search.Clear"]" title="@L["Nav.Search.Clear"]" @onclick="ClearAsync">
+                <Icon Name="x" Size="16" />
+            </button>
         }
-        @foreach (NavItem item in group)
+    </div>
+    <button type="button" class="lt-nav-search-rail" aria-label="@L["Palette.Title"]" title="@L["Palette.Title"] (Ctrl+K)" @onclick="() => SearchEverywhereAsync(string.Empty)">
+        <Icon Name="search" />
+    </button>
+</div>
+
+<div class="lt-nav-scroll" id="@($"{Id}-results")">
+    @if (Filtering)
+    {
+        <p class="lettra-visually-hidden" role="status">@string.Format(CultureInfo.CurrentCulture, L["Nav.Search.Count"], _results.Count)</p>
+        @if (_results.Count > 0)
         {
-            <li>
-                <NavLink href="@item.Href" Match="item.Match" class="lt-nav-link" title="@L[item.LabelKey]" @onclick="OnNavigate">
-                    <Icon Name="@item.Icon" />
-                    <span class="lt-nav-label">@L[item.LabelKey]</span>
-                </NavLink>
-            </li>
+            <ul class="lt-nav lt-nav-results" role="list">
+                @foreach (NavItem item in _results)
+                {
+                    @Link(item, showGroup: true)
+                }
+            </ul>
+        }
+        else
+        {
+            <p class="lt-nav-empty">@string.Format(CultureInfo.CurrentCulture, L["Nav.Search.Empty"], _query.Trim())</p>
+        }
+        <div class="lt-nav-fallbacks">
+            <button type="button" id="@($"{Id}-everywhere")" class="lt-nav-link lt-nav-fallback" @onclick="() => SearchEverywhereAsync(_query)">
+                <Icon Name="search" />
+                <span class="lt-nav-label">@string.Format(CultureInfo.CurrentCulture, L["Nav.Search.Everywhere"], _query.Trim())</span>
+            </button>
+            <button type="button" id="@($"{Id}-ask")" class="lt-nav-link lt-nav-fallback" @onclick="AskHelpAsync">
+                <Icon Name="circle-help" />
+                <span class="lt-nav-label">@L["Nav.Search.AskHelp"]</span>
+            </button>
+        </div>
+    }
+    else
+    {
+        @foreach (IGrouping<string?, NavItem> group in NavItems.Groups(_visible))
+        {
+            @if (group.Key is { } key)
+            {
+                @Section(key, [.. group], null)
+            }
+            else
+            {
+                <ul class="lt-nav" role="list">
+                    @foreach (NavItem item in group)
+                    {
+                        @Link(item, showGroup: false)
+                    }
+                </ul>
+                @* Les favoris viennent juste après les écrans sans section (Accueil, Vue cabinet). *@
+                @if (_favorites.Count > 0)
+                {
+                    @Section(NavItems.FavoritesGroupKey, _favorites, "lt-nav-favorites")
+                }
+            }
         }
     }
-</ul>
+</div>
 
 @code {
+    private ElementReference _search;
     private MyAccessResponse? _access;
+    private string _query = string.Empty;
+    private IReadOnlyList<NavItem> _visible = [];
+    private IReadOnlyList<NavItem> _results = [];
+    private IReadOnlyList<NavItem> _favorites = [];
+    private string _path = string.Empty;
 
     [Parameter] public IEnumerable<NavItem> Items { get; set; } = NavItems.All;
+
+    /// <summary>Préfixe des identifiants : la barre latérale et la feuille « Plus » peuvent être à l'écran ensemble.</summary>
+    [Parameter] public string Id { get; set; } = "nav";
 
     /// <summary>Après un clic : la feuille « Plus » se referme.</summary>
     [Parameter] public EventCallback OnNavigate { get; set; }
 
+    /// <summary>« Chercher partout » : la palette Ctrl+K, ouverte avec ce qui a été tapé.</summary>
+    [Parameter] public EventCallback<string> OnSearchEverywhere { get; set; }
+
+    private bool Filtering => !string.IsNullOrWhiteSpace(_query);
+
     protected override async Task OnInitializedAsync()
     {
-        // Une seule lecture, et seulement si une entrée en dépend ; tant qu'elle n'est pas revenue, ces entrées restent cachées.
-        if (Items.Any(i => i.Page is not null) && Services.GetService(typeof(IAdministrationGateway)) is IAdministrationGateway gateway)
+        Menu.Changed += OnMenuChanged;
+        Navigation.LocationChanged += OnLocationChanged;
+        _path = Navigation.ToBaseRelativePath(Navigation.Uri);
+        Refresh();
+
+        // Une seule lecture des droits, et seulement si une entrée en dépend ; tant qu'elle n'est pas revenue, ces entrées restent cachées.
+        if (NavItems.All.Any(i => i.Page is not null) && Services.GetService(typeof(IAdministrationGateway)) is IAdministrationGateway gateway)
         {
             OperationResult<MyAccessResponse> access = await gateway.GetMyAccessAsync(null, CancellationToken.None);
             _access = access.IsSuccess ? access.Value : null;
+            Refresh();
         }
+
+        await Menu.LoadAsync();
+    }
+
+    private RenderFragment Section(string key, IReadOnlyList<NavItem> items, string? css) => __builder =>
+    {
+        bool collapsed = Menu.IsCollapsed(key);
+        string bodyId = $"{Id}-section-{key.Replace('.', '-')}";
+        bool hasCurrent = collapsed && items.Any(i => i.IsCurrent(_path));
+        <section class="lt-nav-section @css @(collapsed ? "is-collapsed" : null)" data-group="@key">
+            <div class="lt-nav-heading">
+                <button type="button" class="lt-nav-group" aria-expanded="@(collapsed ? "false" : "true")" aria-controls="@bodyId"
+                        @onclick="() => Menu.ToggleSectionAsync(key)">
+                    <span class="lt-nav-group-title">@L[key]</span>
+                    @if (hasCurrent)
+                    {
+                        <span class="lt-nav-current-dot" title="@L["Nav.Sections.HasCurrent"]"><span class="lettra-visually-hidden">@L["Nav.Sections.HasCurrent"]</span></span>
+                    }
+                    <Icon Name="chevron-down" Size="16" Class="lt-nav-chevron" />
+                </button>
+            </div>
+            <ul class="lt-nav lt-nav-items" id="@bodyId" role="list">
+                @foreach (NavItem item in items)
+                {
+                    @Link(item, showGroup: false)
+                }
+            </ul>
+        </section>
+    };
+
+    private RenderFragment Link(NavItem item, bool showGroup) => __builder =>
+    {
+        bool pinned = Menu.IsFavorite(item);
+        <li class="lt-nav-item">
+            <NavLink href="@item.Href" Match="item.Match" class="lt-nav-link" title="@L[item.LabelKey]" @onclick="OnNavigate">
+                <Icon Name="@item.Icon" />
+                <span class="lt-nav-label">@L[item.LabelKey]</span>
+                @if (showGroup && item.GroupKey is { } group)
+                {
+                    <span class="lt-nav-hint">@L[group]</span>
+                }
+            </NavLink>
+            @if (item.Href.Length > 0)
+            {
+                string label = string.Format(CultureInfo.CurrentCulture, L[pinned ? "Nav.Favorite.Remove" : "Nav.Favorite.Add"], L[item.LabelKey]);
+                <button type="button" class="lt-nav-pin @(pinned ? "is-pinned" : null)" aria-pressed="@(pinned ? "true" : "false")"
+                        aria-label="@label" title="@label" @onclick="() => Menu.ToggleFavoriteAsync(item)">
+                    <Icon Name="star" Size="16" />
+                </button>
+            }
+        </li>
+    };
+
+    private void Refresh()
+    {
+        _visible = [.. Items.Where(Visible)];
+        _favorites = Menu.FavoriteItems(_visible);
+        _results = Search();
+    }
+
+    // La recherche porte sur tout le menu, même là où la liste est partielle (feuille « Plus » sans les onglets).
+    private IReadOnlyList<NavItem> Search() => NavSearch.Filter(NavItems.All.Where(Visible), _query, i => L[i.LabelKey], Keywords);
+
+    private string? Keywords(NavItem item)
+    {
+        LocalizedString keywords = L[item.KeywordsKey];
+        return keywords.ResourceNotFound ? null : keywords.Value;
     }
 
     private bool Visible(NavItem item) => item.Page switch
@@ -47,4 +196,81 @@
         AccessAreaDto.Administration => _access?.CanAdminister == true,
         { } page => _access?.LevelOf(page) > AccessLevelDto.None,
     };
+
+    private void OnInput(ChangeEventArgs e)
+    {
+        _query = e.Value?.ToString() ?? string.Empty;
+        _results = Search();
+    }
+
+    private async Task OnSearchKeyDown(KeyboardEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case "Enter" when Filtering && _results.Count > 0:
+                NavItem first = _results[0];
+                _query = string.Empty;
+                Refresh();
+                Navigation.NavigateTo(first.Href);
+                await OnNavigate.InvokeAsync();
+                break;
+            case "Enter" when Filtering:
+                await SearchEverywhereAsync(_query);
+                break;
+            case "Escape" when Filtering:
+                _query = string.Empty;
+                Refresh();
+                break;
+        }
+    }
+
+    private async Task ClearAsync()
+    {
+        _query = string.Empty;
+        Refresh();
+        try
+        {
+            await _search.FocusAsync();
+        }
+        catch (InvalidOperationException)
+        {
+            // Pas de navigateur (tests).
+        }
+    }
+
+    private async Task SearchEverywhereAsync(string query)
+    {
+        string text = query.Trim();
+        _query = string.Empty;
+        Refresh();
+        await OnNavigate.InvokeAsync();
+        await OnSearchEverywhere.InvokeAsync(text);
+    }
+
+    private async Task AskHelpAsync()
+    {
+        string text = _query.Trim();
+        _query = string.Empty;
+        Refresh();
+        await OnNavigate.InvokeAsync();
+        Help.Open(text);
+    }
+
+    private void OnMenuChanged(object? sender, EventArgs e)
+    {
+        Refresh();
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        _path = Navigation.ToBaseRelativePath(e.Location);
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Menu.Changed -= OnMenuChanged;
+        Navigation.LocationChanged -= OnLocationChanged;
+    }
 }

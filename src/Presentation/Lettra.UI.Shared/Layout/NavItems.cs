@@ -8,7 +8,20 @@ namespace Lettra.UI.Shared.Layout;
 /// <paramref name="Page"/>, facultatif, cache l'entrée à qui n'ouvre pas cette page (lu une fois par
 /// <c>IAdministrationGateway.GetMyAccessAsync</c>) ; sans lui, l'entrée est toujours affichée et le serveur décide.
 /// </summary>
-public sealed record NavItem(string Href, string LabelKey, string Icon, string? GroupKey, bool InTabBar = false, NavLinkMatch Match = NavLinkMatch.Prefix, AccessAreaDto? Page = null);
+public sealed record NavItem(string Href, string LabelKey, string Icon, string? GroupKey, bool InTabBar = false, NavLinkMatch Match = NavLinkMatch.Prefix, AccessAreaDto? Page = null)
+{
+    /// <summary>Mots que la recherche du menu reconnaît en plus du libellé (« TVA » pour Déclarations), facultatifs.</summary>
+    public string KeywordsKey => LabelKey + ".Keywords";
+
+    /// <summary>L'entrée mène-t-elle à l'écran affiché ? <paramref name="path"/> est relatif à la base, sans requête.</summary>
+    public bool IsCurrent(string path)
+    {
+        string current = path.Split('?', '#')[0].Trim('/');
+        return Match == NavLinkMatch.All || Href.Length == 0
+            ? string.Equals(current, Href, StringComparison.OrdinalIgnoreCase)
+            : current.Equals(Href, StringComparison.OrdinalIgnoreCase) || current.StartsWith(Href + "/", StringComparison.OrdinalIgnoreCase);
+    }
+}
 
 /// <summary>
 /// La navigation de l'application, décrite une seule fois : barre latérale (ordinateur), rail (tablette), onglets et
@@ -16,6 +29,9 @@ public sealed record NavItem(string Href, string LabelKey, string Icon, string? 
 /// </summary>
 public static class NavItems
 {
+    /// <summary>Section « Favoris » : les écrans épinglés par l'utilisateur, en tête du menu.</summary>
+    public const string FavoritesGroupKey = "Nav.Group.Favorites";
+
     public static IReadOnlyList<NavItem> All { get; } =
     [
         new("", "Nav.Home", "layout-dashboard", null, InTabBar: true, Match: NavLinkMatch.All),
