@@ -121,9 +121,15 @@ internal static class BankingEndpoints
         Guid? customerId = null,
         string? search = null,
         int page = 1,
-        int pageSize = 50) =>
+        int pageSize = 50,
+        PaymentSortDto sort = PaymentSortDto.Date,
+        SortDirectionDto direction = SortDirectionDto.Descending,
+        decimal? minAmount = null,
+        decimal? maxAmount = null) =>
         Ok(await queries.QueryAsync(
-            new ListPaymentsQuery(tenant.Current.DossierId, from, to, customerId, string.IsNullOrWhiteSpace(search) ? null : search.Trim(), page, pageSize),
+            new ListPaymentsQuery(
+                tenant.Current.DossierId, from, to, customerId, string.IsNullOrWhiteSpace(search) ? null : search.Trim(), page, pageSize,
+                sort, direction, minAmount, maxAmount),
             cancellationToken).ConfigureAwait(false));
 
     private static async Task<IResult> GetOpenInvoicesAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken, Guid? customerId = null) =>

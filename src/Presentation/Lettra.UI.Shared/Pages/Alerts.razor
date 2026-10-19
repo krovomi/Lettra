@@ -67,31 +67,73 @@ else
         }
         else
         {
-            <table class="lettra-table lt-cards">
-                <thead>
-                    <tr>
-                        <th scope="col">@L["Alerts.Field.Title"]</th>
-                        <th scope="col">@L["Alerts.Field.Severity"]</th>
-                        <th scope="col">@L["Alerts.Field.Scope"]</th>
-                        <th scope="col">@L["Alerts.Field.State"]</th>
-                        <th scope="col">@L["Alerts.Field.LastSeen"]</th>
-                        <th scope="col" class="lg-num">@L["Alerts.Field.Occurrences"]</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (AlertSummary alert in _centre.Alerts)
-                    {
-                        <tr aria-current="@(alert.Id == Id ? "true" : null)">
-                            <td><a href="alerts/@alert.Id">@RuleTitle(alert)</a></td>
-                            <td data-label="@L["Alerts.Field.Severity"]"><span class="lt-severity-badge" data-severity="@alert.Severity">@alert.Severity</span></td>
-                            <td data-label="@L["Alerts.Field.Scope"]">@L["Alerts.Scope." + alert.ScopeLevel]</td>
-                            <td data-label="@L["Alerts.Field.State"]"><span class="lt-state" data-state="@alert.State">@L["Alerts.State." + alert.State]</span></td>
-                            <td data-label="@L["Alerts.Field.LastSeen"]">@When(alert.LastSeen)</td>
-                            <td class="lg-num" data-label="@L["Alerts.Field.Occurrences"]">@alert.Occurrences</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+            <ListFilterBar Id="alerts-filters" ActiveCount="ActiveFilters" OnReset="ResetFilters">
+                <ChildContent>
+                    <div class="lt-filter">
+                        <label for="alerts-search">@L["Lists.Search"]</label>
+                        <input id="alerts-search" type="search" @bind="_search" @bind:event="oninput" autocomplete="off" />
+                    </div>
+                </ChildContent>
+                <More>
+                    <div class="lt-filter">
+                        <label for="alerts-severity">@L["Alerts.Field.Severity"]</label>
+                        <select id="alerts-severity" @bind="_severityFilter">
+                            <option value="">@L["Lists.AllSeverities"]</option>
+                            @foreach (AlertSeverity severity in Enum.GetValues<AlertSeverity>())
+                            {
+                                <option value="@severity">@severity</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="lt-filter">
+                        <label for="alerts-state">@L["Alerts.Field.State"]</label>
+                        <select id="alerts-state" @bind="_stateFilter">
+                            <option value="">@L["Lists.AllStates"]</option>
+                            @foreach (AlertState state in Enum.GetValues<AlertState>())
+                            {
+                                <option value="@state">@L["Alerts.State." + state]</option>
+                            }
+                        </select>
+                    </div>
+                    <SortSelect Id="alerts-sort" Options="SortOptions" State="_sort" OnSort="StateHasChanged" DefaultLabel="@L["Lists.Sort.Default"]" />
+                </More>
+            </ListFilterBar>
+            @if (VisibleAlerts.Count == 0)
+            {
+                <EmptyState Id="alerts-filtered-empty" IconName="search" Title="@L["Lists.Empty.FilteredTitle"]" Text="@L["Lists.Empty.Filtered"]">
+                    <button type="button" class="lettra-button is-secondary" id="alerts-empty-reset" @onclick="ResetFilters">@L["Lists.Filters.Reset"]</button>
+                </EmptyState>
+            }
+            else
+            {
+                <div class="lt-list-scroll">
+                    <table class="lettra-table lt-cards">
+                        <thead>
+                            <tr>
+                                <SortHeader Option="Column(AlertColumn.Title)" State="_sort" OnSort="StateHasChanged" Id="alerts-sort-title" />
+                                <SortHeader Option="Column(AlertColumn.Severity)" State="_sort" OnSort="StateHasChanged" Id="alerts-sort-severity" />
+                                <SortHeader Option="Column(AlertColumn.Scope)" State="_sort" OnSort="StateHasChanged" Id="alerts-sort-scope" />
+                                <SortHeader Option="Column(AlertColumn.State)" State="_sort" OnSort="StateHasChanged" Id="alerts-sort-state" />
+                                <SortHeader Option="Column(AlertColumn.LastSeen)" State="_sort" OnSort="StateHasChanged" Id="alerts-sort-last" />
+                                <SortHeader Option="Column(AlertColumn.Occurrences)" State="_sort" OnSort="StateHasChanged" Id="alerts-sort-count" Class="lg-num" />
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (AlertSummary alert in VisibleAlerts)
+                            {
+                                <tr aria-current="@(alert.Id == Id ? "true" : null)">
+                                    <td><a href="alerts/@alert.Id">@RuleTitle(alert)</a></td>
+                                    <td data-label="@L["Alerts.Field.Severity"]"><span class="lt-severity-badge" data-severity="@alert.Severity">@alert.Severity</span></td>
+                                    <td data-label="@L["Alerts.Field.Scope"]">@L["Alerts.Scope." + alert.ScopeLevel]</td>
+                                    <td data-label="@L["Alerts.Field.State"]"><span class="lt-state" data-state="@alert.State">@L["Alerts.State." + alert.State]</span></td>
+                                    <td data-label="@L["Alerts.Field.LastSeen"]">@When(alert.LastSeen)</td>
+                                    <td class="lg-num" data-label="@L["Alerts.Field.Occurrences"]">@alert.Occurrences</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
         }
     </section>
 }
@@ -175,6 +217,63 @@ else
     private bool _cabinetWide;
     private bool _includeClosed;
     private bool _busy;
+    private string? _search;
+    private AlertSeverity? _severityFilter;
+    private AlertState? _stateFilter;
+
+    // Ordre du serveur (gravité puis récence) tant que l'utilisateur n'a pas choisi de colonne : Default n'a pas de clé.
+    private readonly SortState<AlertColumn> _sort = new(AlertColumn.Default);
+
+    private enum AlertColumn
+    {
+        Default,
+        Title,
+        Severity,
+        Scope,
+        State,
+        LastSeen,
+        Occurrences,
+    }
+
+    private IReadOnlyList<SortOption<AlertColumn>> SortOptions =>
+    [
+        new(AlertColumn.Title, L["Alerts.Field.Title"]),
+        new(AlertColumn.Severity, L["Alerts.Field.Severity"]),
+        new(AlertColumn.Scope, L["Alerts.Field.Scope"]),
+        new(AlertColumn.State, L["Alerts.Field.State"]),
+        new(AlertColumn.LastSeen, L["Alerts.Field.LastSeen"], SortDirectionDto.Descending),
+        new(AlertColumn.Occurrences, L["Alerts.Field.Occurrences"], SortDirectionDto.Descending),
+    ];
+
+    private SortOption<AlertColumn> Column(AlertColumn column) => SortOptions.First(o => o.Column == column);
+
+    private int ActiveFilters => new object?[] { string.IsNullOrWhiteSpace(_search) ? null : _search, _severityFilter, _stateFilter }.Count(f => f is not null);
+
+    private void ResetFilters() => (_search, _severityFilter, _stateFilter) = (null, null, null);
+
+    /// <summary>Le centre charge toutes les alertes ouvertes (quelques dizaines) : filtres et tri se font à l'écran.</summary>
+    private IReadOnlyList<AlertSummary> VisibleAlerts
+    {
+        get
+        {
+            IEnumerable<AlertSummary> alerts = _centre?.Alerts ?? [];
+            if (!string.IsNullOrWhiteSpace(_search))
+            {
+                alerts = alerts.Where(a => ListSorting.Matches(RuleTitle(a), _search));
+            }
+
+            alerts = alerts.Where(a => (_severityFilter is null || a.Severity == _severityFilter) && (_stateFilter is null || a.State == _stateFilter));
+            return ListSorting.Sort(alerts, _sort, new Dictionary<AlertColumn, Func<AlertSummary, object?>>
+            {
+                [AlertColumn.Title] = RuleTitle,
+                [AlertColumn.Severity] = a => a.Severity,
+                [AlertColumn.Scope] = a => L["Alerts.Scope." + a.ScopeLevel].Value,
+                [AlertColumn.State] = a => a.State,
+                [AlertColumn.LastSeen] = a => a.LastSeen,
+                [AlertColumn.Occurrences] = a => a.Occurrences,
+            });
+        }
+    }
 
     protected override async Task OnParametersSetAsync()
     {

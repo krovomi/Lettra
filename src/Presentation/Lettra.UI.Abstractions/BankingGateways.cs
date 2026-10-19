@@ -3,8 +3,21 @@ using Lettra.Contracts.Common;
 
 namespace Lettra.UI.Abstractions;
 
-/// <summary>Filtre de la liste des encaissements : période (bornes comprises), client, recherche (numéro, client, référence, facture).</summary>
-public sealed record PaymentListQuery(DateOnly? From = null, DateOnly? To = null, Guid? CustomerId = null, string? Search = null, int Page = 1, int PageSize = 50);
+/// <summary>
+/// Filtre de la liste des encaissements : période et montants (bornes comprises), client, recherche (numéro, client,
+/// référence, facture), tri (par défaut la date, la plus récente en tête).
+/// </summary>
+public sealed record PaymentListQuery(
+    DateOnly? From = null,
+    DateOnly? To = null,
+    Guid? CustomerId = null,
+    string? Search = null,
+    int Page = 1,
+    int PageSize = 50,
+    PaymentSortDto Sort = PaymentSortDto.Date,
+    SortDirectionDto Direction = SortDirectionDto.Descending,
+    decimal? MinAmount = null,
+    decimal? MaxAmount = null);
 
 /// <summary>
 /// Pages Encaissements et Rapprochement bancaire (vague 6). Lecture : <c>DossierLire</c> ; saisie, contre-passation,

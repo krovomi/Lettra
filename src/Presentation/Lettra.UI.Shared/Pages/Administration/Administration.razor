@@ -115,10 +115,11 @@
                                     id="filter-@filter.ToString().ToLowerInvariant()" @onclick="() => _filter = filter">@L[$"Admin.Filter.{filter}"]</button>
                         }
                     </div>
+                    <SortSelect Id="people-sort" Options="PeopleSortOptions" State="_peopleSort" OnSort="StateHasChanged" PhoneOnly="false" />
                 </div>
 
-                @{ PersonSummary[] people = view.Search(_search, _filter).ToArray(); }
-                @if (people.Length == 0)
+                @{ IReadOnlyList<PersonSummary> people = ListSorting.Sort(view.Search(_search, _filter), _peopleSort, PeopleKeys(view)); }
+                @if (people.Count == 0)
                 {
                     <div class="lt-panel lt-empty">
                         <span class="lt-empty-icon"><Icon Name="users" Size="28" /></span>
@@ -184,8 +185,14 @@
                         }
                     </div>
                 }
+                @if (view.Overview.Teams.Count > 1)
+                {
+                    <div class="la-toolbar">
+                        <SortSelect Id="teams-sort" Options="TeamSortOptions" State="_teamSort" OnSort="StateHasChanged" PhoneOnly="false" />
+                    </div>
+                }
                 <ul class="la-cards" role="list">
-                    @foreach (TeamSummary team in view.Overview.Teams)
+                    @foreach (TeamSummary team in ListSorting.Sort(view.Overview.Teams, _teamSort, TeamKeys))
                     {
                         <li @key="team.Id">
                             <button type="button" class="la-card" id="team-@team.Id" @onclick="() => Open(Mode.Team, team.Id)">
@@ -323,6 +330,38 @@
     private Tab _tab = Tab.People;
     private PeopleFilter _filter = PeopleFilter.All;
     private string? _search;
+    private readonly SortState<string> _peopleSort = new(PeopleByName);
+    private readonly SortState<string> _teamSort = new(TeamsByName);
+    private const string PeopleByName = "name", PeopleByArrival = "arrival", PeopleByAccesses = "accesses";
+    private const string TeamsByName = "name", TeamsByMembers = "members", TeamsByDossiers = "dossiers";
+
+    private IReadOnlyList<SortOption<string>> PeopleSortOptions =>
+    [
+        new(PeopleByName, L["Lists.Sort.Name"]),
+        new(PeopleByArrival, L["Lists.Sort.Arrival"], SortDirectionDto.Descending),
+        new(PeopleByAccesses, L["Lists.Sort.Accesses"], SortDirectionDto.Descending),
+    ];
+
+    private IReadOnlyList<SortOption<string>> TeamSortOptions =>
+    [
+        new(TeamsByName, L["Lists.Sort.Name"]),
+        new(TeamsByMembers, L["Lists.Sort.Members"], SortDirectionDto.Descending),
+        new(TeamsByDossiers, L["Lists.Sort.Dossiers"], SortDirectionDto.Descending),
+    ];
+
+    private static Dictionary<string, Func<PersonSummary, object?>> PeopleKeys(AdministrationView view) => new(StringComparer.Ordinal)
+    {
+        [PeopleByName] = view.NameOf,
+        [PeopleByArrival] = p => p.CreatedAt,
+        [PeopleByAccesses] = p => p.Assignments.Count + p.TeamIds.Count,
+    };
+
+    private static readonly Dictionary<string, Func<TeamSummary, object?>> TeamKeys = new(StringComparer.Ordinal)
+    {
+        [TeamsByName] = t => t.Name,
+        [TeamsByMembers] = t => t.MemberIds.Count,
+        [TeamsByDossiers] = t => t.DossierIds.Count,
+    };
     private Mode _mode;
     private Guid _selected;
     private string? _roleKey;

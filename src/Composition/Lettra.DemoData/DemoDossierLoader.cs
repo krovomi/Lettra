@@ -128,7 +128,7 @@ internal sealed class DemoDossierLoader(IServiceProvider services, DemoClock clo
             Plan(scenario.ArchivedAt, async ct =>
             {
                 Guid id = _items[archived];
-                long version = Ok(await _catalog.ListAsync(scenario.Items[archived].Request.Reference, includeArchived: false, 1, 5, ct).ConfigureAwait(false), "catalogue")
+                long version = Ok(await _catalog.ListAsync(new CatalogListQuery(scenario.Items[archived].Request.Reference, PageSize: 5), ct).ConfigureAwait(false), "catalogue")
                     .Items.Single(i => i.Id == id).Version;
                 Ok(await _catalog.SetArchivedAsync(id, version, isArchived: true, ct).ConfigureAwait(false), "archivage d'un article");
             });

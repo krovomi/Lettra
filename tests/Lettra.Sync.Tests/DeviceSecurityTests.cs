@@ -82,7 +82,7 @@ public sealed class DeviceSecurityTests : IAsyncLifetime
 
         report.Failure.Should().Be(SyncFailure.DeviceRevoked);
         (await device.OutboxAsync()).Should().BeEmpty("l'outbox est effacée avec le reste");
-        (await device.RunAsync(sp => sp.GetRequiredService<ICustomerReadStore>().ListAsync(null, 1, 50, default))).Items.Should().BeEmpty();
+        (await device.RunAsync(sp => sp.GetRequiredService<ICustomerReadStore>().ListAsync(new PartyListFilter(null, 1, 50), default))).Items.Should().BeEmpty();
         (await DevicesAsync()).Single().WipedAt.Should().NotBeNull("le serveur sait que le poste a reçu sa révocation");
 
         int pushes = device.Transport.Pushes, pulls = device.Transport.Pulls;
