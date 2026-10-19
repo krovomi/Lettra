@@ -105,8 +105,9 @@ public sealed class VoiceTests : BunitContext
         page.FindAll("#voice-retry").Should().ContainSingle();
         _speech.Status = _speech.Status with { Ready = true };
 
+        // Le panneau et le micro du champ se redessinent chacun de leur côté (InvokeAsync) : on attend les deux.
         page.WaitForAssertion(() => page.FindAll("#voice-speak").Should().ContainSingle(), TimeSpan.FromSeconds(5));
-        page.FindAll("#subject-mic").Should().ContainSingle();
+        page.WaitForAssertion(() => page.FindAll("#subject-mic").Should().ContainSingle(), TimeSpan.FromSeconds(5));
     }
 
     [Fact]
