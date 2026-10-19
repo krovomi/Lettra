@@ -6,6 +6,7 @@ Par l'API HTTP de Grafana seulement (ses sources de données servent de relais) 
      (exemplaire → trace, trace → journaux, journal → trace) ;
   2. les trois tableaux de bord sont provisionnés dans le dossier « Lettra » ;
   3. chaque requête de chaque panneau rend des données : PromQL dans Prometheus, TraceQL dans Tempo, LogQL dans Loki ;
+     un comptage filtré par un seuil (« count(... >= 3) ») peut être vide si la série filtrée existe ;
      seuls les panneaux listés dans SANS_DONNEES_EN_DEMO peuvent rester vides, avec leur raison ;
   4. les courbes de latence ont des exemplaires, dont au moins une trace existe dans Tempo et a ses journaux dans Loki ;
   5. les règles d'alerte de la cellule sont chargées et visibles depuis Grafana (Watchdog active).
@@ -81,6 +82,11 @@ def substituer(expression):
     for variable, valeur in VARIABLES.items():
         expression = expression.replace(variable, valeur)
     return re.sub(r"\s+or\s+vector\(0\)\s*$", "", expression)
+
+
+def sans_seuil(expression):
+    """Seuils numériques retirés (« >= 3 ») : un comptage filtré peut être vide à bon droit, la série filtrée doit exister."""
+    return re.sub(r"\s*(?:>=|<=|==|!=|>|<)\s*\d+(?:\.\d+)?(?=\s*\))", "", expression)
 
 
 def reessayer(attente, verification):
@@ -169,8 +175,11 @@ def main():
                 if genre == "prometheus":
                     expression = substituer(cible["expr"])
                     def serie(e=expression):
-                        s, r = grafana.prometheus("query", {"query": e})
-                        return r["data"]["result"] if s == 200 and r and r["data"]["result"] else None
+                        for requete in dict.fromkeys((e, sans_seuil(e))):
+                            s, r = grafana.prometheus("query", {"query": requete})
+                            if s == 200 and r and r["data"]["result"]:
+                                return r["data"]["result"]
+                        return None
                     if not (reessayer(0 if raison else options.attente, serie)):
                         vides.append(cible.get("legendFormat") or expression)
                     elif cible.get("exemplar"):
@@ -227,6 +236,9 @@ def main():
         print(f"\nÉCHEC : {len(echecs)} vérification(s)", file=sys.stderr)
         for echec in echecs:
             print(f"   {echec}", file=sys.stderr)
+            if os.environ.get("GITHUB_ACTIONS") == "true":
+                # Annotation lisible sans le journal du job (titre : la vérification en échec).
+                print(f"::error title=Grafana::{echec.replace('%', '%25').replace(chr(10), '%0A')}")
         sys.exit(1)
     print("\nGrafana de la démonstration : tout est en place et chaque tableau de bord a des données.")
 
