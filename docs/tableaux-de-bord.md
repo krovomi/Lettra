@@ -14,6 +14,8 @@ Les couleurs suivent la règle de Grafana : vert, tout va bien ; orange, à surv
 coloré a aussi sa bulle d'aide en texte : la couleur n'est jamais la seule information. « Actualiser » relit les trois
 onglets et le dit dans le toaster ; changer de dossier depuis « Mes dossiers » aussi.
 
+![Ce dossier, sur ordinateur](captures/tableaux-de-bord/pilotage-dossier-ordinateur.png)
+
 ## Droits : qui voit quoi
 
 Grafana OSS ne sait pas filtrer un tableau selon la personne connectée : une page Grafana intégrée telle quelle (iframe)
@@ -45,6 +47,14 @@ garde les indicateurs de gestion de ses propres dossiers.
 | Ordinateur (≥ 1200 px) | indicateurs en grille, les deux graphiques côte à côte, tableaux complets avec tri par en-tête |
 | Tablette (768 à 1199 px) | graphiques l'un sous l'autre, tableaux qui défilent de côté dans leur cadre |
 | Téléphone (< 768 px) | deux indicateurs par ligne, onglets qui défilent, une carte par dossier et tri par liste déroulante ; les valeurs au-dessus des barres sont masquées (le titre donne l'unité) |
+
+Vérifié dans la démo Docker (mise à jour d'une démo existante, données conservées), connecté comme `demo` : les trois
+onglets remplis pour les trois dossiers de démonstration, aucun défilement de côté à 390, 820 et 1440 px, aucune
+erreur dans la console ; l'entrée est dans la section « Pilotage » du menu. Les tableaux Grafana restent inchangés.
+
+| Mes dossiers, téléphone | Administration, tablette |
+|---|---|
+| ![](captures/tableaux-de-bord/pilotage-dossiers-telephone.png) | ![](captures/tableaux-de-bord/pilotage-administration-tablette.png) |
 
 ## Code
 

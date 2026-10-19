@@ -223,7 +223,7 @@ public sealed partial class PilotagePage
     private string When(DateTimeOffset at)
     {
         DateTimeOffset local = at.ToLocalTime();
-        return local.Date == DateTime.Today
+        return DateOnly.FromDateTime(local.Date) == Clock.LocalToday()
             ? string.Format(Culture, L["Cabinet.TodayAt"], local.ToString("t", Culture))
             : local.ToString("g", Culture);
     }
