@@ -527,8 +527,9 @@ MailPit, à 1440 et 375 px. Non vérifié dans les applications installées.)* D
 ### Et ensuite
 
 - **Catalogue** : les articles et prestations, même présentation que les clients (liste, fiche, **Modifier**,
-  **Archiver**) ; **Saisie en grille** reste disponible pour en saisir beaucoup au clavier. Une ligne de facture peut
-  aussi se saisir librement.
+  **Archiver**) ; **Saisie en grille** reste disponible pour en saisir beaucoup au clavier. La bascule « Liste |
+  Saisie en grille » en haut de page passe d'un affichage à l'autre dans les deux sens (`catalog`, `catalog/grid`).
+  Une ligne de facture peut aussi se saisir librement.
 - **Journal et balance** : les écritures de vente de la période (journal, balance, grand livre d'un compte ou d'un
   client), en lecture, les mêmes que dans le FEC. La fiche d'un client y renvoie par **Compte client**. Les
   encaissements y figurent au journal de banque (BQ) et lettrent le compte 411 (étape 9).
@@ -541,7 +542,9 @@ MailPit, à 1440 et 375 px. Non vérifié dans les applications installées.)* D
   aucune donnée de client.
 - **Verrouiller** (en haut) : ferme la session ; la phrase secrète la rouvre.
 - **Langue** : l'écran suit la langue de l'appareil ou du navigateur (français ou anglais). Chaque client et chaque PDF peuvent avoir la
-  leur (« Langue des devis et factures imprimés », « Langue du PDF »).
+  leur (« Langue des devis et factures imprimés », « Langue du PDF »). Dates et montants suivent la langue de l'écran :
+  jj/mm/aaaa et 15 128,00 en français, mm/dd/yyyy et 15,128.00 en anglais ; chaque champ de date a un calendrier
+  (bouton à droite) et accepte aussi 19102026 ou 19/10. Détails : [docs/dates-et-langue.md](docs/dates-et-langue.md).
 - **Équipe et accès** (menu **Pilotage**) : qui travaille dans le cabinet et ce que chacun peut ouvrir. Onglet
   **Personnes** : ajoutez une personne (nom et adresse), puis donnez-lui un accès en trois questions (quel rôle, où,
   jusqu'à quand) ; sa fiche dit en clair ce qu'elle peut faire, page par page. Onglet **Équipes** : regroupez des
