@@ -3,6 +3,7 @@ using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Bootstrap;
 using Lettra.Exports.Infrastructure;
 using Lettra.Infrastructure.Catalog;
+using Lettra.Infrastructure.Persistence.Billing;
 using Lettra.Infrastructure.Persistence.Cabinet;
 using Lettra.Infrastructure.Persistence.Outbox;
 using Lettra.Worker;
@@ -14,13 +15,15 @@ using Microsoft.Extensions.Hosting;
 // de toutes les bases de dossiers par vagues (canari d'abord, avec bail et reprise), passe d'escalade de la Supervision,
 // passe de nuit de la chaîne anti-fraude (clôtures et contrôle d'intégrité de chaque dossier), export FEC en masse et
 // passe de l'outbox (envois à la plateforme agréée mis en file pendant une panne), alertes du calendrier fiscal
-// (échéances proches et dépassées) et passe de nuit de la vue cabinet (compteurs de chaque dossier). La plateforme est celle de l'API :
-// même réglage Lettra:EInvoicing:Platform.
+// (échéances proches et dépassées), passe de nuit de la vue cabinet (compteurs de chaque dossier) et factures
+// récurrentes dues. La plateforme est celle de l'API : même réglage Lettra:EInvoicing:Platform.
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddLettra(builder.Configuration);
 
-// Le Worker agit sous son propre compte de service, jamais comme un utilisateur anonyme ou emprunté.
+// Le Worker agit sous son propre compte de service, jamais comme un utilisateur anonyme ou emprunté. Pour les factures
+// récurrentes, ce compte doit avoir FactureSaisir et FactureValider dans le registre des droits (rôle manager, par
+// exemple) ; sans identité configurée, la passe ne crée rien.
 builder.Services.AddOptions<WorkerIdentityOptions>().Bind(builder.Configuration.GetSection(WorkerIdentityOptions.SectionName));
 builder.Services.Replace(ServiceDescriptor.Scoped<ICurrentUser, WorkerCurrentUser>());
 builder.Services.AddScoped<JobDossierSource>();
@@ -35,6 +38,7 @@ builder.Services.AddFecBulkExport(builder.Configuration, (services, token) => se
 builder.Services.AddOutboxDispatch(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
 builder.Services.AddFiscalDeadlineAlerts(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
 builder.Services.AddCabinetOverviewJob(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
+builder.Services.AddRecurringInvoicing(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
 
 using IHost host = builder.Build();
 await host.RunAsync().ConfigureAwait(false);

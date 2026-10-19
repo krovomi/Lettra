@@ -467,6 +467,20 @@ automatiques ; non vérifié à la main dans la démo Docker ni dans les applica
 serveur ou dans la base locale du poste seul, pas encore de synchronisation de la réplique.)* Détails :
 [docs/encaissements.md](docs/encaissements.md).
 
+### 10. Factures récurrentes
+
+Menu Ventes > **Factures récurrentes** > **Nouveau modèle** : un nom, le client, les lignes, la fréquence (mensuelle,
+trimestrielle, annuelle), le début, une fin facultative, et une facturation à échoir ou échue. Vous pouvez ajouter une
+révision annuelle des prix : un pourcentage fixe, ou l'indice Syntec que vous saisissez. Les factures dues sont créées
+en brouillon, ou validées si vous cochez « Valider automatiquement les factures » ; le numéro est attribué à la
+validation. Pour l'essayer, choisissez un début deux mois en arrière : le bandeau propose **Créer les factures dues**
+et en crée trois. Chacune porte sa période (« Période facturée : du … au … »), reprise dans le Factur-X et l'UBL. Un
+modèle se met en pause, se reprend et se supprime ; les factures déjà créées restent. Le Worker crée les factures dues
+toutes les 6 heures, sous son compte de service (qui doit avoir FactureSaisir et FactureValider) ; la démo n'a pas de
+Worker, on les crée depuis l'écran. *(Vérifié : démo Docker dans Chromium à 375, 768 et 1440 px, et tests
+automatiques sur SQLite, PostgreSQL et SQL Server ; non vérifié dans les applications installées. Les modèles ne se
+synchronisent pas entre appareils.)* Détails : [docs/factures-recurrentes.md](docs/factures-recurrentes.md).
+
 ### Et ensuite
 
 - **Catalogue** : les articles et prestations, même présentation que les clients (liste, fiche, **Modifier**,
@@ -578,7 +592,7 @@ Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou 
 | Hors ligne sur un appareil relié au serveur commun | Relié au serveur commun, l'appareil a besoin du réseau. Reste à étendre la synchronisation aux devis, factures et règlements, ou à y ouvrir les brouillons hors ligne. |
 | Invitations | Une personne ajoutée dans **Équipe et accès** apparaît et reçoit des accès, mais Lettra n'envoie pas d'e-mail et ne crée pas encore son compte de connexion (Keycloak) : elle ne peut pas encore se connecter. |
 | Télédéclaration de la TVA et de la DES | Non : Lettra prépare le brouillon et le fichier, le dépôt se fait sur impots.gouv ou le service en ligne des douanes. La TVA déductible (achats) n'est pas encore reprise. |
-| Envoi des devis et factures par e-mail | Non : on télécharge le PDF ou le Factur-X. |
+| Envoi des devis et factures par e-mail | Non : on télécharge le PDF ou le Factur-X. Les factures récurrentes aussi : leur envoi viendra avec les e-mails et relances. |
 | Applications signées | Non : avertissement de Windows au premier lancement, APK Android installé à la main, application macOS arrêtée par le Trousseau, pas de version pour iPhone réel. |
 
 ---
