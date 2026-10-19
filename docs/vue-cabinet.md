@@ -8,7 +8,8 @@ configuration, sans moyen d'en changer. La vague 6 ajoute trois choses :
    aussi « Ouvrir le dossier … » et « Vue cabinet ».
 2. **La vue cabinet** (menu « Vue cabinet », adresse `/cabinet`) : un tableau des dossiers que l'utilisateur peut ouvrir,
    les plus urgents d'abord, avec leurs compteurs (factures en retard, rejets de la plateforme, alertes ouvertes, revue du
-   mois). « Ouvrir » et « Revue » changent de dossier en un clic.
+   mois, et les colonnes ajoutées par les autres modules comme « TVA à déclarer » et « Banque non rapprochée »). L'heure du dernier calcul est sous le
+   nom du dossier. « Ouvrir » et « Revue » changent de dossier en un clic.
 3. **La revue de dossier** (menu Comptabilité › « Revue du dossier », adresse `/review`) : une liste de contrôle par mois
    ou par trimestre, cochée point par point, avec qui a coché et quand, et une note facultative.
 
@@ -18,11 +19,13 @@ Chaque action (changer de dossier, actualiser, cocher, décocher, enregistrer un
 
 | Taille | Sélecteur | Vue cabinet | Revue |
 |---|---|---|---|
-| Ordinateur (≥ 1200 px) | bouton avec le nom du dossier, panneau sous le bouton | tableau complet | liste, note en ligne |
+| Ordinateur (≥ 1200 px) | bouton avec le nom du dossier, panneau sous le bouton | tableau complet ; « Ouvrir » et « Revue » l'un sous l'autre, en-têtes sur deux lignes au besoin, marges de cellule plus serrées sous 1280 px | liste, note en ligne |
 | Tablette (768 à 1199 px) | bouton raccourci | tableau qui défile de côté dans son cadre | liste |
-| Téléphone (< 768 px) | icône dossier (le logo lui laisse la place), panneau sur toute la largeur sous la barre | une carte par dossier, les plus urgentes en haut | liste à une colonne, cibles de 44 px |
+| Téléphone (< 768 px) | icône dossier (le logo lui laisse la place), panneau sur toute la largeur sous la barre | une carte par dossier, les plus urgentes en haut ; l'échéance passe sous son compteur | liste à une colonne, cibles de 44 px |
 
-Vérifié dans la démo Docker à 1440, 768 et 375 px (aucun débordement horizontal, aucune erreur dans la console).
+Vérifié dans la démo Docker à 1440, 1280, 1200, 768 et 375 px (aucun débordement horizontal ; dans la console, seulement
+les deux 401 déjà connus avant la connexion), y compris après une mise à jour d'une démo existante (`up --build`) : les deux dossiers de démonstration
+supplémentaires s'ajoutent sans effacer les données.
 
 Selon l'installation :
 

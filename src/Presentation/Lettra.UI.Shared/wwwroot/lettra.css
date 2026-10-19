@@ -751,6 +751,14 @@ a.lt-kpi:hover { border-color: var(--color-primary); box-shadow: var(--shadow-md
 .lt-cabinet-tools .lettra-input { width: min(18rem, 100%); }
 .lt-cabinet-table tbody th[scope="row"] { background: transparent; color: var(--color-fg); font-size: var(--text-sm); font-weight: var(--weight-medium); letter-spacing: normal; text-transform: none; text-align: left; }
 .lt-cabinet-name { display: flex; align-items: center; gap: var(--space-2); }
+.lt-cabinet-label { display: grid; min-width: 0; }
+.lt-cabinet-when { color: var(--color-fg-muted); font-size: var(--text-xs); font-weight: var(--weight-regular); }
+/* En-têtes et échéances sur deux lignes au besoin : le tableau garde ses boutons visibles à l'écran d'ordinateur. */
+.lettra-table.lt-cabinet-table th, .lettra-table.lt-cabinet-table .lg-num { white-space: normal; }
+@media (min-width: 768px) and (max-width: 1279px) {
+    /* Petit écran d'ordinateur : des marges de cellule plus serrées, le tableau tient sans défiler à 1200 px. */
+    .lettra-table.lt-cabinet-table th, .lettra-table.lt-cabinet-table td { padding-inline: var(--space-2); }
+}
 .lt-level-text { margin-left: auto; color: var(--color-fg-muted); font-size: var(--text-xs); font-weight: var(--weight-medium); }
 .lt-level-dot { display: inline-block; width: 0.625rem; height: 0.625rem; flex: none; border-radius: var(--radius-full); background: var(--color-success-fg); }
 .lt-level-dot[data-level="Info"] { background: var(--color-info-fg); }
@@ -762,7 +770,11 @@ a.lt-kpi:hover { border-color: var(--color-primary); box-shadow: var(--shadow-md
 .lt-indicator[data-level="Critical"] { background: var(--color-danger-bg); color: var(--color-danger-fg); }
 .lt-indicator-due { display: block; color: var(--color-fg-muted); font-size: var(--text-xs); }
 .lt-cabinet-actions { white-space: nowrap; text-align: right; }
-.lt-cabinet-actions .lettra-button + .lettra-button { margin-left: var(--space-1); }
+@media (min-width: 768px) {
+    /* « Ouvrir » et « Revue » l'un sous l'autre : une colonne étroite, même avec les compteurs à venir. */
+    .lt-cabinet-actions .lettra-button { display: flex; width: 100%; justify-content: flex-start; }
+    .lt-cabinet-actions .lettra-button + .lettra-button { margin-top: var(--space-1); }
+}
 
 .lt-review-period { align-items: center; }
 .lt-review-period .lettra-input { width: auto; min-width: 12rem; }
@@ -800,10 +812,12 @@ a.lt-kpi:hover { border-color: var(--color-primary); box-shadow: var(--shadow-md
     .lt-cabinet-tools, .lt-cabinet-tools .lettra-input { width: 100%; }
     .lt-cabinet-scroll { overflow-x: visible; }
     .lt-cabinet-table tr { grid-template-columns: minmax(0, 1fr); }
-    .lt-cabinet-table tbody th[scope="row"] { display: flex; padding: 0 0 var(--space-1); border: 0; font-size: var(--text-base); font-weight: var(--weight-bold); }
+    .lt-cabinet-table tbody th[scope="row"] { display: block; padding: 0 0 var(--space-1); border: 0; font-size: var(--text-base); font-weight: var(--weight-bold); }
     .lt-cabinet-actions { justify-content: flex-start !important; gap: var(--space-2); white-space: normal; }
     .lt-cabinet-actions .lettra-button { flex: 1; min-height: var(--hit); }
-    .lt-indicator-due { display: inline; margin-left: var(--space-2); }
+    /* Téléphone : l'échéance passe sous le compteur, dans la carte. */
+    .lt-cabinet-table td.lg-num { flex-wrap: wrap; }
+    .lt-indicator-due { flex-basis: 100%; text-align: right; }
     .lt-review-period { width: 100%; }
     .lt-review-period .lettra-input { flex: 1; }
     .lt-review-item { grid-template-columns: minmax(0, 1fr); }
