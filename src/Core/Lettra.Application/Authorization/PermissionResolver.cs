@@ -38,7 +38,7 @@ public static class PermissionResolver
     private static bool Applies(UserAuthorizationProfile profile, RoleAssignment assignment, RoleDefinition role, ScopePath target, DateTimeOffset now)
     {
         // Attribution échue, ou rôle à durée limitée attribué sans échéance (auditeur, délégation).
-        if (assignment.ExpiresAt is DateTimeOffset expires ? expires <= now : role.RequiresExpiry)
+        if (!role.AcceptsExpiry(assignment.ExpiresAt, now))
         {
             return false;
         }
@@ -56,7 +56,7 @@ public static class PermissionResolver
         }
 
         // Un rôle n'est jamais attribué plus largement que prévu (un collaborateur sur tout le cabinet, par exemple).
-        if (assignment.Scope.Kind < role.WidestScope)
+        if (!role.AllowsScope(assignment.Scope.Kind))
         {
             return false;
         }

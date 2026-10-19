@@ -67,7 +67,15 @@ public sealed record RoleAssignment(SubjectRef Subject, string Role, Authorizati
 /// Un rôle : un ensemble de permissions, la portée la plus large à laquelle il peut être attribué, et
 /// s'il exige une échéance.
 /// </summary>
-public sealed record RoleDefinition(string Key, IReadOnlySet<Permission> Permissions, ScopeKind WidestScope, bool RequiresExpiry = false);
+public sealed record RoleDefinition(string Key, IReadOnlySet<Permission> Permissions, ScopeKind WidestScope, bool RequiresExpiry = false)
+{
+    /// <summary>Un rôle ne se donne jamais plus largement que prévu (un collaborateur sur tout le cabinet, par exemple).</summary>
+    public bool AllowsScope(ScopeKind kind) => kind >= WidestScope;
+
+    /// <summary>L'échéance convient à cet instant : future, ou absente pour un rôle sans durée limitée.</summary>
+    public bool AcceptsExpiry(DateTimeOffset? expiresAt, DateTimeOffset now) =>
+        expiresAt is DateTimeOffset expires ? expires > now : !RequiresExpiry;
+}
 
 /// <summary>
 /// Ce que le catalogue sait d'un utilisateur pour décider de ses droits. Les attributions incluent celles
