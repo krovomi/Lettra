@@ -33,6 +33,15 @@ public enum VoiceAvailability
 
     /// <summary>Ce navigateur ou cette WebView ne donne pas accès au micro.</summary>
     Unsupported,
+
+    /// <summary>
+    /// Moteur configuré mais pas encore prêt : au premier démarrage, le serveur Whisper télécharge puis charge son modèle.
+    /// L'état est redemandé tout seul jusqu'à ce qu'il le soit.
+    /// </summary>
+    Starting,
+
+    /// <summary>Page ouverte en <c>http://</c> sur une autre adresse que localhost : le navigateur refuse le micro.</summary>
+    InsecureContext,
 }
 
 public enum VoicePhase
@@ -64,6 +73,7 @@ public sealed class VoiceInput(IServiceProvider services, DevicePreferences pref
     private DotNetObjectReference<VoiceInput>? _self;
     private bool _preferenceLoaded;
     private Task? _loading;
+    private CancellationTokenSource? _waitForEngine;
 
     public event EventHandler? Changed;
 
@@ -124,6 +134,9 @@ public sealed class VoiceInput(IServiceProvider services, DevicePreferences pref
 
     public bool IsBusy => Phase != VoicePhase.Idle;
 
+    /// <summary>Délai entre deux demandes d'état tant que le moteur se prépare.</summary>
+    public TimeSpan StartingRetryDelay { get; set; } = TimeSpan.FromSeconds(15);
+
     public int MaxSeconds => Status.MaxSeconds > 0 ? Status.MaxSeconds : 30;
 
     /// <summary>Langue de la dictée : celle de l'interface si le moteur la propose, sinon la première qu'il propose.</summary>
@@ -168,12 +181,48 @@ public sealed class VoiceInput(IServiceProvider services, DevicePreferences pref
         {
             Availability = VoiceAvailability.NotConfigured;
         }
+        else if (!await SupportedAsync())
+        {
+            Availability = await SecureContextAsync() ? VoiceAvailability.Unsupported : VoiceAvailability.InsecureContext;
+        }
         else
         {
-            Availability = await SupportedAsync() ? VoiceAvailability.Ready : VoiceAvailability.Unsupported;
+            Availability = Status.Ready ? VoiceAvailability.Ready : VoiceAvailability.Starting;
+        }
+
+        if (Availability == VoiceAvailability.Starting)
+        {
+            WaitForEngine();
         }
 
         Changed?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>Redemande l'état plus tard, une seule attente à la fois, jusqu'à ce que le moteur soit prêt.</summary>
+    private void WaitForEngine()
+    {
+        if (_waitForEngine is not null)
+        {
+            return;
+        }
+
+        CancellationTokenSource wait = new();
+        _waitForEngine = wait;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(StartingRetryDelay, wait.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+
+            _waitForEngine = null;
+            wait.Dispose();
+            await LoadAsync(refresh: true);
+        });
     }
 
     public async Task SetEnabledAsync(bool enabled)
@@ -278,6 +327,11 @@ public sealed class VoiceInput(IServiceProvider services, DevicePreferences pref
             {
                 string code = result.Errors.Count > 0 ? result.Errors[0].Code : ErrorCodes.Speech.NothingHeard;
                 outcome = new(owner, mode, null, null, localizer.Error(code));
+                if (code is ErrorCodes.Speech.EngineUnavailable or ErrorCodes.Speech.ModelUnavailable)
+                {
+                    // Le moteur a pu redémarrer ou être en train de charger son modèle : l'état affiché le dira.
+                    _ = LoadAsync(refresh: true);
+                }
             }
         }
 
@@ -350,6 +404,8 @@ public sealed class VoiceInput(IServiceProvider services, DevicePreferences pref
         VoiceAvailability.NotConfigured => "Voice.State.NotConfigured",
         VoiceAvailability.Unreachable => "Voice.State.Unreachable",
         VoiceAvailability.Unsupported => "Voice.Error.Unsupported",
+        VoiceAvailability.Starting => "Voice.State.Starting",
+        VoiceAvailability.InsecureContext => "Voice.Error.InsecureContext",
         _ => "Voice.State.Unknown",
     }];
 
@@ -395,6 +451,22 @@ public sealed class VoiceInput(IServiceProvider services, DevicePreferences pref
         }
     }
 
+    private async Task<bool> SecureContextAsync()
+    {
+        try
+        {
+            return await ModuleAsync() is not { } module || await module.InvokeAsync<bool>("secureContext");
+        }
+        catch (JSException)
+        {
+            return true;
+        }
+    }
+
     /// <summary>Le module JavaScript est libéré avec la page ; l'hôte vocal coupe le micro en partant.</summary>
-    public void Dispose() => _self?.Dispose();
+    public void Dispose()
+    {
+        _waitForEngine?.Cancel();
+        _self?.Dispose();
+    }
 }

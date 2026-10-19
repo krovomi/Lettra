@@ -138,10 +138,12 @@ public sealed record GetSpeechStatusQuery(DossierId Dossier) : IQuery<Result<Spe
     public Permission Permission => Permission.DossierLire;
 }
 
-internal sealed class GetSpeechStatusHandler(SpeechSettings settings) : IQueryHandler<GetSpeechStatusQuery, Result<SpeechStatusResponse>>
+internal sealed class GetSpeechStatusHandler(SpeechSettings settings, ISpeechToText engine) : IQueryHandler<GetSpeechStatusQuery, Result<SpeechStatusResponse>>
 {
-    public Task<Result<SpeechStatusResponse>> HandleAsync(GetSpeechStatusQuery query, CancellationToken cancellationToken) =>
-        Task.FromResult<Result<SpeechStatusResponse>>(settings.ToResponse());
+    public async Task<Result<SpeechStatusResponse>> HandleAsync(GetSpeechStatusQuery query, CancellationToken cancellationToken) =>
+        settings.Enabled
+            ? settings.ToResponse(await engine.IsReadyAsync(cancellationToken).ConfigureAwait(false))
+            : settings.ToResponse();
 }
 
 /// <summary>Vocabulaire du métier donné au moteur : il l'oriente vers « devis », « HT », « SIRET » plutôt que vers des homophones.</summary>
