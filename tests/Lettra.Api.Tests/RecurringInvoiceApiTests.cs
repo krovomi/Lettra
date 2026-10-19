@@ -6,6 +6,7 @@ using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
 using Lettra.Contracts.Serialization;
+using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Api.Tests;
 
@@ -29,7 +30,7 @@ public sealed class RecurringInvoiceApiTests(LettraApiFactory factory) : IClassF
     {
         get
         {
-            DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
+            DateOnly today = LegalCalendar.DateOf(DateTimeOffset.UtcNow);
             return new DateOnly(today.Year, today.Month, 1).AddMonths(-2);
         }
     }

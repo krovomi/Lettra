@@ -2,6 +2,7 @@ using System.Text;
 using Lettra.Contracts.Banking;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
+using Lettra.Domain.SharedKernel;
 using Lettra.UI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,7 +18,7 @@ public sealed class BankingGatewayParityTests(LettraApiFactory factory) : IClass
 
     public static TheoryData<string> Transports => GatewayHarness.Transports;
 
-    private static DateOnly Today => DateOnly.FromDateTime(DateTime.UtcNow);
+    private static DateOnly Today => LegalCalendar.DateOf(DateTimeOffset.UtcNow);
 
     [Theory]
     [MemberData(nameof(Transports))]

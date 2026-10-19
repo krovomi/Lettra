@@ -7,6 +7,7 @@ using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Exports;
 using Lettra.Contracts.Serialization;
+using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Api.Tests;
 
@@ -105,7 +106,7 @@ public sealed class ExportApiTests(LettraApiFactory factory) : IClassFixture<Let
 
         using HttpResponseMessage paid = await manager.PostAsJsonAsync(
             Api($"/api/v1/invoices/{invoice}/platform-transmission/payments"),
-            new ReportPaymentRequest { Date = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1), Amount = 120m },
+            new ReportPaymentRequest { Date = LegalCalendar.DateOf(DateTimeOffset.UtcNow).AddDays(1), Amount = 120m },
             ContractsJsonContext.Default.ReportPaymentRequest);
         paid.StatusCode.Should().Be(HttpStatusCode.OK, await paid.Content.ReadAsStringAsync());
         PlatformTransmissionResponse collected = (await manager.GetFromJsonAsync(

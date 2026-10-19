@@ -6,6 +6,7 @@ using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Serialization;
 using Lettra.Contracts.Tax;
+using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Api.Tests;
 
@@ -23,7 +24,7 @@ public sealed class TaxApiTests(LettraApiFactory factory) : IClassFixture<Lettra
         return client;
     }
 
-    private static DateOnly Today => DateOnly.FromDateTime(DateTime.UtcNow);
+    private static DateOnly Today => LegalCalendar.DateOf(DateTimeOffset.UtcNow);
 
     private static async Task SetRegimeAsync(HttpClient client, VatDeclarationRegimeDto? regime)
     {

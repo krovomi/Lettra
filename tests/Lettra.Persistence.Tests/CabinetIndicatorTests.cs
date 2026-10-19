@@ -68,7 +68,7 @@ public sealed class CabinetIndicatorTests : IDisposable
 
             // Un brouillon à échéance n'est jamais en retard.
             SaveInvoiceRequest draft = Request(durand, 10m);
-            draft.DueDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1);
+            draft.DueDate = LegalCalendar.DateOf(DateTimeOffset.UtcNow).AddDays(1);
             (await commands.SendAsync(new CreateInvoiceCommand(dossier, draft), default)).IsSuccess.Should().BeTrue();
         }
 

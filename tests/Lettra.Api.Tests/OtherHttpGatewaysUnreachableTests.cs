@@ -2,6 +2,7 @@ using Lettra.Contracts.Cabinet;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Identity;
 using Lettra.Contracts.Speech;
+using Lettra.Domain.SharedKernel;
 using Lettra.UI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,7 +14,7 @@ namespace Lettra.Api.Tests;
 /// </summary>
 public sealed class OtherHttpGatewaysUnreachableTests
 {
-    private static DateOnly Today => DateOnly.FromDateTime(DateTime.UtcNow);
+    private static DateOnly Today => LegalCalendar.DateOf(DateTimeOffset.UtcNow);
 
     [Fact]
     public async Task Serveur_injoignable_comptabilite_cabinet_exports_voix_clients_et_session_rendent_Api_Unreachable()

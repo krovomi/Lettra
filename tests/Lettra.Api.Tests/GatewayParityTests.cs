@@ -5,6 +5,7 @@ using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
 using Lettra.Contracts.Exports;
 using Lettra.Contracts.Reminders;
+using Lettra.Domain.SharedKernel;
 using Lettra.UI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -154,7 +155,7 @@ public sealed partial class GatewayParityTests(LettraApiFactory factory) : IClas
         await using ServiceProvider services = Gateway(transport);
         IRecurringInvoicesGateway recurring = services.GetRequiredService<IRecurringInvoicesGateway>();
         Guid customer = (await services.GetRequiredService<ICustomersGateway>().CreateAsync(CustomerApiTests.Martin(), default)).Value!.Id;
-        DateOnly start = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1);
+        DateOnly start = LegalCalendar.DateOf(DateTimeOffset.UtcNow).AddDays(-1);
         SaveRecurringInvoiceRequest request = new()
         {
             Name = "Forfait parité",
