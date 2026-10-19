@@ -74,7 +74,8 @@ services.AddScoped<IDossierIndicatorSource, VatToDeclareIndicatorSource>();
   `Critical` (« urgent »).
 
 Compteurs livrés : factures en retard (critique après 30 jours), rejets de la plateforme agréée, alertes ouvertes
-(critique pour S1 et S2), points de la revue du mois écoulé non cochés (« à faire » jusqu'au 15, puis « à traiter »).
+(critique pour S1 et S2), points de la revue du mois écoulé non cochés (« à faire » jusqu'au 15, puis « à traiter »), TVA à déclarer (CA3, CA12 et acomptes de TVA en retard ou dus dans les 7 jours :
+« à traiter », « urgent » dès qu'une échéance est en retard ; voir [les déclarations](declarations-fiscales.md)).
 
 ## La liste de contrôle de la revue
 

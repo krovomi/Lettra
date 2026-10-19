@@ -93,10 +93,14 @@ l'échéance est marquée déposée. Les alertes ne contiennent aucune donnée d
 | API | `GET /api/v1/tax/vat-return?date=`, `GET /api/v1/tax/des?year=&month=`, `GET /api/v1/tax/des/file`, `GET /api/v1/tax/calendar?from=&to=`, `GET /api/v1/tax/calendar/upcoming?days=7`, `PUT /api/v1/tax/calendar/filings`, `GET` et `PUT /api/v1/tax/settings` |
 | Écrans | `Lettra.UI.Shared/Pages/Tax/`, `Components/Tax/`, `wwwroot/lettra-tax.css`, ressources `Localization/Modules/Fiscalite*.resx` ; passerelles `ITaxGateway` HTTP et in-process |
 
-**Vue cabinet multi-dossiers.** « TVA à déclarer dans les 7 jours » se lit par `GetUpcomingFiscalDeadlinesQuery`
-(dans un dossier), `GET /api/v1/tax/calendar/upcoming?days=7` ou `ITaxGateway.GetUpcomingAsync(7)` : les échéances en
-retard ou dues dans la fenêtre, pas encore marquées déposées.
+**Vue cabinet multi-dossiers.** La colonne « TVA à déclarer » (`tva.a-declarer`) vient de
+`VatToDeclareIndicatorSource` : le nombre de CA3, CA12 et acomptes de TVA en retard ou dus dans les 7 jours, pas
+encore marqués déposés, et la plus proche de leurs échéances. « À traiter » s'il y en a, « urgent » dès qu'une est en
+retard (donc jamais avant le premier enregistrement des réglages). Un dossier sans fiche entreprise n'a pas
+d'indicateur ; en franchise, il est à zéro. La DES et l'IS n'y entrent pas : ils restent au calendrier et dans le
+centre d'alertes. La même liste se lit dans un dossier par `GetUpcomingFiscalDeadlinesQuery`,
+`GET /api/v1/tax/calendar/upcoming?days=7` ou `ITaxGateway.GetUpcomingAsync(7)`.
 
-Tests : `tests/Lettra.Exports.Tests/Tax/` (cases, DES, calendrier, jours fériés), `tests/Lettra.Api.Tests/TaxApiTests.cs`
+Tests : `tests/Lettra.Exports.Tests/Tax/` (cases, DES, calendrier, jours fériés, indicateur de la vue cabinet), `tests/Lettra.Api.Tests/TaxApiTests.cs`
 (API réelle sur SQLite : brouillon relié au journal, réglages et conflit de version, dépôts, refus),
 `tests/Lettra.UI.Tests/Tax/TaxPagesTests.cs` (écrans et messages du toaster).
