@@ -32,6 +32,19 @@ internal static class HttpCalls
     public static string SearchParameter(string? search) =>
         string.IsNullOrWhiteSpace(search) ? string.Empty : "&search=" + Uri.EscapeDataString(search.Trim());
 
+    /// <summary>Paramètres d'une liste de clients ou de fournisseurs ; le tri n'apparaît que s'il diffère du nom de A à Z.</summary>
+    public static string PartyListParameters(PartyListQuery query)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+        string text = string.Create(CultureInfo.InvariantCulture, $"page={query.Page}&pageSize={query.PageSize}") + SearchParameter(query.Search);
+        if (query.Sort != PartySortDto.Name || query.Direction != SortDirectionDto.Ascending)
+        {
+            text += $"&sort={query.Sort}&direction={query.Direction}";
+        }
+
+        return query.Kind is { } kind ? $"{text}&kind={kind}" : text;
+    }
+
     public static Uri Relative(FormattableString uri) => new(string.Create(CultureInfo.InvariantCulture, $"{uri}"), UriKind.Relative);
 
     /// <summary>PUT d'une modification avec la version lue en <c>If-Match</c> (ADR-0013).</summary>
@@ -66,9 +79,9 @@ internal sealed class HttpSuppliersGateway(HttpClient http) : ISuppliersGateway
             ContractsJsonContext.Default.PagedResponseSupplierSummary,
             cancellationToken);
 
-    public Task<OperationResult<PagedResponse<SupplierSummary>>> SearchAsync(string? search, int page, int pageSize, CancellationToken cancellationToken) =>
+    public Task<OperationResult<PagedResponse<SupplierSummary>>> SearchAsync(PartyListQuery query, CancellationToken cancellationToken) =>
         HttpCalls.SendAsync(
-            ct => http.GetAsync(HttpCalls.Relative($"api/v1/suppliers?page={page}&pageSize={pageSize}{HttpCalls.SearchParameter(search)}"), ct),
+            ct => http.GetAsync(new Uri("api/v1/suppliers?" + HttpCalls.PartyListParameters(query), UriKind.Relative), ct),
             ContractsJsonContext.Default.PagedResponseSupplierSummary,
             cancellationToken);
 

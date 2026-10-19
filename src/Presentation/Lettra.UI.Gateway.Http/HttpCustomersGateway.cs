@@ -55,9 +55,9 @@ internal sealed class HttpCustomersGateway(HttpClient http) : ICustomersGateway
         }
     }
 
-    public Task<OperationResult<PagedResponse<CustomerSummary>>> SearchAsync(string? search, int page, int pageSize, CancellationToken cancellationToken) =>
+    public Task<OperationResult<PagedResponse<CustomerSummary>>> SearchAsync(PartyListQuery query, CancellationToken cancellationToken) =>
         HttpCalls.SendAsync(
-            ct => http.GetAsync(HttpCalls.Relative($"api/v1/customers?page={page}&pageSize={pageSize}{HttpCalls.SearchParameter(search)}"), ct),
+            ct => http.GetAsync(new Uri("api/v1/customers?" + HttpCalls.PartyListParameters(query), UriKind.Relative), ct),
             ContractsJsonContext.Default.PagedResponseCustomerSummary,
             cancellationToken);
 

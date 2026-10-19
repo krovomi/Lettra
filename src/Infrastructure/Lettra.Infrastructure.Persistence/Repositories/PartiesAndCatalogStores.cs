@@ -29,22 +29,25 @@ internal sealed class SupplierRepository(TenantDbSession session) : ISupplierRep
 
 internal sealed class SupplierReadStore(TenantDbSession session) : ISupplierReadStore
 {
-    public async Task<PagedResponse<SupplierSummary>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken)
+    public async Task<PagedResponse<SupplierSummary>> ListAsync(PartyListFilter filter, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(filter);
         LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
-        IQueryable<Supplier> query = db.Set<Supplier>().AsNoTracking().Where(s => !s.IsArchived).WhereSearchKeyContains(search);
+        IQueryable<Supplier> query = db.Set<Supplier>().AsNoTracking().Where(s => !s.IsArchived).WhereSearchKeyContains(filter.Search);
         int total = await query.CountAsync(cancellationToken).ConfigureAwait(false);
-        var rows = await query
-            .OrderBy(s => s.Name)
+        IOrderedQueryable<Supplier> ordered = filter.Sort == PartySortDto.City
+            ? query.By(s => s.Address.City, filter.Direction).ThenBy(s => s.Name)
+            : query.By(s => s.Name, filter.Direction);
+        var rows = await ordered
             .ThenBy(s => s.Id)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((filter.Page - 1) * filter.PageSize)
+            .Take(filter.PageSize)
             .Select(s => new { s.Id, s.Name, s.Siren, s.Address.City })
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
         List<SupplierSummary> items = rows.Select(r => new SupplierSummary(r.Id.Value, r.Name, r.Siren?.Value, r.City)).ToList();
-        return new PagedResponse<SupplierSummary>(items, page, pageSize, total);
+        return new PagedResponse<SupplierSummary>(items, filter.Page, filter.PageSize, total);
     }
 
     public async Task<SupplierResponse?> GetAsync(SupplierId id, CancellationToken cancellationToken)

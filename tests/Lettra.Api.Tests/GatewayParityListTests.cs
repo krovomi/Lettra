@@ -1,12 +1,13 @@
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Common;
+using Lettra.Contracts.Customers;
 using Lettra.UI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.Api.Tests;
 
-/// <summary>Tri et bornes de montant des listes de pièces : mêmes paramètres et même résultat sur les deux transports.</summary>
+/// <summary>Tri, filtres et bornes des listes : mêmes paramètres et même résultat sur les deux transports.</summary>
 public sealed partial class GatewayParityTests
 {
     [Theory]
@@ -38,5 +39,34 @@ public sealed partial class GatewayParityTests
         bounded.Value!.Items.Select(i => i.TotalExclTax).Should().Equal(1000m, 100m);
         quoteList.Value!.Items.Select(q => q.TotalInclTax).Should().Equal(120m, 12.6m);
         reversed.Errors.Should().ContainSingle().Which.Should().Be(new ErrorDetail(ErrorCodes.Validation.Invalid, "MaxAmount"));
+    }
+
+    [Theory]
+    [MemberData(nameof(Transports))]
+    public async Task Lister_les_clients_et_fournisseurs_tries_par_ville_et_filtres_par_nature(string transport)
+    {
+        await using ServiceProvider services = Gateway(transport);
+        ICustomersGateway customers = services.GetRequiredService<ICustomersGateway>();
+        ISuppliersGateway suppliers = services.GetRequiredService<ISuppliersGateway>();
+        (await customers.CreateAsync(CustomerApiTests.Martin(), default)).IsSuccess.Should().BeTrue();
+        (await customers.CreateAsync(new CreateCustomerRequest
+        {
+            Kind = CustomerKindDto.Individual, Name = "Zoé Lambert", AddressLine1 = "2 quai des Chartrons", PostalCode = "33000", City = "Bordeaux",
+        }, default)).IsSuccess.Should().BeTrue();
+        (await suppliers.CreateAsync(PartiesAndCatalogApiTests.Dupuis(), default)).IsSuccess.Should().BeTrue();
+
+        OperationResult<PagedResponse<CustomerSummary>> byCity = await customers.SearchAsync(
+            new PartyListQuery(Sort: PartySortDto.City, Direction: SortDirectionDto.Descending), default);
+        OperationResult<PagedResponse<CustomerSummary>> individuals = await customers.SearchAsync(new PartyListQuery(Kind: CustomerKindDto.Individual), default);
+        OperationResult<PagedResponse<Contracts.Suppliers.SupplierSummary>> supplierList = await suppliers.SearchAsync(
+            new PartyListQuery("dupuis", Sort: PartySortDto.City), default);
+        OperationResult<PagedResponse<CustomerSummary>> refused = await customers.SearchAsync(new PartyListQuery(Sort: (PartySortDto)9), default);
+
+        // Le transport en direct partage sa base entre les tests : on vérifie l'ordre et le filtre, pas un compte exact.
+        byCity.Value!.Items.Select(c => c.City).Should().StartWith("Paris").And.EndWith("Bordeaux");
+        individuals.Value!.Items.Should().OnlyContain(c => c.Kind == CustomerKindDto.Individual).And.Contain(c => c.Name == "Zoé Lambert");
+        individuals.Value.TotalCount.Should().Be(individuals.Value.Items.Count);
+        supplierList.Value!.Items.Should().NotBeEmpty().And.OnlyContain(s => s.Name == "Minoterie Dupuis");
+        refused.Errors.Should().ContainSingle().Which.Should().Be(new ErrorDetail(ErrorCodes.Validation.Invalid, "Sort"));
     }
 }

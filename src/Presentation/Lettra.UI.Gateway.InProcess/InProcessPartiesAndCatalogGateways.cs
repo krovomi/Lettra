@@ -87,10 +87,11 @@ internal sealed class InProcessSuppliersGateway(IServiceScopeFactory scopes) : I
     public Task<OperationResult<PagedResponse<SupplierSummary>>> ListAsync(int page, int pageSize, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new ListSuppliersQuery(dossier, page, pageSize), ct), cancellationToken);
 
-    public Task<OperationResult<PagedResponse<SupplierSummary>>> SearchAsync(string? search, int page, int pageSize, CancellationToken cancellationToken) =>
+    public Task<OperationResult<PagedResponse<SupplierSummary>>> SearchAsync(PartyListQuery query, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(
             scopes,
-            (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new ListSuppliersQuery(dossier, page, pageSize, string.IsNullOrWhiteSpace(search) ? null : search.Trim()), ct),
+            (sp, dossier, ct) => InProcessScope.QueryAsync(
+                sp, new ListSuppliersQuery(dossier, query.Page, query.PageSize, string.IsNullOrWhiteSpace(query.Search) ? null : query.Search.Trim(), query.Sort, query.Direction), ct),
             cancellationToken);
 
     public Task<OperationResult<SupplierResponse>> GetAsync(Guid id, CancellationToken cancellationToken) =>

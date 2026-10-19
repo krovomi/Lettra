@@ -33,4 +33,7 @@
   <data name="Lists.Filter.State" xml:space="preserve"><value>État</value></data>
   <data name="Lists.AllObligations" xml:space="preserve"><value>Toutes les échéances</value></data>
   <data name="Lists.Sort.Statement" xml:space="preserve"><value>Ordre du relevé</value></data>
+  <data name="Lists.Sort.City" xml:space="preserve"><value>Ville</value></data>
+  <data name="Lists.Filter.Kind" xml:space="preserve"><value>Nature</value></data>
+  <data name="Lists.AllCustomerKinds" xml:space="preserve"><value>Tous les clients</value></data>
 </root>

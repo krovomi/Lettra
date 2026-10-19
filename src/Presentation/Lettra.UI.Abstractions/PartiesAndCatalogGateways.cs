@@ -12,8 +12,8 @@ public interface ISuppliersGateway
 
     Task<OperationResult<PagedResponse<SupplierSummary>>> ListAsync(int page, int pageSize, CancellationToken cancellationToken);
 
-    /// <summary>Liste filtrée sur le nom, sans accents ni casse (page de consultation).</summary>
-    Task<OperationResult<PagedResponse<SupplierSummary>>> SearchAsync(string? search, int page, int pageSize, CancellationToken cancellationToken);
+    /// <summary>Liste filtrée, triée et paginée de la page de consultation (voir <see cref="PartyListQuery"/>).</summary>
+    Task<OperationResult<PagedResponse<SupplierSummary>>> SearchAsync(PartyListQuery query, CancellationToken cancellationToken);
 
     Task<OperationResult<SupplierResponse>> GetAsync(Guid id, CancellationToken cancellationToken);
 
