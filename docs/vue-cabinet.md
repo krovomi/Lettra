@@ -120,6 +120,10 @@ et survivent aux mises à jour. Une clé de point n'est jamais renommée.
 }
 ```
 
+La démo Docker, sans Worker, fait tourner la passe dans l'API dès 15 s après le démarrage
+(`Lettra__CabinetOverview__InitialDelay: "00:00:15"`) : sur une démo neuve, la vue cabinet, les « Tableaux de bord » et
+Grafana ont leurs compteurs dès la première minute, sans attendre la nuit ni un clic sur « Actualiser ».
+
 La démo Docker crée deux dossiers fictifs de plus (« Bâti Rénov' Lemoine », « Négoce Méditerranée Distribution ») avec
 `Lettra__Demo__AdditionalDossiers: "2"`, pour que le sélecteur et la vue cabinet aient de quoi montrer. Le jeu ne touche
 jamais aux dossiers qui existent déjà.
