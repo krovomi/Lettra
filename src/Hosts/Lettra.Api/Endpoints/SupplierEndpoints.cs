@@ -10,6 +10,7 @@ using Lettra.Contracts.Suppliers;
 using Lettra.Domain.Common;
 using Lettra.Domain.Parties;
 using Lettra.Domain.SharedKernel;
+using static Lettra.Api.Infrastructure.HttpResults;
 
 namespace Lettra.Api.Endpoints;
 
@@ -88,7 +89,7 @@ internal static class SupplierEndpoints
         Result<PagedResponse<SupplierSummary>> result = await queries
             .QueryAsync(new ListSuppliersQuery(tenant.Current.DossierId, page, pageSize, string.IsNullOrWhiteSpace(search) ? null : search.Trim()), cancellationToken)
             .ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
+        return Ok(result);
     }
 
     private static async Task<IResult> GetAsync(Guid id, ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken)
@@ -96,7 +97,7 @@ internal static class SupplierEndpoints
         Result<SupplierResponse> result = await queries
             .QueryAsync(new GetSupplierQuery(tenant.Current.DossierId, new SupplierId(id)), cancellationToken)
             .ConfigureAwait(false);
-        return result.IsSuccess ? TypedResults.Ok(result.Value).WithETag(result.Value.Version) : result.Errors.ToProblem();
+        return Versioned(result, v => v.Version);
     }
 
     /// <summary>Modification : même contrat qu'à la création, version lue en <c>If-Match</c> (ADR-0013).</summary>
@@ -121,7 +122,7 @@ internal static class SupplierEndpoints
         }
 
         Result<SupplierResponse> read = await Read().ConfigureAwait(false);
-        return read.IsSuccess ? TypedResults.Ok(read.Value).WithETag(read.Value.Version) : read.Errors.ToProblem();
+        return Versioned(read, v => v.Version);
     }
 
     private static async Task<IResult> DeleteAsync(

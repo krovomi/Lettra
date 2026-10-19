@@ -8,6 +8,7 @@ using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
 using Lettra.Supervision.Application;
 using Lettra.Supervision.Domain;
+using static Lettra.Api.Infrastructure.HttpResults;
 
 namespace Lettra.Api.Endpoints;
 
@@ -115,13 +116,13 @@ internal static class AlertEndpoints
     private static async Task<IResult> ListAsync(AuthorizationScope within, bool includeClosed, IQueryDispatcher queries, CancellationToken cancellationToken)
     {
         Result<AlertCentreResponse> centre = await queries.QueryAsync(new ListAlertsQuery(within, includeClosed), cancellationToken).ConfigureAwait(false);
-        return centre.IsSuccess ? TypedResults.Ok(centre.Value) : centre.Errors.ToProblem();
+        return Ok(centre);
     }
 
     private static async Task<IResult> GetAsync(Guid id, AuthorizationScope within, IQueryDispatcher queries, CancellationToken cancellationToken)
     {
         Result<AlertDetailResponse> detail = await queries.QueryAsync(new GetAlertQuery(new AlertId(id), within), cancellationToken).ConfigureAwait(false);
-        return detail.IsSuccess ? TypedResults.Ok(detail.Value) : detail.Errors.ToProblem();
+        return Ok(detail);
     }
 
     private static async Task<IResult> ActAsync(AlertActionCommand command, ICommandDispatcher commands, CancellationToken cancellationToken)
@@ -133,6 +134,6 @@ internal static class AlertEndpoints
             ChangeAlertSeverityCommand change => await commands.SendAsync(change, cancellationToken).ConfigureAwait(false),
             _ => throw new ArgumentOutOfRangeException(nameof(command)),
         };
-        return result.IsSuccess ? TypedResults.NoContent() : result.Errors.ToProblem();
+        return NoContent(result);
     }
 }
