@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <!-- Préférences de l'utilisateur : page « Mes préférences », « Retenir par défaut », « Reprendre où j'en étais ». -->
+  <data name="Nav.Preferences" xml:space="preserve"><value>My preferences</value></data>
+  <data name="Nav.Preferences.Keywords" xml:space="preserve"><value>preferences settings defaults theme language home suggestions favourites</value></data>
+  <data name="Preferences.Title" xml:space="preserve"><value>My preferences</value></data>
+  <data name="Preferences.Intro" xml:space="preserve"><value>What Lettra remembers for you: appearance, start screen, entry defaults and suggestions. Change or clear any of it here.</value></data>
+  <data name="Preferences.Where.Account" xml:space="preserve"><value>Kept in your account: they follow you on all your devices.</value></data>
+  <data name="Preferences.Where.Device" xml:space="preserve"><value>Kept on this device (standalone workstation or server without accounts): they apply here only.</value></data>
+  <data name="Preferences.Section.Appearance" xml:space="preserve"><value>Appearance and start-up</value></data>
+  <data name="Preferences.Language" xml:space="preserve"><value>Screen language</value></data>
+  <data name="Preferences.Language.Auto" xml:space="preserve"><value>Device language</value></data>
+  <data name="Preferences.Language.Hint" xml:space="preserve"><value>Dates and amounts follow the language. The page reloads.</value></data>
+  <data name="Preferences.HomePage" xml:space="preserve"><value>Start screen</value></data>
+  <data name="Preferences.HomePage.Hint" xml:space="preserve"><value>Opened when you sign in, instead of the dashboard.</value></data>
+  <data name="Preferences.Section.Entry" xml:space="preserve"><value>Entry defaults</value></data>
+  <data name="Preferences.Entry.Intro" xml:space="preserve"><value>Pre-filled in your new documents in {0}. You can still change them on each document.</value></data>
+  <data name="Preferences.Entry.NoDossier" xml:space="preserve"><value>Open a client file to set its entry defaults.</value></data>
+  <data name="Preferences.Entry.ThisDossier" xml:space="preserve"><value>this client file</value></data>
+  <data name="Preferences.Entry.Vat" xml:space="preserve"><value>VAT on new lines</value></data>
+  <data name="Preferences.Entry.Unit" xml:space="preserve"><value>Unit on new lines</value></data>
+  <data name="Preferences.Entry.Usual" xml:space="preserve"><value>Usual</value></data>
+  <data name="Preferences.Entry.QuoteValidity" xml:space="preserve"><value>Quote validity (days)</value></data>
+  <data name="Preferences.Entry.InvoiceNotes" xml:space="preserve"><value>Invoice notes</value></data>
+  <data name="Preferences.Entry.QuoteNotes" xml:space="preserve"><value>Quote notes</value></data>
+  <data name="Preferences.Entry.Save" xml:space="preserve"><value>Save entry defaults</value></data>
+  <data name="Preferences.Section.Suggestions" xml:space="preserve"><value>Suggestions</value></data>
+  <data name="Preferences.Suggestions.Rank" xml:space="preserve"><value>Put the customers and items I pick most often first</value></data>
+  <data name="Preferences.Suggestions.Hint" xml:space="preserve"><value>Worked out by Lettra, without AI: only identifiers and counts are kept, never a name or an amount.</value></data>
+  <data name="Preferences.Suggestions.Count" xml:space="preserve"><value>In this client file: {0} customer(s), {1} item(s) and {2} recent document(s) remembered.</value></data>
+  <data name="Preferences.Suggestions.ForgetDossier" xml:space="preserve"><value>Forget for this client file</value></data>
+  <data name="Preferences.Suggestions.ForgetAll" xml:space="preserve"><value>Forget everywhere</value></data>
+  <data name="Preferences.Section.Privacy" xml:space="preserve"><value>Your data</value></data>
+  <data name="Preferences.Privacy.What" xml:space="preserve"><value>These preferences are yours alone: nobody else sees them, not even the firm administrator.</value></data>
+  <data name="Preferences.Privacy.Never" xml:space="preserve"><value>They never appear in technical logs or in indicators.</value></data>
+  <data name="Preferences.Reset" xml:space="preserve"><value>Reset everything</value></data>
+  <data name="Preferences.Reset.Confirm" xml:space="preserve"><value>Go back to the starting settings? Entry defaults, start screen, menu and suggestions will be cleared.</value></data>
+  <data name="Preferences.Reset.Yes" xml:space="preserve"><value>Yes, reset everything</value></data>
+  <data name="Preferences.Reset.No" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Preferences.Remember" xml:space="preserve"><value>Use as default</value></data>
+  <data name="Preferences.Toast.Remembered" xml:space="preserve"><value>Kept for your next documents in this client file.</value></data>
+  <data name="Preferences.Toast.Saved" xml:space="preserve"><value>Preferences saved.</value></data>
+  <data name="Preferences.Toast.Forgotten" xml:space="preserve"><value>Suggestions forgotten.</value></data>
+  <data name="Preferences.Toast.Reset" xml:space="preserve"><value>Preferences reset.</value></data>
+  <data name="Preferences.Toast.Failed" xml:space="preserve"><value>The preferences could not be saved.</value></data>
+  <data name="Home.Resume.Title" xml:space="preserve"><value>Pick up where I left off</value></data>
+  <data name="Home.Resume.Settings" xml:space="preserve"><value>My preferences</value></data>
+  <data name="Recent.Invoice" xml:space="preserve"><value>Invoice {0} · {1}</value></data>
+  <data name="Recent.Quote" xml:space="preserve"><value>Quote {0} · {1}</value></data>
+  <data name="Recent.Draft" xml:space="preserve"><value>draft</value></data>
+  <data name="Palette.Group.Resume" xml:space="preserve"><value>Pick up</value></data>
+  <data name="Palette.Resume" xml:space="preserve"><value>Pick up {0}</value></data>
+  <data name="Error.Preferences.Invalid" xml:space="preserve"><value>A preference has the wrong format.</value></data>
+  <data name="Error.Preferences.TooMany" xml:space="preserve"><value>Too many entries for this preference.</value></data>
+  <data name="Error.Preferences.Unavailable" xml:space="preserve"><value>Preferences stay on this device.</value></data>
+</root>

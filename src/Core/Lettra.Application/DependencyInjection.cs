@@ -3,6 +3,7 @@ using Lettra.Application.Abstractions.Mail;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Messaging;
+using Lettra.Application.Abstractions.Preferences;
 using Lettra.Application.Abstractions.Speech;
 using Lettra.Application.Abstractions.Sync;
 using Lettra.Application.Authorization;
@@ -54,6 +55,9 @@ public static class DependencyInjection
 
         // Hors du mode 1, les cas d'usage de session locale répondent « non pris en charge ».
         services.TryAddSingleton<ILocalAccounts, NoLocalAccounts>();
+
+        // Sans base Catalog (poste isolé), les préférences de l'utilisateur restent sur l'appareil.
+        services.TryAddSingleton<IUserPreferencesStore, NoUserPreferencesStore>();
 
         // Sans base Catalog (poste isolé, registre en configuration), les droits ne s'administrent pas.
         services.TryAddSingleton<IAuthorizationAdministration, NoAuthorizationAdministration>();

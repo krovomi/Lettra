@@ -28,7 +28,8 @@ macOS, Android, iOS).
     est passée telle quelle. L'aide marche entièrement sans lui.
 - **Mémoire** : sections repliées et favoris sont retenus sur l'appareil, **par utilisateur** (deux personnes sur le
   même poste ont chacune leur menu), dans le stockage local du navigateur ou du WebView MAUI. Ce n'est jamais une
-  donnée de dossier.
+  donnée de dossier. Quand le serveur le permet, ils sont aussi rangés dans le compte et suivent l'utilisateur sur
+  ses autres appareils ([preferences-utilisateur.md](preferences-utilisateur.md)).
 
 | Appareil | Menu | Aide |
 |---|---|---|
@@ -54,7 +55,7 @@ macOS, Android, iOS).
 | Entrées du menu (une ligne par écran), section, droit qui la cache | `Layout/NavItems.cs` |
 | Mots-clés de la recherche du menu | ressource `<clé du libellé>.Keywords`, facultative (`Localization/Modules/Aide.resx`) |
 | Recherche du menu (libellé d'abord, puis mots-clés) | `Layout/NavSearch.cs` |
-| Sections repliées et favoris, par utilisateur et par appareil | `Layout/NavMenuState.cs` (clés `lettra.nav.sections.<empreinte>` et `lettra.nav.favorites.<empreinte>`) |
+| Sections repliées et favoris, par utilisateur et par appareil | `Layout/NavMenuState.cs` (clés `lettra.nav.sections.<empreinte>` et `lettra.nav.favorites.<empreinte>`) ; reliés au compte par `Preferences/PreferencesSync.cs` |
 | Menu (barre latérale et feuille « Plus ») | `Layout/NavMenu.razor` |
 | Questions fréquentes (écrans concernés, lien) | `Onboarding/HelpCatalog.cs` ; textes `Help.Faq.<id>.Question`, `.Answer`, `.Keywords` |
 | Panneau d'aide, état partagé, entrée de la palette | `Onboarding/HelpPanel.razor`, `HelpPanelState.cs`, `HelpPaletteProvider.cs` |

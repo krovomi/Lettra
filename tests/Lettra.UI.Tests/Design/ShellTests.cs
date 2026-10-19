@@ -59,7 +59,7 @@ public sealed class ShellTests : BunitContext
         IRenderedComponent<MainLayout> coque = Coque();
 
         Libelles(coque.FindAll(".lt-sidebar .lt-nav-link")).Should().Equal(
-            "Accueil", "Vue cabinet", "Devis", "Factures", "Avoirs", "Factures récurrentes", "Clients", "Fournisseurs", "Catalogue", "Encaissements", "Rapprochement bancaire", "Relances", "Journal et balance", "FEC", "Déclarations", "Revue du dossier", "Alertes", "Entreprise", "Serveur du cabinet");
+            "Accueil", "Vue cabinet", "Devis", "Factures", "Avoirs", "Factures récurrentes", "Clients", "Fournisseurs", "Catalogue", "Encaissements", "Rapprochement bancaire", "Relances", "Journal et balance", "FEC", "Déclarations", "Revue du dossier", "Alertes", "Entreprise", "Mes préférences", "Serveur du cabinet");
         coque.FindAll(".lt-sidebar .lt-nav-group").Select(g => g.TextContent).Should().Equal("Ventes", "Tiers", "Comptabilité", "Pilotage");
         Libelles(coque.FindAll(".lt-tabbar .lt-tab")).Should().Equal("Accueil", "Devis", "Factures", "Clients", "Plus");
         coque.Find(".lt-skip").GetAttribute("href").Should().Be("#main");
@@ -76,7 +76,7 @@ public sealed class ShellTests : BunitContext
         coque.Find("#tab-more").GetAttribute("aria-expanded").Should().Be("true");
         IElement feuille = coque.Find("#more-sheet");
         feuille.GetAttribute("role").Should().Be("dialog");
-        Libelles(feuille.QuerySelectorAll(".lt-nav-link")).Should().Equal("Vue cabinet", "Avoirs", "Factures récurrentes", "Fournisseurs", "Catalogue", "Encaissements", "Rapprochement bancaire", "Relances", "Journal et balance", "FEC", "Déclarations", "Revue du dossier", "Alertes", "Entreprise", "Serveur du cabinet");
+        Libelles(feuille.QuerySelectorAll(".lt-nav-link")).Should().Equal("Vue cabinet", "Avoirs", "Factures récurrentes", "Fournisseurs", "Catalogue", "Encaissements", "Rapprochement bancaire", "Relances", "Journal et balance", "FEC", "Déclarations", "Revue du dossier", "Alertes", "Entreprise", "Mes préférences", "Serveur du cabinet");
         feuille.QuerySelectorAll("input[type=radio][name^=lettra-theme]").Should().HaveCount(5);
 
         feuille.KeyDown("Escape");
