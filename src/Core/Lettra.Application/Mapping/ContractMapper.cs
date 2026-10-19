@@ -69,6 +69,7 @@ public static class ContractMapper
         {
             Version = customer.Version,
             PreferredLanguage = customer.PreferredLanguage,
+            IsArchived = customer.IsArchived,
         };
     }
 

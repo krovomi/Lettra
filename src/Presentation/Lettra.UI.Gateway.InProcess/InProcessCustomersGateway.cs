@@ -56,6 +56,9 @@ internal sealed class InProcessCustomersGateway(IServiceScopeFactory scopes) : I
         RunAsync((sp, dossier, ct) => InProcessScope.WriteThenReadAsync(
             sp, request.ToUpdateCommand(dossier, new CustomerId(id), expectedVersion), new GetCustomerQuery(dossier, new CustomerId(id)), ct), cancellationToken);
 
+    public Task<OperationResult<bool>> DeleteAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken) =>
+        RunAsync((sp, dossier, ct) => InProcessCommands.SendAsync(sp, new DeleteCustomerCommand(dossier, new CustomerId(id), expectedVersion), ct), cancellationToken);
+
     private Task<OperationResult<T>> RunAsync<T>(
         Func<IServiceProvider, DossierId, CancellationToken, Task<OperationResult<T>>> operation,
         CancellationToken cancellationToken) =>
@@ -85,6 +88,7 @@ public static class DependencyInjection
         services.AddSingleton<IReceivablesGateway, InProcessReceivablesGateway>();
         services.AddSingleton<IFecGateway, InProcessFecGateway>();
         services.AddSingleton<IAccountingGateway, InProcessAccountingGateway>();
+        services.AddSingleton<ITaxGateway, InProcessTaxGateway>();
         services.AddSingleton<IBillingSettingsGateway, InProcessBillingSettingsGateway>();
         services.AddSingleton<IPriceListsGateway, InProcessPriceListsGateway>();
         services.AddSingleton<IAlertsGateway, InProcessAlertsGateway>();

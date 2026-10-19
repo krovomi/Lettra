@@ -117,6 +117,22 @@ public sealed class BillingTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Supprimer_un_client_le_retire_des_listes_et_garde_ses_factures()
+    {
+        InvoiceId id = await DraftInvoiceAsync();
+        Guid customer = (await Queries.QueryAsync(new GetInvoiceQuery(Dossier, id), default)).Value.CustomerId;
+
+        Result deleted = await Commands.SendAsync(new DeleteCustomerCommand(Dossier, new CustomerId(customer), null), default);
+        Result again = await Commands.SendAsync(new DeleteCustomerCommand(Dossier, new CustomerId(customer), null), default);
+
+        deleted.IsSuccess.Should().BeTrue();
+        again.IsSuccess.Should().BeTrue("supprimer deux fois revient au même");
+        (await Queries.QueryAsync(new ListCustomersQuery(Dossier), default)).Value.Items.Should().BeEmpty();
+        (await Queries.QueryAsync(new GetCustomerQuery(Dossier, new CustomerId(customer)), default)).Value.IsArchived.Should().BeTrue();
+        (await Queries.QueryAsync(new GetInvoiceQuery(Dossier, id), default)).Value.CustomerId.Should().Be(customer);
+    }
+
+    [Fact]
     public async Task Sans_fiche_entreprise_la_validation_est_refusee_sans_consommer_de_numero()
     {
         InvoiceId id = await DraftInvoiceAsync();

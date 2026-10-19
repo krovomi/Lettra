@@ -55,6 +55,9 @@ public sealed class Supplier : AggregateRoot<SupplierId>, IVersioned
 
     public DateTimeOffset CreatedAt { get; private set; }
 
+    /// <summary>Supprimé par l'utilisateur : absent des listes, mais gardé en base comme les clients (voir <see cref="Customer.IsArchived"/>).</summary>
+    public bool IsArchived { get; private set; }
+
     /// <summary>Version de concurrence optimiste (ADR-0013), avancée par la persistance à chaque écriture.</summary>
     public long Version { get; private set; }
 
@@ -106,6 +109,18 @@ public sealed class Supplier : AggregateRoot<SupplierId>, IVersioned
         Address = v.Address;
         Raise(new SupplierUpdated(Id, now));
         return Result.Success();
+    }
+
+    /// <summary>Retire le fournisseur des listes, ou l'y remet. Sans effet (et sans événement) si l'état est déjà celui demandé.</summary>
+    public void SetArchived(bool archived, DateTimeOffset now)
+    {
+        if (IsArchived == archived)
+        {
+            return;
+        }
+
+        IsArchived = archived;
+        Raise(new SupplierArchiveChanged(Id, archived, now));
     }
 
     private static Result<Values> Read(Draft draft)

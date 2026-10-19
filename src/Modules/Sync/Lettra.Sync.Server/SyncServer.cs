@@ -242,6 +242,10 @@ public sealed class SyncServer(
                 intent, u.Base, u.Data, ContractsJsonContext.Default.CreateCustomerRequest,
                 async () => await customers.GetAsync(new CustomerId(u.EntityId), ct).ConfigureAwait(false) is { } s ? (s.ToRequest(), s.Version) : null,
                 (merged, version) => commands.SendAsync(merged.ToUpdateCommand(dossier, new CustomerId(u.EntityId), version), ct)),
+            DeleteCustomerIntent d => DeleteAsync(
+                intent,
+                async () => await customers.GetAsync(new CustomerId(d.EntityId), ct).ConfigureAwait(false) is { } s ? (s.IsArchived, s.Version) : null,
+                version => commands.SendAsync(new DeleteCustomerCommand(dossier, new CustomerId(d.EntityId), version), ct)),
             CreateSupplierIntent c => CreateAsync(
                 intent,
                 () => Version(suppliers.GetAsync(new SupplierId(c.EntityId), ct)),
@@ -250,6 +254,10 @@ public sealed class SyncServer(
                 intent, u.Base, u.Data, ContractsJsonContext.Default.CreateSupplierRequest,
                 async () => await suppliers.GetAsync(new SupplierId(u.EntityId), ct).ConfigureAwait(false) is { } s ? (s.ToRequest(), s.Version) : null,
                 (merged, version) => commands.SendAsync(merged.ToUpdateCommand(dossier, new SupplierId(u.EntityId), version), ct)),
+            DeleteSupplierIntent d => DeleteAsync(
+                intent,
+                async () => await suppliers.GetAsync(new SupplierId(d.EntityId), ct).ConfigureAwait(false) is { } s ? (s.IsArchived, s.Version) : null,
+                version => commands.SendAsync(new DeleteSupplierCommand(dossier, new SupplierId(d.EntityId), version), ct)),
             CreateCatalogItemIntent c => CreateAsync(
                 intent,
                 () => Version(items.GetAsync(new CatalogItemId(c.EntityId), ct)),
@@ -338,6 +346,39 @@ public sealed class SyncServer(
                     : merge.ServerChanged ? SyncIntentOutcome.Merged
                     : SyncIntentOutcome.Applied;
                 return Outcome(intent, outcome, now, merge.Conflicts);
+            }
+        }
+
+        /// <summary>
+        /// Suppression d'un tiers : rejouée sur la version du moment, car une modification faite au bureau entre-temps
+        /// n'empêche pas de retirer le tiers des listes. Déjà supprimé : rien à faire.
+        /// </summary>
+        private static async Task<SyncIntentResult> DeleteAsync(
+            SyncIntent intent,
+            Func<Task<(bool IsArchived, long Version)?>> read,
+            Func<long, Task<Result>> delete)
+        {
+            for (int attempt = 1; ; attempt++)
+            {
+                if (await read().ConfigureAwait(false) is not (bool archived, long version))
+                {
+                    return Rejected(intent, SyncErrors.EntityNotFound);
+                }
+
+                if (archived)
+                {
+                    return Outcome(intent, SyncIntentOutcome.AlreadyApplied, version);
+                }
+
+                Result written = await delete(version).ConfigureAwait(false);
+                if (written.IsFailure && written.Errors.Any(e => e.Code == ConcurrencyErrors.VersionMismatchCode) && attempt < MergeAttempts)
+                {
+                    continue;
+                }
+
+                return written.IsFailure
+                    ? Rejected(intent, written.Errors)
+                    : Outcome(intent, SyncIntentOutcome.Applied, await read().ConfigureAwait(false) is (_, long now) ? now : null);
             }
         }
 

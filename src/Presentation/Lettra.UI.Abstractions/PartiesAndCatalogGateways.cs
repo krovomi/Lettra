@@ -19,6 +19,9 @@ public interface ISuppliersGateway
 
     /// <summary>Modifie un fournisseur à partir de la version lue (ADR-0013), comme <see cref="ICatalogGateway.UpdateAsync"/>.</summary>
     Task<OperationResult<SupplierResponse>> UpdateAsync(Guid id, long expectedVersion, CreateSupplierRequest request, CancellationToken cancellationToken);
+
+    /// <summary>Supprime un fournisseur (retiré des listes, gardé en base), comme <see cref="ICustomersGateway.DeleteAsync"/>.</summary>
+    Task<OperationResult<bool>> DeleteAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken);
 }
 
 /// <summary>Écran Catalogue, et liste de choix F4 des futurs écrans Devis et Factures.</summary>

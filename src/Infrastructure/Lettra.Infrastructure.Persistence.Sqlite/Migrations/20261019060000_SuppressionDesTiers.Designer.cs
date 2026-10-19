@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
 {
     [DbContext(typeof(LettraDbContext))]
-    [Migration("20261019060000_RevueDeDossier")]
-    partial class RevueDeDossier
+    [Migration("20261019060000_SuppressionDesTiers")]
+    partial class SuppressionDesTiers
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -856,6 +856,9 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                         .HasMaxLength(254)
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("Kind")
                         .HasColumnType("INTEGER");
 
@@ -952,6 +955,9 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                         .HasMaxLength(34)
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -1045,31 +1051,6 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("PriceLists", (string)null);
-                });
-
-            modelBuilder.Entity("Lettra.Domain.Review.DossierReviewMark", b =>
-                {
-                    b.Property<string>("Period")
-                        .HasMaxLength(7)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ItemKey")
-                        .HasMaxLength(40)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTimeOffset>("CheckedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("CheckedBy")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Note")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Period", "ItemKey");
-
-                    b.ToTable("ReviewMarks", (string)null);
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Ai.AiJournalRecord", b =>

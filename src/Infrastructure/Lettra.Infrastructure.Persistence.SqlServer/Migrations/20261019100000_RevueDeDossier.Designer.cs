@@ -4,16 +4,16 @@ using System.Collections.Generic;
 using Lettra.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
+namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
 {
     [DbContext(typeof(LettraDbContext))]
-    [Migration("20261019060000_RevueDeDossier")]
+    [Migration("20261019100000_RevueDeDossier")]
     partial class RevueDeDossier
     {
         /// <inheritdoc />
@@ -22,78 +22,78 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "10.0.13")
-                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
             modelBuilder.Entity("Lettra.Domain.Billing.CompanyProfile", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Bic")
                         .HasMaxLength(11)
-                        .HasColumnType("character varying(11)");
+                        .HasColumnType("nvarchar(11)");
 
                     b.Property<string>("EarlyPaymentDiscount")
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Iban")
                         .HasMaxLength(34)
-                        .HasColumnType("character varying(34)");
+                        .HasColumnType("nvarchar(34)");
 
                     b.Property<decimal?>("LatePenaltyRate")
                         .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("LegalForm")
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<int>("PaymentDays")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("PaymentTerms")
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Rcs")
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<decimal?>("ShareCapital")
                         .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("Siren")
                         .HasMaxLength(9)
-                        .HasColumnType("character varying(9)");
+                        .HasColumnType("nvarchar(9)");
 
                     b.Property<string>("Siret")
                         .HasMaxLength(14)
-                        .HasColumnType("character varying(14)");
+                        .HasColumnType("nvarchar(14)");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<int?>("VatDeclarationRegime")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<bool>("VatFranchise")
-                        .HasColumnType("boolean");
+                        .HasColumnType("bit");
 
                     b.Property<string>("VatNumber")
                         .HasMaxLength(15)
-                        .HasColumnType("character varying(15)");
+                        .HasColumnType("nvarchar(15)");
 
                     b.Property<bool>("VatOnDebits")
-                        .HasColumnType("boolean");
+                        .HasColumnType("bit");
 
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
@@ -106,30 +106,30 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                             b1.Property<string>("City")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("City");
 
                             b1.Property<string>("Country")
                                 .IsRequired()
                                 .HasMaxLength(2)
-                                .HasColumnType("character varying(2)")
+                                .HasColumnType("nvarchar(2)")
                                 .HasColumnName("Country");
 
                             b1.Property<string>("Line1")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("AddressLine1");
 
                             b1.Property<string>("Line2")
                                 .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("AddressLine2");
 
                             b1.Property<string>("PostalCode")
                                 .IsRequired()
                                 .HasMaxLength(16)
-                                .HasColumnType("character varying(16)")
+                                .HasColumnType("nvarchar(16)")
                                 .HasColumnName("PostalCode");
                         });
 
@@ -141,141 +141,141 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
             modelBuilder.Entity("Lettra.Domain.Billing.Invoice", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ContentHash")
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset?>("CreditApprovedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid?>("CreditApprovedBy")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("CreditReason")
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<decimal>("CreditedInclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<Guid?>("CreditedInvoiceId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("CreditedInvoiceNumber")
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<Guid>("CustomerId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("DeliveryAddress")
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<DateOnly?>("DeliveryDate")
                         .HasColumnType("date");
 
                     b.Property<Guid?>("DeviceId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateOnly?>("DueDate")
                         .HasColumnType("date");
 
                     b.Property<string>("EarlyPaymentDiscount")
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<DateOnly?>("IssueDate")
                         .HasColumnType("date");
 
                     b.Property<DateTimeOffset?>("IssuedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid?>("IssuedBy")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Kind")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<Guid>("LastModifiedBy")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal?>("LatePenaltyRate")
                         .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("LegalMentions")
                         .IsRequired()
                         .HasMaxLength(4000)
-                        .HasColumnType("character varying(4000)");
+                        .HasColumnType("nvarchar(4000)");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(4000)
-                        .HasColumnType("character varying(4000)");
+                        .HasColumnType("nvarchar(4000)");
 
                     b.Property<string>("Number")
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<string>("PaymentTerms")
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("PurchaseOrderReference")
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<Guid?>("QuoteId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("QuoteNumber")
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<string>("SeriesCode")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<int>("Status")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("Subject")
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<decimal>("TotalExclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("TotalInclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("TotalVat")
                         .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<DateTimeOffset?>("ValidatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid?>("ValidatedBy")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("VatRegime")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
@@ -288,70 +288,70 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                             b1.Property<string>("AddressLine1")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("CustomerAddressLine1");
 
                             b1.Property<string>("AddressLine2")
                                 .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("CustomerAddressLine2");
 
                             b1.Property<string>("City")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("CustomerCity");
 
                             b1.Property<string>("CountryCode")
                                 .IsRequired()
                                 .HasMaxLength(2)
-                                .HasColumnType("character varying(2)")
+                                .HasColumnType("nvarchar(2)")
                                 .HasColumnName("CustomerCountry");
 
                             b1.Property<bool>("IsBusiness")
-                                .HasColumnType("boolean")
+                                .HasColumnType("bit")
                                 .HasColumnName("CustomerIsBusiness");
 
                             b1.Property<string>("LegalForm")
                                 .HasMaxLength(100)
-                                .HasColumnType("character varying(100)")
+                                .HasColumnType("nvarchar(100)")
                                 .HasColumnName("CustomerLegalForm");
 
                             b1.Property<string>("Name")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("CustomerName");
 
                             b1.Property<string>("PostalCode")
                                 .IsRequired()
                                 .HasMaxLength(16)
-                                .HasColumnType("character varying(16)")
+                                .HasColumnType("nvarchar(16)")
                                 .HasColumnName("CustomerPostalCode");
 
                             b1.Property<string>("Rcs")
                                 .HasMaxLength(100)
-                                .HasColumnType("character varying(100)")
+                                .HasColumnType("nvarchar(100)")
                                 .HasColumnName("CustomerRcs");
 
                             b1.Property<decimal?>("ShareCapital")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("numeric(18,4)")
+                                .HasColumnType("decimal(18,4)")
                                 .HasColumnName("CustomerShareCapital");
 
                             b1.Property<string>("Siren")
                                 .HasMaxLength(9)
-                                .HasColumnType("character varying(9)")
+                                .HasColumnType("nvarchar(9)")
                                 .HasColumnName("CustomerSiren");
 
                             b1.Property<string>("Siret")
                                 .HasMaxLength(14)
-                                .HasColumnType("character varying(14)")
+                                .HasColumnType("nvarchar(14)")
                                 .HasColumnName("CustomerSiret");
 
                             b1.Property<string>("VatNumber")
                                 .HasMaxLength(15)
-                                .HasColumnType("character varying(15)")
+                                .HasColumnType("nvarchar(15)")
                                 .HasColumnName("CustomerVatNumber");
                         });
 
@@ -360,70 +360,70 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                             b1.Property<string>("AddressLine1")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("SellerAddressLine1");
 
                             b1.Property<string>("AddressLine2")
                                 .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("SellerAddressLine2");
 
                             b1.Property<string>("City")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("SellerCity");
 
                             b1.Property<string>("CountryCode")
                                 .IsRequired()
                                 .HasMaxLength(2)
-                                .HasColumnType("character varying(2)")
+                                .HasColumnType("nvarchar(2)")
                                 .HasColumnName("SellerCountry");
 
                             b1.Property<bool>("IsBusiness")
-                                .HasColumnType("boolean")
+                                .HasColumnType("bit")
                                 .HasColumnName("SellerIsBusiness");
 
                             b1.Property<string>("LegalForm")
                                 .HasMaxLength(100)
-                                .HasColumnType("character varying(100)")
+                                .HasColumnType("nvarchar(100)")
                                 .HasColumnName("SellerLegalForm");
 
                             b1.Property<string>("Name")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("SellerName");
 
                             b1.Property<string>("PostalCode")
                                 .IsRequired()
                                 .HasMaxLength(16)
-                                .HasColumnType("character varying(16)")
+                                .HasColumnType("nvarchar(16)")
                                 .HasColumnName("SellerPostalCode");
 
                             b1.Property<string>("Rcs")
                                 .HasMaxLength(100)
-                                .HasColumnType("character varying(100)")
+                                .HasColumnType("nvarchar(100)")
                                 .HasColumnName("SellerRcs");
 
                             b1.Property<decimal?>("ShareCapital")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("numeric(18,4)")
+                                .HasColumnType("decimal(18,4)")
                                 .HasColumnName("SellerShareCapital");
 
                             b1.Property<string>("Siren")
                                 .HasMaxLength(9)
-                                .HasColumnType("character varying(9)")
+                                .HasColumnType("nvarchar(9)")
                                 .HasColumnName("SellerSiren");
 
                             b1.Property<string>("Siret")
                                 .HasMaxLength(14)
-                                .HasColumnType("character varying(14)")
+                                .HasColumnType("nvarchar(14)")
                                 .HasColumnName("SellerSiret");
 
                             b1.Property<string>("VatNumber")
                                 .HasMaxLength(15)
-                                .HasColumnType("character varying(15)")
+                                .HasColumnType("nvarchar(15)")
                                 .HasColumnName("SellerVatNumber");
                         });
 
@@ -440,7 +440,8 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.HasIndex("Kind", "Status");
 
                     b.HasIndex("SeriesCode", "Number")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[Number] IS NOT NULL");
 
                     b.ToTable("Invoices", (string)null);
                 });
@@ -448,84 +449,84 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
             modelBuilder.Entity("Lettra.Domain.Billing.Quote", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("CustomerId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("DeviceId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("DownPaymentsInclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<Guid?>("FinalInvoiceId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateOnly?>("IssueDate")
                         .HasColumnType("date");
 
                     b.Property<Guid>("LastModifiedBy")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("LegalMentions")
                         .IsRequired()
                         .HasMaxLength(4000)
-                        .HasColumnType("character varying(4000)");
+                        .HasColumnType("nvarchar(4000)");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(4000)
-                        .HasColumnType("character varying(4000)");
+                        .HasColumnType("nvarchar(4000)");
 
                     b.Property<string>("Number")
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<string>("SeriesCode")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<int>("Status")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("Subject")
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<decimal>("TotalExclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("TotalInclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("TotalVat")
                         .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<DateOnly?>("ValidUntil")
                         .HasColumnType("date");
 
                     b.Property<DateTimeOffset?>("ValidatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid?>("ValidatedBy")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("VatRegime")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
@@ -538,70 +539,70 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                             b1.Property<string>("AddressLine1")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("CustomerAddressLine1");
 
                             b1.Property<string>("AddressLine2")
                                 .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("CustomerAddressLine2");
 
                             b1.Property<string>("City")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("CustomerCity");
 
                             b1.Property<string>("CountryCode")
                                 .IsRequired()
                                 .HasMaxLength(2)
-                                .HasColumnType("character varying(2)")
+                                .HasColumnType("nvarchar(2)")
                                 .HasColumnName("CustomerCountry");
 
                             b1.Property<bool>("IsBusiness")
-                                .HasColumnType("boolean")
+                                .HasColumnType("bit")
                                 .HasColumnName("CustomerIsBusiness");
 
                             b1.Property<string>("LegalForm")
                                 .HasMaxLength(100)
-                                .HasColumnType("character varying(100)")
+                                .HasColumnType("nvarchar(100)")
                                 .HasColumnName("CustomerLegalForm");
 
                             b1.Property<string>("Name")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("CustomerName");
 
                             b1.Property<string>("PostalCode")
                                 .IsRequired()
                                 .HasMaxLength(16)
-                                .HasColumnType("character varying(16)")
+                                .HasColumnType("nvarchar(16)")
                                 .HasColumnName("CustomerPostalCode");
 
                             b1.Property<string>("Rcs")
                                 .HasMaxLength(100)
-                                .HasColumnType("character varying(100)")
+                                .HasColumnType("nvarchar(100)")
                                 .HasColumnName("CustomerRcs");
 
                             b1.Property<decimal?>("ShareCapital")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("numeric(18,4)")
+                                .HasColumnType("decimal(18,4)")
                                 .HasColumnName("CustomerShareCapital");
 
                             b1.Property<string>("Siren")
                                 .HasMaxLength(9)
-                                .HasColumnType("character varying(9)")
+                                .HasColumnType("nvarchar(9)")
                                 .HasColumnName("CustomerSiren");
 
                             b1.Property<string>("Siret")
                                 .HasMaxLength(14)
-                                .HasColumnType("character varying(14)")
+                                .HasColumnType("nvarchar(14)")
                                 .HasColumnName("CustomerSiret");
 
                             b1.Property<string>("VatNumber")
                                 .HasMaxLength(15)
-                                .HasColumnType("character varying(15)")
+                                .HasColumnType("nvarchar(15)")
                                 .HasColumnName("CustomerVatNumber");
                         });
 
@@ -614,7 +615,8 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.HasIndex("Status");
 
                     b.HasIndex("SeriesCode", "Number")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[Number] IS NOT NULL");
 
                     b.ToTable("Quotes", (string)null);
                 });
@@ -622,59 +624,59 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
             modelBuilder.Entity("Lettra.Domain.Catalog.CatalogItem", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Description")
                         .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
+                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<string>("Designation")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<bool>("IsArchived")
-                        .HasColumnType("boolean");
+                        .HasColumnType("bit");
 
                     b.Property<int>("Kind")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("Reference")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("ReferenceKey")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("SearchKey")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(400)
-                        .HasColumnType("character varying(400)")
+                        .HasColumnType("nvarchar(400)")
                         .HasDefaultValue("");
 
                     b.Property<string>("Unit")
                         .IsRequired()
                         .HasMaxLength(3)
-                        .HasColumnType("character varying(3)");
+                        .HasColumnType("nvarchar(3)");
 
                     b.Property<decimal>("UnitPriceExclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("VatRate")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
@@ -700,39 +702,39 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.Property<string>("ContentHash")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("Currency")
                         .HasMaxLength(3)
-                        .HasColumnType("character varying(3)");
+                        .HasColumnType("nvarchar(3)");
 
                     b.Property<Guid?>("CustomerId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("DocumentId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int?>("DocumentKind")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("Hash")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<DateOnly?>("IssueDate")
                         .HasColumnType("date");
 
                     b.Property<string>("KeyId")
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<int>("Kind")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("Number")
                         .HasMaxLength(40)
-                        .HasColumnType("character varying(40)");
+                        .HasColumnType("nvarchar(40)");
 
                     b.Property<long>("OccurredAt")
                         .HasColumnType("bigint");
@@ -740,31 +742,31 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.Property<string>("PreviousHash")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<Guid?>("RelatedDocumentId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Seal")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("SeriesCode")
                         .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<decimal>("TotalExclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("TotalInclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("TotalVat")
                         .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.HasKey("Sequence");
 
@@ -778,14 +780,14 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
             modelBuilder.Entity("Lettra.Domain.Integrity.PeriodClosing", b =>
                 {
                     b.Property<int>("Number")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<long>("ClosedAt")
                         .HasColumnType("bigint");
 
                     b.Property<decimal>("CumulativeInclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<long>("FirstSequence")
                         .HasColumnType("bigint");
@@ -793,17 +795,17 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.Property<string>("Hash")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("KeyId")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<string>("LastEntryHash")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<long>("LastSequence")
                         .HasColumnType("bigint");
@@ -812,7 +814,7 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .HasColumnType("date");
 
                     b.Property<int>("PeriodKind")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<DateOnly>("PeriodStart")
                         .HasColumnType("date");
@@ -820,29 +822,29 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.Property<string>("PreviousClosingHash")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("PublicKey")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("Signature")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<decimal>("TotalExclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("TotalInclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("TotalVat")
                         .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.HasKey("Number");
 
@@ -852,45 +854,45 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
             modelBuilder.Entity("Lettra.Domain.Parties.Customer", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Email")
                         .HasMaxLength(254)
-                        .HasColumnType("character varying(254)");
+                        .HasColumnType("nvarchar(254)");
 
                     b.Property<int>("Kind")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("PreferredLanguage")
                         .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<string>("SearchKey")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(400)
-                        .HasColumnType("character varying(400)")
+                        .HasColumnType("nvarchar(400)")
                         .HasDefaultValue("");
 
                     b.Property<string>("Siren")
                         .HasMaxLength(9)
-                        .HasColumnType("character varying(9)");
+                        .HasColumnType("nvarchar(9)");
 
                     b.Property<string>("Siret")
                         .HasMaxLength(14)
-                        .HasColumnType("character varying(14)");
+                        .HasColumnType("nvarchar(14)");
 
                     b.Property<string>("VatNumber")
                         .HasMaxLength(15)
-                        .HasColumnType("character varying(15)");
+                        .HasColumnType("nvarchar(15)");
 
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
@@ -903,30 +905,30 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                             b1.Property<string>("City")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("BillingCity");
 
                             b1.Property<string>("Country")
                                 .IsRequired()
                                 .HasMaxLength(2)
-                                .HasColumnType("character varying(2)")
+                                .HasColumnType("nvarchar(2)")
                                 .HasColumnName("BillingCountry");
 
                             b1.Property<string>("Line1")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("BillingLine1");
 
                             b1.Property<string>("Line2")
                                 .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("BillingLine2");
 
                             b1.Property<string>("PostalCode")
                                 .IsRequired()
                                 .HasMaxLength(16)
-                                .HasColumnType("character varying(16)")
+                                .HasColumnType("nvarchar(16)")
                                 .HasColumnName("BillingPostalCode");
                         });
 
@@ -944,42 +946,42 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
             modelBuilder.Entity("Lettra.Domain.Parties.Supplier", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Email")
                         .HasMaxLength(254)
-                        .HasColumnType("character varying(254)");
+                        .HasColumnType("nvarchar(254)");
 
                     b.Property<string>("Iban")
                         .HasMaxLength(34)
-                        .HasColumnType("character varying(34)");
+                        .HasColumnType("nvarchar(34)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("SearchKey")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(400)
-                        .HasColumnType("character varying(400)")
+                        .HasColumnType("nvarchar(400)")
                         .HasDefaultValue("");
 
                     b.Property<string>("Siren")
                         .HasMaxLength(9)
-                        .HasColumnType("character varying(9)");
+                        .HasColumnType("nvarchar(9)");
 
                     b.Property<string>("Siret")
                         .HasMaxLength(14)
-                        .HasColumnType("character varying(14)");
+                        .HasColumnType("nvarchar(14)");
 
                     b.Property<string>("VatNumber")
                         .HasMaxLength(15)
-                        .HasColumnType("character varying(15)");
+                        .HasColumnType("nvarchar(15)");
 
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
@@ -992,30 +994,30 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                             b1.Property<string>("City")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("City");
 
                             b1.Property<string>("Country")
                                 .IsRequired()
                                 .HasMaxLength(2)
-                                .HasColumnType("character varying(2)")
+                                .HasColumnType("nvarchar(2)")
                                 .HasColumnName("Country");
 
                             b1.Property<string>("Line1")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("AddressLine1");
 
                             b1.Property<string>("Line2")
                                 .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("AddressLine2");
 
                             b1.Property<string>("PostalCode")
                                 .IsRequired()
                                 .HasMaxLength(16)
-                                .HasColumnType("character varying(16)")
+                                .HasColumnType("nvarchar(16)")
                                 .HasColumnName("PostalCode");
                         });
 
@@ -1033,15 +1035,15 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
             modelBuilder.Entity("Lettra.Domain.Pricing.PriceList", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
@@ -1056,21 +1058,21 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                 {
                     b.Property<string>("Period")
                         .HasMaxLength(7)
-                        .HasColumnType("character varying(7)");
+                        .HasColumnType("nvarchar(7)");
 
                     b.Property<string>("ItemKey")
                         .HasMaxLength(40)
-                        .HasColumnType("character varying(40)");
+                        .HasColumnType("nvarchar(40)");
 
                     b.Property<DateTimeOffset>("CheckedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("CheckedBy")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Note")
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("nvarchar(500)");
 
                     b.HasKey("Period", "ItemKey");
 
@@ -1083,24 +1085,24 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<DateTimeOffset>("At")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Detail")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Engine")
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<int>("Kind")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -1110,27 +1112,27 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Billing.SalesJournalLineRecord", b =>
                 {
                     b.Property<Guid>("EntryId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("LineNumber")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("Account")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<decimal>("Credit")
                         .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("Debit")
                         .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal?>("VatRatePercent")
                         .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.HasKey("EntryId", "LineNumber");
 
@@ -1140,26 +1142,26 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Billing.SalesJournalRecord", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("CustomerId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("CustomerName")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
 
                     b.Property<Guid>("InvoiceId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("PieceNumber")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("nvarchar(32)");
 
                     b.HasKey("Id");
 
@@ -1174,24 +1176,24 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.EInvoicing.PlatformStatusEventRecord", b =>
                 {
                     b.Property<Guid>("TransmissionId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Sequence")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<decimal?>("Amount")
                         .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<long>("AtMs")
                         .HasColumnType("bigint");
 
                     b.Property<string>("Reason")
                         .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<int>("Status")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.HasKey("TransmissionId", "Sequence");
 
@@ -1201,37 +1203,37 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.EInvoicing.PlatformTransmissionRecord", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Channel")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<int?>("Format")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<Guid>("InvoiceId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("InvoiceNumber")
                         .IsRequired()
                         .HasMaxLength(40)
-                        .HasColumnType("character varying(40)");
+                        .HasColumnType("nvarchar(40)");
 
                     b.Property<string>("Platform")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Reference")
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<long>("SubmittedAtMs")
                         .HasColumnType("bigint");
 
                     b.Property<decimal>("TotalInclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.HasKey("Id");
 
@@ -1243,12 +1245,12 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Integrity.IntegrityChainHead", b =>
                 {
                     b.Property<int>("Id")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<string>("LastHash")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<long>("LastSequence")
                         .HasColumnType("bigint");
@@ -1274,7 +1276,7 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Integrity.StoredIntegrityKey", b =>
                 {
                     b.Property<int>("Version")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<long>("CreatedAt")
                         .HasColumnType("bigint");
@@ -1282,17 +1284,17 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.Property<string>("KeyId")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<string>("PublicKey")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<byte[]>("WrappedSecret")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("bytea");
+                        .HasColumnType("varbinary(128)");
 
                     b.HasKey("Version");
 
@@ -1306,7 +1308,7 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                 {
                     b.Property<string>("Code")
                         .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<long>("Next")
                         .HasColumnType("bigint");
@@ -1314,7 +1316,7 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.Property<string>("Prefix")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
@@ -1328,10 +1330,10 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Outbox.OutboxRecord", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Attempts")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<long?>("DeliveredAtMs")
                         .HasColumnType("bigint");
@@ -1342,19 +1344,19 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.Property<string>("IdempotencyKey")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Kind")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("LastError")
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<Guid?>("LeaseOwner")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<long?>("LeaseUntilMs")
                         .HasColumnType("bigint");
@@ -1367,7 +1369,7 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
 
                     b.Property<string>("Payload")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -1383,18 +1385,18 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                 {
                     b.Property<string>("Code")
                         .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<string>("BaseSeries")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<long?>("ClosedAtMs")
                         .HasColumnType("bigint");
 
                     b.Property<Guid>("DeviceId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<long>("OpenedAtMs")
                         .HasColumnType("bigint");
@@ -1412,36 +1414,36 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<string>("BaseValue")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<long>("DetectedAtMs")
                         .HasColumnType("bigint");
 
                     b.Property<int>("Entity")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<Guid>("EntityId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Field")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<Guid>("IdempotencyKey")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("MineValue")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ServerValue")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -1453,7 +1455,7 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.SyncDeviceRecord", b =>
                 {
                     b.Property<Guid>("DeviceId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<long>("FirstSeenAtMs")
                         .HasColumnType("bigint");
@@ -1462,13 +1464,13 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<Guid?>("LastUserId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<long?>("RevokedAtMs")
                         .HasColumnType("bigint");
 
                     b.Property<Guid?>("RevokedBy")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<long?>("WipedAtMs")
                         .HasColumnType("bigint");
@@ -1484,16 +1486,16 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Sequence"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Sequence"));
 
                     b.Property<long>("ChangedAtMs")
                         .HasColumnType("bigint");
 
                     b.Property<int>("Entity")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<Guid>("EntityId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Sequence");
 
@@ -1508,33 +1510,33 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Sequence"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Sequence"));
 
                     b.Property<long?>("AcknowledgedAtMs")
                         .HasColumnType("bigint");
 
                     b.Property<string>("Detail")
                         .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<int>("Entity")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<Guid>("EntityId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("IdempotencyKey")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Payload")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<long>("RecordedAtMs")
                         .HasColumnType("bigint");
 
                     b.Property<int>("Status")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.HasKey("Sequence");
 
@@ -1549,10 +1551,10 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.SyncReceiptRecord", b =>
                 {
                     b.Property<Guid>("IdempotencyKey")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("DeviceId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<long>("ReceivedAtMs")
                         .HasColumnType("bigint");
@@ -1560,11 +1562,11 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.Property<string>("RequestHash")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("Result")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("IdempotencyKey");
 
@@ -1575,24 +1577,24 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                 {
                     b.Property<string>("Number")
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<long?>("ConsumedAtMs")
                         .HasColumnType("bigint");
 
                     b.Property<Guid>("DeviceId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<long>("ReleasedAtMs")
                         .HasColumnType("bigint");
 
                     b.Property<Guid>("ReleasedBy")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("SeriesCode")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
+                        .HasColumnType("nvarchar(16)");
 
                     b.HasKey("Number");
 
@@ -1605,12 +1607,12 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                 {
                     b.Property<string>("Key")
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("Key");
 
@@ -1620,16 +1622,16 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Tenancy.DossierStamp", b =>
                 {
                     b.Property<int>("Id")
-                        .HasColumnType("integer");
+                        .HasColumnType("int");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("DossierId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("OrganisationId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -1641,68 +1643,68 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.OwnsMany("Lettra.Domain.Billing.DocumentLine", "Lines", b1 =>
                         {
                             b1.Property<Guid>("DocumentId")
-                                .HasColumnType("uuid");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<int>("Position")
-                                .HasColumnType("integer");
+                                .HasColumnType("int");
 
                             b1.Property<Guid?>("CatalogItemId")
-                                .HasColumnType("uuid");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("Description")
                                 .HasMaxLength(2000)
-                                .HasColumnType("character varying(2000)");
+                                .HasColumnType("nvarchar(2000)");
 
                             b1.Property<string>("Designation")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("character varying(200)");
+                                .HasColumnType("nvarchar(200)");
 
                             b1.Property<decimal>("DiscountPercent")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("numeric(18,4)");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<int>("Nature")
-                                .HasColumnType("integer");
+                                .HasColumnType("int");
 
                             b1.Property<decimal>("Quantity")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("numeric(18,4)");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<string>("Reference")
                                 .HasMaxLength(50)
-                                .HasColumnType("character varying(50)");
+                                .HasColumnType("nvarchar(50)");
 
                             b1.Property<decimal>("TotalExclTax")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("numeric(18,4)");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<string>("UnitCode")
                                 .IsRequired()
                                 .HasMaxLength(3)
-                                .HasColumnType("character varying(3)");
+                                .HasColumnType("nvarchar(3)");
 
                             b1.Property<decimal>("UnitPriceExclTax")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("numeric(18,4)");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<string>("VatCategory")
                                 .IsRequired()
                                 .HasMaxLength(2)
-                                .HasColumnType("character varying(2)");
+                                .HasColumnType("nvarchar(2)");
 
                             b1.Property<string>("VatExemptionCode")
                                 .HasMaxLength(30)
-                                .HasColumnType("character varying(30)");
+                                .HasColumnType("nvarchar(30)");
 
                             b1.Property<string>("VatRateCode")
                                 .IsRequired()
                                 .HasMaxLength(10)
-                                .HasColumnType("character varying(10)");
+                                .HasColumnType("nvarchar(10)");
 
                             b1.Property<decimal>("VatRatePercent")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("numeric(18,4)");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.HasKey("DocumentId", "Position");
 
@@ -1715,27 +1717,27 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.OwnsMany("Lettra.Domain.Billing.VatSummary", "VatSummaries", b1 =>
                         {
                             b1.Property<Guid>("DocumentId")
-                                .HasColumnType("uuid");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("Category")
                                 .HasMaxLength(2)
-                                .HasColumnType("character varying(2)");
+                                .HasColumnType("nvarchar(2)");
 
                             b1.Property<decimal>("RatePercent")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("numeric(18,4)");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<decimal>("BaseExclTax")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("numeric(18,4)");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<string>("ExemptionCode")
                                 .HasMaxLength(30)
-                                .HasColumnType("character varying(30)");
+                                .HasColumnType("nvarchar(30)");
 
                             b1.Property<decimal>("VatAmount")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("numeric(18,4)");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.HasKey("DocumentId", "Category", "RatePercent");
 
@@ -1755,68 +1757,68 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.OwnsMany("Lettra.Domain.Billing.DocumentLine", "Lines", b1 =>
                         {
                             b1.Property<Guid>("DocumentId")
-                                .HasColumnType("uuid");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<int>("Position")
-                                .HasColumnType("integer");
+                                .HasColumnType("int");
 
                             b1.Property<Guid?>("CatalogItemId")
-                                .HasColumnType("uuid");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("Description")
                                 .HasMaxLength(2000)
-                                .HasColumnType("character varying(2000)");
+                                .HasColumnType("nvarchar(2000)");
 
                             b1.Property<string>("Designation")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("character varying(200)");
+                                .HasColumnType("nvarchar(200)");
 
                             b1.Property<decimal>("DiscountPercent")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("numeric(18,4)");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<int>("Nature")
-                                .HasColumnType("integer");
+                                .HasColumnType("int");
 
                             b1.Property<decimal>("Quantity")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("numeric(18,4)");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<string>("Reference")
                                 .HasMaxLength(50)
-                                .HasColumnType("character varying(50)");
+                                .HasColumnType("nvarchar(50)");
 
                             b1.Property<decimal>("TotalExclTax")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("numeric(18,4)");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<string>("UnitCode")
                                 .IsRequired()
                                 .HasMaxLength(3)
-                                .HasColumnType("character varying(3)");
+                                .HasColumnType("nvarchar(3)");
 
                             b1.Property<decimal>("UnitPriceExclTax")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("numeric(18,4)");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<string>("VatCategory")
                                 .IsRequired()
                                 .HasMaxLength(2)
-                                .HasColumnType("character varying(2)");
+                                .HasColumnType("nvarchar(2)");
 
                             b1.Property<string>("VatExemptionCode")
                                 .HasMaxLength(30)
-                                .HasColumnType("character varying(30)");
+                                .HasColumnType("nvarchar(30)");
 
                             b1.Property<string>("VatRateCode")
                                 .IsRequired()
                                 .HasMaxLength(10)
-                                .HasColumnType("character varying(10)");
+                                .HasColumnType("nvarchar(10)");
 
                             b1.Property<decimal>("VatRatePercent")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("numeric(18,4)");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.HasKey("DocumentId", "Position");
 
@@ -1829,27 +1831,27 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.OwnsMany("Lettra.Domain.Billing.VatSummary", "VatSummaries", b1 =>
                         {
                             b1.Property<Guid>("DocumentId")
-                                .HasColumnType("uuid");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("Category")
                                 .HasMaxLength(2)
-                                .HasColumnType("character varying(2)");
+                                .HasColumnType("nvarchar(2)");
 
                             b1.Property<decimal>("RatePercent")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("numeric(18,4)");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<decimal>("BaseExclTax")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("numeric(18,4)");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<string>("ExemptionCode")
                                 .HasMaxLength(30)
-                                .HasColumnType("character varying(30)");
+                                .HasColumnType("nvarchar(30)");
 
                             b1.Property<decimal>("VatAmount")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("numeric(18,4)");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.HasKey("DocumentId", "Category", "RatePercent");
 
@@ -1869,10 +1871,10 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.OwnsMany("Lettra.Domain.Pricing.PriceListCustomer", "Customers", b1 =>
                         {
                             b1.Property<Guid>("PriceListId")
-                                .HasColumnType("uuid");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<Guid>("CustomerId")
-                                .HasColumnType("uuid");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.HasKey("PriceListId", "CustomerId");
 
@@ -1888,18 +1890,18 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.OwnsMany("Lettra.Domain.Pricing.PriceListEntry", "Entries", b1 =>
                         {
                             b1.Property<Guid>("PriceListId")
-                                .HasColumnType("uuid");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<Guid>("CatalogItemId")
-                                .HasColumnType("uuid");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<decimal?>("DiscountPercent")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("numeric(18,4)");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<decimal?>("UnitPriceExclTax")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("numeric(18,4)");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.HasKey("PriceListId", "CatalogItemId");
 

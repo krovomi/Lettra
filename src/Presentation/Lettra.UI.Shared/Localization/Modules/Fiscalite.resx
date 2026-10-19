@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.Tax" xml:space="preserve"><value>Déclarations</value></data>
+  <data name="Tax.Vat.Tab" xml:space="preserve"><value>TVA</value></data>
+  <data name="Tax.Des.Tab" xml:space="preserve"><value>DES</value></data>
+  <data name="Tax.Calendar.Tab" xml:space="preserve"><value>Calendrier fiscal</value></data>
+  <data name="Tax.Settings.Tab" xml:space="preserve"><value>Réglages fiscaux</value></data>
+  <data name="Tax.Vat.Title" xml:space="preserve"><value>Déclaration de TVA</value></data>
+  <data name="Tax.Vat.Subtitle" xml:space="preserve"><value>Brouillon de la partie ventes, calculé à partir des pièces validées. Rien n'est envoyé à l'administration.</value></data>
+  <data name="Tax.Period.Previous" xml:space="preserve"><value>Période précédente</value></data>
+  <data name="Tax.Period.Next" xml:space="preserve"><value>Période suivante</value></data>
+  <data name="Tax.Period.Quarter" xml:space="preserve"><value>{0}e trimestre {1}</value></data>
+  <data name="Tax.Period.Range" xml:space="preserve"><value>Du {0} au {1}</value></data>
+  <data name="Tax.Form.Ca3" xml:space="preserve"><value>CA3 (n° 3310-CA3-SD), régime réel normal</value></data>
+  <data name="Tax.Form.Ca12" xml:space="preserve"><value>CA12 annuelle (n° 3517-S-SD), régime réel simplifié</value></data>
+  <data name="Tax.DueOn" xml:space="preserve"><value>À déposer au plus tard le {0}.</value></data>
+  <data name="Tax.Filed.On" xml:space="preserve"><value>Marquée déposée le {0}.</value></data>
+  <data name="Tax.Filed.Mark" xml:space="preserve"><value>Marquer comme déposée</value></data>
+  <data name="Tax.Filed.Undo" xml:space="preserve"><value>Annuler le dépôt</value></data>
+  <data name="Tax.Vat.Figures" xml:space="preserve"><value>Chiffres de la déclaration</value></data>
+  <data name="Tax.Box.GrossTotal" xml:space="preserve"><value>TVA brute due</value></data>
+  <data name="Tax.Box.DeductibleTotal" xml:space="preserve"><value>TVA déductible</value></data>
+  <data name="Tax.Vat.DeductibleNote" xml:space="preserve"><value>Achats pas encore suivis : à reporter vous-même.</value></data>
+  <data name="Tax.Box.Credit" xml:space="preserve"><value>Crédit de TVA</value></data>
+  <data name="Tax.Box.NetDue" xml:space="preserve"><value>TVA nette due</value></data>
+  <data name="Tax.Vat.NetNote" xml:space="preserve"><value>Avant TVA déductible.</value></data>
+  <data name="Tax.Vat.Boxes" xml:space="preserve"><value>Cases de la déclaration</value></data>
+  <data name="Tax.Vat.BoxesHint" xml:space="preserve"><value>Montants arrondis à l'euro, comme sur le formulaire. Ouvrez une case pour voir les pièces qui la composent, au centime.</value></data>
+  <data name="Tax.Section.Taxable" xml:space="preserve"><value>Opérations imposables</value></data>
+  <data name="Tax.Section.NonTaxable" xml:space="preserve"><value>Opérations non imposables</value></data>
+  <data name="Tax.Section.Gross" xml:space="preserve"><value>TVA brute par taux</value></data>
+  <data name="Tax.Section.Totals" xml:space="preserve"><value>Totaux</value></data>
+  <data name="Tax.Section.Excluded" xml:space="preserve"><value>Hors déclaration</value></data>
+  <data name="Tax.Box.Label" xml:space="preserve"><value>Case</value></data>
+  <data name="Tax.Box.Line" xml:space="preserve"><value>Ligne</value></data>
+  <data name="Tax.Box.LineUnknown" xml:space="preserve"><value>À reporter</value></data>
+  <data name="Tax.Box.Base" xml:space="preserve"><value>Base HT</value></data>
+  <data name="Tax.Box.Vat" xml:space="preserve"><value>TVA</value></data>
+  <data name="Tax.Box.Detail" xml:space="preserve"><value>Détail</value></data>
+  <data name="Tax.Box.Pieces" xml:space="preserve"><value>{0} pièce(s)</value></data>
+  <data name="Tax.Box.A1" xml:space="preserve"><value>Ventes, prestations de services</value></data>
+  <data name="Tax.Box.E1" xml:space="preserve"><value>Exportations hors UE</value></data>
+  <data name="Tax.Box.E2" xml:space="preserve"><value>Autres opérations non imposables (exonérations, autoliquidation, services intracommunautaires)</value></data>
+  <data name="Tax.Box.F2" xml:space="preserve"><value>Livraisons intracommunautaires à un assujetti</value></data>
+  <data name="Tax.Box.Rate20" xml:space="preserve"><value>Taux normal 20 %</value></data>
+  <data name="Tax.Box.Rate10" xml:space="preserve"><value>Taux intermédiaire 10 %</value></data>
+  <data name="Tax.Box.Rate55" xml:space="preserve"><value>Taux réduit 5,5 %</value></data>
+  <data name="Tax.Box.Rate21" xml:space="preserve"><value>Taux particulier 2,1 % (ligne à confirmer)</value></data>
+  <data name="Tax.Box.RateOther" xml:space="preserve"><value>Taux de {0} % (à vérifier)</value></data>
+  <data name="Tax.Box.OutOfScope" xml:space="preserve"><value>Franchise, hors champ et débours</value></data>
+  <data name="Tax.Installments.Title" xml:space="preserve"><value>Acomptes de la CA12</value></data>
+  <data name="Tax.Installments.Hint" xml:space="preserve"><value>Calculés sur la TVA des ventes de l'exercice précédent. Pas d'acompte quand elle est inférieure à 1 000 €.</value></data>
+  <data name="Tax.Installments.Number" xml:space="preserve"><value>Acompte</value></data>
+  <data name="Tax.Installments.Due" xml:space="preserve"><value>Échéance</value></data>
+  <data name="Tax.Installments.Amount" xml:space="preserve"><value>Montant</value></data>
+  <data name="Tax.Installments.Label" xml:space="preserve"><value>Acompte {0} ({1} %)</value></data>
+  <data name="Tax.Installments.Exempt" xml:space="preserve"><value>Dispensé</value></data>
+  <data name="Tax.Vat.Disclaimer" xml:space="preserve"><value>Correspondance des cases à faire relire par l'expert-comptable avant tout dépôt. Le dépôt se fait sur impots.gouv ou par votre partenaire EDI : Lettra ne transmet rien.</value></data>
+  <data name="Tax.Toast.Filed" xml:space="preserve"><value>Échéance marquée comme déposée.</value></data>
+  <data name="Tax.Toast.Unfiled" xml:space="preserve"><value>Marque de dépôt retirée.</value></data>
+  <data name="Tax.Toast.Downloaded" xml:space="preserve"><value>Fichier de la DES téléchargé.</value></data>
+  <data name="Tax.Toast.SettingsSaved" xml:space="preserve"><value>Réglages fiscaux enregistrés.</value></data>
+  <data name="Tax.Checks.Title" xml:space="preserve"><value>Contrôles avant dépôt</value></data>
+  <data name="Tax.Severity.Ok" xml:space="preserve"><value>Correct</value></data>
+  <data name="Tax.Severity.Warning" xml:space="preserve"><value>À vérifier</value></data>
+  <data name="Tax.Severity.Blocking" xml:space="preserve"><value>À corriger</value></data>
+  <data name="Tax.Check.JournalMatch.Ok" xml:space="preserve"><value>La TVA de la déclaration est celle du compte 44571 de la comptabilité ({0}).</value></data>
+  <data name="Tax.Check.JournalMatch.Blocking" xml:space="preserve"><value>Écart avec la comptabilité : le compte 44571 porte {0}, la déclaration {1}.</value></data>
+  <data name="Tax.Check.Drafts.Ok" xml:space="preserve"><value>Aucun brouillon de facture en attente.</value></data>
+  <data name="Tax.Check.Drafts.Warning" xml:space="preserve"><value>{2} brouillon(s) de facture créé(s) avant la fin de la période ne sont pas validés : ils ne sont pas dans la déclaration.</value></data>
+  <data name="Tax.Check.NotTransmitted.Ok" xml:space="preserve"><value>Toutes les factures à des professionnels français sont transmises à la plateforme.</value></data>
+  <data name="Tax.Check.NotTransmitted.Warning" xml:space="preserve"><value>{2} facture(s) à des professionnels français ne sont pas encore transmises à la plateforme agréée.</value></data>
+  <data name="Tax.Check.VatOnReceipts" xml:space="preserve"><value>{2} pièce(s) de services sans option pour les débits : leur TVA est due à l'encaissement. Comptée ici à la date de la facture tant que les encaissements ne sont pas suivis.</value></data>
+  <data name="Tax.Check.OtherRate" xml:space="preserve"><value>{2} pièce(s) à un taux sans ligne connue dans le formulaire : à ventiler à la main.</value></data>
+  <data name="Tax.Check.DeductibleMissing" xml:space="preserve"><value>La TVA déductible (achats, immobilisations) n'est pas encore calculée : reportez-la vous-même.</value></data>
+  <data name="Tax.Check.DesVatNumberMissing.Ok" xml:space="preserve"><value>Tous les clients de l'Union ont un numéro de TVA.</value></data>
+  <data name="Tax.Check.DesVatNumberMissing.Blocking" xml:space="preserve"><value>{2} pièce(s) pour un client de l'Union sans numéro de TVA : complétez sa fiche, la ligne ne peut pas être déclarée.</value></data>
+  <data name="Tax.Check.DesCustomerNotEu" xml:space="preserve"><value>{2} prestation(s) en autoliquidation pour un client hors de l'Union : pas de DES, vérifiez le régime de la pièce.</value></data>
+  <data name="Tax.Check.DesNegative" xml:space="preserve"><value>Un client a plus d'avoirs que de prestations ce mois-ci : la correction se déclare sur le mois d'origine.</value></data>
+  <data name="Tax.Sources.Empty" xml:space="preserve"><value>Aucune pièce.</value></data>
+  <data name="Tax.Sources.Piece" xml:space="preserve"><value>Pièce</value></data>
+  <data name="Tax.Sources.Date" xml:space="preserve"><value>Date</value></data>
+  <data name="Tax.Sources.Base" xml:space="preserve"><value>Base HT</value></data>
+  <data name="Tax.Sources.Vat" xml:space="preserve"><value>TVA</value></data>
+  <data name="Tax.Kind.Invoice" xml:space="preserve"><value>facture</value></data>
+  <data name="Tax.Kind.DownPayment" xml:space="preserve"><value>acompte</value></data>
+  <data name="Tax.Kind.CreditNote" xml:space="preserve"><value>avoir</value></data>
+  <data name="Tax.Setup.Tax.ProfileMissing.Title" xml:space="preserve"><value>Renseignez d'abord la fiche entreprise</value></data>
+  <data name="Tax.Setup.Tax.ProfileMissing.Text" xml:space="preserve"><value>Le régime de TVA de l'entreprise décide de la déclaration : CA3 ou CA12.</value></data>
+  <data name="Tax.Setup.Tax.RegimeMissing.Title" xml:space="preserve"><value>Choisissez le régime de déclaration de la TVA</value></data>
+  <data name="Tax.Setup.Tax.RegimeMissing.Text" xml:space="preserve"><value>Dans la fiche entreprise : réel normal (CA3), réel simplifié (CA12) ou mini-réel.</value></data>
+  <data name="Tax.Setup.Tax.VatFranchise.Title" xml:space="preserve"><value>Pas de déclaration de TVA</value></data>
+  <data name="Tax.Setup.Tax.VatFranchise.Text" xml:space="preserve"><value>L'entreprise est en franchise en base de TVA : elle ne collecte pas de TVA et ne dépose ni CA3 ni CA12.</value></data>
+  <data name="Tax.Setup.OpenCompany" xml:space="preserve"><value>Ouvrir la fiche entreprise</value></data>
+  <data name="Tax.Des.Title" xml:space="preserve"><value>Déclaration européenne de services</value></data>
+  <data name="Tax.Des.Subtitle" xml:space="preserve"><value>Prestations de services à des professionnels de l'Union, dont la TVA est due par le client.</value></data>
+  <data name="Tax.Des.Count" xml:space="preserve"><value>{0} client(s) à déclarer</value></data>
+  <data name="Tax.Des.Lines" xml:space="preserve"><value>Lignes de la déclaration</value></data>
+  <data name="Tax.Des.Download" xml:space="preserve"><value>Télécharger le fichier</value></data>
+  <data name="Tax.Des.Empty" xml:space="preserve"><value>Pas de DES ce mois-ci</value></data>
+  <data name="Tax.Des.EmptyText" xml:space="preserve"><value>Aucune prestation de services à un professionnel de l'Union n'est datée de ce mois.</value></data>
+  <data name="Tax.Des.Line" xml:space="preserve"><value>Ligne</value></data>
+  <data name="Tax.Des.VatNumber" xml:space="preserve"><value>N° de TVA du client</value></data>
+  <data name="Tax.Des.Amount" xml:space="preserve"><value>Montant HT</value></data>
+  <data name="Tax.Des.Disclaimer" xml:space="preserve"><value>Le fichier se dépose soi-même sur le service en ligne des douanes ; son format est à vérifier avant un premier dépôt réel.</value></data>
+  <data name="Tax.Calendar.Title" xml:space="preserve"><value>Calendrier fiscal</value></data>
+  <data name="Tax.Calendar.Subtitle" xml:space="preserve"><value>Les échéances du dossier, calculées à partir du régime de TVA et des réglages fiscaux.</value></data>
+  <data name="Tax.Calendar.Defaults" xml:space="preserve"><value>Réglages par défaut : clôture au 31 décembre, TVA au 15, IS et CFE. Vérifiez-les pour que le suivi des retards commence.</value></data>
+  <data name="Tax.Calendar.CheckSettings" xml:space="preserve"><value>Vérifier les réglages</value></data>
+  <data name="Tax.Calendar.Empty" xml:space="preserve"><value>Aucune échéance cette année</value></data>
+  <data name="Tax.Calendar.Open" xml:space="preserve"><value>Ouvrir</value></data>
+  <data name="Tax.Calendar.Disclaimer" xml:space="preserve"><value>Lettra rappelle la date la plus tôt possible ; votre espace professionnel impots.gouv donne la date exacte. Les échéances proches arrivent aussi au centre d'alertes.</value></data>
+  <data name="Tax.Obligation.VatReturnCa3" xml:space="preserve"><value>Déclaration de TVA (CA3)</value></data>
+  <data name="Tax.Obligation.VatReturnCa12" xml:space="preserve"><value>Déclaration annuelle de TVA (CA12)</value></data>
+  <data name="Tax.Obligation.VatInstallment" xml:space="preserve"><value>Acompte de TVA</value></data>
+  <data name="Tax.Obligation.Des" xml:space="preserve"><value>Déclaration européenne de services</value></data>
+  <data name="Tax.Obligation.Cfe" xml:space="preserve"><value>Cotisation foncière des entreprises</value></data>
+  <data name="Tax.Obligation.CorporateTaxInstallment" xml:space="preserve"><value>Acompte d'impôt sur les sociétés</value></data>
+  <data name="Tax.Obligation.CorporateTaxBalance" xml:space="preserve"><value>Solde de l'impôt sur les sociétés</value></data>
+  <data name="Tax.Obligation.TaxReturn" xml:space="preserve"><value>Liasse fiscale</value></data>
+  <data name="Tax.Note.VatDeadlineDay" xml:space="preserve"><value>Le {0} du mois, selon les réglages.</value></data>
+  <data name="Tax.Note.Ca12" xml:space="preserve"><value>Deuxième jour ouvré après le 1er mai.</value></data>
+  <data name="Tax.Note.Ca12NonCalendar" xml:space="preserve"><value>Trois mois après la clôture.</value></data>
+  <data name="Tax.Note.InstallmentUnknown" xml:space="preserve"><value>Montant inconnu : pas de pièce sur l'exercice précédent.</value></data>
+  <data name="Tax.Note.InstallmentExempt" xml:space="preserve"><value>Dispensé : TVA de l'exercice précédent inférieure à 1 000 €.</value></data>
+  <data name="Tax.Note.Installment55" xml:space="preserve"><value>55 % de la TVA de l'exercice précédent.</value></data>
+  <data name="Tax.Note.Installment40" xml:space="preserve"><value>40 % de la TVA de l'exercice précédent.</value></data>
+  <data name="Tax.Note.CorporateTaxThreshold" xml:space="preserve"><value>Pas d'acompte si l'IS de l'exercice précédent est inférieur à 3 000 €.</value></data>
+  <data name="Tax.Note.Des" xml:space="preserve"><value>Dixième jour ouvrable du mois.</value></data>
+  <data name="Tax.State.Upcoming" xml:space="preserve"><value>À venir</value></data>
+  <data name="Tax.State.DueSoon" xml:space="preserve"><value>Dans les 7 jours</value></data>
+  <data name="Tax.State.Overdue" xml:space="preserve"><value>En retard</value></data>
+  <data name="Tax.State.Filed" xml:space="preserve"><value>Déposée</value></data>
+  <data name="Tax.State.Exempt" xml:space="preserve"><value>Sans objet</value></data>
+  <data name="Tax.State.Past" xml:space="preserve"><value>Passée</value></data>
+  <data name="Tax.Regime.Franchise" xml:space="preserve"><value>Franchise en base de TVA</value></data>
+  <data name="Tax.Regime.Unknown" xml:space="preserve"><value>Régime de TVA non renseigné</value></data>
+  <data name="Tax.Settings.Title" xml:space="preserve"><value>Réglages fiscaux</value></data>
+  <data name="Tax.Settings.Subtitle" xml:space="preserve"><value>Ce qui fixe les dates du calendrier fiscal et des brouillons.</value></data>
+  <data name="Tax.Settings.FiscalYear" xml:space="preserve"><value>Exercice</value></data>
+  <data name="Tax.Settings.YearEndDay" xml:space="preserve"><value>Jour de clôture</value></data>
+  <data name="Tax.Settings.YearEndMonth" xml:space="preserve"><value>Mois de clôture</value></data>
+  <data name="Tax.Settings.FiscalYearHint" xml:space="preserve"><value>Le 31 décembre pour un exercice civil.</value></data>
+  <data name="Tax.Settings.Vat" xml:space="preserve"><value>TVA</value></data>
+  <data name="Tax.Settings.Periodicity" xml:space="preserve"><value>Rythme de la CA3</value></data>
+  <data name="Tax.Settings.DeadlineDay" xml:space="preserve"><value>Jour limite de la TVA</value></data>
+  <data name="Tax.Settings.DeadlineHint" xml:space="preserve"><value>Entre le 15 et le 24 selon l'entreprise : la date exacte est dans l'espace professionnel impots.gouv. 15 par défaut, la plus tôt.</value></data>
+  <data name="Tax.Settings.Other" xml:space="preserve"><value>Autres impôts</value></data>
+  <data name="Tax.Settings.CorporateIncomeTax" xml:space="preserve"><value>Soumise à l'impôt sur les sociétés (acomptes, solde, liasse)</value></data>
+  <data name="Tax.Settings.Cfe" xml:space="preserve"><value>Redevable de la CFE (15 décembre)</value></data>
+  <data name="Tax.Settings.RegimeHint" xml:space="preserve"><value>Le régime de TVA (CA3 ou CA12) se règle dans la fiche entreprise :</value></data>
+  <data name="Tax.Periodicity.Monthly" xml:space="preserve"><value>Mensuelle</value></data>
+  <data name="Tax.Periodicity.Quarterly" xml:space="preserve"><value>Trimestrielle (TVA annuelle sous 4 000 €)</value></data>
+  <data name="Error.Tax.ProfileMissing" xml:space="preserve"><value>Renseignez d'abord la fiche entreprise.</value></data>
+  <data name="Error.Tax.VatFranchise" xml:space="preserve"><value>L'entreprise est en franchise en base de TVA : pas de déclaration.</value></data>
+  <data name="Error.Tax.RegimeMissing" xml:space="preserve"><value>Choisissez le régime de déclaration de la TVA dans la fiche entreprise.</value></data>
+  <data name="Error.Tax.PeriodInvalid" xml:space="preserve"><value>Cette période n'est pas une période de déclaration.</value></data>
+  <data name="Error.Tax.FiscalYearEndInvalid" xml:space="preserve"><value>Cette date de clôture n'existe pas.</value></data>
+  <data name="Error.Tax.DeadlineDayInvalid" xml:space="preserve"><value>Le jour limite de la TVA est entre le 15 et le 24.</value></data>
+  <data name="Error.Tax.DeadlineUnknown" xml:space="preserve"><value>Cette échéance n'est pas dans le calendrier du dossier.</value></data>
+  <data name="Alerts.Rule.fiscal-echeance-proche" xml:space="preserve"><value>Échéance fiscale d'un dossier dans les 7 jours</value></data>
+  <data name="Alerts.Rule.fiscal-echeance-depassee" xml:space="preserve"><value>Échéance fiscale d'un dossier dépassée</value></data>
+</root>

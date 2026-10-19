@@ -72,12 +72,14 @@ internal sealed class InMemoryCustomers : ICustomerRepository, ICustomerReadStor
 
     public Task<PagedResponse<CustomerSummary>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken)
     {
-        List<CustomerSummary> items = Saved.Values
+        // Comme le stockage : un client supprimé n'est plus listé.
+        List<Customer> listed = [.. Saved.Values.Where(c => !c.IsArchived)];
+        List<CustomerSummary> items = listed
             .OrderBy(c => c.Name, StringComparer.Ordinal)
             .Skip((page - 1) * pageSize).Take(pageSize)
             .Select(c => new CustomerSummary(c.Id.Value, (CustomerKindDto)(int)c.Kind, c.Name, c.Siren?.Value, c.BillingAddress.City))
             .ToList();
-        return Task.FromResult(new PagedResponse<CustomerSummary>(items, page, pageSize, Saved.Count));
+        return Task.FromResult(new PagedResponse<CustomerSummary>(items, page, pageSize, listed.Count));
     }
 
     public Task<CustomerResponse?> GetAsync(CustomerId id, CancellationToken cancellationToken) =>

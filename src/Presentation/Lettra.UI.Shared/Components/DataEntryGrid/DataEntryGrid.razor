@@ -17,12 +17,16 @@
             {
                 <div class="lg-cell lg-head @(column.Numeric ? "lg-num" : null)" role="columnheader">@column.Label</div>
             }
+            @if (HasRowDelete)
+            {
+                <div class="lg-cell lg-head lg-row-action" role="columnheader"><span class="lettra-visually-hidden">@L["Row.Actions"]</span></div>
+            }
         </div>
         <CascadingValue TValue="IGridRowRegistry<TItem>" Value="this" IsFixed="true">
             <Virtualize Items="_slots" ItemSize="@Density.RowHeight()" OverscanCount="12" Context="slot">
                 @{ object key = KeySelector(slot.Item); }
                 <GridRow TItem="TItem" @key="key" RowKey="key" Item="slot.Item" Index="slot.Index" Columns="Columns"
-                         CellLabelFormat="@_cellLabelFormat"
+                         CellLabelFormat="@_cellLabelFormat" DeleteLabelFormat="@(HasRowDelete ? _rowDeleteLabel : null)" OnDelete="OnRowDelete"
                          ReadOnly="@(IsReadOnly?.Invoke(slot.Item) ?? false)" CssClass="@RowClass?.Invoke(slot.Item)" />
             </Virtualize>
         </CascadingValue>
@@ -60,6 +64,17 @@
     /// <summary>Libellé accessible de la grille, déjà traduit.</summary>
     [Parameter] public string? AriaLabel { get; set; }
 
+    /// <summary>
+    /// Corbeille en bout de ligne (souris, toucher), en plus de Ctrl+Suppr : reçoit l'index de la ligne. Sans ce
+    /// paramètre, pas de colonne d'action. Absente sur les lignes en lecture seule.
+    /// </summary>
+    [Parameter] public EventCallback<int> OnRowDelete { get; set; }
+
+    /// <summary>Libellé de la corbeille, {0} = numéro de ligne (déjà traduit) ; « Supprimer la ligne {0} » par défaut.</summary>
+    [Parameter] public string? RowDeleteLabel { get; set; }
+
+    private bool HasRowDelete => OnRowDelete.HasDelegate;
+
     [CascadingParameter] public UiDensity Density { get; set; } = UiDensity.Expert;
 
     private readonly Dictionary<object, GridRow<TItem>> _renderedRows = [];
@@ -71,6 +86,7 @@
     private List<RowSlot> _slots = [];
     private string _template = string.Empty;
     private string _cellLabelFormat = "{0} {1}";
+    private string _rowDeleteLabel = string.Empty;
     private FocusTarget? _requestedFocus;
     private bool _inJsCall;
 
@@ -86,8 +102,9 @@
 
     protected override void OnParametersSet()
     {
-        _template = string.Join(' ', Columns.Select(c => c.Width));
+        _template = string.Join(' ', Columns.Select(c => c.Width)) + (HasRowDelete ? " var(--lg-action-w)" : string.Empty);
         _cellLabelFormat = L["Grid.CellLabel"];
+        _rowDeleteLabel = RowDeleteLabel ?? L["Row.Delete.Line"];
         RebuildSlots();
     }
 

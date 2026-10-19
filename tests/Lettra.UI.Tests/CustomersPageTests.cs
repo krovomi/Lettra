@@ -120,6 +120,27 @@ internal sealed class FakeCustomersGateway : ICustomersGateway
         return Task.FromResult(OperationResult<CustomerResponse>.Success(updated));
     }
 
+    public List<(Guid Id, long? ExpectedVersion)> Deletes { get; } = [];
+
+    /// <summary>Comme le serveur : le client quitte la liste (sa fiche reste lisible, marquée supprimée).</summary>
+    public Task<OperationResult<bool>> DeleteAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken)
+    {
+        Deletes.Add((id, expectedVersion));
+        if (TakeErrors() is { } errors)
+        {
+            return Task.FromResult(OperationResult<bool>.Failure(errors));
+        }
+
+        if (Find(id) is not { } current)
+        {
+            return Task.FromResult(OperationResult<bool>.Failure(ErrorCodes.Customer.NotFound));
+        }
+
+        Records[id] = current with { IsArchived = true, Version = current.Version + 1 };
+        Customers.RemoveAll(c => c.Id == id);
+        return Task.FromResult(OperationResult<bool>.Success(true));
+    }
+
     /// <summary>Un collègue modifie la fiche pendant la saisie (ADR-0013) : la version du serveur avance.</summary>
     public void EditedByColleague(Guid id, Func<CustomerResponse, CustomerResponse> edit)
     {

@@ -1,0 +1,268 @@
+@page "/tax"
+@page "/tax/vat"
+@inject ITaxGateway Tax
+@inject NavigationManager Navigation
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+@inject IServiceProvider Services
+@* Brouillon de CA3 ou de CA12 (partie ventes) : chaque case s'ouvre sur les pièces qui la composent. Rien n'est
+   déposé : le brouillon se recopie sur impots.gouv ou dans le logiciel de télédéclaration du cabinet. *@
+
+<PageTitle>@L["Tax.Vat.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Tax.Vat.Title"]</h1>
+        <p class="lettra-muted">@L["Tax.Vat.Subtitle"]</p>
+    </div>
+</div>
+
+<TaxTabs />
+<GeneralErrors Errors="_errors" />
+
+@if (_setup.Count > 0)
+{
+    <TaxSetupNeeded Errors="_setup" />
+}
+else if (_return is null)
+{
+    <ExplorerSkeleton Rows="8" />
+}
+else
+{
+    VatReturnResponse vat = _return;
+    <section class="lt-panel lt-tax-head" aria-labelledby="vat-period">
+        <div class="lt-tax-nav">
+            <a class="lettra-button is-ghost" href="@Href(vat.From.AddDays(-1))" id="vat-previous" aria-label="@L["Tax.Period.Previous"]"><Icon Name="chevrons-left" Size="18" /></a>
+            <div class="lt-tax-period">
+                <h2 id="vat-period">@TaxText.Period(L, vat.From, vat.To)</h2>
+                <p class="lettra-muted" id="vat-form">@L[$"Tax.Form.{vat.Form}"]</p>
+            </div>
+            <a class="lettra-button is-ghost" href="@Href(vat.To.AddDays(1))" id="vat-next" aria-label="@L["Tax.Period.Next"]"><Icon Name="chevrons-right" Size="18" /></a>
+        </div>
+        <div class="lt-tax-due">
+            @if (vat.FiledAt is { } filed)
+            {
+                <p class="lettra-banner is-success" id="vat-filed">
+                    <Icon Name="badge-check" Size="18" /> @string.Format(CultureInfo.CurrentCulture, L["Tax.Filed.On"], filed.ToLocalTime().ToString("d", CultureInfo.CurrentCulture))
+                    <button type="button" class="lettra-button is-secondary" id="vat-unfile" disabled="@_busy" @onclick="() => MarkAsync(false)">@L["Tax.Filed.Undo"]</button>
+                </p>
+            }
+            else
+            {
+                <p class="lettra-banner @(vat.DueDate < Today ? "is-danger" : "is-warning")" id="vat-due">
+                    <Icon Name="calendar-clock" Size="18" /> @string.Format(CultureInfo.CurrentCulture, L["Tax.DueOn"], TaxText.Day(vat.DueDate))
+                    <button type="button" class="lettra-button" id="vat-file" disabled="@_busy" @onclick="() => MarkAsync(true)">@L["Tax.Filed.Mark"]</button>
+                </p>
+            }
+        </div>
+
+        <dl class="lt-stats" aria-label="@L["Tax.Vat.Figures"]" id="vat-stats">
+            <div id="vat-kpi-gross">
+                <dt>@L["Tax.Box.GrossTotal"]</dt>
+                <dd>@TaxText.Euros(vat.GrossVat)</dd>
+                <dd class="lt-stats-note">@TaxText.Exact(vat.GrossVat)</dd>
+            </div>
+            <div id="vat-kpi-deductible">
+                <dt>@L["Tax.Box.DeductibleTotal"]</dt>
+                <dd>@TaxText.Euros(vat.DeductibleVat)</dd>
+                <dd class="lt-stats-note">@L["Tax.Vat.DeductibleNote"]</dd>
+            </div>
+            <div id="vat-kpi-net">
+                <dt>@(vat.VatCredit > 0 ? L["Tax.Box.Credit"] : L["Tax.Box.NetDue"])</dt>
+                <dd>@TaxText.Euros(vat.VatCredit > 0 ? vat.VatCredit : vat.NetVatDue)</dd>
+                <dd class="lt-stats-note">@L["Tax.Vat.NetNote"]</dd>
+            </div>
+        </dl>
+    </section>
+
+    <TaxChecks Checks="vat.Checks" Id="vat-checks" />
+
+    <section class="lt-panel" aria-labelledby="vat-boxes-title">
+        <h2 id="vat-boxes-title">@L["Tax.Vat.Boxes"]</h2>
+        <p class="lettra-hint">@L["Tax.Vat.BoxesHint"]</p>
+        @foreach (IGrouping<string, VatReturnBoxResponse> section in vat.Boxes.GroupBy(b => b.Section))
+        {
+            <h3 id="@($"vat-section-{section.Key}")">@L[$"Tax.Section.{section.Key}"]</h3>
+            <table class="lettra-table lt-cards lt-tax-boxes" aria-labelledby="@($"vat-section-{section.Key}")">
+                <thead>
+                    <tr>
+                        <th scope="col">@L["Tax.Box.Label"]</th>
+                        <th scope="col">@L["Tax.Box.Line"]</th>
+                        <th scope="col" class="lg-num">@L["Tax.Box.Base"]</th>
+                        <th scope="col" class="lg-num">@L["Tax.Box.Vat"]</th>
+                        <th scope="col"><span class="lettra-visually-hidden">@L["Tax.Box.Detail"]</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (VatReturnBoxResponse box in section)
+                    {
+                        string id = BoxId(box);
+                        bool open = _open.Contains(id);
+                        <tr id="@id" class="@(open ? "is-open" : null)">
+                            <td>@BoxLabel(box)</td>
+                            <td data-label="@L["Tax.Box.Line"]">@(box.Line ?? L["Tax.Box.LineUnknown"])</td>
+                            <td class="lg-num" data-label="@L["Tax.Box.Base"]">@(box.BaseExclTax is { } b ? TaxText.Euros(b) : null)</td>
+                            <td class="lg-num" data-label="@L["Tax.Box.Vat"]">@(box.VatAmount is { } v ? TaxText.Euros(v) : null)</td>
+                            <td>
+                                @if (box.Sources.Count > 0)
+                                {
+                                    <button type="button" class="lettra-button is-secondary lt-tax-toggle" id="@($"{id}-toggle")" aria-expanded="@(open ? "true" : "false")" aria-controls="@($"{id}-detail")" @onclick="() => Toggle(id)">
+                                        <Icon Name="@(open ? "chevron-down" : "chevron-right")" Size="16" /> @string.Format(CultureInfo.CurrentCulture, L["Tax.Box.Pieces"], box.Sources.Count)
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                        @if (open)
+                        {
+                            <tr class="lt-tax-detail-row" id="@($"{id}-detail")">
+                                <td colspan="5">
+                                    <TaxSources Sources="box.Sources" ShowVat="box.VatAmount is not null" Id="@($"{id}-sources")" Caption="@BoxLabel(box)" />
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        }
+    </section>
+
+    @if (vat.Installments.Count > 0)
+    {
+        <section class="lt-panel" aria-labelledby="vat-installments-title" id="vat-installments">
+            <h2 id="vat-installments-title">@L["Tax.Installments.Title"]</h2>
+            <p class="lettra-hint">@L["Tax.Installments.Hint"]</p>
+            <table class="lettra-table lt-cards">
+                <thead>
+                    <tr>
+                        <th scope="col">@L["Tax.Installments.Number"]</th>
+                        <th scope="col">@L["Tax.Installments.Due"]</th>
+                        <th scope="col" class="lg-num">@L["Tax.Installments.Amount"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (VatInstallmentResponse installment in vat.Installments)
+                    {
+                        <tr>
+                            <td>@string.Format(CultureInfo.CurrentCulture, L["Tax.Installments.Label"], installment.Number, installment.Number == 1 ? 55 : 40)</td>
+                            <td data-label="@L["Tax.Installments.Due"]">@TaxText.Day(installment.DueDate)</td>
+                            <td class="lg-num" data-label="@L["Tax.Installments.Amount"]">@(installment.Exempt ? L["Tax.Installments.Exempt"] : TaxText.Euros(installment.Amount))</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    }
+
+    <p class="lettra-hint" id="vat-disclaimer">@L["Tax.Vat.Disclaimer"]</p>
+}
+
+@code {
+    private VatReturnResponse? _return;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private IReadOnlyList<ErrorDetail> _setup = [];
+    private readonly HashSet<string> _open = [];
+    private OperationResult<FiscalCalendarResponse>? _regime;
+    private bool _busy;
+
+    [SupplyParameterFromQuery(Name = "date")] public string? Date { get; set; }
+
+    private DateOnly Today => DateOnly.FromDateTime((Services.GetService<TimeProvider>() ?? TimeProvider.System).GetLocalNow().DateTime);
+
+    /// <summary>Par défaut, la période qui vient de se terminer : c'est elle qu'on déclare ce mois-ci.</summary>
+    private DateOnly Requested =>
+        DateOnly.TryParseExact(Date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly day)
+            ? day
+            : new DateOnly(Today.Year, Today.Month, 1).AddDays(-1);
+
+    protected override void OnInitialized()
+    {
+        // « /tax » ouvre l'onglet TVA : l'adresse devient « /tax/vat » pour que l'onglet soit marqué actif.
+        string path = Navigation.ToBaseRelativePath(Navigation.Uri).Split('?', '#')[0].TrimEnd('/');
+        if (path == "tax")
+        {
+            Navigation.NavigateTo("tax/vat" + new Uri(Navigation.Uri).Query, replace: true);
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _open.Clear();
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _errors = [];
+
+        // Sans régime de TVA (ou en franchise), l'écran le dit sans demander un brouillon que le serveur refuserait.
+        _regime ??= await Tax.GetCalendarAsync(Today, Today, CancellationToken.None);
+        if (_regime is { IsSuccess: true, Value: { } known } && (known.VatFranchise || known.Regime is null))
+        {
+            _setup = [new ErrorDetail(known.VatFranchise ? ErrorCodes.Tax.VatFranchise : ErrorCodes.Tax.RegimeMissing)];
+            return;
+        }
+
+        OperationResult<VatReturnResponse> result = await Tax.GetVatReturnAsync(Requested, CancellationToken.None);
+        if (result is { IsSuccess: true, Value: { } vat })
+        {
+            _return = vat;
+            _setup = [];
+        }
+        else if (TaxText.IsSetupNeeded(result.Errors))
+        {
+            _setup = result.Errors;
+        }
+        else
+        {
+            _errors = result.Errors;
+            _setup = [];
+        }
+    }
+
+    private string Href(DateOnly date) => $"tax/vat?date={TaxText.Iso(date)}";
+
+    private void Toggle(string id)
+    {
+        if (!_open.Remove(id))
+        {
+            _open.Add(id);
+        }
+    }
+
+    private async Task MarkAsync(bool filed)
+    {
+        if (_return is not { } vat)
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            FiscalObligationDto obligation = vat.Form == VatReturnFormDto.Ca12 ? FiscalObligationDto.VatReturnCa12 : FiscalObligationDto.VatReturnCa3;
+            OperationResult<FiscalDeadlineResponse> marked = await Tax.MarkFilingAsync(new MarkFiscalFilingRequest(obligation, vat.From, filed), CancellationToken.None);
+            if (marked.IsSuccess)
+            {
+                Toasts.Show(ToastKind.Success, L[filed ? "Tax.Toast.Filed" : "Tax.Toast.Unfiled"].Value);
+                await LoadAsync();
+            }
+            else
+            {
+                _errors = marked.Errors;
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private static string BoxId(VatReturnBoxResponse box) =>
+        $"vat-box-{box.Key}{(box.Key == "RateOther" && box.RatePercent is { } rate ? "-" + rate.ToString(CultureInfo.InvariantCulture).Replace('.', '-') : null)}";
+
+    private string BoxLabel(VatReturnBoxResponse box) =>
+        box.Key == "RateOther" && box.RatePercent is { } rate
+            ? string.Format(CultureInfo.CurrentCulture, L["Tax.Box.RateOther"], rate)
+            : L[$"Tax.Box.{box.Key}"];
+}

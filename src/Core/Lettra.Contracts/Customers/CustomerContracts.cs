@@ -83,6 +83,9 @@ public sealed record CustomerResponse(
 
     /// <summary>Langue de ses pièces imprimées ; <c>null</c> : le français.</summary>
     public string? PreferredLanguage { get; init; }
+
+    /// <summary>Supprimé des listes : ses pièces le désignent encore, il reste lisible par son identifiant.</summary>
+    public bool IsArchived { get; init; }
 }
 
 /// <summary>Ligne de la liste des clients.</summary>

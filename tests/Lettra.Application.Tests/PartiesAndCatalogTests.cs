@@ -80,6 +80,54 @@ public sealed class PartiesAndCatalogTests : IAsyncLifetime
         read.Value.Iban.Should().Be("FR7630006000011234567890189");
     }
 
+    private async Task<SupplierId> CreateSupplierAsync() =>
+        (await Commands.SendAsync(new CreateSupplierCommand(Dossier, new Supplier.Draft("Minoterie Dupuis", null, "73282932000074", null, null, null,
+            "2 chemin du Moulin", null, "45000", "Orléans", "FR")), default)).Value;
+
+    [Fact]
+    public async Task Supprimer_un_fournisseur_le_retire_des_listes_mais_garde_sa_fiche()
+    {
+        SupplierId id = await CreateSupplierAsync();
+
+        (await Commands.SendAsync(new DeleteSupplierCommand(Dossier, id, null), default)).IsSuccess.Should().BeTrue();
+
+        (await Queries.QueryAsync(new ListSuppliersQuery(Dossier, 1, 50), default)).Value.TotalCount.Should().Be(0);
+        (await Queries.QueryAsync(new GetSupplierQuery(Dossier, id), default)).Value.IsArchived.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Supprimer_deux_fois_le_meme_fournisseur_reussit_sans_rien_changer()
+    {
+        SupplierId id = await CreateSupplierAsync();
+        await Commands.SendAsync(new DeleteSupplierCommand(Dossier, id, null), default);
+
+        (await Commands.SendAsync(new DeleteSupplierCommand(Dossier, id, 42), default)).IsSuccess.Should().BeTrue("déjà supprimé : rien à faire, même avec une version périmée");
+        _store.Suppliers[id].DomainEvents.OfType<SupplierArchiveChanged>().Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task Supprimer_un_fournisseur_avec_une_version_perimee_est_refuse()
+    {
+        SupplierId id = await CreateSupplierAsync();
+
+        Result deleted = await Commands.SendAsync(new DeleteSupplierCommand(Dossier, id, 42), default);
+
+        deleted.Errors.Should().ContainSingle().Which.Code.Should().Be(ConcurrencyErrors.VersionMismatchCode);
+        _store.Suppliers[id].IsArchived.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Supprimer_un_fournisseur_inconnu_ou_sans_droit_est_refuse()
+    {
+        (await Commands.SendAsync(new DeleteSupplierCommand(Dossier, new SupplierId(Guid.CreateVersion7()), null), default))
+            .Errors.Should().ContainSingle().Which.Code.Should().Be(SupplierErrors.NotFoundCode);
+
+        SupplierId id = await CreateSupplierAsync();
+        _permissions.Granted.Remove(Permission.TiersModifier);
+        (await Commands.SendAsync(new DeleteSupplierCommand(Dossier, id, null), default))
+            .Errors.Should().ContainSingle().Which.Code.Should().Be(SecurityErrors.ForbiddenCode);
+    }
+
     [Fact]
     public async Task Une_reference_deja_prise_est_refusee_sans_tenir_compte_de_la_casse()
     {
