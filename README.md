@@ -552,6 +552,16 @@ MailPit, à 1440 et 375 px. Non vérifié dans les applications installées.)* D
   cabinet. *(Vérifié : navigateur, rendu Chromium à 375, 768 et 1440 px et tests ; poste isolé par un test de bout en
   bout ; application native non lancée.)*
 
+### Menu et aide
+
+Le menu de gauche se règle à la façon de chacun. Cliquez sur le titre d'une section pour la replier (chevron), et sur
+l'étoile d'un écran pour l'épingler dans « Favoris » ; ces réglages sont retenus par utilisateur sur l'appareil. Le
+champ « Aller à… » en haut du menu trouve un écran par son nom ou par un mot courant (« tva », « impayé », « banque ») ;
+Entrée l'ouvre, et « Chercher partout » passe à la palette Ctrl+K. « Aide et questions », en bas du menu, derrière le
+bouton « ? » ou dans la feuille « Plus » du téléphone, répond aux questions fréquentes en langage courant (« comment
+annuler une facture ? »), relance le tutoriel de l'écran et liste les raccourcis, sans IA. Détails :
+[docs/menu-et-aide.md](docs/menu-et-aide.md).
+
 ### Trier et filtrer les listes
 
 Toutes les listes de Lettra se trient et se filtrent, sur ordinateur, tablette et téléphone (navigateur, PWA et

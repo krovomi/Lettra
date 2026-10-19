@@ -352,8 +352,13 @@ internal sealed class FakeSpeechGateway : ISpeechGateway
 
     public List<(SpeechMode Mode, string Language, int Bytes)> Calls { get; } = [];
 
-    public Task<OperationResult<SpeechStatusResponse>> GetStatusAsync(CancellationToken cancellationToken) =>
-        Task.FromResult(StatusError is { } error ? OperationResult<SpeechStatusResponse>.Failure(error) : OperationResult<SpeechStatusResponse>.Success(Status));
+    public int StatusReads { get; private set; }
+
+    public Task<OperationResult<SpeechStatusResponse>> GetStatusAsync(CancellationToken cancellationToken)
+    {
+        StatusReads++;
+        return Task.FromResult(StatusError is { } error ? OperationResult<SpeechStatusResponse>.Failure(error) : OperationResult<SpeechStatusResponse>.Success(Status));
+    }
 
     public Task<OperationResult<TranscriptionResponse>> TranscribeAsync(ReadOnlyMemory<byte> wav, SpeechMode mode, string language, CancellationToken cancellationToken)
     {
