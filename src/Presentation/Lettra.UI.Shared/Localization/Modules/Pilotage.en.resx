@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.Pilotage" xml:space="preserve"><value>Dashboards</value></data>
+  <data name="Pilotage.Title" xml:space="preserve"><value>Dashboards</value></data>
+  <data name="Pilotage.Subtitle" xml:space="preserve"><value>Your dossiers' indicators, within your rights.</value></data>
+  <data name="Pilotage.Subtitle.Dossier" xml:space="preserve"><value>{0} · computed {1}</value></data>
+  <data name="Pilotage.Subtitle.Collected" xml:space="preserve"><value>Server figures, collected {0}</value></data>
+  <data name="Pilotage.Refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="Pilotage.Refreshing" xml:space="preserve"><value>Refreshing…</value></data>
+  <data name="Pilotage.Refreshed" xml:space="preserve"><value>Dashboards refreshed.</value></data>
+  <data name="Pilotage.Tab.Dossier" xml:space="preserve"><value>This dossier</value></data>
+  <data name="Pilotage.Tab.Dossiers" xml:space="preserve"><value>My dossiers</value></data>
+  <data name="Pilotage.Tab.Administration" xml:space="preserve"><value>Administration</value></data>
+  <data name="Pilotage.Section.Clients" xml:space="preserve"><value>Customers and collections</value></data>
+  <data name="Pilotage.Section.Sales" xml:space="preserve"><value>Sales activity</value></data>
+  <data name="Pilotage.Section.ToDo" xml:space="preserve"><value>To do</value></data>
+  <data name="Pilotage.Kpi.Dso" xml:space="preserve"><value>Average payment time</value></data>
+  <data name="Pilotage.Kpi.Dso.Help" xml:space="preserve"><value>What is still owed, against sales of the last 90 days.</value></data>
+  <data name="Pilotage.Kpi.Overdue" xml:space="preserve"><value>Overdue receivables</value></data>
+  <data name="Pilotage.Kpi.Overdue.Help" xml:space="preserve"><value>Share of receivables past their due date.</value></data>
+  <data name="Pilotage.Kpi.Collection" xml:space="preserve"><value>Collected over 12 months</value></data>
+  <data name="Pilotage.Kpi.Collection.Help" xml:space="preserve"><value>Share of the year's invoices already collected.</value></data>
+  <data name="Pilotage.Kpi.Customers" xml:space="preserve"><value>Active customers</value></data>
+  <data name="Pilotage.Kpi.Customers.Help" xml:space="preserve"><value>Customers invoiced in the last 12 months.</value></data>
+  <data name="Pilotage.Kpi.TopCustomer" xml:space="preserve"><value>Largest customer's share</value></data>
+  <data name="Pilotage.Kpi.TopCustomer.Help" xml:space="preserve"><value>Share of the year's sales made with a single customer.</value></data>
+  <data name="Pilotage.Kpi.Trend" xml:space="preserve"><value>Sales trend</value></data>
+  <data name="Pilotage.Kpi.Trend.Help" xml:space="preserve"><value>Last 3 full months against the 3 before.</value></data>
+  <data name="Pilotage.Kpi.Conversion" xml:space="preserve"><value>Quotes won</value></data>
+  <data name="Pilotage.Kpi.Conversion.Help" xml:space="preserve"><value>Quotes accepted among those decided over 12 months.</value></data>
+  <data name="Pilotage.Kpi.Pending" xml:space="preserve"><value>Pending quotes</value></data>
+  <data name="Pilotage.Kpi.Pending.Help" xml:space="preserve"><value>Sent, unanswered, not yet expired.</value></data>
+  <data name="Pilotage.Kpi.Expiring" xml:space="preserve"><value>Quotes expiring within 7 days</value></data>
+  <data name="Pilotage.Kpi.Expiring.Help" xml:space="preserve"><value>Follow up before it is too late.</value></data>
+  <data name="Pilotage.Chart.Index" xml:space="preserve"><value>Month-by-month activity</value></data>
+  <data name="Pilotage.Chart.Index.Unit" xml:space="preserve"><value>index, 100 = average month</value></data>
+  <data name="Pilotage.Chart.Invoices" xml:space="preserve"><value>Invoices issued per month</value></data>
+  <data name="Pilotage.Chart.Invoices.Unit" xml:space="preserve"><value>number of invoices</value></data>
+  <data name="Pilotage.ToDo.Computed" xml:space="preserve"><value>computed {0}</value></data>
+  <data name="Pilotage.ToDo.NeverShort" xml:space="preserve"><value>not computed yet</value></data>
+  <data name="Pilotage.ToDo.Never" xml:space="preserve"><value>Nothing has been computed for this dossier yet. The firm overview does it every night, or with "Refresh".</value></data>
+  <data name="Pilotage.Unavailable" xml:space="preserve"><value>No overview on this device</value></data>
+  <data name="Pilotage.Unavailable.Text" xml:space="preserve"><value>This installation only opens its own dossiers: "This dossier" shows everything it knows. Link it to the firm's server to see all your dossiers.</value></data>
+  <data name="Nav.Pilotage.Keywords" xml:space="preserve"><value>grafana indicators kpi charts dashboards statistics</value></data>
+  <data name="Pilotage.Dossier.Unavailable" xml:space="preserve"><value>This dossier's figures are not open to you</value></data>
+  <data name="Pilotage.Dossiers.Empty" xml:space="preserve"><value>No dossier to show</value></data>
+  <data name="Pilotage.Dossiers.Title" xml:space="preserve"><value>Your dossiers</value></data>
+  <data name="Pilotage.Dossiers.Count" xml:space="preserve"><value>Dossiers followed</value></data>
+  <data name="Pilotage.Dossiers.Dso" xml:space="preserve"><value>Average payment time</value></data>
+  <data name="Pilotage.Dossiers.Dso.Help" xml:space="preserve"><value>Average of the dossiers with sales.</value></data>
+  <data name="Pilotage.Dossiers.Late" xml:space="preserve"><value>Dossiers with late payments</value></data>
+  <data name="Pilotage.Dossiers.Late.Help" xml:space="preserve"><value>At least 20 % of receivables overdue.</value></data>
+  <data name="Pilotage.Search" xml:space="preserve"><value>Search a dossier</value></data>
+  <data name="Pilotage.Filtered.Empty" xml:space="preserve"><value>No dossier matches the search</value></data>
+  <data name="Pilotage.Open" xml:space="preserve"><value>View</value></data>
+  <data name="Pilotage.Field.Dossier" xml:space="preserve"><value>Dossier</value></data>
+  <data name="Pilotage.Field.Dso" xml:space="preserve"><value>Payment time</value></data>
+  <data name="Pilotage.Field.Overdue" xml:space="preserve"><value>Overdue</value></data>
+  <data name="Pilotage.Field.Collection" xml:space="preserve"><value>Collected 12 months</value></data>
+  <data name="Pilotage.Field.Trend" xml:space="preserve"><value>Trend</value></data>
+  <data name="Pilotage.Field.Customers" xml:space="preserve"><value>Active customers</value></data>
+  <data name="Pilotage.Field.Conversion" xml:space="preserve"><value>Quotes won</value></data>
+  <data name="Pilotage.Field.Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Pilotage.Field.Size" xml:space="preserve"><value>Space used</value></data>
+  <data name="Pilotage.Field.Devices" xml:space="preserve"><value>Active devices</value></data>
+  <data name="Pilotage.Field.Revoked" xml:space="preserve"><value>Revoked devices</value></data>
+  <data name="Pilotage.Field.Silent" xml:space="preserve"><value>Silent</value></data>
+  <data name="Pilotage.Field.LongestSilence" xml:space="preserve"><value>Longest silence</value></data>
+  <data name="Pilotage.Field.Nightly" xml:space="preserve"><value>Firm overview computed</value></data>
+  <data name="Pilotage.Admin.Title" xml:space="preserve"><value>Dossiers you administer</value></data>
+  <data name="Pilotage.Admin.Dossiers" xml:space="preserve"><value>Dossiers administered</value></data>
+  <data name="Pilotage.Admin.Size" xml:space="preserve"><value>Space used</value></data>
+  <data name="Pilotage.Admin.Size.Help" xml:space="preserve"><value>Total size of these dossiers' databases.</value></data>
+  <data name="Pilotage.Admin.Silent" xml:space="preserve"><value>Silent devices</value></data>
+  <data name="Pilotage.Admin.Silent.Help" xml:space="preserve"><value>Installed apps with no sync for more than 7 days.</value></data>
+  <data name="Pilotage.Admin.Nightly" xml:space="preserve"><value>Oldest nightly computation</value></data>
+  <data name="Pilotage.Admin.Nightly.Help" xml:space="preserve"><value>Beyond one day and two hours, a night was missed.</value></data>
+  <data name="Pilotage.Footnote" xml:space="preserve"><value>Ratios, delays and indices only: no amounts or customer names. You only see the dossiers your rights open.</value></data>
+</root>

@@ -89,7 +89,7 @@ Réglages (`Lettra:Kpi`) :
 |---|---|---|
 | `ScrapeToken` | vide (route absente) | jeton attendu de Prometheus ; en production, un secret de la cellule |
 | `RefreshInterval` | `00:05:00` | durée de vie d'une collecte |
-| `BusinessIndicators` | `true` | `false` retire les indicateurs de ventes, de devis et les compteurs de la Vue cabinet (par exemple en SaaS, si l'éditeur exploite Grafana et ne doit pas voir l'activité des clients) ; l'administration reste |
+| `BusinessIndicators` | `true` | `false` retire de la publication vers Prometheus les indicateurs de ventes, de devis et les compteurs de la Vue cabinet (par exemple en SaaS, si l'éditeur exploite Grafana et ne doit pas voir l'activité des clients) ; l'administration reste. Les tableaux de bord dans Lettra, eux, gardent tous les indicateurs : chacun n'y voit que ses dossiers |
 
 Code : ports dans `Lettra.Application/Abstractions/Kpi`, calcul pur dans `Features/Kpi/BillingKpis.cs`, lecture des bases
 dans `Lettra.Infrastructure.Persistence/Kpi`, collecte dans `Lettra.Infrastructure.Catalog/Kpi`, format Prometheus dans
@@ -114,12 +114,13 @@ téléphone, Grafana empile les panneaux sur une colonne et les tableaux défile
   les connaît pas. Grafana OSS ne sait pas filtrer les données d'un tableau selon la personne connectée : qui ouvre le
   tableau du cabinet voit tous les dossiers. Ces tableaux sont donc **pour les responsables du cabinet et les
   administrateurs**. Un collaborateur limité à quelques dossiers reste sur la **Vue cabinet** de Lettra, qui applique
-  ses droits.
+  ses droits, et sur le menu **Tableaux de bord**, qui montre les mêmes indicateurs filtrés par ses droits.
 - **Connexion séparée.** Grafana a ses propres comptes ; en production, il faut le brancher sur Keycloak (OIDC) et
   réserver l'accès aux rôles de responsable et d'administrateur. La démo garde l'accès anonyme en lecture.
 - **Un outil de plus.** Grafana est en anglais par endroits (sélecteur de période, menus), ses menus sont pensés pour
   des techniciens, et un clic sur un chiffre n'ouvre pas la pièce dans Lettra. Les textes d'aide, les bulles et les
-  couleurs atténuent cela, mais pour un usage quotidien par tous, un écran dans Lettra serait plus simple.
+  couleurs atténuent cela ; pour un usage quotidien par tous, les mêmes indicateurs sont aussi **dans Lettra**
+  (menu « Tableaux de bord », voir [tableaux-de-bord.md](tableaux-de-bord.md)), avec les droits de chacun.
 - **Données à 5 minutes près.** Les chiffres viennent d'une collecte périodique, pas de l'écran en direct.
 
 ## Limites et suite

@@ -184,6 +184,13 @@ internal sealed class InMemoryCabinetStores :
     }
 }
 
+/// <summary>Tableau de bord d'un dossier vide : aucune pièce.</summary>
+internal sealed class NoBillingKpis : Lettra.Application.Features.Kpi.IBillingKpiReader
+{
+    public Task<Lettra.Application.Features.Kpi.BillingKpiFacts> ReadAsync(CancellationToken cancellationToken) =>
+        Task.FromResult(new Lettra.Application.Features.Kpi.BillingKpiFacts([], []));
+}
+
 internal static class CabinetFakesRegistration
 {
     /// <summary>Les ports de la vue cabinet, pour que le conteneur des tests se valide.</summary>
@@ -193,6 +200,7 @@ internal static class CabinetFakesRegistration
         services.AddSingleton<Lettra.Application.Abstractions.Cabinet.IDossierIndicatorStore>(stores);
         services.AddSingleton<Lettra.Application.Abstractions.Cabinet.IDossierIndicatorRefresher>(stores);
         services.AddSingleton<Lettra.Application.Abstractions.Cabinet.IDossierReviewStore>(stores);
+        services.AddSingleton<Lettra.Application.Features.Kpi.IBillingKpiReader>(new NoBillingKpis());
         return services.AddRecurringFakes();
     }
 }

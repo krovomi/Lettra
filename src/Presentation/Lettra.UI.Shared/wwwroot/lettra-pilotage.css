@@ -1,0 +1,54 @@
+/* Tableaux de bord (docs/tableaux-de-bord.md). Téléphone d'abord ; tablette dès 768px, bureau dès 1200px. */
+
+.lt-pilotage-tabs { margin-bottom: var(--space-4); overflow-x: auto; scrollbar-width: none; }
+.lt-pilotage-tabs::-webkit-scrollbar { display: none; }
+.lt-pilotage-panel { min-width: 0; }
+.lt-pilotage-heading { margin: 0 0 var(--space-3); font-size: var(--text-lg); }
+
+/* Deux cartes par ligne sur téléphone ; les notes d'aide restent sous la valeur, en petit. */
+.lt-kpis.lt-pilotage-kpis { list-style: none; padding: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+.lt-pilotage-kpi { padding: var(--space-3); min-width: 0; }
+.lt-pilotage-kpi .lt-kpi-head { overflow-wrap: anywhere; }
+.lt-pilotage-kpi .lt-kpi-value { font-size: var(--text-xl); }
+.lt-pilotage-kpi .lt-kpi-note { font-size: var(--text-xs); }
+
+/* La couleur du seuil : un liseré à gauche et la valeur teintée, jamais la couleur seule (la note le dit aussi). */
+.lt-pilotage-kpi[data-level="Warning"] { box-shadow: inset 3px 0 0 var(--color-warning), var(--shadow-sm); }
+.lt-pilotage-kpi[data-level="Warning"] .lt-kpi-value { color: var(--color-warning-fg); }
+.lt-pilotage-kpi[data-level="Critical"] { box-shadow: inset 3px 0 0 var(--color-danger), var(--shadow-sm); }
+.lt-pilotage-kpi[data-level="Critical"] .lt-kpi-value { color: var(--color-danger-fg); }
+
+/* Douze mois : barres serrées sur téléphone, valeurs masquées pour ne pas se chevaucher (le titre donne l'unité). */
+.lt-pilotage-charts { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
+.lt-pilotage-chart { gap: 2px; height: 10rem; }
+.lt-pilotage-chart .lt-bar-value { display: none; }
+.lt-pilotage-chart .lt-bar-label { font-size: 0.625rem; }
+
+.lt-pilotage-todo { list-style: none; margin: 0; padding: 0; }
+.lt-pilotage-todo li + li { border-top: 1px solid var(--color-border); }
+.lt-pilotage-todo a { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); min-height: var(--hit); padding: var(--space-2); margin: 0 calc(-1 * var(--space-2)); border-radius: var(--radius-sm); color: var(--color-fg); text-decoration: none; overflow-wrap: anywhere; }
+.lt-pilotage-todo a:hover { background: var(--color-neutral-bg); }
+
+.lt-pilotage-table td:first-child { overflow-wrap: anywhere; }
+.lt-pilotage-filters { flex-wrap: wrap; gap: var(--space-3); }
+.lt-pilotage-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); width: 100%; }
+.lt-pilotage-tools .lettra-input { width: 100%; }
+.lt-pilotage-actions { text-align: right; }
+.lt-pilotage-actions .lettra-button { width: 100%; justify-content: center; min-height: var(--hit); }
+
+@media (min-width: 768px) {
+    .lt-kpis.lt-pilotage-kpis { grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: var(--space-3); }
+    .lt-pilotage-chart { gap: var(--space-2); height: 12rem; }
+    .lt-pilotage-chart .lt-bar-value { display: block; font-size: 0.625rem; }
+    .lt-pilotage-table td:first-child { min-width: 16ch; }
+    .lt-pilotage-tools { width: auto; }
+    .lt-pilotage-tools .lettra-input { width: min(18rem, 100%); }
+    .lt-pilotage-actions { white-space: nowrap; }
+    .lt-pilotage-actions .lettra-button { width: auto; min-height: 0; }
+}
+
+@media (min-width: 1200px) {
+    .lt-pilotage-charts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .lt-pilotage-kpi .lt-kpi-value { font-size: var(--text-2xl); }
+    .lt-pilotage-chart .lt-bar-value { font-size: var(--text-xs); }
+}
