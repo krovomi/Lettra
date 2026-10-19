@@ -494,7 +494,7 @@ internal static class PaymentViews
         0m,
         0m,
         payment.Amount,
-        "EUR",
+        Money.Euro,
         payment.ComputeFingerprint());
 
     public static string? CodeOf(IEnumerable<Lettering> active, Guid paymentId) =>

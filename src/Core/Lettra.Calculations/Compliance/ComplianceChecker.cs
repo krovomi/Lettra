@@ -99,9 +99,7 @@ public static class ComplianceChecker
         new HashSet<string>(["SAS", "SASU", "SARL", "EURL", "SA", "SNC", "SCA", "SCS", "SELARL", "SELAS"], StringComparer.OrdinalIgnoreCase);
 
     /// <summary>Pays de l'Union européenne (codes ISO, la Grèce en GR).</summary>
-    public static IReadOnlySet<string> EuCountries { get; } = new HashSet<string>(
-        ["AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "ES", "FI", "FR", "GR", "HR", "HU", "IE", "IT", "LT", "LU", "LV", "MT", "NL", "PL", "PT", "RO", "SE", "SI", "SK"],
-        StringComparer.OrdinalIgnoreCase);
+    public static IReadOnlySet<string> EuCountries { get; } = new HashSet<string>(EuropeanUnion.MemberStates, StringComparer.OrdinalIgnoreCase);
 
     public static ComplianceReport Check(ComplianceDocument document, DateOnly today)
     {

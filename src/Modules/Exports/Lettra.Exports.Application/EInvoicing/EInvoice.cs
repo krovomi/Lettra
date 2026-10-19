@@ -2,6 +2,7 @@ using System.Globalization;
 using Lettra.Calculations;
 using Lettra.Contracts.Billing;
 using Lettra.Domain.Billing;
+using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Exports.Application.EInvoicing;
 
@@ -77,7 +78,7 @@ internal sealed record EInvoice
 
     public DateOnly? PeriodEnd { get; init; }
 
-    public string Currency { get; init; } = "EUR";
+    public string Currency { get; init; } = Money.Euro;
 
     public required IReadOnlyList<EInvoiceNote> Notes { get; init; }
 

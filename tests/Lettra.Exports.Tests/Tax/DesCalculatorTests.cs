@@ -85,4 +85,9 @@ public sealed class DesCalculatorTests
         // Mai 2026 : 1er (fête du travail), 8 (victoire 1945) et 14 (Ascension) ne comptent pas : le 10e jour ouvrable est le 15.
         FiscalCalendar.DesDueDate(2026, 4).Should().Be(new DateOnly(2026, 5, 15));
     }
+
+    [Fact]
+    public void La_DES_vise_les_26_autres_etats_membres() =>
+        DesCalculator.OtherMemberStates.Should().HaveCount(26)
+            .And.BeEquivalentTo(Lettra.Calculations.EuropeanUnion.MemberStates.Where(c => c != "FR"));
 }

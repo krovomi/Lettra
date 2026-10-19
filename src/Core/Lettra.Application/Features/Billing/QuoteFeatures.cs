@@ -511,5 +511,5 @@ internal static class BillingTexts
 internal static class BillingJournal
 {
     /// <summary>Lettra ne facture qu'en euros pour l'instant (code ISO 4217).</summary>
-    public const string Currency = "EUR";
+    public const string Currency = Money.Euro;
 }
