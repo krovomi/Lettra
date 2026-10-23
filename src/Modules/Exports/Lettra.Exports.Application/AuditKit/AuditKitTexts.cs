@@ -77,8 +77,9 @@ internal static class AuditKitTexts
            motif. Une ligne lettrée se délettre avec trace.
         7. Comptabilité. Le FEC est écrit à partir des écritures enregistrées à la validation de chaque pièce et de
            chaque encaissement : il ne recalcule rien.
-        8. Contrôle. La chaîne entière est vérifiée chaque nuit et à chaque préparation de ce kit ; un écart lève
-           une alerte de conformité pour les administrateurs du cabinet.
+        8. Contrôle. La chaîne entière est vérifiée une fois par jour par le service de tâches de fond, sur demande
+           et à chaque préparation de ce kit ; un écart lève une alerte de conformité pour les administrateurs du
+           cabinet.
 
         Lien entre la pièce, la facture électronique et le paiement : pieces.csv (numéro, empreinte, statut de la
         plateforme), factures/ (XML et PDF), plateforme/transmissions.csv et encaissements.csv.
