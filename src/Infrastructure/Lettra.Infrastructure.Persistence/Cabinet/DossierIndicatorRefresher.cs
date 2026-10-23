@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 namespace Lettra.Infrastructure.Persistence.Cabinet;
 
 /// <summary>
-/// Ouvre chaque dossier désigné dans sa propre portée (comme les passes de nuit du Worker), y fait tourner toutes les
+/// Ouvre chaque dossier désigné dans sa propre portée (comme les passes quotidiennes du Worker), y fait tourner toutes les
 /// <see cref="IDossierIndicatorSource"/> et range le résultat. Une source ou un dossier en échec n'arrête pas les autres ;
 /// un dossier en échec garde ses anciennes valeurs. Aucune donnée de dossier n'est journalisée.
 /// </summary>

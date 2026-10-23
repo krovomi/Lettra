@@ -3,27 +3,29 @@ using System.Resources;
 using Lettra.Contracts.Billing;
 using Lettra.Printing;
 using Lettra.UI.Shared.Localization;
+using Lettra.UI.Shared.Services;
 
 namespace Lettra.UI.Shared.Billing;
 
 /// <summary>
 /// Des contrats au modèle d'impression (mappage écrit à la main). Les libellés (unités) sont pris dans la langue du
 /// document, pas dans celle de l'utilisateur ; l'émetteur est la copie figée de la pièce validée, à défaut la fiche
-/// entreprise (brouillon).
+/// entreprise (brouillon). Un brouillon sans date d'émission prend le jour de l'horloge injectée, jamais l'horloge système.
 /// </summary>
 public static class PrintableMapper
 {
     private static readonly ResourceManager Texts = new(typeof(SharedResource));
 
-    public static PrintableDocument FromQuote(QuoteResponse quote, CompanyProfileResponse? company, CultureInfo culture)
+    public static PrintableDocument FromQuote(QuoteResponse quote, CompanyProfileResponse? company, CultureInfo culture, TimeProvider clock)
     {
         ArgumentNullException.ThrowIfNull(quote);
         ArgumentNullException.ThrowIfNull(culture);
+        ArgumentNullException.ThrowIfNull(clock);
         return new PrintableDocument
         {
             Kind = PrintableDocumentKind.Quote,
             Number = quote.Number,
-            IssueDate = quote.IssueDate ?? DateOnly.FromDateTime(DateTime.Today),
+            IssueDate = quote.IssueDate ?? clock.LocalToday(),
             DueDate = quote.ValidUntil,
             Seller = Seller(null, company, culture),
             Buyer = Party(quote.Customer, culture),
@@ -36,10 +38,11 @@ public static class PrintableMapper
         };
     }
 
-    public static PrintableDocument FromInvoice(InvoiceResponse invoice, CompanyProfileResponse? company, CultureInfo culture)
+    public static PrintableDocument FromInvoice(InvoiceResponse invoice, CompanyProfileResponse? company, CultureInfo culture, TimeProvider clock)
     {
         ArgumentNullException.ThrowIfNull(invoice);
         ArgumentNullException.ThrowIfNull(culture);
+        ArgumentNullException.ThrowIfNull(clock);
         return new PrintableDocument
         {
             Kind = invoice.Kind switch
@@ -49,7 +52,7 @@ public static class PrintableMapper
                 _ => PrintableDocumentKind.Invoice,
             },
             Number = invoice.Number,
-            IssueDate = invoice.IssueDate ?? DateOnly.FromDateTime(DateTime.Today),
+            IssueDate = invoice.IssueDate ?? clock.LocalToday(),
             DeliveryDate = invoice.DeliveryDate,
             DueDate = invoice.DueDate,
             Seller = Seller(invoice.Seller, company, culture),

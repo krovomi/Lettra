@@ -36,7 +36,7 @@ public static class PilotageDisplay
         _ => IndicatorLevelDto.Ok,
     };
 
-    /// <summary>Âge du calcul de nuit de la vue cabinet : orange au-delà de 26 h, rouge au-delà de 50 h (une nuit manquée).</summary>
+    /// <summary>Âge du dernier calcul de la vue cabinet (toutes les 24 h) : orange au-delà de 26 h (un calcul manqué), rouge au-delà de 50 h.</summary>
     public static IndicatorLevelDto NightlyAge(double? seconds) => Above(seconds, 26 * 3600, 50 * 3600);
 
     /// <summary>Un poste silencieux (plus de 7 jours sans synchronisation) est à vérifier.</summary>

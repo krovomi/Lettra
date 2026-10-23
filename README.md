@@ -34,11 +34,11 @@ résultat. « **Non vérifié** » signifie que la méthode est décrite mais qu
 | PC Windows 10 ou 11 | [Application Windows](#application-windows) | **Vérifiée** : lancement, cabinet et premier dossier chiffré créés ; le parcours pas à pas est rejoué par les tests. |
 | Émulateur Android (Android Studio) | [Application Android](#android-émulateur-ou-téléphone) | **Vérifiée** sur un émulateur Android 14 (API 34) : lancement sans plantage, premier dossier chiffré créé. |
 | Téléphone Android (7.0 ou plus récent) | Le même APK, [installé à la main](#sur-un-téléphone-android) | **Non vérifié** sur un vrai téléphone. |
-| Simulateur iOS (Mac avec puce Apple et Xcode) | [Application iOS pour le simulateur](#simulateur-ios-mac) | **Vérifiée** : lancement, application toujours ouverte après 30 s, premier dossier chiffré créé. |
+| Simulateur iOS (Mac avec puce Apple et Xcode) | [Application iOS pour le simulateur](#simulateur-ios-mac) | **Vérifiée** : lancement, premier dossier chiffré créé, application toujours ouverte 10 s plus tard. |
 | iPhone ou iPad réel | Application native | **Pas encore possible** : il faut un Mac et un compte Apple Developer pour la signer. Utiliser le navigateur. |
 | Mac (macOS) | [Application macOS](#macos-mac-catalyst) | Construite, mais **s'arrête à la création du premier dossier** tant qu'elle n'est pas signée par Apple. Utiliser le navigateur. |
 | Linux, en application native | Pas de version native (.NET MAUI ne vise pas Linux) | Utiliser le navigateur. |
-| Tous les appareils sur les mêmes données | [Serveur commun](#serveur-commun) : **Paramètres** > **Serveur du cabinet**, adresse `http://localhost:8080` (Android par câble : `adb reverse tcp:8080 tcp:8080` et `adb reverse tcp:8081 tcp:8081`) | Navigateur, harnais de l'application installée et émulateur Android **vérifiés** de bout en bout ; Windows, vrai téléphone Android et simulateur iOS **non vérifiés** ; iPhone et Mac : signature Apple nécessaire. |
+| Tous les appareils sur les mêmes données | [Serveur commun](#serveur-commun) : **Pilotage** > **Serveur du cabinet**, adresse `http://localhost:8080` (Android par câble : `adb reverse tcp:8080 tcp:8080` et `adb reverse tcp:8081 tcp:8081`) | Navigateur, harnais de l'application installée et émulateur Android **vérifiés** de bout en bout ; Windows, vrai téléphone Android et simulateur iOS **non vérifiés** ; iPhone et Mac : signature Apple nécessaire. |
 
 Les applications natives se téléchargent depuis la CI. Sur GitHub, ouvrez l'onglet
 [Actions](https://github.com/krovomi/Lettra/actions/workflows/ci.yml?query=branch%3Amain+is%3Asuccess), cliquez sur
@@ -237,8 +237,8 @@ reconnu par Android.
 Cette version ne s'installe que dans le simulateur, pas sur un iPhone : un iPhone réel exige une version signée avec
 un compte Apple Developer, que le prototype n'a pas. Sur un iPhone, utiliser le navigateur.
 
-> Vérifié par la CI (job « MAUI iOS (simulateur) et macOS (Mac Catalyst) ») : l'application s'installe, est
-> toujours ouverte après 30 secondes et a créé son premier dossier chiffré. Captures et journaux dans l'artefact
+> Vérifié par la CI (job « MAUI iOS (simulateur) et macOS (Mac Catalyst) ») : l'application s'installe, crée
+> son premier dossier chiffré et est toujours ouverte 10 secondes plus tard. Captures et journaux dans l'artefact
 > `lettra-apple-captures`.
 
 ### macOS (Mac Catalyst)
@@ -258,7 +258,7 @@ droit, **Ouvrir**, la première fois) et `open Lettra.app`. Rien n'a été essay
 ## Serveur commun
 
 Le navigateur travaille toujours sur le serveur. Une application installée (Windows, macOS, Android, iOS) travaille
-seule sur ses propres données, sauf si on la relie au serveur du cabinet : **Paramètres** > **Serveur du cabinet**,
+seule sur ses propres données, sauf si on la relie au serveur du cabinet : menu **Pilotage** > **Serveur du cabinet** (ou Ctrl+K),
 saisir l'adresse (https obligatoire hors localhost), redémarrer l'application, se connecter. Elle travaille alors sur
 le même dossier que le navigateur et les autres appareils reliés. Elle a besoin du réseau ; ses données d'appareil
 seul restent sur l'appareil, intactes, et reviennent avec **Revenir à cet appareil seul**. Détails et état par
@@ -271,14 +271,15 @@ crée un que le navigateur retrouve.
 ## Vue cabinet
 
 Le sélecteur de dossier (barre du haut, ou Ctrl+K « Ouvrir le dossier … ») change de dossier en un clic. Il propose la
-recherche, les favoris (étoile) et les récents, tous gardés sur l'appareil. La démo Docker contient trois dossiers :
-Cabinet Démo, Bâti Rénov' Lemoine et Négoce Méditerranée Distribution (ajoutés aussi à une démo déjà remplie, sans rien
+recherche, les favoris (étoile) et les récents, rangés dans votre compte : ils vous suivent d'un appareil à l'autre (sur
+un poste isolé, ils restent sur l'appareil). La démo Docker contient trois dossiers : Dossier de démonstration, Bâti Rénov' Lemoine et Négoce Méditerranée Distribution (ajoutés aussi à une démo déjà remplie, sans rien
 effacer).
 
 La page **Vue cabinet** liste les dossiers que vous pouvez ouvrir, les plus urgents d'abord. Pour chacun, elle montre
 les factures en retard, les rejets de la plateforme, les alertes ouvertes, la revue du mois et le relevé bancaire non
 rapproché. La colonne relevé non rapproché devient à traiter après 15 jours et urgente après 30. Ces chiffres sont
-calculés la nuit (par le Worker, ou par l'API dans la démo), sur « Actualiser », ou à la première ouverture. Ce ne sont
+calculés une fois par jour (par le Worker, ou par l'API dans la démo, où le premier calcul a lieu 15 s après le
+démarrage), sur « Actualiser », ou à la première ouverture. Ce ne sont
 que des compteurs : aucun montant ni nom de client ne quitte le dossier. Le bouton « Tableaux de bord » en haut de la Vue cabinet ouvre
 l'onglet « Mes dossiers » des tableaux de bord : les mêmes dossiers en graphiques.
 
@@ -319,14 +320,17 @@ Le prestataire de services a opté pour la TVA sur les débits : ses factures et
 - **Dans le navigateur**, le « Dossier de démonstration » est rempli au premier démarrage du serveur.
 - **Dans l'application installée**, le « Dossier principal » est rempli en arrière-plan juste après la création du
   compte, en une cinquantaine de secondes. Deux autres dossiers sont créés sur le poste (« Bâti Rénov' Lemoine »,
-  artisan du bâtiment, et « Négoce Méditerranée Distribution », négoce), mais l'application n'a pas encore d'écran
-  pour changer de dossier.
+  artisan du bâtiment, et « Négoce Méditerranée Distribution », négoce) ; le sélecteur de dossier de la barre du haut
+  (ou Ctrl+K) passe de l'un à l'autre.
 
 Le jeu ne s'ajoute jamais à un dossier qui a déjà des devis ou des factures. Pour repartir d'un dossier rempli à neuf,
 voir « Repartir de zéro » dans [En cas de problème](#en-cas-de-problème).
 
-**La navigation.** **Accueil**, puis **Ventes** (**Devis**, **Factures**, **Avoirs**), **Tiers** (**Clients**,
-**Fournisseurs**, **Catalogue**), **Comptabilité** (**Journal et balance**, **FEC**) et **Pilotage** (**Tableaux de bord**, **Alertes**, **Entreprise**). Sur un
+**La navigation.** **Accueil** et **Vue cabinet**, puis **Ventes** (**Devis**, **Factures**, **Avoirs**, **Factures
+récurrentes**), **Tiers** (**Clients**, **Fournisseurs**, **Catalogue**), **Comptabilité** (**Encaissements**,
+**Rapprochement bancaire**, **Relances**, **Journal et balance**, **FEC**, **Déclarations**, **Revue du dossier**) et
+**Pilotage** (**Tableaux de bord**, **Alertes**, **Entreprise**, **Mes préférences**, **Équipe et accès** pour qui
+administre le cabinet, **Serveur du cabinet**). Sur un
 ordinateur, le menu est à gauche et se replie en icônes ; sur une tablette, c'est une colonne d'icônes ; sur un
 téléphone, des onglets en bas (Accueil, Devis, Factures, Clients, **Plus** pour le reste). En haut, le champ
 « Rechercher un écran, une pièce, un client… » ouvre la palette de commandes, aussi au clavier avec **Ctrl+K**
@@ -334,8 +338,9 @@ téléphone, des onglets en bas (Accueil, Devis, Factures, Clients, **Plus** pou
 
 **Les thèmes.** Le bouton **Apparence**, en haut à droite (dans **Plus** sur un téléphone), propose cinq thèmes :
 **Comme le système**, **Clair**, **Sombre**, **Ardoise** et **Contraste élevé**, ainsi que la densité : **Confort**
-(au doigt) ou **Expert** (souris et clavier ; **Ctrl+Maj+D** bascule). Le choix s'applique tout de suite et reste
-mémorisé sur l'appareil.
+(au doigt) ou **Expert** (souris et clavier ; **Ctrl+Maj+D** bascule). Le choix s'applique tout de suite et vous suit
+sur tous vos appareils (rangé dans votre compte ; sur un poste isolé, sur l'appareil). Thème, densité, langue, écran
+d'accueil, valeurs de saisie et suggestions se règlent aussi dans **Pilotage** > **Mes préférences**.
 
 **Les notifications.** Chaque création, modification et suppression s'annonce dans une notification en bas à droite
 (au-dessus des onglets sur un téléphone). Une réussite disparaît après 6 secondes ; une erreur reste jusqu'à ce qu'on
@@ -344,7 +349,8 @@ la ferme.
 **Les listes.** Pendant le chargement, une silhouette de la liste s'affiche ; une liste vide dit quoi faire ; sur un
 téléphone, chaque ligne devient une carte.
 
-*Vérifié : 258 tests de l'interface ; galerie de 12 écrans × 4 thèmes × 3 largeurs, sans défaut d'accessibilité (axe) ;
+*Vérifié : plus de 600 tests de l'interface ; galerie de 28 écrans, plus celle de l'administration, × 4 thèmes ×
+3 largeurs (375, 768, 1440 px), sans défaut d'accessibilité (axe) ;
 éditeurs contrôlés dans Chromium de 375 à 1920 px. Détails : [docs/design/systeme-de-design.md](docs/design/systeme-de-design.md).*
 
 ### 1. La fiche de votre entreprise
@@ -454,10 +460,10 @@ Menu **Déclarations** (groupe Comptabilité). Lettra prépare, le cabinet dépo
    TVA des services à la date de chaque encaissement pour les factures validées à partir de cette version.
 3. Onglet **DES** : la déclaration européenne de services du mois (clients de l'Union en autoliquidation) et son
    fichier CSV.
-4. Onglet **Calendrier** : les échéances de l'année (CA3 ou CA12 et acomptes, DES, CFE, IS, liasse), proches, en
+4. Onglet **Calendrier fiscal** : les échéances de l'année (CA3 ou CA12 et acomptes, DES, CFE, IS, liasse), proches, en
    retard ou déposées. Les échéances proches et dépassées arrivent aussi dans **Alertes** (passe toutes les 12 heures,
    par le Worker ou, dans la démo sans Worker, par l'API).
-5. Onglet **Réglages** : date de clôture, CA3 mensuelle ou trimestrielle, jour limite de la TVA (du 15 au 24), IS et
+5. Onglet **Réglages fiscaux** : date de clôture, CA3 mensuelle ou trimestrielle, jour limite de la TVA (du 15 au 24), IS et
    CFE.
 
 Les correspondances de cases et les dates sont à faire relire par un expert-comptable. *(Vérifié : navigateur,
@@ -577,7 +583,7 @@ annuler une facture ? »), relance le tutoriel de l'écran et liste les raccourc
 
 ### Mes préférences
 
-**Paramètres** > **Mes préférences** (`/settings/preferences`) : thème, densité, langue, écran d'accueil, valeurs de
+Menu **Pilotage** > **Mes préférences** (`/settings/preferences`) : thème, densité, langue, écran d'accueil, valeurs de
 saisie par dossier (TVA, unité, conditions de paiement, mentions, validité des devis), suggestions par usage (clients et
 articles les plus choisis en tête), « Reprendre où j'en étais » à l'accueil et dans Ctrl+K, réinitialisation. Rangées
 dans le compte (base Catalog) quand le serveur le permet, elles suivent l'utilisateur sur tous ses appareils ; en poste
@@ -701,6 +707,7 @@ Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou 
 | Télédéclaration de la TVA et de la DES | Non : Lettra prépare le brouillon et le fichier, le dépôt se fait sur impots.gouv ou le service en ligne des douanes. La TVA déductible (achats) n'est pas encore reprise. |
 | Envoi des devis et factures par e-mail | Non : on télécharge le PDF ou le Factur-X, factures récurrentes comprises. Seules les relances et les invitations partent par e-mail. |
 | Relances par courrier ou en PDF, facture des pénalités | Non : Lettra envoie la relance par e-mail ou la note comme faite à la main ; il cite les pénalités sans les facturer. |
+| Tableaux de pilotage dans le Grafana d'une cellule | Dans la démo, Prometheus lit les indicateurs sur l'API (`/internal/kpi/metrics`). Les charts Helm ne posent pas encore ce jeton ni cette lecture : dans une cellule déployée, « Pilotage du cabinet », « Pilotage d'un dossier » et « Administration » restent vides dans Grafana. La page **Tableaux de bord** de Lettra, elle, fonctionne partout. |
 | Applications signées | Non : avertissement de Windows au premier lancement, APK Android installé à la main, application macOS arrêtée par le Trousseau, pas de version pour iPhone réel. |
 
 ---
@@ -709,7 +716,7 @@ Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou 
 
 | Symptôme | Que faire |
 |---|---|
-| Navigateur : la page ne répond pas | Au premier démarrage, le remplissage du dossier de démonstration prend une trentaine de secondes après `up --wait` : attendre, puis recharger ; `docker compose -f deploy/demo/compose.yaml ps` doit montrer `keycloak` et `api` « healthy » (`whisper`, sans contrôle de santé, est simplement « Up »). |
+| Navigateur : la page ne répond pas | Au premier démarrage, le remplissage du dossier de démonstration prend une trentaine de secondes après `up --wait` : attendre, puis recharger ; `docker compose -f deploy/demo/compose.yaml ps` doit montrer `keycloak`, `mailpit` et `api` « healthy » (`whisper`, sans contrôle de santé, est simplement « Up »). |
 | Navigateur : pas de micro dans les champs | Ouvrez le micro de la barre du haut, son panneau dit pourquoi. « La dictée se prépare » : le modèle Whisper se télécharge, attendez. Message « https:// ou http://localhost » : changez d'adresse. |
 | Navigateur : la voix répond « indisponible » (503) | Le conteneur `whisper` télécharge encore son modèle (142 Mio) ou n'a pas accès à Internet : `docker compose -f deploy/demo/compose.yaml logs whisper` montre le téléchargement (et, sans Internet, un nouvel essai toutes les 30 secondes) ; le serveur est prêt quand la commande de vérification de [Dictée et commandes vocales](#dictée-et-commandes-vocales) affiche `200`. Le reste de Lettra fonctionne pendant ce temps. |
 | Navigateur : erreur « Uncaught (in promise) TypeError: Failed to fetch at fromShell » dans la console | C'est l'ancien service worker : fermer tous les onglets de Lettra puis rouvrir (ou DevTools → **Application** → **Service workers** → **Unregister**). La console doit rester vide d'erreurs sur tous les écrans, en ligne comme hors ligne ([détails](deploy/demo/README.md#installer-lapplication-pwa)). |
@@ -820,16 +827,19 @@ Le poste crée alors la réplique du dossier du serveur, envoie ses pièces au r
 
 ```
 src/
-  Core/            Calculations (arrondi unique, conformité), Contracts (API publique), Domain, Application (cas d'usage, ports)
+  Core/            Calculations (arrondi unique, conformité), Contracts (API publique), Domain, Application (cas d'usage, ports),
+                   Speech (dictée et commandes vocales)
   Infrastructure/  Persistence (EF Core) et un projet de migrations par provider, Catalog, Identity.Local, Identity.Oidc,
-                   External (SIRENE, VIES), Observability
+                   External (SIRENE, VIES, e-mail), Observability, Speech (serveur whisper.cpp), Speech.OnDevice (Whisper.net)
   Modules/         Supervision (alertes), Exports (FEC, Factur-X, UBL, CII, plateforme agréée), Sync (Client, Server)
-  Composition/     Bootstrap : AddLettra(), la composition selon le mode
+  Composition/     Bootstrap : AddLettra(), la composition selon le mode ; DemoData (jeu de démonstration « Cabinet Démo »)
   Presentation/    UI.Abstractions (ports), UI.Shared (toute l'UI Blazor), UI.Gateway.Http, UI.Gateway.InProcess, Printing (PDF)
-  Hosts/           Api (Minimal APIs, BFF, sert le WASM), Web (WASM), App.Maui (Blazor Hybrid), Worker (migrations, escalade)
+  Hosts/           Api (Minimal APIs, BFF, sert le WASM), Web (WASM), App.Maui (Blazor Hybrid), Worker (migrations, escalade, intégrité,
+                   export FEC, outbox, échéances fiscales, vue cabinet, factures récurrentes, relances)
   Ai/              Couche IA (Paperasse épinglé, pseudonymisation, orchestrateur, moteurs Claude UE et local)
 tests/             un projet par couche ou module, dont Api (bout en bout, parité HTTP / in-process) et Architecture
-deploy/            Helm, OpenTofu, Argo CD, Keycloak, observabilité, essai de panne local (deploy/local/essai-panne.sh)
+deploy/            démo Docker, Helm, OpenTofu, Argo CD, cellules, Keycloak, observabilité, tests de déploiement (k6, Grafana,
+                   kind, ZAP), essai de panne local (deploy/local/essai-panne.sh)
 ```
 
 ### Règles tenues par les tests
@@ -851,6 +861,9 @@ deploy/            Helm, OpenTofu, Argo CD, Keycloak, observabilité, essai de p
 - Échecs métier en valeurs (`Result`, `Result<T>`), jamais en exceptions ; le serveur ne renvoie que des codes,
   traduits par module (`ErrorCodes.<Module>.cs`, `Localization/Modules/<Module>.resx`).
 - Médiateur maison : journalisation, dossier, autorisation, validation.
+- Style vérifié à la compilation : les règles IDE de `.editorconfig` sont des avertissements et `TreatWarningsAsErrors`
+  (`Directory.Build.props`) en fait des erreurs ; `dotnet format Lettra.Ci.slnf --severity warn` corrige avant de
+  pousser ([docs/qualite-du-code.md](docs/qualite-du-code.md)).
 - Avertissements bloquants, paquets centralisés (`Directory.Packages.props`), identifiants Guid v7, montants
   `decimal(18,4)`, dates UTC.
 - Migrations : même identifiant dans les trois providers ; la PR fusionnée en second régénère la sienne.
@@ -861,9 +874,15 @@ deploy/            Helm, OpenTofu, Argo CD, Keycloak, observabilité, essai de p
 `.github/workflows/ci.yml` : build et tests Linux (Testcontainers PostgreSQL, SQL Server, Keycloak) sous couverture
 de code, qui échoue sous 88 % des lignes ou 78 % des branches (rapport par assembly dans le résumé du job ; détails et
 commande locale : [docs/qualite-du-code.md](docs/qualite-du-code.md)), conformité Factur-X, applications MAUI construites et lancées (Windows ; Android sur émulateur ; simulateur iOS ; macOS, non
-bloquant tant qu'il n'est pas signé) avec leurs artefacts, gitleaks, SBOM CycloneDX,
-CodeQL, avis de tiers, images signées (cosign) sur `main`. `.github/workflows/deploy.yml` valide l'IaC, les règles
-d'alerte et l'essai de panne (API arrêtée, astreinte appelée en S1). Sur une PR, un nouveau push annule l'exécution
+bloquant tant qu'il n'est pas signé) avec leurs artefacts, captures du design et audit d'accessibilité (Playwright,
+axe-core), gitleaks, SBOM CycloneDX, CodeQL (dépôt public), avis de tiers, images signées (cosign) sur `main`. La
+charge de travail MAUI est épinglée (`MAUI_WORKLOAD_VERSION`, 10.0.401) : un jeu plus récent publié sur nuget.org ne
+casse pas la CI du jour au lendemain. `.github/workflows/deploy.yml` valide l'IaC, les règles et le routage des
+alertes, l'essai de panne (API arrêtée, astreinte appelée en S1), Keycloak dans une cellule kind, puis la démo Docker :
+parcours navigateur (Keycloak, API, PWA), charge k6, télémétrie dans Grafana (chaque vérification en échec devient une
+annotation du job) et scan de sécurité ZAP. Autres workflows : `serveur-commun-android.yml` (navigateur et application
+Android sur les mêmes données, émulateur), `voix.yml` (Whisper réel sur Linux, Windows et macOS),
+`pr-environment.yml` (image d'une PR étiquetée « env:pr », déployée par Argo CD dans la cellule de recette). Sur une PR, un nouveau push annule l'exécution
 en cours ; sur `main`, chaque fusion garde son exécution complète.
 
 ### Assistant IA
