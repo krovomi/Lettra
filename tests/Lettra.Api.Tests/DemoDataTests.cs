@@ -166,8 +166,21 @@ public sealed class DemoDataTests : IDisposable
         InvoiceSummary credit = allInvoices.First(i => i.Kind == InvoiceKindDto.CreditNote && i.Status != InvoiceStatusDto.Draft);
         (await invoices.GetAsync(credit.Id, default)).Value!.LegalMentions.Should().Contain(m => m.Contains("débits", StringComparison.Ordinal));
 
-        InvoiceSummary paid = allInvoices.First(i => i.Status == InvoiceStatusDto.Issued && i.Kind == InvoiceKindDto.Invoice);
-        (await app.GetRequiredService<IPlatformTransmissionGateway>().GetAsync(paid.Id, default)).Value!.History
+        // Une facture à une entreprise (SIREN) va jusqu'à la mise à disposition ; celle d'un particulier n'est que
+        // déclarée (e-reporting). La plus récente des factures émises peut être l'une ou l'autre selon le jour.
+        InvoiceResponse? business = null;
+        foreach (InvoiceSummary issued in allInvoices.Where(i => i.Status == InvoiceStatusDto.Issued && i.Kind == InvoiceKindDto.Invoice))
+        {
+            InvoiceResponse candidate = (await invoices.GetAsync(issued.Id, default)).Value!;
+            if (!string.IsNullOrEmpty(candidate.Customer?.Siren))
+            {
+                business = candidate;
+                break;
+            }
+        }
+
+        business.Should().NotBeNull("le jeu contient des factures émises à des entreprises");
+        (await app.GetRequiredService<IPlatformTransmissionGateway>().GetAsync(business!.Id, default)).Value!.History
             .Should().Contain(h => h.Status == PlatformStatusDto.MadeAvailable);
 
         // Le FEC de l'année écoulée passe le validateur intégré : numérotation et chronologie réelles.
