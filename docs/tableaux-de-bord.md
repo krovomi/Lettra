@@ -8,7 +8,7 @@ l'application ni ouvrir un autre outil. Les mêmes chiffres, les mêmes seuils d
 |---|---|---|
 | **Ce dossier** | qui peut lire le dossier ouvert (`dossier.lire`) | délai moyen de paiement, part des créances en retard, part encaissée, évolution du chiffre d'affaires, clients actifs, poids du premier client, conversion et devis en attente ; deux graphiques sur douze mois (indice du chiffre d'affaires, factures émises) ; la liste « À faire » de la Vue cabinet, chaque ligne menant à l'écran où la traiter |
 | **Mes dossiers** | tout utilisateur ; seuls les dossiers qu'il peut lire sont listés | les indicateurs clés de chaque dossier, avec recherche, tri par colonne (ou par liste déroulante sur téléphone) et « Voir » qui ouvre le dossier sur son tableau de bord |
-| **Administration** | seulement qui administre au moins un dossier (`dossier.administrer`) ; l'onglet est caché pour les autres | taille de chaque base, postes actifs, révoqués et silencieux, plus long silence de synchronisation, âge du calcul de nuit |
+| **Administration** | seulement qui administre au moins un dossier (`dossier.administrer`) ; l'onglet est caché pour les autres | taille de chaque base, postes actifs, révoqués et silencieux, plus long silence de synchronisation, âge du calcul quotidien de la Vue cabinet |
 
 Les couleurs suivent la règle de Grafana : vert, tout va bien ; orange, à surveiller ; rouge, à traiter. Un indicateur
 coloré a aussi sa bulle d'aide en texte : la couleur n'est jamais la seule information. « Actualiser » relit les trois

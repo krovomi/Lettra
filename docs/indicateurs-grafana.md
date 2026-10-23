@@ -40,7 +40,7 @@ plateforme n'est plus une créance à suivre, mais sa vente compte toujours dans
 
 ### Vue cabinet (par dossier)
 
-Le tableau du cabinet reprend les compteurs du calcul de nuit de la [Vue cabinet](vue-cabinet.md), sans les recalculer :
+Le tableau du cabinet reprend les compteurs du calcul quotidien de la [Vue cabinet](vue-cabinet.md), sans les recalculer :
 `lettra_kpi_cabinet_indicator_count{key}`, `_level{key}` (0 rien, 1 en attente, 2 à traiter, 3 urgent), `_due_days{key}`
 (jours avant l'échéance, négatif en retard) et `_age_seconds` (âge du dernier calcul). Les clés sont celles de la Vue
 cabinet (`factures.retard`, `pa.rejets`, `alertes.ouvertes`, `revue.a-faire`, `tva.a-declarer`, `banque.non-rapprochee`).
