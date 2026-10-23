@@ -7,6 +7,7 @@
 @inject IQuotesGateway Quotes
 @inject IBillingSettingsGateway Settings
 @inject IServiceProvider Services
+@inject TimeProvider Clock
 @inject IDocumentPdfRenderer Pdf
 @inject IFileDownloader Files
 @inject NavigationManager Navigation
@@ -274,7 +275,7 @@ else
                 _request.Notes = defaults.QuoteNotes;
                 if (defaults.QuoteValidityDays is int days)
                 {
-                    _request.ValidUntil = DateOnly.FromDateTime((Services.GetService<TimeProvider>() ?? TimeProvider.System).GetLocalNow().Date).AddDays(days);
+                    _request.ValidUntil = Clock.LocalToday().AddDays(days);
                 }
             }
 
@@ -674,7 +675,7 @@ else
         }
 
         CultureInfo culture = CultureInfo.GetCultureInfo(_pdfCulture);
-        byte[] pdf = Pdf.Render(PrintableMapper.FromQuote(_quote, _company, culture));
+        byte[] pdf = Pdf.Render(PrintableMapper.FromQuote(_quote, _company, culture, Clock));
         string name = _quote.Number ?? L["Quote.FileDraft"];
         await Files.DownloadAsync($"{name}.pdf", "application/pdf", pdf, CancellationToken.None);
     }

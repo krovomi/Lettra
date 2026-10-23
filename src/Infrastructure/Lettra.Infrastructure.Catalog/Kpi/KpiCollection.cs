@@ -184,7 +184,7 @@ internal sealed partial class KpiSnapshotCollector(
 
 /// <summary>
 /// Ce que la base Catalog sait déjà, sans ouvrir de dossier : comptes par état, dossiers par état, et les compteurs de la
-/// vue cabinet calculés la nuit (avec leur fraîcheur, qui dit si la passe de nuit tourne).
+/// vue cabinet calculés chaque jour (avec leur fraîcheur, qui dit si la passe quotidienne tourne).
 /// </summary>
 internal sealed class CatalogKpiSource(IDbContextFactory<CatalogDbContext> catalog, IDossierIndicatorStore indicators, TimeProvider clock) : ICellKpiSource
 {

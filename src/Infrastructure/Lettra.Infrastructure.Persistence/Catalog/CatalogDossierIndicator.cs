@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Lettra.Infrastructure.Persistence.Catalog;
 
 /// <summary>
-/// Un indicateur de la vue cabinet : un compteur par (dossier, clé), recalculé la nuit. Seulement des agrégats : aucun
+/// Un indicateur de la vue cabinet : un compteur par (dossier, clé), recalculé chaque jour. Seulement des agrégats : aucun
 /// montant, aucun nom de client ne quitte la base du dossier (ADR-0003, annexe F). Une nouvelle clé n'exige pas de migration.
 /// </summary>
 public sealed class CatalogDossierIndicator

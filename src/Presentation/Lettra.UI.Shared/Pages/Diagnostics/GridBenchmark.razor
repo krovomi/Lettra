@@ -2,6 +2,7 @@
 @using Lettra.UI.Shared.Diagnostics
 @implements IAsyncDisposable
 @inject IJSRuntime JS
+@inject TimeProvider Clock
 @inject IStringLocalizer<DiagnosticsResource> D
 @* Mesure de la grille sur le poste du cabinet (critère J1 de l'annexe C, en MAUI comme dans le navigateur) :
    une pièce de 1 000 lignes, une saisie rejouée au clavier à cadence humaine, et les p95 à copier dans le fil.
@@ -141,7 +142,7 @@
             GridBenchmarkRun run = await _module.InvokeAsync<GridBenchmarkRun>("run", timeout.Token, _host,
                 new { keystrokes = Keystrokes, cadenceMs = CadenceMs, editableColumns = 6, quantityColumn = QuantityColumn });
             GridBenchmarkEnvironment environment = await _module.InvokeAsync<GridBenchmarkEnvironment>("environment", timeout.Token);
-            _report = BenchReport.From(run, environment, D);
+            _report = BenchReport.From(run, environment, D, Clock.GetLocalNow());
         }
         catch (OperationCanceledException) when (_lifetime.IsCancellationRequested)
         {
@@ -210,7 +211,7 @@
     public sealed record BenchReport(LatencyStats Navigation, LatencyStats Entry, LatencyStats Amount, int Missed, string Text,
         IReadOnlyList<(string Label, LatencyStats Stats)> Rows)
     {
-        public static BenchReport From(GridBenchmarkRun run, GridBenchmarkEnvironment environment, IStringLocalizer<DiagnosticsResource> d)
+        public static BenchReport From(GridBenchmarkRun run, GridBenchmarkEnvironment environment, IStringLocalizer<DiagnosticsResource> d, DateTimeOffset measuredAt)
         {
             ArgumentNullException.ThrowIfNull(run);
             ArgumentNullException.ThrowIfNull(environment);
@@ -219,7 +220,7 @@
             LatencyStats entry = LatencyStats.From(run.Entry);
             LatencyStats amount = LatencyStats.From(run.Amount);
             string text = string.Join(Environment.NewLine,
-                $"Lettra · mesure de la grille · {HostName} · {DateTime.Now.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)}",
+                $"Lettra · mesure de la grille · {HostName} · {measuredAt.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)}",
                 $"{LineCount} lignes, {Keystrokes} frappes, une toutes les {CadenceMs} ms, {environment.Cores} cœurs, fenêtre {environment.Width}×{environment.Height} @{environment.PixelRatio.ToString("0.##", CultureInfo.InvariantCulture)}",
                 $"Navigation p95 = {LatencyStats.Ms(navigation.P95)} (médiane {LatencyStats.Ms(navigation.Median)}, max {LatencyStats.Ms(navigation.Max)}, n = {navigation.Count})",
                 $"Tab après saisie p95 = {LatencyStats.Ms(entry.P95)} (n = {entry.Count})",

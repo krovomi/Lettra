@@ -10,7 +10,7 @@ using Lettra.Domain.SharedKernel;
 namespace Lettra.Application.Features.Cabinet;
 
 /// <summary>
-/// La vue cabinet : une ligne par dossier que l'utilisateur peut ouvrir, avec les indicateurs rangés la nuit (ou au
+/// La vue cabinet : une ligne par dossier que l'utilisateur peut ouvrir, avec les indicateurs rangés par la passe quotidienne (ou au
 /// dernier « Actualiser »). Une seule lecture du registre des indicateurs : aucune base de dossier n'est ouverte.
 /// </summary>
 public sealed record GetCabinetOverviewQuery : IQuery<Result<CabinetOverviewResponse>>, IFilterByPermission

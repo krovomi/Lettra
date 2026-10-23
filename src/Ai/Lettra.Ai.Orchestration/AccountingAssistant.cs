@@ -8,6 +8,7 @@ using Lettra.Application.Features.Assistant;
 using Lettra.Contracts.Assistant;
 using Lettra.Contracts.Common;
 using Lettra.Domain.Common;
+using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Ai.Orchestration;
 
@@ -48,7 +49,7 @@ internal sealed class AccountingAssistant(
             yield break;
         }
 
-        DateOnly today = DateOnly.FromDateTime(time.GetUtcNow().UtcDateTime);
+        DateOnly today = LegalCalendar.Today(time);
         HashSet<AiSkill> staleSignalled = [];
         if (StaleWarning(request.Skill, today, staleSignalled) is { } stale)
         {

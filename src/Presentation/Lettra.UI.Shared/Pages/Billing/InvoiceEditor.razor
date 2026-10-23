@@ -7,6 +7,7 @@
 @inject IInvoicesGateway Invoices
 @inject IBillingSettingsGateway Settings
 @inject IServiceProvider Services
+@inject TimeProvider Clock
 @inject IDocumentPdfRenderer Pdf
 @inject IFileDownloader Files
 @inject NavigationManager Navigation
@@ -740,7 +741,7 @@ else
         }
 
         CultureInfo culture = CultureInfo.GetCultureInfo(_pdfCulture);
-        byte[] pdf = Pdf.Render(PrintableMapper.FromInvoice(_invoice, _company, culture));
+        byte[] pdf = Pdf.Render(PrintableMapper.FromInvoice(_invoice, _company, culture, Clock));
         string name = _invoice.Number ?? L[$"InvoiceKind.{Kind}.FileDraft"];
         await Files.DownloadAsync($"{name}.pdf", "application/pdf", pdf, CancellationToken.None);
     }
@@ -755,7 +756,7 @@ else
         }
 
         CultureInfo culture = CultureInfo.GetCultureInfo(_pdfCulture);
-        byte[] pdf = Pdf.Render(PrintableMapper.FromInvoice(invoice, _company, culture), [PdfAttachment.FacturX(cii)]);
+        byte[] pdf = Pdf.Render(PrintableMapper.FromInvoice(invoice, _company, culture, Clock), [PdfAttachment.FacturX(cii)]);
         await Files.DownloadAsync($"{number}-factur-x.pdf", "application/pdf", pdf, CancellationToken.None);
     }
 

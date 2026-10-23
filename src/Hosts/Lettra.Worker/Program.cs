@@ -11,9 +11,9 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 // Jobs de fond des modes 2, 3 et 5 : migration du catalogue, reprise des créations de dossiers interrompues, migration
 // de toutes les bases de dossiers par vagues (canari d'abord, avec bail et reprise), passe d'escalade de la Supervision,
-// passe de nuit de la chaîne anti-fraude (clôtures et contrôle d'intégrité de chaque dossier), export FEC en masse et
+// passe quotidienne de la chaîne anti-fraude (clôtures et contrôle d'intégrité de chaque dossier), export FEC en masse et
 // passe de l'outbox (envois à la plateforme agréée mis en file pendant une panne), alertes du calendrier fiscal
-// (échéances proches et dépassées), passe de nuit de la vue cabinet (compteurs de chaque dossier), factures
+// (échéances proches et dépassées), passe quotidienne de la vue cabinet (compteurs de chaque dossier), factures
 // récurrentes dues et relances des factures échues (envoi automatique, si un serveur d'e-mail est réglé). La plateforme
 // est celle de l'API : même réglage Lettra:EInvoicing:Platform.
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
