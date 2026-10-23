@@ -147,7 +147,7 @@
     {
         OperationResult<InvoiceResponse> invoice = await Invoices.GetAsync(piece.InvoiceId, cancellationToken);
         byte[]? pdf = invoice.Value is { } value
-            ? Pdf.Render(PrintableMapper.FromInvoice(value, company, DocumentCulture), [PdfAttachment.FacturX(xml)])
+            ? Pdf.Render(PrintableMapper.FromInvoice(value, company, DocumentCulture, Clock), [PdfAttachment.FacturX(xml)])
             : null;
         _done++;
         // Le rendu occupe le fil du navigateur : on lui rend la main pour afficher l'avancement.

@@ -36,8 +36,8 @@
   <data name="Accounting.Journal.Subtitle" xml:space="preserve"><value>Entries recorded when documents are validated, as in the FEC.</value></data>
   <data name="Accounting.Journal.Title" xml:space="preserve"><value>Sales journal</value></data>
   <data name="Accounting.Journal.Toggle" xml:space="preserve"><value>Lines of entry {0}</value></data>
-  <data name="Accounting.Kpi.Receivable" xml:space="preserve"><value>Net invoiced to customers</value></data>
-  <data name="Accounting.Kpi.ReceivableNote" xml:space="preserve"><value>Balance of 411, payments excluded</value></data>
+  <data name="Accounting.Kpi.Receivable" xml:space="preserve"><value>Outstanding from customers</value></data>
+  <data name="Accounting.Kpi.ReceivableNote" xml:space="preserve"><value>Balance of 411, net of credit notes and payments</value></data>
   <data name="Accounting.Kpi.Revenue" xml:space="preserve"><value>Revenue excl. VAT</value></data>
   <data name="Accounting.Kpi.RevenueNote" xml:space="preserve"><value>Accounts 706 and 707, net of credit notes</value></data>
   <data name="Accounting.Kpi.Vat" xml:space="preserve"><value>Output VAT</value></data>
@@ -47,7 +47,7 @@
   <data name="Accounting.Ledger.Empty" xml:space="preserve"><value>No movement in the period.</value></data>
   <data name="Accounting.Ledger.Opening" xml:space="preserve"><value>Opening balance at {0}</value></data>
   <data name="Accounting.Ledger.PageTitle" xml:space="preserve"><value>Ledger {0}</value></data>
-  <data name="Accounting.Ledger.PaymentsNote" xml:space="preserve"><value>Payments are not recorded in Lettra's books yet: the 411 balance is what was invoiced, net of credit notes.</value></data>
+  <data name="Accounting.Ledger.PaymentsNote" xml:space="preserve"><value>Payments are posted to the bank journal (BQ): the 411 balance is what is still owed, net of credit notes and payments.</value></data>
   <data name="Accounting.Ledger.Subtitle" xml:space="preserve"><value>Account movements with the running balance.</value></data>
   <data name="Accounting.Ledger.Title" xml:space="preserve"><value>Ledger</value></data>
   <data name="Accounting.Next" xml:space="preserve"><value>Next</value></data>

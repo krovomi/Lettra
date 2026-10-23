@@ -112,7 +112,7 @@ public sealed class TypingHistory(IServiceProvider services)
             reads.AddRange((list.Value?.Items ?? []).Where(i => i.Kind != InvoiceKindDto.CreditNote).Select(i => (Func<Task<HistoryDocument?>>)(async () =>
             {
                 OperationResult<InvoiceResponse> invoice = await invoices.GetAsync(i.Id, CancellationToken.None).ConfigureAwait(false);
-                return invoice.Value is { } v ? new HistoryDocument(v.CustomerId, v.IssueDate ?? DateOnly.FromDateTime(v.CreatedAt.Date), v.PaymentTerms, Lines(v.Lines)) : null;
+                return invoice.Value is { } v ? new HistoryDocument(v.CustomerId, v.IssueDate ?? DateOnly.FromDateTime(v.CreatedAt.LocalDateTime), v.PaymentTerms, Lines(v.Lines)) : null;
             })));
         }
 
@@ -123,7 +123,7 @@ public sealed class TypingHistory(IServiceProvider services)
             reads.AddRange((list.Value?.Items ?? []).Select(q => (Func<Task<HistoryDocument?>>)(async () =>
             {
                 OperationResult<QuoteResponse> quote = await quotes.GetAsync(q.Id, CancellationToken.None).ConfigureAwait(false);
-                return quote.Value is { } v ? new HistoryDocument(v.CustomerId, v.IssueDate ?? DateOnly.FromDateTime(v.CreatedAt.Date), null, Lines(v.Lines)) : null;
+                return quote.Value is { } v ? new HistoryDocument(v.CustomerId, v.IssueDate ?? DateOnly.FromDateTime(v.CreatedAt.LocalDateTime), null, Lines(v.Lines)) : null;
             })));
         }
 

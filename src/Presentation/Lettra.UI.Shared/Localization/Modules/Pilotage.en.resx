@@ -42,7 +42,7 @@
   <data name="Pilotage.Chart.Invoices.Unit" xml:space="preserve"><value>number of invoices</value></data>
   <data name="Pilotage.ToDo.Computed" xml:space="preserve"><value>computed {0}</value></data>
   <data name="Pilotage.ToDo.NeverShort" xml:space="preserve"><value>not computed yet</value></data>
-  <data name="Pilotage.ToDo.Never" xml:space="preserve"><value>Nothing has been computed for this dossier yet. The firm overview does it every night, or with "Refresh".</value></data>
+  <data name="Pilotage.ToDo.Never" xml:space="preserve"><value>Nothing has been computed for this dossier yet. The firm overview does it shortly after the server starts, then every 24 hours, or with "Refresh".</value></data>
   <data name="Pilotage.Unavailable" xml:space="preserve"><value>No overview on this device</value></data>
   <data name="Pilotage.Unavailable.Text" xml:space="preserve"><value>This installation only opens its own dossiers: "This dossier" shows everything it knows. Link it to the firm's server to see all your dossiers.</value></data>
   <data name="Nav.Pilotage.Keywords" xml:space="preserve"><value>grafana indicators kpi charts dashboards statistics</value></data>
@@ -77,7 +77,7 @@
   <data name="Pilotage.Admin.Size.Help" xml:space="preserve"><value>Total size of these dossiers' databases.</value></data>
   <data name="Pilotage.Admin.Silent" xml:space="preserve"><value>Silent devices</value></data>
   <data name="Pilotage.Admin.Silent.Help" xml:space="preserve"><value>Installed apps with no sync for more than 7 days.</value></data>
-  <data name="Pilotage.Admin.Nightly" xml:space="preserve"><value>Oldest nightly computation</value></data>
-  <data name="Pilotage.Admin.Nightly.Help" xml:space="preserve"><value>Beyond one day and two hours, a night was missed.</value></data>
+  <data name="Pilotage.Admin.Nightly" xml:space="preserve"><value>Oldest cabinet indicators</value></data>
+  <data name="Pilotage.Admin.Nightly.Help" xml:space="preserve"><value>Recomputed every 24 hours: beyond 26 hours, a run was missed.</value></data>
   <data name="Pilotage.Footnote" xml:space="preserve"><value>Ratios, delays and indices only: no amounts or customer names. You only see the dossiers your rights open.</value></data>
 </root>

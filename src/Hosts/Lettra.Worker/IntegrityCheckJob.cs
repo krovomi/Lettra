@@ -27,7 +27,7 @@ public sealed class IntegrityCheckJobOptions
 }
 
 /// <summary>
-/// Passe de nuit de la chaîne anti-fraude : pour chaque dossier actif, clôture et signe les mois écoulés, fait tourner
+/// Passe quotidienne de la chaîne anti-fraude (5 min après le démarrage du Worker, puis toutes les 24 h) : pour chaque dossier actif, clôture et signe les mois écoulés, fait tourner
 /// les clés devenues trop anciennes, puis contrôle la chaîne. Un constat lève l'alerte de dossier (S1 chaîne compromise, S2 trou de numérotation), un contrôle
 /// propre la résout. Un dossier en échec n'arrête pas la passe ; aucune donnée de dossier n'est journalisée.
 /// </summary>

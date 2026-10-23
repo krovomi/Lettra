@@ -130,8 +130,10 @@ Chaque écart a été vérifié dans le code. Les chemins sont relatifs à `src/
 | D2 | Les mentions légales sont repérées par recherche de mots dans le texte généré. | `Core/Lettra.Calculations/Compliance/ComplianceChecker.cs:168, 217, 245`, `Core/Lettra.Domain/Billing/Invoice.cs:172, 621` | Textes et prédicats de reconnaissance au même endroit (`LegalMentionTexts`) : le texte imprimé et sa vérification ne peuvent plus diverger. Des codes structurés demanderaient de changer le format des pièces enregistrées, pour un gain faible. |
 | D3 | `SyncCenter.OnSourceChanged` est un `async void` qui avale toute exception sans la journaliser. | `Modules/Sync/Lettra.Sync.Client/SyncCenter.cs:178-188` | Journaliser l'exception. |
 | D4 | Un délai d'attente HTTP devient une exception à l'écran pour la plupart des passerelles, mais « serveur injoignable » pour d'autres. | `Presentation/Lettra.UI.Gateway.Http/HttpPartiesAndCatalogGateways.cs:25`, `HttpBillingGateways.cs:37` contre `HttpCabinetGateway.cs:50` | Un seul filtre `HttpCalls.IsUnreachable` (erreur réseau ou délai dépassé), une annulation voulue par l'écran remonte (corrigé, PR 3). |
-| D5 | Plusieurs écrans prennent la date du poste (`DateTime.Today`, `DateTimeOffset.Now`) au lieu de `TimeProvider`. | `Presentation/Lettra.UI.Shared` : `DossierReviewPage.razor:101`, `CabinetPage.razor:285`, `FecExport.razor:96`, `GrantAccessForm.razor:141`, `PlatformTransmissionPanel.razor:108`, `Administration.razor:83` | `TimeProvider` injecté dans 17 écrans (`UiClock.LocalToday`), enregistré par `AddLettraUi` ; restent la mesure de la grille (diagnostic) et la date provisoire d'aperçu d'un brouillon (corrigé, PR 5). |
+| D5 | Plusieurs écrans prennent la date du poste (`DateTime.Today`, `DateTimeOffset.Now`) au lieu de `TimeProvider`. | `Presentation/Lettra.UI.Shared` : `DossierReviewPage.razor:101`, `CabinetPage.razor:285`, `FecExport.razor:96`, `GrantAccessForm.razor:141`, `PlatformTransmissionPanel.razor:108`, `Administration.razor:83` | `TimeProvider` injecté dans 17 écrans (`UiClock.LocalToday`), enregistré par `AddLettraUi` ; la mesure de la grille, la date provisoire d'aperçu d'un brouillon et le panneau d'une personne suivent depuis la PR 7 bis (corrigé, PR 5 et 7 bis). |
 | D6 | Supprimer un devis ou une facture avec une version périmée : en direct, refus « conflit de version » ; par HTTP, une `JsonException` remonte jusqu'à l'écran, car la pièce jointe au 412 est relue comme un `ProblemResponse`. Trouvé par les tests de parité des passerelles. | `Presentation/Lettra.UI.Gateway.Http/HttpBillingGateways.cs:33`, `HttpCustomersGateway.cs:96` | Pièce jointe illisible ignorée, le refus garde son code (corrigé, PR 2). |
+| D8 | Des dates du jour lues en UTC alors que le calendrier légal est celui de Paris : entre 22 h et minuit UTC (minuit à 2 h à Paris), la veille. Le PDF d'un brouillon prenait l'horloge système (`DateTime.Today`), le badge d'ancienneté du skill pack de l'assistant le jour UTC, et le kit contrôle fiscal gardait dans la période une écriture enregistrée à 0 h 30 à Paris le lendemain de sa fin. | `Presentation/Lettra.UI.Shared/Billing/PrintableMapper.cs:26, 52`, `Ai/Lettra.Ai.Orchestration/AccountingAssistant.cs:51`, `Modules/Exports/Lettra.Exports.Application/AuditKit/AuditKit.cs:120` | Côté serveur, `LegalCalendar.Today(clock)` et `LegalCalendar.DateOf(instant)` ; côté écran (qui ne voit pas le domaine), `TimeProvider` injecté et `UiClock.LocalToday`, comme les autres écrans. Même règle pour l'horodatage de la mesure de la grille, le panneau d'une personne (`DateTimeOffset.Now`) et l'historique de saisie (`CreatedAt.Date` lu en UTC) (corrigé, PR 7 bis). |
+| D9 | Le filtre des données de dossier (`DossierDataScrubber`) passait toute valeur dans une expression régulière bornée à 100 ms, qui masque la valeur entière si le délai expire. L'expression est linéaire (environ 4 ms pour 35 Ko), mais instrumentée par la mesure de couverture sur un runner chargé, elle dépassait le délai : un long texte sans donnée ressortait « *** » et le test `Un_long_texte_sans_donnee_reste_lisible_et_ne_depasse_pas_le_delai` échouait par intermittence. | `Infrastructure/Lettra.Infrastructure.Observability/DossierDataScrubber.cs:47` | Chaque motif contient un « @ » ou un chiffre : une valeur qui n'en a aucun ne passe plus par l'expression (recherche vectorisée `SearchValues`), en production comme sous couverture (corrigé, PR 7 bis). |
 | D7 | Une charge Alertmanager en JSON illisible faisait répondre 500 ; Alertmanager rejoue les 5xx, donc la charge revenait sans fin. | `Modules/Supervision/Lettra.Supervision.Infrastructure/SupervisionEndpoints.cs:41` | Répondre 400 (corrigé, PR 2). |
 
 ### Duplication (DRY)
@@ -216,6 +218,18 @@ constructeur métier le reprend donc (`: this(id)`, comme `CatalogItem`), ce qui
 suppression (`Customer`, `Supplier`). Aucun comportement ne change ; toute
 la suite de tests passe.
 
+Règle des dates du jour : la date du jour vient toujours du calendrier légal, jamais de
+`DateOnly.FromDateTime(DateTime.UtcNow)`, `DateTime.Now` ou `DateTime.Today`, dans `src` comme dans
+`tests`. Côté serveur et dans les tests, `LegalCalendar.Today(clock)` ou `LegalCalendar.DateOf(instant)` ;
+dans les écrans (qui ne voient pas le domaine), `TimeProvider` injecté et `UiClock.LocalToday`. Sinon,
+entre 22 h et minuit UTC, la date est celle de la veille à Paris (D8 ; `main` rouge sur une CI lancée à
+minuit, corrigée par la PR #157).
+
+Le SDK local doit être de la même bande que celui de la CI (dernière 10.0, aujourd'hui 10.0.402) :
+`global.json` accepte toute 10.0 récente, et un SDK plus ancien (10.0.1xx) embarque un Roslyn qui
+signale des IDE0028 que la CI ne voit pas. Le build d'un projet seul et celui de `Lettra.Ci.slnf`
+appliquent les mêmes règles (même `.editorconfig`, même `Directory.Build.props`).
+
 Règles volontairement non imposées, car ce sont des préférences de style sans gain de justesse et
 le code ne les suit pas uniformément : IDE0008 / `var` (type explicite), IDE0010 et IDE0072 (cas
 manquants d'un `switch`, couverts par les tests), IDE0021 à IDE0024 et IDE0061 (corps
@@ -265,6 +279,7 @@ Aucun test existant n'est retiré, désactivé ni affaibli.
 | 5 | Listes paginées : une seule règle de page et de taille (R7) ; interface : horloge injectée (D5) ; tests. | Fusionnée (PR #145) |
 | 5 bis | Recherche normalisée en un seul endroit (R12), découpage du contrôle des mentions (S3), tests. | Fusionnée (PR #146) |
 | 7 | Base propre : règles de l'IDE bloquantes (using inutiles, code mort, mise en forme, simplifications), 160 fichiers corrigés, suppressions d'avertissements revues (voir « Base propre »). | Fusionnée (PR #153) |
+| 7 bis | Dates du jour au calendrier légal (D8) : documents imprimables, assistant, kit contrôle fiscal, derniers écrans sur l'horloge système ; tests à minuit à Paris. | Fusionnée (PR #159) |
 | 6 | Application : chargement versionné (R5), fin de validation de facture (R8), saisie d'un encaissement (R4, S1, premier `IValidator` d'Exports pour A7), tests. | Fusionnée (PR #141) |
 | 8 | Interface Blazor : fin du localisateur de services (A5, A6), base commune des éditeurs (R9), tests bUnit. | À faire |
 
