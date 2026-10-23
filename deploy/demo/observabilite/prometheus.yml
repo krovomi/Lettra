@@ -20,7 +20,7 @@ scrape_configs:
   # Indicateurs de pilotage de l'API (docs/indicateurs-grafana.md) : tableaux « Pilotage du cabinet », « Pilotage d'un
   # dossier » et « Administration ». Lus directement sur l'API, hors du chemin OpenTelemetry : ces valeurs ne sortent pas
   # de la cellule. Jeton FICTIF de démonstration, le même que Lettra__Kpi__ScrapeToken de l'API (compose.observabilite.yaml).
-  # L'API refait sa collecte toutes les 5 minutes au plus ; une lecture par minute suffit.
+  # L'API de la démo refait sa collecte chaque minute au plus (Lettra__Kpi__RefreshInterval) ; une lecture par minute suffit.
   - job_name: lettra-kpi
     metrics_path: /internal/kpi/metrics
     scrape_interval: 60s

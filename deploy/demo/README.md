@@ -37,13 +37,17 @@ Les ports ne sont ouverts que sur le poste (127.0.0.1). Pour en changer : `LETTR
 ## Premier usage
 
 1. Sur l'écran de session, **Se connecter** : Keycloak s'ouvre.
-2. Identifiant **`demo`**, mot de passe **`demo-lettra-demo`** (Camille Démo, manager du « Cabinet de démonstration »).
+2. Identifiant **`demo`**, mot de passe **`demo-lettra-demo`** (Camille Démo, rôles manager et administration du « Cabinet de démonstration »).
 3. **Enrôlement du second facteur**, imposé à la première connexion : scanner le QR code avec une application TOTP qui
    accepte SHA-256 (FreeOTP, Google Authenticator récent, Aegis, Bitwarden, 1Password… ; pas Microsoft Authenticator),
    ou saisir la clé affichée sous « Impossible de scanner ? », puis entrer le code à 6 chiffres.
 4. Keycloak redemande **une fois** le mot de passe puis le code : le jeton de l'enrôlement ne prouve pas le second
    facteur, Lettra exige une authentification complète.
-5. Le tableau de bord s'affiche, sur le « Dossier de démonstration », rempli d'un an d'activité fictive au premier démarrage (README racine). Les connexions suivantes : mot de passe + code.
+5. Le tableau de bord s'affiche, sur le « Dossier de démonstration », rempli d'un an d'activité fictive au premier démarrage (README racine). Deux autres dossiers du cabinet (« Bâti
+   Rénov' Lemoine », « Négoce Méditerranée Distribution ») sont créés une seule fois, y compris dans une démo déjà
+   remplie, pour la vue cabinet et le sélecteur de dossier. La vue cabinet est calculée 15 s après le démarrage
+   (`Lettra__CabinetOverview__InitialDelay`) et les indicateurs sont recollectés chaque minute
+   (`Lettra__Kpi__RefreshInterval`). Les connexions suivantes : mot de passe + code.
 
 ## Dictée et commandes vocales (conteneur whisper)
 
@@ -243,6 +247,7 @@ minute, 24). Les métriques arrivent toutes les 10 s : les courbes bougent aprè
 API ─OTLP─► collecteur (base de la cellule, même filtrage) ─┬─ métriques et exemplaires ─► Prometheus (OTLP, règles de la cellule)
                                                             ├─ traces ─────────────────► Tempo
                                                             └─ journaux ───────────────► Loki ──► Grafana (sources et tableaux provisionnés)
+API /internal/kpi/metrics ◄─ lecture chaque minute, jeton fictif ─ Prometheus (tâche lettra-kpi, hors OpenTelemetry)
 ```
 
 - Le collecteur reprend la base de la cellule (`files/collector.yaml`) et ses destinations Tempo et Loki
@@ -264,7 +269,8 @@ API ─OTLP─► collecteur (base de la cellule, même filtrage) ─┬─ mét
 - `compose.observabilite.yaml` remplace `compose.otel.yaml` (collecteur seul, ci-dessus) : ne pas combiner les deux.
 - Vérifié à chaque CI par le job « Démo — télémétrie dans Grafana » de `.github/workflows/deploy.yml` : la pile démarre,
   Grafana répond et a ses sources et ses tableaux de bord, puis après deux minutes d'activité k6, chaque panneau a des
-  données (sauf les deux panneaux PostgreSQL), un exemplaire mène à une trace qui a ses journaux, et les règles
+  données (sauf ceux que `SANS_DONNEES_EN_DEMO` de `verifier.py` laisse vides, avec leur raison : les deux panneaux
+  PostgreSQL et quatre panneaux d'« Administration » sans erreur 5xx, connexion refusée ni poste relié garantis), un exemplaire mène à une trace qui a ses journaux, et les règles
   d'alerte sont visibles (`deploy/tests/grafana/verifier.py`). L'affichage dans un navigateur n'est pas vérifié par la CI.
 
 ## Comment c'est monté
@@ -276,7 +282,8 @@ API ─OTLP─► collecteur (base de la cellule, même filtrage) ─┬─ mét
   Docker (`http://keycloak:8080`) et `KC_HOSTNAME_BACKCHANNEL_DYNAMIC` y renvoie les points d'accès serveur à
   serveur, avec le même émetteur. Navigateur et API valident donc les mêmes jetons.
 - L'API reçoit sa configuration par variables d'environnement (`compose.yaml`) : mode réseau local, facturation
-  électronique simulée, utilisateur `demo` manager du cabinet.
+  électronique simulée, utilisateur `demo` manager et administrateur du cabinet, compte de service fictif des factures
+  récurrentes, e-mails vers MailPit.
 - Vérifié à chaque CI par le job « Démo navigateur » de `.github/workflows/deploy.yml` (Playwright, `e2e/parcours.mjs`), y compris le profil HTTPS
   avec un nom d'hôte hors localhost.
 - La même pile sert aussi un test de charge léger (k6, job « Démo — charge k6 ») et un scan de sécurité ZAP de base

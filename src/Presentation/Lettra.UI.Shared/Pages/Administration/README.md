@@ -58,13 +58,15 @@ Portail) aux permissions vérifiées par `AuthorizationBehavior`. Chaque niveau 
 refuse l'administration et le portail (ils restent dans les rôles fournis). Devis, factures et avoirs se consultent
 ensemble (même permission de lecture), ce que l'éditeur affiche.
 
-**Routes** (groupe cabinet, `RightsEndpoints.MapCabinetRights`, plus `/api/v1/dossiers/acces`) :
+**Routes** (groupe cabinet, `AdministrationEndpoints.MapCabinetAdministration` appelé par
+`RightsEndpoints.MapCabinetRights`, plus `/api/v1/dossiers/acces` par `MapMyAccess`) :
 
 | Méthode | Route | Cas d'usage |
 |---|---|---|
 | GET | `/api/v1/dossiers/acces?dossier=` | `GetMyAccessQuery` : cabinet, `CanAdminister`, niveaux par page |
 | GET | `/api/v1/cabinets/{id}/administration` | `GetAdministrationOverviewQuery` : tout l'espace en une lecture |
 | POST / PUT | `…/personnes`, `…/personnes/{userId}` | `InvitePersonCommand`, `UpdatePersonCommand` |
+| POST | `…/personnes/{userId}/invitation` | `ResendInvitationCommand` : renvoi de l'e-mail d'invitation |
 | PUT / DELETE | `…/groupes/{groupId}` | `RenameTeamCommand`, `DeleteTeamCommand` |
 | POST / PUT / DELETE | `…/roles`, `…/roles/{key}` | `SaveCustomRoleCommand`, `DeleteCustomRoleCommand` |
 
@@ -87,7 +89,9 @@ dossier, styles `wwwroot/lettra-admin.css` (importé par `lettra.css`, jetons un
 
 ## Limites connues
 
-- Lettra n'envoie pas d'e-mail d'invitation : l'administrateur prévient la personne.
+- Lettra envoie un e-mail d'invitation (français puis anglais) quand l'envoi d'e-mails est configuré (`Lettra:Email`,
+  MailPit dans la démonstration) ; sinon, ou en cas d'échec, l'invitation reste valable et l'administrateur la renvoie
+  ou prévient la personne.
 - Une personne ajoutée ici n'a pas encore de compte Keycloak : dans la démonstration navigateur, elle apparaît et reçoit
   des accès, mais ne peut pas se connecter (création du compte côté Keycloak prévue en phase 7).
 - Le message « Annuler » est propre à cet espace en attendant que le toaster partagé accepte une action.
