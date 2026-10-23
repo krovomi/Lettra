@@ -20,7 +20,7 @@ namespace Lettra.Exports.Application.AuditKit;
 /// <summary>
 /// Préparer le kit contrôle fiscal d'une période (un exercice, 24 mois au plus) : FEC et son rapport de validation,
 /// attestation d'intégrité, piste d'audit fiable, XML des pièces et journal des transmissions à la plateforme. Lecture
-/// seule, sauf le contrôle d'intégrité qui republie l'état des alertes de la chaîne, comme celui de la nuit.
+/// seule, sauf le contrôle d'intégrité qui republie l'état des alertes de la chaîne, comme la passe quotidienne du Worker.
 /// </summary>
 public sealed record GetAuditKitQuery(DossierId Dossier, DateOnly From, DateOnly To) : IQuery<Result<AuditKitFile>>, IRequirePermission
 {
@@ -117,7 +117,7 @@ public sealed class AuditKitService(
         List<JournalEntry> entries = [];
         await foreach (JournalEntry entry in journal.ReadEntriesAsync(cancellationToken).ConfigureAwait(false))
         {
-            DateOnly recorded = DateOnly.FromDateTime(entry.OccurredAt.UtcDateTime);
+            DateOnly recorded = LegalCalendar.DateOf(entry.OccurredAt);
             if ((entry.IssueDate is { } day && day >= from && day <= to) || (recorded >= from && recorded <= to))
             {
                 entries.Add(entry);

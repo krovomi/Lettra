@@ -21,7 +21,7 @@ public static class KpiMetrics
     public const string QuotesPending = "lettra_kpi_quotes_pending";
     public const string QuotesExpiringSoon = "lettra_kpi_quotes_expiring_soon";
 
-    // Vue cabinet (les compteurs de la nuit, relus dans la base Catalog).
+    // Vue cabinet (les compteurs de la passe quotidienne, relus dans la base Catalog).
     public const string CabinetIndicatorCount = "lettra_kpi_cabinet_indicator_count";
     public const string CabinetIndicatorLevel = "lettra_kpi_cabinet_indicator_level";
     public const string CabinetIndicatorDueDays = "lettra_kpi_cabinet_indicator_due_days";
@@ -81,7 +81,7 @@ public static class KpiMetrics
         [QuoteConversion] = "Devis acceptés sur les devis tranchés des 12 derniers mois (acceptés, refusés ou expirés).",
         [QuotesPending] = "Devis envoyés en attente de réponse, pas encore expirés.",
         [QuotesExpiringSoon] = "Devis en attente qui expirent dans les 7 jours.",
-        [CabinetIndicatorCount] = "Compteur d'un indicateur de la vue cabinet (calcul de la nuit).",
+        [CabinetIndicatorCount] = "Compteur d'un indicateur de la vue cabinet (calcul quotidien).",
         [CabinetIndicatorLevel] = "Urgence d'un indicateur de la vue cabinet : 0 rien, 1 en attente, 2 à traiter, 3 urgent.",
         [CabinetIndicatorDueDays] = "Jours avant l'échéance d'un indicateur de la vue cabinet (négatif : en retard).",
         [CabinetIndicatorAge] = "Âge du dernier calcul de la vue cabinet du dossier.",

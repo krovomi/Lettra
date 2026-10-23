@@ -40,7 +40,7 @@
   <data name="Cabinet.Review" xml:space="preserve"><value>Review</value></data>
   <data name="Cabinet.Review.Title" xml:space="preserve"><value>Open this dossier's monthly review</value></data>
   <data name="Cabinet.AllClear" xml:space="preserve"><value>All up to date</value></data>
-  <data name="Cabinet.Footnote" xml:space="preserve"><value>Figures are recomputed every night, and when you click “Refresh”. They are counters only: no amount or customer name leaves the dossier.</value></data>
+  <data name="Cabinet.Footnote" xml:space="preserve"><value>Figures are computed shortly after the server starts, then every 24 hours, and when you click “Refresh”. They are counters only: no amount or customer name leaves the dossier.</value></data>
   <data name="Cabinet.Indicator.factures.retard" xml:space="preserve"><value>Overdue invoices</value></data>
   <data name="Cabinet.Indicator.factures.retard.Due" xml:space="preserve"><value>since {0}</value></data>
   <data name="Cabinet.Indicator.pa.rejets" xml:space="preserve"><value>Platform rejections</value></data>

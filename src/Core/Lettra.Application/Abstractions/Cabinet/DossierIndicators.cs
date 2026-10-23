@@ -19,8 +19,8 @@ public enum IndicatorLevel
 public sealed record DossierIndicator(string Key, int Count, IndicatorLevel Level, DateOnly? DueOn = null);
 
 /// <summary>
-/// Calcule des indicateurs d'un dossier. S'exécute dans la portée de ce dossier (sa base est le dossier courant), la nuit
-/// et quand quelqu'un demande « Actualiser ». Chaque module enregistre la sienne :
+/// Calcule des indicateurs d'un dossier. S'exécute dans la portée de ce dossier (sa base est le dossier courant), à chaque
+/// passe quotidienne et quand quelqu'un demande « Actualiser ». Chaque module enregistre la sienne :
 /// <c>services.AddScoped&lt;IDossierIndicatorSource, …&gt;()</c>. Une source en échec n'empêche pas les autres.
 /// </summary>
 public interface IDossierIndicatorSource
