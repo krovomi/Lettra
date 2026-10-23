@@ -9,7 +9,7 @@ using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Application.Features.Integrity;
 
-/// <summary>Contrôler maintenant l'intégrité de la chaîne du dossier (le Worker le fait aussi chaque nuit).</summary>
+/// <summary>Contrôler maintenant l'intégrité de la chaîne du dossier (le Worker le fait aussi une fois par jour).</summary>
 public sealed record VerifyDossierIntegrityCommand(DossierId Dossier)
     : ICommand<Result<IntegrityReportResponse>>, IRequirePermission
 {

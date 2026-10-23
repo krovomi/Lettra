@@ -42,7 +42,7 @@
   <data name="Pilotage.Chart.Invoices.Unit" xml:space="preserve"><value>nombre de factures</value></data>
   <data name="Pilotage.ToDo.Computed" xml:space="preserve"><value>calcul {0}</value></data>
   <data name="Pilotage.ToDo.NeverShort" xml:space="preserve"><value>pas encore calculé</value></data>
-  <data name="Pilotage.ToDo.Never" xml:space="preserve"><value>Rien n'a encore été calculé pour ce dossier. La vue cabinet le fait chaque nuit, ou avec « Actualiser ».</value></data>
+  <data name="Pilotage.ToDo.Never" xml:space="preserve"><value>Rien n'a encore été calculé pour ce dossier. La vue cabinet le fait peu après le démarrage du serveur puis toutes les 24 heures, ou avec « Actualiser ».</value></data>
   <data name="Pilotage.Unavailable" xml:space="preserve"><value>Pas de vue d'ensemble sur ce poste</value></data>
   <data name="Pilotage.Unavailable.Text" xml:space="preserve"><value>Cette installation n'ouvre que ses propres dossiers : l'onglet « Ce dossier » montre tout ce qu'elle connaît. Reliez-la au serveur du cabinet pour voir tous vos dossiers.</value></data>
   <data name="Nav.Pilotage.Keywords" xml:space="preserve"><value>grafana indicateurs kpi graphiques tableaux de bord pilotage statistiques</value></data>

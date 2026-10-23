@@ -8,7 +8,7 @@
 @inject TimeProvider Clock
 
 @* Vue cabinet : un tableau de supervision des dossiers que l'utilisateur peut ouvrir, les plus urgents d'abord. Les
-   compteurs sont ceux de la nuit (ou du dernier « Actualiser ») : la page ne lit que le registre des indicateurs, sans
+   compteurs sont ceux du dernier calcul (peu après le démarrage puis toutes les 24 h, ou au dernier « Actualiser ») : la page ne lit que le registre des indicateurs, sans
    ouvrir les dossiers. Grand écran : tableau ; tablette et téléphone : une carte par dossier, dans le même ordre. Les
    indicateurs des autres modules (TVA, banque) prennent leur colonne d'eux-mêmes dès qu'un dossier en a. *@
 
@@ -173,7 +173,7 @@ else
     private bool _onlyToHandle;
     private readonly CancellationTokenSource _disposed = new();
 
-    /// <summary>Au-delà, le premier calcul est laissé à la passe de nuit : il ouvrirait trop de bases d'un coup.</summary>
+    /// <summary>Au-delà, le premier calcul est laissé à la passe quotidienne : il ouvrirait trop de bases d'un coup.</summary>
     private const int AutoRefreshLimit = 30;
 
     private int ToHandle => _overview?.Dossiers.Count(d => d.Level >= IndicatorLevelDto.Warning) ?? 0;
