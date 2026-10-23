@@ -71,10 +71,12 @@ qui il est. Seuls le nom du dossier et celui du cabinet apparaissent, pour que l
 ```
 API Lettra ── GET /internal/kpi/metrics (Bearer) ──► Prometheus de la cellule ──► Grafana
    │
-   └─ toutes les 5 min : pour chaque dossier actif du catalogue, ouvre sa base
+   └─ à chaque lecture (Prometheus, ou « Mes dossiers » dans Lettra), si la dernière collecte a plus de
+      RefreshInterval (5 min ; 1 min dans la démo) : pour chaque dossier actif du catalogue, ouvre sa base
       (sources IDossierKpiSource), puis catalogue et alertes (ICellKpiSource)
 
-Branché dans la démo Docker ; pas encore branché dans les charts Helm (ni jeton, ni tâche « lettra-kpi »).
+Branché dans la démo Docker ; pas encore branché dans les charts Helm (ni jeton, ni tâche « lettra-kpi ») :
+dans une cellule déployée, les tableaux Grafana de pilotage et d'administration restent vides.
 ```
 
 - **Hors OpenTelemetry.** La télémétrie OTel ne porte aucune donnée de dossier et peut quitter la cellule (annexe G).
