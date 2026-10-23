@@ -15,7 +15,7 @@ Le code est **globalement sain** : avertissements traités en erreurs avec les a
 mode `Recommended`, aucune utilisation de `DateTime.Now` côté serveur, aucun `.Result` / `.Wait()`,
 exceptions typées et journalisées, règles de dépendance entre couches vérifiées par
 `tests/Lettra.Architecture.Tests`. La couverture est déjà élevée (**88 % des lignes, 77 % des
-branches** à cette mesure ; 92,2 % et 82,1 % depuis la PR #153).
+branches** à cette mesure ; 92,2 % et 82,1 % après la PR #153, 92,3 % et 82,1 % après la PR #159).
 
 Il n'est pas pour autant exempt de dettes. Les principales :
 
