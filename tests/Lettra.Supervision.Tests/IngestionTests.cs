@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Lettra.Application.Authorization;
 using Lettra.Domain.Common;
 using Lettra.Supervision.Application;
 using Lettra.Supervision.Domain;
@@ -118,7 +119,7 @@ public sealed class IngestionTests : IDisposable
     [InlineData("s3cr3t", false)]
     [InlineData("", false)]
     public void Le_webhook_exige_le_jeton_de_la_cellule(string header, bool expected) =>
-        SupervisionEndpoints.IsAuthorized(header, "s3cr3t").Should().Be(expected);
+        MachineToken.Matches(header, "s3cr3t").Should().Be(expected);
 
     private const string Sample = """
         {

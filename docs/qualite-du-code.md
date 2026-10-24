@@ -344,7 +344,8 @@ workflows, `LayerDependencyTests`, `MauiProgram.cs`) passent par le coordinateur
 | 15 bis | Domaine du module Exports (nouveau projet, câblage Socle). | X21 |
 | 15 ter | Éditeurs de devis et de facture : ce qui était copié passe dans `DocumentEditing`. | R9 |
 | 15 quater | Grands composants, méthodes et constructeurs longs. | X22, X26 |
-| 16 | Basse gravité, au fil des PR qui touchent les fichiers. | basse |
+| 16 | Basse gravité, par thème : erreurs et journaux, jetons de machine, clients HTTP de Claude. | basse, X12 |
+| 16 bis | Basse gravité : constantes recopiées, tables figées, aides JavaScript des composants. | basse |
 
 ### Fait dans la PR 8
 
@@ -586,6 +587,27 @@ workflows, `LayerDependencyTests`, `MauiProgram.cs`) passent par le coordinateur
 - Tests : `CustomerDirectoryTests` (recherche du client dit) et `DocumentLineCellsTests` (lecture des cellules) ; les
   tests existants de la dictée, du FEC, des modèles récurrents, du kit, de l'administration et des relances passent
   inchangés.
+
+### Fait dans la PR 16
+
+- Archive scellée : une archive modifiée qui met un champ à `null` ou l'omet n'est plus repérée en attrapant une
+  `NullReferenceException`. La lecture respecte les annotations de nullité et les paramètres requis
+  (`RespectNullableAnnotations`, `RespectRequiredConstructorParameters`), un fichier `null` est refusé, et l'archive
+  ressort « format invalide » comme avant. Le format écrit est inchangé. Tests `SealedArchiveFormatTests`.
+- Assistant : un outil en échec est journalisé (nom de l'outil et type de l'exception, jamais son message, qui peut
+  contenir des données du dossier). Test avec le collecteur de `Microsoft.Extensions.Diagnostics.Testing`.
+- Catalogue : un dossier dont la création ou la migration échoue garde le type de l'exception dans `LastError`, et
+  non plus son message (nom du serveur, de l'utilisateur ou de la base). Le message reste dans le journal technique,
+  comme pour l'outbox. Changement de comportement voulu : la colonne ne sert qu'à l'exploitation.
+- Jetons de machine (collecte des indicateurs, webhook d'Alertmanager) : une seule comparaison en temps constant,
+  `MachineToken.Matches`, au lieu de deux copies.
+- **X12** : le moteur Claude prend son client HTTP à `IHttpClientFactory` (délai de 10 minutes, connexions renouvelées
+  toutes les 2 minutes pour suivre le DNS, le moteur vivant autant que l'application). Plus de `new HttpClient()` pour
+  Vertex. Les nouvelles tentatives restent celles du SDK.
+- Gardés, avec la raison : `MentionCodes` (`Lettra.Calculations`, sans dépendance) et `ErrorCodes.Mention` (contrats)
+  sont jumeaux, vérifiés par un test, comme les énumérations du domaine Exports. `SmtpClient` reste : le remplacer par
+  MailKit ajoute un paquet pour un envoi qui ne sert qu'au relais du cabinet, et la démonstration n'envoie rien
+  dehors.
 
 ## Plan
 

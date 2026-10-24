@@ -11,6 +11,8 @@ using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Common;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Testing;
 using static Lettra.Ai.Tests.ScriptedTurnsEngine;
 
 namespace Lettra.Ai.Tests;
@@ -136,6 +138,23 @@ public sealed class AssistantBillingToolsTests
         events.Should().NotContain(e => e is AssistantDraftProposedEvent);
         events.OfType<AssistantToolUsedEvent>().Should().ContainSingle().Which.Succeeded.Should().BeFalse();
         h.Engine.Requests[1].Messages[^1].Parts.OfType<ToolResultPart>().Single().Content.Should().Be("Refusé par Lettra : Customer.NotFound");
+    }
+
+    [Fact]
+    public async Task Un_outil_en_echec_est_journalise_sans_son_message_technique()
+    {
+        await using AssistantHarness h = new(
+            new ScriptedTurnsEngine(_ => Call("creer_brouillon_devis", DraftInput), _ => Say("Je n'ai pas pu créer le brouillon.")),
+            AssistantHarness.Enabled(),
+            namedEntityDetection: true);
+
+        List<AssistantEvent> events = await h.AskAsync(AssistantFeature.DraftFromText, "Devis pour Dupont");
+
+        events.OfType<AssistantToolUsedEvent>().Single().Succeeded.Should().BeFalse();
+        h.Engine.Requests[1].Messages[^1].Parts.OfType<ToolResultPart>().Single().Content.Should().Be("L'outil a échoué.");
+        FakeLogRecord log = h.Logs.GetSnapshot().Should().ContainSingle(r => r.Level == LogLevel.Warning).Subject;
+        log.Message.Should().Be($"Outil de l'assistant {CreateQuoteDraftTool.ToolName} en échec (InvalidOperationException).");
+        log.Exception.Should().BeNull("le message de l'exception peut contenir des données du dossier");
     }
 
     [Fact]

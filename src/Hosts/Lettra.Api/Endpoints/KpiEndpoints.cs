@@ -1,6 +1,5 @@
-using System.Security.Cryptography;
-using System.Text;
 using Lettra.Application.Abstractions.Kpi;
+using Lettra.Application.Authorization;
 using Lettra.Application.Features.Kpi;
 using Lettra.Infrastructure.Catalog.Kpi;
 using Lettra.Infrastructure.Observability;
@@ -32,7 +31,7 @@ internal static class KpiEndpoints
 
     private static async Task<IResult> ScrapeAsync(HttpContext context, IOptions<KpiOptions> options, IKpiSnapshotProvider snapshots, CancellationToken cancellationToken)
     {
-        if (!IsAuthorized(context.Request.Headers.Authorization.ToString(), options.Value.ScrapeToken!))
+        if (!MachineToken.Matches(context.Request.Headers.Authorization.ToString(), options.Value.ScrapeToken!))
         {
             return TypedResults.Unauthorized();
         }
@@ -44,18 +43,4 @@ internal static class KpiEndpoints
     /// <summary>Sans les indicateurs de gestion quand la cellule ne publie que l'exploitation (le cache, lui, les garde).</summary>
     internal static KpiSnapshot Published(KpiSnapshot snapshot, KpiOptions options) =>
         options.BusinessIndicators ? snapshot : snapshot with { Samples = [.. snapshot.Samples.Where(s => !KpiMetrics.Business.Contains(s.Metric))] };
-
-    /// <summary>Compare le jeton présenté en temps constant (empreintes de même longueur).</summary>
-    internal static bool IsAuthorized(string header, string token)
-    {
-        const string scheme = "Bearer ";
-        if (!header.StartsWith(scheme, StringComparison.Ordinal))
-        {
-            return false;
-        }
-
-        byte[] presented = SHA256.HashData(Encoding.UTF8.GetBytes(header[scheme.Length..]));
-        byte[] expected = SHA256.HashData(Encoding.UTF8.GetBytes(token));
-        return CryptographicOperations.FixedTimeEquals(presented, expected);
-    }
 }

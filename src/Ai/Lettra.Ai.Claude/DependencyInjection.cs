@@ -73,6 +73,9 @@ internal sealed record ProviderCredentials(
 
 public static class DependencyInjection
 {
+    /// <summary>Délai d'un tour du moteur : une réponse longue avec raisonnement peut prendre plusieurs minutes.</summary>
+    private static readonly TimeSpan RequestTimeout = TimeSpan.FromMinutes(10);
+
     /// <summary>
     /// Enregistre le moteur Claude, seulement si un fournisseur est configuré sur ce déploiement. Échec fermé : une région
     /// hors UE, un projet Vertex absent ou l'API directe sans autorisation d'évaluation empêchent le démarrage, au lieu
@@ -93,7 +96,13 @@ public static class DependencyInjection
             return services;
         }
 
-        services.AddKeyedSingleton<IAiEngine>(AiEngineKind.ClaudeEu, (_, _) => new ClaudeEngine(CreateClient(options, new ClientOptions()), options));
+        // Le moteur vit autant que l'application : le client HTTP aussi, et ses connexions sont renouvelées pour suivre le DNS.
+        services.AddHttpClient(nameof(ClaudeEngine), client => client.Timeout = RequestTimeout)
+            .UseSocketsHttpHandler((handler, _) => handler.PooledConnectionLifetime = TimeSpan.FromMinutes(2))
+            .SetHandlerLifetime(Timeout.InfiniteTimeSpan);
+        services.AddKeyedSingleton<IAiEngine>(AiEngineKind.ClaudeEu, (sp, _) => new ClaudeEngine(
+            CreateClient(options, new ClientOptions { HttpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(ClaudeEngine)) }),
+            options));
         return services;
     }
 
@@ -119,7 +128,7 @@ public static class DependencyInjection
                 ? new AnthropicVertexCredentials(options.Region!, options.ProjectId!, google)
                 : new AnthropicVertexCredentials(options.Region!, options.ProjectId!))
             {
-                HttpClient = client.HttpClient ?? new HttpClient(),
+                HttpClient = client.HttpClient ?? throw new ArgumentException("Le client HTTP de la fabrique est requis.", nameof(client)),
                 MaxRetries = client.MaxRetries,
             },
             ClaudeProvider.AnthropicDirect => new AnthropicClient(client) { ApiKey = options.ApiKey },

@@ -13,6 +13,7 @@ using Lettra.Domain.SharedKernel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging.Testing;
 
 namespace Lettra.Ai.Tests;
 
@@ -123,6 +124,7 @@ internal sealed class AssistantHarness : IAsyncDisposable
         services.AddSingleton<ICommandDispatcher>(Dispatcher);
         services.AddSingleton<IAiAuditLog, InMemoryAiAuditLog>();
         services.AddSingleton<IAiSettingsStore>(Settings);
+        services.AddFakeLogging();
         if (namedEntityDetection)
         {
             // Le repérage des noms propres n'existe pas encore : ce double ouvre le point 1 pour tester ses outils.
@@ -168,6 +170,9 @@ internal sealed class AssistantHarness : IAsyncDisposable
 
         return settings;
     }
+
+    /// <summary>Les journaux techniques écrits pendant le test.</summary>
+    public FakeLogCollector Logs => _services.GetFakeLogCollector();
 
     public T Get<T>()
         where T : notnull => _services.GetRequiredService<T>();

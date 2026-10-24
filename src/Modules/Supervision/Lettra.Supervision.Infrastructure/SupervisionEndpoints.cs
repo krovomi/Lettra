@@ -1,6 +1,5 @@
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
+using Lettra.Application.Authorization;
 using Lettra.Domain.Common;
 using Lettra.Supervision.Application;
 using Microsoft.AspNetCore.Builder;
@@ -34,7 +33,7 @@ public static class SupervisionEndpoints
 
     private static async Task<IResult> ReceiveAsync(HttpContext context, IOptions<SupervisionOptions> options, AlertIngestion ingestion, CancellationToken cancellationToken)
     {
-        if (!IsAuthorized(context.Request.Headers.Authorization.ToString(), options.Value.WebhookToken!))
+        if (!MachineToken.Matches(context.Request.Headers.Authorization.ToString(), options.Value.WebhookToken!))
         {
             return TypedResults.Unauthorized();
         }
@@ -68,19 +67,6 @@ public static class SupervisionEndpoints
 
         // Alertmanager rejoue sur 5xx seulement : une alerte mal étiquetée n'est pas rejouée, elle est comptée.
         return TypedResults.Ok(new WebhookReceipt(accepted, rejected));
-    }
-
-    internal static bool IsAuthorized(string header, string token)
-    {
-        const string scheme = "Bearer ";
-        if (!header.StartsWith(scheme, StringComparison.Ordinal))
-        {
-            return false;
-        }
-
-        byte[] presented = SHA256.HashData(Encoding.UTF8.GetBytes(header[scheme.Length..]));
-        byte[] expected = SHA256.HashData(Encoding.UTF8.GetBytes(token));
-        return CryptographicOperations.FixedTimeEquals(presented, expected);
     }
 }
 
