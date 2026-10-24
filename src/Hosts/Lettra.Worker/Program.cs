@@ -5,7 +5,9 @@ using Lettra.Exports.Infrastructure;
 using Lettra.Infrastructure.Catalog;
 using Lettra.Infrastructure.Persistence.Billing;
 using Lettra.Infrastructure.Persistence.Cabinet;
+using Lettra.Infrastructure.Persistence.Integrity;
 using Lettra.Infrastructure.Persistence.Outbox;
+using Lettra.Supervision.Infrastructure;
 using Lettra.Worker;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -29,10 +31,14 @@ builder.Services.AddScoped<JobDossierSource>();
 builder.Services.AddScoped<IRequestedDossierSource>(sp => sp.GetRequiredService<JobDossierSource>());
 builder.Services.AddOptions<DossierMigrationJobOptions>().Bind(builder.Configuration.GetSection(DossierMigrationJobOptions.SectionName));
 builder.Services.AddHostedService<DossierMigrationJob>();
-builder.Services.AddOptions<EscalationJobOptions>().Bind(builder.Configuration.GetSection(EscalationJobOptions.SectionName));
-builder.Services.AddHostedService<EscalationJob>();
-builder.Services.AddOptions<IntegrityCheckJobOptions>().Bind(builder.Configuration.GetSection(IntegrityCheckJobOptions.SectionName));
-builder.Services.AddHostedService<IntegrityCheckJob>();
+
+// Un Worker lancé en job de déploiement (RunOnce) ne fait que migrer : ni escalade ni contrôle d'intégrité.
+if (!builder.Configuration.GetValue<bool>($"{DossierMigrationJobOptions.SectionName}:{nameof(DossierMigrationJobOptions.RunOnce)}"))
+{
+    builder.Services.AddEscalationJob(builder.Configuration);
+    builder.Services.AddIntegrityCheckJob(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
+}
+
 builder.Services.AddFecBulkExport(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
 builder.Services.AddOutboxDispatch(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
 builder.Services.AddFiscalDeadlineAlerts(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));

@@ -47,7 +47,10 @@ Les ports ne sont ouverts que sur le poste (127.0.0.1). Pour en changer : `LETTR
    Rénov' Lemoine », « Négoce Méditerranée Distribution ») sont créés une seule fois, y compris dans une démo déjà
    remplie, pour la vue cabinet et le sélecteur de dossier. La vue cabinet est calculée 15 s après le démarrage
    (`Lettra__CabinetOverview__InitialDelay`) et les indicateurs sont recollectés chaque minute
-   (`Lettra__Kpi__RefreshInterval`). Les connexions suivantes : mot de passe + code.
+   (`Lettra__Kpi__RefreshInterval`). La chaîne anti-fraude de chaque dossier est clôturée et contrôlée 30 s après le
+   démarrage puis une fois par jour (`Lettra__Worker__Integrity__InitialDelay`), et l'escalade du centre d'alertes
+   tourne chaque minute : sans Worker, l'API fait toutes ses passes sauf les vagues de migration (chaque base
+   de dossier est migrée à sa première ouverture). Les connexions suivantes : mot de passe + code.
 
 ## Dictée et commandes vocales (conteneur whisper)
 

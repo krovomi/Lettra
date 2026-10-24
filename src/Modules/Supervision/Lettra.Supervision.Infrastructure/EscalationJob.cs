@@ -1,13 +1,17 @@
 using Lettra.Supervision.Application;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Lettra.Worker;
+namespace Lettra.Supervision.Infrastructure;
 
 public sealed class EscalationJobOptions
 {
     public const string SectionName = "Lettra:Worker:Escalation";
 
-    /// <summary>Faux pour un Worker lancé en job de déploiement (<c>RunOnce</c>) : il ne fait que migrer.</summary>
     public bool Enabled { get; set; } = true;
 
     /// <summary>Les délais d'escalade se comptent en minutes : une passe par minute suffit.</summary>
@@ -16,19 +20,19 @@ public sealed class EscalationJobOptions
 
 /// <summary>
 /// Passe d'escalade du module Supervision (annexe G) : alertes non prises en charge escaladées, alertes résolues
-/// et calmes clôturées. Une passe qui échoue est journalisée ; la suivante repart de l'état du registre.
+/// et calmes clôturées, par le Worker ou, dans une installation sans Worker (démonstration), par l'API. Une passe qui
+/// échoue est journalisée ; la suivante repart de l'état du registre.
 /// </summary>
 internal sealed partial class EscalationJob(
     IServiceScopeFactory scopes,
     IOptions<EscalationJobOptions> options,
-    IOptions<DossierMigrationJobOptions> worker,
     TimeProvider clock,
     ILogger<EscalationJob> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         EscalationJobOptions settings = options.Value;
-        if (!settings.Enabled || worker.Value.RunOnce)
+        if (!settings.Enabled)
         {
             return;
         }
@@ -61,4 +65,17 @@ internal sealed partial class EscalationJob(
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Passe d'escalade en échec")]
     private partial void LogFailed(Exception exception);
+}
+
+public static class EscalationHosting
+{
+    /// <summary>Passe d'escalade du centre d'alertes ; réglages sous <c>Lettra:Worker:Escalation</c>, quel que soit l'hôte.</summary>
+    public static IServiceCollection AddEscalationJob(this IServiceCollection services, IConfiguration configuration)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddOptions<EscalationJobOptions>().Bind(configuration.GetSection(EscalationJobOptions.SectionName));
+        services.AddHostedService<EscalationJob>();
+        return services;
+    }
 }
