@@ -82,7 +82,7 @@ public sealed class CatalogDossier
     /// <summary>En UTC. <see cref="DateTime"/> plutôt que <see cref="DateTimeOffset"/> : comparable sur les trois providers.</summary>
     public DateTime? LeaseUntil { get; set; }
 
-    /// <summary>Message technique de la dernière erreur (aucune donnée du dossier).</summary>
+    /// <summary>Type de l'exception de la dernière erreur ; le message reste dans le journal technique.</summary>
     public string? LastError { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }

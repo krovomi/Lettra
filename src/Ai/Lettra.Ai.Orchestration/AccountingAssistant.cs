@@ -9,6 +9,7 @@ using Lettra.Contracts.Assistant;
 using Lettra.Contracts.Common;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
+using Microsoft.Extensions.Logging;
 
 namespace Lettra.Ai.Orchestration;
 
@@ -17,7 +18,7 @@ namespace Lettra.Ai.Orchestration;
 /// par les mêmes contrôles : politique du cabinet, droits, minimisation, pseudonymisation, outils sans pouvoir,
 /// validation des entrées, journal, contrôle de la réponse. Le moteur ne fait que proposer.
 /// </summary>
-internal sealed class AccountingAssistant(
+internal sealed partial class AccountingAssistant(
     IAiUsagePolicy policy,
     INamedEntityDetection namedEntities,
     IAiEngineFactory engines,
@@ -25,7 +26,8 @@ internal sealed class AccountingAssistant(
     ToolRegistry tools,
     IAiDossierContext dossiers,
     IAiAuditLog audit,
-    TimeProvider time) : IAccountingAssistant
+    TimeProvider time,
+    ILogger<AccountingAssistant> logger) : IAccountingAssistant
 {
     public async IAsyncEnumerable<AssistantEvent> AskAsync(AssistantRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
@@ -303,7 +305,8 @@ internal sealed class AccountingAssistant(
         catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or InvalidOperationException or FormatException or KeyNotFoundException
             && !cancellationToken.IsCancellationRequested)
         {
-            // Le message technique ne part ni vers le moteur ni vers le journal : il peut contenir des données.
+            // Le message technique ne part ni vers le moteur ni vers les journaux : il peut contenir des données.
+            LogToolFailed(logger, tool.Name, exception.GetType().Name);
             result = AiToolResult.Error("L'outil a échoué.");
         }
 
@@ -331,4 +334,7 @@ internal sealed class AccountingAssistant(
 
     private ValueTask AuditAsync(AssistantRequest request, AiAuditKind kind, string detail, string? engine, CancellationToken cancellationToken) =>
         audit.AppendAsync(new AiAuditEntry(time.GetUtcNow(), request.Dossier, request.UserId, kind, detail, engine), cancellationToken);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Outil de l'assistant {Tool} en échec ({ExceptionType}).")]
+    private static partial void LogToolFailed(ILogger logger, string tool, string exceptionType);
 }

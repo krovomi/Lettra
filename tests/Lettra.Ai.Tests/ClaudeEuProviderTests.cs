@@ -5,6 +5,8 @@ using Lettra.Ai.Claude;
 using Lettra.Application.Abstractions.Ai;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Http;
+using Microsoft.Extensions.Options;
 
 namespace Lettra.Ai.Tests;
 
@@ -128,6 +130,27 @@ public sealed class ClaudeEuProviderTests
         using ServiceProvider provider = services.BuildServiceProvider();
 
         provider.GetKeyedService<IAiEngine>(AiEngineKind.ClaudeEu).Should().BeOfType<ClaudeEngine>().Which.Name.Should().Be("claude:claude-opus-5-5");
+    }
+
+    [Fact]
+    public void Le_moteur_Claude_prend_son_client_HTTP_a_la_fabrique_avec_un_delai()
+    {
+        ServiceCollection services = new();
+        services.AddClaudeEngine(Configuration(new()
+        {
+            ["Lettra:Ai:Claude:Provider"] = "Bedrock",
+            ["Lettra:Ai:Claude:Region"] = "eu-west-3",
+        }));
+        using ServiceProvider provider = services.BuildServiceProvider();
+
+        using HttpClient client = new();
+        foreach (Action<HttpClient> configure in provider.GetRequiredService<IOptionsMonitor<HttpClientFactoryOptions>>().Get(nameof(ClaudeEngine)).HttpClientActions)
+        {
+            configure(client);
+        }
+
+        client.Timeout.Should().Be(TimeSpan.FromMinutes(10));
+        provider.GetKeyedService<IAiEngine>(AiEngineKind.ClaudeEu).Should().BeOfType<ClaudeEngine>();
     }
 
     private static async Task<(EngineTurn Turn, HttpRequestMessage Request, JsonElement Body)> CallAsync(ClaudeEngineOptions options)

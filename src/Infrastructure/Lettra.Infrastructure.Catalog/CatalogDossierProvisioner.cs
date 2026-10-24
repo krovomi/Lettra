@@ -105,7 +105,7 @@ internal sealed partial class CatalogDossierProvisioner(
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             LogProvisioningFailed(logger, exception, dossier.Id);
-            await SetStateAsync(dossier.Id, DossierState.Failed, schemaVersion: null, Truncate(exception.Message), CancellationToken.None).ConfigureAwait(false);
+            await SetStateAsync(dossier.Id, DossierState.Failed, schemaVersion: null, FailureOf(exception), CancellationToken.None).ConfigureAwait(false);
             return false;
         }
     }
@@ -140,7 +140,11 @@ internal sealed partial class CatalogDossierProvisioner(
             .FirstOrDefault();
     }
 
-    internal static string Truncate(string message) => message.Length <= 2000 ? message : message[..2000];
+    /// <summary>
+    /// Ce que le catalogue garde d'un échec : le type de l'exception. Son message, qui peut nommer le serveur, l'utilisateur
+    /// ou la base, ne va qu'au journal technique.
+    /// </summary>
+    internal static string FailureOf(Exception exception) => exception.GetType().Name;
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Aucun serveur de bases disponible dans la cellule {CellId}")]
     private static partial void LogNoCapacity(ILogger logger, string cellId);
