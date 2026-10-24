@@ -882,6 +882,8 @@ deploy/            démo Docker, Helm, OpenTofu, Argo CD, cellules, Keycloak, ob
   `decimal(18,4)`, dates UTC.
 - Migrations : même identifiant dans les trois providers ; la PR fusionnée en second régénère la sienne.
 - Tests nommés en français (`Une_entreprise_francaise_sans_siren_est_refusee`).
+- Audit d'architecture d'octobre 2026 : écarts, corrections et reste ouvert dans
+  [docs/qualite-du-code.md](docs/qualite-du-code.md).
 
 ### CI
 
