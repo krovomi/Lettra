@@ -1,4 +1,5 @@
 @page "/accounting/accounts/{Account}"
+@implements IDisposable
 @inject IAccountingGateway Accounting
 @inject ICustomersGateway Customers
 @inject NavigationManager Navigation
@@ -106,6 +107,7 @@
 </section>
 
 @code {
+    private readonly LatestRequest _load = new();
     private AccountingPeriod _period;
     private AccountLedgerResponse? _ledger;
     private IReadOnlyList<ErrorDetail> _errors = [];
@@ -128,7 +130,12 @@
         _period = AccountingPeriod.Parse(From, To, Today);
         _errors = [];
         _ledger = null;
-        OperationResult<AccountLedgerResponse> result = await Accounting.GetLedgerAsync(Account, _period.From, _period.To, CustomerId, CancellationToken.None);
+        if (await _load.RunAsync(token => Accounting.GetLedgerAsync(Account, _period.From, _period.To, CustomerId, token)) is not { } result)
+        {
+            // Une période plus récente a pris la main.
+            return;
+        }
+
         if (result is { IsSuccess: true, Value: { } ledger })
         {
             _ledger = ledger;
@@ -145,11 +152,13 @@
             _customerName = _ledger.Lines.FirstOrDefault()?.CustomerName;
             if (_customerName is null)
             {
-                OperationResult<CustomerResponse> read = await Customers.GetAsync(customer, CancellationToken.None);
-                _customerName = read.Value?.Name;
+                OperationResult<CustomerResponse>? read = await _load.ContinueAsync(token => Customers.GetAsync(customer, token));
+                _customerName = read?.Value?.Name;
             }
         }
     }
+
+    public void Dispose() => _load.Dispose();
 
     private void ChangePeriod(AccountingPeriod period) => Navigation.NavigateTo(Href(Account, period, CustomerId));
 

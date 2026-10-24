@@ -109,7 +109,7 @@ un an d'activité fictive dans le dossier ouvert (`POST /api/v1/demo/seed`, droi
 
 | Composant | Rôle |
 |---|---|
-| `ToastHost`, `ToastService` | Toaster en bas à droite (au-dessus des onglets sur téléphone). Une réussite disparaît après 6 s ; un avertissement ou une erreur reste jusqu'à ce qu'on le ferme. Trois au plus, sans doublon. |
+| `ToastHost`, `ToastService` | Toaster en bas à droite (au-dessus des onglets sur téléphone). Une réussite disparaît après 6 s ; un avertissement ou une erreur reste jusqu'à ce qu'on le ferme. Un message peut porter une action (`ToastAction`, « Annuler » un retrait d'accès dans « Équipe et accès ») : il reste alors 10 s. Trois au plus, sans doublon. Seul toaster de l'application. |
 | `StatusToast` | Annonce dans le toaster le résultat d'une action (pièce validée, fiche enregistrée, client créé) au lieu d'un message dans la page. |
 | `GeneralErrors` | Erreurs sans champ (droits, serveur injoignable) dans le toaster. Elles se retirent quand la page réussit à nouveau ou se ferme. Les erreurs de champ restent sous leur champ. |
 | `EmptyState` | État vide illustré : icône, ce qui manque, action principale. Une recherche sans résultat dit d'élargir les filtres. |

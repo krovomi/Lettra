@@ -3,6 +3,7 @@
 @inject IAdministrationGateway Gateway
 @inject IDossierSelection Selection
 @inject IStringLocalizer<SharedResource> L
+@inject ToastService Toasts
 @inject NavigationManager Navigation
 @inject TimeProvider Clock
 
@@ -315,7 +316,6 @@
     }
 </div>
 
-<AdminToasts @ref="_toasts" />
 
 @code {
     private enum Tab { People, Teams, Roles }
@@ -324,7 +324,6 @@
 
     private readonly CancellationTokenSource _disposed = new();
     private AdministrationView? _view;
-    private AdminToasts _toasts = default!;
     private IReadOnlyList<ErrorDetail> _errors = [];
     private bool _denied;
     private Guid? _cabinetId;
@@ -503,7 +502,7 @@
         {
             <AdminDrawer Id="person-drawer" Title="@view.NameOf(person)" OnClose="Close">
                 <ChildContent>
-                    <PersonPanel View="view" Person="person" Toasts="_toasts" OnGrant="() => _mode = Mode.PersonGrant" OnChanged="ReloadAsync" />
+                    <PersonPanel View="view" Person="person" OnGrant="() => _mode = Mode.PersonGrant" OnChanged="ReloadAsync" />
                 </ChildContent>
                 <Footer>
                     @if (view.Overview.Can.ManagePeople)
@@ -550,7 +549,7 @@
         else
         {
             <AdminDrawer Id="team-drawer" Title="@team.Name" Subtitle="@string.Format(CultureInfo.CurrentCulture, L["Admin.Team.Counts"], team.MemberIds.Count, team.DossierIds.Count)" OnClose="Close">
-                <TeamPanel View="view" Team="team" Toasts="_toasts" OnGrant="() => _mode = Mode.TeamGrant" OnChanged="ReloadAsync" OnDeleted="TeamDeletedAsync" />
+                <TeamPanel View="view" Team="team" OnGrant="() => _mode = Mode.TeamGrant" OnChanged="ReloadAsync" OnDeleted="TeamDeletedAsync" />
             </AdminDrawer>
         }
     };
@@ -634,17 +633,17 @@
 
     private async Task GrantedAsync(string subject, RoleAssignmentSummary assignment)
     {
-        _toasts.Show(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.Granted"], subject, _view?.RoleName(assignment.Role)));
+        Toasts.Done(L, string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.Granted"], subject, _view?.RoleName(assignment.Role)));
         _mode = assignment.SubjectKind == SubjectKindDto.Group ? Mode.Team : Mode.Person;
         await ReloadAsync();
     }
 
     private async Task InvitedAsync(PersonSummary person)
     {
-        _toasts.Show(string.Format(CultureInfo.CurrentCulture, L[person.InvitationEmail == InvitationEmailStatusDto.Sent ? "Admin.Toast.InvitedByEmail" : "Admin.Toast.Invited"], person.DisplayName));
+        Toasts.Done(L, string.Format(CultureInfo.CurrentCulture, L[person.InvitationEmail == InvitationEmailStatusDto.Sent ? "Admin.Toast.InvitedByEmail" : "Admin.Toast.Invited"], person.DisplayName));
         if (person.InvitationEmail == InvitationEmailStatusDto.Failed)
         {
-            _toasts.ShowError(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.InvitationFailed"], person.DisplayName));
+            Toasts.Failed(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.InvitationFailed"], person.DisplayName));
         }
 
         await ReloadAsync();
@@ -654,7 +653,7 @@
 
     private async Task PersonSavedAsync(PersonSummary person)
     {
-        _toasts.Show(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.PersonSaved"], person.DisplayName));
+        Toasts.Done(L, string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.PersonSaved"], person.DisplayName));
         _mode = Mode.Person;
         await ReloadAsync();
     }
@@ -664,13 +663,14 @@
         OperationResult<bool> result = await Gateway.SetAccountStateAsync(view.Overview.CabinetId, person.Id, state, _disposed.Token);
         if (!result.IsSuccess)
         {
-            _toasts.ShowError(L.Error(result.Errors[0].Code));
+            Toasts.Failed(L.Error(result.Errors[0].Code));
             return;
         }
 
         AccountStateDto previous = person.State;
         string key = state == AccountStateDto.Active ? "Admin.Toast.Reactivated" : "Admin.Toast.Suspended";
-        _toasts.Show(
+        Toasts.Done(
+            L,
             string.Format(CultureInfo.CurrentCulture, L[key], view.FirstNameOf(person)),
             async () =>
             {
@@ -685,11 +685,11 @@
         OperationResult<GroupSummary> created = await Gateway.CreateTeamAsync(view.Overview.CabinetId, new CreateGroupRequest { Name = _newTeam }, _disposed.Token);
         if (!created.IsSuccess || created.Value is not { } team)
         {
-            _toasts.ShowError(L.Error(created.Errors[0].Code));
+            Toasts.Failed(L.Error(created.Errors[0].Code));
             return;
         }
 
-        _toasts.Show(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.TeamCreated"], team.Name));
+        Toasts.Done(L, string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.TeamCreated"], team.Name));
         _tab = Tab.Teams;
         await ReloadAsync();
         Open(Mode.Team, team.Id);
@@ -703,14 +703,14 @@
 
     private async Task RoleSavedAsync(RoleDescription role)
     {
-        _toasts.Show(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.RoleSaved"], role.Name));
+        Toasts.Done(L, string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.RoleSaved"], role.Name));
         await ReloadAsync();
         OpenRole(role.Key);
     }
 
     private async Task RoleDeletedAsync(string key)
     {
-        _toasts.Show(L["Admin.Toast.RoleDeleted"]);
+        Toasts.Done(L, L["Admin.Toast.RoleDeleted"]);
         Close();
         await ReloadAsync();
     }

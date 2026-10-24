@@ -52,7 +52,9 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
 {
     public const int PageSize = 50;
 
-    private CancellationTokenSource? _searchDebounce;
+    private readonly LatestRequest _searchPause = new();
+    private readonly LatestRequest _listLoad = new();
+    private readonly LatestRequest _recordLoad = new();
     private string? _search;
     private string? _lastLocation;
     private string? _pendingNavigation;
@@ -244,7 +246,13 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
     protected async Task ReloadAsync()
     {
         Loading = true;
-        OperationResult<PagedResponse<TSummary>> result = await LoadPageAsync(ListSearch.Normalize(_search), 1, CancellationToken.None);
+        string? search = ListSearch.Normalize(_search);
+        if (await _listLoad.RunAsync(token => LoadPageAsync(search, 1, token)) is not { } result)
+        {
+            // Une recherche plus récente a pris la main : c'est elle qui remplira la liste.
+            return;
+        }
+
         Items.Clear();
         if (result is { IsSuccess: true, Value: { } page })
         {
@@ -263,13 +271,14 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
     protected async Task LoadMoreAsync()
     {
         int next = (Items.Count / PageSize) + 1;
-        OperationResult<PagedResponse<TSummary>> result = await LoadPageAsync(ListSearch.Normalize(_search), next, CancellationToken.None);
+        string? search = ListSearch.Normalize(_search);
+        OperationResult<PagedResponse<TSummary>>? result = await _listLoad.ContinueAsync(token => LoadPageAsync(search, next, token));
         if (result is { IsSuccess: true, Value: { } page })
         {
             Items.AddRange(page.Items);
             TotalCount = page.TotalCount;
         }
-        else
+        else if (result is not null)
         {
             Errors = result.Errors;
         }
@@ -277,13 +286,10 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
 
     private async Task ReloadAfterPauseAsync()
     {
-        _searchDebounce?.Cancel();
-        _searchDebounce?.Dispose();
-        CancellationTokenSource debounce = new();
-        _searchDebounce = debounce;
+        CancellationToken pause = _searchPause.Start();
         try
         {
-            await Task.Delay(ExplorerSettings.SearchDelay, debounce.Token);
+            await Task.Delay(ExplorerSettings.SearchDelay, pause);
         }
         catch (OperationCanceledException)
         {
@@ -456,7 +462,12 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
         LoadingRecord = true;
         Record = null;
         Errors = [];
-        OperationResult<TRecord> result = await GetAsync(id, CancellationToken.None);
+        if (await _recordLoad.RunAsync(token => GetAsync(id, token)) is not { } result)
+        {
+            // Une autre fiche a été choisie entre-temps : sa lecture la remplacera.
+            return;
+        }
+
         LoadingRecord = false;
         if (result is { IsSuccess: true, Value: { } record })
         {
@@ -678,8 +689,9 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
             Navigation.LocationChanged -= OnLocationChanged;
             _formContext?.OnFieldChanged -= OnFormFieldChanged;
 
-            _searchDebounce?.Cancel();
-            _searchDebounce?.Dispose();
+            _searchPause.Dispose();
+            _listLoad.Dispose();
+            _recordLoad.Dispose();
         }
     }
 }

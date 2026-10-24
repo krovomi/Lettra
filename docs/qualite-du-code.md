@@ -378,6 +378,26 @@ workflows, `LayerDependencyTests`, `MauiProgram.cs`) passent par le coordinateur
   partagée (`DossierJobScope`).
 
 
+### Fait dans la PR 11
+
+- **X9** : `LatestRequest` (`Components/LatestRequest.cs`) tient la dernière demande d'un écran. En lancer une annule
+  la précédente, une réponse arrivée trop tard est ignorée, fermer l'écran annule la demande en cours. L'explorateur
+  (liste, page suivante, fiche), le journal des ventes, le grand livre et la grille du catalogue y passent leur jeton :
+  deux recherches qui se chevauchent n'affichent plus l'ancien résultat. Les autres `CancellationToken.None` restent :
+  ce sont des gestes uniques (enregistrer, supprimer) ou des lectures au chargement, qu'un écran fermé n'a pas à
+  interrompre ; la règle est désormais « tout écran qui recharge au fil d'une saisie passe par `LatestRequest` ».
+- **X17** : un seul toaster. `ToastService` accepte une action (`ToastAction`, bouton « Annuler ») et garde ce message
+  10 s ; « Équipe et accès » l'utilise et son composant `AdminToasts.razor` disparaît. Ses erreurs suivent la règle
+  commune : elles restent jusqu'à ce qu'on les ferme.
+- **X23** (en partie) : les éditeurs de devis, factures et factures récurrentes reconnaissent un conflit de version par
+  `OperationResult.IsStale`, déjà là, au lieu de recopier le test du code d'erreur. Le drapeau « occupé » reste écrit
+  dans chaque page, volontairement : `_busy = true; try … finally` tient en trois lignes lisibles, une aide commune
+  obligerait chaque enregistrement à passer dans un délégué (retours anticipés, valeurs rendues) sans rien gagner, contraire
+  à KISS. Les tâches lancées sans attendre (`_ = InvokeAsync(StateHasChanged)`, synchronisation des préférences)
+  restent aussi : la plupart ne font que redessiner l'écran, et les passerelles des autres rendent leurs refus dans un
+  `OperationResult` au lieu de lever une exception. Seule une panne de l'interop JavaScript (thème, langue) s'y perdrait
+  sans message, sans effet sur les données.
+
 ## Plan
 
 Une PR par couche, petite, verte en CI et assignée à Leub. Chaque refactorisation commence par
