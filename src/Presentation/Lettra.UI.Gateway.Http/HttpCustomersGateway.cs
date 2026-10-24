@@ -1,59 +1,30 @@
-using System.Globalization;
 using System.Net.Http.Json;
-using System.Text.Json;
-using System.Text.Json.Serialization.Metadata;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
 using Lettra.Contracts.Serialization;
 using Lettra.UI.Abstractions;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Lettra.UI.Gateway.Http;
 
 internal sealed class HttpCustomersGateway(HttpClient http) : ICustomersGateway
 {
-    public async Task<OperationResult<CustomerResponse>> CreateAsync(CreateCustomerRequest request, CancellationToken cancellationToken)
-    {
-        try
-        {
-            using HttpResponseMessage response = await http
-                .PostAsJsonAsync("api/v1/customers", request, ContractsJsonContext.Default.CreateCustomerRequest, cancellationToken)
-                .ConfigureAwait(false);
-            return await response.ToOperationResultAsync(ContractsJsonContext.Default.CustomerResponse, cancellationToken).ConfigureAwait(false);
-        }
-        catch (Exception e) when (HttpCalls.IsUnreachable(e, cancellationToken))
-        {
-            return OperationResult<CustomerResponse>.Failure(ErrorCodes.Api.Unreachable);
-        }
-    }
+    public Task<OperationResult<CustomerResponse>> CreateAsync(CreateCustomerRequest request, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.PostAsJsonAsync("api/v1/customers", request, ContractsJsonContext.Default.CreateCustomerRequest, ct),
+            ContractsJsonContext.Default.CustomerResponse,
+            cancellationToken);
 
-    public async Task<OperationResult<PagedResponse<CustomerSummary>>> ListAsync(int page, int pageSize, CancellationToken cancellationToken)
-    {
-        try
-        {
-            Uri uri = new(string.Create(CultureInfo.InvariantCulture, $"api/v1/customers?page={page}&pageSize={pageSize}"), UriKind.Relative);
-            using HttpResponseMessage response = await http.GetAsync(uri, cancellationToken).ConfigureAwait(false);
-            return await response.ToOperationResultAsync(ContractsJsonContext.Default.PagedResponseCustomerSummary, cancellationToken).ConfigureAwait(false);
-        }
-        catch (Exception e) when (HttpCalls.IsUnreachable(e, cancellationToken))
-        {
-            return OperationResult<PagedResponse<CustomerSummary>>.Failure(ErrorCodes.Api.Unreachable);
-        }
-    }
+    public Task<OperationResult<PagedResponse<CustomerSummary>>> ListAsync(int page, int pageSize, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.GetAsync(HttpCalls.Relative($"api/v1/customers?page={page}&pageSize={pageSize}"), ct),
+            ContractsJsonContext.Default.PagedResponseCustomerSummary,
+            cancellationToken);
 
-    public async Task<OperationResult<CustomerResponse>> GetAsync(Guid id, CancellationToken cancellationToken)
-    {
-        try
-        {
-            using HttpResponseMessage response = await http.GetAsync(new Uri($"api/v1/customers/{id}", UriKind.Relative), cancellationToken).ConfigureAwait(false);
-            return await response.ToOperationResultAsync(ContractsJsonContext.Default.CustomerResponse, cancellationToken).ConfigureAwait(false);
-        }
-        catch (Exception e) when (HttpCalls.IsUnreachable(e, cancellationToken))
-        {
-            return OperationResult<CustomerResponse>.Failure(ErrorCodes.Api.Unreachable);
-        }
-    }
+    public Task<OperationResult<CustomerResponse>> GetAsync(Guid id, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.GetAsync(HttpCalls.Relative($"api/v1/customers/{id}"), ct),
+            ContractsJsonContext.Default.CustomerResponse,
+            cancellationToken);
 
     public Task<OperationResult<PagedResponse<CustomerSummary>>> SearchAsync(PartyListQuery query, CancellationToken cancellationToken) =>
         HttpCalls.SendAsync(
@@ -69,215 +40,4 @@ internal sealed class HttpCustomersGateway(HttpClient http) : ICustomersGateway
 
     public Task<OperationResult<bool>> DeleteAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken) =>
         VersionedCalls.DeleteAsync(http, HttpCalls.Relative($"api/v1/customers/{id}"), expectedVersion, cancellationToken);
-}
-
-/// <summary>Traduit une réponse HTTP en <see cref="OperationResult{T}"/> : corps typé, ou codes d'erreur du <c>ProblemResponse</c>.</summary>
-internal static class HttpResponseExtensions
-{
-    public static async Task<OperationResult<T>> ToOperationResultAsync<T>(
-        this HttpResponseMessage response, JsonTypeInfo<T> typeInfo, CancellationToken cancellationToken)
-    {
-        if (response.IsSuccessStatusCode)
-        {
-            T? value = await response.Content.ReadFromJsonAsync(typeInfo, cancellationToken).ConfigureAwait(false);
-            return value is null ? OperationResult<T>.Failure(ErrorCodes.Api.Unexpected) : OperationResult<T>.Success(value);
-        }
-
-        ProblemResponse? problem = null;
-        try
-        {
-            problem = await response.Content.ReadFromJsonAsync(ContractsJsonContext.Default.ProblemResponse, cancellationToken).ConfigureAwait(false);
-        }
-        catch (JsonException)
-        {
-            // Corps illisible (proxy, page d'erreur HTML) : erreur générique ci-dessous.
-        }
-
-        // 412 (ADR-0013) : le serveur joint le document actuel, pour la fusion à l'écran.
-        if (problem?.Code == ErrorCodes.Concurrency.VersionMismatch && problem.Current is JsonElement current
-            && current.ValueKind == JsonValueKind.Object && TryRead(current, typeInfo) is T currentValue)
-        {
-            return OperationResult<T>.Stale(currentValue);
-        }
-
-        List<ErrorDetail> errors = [];
-        foreach ((string field, string[] codes) in problem?.Errors ?? new Dictionary<string, string[]>())
-        {
-            string? target = string.IsNullOrEmpty(field) ? null : char.ToUpperInvariant(field[0]) + field[1..];
-            errors.AddRange(codes.Select(code => new ErrorDetail(code, target)));
-        }
-
-        // Le code principal, s'il n'est pas déjà rattaché à un champ (ex. Dossier.NotFound, Security.Forbidden).
-        string? mainCode = problem?.Code;
-        if (errors.Count == 0 || (mainCode is not null && !errors.Exists(e => e.Code == mainCode)))
-        {
-            errors.Add(new ErrorDetail(mainCode ?? ErrorCodes.Api.Unexpected));
-        }
-
-        return OperationResult<T>.Failure(errors);
-    }
-
-    /// <summary>
-    /// La pièce jointe au 412 n'a pas toujours le type attendu : une suppression la lit comme un
-    /// <see cref="ProblemResponse"/>. Illisible, elle est ignorée et le refus garde son code.
-    /// </summary>
-    private static T? TryRead<T>(JsonElement current, JsonTypeInfo<T> typeInfo)
-    {
-        try
-        {
-            return current.Deserialize(typeInfo);
-        }
-        catch (JsonException)
-        {
-            return default;
-        }
-    }
-}
-
-/// <summary>Ajoute l'en-tête <c>X-Dossier</c> du dossier ouvert à chaque appel.</summary>
-internal sealed class DossierHeaderHandler(IDossierSelection selection) : DelegatingHandler
-{
-    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-        if (selection.CurrentDossierId is Guid dossier)
-        {
-            request.Headers.Remove(LettraHeaders.Dossier);
-            request.Headers.Add(LettraHeaders.Dossier, dossier.ToString());
-        }
-
-        return base.SendAsync(request, cancellationToken);
-    }
-}
-
-/// <summary>
-/// En-tête anti-CSRF exigé par l'API pour les appels authentifiés par le cookie du BFF (annexe F §2). Le
-/// navigateur ne l'ajoute jamais de lui-même à une requête venue d'un autre site.
-/// </summary>
-internal sealed class CsrfHeaderHandler : DelegatingHandler
-{
-    public const string HeaderName = "X-Lettra-Csrf";
-
-    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-        request.Headers.Remove(HeaderName);
-        request.Headers.Add(HeaderName, "1");
-        return base.SendAsync(request, cancellationToken);
-    }
-}
-
-/// <summary>
-/// Hors ligne (selon <see cref="INetworkStatus"/>, quand l'hôte en fournit un) : la requête n'est pas envoyée et
-/// l'appel échoue comme un serveur injoignable. Le navigateur n'inscrit donc pas une erreur réseau dans la console pour
-/// chaque appel, et les écrans gardent leur comportement hors ligne (brouillons de l'appareil).
-/// </summary>
-internal sealed class OfflineShortCircuitHandler(IServiceProvider services) : DelegatingHandler
-{
-    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-    {
-        if (services.GetService<INetworkStatus>() is { } network && await network.IsOfflineAsync(cancellationToken).ConfigureAwait(false))
-        {
-            throw new HttpRequestException(HttpRequestError.ConnectionError, "Appareil hors ligne : requête non envoyée.");
-        }
-
-        return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
-    }
-}
-
-public static class DependencyInjection
-{
-    public static IServiceCollection AddHttpGateways(this IServiceCollection services, Uri apiBaseAddress)
-    {
-        // Navigateur : le dossier de la configuration n'est que celui du démarrage, le sélecteur de dossier en change.
-        if (services.LastOrDefault(d => d.ServiceType == typeof(IDossierSelection))?.ImplementationInstance is FixedDossierSelection configured)
-        {
-            services.Replace(ServiceDescriptor.Singleton<IDossierSelection>(new SwitchableDossierSelection(configured.CurrentDossierId)));
-        }
-
-        services.AddTransient<CsrfHeaderHandler>();
-        services.AddTransient<OfflineShortCircuitHandler>();
-        services.AddHttpClient<ISessionGateway, HttpSessionGateway>(client => client.BaseAddress = apiBaseAddress)
-            .AddHttpMessageHandler<OfflineShortCircuitHandler>()
-            .AddHttpMessageHandler<CsrfHeaderHandler>();
-        return services.AddApiGateways(apiBaseAddress, builder => builder
-            .AddHttpMessageHandler<OfflineShortCircuitHandler>()
-            .AddHttpMessageHandler<CsrfHeaderHandler>());
-    }
-
-    /// <summary>
-    /// Application de bureau reliée à un serveur (modes 2, 3 et 5) : mêmes gateways HTTP, authentifiées par le jeton
-    /// d'accès du poste (PKCE) au lieu du cookie du BFF. L'hôte fournit <see cref="Device.IAuthorizationBrowser"/> et
-    /// <see cref="Device.ITokenVault"/>.
-    /// </summary>
-    public static IServiceCollection AddDeviceHttpGateways(this IServiceCollection services, Device.DeviceSignInOptions options)
-    {
-        ArgumentNullException.ThrowIfNull(options);
-        Uri apiBaseAddress = options.BaseAddress ?? throw new InvalidOperationException($"{Device.DeviceSignInOptions.SectionName}:BaseAddress est obligatoire.");
-        services.AddDeviceSignIn(options);
-        services.AddSingleton<ISessionGateway>(sp => sp.GetRequiredService<Device.DeviceSessionGateway>());
-        return services.AddApiGateways(apiBaseAddress, builder => builder.AddHttpMessageHandler<Device.BearerTokenHandler>());
-    }
-
-    /// <summary>
-    /// Connexion du poste au Keycloak du cabinet (PKCE) et <see cref="Device.BearerTokenHandler"/>, sans les gateways
-    /// HTTP ni la session de l'UI : le poste relié travaille sur sa réplique (session locale) et ne se connecte au
-    /// serveur que pour se synchroniser.
-    /// </summary>
-    public static IServiceCollection AddDeviceSignIn(this IServiceCollection services, Device.DeviceSignInOptions options)
-    {
-        ArgumentNullException.ThrowIfNull(options);
-        services.AddSingleton(options);
-        services.TryAddSingleton(TimeProvider.System);
-        services.AddHttpClient(nameof(Device.OidcPkceClient));
-        // Un seul client OIDC (et un seul rafraîchissement à la fois) pour toute l'application.
-        services.AddSingleton(sp => new Device.OidcPkceClient(
-            sp.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(Device.OidcPkceClient)),
-            options,
-            sp.GetRequiredService<Device.ITokenVault>(),
-            sp.GetRequiredService<Device.IAuthorizationBrowser>(),
-            sp.GetRequiredService<TimeProvider>()));
-        services.AddSingleton<Device.DeviceSessionGateway>();
-        services.AddSingleton<IInteractiveSignIn>(sp => sp.GetRequiredService<Device.DeviceSessionGateway>());
-        services.AddTransient<Device.BearerTokenHandler>();
-        return services;
-    }
-
-    private static IServiceCollection AddApiGateways(this IServiceCollection services, Uri apiBaseAddress, Action<IHttpClientBuilder> authenticate)
-    {
-        services.AddTransient<DossierHeaderHandler>();
-        void Configure(IHttpClientBuilder builder)
-        {
-            authenticate(builder);
-            builder.AddHttpMessageHandler<DossierHeaderHandler>();
-        }
-
-        Configure(services.AddHttpClient<ICustomersGateway, HttpCustomersGateway>(client => client.BaseAddress = apiBaseAddress));
-        Configure(services.AddHttpClient<ISuppliersGateway, HttpSuppliersGateway>(client => client.BaseAddress = apiBaseAddress));
-        Configure(services.AddHttpClient<ICatalogGateway, HttpCatalogGateway>(client => client.BaseAddress = apiBaseAddress));
-        Configure(services.AddHttpClient<IDirectoryGateway, HttpDirectoryGateway>(client => client.BaseAddress = apiBaseAddress));
-        Configure(services.AddHttpClient<IQuotesGateway, HttpQuotesGateway>(client => client.BaseAddress = apiBaseAddress));
-        Configure(services.AddHttpClient<IInvoicesGateway, HttpInvoicesGateway>(client => client.BaseAddress = apiBaseAddress));
-        Configure(services.AddHttpClient<IRecurringInvoicesGateway, HttpRecurringInvoicesGateway>(client => client.BaseAddress = apiBaseAddress));
-        Configure(services.AddHttpClient<IPlatformTransmissionGateway, HttpPlatformTransmissionGateway>(client => client.BaseAddress = apiBaseAddress));
-        Configure(services.AddHttpClient<IReceivablesGateway, HttpReceivablesGateway>(client => client.BaseAddress = apiBaseAddress));
-        Configure(services.AddHttpClient<IDemoDataGateway, HttpDemoDataGateway>(client => client.BaseAddress = apiBaseAddress));
-        Configure(services.AddHttpClient<IFecGateway, HttpFecGateway>(client => client.BaseAddress = apiBaseAddress));
-        Configure(services.AddHttpClient<IAuditKitGateway, HttpAuditKitGateway>(client => client.BaseAddress = apiBaseAddress));
-        Configure(services.AddHttpClient<IAccountingGateway, HttpAccountingGateway>(client => client.BaseAddress = apiBaseAddress));
-        Configure(services.AddHttpClient<IBankingGateway, HttpBankingGateway>(client => client.BaseAddress = apiBaseAddress));
-        Configure(services.AddHttpClient<IRemindersGateway, HttpRemindersGateway>(client => client.BaseAddress = apiBaseAddress));
-        Configure(services.AddHttpClient<ICabinetGateway, HttpCabinetGateway>(client => client.BaseAddress = apiBaseAddress));
-        Configure(services.AddHttpClient<IPilotageGateway, HttpPilotageGateway>(client => client.BaseAddress = apiBaseAddress));
-        Configure(services.AddHttpClient<ITaxGateway, HttpTaxGateway>(client => client.BaseAddress = apiBaseAddress));
-        Configure(services.AddHttpClient<IBillingSettingsGateway, HttpBillingSettingsGateway>(client => client.BaseAddress = apiBaseAddress));
-        Configure(services.AddHttpClient<IBillingDashboardGateway, HttpBillingDashboardGateway>(client => client.BaseAddress = apiBaseAddress));
-        Configure(services.AddHttpClient<IPriceListsGateway, HttpPriceListsGateway>(client => client.BaseAddress = apiBaseAddress));
-        Configure(services.AddHttpClient<IAlertsGateway, HttpAlertsGateway>(client => client.BaseAddress = apiBaseAddress));
-        Configure(services.AddHttpClient<IAssistantGateway, HttpAssistantGateway>(client => client.BaseAddress = apiBaseAddress));
-        Configure(services.AddHttpClient<ISpeechGateway, HttpSpeechGateway>(client => client.BaseAddress = apiBaseAddress));
-        Configure(services.AddHttpClient<IAdministrationGateway, HttpAdministrationGateway>(client => client.BaseAddress = apiBaseAddress));
-        Configure(services.AddHttpClient<IUserPreferencesGateway, HttpUserPreferencesGateway>(client => client.BaseAddress = apiBaseAddress));
-        return services;
-    }
 }

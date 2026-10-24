@@ -1,6 +1,5 @@
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Features.Preferences;
-using Lettra.Application.Mapping;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Preferences;
 using Lettra.Domain.Common;
@@ -15,14 +14,8 @@ namespace Lettra.UI.Gateway.InProcess;
 /// </summary>
 internal sealed class InProcessUserPreferencesGateway(IServiceScopeFactory scopes) : IUserPreferencesGateway
 {
-    public async Task<OperationResult<UserPreferencesResponse>> GetAsync(CancellationToken cancellationToken)
-    {
-        AsyncServiceScope scope = scopes.CreateAsyncScope();
-        await using (scope.ConfigureAwait(false))
-        {
-            return await InProcessScope.QueryAsync(scope.ServiceProvider, new GetUserPreferencesQuery(), cancellationToken).ConfigureAwait(false);
-        }
-    }
+    public Task<OperationResult<UserPreferencesResponse>> GetAsync(CancellationToken cancellationToken) =>
+        InProcessScope.OutsideDossierAsync(scopes, sp => InProcessScope.QueryAsync(sp, new GetUserPreferencesQuery(), cancellationToken));
 
     public Task<OperationResult<UserPreferencesResponse>> SaveAsync(SaveUserPreferencesRequest request, CancellationToken cancellationToken) =>
         SendAsync(new SaveUserPreferencesCommand(request), cancellationToken);
@@ -36,13 +29,6 @@ internal sealed class InProcessUserPreferencesGateway(IServiceScopeFactory scope
     public Task<OperationResult<UserPreferencesResponse>> ResetAsync(CancellationToken cancellationToken) =>
         SendAsync(new ResetUserPreferencesCommand(), cancellationToken);
 
-    private async Task<OperationResult<UserPreferencesResponse>> SendAsync(ICommand<Result<UserPreferencesResponse>> command, CancellationToken cancellationToken)
-    {
-        AsyncServiceScope scope = scopes.CreateAsyncScope();
-        await using (scope.ConfigureAwait(false))
-        {
-            Result<UserPreferencesResponse> result = await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>().SendAsync(command, cancellationToken).ConfigureAwait(false);
-            return result.ToOperationResult();
-        }
-    }
+    private Task<OperationResult<UserPreferencesResponse>> SendAsync(ICommand<Result<UserPreferencesResponse>> command, CancellationToken cancellationToken) =>
+        InProcessScope.OutsideDossierAsync(scopes, sp => InProcessScope.SendAsync(sp, command, cancellationToken));
 }
