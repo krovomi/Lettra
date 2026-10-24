@@ -865,6 +865,7 @@ deploy/            démo Docker, Helm, OpenTofu, Argo CD, cellules, Keycloak, ob
 | Les couches Application des modules ne voient ni EF, ni ASP.NET, ni l'infrastructure | `ApplicationLayerRulesTests` |
 | Les noms écrits dans les empreintes d'intégrité scellées ne changent jamais | `SealedFingerprintTests` |
 | Un calendrier de tâche de fond invalide empêche l'hôte de démarrer | `PeriodicJobOptionsTests` |
+| Les écrans et services de l'interface déclarent leurs dépendances (injection, `Optional<T>`) ; aucun ne reçoit `IServiceProvider` | `UiDependencyRulesTests` |
 | Factur-X conforme PDF/A-3b et EN 16931 | CI : veraPDF et validateurs EN 16931 |
 
 ### Conventions
