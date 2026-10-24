@@ -32,53 +32,79 @@ internal sealed class AccountingAssistant(
         ArgumentNullException.ThrowIfNull(request);
 
         // 1. Politique du cabinet et droits de l'utilisateur (défense en profondeur : le pipeline l'a déjà vérifié).
-        AiSettings settings = await policy.GetSettingsAsync(request.Organisation, cancellationToken).ConfigureAwait(false);
-        Error? refusal = request.Permissions.Contains(Permission.IaUtiliser)
-            ? AiErrors.CheckPolicy(settings, request.Feature, request.Dossier, namedEntities)
-            : SecurityErrors.Forbidden;
-        IAiEngine? engine = refusal is null ? engines.Resolve(settings.Engine) : null;
-        if (refusal is null && engine is null)
+        (AiSettings settings, IAiEngine? engine, string? refusal) = await ResolveEngineAsync(request, cancellationToken).ConfigureAwait(false);
+        if (engine is null)
         {
-            refusal = AiErrors.EngineUnavailable;
-        }
-
-        if (refusal is not null || engine is null)
-        {
-            string code = refusal?.Code ?? ErrorCodes.Ai.EngineUnavailable;
+            string code = refusal ?? ErrorCodes.Ai.EngineUnavailable;
             await AuditAsync(request, AiAuditKind.Unavailable, code, null, cancellationToken).ConfigureAwait(false);
             yield return new AssistantUnavailableEvent(code);
             yield break;
         }
 
-        DateOnly today = LegalCalendar.Today(time);
-        HashSet<AiSkill> staleSignalled = [];
-        if (StaleWarning(request.Skill, today, staleSignalled) is { } stale)
+        Conversation conversation = new(request, settings, engine, LegalCalendar.Today(time));
+        if (StaleWarning(request.Skill, conversation) is { } stale)
         {
             yield return stale;
         }
 
         // 2. Minimisation et pseudonymisation : rien ne part en clair, pas même dans le journal.
-        PseudonymizationSession privacy = new(await dossiers.GetKnownIdentitiesAsync(request.Dossier, cancellationToken).ConfigureAwait(false));
-        string companyJson = privacy.PseudonymizeJson(await dossiers.GetCompanyJsonAsync(request.Dossier, cancellationToken).ConfigureAwait(false));
-        string context = BuildContext(request, companyJson, today);
-        IReadOnlyList<IAiTool> available = tools.For(request.Feature, request.Permissions, settings);
-        List<EngineToolDefinition> definitions = [.. available.Select(t => new EngineToolDefinition(t.Name, t.Description, t.InputSchema))];
-        AiToolContext toolContext = new(request.Organisation, request.Dossier, request.UserId, settings, request.OpenDocumentId);
-
-        string userMessage = BuildUserMessage(request, privacy);
-        await AuditAsync(request, AiAuditKind.Request, $"{request.Feature} : {userMessage}", engine.Name, cancellationToken).ConfigureAwait(false);
-
-        List<EngineMessage> messages = [EngineMessage.UserText(userMessage)];
-        List<string> trustedSources = [request.Question, request.ImportedContent ?? string.Empty];
-        string stable = skills.GetOverlay() + "\n\n---\n\n" + skills.GetSkillInstructions(request.Skill);
-        EngineUsage? usage = null;
-        int rounds = 0;
+        EngineRequest prepared = await PrepareAsync(conversation, cancellationToken).ConfigureAwait(false);
 
         // 3. Boucle d'outils, tenue par le serveur.
+        await foreach (AssistantEvent step in ToolLoopAsync(conversation, prepared, cancellationToken).ConfigureAwait(false))
+        {
+            yield return step;
+        }
+    }
+
+    /// <summary>Le moteur du cabinet, ou le code du refus : droit d'utiliser l'IA, politique, moteur joignable.</summary>
+    private async Task<(AiSettings Settings, IAiEngine? Engine, string? Refusal)> ResolveEngineAsync(AssistantRequest request, CancellationToken cancellationToken)
+    {
+        AiSettings settings = await policy.GetSettingsAsync(request.Organisation, cancellationToken).ConfigureAwait(false);
+        Error? refusal = request.Permissions.Contains(Permission.IaUtiliser)
+            ? AiErrors.CheckPolicy(settings, request.Feature, request.Dossier, namedEntities)
+            : SecurityErrors.Forbidden;
+        if (refusal is not null)
+        {
+            return (settings, null, refusal.Code);
+        }
+
+        IAiEngine? engine = engines.Resolve(settings.Engine);
+        return (settings, engine, engine is null ? AiErrors.EngineUnavailable.Code : null);
+    }
+
+    /// <summary>Pseudonymise le contexte et la question, choisit les outils permis et journalise la demande.</summary>
+    private async Task<EngineRequest> PrepareAsync(Conversation conversation, CancellationToken cancellationToken)
+    {
+        AssistantRequest request = conversation.Request;
+        conversation.Privacy = new(await dossiers.GetKnownIdentitiesAsync(request.Dossier, cancellationToken).ConfigureAwait(false));
+        string companyJson = conversation.Privacy.PseudonymizeJson(await dossiers.GetCompanyJsonAsync(request.Dossier, cancellationToken).ConfigureAwait(false));
+        conversation.Tools = tools.For(request.Feature, request.Permissions, conversation.Settings);
+        conversation.ToolContext = new(request.Organisation, request.Dossier, request.UserId, conversation.Settings, request.OpenDocumentId);
+
+        string userMessage = BuildUserMessage(request, conversation.Privacy);
+        await AuditAsync(request, AiAuditKind.Request, $"{request.Feature} : {userMessage}", conversation.Engine.Name, cancellationToken).ConfigureAwait(false);
+
+        conversation.Messages.Add(EngineMessage.UserText(userMessage));
+        conversation.TrustedSources.AddRange([request.Question, request.ImportedContent ?? string.Empty]);
+        return new EngineRequest(
+            skills.GetOverlay() + "\n\n---\n\n" + skills.GetSkillInstructions(request.Skill),
+            BuildContext(request, companyJson, conversation.Today),
+            conversation.Messages,
+            [.. conversation.Tools.Select(t => new EngineToolDefinition(t.Name, t.Description, t.InputSchema))]);
+    }
+
+    /// <summary>Tours du moteur jusqu'à une réponse, un refus ou la limite de tours du cabinet.</summary>
+    private async IAsyncEnumerable<AssistantEvent> ToolLoopAsync(Conversation conversation, EngineRequest prepared, [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        AssistantRequest request = conversation.Request;
+        IAiEngine engine = conversation.Engine;
+        EngineUsage? usage = null;
+        int rounds = 0;
         while (true)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            EngineTurn turn = await engine.CompleteAsync(new EngineRequest(stable, context, messages, definitions), cancellationToken).ConfigureAwait(false);
+            EngineTurn turn = await engine.CompleteAsync(prepared, cancellationToken).ConfigureAwait(false);
             usage = EngineUsage.Add(usage, turn.Usage);
             List<ToolCallPart> calls = [.. turn.ToolCalls];
             await AuditAsync(request, AiAuditKind.EngineCall, $"arrêt={turn.StopReason} appels={calls.Count}", engine.Name, cancellationToken).ConfigureAwait(false);
@@ -92,7 +118,7 @@ internal sealed class AccountingAssistant(
 
             if (calls.Count == 0 || turn.StopReason != EngineStopReason.ToolUse)
             {
-                foreach (AssistantEvent answer in FinalAnswer(turn, privacy, trustedSources))
+                foreach (AssistantEvent answer in FinalAnswer(turn, conversation.Privacy, conversation.TrustedSources))
                 {
                     yield return answer;
                 }
@@ -102,47 +128,83 @@ internal sealed class AccountingAssistant(
                 yield break;
             }
 
-            if (++rounds > settings.MaxToolRounds)
+            if (++rounds > conversation.Settings.MaxToolRounds)
             {
                 yield return new AssistantWarningEvent(ErrorCodes.Ai.ToolRoundsExceeded);
                 yield return Completed(engine, rounds - 1, usage);
                 yield break;
             }
 
-            messages.Add(new EngineMessage(EngineRole.Assistant, turn.Parts));
-            List<EnginePart> results = [];
-            foreach (ToolCallPart call in calls)
+            conversation.Messages.Add(new EngineMessage(EngineRole.Assistant, turn.Parts));
+            await foreach (AssistantEvent toolEvent in ToolRoundAsync(conversation, calls, cancellationToken).ConfigureAwait(false))
             {
-                (AiToolResult result, List<AssistantEvent> events) = await RunToolAsync(call, available, toolContext, privacy, request, engine.Name, cancellationToken).ConfigureAwait(false);
-                foreach (AssistantEvent toolEvent in events)
-                {
-                    yield return toolEvent;
-
-                    // Une fiche lue dans un autre skill (contrôleur fiscal, CAC) a sa propre fraîcheur.
-                    if (toolEvent is AssistantCitationEvent { Reference: var reference }
-                        && AiSkillNames.TryParse(reference.Split('/')[0], out AiSkill cited)
-                        && StaleWarning(cited, today, staleSignalled) is { } citedStale)
-                    {
-                        yield return citedStale;
-                    }
-                }
-
-                if (!result.IsError)
-                {
-                    trustedSources.Add(result.Content);
-                }
-
-                // Le résultat repart vers le moteur pseudonymisé, comme tout le reste.
-                results.Add(new ToolResultPart(call.Id, privacy.Pseudonymize(result.Content), result.IsError));
+                yield return toolEvent;
             }
-
-            messages.Add(new EngineMessage(EngineRole.User, results));
         }
     }
 
+    /// <summary>Lance les outils demandés et rend leurs résultats au moteur, pseudonymisés, dans un seul message.</summary>
+    private async IAsyncEnumerable<AssistantEvent> ToolRoundAsync(Conversation conversation, List<ToolCallPart> calls, [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        List<EnginePart> results = [];
+        foreach (ToolCallPart call in calls)
+        {
+            (AiToolResult result, List<AssistantEvent> events) = await RunToolAsync(
+                call, conversation.Tools, conversation.ToolContext, conversation.Privacy, conversation.Request, conversation.Engine.Name, cancellationToken).ConfigureAwait(false);
+            foreach (AssistantEvent toolEvent in events)
+            {
+                yield return toolEvent;
+
+                // Une fiche lue dans un autre skill (contrôleur fiscal, CAC) a sa propre fraîcheur.
+                if (toolEvent is AssistantCitationEvent { Reference: var reference }
+                    && AiSkillNames.TryParse(reference.Split('/')[0], out AiSkill cited)
+                    && StaleWarning(cited, conversation) is { } citedStale)
+                {
+                    yield return citedStale;
+                }
+            }
+
+            if (!result.IsError)
+            {
+                conversation.TrustedSources.Add(result.Content);
+            }
+
+            // Le résultat repart vers le moteur pseudonymisé, comme tout le reste.
+            results.Add(new ToolResultPart(call.Id, conversation.Privacy.Pseudonymize(result.Content), result.IsError));
+        }
+
+        conversation.Messages.Add(new EngineMessage(EngineRole.User, results));
+    }
+
+    /// <summary>Une demande en cours : le moteur retenu, ce qu'il a reçu et ce qui fonde la réponse.</summary>
+    private sealed class Conversation(AssistantRequest request, AiSettings settings, IAiEngine engine, DateOnly today)
+    {
+        public AssistantRequest Request { get; } = request;
+
+        public AiSettings Settings { get; } = settings;
+
+        public IAiEngine Engine { get; } = engine;
+
+        public DateOnly Today { get; } = today;
+
+        public PseudonymizationSession Privacy { get; set; } = null!;
+
+        public IReadOnlyList<IAiTool> Tools { get; set; } = [];
+
+        public AiToolContext ToolContext { get; set; } = null!;
+
+        public List<EngineMessage> Messages { get; } = [];
+
+        /// <summary>Ce que l'utilisateur a écrit et ce que les outils ont rendu : seuls montants admis dans la réponse.</summary>
+        public List<string> TrustedSources { get; } = [];
+
+        /// <summary>Skills déjà signalés périmés dans cette réponse.</summary>
+        public HashSet<AiSkill> StaleSignalled { get; } = [];
+    }
+
     /// <summary>Signale une fois par réponse un skill dont la mise à jour et la relecture ont plus de six mois.</summary>
-    private AssistantWarningEvent? StaleWarning(AiSkill skill, DateOnly today, HashSet<AiSkill> signalled) =>
-        skills.Info.IsStale(skill, today) && signalled.Add(skill)
+    private AssistantWarningEvent? StaleWarning(AiSkill skill, Conversation conversation) =>
+        skills.Info.IsStale(skill, conversation.Today) && conversation.StaleSignalled.Add(skill)
             ? new AssistantWarningEvent(
                 ErrorCodes.Ai.SkillPackStale,
                 $"{AiSkillNames.Name(skill)} {skills.Info.FreshAsOf(skill).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}")
