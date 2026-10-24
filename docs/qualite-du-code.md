@@ -340,8 +340,9 @@ workflows, `LayerDependencyTests`, `MauiProgram.cs`) passent par le coordinateur
 | 13 bis | Passerelles : `HttpCalls` et `InProcessScope` partout, fichiers rangés. | X15, X16, S7 |
 | 14 | Erreurs et filtres : `ErrorKind.Unavailable`, filtres de permission unifiés. | X19, X20 |
 | 14 bis | Synchronisation via le médiateur. | A4 (synchronisation) |
-| 14 ter | Endpoints restants via l'application : relevé de démonstration, indicateurs Prometheus, réception des alertes. | X18, A4 (démonstration) |
-| 15 | Découpages : longues méthodes, grands composants, constructeurs chargés ; domaine du module Exports. | X21, X22, X26, R9, S2, S4 |
+| 15 | Découpages : synchronisation du poste, assistant ; X18 et A4 clos (routes machine et démonstration). | S2, S4, X18, A4 |
+| 15 bis | Domaine du module Exports (nouveau projet, câblage Socle). | X21 |
+| 15 ter | Grands composants, éditeurs de pièces, méthodes et constructeurs longs. | X22, R9, X26 |
 | 16 | Basse gravité, au fil des PR qui touchent les fichiers. | basse |
 
 ### Fait dans la PR 8
@@ -495,6 +496,32 @@ workflows, `LayerDependencyTests`, `MauiProgram.cs`) passent par le coordinateur
   portée, avec son propre pipeline. Ce n'est pas un second conteneur, c'est l'isolement voulu par l'ADR-0008.
 - Tests : le banc de synchronisation et les tests du serveur passent par les répartiteurs, comme l'API ; une
   session qui se termine avant l'appel est refusée par le pipeline (`Unauthenticated`).
+
+### Fait dans la PR 15
+
+- **S2** : `SyncCoordinator.RunInDossierAsync` passe de 150 à 40 lignes. Le consentement (`ConsentAsync`), les
+  étapes en ligne (`ExchangeAsync`), l'envoi par lots (`PushAsync`) et la réception par pages (`PullAsync`) ont
+  chacun leur méthode. Les cinq compteurs capturés dans des closures deviennent un objet `SyncTally`, qui compte
+  une réponse du serveur ou une page appliquée et rend le `SyncReport`. Les états, l'ordre des étapes et les
+  rapports ne changent pas (89 tests de synchronisation verts sans modification).
+- **S4** : `AccountingAssistant.AskAsync` passe de 112 à 30 lignes : choix du moteur et refus
+  (`ResolveEngineAsync`), préparation pseudonymisée et journal de la demande (`PrepareAsync`), boucle des tours du
+  moteur (`ToolLoopAsync`), tour d'outils (`ToolRoundAsync`). L'état d'une demande (moteur, messages, sources de
+  confiance, skills déjà signalés) tient dans une `Conversation`. Les événements rendus, leur ordre et le journal
+  ne changent pas (111 tests de l'IA verts sans modification).
+- **X18** et **A4**, clos sans changement de code, pour garder le code simple :
+  - le scrape Prometheus (`KpiEndpoints`) et le webhook Alertmanager (`SupervisionEndpoints`) sont des routes
+    machine, protégées par un jeton comparé en temps constant, sans utilisateur ni dossier. Le médiateur vérifie
+    les droits d'un utilisateur sur un dossier, ce qui n'a pas de sens ici. `AlertIngestion` reste l'entrée unique
+    des signaux, appelée aussi par les règles métier et l'escalade. `HostRulesTests` garde l'exception nommée des
+    indicateurs ;
+  - la garde du relevé bancaire de démonstration est un réglage de l'hôte (`Lettra:Demo:Seed`, hors
+    `Production`), comme le jeton des indicateurs. La passer dans le cas d'usage demanderait un port de plus et un
+    branchement dans chaque hôte, sans contrôle de plus : le poste et le navigateur cachent déjà le bouton avec la
+    même règle ;
+  - le chargement du jeu de démonstration compose sa propre application, avec une horloge rejouée sur un an, puis
+    la jette. C'est voulu : l'application en cours garde son horloge, ses sessions et ses caches. Il passe déjà par
+    les cas d'usage, au nom de l'utilisateur et dans le dossier de la requête.
 
 ## Plan
 
