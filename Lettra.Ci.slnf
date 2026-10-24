@@ -54,7 +54,8 @@
       "tests\\Lettra.UI.Tests\\Lettra.UI.Tests.csproj",
       "tests\\Lettra.Observability.Tests\\Lettra.Observability.Tests.csproj",
       "tests\\Lettra.Supervision.Tests\\Lettra.Supervision.Tests.csproj",
-      "tests\\Lettra.Sync.Tests\\Lettra.Sync.Tests.csproj"
+      "tests\\Lettra.Sync.Tests\\Lettra.Sync.Tests.csproj",
+      "tests\\Lettra.Worker.Tests\\Lettra.Worker.Tests.csproj"
     ]
   }
 }

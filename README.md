@@ -839,7 +839,8 @@ src/
   Presentation/    UI.Abstractions (ports), UI.Shared (toute l'UI Blazor), UI.Gateway.Http, UI.Gateway.InProcess, Printing (PDF)
   Hosts/           Api (Minimal APIs, BFF, sert le WASM), Web (WASM), App.Maui (Blazor Hybrid), Worker (migrations, escalade, intégrité,
                    export FEC, outbox, échéances fiscales, vue cabinet, factures récurrentes, relances ; sans Worker,
-                   l'API fait toutes ces passes sauf les vagues de migration : chaque base y est migrée à sa première ouverture)
+                   l'API fait toutes ces passes sauf les vagues de migration : chaque base y est migrée à sa première ouverture ;
+                   lancé en job de déploiement, Lettra:Worker:RunOnce=true, le Worker ne fait que migrer puis s'arrête)
   Ai/              Couche IA (Paperasse épinglé, pseudonymisation, orchestrateur, moteurs Claude UE et local)
 tests/             un projet par couche ou module, dont Api (bout en bout, parité HTTP / in-process) et Architecture
 deploy/            démo Docker, Helm, OpenTofu, Argo CD, cellules, Keycloak, observabilité, tests de déploiement (k6, Grafana,
