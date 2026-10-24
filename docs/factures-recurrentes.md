@@ -10,7 +10,7 @@ la période facturée écrite sur la facture et dans la facture électronique. U
 ## Créer un modèle
 
 1. **Factures récurrentes › Nouveau modèle**.
-2. **Principal** : un nom (« Tenue comptable mensuelle »), le client, le régime de TVA et un objet facultatif. La
+2. **Informations** : un nom (« Tenue comptable mensuelle »), le client, le régime de TVA et un objet facultatif. La
    période facturée est ajoutée à l'objet de chaque facture, par exemple « Honoraires (du 01/10/2026 au 31/10/2026) ».
 3. **Échéancier** :
    - la **fréquence** : mensuelle, trimestrielle ou annuelle ;
@@ -139,7 +139,8 @@ Codes d'erreur : `RecurringInvoice.NotFound`, `NameRequired`, `NameTooLong`, `Fr
 ## Limites connues
 
 - La validation automatique se choisit **par modèle**, pas pour tout le dossier.
-- Pas d'envoi par e-mail des factures créées : il viendra avec le port e-mail de la vague 7 (« E-mails et relances »).
+- Pas d'envoi par e-mail des factures créées : le port e-mail de la vague 7 existe (`IEmailSender`,
+  [relances-et-e-mails.md](relances-et-e-mails.md)), mais les factures récurrentes ne s'en servent pas encore.
 - Les modèles ne se synchronisent pas entre appareils : sur un poste isolé (mode 1), ils restent dans la base locale ;
   la réplique d'une facture synchronisée ne porte pas sa période.
 - L'indice Syntec est saisi à la main ; aucune proratisation à la fin du contrat.

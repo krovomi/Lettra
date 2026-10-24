@@ -4,6 +4,8 @@ using Lettra.Application.Abstractions.Ai;
 using Lettra.Contracts.Assistant;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Serialization;
+using Lettra.Domain.Common;
+using Lettra.Domain.SharedKernel;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -91,6 +93,54 @@ public sealed class AiSettingsApiTests(LettraApiFactory factory) : IClassFixture
         (await response.Content.ReadAsStringAsync()).Should().Contain(ErrorCodes.Ai.EngineRequired);
     }
 
+    [Fact]
+    public async Task Le_brouillon_de_devis_en_texte_libre_ne_peut_pas_etre_active()
+    {
+        using HttpClient admin = factory.ClientFor(LettraApiFactory.AdministrateurCabinetId);
+
+        HttpResponseMessage response = await admin.PutAsJsonAsync(
+            Settings(LettraApiFactory.CabinetId),
+            new SaveAiSettingsRequest { Enabled = true, Engine = AssistantEngine.ClaudeEu, Features = [AssistantFeature.RegulatoryQuestions, AssistantFeature.DraftFromText] },
+            ContractsJsonContext.Default.SaveAiSettingsRequest);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await response.Content.ReadAsStringAsync()).Should().Contain(ErrorCodes.Ai.FeatureBlocked);
+    }
+
+    [Fact]
+    public async Task Un_brouillon_de_devis_active_avant_la_fermeture_reste_enregistre_mais_est_ignore()
+    {
+        // Réglage enregistré par une version précédente, point 1 compris : il n'est ni effacé ni appliqué.
+        InMemoryAiSettingsStore store = new(new AiSettings
+        {
+            Enabled = true,
+            Engine = AiEngineKind.ClaudeEu,
+            Features = new HashSet<AssistantFeature> { AssistantFeature.DraftFromText, AssistantFeature.RegulatoryQuestions },
+        });
+        using WebApplicationFactory<Program> withStored = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+        {
+            services.AddSingleton<IAiSettingsStore>(store);
+            services.AddKeyedSingleton<IAiEngine>(AiEngineKind.ClaudeEu, new AnswerEngine());
+        }));
+        using HttpClient admin = withStored.CreateClient();
+        admin.DefaultRequestHeaders.Authorization = new("Bearer", LettraApiFactory.TokenFor(LettraApiFactory.AdministrateurCabinetId));
+        using HttpClient manager = withStored.CreateClient();
+        manager.DefaultRequestHeaders.Add(LettraHeaders.Dossier, LettraApiFactory.DossierId.ToString());
+
+        AiSettingsResponse shown = (await admin.GetFromJsonAsync(Settings(LettraApiFactory.CabinetId), ContractsJsonContext.Default.AiSettingsResponse))!;
+        shown.Features.Should().Equal(AssistantFeature.RegulatoryQuestions);
+        AssistantStatusResponse status = (await manager.GetFromJsonAsync("/api/v1/assistant/statut", ContractsJsonContext.Default.AssistantStatusResponse))!;
+        status.Features.Should().Equal(AssistantFeature.RegulatoryQuestions);
+
+        using HttpResponseMessage refused = await manager.PostAsJsonAsync(
+            "/api/v1/assistant",
+            new AskAssistantRequest { Feature = AssistantFeature.DraftFromText, Question = "Devis pour Dupont, 3 jours de conseil" },
+            ContractsJsonContext.Default.AskAssistantRequest);
+        refused.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await refused.Content.ReadAsStringAsync()).Should().Contain(ErrorCodes.Ai.FeatureBlocked);
+        store.Stored!.Settings.Features.Should().Contain(AssistantFeature.DraftFromText);
+    }
+
     [Theory]
     [InlineData("manager")]
     [InlineData("collaborateur")]
@@ -108,6 +158,26 @@ public sealed class AiSettingsApiTests(LettraApiFactory factory) : IClassFixture
         (await client.GetAsync(Settings(LettraApiFactory.CabinetId))).StatusCode.Should().Be(HttpStatusCode.Forbidden);
         (await client.PutAsJsonAsync(Settings(LettraApiFactory.CabinetId), EnableRegulatoryQuestions(null), ContractsJsonContext.Default.SaveAiSettingsRequest))
             .StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    private sealed class InMemoryAiSettingsStore(AiSettings initial) : IAiSettingsStore
+    {
+        public StoredAiSettings? Stored { get; private set; } = new(initial, 1, DateTimeOffset.UnixEpoch, Guid.Empty);
+
+        public bool IsAvailable => true;
+
+        public ValueTask<StoredAiSettings?> FindAsync(OrganisationId organisation, CancellationToken cancellationToken) => ValueTask.FromResult(Stored);
+
+        public ValueTask<Result<StoredAiSettings>> SaveAsync(
+            OrganisationId organisation,
+            AiSettings settings,
+            long? expectedVersion,
+            Guid updatedBy,
+            CancellationToken cancellationToken)
+        {
+            Stored = new StoredAiSettings(settings, (expectedVersion ?? 0) + 1, DateTimeOffset.UnixEpoch, updatedBy);
+            return ValueTask.FromResult(Result<StoredAiSettings>.Success(Stored));
+        }
     }
 
     private sealed class AnswerEngine : IAiEngine

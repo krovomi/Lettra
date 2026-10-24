@@ -8,6 +8,7 @@
   <data name="Error.Ai.DossierExcluded" xml:space="preserve"><value>The firm has excluded this client file from the AI assistant.</value></data>
   <data name="Error.Ai.EngineUnavailable" xml:space="preserve"><value>No AI engine is available for this firm. Compliance checks remain active.</value></data>
   <data name="Error.Ai.FeatureDisabled" xml:space="preserve"><value>The firm has not turned on this assistant feature.</value></data>
+  <data name="Error.Ai.FeatureBlocked" xml:space="preserve"><value>Drafting a quote from free text is not available yet: Lettra must first be able to spot the names of people and companies typed in the text, so it can mask them before anything reaches the AI.</value></data>
   <data name="Error.Ai.Refused" xml:space="preserve"><value>The assistant declined to answer this request. Rephrase it or handle it without the assistant.</value></data>
   <data name="Error.Ai.SkillPackStale" xml:space="preserve"><value>The assistant's reference material is more than six months old: check thresholds and rates on official websites.</value></data>
   <data name="Error.Ai.ToolRejected" xml:space="preserve"><value>The assistant asked for an action that is not available, and it was refused.</value></data>
@@ -22,6 +23,7 @@
   <data name="Assistant.Title" xml:space="preserve"><value>AI assistant</value></data>
   <data name="Assistant.Close" xml:space="preserve"><value>Close</value></data>
   <data name="Assistant.Disclaimer" xml:space="preserve"><value>The assistant suggests, you decide: it never validates, issues or sends a document. Names and identifiers from the client file are masked before anything reaches the engine.</value></data>
+  <data name="Assistant.DraftFromTextBlocked" xml:space="preserve"><value>Drafting a quote from free text will come once Lettra can mask the names typed in the text.</value></data>
   <data name="Assistant.Feature" xml:space="preserve"><value>Feature</value></data>
   <data name="Assistant.Feature.DraftFromText" xml:space="preserve"><value>Draft quote</value></data>
   <data name="Assistant.Feature.ExplainCompliance" xml:space="preserve"><value>Why? (compliance)</value></data>

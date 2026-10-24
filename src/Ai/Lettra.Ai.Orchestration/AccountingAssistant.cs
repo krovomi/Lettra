@@ -19,6 +19,7 @@ namespace Lettra.Ai.Orchestration;
 /// </summary>
 internal sealed class AccountingAssistant(
     IAiUsagePolicy policy,
+    INamedEntityDetection namedEntities,
     IAiEngineFactory engines,
     IAiSkillCatalog skills,
     ToolRegistry tools,
@@ -33,7 +34,7 @@ internal sealed class AccountingAssistant(
         // 1. Politique du cabinet et droits de l'utilisateur (défense en profondeur : le pipeline l'a déjà vérifié).
         AiSettings settings = await policy.GetSettingsAsync(request.Organisation, cancellationToken).ConfigureAwait(false);
         Error? refusal = request.Permissions.Contains(Permission.IaUtiliser)
-            ? AiErrors.CheckPolicy(settings, request.Feature, request.Dossier)
+            ? AiErrors.CheckPolicy(settings, request.Feature, request.Dossier, namedEntities)
             : SecurityErrors.Forbidden;
         IAiEngine? engine = refusal is null ? engines.Resolve(settings.Engine) : null;
         if (refusal is null && engine is null)

@@ -21,17 +21,28 @@ public static class AiErrors
 
     public static Error FeatureDisabled => new(FeatureDisabledCode, ErrorKind.Forbidden);
 
+    /// <summary>Point fermé sur ce déploiement faute d'un garde-fou qu'il exige (<see cref="AiFeatureSafeguards"/>).</summary>
+    public static Error FeatureBlocked => new(ErrorCodes.Ai.FeatureBlocked, ErrorKind.Forbidden);
+
     public static Error DossierExcluded => new(DossierExcludedCode, ErrorKind.Forbidden);
 
     public static Error EngineUnavailable => new(EngineUnavailableCode, ErrorKind.Forbidden);
 
-    /// <summary>Politique du cabinet : la première raison qui empêche l'assistant de répondre, ou <c>null</c>.</summary>
-    public static Error? CheckPolicy(AiSettings settings, AssistantFeature feature, DossierId dossier)
+    /// <summary>
+    /// Politique du cabinet et garde-fous du déploiement : la première raison qui empêche l'assistant de répondre, ou
+    /// <c>null</c>. Un point fermé par un garde-fou le reste même si le cabinet l'a activé (réglage conservé, ignoré).
+    /// </summary>
+    public static Error? CheckPolicy(AiSettings settings, AssistantFeature feature, DossierId dossier, INamedEntityDetection namedEntities)
     {
         ArgumentNullException.ThrowIfNull(settings);
         if (!settings.Enabled)
         {
             return Disabled;
+        }
+
+        if (AiFeatureSafeguards.IsBlocked(feature, namedEntities))
+        {
+            return FeatureBlocked;
         }
 
         if (!settings.Features.Contains(feature))
@@ -82,6 +93,7 @@ internal sealed class AskAssistantHandler(
     ICurrentUser user,
     IPermissionService permissions,
     IAiUsagePolicy policy,
+    INamedEntityDetection namedEntities,
     IAccountingAssistant assistant) : IQueryHandler<AskAssistantQuery, Result<IAsyncEnumerable<AssistantEvent>>>
 {
     public async Task<Result<IAsyncEnumerable<AssistantEvent>>> HandleAsync(AskAssistantQuery query, CancellationToken cancellationToken)
@@ -89,7 +101,7 @@ internal sealed class AskAssistantHandler(
         ArgumentNullException.ThrowIfNull(query);
         OrganisationId organisation = tenant.Current.OrganisationId;
         AiSettings settings = await policy.GetSettingsAsync(organisation, cancellationToken).ConfigureAwait(false);
-        if (AiErrors.CheckPolicy(settings, query.Feature, query.Dossier) is { } refused)
+        if (AiErrors.CheckPolicy(settings, query.Feature, query.Dossier, namedEntities) is { } refused)
         {
             return refused;
         }
@@ -112,7 +124,11 @@ public sealed record GetAssistantStatusQuery(DossierId Dossier)
     public Permission Permission => Permission.IaUtiliser;
 }
 
-internal sealed class GetAssistantStatusHandler(ITenantContext tenant, IAiUsagePolicy policy, IAiEngineFactory engines)
+internal sealed class GetAssistantStatusHandler(
+    ITenantContext tenant,
+    IAiUsagePolicy policy,
+    IAiEngineFactory engines,
+    INamedEntityDetection namedEntities)
     : IQueryHandler<GetAssistantStatusQuery, Result<AssistantStatusResponse>>
 {
     public async Task<Result<AssistantStatusResponse>> HandleAsync(GetAssistantStatusQuery query, CancellationToken cancellationToken)
@@ -122,7 +138,7 @@ internal sealed class GetAssistantStatusHandler(ITenantContext tenant, IAiUsageP
         IAiEngine? engine = engines.Resolve(settings.Engine);
         AssistantFeature[] features = engine is null
             ? []
-            : [.. Enum.GetValues<AssistantFeature>().Where(f => AiErrors.CheckPolicy(settings, f, query.Dossier) is null)];
+            : [.. Enum.GetValues<AssistantFeature>().Where(f => AiErrors.CheckPolicy(settings, f, query.Dossier, namedEntities) is null)];
         return new AssistantStatusResponse(features, features.Length == 0 ? null : engine?.Name);
     }
 }

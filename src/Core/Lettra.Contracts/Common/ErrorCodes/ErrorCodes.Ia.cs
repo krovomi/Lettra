@@ -7,6 +7,7 @@ public static partial class ErrorCodes
     {
         public const string Disabled = "Ai.Disabled";
         public const string FeatureDisabled = "Ai.FeatureDisabled";
+        public const string FeatureBlocked = "Ai.FeatureBlocked";
         public const string DossierExcluded = "Ai.DossierExcluded";
         public const string EngineUnavailable = "Ai.EngineUnavailable";
         public const string Refused = "Ai.Refused";
