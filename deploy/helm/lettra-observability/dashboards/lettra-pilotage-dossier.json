@@ -374,7 +374,7 @@
           "range": false
         }
       ],
-      "description": "Calcul de la nuit (Vue cabinet)."
+      "description": "Calcul quotidien de la Vue cabinet (et « Actualiser »)."
     },
     {
       "id": 7,

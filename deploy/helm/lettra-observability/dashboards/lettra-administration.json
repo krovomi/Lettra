@@ -832,7 +832,7 @@
           "range": false
         }
       ],
-      "description": "Le calcul de nuit de la Vue cabinet a-t-il tourné ? Au-delà d'un jour et deux heures, il a manqué une nuit."
+      "description": "Le calcul quotidien de la Vue cabinet a-t-il tourné ? Il passe peu après le démarrage du serveur, puis toutes les 24 heures. Au-delà d'un jour et deux heures, un passage a manqué."
     },
     {
       "id": 15,
