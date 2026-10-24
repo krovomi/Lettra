@@ -34,8 +34,12 @@ namespace Lettra.Sync.Server;
 /// sans rien rejouer ; la même clé avec un autre contenu est refusée. Si le serveur tombe entre l'écriture et la
 /// réponse gardée, le rejeu retombe sur ses pieds : la création trouve l'élément, la fusion ne trouve rien à changer.
 /// </para>
+/// <para>
+/// Appelé seulement par ses cas d'usage (<see cref="SyncUseCases"/>) : le pipeline vérifie connexion, dossier et
+/// permission de la route avant d'arriver ici.
+/// </para>
 /// </summary>
-public sealed class SyncServer(
+internal sealed class SyncServer(
     IDossierWorkScope work,
     ISyncReceipts receipts,
     ISyncChangeFeed feed,
@@ -81,11 +85,6 @@ public sealed class SyncServer(
     /// </summary>
     public async Task<Result<SyncChangesResponse>> PullAsync(string? token, int limit, CancellationToken cancellationToken, Guid? deviceId = null)
     {
-        if (!user.IsAuthenticated)
-        {
-            return SecurityErrors.Unauthenticated;
-        }
-
         if (deviceId is Guid device)
         {
             Result known = await TouchAsync(device, cancellationToken).ConfigureAwait(false);
@@ -118,17 +117,12 @@ public sealed class SyncServer(
     }
 
     /// <summary>
-    /// Ouvre, ou rend, les séries du poste (ADR-0007). Réservé à qui peut valider une facture : les autres ne
-    /// numérotent pas hors ligne.
+    /// Ouvre, ou rend, les séries du poste (ADR-0007). Son cas d'usage exige de pouvoir valider une facture : les
+    /// autres ne numérotent pas hors ligne.
     /// </summary>
     public async Task<Result<OpenDeviceSeriesResponse>> OpenDeviceSeriesAsync(OpenDeviceSeriesRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        if (!user.IsAuthenticated)
-        {
-            return SecurityErrors.Unauthenticated;
-        }
-
         if (request.DeviceId == Guid.Empty)
         {
             return RightsSnapshotErrors.DeviceRequired;
@@ -138,14 +132,6 @@ public sealed class SyncServer(
         if (known.IsFailure)
         {
             return Result<OpenDeviceSeriesResponse>.Failure(known.Errors);
-        }
-
-        IReadOnlySet<Permission> granted = await permissions
-            .GetEffectiveAsync(user.UserId, AuthorizationScope.ForDossier(tenant.Current.DossierId), cancellationToken)
-            .ConfigureAwait(false);
-        if (!granted.Contains(Permission.FactureValider))
-        {
-            return SecurityErrors.Forbidden;
         }
 
         List<DeviceSeriesResponse> opened = [];
@@ -417,6 +403,9 @@ public static class DependencyInjection
     {
         services.AddScoped<SyncServer>();
         services.AddScoped<SyncServer.IntentReplay>();
+        services.AddScoped<ICommandHandler<PushSyncIntentsCommand, Result<PushSyncIntentsResponse>>, SyncUseCases>();
+        services.AddScoped<IQueryHandler<PullSyncChangesQuery, Result<SyncChangesResponse>>, SyncUseCases>();
+        services.AddScoped<ICommandHandler<OpenDeviceSeriesCommand, Result<OpenDeviceSeriesResponse>>, SyncUseCases>();
         return services;
     }
 }

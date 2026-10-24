@@ -58,7 +58,7 @@ internal abstract class DossierNode : IAsyncDisposable
         TenantDescriptor descriptor = new(dossier, new OrganisationId(Guid.CreateVersion7()), DatabaseProvider.Sqlite, "test:" + dossier.Value);
         services.AddSingleton<ITenantCatalog>(new Catalog(descriptor));
         services.AddSingleton<ISecretStore>(new Secrets($"Data Source={file};Pooling=False"));
-        services.AddSingleton<ICurrentUser>(new User());
+        services.AddSingleton<ICurrentUser>(new User(this));
         services.AddSingleton<IPermissionService>(Permissions);
         InMemoryKekStore keks = new();
         _ = keks.GetOrCreateAsync(descriptor.OrganisationId, default).AsTask().Result;
@@ -71,6 +71,9 @@ internal abstract class DossierNode : IAsyncDisposable
     public DossierId Dossier { get; }
 
     public TestPermissions Permissions { get; } = new();
+
+    /// <summary>Vrai : les appels suivants arrivent sans session, comme une requête sans jeton.</summary>
+    public bool SignedOut { get; set; }
 
     public IServiceProvider Services => _root;
 
@@ -114,9 +117,9 @@ internal abstract class DossierNode : IAsyncDisposable
             ValueTask.FromResult(connectionString);
     }
 
-    private sealed class User : ICurrentUser
+    private sealed class User(DossierNode node) : ICurrentUser
     {
-        public bool IsAuthenticated => true;
+        public bool IsAuthenticated => !node.SignedOut;
 
         public Guid UserId { get; } = Guid.CreateVersion7();
     }
@@ -183,7 +186,7 @@ internal sealed class InMemoryTransport(ServerNode server) : ISyncTransport
         Pushes++;
         Lose(Cut.PushRequest);
         PushSyncIntentsRequest received = RoundTrip(request, ContractsJsonContext.Default.PushSyncIntentsRequest);
-        Result<PushSyncIntentsResponse> result = await server.RunAsync(sp => sp.GetRequiredService<SyncServer>().PushAsync(received, cancellationToken));
+        Result<PushSyncIntentsResponse> result = await server.SendAsync(new PushSyncIntentsCommand(server.Dossier, received));
         Refuse(result);
         result.IsSuccess.Should().BeTrue(string.Join(", ", result.Errors.Select(e => e.Code)));
         Lose(Cut.PushResponse);
@@ -194,7 +197,7 @@ internal sealed class InMemoryTransport(ServerNode server) : ISyncTransport
     {
         Pulls++;
         Lose(Cut.PullRequest);
-        Result<SyncChangesResponse> result = await server.RunAsync(sp => sp.GetRequiredService<SyncServer>().PullAsync(token, limit, cancellationToken, DeviceId));
+        Result<SyncChangesResponse> result = await server.QueryAsync(new PullSyncChangesQuery(server.Dossier, token, limit, DeviceId));
         Refuse(result);
 
         Lose(Cut.PullResponse);
@@ -207,7 +210,7 @@ internal sealed class InMemoryTransport(ServerNode server) : ISyncTransport
     {
         SeriesRequests++;
         OpenDeviceSeriesRequest received = RoundTrip(request, ContractsJsonContext.Default.OpenDeviceSeriesRequest);
-        Result<OpenDeviceSeriesResponse> result = await server.RunAsync(sp => sp.GetRequiredService<SyncServer>().OpenDeviceSeriesAsync(received, cancellationToken));
+        Result<OpenDeviceSeriesResponse> result = await server.SendAsync(new OpenDeviceSeriesCommand(server.Dossier, received));
         Refuse(result);
 
         return RoundTrip(result.Value, ContractsJsonContext.Default.OpenDeviceSeriesResponse);

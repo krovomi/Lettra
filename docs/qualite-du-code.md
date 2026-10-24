@@ -339,7 +339,8 @@ workflows, `LayerDependencyTests`, `MauiProgram.cs`) passent par le coordinateur
 | 13 | Synchronisation sans localisateur (portée de travail typée), indicateurs d'accueil lus au serveur. | X14 (synchronisation), X8 |
 | 13 bis | Passerelles : `HttpCalls` et `InProcessScope` partout, fichiers rangés. | X15, X16, S7 |
 | 14 | Erreurs et filtres : `ErrorKind.Unavailable`, filtres de permission unifiés. | X19, X20 |
-| 14 bis | Endpoints restants via le médiateur (synchronisation, démonstration, jeton de droits, indicateurs). | X18, A4 |
+| 14 bis | Synchronisation via le médiateur. | A4 (synchronisation) |
+| 14 ter | Endpoints restants via l'application : relevé de démonstration, indicateurs Prometheus, réception des alertes. | X18, A4 (démonstration) |
 | 15 | Découpages : longues méthodes, grands composants, constructeurs chargés ; domaine du module Exports. | X21, X22, X26, R9, S2, S4 |
 | 16 | Basse gravité, au fil des PR qui touchent les fichiers. | basse |
 
@@ -477,7 +478,23 @@ workflows, `LayerDependencyTests`, `MauiProgram.cs`) passent par le coordinateur
 - **X18** (en partie) : les clés publiques des instantanés de droits passent par le port `IRightsSnapshotIssuer`
   (`PublicKeys()`) et non plus par la classe d'infrastructure `EcdsaRightsSnapshotIssuer`. L'exception de
   `HostRulesTests` pour `RightsSnapshotEndpoints` est retirée ; il ne reste que celle des indicateurs Prometheus
-  (`KpiEndpoints`), traitée avec la PR 14 bis.
+  (`KpiEndpoints`), traitée avec la PR 14 ter.
+
+### Fait dans la PR 14 bis
+
+- **A4** (synchronisation) : les trois routes de synchronisation (envoi des intentions, réception des changements,
+  séries du poste) passent par le médiateur comme toutes les autres. `PushSyncIntentsCommand`,
+  `PullSyncChangesQuery` et `OpenDeviceSeriesCommand` déclarent leur permission (lire le dossier, ou valider une
+  facture pour les séries) ; le pipeline vérifie la connexion, le dossier et la permission, journalise et trace.
+  `SyncServer` devient interne au module : on ne l'appelle plus que par ces cas d'usage. Il perd ses vérifications
+  refaites à la main (connexion, droit de valider). Il garde la lecture des droits qui choisit ce que la réception
+  rend (tiers, catalogue) : c'est un filtre, pas une autorisation.
+- Comportement inchangé à l'API : mêmes routes, mêmes codes. Seul l'ordre change quand deux refus se cumulent hors
+  API (un poste vide sans droit de valider) : le droit est vérifié avant le poste, comme pour tout cas d'usage.
+- La portée de travail par intention (`IDossierWorkScope`) reste : chaque intention est rejouée dans sa propre
+  portée, avec son propre pipeline. Ce n'est pas un second conteneur, c'est l'isolement voulu par l'ADR-0008.
+- Tests : le banc de synchronisation et les tests du serveur passent par les répartiteurs, comme l'API ; une
+  session qui se termine avant l'appel est refusée par le pipeline (`Unauthenticated`).
 
 ## Plan
 
