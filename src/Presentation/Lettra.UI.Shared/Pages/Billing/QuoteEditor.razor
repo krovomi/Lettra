@@ -158,7 +158,7 @@ else
     private bool _conflict;
     private bool _busy;
     private decimal? _downPaymentPercent = 30m;
-    private string _pdfCulture = "fr-FR";
+    private string _pdfCulture = DocumentEditing.DefaultPdfCulture;
     private DraftAutosave _autosave = default!;
     private KeyboardScope _pageScope = default!;
     private CustomerPicker? _customerPicker;
@@ -378,16 +378,8 @@ else
     }
 
     /// <summary>Langue du PDF proposée : celle du client, le français sinon (elle reste modifiable).</summary>
-    private async Task PreselectPdfLanguageAsync()
-    {
-        if (_request.CustomerId == Guid.Empty || OptionalCustomers.Value is not { } customers)
-        {
-            return;
-        }
-
-        OperationResult<CustomerResponse> customer = await customers.GetAsync(_request.CustomerId, CancellationToken.None);
-        _pdfCulture = customer.Value?.PreferredLanguage ?? "fr-FR";
-    }
+    private async Task PreselectPdfLanguageAsync() =>
+        _pdfCulture = await DocumentEditing.PdfCultureOfAsync(OptionalCustomers, _request.CustomerId) ?? _pdfCulture;
 
     private async Task ValidUntilChangedAsync(DateOnly? date)
     {
@@ -416,21 +408,12 @@ else
         await ScheduleSaveAsync();
     }
 
-    /// <summary>Articles déjà sur le devis : les suggestions du client ne les reproposent pas.</summary>
-    private Guid[] PresentItems => [.. _lines.Where(l => l.CatalogItemId is not null).Select(l => l.CatalogItemId!.Value)];
+    private Guid[] PresentItems => DocumentEditing.PresentItems(_lines);
 
     private void TotalsChanged(DocumentTotals totals) => _totals = totals;
 
-    private async Task<ResolvedPrice?> ResolvePriceAsync(Guid catalogItemId)
-    {
-        if (_request.CustomerId == Guid.Empty || OptionalPrices.Value is not { } prices)
-        {
-            return null;
-        }
-
-        OperationResult<IReadOnlyList<ResolvedPrice>> result = await prices.ResolveAsync(_request.CustomerId, [catalogItemId], CancellationToken.None);
-        return result.Value?.FirstOrDefault();
-    }
+    private Task<ResolvedPrice?> ResolvePriceAsync(Guid catalogItemId) =>
+        DocumentEditing.ResolvePriceAsync(OptionalPrices, _request.CustomerId, catalogItemId);
 
     // ---------- enregistrement du brouillon et checklist ----------
 
@@ -445,7 +428,7 @@ else
         if (_quote is null && _request.CustomerId == Guid.Empty)
         {
             _errors = [new ErrorDetail(ErrorCodes.Billing.CustomerRequired)];
-            await ExpandAsync(_mainBlock);
+            await DocumentEditing.ExpandAsync(_mainBlock);
             if (_customerPicker is not null)
             {
                 await _customerPicker.FocusAsync();
@@ -685,50 +668,20 @@ else
 
     // ---------- checklist → champ fautif ----------
 
-    private async Task FocusFindingAsync(ComplianceFindingResponse finding)
+    private Task FocusFindingAsync(ComplianceFindingResponse finding) =>
+        DocumentEditing.FocusFindingAsync(finding, new(Navigation, _mainBlock, _customerPicker, _linesBlock, _linesGrid), FocusOwnFieldAsync);
+
+    /// <summary>Champ propre au devis : la date de validité, tenue pour l'échéance.</summary>
+    private async Task<bool> FocusOwnFieldAsync(string code)
     {
-        switch (finding.Code)
+        if (code != ErrorCodes.Mention.DueDate)
         {
-            case var code when code.StartsWith("Mention.Customer", StringComparison.Ordinal):
-                await ExpandAsync(_mainBlock);
-                if (_customerPicker is not null)
-                {
-                    await _customerPicker.FocusAsync();
-                }
-
-                break;
-            case var code when code.StartsWith("Mention.Seller", StringComparison.Ordinal)
-                || code is ErrorCodes.Mention.LatePenalties or ErrorCodes.Mention.RecoveryIndemnity
-                    or ErrorCodes.Mention.EarlyPaymentDiscount or ErrorCodes.Mention.VatOnDebits:
-                Navigation.NavigateTo("settings/company");
-                break;
-            case ErrorCodes.Mention.DueDate:
-                await ExpandAsync(_mainBlock);
-                await FocusAsync(_validUntil?.Element ?? default);
-                break;
-            default:
-                await ExpandAsync(_linesBlock);
-                if (_linesGrid is not null)
-                {
-                    await _linesGrid.FocusLineAsync((finding.Line ?? 1) - 1);
-                }
-
-                break;
+            return false;
         }
-    }
 
-    private static Task ExpandAsync(Collapsible? block) => block?.ExpandAsync() ?? Task.CompletedTask;
-
-    private static async Task FocusAsync(ElementReference element)
-    {
-        try
-        {
-            await element.FocusAsync();
-        }
-        catch (InvalidOperationException)
-        {
-            // Rendu sans navigateur (tests).
-        }
+        await DocumentEditing.ExpandAsync(_mainBlock);
+        await DocumentEditing.FocusAsync(_validUntil?.Element ?? default);
+        return true;
     }
 
     public void Dispose()
