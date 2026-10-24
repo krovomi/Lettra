@@ -24,7 +24,7 @@ internal static class Assemblies
     public static readonly Assembly SupervisionDomain = typeof(Supervision.Domain.SupervisionDomain).Assembly;
     public static readonly Assembly SupervisionApplication = typeof(Supervision.Application.DependencyInjection).Assembly;
     public static readonly Assembly SupervisionInfrastructure = typeof(Supervision.Infrastructure.DependencyInjection).Assembly;
-    public static readonly Assembly SyncServer = typeof(Sync.Server.SyncServer).Assembly;
+    public static readonly Assembly SyncServer = typeof(Sync.Server.DependencyInjection).Assembly;
     public static readonly Assembly SyncClient = typeof(Sync.Client.SyncCoordinator).Assembly;
     public static readonly Assembly ExportsApplication = typeof(Exports.Application.DependencyInjection).Assembly;
     public static readonly Assembly ExportsInfrastructure = typeof(Exports.Infrastructure.DependencyInjection).Assembly;
