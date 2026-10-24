@@ -35,8 +35,9 @@ isolé (mode 1), seulement son identifiant.
 ## Comment c'est construit
 
 - **Serveur** (`Lettra.Exports.Application/AuditKit`) : `GetAuditKitQuery` → `AuditKitService` rassemble les briques
-  existantes (export FEC, contrôle d'intégrité, archives scellées, registre des clés, XML CII) et le port
-  `IAuditTrailReader` (EF : `EfAuditTrailReader`) ; `AuditKitWriter`, pur, écrit l'archive. Route
+  existantes (export FEC, XML CII) et le port `IAuditTrailReader` (EF : `EfAuditTrailReader`) ; `AuditKitIntegrity`
+  fournit les preuves d'intégrité (contrôle de la chaîne, archives scellées, registre des clés, entrées de la
+  période) ; `AuditKitWriter`, pur, écrit l'archive. Route
   `GET /api/v1/exports/audit-kit?from=AAAA-MM-JJ&to=AAAA-MM-JJ` (`application/zip`).
 - **Écran** (`Pages/Tax/AuditKitPage.razor`) : appelle la passerelle (`IAuditKitGateway`, HTTP ou en processus pour
   l'application installée), puis `AuditKitAssembler` ajoute les PDF Factur-X. Le rendu PDF reste côté client, comme

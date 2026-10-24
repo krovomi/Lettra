@@ -20,32 +20,15 @@ public static partial class FecValidator
         Report report = new();
         ValidateFileName(fileName, periodEnd, report);
 
-        string text = Decode(content);
-        List<string> lines = [.. text.Split('\n').Select(l => l.TrimEnd('\r'))];
-        if (lines.Count > 0 && lines[^1].Length == 0)
-        {
-            lines.RemoveAt(lines.Count - 1);
-        }
-
+        List<string> lines = ReadLines(content);
         if (lines.Count == 0)
         {
             report.Add(ErrorCodes.Fec.Empty, FecFindingSeverityDto.Error);
             return report.ToResponse(fileName, 0, 0);
         }
 
-        char? separator = lines[0].Contains('\t', StringComparison.Ordinal) ? '\t'
-            : lines[0].Contains('|', StringComparison.Ordinal) ? '|'
-            : null;
-        if (separator is null)
+        if (ReadSeparator(lines[0], report) is not { } separator)
         {
-            report.Add(ErrorCodes.Fec.SeparatorInvalid, FecFindingSeverityDto.Error, line: 1);
-            return report.ToResponse(fileName, lines.Count, 0);
-        }
-
-        string[] header = lines[0].TrimStart('﻿').Split(separator.Value);
-        if (!header.SequenceEqual(FecFormat.Columns, StringComparer.OrdinalIgnoreCase))
-        {
-            report.Add(ErrorCodes.Fec.HeaderInvalid, FecFindingSeverityDto.Error, line: 1);
             return report.ToResponse(fileName, lines.Count, 0);
         }
 
@@ -54,12 +37,11 @@ public static partial class FecValidator
             report.Add(ErrorCodes.Fec.NoEntries, FecFindingSeverityDto.Warning);
         }
 
-        Dictionary<(string Journal, string Number), Entry> entries = [];
-        Dictionary<string, DateOnly> lastValidation = new(StringComparer.Ordinal);
+        Ledger ledger = new(report);
         for (int index = 1; index < lines.Count; index++)
         {
             int lineNumber = index + 1;
-            string[] fields = lines[index].Split(separator.Value);
+            string[] fields = lines[index].Split(separator);
             if (fields.Length != FecFormat.Columns.Count)
             {
                 report.Add(ErrorCodes.Fec.ColumnCountInvalid, FecFindingSeverityDto.Error, lineNumber);
@@ -68,55 +50,45 @@ public static partial class FecValidator
 
             Row row = new(fields);
             ValidateRow(row, lineNumber, periodStart, periodEnd, report);
-
-            string journal = row[FecFormat.JournalCode];
-            string number = row[FecFormat.EcritureNum];
-            if (journal.Length == 0 || number.Length == 0)
-            {
-                continue;
-            }
-
-            if (!entries.TryGetValue((journal, number), out Entry? entry))
-            {
-                entry = new Entry(journal, number, row[FecFormat.EcritureDate], row[FecFormat.ValidDate]);
-                entries.Add((journal, number), entry);
-
-                // Les écritures d'un journal se suivent dans l'ordre de leur validation.
-                if (FecFormat.TryParseDate(entry.ValidDate, out DateOnly validated))
-                {
-                    if (lastValidation.TryGetValue(journal, out DateOnly previous) && validated < previous)
-                    {
-                        report.Add(ErrorCodes.Fec.NotChronological, FecFindingSeverityDto.Error, lineNumber, FecFormat.ValidDate, number);
-                    }
-
-                    lastValidation[journal] = validated;
-                }
-            }
-            else if (entry.EntryDate != row[FecFormat.EcritureDate] || entry.ValidDate != row[FecFormat.ValidDate])
-            {
-                report.Add(ErrorCodes.Fec.EntryInconsistent, FecFindingSeverityDto.Error, lineNumber, FecFormat.EcritureDate, number);
-            }
-
-            if (FecFormat.TryParseAmount(row[FecFormat.Debit], out decimal debit) && FecFormat.TryParseAmount(row[FecFormat.Credit], out decimal credit))
-            {
-                entry.Debit += debit;
-                entry.Credit += credit;
-                report.TotalDebit += debit;
-                report.TotalCredit += credit;
-            }
+            ledger.Post(row, lineNumber);
         }
 
-        foreach (Entry entry in entries.Values.Where(e => e.Debit != e.Credit))
+        ledger.CheckBalances();
+        return report.ToResponse(fileName, lines.Count, ledger.EntryCount);
+    }
+
+    /// <summary>Les lignes du fichier, sans fin de ligne ni dernière ligne vide.</summary>
+    private static List<string> ReadLines(ReadOnlySpan<byte> content)
+    {
+        List<string> lines = [.. Decode(content).Split('\n').Select(l => l.TrimEnd('\r'))];
+        if (lines.Count > 0 && lines[^1].Length == 0)
         {
-            report.Add(ErrorCodes.Fec.EntryUnbalanced, FecFindingSeverityDto.Error, entryNumber: entry.Number);
+            lines.RemoveAt(lines.Count - 1);
         }
 
-        if (report.TotalDebit != report.TotalCredit)
+        return lines;
+    }
+
+    /// <summary>Le séparateur (tabulation ou barre verticale) d'un en-tête conforme, ou rien s'il ne l'est pas.</summary>
+    private static char? ReadSeparator(string headerLine, Report report)
+    {
+        char? separator = headerLine.Contains('\t', StringComparison.Ordinal) ? '\t'
+            : headerLine.Contains('|', StringComparison.Ordinal) ? '|'
+            : null;
+        if (separator is null)
         {
-            report.Add(ErrorCodes.Fec.FileUnbalanced, FecFindingSeverityDto.Error);
+            report.Add(ErrorCodes.Fec.SeparatorInvalid, FecFindingSeverityDto.Error, line: 1);
+            return null;
         }
 
-        return report.ToResponse(fileName, lines.Count, entries.Count);
+        string[] header = headerLine.TrimStart('\uFEFF').Split(separator.Value);
+        if (!header.SequenceEqual(FecFormat.Columns, StringComparer.OrdinalIgnoreCase))
+        {
+            report.Add(ErrorCodes.Fec.HeaderInvalid, FecFindingSeverityDto.Error, line: 1);
+            return null;
+        }
+
+        return separator;
     }
 
     private static void ValidateFileName(string fileName, DateOnly? periodEnd, Report report)
@@ -266,6 +238,73 @@ public static partial class FecValidator
         public decimal Debit { get; set; }
 
         public decimal Credit { get; set; }
+    }
+
+    /// <summary>Les écritures du fichier : regroupement des lignes, ordre de validation par journal, équilibres.</summary>
+    private sealed class Ledger(Report report)
+    {
+        private readonly Dictionary<(string Journal, string Number), Entry> _entries = [];
+        private readonly Dictionary<string, DateOnly> _lastValidation = new(StringComparer.Ordinal);
+
+        public int EntryCount => _entries.Count;
+
+        public void Post(Row row, int lineNumber)
+        {
+            string journal = row[FecFormat.JournalCode];
+            string number = row[FecFormat.EcritureNum];
+            if (journal.Length == 0 || number.Length == 0)
+            {
+                return;
+            }
+
+            if (!_entries.TryGetValue((journal, number), out Entry? entry))
+            {
+                entry = new Entry(journal, number, row[FecFormat.EcritureDate], row[FecFormat.ValidDate]);
+                _entries.Add((journal, number), entry);
+                CheckChronology(entry, lineNumber);
+            }
+            else if (entry.EntryDate != row[FecFormat.EcritureDate] || entry.ValidDate != row[FecFormat.ValidDate])
+            {
+                report.Add(ErrorCodes.Fec.EntryInconsistent, FecFindingSeverityDto.Error, lineNumber, FecFormat.EcritureDate, number);
+            }
+
+            if (FecFormat.TryParseAmount(row[FecFormat.Debit], out decimal debit) && FecFormat.TryParseAmount(row[FecFormat.Credit], out decimal credit))
+            {
+                entry.Debit += debit;
+                entry.Credit += credit;
+                report.TotalDebit += debit;
+                report.TotalCredit += credit;
+            }
+        }
+
+        public void CheckBalances()
+        {
+            foreach (Entry entry in _entries.Values.Where(e => e.Debit != e.Credit))
+            {
+                report.Add(ErrorCodes.Fec.EntryUnbalanced, FecFindingSeverityDto.Error, entryNumber: entry.Number);
+            }
+
+            if (report.TotalDebit != report.TotalCredit)
+            {
+                report.Add(ErrorCodes.Fec.FileUnbalanced, FecFindingSeverityDto.Error);
+            }
+        }
+
+        /// <summary>Les écritures d'un journal se suivent dans l'ordre de leur validation.</summary>
+        private void CheckChronology(Entry entry, int lineNumber)
+        {
+            if (!FecFormat.TryParseDate(entry.ValidDate, out DateOnly validated))
+            {
+                return;
+            }
+
+            if (_lastValidation.TryGetValue(entry.Journal, out DateOnly previous) && validated < previous)
+            {
+                report.Add(ErrorCodes.Fec.NotChronological, FecFindingSeverityDto.Error, lineNumber, FecFormat.ValidDate, entry.Number);
+            }
+
+            _lastValidation[entry.Journal] = validated;
+        }
     }
 
     private sealed class Report

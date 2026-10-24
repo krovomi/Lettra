@@ -425,20 +425,14 @@
         await item.Run();
     }
 
-    // « Devis pour Dupont, trois heures de conseil » : le client est cherché parmi ceux du dossier, le devis s'ouvre en
+    // « Devis pour Dupont, trois heures de conseil » : le client est cherché dans le dossier par son nom, le devis s'ouvre en
     // brouillon et ses lignes l'attendent ; rien n'est enregistré avant que la page ne reçoive les lignes.
     private async Task DraftQuoteAsync(VoiceCommand command)
     {
         Guid? customer = null;
         if (command.Customer is { Length: > 0 } name && OptionalCustomers.Value is { } customers)
         {
-            OperationResult<IReadOnlyList<CustomerSummary>> list = await customers.ListAllAsync(CancellationToken.None);
-            customer = list.Value?
-                .Select(c => (c.Id, Score: PaletteMatcher.Score(c.Name, name)))
-                .Where(c => c.Score > 0)
-                .OrderByDescending(c => c.Score)
-                .Select(c => (Guid?)c.Id)
-                .FirstOrDefault();
+            customer = await customers.FindBestMatchAsync(name, CancellationToken.None);
         }
 
         if (command.Lines.Count > 0)
