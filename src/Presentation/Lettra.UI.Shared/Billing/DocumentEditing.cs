@@ -1,3 +1,4 @@
+using Lettra.Calculations;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
@@ -14,7 +15,7 @@ namespace Lettra.UI.Shared.Billing;
 public static class DocumentEditing
 {
     /// <summary>Langue du PDF quand le client n'en a pas.</summary>
-    public const string DefaultPdfCulture = "fr-FR";
+    public const string DefaultPdfCulture = LegalLanguage.Name;
 
     /// <summary>
     /// Langue du PDF proposée : celle du client, le français sinon (elle reste modifiable). Null sans client ou sans

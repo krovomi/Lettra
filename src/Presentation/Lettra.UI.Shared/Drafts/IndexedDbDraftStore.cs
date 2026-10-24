@@ -151,17 +151,7 @@ internal sealed class IndexedDbDraftStore(IJSRuntime js, OfflineDraftScope scope
 
     public async ValueTask DisposeAsync()
     {
-        if (_module is not null)
-        {
-            try
-            {
-                await _module.DisposeAsync().ConfigureAwait(false);
-            }
-            catch (JSDisconnectedException)
-            {
-                // Page fermée.
-            }
-        }
+        await JsModules.ReleaseAsync(_module).ConfigureAwait(false);
     }
 }
 

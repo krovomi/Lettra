@@ -41,8 +41,8 @@ internal static class VersionedCalls
         StringBuilder text = new(string.Create(CultureInfo.InvariantCulture, $"page={query.Page}&pageSize={query.PageSize}"));
         Append(text, "search", ListSearch.Normalize(query.Search));
         Append(text, "customerId", query.CustomerId?.ToString());
-        Append(text, "from", query.From?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
-        Append(text, "to", query.To?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+        Append(text, "from", query.From is { } from ? QueryText.Day(from) : null);
+        Append(text, "to", query.To is { } to ? QueryText.Day(to) : null);
         Append(text, "minAmount", query.MinAmount?.ToString(CultureInfo.InvariantCulture));
         Append(text, "maxAmount", query.MaxAmount?.ToString(CultureInfo.InvariantCulture));
         if (query.Sort != BillingSortDto.IssueDate || query.Direction != SortDirectionDto.Descending)

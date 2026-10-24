@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using Lettra.Calculations;
+using Lettra.Domain.Parties;
 using Lettra.Domain.Reminders;
 
 namespace Lettra.Exports.Application.Reminders;
@@ -26,9 +27,9 @@ public sealed record ReminderLetter(
 /// </summary>
 public static class ReminderTemplates
 {
-    public const string English = "en-US";
+    public const string English = DocumentLanguages.English;
 
-    public const string French = "fr-FR";
+    public const string French = DocumentLanguages.French;
 
     /// <summary><c>en-US</c> pour un client anglophone, <c>fr-FR</c> sinon.</summary>
     public static string LanguageOf(string? preferred) =>
@@ -42,7 +43,7 @@ public static class ReminderTemplates
 
     private static (string Subject, string Body) WriteFrench(ReminderLetter l)
     {
-        CultureInfo fr = CultureInfo.GetCultureInfo("fr-FR");
+        CultureInfo fr = CultureInfo.GetCultureInfo(French);
         string amount = Money(l.Outstanding, fr);
         string due = l.DueDate.ToString("d MMMM yyyy", fr);
         string issued = l.IssueDate.ToString("d MMMM yyyy", fr);

@@ -1,4 +1,3 @@
-using System.Globalization;
 using Lettra.Calculations;
 using Lettra.Calculations.Compliance;
 using Lettra.Domain.Common;
@@ -691,7 +690,7 @@ public sealed class Invoice : BillingDocument<InvoiceId>
 
         if (terms.LatePenaltyRate is { } rate)
         {
-            mentions.Add(string.Create(CultureInfo.GetCultureInfo("fr-FR"), $"Pénalités de retard : {rate:0.##} % par an"));
+            mentions.Add(string.Create(LegalLanguage.Culture, $"Pénalités de retard : {rate:0.##} % par an"));
         }
 
         if (Customer.IsBusiness)

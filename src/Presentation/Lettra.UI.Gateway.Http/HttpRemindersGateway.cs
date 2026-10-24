@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Net.Http.Json;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Reminders;
@@ -59,12 +58,12 @@ internal sealed class HttpRemindersGateway(HttpClient http) : IRemindersGateway
 
         if (query.From is DateOnly from)
         {
-            parameters.Add("from=" + from.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+            parameters.Add("from=" + QueryText.Day(from));
         }
 
         if (query.To is DateOnly to)
         {
-            parameters.Add("to=" + to.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+            parameters.Add("to=" + QueryText.Day(to));
         }
 
         string url = $"api/v1/reminders/history?{string.Join('&', parameters)}{HttpCalls.SearchParameter(query.Search)}";

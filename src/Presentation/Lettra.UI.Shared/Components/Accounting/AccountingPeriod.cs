@@ -1,5 +1,5 @@
-using System.Globalization;
 using Lettra.Calculations;
+using Lettra.UI.Shared.Components.Dates;
 
 namespace Lettra.UI.Shared.Components.Accounting;
 
@@ -37,7 +37,7 @@ public readonly record struct AccountingPeriod(DateOnly From, DateOnly To)
     public static AccountingPeriod Parse(string? from, string? to, DateOnly today)
     {
         AccountingPeriod year = Of(PeriodPreset.ThisYear, today);
-        return new(ParseDay(from) ?? year.From, ParseDay(to) ?? year.To);
+        return new(DateText.ParseIso(from) ?? year.From, DateText.ParseIso(to) ?? year.To);
     }
 
     public PeriodPreset? Preset(DateOnly today)
@@ -53,12 +53,7 @@ public readonly record struct AccountingPeriod(DateOnly From, DateOnly To)
         return null;
     }
 
-    public string Query => $"from={Day(From)}&to={Day(To)}";
-
-    public static string Day(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-
-    private static DateOnly? ParseDay(string? value) =>
-        DateOnly.TryParseExact(value, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly day) ? day : null;
+    public string Query => $"from={DateText.ToIso(From)}&to={DateText.ToIso(To)}";
 }
 
 /// <summary>Intitulés des comptes du plan comptable utilisés par les écritures de vente et de banque (clés <c>Account.&lt;numéro&gt;</c>).</summary>

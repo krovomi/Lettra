@@ -74,7 +74,7 @@ public sealed record SaveUserPreferencesRequest
 {
     public WorkspacePreferencesDto Workspace { get; set; } = new();
 
-    public IList<EntryDefaultsDto> EntryDefaults { get; set; } = [];
+    public List<EntryDefaultsDto> EntryDefaults { get; set; } = [];
 
     /// <summary>Version lue ; <c>null</c> pour un premier enregistrement. Un écart renvoie <c>Concurrency.VersionMismatch</c>.</summary>
     public long? Version { get; set; }

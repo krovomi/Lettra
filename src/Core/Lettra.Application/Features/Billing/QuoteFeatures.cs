@@ -3,6 +3,7 @@ using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Persistence;
 using Lettra.Application.Mapping;
+using Lettra.Calculations;
 using Lettra.Calculations.Compliance;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
@@ -489,7 +490,7 @@ internal static class BillingTexts
 {
     public static string DownPaymentDesignation(Quote quote, decimal ratio) =>
         string.Create(
-            System.Globalization.CultureInfo.GetCultureInfo("fr-FR"),
+            LegalLanguage.Culture,
             $"Acompte de {ratio * 100m:0.##} % sur le devis n° {quote.Number}");
 
     public static string DeductionDesignation(Invoice downPayment) =>

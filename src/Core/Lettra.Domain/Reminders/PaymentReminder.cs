@@ -1,5 +1,6 @@
 using Lettra.Domain.Billing;
 using Lettra.Domain.Common;
+using Lettra.Domain.Parties;
 using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Domain.Reminders;
@@ -66,7 +67,7 @@ public sealed class PaymentReminder : Entity<Guid>
     public string? Recipient { get; private init; }
 
     /// <summary><c>fr-FR</c> ou <c>en-US</c>, la langue du client.</summary>
-    public string Language { get; private init; } = "fr-FR";
+    public string Language { get; private init; } = DocumentLanguages.French;
 
     public string Subject { get; private init; } = "";
 

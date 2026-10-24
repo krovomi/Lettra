@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Net.Http.Json;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Serialization;
@@ -11,7 +10,7 @@ internal sealed class HttpTaxGateway(HttpClient http) : ITaxGateway
 {
     public Task<OperationResult<VatReturnResponse>> GetVatReturnAsync(DateOnly date, CancellationToken cancellationToken) =>
         HttpCalls.SendAsync(
-            ct => http.GetAsync(HttpCalls.Relative($"api/v1/tax/vat-return?date={Day(date)}"), ct),
+            ct => http.GetAsync(HttpCalls.Relative($"api/v1/tax/vat-return?date={QueryText.Day(date)}"), ct),
             ContractsJsonContext.Default.VatReturnResponse,
             cancellationToken);
 
@@ -26,7 +25,7 @@ internal sealed class HttpTaxGateway(HttpClient http) : ITaxGateway
 
     public Task<OperationResult<FiscalCalendarResponse>> GetCalendarAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken) =>
         HttpCalls.SendAsync(
-            ct => http.GetAsync(HttpCalls.Relative($"api/v1/tax/calendar?from={Day(from)}&to={Day(to)}"), ct),
+            ct => http.GetAsync(HttpCalls.Relative($"api/v1/tax/calendar?from={QueryText.Day(from)}&to={QueryText.Day(to)}"), ct),
             ContractsJsonContext.Default.FiscalCalendarResponse,
             cancellationToken);
 
@@ -53,6 +52,4 @@ internal sealed class HttpTaxGateway(HttpClient http) : ITaxGateway
             ct => http.PutAsJsonAsync(HttpCalls.Relative($"api/v1/tax/settings"), request, ContractsJsonContext.Default.UpdateFiscalSettingsRequest, ct),
             ContractsJsonContext.Default.FiscalSettingsResponse,
             cancellationToken);
-
-    private static string Day(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 }

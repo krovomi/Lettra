@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using Lettra.Calculations;
 using Lettra.Contracts.Exports;
 
 namespace Lettra.Exports.Application.AuditKit;
@@ -12,7 +13,7 @@ internal static class AuditKitTexts
 {
     public static string ReadMe(AuditKitContent content, AuditKitFecSummary fec, AuditKitIntegritySummary integrity)
     {
-        CultureInfo french = CultureInfo.GetCultureInfo("fr-FR");
+        CultureInfo french = LegalLanguage.Culture;
         StringBuilder text = new();
         text.Append(CultureInfo.InvariantCulture, $"""
             Kit contrôle fiscal Lettra (format {AuditKitLayout.Format})

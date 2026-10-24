@@ -1,5 +1,6 @@
 using System.Globalization;
 using Lettra.Contracts.Cabinet;
+using Lettra.UI.Shared.Components.Dates;
 
 namespace Lettra.UI.Shared.Pages.Pilotage;
 
@@ -109,7 +110,7 @@ public static class PilotageDisplay
 
     /// <summary>Le mois <c>2026-10</c> en « oct. » (court) ou « octobre 2026 » (long).</summary>
     public static string Month(string month, bool full, CultureInfo culture) =>
-        DateOnly.TryParseExact(month + "-01", "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly date)
+        DateText.ParseIsoMonth(month) is { } date
             ? date.ToString(full ? "MMMM yyyy" : "MMM", culture)
             : month;
 

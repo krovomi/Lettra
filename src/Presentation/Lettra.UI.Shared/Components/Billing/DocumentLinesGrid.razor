@@ -539,20 +539,7 @@
         }
 
         _choice = null;
-        if (_assist is not null)
-        {
-            try
-            {
-                await _assist.InvokeVoidAsync("detachQuickPreview");
-                await _assist.DisposeAsync();
-            }
-            catch (JSDisconnectedException)
-            {
-            }
-            catch (JSException)
-            {
-            }
-        }
+        await JsModules.ReleaseAsync(_assist, "detachQuickPreview");
 
         _self?.Dispose();
     }
