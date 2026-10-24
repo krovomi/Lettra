@@ -810,6 +810,20 @@ Les jobs MAUI de la CI font exactement ces builds, puis lancent chaque applicati
 | 3 et 5. PostgreSQL dédié, SaaS | API + Worker, cellule Kubernetes | une base PostgreSQL par dossier | Keycloak |
 | 4. Poste relié | Application MAUI avec `lettra.json` | réplique chiffrée du dossier du serveur, synchronisée | compte local, Keycloak (PKCE) pour la synchronisation |
 
+```mermaid
+flowchart LR
+  subgraph poste["Sur le poste (application MAUI)"]
+    m1["Mode 1 · poste isolé<br/>gateway in-process"] --> b1[("SQLite chiffré,<br/>une base par dossier")]
+    m4["Mode 4 · poste relié"] --> b4[("réplique chiffrée<br/>du dossier")]
+  end
+  subgraph serveur["Sur un serveur (modes 2, 3 et 5)"]
+    api["API + application web (WASM)<br/>Keycloak pour la connexion"] --> bs[("une base par dossier<br/>et le registre Catalog")]
+  end
+  nav["Navigateur"] -->|"HTTPS, cookie de session"| api
+  m4 -->|"synchronisation, avec l'accord de l'utilisateur"| api
+  sc["Application reliée au serveur commun<br/>(en ligne seulement)"] -->|"HTTPS"| api
+```
+
 **Serveur et version web (mode 2).** L'API exige un realm Keycloak (`Lettra:Identity:Oidc:Authority`, MFA
 obligatoire) : démarrez d'abord Keycloak comme l'explique [deploy/keycloak/README.md](deploy/keycloak/README.md),
 créez-y un utilisateur dans l'organisation du cabinet, puis :
@@ -874,7 +888,9 @@ deploy/            démo Docker, Helm, OpenTofu, Argo CD, cellules, Keycloak, ob
 
 - Échecs métier en valeurs (`Result`, `Result<T>`), jamais en exceptions ; le serveur ne renvoie que des codes,
   traduits par module (`ErrorCodes.<Module>.cs`, `Localization/Modules/<Module>.resx`).
-- Médiateur maison : journalisation, dossier, autorisation, validation.
+- Médiateur maison : journalisation, garde du dossier, autorisation, validation, concurrence ; sur un poste relié,
+  la file de synchronisation en plus (`src/Core/Lettra.Application/DependencyInjection.cs`, `SyncOutboxBehavior`
+  dans `src/Modules/Sync/Lettra.Sync.Client`).
 - Style vérifié à la compilation : les règles IDE de `.editorconfig` sont des avertissements et `TreatWarningsAsErrors`
   (`Directory.Build.props`) en fait des erreurs ; `dotnet format Lettra.Ci.slnf --severity warn` corrige avant de
   pousser ([docs/qualite-du-code.md](docs/qualite-du-code.md)).
@@ -884,6 +900,17 @@ deploy/            démo Docker, Helm, OpenTofu, Argo CD, cellules, Keycloak, ob
 - Tests nommés en français (`Une_entreprise_francaise_sans_siren_est_refusee`).
 - Audit d'architecture d'octobre 2026 : écarts, corrections et reste ouvert dans
   [docs/qualite-du-code.md](docs/qualite-du-code.md).
+
+Le trajet d'une requête :
+
+```mermaid
+flowchart LR
+  r["Requête<br/>cookie, en-tête X-Dossier"] --> c1["Contrôle 1, à l'entrée de l'API<br/>connexion et double facteur,<br/>anti-CSRF, dossier accessible,<br/>permission déclarée par la route"]
+  c1 --> c2["Contrôle 2, dans le médiateur<br/>journalisation, garde du dossier,<br/>autorisation, validation, concurrence"]
+  c2 --> uc["Cas d'usage<br/>base du seul dossier demandé"]
+```
+
+Sur un poste isolé ou relié, il n'y a pas d'API : seul le contrôle 2 s'applique.
 
 ### CI
 
