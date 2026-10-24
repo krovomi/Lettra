@@ -127,7 +127,9 @@ Puis **http://localhost:3000/**, sans connexion : six tableaux de bord dans le d
 **Pilotage du cabinet** (tous les dossiers d'un coup d'œil : délai de paiement des clients, créances en retard, TVA à
 déclarer, banque à rapprocher ; un clic sur un dossier ouvre son tableau), **Pilotage d'un dossier** (clients et
 encaissements, activité mois par mois, devis, ce qui reste à faire) et **Administration** (erreurs et lenteurs,
-connexions refusées, alertes graves, postes qui ne se synchronisent plus, comptes, dossiers, place occupée). Trois pour
+connexions refusées, alertes graves, postes qui ne se synchronisent plus, comptes, dossiers, place occupée). Grafana ne
+reçoit aucun nom de dossier ni de cabinet : chaque dossier y est désigné par une référence courte (8 caractères), que le
+menu Tableaux de bord de Lettra affiche sous son nom. Trois pour
 la technique : **Activité** (requêtes, latence, erreurs, outbox, synchronisations, connexions, assistant), **Métier**
 (devis, factures, avoirs, transmissions, FEC, en nombres seulement) et **Objectifs de service** (disponibilité, latence,
 alertes). Les tableaux de pilotage se remplissent seuls à partir des dossiers de démonstration (une collecte par minute
@@ -563,7 +565,8 @@ MailPit, à 1440 et 375 px. Non vérifié dans les applications installées.)* D
   (bouton à droite) et accepte aussi 19102026 ou 19/10. Détails : [docs/dates-et-langue.md](docs/dates-et-langue.md).
 - **Tableaux de bord** (menu **Pilotage** > **Tableaux de bord**, `/pilotage`) : les indicateurs des tableaux Grafana dans
   Lettra, filtrés par les droits de chacun : « Ce dossier » (lecture du dossier), « Mes dossiers » (dossiers lisibles),
-  « Administration » (dossiers administrés, onglet caché sinon) ; aucun montant ni nom de client. Dans la démo Docker,
+  « Administration » (dossiers administrés, onglet caché sinon) ; aucun montant ni nom de client ; la référence courte des
+  tableaux Grafana sous chaque nom. Dans la démo Docker,
   les trois onglets sont remplis pour les trois dossiers ; sur un poste isolé ou relié, seul « Ce dossier » est
   disponible. Voir [docs/tableaux-de-bord.md](docs/tableaux-de-bord.md).
 - **Équipe et accès** (menu **Pilotage**) : qui travaille dans le cabinet et ce que chacun peut ouvrir. Onglet
