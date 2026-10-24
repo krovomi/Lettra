@@ -38,6 +38,7 @@ internal sealed partial class PaymentReminderJob(
     IServiceProvider services,
     ReminderDossierSource dossierSource,
     IEmailSender email,
+    TimeProvider clock,
     IOptions<PaymentReminderJobOptions> options,
     ILogger<PaymentReminderJob> logger) : BackgroundService
 {
@@ -49,13 +50,7 @@ internal sealed partial class PaymentReminderJob(
             return;
         }
 
-        await Task.Delay(settings.InitialDelay, stoppingToken).ConfigureAwait(false);
-        using PeriodicTimer timer = new(settings.Interval);
-        do
-        {
-            await RunPassAsync(stoppingToken).ConfigureAwait(false);
-        }
-        while (await timer.WaitForNextTickAsync(stoppingToken).ConfigureAwait(false));
+        await PeriodicPass.RunAsync(settings.InitialDelay, settings.Interval, clock, RunPassAsync, stoppingToken).ConfigureAwait(false);
     }
 
     internal async Task<(int Dossiers, int Sent, int Failed)> RunPassAsync(CancellationToken cancellationToken)

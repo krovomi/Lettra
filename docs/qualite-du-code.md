@@ -333,7 +333,7 @@ workflows, `LayerDependencyTests`, `MauiProgram.cs`) passent par le coordinateur
 |---|---|---|
 | 8 | Ce chapitre ; noms d'énumérations des empreintes scellées figés (même sortie) ; règles d'architecture étendues (cas d'usage de Supervision, frameworks pour toutes les couches Application, hôtes et démonstration) ; validation des options au démarrage. | X2, X4, X5, X7, X10 |
 | 9 | Encaissements et relances cherchés et paginés en base ; une seule recherche pour toutes les listes. | X6, X13 |
-| 10 | Tâches de fond : `PeriodicPass` partout, boucle « pour chaque dossier » unique ; job de migration sans autre tâche (Socle). | X1, X11 |
+| 10 | Tâches de fond : `PeriodicPass` et horloge injectée partout ; job de migration sans autre tâche (Socle). | X1, X11 |
 | 11 | Interface : jetons d'annulation par page, recherche différée annulable, un seul toaster, base « occupé / erreur / conflit ». | X9, X17, X23 |
 | 12 | Interface : fin du localisateur de services (implémentations « indisponible » par hôte), indicateurs d'accueil lus au serveur. | X8, X14, A5, A6 |
 | 13 | Passerelles : `HttpCalls` et `InProcessScope` partout, fichiers rangés. | X15, X16, S7 |
@@ -356,6 +356,26 @@ workflows, `LayerDependencyTests`, `MauiProgram.cs`) passent par le coordinateur
   un message qui le nomme. Restent à valider : e-mail, OIDC et la migration du Worker (Socle).
 - **X10** : `ApplicationLayerRulesTests` applique « ni EF, ni ASP.NET, ni infrastructure, ni écran » à
   `Exports.Application` et `Supervision.Application` ; les règles des cas d'usage couvrent aussi `Supervision.Application`.
+
+### Fait dans la PR 9
+
+- **X6** (encaissements) : recherche, filtre de montant, tri et pagination en base. Le nom du client a sa colonne
+  `SearchKey` (migration `RechercheEncaissements`, remplie en SQL pour les lignes existantes) ; la recherche ne dépend
+  plus de la culture du serveur et trouve « eclair » dans « Éclair ». L'historique des relances reste trié en mémoire
+  après filtrage en base : son tri par défaut porte sur une date avec fuseau, que SQLite ne sait pas trier, et sa
+  recherche sur l'objet ignore déjà les accents.
+- **X13** (début) : `ListSearchTerm`, la règle unique (nom sans accents, code en majuscules), sert aux encaissements.
+  Restent à y passer les pièces et les factures récurrentes (clé de recherche à plusieurs sources).
+
+### Fait dans la PR 10
+
+- **X1** (Socle, PR #166) : un Worker lancé en job de migration ne fait plus que migrer.
+- **X11** : les relances et les factures récurrentes passent par `PeriodicPass` et l'horloge injectée, comme les
+  autres tâches ; l'attente initiale de l'export FEC en masse aussi. La boucle « pour chaque dossier » reste écrite dans
+  chaque tâche, volontairement : chacune agrège ses propres compteurs et l'une s'arrête en cours de passe (factures
+  récurrentes sans compte de service) ; une aide commune demanderait trois rappels (liste en échec, dossier en échec,
+  arrêt) pour une dizaine de lignes gagnées par tâche, contraire à KISS. Seule l'ouverture de la portée du dossier est
+  partagée (`DossierJobScope`).
 
 
 ## Plan

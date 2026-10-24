@@ -8,6 +8,7 @@ using Lettra.Infrastructure.Persistence.Hosting;
 using Lettra.Infrastructure.Persistence.Integrity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -65,6 +66,7 @@ internal sealed partial class RecurringInvoiceJob(
     IServiceProvider services,
     IServiceScopeFactory scopes,
     RecurringDossierSource dossiers,
+    TimeProvider clock,
     IOptions<RecurringInvoiceJobOptions> options,
     ILogger<RecurringInvoiceJob> logger) : BackgroundService
 {
@@ -76,13 +78,7 @@ internal sealed partial class RecurringInvoiceJob(
             return;
         }
 
-        await Task.Delay(settings.InitialDelay, stoppingToken).ConfigureAwait(false);
-        using PeriodicTimer timer = new(settings.Interval);
-        do
-        {
-            await RunPassAsync(stoppingToken).ConfigureAwait(false);
-        }
-        while (await timer.WaitForNextTickAsync(stoppingToken).ConfigureAwait(false));
+        await PeriodicPass.RunAsync(settings.InitialDelay, settings.Interval, clock, RunPassAsync, stoppingToken).ConfigureAwait(false);
     }
 
     internal async Task<(int Created, int Validated, int Failed)> RunPassAsync(CancellationToken cancellationToken)
@@ -184,6 +180,7 @@ public static class RecurringInvoiceRegistration
     {
         ArgumentNullException.ThrowIfNull(configuration);
         ArgumentNullException.ThrowIfNull(activeDossiers);
+        services.TryAddSingleton(TimeProvider.System);
         IConfigurationSection section = configuration.GetSection(RecurringInvoiceJobOptions.SectionName);
         services.AddOptions<RecurringInvoiceJobOptions>().Bind(section).ValidatePeriodicJob(RecurringInvoiceJobOptions.SectionName);
         if (section.Get<RecurringInvoiceJobOptions>()?.ServiceAccountId is not null)
