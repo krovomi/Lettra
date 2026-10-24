@@ -95,7 +95,7 @@
     private const string ZipMimeType = "application/zip";
 
     /// <summary>Le kit va à l'administration française : ses PDF sont en français, quelle que soit la langue de l'écran.</summary>
-    private static readonly CultureInfo DocumentCulture = CultureInfo.GetCultureInfo("fr-FR");
+    private static readonly CultureInfo DocumentCulture = LegalLanguage.Culture;
 
     private DateOnly _from;
     private DateOnly _to;

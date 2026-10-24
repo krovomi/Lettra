@@ -90,7 +90,7 @@ else
                 <ul class="lt-tax-deadlines">
                     @foreach (FiscalDeadlineResponse deadline in month)
                     {
-                        string id = $"deadline-{deadline.Obligation}-{TaxText.Iso(deadline.PeriodStart)}";
+                        string id = $"deadline-{deadline.Obligation}-{DateText.ToIso(deadline.PeriodStart)}";
                         <li class="lt-tax-deadline @TaxText.StateClass(deadline.State)" id="@id">
                             <div class="lt-tax-deadline-date">
                                 <span class="lt-tax-deadline-day">@deadline.DueDate.Day</span>
@@ -179,7 +179,7 @@ else
 
     private static string? Link(FiscalDeadlineResponse deadline) => deadline.Obligation switch
     {
-        FiscalObligationDto.VatReturnCa3 or FiscalObligationDto.VatReturnCa12 => $"tax/vat?date={TaxText.Iso(deadline.PeriodStart)}",
+        FiscalObligationDto.VatReturnCa3 or FiscalObligationDto.VatReturnCa12 => $"tax/vat?date={DateText.ToIso(deadline.PeriodStart)}",
         FiscalObligationDto.Des => $"tax/des?month={deadline.PeriodStart:yyyy-MM}",
         _ => null,
     };

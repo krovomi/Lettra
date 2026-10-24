@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using Lettra.Calculations;
 using Lettra.Domain.Banking;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Integrity;
@@ -14,7 +15,7 @@ namespace Lettra.Exports.Application.AuditKit;
 /// </summary>
 public static class AuditTrailCsv
 {
-    private static readonly CultureInfo French = CultureInfo.GetCultureInfo("fr-FR");
+    private static readonly CultureInfo French = LegalLanguage.Culture;
 
     /// <summary>Une ligne par pièce : qui l'a créée, validée, émise (et approuvée pour un avoir), son empreinte figée.</summary>
     public static byte[] Pieces(IReadOnlyList<Invoice> invoices, IReadOnlyList<PlatformTransmission> transmissions, IReadOnlyDictionary<Guid, string> people)

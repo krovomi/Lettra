@@ -345,7 +345,7 @@ workflows, `LayerDependencyTests`, `MauiProgram.cs`) passent par le coordinateur
 | 15 ter | Éditeurs de devis et de facture : ce qui était copié passe dans `DocumentEditing`. | R9 |
 | 15 quater | Grands composants, méthodes et constructeurs longs. | X22, X26 |
 | 16 | Basse gravité, par thème : erreurs et journaux, jetons de machine, clients HTTP de Claude. | basse, X12 |
-| 16 bis | Basse gravité : constantes recopiées, tables figées, aides JavaScript des composants. | basse |
+| 16 bis | Basse gravité : constantes recopiées, dates ISO, listes des contrats, libération des modules JS. | basse |
 
 ### Fait dans la PR 8
 
@@ -608,6 +608,34 @@ workflows, `LayerDependencyTests`, `MauiProgram.cs`) passent par le coordinateur
   sont jumeaux, vérifiés par un test, comme les énumérations du domaine Exports. `SmtpClient` reste : le remplacer par
   MailKit ajoute un paquet pour un envoi qui ne sert qu'au relais du cabinet, et la démonstration n'envoie rien
   dehors.
+
+### Fait dans la PR 16 bis
+
+Comportement inchangé, sauf la fermeture des composants (dernier point).
+
+- « fr-FR » : `LegalLanguage` (`Lettra.Calculations`) nomme la langue des mentions légales et des fichiers remis à
+  l'administration. Mentions, désignations d'acompte, kit contrôle fiscal, journal des pièces, PDF par défaut et
+  langue des pièces (`DocumentLanguages.French`) l'utilisent ; les relances prennent `DocumentLanguages`. Restent dans
+  l'interface la langue d'écran par défaut (`SharedResource.Default`, un choix produit et non une règle) et les
+  valeurs des listes de choix des écrans.
+- TVA : `VatRate.All` est une liste ordonnée (le dictionnaire ne garantissait pas l'ordre) et la table de recherche
+  est figée (`FrozenDictionary`). Les outils de l'assistant en tirent leurs codes au lieu d'une copie. Restent
+  « FR-20 » écrits en clair : la valeur par défaut des contrats (sans dépendance vers le domaine) et le catalogue de
+  démonstration, qui est une table de données.
+- Union européenne : la troisième liste, celle des préfixes VIES, devient `EuropeanUnion.ViesPrefixes`, tirée des
+  États membres (la Grèce en « EL », plus l'Irlande du Nord « XI »).
+- Dates ISO : `DateText.ToIso`, `ParseIso` et `ParseIsoMonth` dans l'interface, `QueryText.Day` dans les passerelles
+  HTTP, au lieu de huit copies du format. Les lecteurs de relevés bancaires, le FEC, la facture électronique et les
+  empreintes gardent leur format, propre à chaque norme.
+- Contrats : les listes des requêtes sont toutes des `List<T>` (trois `IList<T>` alignées), même JSON.
+- Modules JS : `JsModules.ReleaseAsync` appelle les fonctions de nettoyage puis libère le module, dans dix composants
+  et services. Un module déjà détaché (`JSException`) n'est plus une erreur à la fermeture, là où seul l'hôte fermé
+  l'était. Tests `JsModulesTests` et `DateTextIsoTests`.
+- Gardés, avec la raison : l'empreinte SHA-256 hexadécimale tient en un appel de la bibliothèque standard
+  (`Convert.ToHexStringLower(SHA256.HashData(...))`) et sert dans des couches qui ne partagent rien, dont les contrats ;
+  `LettraTelemetry.Outbox` garde sa dernière mesure en statique, comme le `Meter` de Lettra, un par processus : passer
+  à `IMeterFactory` changerait toute la télémétrie pour une seule jauge. Les autres tables statiques sont petites et
+  lues rarement : `FrozenDictionary` n'y gagne rien de mesurable.
 
 ## Plan
 

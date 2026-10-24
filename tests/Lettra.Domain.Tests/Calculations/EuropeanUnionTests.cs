@@ -11,6 +11,10 @@ public sealed class EuropeanUnionTests
         EuropeanUnion.MemberStates.Should().HaveCount(27).And.OnlyHaveUniqueItems().And.Contain("FR");
 
     [Fact]
+    public void VIES_interroge_les_27_etats_la_grece_en_EL_et_l_irlande_du_nord() =>
+        EuropeanUnion.ViesPrefixes.Should().HaveCount(28).And.Contain(["EL", "XI", "FR"]).And.NotContain("GR");
+
+    [Fact]
     public void La_grece_s_ecrit_GR_comme_dans_ISO_3166() =>
         EuropeanUnion.MemberStates.Should().Contain("GR").And.NotContain("EL");
 

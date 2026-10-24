@@ -1,3 +1,5 @@
+using System.Collections.Frozen;
+
 namespace Lettra.Calculations;
 
 /// <summary>
@@ -12,4 +14,11 @@ public static class EuropeanUnion
         "AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "ES", "FI", "FR", "GR", "HR", "HU", "IE", "IT", "LT", "LU", "LV",
         "MT", "NL", "PL", "PT", "RO", "SE", "SI", "SK",
     ];
+
+    /// <summary>
+    /// Préfixes des numéros de TVA interrogeables dans VIES : les États membres, la Grèce écrite « EL », et l'Irlande
+    /// du Nord (« XI »), hors de l'Union mais dans VIES pour les biens.
+    /// </summary>
+    public static IReadOnlySet<string> ViesPrefixes { get; } =
+        MemberStates.Select(c => c == "GR" ? "EL" : c).Append("XI").ToFrozenSet(StringComparer.Ordinal);
 }

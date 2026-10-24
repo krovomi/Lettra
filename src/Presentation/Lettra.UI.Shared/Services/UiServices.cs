@@ -35,17 +35,7 @@ public sealed class JsFileDownloader(IJSRuntime js) : IFileDownloader, IAsyncDis
 
     public async ValueTask DisposeAsync()
     {
-        if (_module is not null)
-        {
-            try
-            {
-                await _module.DisposeAsync().ConfigureAwait(false);
-            }
-            catch (JSDisconnectedException)
-            {
-                // Hôte fermé.
-            }
-        }
+        await JsModules.ReleaseAsync(_module).ConfigureAwait(false);
     }
 }
 

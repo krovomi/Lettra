@@ -37,10 +37,10 @@ public sealed record SaveAiSettingsRequest
 
     public AssistantEngine Engine { get; set; } = AssistantEngine.None;
 
-    public IList<AssistantFeature> Features { get; set; } = [];
+    public List<AssistantFeature> Features { get; set; } = [];
 
     /// <summary>Dossiers que le cabinet exclut de l'assistant (dossiers sensibles), au plus <see cref="MaxExcludedDossiers"/>.</summary>
-    public IList<Guid> ExcludedDossiers { get; set; } = [];
+    public List<Guid> ExcludedDossiers { get; set; } = [];
 
     /// <summary>Consultation des sites officiels (annexe B §7).</summary>
     public bool OfficialWebLookup { get; set; }

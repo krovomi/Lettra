@@ -1,5 +1,3 @@
-using System.Globalization;
-
 namespace Lettra.Calculations.Compliance;
 
 /// <summary>
@@ -15,7 +13,7 @@ public static class LegalMentionTexts
 
     /// <summary>Indemnité forfaitaire pour frais de recouvrement due par un client professionnel (art. D441-5 C.com).</summary>
     public static string RecoveryIndemnity { get; } = string.Create(
-        CultureInfo.GetCultureInfo("fr-FR"),
+        LegalLanguage.Culture,
         $"Indemnité forfaitaire pour frais de recouvrement en cas de retard de paiement : {MandatoryMentions.RecoveryIndemnityAmount:0} €");
 
     /// <summary>Vrai si la mention est l'option pour la TVA d'après les débits.</summary>

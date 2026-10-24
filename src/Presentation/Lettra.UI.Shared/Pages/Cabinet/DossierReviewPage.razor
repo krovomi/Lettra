@@ -232,7 +232,7 @@ else
             return string.Format(CultureInfo.CurrentCulture, L["Review.Period.Quarter"], period[6], period[..4]);
         }
 
-        return DateOnly.TryParseExact(period + "-01", "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly month)
+        return DateText.ParseIsoMonth(period) is { } month
             ? Capitalize(month.ToString("MMMM yyyy", CultureInfo.CurrentCulture))
             : period;
     }

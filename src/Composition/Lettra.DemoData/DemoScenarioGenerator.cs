@@ -4,6 +4,7 @@ using Lettra.Contracts.Billing;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Customers;
 using Lettra.Contracts.Suppliers;
+using Lettra.Domain.Parties;
 using Lettra.Domain.SharedKernel;
 
 namespace Lettra.DemoData;
@@ -340,7 +341,7 @@ internal sealed class DemoScenarioGenerator
                 List<DemoLine> lines = monthlyItems.Length > 0
                     ? [.. monthlyItems.OrderBy(_ => _random.Next()).Take(_random.Next(1, 3)).Select(i => new DemoLine(i, 1m, Discount(priceLists, subscriber, i)))]
                     : Lines(customers[subscriber], items, [.. Enumerable.Range(0, items.Count)], priceLists, subscriber, _random.Next(2, 5), habitualOnly: true);
-                string subject = string.Create(CultureInfo.GetCultureInfo("fr-FR"), $"{(monthlyItems.Length > 0 ? "Abonnement" : "Commande mensuelle")} {firstDay:MMMM yyyy}");
+                string subject = string.Create(CultureInfo.GetCultureInfo(DocumentLanguages.French), $"{(monthlyItems.Length > 0 ? "Abonnement" : "Commande mensuelle")} {firstDay:MMMM yyyy}");
                 invoices.Add(new DemoInvoiceStory(subscriber, subject, lines, Settled(at, customers[subscriber].Payer, lines.Count, allowCredit: true, downPayment: false)));
             }
         }

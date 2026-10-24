@@ -12,6 +12,16 @@ public static class DateText
 {
     private const string Iso = "yyyy-MM-dd";
 
+    /// <summary>Date ISO (2026-10-19) des adresses et des attributs, quelle que soit la langue de l'écran.</summary>
+    public static string ToIso(DateOnly date) => date.ToString(Iso, CultureInfo.InvariantCulture);
+
+    /// <summary>La date ISO lue, ou <c>null</c>.</summary>
+    public static DateOnly? ParseIso(string? text) =>
+        DateOnly.TryParseExact(text, Iso, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly date) ? date : null;
+
+    /// <summary>Le premier jour du mois ISO lu (2026-10), ou <c>null</c>.</summary>
+    public static DateOnly? ParseIsoMonth(string? text) => text is null ? null : ParseIso(text + "-01");
+
     /// <summary>Date courte de la culture, ou texte vide.</summary>
     public static string Format(DateOnly? date, CultureInfo culture)
     {
