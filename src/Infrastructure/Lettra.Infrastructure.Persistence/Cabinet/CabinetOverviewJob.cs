@@ -10,7 +10,7 @@ using Microsoft.Extensions.Options;
 
 namespace Lettra.Infrastructure.Persistence.Cabinet;
 
-public sealed class CabinetOverviewJobOptions
+public sealed class CabinetOverviewJobOptions : IPeriodicJobOptions
 {
     public const string SectionName = "Lettra:CabinetOverview";
 
@@ -82,7 +82,7 @@ public static class CabinetOverviewHosting
     {
         ArgumentNullException.ThrowIfNull(configuration);
         services.TryAddSingleton(TimeProvider.System);
-        services.AddOptions<CabinetOverviewJobOptions>().Bind(configuration.GetSection(CabinetOverviewJobOptions.SectionName));
+        services.AddOptions<CabinetOverviewJobOptions>().Bind(configuration.GetSection(CabinetOverviewJobOptions.SectionName)).ValidatePeriodicJob(CabinetOverviewJobOptions.SectionName);
         services.AddHostedService(sp => new CabinetOverviewJob(
             sp, listDossiers, sp.GetRequiredService<IOptions<CabinetOverviewJobOptions>>(),
             sp.GetRequiredService<TimeProvider>(), sp.GetRequiredService<ILogger<CabinetOverviewJob>>()));

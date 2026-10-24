@@ -264,6 +264,100 @@ Suppressions d'avertissements restantes, chacune justifiée sur place :
 | `WhisperModelStore.cs:129` et deux tests de la voix | CA5350 | whisper.cpp ne publie que des SHA-1 : contrôle d'intégrité, doublé d'un SHA-256 épinglé. |
 | `RedactionTests.cs:129` | CA1848, CA2254 | Le test simule volontairement un journal mal écrit. |
 
+## Audit d'architecture (octobre 2026)
+
+Deuxième passage complet, sur `main` a6a7c1d : frontières entre couches (hôtes et composition compris), cœur et
+modules, interface et passerelles. Chaque écart ci-dessous a été vérifié dans le code ; il s'ajoute à ceux de
+« Écarts relevés ». Gravité : **haute** = défaut réel ou frontière franchie, **moyenne** = maintenance, **basse** =
+cohérence.
+
+Ce qui est sain et vérifié : aucun hôte ni le jeu de démonstration n'accède à EF ou à une base ; les endpoints passent
+par le médiateur (sauf les cas notés) ; le domaine n'a ni setter public ni constructeur public sans paramètre ; aucun
+`.Result` / `.Wait()` hors MAUI (X3) ; `ConfigureAwait(false)` partout côté bibliothèques ; toutes les classes sont
+`sealed` ; chaque `catch (Exception)` est filtré et journalisé ; `HttpClient` passe par `IHttpClientFactory` sauf X12.
+
+### Gravité haute
+
+| # | Écart | Où |
+|---|---|---|
+| X1 | Un Worker lancé en job de migration (`RunOnce`) n'est censé que migrer, mais six tâches restent enregistrées hors du `if` (export FEC, outbox, alertes fiscales, vue cabinet, factures récurrentes, relances) : il peut créer des factures ou envoyer des e-mails avant de s'arrêter. | `Hosts/Lettra.Worker/Program.cs:35-47` |
+| X2 | L'empreinte d'intégrité figée d'un encaissement (v1) contient `Method.ToString()` et `Status.ToString()` : renommer un membre d'énumération casserait la vérification de tous les journaux scellés. | `Core/Lettra.Domain/Banking/Payment.cs:232, 240` |
+| X3 | Démarrage MAUI : `InitializeLettraAsync(...).GetAwaiter().GetResult()` bloque le fil principal (risque de blocage ou d'ANR sur Android). | `Hosts/Lettra.App.Maui/MauiProgram.cs:112` |
+| X4 | Les tests d'architecture ne couvrent ni Api, ni Web, ni Worker, ni MAUI, ni DemoData, et exemptent `Lettra.Bootstrap` : un nouveau projet échappe à toutes les règles. | `tests/Lettra.Architecture.Tests/Assemblies.cs:42-50`, `LayerDependencyTests.cs:66-71` |
+| X5 | Le jeu de démonstration utilise un type du fournisseur SQLite (`LocalDossierRegistry`), contraire à la règle « seule la composition connaît les fournisseurs », que rien ne vérifie (X4). | `Composition/Lettra.DemoData/LettraDemoData.cs:9, 149, 253` |
+| X6 | Liste des encaissements et historique des relances : tout est lu en mémoire puis cherché, trié et paginé en .NET ; la recherche dépend en plus de la culture du serveur. | `Exports.Infrastructure/EfBankingStores.cs:66-76`, `EfReminderStores.cs:100-112` |
+| X7 | Aucune des 23 options (`AddOptions` / `Configure`) n'est validée au démarrage : un intervalle nul fait échouer `PeriodicTimer` à l'exécution, un serveur SMTP ou OIDC manquant n'apparaît qu'au premier appel. | toutes les `DependencyInjection` et tâches de fond |
+| X8 | Tableau de bord d'accueil : le chiffre d'affaires du mois et le signe des avoirs sont recalculés dans le navigateur en lisant toutes les pièces sur 6 mois, alors que le serveur a la même règle (`BillingKpis`). | `UI.Shared/Billing/DashboardFigures.cs:33-61`, `Pages/Home.razor:283-293` |
+| X9 | 209 `CancellationToken.None` dans l'interface ; la recherche différée de l'explorateur et du journal ne transmet pas son jeton : deux recherches qui se chevauchent peuvent afficher l'ancien résultat. | `Components/Explorer/RecordExplorerPage.cs:247-596`, `Pages/Accounting/JournalPage.razor:215, 225` |
+
+### Gravité moyenne
+
+| # | Écart | Où |
+|---|---|---|
+| X10 | Règles de framework (« ni EF ni ASP.NET ») vérifiées pour `Lettra.Application` seulement, pas pour `Exports.Application`, `Supervision.Application`, `Sync.*` ; les règles des cas d'usage (permission, `Result`) ne voient pas `Supervision.Application`. | `LayerDependencyTests.cs:111`, `UseCaseRulesTests.cs:11` |
+| X11 | Trois boucles de tâche périodique contournent `PeriodicPass` et l'horloge injectée (retour de R10) ; la boucle « pour chaque dossier actif » est recopiée 9 fois. | `PaymentReminderJob.cs:51`, `RecurringInvoiceJob.cs:78`, `FecBulkExportJob.cs:85` |
+| X12 | Clients Claude hors `AddHttpClient` (sans délai ni résilience) ; `new HttpClient()` pour Vertex. | `Ai/Lettra.Ai.Claude/DependencyInjection.cs:96-126` |
+| X13 | Cinq façons de chercher dans les listes (clé sans accents, `SearchText`, `ToUpper().Contains`, mémoire) : la même saisie ne trouve pas la même chose d'un écran à l'autre. | `BillingStores.cs:174`, `RecurringInvoiceStores.cs:131`, `PartiesAndCatalogStores.cs:100`, X6 |
+| X14 | Localisateur de services : 34 types de l'interface (21 composants, 13 services, environ 70 appels, mesure plus fine que A5) et 25 appels dans `Sync.Client` ; le port `IDossierWorkScope` impose `Func<IServiceProvider, …>`. | `UI.Shared`, `Sync.Client/SyncCenter.cs`, `SyncCoordinator.cs`, `Application/Abstractions/Sync/Sync.cs:283` |
+| X15 | Séquence « ouvrir une portée, initialiser le dossier, lire le contexte » recopiée une vingtaine de fois (synchronisation, passerelles en processus, démonstration) ; `InProcessScope` existe mais n'est presque pas utilisé. | `SyncCoordinator.cs:262, 309, 458`, `InProcess*Gateway.cs`, `DemoDataGateway.cs:25` |
+| X16 | Passerelles HTTP : le bloc « appel, conversion, coupure réseau » recopié 16 fois au lieu de `HttpCalls.SendAsync` ; `HttpPilotageGateway` refait le filtre de coupure à la main (retour de D4). | `UI.Gateway.Http/*` |
+| X17 | Deux toasters : `AdminToasts` double `ToastService` (même limite, autre durée de vie, sans `TimeProvider`). | `Pages/Administration/AdminToasts.razor` |
+| X18 | Endpoints hors médiateur : jeton de droits hors ligne (type concret d'infrastructure), indicateurs Prometheus ; garde « relevé de démonstration » dans l'endpoint et non dans le cas d'usage ; `AlertIngestion` appelée hors pipeline. | `RightsSnapshotEndpoints.cs:36`, `KpiEndpoints.cs:40`, `BankingEndpoints.cs:157`, `Supervision.Application/AlertIngestion.cs:11` |
+| X19 | `ErrorKind` n'a pas de valeur « indisponible » : le 503 est choisi par code d'erreur dans les endpoints. | `Domain/Common/Error.cs:4-15`, `SpeechEndpoints.cs:98`, `ServerDiscoveryEndpoints.cs:56` |
+| X20 | Trois filtres de permission presque identiques (dossier, cabinet, groupe). | `Api/Security/PermissionEndpointFilter.cs:11-126` |
+| X21 | Le module Exports n'a pas de projet Domaine : `PlatformTransmission` (état et invariants) vit dans l'Application et prend des énumérations de contrats. | `Exports.Application/EInvoicing/Platform/PlatformTransmission.cs:13` |
+| X22 | Grands composants qui mêlent accès aux données et écran : `DocumentLinesGrid` (603 lignes), `Administration` (723), `RemindersPage` (573), `VoiceHost` (502) ; la dictée charge toute la liste des clients pour reconnaître un nom. | `UI.Shared/Components/Billing/DocumentLinesGrid.razor`, `Voice/VoiceHost.razor:429` |
+| X23 | Gestion « occupé / erreur / conflit » recopiée dans 34 pages (57 indicateurs, 9 tests de conflit identiques) ; 47 tâches lancées sans observer leurs exceptions. | `UI.Shared/Pages/*` |
+| X24 | Port `IKekStore` défini dans l'Infrastructure mais implémenté par l'hôte MAUI. | `Infrastructure.Persistence/Security/DossierKeyring.cs:11` |
+| X25 | Le jeu de démonstration construit un second conteneur complet à chaque chargement ; MAUI décore un service par chirurgie des descripteurs. | `LettraDemoData.cs:131, 215`, `App.Maui/DemoSeeding.cs:29` |
+| X26 | Méthodes et classes longues non encore listées : `SpokenNumbers.TryRead` (176 lignes), `CatalogDbContext.OnModelCreating` (124), `FecValidator.Validate` (103), `RecurringInvoice.Apply` (102) ; `Invoice` 745 lignes ; 6 constructeurs à 9 ou 11 dépendances (`AuditKitService`, `ValidateInvoiceHandler`…). | `Core`, `Infrastructure`, `Modules` |
+
+### Gravité basse
+
+Constantes recopiées (« fr-FR » 6 fois, « FR-20 » hors `VatRate.Normal`, troisième liste des États de l'UE dans
+`DirectoryLookups.cs:71`, empreinte SHA-256 hexadécimale réécrite 8 fois, formats de date ISO dans 13 fichiers) ;
+`MentionCodes` en deux exemplaires ; DTO de requête mêlant `List<T>` et `IList<T>` ; état statique de télémétrie
+(`LettraTelemetry.Outbox._last`) au lieu de `IMeterFactory` ; exception d'erreur de format attrapée comme
+`NullReferenceException` (`SealedArchives.cs:189`) ; outil de l'assistant en échec sans journal
+(`AccountingAssistant.cs:241`) ; message d'exception du fournisseur stocké comme état d'erreur du dossier
+(`CatalogDossierProvisioner.cs:108`) ; `SmtpClient` déconseillé par Microsoft ; tables de correspondance statiques
+qui pourraient être des `FrozenDictionary` ; jeton porteur comparé deux fois de la même façon (`KpiEndpoints`,
+`SupervisionEndpoints`) ; aide JavaScript et `JSDisconnectedException` recopiées dans 15 composants.
+
+### Ordre de correction
+
+Les écarts de gravité haute d'abord, une PR petite et verte par thème ; les fichiers de Socle (`Program.cs`, `slnx`,
+workflows, `LayerDependencyTests`, `MauiProgram.cs`) passent par le coordinateur.
+
+| PR | Contenu | Écarts |
+|---|---|---|
+| 8 | Ce chapitre ; noms d'énumérations des empreintes scellées figés (même sortie) ; règles d'architecture étendues (cas d'usage de Supervision, frameworks pour toutes les couches Application, hôtes et démonstration) ; validation des options au démarrage. | X2, X4, X5, X7, X10 |
+| 9 | Encaissements et relances cherchés et paginés en base ; une seule recherche pour toutes les listes. | X6, X13 |
+| 10 | Tâches de fond : `PeriodicPass` partout, boucle « pour chaque dossier » unique ; job de migration sans autre tâche (Socle). | X1, X11 |
+| 11 | Interface : jetons d'annulation par page, recherche différée annulable, un seul toaster, base « occupé / erreur / conflit ». | X9, X17, X23 |
+| 12 | Interface : fin du localisateur de services (implémentations « indisponible » par hôte), indicateurs d'accueil lus au serveur. | X8, X14, A5, A6 |
+| 13 | Passerelles : `HttpCalls` et `InProcessScope` partout, fichiers rangés. | X15, X16, S7 |
+| 14 | Endpoints et erreurs : `ErrorKind.Unavailable`, filtres de permission unifiés, endpoints restants via le médiateur. | X18, X19, X20, A4 |
+| 15 | Découpages : longues méthodes, grands composants, constructeurs chargés ; domaine du module Exports. | X21, X22, X26, R9, S2, S4 |
+| 16 | Basse gravité, au fil des PR qui touchent les fichiers. | basse |
+
+### Fait dans la PR 8
+
+- **X2** : les noms des énumérations écrites dans les empreintes scellées (forme canonique d'une pièce, empreinte v1
+  d'un encaissement) sont figés par `SealedFingerprintTests` ; l'empreinte calculée ne change pas. Ajouter un membre
+  reste possible, en renommer ou en retirer un fait échouer la CI.
+- **X4** : `HostRulesTests` couvre Api, Web, Worker et DemoData : matrice des références Lettra de chaque hôte, ni EF
+  ni fournisseur de base, endpoints sans infrastructure (deux écarts connus, X18, listés dans le test). MAUI n'est
+  compilé qu'en CI : ses règles restent vérifiées à la revue.
+- **X5** : nouveau port `IOpenedLocalDossier` (dossier ouvert sur le poste), implémenté par `LocalDossierRegistry` ; le
+  jeu de démonstration ne référence plus le fournisseur SQLite.
+- **X7** : le calendrier des huit tâches de fond (intervalle strictement positif, délai initial positif ou nul) est
+  validé au démarrage de l'hôte (`ValidatePeriodicJob`, `ValidateOnStart`) : un réglage faux empêche le démarrage avec
+  un message qui le nomme. Restent à valider : e-mail, OIDC et la migration du Worker (Socle).
+- **X10** : `ApplicationLayerRulesTests` applique « ni EF, ni ASP.NET, ni infrastructure, ni écran » à
+  `Exports.Application` et `Supervision.Application` ; les règles des cas d'usage couvrent aussi `Supervision.Application`.
+
+
 ## Plan
 
 Une PR par couche, petite, verte en CI et assignée à Leub. Chaque refactorisation commence par
@@ -281,7 +375,7 @@ Aucun test existant n'est retiré, désactivé ni affaibli.
 | 7 | Base propre : règles de l'IDE bloquantes (using inutiles, code mort, mise en forme, simplifications), 160 fichiers corrigés, suppressions d'avertissements revues (voir « Base propre »). | Fusionnée (PR #153) |
 | 7 bis | Dates du jour au calendrier légal (D8) : documents imprimables, assistant, kit contrôle fiscal, derniers écrans sur l'horloge système ; tests à minuit à Paris. | Fusionnée (PR #159) |
 | 6 | Application : chargement versionné (R5), fin de validation de facture (R8), saisie d'un encaissement (R4, S1, premier `IValidator` d'Exports pour A7), tests. | Fusionnée (PR #141) |
-| 8 | Interface Blazor : fin du localisateur de services (A5, A6), base commune des éditeurs (R9), tests bUnit. | À faire |
+| 8 à 16 | Audit d'architecture d'octobre 2026 : voir « Ordre de correction » ci-dessus (A5, A6 et R9 y sont repris). | En cours |
 
 Seuil de couverture appliqué par la CI depuis la PR #136 : 88 % des lignes et 78 % des branches au
 global (`fusionner.py --seuil-lignes 88 --seuil-branches 78`) ; chaque PR garde au moins le niveau

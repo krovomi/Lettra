@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Infrastructure.Persistence.Sqlite.Local;
@@ -22,7 +23,7 @@ public sealed record LocalOrganisation(Guid Id, DateTimeOffset CreatedAt);
 /// Registre des dossiers du poste : un répertoire de données avec <c>organisation.json</c>, un manifeste
 /// <c>{id}.lettra</c> et une base <c>{id}.db</c> par dossier, et <c>active.txt</c> pour le dossier ouvert.
 /// </summary>
-public sealed class LocalDossierRegistry : IDisposable
+public sealed class LocalDossierRegistry : IOpenedLocalDossier, IDisposable
 {
     public const string SecretPrefix = "local:";
 

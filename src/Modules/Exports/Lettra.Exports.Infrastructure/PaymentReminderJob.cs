@@ -5,6 +5,7 @@ using Lettra.Contracts.Reminders;
 using Lettra.Domain.Common;
 using Lettra.Domain.Reminders;
 using Lettra.Exports.Application.Reminders;
+using Lettra.Infrastructure.Persistence.Hosting;
 using Lettra.Infrastructure.Persistence.Integrity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -14,7 +15,7 @@ using Microsoft.Extensions.Options;
 namespace Lettra.Exports.Infrastructure;
 
 /// <summary>Réglages de la passe quotidienne des relances (Worker), active par défaut.</summary>
-public sealed class PaymentReminderJobOptions
+public sealed class PaymentReminderJobOptions : IPeriodicJobOptions
 {
     public const string SectionName = "Lettra:Worker:PaymentReminders";
 

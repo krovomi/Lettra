@@ -4,6 +4,7 @@ using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Features.Billing;
 using Lettra.Contracts.Billing;
 using Lettra.Domain.Common;
+using Lettra.Infrastructure.Persistence.Hosting;
 using Lettra.Infrastructure.Persistence.Integrity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,7 +15,7 @@ using Microsoft.Extensions.Options;
 namespace Lettra.Infrastructure.Persistence.Billing;
 
 /// <summary>Réglages de la passe des factures récurrentes (Worker, ou API sans Worker), active par défaut.</summary>
-public sealed class RecurringInvoiceJobOptions
+public sealed class RecurringInvoiceJobOptions : IPeriodicJobOptions
 {
     public const string SectionName = "Lettra:Worker:RecurringInvoices";
 
@@ -184,7 +185,7 @@ public static class RecurringInvoiceRegistration
         ArgumentNullException.ThrowIfNull(configuration);
         ArgumentNullException.ThrowIfNull(activeDossiers);
         IConfigurationSection section = configuration.GetSection(RecurringInvoiceJobOptions.SectionName);
-        services.AddOptions<RecurringInvoiceJobOptions>().Bind(section);
+        services.AddOptions<RecurringInvoiceJobOptions>().Bind(section).ValidatePeriodicJob(RecurringInvoiceJobOptions.SectionName);
         if (section.Get<RecurringInvoiceJobOptions>()?.ServiceAccountId is not null)
         {
             UseServiceAccount(services);
