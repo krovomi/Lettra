@@ -1210,9 +1210,9 @@
             "type": "prometheus",
             "uid": "${prometheus}"
           },
-          "expr": "max by (dossier, dossier_id) (lettra_kpi_database_size_bytes)",
+          "expr": "label_replace(max by (dossier_id) (lettra_kpi_database_size_bytes), \"dossier\", \"$1\", \"dossier_id\", \".*(.{8})\")",
           "refId": "A",
-          "legendFormat": "{{dossier}}",
+          "legendFormat": "Dossier {{dossier}}",
           "instant": true,
           "range": false
         }
@@ -1347,7 +1347,7 @@
             "type": "prometheus",
             "uid": "${prometheus}"
           },
-          "expr": "max by (dossier) (lettra_kpi_devices{state=\"active\"})",
+          "expr": "label_replace(max by (dossier_id) (lettra_kpi_devices{state=\"active\"}), \"dossier\", \"$1\", \"dossier_id\", \".*(.{8})\")",
           "refId": "A",
           "instant": true,
           "range": false,
@@ -1358,7 +1358,7 @@
             "type": "prometheus",
             "uid": "${prometheus}"
           },
-          "expr": "max by (dossier) (lettra_kpi_devices{state=\"revoked\"})",
+          "expr": "label_replace(max by (dossier_id) (lettra_kpi_devices{state=\"revoked\"}), \"dossier\", \"$1\", \"dossier_id\", \".*(.{8})\")",
           "refId": "B",
           "instant": true,
           "range": false,
@@ -1369,7 +1369,7 @@
             "type": "prometheus",
             "uid": "${prometheus}"
           },
-          "expr": "max by (dossier, dossier_id) (lettra_kpi_devices_silent)",
+          "expr": "label_replace(max by (dossier_id) (lettra_kpi_devices_silent), \"dossier\", \"$1\", \"dossier_id\", \".*(.{8})\")",
           "refId": "C",
           "instant": true,
           "range": false,
@@ -1380,7 +1380,7 @@
             "type": "prometheus",
             "uid": "${prometheus}"
           },
-          "expr": "max by (dossier, dossier_id) (lettra_kpi_device_oldest_sync_age_seconds)",
+          "expr": "label_replace(max by (dossier_id) (lettra_kpi_device_oldest_sync_age_seconds), \"dossier\", \"$1\", \"dossier_id\", \".*(.{8})\")",
           "refId": "D",
           "instant": true,
           "range": false,

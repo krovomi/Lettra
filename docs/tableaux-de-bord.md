@@ -29,6 +29,9 @@ Lettra, et c'est le serveur qui filtre, dossier par dossier, avec les mêmes rè
   permission demandée. Un dossier d'un autre cabinet, ou d'un groupe auquel il n'a pas accès, n'est jamais envoyé.
 - Un compte suspendu ne reçoit aucun dossier.
 - Aucun montant, aucun nom de client : des ratios, des délais, des indices et des compteurs, comme dans Grafana.
+- Les noms de dossier restent dans Lettra. Grafana ne reçoit que l'identifiant de chaque dossier et affiche sa
+  **référence courte** (8 caractères) ; les onglets « Mes dossiers » et « Administration » la montrent sous chaque nom
+  (« Réf. 3f9a21bc ») pour faire le lien, et la recherche la retrouve.
 
 Le réglage `Lettra:Kpi:BusinessIndicators=false` ne touche que la publication vers Prometheus : dans Lettra, chacun
 garde les indicateurs de gestion de ses propres dossiers.

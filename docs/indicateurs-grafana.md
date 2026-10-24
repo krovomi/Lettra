@@ -64,7 +64,14 @@ réponse, connexions, outbox) et renvoie vers « Activité technique détaillée
 Les indicateurs publiés sont des **ratios, des délais, des indices et des compteurs**, jamais un montant en euros, un
 nom de client ou une donnée personnelle. Les montants restent dans la base du dossier (ADR-0003, annexe F) ; le
 chiffre d'affaires est donc donné en indice (100 = mois moyen) et le poids du premier client en pourcentage, sans dire
-qui il est. Seuls le nom du dossier et celui du cabinet apparaissent, pour que les tableaux soient lisibles.
+qui il est.
+
+**Aucun nom non plus.** Un dossier n'est désigné que par son identifiant (`dossier_id`) : ni son nom, ni celui du
+cabinet ne sont publiés, car le nom d'une entreprise individuelle est celui d'une personne (décision du DPO, 24/10/2026).
+Les tableaux affichent une **référence courte**, les 8 derniers caractères de l'identifiant (« Dossier 3f9a21bc »),
+calculée dans la requête (`label_replace`). La même référence apparaît sous le nom de chaque dossier dans le menu
+**Tableaux de bord** de Lettra, qui montre les noms selon les droits de chacun, et la recherche de « Mes dossiers » la
+retrouve.
 
 ## Comment les chiffres arrivent dans Grafana
 
@@ -108,8 +115,8 @@ qui ne passe pas par Prometheus, marche partout.
 ## Dans la démo
 
 Avec l'observabilité (voir le README), ouvrir http://localhost:3000, dossier **Lettra**. Le tableau du cabinet
-liste les trois dossiers de démonstration ; cliquer sur un nom ouvre son tableau, ou choisir le dossier en haut du
-tableau du dossier. Les courbes dans le temps se remplissent au fil des collectes (une par minute dans la démo, qui règle
+liste les trois dossiers de démonstration par leur référence courte ; cliquer sur une référence ouvre son tableau, ou
+choisir la référence en haut du tableau du dossier. Les courbes dans le temps se remplissent au fil des collectes (une par minute dans la démo, qui règle
 `Lettra__Kpi__RefreshInterval: "00:01:00"` ; toutes les 5 minutes par défaut).
 
 Vérifié dans la démo Docker, après la mise à jour d'une démo existante (les données de démonstration sont conservées) :

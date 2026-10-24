@@ -64,7 +64,7 @@
       },
       "options": {
         "mode": "markdown",
-        "content": "**Pilotage du cabinet** · un dossier par ligne, recalculé toutes les 5 minutes (les compteurs « à faire » viennent du calcul quotidien de la *Vue cabinet*).\nVert : rien à signaler · orange : à surveiller · rouge : à traiter. Aucun montant ni nom de client ici : des délais, des parts et des nombres. Cliquer sur un dossier ouvre son tableau détaillé."
+        "content": "**Pilotage du cabinet** · un dossier par ligne, recalculé toutes les 5 minutes (les compteurs « à faire » viennent du calcul quotidien de la *Vue cabinet*).\nVert : rien à signaler · orange : à surveiller · rouge : à traiter. Aucun montant ni nom de client ici : des délais, des parts et des nombres. Cliquer sur un dossier ouvre son tableau détaillé. Les dossiers n'y sont désignés que par leur **référence courte** (8 caractères) : leur nom reste dans Lettra, menu *Tableaux de bord*, qui montre la même référence sous chaque nom."
       }
     },
     {
@@ -852,7 +852,7 @@
             "type": "prometheus",
             "uid": "${prometheus}"
           },
-          "expr": "max by (dossier, dossier_id) (lettra_kpi_dso_days)",
+          "expr": "label_replace(max by (dossier_id) (lettra_kpi_dso_days), \"dossier\", \"$1\", \"dossier_id\", \".*(.{8})\")",
           "refId": "A",
           "instant": true,
           "range": false,
@@ -863,7 +863,7 @@
             "type": "prometheus",
             "uid": "${prometheus}"
           },
-          "expr": "max by (dossier, dossier_id) (lettra_kpi_overdue_receivables_ratio)",
+          "expr": "label_replace(max by (dossier_id) (lettra_kpi_overdue_receivables_ratio), \"dossier\", \"$1\", \"dossier_id\", \".*(.{8})\")",
           "refId": "B",
           "instant": true,
           "range": false,
@@ -874,7 +874,7 @@
             "type": "prometheus",
             "uid": "${prometheus}"
           },
-          "expr": "max by (dossier, dossier_id) (lettra_kpi_cabinet_indicator_count{key=\"factures.retard\"})",
+          "expr": "label_replace(max by (dossier_id) (lettra_kpi_cabinet_indicator_count{key=\"factures.retard\"}), \"dossier\", \"$1\", \"dossier_id\", \".*(.{8})\")",
           "refId": "C",
           "instant": true,
           "range": false,
@@ -885,7 +885,7 @@
             "type": "prometheus",
             "uid": "${prometheus}"
           },
-          "expr": "max by (dossier, dossier_id) (lettra_kpi_cabinet_indicator_count{key=\"tva.a-declarer\"})",
+          "expr": "label_replace(max by (dossier_id) (lettra_kpi_cabinet_indicator_count{key=\"tva.a-declarer\"}), \"dossier\", \"$1\", \"dossier_id\", \".*(.{8})\")",
           "refId": "D",
           "instant": true,
           "range": false,
@@ -896,7 +896,7 @@
             "type": "prometheus",
             "uid": "${prometheus}"
           },
-          "expr": "max by (dossier, dossier_id) (lettra_kpi_cabinet_indicator_count{key=\"banque.non-rapprochee\"})",
+          "expr": "label_replace(max by (dossier_id) (lettra_kpi_cabinet_indicator_count{key=\"banque.non-rapprochee\"}), \"dossier\", \"$1\", \"dossier_id\", \".*(.{8})\")",
           "refId": "E",
           "instant": true,
           "range": false,
@@ -907,7 +907,7 @@
             "type": "prometheus",
             "uid": "${prometheus}"
           },
-          "expr": "max by (dossier, dossier_id) (lettra_kpi_cabinet_indicator_count{key=\"revue.a-faire\"})",
+          "expr": "label_replace(max by (dossier_id) (lettra_kpi_cabinet_indicator_count{key=\"revue.a-faire\"}), \"dossier\", \"$1\", \"dossier_id\", \".*(.{8})\")",
           "refId": "F",
           "instant": true,
           "range": false,
@@ -918,7 +918,7 @@
             "type": "prometheus",
             "uid": "${prometheus}"
           },
-          "expr": "max by (dossier, dossier_id) (lettra_kpi_quote_conversion_ratio)",
+          "expr": "label_replace(max by (dossier_id) (lettra_kpi_quote_conversion_ratio), \"dossier\", \"$1\", \"dossier_id\", \".*(.{8})\")",
           "refId": "G",
           "instant": true,
           "range": false,
@@ -929,7 +929,7 @@
             "type": "prometheus",
             "uid": "${prometheus}"
           },
-          "expr": "max by (dossier, dossier_id) (lettra_kpi_revenue_trend_ratio)",
+          "expr": "label_replace(max by (dossier_id) (lettra_kpi_revenue_trend_ratio), \"dossier\", \"$1\", \"dossier_id\", \".*(.{8})\")",
           "refId": "H",
           "instant": true,
           "range": false,
@@ -1043,9 +1043,9 @@
             "type": "prometheus",
             "uid": "${prometheus}"
           },
-          "expr": "max by (dossier, dossier_id) (lettra_kpi_dso_days)",
+          "expr": "label_replace(max by (dossier_id) (lettra_kpi_dso_days), \"dossier\", \"$1\", \"dossier_id\", \".*(.{8})\")",
           "refId": "A",
-          "legendFormat": "{{dossier}}",
+          "legendFormat": "Dossier {{dossier}}",
           "instant": true,
           "range": false
         }
@@ -1123,9 +1123,9 @@
             "type": "prometheus",
             "uid": "${prometheus}"
           },
-          "expr": "max by (dossier, dossier_id) (lettra_kpi_overdue_receivables_ratio)",
+          "expr": "label_replace(max by (dossier_id) (lettra_kpi_overdue_receivables_ratio), \"dossier\", \"$1\", \"dossier_id\", \".*(.{8})\")",
           "refId": "A",
-          "legendFormat": "{{dossier}}",
+          "legendFormat": "Dossier {{dossier}}",
           "instant": true,
           "range": false
         }
@@ -1180,9 +1180,9 @@
             "type": "prometheus",
             "uid": "${prometheus}"
           },
-          "expr": "max by (dossier, dossier_id) (lettra_kpi_dso_days)",
+          "expr": "label_replace(max by (dossier_id) (lettra_kpi_dso_days), \"dossier\", \"$1\", \"dossier_id\", \".*(.{8})\")",
           "refId": "A",
-          "legendFormat": "{{dossier}}"
+          "legendFormat": "Dossier {{dossier}}"
         }
       ],
       "description": "L'historique se construit au fil des collectes (toutes les 5 minutes) : il s'allonge avec le temps."

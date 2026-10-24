@@ -57,7 +57,7 @@ public sealed class KpiScrapeTests
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         response.Content.Headers.ContentType!.MediaType.Should().Be("text/plain");
         response.Content.Headers.ContentType.Parameters.Should().Contain(p => p.Name == "version" && p.Value == "0.0.4");
-        (await response.Content.ReadAsStringAsync()).Should().Contain("lettra_kpi_dso_days{dossier_id=\"").And.Contain(",dossier=\"Dossier test\"} 30");
+        (await response.Content.ReadAsStringAsync()).Should().Contain("lettra_kpi_dso_days{dossier_id=\"").And.NotContain("Dossier test");
     }
 
     [Fact]

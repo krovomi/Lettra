@@ -62,7 +62,7 @@
           "refId": "dossier"
         },
         "definition": "query_result(lettra_kpi_dossier_info)",
-        "regex": "/dossier=\"(?<text>(?:[^\"\\\\]|\\\\.)*)\",dossier_id=\"(?<value>[^\"]+)\"/",
+        "regex": "/dossier_id=\"(?<value>[^\"]*(?<text>[0-9a-f]{8}))\"/",
         "refresh": 2,
         "sort": 5,
         "includeAll": false,
@@ -85,7 +85,7 @@
       },
       "options": {
         "mode": "markdown",
-        "content": "**Pilotage du dossier** · choisir le dossier en haut. *Délai moyen de paiement* : en combien de jours les clients paient, en moyenne (au-delà de 60 jours, c'est hors délai légal). *Part en retard* : ce qui reste à encaisser et dont l'échéance est passée. *Transformation* : devis acceptés sur les devis tranchés (acceptés, refusés ou expirés) des 12 derniers mois. *Indice* : 100 = un mois moyen des 12 derniers mois."
+        "content": "**Pilotage du dossier** · choisir le dossier en haut. *Délai moyen de paiement* : en combien de jours les clients paient, en moyenne (au-delà de 60 jours, c'est hors délai légal). *Part en retard* : ce qui reste à encaisser et dont l'échéance est passée. *Transformation* : devis acceptés sur les devis tranchés (acceptés, refusés ou expirés) des 12 derniers mois. *Indice* : 100 = un mois moyen des 12 derniers mois. Les dossiers n'y sont désignés que par leur **référence courte** (8 caractères) : leur nom reste dans Lettra, menu *Tableaux de bord*, qui montre la même référence sous chaque nom."
       }
     },
     {
