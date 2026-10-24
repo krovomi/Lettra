@@ -435,6 +435,28 @@ workflows, `LayerDependencyTests`, `MauiProgram.cs`) passent par le coordinateur
   (`IBillingDashboardGateway`), testées sur les deux transports ; calcul couvert par `BillingDashboardTests`.
 - Passent à la PR 13 bis : **X15**, **X16**, **S7** (passerelles), pour garder cette PR petite.
 
+### Fait dans la PR 13 bis
+
+- **X16** : chaque passerelle HTTP passe par `HttpCalls.SendAsync`, qui fait l'appel, la conversion et la règle
+  « serveur injoignable ». Une seconde forme prend la lecture de la réponse quand elle n'est pas un corps JSON :
+  fichier téléchargé, facture électronique, 204 de l'administration, 401 du BFF qui veut dire « pas connecté ».
+  `FailureAsync<T>` rend le refus du serveur quel que soit le type attendu. `HttpPilotageGateway` ne refait plus son
+  propre filtre : une erreur réseau survenue pendant une annulation voulue par l'écran y devient aussi
+  `Api.Unreachable`, comme dans les autres passerelles (retour de D4). Restent à part, à dessein : le flux de
+  l'assistant (lu ligne par ligne), la dictée (corps binaire à libérer), la vue cabinet (requête construite) et les
+  préférences (route absente d'un ancien serveur). Elles appellent toutes `HttpCalls.IsUnreachable`.
+- **S7** : `HttpCustomersGateway.cs` ne contient plus que la passerelle des clients. La traduction des réponses
+  (`HttpResponseExtensions.cs`), les gestionnaires HTTP (`HttpHandlers.cs`), l'enregistrement
+  (`DependencyInjection.cs`), `HttpCalls.cs` et `VersionedCalls.cs` ont chacun leur fichier.
+  `OfflineShortCircuitHandler` reçoit l'état du réseau par injection et non plus par le conteneur.
+- **X15** : les passerelles en processus hors dossier (administration, cabinet, pilotage, session, préférences)
+  passent par `InProcessScope.OutsideDossierAsync`, et toutes les commandes par `InProcessScope.SendAsync`. Les quatre
+  copies privées de « ouvrir une portée, envoyer, convertir » disparaissent. `InProcessScope` a son fichier. Seul
+  le flux de l'assistant garde sa propre portée, parce qu'il rend ses réponses au fil de l'eau. Côté appareil, la
+  synchronisation garde ses portées par dossier (voir la PR 13).
+- Tests : `OtherHttpGatewaysUnreachableTests` couvre le pilotage, l'assistant, l'administration et la facture
+  électronique en délai dépassé, ainsi que les réponses sans corps JSON (401 du BFF, 204, fichier).
+
 ## Plan
 
 Une PR par couche, petite, verte en CI et assignée à Leub. Chaque refactorisation commence par

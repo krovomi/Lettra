@@ -9,18 +9,11 @@ namespace Lettra.UI.Gateway.Http;
 /// <summary>Route <c>/voix</c> de l'API : le WAV part tel quel (<c>audio/wav</c>), la réponse est le texte mis en forme.</summary>
 internal sealed class HttpSpeechGateway(HttpClient http) : ISpeechGateway
 {
-    public async Task<OperationResult<SpeechStatusResponse>> GetStatusAsync(CancellationToken cancellationToken)
-    {
-        try
-        {
-            using HttpResponseMessage response = await http.GetAsync(new Uri("api/v1/voix/statut", UriKind.Relative), cancellationToken).ConfigureAwait(false);
-            return await response.ToOperationResultAsync(ContractsJsonContext.Default.SpeechStatusResponse, cancellationToken).ConfigureAwait(false);
-        }
-        catch (Exception e) when (HttpCalls.IsUnreachable(e, cancellationToken))
-        {
-            return OperationResult<SpeechStatusResponse>.Failure(ErrorCodes.Api.Unreachable);
-        }
-    }
+    public Task<OperationResult<SpeechStatusResponse>> GetStatusAsync(CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.GetAsync(new Uri("api/v1/voix/statut", UriKind.Relative), ct),
+            ContractsJsonContext.Default.SpeechStatusResponse,
+            cancellationToken);
 
     public async Task<OperationResult<TranscriptionResponse>> TranscribeAsync(
         ReadOnlyMemory<byte> wav, SpeechMode mode, string language, CancellationToken cancellationToken)

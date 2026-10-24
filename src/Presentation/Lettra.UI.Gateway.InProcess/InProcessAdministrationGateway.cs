@@ -2,7 +2,6 @@ using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Features.Administration;
 using Lettra.Application.Features.Rights;
-using Lettra.Application.Mapping;
 using Lettra.Contracts.Administration;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Rights;
@@ -89,32 +88,12 @@ internal sealed class InProcessAdministrationGateway(IServiceScopeFactory scopes
     public Task<OperationResult<bool>> DeleteRoleAsync(Guid cabinetId, string key, CancellationToken cancellationToken) =>
         SendAsync(new DeleteCustomRoleCommand(new OrganisationId(cabinetId), key), cancellationToken);
 
-    private async Task<OperationResult<T>> QueryAsync<T>(IQuery<Result<T>> query, CancellationToken cancellationToken)
-    {
-        AsyncServiceScope scope = scopes.CreateAsyncScope();
-        await using (scope.ConfigureAwait(false))
-        {
-            return await InProcessScope.QueryAsync(scope.ServiceProvider, query, cancellationToken).ConfigureAwait(false);
-        }
-    }
+    private Task<OperationResult<T>> QueryAsync<T>(IQuery<Result<T>> query, CancellationToken cancellationToken) =>
+        InProcessScope.OutsideDossierAsync(scopes, sp => InProcessScope.QueryAsync(sp, query, cancellationToken));
 
-    private async Task<OperationResult<T>> SendAsync<T>(ICommand<Result<T>> command, CancellationToken cancellationToken)
-    {
-        AsyncServiceScope scope = scopes.CreateAsyncScope();
-        await using (scope.ConfigureAwait(false))
-        {
-            Result<T> result = await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>().SendAsync(command, cancellationToken).ConfigureAwait(false);
-            return result.ToOperationResult();
-        }
-    }
+    private Task<OperationResult<T>> SendAsync<T>(ICommand<Result<T>> command, CancellationToken cancellationToken) =>
+        InProcessScope.OutsideDossierAsync(scopes, sp => InProcessScope.SendAsync(sp, command, cancellationToken));
 
-    private async Task<OperationResult<bool>> SendAsync(ICommand<Result> command, CancellationToken cancellationToken)
-    {
-        AsyncServiceScope scope = scopes.CreateAsyncScope();
-        await using (scope.ConfigureAwait(false))
-        {
-            Result result = await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>().SendAsync(command, cancellationToken).ConfigureAwait(false);
-            return result.IsSuccess ? OperationResult<bool>.Success(true) : OperationResult<bool>.Failure(result.Errors.ToErrorDetails());
-        }
-    }
+    private Task<OperationResult<bool>> SendAsync(ICommand<Result> command, CancellationToken cancellationToken) =>
+        InProcessScope.OutsideDossierAsync(scopes, sp => InProcessScope.SendAsync(sp, command, cancellationToken));
 }
