@@ -36,6 +36,20 @@ public sealed class AssistantBillingToolsTests
     };
 
     [Fact]
+    public async Task Sans_reperage_des_noms_propres_le_brouillon_en_texte_libre_reste_ferme_meme_active_par_le_cabinet()
+    {
+        ScriptedTurnsEngine engine = new(_ => Call("creer_brouillon_devis", DraftInput));
+        await using AssistantHarness h = new(engine, AssistantHarness.Enabled());
+
+        List<AssistantEvent> events = await h.AskAsync(AssistantFeature.DraftFromText, "Devis pour Dupont SARL : 3 jours de conseil à 650 € HT");
+
+        events.Should().ContainSingle().Which.Should().Be(new AssistantUnavailableEvent(ErrorCodes.Ai.FeatureBlocked));
+        engine.Calls.Should().Be(0);
+        h.Dispatcher.Sent.Should().BeEmpty();
+        (await h.AuditAsync()).Should().ContainSingle(e => e.Kind == AiAuditKind.Unavailable && e.Detail == ErrorCodes.Ai.FeatureBlocked);
+    }
+
+    [Fact]
     public async Task La_demande_en_langage_naturel_cree_un_brouillon_et_une_validation_demandee_par_le_modele_est_refusee()
     {
         await using AssistantHarness h = new(
@@ -44,7 +58,7 @@ public sealed class AssistantBillingToolsTests
                 _ => Call("creer_brouillon_devis", DraftInput, "c2"),
                 _ => Call("valider_devis", new { devis_id = QuoteGuid.ToString() }, "c3"),
                 _ => Say("Le brouillon est prêt : 2850.00 € HT. Relisez-le puis validez-le.")),
-            AssistantHarness.Enabled());
+            AssistantHarness.Enabled(), namedEntityDetection: true);
         AnswerCustomersAndQuotes(h.Dispatcher);
 
         List<AssistantEvent> events = await h.AskAsync(
@@ -84,7 +98,7 @@ public sealed class AssistantBillingToolsTests
         RecordingHandler ollama = new(_ => RecordingHandler.Json(answers[Math.Min(next++, answers.Length - 1)]));
         using HttpClient http = new(ollama);
         LocalModelEngine local = new(http, new LocalModelOptions { Endpoint = new Uri("http://127.0.0.1:11434/v1/chat/completions"), Model = "mistral-small" });
-        await using AssistantHarness h = new(new ScriptedTurnsEngine(r => local.CompleteAsync(r, CancellationToken.None).GetAwaiter().GetResult()), AssistantHarness.Enabled());
+        await using AssistantHarness h = new(new ScriptedTurnsEngine(r => local.CompleteAsync(r, CancellationToken.None).GetAwaiter().GetResult()), AssistantHarness.Enabled(), namedEntityDetection: true);
         AnswerCustomersAndQuotes(h.Dispatcher);
 
         List<AssistantEvent> events = await h.AskAsync(AssistantFeature.DraftFromText, "Devis pour Dupont SARL : 3 jours de conseil à 650 € et une formation à 900 €");
@@ -99,7 +113,7 @@ public sealed class AssistantBillingToolsTests
     [Fact]
     public async Task Sans_le_droit_de_creer_un_devis_l_outil_de_brouillon_n_est_pas_propose()
     {
-        await using AssistantHarness h = new(new ScriptedTurnsEngine(_ => Say("ok")), AssistantHarness.Enabled());
+        await using AssistantHarness h = new(new ScriptedTurnsEngine(_ => Say("ok")), AssistantHarness.Enabled(), namedEntityDetection: true);
         HashSet<Permission> permissions = [.. AssistantHarness.AllPermissions];
         permissions.Remove(Permission.DevisCreer);
 
@@ -113,7 +127,8 @@ public sealed class AssistantBillingToolsTests
     {
         await using AssistantHarness h = new(
             new ScriptedTurnsEngine(_ => Call("creer_brouillon_devis", DraftInput), _ => Say("Le client n'existe pas.")),
-            AssistantHarness.Enabled());
+            AssistantHarness.Enabled(),
+            namedEntityDetection: true);
         h.Dispatcher.On<CreateQuoteCommand, Result<QuoteId>>(_ => Result<QuoteId>.Failure([Error.NotFound("Customer.NotFound")]));
 
         List<AssistantEvent> events = await h.AskAsync(AssistantFeature.DraftFromText, "Devis pour Dupont");
