@@ -135,9 +135,9 @@ jamais aux dossiers qui existent déjà.
 
 ## Câblage (fichiers du socle)
 
-Fait à la PR #113 :
+En place :
 
-- `AddCabinetOverviewJob(...)` dans `Lettra.Worker/Program.cs`, et dans `Lettra.Api/Program.cs` pour les installations
+- `AddCabinetOverviewJob(...)` dans `Lettra.Worker/WorkerJobs.cs`, et dans `Lettra.Api/Program.cs` pour les installations
   sans Worker (démo), comme la tâche de l'outbox. Sans elle, la vue se calcule au premier affichage et avec
   « Actualiser ».
 - `deploy/demo/compose.yaml` : `Lettra__Demo__AdditionalDossiers: "2"`.
