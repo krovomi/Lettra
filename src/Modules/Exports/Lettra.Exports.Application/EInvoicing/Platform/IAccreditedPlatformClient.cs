@@ -1,5 +1,6 @@
 using Lettra.Contracts.Exports;
 using Lettra.Domain.Common;
+using Lettra.Exports.Domain.Platform;
 
 namespace Lettra.Exports.Application.EInvoicing.Platform;
 
@@ -53,13 +54,10 @@ public sealed record PlatformPaymentReport(
     string SellerSiren,
     string InvoiceNumber,
     string Reference,
-    PlatformChannelDto Channel,
+    PlatformChannel Channel,
     DateOnly Date,
     decimal Amount,
     string? IdempotencyKey = null);
-
-/// <summary>Un statut du cycle de vie, tel que la plateforme le restitue.</summary>
-public sealed record PlatformStatusEvent(PlatformStatusDto Status, DateTimeOffset At, string? Reason = null, decimal? Amount = null);
 
 /// <summary>Accusé de dépôt : la référence attribuée par la plateforme et le premier statut (Déposée ou Rejetée).</summary>
 public sealed record PlatformReceipt(string Reference, PlatformStatusEvent Status);

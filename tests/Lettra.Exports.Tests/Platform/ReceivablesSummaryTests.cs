@@ -1,6 +1,7 @@
 using Lettra.Contracts.Exports;
 using Lettra.Domain.Billing;
 using Lettra.Exports.Application.EInvoicing.Platform;
+using Lettra.Exports.Domain.Platform;
 
 namespace Lettra.Exports.Tests.Platform;
 
@@ -16,17 +17,17 @@ public sealed class ReceivablesSummaryTests
         new(Guid.CreateVersion7(), kind, numero, client, echeance, ttc, avoirs, transmission);
 
     private static PlatformTransmission Transmission(decimal ttc, params PlatformStatusEvent[] suite) => new(
-        Guid.CreateVersion7(), Guid.CreateVersion7(), "FAC", PlatformChannelDto.EInvoice, EInvoiceFormatDto.Cii, "Simulée", "REF", ttc, Depot,
-        [new PlatformStatusEvent(PlatformStatusDto.Deposited, Depot), .. suite]);
+        Guid.CreateVersion7(), Guid.CreateVersion7(), "FAC", PlatformChannel.EInvoice, EInvoiceFormat.Cii, "Simulée", "REF", ttc, Depot,
+        [new PlatformStatusEvent(PlatformStatus.Deposited, Depot), .. suite]);
 
-    private static PlatformStatusEvent Statut(PlatformStatusDto statut, decimal? montant = null) => new(statut, Depot.AddDays(5), Amount: montant);
+    private static PlatformStatusEvent Statut(PlatformStatus statut, decimal? montant = null) => new(statut, Depot.AddDays(5), Amount: montant);
 
     [Fact]
     public void Une_facture_est_en_retard_le_lendemain_de_son_echeance_pour_son_reste_du()
     {
         ReceivablesSummaryResponse point = ReceivablesSummary.Compute(
         [
-            Piece("FAC-2026-0001", Aujourdhui.AddDays(-1), 1200m, Transmission(1200m, Statut(PlatformStatusDto.Collected, 200m))),
+            Piece("FAC-2026-0001", Aujourdhui.AddDays(-1), 1200m, Transmission(1200m, Statut(PlatformStatus.Collected, 200m))),
             Piece("FAC-2026-0002", Aujourdhui, 600m),
             Piece("FAC-2026-0003", Aujourdhui.AddDays(-40), 360m, avoirs: 60m),
             Piece("FAC-2026-0004", null, 900m),
@@ -44,7 +45,7 @@ public sealed class ReceivablesSummaryTests
     {
         ReceivablesSummaryResponse point = ReceivablesSummary.Compute(
         [
-            Piece("FAC-2026-0001", Aujourdhui.AddDays(-10), 360m, Transmission(360m, Statut(PlatformStatusDto.Collected, 360m))),
+            Piece("FAC-2026-0001", Aujourdhui.AddDays(-10), 360m, Transmission(360m, Statut(PlatformStatus.Collected, 360m))),
             Piece("FAC-2026-0002", Aujourdhui.AddDays(-10), 360m, avoirs: 360m),
             Piece("FAC-2026-0003", Aujourdhui.AddDays(-10), 360m, avoirs: 500m),
             Piece("AV-2026-0001", Aujourdhui.AddDays(-10), 360m, kind: InvoiceKind.CreditNote),
@@ -74,11 +75,11 @@ public sealed class ReceivablesSummaryTests
             Piece("FAC-2026-0001", null, 100m),
             Piece("AV-2026-0001", null, 100m, kind: InvoiceKind.CreditNote),
             Piece("FAC-2026-0002", null, 100m, Transmission(100m)),
-            Piece("FAC-2026-0003", null, 100m, Transmission(100m, Statut(PlatformStatusDto.MadeAvailable))),
-            Piece("FAC-2026-0004", null, 100m, Transmission(100m, Statut(PlatformStatusDto.Collected, 40m))),
-            Piece("FAC-2026-0005", null, 100m, Transmission(100m, Statut(PlatformStatusDto.Rejected))),
-            Piece("FAC-2026-0006", null, 100m, Transmission(100m, Statut(PlatformStatusDto.MadeAvailable), Statut(PlatformStatusDto.Disputed))),
-            Piece("FAC-2026-0007", null, 100m, Transmission(100m, Statut(PlatformStatusDto.Collected, 100m))),
+            Piece("FAC-2026-0003", null, 100m, Transmission(100m, Statut(PlatformStatus.MadeAvailable))),
+            Piece("FAC-2026-0004", null, 100m, Transmission(100m, Statut(PlatformStatus.Collected, 40m))),
+            Piece("FAC-2026-0005", null, 100m, Transmission(100m, Statut(PlatformStatus.Rejected))),
+            Piece("FAC-2026-0006", null, 100m, Transmission(100m, Statut(PlatformStatus.MadeAvailable), Statut(PlatformStatus.Disputed))),
+            Piece("FAC-2026-0007", null, 100m, Transmission(100m, Statut(PlatformStatus.Collected, 100m))),
         ], Aujourdhui);
 
         point.NotTransmitted.Should().Be(2);

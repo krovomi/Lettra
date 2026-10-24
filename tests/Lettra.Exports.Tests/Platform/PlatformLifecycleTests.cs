@@ -1,6 +1,7 @@
 using Lettra.Contracts.Exports;
 using Lettra.Exports.Application.EInvoicing.Platform;
-using static Lettra.Contracts.Exports.PlatformStatusDto;
+using Lettra.Exports.Domain.Platform;
+using static Lettra.Exports.Domain.Platform.PlatformStatus;
 
 namespace Lettra.Exports.Tests.Platform;
 
@@ -20,7 +21,7 @@ public sealed class PlatformLifecycleTests
     [InlineData(Deposited, Collected)]
     [InlineData(PaymentSent, Collected)]
     [InlineData(Collected, Collected)]
-    public void Transition_permise(PlatformStatusDto from, PlatformStatusDto to) =>
+    public void Transition_permise(PlatformStatus from, PlatformStatus to) =>
         PlatformLifecycle.CanMove(from, to).Should().BeTrue();
 
     [Theory]
@@ -33,13 +34,13 @@ public sealed class PlatformLifecycleTests
     [InlineData(Rejected, Collected)]
     [InlineData(Collected, Approved)]
     [InlineData(Deposited, Deposited)]
-    public void Transition_refusee(PlatformStatusDto from, PlatformStatusDto to) =>
+    public void Transition_refusee(PlatformStatus from, PlatformStatus to) =>
         PlatformLifecycle.CanMove(from, to).Should().BeFalse();
 
     [Fact]
     public void Refusee_et_rejetee_sont_definitifs_et_rien_n_en_sort()
     {
-        foreach (PlatformStatusDto to in Enum.GetValues<PlatformStatusDto>())
+        foreach (PlatformStatus to in Enum.GetValues<PlatformStatus>())
         {
             PlatformLifecycle.CanMove(Refused, to).Should().BeFalse();
             PlatformLifecycle.CanMove(Rejected, to).Should().BeFalse();
@@ -49,9 +50,9 @@ public sealed class PlatformLifecycleTests
     [Fact]
     public void Chaque_statut_sauf_deposee_a_au_moins_une_origine()
     {
-        foreach (PlatformStatusDto to in Enum.GetValues<PlatformStatusDto>().Where(s => s != Deposited))
+        foreach (PlatformStatus to in Enum.GetValues<PlatformStatus>().Where(s => s != Deposited))
         {
-            Enum.GetValues<PlatformStatusDto>().Any(from => PlatformLifecycle.CanMove(from, to)).Should().BeTrue(to.ToString());
+            Enum.GetValues<PlatformStatus>().Any(from => PlatformLifecycle.CanMove(from, to)).Should().BeTrue(to.ToString());
         }
     }
 
@@ -60,7 +61,7 @@ public sealed class PlatformLifecycleTests
     {
         DateTimeOffset at = new(2026, 10, 15, 9, 0, 0, TimeSpan.Zero);
         PlatformTransmission transmission = new(
-            Guid.CreateVersion7(), Guid.CreateVersion7(), "FAC-000042", PlatformChannelDto.EInvoice, EInvoiceFormatDto.Cii,
+            Guid.CreateVersion7(), Guid.CreateVersion7(), "FAC-000042", PlatformChannel.EInvoice, EInvoiceFormat.Cii,
             "PA simulée", "PAS-000001", 360m, at, [new PlatformStatusEvent(Deposited, at)]);
 
         transmission.TryApply(new PlatformStatusEvent(Deposited, at.AddTicks(1))).Should().BeFalse();
@@ -74,6 +75,6 @@ public sealed class PlatformLifecycleTests
         transmission.IsFinal.Should().BeTrue();
         transmission.CollectedAmount.Should().Be(360m);
         transmission.TryApply(new PlatformStatusEvent(Disputed, at.AddDays(10))).Should().BeFalse();
-        transmission.ToResponse().History.Select(h => h.Status).Should().Equal(Deposited, MadeAvailable, Collected, Collected);
+        transmission.ToResponse().History.Select(h => h.Status).Should().Equal(PlatformStatusDto.Deposited, PlatformStatusDto.MadeAvailable, PlatformStatusDto.Collected, PlatformStatusDto.Collected);
     }
 }

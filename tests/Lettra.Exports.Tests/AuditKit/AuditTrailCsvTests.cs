@@ -1,9 +1,8 @@
 using System.Text;
-using Lettra.Contracts.Exports;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Integrity;
 using Lettra.Exports.Application.AuditKit;
-using Lettra.Exports.Application.EInvoicing.Platform;
+using Lettra.Exports.Domain.Platform;
 
 namespace Lettra.Exports.Tests.AuditKit;
 
@@ -25,8 +24,8 @@ public sealed class AuditTrailCsvTests
     public void Chaque_statut_d_une_transmission_fait_une_ligne_horodatee_en_utc()
     {
         PlatformTransmission transmission = new(
-            Guid.CreateVersion7(), Guid.CreateVersion7(), "FAC-000001", PlatformChannelDto.EInvoice, EInvoiceFormatDto.Cii, "PA simulée", "REF-1", 360m, Submitted,
-            [new PlatformStatusEvent(PlatformStatusDto.Deposited, Submitted), new PlatformStatusEvent(PlatformStatusDto.Collected, Submitted.AddDays(20), Amount: 360m)]);
+            Guid.CreateVersion7(), Guid.CreateVersion7(), "FAC-000001", PlatformChannel.EInvoice, EInvoiceFormat.Cii, "PA simulée", "REF-1", 360m, Submitted,
+            [new PlatformStatusEvent(PlatformStatus.Deposited, Submitted), new PlatformStatusEvent(PlatformStatus.Collected, Submitted.AddDays(20), Amount: 360m)]);
 
         string[] lines = Lines(AuditTrailCsv.Transmissions([transmission]));
 
@@ -64,7 +63,7 @@ public sealed class AuditTrailCsvTests
     public void Chaque_evenement_et_chaque_statut_ont_un_libelle_francais()
     {
         Enum.GetValues<JournalEntryKind>().Select(AuditTrailCsv.EventLabel).Should().NotContain(l => Enum.GetNames<JournalEntryKind>().Contains(l));
-        Enum.GetValues<PlatformStatusDto>().Select(AuditTrailCsv.StatusLabel).Should().NotContain(l => Enum.GetNames<PlatformStatusDto>().Contains(l));
+        Enum.GetValues<PlatformStatus>().Select(AuditTrailCsv.StatusLabel).Should().NotContain(l => Enum.GetNames<PlatformStatus>().Contains(l));
     }
 
     [Theory]

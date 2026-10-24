@@ -1,10 +1,9 @@
 using System.Globalization;
 using System.Text;
-using Lettra.Contracts.Exports;
 using Lettra.Domain.Banking;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Integrity;
-using Lettra.Exports.Application.EInvoicing.Platform;
+using Lettra.Exports.Domain.Platform;
 
 namespace Lettra.Exports.Application.AuditKit;
 
@@ -68,7 +67,7 @@ public static class AuditTrailCsv
                     transmission.InvoiceNumber,
                     transmission.Id.ToString(),
                     transmission.Platform,
-                    transmission.Channel == PlatformChannelDto.EInvoice ? "Facture électronique" : "E-reporting",
+                    transmission.Channel == PlatformChannel.EInvoice ? "Facture électronique" : "E-reporting",
                     transmission.Format?.ToString(),
                     transmission.Reference,
                     Instant(transmission.SubmittedAt),
@@ -161,22 +160,22 @@ public static class AuditTrailCsv
         _ => kind.ToString(),
     };
 
-    public static string StatusLabel(PlatformStatusDto status) => status switch
+    public static string StatusLabel(PlatformStatus status) => status switch
     {
-        PlatformStatusDto.Deposited => "Déposée",
-        PlatformStatusDto.Issued => "Émise",
-        PlatformStatusDto.Received => "Reçue",
-        PlatformStatusDto.MadeAvailable => "Mise à disposition",
-        PlatformStatusDto.InProgress => "Prise en charge",
-        PlatformStatusDto.Approved => "Approuvée",
-        PlatformStatusDto.PartiallyApproved => "Approuvée partiellement",
-        PlatformStatusDto.Disputed => "En litige",
-        PlatformStatusDto.Suspended => "Suspendue",
-        PlatformStatusDto.Completed => "Complétée",
-        PlatformStatusDto.Refused => "Refusée",
-        PlatformStatusDto.PaymentSent => "Paiement transmis",
-        PlatformStatusDto.Collected => "Encaissée",
-        PlatformStatusDto.Rejected => "Rejetée",
+        PlatformStatus.Deposited => "Déposée",
+        PlatformStatus.Issued => "Émise",
+        PlatformStatus.Received => "Reçue",
+        PlatformStatus.MadeAvailable => "Mise à disposition",
+        PlatformStatus.InProgress => "Prise en charge",
+        PlatformStatus.Approved => "Approuvée",
+        PlatformStatus.PartiallyApproved => "Approuvée partiellement",
+        PlatformStatus.Disputed => "En litige",
+        PlatformStatus.Suspended => "Suspendue",
+        PlatformStatus.Completed => "Complétée",
+        PlatformStatus.Refused => "Refusée",
+        PlatformStatus.PaymentSent => "Paiement transmis",
+        PlatformStatus.Collected => "Encaissée",
+        PlatformStatus.Rejected => "Rejetée",
         _ => status.ToString(),
     };
 
