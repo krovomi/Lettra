@@ -104,9 +104,16 @@ Les autres listes paginées suivent le même schéma :
 
 Une valeur inconnue renvoie un 400 `Validation.Invalid` sur le champ (`Sort`, `Direction`, `Kind`, `MaxAmount`). Les
 égalités se départagent toujours (nom puis identifiant pour les tiers, référence pour les articles, numéro pour les
-encaissements). La désignation d'un article se trie sur sa forme sans accents ni casse et le prix en réel, d'où le
-même ordre sur SQLite, PostgreSQL et SQL Server. Les règles communes de validation sont dans
+encaissements). La désignation d'un article et le client d'un encaissement se trient sur leur forme sans accents ni casse,
+le prix et le montant en réel, d'où le même ordre sur SQLite, PostgreSQL et SQL Server. Les encaissements sont
+cherchés, triés et paginés en base, comme les pièces. Les règles communes de validation sont dans
 `Lettra.Application/Features/ListSortRules.cs` ; le tri des stores dans `Repositories/ListOrdering.cs`.
+
+La recherche suit une règle unique (`Search/ListSearchTerm.cs`) : un nom ou un libellé se cherche sur sa forme sans
+accents ni casse (colonne `SearchKey`, calculée en C#), un code (numéro, référence) en majuscules. « eclair » trouve
+ainsi « Boulangerie Éclair » sur les trois bases, quelle que soit la langue du serveur. Les pièces et les factures
+récurrentes cherchent encore le nom du client en majuscules seulement (sans retirer les accents sur SQLite) : elles
+passeront à la même règle (écart X13 de `docs/qualite-du-code.md`).
 
 Côté UI : `PartyListQuery` (clients, fournisseurs), `CatalogListQuery` (catalogue) et `PaymentListQuery`
 (encaissements) portent les mêmes critères sur les deux transports. Dans les écrans en deux volets (clients,

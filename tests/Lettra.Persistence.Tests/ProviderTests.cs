@@ -120,6 +120,13 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Les_encaissements_sont_cherches_tries_et_pagines_en_base()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await PaymentListScenarios.SearchSortAndPageInTheDatabaseAsync(harness, DatabaseProvider.Sqlite, Database("pls"));
+    }
+
+    [Fact]
     public async Task Numerotation_continue_sous_concurrence()
     {
         await using TenantHarness harness = new(new SqliteConfigurator());
@@ -551,6 +558,14 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     }
 
     [SkippableFact]
+    public async Task Les_encaissements_sont_cherches_tries_et_pagines_en_base()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new PostgreSqlConfigurator());
+        await PaymentListScenarios.SearchSortAndPageInTheDatabaseAsync(harness, DatabaseProvider.PostgreSql, Database("pls"));
+    }
+
+    [SkippableFact]
     public async Task Numerotation_continue_sous_concurrence()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
@@ -929,6 +944,14 @@ public sealed class SqlServerTests : IAsyncLifetime
         Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new SqlServerConfigurator());
         await AccentInsensitiveSearchScenarios.BackfillMatchesTheCSharpFormAsync(harness, DatabaseProvider.SqlServer, Database("rsb"));
+    }
+
+    [SkippableFact]
+    public async Task Les_encaissements_sont_cherches_tries_et_pagines_en_base()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new SqlServerConfigurator());
+        await PaymentListScenarios.SearchSortAndPageInTheDatabaseAsync(harness, DatabaseProvider.SqlServer, Database("pls"));
     }
 
     [SkippableFact]

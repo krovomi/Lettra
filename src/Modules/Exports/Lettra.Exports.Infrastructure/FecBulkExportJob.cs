@@ -82,7 +82,7 @@ internal sealed partial class FecBulkExportJob(
             return;
         }
 
-        await Task.Delay(settings.InitialDelay, stoppingToken).ConfigureAwait(false);
+        await Task.Delay(settings.InitialDelay, clock, stoppingToken).ConfigureAwait(false);
         await RunAsync(settings.PeriodStart.Value, settings.PeriodEnd.Value, stoppingToken).ConfigureAwait(false);
     }
 

@@ -1,4 +1,3 @@
-using System.Globalization;
 using Lettra.Calculations;
 using Lettra.Contracts.Banking;
 using Lettra.Contracts.Common;
@@ -9,13 +8,16 @@ using Lettra.Exports.Application.Banking;
 using Lettra.Infrastructure.Persistence;
 using Lettra.Infrastructure.Persistence.Banking;
 using Lettra.Infrastructure.Persistence.Billing;
+using Lettra.Infrastructure.Persistence.Repositories;
+using Lettra.Infrastructure.Persistence.Search;
 using Lettra.Infrastructure.Persistence.Tenancy;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lettra.Exports.Infrastructure;
 
-// Encaissements, relevés et lettrages dans la base du dossier (vague 6). SQLite ne trie ni ne compare les dates avec
-// fuseau ni les décimaux en SQL : ces tris et sommes se font en mémoire, sur des volumes de petite entreprise.
+// Encaissements, relevés et lettrages dans la base du dossier (vague 6). La liste des encaissements est cherchée, triée
+// et paginée en base (montants en réel). SQLite ne trie ni ne compare les dates avec fuseau ni les décimaux en SQL : les
+// autres tris et sommes se font en mémoire, sur des volumes de petite entreprise.
 
 internal sealed class EfPaymentRepository(TenantDbSession session) : IPaymentRepository
 {
@@ -63,34 +65,50 @@ internal sealed class EfPaymentRepository(TenantDbSession session) : IPaymentRep
             query = query.Where(p => p.CustomerId == customer);
         }
 
-        List<Payment> all = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
-        string? search = ListSearch.Normalize(filter.Search);
-        IEnumerable<Payment> found = all
-            .Where(p => search is null
-                || p.Number.Contains(search, StringComparison.OrdinalIgnoreCase)
-                || p.CustomerName.Contains(search, StringComparison.CurrentCultureIgnoreCase)
-                || (p.Reference?.Contains(search, StringComparison.CurrentCultureIgnoreCase) ?? false)
-                || p.Allocations.Any(a => a.InvoiceNumber.Contains(search, StringComparison.OrdinalIgnoreCase)))
-            .Where(p => (filter.MinAmount is null || p.Amount >= filter.MinAmount) && (filter.MaxAmount is null || p.Amount <= filter.MaxAmount));
-        List<Payment> matching = [.. Sort(found, filter.Sort, filter.Direction == SortDirectionDto.Descending)];
-        return ([.. matching.Skip((filter.Page - 1) * filter.PageSize).Take(filter.PageSize)], matching.Count);
+        if (ListSearchTerm.From(filter.Search) is { } term)
+        {
+#pragma warning disable CA1304, CA1311, CA1862 // Arbre d'expression traduit en UPPER(...) SQL : jamais exécuté en .NET.
+            query = query.Where(p => EF.Property<string>(p, SearchKey.PropertyName).Contains(term.Text)
+                || p.Number.ToUpper().Contains(term.Code)
+                || (p.Reference ?? string.Empty).ToUpper().Contains(term.Code)
+                || p.Allocations.Any(a => a.InvoiceNumber.ToUpper().Contains(term.Code)));
+#pragma warning restore CA1304, CA1311, CA1862
+        }
+
+        // Montants comparés et triés en réel : SQLite ne compare pas les decimal (stockés en texte) ; à decimal(18,4),
+        // la conversion ne change ni l'ordre ni les bornes saisies au centime.
+        if (filter.MinAmount is decimal min)
+        {
+            double bound = (double)min;
+            query = query.Where(p => (double)p.Amount >= bound);
+        }
+
+        if (filter.MaxAmount is decimal max)
+        {
+            double bound = (double)max;
+            query = query.Where(p => (double)p.Amount <= bound);
+        }
+
+        int total = await query.CountAsync(cancellationToken).ConfigureAwait(false);
+        List<Payment> page = await Sort(query, filter.Sort, filter.Direction)
+            .Skip((filter.Page - 1) * filter.PageSize)
+            .Take(filter.PageSize)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return (page, total);
     }
 
-    /// <summary>
-    /// Tri en mémoire, comme la recherche (les encaissements d'un dossier tiennent en mémoire) : textes sans casse ni
-    /// accents, puis le numéro, du plus récent au plus ancien, départage.
-    /// </summary>
-    private static IEnumerable<Payment> Sort(IEnumerable<Payment> payments, PaymentSortDto sort, bool descending)
+    /// <summary>Tri en base : client sur sa forme sans accents, montant en réel ; le numéro, du plus récent au plus ancien, départage.</summary>
+    private static IOrderedQueryable<Payment> Sort(IQueryable<Payment> payments, PaymentSortDto sort, SortDirectionDto direction)
     {
-        StringComparer text = StringComparer.Create(CultureInfo.CurrentCulture, CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace);
-        IOrderedEnumerable<Payment> ordered = sort switch
+        IOrderedQueryable<Payment> ordered = sort switch
         {
-            PaymentSortDto.Number => descending ? payments.OrderByDescending(p => p.Number, StringComparer.Ordinal) : payments.OrderBy(p => p.Number, StringComparer.Ordinal),
-            PaymentSortDto.Customer => descending ? payments.OrderByDescending(p => p.CustomerName, text) : payments.OrderBy(p => p.CustomerName, text),
-            PaymentSortDto.Amount => descending ? payments.OrderByDescending(p => p.Amount) : payments.OrderBy(p => p.Amount),
-            _ => descending ? payments.OrderByDescending(p => p.Date) : payments.OrderBy(p => p.Date),
+            PaymentSortDto.Number => payments.By(p => p.Number, direction),
+            PaymentSortDto.Customer => payments.By(p => EF.Property<string>(p, SearchKey.PropertyName), direction),
+            PaymentSortDto.Amount => payments.By(p => (double)p.Amount, direction),
+            _ => payments.By(p => p.Date, direction),
         };
-        return ordered.ThenByDescending(p => p.Number, StringComparer.Ordinal);
+        return ordered.ThenByDescending(p => p.Number);
     }
 
     public async Task<IReadOnlyDictionary<Guid, string>> NumbersAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken)
