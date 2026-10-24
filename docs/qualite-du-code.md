@@ -637,6 +637,17 @@ Comportement inchangé, sauf la fermeture des composants (dernier point).
   à `IMeterFactory` changerait toute la télémétrie pour une seule jauge. Les autres tables statiques sont petites et
   lues rarement : `FrozenDictionary` n'y gagne rien de mesurable.
 
+### Reste ouvert
+
+Tout l'audit est traité sauf ce qui touche l'hôte MAUI, compilé seulement en CI (fichiers de Socle) :
+
+- **X3** est fait hors de ces PR : le démarrage MAUI ouvre les données du poste hors du fil principal (`AppStartup`,
+  `MauiProgram.cs:110`).
+- **X24** : déplacer `IKekStore` vers `Lettra.Application.Abstractions` change les `using` de `MauiProgram.cs` et de
+  `SecureStorageKekStore` ; à faire avec Socle, avec la passe MAUI de la base propre.
+- **X25** : le second conteneur du jeu de démonstration et la décoration par descripteurs de `DemoSeeding` (MAUI)
+  restent ; les reprendre demande l'hôte MAUI et le jeu de démonstration ensemble, sans gain pour l'utilisateur.
+
 ## Plan
 
 Une PR par couche, petite, verte en CI et assignée à Leub. Chaque refactorisation commence par
@@ -654,7 +665,7 @@ Aucun test existant n'est retiré, désactivé ni affaibli.
 | 7 | Base propre : règles de l'IDE bloquantes (using inutiles, code mort, mise en forme, simplifications), 160 fichiers corrigés, suppressions d'avertissements revues (voir « Base propre »). | Fusionnée (PR #153) |
 | 7 bis | Dates du jour au calendrier légal (D8) : documents imprimables, assistant, kit contrôle fiscal, derniers écrans sur l'horloge système ; tests à minuit à Paris. | Fusionnée (PR #159) |
 | 6 | Application : chargement versionné (R5), fin de validation de facture (R8), saisie d'un encaissement (R4, S1, premier `IValidator` d'Exports pour A7), tests. | Fusionnée (PR #141) |
-| 8 à 16 | Audit d'architecture d'octobre 2026 : voir « Ordre de correction » ci-dessus (A5, A6 et R9 y sont repris). | En cours |
+| 8 à 16 bis | Audit d'architecture d'octobre 2026 : voir « Ordre de correction » et « Reste ouvert » ci-dessus (A5, A6 et R9 y sont repris). | Fusionnées (dernière : PR #185) |
 
 Seuil de couverture appliqué par la CI depuis la PR #136 : 88 % des lignes et 78 % des branches au
 global (`fusionner.py --seuil-lignes 88 --seuil-branches 78`) ; chaque PR garde au moins le niveau
