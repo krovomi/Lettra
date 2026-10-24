@@ -700,7 +700,7 @@ Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou 
 
 | Fonction | État |
 |---|---|
-| Assistant IA | Les écrans existent : le panneau « Assistant IA » (bouton en haut), le brouillon de devis proposé par l'assistant et le lien « Pourquoi ? » de la checklist de conformité. Ils restent masqués tant que l'IA est désactivée, ce qui est le réglage par défaut (section `Lettra:Ai`) et celui de la démo. L'assistant propose et explique ; il ne valide ni n'émet jamais rien. |
+| Assistant IA | Les écrans existent : le panneau « Assistant IA » (bouton en haut) et le lien « Pourquoi ? » de la checklist de conformité. Ils restent masqués tant que l'IA est désactivée, ce qui est le réglage par défaut (section `Lettra:Ai`) et celui de la démo. L'assistant propose et explique ; il ne valide ni n'émet jamais rien. Le brouillon de devis à partir d'un texte libre est fermé tant que Lettra ne sait pas repérer les noms propres dans le texte ([docs/assistant-ia.md](docs/assistant-ia.md)). |
 | Vraie plateforme agréée | En attente d'un partenaire ; la démo utilise la plateforme simulée. |
 | Serveur du cabinet en production | La démonstration navigateur tourne sur un poste avec Docker ; un vrai serveur du cabinet ou une cellule SaaS demande Keycloak, des certificats et une infrastructure (voir plus bas). |
 | Poste relié à un serveur, synchronisation | Prête dans l'application (fichier `lettra.json`), mais demande un serveur Lettra et Keycloak. Sur un poste isolé, la page Synchronisation indique « Ce poste ne synchronise pas ». |
