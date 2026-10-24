@@ -44,8 +44,10 @@ isolé (mode 1), seulement son identifiant.
   lisibles ajoutées après le manifeste : ils n'y figurent pas, et l'empreinte du kit ne change pas.
 - La période suit les règles du FEC : bornes comprises, 24 mois au plus ; les refus sont ceux du FEC (fiche
   entreprise, SIREN, période).
-- Le contrôle d'intégrité du kit est le même que la passe quotidienne du Worker (5 min après son démarrage, puis toutes
-  les 24 h ; pas de Worker dans la démo Docker) : il republie l'état des deux alertes de la chaîne.
+- Le contrôle d'intégrité du kit est le même que la passe quotidienne (`IntegrityCheckJob`) : il republie l'état des
+  deux alertes de la chaîne. Cette passe tourne dans le Worker, 5 min après son démarrage puis toutes les 24 h ; dans
+  une installation sans Worker (la démo Docker), l'API la lance elle-même, 30 s après le démarrage dans la démo, puis
+  une fois par jour (PR #163).
 
 ## Vérifier un kit
 
