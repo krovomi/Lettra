@@ -305,6 +305,8 @@ de Lettra ; copiez-les tels quels.
 attente, brouillons), le chiffre d'affaires des six derniers mois, les dernières factures et les derniers devis, et
 deux raccourcis : **Nouveau devis**, **Nouvelle facture**. Il montre aussi les factures en retard (les cinq plus
 anciennes, avec leur reste dû) et les transmissions à la plateforme (non transmises, en cours, à traiter, encaissées).
+Les chiffres de l'accueil (chiffre d'affaires des six derniers mois, devis en attente) sont calculés par le serveur sur
+toutes les pièces validées du dossier (`GET /api/v1/billing/dashboard`).
 Sur un dossier vide, il propose à la place de compléter la fiche entreprise et d'ajouter un client, et le bouton
 **Charger les données de démonstration** remplit le dossier d'un an d'activité fictive en une demi-minute. Ce bouton
 est absent en Production et pour qui n'a pas le droit d'émettre des factures.
