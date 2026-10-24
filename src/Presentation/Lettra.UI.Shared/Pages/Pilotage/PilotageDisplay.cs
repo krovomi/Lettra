@@ -43,6 +43,12 @@ public static class PilotageDisplay
     /// <summary>Un poste silencieux (plus de 7 jours sans synchronisation) est à vérifier.</summary>
     public static IndicatorLevelDto Silent(int count) => count > 0 ? IndicatorLevelDto.Warning : IndicatorLevelDto.Ok;
 
+    /// <summary>
+    /// Référence courte du dossier : les 8 derniers caractères de son identifiant, la même que dans les tableaux Grafana,
+    /// qui ne publient aucun nom de dossier.
+    /// </summary>
+    public static string Reference(Guid dossierId) => dossierId.ToString("N")[^8..];
+
     public static string Days(double? days, CultureInfo culture) =>
         days is double value ? string.Create(culture, $"{Math.Round(value, MidpointRounding.AwayFromZero):N0} j") : "—";
 

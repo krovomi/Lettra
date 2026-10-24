@@ -196,7 +196,7 @@
                             @foreach (DossierPilotageDto row in DossierRows)
                             {
                                 <tr @key="row.DossierId" aria-current="@(row.DossierId == Dossiers.Id ? "true" : null)">
-                                    <th scope="row">@row.Name</th>
+                                    <th scope="row">@row.Name<span class="lt-pilotage-ref" title="@L["Pilotage.Reference.Help"]">@L["Pilotage.Reference", PilotageDisplay.Reference(row.DossierId)]</span></th>
                                     <td class="lg-num" data-label="@L["Pilotage.Field.Dso"]"><span class="lt-indicator" data-level="@PilotageDisplay.Dso(row.DaysSalesOutstanding)">@PilotageDisplay.Days(row.DaysSalesOutstanding, Culture)</span></td>
                                     <td class="lg-num" data-label="@L["Pilotage.Field.Overdue"]"><span class="lt-indicator" data-level="@PilotageDisplay.Overdue(row.OverdueReceivablesRatio)">@PilotageDisplay.Percent(row.OverdueReceivablesRatio, Culture)</span></td>
                                     <td class="lg-num" data-label="@L["Pilotage.Field.Collection"]"><span class="lt-indicator" data-level="@PilotageDisplay.Collection(row.CollectionRatio)">@PilotageDisplay.Percent(row.CollectionRatio, Culture)</span></td>
@@ -263,7 +263,7 @@
                         @foreach (DossierOperationsDto row in AdminRows)
                         {
                             <tr @key="row.DossierId">
-                                <th scope="row">@row.Name</th>
+                                <th scope="row">@row.Name<span class="lt-pilotage-ref" title="@L["Pilotage.Reference.Help"]">@L["Pilotage.Reference", PilotageDisplay.Reference(row.DossierId)]</span></th>
                                 <td class="lg-num" data-label="@L["Pilotage.Field.Size"]">@PilotageDisplay.Bytes(row.DatabaseSizeBytes, Culture)</td>
                                 <td class="lg-num" data-label="@L["Pilotage.Field.Devices"]">@row.ActiveDevices.ToString("N0", Culture)</td>
                                 <td class="lg-num" data-label="@L["Pilotage.Field.Revoked"]">@row.RevokedDevices.ToString("N0", Culture)</td>

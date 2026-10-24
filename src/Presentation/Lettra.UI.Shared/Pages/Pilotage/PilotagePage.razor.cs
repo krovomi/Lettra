@@ -75,7 +75,8 @@ public sealed partial class PilotagePage
     ];
 
     private IReadOnlyList<DossierPilotageDto> DossierRows => ListSorting.Sort(
-        (_cabinet?.Dossiers ?? []).Where(d => PaletteMatcher.Score(d.Name, _query ?? string.Empty) > 0),
+        (_cabinet?.Dossiers ?? []).Where(d => PaletteMatcher.Score(d.Name, _query ?? string.Empty) > 0
+            || PilotageDisplay.Reference(d.DossierId).Contains((_query ?? string.Empty).Trim(), StringComparison.OrdinalIgnoreCase)),
         _dossierSort,
         new Dictionary<string, Func<DossierPilotageDto, object?>>(StringComparer.Ordinal)
         {
