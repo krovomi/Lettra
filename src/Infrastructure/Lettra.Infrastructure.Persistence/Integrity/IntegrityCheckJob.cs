@@ -3,12 +3,15 @@ using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Features.Integrity;
 using Lettra.Domain.Common;
 using Lettra.Domain.Integrity;
-using Lettra.Infrastructure.Catalog;
 using Lettra.Infrastructure.Persistence.Hosting;
-using Lettra.Infrastructure.Persistence.Integrity;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Lettra.Worker;
+namespace Lettra.Infrastructure.Persistence.Integrity;
 
 public sealed class IntegrityCheckJobOptions
 {
@@ -27,22 +30,23 @@ public sealed class IntegrityCheckJobOptions
 }
 
 /// <summary>
-/// Passe quotidienne de la chaîne anti-fraude (5 min après le démarrage du Worker, puis toutes les 24 h) : pour chaque dossier actif, clôture et signe les mois écoulés, fait tourner
+/// Passe quotidienne de la chaîne anti-fraude (5 min après le démarrage, puis toutes les 24 h), par le Worker ou, dans une
+/// installation sans Worker (démonstration), par l'API : pour chaque dossier actif, clôture et signe les mois écoulés, fait tourner
 /// les clés devenues trop anciennes, puis contrôle la chaîne. Un constat lève l'alerte de dossier (S1 chaîne compromise, S2 trou de numérotation), un contrôle
 /// propre la résout. Un dossier en échec n'arrête pas la passe ; aucune donnée de dossier n'est journalisée.
 /// </summary>
 internal sealed partial class IntegrityCheckJob(
     IServiceProvider services,
+    Func<IServiceProvider, CancellationToken, Task<IReadOnlyList<TenantDescriptor>>> listDossiers,
     IServiceScopeFactory scopes,
     IOptions<IntegrityCheckJobOptions> options,
-    IOptions<DossierMigrationJobOptions> worker,
     TimeProvider clock,
     ILogger<IntegrityCheckJob> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         IntegrityCheckJobOptions settings = options.Value;
-        if (!settings.Enabled || worker.Value.RunOnce)
+        if (!settings.Enabled)
         {
             return;
         }
@@ -59,7 +63,7 @@ internal sealed partial class IntegrityCheckJob(
         IReadOnlyList<TenantDescriptor> dossiers;
         try
         {
-            dossiers = await services.ListActiveDossiersAsync(cancellationToken).ConfigureAwait(false);
+            dossiers = await listDossiers(services, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -131,4 +135,25 @@ internal sealed partial class IntegrityCheckJob(
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Contrôle d'intégrité du dossier {DossierId} en échec")]
     private partial void LogDossierFailed(Guid dossierId, Exception exception);
+}
+
+public static class IntegrityCheckHosting
+{
+    /// <summary>
+    /// Passe quotidienne de la chaîne anti-fraude. <paramref name="listDossiers"/> donne les dossiers actifs de la cellule
+    /// (le catalogue) ; réglages sous <c>Lettra:Worker:Integrity</c>, quel que soit l'hôte.
+    /// </summary>
+    public static IServiceCollection AddIntegrityCheckJob(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        Func<IServiceProvider, CancellationToken, Task<IReadOnlyList<TenantDescriptor>>> listDossiers)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddOptions<IntegrityCheckJobOptions>().Bind(configuration.GetSection(IntegrityCheckJobOptions.SectionName));
+        services.AddHostedService(sp => new IntegrityCheckJob(
+            sp, listDossiers, sp.GetRequiredService<IServiceScopeFactory>(), sp.GetRequiredService<IOptions<IntegrityCheckJobOptions>>(),
+            sp.GetRequiredService<TimeProvider>(), sp.GetRequiredService<ILogger<IntegrityCheckJob>>()));
+        return services;
+    }
 }

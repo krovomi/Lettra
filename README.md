@@ -550,7 +550,9 @@ MailPit, à 1440 et 375 px. Non vérifié dans les applications installées.)* D
   consultables. Un article du catalogue s'archive et se réactive. Détails :
   [docs/suppression-des-lignes.md](docs/suppression-des-lignes.md).
 - **Alertes** : le centre d'alertes techniques (chaîne anti-fraude d'un dossier, trou de numérotation). Il ne montre
-  aucune donnée de client.
+  aucune donnée de client. La chaîne de chaque dossier est clôturée et contrôlée une fois par jour, par le Worker ou,
+  dans la démo sans Worker, par l'API (30 s après le démarrage) ; une alerte non prise en charge est escaladée selon sa
+  gravité, par une passe qui tourne chaque minute.
 - **Verrouiller** (en haut) : ferme la session ; la phrase secrète la rouvre.
 - **Langue** : l'écran suit la langue de l'appareil ou du navigateur (français ou anglais). Chaque client et chaque PDF peuvent avoir la
   leur (« Langue des devis et factures imprimés », « Langue du PDF »). Dates et montants suivent la langue de l'écran :
@@ -835,7 +837,8 @@ src/
   Composition/     Bootstrap : AddLettra(), la composition selon le mode ; DemoData (jeu de démonstration « Cabinet Démo »)
   Presentation/    UI.Abstractions (ports), UI.Shared (toute l'UI Blazor), UI.Gateway.Http, UI.Gateway.InProcess, Printing (PDF)
   Hosts/           Api (Minimal APIs, BFF, sert le WASM), Web (WASM), App.Maui (Blazor Hybrid), Worker (migrations, escalade, intégrité,
-                   export FEC, outbox, échéances fiscales, vue cabinet, factures récurrentes, relances)
+                   export FEC, outbox, échéances fiscales, vue cabinet, factures récurrentes, relances ; sans Worker,
+                   l'API fait toutes ces passes sauf les vagues de migration : chaque base y est migrée à sa première ouverture)
   Ai/              Couche IA (Paperasse épinglé, pseudonymisation, orchestrateur, moteurs Claude UE et local)
 tests/             un projet par couche ou module, dont Api (bout en bout, parité HTTP / in-process) et Architecture
 deploy/            démo Docker, Helm, OpenTofu, Argo CD, cellules, Keycloak, observabilité, tests de déploiement (k6, Grafana,
