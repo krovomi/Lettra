@@ -35,6 +35,22 @@ public sealed class WorkerJobsTests
     }
 
     [Theory]
+    [InlineData("00:00:00")]
+    [InlineData("-00:01:00")]
+    public void Un_intervalle_de_migration_nul_ou_negatif_est_refuse(string interval)
+    {
+        ServiceCollection services = new();
+        services.AddWorkerJobs(new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["Lettra:Worker:RunOnce"] = "true", ["Lettra:Worker:Interval"] = interval })
+            .Build());
+        using ServiceProvider provider = services.BuildServiceProvider();
+
+        Func<DossierMigrationJobOptions> read = () => provider.GetRequiredService<IOptions<DossierMigrationJobOptions>>().Value;
+
+        read.Should().Throw<OptionsValidationException>().WithMessage("*Lettra:Worker:Interval*");
+    }
+
+    [Theory]
     [InlineData("00000000-0000-0000-0000-000000000000", false)]
     [InlineData("0199e3a0-0000-7000-8000-0000000005e1", true)]
     public void Le_compte_de_service_n_est_authentifie_que_s_il_est_configure(string userId, bool authenticated)

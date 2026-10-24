@@ -18,7 +18,9 @@ internal static class WorkerJobs
     /// </summary>
     public static IServiceCollection AddWorkerJobs(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddOptions<DossierMigrationJobOptions>().Bind(configuration.GetSection(DossierMigrationJobOptions.SectionName));
+        services.AddOptions<DossierMigrationJobOptions>().Bind(configuration.GetSection(DossierMigrationJobOptions.SectionName))
+            .Validate(o => o.Interval > TimeSpan.Zero, $"{DossierMigrationJobOptions.SectionName}:{nameof(DossierMigrationJobOptions.Interval)} doit être strictement positif.")
+            .ValidateOnStart();
         services.AddHostedService<DossierMigrationJob>();
         if (configuration.GetValue<bool>($"{DossierMigrationJobOptions.SectionName}:{nameof(DossierMigrationJobOptions.RunOnce)}"))
         {
