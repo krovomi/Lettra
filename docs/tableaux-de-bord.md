@@ -1,14 +1,14 @@
 # Tableaux de bord dans Lettra
 
 Les indicateurs des tableaux Grafana ([indicateurs-grafana.md](indicateurs-grafana.md)) sont aussi dans Lettra, au menu
-**Tableaux de bord** (section « Pilotage » du menu, adresse `/pilotage` ; aussi dans la palette Ctrl+K), pour que chacun s'en serve sans quitter
+**Tableaux de bord** (section « Pilotage » du menu, adresse `/pilotage` ; aussi dans la palette Ctrl+K, et le bouton « Tableaux de bord » de la Vue cabinet ouvre l'onglet « Mes dossiers »), pour que chacun s'en serve sans quitter
 l'application ni ouvrir un autre outil. Les mêmes chiffres, les mêmes seuils de couleur, et les droits de Lettra.
 
 | Onglet | Qui le voit | Ce qu'il montre |
 |---|---|---|
-| **Ce dossier** | qui peut lire le dossier ouvert (`dossier.lire`) | délai moyen de paiement, part des créances en retard, part encaissée, évolution du chiffre d'affaires, clients actifs, poids du premier client, conversion et devis en attente ; deux graphiques sur douze mois (indice du chiffre d'affaires, factures émises) ; la liste « À faire » de la Vue cabinet, chaque ligne menant à l'écran où la traiter |
+| **Ce dossier** | qui peut lire le dossier ouvert (`DossierLire`) | délai moyen de paiement, part des créances en retard, part encaissée, évolution du chiffre d'affaires, clients actifs, poids du premier client, conversion et devis en attente ; deux graphiques sur douze mois (indice du chiffre d'affaires, factures émises) ; la liste « À faire » de la Vue cabinet, chaque ligne menant à l'écran où la traiter |
 | **Mes dossiers** | tout utilisateur ; seuls les dossiers qu'il peut lire sont listés | les indicateurs clés de chaque dossier, avec recherche, tri par colonne (ou par liste déroulante sur téléphone) et « Voir » qui ouvre le dossier sur son tableau de bord |
-| **Administration** | seulement qui administre au moins un dossier (`dossier.administrer`) ; l'onglet est caché pour les autres | taille de chaque base, postes actifs, révoqués et silencieux, plus long silence de synchronisation, âge du calcul quotidien de la Vue cabinet |
+| **Administration** | seulement qui administre au moins un dossier (`DossierAdministrer`) ; l'onglet est caché pour les autres | taille de chaque base, postes actifs, révoqués et silencieux, plus long silence de synchronisation, âge du dernier calcul de la Vue cabinet |
 
 Les couleurs suivent la règle de Grafana : vert, tout va bien ; orange, à surveiller ; rouge, à traiter. Un indicateur
 coloré a aussi sa bulle d'aide en texte : la couleur n'est jamais la seule information. « Actualiser » relit les trois
@@ -22,7 +22,7 @@ Grafana OSS ne sait pas filtrer un tableau selon la personne connectée : une pa
 aurait montré tous les dossiers de la cellule à tout le monde. Les tableaux de bord de Lettra sont donc des écrans
 Lettra, et c'est le serveur qui filtre, dossier par dossier, avec les mêmes règles que le reste de l'application :
 
-- **Ce dossier** passe par l'autorisation habituelle du dossier ouvert (`RequirePermission(dossier.lire)`). Un client
+- **Ce dossier** passe par l'autorisation habituelle du dossier ouvert (`RequirePermission(Permission.DossierLire)`). Un client
   du portail ou un administrateur sans droit de lecture reçoit un refus ; l'onglet le dit sans bloquer les autres.
 - **Mes dossiers** et **Administration** lisent la dernière collecte du serveur (la même que Prometheus), qui couvre
   toute la cellule, puis n'en gardent que les dossiers que `AccessibleDossiers` ouvre à l'utilisateur pour la
@@ -37,8 +37,12 @@ garde les indicateurs de gestion de ses propres dossiers.
 
 | Mode | Ce dossier | Mes dossiers et Administration |
 |---|---|---|
-| Serveur du cabinet, SaaS, démo Docker (modes 2, 3, 5) | calculé à l'instant | dernière collecte du serveur (5 minutes au plus) |
+| Serveur du cabinet, SaaS, démo Docker (modes 2, 3, 5) | calculé à l'instant | dernière collecte du serveur (5 minutes au plus, une minute dans la démo Docker) |
 | Poste isolé, poste relié (modes 1 et 4) | calculé à l'instant | « Pas de vue d'ensemble sur ce poste » : aucune collecte n'y tourne |
+
+Les tableaux Grafana, eux, ne se remplissent que si Prometheus collecte `/internal/kpi/metrics` (job « lettra-kpi »,
+jeton `Lettra:Kpi:ScrapeToken`) : c'est réglé dans la démo (`compose.observabilite.yaml`), pas encore dans les charts
+Helm. Dans une cellule déployée, les tableaux Grafana restent donc vides, alors que cette page marche.
 
 ## Sur chaque appareil
 

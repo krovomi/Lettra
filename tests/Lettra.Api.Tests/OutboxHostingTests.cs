@@ -20,4 +20,17 @@ public sealed class OutboxHostingTests
             .Any(s => s.GetType().Name == "OutboxDispatchJob")
             .Should().Be(expected);
     }
+
+    [Fact]
+    public void Sans_worker_l_api_fait_tourner_toutes_les_passes_du_worker_sauf_la_migration()
+    {
+        using LettraApiFactory factory = new();
+        using var configured = factory.WithWebHostBuilder(b => b.UseSetting("Lettra:Outbox:Job:HostedByApi", "true"));
+
+        configured.Services.GetServices<IHostedService>().Select(s => s.GetType().Name).Should().Contain(
+        [
+            "OutboxDispatchJob", "FiscalDeadlineAlertJob", "CabinetOverviewJob", "RecurringInvoiceJob", "PaymentReminderJob",
+            "EscalationJob", "IntegrityCheckJob", "FecBulkExportJob",
+        ]);
+    }
 }

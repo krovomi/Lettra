@@ -44,16 +44,17 @@ seulement les deux 401 déjà connus avant la connexion), y compris après une m
 Selon l'installation :
 
 - **Navigateur et PWA** : changer de dossier est retenu sur l'appareil ; au lancement suivant, le même dossier se rouvre
-  s'il est toujours accessible. Favoris et récents sont aussi gardés sur l'appareil.
+  s'il est toujours accessible. Favoris et récents sont rangés dans le compte et suivent l'utilisateur d'un
+  appareil à l'autre (sur l'appareil seulement sans compte, voir [preferences-utilisateur.md](preferences-utilisateur.md)).
 - **Application installée reliée au serveur du cabinet** (Windows, macOS, Android, iOS) : même sélecteur, le dossier
   choisi est retenu sur l'appareil comme celui de la connexion.
-- **Poste isolé (mode 1)** : la vue cabinet et la revue marchent sur les dossiers du poste ; le sélecteur affiche le
-  dossier ouvert mais ne propose pas encore d'en changer (câblage de `MauiProgram.cs` à faire, voir plus bas).
+- **Poste isolé (mode 1)** : la vue cabinet et la revue marchent sur les dossiers du poste ; le sélecteur propose
+  aussi d'en changer, parmi les dossiers du poste (câblage de `MauiProgram.cs`, voir plus bas).
 
 ## Les droits
 
-- La vue cabinet ne montre que les dossiers que l'utilisateur peut ouvrir (`Dossier.Lire`), comme `GET /api/v1/dossiers`.
-- La revue se lit avec `Dossier.Lire` et se coche avec `Facture.Saisir` (collaborateur, manager) : le client du portail
+- La vue cabinet ne montre que les dossiers que l'utilisateur peut ouvrir (`DossierLire`), comme `GET /api/v1/dossiers`.
+- La revue se lit avec `DossierLire` et se coche avec `FactureSaisir` (collaborateur, manager) : le client du portail
   et l'auditeur la lisent sans la modifier.
 
 ## Pourquoi la page reste rapide
@@ -61,7 +62,8 @@ Selon l'installation :
 La vue ne parcourt pas les bases des dossiers à l'ouverture. Les compteurs sont calculés à l'avance et rangés dans la
 base Catalog (table `DossierIndicators`, une ligne par dossier et par compteur) :
 
-- **la nuit**, par la tâche `CabinetOverviewJob` (toutes les 24 h, 2 min après le démarrage) ;
+- **peu après le démarrage, puis toutes les 24 h**, par la tâche `CabinetOverviewJob` (2 min après le démarrage par
+  défaut, 15 s dans la démo) ;
 - **à la demande**, par le bouton « Actualiser » (`POST /api/v1/dossiers/overview/refresh`) ;
 - **au premier affichage**, si aucun dossier n'a encore été calculé et qu'il y en a 30 au plus (installation neuve,
   démo, poste isolé).
@@ -92,8 +94,10 @@ services.AddScoped<IDossierIndicatorSource, VatToDeclareIndicatorSource>();
 
 Compteurs livrés : factures en retard (critique après 30 jours ; une facture soldée par des avoirs ou des
 encaissements n'y compte plus), rejets de la plateforme agréée, alertes ouvertes (critique pour S1 et S2), points de la
-revue du mois écoulé non cochés (« à faire » jusqu'au 15, puis « à traiter »), opérations du relevé bancaire à
-rapprocher (`banque.non-rapprochee` : « à traiter » quand la plus ancienne a plus de 15 jours, « urgent » au-delà de 30).
+revue du mois écoulé non cochés (« à surveiller » jusqu'au 15, puis « à traiter »), TVA à déclarer (`tva.a-declarer` :
+CA3, CA12 et acomptes de TVA en retard ou dus dans les 7 jours, pas encore marqués déposés ; « urgent » dès qu'une
+échéance est passée), opérations du relevé bancaire à rapprocher (`banque.non-rapprochee` : « à traiter » quand la plus
+ancienne a plus de 15 jours, « urgent » au-delà de 30).
 
 ## La liste de contrôle de la revue
 
@@ -107,10 +111,10 @@ et survivent aux mises à jour. Une clé de point n'est jamais renommée.
 
 | Méthode | Adresse | Droit | Rôle |
 |---|---|---|---|
-| GET | `/api/v1/dossiers/overview` | authentifié, filtré par `Dossier.Lire` | tableau des dossiers |
+| GET | `/api/v1/dossiers/overview` | authentifié, filtré par `DossierLire` | tableau des dossiers |
 | POST | `/api/v1/dossiers/overview/refresh[?dossier=]` | idem | recalcul immédiat |
-| GET | `/api/v1/review/{période}` | `Dossier.Lire` (en-tête `X-Dossier`) | revue de la période (`2026-09` ou `2026-T3`) |
-| PUT | `/api/v1/review/{période}/items/{point}` | `Facture.Saisir` | cocher, décocher, noter |
+| GET | `/api/v1/review/{période}` | `DossierLire` (en-tête `X-Dossier`) | revue de la période (`2026-09` ou `2026-T3`) |
+| PUT | `/api/v1/review/{période}/items/{point}` | `FactureSaisir` | cocher, décocher, noter |
 
 ## Réglages
 
@@ -122,17 +126,20 @@ et survivent aux mises à jour. Une clé de point n'est jamais renommée.
 
 La démo Docker, sans Worker, fait tourner la passe dans l'API dès 15 s après le démarrage
 (`Lettra__CabinetOverview__InitialDelay: "00:00:15"`) : sur une démo neuve, la vue cabinet, les « Tableaux de bord » et
-Grafana ont leurs compteurs dès la première minute, sans attendre la nuit ni un clic sur « Actualiser ».
+Grafana ont leurs compteurs dès la première minute, sans attendre les 2 minutes du réglage par défaut ni un clic sur
+« Actualiser ».
 
 La démo Docker crée deux dossiers fictifs de plus (« Bâti Rénov' Lemoine », « Négoce Méditerranée Distribution ») avec
 `Lettra__Demo__AdditionalDossiers: "2"`, pour que le sélecteur et la vue cabinet aient de quoi montrer. Le jeu ne touche
 jamais aux dossiers qui existent déjà.
 
-## Reste à câbler (fichiers du socle)
+## Câblage (fichiers du socle)
+
+Fait à la PR #113 :
 
 - `AddCabinetOverviewJob(...)` dans `Lettra.Worker/Program.cs`, et dans `Lettra.Api/Program.cs` pour les installations
   sans Worker (démo), comme la tâche de l'outbox. Sans elle, la vue se calcule au premier affichage et avec
   « Actualiser ».
 - `deploy/demo/compose.yaml` : `Lettra__Demo__AdditionalDossiers: "2"`.
-- `MauiProgram.cs` (poste isolé) : faire implémenter `ISelectableDossierSelection` à la sélection du poste
-  (`registry.SetActiveAsync(...)`) pour que le sélecteur y change aussi de dossier.
+- `MauiProgram.cs` (poste isolé) : la sélection du poste (`ActiveDossierSelection`) implémente
+  `ISelectableDossierSelection` (`registry.SetActiveAsync(...)`), si bien que le sélecteur y change aussi de dossier.

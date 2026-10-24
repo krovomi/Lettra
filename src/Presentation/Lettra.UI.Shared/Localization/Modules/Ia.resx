@@ -8,6 +8,7 @@
   <data name="Error.Ai.DossierExcluded" xml:space="preserve"><value>Le cabinet a exclu ce dossier de l'assistant IA.</value></data>
   <data name="Error.Ai.EngineUnavailable" xml:space="preserve"><value>Aucun moteur d'IA n'est disponible pour ce cabinet. Les contrôles de conformité restent actifs.</value></data>
   <data name="Error.Ai.FeatureDisabled" xml:space="preserve"><value>Cette fonction de l'assistant n'est pas activée par le cabinet.</value></data>
+  <data name="Error.Ai.FeatureBlocked" xml:space="preserve"><value>Le brouillon de devis à partir d'un texte libre n'est pas encore disponible : Lettra doit d'abord savoir repérer les noms de personnes et d'entreprises tapés dans le texte pour les masquer avant l'envoi à l'IA.</value></data>
   <data name="Error.Ai.Refused" xml:space="preserve"><value>L'assistant a refusé de répondre à cette demande. Reformulez-la ou traitez-la sans l'assistant.</value></data>
   <data name="Error.Ai.SkillPackStale" xml:space="preserve"><value>Le référentiel métier de l'assistant date de plus de six mois : vérifiez les seuils et les taux sur les sites officiels.</value></data>
   <data name="Error.Ai.ToolRejected" xml:space="preserve"><value>L'assistant a demandé une action qui n'est pas disponible : elle a été refusée.</value></data>
@@ -22,6 +23,7 @@
   <data name="Assistant.Title" xml:space="preserve"><value>Assistant IA</value></data>
   <data name="Assistant.Close" xml:space="preserve"><value>Fermer</value></data>
   <data name="Assistant.Disclaimer" xml:space="preserve"><value>L'assistant propose, vous décidez : il ne valide, n'émet ni n'envoie aucun document. Les noms et identifiants du dossier sont masqués avant tout envoi au moteur.</value></data>
+  <data name="Assistant.DraftFromTextBlocked" xml:space="preserve"><value>Le brouillon de devis à partir d'un texte libre arrivera quand Lettra saura masquer les noms tapés dans le texte.</value></data>
   <data name="Assistant.Feature" xml:space="preserve"><value>Fonction</value></data>
   <data name="Assistant.Feature.DraftFromText" xml:space="preserve"><value>Brouillon de devis</value></data>
   <data name="Assistant.Feature.ExplainCompliance" xml:space="preserve"><value>Pourquoi ? (conformité)</value></data>
