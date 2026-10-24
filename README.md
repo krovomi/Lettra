@@ -169,7 +169,8 @@ présent d'office sous Windows 11 et sur un Windows 10 à jour, suffit ; rien d'
 4. **Lancer.** Dans le dossier extrait, double-cliquez sur **`Lettra.App.Maui.exe`**. Le prototype n'est pas signé :
    si Windows affiche « Windows a protégé votre ordinateur », cliquez sur **Informations complémentaires**, puis
    **Exécuter quand même**. Pour la suite, clic droit sur l'exécutable, **Envoyer vers**, **Bureau (créer un raccourci)**.
-5. **Créer le compte du poste.** Au premier lancement, Lettra demande votre nom et une **phrase secrète** d'au moins
+5. **Créer le compte du poste.** L'écran « Ouverture de vos dossiers… » s'affiche le temps d'ouvrir les données du
+   poste (si elles ne s'ouvrent pas, un message et **Réessayer**). Au premier lancement, Lettra demande votre nom et une **phrase secrète** d'au moins
    12 caractères. Elle protège les dossiers chiffrés de ce PC et **ne peut pas être récupérée** : notez-la pour la
    durée de la démo.
 
