@@ -338,7 +338,8 @@ workflows, `LayerDependencyTests`, `MauiProgram.cs`) passent par le coordinateur
 | 12 | Interface : fin du localisateur de services (`Optional<T>` pour ce que l'hôte peut ne pas fournir). | X14 (interface), A5, A6 |
 | 13 | Synchronisation sans localisateur (portée de travail typée), indicateurs d'accueil lus au serveur. | X14 (synchronisation), X8 |
 | 13 bis | Passerelles : `HttpCalls` et `InProcessScope` partout, fichiers rangés. | X15, X16, S7 |
-| 14 | Endpoints et erreurs : `ErrorKind.Unavailable`, filtres de permission unifiés, endpoints restants via le médiateur. | X18, X19, X20, A4 |
+| 14 | Erreurs et filtres : `ErrorKind.Unavailable`, filtres de permission unifiés. | X19, X20 |
+| 14 bis | Endpoints restants via le médiateur (synchronisation, démonstration, jeton de droits, indicateurs). | X18, A4 |
 | 15 | Découpages : longues méthodes, grands composants, constructeurs chargés ; domaine du module Exports. | X21, X22, X26, R9, S2, S4 |
 | 16 | Basse gravité, au fil des PR qui touchent les fichiers. | basse |
 
@@ -456,6 +457,27 @@ workflows, `LayerDependencyTests`, `MauiProgram.cs`) passent par le coordinateur
   synchronisation garde ses portées par dossier (voir la PR 13).
 - Tests : `OtherHttpGatewaysUnreachableTests` couvre le pilotage, l'assistant, l'administration et la facture
   électronique en délai dépassé, ainsi que les réponses sans corps JSON (401 du BFF, 204, fichier).
+
+### Fait dans la PR 14
+
+- **X19** : `ErrorKind.Unavailable` dit qu'un service dont dépend la demande est arrêté ou injoignable. La demande
+  est valable et peut être refaite plus tard. `ErrorResults` en fait un 503, comme les autres natures d'erreur.
+  L'annuaire, le moteur de dictée, le modèle de dictée et la découverte du serveur (Keycloak injoignable) déclarent
+  cette nature, au lieu que trois endpoints choisissent le 503 d'après le code. Les statuts rendus ne changent pas.
+  Le faux moteur du test de dictée rend désormais la vraie erreur du module (`SpeechErrors.EngineUnavailable`), et non
+  une copie qui avait une autre nature. `HttpResultsTests` vérifie le statut de chaque nature et échoue si une nature
+  est ajoutée sans son statut.
+- Gardés à 500 sans changement : la plateforme agréée simulée injoignable, la clé d'intégrité absente, le jeton de
+  droits non signable. Passer la plateforme en 503 changerait la réponse de la transmission ; la décision attend une
+  PR qui touche ce flux.
+- **X20** : un seul `PermissionEndpointFilter`, qui prend la permission et la façon de lire la portée : le dossier
+  de la requête, ou le cabinet ou le groupe de la route. Les trois copies disparaissent. Les classes
+  `CabinetPermissionEndpointFilter` et `GroupPermissionEndpointFilter` ne gardent que la clé de route et la lecture
+  de la portée, parce que `Program.cs` (fichier de Socle) lit leur `RouteKey`.
+- **X18** (en partie) : les clés publiques des instantanés de droits passent par le port `IRightsSnapshotIssuer`
+  (`PublicKeys()`) et non plus par la classe d'infrastructure `EcdsaRightsSnapshotIssuer`. L'exception de
+  `HostRulesTests` pour `RightsSnapshotEndpoints` est retirée ; il ne reste que celle des indicateurs Prometheus
+  (`KpiEndpoints`), traitée avec la PR 14 bis.
 
 ## Plan
 

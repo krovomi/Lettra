@@ -90,17 +90,7 @@ internal static class SpeechEndpoints
 
         TranscribeSpeechQuery query = new(tenant.Current.DossierId, body.ToArray(), langue, mode);
         Result<TranscriptionResponse> result = await queries.QueryAsync(query, cancellationToken).ConfigureAwait(false);
-        if (result.IsSuccess)
-        {
-            return TypedResults.Ok(result.Value);
-        }
-
-        // Moteur arrêté ou modèle absent : le service est indisponible, la requête n'y est pour rien.
-        return result.Errors[0].Code is SpeechErrors.EngineUnavailableCode or SpeechErrors.ModelUnavailableCode
-            ? TypedResults.Problem(
-                statusCode: StatusCodes.Status503ServiceUnavailable,
-                title: result.Errors[0].Code,
-                extensions: new Dictionary<string, object?>(StringComparer.Ordinal) { ["code"] = result.Errors[0].Code })
-            : result.Errors.ToProblem();
+        // Moteur arrêté ou modèle absent : ErrorKind.Unavailable, donc 503 ; la requête n'y est pour rien.
+        return result.IsSuccess ? TypedResults.Ok(result.Value) : result.Errors.ToProblem();
     }
 }

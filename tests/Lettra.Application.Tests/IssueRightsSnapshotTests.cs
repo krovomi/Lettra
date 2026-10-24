@@ -87,5 +87,7 @@ public sealed class IssueRightsSnapshotTests
             Signed = snapshot;
             return "jws";
         }
+
+        public RightsSnapshotKeysResponse PublicKeys() => new([]);
     }
 }

@@ -12,6 +12,12 @@ public enum ErrorKind
 
     /// <summary>L'écriture part d'une version périmée du document (HTTP 412, ADR-0013).</summary>
     PreconditionFailed,
+
+    /// <summary>
+    /// Un service dont dépend la demande est arrêté ou injoignable (annuaire, moteur de dictée, Keycloak) : la demande
+    /// est valable et peut être refaite plus tard (HTTP 503).
+    /// </summary>
+    Unavailable,
 }
 
 /// <summary>
@@ -28,6 +34,8 @@ public sealed record Error(string Code, ErrorKind Kind, string? Target = null)
     public static Error NotFound(string code) => new(code, ErrorKind.NotFound);
 
     public static Error Conflict(string code) => new(code, ErrorKind.Conflict);
+
+    public static Error Unavailable(string code) => new(code, ErrorKind.Unavailable);
 
     public Error For(string target) => this with { Target = target };
 }
