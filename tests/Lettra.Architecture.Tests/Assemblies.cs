@@ -26,6 +26,7 @@ internal static class Assemblies
     public static readonly Assembly SupervisionInfrastructure = typeof(Supervision.Infrastructure.DependencyInjection).Assembly;
     public static readonly Assembly SyncServer = typeof(Sync.Server.DependencyInjection).Assembly;
     public static readonly Assembly SyncClient = typeof(Sync.Client.SyncCoordinator).Assembly;
+    public static readonly Assembly ExportsDomain = typeof(Exports.Domain.ExportsDomain).Assembly;
     public static readonly Assembly ExportsApplication = typeof(Exports.Application.DependencyInjection).Assembly;
     public static readonly Assembly ExportsInfrastructure = typeof(Exports.Infrastructure.DependencyInjection).Assembly;
     public static readonly Assembly Bootstrap = typeof(Bootstrap.LettraBootstrap).Assembly;
@@ -53,7 +54,7 @@ internal static class Assemblies
     [
         Calculations, Contracts, Domain, Application, Persistence, PersistenceSqlite, PersistencePostgreSql,
         PersistenceSqlServer, Catalog, IdentityLocal, IdentityOidc, External, Observability, SupervisionDomain,
-        SupervisionApplication, SupervisionInfrastructure, SyncServer, SyncClient, ExportsApplication, ExportsInfrastructure,
+        SupervisionApplication, SupervisionInfrastructure, SyncServer, SyncClient, ExportsDomain, ExportsApplication, ExportsInfrastructure,
         Bootstrap, UiAbstractions, UiShared, Printing, UiGatewayHttp, UiGatewayInProcess,
         AiSkills, AiPrivacy, AiTools, AiOrchestration, AiClaude, AiLocal,
         Speech, InfrastructureSpeech, SpeechOnDevice,

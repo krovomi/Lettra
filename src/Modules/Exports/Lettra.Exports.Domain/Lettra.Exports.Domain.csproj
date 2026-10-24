@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Domaine du module Exports : la transmission d'une pièce à la plateforme agréée, son cycle de vie (XP Z12-012)
+       et ses invariants. Pur, comme Lettra.Domain : aucune dépendance de framework ni de contrat. -->
+
+</Project>

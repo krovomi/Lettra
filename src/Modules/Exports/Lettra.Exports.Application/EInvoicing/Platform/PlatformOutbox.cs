@@ -10,6 +10,7 @@ using Lettra.Contracts.Common;
 using Lettra.Contracts.Exports;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Common;
+using Lettra.Exports.Domain.Platform;
 
 namespace Lettra.Exports.Application.EInvoicing.Platform;
 
@@ -180,8 +181,8 @@ internal sealed class PlatformDepositHandler(
             Guid.CreateVersion7(),
             invoice.Id.Value,
             invoice.Number!,
-            eInvoice ? PlatformChannelDto.EInvoice : PlatformChannelDto.EReporting,
-            eInvoice ? format : null,
+            eInvoice ? PlatformChannel.EInvoice : PlatformChannel.EReporting,
+            eInvoice ? format.ToDomain() : null,
             platform.Name,
             receipt.Value.Reference,
             piece.Totals.TotalInclTax,
@@ -215,12 +216,12 @@ internal sealed class PlatformPaymentHandler(
         Invoice? invoice = await invoices.FindAsync(new InvoiceId(order.InvoiceId), cancellationToken).ConfigureAwait(false);
         PlatformTransmission? transmission = invoice is null ? null
             : await transmissions.FindLatestAsync(invoice.Id.Value, cancellationToken).ConfigureAwait(false);
-        if (invoice is null || transmission?.Reference is null || transmission.Id != order.TransmissionId || transmission.Status == PlatformStatusDto.Rejected)
+        if (invoice is null || transmission?.Reference is null || transmission.Id != order.TransmissionId || transmission.Status == PlatformStatus.Rejected)
         {
             return OutboxOutcome.Poison(ErrorCodes.Platform.NotTransmitted);
         }
 
-        bool mayBeRecorded = transmission.History.Skip(order.KnownCount).Any(e => e.Status == PlatformStatusDto.Collected && e.Amount == order.Amount);
+        bool mayBeRecorded = transmission.History.Skip(order.KnownCount).Any(e => e.Status == PlatformStatus.Collected && e.Amount == order.Amount);
         if (!mayBeRecorded && transmission.IsFinal)
         {
             return OutboxOutcome.Poison(ErrorCodes.Platform.AlreadyFinal);

@@ -1,9 +1,9 @@
 using Lettra.Application.Abstractions.Integrity;
-using Lettra.Contracts.Exports;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Common;
 using Lettra.Domain.Integrity;
 using Lettra.Domain.SharedKernel;
+using Lettra.Exports.Domain.Platform;
 
 namespace Lettra.Exports.Application.EInvoicing.Platform;
 
@@ -42,7 +42,7 @@ internal static class PlatformJournal
             JournalEntryKind kind = position == 0 ? JournalEntryKind.PlatformTransmitted
                 : PlatformLifecycle.IsDeclaredBySeller(status.Status) ? JournalEntryKind.PlatformPaymentReported
                 : JournalEntryKind.PlatformStatusReceived;
-            decimal collected = status.Status == PlatformStatusDto.Collected ? status.Amount ?? 0m : 0m;
+            decimal collected = status.Status == PlatformStatus.Collected ? status.Amount ?? 0m : 0m;
             Result<long> appended = await journal.AppendAsync(
                 new DocumentLifecycleEvent(
                     kind,

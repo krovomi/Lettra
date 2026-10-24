@@ -1,7 +1,6 @@
-using Lettra.Contracts.Exports;
-using static Lettra.Contracts.Exports.PlatformStatusDto;
+using static Lettra.Exports.Domain.Platform.PlatformStatus;
 
-namespace Lettra.Exports.Application.EInvoicing.Platform;
+namespace Lettra.Exports.Domain.Platform;
 
 /// <summary>
 /// La machine d'états du cycle de vie (XP Z12-012). Seuls Déposée, Rejetée, Refusée et Encaissée sont obligatoires : les
@@ -10,11 +9,11 @@ namespace Lettra.Exports.Application.EInvoicing.Platform;
 /// </summary>
 public static class PlatformLifecycle
 {
-    private static readonly PlatformStatusDto[] BeforeAvailability = [Deposited, Issued, Received];
+    private static readonly PlatformStatus[] BeforeAvailability = [Deposited, Issued, Received];
 
-    private static readonly PlatformStatusDto[] BeforeDecision = [Deposited, Issued, Received, MadeAvailable, InProgress];
+    private static readonly PlatformStatus[] BeforeDecision = [Deposited, Issued, Received, MadeAvailable, InProgress];
 
-    private static readonly Dictionary<PlatformStatusDto, PlatformStatusDto[]> AllowedFrom = new()
+    private static readonly Dictionary<PlatformStatus, PlatformStatus[]> AllowedFrom = new()
     {
         // Le circuit des plateformes : toujours vers l'avant.
         [Issued] = [Deposited],
@@ -37,11 +36,11 @@ public static class PlatformLifecycle
     };
 
     /// <summary>Refusée et Rejetée closent la transmission ; Encaissée la clôt quand tout le TTC est encaissé.</summary>
-    public static bool IsTerminal(PlatformStatusDto status) => status is Refused or Rejected;
+    public static bool IsTerminal(PlatformStatus status) => status is Refused or Rejected;
 
     /// <summary>Statut posé par le vendeur, pas par les plateformes ni l'acheteur.</summary>
-    public static bool IsDeclaredBySeller(PlatformStatusDto status) => status is Collected;
+    public static bool IsDeclaredBySeller(PlatformStatus status) => status is Collected;
 
-    public static bool CanMove(PlatformStatusDto from, PlatformStatusDto to) =>
-        !IsTerminal(from) && AllowedFrom.TryGetValue(to, out PlatformStatusDto[]? origins) && origins.Contains(from);
+    public static bool CanMove(PlatformStatus from, PlatformStatus to) =>
+        !IsTerminal(from) && AllowedFrom.TryGetValue(to, out PlatformStatus[]? origins) && origins.Contains(from);
 }

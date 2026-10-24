@@ -4,6 +4,7 @@ using Lettra.Contracts.Exports;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
+using Lettra.Exports.Domain.Platform;
 
 namespace Lettra.Exports.Application.EInvoicing.Platform;
 
@@ -39,8 +40,8 @@ public sealed record GetReceivablesSummaryQuery(DossierId Dossier) : IQuery<Resu
 /// </summary>
 public static class ReceivablesSummary
 {
-    private static readonly PlatformStatusDto[] AttentionStatuses =
-        [PlatformStatusDto.Rejected, PlatformStatusDto.Refused, PlatformStatusDto.Disputed, PlatformStatusDto.Suspended];
+    private static readonly PlatformStatus[] AttentionStatuses =
+        [PlatformStatus.Rejected, PlatformStatus.Refused, PlatformStatus.Disputed, PlatformStatus.Suspended];
 
     public static ReceivablesSummaryResponse Compute(IEnumerable<ReceivableRow> rows, DateOnly today)
     {
@@ -60,7 +61,7 @@ public static class ReceivablesSummary
 
         int notTransmitted = all.Count(r => r.Transmission is null);
         int attention = all.Count(r => r.Transmission is { } t && AttentionStatuses.Contains(t.Status));
-        int collected = all.Count(r => r.Transmission is { Status: PlatformStatusDto.Collected, IsFinal: true });
+        int collected = all.Count(r => r.Transmission is { Status: PlatformStatus.Collected, IsFinal: true });
         return new ReceivablesSummaryResponse(
             today,
             overdue.Length,

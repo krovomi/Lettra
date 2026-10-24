@@ -1,6 +1,6 @@
 using Lettra.Contracts.Common;
-using Lettra.Contracts.Exports;
 using Lettra.Exports.Application.EInvoicing.Platform;
+using Lettra.Exports.Domain.Platform;
 using Lettra.Exports.Infrastructure;
 
 namespace Lettra.Exports.Tests.Platform;
@@ -20,7 +20,7 @@ public sealed class SimulatedAccreditedPlatformTests : AccreditedPlatformContrac
         IReadOnlyList<PlatformStatusEvent> events = (await _platform.GetStatusEventsAsync(receipt.Reference, default)).Value;
 
         events.Select(e => e.Status).Should().Equal(
-            PlatformStatusDto.Deposited, PlatformStatusDto.Issued, PlatformStatusDto.Received, PlatformStatusDto.MadeAvailable);
+            PlatformStatus.Deposited, PlatformStatus.Issued, PlatformStatus.Received, PlatformStatus.MadeAvailable);
         (await _platform.GetStatusEventsAsync(receipt.Reference, default)).Value.Should().Equal(events);
     }
 
@@ -31,7 +31,7 @@ public sealed class SimulatedAccreditedPlatformTests : AccreditedPlatformContrac
 
         PlatformReceipt receipt = (await _platform.SubmitInvoiceAsync(PlatformSamples.Submission(PlatformSamples.NewNumber()), default)).Value;
 
-        receipt.Status.Status.Should().Be(PlatformStatusDto.Rejected);
+        receipt.Status.Status.Should().Be(PlatformStatus.Rejected);
         receipt.Status.Reason.Should().Contain("annuaire");
     }
 
@@ -53,12 +53,12 @@ public sealed class SimulatedAccreditedPlatformTests : AccreditedPlatformContrac
         PlatformReceipt receipt = (await _platform.SubmitInvoiceAsync(PlatformSamples.Submission(PlatformSamples.NewNumber()), default)).Value;
         await _platform.GetStatusEventsAsync(receipt.Reference, default);
 
-        _platform.SimulateBuyerStatus(receipt.Reference, PlatformStatusDto.Disputed, "Quantité contestée");
-        _platform.SimulateBuyerStatus(receipt.Reference, PlatformStatusDto.Refused, "Prestation non commandée");
+        _platform.SimulateBuyerStatus(receipt.Reference, PlatformStatus.Disputed, "Quantité contestée");
+        _platform.SimulateBuyerStatus(receipt.Reference, PlatformStatus.Refused, "Prestation non commandée");
 
-        FluentActions.Invoking(() => _platform.SimulateBuyerStatus(receipt.Reference, PlatformStatusDto.Approved))
+        FluentActions.Invoking(() => _platform.SimulateBuyerStatus(receipt.Reference, PlatformStatus.Approved))
             .Should().Throw<InvalidOperationException>();
-        FluentActions.Invoking(() => _platform.SimulateBuyerStatus(receipt.Reference, PlatformStatusDto.Collected))
+        FluentActions.Invoking(() => _platform.SimulateBuyerStatus(receipt.Reference, PlatformStatus.Collected))
             .Should().Throw<InvalidOperationException>();
         (await _platform.GetStatusEventsAsync(receipt.Reference, default)).Value[^1].Reason.Should().Be("Prestation non commandée");
     }

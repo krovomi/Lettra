@@ -1,6 +1,6 @@
 using Lettra.Domain.Banking;
 using Lettra.Domain.Billing;
-using Lettra.Exports.Application.EInvoicing.Platform;
+using Lettra.Exports.Domain.Platform;
 
 namespace Lettra.Exports.Application.AuditKit;
 

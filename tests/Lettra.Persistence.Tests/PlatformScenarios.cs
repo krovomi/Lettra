@@ -14,6 +14,7 @@ using Lettra.Domain.Integrity;
 using Lettra.Domain.Parties;
 using Lettra.Domain.SharedKernel;
 using Lettra.Exports.Application.EInvoicing.Platform;
+using Lettra.Exports.Domain.Platform;
 using Lettra.Exports.Infrastructure;
 using Lettra.Infrastructure.Persistence;
 using Lettra.Infrastructure.Persistence.EInvoicing;
@@ -88,7 +89,7 @@ internal static class PlatformScenarios
             PlatformTransmissionResponse refreshed = Succeeded(await commands.SendAsync(new RefreshPlatformStatusCommand(dossier, approved), default));
             refreshed.History.Select(h => h.Status).Should().Equal(
                 PlatformStatusDto.Deposited, PlatformStatusDto.Issued, PlatformStatusDto.Received, PlatformStatusDto.MadeAvailable);
-            platform.SimulateBuyerStatus(refreshed.PlatformReference!, PlatformStatusDto.Approved);
+            platform.SimulateBuyerStatus(refreshed.PlatformReference!, PlatformStatus.Approved);
             Succeeded(await commands.SendAsync(new RefreshPlatformStatusCommand(dossier, approved), default)).Status.Should().Be(PlatformStatusDto.Approved);
         }
 
@@ -155,7 +156,7 @@ internal static class PlatformScenarios
             ICommandDispatcher commands = scope.ServiceProvider.GetRequiredService<ICommandDispatcher>();
             string reference = Succeeded(await commands.SendAsync(new TransmitInvoiceCommand(dossier, refused), default)).PlatformReference!;
             Succeeded(await commands.SendAsync(new RefreshPlatformStatusCommand(dossier, refused), default));
-            platform.SimulateBuyerStatus(reference, PlatformStatusDto.Refused, "Prestation non commandée");
+            platform.SimulateBuyerStatus(reference, PlatformStatus.Refused, "Prestation non commandée");
             PlatformTransmissionResponse closed = Succeeded(await commands.SendAsync(new RefreshPlatformStatusCommand(dossier, refused), default));
             closed.Status.Should().Be(PlatformStatusDto.Refused);
             closed.IsFinal.Should().BeTrue();
