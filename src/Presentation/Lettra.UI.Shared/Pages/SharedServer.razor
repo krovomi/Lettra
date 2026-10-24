@@ -2,7 +2,7 @@
 @* Serveur commun : l'application installée travaille sur cet appareil seul, ou sur le serveur du cabinet que partagent le
    navigateur et les autres appareils. Accessible sans session (route « session/… ») : on choisit avant de se connecter. *@
 @using Microsoft.Extensions.DependencyInjection
-@inject IServiceProvider Services
+@inject Optional<IServerConnection> OptionalConnection
 @inject NavigationManager Navigation
 @inject IStringLocalizer<SharedResource> L
 @inject ToastService Toasts
@@ -95,7 +95,7 @@ else
 
     protected override void OnInitialized()
     {
-        _connection = Services.GetService<IServerConnection>();
+        _connection = OptionalConnection.Value;
         if (_connection?.CurrentServer is Uri server)
         {
             _address = Display(server);

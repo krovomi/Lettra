@@ -26,7 +26,7 @@ public sealed class AccountingPagesTests : BunitContext
     public AccountingPagesTests()
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
-        ExplorerSettings.SearchDelay = TimeSpan.FromMilliseconds(1);
+        Services.AddSingleton(new ExplorerSettings { SearchDelay = TimeSpan.FromMilliseconds(1) });
         Services.AddLettraUi();
         Services.AddSingleton<IAccountingGateway>(_accounting);
         Services.AddSingleton<ICustomersGateway>(_customers);

@@ -12,11 +12,11 @@ using Microsoft.Extensions.Localization;
 
 namespace Lettra.UI.Shared.Components.Explorer;
 
-/// <summary>Réglages communs des pages de consultation.</summary>
-public static class ExplorerSettings
+/// <summary>Réglages communs des pages de consultation, injectés : un test les raccourcit en enregistrant les siens.</summary>
+public sealed class ExplorerSettings
 {
-    /// <summary>Délai avant de relancer la recherche pendant la frappe (raccourci par les tests).</summary>
-    public static TimeSpan SearchDelay { get; set; } = TimeSpan.FromMilliseconds(250);
+    /// <summary>Délai avant de relancer la recherche pendant la frappe.</summary>
+    public TimeSpan SearchDelay { get; init; } = TimeSpan.FromMilliseconds(250);
 }
 
 /// <summary>Ce que montre une page de consultation : la liste seule, une fiche, ou une fiche en saisie.</summary>
@@ -68,6 +68,8 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
     [Inject] protected IStringLocalizer<SharedResource> L { get; set; } = default!;
 
     [Inject] protected ToastService Toasts { get; set; } = default!;
+
+    [Inject] protected ExplorerSettings Settings { get; set; } = default!;
 
     protected ExplorerMode Mode { get; private set; } = ExplorerMode.List;
 
@@ -289,7 +291,7 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
         CancellationToken pause = _searchPause.Start();
         try
         {
-            await Task.Delay(ExplorerSettings.SearchDelay, pause);
+            await Task.Delay(Settings.SearchDelay, pause);
         }
         catch (OperationCanceledException)
         {

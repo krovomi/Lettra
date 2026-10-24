@@ -172,6 +172,9 @@ seulement ; Safari et les vrais téléphones ne sont pas testés ici.
 4. Ajouter l'écran à la galerie si son apparence compte.
 5. Une liste d'enregistrements qu'on consulte et modifie (clients, fournisseurs, articles) : hériter de
    `RecordExplorerPage`, voir [Pages de consultation](pages-de-consultation.md).
+6. Ses dépendances s'injectent (`@inject`, constructeur) ; une passerelle que tous les hôtes ne fournissent pas
+   (synchronisation, voix, assistant) se déclare `Optional<T>` et se lit par `.Value`. Jamais `IServiceProvider` :
+   `UiDependencyRulesTests` le refuse.
 
 ## Licences
 

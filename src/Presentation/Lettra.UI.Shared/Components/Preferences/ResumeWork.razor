@@ -1,5 +1,5 @@
 @using Microsoft.Extensions.DependencyInjection
-@inject IServiceProvider Services
+@inject Optional<RecentDocuments> OptionalRecents
 @inject IStringLocalizer<SharedResource> L
 @* Accueil : « Reprendre où j'en étais », les dernières pièces ouvertes par l'utilisateur dans ce dossier (sur tous
    ses appareils quand ses préférences sont dans son compte). Rien n'est affiché tant qu'aucune pièce n'a été ouverte. *@
@@ -30,7 +30,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (Services.GetService<RecentDocuments>() is { } recents)
+        if (OptionalRecents.Value is { } recents)
         {
             _documents = await recents.ListAsync();
         }

@@ -1,10 +1,10 @@
 @* Sur l'écran de session de l'application installée : où sont les données (cet appareil ou le serveur du cabinet) et le
    lien pour changer. Rien dans le navigateur, qui travaille toujours sur son serveur. *@
 @using Microsoft.Extensions.DependencyInjection
-@inject IServiceProvider Services
+@inject Optional<IServerConnection> OptionalConnection
 @inject IStringLocalizer<SharedResource> L
 
-@if (Services.GetService<IServerConnection>() is { } connection)
+@if (OptionalConnection.Value is { } connection)
 {
     <section class="lettra-card" aria-labelledby="shared-server-link-title">
         <h2 id="shared-server-link-title">@L["SharedServer.Title"]</h2>

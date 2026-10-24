@@ -1,4 +1,4 @@
-@inject IServiceProvider Services
+@inject Optional<EntryPreferences> OptionalEntry
 @inject ToastService Toasts
 @inject IStringLocalizer<SharedResource> L
 @* « Retenir par défaut » sous un champ de saisie : la valeur saisie devient celle des prochaines pièces du dossier
@@ -27,7 +27,7 @@
 
     private bool _busy;
 
-    private EntryPreferences? Preferences => EntryPreferences.From(Services);
+    private EntryPreferences? Preferences => OptionalEntry.Value;
 
     private bool Visible =>
         !Disabled && Preferences is { DossierId: not null } preferences && !string.IsNullOrWhiteSpace(Value)

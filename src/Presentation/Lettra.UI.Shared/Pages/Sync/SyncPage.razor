@@ -1,6 +1,6 @@
 @page "/synchronisation"
 @implements IDisposable
-@inject IServiceProvider Services
+@inject Optional<ISyncCenter> OptionalSync
 @inject IStringLocalizer<SharedResource> L
 
 @* Synchronisation du poste (étape 4.3, ADR-0008) : état, « synchroniser maintenant », saisies en attente, préférence,
@@ -123,7 +123,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        _sync = Services.GetService(typeof(ISyncCenter)) as ISyncCenter;
+        _sync = OptionalSync.Value;
         if (_sync is null)
         {
             return;

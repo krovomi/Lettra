@@ -4,7 +4,6 @@ using Lettra.Contracts.Speech;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Services;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Microsoft.JSInterop;
 
@@ -62,7 +61,7 @@ public sealed record VoiceOutcome(string Owner, SpeechMode Mode, string? Text, V
 /// enregistrement et transcription. Le texte dicté est inséré dans son champ par le service lui-même ; une commande
 /// est remise à <see cref="Completed"/>, que l'hôte vocal affiche avant de l'exécuter. Un seul enregistrement à la fois.
 /// </summary>
-public sealed class VoiceInput(IServiceProvider services, DevicePreferences preferences, IJSRuntime js, IStringLocalizer<SharedResource> localizer) : IDisposable
+public sealed class VoiceInput(Optional<ISpeechGateway> speech, DevicePreferences preferences, IJSRuntime js, IStringLocalizer<SharedResource> localizer) : IDisposable
 {
     /// <summary>Propriétaire d'un enregistrement destiné aux commandes (bouton de la barre du haut, F8 hors d'un champ).</summary>
     public const string CommandOwner = "voice-command";
@@ -168,7 +167,7 @@ public sealed class VoiceInput(IServiceProvider services, DevicePreferences pref
             Enabled = await preferences.ReadAsync(PreferenceKey) != "off";
         }
 
-        ISpeechGateway? gateway = services.GetService<ISpeechGateway>();
+        ISpeechGateway? gateway = speech.Value;
         OperationResult<SpeechStatusResponse> status = gateway is null
             ? OperationResult<SpeechStatusResponse>.Success(SpeechStatusResponse.Disabled)
             : await gateway.GetStatusAsync(CancellationToken.None);
@@ -315,7 +314,7 @@ public sealed class VoiceInput(IServiceProvider services, DevicePreferences pref
         }
         else
         {
-            ISpeechGateway? gateway = services.GetService<ISpeechGateway>();
+            ISpeechGateway? gateway = speech.Value;
             OperationResult<TranscriptionResponse> result = gateway is null
                 ? OperationResult<TranscriptionResponse>.Failure(ErrorCodes.Speech.Disabled)
                 : await gateway.TranscribeAsync(wav, mode, Language, CancellationToken.None);

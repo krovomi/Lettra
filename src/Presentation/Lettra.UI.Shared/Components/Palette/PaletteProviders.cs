@@ -8,7 +8,6 @@ using Lettra.UI.Shared.Keyboard;
 using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Services;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 
 namespace Lettra.UI.Shared.Components.Palette;
@@ -72,7 +71,9 @@ public sealed class NavigationPaletteProvider(
 /// propose une nouvelle facture pour ce client. Les gateways sont lues à la demande : sans elles, rien n'est proposé.
 /// </summary>
 public sealed class BillingPaletteProvider(
-    IServiceProvider services,
+    Optional<ICustomersGateway> customerGateway,
+    Optional<IQuotesGateway> quoteGateway,
+    Optional<IInvoicesGateway> invoiceGateway,
     NavigationManager navigation,
     IStringLocalizer<SharedResource> localizer) : ICommandPaletteProvider
 {
@@ -95,7 +96,7 @@ public sealed class BillingPaletteProvider(
 
     private async Task AddCustomersAsync(List<PaletteItem> items, CancellationToken cancellationToken)
     {
-        if (_customers is null && services.GetService<ICustomersGateway>() is { } customers)
+        if (_customers is null && customerGateway.Value is { } customers)
         {
             OperationResult<IReadOnlyList<CustomerSummary>> result = await customers.ListAllAsync(cancellationToken).ConfigureAwait(false);
             _customers = result.Value ?? [];
@@ -111,7 +112,7 @@ public sealed class BillingPaletteProvider(
 
     private async Task AddQuotesAsync(List<PaletteItem> items, string? search, CancellationToken cancellationToken)
     {
-        if (services.GetService<IQuotesGateway>() is not { } quotes)
+        if (quoteGateway.Value is not { } quotes)
         {
             return;
         }
@@ -128,7 +129,7 @@ public sealed class BillingPaletteProvider(
 
     private async Task AddInvoicesAsync(List<PaletteItem> items, string? search, CancellationToken cancellationToken)
     {
-        if (services.GetService<IInvoicesGateway>() is not { } invoices)
+        if (invoiceGateway.Value is not { } invoices)
         {
             return;
         }

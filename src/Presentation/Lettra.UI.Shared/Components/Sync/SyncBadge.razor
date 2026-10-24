@@ -1,6 +1,6 @@
 @* Pastille de la barre : état de la synchronisation et saisies en attente. Rien quand le poste ne synchronise pas. *@
 @implements IDisposable
-@inject IServiceProvider Services
+@inject Optional<ISyncCenter> OptionalSync
 @inject IStringLocalizer<SharedResource> L
 
 @if (_sync is not null)
@@ -25,7 +25,7 @@
 
     protected override void OnInitialized()
     {
-        _sync = Services.GetService(typeof(ISyncCenter)) as ISyncCenter;
+        _sync = OptionalSync.Value;
         if (_sync is not null)
         {
             _sync.Changed += OnChanged;

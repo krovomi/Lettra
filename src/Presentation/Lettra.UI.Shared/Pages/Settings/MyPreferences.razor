@@ -3,7 +3,9 @@
 @implements IDisposable
 @inject UserPreferencesState Account
 @inject UiPreferences Appearance
-@inject IServiceProvider Services
+@inject Optional<Lettra.UI.Shared.Cabinet.CurrentDossier> OptionalDossiers
+@inject Optional<EntryPreferences> OptionalEntry
+@inject Optional<IBillingSettingsGateway> OptionalBillingSettings
 @inject NavigationManager Navigation
 @inject ToastService Toasts
 @inject IStringLocalizer<SharedResource> L
@@ -203,15 +205,15 @@ else
     {
         Account.Changed += OnAccountChanged;
         Appearance.Changed += OnAccountChanged;
-        _dossiers = Services.GetService<Lettra.UI.Shared.Cabinet.CurrentDossier>();
+        _dossiers = OptionalDossiers.Value;
         if (_dossiers is not null)
         {
             _dossiers.Changed += OnAccountChanged;   // le nom du dossier arrive après la page
         }
 
         await Account.EnsureLoadedAsync();
-        _dossierId = EntryPreferences.From(Services)?.DossierId;
-        if (Services.GetService<IBillingSettingsGateway>() is { } settings)
+        _dossierId = OptionalEntry.Value?.DossierId;
+        if (OptionalBillingSettings.Value is { } settings)
         {
             OperationResult<BillingReferenceData> reference = await settings.GetReferenceDataAsync(CancellationToken.None);
             _rates = reference.Value?.VatRates ?? [];

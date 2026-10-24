@@ -35,7 +35,7 @@ public sealed class RowDeleteTests : BunitContext
     public RowDeleteTests()
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
-        ExplorerSettings.SearchDelay = TimeSpan.FromMilliseconds(1);
+        Services.AddSingleton(new ExplorerSettings { SearchDelay = TimeSpan.FromMilliseconds(1) });
         Services.AddLettraUi();
         Services.AddSingleton<IInvoicesGateway>(_invoices);
         Services.AddSingleton<IQuotesGateway>(_quotes);

@@ -335,8 +335,8 @@ workflows, `LayerDependencyTests`, `MauiProgram.cs`) passent par le coordinateur
 | 9 | Encaissements et relances cherchés et paginés en base ; une seule recherche pour toutes les listes. | X6, X13 |
 | 10 | Tâches de fond : `PeriodicPass` et horloge injectée partout ; job de migration sans autre tâche (Socle). | X1, X11 |
 | 11 | Interface : jetons d'annulation par page, recherche différée annulable, un seul toaster, base « occupé / erreur / conflit ». | X9, X17, X23 |
-| 12 | Interface : fin du localisateur de services (implémentations « indisponible » par hôte), indicateurs d'accueil lus au serveur. | X8, X14, A5, A6 |
-| 13 | Passerelles : `HttpCalls` et `InProcessScope` partout, fichiers rangés. | X15, X16, S7 |
+| 12 | Interface : fin du localisateur de services (`Optional<T>` pour ce que l'hôte peut ne pas fournir). | X14 (interface), A5, A6 |
+| 13 | Synchronisation sans localisateur (portée de travail typée), indicateurs d'accueil lus au serveur ; passerelles : `HttpCalls` et `InProcessScope` partout, fichiers rangés. | X14 (synchronisation), X8, X15, X16, S7 |
 | 14 | Endpoints et erreurs : `ErrorKind.Unavailable`, filtres de permission unifiés, endpoints restants via le médiateur. | X18, X19, X20, A4 |
 | 15 | Découpages : longues méthodes, grands composants, constructeurs chargés ; domaine du module Exports. | X21, X22, X26, R9, S2, S4 |
 | 16 | Basse gravité, au fil des PR qui touchent les fichiers. | basse |
@@ -397,6 +397,21 @@ workflows, `LayerDependencyTests`, `MauiProgram.cs`) passent par le coordinateur
   restent aussi : la plupart ne font que redessiner l'écran, et les passerelles des autres rendent leurs refus dans un
   `OperationResult` au lieu de lever une exception. Seule une panne de l'interop JavaScript (thème, langue) s'y perdrait
   sans message, sans effet sur les données.
+
+### Fait dans la PR 12
+
+- **A5, X14** (interface) : plus aucun écran ni service de l'interface ne reçoit `IServiceProvider`. Une dépendance que
+  tous les hôtes ne fournissent pas (synchronisation hors MAUI, voix, assistant, passerelles absentes d'un test
+  d'écran) se déclare `Optional<T>` (`Services/Optional.cs`) : sa valeur est `null` quand l'hôte ne l'a pas enregistrée,
+  et elle est lue au moment où on s'en sert, comme avant. Les autres sont injectées directement (horloge, passerelles
+  des pièces des brouillons hors ligne). `EntryPreferences.From(services)` disparaît. La session n'existe que si l'hôte
+  a une passerelle de session : cette condition est écrite une fois, à l'enregistrement de `Optional<SessionState>`, au
+  lieu de quatre. Une règle d'architecture (`UiDependencyRulesTests`) le garde : seuls l'enregistrement des services,
+  `Optional<T>` et la langue posée au démarrage de l'hôte voient le conteneur.
+- **A6** : `ExplorerSettings` est un réglage injecté et non plus un état statique que les tests modifiaient ; un test
+  le raccourcit en enregistrant le sien, sans effet sur les autres.
+- Passent à la PR 13 : **X14** côté synchronisation (`Sync.Client`, port `IDossierWorkScope`, où chaque intention
+  rejouée a sa portée) et **X8** (indicateurs d'accueil lus au serveur), qui ajoute une requête et un point d'API.
 
 ## Plan
 

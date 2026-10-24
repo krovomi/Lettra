@@ -21,7 +21,7 @@ public sealed class SuppliersPageTests : BunitContext
     public SuppliersPageTests()
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
-        ExplorerSettings.SearchDelay = TimeSpan.FromMilliseconds(1);
+        Services.AddSingleton(new ExplorerSettings { SearchDelay = TimeSpan.FromMilliseconds(1) });
         Services.AddLettraUi();
         Services.AddSingleton<ISuppliersGateway>(_gateway);
         Services.AddSingleton<IDirectoryGateway>(_directory);
