@@ -859,6 +859,10 @@ deploy/            démo Docker, Helm, OpenTofu, Argo CD, cellules, Keycloak, ob
 | Numérotation sans trou ni doublon sous concurrence | `Numerotation_continue_sous_concurrence` |
 | Chaque code d'erreur est traduit en FR et EN | `ErrorCodeAndResourceTests` |
 | Aucune donnée de dossier dans les journaux | `NoDossierDataInLogsTests` |
+| Les hôtes (Api, Web, Worker) et le jeu de démonstration ne voient ni EF ni un fournisseur de base ; les endpoints passent par l'application | `HostRulesTests` |
+| Les couches Application des modules ne voient ni EF, ni ASP.NET, ni l'infrastructure | `ApplicationLayerRulesTests` |
+| Les noms écrits dans les empreintes d'intégrité scellées ne changent jamais | `SealedFingerprintTests` |
+| Un calendrier de tâche de fond invalide empêche l'hôte de démarrer | `PeriodicJobOptionsTests` |
 | Factur-X conforme PDF/A-3b et EN 16931 | CI : veraPDF et validateurs EN 16931 |
 
 ### Conventions
