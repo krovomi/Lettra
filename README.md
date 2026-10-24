@@ -609,6 +609,8 @@ applications MAUI).
   recherche (nom ou ville ; référence, désignation ou prix ; nom, arrivée ou accès).
 - **Filtres** : recherche, puis selon la liste nature, statut, période, fourchette de montant, gravité, état ou
   échéance. **Effacer les filtres** apparaît dès qu'un filtre est posé.
+- **Recherche** : la recherche des listes suit une règle unique : un nom sans accents ni casse, un code en majuscules
+  (docs/tris-et-filtres.md).
 - **Téléphone** : les tableaux deviennent des cartes ; le bouton **Filtres** (avec le nombre de filtres posés) déplie
   les autres filtres et une liste **Trier par**.
 - Journal des ventes et grand livre restent chronologiques (solde progressif) ; le calendrier fiscal reste par date et
