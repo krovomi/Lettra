@@ -1,5 +1,5 @@
 @page "/synchronisation/conflits"
-@inject IServiceProvider Services
+@inject Optional<ISyncCenter> OptionalSync
 @inject IStringLocalizer<SharedResource> L
 
 @* Résolution des conflits (étape 4.3) : les champs modifiés à la fois sur le poste et au cabinet, champ par champ.
@@ -78,7 +78,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        _sync = Services.GetService(typeof(ISyncCenter)) as ISyncCenter;
+        _sync = OptionalSync.Value;
         if (_sync is not null)
         {
             await LoadAsync();

@@ -3,7 +3,7 @@
    Voir docs/dates-et-langue.md. *@
 @inject IStringLocalizer<SharedResource> L
 @using Microsoft.Extensions.DependencyInjection
-@inject IServiceProvider Services
+@inject TimeProvider Clock
 
 <div class="lt-date @(_open ? "is-open" : null)">
     <div class="lt-date-control">
@@ -64,7 +64,7 @@
 
     private static CultureInfo Culture => CultureInfo.CurrentCulture;
 
-    private DateOnly Today => DateOnly.FromDateTime((Services.GetService<TimeProvider>() ?? TimeProvider.System).GetLocalNow().DateTime);
+    private DateOnly Today => Clock.LocalToday();
 
     protected override void OnParametersSet()
     {

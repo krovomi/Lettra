@@ -1,9 +1,7 @@
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
-using Lettra.Contracts.Customers;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Shared.Services;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.UI.Shared.Onboarding;
 
@@ -16,7 +14,12 @@ public sealed record StarterStep(string Id, string Href, bool Done);
 /// laisse pas de trace côté serveur, est noté sur l'appareil quand il réussit. La liste masquée l'est pour le dossier,
 /// sur cet appareil.
 /// </summary>
-public sealed class StarterProgress(DevicePreferences preferences, IServiceProvider services)
+public sealed class StarterProgress(
+    DevicePreferences preferences,
+    Optional<IDossierSelection> selection,
+    Optional<IBillingSettingsGateway> billingSettings,
+    Optional<ICustomersGateway> customers,
+    Optional<IQuotesGateway> quotes)
 {
     public const string Company = "company";
     public const string Customer = "customer";
@@ -32,9 +35,9 @@ public sealed class StarterProgress(DevicePreferences preferences, IServiceProvi
     public async Task<IReadOnlyList<StarterStep>> ReadAsync(CancellationToken cancellationToken)
     {
         Task<bool> company = CompanyDoneAsync(cancellationToken);
-        Task<bool> customer = CountAsync<ICustomersGateway, CustomerSummary>(g => g.ListAsync(1, 1, cancellationToken));
-        Task<bool> quote = CountAsync<IQuotesGateway, QuoteSummary>(g => g.ListAsync(new BillingListQuery(PageSize: 1), null, cancellationToken));
-        Task<bool> invoiced = CountAsync<IQuotesGateway, QuoteSummary>(g => g.ListAsync(new BillingListQuery(PageSize: 1), QuoteStatusDto.Invoiced, cancellationToken));
+        Task<bool> customer = CountAsync(customers, g => g.ListAsync(1, 1, cancellationToken));
+        Task<bool> quote = CountAsync(quotes, g => g.ListAsync(new BillingListQuery(PageSize: 1), null, cancellationToken));
+        Task<bool> invoiced = CountAsync(quotes, g => g.ListAsync(new BillingListQuery(PageSize: 1), QuoteStatusDto.Invoiced, cancellationToken));
         Task<HashSet<string>> flags = LoadAsync();
         await Task.WhenAll(company, customer, quote, invoiced, flags).ConfigureAwait(false);
 
@@ -64,7 +67,7 @@ public sealed class StarterProgress(DevicePreferences preferences, IServiceProvi
         }
     }
 
-    private string StorageKey => "lettra.starter." + (services.GetService<IDossierSelection>()?.CurrentDossierId?.ToString("N") ?? "local");
+    private string StorageKey => "lettra.starter." + (selection.Value?.CurrentDossierId?.ToString("N") ?? "local");
 
     private async Task<HashSet<string>> LoadAsync()
     {
@@ -79,7 +82,7 @@ public sealed class StarterProgress(DevicePreferences preferences, IServiceProvi
 
     private async Task<bool> CompanyDoneAsync(CancellationToken cancellationToken)
     {
-        if (services.GetService<IBillingSettingsGateway>() is not { } settings)
+        if (billingSettings.Value is not { } settings)
         {
             return false;
         }
@@ -88,10 +91,10 @@ public sealed class StarterProgress(DevicePreferences preferences, IServiceProvi
         return profile.Value is { } company && !string.IsNullOrWhiteSpace(company.Name) && !string.IsNullOrWhiteSpace(company.Siren);
     }
 
-    private async Task<bool> CountAsync<TGateway, TItem>(Func<TGateway, Task<OperationResult<PagedResponse<TItem>>>> list)
+    private static async Task<bool> CountAsync<TGateway, TItem>(Optional<TGateway> source, Func<TGateway, Task<OperationResult<PagedResponse<TItem>>>> list)
         where TGateway : class
     {
-        if (services.GetService<TGateway>() is not { } gateway)
+        if (source.Value is not { } gateway)
         {
             return false;
         }

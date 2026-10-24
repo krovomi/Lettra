@@ -4,7 +4,7 @@
 @using Microsoft.Extensions.DependencyInjection
 @inject ISessionGateway Sessions
 @inject SessionState Session
-@inject IServiceProvider Services
+@inject Optional<OfflineDrafts> OptionalDrafts
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
 @inject IStringLocalizer<SharedResource> L
@@ -41,7 +41,7 @@
     /// </summary>
     private async Task SignOutAsync(string signOut)
     {
-        if (Services.GetService<OfflineDrafts>() is { } drafts)
+        if (OptionalDrafts.Value is { } drafts)
         {
             await drafts.SyncAsync(CancellationToken.None);
             int left = (await drafts.ListAsync(CancellationToken.None)).Count;

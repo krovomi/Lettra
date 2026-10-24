@@ -30,14 +30,14 @@ public sealed class PreferencesSync
     private UiTheme _theme;
     private UiDensity _density;
 
-    public PreferencesSync(UserPreferencesState account, UiPreferences appearance, NavMenuState menu, CurrentDossier dossiers, IServiceProvider services)
+    public PreferencesSync(UserPreferencesState account, UiPreferences appearance, NavMenuState menu, CurrentDossier dossiers, Optional<NavigationManager> navigation)
     {
-        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(navigation);
         _account = account;
         _appearance = appearance;
         _menu = menu;
         _dossiers = dossiers;
-        _navigation = services.GetService<NavigationManager>();
+        _navigation = navigation.Value;
     }
 
     /// <summary>Une seule fois par session de l'interface, après la lecture des réglages d'affichage de l'appareil.</summary>

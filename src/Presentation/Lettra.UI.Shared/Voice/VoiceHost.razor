@@ -8,7 +8,8 @@
 @inject VoiceCommands Commands
 @inject NavigationManager Navigation
 @inject AssistantPanelState Assistant
-@inject IServiceProvider Services
+@inject Optional<SessionState> OptionalSession
+@inject Optional<ICustomersGateway> OptionalCustomers
 @inject IEnumerable<ICommandPaletteProvider> Providers
 @inject IStringLocalizer<SharedResource> L
 
@@ -172,7 +173,7 @@
     {
         Voice.Changed += OnVoiceChanged;
         Voice.Completed += OnCompleted;
-        _session = Services.GetService(typeof(ISessionGateway)) is null ? null : Services.GetService(typeof(SessionState)) as SessionState;
+        _session = OptionalSession.Value;
         if (_session is not null)
         {
             _session.Changed += OnSessionChanged;
@@ -429,7 +430,7 @@
     private async Task DraftQuoteAsync(VoiceCommand command)
     {
         Guid? customer = null;
-        if (command.Customer is { Length: > 0 } name && Services.GetService(typeof(ICustomersGateway)) is ICustomersGateway customers)
+        if (command.Customer is { Length: > 0 } name && OptionalCustomers.Value is { } customers)
         {
             OperationResult<IReadOnlyList<CustomerSummary>> list = await customers.ListAllAsync(CancellationToken.None);
             customer = list.Value?

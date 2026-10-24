@@ -1,7 +1,6 @@
 using System.Globalization;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Shared.Services;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.UI.Shared.Onboarding;
 
@@ -17,7 +16,7 @@ public static class TourModule
 /// dans le stockage local du navigateur ou du WebView MAUI. Sans stockage (tests, navigation privée), il vaut pour la
 /// session.
 /// </summary>
-public sealed class GuidedTours(DevicePreferences preferences, IServiceProvider services)
+public sealed class GuidedTours(DevicePreferences preferences, Optional<ISessionGateway> sessions)
 {
     private const string KeyPrefix = "lettra.tours.";
 
@@ -158,7 +157,7 @@ public sealed class GuidedTours(DevicePreferences preferences, IServiceProvider 
 
     private async Task<string?> CurrentUserAsync()
     {
-        if (services.GetService<ISessionGateway>() is not { } session)
+        if (sessions.Value is not { } session)
         {
             return null;
         }

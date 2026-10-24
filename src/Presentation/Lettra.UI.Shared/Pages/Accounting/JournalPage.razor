@@ -5,6 +5,7 @@
 @inject NavigationManager Navigation
 @inject IStringLocalizer<SharedResource> L
 @inject TimeProvider Clock
+@inject ExplorerSettings Explorer
 @implements IDisposable
 @* Journal des ventes : les écritures enregistrées à la validation des pièces, de la plus récente à la plus ancienne. *@
 
@@ -246,7 +247,7 @@
         CancellationToken pause = _searchPause.Start();
         try
         {
-            await Task.Delay(ExplorerSettings.SearchDelay, pause);
+            await Task.Delay(Explorer.SearchDelay, pause);
         }
         catch (OperationCanceledException)
         {

@@ -22,12 +22,18 @@ public static class DependencyInjection
     public static IServiceCollection AddLettraUi(this IServiceCollection services)
     {
         services.AddLocalization();
+        // Dépendances que tous les hôtes ne fournissent pas : déclarées par Optional<T>, jamais cherchées dans le conteneur.
+        services.AddOptionalDependencies();
         services.AddScoped<ShortcutRegistry>();
         services.AddScoped<UiPreferences>();
         services.AddScoped<AssistantPanelState>();
         services.AddScoped<ToastService>();
+        // Délai de la recherche au fil de la frappe : un test le raccourcit en enregistrant ses réglages avant.
+        services.TryAddSingleton<Components.Explorer.ExplorerSettings>();
         // Session lue une fois pour la mise en page : la garde des écrans (SessionGate) et la barre de session.
         services.TryAddScoped<SessionState>();
+        // La session n'existe que si l'hôte a une passerelle de session (un écran testé seul n'en a pas).
+        services.TryAddTransient(sp => Optional<SessionState>.When(() => sp.GetService<ISessionGateway>() is null ? null : sp.GetService<SessionState>()));
         // Horloge des écrans (date du jour, échéances) : l'hôte ou les tests peuvent la fixer en l'enregistrant avant.
         services.TryAddSingleton(TimeProvider.System);
         // Un hôte peut remplacer le téléchargement (enregistrement natif en MAUI) en l'enregistrant avant.
@@ -67,7 +73,7 @@ public static class DependencyInjection
         services.TryAddSingleton<SyncConsentDialog>();
         services.TryAddSingleton<ISyncConsentDialog>(sp => sp.GetRequiredService<SyncConsentDialog>());
         // Code PIN du poste : seul l'hôte qui a un coffre (MAUI) ajoute son IDeviceLockStore ; sans lui, pas de verrou.
-        services.TryAddSingleton(sp => new DeviceLock(sp.GetService<IDeviceLockStore>(), sp.GetService<TimeProvider>() ?? TimeProvider.System));
+        services.TryAddSingleton(sp => new DeviceLock(sp.GetService<IDeviceLockStore>(), sp.GetRequiredService<TimeProvider>()));
         return services;
     }
 }

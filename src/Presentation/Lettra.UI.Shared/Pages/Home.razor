@@ -3,7 +3,8 @@
 @inject IInvoicesGateway Invoices
 @inject IQuotesGateway Quotes
 @inject IStringLocalizer<SharedResource> L
-@inject IServiceProvider Services
+@inject Optional<IDemoDataGateway> OptionalDemo
+@inject Optional<IReceivablesGateway> OptionalReceivables
 @inject ToastService Toasts
 @inject TimeProvider Clock
 
@@ -268,7 +269,7 @@ else
     {
         await LoadAsync();
         // Le chargement de démonstration n'existe que sur un hôte qui l'a branché et l'autorise (jamais en Production).
-        if (_figures is { } figures && IsEmpty(figures) && Services.GetService<IDemoDataGateway>() is { } demo)
+        if (_figures is { } figures && IsEmpty(figures) && OptionalDemo.Value is { } demo)
         {
             OperationResult<DemoDataStatusResponse> status = await demo.GetStatusAsync(CancellationToken.None);
             _demoAvailable = status is { IsSuccess: true, Value.Available: true };
@@ -279,7 +280,7 @@ else
     {
         // Le point des créances est facultatif : sans lui (hôte ancien, refus), la carte des factures du mois reste.
         Task<OperationResult<ReceivablesSummaryResponse>>? receivables =
-            Services.GetService<IReceivablesGateway>()?.GetSummaryAsync(CancellationToken.None);
+            OptionalReceivables.Value?.GetSummaryAsync(CancellationToken.None);
         DateOnly from = DashboardFigures.PeriodStart(Today);
         Task<(List<InvoiceSummary> Items, IReadOnlyList<ErrorDetail> Errors)> invoices = ReadAllAsync(
             page => Invoices.ListAsync(new BillingListQuery(From: from, To: Today, Page: page, PageSize: 200), null, null, CancellationToken.None));
@@ -298,7 +299,7 @@ else
 
     private async Task LoadDemoAsync()
     {
-        if (Services.GetService<IDemoDataGateway>() is not { } demo || _demoBusy)
+        if (OptionalDemo.Value is not { } demo || _demoBusy)
         {
             return;
         }

@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Identity;
 using Lettra.UI.Abstractions;
+using Lettra.UI.Shared.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.JSInterop;
@@ -17,7 +18,7 @@ internal sealed partial class OfflineDraftJson : JsonSerializerContext;
 /// En ligne, la session le donne et l'onglet le retient ; sans réseau, seul l'onglet qui l'a retenu le retrouve (un
 /// nouvel onglet, ou la personne suivante sur le poste, n'a pas de périmètre et ne voit aucun brouillon).
 /// </summary>
-internal sealed class OfflineDraftScope(IServiceProvider services)
+internal sealed class OfflineDraftScope(Optional<IDossierSelection> selection, Optional<ISessionGateway> sessions)
 {
     private string? _scope;
 
@@ -28,13 +29,12 @@ internal sealed class OfflineDraftScope(IServiceProvider services)
             return _scope;
         }
 
-        if (services.GetService<IDossierSelection>()?.CurrentDossierId is not Guid dossier
-            || services.GetService<ISessionGateway>() is not { } sessions)
+        if (selection.Value?.CurrentDossierId is not Guid dossier || sessions.Value is not { } gateway)
         {
             return null;
         }
 
-        OperationResult<SessionResponse> session = await sessions.GetAsync(cancellationToken).ConfigureAwait(false);
+        OperationResult<SessionResponse> session = await gateway.GetAsync(cancellationToken).ConfigureAwait(false);
         if (session.Value is { } current)
         {
             if (!current.IsAuthenticated || current.DeviceStorageKey is not { Length: > 0 } user)
@@ -174,6 +174,7 @@ public static class OfflineDraftsRegistration
     public static IServiceCollection AddOfflineDrafts(this IServiceCollection services)
     {
         services.TryAddSingleton(TimeProvider.System);
+        services.AddOptionalDependencies();
         services.TryAddScoped<OfflineDraftScope>();
         services.TryAddScoped<IOfflineDraftStore, IndexedDbDraftStore>();
         services.TryAddScoped<OfflineDrafts>();

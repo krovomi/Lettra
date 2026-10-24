@@ -1,7 +1,7 @@
 @page "/session/connexion"
 @page "/session/deconnexion"
 @* Application de bureau reliée à un serveur : la page de connexion du cabinet s'ouvre dans le navigateur système (PKCE). *@
-@inject IServiceProvider Services
+@inject Optional<IInteractiveSignIn> OptionalSignIn
 @inject NavigationManager Navigation
 @inject IStringLocalizer<SharedResource> L
 
@@ -17,7 +17,7 @@
     protected override async Task OnInitializedAsync()
     {
         _signingOut = Navigation.ToBaseRelativePath(Navigation.Uri).StartsWith("session/deconnexion", StringComparison.OrdinalIgnoreCase);
-        IInteractiveSignIn? signIn = Services.GetService(typeof(IInteractiveSignIn)) as IInteractiveSignIn;
+        IInteractiveSignIn? signIn = OptionalSignIn.Value;
         if (signIn is null)
         {
             Navigation.NavigateTo("session");

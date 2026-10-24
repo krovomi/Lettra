@@ -1,19 +1,17 @@
 using Lettra.Contracts.Preferences;
 using Lettra.UI.Abstractions;
-using Microsoft.Extensions.DependencyInjection;
+using Lettra.UI.Shared.Services;
 
 namespace Lettra.UI.Shared.Preferences;
 
 /// <summary>
 /// Ce que les écrans de saisie lisent des préférences, dans le dossier ouvert : valeurs pré-remplies, listes de choix
-/// classées selon l'usage, choix comptés. Les écrans l'obtiennent par <see cref="From"/> : absent (tests d'un seul
-/// composant, hôte sans préférences), la saisie se comporte comme avant.
+/// classées selon l'usage, choix comptés. Les écrans la reçoivent par <c>Optional&lt;EntryPreferences&gt;</c> :
+/// absente (hôte sans préférences), la saisie se comporte comme avant.
 /// </summary>
-public sealed class EntryPreferences(UserPreferencesState preferences, IServiceProvider services)
+public sealed class EntryPreferences(UserPreferencesState preferences, Optional<IDossierSelection> selection)
 {
-    public static EntryPreferences? From(IServiceProvider services) => services?.GetService<EntryPreferences>();
-
-    private IDossierSelection? Selection => services.GetService<IDossierSelection>();
+    private IDossierSelection? Selection => selection.Value;
 
     public Guid? DossierId => Selection?.CurrentDossierId is Guid id && id != Guid.Empty ? id : null;
 

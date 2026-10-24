@@ -8,7 +8,8 @@
 @using Lettra.Contracts.Administration
 @implements IDisposable
 @inject IStringLocalizer<SharedResource> L
-@inject IServiceProvider Services
+@inject Optional<SessionState> OptionalSession
+@inject Optional<IAdministrationGateway> OptionalAdministration
 @inject NavMenuState Menu
 @inject HelpPanelState Help
 @inject NavigationManager Navigation
@@ -117,7 +118,7 @@
         _path = Navigation.ToBaseRelativePath(Navigation.Uri);
         Refresh();
 
-        _session = Services.GetService(typeof(ISessionGateway)) is null ? null : Services.GetService(typeof(SessionState)) as SessionState;
+        _session = OptionalSession.Value;
         if (_session is not null)
         {
             _session.Changed += OnSessionChanged;
@@ -133,7 +134,7 @@
     /// </summary>
     private async Task LoadAccessAsync()
     {
-        if (!NavItems.All.Any(i => i.Page is not null) || Services.GetService(typeof(IAdministrationGateway)) is not IAdministrationGateway gateway)
+        if (!NavItems.All.Any(i => i.Page is not null) || OptionalAdministration.Value is not { } gateway)
         {
             return;
         }

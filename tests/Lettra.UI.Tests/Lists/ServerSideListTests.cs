@@ -33,7 +33,7 @@ public sealed class ServerSideListTests : BunitContext
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         JSInterop.SetupModule(AssistModule.Path).Mode = JSRuntimeMode.Loose;
-        ExplorerSettings.SearchDelay = TimeSpan.FromMilliseconds(1);
+        Services.AddSingleton(new ExplorerSettings { SearchDelay = TimeSpan.FromMilliseconds(1) });
         Services.AddLettraUi();
         Services.AddSingleton<TimeProvider>(new ManualClock(new DateTimeOffset(2026, 10, 16, 12, 0, 0, TimeSpan.Zero)));
         LettraCultures.Apply(CultureInfo.GetCultureInfo("fr-FR"));

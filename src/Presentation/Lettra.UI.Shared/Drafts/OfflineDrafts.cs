@@ -6,7 +6,7 @@ using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Serialization;
 using Lettra.UI.Abstractions;
-using Microsoft.Extensions.DependencyInjection;
+using Lettra.UI.Shared.Services;
 
 namespace Lettra.UI.Shared.Drafts;
 
@@ -27,7 +27,12 @@ public sealed record OfflineDraftSyncReport(int Sent, int Kept, bool Offline);
 /// l'éditeur le résout comme en ligne. Chaque brouillon porte son dossier et ne part que vers lui ; le stockage est
 /// propre à l'utilisateur et au dossier, et la déconnexion l'efface (<see cref="ClearAsync"/>).
 /// </summary>
-public sealed class OfflineDrafts(IOfflineDraftStore store, IServiceProvider services, TimeProvider clock) : IDisposable
+public sealed class OfflineDrafts(
+    IOfflineDraftStore store,
+    IQuotesGateway quotes,
+    IInvoicesGateway invoices,
+    Optional<IDossierSelection> selection,
+    TimeProvider clock) : IDisposable
 {
     public const string ReferenceDataKey = "billing.reference";
     public const string CompanyProfileKey = "billing.company";
@@ -224,7 +229,6 @@ public sealed class OfflineDrafts(IOfflineDraftStore store, IServiceProvider ser
         {
             case OfflineDraftKind.Quote when QuoteRequestOf(draft) is { } request:
             {
-                IQuotesGateway quotes = services.GetRequiredService<IQuotesGateway>();
                 OperationResult<QuoteResponse> result = draft.ServerId is Guid id
                     ? await quotes.UpdateAsync(id, request, draft.BaseVersion, cancellationToken).ConfigureAwait(false)
                     : await quotes.CreateAsync(request, cancellationToken).ConfigureAwait(false);
@@ -233,7 +237,6 @@ public sealed class OfflineDrafts(IOfflineDraftStore store, IServiceProvider ser
 
             case OfflineDraftKind.Invoice when InvoiceRequestOf(draft) is { } request:
             {
-                IInvoicesGateway invoices = services.GetRequiredService<IInvoicesGateway>();
                 OperationResult<InvoiceResponse> result = draft.ServerId is Guid id
                     ? await invoices.UpdateAsync(id, request, draft.BaseVersion, cancellationToken).ConfigureAwait(false)
                     : await invoices.CreateAsync(request, cancellationToken).ConfigureAwait(false);
@@ -245,7 +248,7 @@ public sealed class OfflineDrafts(IOfflineDraftStore store, IServiceProvider ser
         }
     }
 
-    private Guid? CurrentDossier => services.GetService<IDossierSelection>()?.CurrentDossierId;
+    private Guid? CurrentDossier => selection.Value?.CurrentDossierId;
 
     private static Outcome Of<T>(OperationResult<T> result, Guid? id, long? version) =>
         IsUnreachable(result) ? new Outcome(true, null, null, null)

@@ -4,7 +4,6 @@ using Lettra.Contracts.Preferences;
 using Lettra.Contracts.Serialization;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Shared.Services;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.UI.Shared.Preferences;
 
@@ -30,13 +29,14 @@ public sealed class UserPreferencesState : IDisposable
     private string? _user;
     private Task? _loading;
 
-    public UserPreferencesState(UiPreferences device, IServiceProvider services)
+    public UserPreferencesState(UiPreferences device, Optional<IUserPreferencesGateway> gateway, Optional<SessionState> session, TimeProvider clock)
     {
-        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(gateway);
+        ArgumentNullException.ThrowIfNull(session);
         _device = device;
-        _gateway = services.GetService<IUserPreferencesGateway>();
-        _session = services.GetService<ISessionGateway>() is null ? null : services.GetService<SessionState>();
-        _clock = services.GetService<TimeProvider>() ?? TimeProvider.System;
+        _gateway = gateway.Value;
+        _session = session.Value;
+        _clock = clock;
         // Un autre utilisateur ouvre sa session sur le poste : ses propres préférences reviennent.
         _session?.Changed += (_, _) => _ = EnsureLoadedAsync();
     }

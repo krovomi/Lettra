@@ -2,7 +2,7 @@
    Rien sans brouillons hors ligne (MAUI, poste isolé) ou quand aucun n'attend. *@
 @implements IAsyncDisposable
 @using Microsoft.Extensions.DependencyInjection
-@inject IServiceProvider Services
+@inject Optional<OfflineDrafts> OptionalDrafts
 @inject IJSRuntime JS
 @inject IStringLocalizer<SharedResource> L
 
@@ -40,7 +40,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _drafts = Services.GetService<OfflineDrafts>();
+        _drafts = OptionalDrafts.Value;
         if (_drafts is null)
         {
             return;

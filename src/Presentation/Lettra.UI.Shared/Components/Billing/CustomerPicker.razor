@@ -1,6 +1,6 @@
 @inject ICustomersGateway Customers
 @inject IStringLocalizer<SharedResource> L
-@inject IServiceProvider Services
+@inject Optional<EntryPreferences> OptionalEntry
 @* Choix du client d'une pièce : bouton (ou F4 sur le bouton) qui ouvre la liste filtrable des clients, ceux que
    l'utilisateur choisit le plus souvent en tête. *@
 <div class="lettra-field">
@@ -71,7 +71,7 @@
     {
         OperationResult<IReadOnlyList<CustomerSummary>> result = await Customers.ListAllAsync(CancellationToken.None);
         _errors = result.Errors;
-        _options = result.Value is { } customers && EntryPreferences.From(Services) is { } preferences
+        _options = result.Value is { } customers && OptionalEntry.Value is { } preferences
             ? preferences.Rank(customers, c => c.Id, UsageKindDto.Customer)
             : result.Value;
     }

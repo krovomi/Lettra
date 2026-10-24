@@ -6,7 +6,10 @@
 @implements IDisposable
 @inject IQuotesGateway Quotes
 @inject IBillingSettingsGateway Settings
-@inject IServiceProvider Services
+@inject Optional<OfflineDrafts> OptionalDrafts
+@inject Optional<EntryPreferences> OptionalEntry
+@inject Optional<ICustomersGateway> OptionalCustomers
+@inject Optional<IPriceListsGateway> OptionalPrices
 @inject TimeProvider Clock
 @inject IDocumentPdfRenderer Pdf
 @inject IFileDownloader Files
@@ -198,7 +201,7 @@ else
             .Bind("Ctrl+S", L["Billing.Command.Save"], _ => SaveNowAsync(), _ => IsDraft)
             .Bind("Ctrl+Enter", L["Billing.Command.Validate"], _ => ValidateAsync(), _ => CanValidate)
             .Bind("Ctrl+P", L["Billing.Command.Pdf"], _ => DownloadPdfAsync(), _ => _quote is not null);
-        _drafts = Services.GetService<OfflineDrafts>();
+        _drafts = OptionalDrafts.Value;
         if (_drafts is not null)
         {
             _drafts.Synced += DraftSynced;
@@ -245,7 +248,7 @@ else
 
             Show(loaded.Value, replaceLines: true);
             // Pièce ouverte : proposée dans « Reprendre où j'en étais » (accueil, palette).
-            _ = EntryPreferences.From(Services)?.RecordUseAsync(UsageKindDto.Quote, id);
+            _ = OptionalEntry.Value?.RecordUseAsync(UsageKindDto.Quote, id);
             await RestoreAsync(serverId: id, localId: null);
             await CheckAsync();
         }
@@ -269,7 +272,7 @@ else
             _quote = null;
             _request = new SaveQuoteRequest { VatRegime = _company?.VatFranchise == true ? VatRegimeDto.Franchise : VatRegimeDto.Standard };
             // Valeurs retenues par l'utilisateur pour ce dossier (« Mes préférences ») ; vides, rien ne change.
-            if (EntryPreferences.From(Services) is { } entry)
+            if (OptionalEntry.Value is { } entry)
             {
                 EntryDefaultsDto defaults = await entry.DefaultsAsync();
                 _request.Notes = defaults.QuoteNotes;
@@ -369,7 +372,7 @@ else
     {
         _request.CustomerId = customer.Id;
         _customerName = customer.Name;
-        _ = EntryPreferences.From(Services)?.RecordUseAsync(UsageKindDto.Customer, customer.Id);
+        _ = OptionalEntry.Value?.RecordUseAsync(UsageKindDto.Customer, customer.Id);
         await PreselectPdfLanguageAsync();
         await ScheduleSaveAsync();
     }
@@ -377,7 +380,7 @@ else
     /// <summary>Langue du PDF proposée : celle du client, le français sinon (elle reste modifiable).</summary>
     private async Task PreselectPdfLanguageAsync()
     {
-        if (_request.CustomerId == Guid.Empty || Services.GetService(typeof(ICustomersGateway)) is not ICustomersGateway customers)
+        if (_request.CustomerId == Guid.Empty || OptionalCustomers.Value is not { } customers)
         {
             return;
         }
@@ -420,7 +423,7 @@ else
 
     private async Task<ResolvedPrice?> ResolvePriceAsync(Guid catalogItemId)
     {
-        if (_request.CustomerId == Guid.Empty || Services.GetService(typeof(IPriceListsGateway)) is not IPriceListsGateway prices)
+        if (_request.CustomerId == Guid.Empty || OptionalPrices.Value is not { } prices)
         {
             return null;
         }
