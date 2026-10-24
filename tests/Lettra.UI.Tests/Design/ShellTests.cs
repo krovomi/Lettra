@@ -39,6 +39,7 @@ public sealed class ShellTests : BunitContext
         Services.AddCabinetFakes();
         Services.AddSingleton<IInvoicesGateway>(_invoices);
         Services.AddSingleton<IQuotesGateway>(_quotes);
+        Services.AddFakeBillingDashboard();
         Services.AddSingleton<ISessionGateway>(new FakeSessionGateway(new SessionResponse(true, SessionModeDto.Local, "Claire Martin", true)));
         Services.AddSingleton<TimeProvider>(new ManualClock(new DateTimeOffset(2026, 10, 16, 12, 0, 0, TimeSpan.Zero)));
         LettraCultures.Apply(CultureInfo.GetCultureInfo("fr-FR"));

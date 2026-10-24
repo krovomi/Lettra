@@ -276,11 +276,13 @@ public static class SyncErrors
 
 /// <summary>
 /// Une portée neuve sur le dossier courant, pour le même utilisateur : chaque intention rejouée a son propre contexte,
-/// et une écriture refusée (version périmée) ne reste pas en attente dans celui de l'intention suivante.
+/// et une écriture refusée (version périmée) ne reste pas en attente dans celui de l'intention suivante. Le travail
+/// reçoit le service dont il a besoin, pris dans cette portée : il ne voit jamais le conteneur.
 /// </summary>
 public interface IDossierWorkScope
 {
-    Task<T> RunAsync<T>(Func<IServiceProvider, CancellationToken, Task<T>> work, CancellationToken cancellationToken);
+    Task<T> RunAsync<TService, T>(Func<TService, CancellationToken, Task<T>> work, CancellationToken cancellationToken)
+        where TService : notnull;
 }
 
 /// <summary>

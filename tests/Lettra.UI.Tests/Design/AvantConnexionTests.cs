@@ -33,6 +33,7 @@ public sealed class AvantConnexionTests : BunitContext
         Services.AddCabinetFakes();
         Services.AddSingleton<IInvoicesGateway>(new FakeInvoicesGateway());
         Services.AddSingleton<IQuotesGateway>(new FakeQuotesGateway());
+        Services.AddFakeBillingDashboard();
         Services.AddSingleton<IAdministrationGateway>(_administration);
         Services.AddSingleton<ISpeechGateway>(_speech);
         Services.AddSingleton<ISessionGateway>(_session);

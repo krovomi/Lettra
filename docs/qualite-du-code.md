@@ -336,7 +336,8 @@ workflows, `LayerDependencyTests`, `MauiProgram.cs`) passent par le coordinateur
 | 10 | Tâches de fond : `PeriodicPass` et horloge injectée partout ; job de migration sans autre tâche (Socle). | X1, X11 |
 | 11 | Interface : jetons d'annulation par page, recherche différée annulable, un seul toaster, base « occupé / erreur / conflit ». | X9, X17, X23 |
 | 12 | Interface : fin du localisateur de services (`Optional<T>` pour ce que l'hôte peut ne pas fournir). | X14 (interface), A5, A6 |
-| 13 | Synchronisation sans localisateur (portée de travail typée), indicateurs d'accueil lus au serveur ; passerelles : `HttpCalls` et `InProcessScope` partout, fichiers rangés. | X14 (synchronisation), X8, X15, X16, S7 |
+| 13 | Synchronisation sans localisateur (portée de travail typée), indicateurs d'accueil lus au serveur. | X14 (synchronisation), X8 |
+| 13 bis | Passerelles : `HttpCalls` et `InProcessScope` partout, fichiers rangés. | X15, X16, S7 |
 | 14 | Endpoints et erreurs : `ErrorKind.Unavailable`, filtres de permission unifiés, endpoints restants via le médiateur. | X18, X19, X20, A4 |
 | 15 | Découpages : longues méthodes, grands composants, constructeurs chargés ; domaine du module Exports. | X21, X22, X26, R9, S2, S4 |
 | 16 | Basse gravité, au fil des PR qui touchent les fichiers. | basse |
@@ -412,6 +413,27 @@ workflows, `LayerDependencyTests`, `MauiProgram.cs`) passent par le coordinateur
   le raccourcit en enregistrant le sien, sans effet sur les autres.
 - Passent à la PR 13 : **X14** côté synchronisation (`Sync.Client`, port `IDossierWorkScope`, où chaque intention
   rejouée a sa portée) et **X8** (indicateurs d'accueil lus au serveur), qui ajoute une requête et un point d'API.
+
+### Fait dans la PR 13
+
+- **X14** (synchronisation, côté serveur) : le port `IDossierWorkScope` ne passe plus le conteneur au travail à faire.
+  `RunAsync<TService, T>` résout le service voulu dans la portée du dossier et le lui donne. La boîte d'envoi reçoit
+  ses gestionnaires (`IEnumerable<IOutboxHandler>`) ; le serveur de synchronisation reçoit `IntentReplay`, une classe
+  qui déclare dans son constructeur ce dont le rejeu d'une intention a besoin (médiateur, lectures des tiers et du
+  catalogue, dossier courant).
+- **X14** (synchronisation, côté appareil), gardé : `SyncCenter`, `SyncCoordinator`, `ReplicaSyncPreferences` et
+  `SyncConflictResolver` ouvrent une portée par dossier (`IServiceScopeFactory`) parce que le dossier ouvert change
+  pendant la vie de l'application et que chaque passe travaille dans la base locale d'un dossier précis. C'est le motif
+  « une portée par unité de travail » de .NET, pas un localisateur : les services résolus sont ceux de cette portée, et
+  la remplacer par des fabriques typées multiplierait les types sans rien rendre plus sûr (KISS).
+- **X8** : les chiffres de l'accueil sont calculés au serveur (`GET /api/v1/billing/dashboard`, permission
+  `DossierLire`, requête `GetBillingDashboardQuery`). `BillingDashboardCalculator` part des mêmes faits que les
+  indicateurs de pilotage (`IBillingKpiReader`, pièces validées seulement) et du jour légal de Paris. Le navigateur ne
+  lit plus toutes les pièces sur six mois : il demande les chiffres et les cinq dernières factures et devis, triés par
+  le serveur. Un devis valable jusqu'à aujourd'hui compte comme en attente, quelle que soit sa date d'émission (avant,
+  seuls les devis des six derniers mois lus par l'écran comptaient). Passerelles HTTP et en processus
+  (`IBillingDashboardGateway`), testées sur les deux transports ; calcul couvert par `BillingDashboardTests`.
+- Passent à la PR 13 bis : **X15**, **X16**, **S7** (passerelles), pour garder cette PR petite.
 
 ## Plan
 

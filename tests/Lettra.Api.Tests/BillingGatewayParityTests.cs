@@ -120,6 +120,35 @@ public sealed class BillingGatewayParityTests(LettraApiFactory factory) : IClass
 
     [Theory]
     [MemberData(nameof(Transports))]
+    public async Task L_accueil_compte_un_devis_valide_et_une_facture_validee_du_mois(string transport)
+    {
+        await using ServiceProvider services = _harness.Gateway(transport);
+        IBillingDashboardGateway dashboard = services.GetRequiredService<IBillingDashboardGateway>();
+        IQuotesGateway quotes = services.GetRequiredService<IQuotesGateway>();
+        IInvoicesGateway invoices = services.GetRequiredService<IInvoicesGateway>();
+        Guid customer = await CustomerAsync(services);
+        await GatewayHarness.SaveCompanyProfileAsync(services);
+        BillingDashboardResponse before = (await dashboard.GetAsync(default)).Value!;
+
+        QuoteResponse quote = (await quotes.CreateAsync(new SaveQuoteRequest { CustomerId = customer, Lines = [GatewayHarness.Conseil()] }, default)).Value!;
+        OperationResult<QuoteResponse> sent = await quotes.ValidateAsync(quote.Id, quote.Version, default);
+        InvoiceResponse invoice = (await invoices.CreateAsync(new SaveInvoiceRequest { CustomerId = customer, Lines = [GatewayHarness.Conseil(2m)] }, default)).Value!;
+        OperationResult<InvoiceResponse> validated = await invoices.ValidateAsync(invoice.Id, invoice.Version, default);
+        OperationResult<BillingDashboardResponse> after = await dashboard.GetAsync(default);
+
+        sent.IsSuccess.Should().BeTrue(GatewayHarness.Codes(sent));
+        validated.IsSuccess.Should().BeTrue(GatewayHarness.Codes(validated));
+        after.IsSuccess.Should().BeTrue(GatewayHarness.Codes(after));
+        after.Value!.Months.Should().HaveCount(BillingDashboardResponse.MonthCount);
+        after.Value.Months[^1].Month.Should().Be(new DateOnly(Today.Year, Today.Month, 1));
+        after.Value.Months[^1].ExclTax.Should().Be(before.Months[^1].ExclTax + 200m);
+        after.Value.InvoicesThisMonth.Should().Be(before.InvoicesThisMonth + 1);
+        after.Value.PendingQuotes.Should().Be(before.PendingQuotes + 1);
+        after.Value.PendingQuotesExclTax.Should().Be(before.PendingQuotesExclTax + 100m);
+    }
+
+    [Theory]
+    [MemberData(nameof(Transports))]
     public async Task Une_facture_inconnue_est_refusee_de_meme(string transport)
     {
         await using ServiceProvider services = _harness.Gateway(transport);
@@ -288,6 +317,7 @@ public sealed class BillingGatewayParityTests(LettraApiFactory factory) : IClass
             (await lists.DeleteAsync(id, default)).Errors,
             (await lists.ResolveAsync(id, [id, Guid.CreateVersion7()], default)).Errors,
             (await receivables.GetSummaryAsync(default)).Errors,
+            (await services.GetRequiredService<IBillingDashboardGateway>().GetAsync(default)).Errors,
             (await demo.GetStatusAsync(default)).Errors,
             (await demo.SeedAsync(default)).Errors,
         ];

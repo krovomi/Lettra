@@ -89,6 +89,12 @@ public interface IInvoicesGateway
     Task<OperationResult<byte[]>> GetEInvoiceAsync(Guid id, EInvoiceFormatDto format, CancellationToken cancellationToken);
 }
 
+/// <summary>Les chiffres de l'accueil du dossier, calculés par le serveur.</summary>
+public interface IBillingDashboardGateway
+{
+    Task<OperationResult<BillingDashboardResponse>> GetAsync(CancellationToken cancellationToken);
+}
+
 /// <summary>Listes fermées de la facturation et fiche de l'entreprise émettrice.</summary>
 public interface IBillingSettingsGateway
 {

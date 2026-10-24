@@ -33,6 +33,12 @@ internal static class BillingEndpoints
             .WithName("GetBillingReferenceData")
             .Produces<BillingReferenceData>();
 
+        api.MapGet("/billing/dashboard", DashboardAsync)
+            .RequirePermission(Permission.DossierLire)
+            .WithTags("Billing")
+            .WithName("GetBillingDashboard")
+            .Produces<BillingDashboardResponse>();
+
         RouteGroupBuilder profile = api.MapGroup("/company-profile").WithTags("Billing");
         profile.MapGet("/", GetProfileAsync).RequirePermission(Permission.DossierLire).WithName("GetCompanyProfile")
             .Produces<CompanyProfileResponse>().ProducesProblem(StatusCodes.Status404NotFound);
@@ -114,6 +120,9 @@ internal static class BillingEndpoints
     }
 
     // --- Paramétrage
+
+    private static async Task<IResult> DashboardAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken) =>
+        Ok(await queries.QueryAsync(new GetBillingDashboardQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false));
 
     private static async Task<IResult> ReferenceDataAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken) =>
         Ok(await queries.QueryAsync(new GetBillingReferenceDataQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false));
