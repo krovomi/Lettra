@@ -554,6 +554,39 @@ workflows, `LayerDependencyTests`, `MauiProgram.cs`) passent par le coordinateur
   Les réunir demanderait un éditeur générique sur deux types de contrats, plus difficile à lire que les deux copies
   courtes qui restent.
 
+### Fait dans la PR 15 quater
+
+- **X26**, méthodes longues découpées en étapes nommées, sans changer le comportement :
+  - `SpokenNumbers.TryRead` : 176 → 62 lignes. Les chiffres, les mots, les unités et le « et » entre deux mots
+    sont lus chacun par sa méthode, sur un `Accumulator` (milliers posés, groupe en cours).
+  - `FecValidator.Validate` : 103 → 41 lignes. La lecture des lignes et de l'en-tête est à part, et `Ledger` regroupe
+    les écritures, vérifie l'ordre de validation par journal et les équilibres.
+  - `RecurringInvoice.Apply` : 102 → 37 lignes, avec `DraftErrors` et `ScheduleRevision` (date de la prochaine
+    révision).
+  - `CatalogDbContext.OnModelCreating` : 124 → 16 lignes, en trois parties (topologie, registre des droits, règles
+    du cabinet). Le modèle EF est inchangé.
+- **X26**, constructeurs : `AuditKitService` passe de 11 à 8 dépendances. Les preuves d'intégrité (contrôle de la
+  chaîne, registre des clés, archives scellées, entrées de la période) passent dans `AuditKitIntegrity`.
+  `ValidateInvoiceHandler` garde ses 11 ports : la validation d'une facture enchaîne relecture, séparation des
+  tâches, conformité, série du poste, numérotation, effets sur les pièces liées, scellement et journaux. Chacun sert
+  une fois. Les regrouper dans un objet de paramètres cacherait les dépendances sans simplifier le cas d'usage
+  (KISS). `Invoice` (745 lignes) reste l'agrégat de la pièce : ses invariants (brouillon, validation, avoir, acompte,
+  scellement) se vérifient ensemble.
+- **X22** :
+  - La dictée « devis pour Dupont » ne lit plus toute la liste des clients. `CustomerDirectory.FindBestMatchAsync`
+    cherche dans le dossier par le mot le plus long du nom, puis départage avec la recherche floue de la palette.
+  - `Administration` (723 → 654 lignes) : la matrice des rôles (`RolesMatrix`) et la fiche d'un rôle (`RolePanel`)
+    deviennent des composants.
+  - `RemindersPage` (573 → 412) : l'historique et ses filtres, son tri et ses pages passent dans `ReminderHistory`.
+    Ses erreurs s'affichent avec celles de la page.
+  - `DocumentLinesGrid` (603 → 559) : la lecture des cellules chiffrées (quantité, prix, remise, TVA) passe dans
+    `DocumentLineCells`, testable sans écran. La grille garde le clavier, les listes F4 et la voix, qui dépendent du
+    catalogue chargé et des textes traduits.
+  - `VoiceHost` (497 lignes) garde le panneau, la dictée et la palette : un seul écran, déjà découpé en fragments.
+- Tests : `CustomerDirectoryTests` (recherche du client dit) et `DocumentLineCellsTests` (lecture des cellules) ; les
+  tests existants de la dictée, du FEC, des modèles récurrents, du kit, de l'administration et des relances passent
+  inchangés.
+
 ## Plan
 
 Une PR par couche, petite, verte en CI et assignée à Leub. Chaque refactorisation commence par

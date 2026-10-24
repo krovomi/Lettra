@@ -77,6 +77,7 @@ public static class DependencyInjection
         services.AddScoped<IDossierIndicatorSource, VatToDeclareIndicatorSource>();
 
         // Kit contrôle fiscal (vague 7) : FEC, attestation d'intégrité, piste d'audit fiable, XML et transmissions.
+        services.AddScoped<AuditKitIntegrity>();
         services.AddScoped<AuditKitService>();
         services.AddScoped<IQueryHandler<GetAuditKitQuery, Result<AuditKitFile>>, GetAuditKitHandler>();
         // Relances des factures échues (vague 7) : scénario, textes FR/EN, envoi par le port e-mail et historique.

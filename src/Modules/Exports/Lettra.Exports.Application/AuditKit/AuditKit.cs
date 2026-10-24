@@ -37,10 +37,7 @@ public sealed class AuditKitService(
     ICompanyProfileRepository profiles,
     IInvoiceRepository invoices,
     FecExportService fec,
-    DossierIntegrityService integrity,
-    IIntegrityStore journal,
-    IIntegrityKeyring keyring,
-    ISealedArchiveBuilder archives,
+    AuditKitIntegrity integrity,
     IAuditTrailReader trail,
     IAuthorizationRegistry registry,
     TimeProvider clock)
@@ -55,35 +52,12 @@ public sealed class AuditKitService(
         }
 
         CompanyProfile profile = (await profiles.FindAsync(cancellationToken).ConfigureAwait(false))!;
-        Result<IntegrityReport> report = await integrity.VerifyAsync(cancellationToken).ConfigureAwait(false);
-        if (report.IsFailure)
-        {
-            return Result<AuditKitFile>.Failure(report.Errors);
-        }
-
-        IReadOnlyList<ClosingSummary> closings = [.. IntegrityMapper
-            .ToSummaries(await journal.ListClosingsAsync(cancellationToken).ConfigureAwait(false))
-            .Where(c => c.PeriodStart <= to && c.PeriodEnd >= from)];
-        List<SealedArchive> sealedArchives = [];
-        foreach (ClosingSummary closing in closings)
-        {
-            Result<SealedArchive> archive = await archives.BuildAsync(closing.Number, cancellationToken).ConfigureAwait(false);
-            if (archive.IsFailure)
-            {
-                return Result<AuditKitFile>.Failure(archive.Errors);
-            }
-
-            sealedArchives.Add(archive.Value);
-        }
-
         TenantDescriptor dossier = tenant.Current;
-        AuditKitAttestationResponse attestation = new(
-            dossier.DossierId.Value,
-            from,
-            to,
-            IntegrityMapper.ToResponse(report.Value),
-            IntegrityMapper.ToSummaries(await keyring.ListAsync(cancellationToken).ConfigureAwait(false)),
-            closings);
+        Result<IntegrityEvidence> evidence = await integrity.CollectAsync(dossier.DossierId, from, to, cancellationToken).ConfigureAwait(false);
+        if (evidence.IsFailure)
+        {
+            return Result<AuditKitFile>.Failure(evidence.Errors);
+        }
 
         AuditTrailData data = await trail.ReadAsync(from, to, cancellationToken).ConfigureAwait(false);
         CompanyProfileResponse company = profile.ToResponse();
@@ -102,13 +76,72 @@ public sealed class AuditKitService(
             to,
             clock.GetUtcNow(),
             fecFile.Value,
-            attestation,
-            sealedArchives,
+            evidence.Value.Attestation,
+            evidence.Value.SealedArchives,
             data,
             xml,
-            await ReadJournalAsync(from, to, cancellationToken).ConfigureAwait(false),
+            evidence.Value.Journal,
             await PeopleAsync(dossier, cancellationToken).ConfigureAwait(false));
         return AuditKitWriter.Write(content);
+    }
+
+    /// <summary>Les noms du registre du cabinet ; vide sans registre (poste isolé) : la piste garde les identifiants.</summary>
+    private async Task<IReadOnlyDictionary<Guid, string>> PeopleAsync(TenantDescriptor dossier, CancellationToken cancellationToken)
+    {
+        CabinetRegistry? cabinet = await registry.ReadAsync(dossier.OrganisationId, cancellationToken).ConfigureAwait(false);
+        return cabinet is null
+            ? []
+            : cabinet.People.Where(p => !string.IsNullOrWhiteSpace(p.DisplayName)).ToDictionary(p => p.Id, p => p.DisplayName!);
+    }
+}
+
+/// <summary>Les preuves d'intégrité d'une période : attestation, archives scellées des clôtures et entrées de la chaîne.</summary>
+public sealed record IntegrityEvidence(
+    AuditKitAttestationResponse Attestation,
+    IReadOnlyList<SealedArchive> SealedArchives,
+    IReadOnlyList<JournalEntry> Journal);
+
+/// <summary>
+/// La part intégrité du kit : contrôle de la chaîne (qui republie l'état des alertes), registre des clés, archives
+/// scellées des clôtures qui touchent la période, entrées de la chaîne de la période.
+/// </summary>
+public sealed class AuditKitIntegrity(
+    DossierIntegrityService integrity,
+    IIntegrityStore journal,
+    IIntegrityKeyring keyring,
+    ISealedArchiveBuilder archives)
+{
+    public async Task<Result<IntegrityEvidence>> CollectAsync(DossierId dossier, DateOnly from, DateOnly to, CancellationToken cancellationToken)
+    {
+        Result<IntegrityReport> report = await integrity.VerifyAsync(cancellationToken).ConfigureAwait(false);
+        if (report.IsFailure)
+        {
+            return Result<IntegrityEvidence>.Failure(report.Errors);
+        }
+
+        IReadOnlyList<ClosingSummary> closings = [.. IntegrityMapper
+            .ToSummaries(await journal.ListClosingsAsync(cancellationToken).ConfigureAwait(false))
+            .Where(c => c.PeriodStart <= to && c.PeriodEnd >= from)];
+        List<SealedArchive> sealedArchives = [];
+        foreach (ClosingSummary closing in closings)
+        {
+            Result<SealedArchive> archive = await archives.BuildAsync(closing.Number, cancellationToken).ConfigureAwait(false);
+            if (archive.IsFailure)
+            {
+                return Result<IntegrityEvidence>.Failure(archive.Errors);
+            }
+
+            sealedArchives.Add(archive.Value);
+        }
+
+        AuditKitAttestationResponse attestation = new(
+            dossier.Value,
+            from,
+            to,
+            IntegrityMapper.ToResponse(report.Value),
+            IntegrityMapper.ToSummaries(await keyring.ListAsync(cancellationToken).ConfigureAwait(false)),
+            closings);
+        return new IntegrityEvidence(attestation, sealedArchives, await ReadJournalAsync(from, to, cancellationToken).ConfigureAwait(false));
     }
 
     /// <summary>Les entrées de la chaîne datées de la période (date de pièce) ou enregistrées pendant la période.</summary>
@@ -125,15 +158,6 @@ public sealed class AuditKitService(
         }
 
         return entries;
-    }
-
-    /// <summary>Les noms du registre du cabinet ; vide sans registre (poste isolé) : la piste garde les identifiants.</summary>
-    private async Task<IReadOnlyDictionary<Guid, string>> PeopleAsync(TenantDescriptor dossier, CancellationToken cancellationToken)
-    {
-        CabinetRegistry? cabinet = await registry.ReadAsync(dossier.OrganisationId, cancellationToken).ConfigureAwait(false);
-        return cabinet is null
-            ? []
-            : cabinet.People.Where(p => !string.IsNullOrWhiteSpace(p.DisplayName)).ToDictionary(p => p.Id, p => p.DisplayName!);
     }
 }
 

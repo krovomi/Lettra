@@ -86,15 +86,15 @@
             new() { Key = Column.Designation, Label = L["Lines.Column.Designation"], Width = "minmax(10rem, 3fr)", Wide = true,
                     Display = r => r.Designation, Parse = (r, t) => r with { Designation = t.Trim() } },
             new() { Key = Column.Quantity, Label = L["Lines.Column.Quantity"], Width = "minmax(4rem, 5rem)", Numeric = true,
-                    Display = r => r.Quantity.ToString("#,##0.###", Culture), Parse = ParseQuantity },
+                    Display = r => r.Quantity.ToString("#,##0.###", Culture), Parse = (r, t) => DocumentLineCells.ParseQuantity(r, t, Culture) },
             new() { Key = Column.Unit, Label = L["Lines.Column.Unit"], Width = "minmax(4.5rem, 6rem)",
                     Display = r => UnitLabel(r.UnitCode), Parse = ParseUnit },
             new() { Key = Column.Price, Label = L["Lines.Column.UnitPrice"], Width = "minmax(5.5rem, 7rem)", Numeric = true,
-                    Display = r => GridNumber.FormatPrice(r.UnitPriceExclTax, Culture), Parse = ParsePrice },
+                    Display = r => GridNumber.FormatPrice(r.UnitPriceExclTax, Culture), Parse = (r, t) => DocumentLineCells.ParsePrice(r, t, Culture) },
             new() { Key = Column.Discount, Label = L["Lines.Column.Discount"], Width = "5rem", Numeric = true,
-                    Display = r => r.DiscountPercent == 0m ? string.Empty : r.DiscountPercent.ToString("0.##", Culture), Parse = ParseDiscount },
+                    Display = r => r.DiscountPercent == 0m ? string.Empty : r.DiscountPercent.ToString("0.##", Culture), Parse = (r, t) => DocumentLineCells.ParseDiscount(r, t, Culture) },
             new() { Key = Column.Vat, Label = L["Lines.Column.Vat"], Width = "minmax(4rem, 6rem)", Numeric = true,
-                    Display = VatLabel, Parse = ParseVat },
+                    Display = VatLabel, Parse = (r, t) => DocumentLineCells.ParseVat(r, t, ReferenceData, Regime, Culture) },
             new() { Key = Column.Total, Label = L["Lines.Column.Total"], Width = "minmax(6rem, 7rem)", Numeric = true,
                     Display = r => GridNumber.FormatAmount(r.TotalExclTax, Culture) },
         ];
@@ -372,16 +372,6 @@
         return row with { Reference = value.Length == 0 ? null : value, CatalogItemId = value.Length == 0 ? null : row.CatalogItemId };
     }
 
-    /// <summary>Quantité, saisie rapide comprise (« 3h », « 1,5 j », « 2x3 ») : l'unité de temps reconnue remplace celle de la ligne.</summary>
-    private static DocumentLineRow ParseQuantity(DocumentLineRow row, string text) =>
-        QuickEntry.TryParseQuantity(text, Culture, out QuickValue quantity)
-            ? row with { Quantity = quantity.Value, UnitCode = quantity.UnitCode ?? row.UnitCode }
-            : throw new FormatException(text);
-
-    /// <summary>Prix unitaire, produit compris (« 2x45 »).</summary>
-    private static DocumentLineRow ParsePrice(DocumentLineRow row, string text) =>
-        QuickEntry.TryParseAmount(text, Culture, out QuickValue price) && price.Value >= 0m ? row with { UnitPriceExclTax = price.Value } : throw new FormatException(text);
-
     // ---------- aperçu de la saisie rapide ----------
 
     private IJSObjectReference? _assist;
@@ -447,19 +437,6 @@
         };
     }
 
-    private static DocumentLineRow ParseDiscount(DocumentLineRow row, string text)
-    {
-        string value = text.Replace("%", string.Empty, StringComparison.Ordinal).Trim();
-        if (value.Length == 0)
-        {
-            return row with { DiscountPercent = 0m };
-        }
-
-        return GridNumber.TryParse(value, Culture, out decimal discount) && discount is >= 0m and <= 100m
-            ? row with { DiscountPercent = discount }
-            : throw new FormatException(text);
-    }
-
     /// <summary>Unité : code CEE-ONU (« HUR ») ou libellé traduit (« Heure »).</summary>
     private DocumentLineRow ParseUnit(DocumentLineRow row, string text)
     {
@@ -467,27 +444,6 @@
         ChoiceOption? match = UnitOptions().FirstOrDefault(o => o.Code.Equals(value, StringComparison.OrdinalIgnoreCase)
             || UnitLabel(o.Code).Equals(value, StringComparison.CurrentCultureIgnoreCase));
         return match is null ? throw new FormatException(value) : row with { UnitCode = match.Code };
-    }
-
-    /// <summary>TVA : code (« FR-5.5 »), taux (« 5,5 », « 20 % ») ou motif d'exonération (« VATEX-EU-132 »).</summary>
-    private DocumentLineRow ParseVat(DocumentLineRow row, string text)
-    {
-        string value = text.Trim();
-        VatExemptionReasonOption? exemption = ReferenceData.ExemptionReasons.FirstOrDefault(e => e.Code.Equals(value, StringComparison.OrdinalIgnoreCase));
-        if (exemption is not null)
-        {
-            return Regime == VatRegimeDto.Standard ? row with { VatExemptionCode = exemption.Code } : throw new FormatException(value);
-        }
-
-        VatRateOption? rate = ReferenceData.VatRates.FirstOrDefault(v => v.Code.Equals(value, StringComparison.OrdinalIgnoreCase));
-        if (rate is null && GridNumber.TryParse(value.Replace("%", string.Empty, StringComparison.Ordinal), Culture, out decimal percent))
-        {
-            rate = ReferenceData.VatRates.FirstOrDefault(v => v.Percent == percent);
-        }
-
-        return rate is null
-            ? throw new FormatException(value)
-            : row with { VatRateCode = rate.Code, VatRatePercent = rate.Percent, VatExemptionCode = null };
     }
 
     // ---------- voix ----------

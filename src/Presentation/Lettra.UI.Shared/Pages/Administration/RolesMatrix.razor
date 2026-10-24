@@ -1,0 +1,47 @@
+@* La matrice des rôles : pour chaque espace de l'application, le niveau que chaque rôle y ouvre. *@
+@inject IStringLocalizer<SharedResource> L
+
+<details class="la-collapsible" id="roles-matrix">
+    <summary><Icon Name="layers" Size="18" />@L["Admin.Matrix.Title"]<Icon Name="chevron-right" Size="18" Class="la-collapsible-chevron" /></summary>
+    <p class="lettra-hint">@L["Admin.Matrix.Hint"]</p>
+    <div class="la-matrix-scroll" tabindex="0" role="region" aria-label="@L["Admin.Matrix.Title"]">
+        <table class="lettra-table la-matrix">
+            <thead>
+                <tr>
+                    <th scope="col">@L["Admin.Matrix.Page"]</th>
+                    @foreach (RoleDescription role in View.Overview.Roles)
+                    {
+                        <th scope="col">@View.RoleName(role.Key)</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (AccessAreaInfo area in AccessAreas.All)
+                {
+                    <tr>
+                        <th scope="row"><Icon Name="@AreaList.AreaIcon(area.Area)" Size="16" />@L[$"Admin.Area.{area.Area}"]</th>
+                        @foreach (RoleDescription role in View.Overview.Roles)
+                        {
+                            AccessLevelDto level = role.Areas.FirstOrDefault(a => a.Area == area.Area)?.Level ?? AccessLevelDto.None;
+                            <td>
+                                @if (level == AccessLevelDto.None)
+                                {
+                                    <span class="la-dash" aria-label="@L["Admin.Level.None"]">–</span>
+                                }
+                                else
+                                {
+                                    <LevelBadge Level="level" />
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</details>
+
+@code {
+    [Parameter, EditorRequired]
+    public AdministrationView View { get; set; } = default!;
+}
