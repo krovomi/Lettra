@@ -79,5 +79,7 @@
   <data name="Pilotage.Admin.Silent.Help" xml:space="preserve"><value>Installed apps with no sync for more than 7 days.</value></data>
   <data name="Pilotage.Admin.Nightly" xml:space="preserve"><value>Oldest cabinet indicators</value></data>
   <data name="Pilotage.Admin.Nightly.Help" xml:space="preserve"><value>Recomputed every 24 hours: beyond 26 hours, a run was missed.</value></data>
+  <data name="Pilotage.Reference" xml:space="preserve"><value>Ref. {0}</value></data>
+  <data name="Pilotage.Reference.Help" xml:space="preserve"><value>The dossier's reference in the Grafana dashboards, which show no names.</value></data>
   <data name="Pilotage.Footnote" xml:space="preserve"><value>Ratios, delays and indices only: no amounts or customer names. You only see the dossiers your rights open.</value></data>
 </root>
