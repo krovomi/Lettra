@@ -57,9 +57,10 @@ Les anciennes variables `--lettra-*` restent en alias pour ne rien casser.
 | Ardoise | `slate` | Barre latérale bleu nuit, contenu clair : look « logiciel comptable » |
 | Contraste élevé | `contrast` | Malvoyance, écran en plein soleil : texte à 7:1 au moins, focus jaune |
 
-Le choix se fait dans le menu **Apparence** de la barre du haut (ou la feuille **Plus** sur téléphone, ou la palette
-Ctrl+K, « Thème : … »). Il s'applique sans recharger (`applyTheme` dans `lettra-ui.js` pose `data-theme` sur `<html>`
-et met à jour `theme-color`) et il est retenu sur l'appareil (`localStorage`, clé `lettra.theme`), comme la densité.
+Le choix se fait dans le menu **Apparence** de la barre du haut (ou la feuille **Plus** sur téléphone, la palette
+Ctrl+K, « Thème : … », ou **Mes préférences**). Il s'applique sans recharger (`applyTheme` dans `lettra-ui.js` pose `data-theme` sur `<html>`
+et met à jour `theme-color`) et il est retenu sur l'appareil (`localStorage`, clé `lettra.theme`), comme la densité ;
+l'un et l'autre suivent aussi l'utilisateur dans son compte ([préférences](../preferences-utilisateur.md)).
 Au démarrage, `lettra-theme-boot.js`, chargé dans le `<head>` des hôtes, pose le thème retenu avant le premier rendu.
 
 ![Ardoise, 768 px](captures/accueil-ardoise-768.png) ![Contraste élevé, 1440 px](captures/accueil-contraste-1440.png)
@@ -68,7 +69,7 @@ Au démarrage, `lettra-theme-boot.js`, chargé dans le `<head>` des hôtes, pose
 
 | Largeur | Navigation | Barre du haut |
 |---|---|---|
-| ≥ 1200 px (ordinateur) | Barre latérale groupée (Ventes, Tiers, Comptabilité, Pilotage) : recherche « Aller à… », sections repliables, favoris, aide en bas ; repliable en rail, choix retenu ([menu et aide](../menu-et-aide.md)) | Recherche Ctrl K, assistant, synchronisation, apparence, session |
+| ≥ 1200 px (ordinateur) | Barre latérale groupée (Ventes, Tiers, Comptabilité, Pilotage) : recherche « Aller à… », sections repliables, favoris, aide en bas ; repliable en rail, choix retenu ([menu et aide](../menu-et-aide.md)) | Dossier ouvert, recherche Ctrl K, assistant, synchronisation, voix, aide, apparence, session |
 | 768 à 1199 px (tablette) | Rail d'icônes, libellés en info-bulle et pour le lecteur d'écran | Idem |
 | < 768 px (téléphone) | Onglets en bas : Accueil, Devis, Factures, Clients, Plus ; la feuille **Plus** porte la recherche, le reste du menu, l'aide et l'apparence | Marque, recherche en icône, actions |
 
@@ -92,7 +93,8 @@ La navigation est décrite une seule fois dans `Layout/NavItems.cs`. Cibles de 4
 - cinq dernières factures et cinq derniers devis.
 
 Les retards et les transmissions viennent du **point des créances** (`GET /api/v1/receivables/summary`, permission
-`DossierLire`), une lecture du module Exports : reste dû = TTC − avoirs validés − encaissements déclarés à la plateforme.
+`DossierLire`), une lecture du module Exports : reste dû = TTC − avoirs validés − encaissements (ceux enregistrés dans
+Lettra, ou ceux déclarés à la plateforme s'ils sont plus élevés).
 Une facture est en retard le lendemain de son échéance, à la date de Paris. Calcul : `ReceivablesSummary.Compute`.
 
 Un dossier vide invite à compléter la fiche entreprise, ajouter un client et faire un premier devis. Quand l'hôte le
@@ -155,9 +157,11 @@ LETTRA_GALLERY_DIR=$PWD/artifacts/galerie dotnet test tests/Lettra.UI.Tests --fi
 NODE_PATH=$(npm root -g) node build/design-captures.cjs artifacts/galerie chemin/vers/axe-core/axe.min.js
 ```
 
-La galerie rend 12 écrans avec des données fictives dans les 4 thèmes : accueil, menu apparence, feuille Plus, devis,
-factures, une facture, clients, articles, centre d'alertes, fiche entreprise, accueil d'un dossier vide et devis sans
-résultat. Le script en tire 144 captures et `audit.json`. Au 16 octobre 2026 : 0 défaut axe, aucun débordement horizontal. Limites : pages rendues sans JavaScript (la grille de saisie y est statique), Chromium
+La galerie rend 28 écrans avec des données fictives dans les 4 thèmes : accueil, menu apparence, feuille Plus, devis,
+factures, une facture, clients, une fiche client (lecture et saisie), articles, un article, la grille du catalogue,
+journal, balance, grand livre, centre d'alertes, fiche entreprise, sept vues du menu et de l'aide, accueil d'un dossier
+vide, devis sans résultat, Mes préférences et « Reprendre où j'en étais » ; s'y ajoutent les sept vues d'« Équipe et
+accès », en clair et en sombre (`AdministrationGalleryTests`). Le script en tire 378 captures et `audit.json`. Au 16 octobre 2026, avec les 12 premiers écrans (144 captures) : 0 défaut axe, aucun débordement horizontal. Limites : pages rendues sans JavaScript (la grille de saisie y est statique), Chromium
 seulement ; Safari et les vrais téléphones ne sont pas testés ici.
 
 ## Ajouter un écran ou un composant

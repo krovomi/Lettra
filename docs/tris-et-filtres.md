@@ -35,6 +35,7 @@ et dans l'application MAUI, sur tous les appareils.
 | Rapprochement bancaire | Opération, date, montant (ordre du relevé par défaut) | Recherche (libellé, tiers, client proposé), période, montant, à traiter ou toutes | Écran |
 | Alertes | Titre, gravité, portée, état, dernière occurrence, occurrences (gravité puis date par défaut) | Recherche, gravité, état, tout le cabinet, closes | Écran |
 | Vue cabinet | Dossier, chaque indicateur (urgence par défaut) | Recherche, à traiter seulement | Écran |
+| Tableaux de bord : Mes dossiers, Administration | Dossier (par défaut), chaque indicateur | Recherche (Mes dossiers) | Écran |
 | Équipe et accès | Personnes : nom, arrivée, accès ; équipes : nom, membres, dossiers | Recherche, filtres existants | Écran |
 | Balance, soldes clients | Client, pièces, débit, crédit, solde (plus gros solde par défaut) | Recherche | Écran |
 | Déclaration européenne de services | Client, ligne, numéro de TVA, montant (ordre du fichier par défaut) | Recherche (client, numéro de TVA) | Écran |
