@@ -146,6 +146,7 @@ internal static class ReminderScenarios
             harness.Services,
             new ReminderDossierSource((_, _) => Task.FromResult<IReadOnlyList<TenantDescriptor>>(dossiers)),
             emails,
+            TimeProvider.System,
             Options.Create(new PaymentReminderJobOptions()),
             NullLogger<PaymentReminderJob>.Instance);
         (int active, int sentCount, int failed) = await job.RunPassAsync(default);
@@ -185,7 +186,7 @@ internal static class ReminderScenarios
         TenantDescriptor unknown = new(new DossierId(Guid.CreateVersion7()), harness.Descriptor(manual).OrganisationId, provider, "test:inconnu", null);
         TenantDescriptor[] dossiers = [harness.Descriptor(manual), harness.Descriptor(automatic), unknown];
         PaymentReminderJob Job(ReminderDossierSource source, IEmailSender sender, PaymentReminderJobOptions? options = null) => new(
-            harness.Services.GetRequiredService<IServiceScopeFactory>(), harness.Services, source, sender,
+            harness.Services.GetRequiredService<IServiceScopeFactory>(), harness.Services, source, sender, TimeProvider.System,
             Options.Create(options ?? new PaymentReminderJobOptions()), NullLogger<PaymentReminderJob>.Instance);
         ReminderDossierSource listed = new((_, _) => Task.FromResult<IReadOnlyList<TenantDescriptor>>(dossiers));
 

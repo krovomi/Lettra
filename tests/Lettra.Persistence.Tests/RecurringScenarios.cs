@@ -71,6 +71,7 @@ internal static class RecurringScenarios
             harness.Services,
             harness.Services.GetRequiredService<IServiceScopeFactory>(),
             new RecurringDossierSource((_, _) => Task.FromResult<IReadOnlyList<TenantDescriptor>>(dossiers)),
+            TimeProvider.System,
             Options.Create(new RecurringInvoiceJobOptions()),
             NullLogger<RecurringInvoiceJob>.Instance);
 
