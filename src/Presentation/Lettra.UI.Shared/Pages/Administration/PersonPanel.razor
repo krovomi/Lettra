@@ -1,6 +1,7 @@
 @* Fiche d'une personne : ce qu'elle peut faire (en clair), ses accès un par un, ses équipes, et les gestes courants
    (donner un accès, retirer, suspendre, réactiver). Un retrait se défait depuis le message qui le confirme. *@
 @inject IStringLocalizer<SharedResource> L
+@inject ToastService Toasts
 @inject IAdministrationGateway Gateway
 @inject TimeProvider Clock
 
@@ -126,7 +127,6 @@ else if (Person.State != AccountStateDto.Active)
 
     [Parameter, EditorRequired] public PersonSummary Person { get; set; } = default!;
 
-    [Parameter, EditorRequired] public AdminToasts Toasts { get; set; } = default!;
 
     [Parameter] public EventCallback OnGrant { get; set; }
 
@@ -150,7 +150,7 @@ else if (Person.State != AccountStateDto.Active)
         _resending = false;
         if (!sent.IsSuccess || sent.Value is not { } result)
         {
-            Toasts.ShowError(L.Error(sent.Errors[0].Code));
+            Toasts.Failed(L.Error(sent.Errors[0].Code));
             return;
         }
 
@@ -158,13 +158,13 @@ else if (Person.State != AccountStateDto.Active)
         switch (result.Status)
         {
             case InvitationEmailStatusDto.Sent:
-                Toasts.Show(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.InvitationSent"], name, Person.Email));
+                Toasts.Done(L, string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.InvitationSent"], name, Person.Email));
                 break;
             case InvitationEmailStatusDto.NotConfigured:
-                Toasts.ShowError(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.InvitationNoEmail"], name));
+                Toasts.Failed(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.InvitationNoEmail"], name));
                 break;
             default:
-                Toasts.ShowError(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.InvitationFailed"], name));
+                Toasts.Failed(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.InvitationFailed"], name));
                 break;
         }
     }
@@ -184,12 +184,13 @@ else if (Person.State != AccountStateDto.Active)
         OperationResult<bool> revoked = await Gateway.RevokeAsync(View.Overview.CabinetId, assignment.Id, CancellationToken.None);
         if (!revoked.IsSuccess)
         {
-            Toasts.ShowError(L.Error(revoked.Errors[0].Code));
+            Toasts.Failed(L.Error(revoked.Errors[0].Code));
             return;
         }
 
         string role = View.RoleName(assignment.Role);
-        Toasts.Show(
+        Toasts.Done(
+            L,
             string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.Revoked"], role, View.FirstNameOf(Person)),
             async () =>
             {
@@ -205,7 +206,7 @@ else if (Person.State != AccountStateDto.Active)
                 OperationResult<RoleAssignmentSummary> restored = await Gateway.AssignAsync(View.Overview.CabinetId, again, CancellationToken.None);
                 if (!restored.IsSuccess)
                 {
-                    Toasts.ShowError(L.Error(restored.Errors[0].Code));
+                    Toasts.Failed(L.Error(restored.Errors[0].Code));
                 }
 
                 await OnChanged.InvokeAsync();
@@ -226,11 +227,12 @@ else if (Person.State != AccountStateDto.Active)
         OperationResult<bool> result = await Gateway.SetTeamMemberAsync(team.Id, Person.Id, member, CancellationToken.None);
         if (!result.IsSuccess)
         {
-            Toasts.ShowError(L.Error(result.Errors[0].Code));
+            Toasts.Failed(L.Error(result.Errors[0].Code));
             return;
         }
 
-        Toasts.Show(
+        Toasts.Done(
+            L,
             string.Format(CultureInfo.CurrentCulture, L[member ? "Admin.Toast.JoinedTeam" : "Admin.Toast.LeftTeam"], View.FirstNameOf(Person), team.Name),
             member ? null : async () =>
             {

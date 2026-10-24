@@ -3,6 +3,7 @@ using Bunit;
 using Lettra.Contracts.Administration;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
+using Lettra.UI.Shared.Components.Feedback;
 using Lettra.UI.Shared.Layout;
 using Lettra.UI.Shared.Localization;
 using Microsoft.Extensions.DependencyInjection;
@@ -89,21 +90,22 @@ public sealed class AdministrationPageTests : BunitContext
         page.Find("#grant-submit").Click();
 
         _gateway.Calls.Should().Contain($"assign {FakeAdministrationGateway.Nadia} auditeur Cabinet");
-        page.Find(".la-toast").TextContent.Should().Contain("Nadia est maintenant Auditeur");
+        this.ToastText().Should().Contain("Nadia est maintenant Auditeur");
     }
 
     [Fact]
     public void Un_retrait_se_defait_depuis_le_message_qui_le_confirme()
     {
         IRenderedComponent<AdminPage> page = Render<AdminPage>();
+        IRenderedComponent<ToastHost> toasts = Render<ToastHost>();
         page.Find($"#person-{FakeAdministrationGateway.Nadia}").Click();
 
         page.Find(".la-drawer .la-row button").Click();
 
-        page.Find(".la-toast").TextContent.Should().Contain("Rôle « Collaborateur » retiré à Nadia");
+        this.ToastText().Should().Contain("Rôle « Collaborateur » retiré à Nadia");
         page.FindAll(".la-drawer .la-row").Should().BeEmpty();
 
-        page.Find(".la-toast-action").Click();
+        toasts.Find(".lt-toast-action").Click();
 
         page.WaitForAssertion(() => page.FindAll(".la-drawer .la-row").Should().ContainSingle().Which.TextContent.Should().Contain("Collaborateur"));
         _gateway.Calls.Should().Contain($"assign {FakeAdministrationGateway.Nadia} collaborateur Groupe");
@@ -138,7 +140,7 @@ public sealed class AdministrationPageTests : BunitContext
         page.Find("#person-email").Change("zoe.petit@cabinet-demo.example");
         page.Find("#person-form").Submit();
 
-        page.WaitForAssertion(() => page.FindAll(".la-toast span").Select(t => t.TextContent).Should().Contain(t => t.StartsWith(expected, StringComparison.Ordinal)));
+        page.WaitForAssertion(() => this.Toasts().Select(t => t.Message).Should().Contain(t => t.StartsWith(expected, StringComparison.Ordinal)));
     }
 
     [Theory]
@@ -154,7 +156,7 @@ public sealed class AdministrationPageTests : BunitContext
         page.Find("#person-resend").Click();
 
         _gateway.Calls.Should().Contain($"resend {FakeAdministrationGateway.Ines}");
-        page.WaitForAssertion(() => page.FindAll(".la-toast span").Select(t => t.TextContent).Should().Contain(t => t.StartsWith(expected, StringComparison.Ordinal)));
+        page.WaitForAssertion(() => this.Toasts().Select(t => t.Message).Should().Contain(t => t.StartsWith(expected, StringComparison.Ordinal)));
     }
 
     [Fact]
@@ -203,7 +205,7 @@ public sealed class AdministrationPageTests : BunitContext
             new(AccessAreaDto.CreditNotes, AccessLevelDto.View),
             new(AccessAreaDto.Parties, AccessLevelDto.View),
         });
-        page.Find(".la-toast").TextContent.Should().Contain("Rôle « Assistant facturation » enregistré");
+        this.ToastText().Should().Contain("Rôle « Assistant facturation » enregistré");
     }
 
     [Fact]
@@ -221,7 +223,7 @@ public sealed class AdministrationPageTests : BunitContext
 
         page.Find("#team-members").TextContent.Should().Be("Membres (1)");
         page.Find("#team-dossiers").TextContent.Should().Be("Dossiers (1)");
-        page.Find(".la-toast:last-child").TextContent.Should().Contain("Dossier Garage du Centre ajouté à l'équipe Pôle artisans");
+        this.ToastText().Should().Contain("Dossier Garage du Centre ajouté à l'équipe Pôle artisans");
     }
 
     [Fact]

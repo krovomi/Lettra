@@ -573,7 +573,7 @@ else
         if (result.Value is null)
         {
             _errors = result.Errors;
-            _conflict = result.Errors.Any(e => e.Code == ErrorCodes.Concurrency.VersionMismatch);
+            _conflict = result.IsStale;
             StateHasChanged();
             return;
         }
@@ -666,7 +666,7 @@ else
             if (result.Value is null)
             {
                 _errors = result.Errors;
-                _conflict = result.Errors.Any(e => e.Code == ErrorCodes.Concurrency.VersionMismatch);
+                _conflict = result.IsStale;
                 _approvalRequested |= result.Errors.Any(e => e.Code == ErrorCodes.SegregationOfDuties.ManagerApprovalRequired);
                 return;
             }
