@@ -22,7 +22,7 @@ manager et auditeur, et le niveau « Approuver » de l'espace d'administration.
 | `integrite/clotures/*.zip` | L'archive scellée de chacune de ces clôtures, vérifiable hors de Lettra. | `ISealedArchiveBuilder` |
 | `piste-audit-fiable/description.txt` | Les contrôles mis en place (numérotation, contenu figé, journal chaîné et scellé, auteurs, transmissions, encaissements, FEC). | texte fixe |
 | `piste-audit-fiable/pieces.csv` | Une ligne par facture, acompte ou avoir validé de la période : qui l'a créé, validé, émis (et approuvé pour un avoir), quand, son empreinte figée et son dernier statut à la plateforme. | pièces de la base du dossier |
-| `piste-audit-fiable/encaissements.csv` | Les encaissements datés de la période, contre-passés compris, avec leur auteur. | encaissements (#105) |
+| `piste-audit-fiable/encaissements.csv` | Les encaissements datés de la période, contre-passés compris, avec leur auteur. | encaissements |
 | `piste-audit-fiable/journal.csv` | Les entrées de la chaîne datées de la période ou enregistrées pendant la période, avec leurs empreintes. | journal inaltérable |
 | `plateforme/transmissions.csv` | Chaque statut reçu de la plateforme agréée, dans l'ordre. | transmissions (phase 5.3) |
 | `factures/<numéro>-cii.xml` | Le XML CII (EN 16931) de chaque pièce. | `EInvoiceSerializer` |
@@ -48,7 +48,7 @@ isolé (mode 1), seulement son identifiant.
 - Le contrôle d'intégrité du kit est le même que la passe quotidienne (`IntegrityCheckJob`) : il republie l'état des
   deux alertes de la chaîne. Cette passe tourne dans le Worker, 5 min après son démarrage puis toutes les 24 h ; dans
   une installation sans Worker (la démo Docker), l'API la lance elle-même, 30 s après le démarrage dans la démo, puis
-  une fois par jour (PR #163).
+  une fois par jour.
 
 ## Vérifier un kit
 
