@@ -342,7 +342,8 @@ workflows, `LayerDependencyTests`, `MauiProgram.cs`) passent par le coordinateur
 | 14 bis | Synchronisation via le médiateur. | A4 (synchronisation) |
 | 15 | Découpages : synchronisation du poste, assistant ; X18 et A4 clos (routes machine et démonstration). | S2, S4, X18, A4 |
 | 15 bis | Domaine du module Exports (nouveau projet, câblage Socle). | X21 |
-| 15 ter | Grands composants, éditeurs de pièces, méthodes et constructeurs longs. | X22, R9, X26 |
+| 15 ter | Éditeurs de devis et de facture : ce qui était copié passe dans `DocumentEditing`. | R9 |
+| 15 quater | Grands composants, méthodes et constructeurs longs. | X22, X26 |
 | 16 | Basse gravité, au fil des PR qui touchent les fichiers. | basse |
 
 ### Fait dans la PR 8
@@ -522,6 +523,19 @@ workflows, `LayerDependencyTests`, `MauiProgram.cs`) passent par le coordinateur
   - le chargement du jeu de démonstration compose sa propre application, avec une horloge rejouée sur un an, puis
     la jette. C'est voulu : l'application en cours garde son horloge, ses sessions et ses caches. Il passe déjà par
     les cas d'usage, au nom de l'utilisateur et dans le dossier de la requête.
+
+### Fait dans la PR 15 ter
+
+- **R9** : ce que les éditeurs de devis et de facture faisaient à l'identique passe dans `DocumentEditing`
+  (`UI.Shared/Billing`) : la langue du PDF proposée d'après le client, le prix de la grille du client, les articles
+  déjà sur la pièce, le renvoi d'une mention manquante vers son champ (client, réglages du cabinet, ligne fautive),
+  l'ouverture d'un bloc et la pose du curseur. Chaque éditeur ne garde que ses champs propres : échéance,
+  livraison et adresse de livraison pour la facture, date de validité pour le devis. 125 lignes en moins dans les
+  deux écrans ; `DocumentEditingTests` couvre l'aide partagée (7 cas).
+- Restent dans chaque éditeur, parce qu'ils portent le type de la pièce (requête, réponse, route, brouillon local) :
+  l'enregistrement, la saisie gardée sur l'appareil et les actions de la pièce (valider, émettre, accepter, avoir).
+  Les réunir demanderait un éditeur générique sur deux types de contrats, plus difficile à lire que les deux copies
+  courtes qui restent.
 
 ## Plan
 
