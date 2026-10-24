@@ -15,7 +15,7 @@ Le code est **globalement sain** : avertissements traités en erreurs avec les a
 mode `Recommended`, aucune utilisation de `DateTime.Now` côté serveur, aucun `.Result` / `.Wait()`,
 exceptions typées et journalisées, règles de dépendance entre couches vérifiées par
 `tests/Lettra.Architecture.Tests`. La couverture est déjà élevée (**88 % des lignes, 77 % des
-branches**).
+branches** à cette mesure ; 92,2 % et 82,1 % après la PR #153, 92,3 % et 82,1 % après la PR #159).
 
 Il n'est pas pour autant exempt de dettes. Les principales :
 
@@ -110,12 +110,13 @@ Le script fusionne les rapports des 14 projets de tests (une ligne est couverte 
 projet l'exécute), écarte le code généré et affiche la couverture par assembly, puis les
 fichiers qui ont le plus de lignes non couvertes.
 Avec `--seuil-lignes 88 --seuil-branches 78`, il sort en erreur (code 1) si la couverture
-totale passe sous ces seuils : c'est l'étape bloquante proposée pour la CI.
+totale passe sous ces seuils : c'est l'étape bloquante de la CI depuis la PR #136.
 
 Attention : sous instrumentation de couverture, le test d'architecture
 `Les_domaines_n_utilisent_aucun_framework` échoue (l'instrumentation ajoute une référence
 `Microsoft.CodeCoverage` dans `Lettra.Domain`). Il passe normalement sans `--collect`. Une étape
-de couverture en CI doit donc soit exclure `Lettra.Architecture.Tests`, soit le lancer à part.
+de couverture en CI doit donc soit exclure `Lettra.Architecture.Tests`, soit le lancer à part : la CI
+l'exclut de la mesure et le lance dans une étape à part (`.github/workflows/ci.yml`).
 
 ## Écarts relevés
 
@@ -278,7 +279,7 @@ Aucun test existant n'est retiré, désactivé ni affaibli.
 | 5 | Listes paginées : une seule règle de page et de taille (R7) ; interface : horloge injectée (D5) ; tests. | Fusionnée (PR #145) |
 | 5 bis | Recherche normalisée en un seul endroit (R12), découpage du contrôle des mentions (S3), tests. | Fusionnée (PR #146) |
 | 7 | Base propre : règles de l'IDE bloquantes (using inutiles, code mort, mise en forme, simplifications), 160 fichiers corrigés, suppressions d'avertissements revues (voir « Base propre »). | Fusionnée (PR #153) |
-| 7 bis | Dates du jour au calendrier légal (D8) : documents imprimables, assistant, kit contrôle fiscal, derniers écrans sur l'horloge système ; tests à minuit à Paris. | En cours |
+| 7 bis | Dates du jour au calendrier légal (D8) : documents imprimables, assistant, kit contrôle fiscal, derniers écrans sur l'horloge système ; tests à minuit à Paris. | Fusionnée (PR #159) |
 | 6 | Application : chargement versionné (R5), fin de validation de facture (R8), saisie d'un encaissement (R4, S1, premier `IValidator` d'Exports pour A7), tests. | Fusionnée (PR #141) |
 | 8 | Interface Blazor : fin du localisateur de services (A5, A6), base commune des éditeurs (R9), tests bUnit. | À faire |
 

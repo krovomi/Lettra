@@ -63,8 +63,8 @@ Lecture seule, calculée à partir des écritures enregistrées à la validation
   solde cumulé, solde de clôture. La fiche client y renvoie (« Compte client »).
 - La période (ce mois, mois dernier, ce trimestre, cette année, année dernière, ou dates libres) est dans l'adresse et
   suit d'un onglet à l'autre. Une consultation couvre cinq ans au plus.
-- Les encaissements ne sont pas encore comptabilisés dans Lettra : le solde 411 est ce qui a été facturé, avoirs
-  déduits. L'écran le dit.
+- Les encaissements sont comptabilisés depuis la vague 6 (journal de banque BQ) : le journal montre leurs écritures à
+  côté des ventes et le solde 411 tient compte des règlements ([encaissements.md](../encaissements.md)).
 
 API : `GET /api/v1/accounting/journal`, `/accounting/balance`, `/accounting/accounts/{account}/ledger` (permission
 `DossierLire`), cas d'usage dans `Lettra.Exports.Application/Accounting`.
