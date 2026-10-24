@@ -1,13 +1,6 @@
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Bootstrap;
-using Lettra.Exports.Infrastructure;
-using Lettra.Infrastructure.Catalog;
-using Lettra.Infrastructure.Persistence.Billing;
-using Lettra.Infrastructure.Persistence.Cabinet;
-using Lettra.Infrastructure.Persistence.Integrity;
-using Lettra.Infrastructure.Persistence.Outbox;
-using Lettra.Supervision.Infrastructure;
 using Lettra.Worker;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -17,7 +10,8 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 // passe de l'outbox (envois à la plateforme agréée mis en file pendant une panne), alertes du calendrier fiscal
 // (échéances proches et dépassées), passe quotidienne de la vue cabinet (compteurs de chaque dossier), factures
 // récurrentes dues et relances des factures échues (envoi automatique, si un serveur d'e-mail est réglé). La plateforme
-// est celle de l'API : même réglage Lettra:EInvoicing:Platform.
+// est celle de l'API : même réglage Lettra:EInvoicing:Platform. En job de déploiement (Lettra:Worker:RunOnce), la
+// migration seule (WorkerJobs).
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddLettra(builder.Configuration);
@@ -29,22 +23,7 @@ builder.Services.AddOptions<WorkerIdentityOptions>().Bind(builder.Configuration.
 builder.Services.Replace(ServiceDescriptor.Scoped<ICurrentUser, WorkerCurrentUser>());
 builder.Services.AddScoped<JobDossierSource>();
 builder.Services.AddScoped<IRequestedDossierSource>(sp => sp.GetRequiredService<JobDossierSource>());
-builder.Services.AddOptions<DossierMigrationJobOptions>().Bind(builder.Configuration.GetSection(DossierMigrationJobOptions.SectionName));
-builder.Services.AddHostedService<DossierMigrationJob>();
-
-// Un Worker lancé en job de déploiement (RunOnce) ne fait que migrer : ni escalade ni contrôle d'intégrité.
-if (!builder.Configuration.GetValue<bool>($"{DossierMigrationJobOptions.SectionName}:{nameof(DossierMigrationJobOptions.RunOnce)}"))
-{
-    builder.Services.AddEscalationJob(builder.Configuration);
-    builder.Services.AddIntegrityCheckJob(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
-}
-
-builder.Services.AddFecBulkExport(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
-builder.Services.AddOutboxDispatch(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
-builder.Services.AddFiscalDeadlineAlerts(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
-builder.Services.AddCabinetOverviewJob(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
-builder.Services.AddRecurringInvoicing(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
-builder.Services.AddPaymentReminders(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
+builder.Services.AddWorkerJobs(builder.Configuration);
 
 using IHost host = builder.Build();
 await host.RunAsync().ConfigureAwait(false);

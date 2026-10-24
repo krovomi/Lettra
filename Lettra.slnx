@@ -82,5 +82,6 @@
     <Project Path="tests/Lettra.Supervision.Tests/Lettra.Supervision.Tests.csproj" />
     <Project Path="tests/Lettra.Sync.Tests/Lettra.Sync.Tests.csproj" />
     <Project Path="tests/Lettra.UI.Tests/Lettra.UI.Tests.csproj" />
+    <Project Path="tests/Lettra.Worker.Tests/Lettra.Worker.Tests.csproj" />
   </Folder>
 </Solution>

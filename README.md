@@ -169,7 +169,8 @@ présent d'office sous Windows 11 et sur un Windows 10 à jour, suffit ; rien d'
 4. **Lancer.** Dans le dossier extrait, double-cliquez sur **`Lettra.App.Maui.exe`**. Le prototype n'est pas signé :
    si Windows affiche « Windows a protégé votre ordinateur », cliquez sur **Informations complémentaires**, puis
    **Exécuter quand même**. Pour la suite, clic droit sur l'exécutable, **Envoyer vers**, **Bureau (créer un raccourci)**.
-5. **Créer le compte du poste.** Au premier lancement, Lettra demande votre nom et une **phrase secrète** d'au moins
+5. **Créer le compte du poste.** L'écran « Ouverture de vos dossiers… » s'affiche le temps d'ouvrir les données du
+   poste (si elles ne s'ouvrent pas, un message et **Réessayer**). Au premier lancement, Lettra demande votre nom et une **phrase secrète** d'au moins
    12 caractères. Elle protège les dossiers chiffrés de ce PC et **ne peut pas être récupérée** : notez-la pour la
    durée de la démo.
 
@@ -700,7 +701,7 @@ Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou 
 
 | Fonction | État |
 |---|---|
-| Assistant IA | Les écrans existent : le panneau « Assistant IA » (bouton en haut), le brouillon de devis proposé par l'assistant et le lien « Pourquoi ? » de la checklist de conformité. Ils restent masqués tant que l'IA est désactivée, ce qui est le réglage par défaut (section `Lettra:Ai`) et celui de la démo. L'assistant propose et explique ; il ne valide ni n'émet jamais rien. |
+| Assistant IA | Les écrans existent : le panneau « Assistant IA » (bouton en haut) et le lien « Pourquoi ? » de la checklist de conformité. Ils restent masqués tant que l'IA est désactivée, ce qui est le réglage par défaut (section `Lettra:Ai`) et celui de la démo. L'assistant propose et explique ; il ne valide ni n'émet jamais rien. Le brouillon de devis à partir d'un texte libre est fermé tant que Lettra ne sait pas repérer les noms propres dans le texte ([docs/assistant-ia.md](docs/assistant-ia.md)). |
 | Vraie plateforme agréée | En attente d'un partenaire ; la démo utilise la plateforme simulée. |
 | Serveur du cabinet en production | La démonstration navigateur tourne sur un poste avec Docker ; un vrai serveur du cabinet ou une cellule SaaS demande Keycloak, des certificats et une infrastructure (voir plus bas). |
 | Poste relié à un serveur, synchronisation | Prête dans l'application (fichier `lettra.json`), mais demande un serveur Lettra et Keycloak. Sur un poste isolé, la page Synchronisation indique « Ce poste ne synchronise pas ». |
@@ -838,7 +839,8 @@ src/
   Presentation/    UI.Abstractions (ports), UI.Shared (toute l'UI Blazor), UI.Gateway.Http, UI.Gateway.InProcess, Printing (PDF)
   Hosts/           Api (Minimal APIs, BFF, sert le WASM), Web (WASM), App.Maui (Blazor Hybrid), Worker (migrations, escalade, intégrité,
                    export FEC, outbox, échéances fiscales, vue cabinet, factures récurrentes, relances ; sans Worker,
-                   l'API fait toutes ces passes sauf les vagues de migration : chaque base y est migrée à sa première ouverture)
+                   l'API fait toutes ces passes sauf les vagues de migration : chaque base y est migrée à sa première ouverture ;
+                   lancé en job de déploiement, Lettra:Worker:RunOnce=true, le Worker ne fait que migrer puis s'arrête)
   Ai/              Couche IA (Paperasse épinglé, pseudonymisation, orchestrateur, moteurs Claude UE et local)
 tests/             un projet par couche ou module, dont Api (bout en bout, parité HTTP / in-process) et Architecture
 deploy/            démo Docker, Helm, OpenTofu, Argo CD, cellules, Keycloak, observabilité, tests de déploiement (k6, Grafana,

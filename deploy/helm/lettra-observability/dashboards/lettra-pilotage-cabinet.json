@@ -64,7 +64,7 @@
       },
       "options": {
         "mode": "markdown",
-        "content": "**Pilotage du cabinet** · un dossier par ligne, recalculé toutes les 5 minutes (les compteurs « à faire » viennent du calcul de la nuit de la *Vue cabinet*).\nVert : rien à signaler · orange : à surveiller · rouge : à traiter. Aucun montant ni nom de client ici : des délais, des parts et des nombres. Cliquer sur un dossier ouvre son tableau détaillé."
+        "content": "**Pilotage du cabinet** · un dossier par ligne, recalculé toutes les 5 minutes (les compteurs « à faire » viennent du calcul quotidien de la *Vue cabinet*).\nVert : rien à signaler · orange : à surveiller · rouge : à traiter. Aucun montant ni nom de client ici : des délais, des parts et des nombres. Cliquer sur un dossier ouvre son tableau détaillé."
       }
     },
     {
@@ -464,7 +464,7 @@
         "type": "prometheus",
         "uid": "${prometheus}"
       },
-      "description": "Une ligne par dossier. Délai de paiement : délai moyen de paiement des clients. Part en retard : part du reste à encaisser dont l'échéance est passée. Factures en retard, TVA à déclarer, opérations à rapprocher, revue à faire : compteurs de la nuit de la Vue cabinet. Devis transformés : sur 12 mois. Évolution du CA : 3 derniers mois contre les 3 d'avant. « — » : pas assez de pièces pour calculer.",
+      "description": "Une ligne par dossier. Délai de paiement : délai moyen de paiement des clients. Part en retard : part du reste à encaisser dont l'échéance est passée. Factures en retard, TVA à déclarer, opérations à rapprocher, revue à faire : compteurs du calcul quotidien de la Vue cabinet. Devis transformés : sur 12 mois. Évolution du CA : 3 derniers mois contre les 3 d'avant. « — » : pas assez de pièces pour calculer.",
       "gridPos": {
         "x": 0,
         "y": 9,
