@@ -3,6 +3,7 @@ using Lettra.Domain.Billing;
 using Lettra.Domain.SharedKernel;
 using Lettra.Infrastructure.Persistence.Billing;
 using Lettra.Infrastructure.Persistence.Concurrency;
+using Lettra.Infrastructure.Persistence.Search;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -104,6 +105,7 @@ internal sealed class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         builder.Property(p => p.Number).HasMaxLength(BillingDocumentMapping.NumberLength).IsRequired();
         builder.Property(p => p.CustomerId).HasConversion(id => id.Value, value => new CustomerId(value)).IsRequired();
         builder.Property(p => p.CustomerName).HasMaxLength(200).IsRequired();
+        builder.HasSearchKey(p => p.CustomerName);
         builder.Property(p => p.Method).HasConversion<int>();
         builder.Property(p => p.Status).HasConversion<int>();
         builder.Property(p => p.Reference).HasMaxLength(Payment.MaxReferenceLength);

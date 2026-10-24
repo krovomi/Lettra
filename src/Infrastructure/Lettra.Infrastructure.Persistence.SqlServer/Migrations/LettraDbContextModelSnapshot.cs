@@ -250,6 +250,13 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.Property<Guid?>("ReversedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("SearchKey")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)")
+                        .HasDefaultValue("");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -269,6 +276,8 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                         .IsUnique();
 
                     b.ToTable("Payments", (string)null);
+
+                    b.HasAnnotation("Lettra:SearchKeySource", "CustomerName");
                 });
 
             modelBuilder.Entity("Lettra.Domain.Billing.CompanyProfile", b =>

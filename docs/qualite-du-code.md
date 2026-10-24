@@ -357,6 +357,16 @@ workflows, `LayerDependencyTests`, `MauiProgram.cs`) passent par le coordinateur
 - **X10** : `ApplicationLayerRulesTests` applique « ni EF, ni ASP.NET, ni infrastructure, ni écran » à
   `Exports.Application` et `Supervision.Application` ; les règles des cas d'usage couvrent aussi `Supervision.Application`.
 
+### Fait dans la PR 9
+
+- **X6** (encaissements) : recherche, filtre de montant, tri et pagination en base. Le nom du client a sa colonne
+  `SearchKey` (migration `RechercheEncaissements`, remplie en SQL pour les lignes existantes) ; la recherche ne dépend
+  plus de la culture du serveur et trouve « eclair » dans « Éclair ». L'historique des relances reste trié en mémoire
+  après filtrage en base : son tri par défaut porte sur une date avec fuseau, que SQLite ne sait pas trier, et sa
+  recherche sur l'objet ignore déjà les accents.
+- **X13** (début) : `ListSearchTerm`, la règle unique (nom sans accents, code en majuscules), sert aux encaissements.
+  Restent à y passer les pièces et les factures récurrentes (clé de recherche à plusieurs sources).
+
 
 ## Plan
 
