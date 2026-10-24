@@ -80,7 +80,9 @@ La navigation est décrite une seule fois dans `Layout/NavItems.cs`. Cibles de 4
 
 ## Tableau de bord d'accueil
 
-`Pages/Home.razor`. Les figures du mois sont calculées par `Billing/DashboardFigures.cs` à partir des listes existantes :
+`Pages/Home.razor`. Les chiffres du mois sont calculés par le serveur (`GET /api/v1/billing/dashboard`, permission
+`DossierLire`, `BillingDashboardCalculator`) sur toutes les pièces validées du dossier, au jour légal de Paris ;
+`Billing/DashboardFigures.cs` n'en tire que l'évolution sur le mois précédent :
 
 - chiffre d'affaires HT du mois (factures et acomptes validés, moins les avoirs) et son évolution sur le mois précédent ;
 - factures en retard : nombre et TTC restant dû (sans point des créances, le nombre de factures du mois à la place) ;
@@ -144,7 +146,7 @@ Les blocs apparaissent avec un léger mouvement à l'ouverture d'une page. Ce mo
 | Le sombre du système identique au sombre choisi, mêmes jetons dans chaque thème | `ThemeContrastTests` |
 | Navigation, onglets, feuille Plus, thème appliqué et retenu, rail retenu, palette | `ShellTests` (bUnit) |
 | Menu sans barre horizontale, sections repliables, favoris, recherche du menu, aide sans IA | `NavMenuTests`, `HelpPanelTests`, `NavLogicTests` |
-| Chiffres du tableau de bord | `DashboardFiguresTests`, `ShellTests` |
+| Chiffres du tableau de bord | `BillingDashboardTests`, `BillingGatewayParityTests`, `DashboardFiguresTests`, `ShellTests` |
 | Point des créances (retards, transmissions) | `ReceivablesSummaryTests`, `ReceivablesApiTests`, `GatewayParityTests` |
 | Bouton des données de démonstration, refus en Production et sans droit | `ShellTests`, `ReceivablesApiTests` |
 | Cellules de la grille à la hauteur de leur ligne | `GridCellTests` |

@@ -234,6 +234,15 @@ internal sealed class HttpPlatformTransmissionGateway(HttpClient http) : IPlatfo
             cancellationToken);
 }
 
+internal sealed class HttpBillingDashboardGateway(HttpClient http) : IBillingDashboardGateway
+{
+    public Task<OperationResult<BillingDashboardResponse>> GetAsync(CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.GetAsync(HttpCalls.Relative($"api/v1/billing/dashboard"), ct),
+            ContractsJsonContext.Default.BillingDashboardResponse,
+            cancellationToken);
+}
+
 internal sealed class HttpBillingSettingsGateway(HttpClient http) : IBillingSettingsGateway
 {
     public Task<OperationResult<BillingReferenceData>> GetReferenceDataAsync(CancellationToken cancellationToken) =>

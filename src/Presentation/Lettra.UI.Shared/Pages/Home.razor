@@ -1,5 +1,5 @@
 @page "/"
-@using Microsoft.Extensions.DependencyInjection
+@inject IBillingDashboardGateway Dashboard
 @inject IInvoicesGateway Invoices
 @inject IQuotesGateway Quotes
 @inject IStringLocalizer<SharedResource> L
@@ -9,8 +9,8 @@
 @inject TimeProvider Clock
 
 @* Tableau de bord d'accueil (vague 5, lanes B et E) : chiffre d'affaires HT du mois et des six derniers mois, devis en
-   attente de réponse, brouillons à finaliser, pièces récentes (calculés à partir des listes), factures en retard et
-   transmissions à la plateforme (point des créances lu côté serveur). Un dossier vide propose d'y charger les données
+   attente de réponse (calculés par le serveur), brouillons à finaliser, pièces récentes (lues dans les listes), factures
+   en retard et transmissions à la plateforme (point des créances lu côté serveur). Un dossier vide propose d'y charger les données
    de démonstration quand l'hôte le permet. *@
 
 <PageTitle>@L["Home.Title"] · Lettra</PageTitle>
@@ -123,7 +123,7 @@ else
             </div>
             <div class="lt-chart" id="home-chart" style="--bars: @figures.Months.Count" aria-hidden="true">
                 @{ decimal max = Math.Max(figures.Months.Max(m => m.ExclTax), 1m); }
-                @foreach (MonthRevenue month in figures.Months)
+                @foreach (MonthRevenueDto month in figures.Months)
                 {
                     <div class="lt-bar @(month == figures.Months[^1] ? "is-current" : null)">
                         <span class="lt-bar-value">@Compact(month.ExclTax)</span>
@@ -135,7 +135,7 @@ else
             <table class="lettra-visually-hidden">
                 <caption>@L["Home.Chart.Title"]</caption>
                 <tbody>
-                    @foreach (MonthRevenue month in figures.Months)
+                    @foreach (MonthRevenueDto month in figures.Months)
                     {
                         <tr><th scope="row">@month.Month.ToString("MMMM yyyy", Culture)</th><td>@Money(month.ExclTax)</td></tr>
                     }
@@ -250,9 +250,6 @@ else
 }
 
 @code {
-    /// <summary>Pages lues au plus par liste : 2 000 pièces sur six mois suffisent au tableau de bord.</summary>
-    private const int MaxPages = 10;
-
     private DashboardFigures? _figures;
     private int _drafts;
     private IReadOnlyList<ErrorDetail> _errors = [];
@@ -281,19 +278,26 @@ else
         // Le point des créances est facultatif : sans lui (hôte ancien, refus), la carte des factures du mois reste.
         Task<OperationResult<ReceivablesSummaryResponse>>? receivables =
             OptionalReceivables.Value?.GetSummaryAsync(CancellationToken.None);
-        DateOnly from = DashboardFigures.PeriodStart(Today);
-        Task<(List<InvoiceSummary> Items, IReadOnlyList<ErrorDetail> Errors)> invoices = ReadAllAsync(
-            page => Invoices.ListAsync(new BillingListQuery(From: from, To: Today, Page: page, PageSize: 200), null, null, CancellationToken.None));
-        Task<(List<QuoteSummary> Items, IReadOnlyList<ErrorDetail> Errors)> quotes = ReadAllAsync(
-            page => Quotes.ListAsync(new BillingListQuery(From: from, Page: page, PageSize: 200), null, CancellationToken.None));
+        Task<OperationResult<BillingDashboardResponse>> dashboard = Dashboard.GetAsync(CancellationToken.None);
+        // Les pièces récentes sont celles de la période du graphique ; une pièce n'a sa date d'émission qu'une fois
+        // validée, si bien que borner la date écarte les brouillons.
+        DateOnly since = PeriodStart;
+        Task<OperationResult<PagedResponse<InvoiceSummary>>> invoices =
+            Invoices.ListAsync(new BillingListQuery(From: since, To: Today, PageSize: DashboardFigures.RecentCount), null, null, CancellationToken.None);
+        Task<OperationResult<PagedResponse<QuoteSummary>>> quotes =
+            Quotes.ListAsync(new BillingListQuery(From: since, PageSize: DashboardFigures.RecentCount), null, CancellationToken.None);
         Task<OperationResult<PagedResponse<QuoteSummary>>> draftQuotes = Quotes.ListAsync(new BillingListQuery(PageSize: 1), QuoteStatusDto.Draft, CancellationToken.None);
         Task<OperationResult<PagedResponse<InvoiceSummary>>> draftInvoices = Invoices.ListAsync(new BillingListQuery(PageSize: 1), null, InvoiceStatusDto.Draft, CancellationToken.None);
-        await Task.WhenAll(invoices, quotes, draftQuotes, draftInvoices);
+        await Task.WhenAll(dashboard, invoices, quotes, draftQuotes, draftInvoices);
 
         _drafts = ((await draftQuotes).Value?.TotalCount ?? 0) + ((await draftInvoices).Value?.TotalCount ?? 0);
-        _figures = DashboardFigures.Compute((await invoices).Items, (await quotes).Items, Today);
-        // Un refus (droits, réseau) est le même pour chaque liste : affiché une fois.
-        _errors = [.. (await invoices).Errors.Concat((await quotes).Errors).Select(e => e with { Target = null }).DistinctBy(e => e.Code)];
+        OperationResult<BillingDashboardResponse> figures = await dashboard;
+        _figures = new DashboardFigures(
+            figures.Value ?? NoFigures(),
+            (await invoices).Value?.Items ?? [],
+            (await quotes).Value?.Items ?? []);
+        // Un refus (droits, réseau) est le même pour chaque lecture : affiché une fois.
+        _errors = [.. figures.Errors.Concat((await invoices).Errors).Concat((await quotes).Errors).Select(e => e with { Target = null }).DistinctBy(e => e.Code)];
         _receivables = receivables is null ? null : (await receivables).Value;
     }
 
@@ -333,26 +337,11 @@ else
         }
     }
 
-    private static async Task<(List<T> Items, IReadOnlyList<ErrorDetail> Errors)> ReadAllAsync<T>(Func<int, Task<OperationResult<PagedResponse<T>>>> read)
-    {
-        List<T> items = [];
-        for (int page = 1; page <= MaxPages; page++)
-        {
-            OperationResult<PagedResponse<T>> result = await read(page);
-            if (result is not { IsSuccess: true, Value: { } response })
-            {
-                return (items, result.Errors);
-            }
+    private DateOnly PeriodStart => new DateOnly(Today.Year, Today.Month, 1).AddMonths(-(BillingDashboardResponse.MonthCount - 1));
 
-            items.AddRange(response.Items);
-            if (response.Items.Count == 0 || items.Count >= response.TotalCount)
-            {
-                break;
-            }
-        }
-
-        return (items, []);
-    }
+    /// <summary>Des mois à zéro quand le serveur refuse (droits, réseau) : l'erreur s'affiche au-dessus.</summary>
+    private BillingDashboardResponse NoFigures() =>
+        new([.. Enumerable.Range(0, BillingDashboardResponse.MonthCount).Select(offset => new MonthRevenueDto(PeriodStart.AddMonths(offset), 0m))], 0, 0, 0m);
 
     private bool IsEmpty(DashboardFigures figures) =>
         _errors.Count == 0 && _drafts == 0 && figures.RecentInvoices.Count == 0 && figures.RecentQuotes.Count == 0;

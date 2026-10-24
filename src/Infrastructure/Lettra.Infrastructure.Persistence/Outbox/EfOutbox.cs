@@ -4,7 +4,6 @@ using Lettra.Application.Abstractions.Sync;
 using Lettra.Application.Diagnostics;
 using Lettra.Infrastructure.Persistence.Tenancy;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -176,9 +175,9 @@ internal sealed partial class EfOutboxDispatcher(
         OutboxOutcome outcome;
         try
         {
-            outcome = await work.RunAsync(async (provider, token) =>
+            outcome = await work.RunAsync<IEnumerable<IOutboxHandler>, OutboxOutcome>(async (handlers, token) =>
             {
-                IOutboxHandler? handler = provider.GetServices<IOutboxHandler>().FirstOrDefault(h => h.Kind == delivery.Kind);
+                IOutboxHandler? handler = handlers.FirstOrDefault(h => h.Kind == delivery.Kind);
                 return handler is null
                     ? OutboxOutcome.Retry($"Aucun gestionnaire pour « {delivery.Kind} ».")
                     : await handler.HandleAsync(delivery, token).ConfigureAwait(false);
