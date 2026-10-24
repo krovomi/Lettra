@@ -6,6 +6,7 @@ using Lettra.Exports.Application.Banking;
 using Lettra.Exports.Application.EInvoicing.Platform;
 using Lettra.Exports.Application.Reminders;
 using Lettra.Exports.Application.Tax;
+using Lettra.Infrastructure.Persistence.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -80,7 +81,9 @@ public static class DependencyInjection
     {
         ArgumentNullException.ThrowIfNull(configuration);
         services.TryAddSingleton(TimeProvider.System);
-        services.AddOptions<FecBulkExportOptions>().Bind(configuration.GetSection(FecBulkExportOptions.SectionName));
+        services.AddOptions<FecBulkExportOptions>().Bind(configuration.GetSection(FecBulkExportOptions.SectionName))
+            .Validate(o => o.InitialDelay >= TimeSpan.Zero, $"{FecBulkExportOptions.SectionName}:{nameof(FecBulkExportOptions.InitialDelay)} ne peut pas être négatif.")
+            .ValidateOnStart();
         services.AddSingleton(new ActiveDossierSource(activeDossiers));
         services.AddSingleton<IExportArchive, FileSystemExportArchive>();
         services.AddSingleton<FecBulkExportJob>();
@@ -99,7 +102,7 @@ public static class DependencyInjection
     {
         ArgumentNullException.ThrowIfNull(configuration);
         services.TryAddSingleton(TimeProvider.System);
-        services.AddOptions<FiscalDeadlineAlertOptions>().Bind(configuration.GetSection(FiscalDeadlineAlertOptions.SectionName));
+        services.AddOptions<FiscalDeadlineAlertOptions>().Bind(configuration.GetSection(FiscalDeadlineAlertOptions.SectionName)).ValidatePeriodicJob(FiscalDeadlineAlertOptions.SectionName);
         services.AddSingleton(new FiscalDossierSource(activeDossiers));
         services.AddSingleton<FiscalDeadlineAlertJob>();
         services.AddHostedService(sp => sp.GetRequiredService<FiscalDeadlineAlertJob>());
@@ -117,7 +120,7 @@ public static class DependencyInjection
     {
         ArgumentNullException.ThrowIfNull(configuration);
         services.TryAddSingleton(TimeProvider.System);
-        services.AddOptions<PaymentReminderJobOptions>().Bind(configuration.GetSection(PaymentReminderJobOptions.SectionName));
+        services.AddOptions<PaymentReminderJobOptions>().Bind(configuration.GetSection(PaymentReminderJobOptions.SectionName)).ValidatePeriodicJob(PaymentReminderJobOptions.SectionName);
         services.AddSingleton(new ReminderDossierSource(activeDossiers));
         services.AddSingleton<PaymentReminderJob>();
         services.AddHostedService(sp => sp.GetRequiredService<PaymentReminderJob>());

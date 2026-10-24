@@ -13,7 +13,7 @@ using Microsoft.Extensions.Options;
 
 namespace Lettra.Infrastructure.Persistence.Integrity;
 
-public sealed class IntegrityCheckJobOptions
+public sealed class IntegrityCheckJobOptions : IPeriodicJobOptions
 {
     public const string SectionName = "Lettra:Worker:Integrity";
 
@@ -150,7 +150,7 @@ public static class IntegrityCheckHosting
     {
         ArgumentNullException.ThrowIfNull(configuration);
         services.TryAddSingleton(TimeProvider.System);
-        services.AddOptions<IntegrityCheckJobOptions>().Bind(configuration.GetSection(IntegrityCheckJobOptions.SectionName));
+        services.AddOptions<IntegrityCheckJobOptions>().Bind(configuration.GetSection(IntegrityCheckJobOptions.SectionName)).ValidatePeriodicJob(IntegrityCheckJobOptions.SectionName);
         services.AddHostedService(sp => new IntegrityCheckJob(
             sp, listDossiers, sp.GetRequiredService<IServiceScopeFactory>(), sp.GetRequiredService<IOptions<IntegrityCheckJobOptions>>(),
             sp.GetRequiredService<TimeProvider>(), sp.GetRequiredService<ILogger<IntegrityCheckJob>>()));

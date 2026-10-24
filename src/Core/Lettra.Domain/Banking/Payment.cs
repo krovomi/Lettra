@@ -220,7 +220,8 @@ public sealed class Payment : AggregateRoot<PaymentId>, IVersioned
     /// <summary>
     /// Empreinte SHA-256 (hexadécimal minuscule) de l'état figé de l'encaissement, inscrite au journal d'intégrité à
     /// l'enregistrement puis à la contre-passation. Format v1 : champs séparés par <c>|</c>, montants à deux
-    /// décimales, imputations triées par facture. <b>Ne jamais modifier une version publiée.</b>
+    /// décimales, imputations triées par facture, mode et état par leur nom (figés par les tests d'architecture,
+    /// <c>SealedFingerprintTests</c>). <b>Ne jamais modifier une version publiée.</b>
     /// </summary>
     public string ComputeFingerprint()
     {

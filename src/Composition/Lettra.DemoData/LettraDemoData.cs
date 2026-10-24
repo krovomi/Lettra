@@ -6,7 +6,6 @@ using Lettra.Bootstrap;
 using Lettra.Contracts.Dossiers;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
-using Lettra.Infrastructure.Persistence.Sqlite.Local;
 using Lettra.Supervision.Application;
 using Lettra.Supervision.Domain;
 using Lettra.UI.Abstractions;
@@ -146,7 +145,7 @@ public static partial class LettraDemoData
         DateOnly today = LegalCalendar.Today(TimeProvider.System);
         List<DemoDossierReport> reports = [];
         List<string> notes = [];
-        LocalDossierRegistry? registry = services.GetService<LocalDossierRegistry>();
+        IOpenedLocalDossier? registry = services.GetService<IOpenedLocalDossier>();
         Guid? active = registry?.ActiveDossierId;
 
         if (!alreadySeeded)
@@ -250,7 +249,7 @@ public static partial class LettraDemoData
     /// <summary>Poste : le dossier ouvert ; serveur : le premier dossier que l'utilisateur de démonstration peut ouvrir.</summary>
     private static async Task<Guid?> DefaultDossierAsync(ServiceProvider services, CancellationToken cancellationToken)
     {
-        if (services.GetService<LocalDossierRegistry>()?.ActiveDossierId is Guid active)
+        if (services.GetService<IOpenedLocalDossier>()?.ActiveDossierId is Guid active)
         {
             return active;
         }

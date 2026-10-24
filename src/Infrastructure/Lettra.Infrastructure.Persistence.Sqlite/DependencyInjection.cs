@@ -22,6 +22,7 @@ public static class DependencyInjection
     {
         LocalDossierRegistry registry = new(dataDirectory);
         services.AddSingleton(registry);
+        services.AddSingleton<IOpenedLocalDossier>(registry);
         services.AddSqliteProvider();
         services.AddSingleton<ISecretSource, LocalSecretSource>();
         services.AddSingleton<LocalTenantCatalog>();

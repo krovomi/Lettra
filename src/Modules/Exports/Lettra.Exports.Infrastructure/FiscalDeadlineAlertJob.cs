@@ -14,7 +14,7 @@ using Microsoft.Extensions.Options;
 namespace Lettra.Exports.Infrastructure;
 
 /// <summary>Réglages de la passe d'alertes du calendrier fiscal (Worker), active par défaut.</summary>
-public sealed class FiscalDeadlineAlertOptions
+public sealed class FiscalDeadlineAlertOptions : IPeriodicJobOptions
 {
     public const string SectionName = "Lettra:Worker:FiscalCalendar";
 

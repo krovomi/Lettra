@@ -74,7 +74,9 @@ public static class EscalationHosting
     {
         ArgumentNullException.ThrowIfNull(configuration);
         services.TryAddSingleton(TimeProvider.System);
-        services.AddOptions<EscalationJobOptions>().Bind(configuration.GetSection(EscalationJobOptions.SectionName));
+        services.AddOptions<EscalationJobOptions>().Bind(configuration.GetSection(EscalationJobOptions.SectionName))
+            .Validate(o => o.Interval > TimeSpan.Zero, $"{EscalationJobOptions.SectionName}:{nameof(EscalationJobOptions.Interval)} doit être strictement positif.")
+            .ValidateOnStart();
         services.AddHostedService<EscalationJob>();
         return services;
     }

@@ -16,7 +16,7 @@ namespace Lettra.Contracts.Billing;
 /// <item>montants (totaux, bases, TVA, montant HT des lignes) en chaîne invariante à exactement 2 décimales ;
 /// quantités, prix unitaires, remises et taux à exactement 4 décimales ;</item>
 /// <item>lignes triées par position ; récapitulatif de TVA trié par taux décroissant puis par nom de catégorie (ordinal) ;</item>
-/// <item>dates en <c>yyyy-MM-dd</c> ; identifiants en Guid minuscule avec tirets ; énumérations par leur nom ;</item>
+/// <item>dates en <c>yyyy-MM-dd</c> ; identifiants en Guid minuscule avec tirets ; énumérations par leur nom (noms figés par <c>SealedFingerprintTests</c>) ;</item>
 /// <item>empreinte : SHA-256 des octets UTF-8, en hexadécimal minuscule (64 caractères).</item>
 /// </list>
 /// Ne figurent que les données figées par la validation : ni le statut, ni la version, ni les acteurs.
