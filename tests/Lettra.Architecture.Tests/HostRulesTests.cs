@@ -72,7 +72,7 @@ public sealed class HostRulesTests
     public void Les_endpoints_passent_par_l_application_et_jamais_par_l_infrastructure()
     {
         // Écarts connus (X18 de docs/qualite-du-code.md), à retirer quand ces endpoints passent par le médiateur.
-        string[] known = ["Lettra.Api.Endpoints.KpiEndpoints", "Lettra.Api.Endpoints.RightsSnapshotEndpoints"];
+        string[] known = ["Lettra.Api.Endpoints.KpiEndpoints"];
 
         IEnumerable<string> failing = Types.InAssembly(Assemblies.Api)
             .That().ResideInNamespaceStartingWith("Lettra.Api.Endpoints")

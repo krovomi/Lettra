@@ -474,6 +474,10 @@ workflows, `LayerDependencyTests`, `MauiProgram.cs`) passent par le coordinateur
   de la requête, ou le cabinet ou le groupe de la route. Les trois copies disparaissent. Les classes
   `CabinetPermissionEndpointFilter` et `GroupPermissionEndpointFilter` ne gardent que la clé de route et la lecture
   de la portée, parce que `Program.cs` (fichier de Socle) lit leur `RouteKey`.
+- **X18** (en partie) : les clés publiques des instantanés de droits passent par le port `IRightsSnapshotIssuer`
+  (`PublicKeys()`) et non plus par la classe d'infrastructure `EcdsaRightsSnapshotIssuer`. L'exception de
+  `HostRulesTests` pour `RightsSnapshotEndpoints` est retirée ; il ne reste que celle des indicateurs Prometheus
+  (`KpiEndpoints`), traitée avec la PR 14 bis.
 
 ## Plan
 
