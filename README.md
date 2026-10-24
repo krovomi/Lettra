@@ -171,8 +171,8 @@ présent d'office sous Windows 11 et sur un Windows 10 à jour, suffit ; rien d'
    **Exécuter quand même**. Pour la suite, clic droit sur l'exécutable, **Envoyer vers**, **Bureau (créer un raccourci)**.
 5. **Créer le compte du poste.** L'écran « Ouverture de vos dossiers… » s'affiche le temps d'ouvrir les données du
    poste (si elles ne s'ouvrent pas, un message et **Réessayer**). Au premier lancement, Lettra demande votre nom et une **phrase secrète** d'au moins
-   12 caractères. Elle protège les dossiers chiffrés de ce PC et **ne peut pas être récupérée** : notez-la pour la
-   durée de la démo.
+   12 caractères. Elle protège l'accès à Lettra sur ce PC et **ne peut pas être récupérée** : notez-la pour la durée
+   de la démo. Les dossiers sont chiffrés avec une clé gardée dans le coffre de Windows.
 
 C'est prêt. Lettra a créé un cabinet local et un premier dossier chiffré, « Dossier principal ». Dès le compte créé,
 il le remplit en arrière-plan d'un an d'activité fictive, en une cinquantaine de secondes : vous pouvez travailler
@@ -746,7 +746,7 @@ hors de l'application, et la base est migrée sur place au démarrage.
 
 | Où | Emplacement | Remettre à zéro exprès |
 |---|---|---|
-| Navigateur (Docker) | Volume `lettra-demo_lettra-donnees` (catalogue, dossier SQLite chiffré, clés de session) ; Keycloak (utilisateur, enrôlement TOTP) dans `lettra-demo_keycloak-donnees`. Le modèle de la voix (sans donnée de dossier) dans `lettra-demo_whisper-modeles`. `docker volume ls` les liste. | `docker compose -f deploy/demo/compose.yaml down -v` |
+| Navigateur (Docker) | Volume `lettra-demo_lettra-donnees` (catalogue, dossier SQLite non chiffré dans la démo, clés de session) ; Keycloak (utilisateur, enrôlement TOTP) dans `lettra-demo_keycloak-donnees`. Le modèle de la voix (sans donnée de dossier) dans `lettra-demo_whisper-modeles`. `docker volume ls` les liste. | `docker compose -f deploy/demo/compose.yaml down -v` |
 | Windows | `%LOCALAPPDATA%\Lettra\Lettra.App.Maui\Data` (à coller dans la barre d'adresse de l'Explorateur) : le compte du poste (`compte-local.json`) et, dans `dossiers`, une base chiffrée par dossier. La clé du cabinet est dans le coffre de Windows : copier ces fichiers sur un autre PC ne les rend pas lisibles. | Supprimer ce dossier, Lettra fermé |
 | Android | Dans l'application (`/data/user/0/fr.lettra.app/files`), sans sauvegarde Android. | Désinstaller, ou **Effacer les données** |
 | iOS, macOS | Dans le dossier de données de l'application, clé du cabinet dans le Trousseau. | Désinstaller l'application (macOS : supprimer aussi son dossier `fr.lettra.app` dans `~/Library`) |
