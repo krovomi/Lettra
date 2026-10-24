@@ -31,8 +31,9 @@ public sealed class LayerDependencyTests
         { "Lettra.Sync.Server", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain"] },
         { "Lettra.Sync.Client", ["Lettra.Application", "Lettra.Contracts", "Lettra.Domain", "Lettra.UI.Abstractions"] },
         // Module Exports (phase 5) : FEC et formats de facture lus depuis les pièces et les écritures, sans les modifier.
-        { "Lettra.Exports.Application", ["Lettra.Application", "Lettra.Calculations", "Lettra.Contracts", "Lettra.Domain"] },
-        { "Lettra.Exports.Infrastructure", ["Lettra.Application", "Lettra.Calculations", "Lettra.Contracts", "Lettra.Domain", "Lettra.Exports.Application", "Lettra.Infrastructure.Persistence"] },
+        { "Lettra.Exports.Domain", [] },
+        { "Lettra.Exports.Application", ["Lettra.Application", "Lettra.Calculations", "Lettra.Contracts", "Lettra.Domain", "Lettra.Exports.Domain"] },
+        { "Lettra.Exports.Infrastructure", ["Lettra.Application", "Lettra.Calculations", "Lettra.Contracts", "Lettra.Domain", "Lettra.Exports.Application", "Lettra.Exports.Domain", "Lettra.Infrastructure.Persistence"] },
         { "Lettra.UI.Abstractions", ["Lettra.Contracts"] },
         { "Lettra.UI.Shared", ["Lettra.Calculations", "Lettra.Contracts", "Lettra.Printing", "Lettra.UI.Abstractions"] },
         // Rendu PDF (phase 3) : ne voit que les calculs partagés, ni les contrats ni le domaine.
@@ -76,7 +77,7 @@ public sealed class LayerDependencyTests
     [Fact]
     public void Les_domaines_n_utilisent_aucun_framework()
     {
-        foreach (Assembly assembly in new[] { Assemblies.Domain, Assemblies.SupervisionDomain })
+        foreach (Assembly assembly in new[] { Assemblies.Domain, Assemblies.SupervisionDomain, Assemblies.ExportsDomain })
         {
             Types.InAssembly(assembly)
                 .ShouldNot().HaveDependencyOnAny("Microsoft", "System.Text.Json", "System.Net.Http", "System.Data")

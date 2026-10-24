@@ -1,7 +1,7 @@
 using Lettra.Application.Abstractions.Integrity;
-using Lettra.Contracts.Exports;
 using Lettra.Domain.Integrity;
 using Lettra.Exports.Application.EInvoicing.Platform;
+using Lettra.Exports.Domain.Platform;
 using Lettra.Infrastructure.Persistence;
 using Lettra.Infrastructure.Persistence.EInvoicing;
 using Lettra.Infrastructure.Persistence.Tenancy;
@@ -37,14 +37,14 @@ internal sealed class EfPlatformTransmissionStore(TenantDbSession session) : IPl
         record.Id,
         record.InvoiceId,
         record.InvoiceNumber,
-        (PlatformChannelDto)record.Channel,
-        (EInvoiceFormatDto?)record.Format,
+        (PlatformChannel)record.Channel,
+        (EInvoiceFormat?)record.Format,
         record.Platform,
         record.Reference,
         record.TotalInclTax,
         DateTimeOffset.FromUnixTimeMilliseconds(record.SubmittedAtMs),
         record.Events.OrderBy(e => e.Sequence).Select(e => new PlatformStatusEvent(
-            (PlatformStatusDto)e.Status, DateTimeOffset.FromUnixTimeMilliseconds(e.AtMs), e.Reason, e.Amount)));
+            (PlatformStatus)e.Status, DateTimeOffset.FromUnixTimeMilliseconds(e.AtMs), e.Reason, e.Amount)));
 
     public async Task StageAsync(PlatformTransmission transmission, CancellationToken cancellationToken)
     {

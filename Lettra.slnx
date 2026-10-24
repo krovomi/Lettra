@@ -48,6 +48,7 @@
   </Folder>
   <Folder Name="/src/Modules/Exports/">
     <Project Path="src/Modules/Exports/Lettra.Exports.Application/Lettra.Exports.Application.csproj" />
+    <Project Path="src/Modules/Exports/Lettra.Exports.Domain/Lettra.Exports.Domain.csproj" />
     <Project Path="src/Modules/Exports/Lettra.Exports.Infrastructure/Lettra.Exports.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/Composition/">

@@ -524,6 +524,23 @@ workflows, `LayerDependencyTests`, `MauiProgram.cs`) passent par le coordinateur
     la jette. C'est voulu : l'application en cours garde son horloge, ses sessions et ses caches. Il passe déjà par
     les cas d'usage, au nom de l'utilisateur et dans le dossier de la requête.
 
+### Fait dans la PR 15 bis
+
+- **X21** : le module Exports a son projet de domaine, `Lettra.Exports.Domain`, pur comme `Lettra.Domain` et
+  `Lettra.Supervision.Domain` (aucune dépendance, pas même les contrats ; vérifié par
+  `Les_domaines_n_utilisent_aucun_framework`). Il porte la transmission d'une pièce à la plateforme agréée :
+  `PlatformTransmission` (historique, encaissé, définitive ou non, ajout d'un statut), `PlatformLifecycle` (la
+  machine d'états XP Z12-012), `PlatformStatusEvent` et ses énumérations `PlatformStatus`, `PlatformChannel`,
+  `EInvoiceFormat`.
+- Les énumérations du domaine sont les jumelles de celles des contrats : mêmes membres, mêmes valeurs, celles déjà
+  enregistrées en base. `PlatformMapping` (Application) passe de l'un à l'autre et construit la réponse
+  (`ToResponse`, sortie de l'entité). `PlatformMappingTests` vérifie les jumelles membre à membre.
+- Restent sur les contrats, parce qu'ils sont des formats d'échange : la commande de transmission et son ordre
+  enregistré dans la file d'envoi (sérialisé en JSON avec le nom de la syntaxe), le dépôt à la plateforme (le XML
+  produit), les indicateurs lus en base par `Infrastructure.Persistence` (qui ne voit pas les modules).
+- Comportement inchangé : mêmes routes, mêmes réponses, mêmes valeurs en base.
+- Câblage : `Lettra.slnx`, `Lettra.Ci.slnf` et la matrice `LayerDependencyTests` reçoivent le nouveau projet.
+
 ### Fait dans la PR 15 ter
 
 - **R9** : ce que les éditeurs de devis et de facture faisaient à l'identique passe dans `DocumentEditing`
