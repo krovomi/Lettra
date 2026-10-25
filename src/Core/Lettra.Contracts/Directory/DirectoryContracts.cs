@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Lettra.Contracts.Directory;
 
 /// <summary>
@@ -38,3 +40,26 @@ public sealed record CompanySearchResponse(IReadOnlyList<CompanySearchResult> It
 /// <param name="Address">Adresse déclarée, quand l'État membre la publie.</param>
 /// <param name="CheckedAt">Date de la consultation (à conserver comme preuve de diligence).</param>
 public sealed record VatNumberCheckResponse(string VatNumber, bool IsValid, string? Name, string? Address, DateTimeOffset CheckedAt);
+
+/// <summary>État d'un client dans l'annuaire SIRENE.</summary>
+[JsonConverter(typeof(JsonStringEnumConverter<DirectoryStatusDto>))]
+public enum DirectoryStatusDto
+{
+    /// <summary>Entreprise en activité.</summary>
+    Active = 1,
+
+    /// <summary>Entreprise cessée (radiée) : ne plus lui facturer sans vérifier.</summary>
+    Ceased = 2,
+
+    /// <summary>SIREN inconnu de l'annuaire : faute de frappe probable.</summary>
+    NotFound = 3,
+}
+
+/// <summary>Un client dont l'annuaire dit qu'il est cessé ou inconnu.</summary>
+public sealed record CustomerDirectoryFinding(Guid CustomerId, string Name, string Siren, DirectoryStatusDto Status);
+
+/// <summary>
+/// Contrôle des clients du dossier dans l'annuaire SIRENE : combien ont été vérifiés, lesquels posent problème.
+/// <paramref name="Complete"/> est faux si l'annuaire n'a pas répondu pour au moins un client.
+/// </summary>
+public sealed record CustomerDirectoryCheckResponse(int Checked, IReadOnlyList<CustomerDirectoryFinding> Findings, bool Complete);

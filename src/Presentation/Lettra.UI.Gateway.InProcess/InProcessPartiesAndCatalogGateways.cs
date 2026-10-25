@@ -1,6 +1,7 @@
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Persistence;
 using Lettra.Application.Features.Catalog;
+using Lettra.Application.Features.Customers;
 using Lettra.Application.Features.Parties;
 using Lettra.Application.Mapping;
 using Lettra.Contracts.Catalog;
@@ -109,4 +110,7 @@ internal sealed class InProcessDirectoryGateway(IServiceScopeFactory scopes) : I
 
     public Task<OperationResult<VatNumberCheckResponse>> CheckVatNumberAsync(string vatNumber, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new CheckVatNumberQuery(dossier, vatNumber), ct), cancellationToken);
+
+    public Task<OperationResult<CustomerDirectoryCheckResponse>> CheckCustomersAsync(CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new CheckCustomersInDirectoryQuery(dossier), ct), cancellationToken);
 }

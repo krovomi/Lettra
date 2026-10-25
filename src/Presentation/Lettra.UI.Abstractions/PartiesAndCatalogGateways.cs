@@ -66,4 +66,7 @@ public interface IDirectoryGateway
     Task<OperationResult<CompanySearchResponse>> SearchCompaniesAsync(string query, int maxResults, CancellationToken cancellationToken);
 
     Task<OperationResult<VatNumberCheckResponse>> CheckVatNumberAsync(string vatNumber, CancellationToken cancellationToken);
+
+    /// <summary>Contrôle des clients entreprises du dossier dans l'annuaire : les cessés et les SIREN inconnus.</summary>
+    Task<OperationResult<CustomerDirectoryCheckResponse>> CheckCustomersAsync(CancellationToken cancellationToken);
 }
