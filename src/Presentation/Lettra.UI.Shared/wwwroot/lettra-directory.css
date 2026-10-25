@@ -1,0 +1,11 @@
+/* Contrôle des clients dans l'annuaire SIRENE (écran Clients). Couleurs : jetons de lettra-tokens.css. */
+.lettra-directory-check { margin: var(--space-3) 0; padding: var(--space-3) var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); display: grid; gap: var(--space-2); }
+.lettra-directory-check.is-warning { border-color: var(--color-warning); background: var(--color-warning-bg); }
+.lettra-directory-check.is-clear { border-color: var(--color-success); background: var(--color-success-bg); }
+.lettra-directory-check header { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); }
+.lettra-directory-check h2 { margin: 0; font-size: var(--text-base); }
+.lettra-directory-check ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-1); }
+.lettra-directory-check li { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-2); }
+.lettra-directory-status { display: inline-block; padding: 0 var(--space-2); border-radius: var(--radius-sm); font-size: var(--text-sm); font-weight: var(--weight-medium); }
+.lettra-directory-status.is-ceased { background: var(--color-danger-bg); color: var(--color-danger-fg); }
+.lettra-directory-status.is-notfound { background: var(--color-surface); color: var(--color-fg-muted); border: 1px solid var(--color-border); }
