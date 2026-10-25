@@ -130,6 +130,9 @@
 .lt-fact dd { margin: 0; overflow-wrap: anywhere; }
 .lt-address { font-style: normal; }
 .lt-mono { font-family: var(--font-mono); font-size: var(--text-sm); }
+/* IBAN masqué (« FR76 •••• 0189 ») : jamais coupé, même dans une carte de téléphone ; ses repères passent dessous. */
+.lt-iban { font-family: var(--font-mono); font-size: var(--text-sm); white-space: nowrap; }
+.lt-iban-cell { display: inline-flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); }
 .lt-prewrap { white-space: pre-wrap; margin: 0; }
 
 /* Dernières pièces : une ligne par pièce, qui se replie en deux lignes sur téléphone. */

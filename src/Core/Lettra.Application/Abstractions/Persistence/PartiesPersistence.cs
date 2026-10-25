@@ -31,3 +31,35 @@ public interface ISupplierReadStore
 
     Task<SupplierResponse?> GetAsync(SupplierId id, CancellationToken cancellationToken);
 }
+
+/// <summary>Les changements d'IBAN des fournisseurs (à vérifier avant tout paiement).</summary>
+public interface IIbanChangeRepository
+{
+    Task AddAsync(IbanChange change, CancellationToken cancellationToken);
+
+    Task<IbanChange?> FindAsync(IbanChangeId id, CancellationToken cancellationToken);
+
+    /// <summary>Les changements encore à vérifier d'un fournisseur, suivis pour être remplacés par un plus récent.</summary>
+    Task<IReadOnlyList<IbanChange>> PendingForAsync(SupplierId supplier, CancellationToken cancellationToken);
+
+    /// <summary>Le nombre de changements encore à vérifier dans le dossier.</summary>
+    Task<int> CountPendingAsync(CancellationToken cancellationToken);
+}
+
+/// <summary>Critères de la liste des changements d'IBAN : état, nom du fournisseur (sans accents ni casse), tri.</summary>
+public sealed record IbanChangeListFilter(
+    IbanChangeStatusDto? Status,
+    string? Search,
+    int Page,
+    int PageSize,
+    IbanChangeSortDto Sort = IbanChangeSortDto.ChangedAt,
+    SortDirectionDto Direction = SortDirectionDto.Descending);
+
+/// <summary>Lecture des changements d'IBAN : projection directe en contrats, avec le nom du fournisseur.</summary>
+public interface IIbanChangeReadStore
+{
+    Task<PagedResponse<IbanChangeResponse>> ListAsync(IbanChangeListFilter filter, CancellationToken cancellationToken);
+
+    /// <summary>L'historique d'un fournisseur, du plus récent au plus ancien.</summary>
+    Task<IReadOnlyList<IbanChangeResponse>> ForSupplierAsync(SupplierId supplier, CancellationToken cancellationToken);
+}

@@ -54,7 +54,14 @@ internal sealed class SupplierReadStore(TenantDbSession session) : ISupplierRead
     {
         LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
         Supplier? supplier = await db.Set<Supplier>().AsNoTracking().FirstOrDefaultAsync(s => s.Id == id, cancellationToken).ConfigureAwait(false);
-        return supplier?.ToResponse();
+        if (supplier is null)
+        {
+            return null;
+        }
+
+        IbanChange? pending = await db.Set<IbanChange>().AsNoTracking()
+            .FirstOrDefaultAsync(c => c.SupplierId == id && c.Status == IbanChangeStatus.Pending, cancellationToken).ConfigureAwait(false);
+        return supplier.ToResponse() with { PendingIbanChange = pending is null ? null : IbanChangeReadStore.ToResponse(pending, supplier.Name) };
     }
 }
 
@@ -145,6 +152,8 @@ internal static class PartiesAndCatalogRegistration
     {
         services.AddScoped<ISupplierRepository, SupplierRepository>();
         services.AddScoped<ISupplierReadStore, SupplierReadStore>();
+        services.AddScoped<IIbanChangeRepository, IbanChangeRepository>();
+        services.AddScoped<IIbanChangeReadStore, IbanChangeReadStore>();
         services.AddScoped<ICatalogItemRepository, CatalogItemRepository>();
         services.AddScoped<ICatalogItemReadStore, CatalogItemReadStore>();
         return services;

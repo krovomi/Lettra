@@ -93,7 +93,10 @@ public interface IIntegrityKeyring
     Task<IReadOnlyList<IntegrityKeyVersion>> ListAsync(CancellationToken cancellationToken);
 }
 
-/// <summary>Les règles d'alerte de dossier : la chaîne anti-fraude (annexe G §5 et §6) et le calendrier fiscal.</summary>
+/// <summary>
+/// Les règles d'alerte de dossier : la chaîne anti-fraude (annexe G §5 et §6), le calendrier fiscal et les changements
+/// d'IBAN des fournisseurs.
+/// </summary>
 public enum DossierAlertRule
 {
     /// <summary>Écart dans la chaîne anti-fraude : S1, conformité.</summary>
@@ -107,6 +110,9 @@ public enum DossierAlertRule
 
     /// <summary>Une échéance fiscale suivie est dépassée sans être marquée déposée : S2, conformité.</summary>
     FiscalDeadlineOverdue = 4,
+
+    /// <summary>L'IBAN d'un fournisseur a changé et attend sa vérification par un autre canal : S2, sécurité.</summary>
+    SupplierIbanToVerify = 5,
 }
 
 /// <summary>

@@ -50,6 +50,7 @@ public static class DependencyInjection
         services.TryAddScoped<IDeviceSeriesRegistry, NoDeviceSeriesRegistry>();
         services.TryAddScoped<ISyncDeviceRegistry, NoSyncDeviceRegistry>();
         services.AddScoped<DossierIntegrityService>();
+        services.AddScoped<Features.Parties.IbanChangeDecisions>();
 
         // Vue cabinet : les dossiers accessibles, partagés par le sélecteur et le tableau de supervision.
         services.AddScoped<Features.Dossiers.AccessibleDossiers>();

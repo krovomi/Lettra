@@ -120,4 +120,5 @@
   <data name="Help.Faq.assistant.Question" xml:space="preserve"><value>What is the AI assistant for?</value></data>
   <data name="Help.Faq.assistant.Answer" xml:space="preserve"><value>The assistant explains a rule or drafts a quote, which you review and validate yourself: it never validates or sends anything. It is off by default; a firm administrator can turn it on. This help works without it.</value></data>
   <data name="Help.Faq.assistant.Keywords" xml:space="preserve"><value>ai artificial intelligence assistant claude question</value></data>
+  <data name="Nav.IbanChanges.Keywords" xml:space="preserve"><value>iban bank details fraud fake supplier change verification transfer</value></data>
 </root>

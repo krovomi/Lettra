@@ -65,6 +65,51 @@ internal sealed class InMemoryPartiesAndCatalog : ISupplierRepository, ISupplier
         Task.FromResult(Items.GetValueOrDefault(id)?.ToResponse());
 }
 
+/// <summary>Faux dépôt des changements d'IBAN : la liste lit le nom du fournisseur dans le faux dépôt des fournisseurs.</summary>
+internal sealed class InMemoryIbanChanges(InMemoryPartiesAndCatalog parties) : IIbanChangeRepository, IIbanChangeReadStore
+{
+    public Dictionary<IbanChangeId, IbanChange> Changes { get; } = [];
+
+    public Task AddAsync(IbanChange change, CancellationToken cancellationToken)
+    {
+        Changes[change.Id] = change;
+        return Task.CompletedTask;
+    }
+
+    public Task<IbanChange?> FindAsync(IbanChangeId id, CancellationToken cancellationToken) => Task.FromResult(Changes.GetValueOrDefault(id));
+
+    public Task<IReadOnlyList<IbanChange>> PendingForAsync(SupplierId supplier, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<IbanChange>>([.. Changes.Values.Where(c => c.SupplierId == supplier && c.IsPending)]);
+
+    public Task<int> CountPendingAsync(CancellationToken cancellationToken) => Task.FromResult(Changes.Values.Count(c => c.IsPending));
+
+    public IbanChangeListFilter? LastFilter { get; private set; }
+
+    public Task<PagedResponse<IbanChangeResponse>> ListAsync(IbanChangeListFilter filter, CancellationToken cancellationToken)
+    {
+        LastFilter = filter;
+        List<IbanChangeResponse> items =
+        [
+            .. Changes.Values
+                .Where(c => filter.Status is not { } status || (int)c.Status == (int)status)
+                .OrderByDescending(c => c.ChangedAt)
+                .Select(ToResponse),
+        ];
+        return Task.FromResult(new PagedResponse<IbanChangeResponse>(items, filter.Page, filter.PageSize, items.Count));
+    }
+
+    public Task<IReadOnlyList<IbanChangeResponse>> ForSupplierAsync(SupplierId supplier, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<IbanChangeResponse>>(
+            [.. Changes.Values.Where(c => c.SupplierId == supplier).OrderByDescending(c => c.ChangedAt).Select(ToResponse)]);
+
+    private IbanChangeResponse ToResponse(IbanChange c) =>
+        new(c.Id.Value, c.SupplierId.Value, parties.Suppliers.GetValueOrDefault(c.SupplierId)?.Name ?? string.Empty, c.PreviousIban, c.NewIban,
+            c.CountryChanged, c.ChangedAt, (IbanChangeStatusDto)c.Status, c.DecidedAt, (IbanVerificationMethodDto?)c.Method, c.Note)
+        {
+            Version = c.Version,
+        };
+}
+
 /// <summary>Annuaires simulés : enregistrent ce qui leur est demandé.</summary>
 internal sealed class FakeDirectories : ICompanyDirectory, IVatNumberChecker
 {
@@ -87,12 +132,15 @@ internal sealed class FakeDirectories : ICompanyDirectory, IVatNumberChecker
 
 internal static class PartiesAndCatalogFakesRegistration
 {
-    public static IServiceCollection AddPartiesAndCatalogFakes(this IServiceCollection services, InMemoryPartiesAndCatalog store, FakeDirectories directories, InMemoryBilling? billing = null)
+    public static IServiceCollection AddPartiesAndCatalogFakes(this IServiceCollection services, InMemoryPartiesAndCatalog store, FakeDirectories directories, InMemoryBilling? billing = null, InMemoryIbanChanges? ibans = null)
     {
         services.AddSingleton<ISupplierRepository>(store);
         services.AddSingleton<ISupplierReadStore>(store);
         services.AddSingleton<ICatalogItemRepository>(store);
         services.AddSingleton<ICatalogItemReadStore>(store);
+        InMemoryIbanChanges ibanChanges = ibans ?? new InMemoryIbanChanges(store);
+        services.AddSingleton<IIbanChangeRepository>(ibanChanges);
+        services.AddSingleton<IIbanChangeReadStore>(ibanChanges);
         services.AddSingleton<ICompanyDirectory>(directories);
         services.AddSingleton<IVatNumberChecker>(directories);
         services.AddBillingFakes(billing ?? new InMemoryBilling());

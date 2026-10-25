@@ -70,6 +70,9 @@ public sealed record SupplierResponse(
 
     /// <summary>Supprimé des listes, gardé en base comme les clients.</summary>
     public bool IsArchived { get; init; }
+
+    /// <summary>Le changement d'IBAN encore à vérifier : aucun paiement vers ce compte avant sa confirmation.</summary>
+    public IbanChangeResponse? PendingIbanChange { get; init; }
 }
 
 /// <summary>Ligne de la liste des fournisseurs.</summary>

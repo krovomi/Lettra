@@ -14,7 +14,7 @@ using static Lettra.Api.Infrastructure.HttpResults;
 
 namespace Lettra.Api.Endpoints;
 
-/// <summary>Routes des fournisseurs (module Tiers).</summary>
+/// <summary>Routes des fournisseurs (module Tiers) et de la vérification de leurs changements d'IBAN.</summary>
 internal static class SupplierEndpoints
 {
     public static RouteGroupBuilder MapSuppliers(this RouteGroupBuilder api)
@@ -55,8 +55,67 @@ internal static class SupplierEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .RequireIfMatch();
 
+        // Changements d'IBAN : à vérifier par un autre canal avant tout paiement (fraude au faux fournisseur).
+        group.MapGet("/iban-changes", ListIbanChangesAsync)
+            .RequirePermission(Permission.TiersConsulter)
+            .WithName("ListIbanChanges")
+            .Produces<PagedResponse<IbanChangeResponse>>()
+            .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        group.MapGet("/{id:guid}/iban-changes", ListSupplierIbanChangesAsync)
+            .RequirePermission(Permission.TiersConsulter)
+            .WithName("ListSupplierIbanChanges")
+            .Produces<IReadOnlyList<IbanChangeResponse>>();
+
+        group.MapPost("/iban-changes/{changeId:guid}/confirmation", ConfirmIbanChangeAsync)
+            .RequirePermission(Permission.TiersModifier)
+            .WithName("ConfirmIbanChange")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
+        group.MapPost("/iban-changes/{changeId:guid}/rejection", RejectIbanChangeAsync)
+            .RequirePermission(Permission.TiersModifier)
+            .WithName("RejectIbanChange")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
         return group;
     }
+
+    private static async Task<IResult> ListIbanChangesAsync(
+        ITenantContext tenant,
+        IQueryDispatcher queries,
+        CancellationToken cancellationToken,
+        IbanChangeStatusDto? status = null,
+        string? search = null,
+        int page = 1,
+        int pageSize = 50,
+        IbanChangeSortDto sort = IbanChangeSortDto.ChangedAt,
+        SortDirectionDto direction = SortDirectionDto.Descending) =>
+        Ok(await queries
+            .QueryAsync(new ListIbanChangesQuery(tenant.Current.DossierId, status, ListSearch.Normalize(search), page, pageSize, sort, direction), cancellationToken)
+            .ConfigureAwait(false));
+
+    private static async Task<IResult> ListSupplierIbanChangesAsync(Guid id, ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken) =>
+        Ok(await queries.QueryAsync(new ListSupplierIbanChangesQuery(tenant.Current.DossierId, new SupplierId(id)), cancellationToken).ConfigureAwait(false));
+
+    private static async Task<IResult> ConfirmIbanChangeAsync(
+        Guid changeId, ConfirmIbanChangeRequest request, ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken) =>
+        NoContent(await commands
+            .SendAsync(new ConfirmIbanChangeCommand(tenant.Current.DossierId, new IbanChangeId(changeId), request.Method, request.Note, request.ExpectedVersion), cancellationToken)
+            .ConfigureAwait(false));
+
+    private static async Task<IResult> RejectIbanChangeAsync(
+        Guid changeId, RejectIbanChangeRequest request, ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken) =>
+        NoContent(await commands
+            .SendAsync(new RejectIbanChangeCommand(tenant.Current.DossierId, new IbanChangeId(changeId), request.Note, request.ExpectedVersion), cancellationToken)
+            .ConfigureAwait(false));
 
     private static async Task<IResult> CreateAsync(
         CreateSupplierRequest request,

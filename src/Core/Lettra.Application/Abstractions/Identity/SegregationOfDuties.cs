@@ -58,6 +58,12 @@ public interface ISegregationOfDuties
     /// <c>SegregationOfDuties.ApproverIsCreator</c> si la politique est active et que l'approbateur en est l'auteur.
     /// </summary>
     Task<Result> EnsureCanApproveCreditNoteAsync(Guid createdBy, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Avant de confirmer ou de refuser un nouvel IBAN de fournisseur : échec <c>IbanChange.SameUser</c> si la politique
+    /// est active et que l'utilisateur courant a lui-même saisi ce nouvel IBAN.
+    /// </summary>
+    Task<Result> EnsureCanDecideIbanChangeAsync(Guid changedBy, CancellationToken cancellationToken);
 }
 
 public static class SegregationOfDutiesErrors

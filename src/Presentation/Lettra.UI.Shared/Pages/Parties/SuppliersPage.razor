@@ -113,6 +113,20 @@
                         </div>
                     </header>
 
+                    @if (supplier.PendingIbanChange is { } change)
+                    {
+                        @* Fraude au faux fournisseur : un nouvel IBAN se vérifie par un autre canal avant tout paiement. *@
+                        <div class="lettra-banner @(change.CountryChanged ? "is-danger" : "is-warning")" role="alert" id="supplier-iban-pending">
+                            <Icon Name="shield-alert" Size="20" />
+                            <span>@string.Format(Culture, L["IbanChanges.Banner"], change.ChangedAt.ToLocalTime().ToString("d", Culture), change.NewIban)
+                                @if (change.CountryChanged)
+                                {
+                                    @(" ")<strong>@L["IbanChanges.CountryChanged"]</strong>
+                                }
+                            </span>
+                            <a class="lettra-button is-secondary" href="iban-changes" id="supplier-iban-verify">@L["IbanChanges.Verify"]</a>
+                        </div>
+                    }
 
                     <Collapsible Card="false" Level="3" Id="supplier-details" Title="@L["Explorer.Section.Contact"]">
                         <dl class="lt-facts lt-facts-2">
