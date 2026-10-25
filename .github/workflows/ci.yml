@@ -61,6 +61,11 @@ jobs:
       - name: Tests d'architecture (dépendances entre couches, conventions)
         run: dotnet test tests/Lettra.Architecture.Tests -c Release --no-build --logger "trx;LogFilePrefix=lettra" --results-directory TestResults
 
+      # Chaque test en échec devient une annotation du job (nom, message, début de la pile), lisible sans le journal.
+      - name: Tests en échec (annotations)
+        if: failure()
+        run: python3 build/tests/annoter-echecs.py TestResults
+
       # Couverture fusionnée de tous les projets de tests, par assembly. Échoue sous 88 % des lignes ou 78 % des branches.
       - name: Couverture de code (seuils)
         run: |
