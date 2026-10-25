@@ -141,4 +141,36 @@
   <data name="Audit.Check.VatRate.Found" xml:space="preserve"><value>Collected VAT is {1}% of revenue: more than the standard rate.</value></data>
   <data name="Audit.Check.VatRate.Passed" xml:space="preserve"><value>Apparent collected VAT rate: {1}% of revenue.</value></data>
   <data name="Audit.Check.VatRate.Fix" xml:space="preserve"><value>Look for VAT counted twice or a sale recorded outside accounts 70.</value></data>
+  <data name="Nav.InvoiceProof" xml:space="preserve"><value>Check an invoice</value></data>
+  <data name="Proof.Title" xml:space="preserve"><value>Check an invoice</value></data>
+  <data name="Proof.Subtitle" xml:space="preserve"><value>Every validated invoice carries a QR code signed by the dossier. Paste the text read by a QR code reader here: Lettra tells you whether the invoice really comes from this dossier and has not been changed.</value></data>
+  <data name="Proof.Code" xml:space="preserve"><value>QR code text</value></data>
+  <data name="Proof.Code.Hint" xml:space="preserve"><value>The text starts with LETTRA-PREUVE-1. A phone camera reads the QR code and lets you copy this text.</value></data>
+  <data name="Proof.Verify" xml:space="preserve"><value>Check</value></data>
+  <data name="Proof.Working" xml:space="preserve"><value>Checking…</value></data>
+  <data name="Proof.Verdict.Authentic" xml:space="preserve"><value>Genuine invoice: signed by this dossier, and identical to the recorded document.</value></data>
+  <data name="Proof.Verdict.Mismatch" xml:space="preserve"><value>Signed by this dossier, but the recorded document no longer says the same thing.</value></data>
+  <data name="Proof.Verdict.Forged" xml:space="preserve"><value>Invalid signature: the text was changed after signing. Do not pay without checking.</value></data>
+  <data name="Proof.Verdict.Foreign" xml:space="preserve"><value>This invoice was not issued by this dossier (its key is not in the registry).</value></data>
+  <data name="Proof.Verdict.Unreadable" xml:space="preserve"><value>This text is not a Lettra proof.</value></data>
+  <data name="Proof.Fact.Siren" xml:space="preserve"><value>Issuer SIREN</value></data>
+  <data name="Proof.Fact.Number" xml:space="preserve"><value>Number</value></data>
+  <data name="Proof.Fact.Date" xml:space="preserve"><value>Issue date</value></data>
+  <data name="Proof.Fact.Total" xml:space="preserve"><value>Total incl. VAT</value></data>
+  <data name="Proof.Fact.Key" xml:space="preserve"><value>Signing key</value></data>
+  <data name="Proof.Fact.None" xml:space="preserve"><value>not given</value></data>
+  <data name="Proof.Open" xml:space="preserve"><value>Open the invoice</value></data>
+  <data name="Proof.Credited" xml:space="preserve"><value>This invoice is fully cancelled by one or more credit notes.</value></data>
+  <data name="Proof.Differences" xml:space="preserve"><value>What differs</value></data>
+  <data name="Proof.Difference.Missing" xml:space="preserve"><value>No validated document with this number in the dossier.</value></data>
+  <data name="Proof.Difference.IssueDate" xml:space="preserve"><value>The issue date is not the same.</value></data>
+  <data name="Proof.Difference.TotalInclTax" xml:space="preserve"><value>The total incl. VAT is not the same.</value></data>
+  <data name="Proof.Difference.Siren" xml:space="preserve"><value>The company SIREN is not the same.</value></data>
+  <data name="Proof.Offline.Title" xml:space="preserve"><value>Check without Lettra</value></data>
+  <data name="Proof.Offline.Hint" xml:space="preserve"><value>The signed text is the QR code without its last field; the last field is the ECDSA P-256 signature (SHA-256, DER format) in URL-safe base 64. With the dossier's public key below, OpenSSL checks it:</value></data>
+  <data name="Proof.Keys" xml:space="preserve"><value>Public key registry</value></data>
+  <data name="Proof.Keys.Empty" xml:space="preserve"><value>The dossier has no key yet: it is created with the first validated document.</value></data>
+  <data name="Proof.Key.Current" xml:space="preserve"><value>in force since {0}</value></data>
+  <data name="Proof.Key.Retired" xml:space="preserve"><value>from {0} to {1} (verification only)</value></data>
+  <data name="Proof.Key.Download" xml:space="preserve"><value>Download the key</value></data>
 </root>

@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.Api.Tests;
 
-/// <summary>ADR-0005 : la météo des paiements et le contrôle fiscal d'entraînement se lisent de la même façon par HTTP (WASM) et en direct (MAUI hors ligne).</summary>
+/// <summary>ADR-0005 : la météo des paiements, le contrôle fiscal d'entraînement et la preuve d'authenticité se lisent de la même façon par HTTP (WASM) et en direct (MAUI hors ligne).</summary>
 public sealed class InsightsGatewayParityTests(LettraApiFactory factory) : IClassFixture<LettraApiFactory>, IDisposable
 {
     private readonly GatewayHarness _harness = new(factory);
@@ -46,6 +46,22 @@ public sealed class InsightsGatewayParityTests(LettraApiFactory factory) : IClas
         other.Value!.Readable.Should().BeFalse();
         other.Value.FileName.Should().Be("autre.txt");
         refused.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Fec.PeriodInvalid);
+    }
+
+    [Theory]
+    [MemberData(nameof(Transports))]
+    public async Task La_preuve_d_authenticite_meme_verdict_par_les_deux_transports(string transport)
+    {
+        await using ServiceProvider services = _harness.Gateway(transport);
+        IInsightsGateway insights = services.GetRequiredService<IInsightsGateway>();
+
+        OperationResult<InvoiceProofCheckResponse> unreadable = await insights.VerifyInvoiceProofAsync("pas une preuve", default);
+        OperationResult<IReadOnlyList<InvoiceProofKeyResponse>> keys = await insights.ListInvoiceProofKeysAsync(default);
+        OperationResult<InvoiceProofResponse> missing = await insights.GetInvoiceProofAsync(Guid.CreateVersion7(), default);
+
+        unreadable.Value!.Verdict.Should().Be(InvoiceProofVerdictDto.Unreadable);
+        keys.IsSuccess.Should().BeTrue(string.Join(", ", keys.Errors.Select(e => e.Code)));
+        missing.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Invoice.NotFound);
     }
 
     public void Dispose() => _harness.Dispose();

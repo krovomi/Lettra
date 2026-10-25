@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Insights;
 using Lettra.Contracts.Serialization;
@@ -31,4 +32,18 @@ internal sealed class HttpInsightsGateway(HttpClient http) : IInsightsGateway
             ContractsJsonContext.Default.PracticeAuditResponse,
             cancellationToken);
     }
+
+    public Task<OperationResult<InvoiceProofResponse>> GetInvoiceProofAsync(Guid invoiceId, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(ct => http.GetAsync(HttpCalls.Relative($"api/v1/insights/invoice-proof/{invoiceId}"), ct), ContractsJsonContext.Default.InvoiceProofResponse, cancellationToken);
+
+    public Task<OperationResult<InvoiceProofCheckResponse>> VerifyInvoiceProofAsync(string code, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.PostAsJsonAsync(
+                HttpCalls.Relative($"api/v1/insights/invoice-proof/verification"), new VerifyInvoiceProofRequest { Code = code }, ContractsJsonContext.Default.VerifyInvoiceProofRequest, ct),
+            ContractsJsonContext.Default.InvoiceProofCheckResponse,
+            cancellationToken);
+
+    public Task<OperationResult<IReadOnlyList<InvoiceProofKeyResponse>>> ListInvoiceProofKeysAsync(CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.GetAsync(HttpCalls.Relative($"api/v1/insights/invoice-proof/keys"), ct), ContractsJsonContext.Default.IReadOnlyListInvoiceProofKeyResponse, cancellationToken);
 }

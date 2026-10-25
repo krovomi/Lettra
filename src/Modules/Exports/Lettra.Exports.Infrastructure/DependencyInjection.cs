@@ -46,6 +46,7 @@ public static class DependencyInjection
         services.AddScoped<IReminderContextReader, EfReminderContextReader>();
         services.AddScoped<IAuditTrailReader, EfAuditTrailReader>();
         services.AddScoped<IPaymentHistoryReader, EfPaymentHistoryReader>();
+        services.AddScoped<IIssuedInvoiceReader, EfIssuedInvoiceReader>();
         string platform = configuration?[PlatformKey] ?? "None";
         switch (platform)
         {

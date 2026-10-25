@@ -121,10 +121,14 @@
   <data name="Help.Faq.assistant.Answer" xml:space="preserve"><value>L'assistant explique une règle ou prépare un brouillon de devis, que vous relisez et validez vous-même : il ne valide ni n'envoie rien. Il est désactivé par défaut ; un administrateur du cabinet peut l'activer. Cette aide-ci fonctionne sans lui.</value></data>
   <data name="Help.Faq.assistant.Keywords" xml:space="preserve"><value>ia intelligence artificielle assistant claude question</value></data>
   <data name="Nav.PaymentWeather.Keywords" xml:space="preserve"><value>météo prévision encaissement retard payeur trésorerie délai</value></data>
-  <data name="Help.Faq.weather.Question" xml:space="preserve"><value>Quand mes factures seront-elles encaissées ?</value></data>
+  <data name="Help.Faq.weather.Question" xml:space="preserve"><value>Quand mes factures seront-elles encaissées ?</value></data>
   <data name="Help.Faq.weather.Answer" xml:space="preserve"><value>La météo des paiements donne à chaque client sa météo, tirée de ses paiements passés, et la date probable d'encaissement de chaque facture due. La prévision des huit prochaines semaines aide à prévoir la trésorerie.</value></data>
   <data name="Help.Faq.weather.Keywords" xml:space="preserve"><value>météo prévision encaissement trésorerie délai payeur</value></data>
-  <data name="Help.Faq.practice-audit.Question" xml:space="preserve"><value>Que relèverait un vérificateur dans ma comptabilité ?</value></data>
+  <data name="Help.Faq.practice-audit.Question" xml:space="preserve"><value>Que relèverait un vérificateur dans ma comptabilité ?</value></data>
   <data name="Help.Faq.practice-audit.Answer" xml:space="preserve"><value>Le contrôle à blanc, dans Déclarations, passe sur le FEC les tests d'un vérificateur : trous de numérotation, écritures un dimanche, caisse négative, espèces au-delà de 1 000 €, montants ronds, doublons, loi de Benford, clients créditeurs, taux de TVA. Il dit quoi corriger ou justifier.</value></data>
   <data name="Help.Faq.practice-audit.Keywords" xml:space="preserve"><value>contrôle fiscal vérificateur entraînement blanc fec benford anomalie</value></data>
+  <data name="Nav.InvoiceProof.Keywords" xml:space="preserve"><value>preuve authenticité qr code signature fausse facture fraude vérifier</value></data>
+  <data name="Help.Faq.invoice-proof.Question" xml:space="preserve"><value>Comment savoir si une facture est vraie ?</value></data>
+  <data name="Help.Faq.invoice-proof.Answer" xml:space="preserve"><value>Chaque facture validée porte un QR code « Preuve d'authenticité » signé par la clé du dossier. Dans Ventes, Vérifier une facture, collez le texte de ce QR code : Lettra dit si la facture vient de ce dossier et si son numéro, sa date ou son montant ont été modifiés. La clé publique permet aussi de vérifier sans Lettra.</value></data>
+  <data name="Help.Faq.invoice-proof.Keywords" xml:space="preserve"><value>preuve authenticité qr signature fausse facture fraude</value></data>
 </root>

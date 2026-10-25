@@ -1,5 +1,6 @@
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Insights;
+using Lettra.Domain.Billing;
 using Lettra.Exports.Application.Insights;
 using Lettra.UI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,4 +20,13 @@ internal sealed class InProcessInsightsGateway(IServiceScopeFactory scopes) : II
         string fileName, byte[] content, DateOnly? from, DateOnly? to, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(
             scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new RunPracticeAuditQuery(dossier, fileName, content, from, to), ct), cancellationToken);
+
+    public Task<OperationResult<InvoiceProofResponse>> GetInvoiceProofAsync(Guid invoiceId, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetInvoiceProofQuery(dossier, new InvoiceId(invoiceId)), ct), cancellationToken);
+
+    public Task<OperationResult<InvoiceProofCheckResponse>> VerifyInvoiceProofAsync(string code, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new VerifyInvoiceProofQuery(dossier, code), ct), cancellationToken);
+
+    public Task<OperationResult<IReadOnlyList<InvoiceProofKeyResponse>>> ListInvoiceProofKeysAsync(CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new ListInvoiceProofKeysQuery(dossier), ct), cancellationToken);
 }

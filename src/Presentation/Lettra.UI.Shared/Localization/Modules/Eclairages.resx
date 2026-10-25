@@ -141,4 +141,36 @@
   <data name="Audit.Check.VatRate.Found" xml:space="preserve"><value>La TVA collectée représente {1} % du chiffre d'affaires : plus que le taux normal.</value></data>
   <data name="Audit.Check.VatRate.Passed" xml:space="preserve"><value>Taux apparent de TVA collectée : {1} % du chiffre d'affaires.</value></data>
   <data name="Audit.Check.VatRate.Fix" xml:space="preserve"><value>Cherchez une TVA comptée deux fois ou une vente enregistrée hors des comptes 70.</value></data>
+  <data name="Nav.InvoiceProof" xml:space="preserve"><value>Vérifier une facture</value></data>
+  <data name="Proof.Title" xml:space="preserve"><value>Vérifier une facture</value></data>
+  <data name="Proof.Subtitle" xml:space="preserve"><value>Chaque facture validée porte un QR code signé par le dossier. Collez ici le texte lu par un lecteur de QR code : Lettra dit si la facture vient bien de ce dossier et si elle n'a pas été modifiée.</value></data>
+  <data name="Proof.Code" xml:space="preserve"><value>Texte du QR code</value></data>
+  <data name="Proof.Code.Hint" xml:space="preserve"><value>Le texte commence par LETTRA-PREUVE-1. L'appareil photo d'un téléphone lit le QR code et permet de copier ce texte.</value></data>
+  <data name="Proof.Verify" xml:space="preserve"><value>Vérifier</value></data>
+  <data name="Proof.Working" xml:space="preserve"><value>Vérification en cours…</value></data>
+  <data name="Proof.Verdict.Authentic" xml:space="preserve"><value>Facture authentique : signée par ce dossier, et identique à la pièce enregistrée.</value></data>
+  <data name="Proof.Verdict.Mismatch" xml:space="preserve"><value>Signée par ce dossier, mais la pièce enregistrée ne dit plus la même chose.</value></data>
+  <data name="Proof.Verdict.Forged" xml:space="preserve"><value>Signature invalide : le texte a été modifié après la signature. Ne payez pas sans vérifier.</value></data>
+  <data name="Proof.Verdict.Foreign" xml:space="preserve"><value>Cette facture n'a pas été émise par ce dossier (sa clé n'est pas au registre).</value></data>
+  <data name="Proof.Verdict.Unreadable" xml:space="preserve"><value>Ce texte n'est pas une preuve Lettra.</value></data>
+  <data name="Proof.Fact.Siren" xml:space="preserve"><value>SIREN de l'émetteur</value></data>
+  <data name="Proof.Fact.Number" xml:space="preserve"><value>Numéro</value></data>
+  <data name="Proof.Fact.Date" xml:space="preserve"><value>Date d'émission</value></data>
+  <data name="Proof.Fact.Total" xml:space="preserve"><value>Total TTC</value></data>
+  <data name="Proof.Fact.Key" xml:space="preserve"><value>Clé de signature</value></data>
+  <data name="Proof.Fact.None" xml:space="preserve"><value>non indiqué</value></data>
+  <data name="Proof.Open" xml:space="preserve"><value>Ouvrir la facture</value></data>
+  <data name="Proof.Credited" xml:space="preserve"><value>Cette facture est entièrement annulée par un ou plusieurs avoirs.</value></data>
+  <data name="Proof.Differences" xml:space="preserve"><value>Ce qui diffère</value></data>
+  <data name="Proof.Difference.Missing" xml:space="preserve"><value>Aucune pièce validée de ce numéro dans le dossier.</value></data>
+  <data name="Proof.Difference.IssueDate" xml:space="preserve"><value>La date d'émission n'est pas la même.</value></data>
+  <data name="Proof.Difference.TotalInclTax" xml:space="preserve"><value>Le total TTC n'est pas le même.</value></data>
+  <data name="Proof.Difference.Siren" xml:space="preserve"><value>Le SIREN de l'entreprise n'est pas le même.</value></data>
+  <data name="Proof.Offline.Title" xml:space="preserve"><value>Vérifier sans Lettra</value></data>
+  <data name="Proof.Offline.Hint" xml:space="preserve"><value>Le texte signé est le QR code sans son dernier champ ; le dernier champ est la signature ECDSA P-256 (SHA-256, format DER) en base 64 URL. Avec la clé publique du dossier ci-dessous, OpenSSL la vérifie :</value></data>
+  <data name="Proof.Keys" xml:space="preserve"><value>Registre des clés publiques</value></data>
+  <data name="Proof.Keys.Empty" xml:space="preserve"><value>Le dossier n'a pas encore de clé : elle est créée à la première pièce validée.</value></data>
+  <data name="Proof.Key.Current" xml:space="preserve"><value>en vigueur depuis le {0}</value></data>
+  <data name="Proof.Key.Retired" xml:space="preserve"><value>du {0} au {1} (vérification seule)</value></data>
+  <data name="Proof.Key.Download" xml:space="preserve"><value>Télécharger la clé</value></data>
 </root>

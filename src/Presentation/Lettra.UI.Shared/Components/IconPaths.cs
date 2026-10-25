@@ -96,6 +96,8 @@ internal static class IconPaths
         ["list-filter"] = "<path d='M3 6h18'/> <path d='M7 12h10'/> <path d='M10 18h4'/>",
         ["pin"] = "<path d='M12 17v5'/> <path d='M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z'/>",
         ["sliders-horizontal"] = "<line x1='21' x2='14' y1='4' y2='4'/> <line x1='10' x2='3' y1='4' y2='4'/> <line x1='21' x2='12' y1='12' y2='12'/> <line x1='8' x2='3' y1='12' y2='12'/> <line x1='21' x2='16' y1='20' y2='20'/> <line x1='12' x2='3' y1='20' y2='20'/> <line x1='14' x2='14' y1='2' y2='6'/> <line x1='8' x2='8' y1='10' y2='14'/> <line x1='16' x2='16' y1='18' y2='22'/>",
+        ["download"] = "<path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/> <polyline points='7 10 12 15 17 10'/> <line x1='12' x2='12' y1='15' y2='3'/>",
+        ["scan-qr-code"] = "<path d='M17 12v4a1 1 0 0 1-1 1h-4'/> <path d='M17 3h2a2 2 0 0 1 2 2v2'/> <path d='M17 8V7'/> <path d='M21 17v2a2 2 0 0 1-2 2h-2'/> <path d='M3 7V5a2 2 0 0 1 2-2h2'/> <path d='M7 17h.01'/> <path d='M7 21H5a2 2 0 0 1-2-2v-2'/> <rect x='7' y='7' width='5' height='5' rx='1'/>",
         ["cloud-sun"] = "<path d='M12 2v2'/> <path d='m4.93 4.93 1.41 1.41'/> <path d='M20 12h2'/> <path d='m19.07 4.93-1.41 1.41'/> <path d='M15.947 12.65a4 4 0 0 0-5.925-4.128'/> <path d='M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z'/>",
         ["cloud"] = "<path d='M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z'/>",
         ["cloud-rain"] = "<path d='M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242'/> <path d='M16 14v6'/> <path d='M8 14v6'/> <path d='M12 16v6'/>",

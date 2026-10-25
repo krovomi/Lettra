@@ -17,4 +17,13 @@ public interface IInsightsGateway
 
     /// <summary>Le contrôle fiscal d'entraînement d'un FEC d'un autre logiciel, sur un exercice s'il est donné.</summary>
     Task<OperationResult<PracticeAuditResponse>> RunPracticeAuditAsync(string fileName, byte[] content, DateOnly? from, DateOnly? to, CancellationToken cancellationToken);
+
+    /// <summary>La preuve d'authenticité d'une pièce validée : le texte de son QR code signé.</summary>
+    Task<OperationResult<InvoiceProofResponse>> GetInvoiceProofAsync(Guid invoiceId, CancellationToken cancellationToken);
+
+    /// <summary>La vérification d'une preuve lue sur une facture, contre le registre des clés et les pièces du dossier.</summary>
+    Task<OperationResult<InvoiceProofCheckResponse>> VerifyInvoiceProofAsync(string code, CancellationToken cancellationToken);
+
+    /// <summary>Le registre des clés publiques du dossier, au format PEM.</summary>
+    Task<OperationResult<IReadOnlyList<InvoiceProofKeyResponse>>> ListInvoiceProofKeysAsync(CancellationToken cancellationToken);
 }

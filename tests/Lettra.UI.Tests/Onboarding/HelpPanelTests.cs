@@ -85,8 +85,8 @@ public sealed class HelpPanelTests : BunitContext
         coque.Find("#tour-help").Click();
 
         Questions(coque.FindAll("section[aria-labelledby=help-here-title] details")).Should().Equal(
-            "Comment corriger ou annuler une facture déjà validée\u00A0?", "Comment enregistrer un paiement reçu\u00A0?", "Puis-je dicter au lieu de taper\u00A0?");
-        coque.FindAll("section[aria-labelledby=help-faq-title] details").Should().HaveCount(HelpCatalog.All.Count - 3);
+            "Comment corriger ou annuler une facture déjà validée\u00A0?", "Comment enregistrer un paiement reçu\u00A0?", "Comment savoir si une facture est vraie\u00A0?", "Puis-je dicter au lieu de taper\u00A0?");
+        coque.FindAll("section[aria-labelledby=help-faq-title] details").Should().HaveCount(HelpCatalog.All.Count - 4);
         coque.Find("#help-tour-start").TextContent.Should().Contain("Tutoriel de cet écran");
     }
 

@@ -50,4 +50,7 @@
   <data name="Vat.Amount" xml:space="preserve"><value>VAT amount</value></data>
   <data name="Vat.Base" xml:space="preserve"><value>Taxable amount</value></data>
   <data name="Vat.Rate" xml:space="preserve"><value>VAT rate</value></data>
+  <data name="Proof.Title" xml:space="preserve"><value>Proof of authenticity</value></data>
+  <data name="Proof.Hint" xml:space="preserve"><value>This QR code is signed by the issuer: scan it and check it in Lettra (Sales, Check an invoice) or with the issuer's public key. Any change to the number, date or amount makes it invalid.</value></data>
+  <data name="Proof.Key" xml:space="preserve"><value>Signing key {0}</value></data>
 </root>

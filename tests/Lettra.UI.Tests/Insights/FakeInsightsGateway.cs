@@ -27,6 +27,23 @@ internal sealed class FakeInsightsGateway : IInsightsGateway
         return Answer(Audit);
     }
 
+    public InvoiceProofCheckResponse? Check { get; set; }
+
+    public IReadOnlyList<InvoiceProofKeyResponse>? Keys { get; set; } = [];
+
+    public List<string> Verified { get; } = [];
+
+    public Task<OperationResult<InvoiceProofResponse>> GetInvoiceProofAsync(Guid invoiceId, CancellationToken cancellationToken) =>
+        Answer<InvoiceProofResponse>(new(invoiceId, "FA-2026-0042", "LETTRA-PREUVE-1;552100554;FA-2026-0042;20261016;426.94;p256-0123456789abcdef;MEUCIQ", "p256-0123456789abcdef"));
+
+    public Task<OperationResult<InvoiceProofCheckResponse>> VerifyInvoiceProofAsync(string code, CancellationToken cancellationToken)
+    {
+        Verified.Add(code);
+        return Answer(Check);
+    }
+
+    public Task<OperationResult<IReadOnlyList<InvoiceProofKeyResponse>>> ListInvoiceProofKeysAsync(CancellationToken cancellationToken) => Answer(Keys);
+
     private static Task<OperationResult<T>> Answer<T>(T? value)
         where T : class =>
         Task.FromResult(value is null

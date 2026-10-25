@@ -38,6 +38,7 @@ public static class HelpCatalog
         new("payment", ["payments", "payments/*", "bank", "invoices/*"], "payments/new", "Payments.New"),
         new("reminder", ["reminders", "invoices", "payments"], "reminders", "Nav.Reminders"),
         new("weather", ["payment-weather", "reminders", "customers/*"], "payment-weather", "Nav.PaymentWeather"),
+        new("invoice-proof", ["invoice-proof", "invoices/*"], "invoice-proof", "Nav.InvoiceProof"),
         new("recurring", ["recurring-invoices", "recurring-invoices/*", "invoices"], "recurring-invoices", "Nav.RecurringInvoices"),
         new("customer", ["customers", "customers/*", "suppliers", "suppliers/*"], "customers/new", "Nav.Customers"),
         new("vat", ["tax", "tax/*"], "tax", "Nav.Tax"),
