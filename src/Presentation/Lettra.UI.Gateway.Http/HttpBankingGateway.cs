@@ -12,8 +12,8 @@ internal sealed class HttpBankingGateway(HttpClient http) : IBankingGateway
     public Task<OperationResult<PagedResponse<PaymentSummary>>> ListPaymentsAsync(PaymentListQuery query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
-        string from = query.From is DateOnly f ? "&from=" + Day(f) : string.Empty;
-        string to = query.To is DateOnly t ? "&to=" + Day(t) : string.Empty;
+        string from = query.From is DateOnly f ? "&from=" + QueryText.Day(f) : string.Empty;
+        string to = query.To is DateOnly t ? "&to=" + QueryText.Day(t) : string.Empty;
         string customer = query.CustomerId is Guid id ? $"&customerId={id}" : string.Empty;
         string amounts = (query.MinAmount is decimal min ? "&minAmount=" + min.ToString(CultureInfo.InvariantCulture) : string.Empty)
             + (query.MaxAmount is decimal max ? "&maxAmount=" + max.ToString(CultureInfo.InvariantCulture) : string.Empty);
@@ -88,6 +88,4 @@ internal sealed class HttpBankingGateway(HttpClient http) : IBankingGateway
 
     public Task<OperationResult<BankReconciliationStatusResponse>> GetStatusAsync(CancellationToken cancellationToken) =>
         HttpCalls.SendAsync(ct => http.GetAsync(HttpCalls.Relative($"api/v1/bank/status"), ct), ContractsJsonContext.Default.BankReconciliationStatusResponse, cancellationToken);
-
-    private static string Day(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 }

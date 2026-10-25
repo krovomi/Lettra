@@ -15,4 +15,8 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Lettra.Worker.Tests" />
+  </ItemGroup>
+
 </Project>

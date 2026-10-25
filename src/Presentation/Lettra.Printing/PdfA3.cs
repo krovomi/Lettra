@@ -56,10 +56,24 @@ internal static class PdfA3
         (Encoding.ASCII.GetBytes("<pdfaid:conformance>A</pdfaid:conformance>"), Encoding.ASCII.GetBytes("<pdfaid:conformance>B</pdfaid:conformance>")),
     ];
 
+    /// <summary>
+    /// PDF/A interdit le lissage des images (règle 6.2.8-3) ; PDFsharp l'active par défaut. Sans lissage, le QR code
+    /// de paiement garde aussi des bords nets à l'écran comme à l'impression.
+    /// </summary>
+    private static void DisableImageInterpolation(PdfDocument pdf)
+    {
+        foreach (PdfDictionary image in pdf.Internals.GetAllObjects().OfType<PdfDictionary>()
+            .Where(d => d.Elements.GetName("/Subtype") == "/Image"))
+        {
+            image.Elements.SetBoolean("/Interpolate", false);
+        }
+    }
+
     public static byte[] Save(PdfDocument pdf, CultureInfo culture, IReadOnlyList<PdfAttachment> attachments)
     {
         pdf.SetPdfA();
         pdf.Internals.Catalog.Elements.SetString("/Lang", culture.Name);
+        DisableImageInterpolation(pdf);
 
         if (attachments.Count > 0)
         {

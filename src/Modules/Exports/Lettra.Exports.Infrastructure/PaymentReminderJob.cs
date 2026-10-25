@@ -5,6 +5,7 @@ using Lettra.Contracts.Reminders;
 using Lettra.Domain.Common;
 using Lettra.Domain.Reminders;
 using Lettra.Exports.Application.Reminders;
+using Lettra.Infrastructure.Persistence.Hosting;
 using Lettra.Infrastructure.Persistence.Integrity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -14,7 +15,7 @@ using Microsoft.Extensions.Options;
 namespace Lettra.Exports.Infrastructure;
 
 /// <summary>Réglages de la passe quotidienne des relances (Worker), active par défaut.</summary>
-public sealed class PaymentReminderJobOptions
+public sealed class PaymentReminderJobOptions : IPeriodicJobOptions
 {
     public const string SectionName = "Lettra:Worker:PaymentReminders";
 
@@ -37,6 +38,7 @@ internal sealed partial class PaymentReminderJob(
     IServiceProvider services,
     ReminderDossierSource dossierSource,
     IEmailSender email,
+    TimeProvider clock,
     IOptions<PaymentReminderJobOptions> options,
     ILogger<PaymentReminderJob> logger) : BackgroundService
 {
@@ -48,13 +50,7 @@ internal sealed partial class PaymentReminderJob(
             return;
         }
 
-        await Task.Delay(settings.InitialDelay, stoppingToken).ConfigureAwait(false);
-        using PeriodicTimer timer = new(settings.Interval);
-        do
-        {
-            await RunPassAsync(stoppingToken).ConfigureAwait(false);
-        }
-        while (await timer.WaitForNextTickAsync(stoppingToken).ConfigureAwait(false));
+        await PeriodicPass.RunAsync(settings.InitialDelay, settings.Interval, clock, RunPassAsync, stoppingToken).ConfigureAwait(false);
     }
 
     internal async Task<(int Dossiers, int Sent, int Failed)> RunPassAsync(CancellationToken cancellationToken)

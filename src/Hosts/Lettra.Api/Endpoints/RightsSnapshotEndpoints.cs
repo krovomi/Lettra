@@ -5,7 +5,6 @@ using Lettra.Application.Features.Identity;
 using Lettra.Contracts.Identity;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
-using Lettra.Infrastructure.Identity.Oidc.Offline;
 using static Lettra.Api.Infrastructure.HttpResults;
 
 namespace Lettra.Api.Endpoints;
@@ -33,7 +32,7 @@ internal static class RightsSnapshotEndpoints
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized);
 
-        app.MapGet(KeysPath, (EcdsaRightsSnapshotIssuer issuer) => TypedResults.Ok(issuer.PublicKeys()))
+        app.MapGet(KeysPath, (IRightsSnapshotIssuer issuer) => TypedResults.Ok(issuer.PublicKeys()))
             .AllowAnonymous()
             .WithTags("Identity")
             .WithName("RightsSnapshotKeys")

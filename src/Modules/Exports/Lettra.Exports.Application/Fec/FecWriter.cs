@@ -1,6 +1,7 @@
 using System.Text;
 using Lettra.Calculations;
 using Lettra.Domain.Billing;
+using Lettra.Exports.Application.Bridges;
 
 namespace Lettra.Exports.Application.Fec;
 
@@ -56,49 +57,75 @@ public static class FecWriter
 
     public static string WriteText(IEnumerable<SalesJournalExportEntry> entries)
     {
-        ArgumentNullException.ThrowIfNull(entries);
         StringBuilder text = new();
         AppendLine(text, FecFormat.Columns);
+        foreach (ExportLine line in Lines(entries))
+        {
+            string date = FecFormat.FormatDate(line.Date);
+            AppendLine(text,
+            [
+                line.Journal,
+                line.JournalLabel,
+                line.EntryNumber.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                date,
+                line.Account,
+                line.AccountLabel,
+                line.AuxiliaryAccount ?? string.Empty,
+                line.AuxiliaryLabel ?? string.Empty,
+                line.Piece,
+                date,
+                line.Label,
+                FecFormat.FormatAmount(line.Debit),
+                FecFormat.FormatAmount(line.Credit),
+                line.LetteringCode ?? string.Empty,
+                line.LetteringDate is { } lettered ? FecFormat.FormatDate(lettered) : string.Empty,
+                // La pièce est validée le jour de sa date (la validation la date du jour, heure de Paris).
+                date,
+                string.Empty,
+                string.Empty,
+            ]);
+        }
 
+        return text.ToString();
+    }
+
+    /// <summary>
+    /// Les lignes des écritures, numérotées en séquence continue par journal dans l'ordre d'enregistrement : la base
+    /// commune du FEC et des passerelles vers les logiciels de production.
+    /// </summary>
+    public static IEnumerable<ExportLine> Lines(IEnumerable<SalesJournalExportEntry> entries)
+    {
+        ArgumentNullException.ThrowIfNull(entries);
         Dictionary<string, int> numbers = new(StringComparer.Ordinal);
         foreach (SalesJournalExportEntry entry in entries)
         {
             string journal = entry.IsBankEntry ? BankJournalCode : SalesJournalCode;
             int number = numbers.GetValueOrDefault(journal) + 1;
             numbers[journal] = number;
-            string entryNumber = number.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            string date = FecFormat.FormatDate(entry.Date);
             string label = EntryLabel(entry);
+            string piece = FecFormat.Clean(entry.PieceNumber);
             foreach (AccountingEntryLine line in entry.Lines)
             {
                 bool customer = line.Account == SalesAccounts.Customers;
                 bool lettered = customer && entry.LetteringCode is not null && entry.LetteringDate is not null;
-                AppendLine(text,
-                [
+                yield return new ExportLine(
                     journal,
                     entry.IsBankEntry ? BankJournalLabel : SalesJournalLabel,
-                    entryNumber,
-                    date,
+                    number,
+                    entry.Date,
                     line.Account,
                     AccountLabels.TryGetValue(line.Account, out string? accountLabel) ? accountLabel : line.Account,
-                    customer ? AuxiliaryAccountOf(entry.CustomerId) : string.Empty,
-                    customer ? FecFormat.Clean(entry.CustomerName) : string.Empty,
-                    FecFormat.Clean(entry.PieceNumber),
-                    date,
+                    customer ? entry.CustomerId : null,
+                    customer ? AuxiliaryAccountOf(entry.CustomerId) : null,
+                    customer ? FecFormat.Clean(entry.CustomerName) : null,
+                    piece,
                     label,
-                    FecFormat.FormatAmount(line.Debit),
-                    FecFormat.FormatAmount(line.Credit),
-                    lettered ? entry.LetteringCode! : string.Empty,
-                    lettered ? FecFormat.FormatDate(entry.LetteringDate!.Value) : string.Empty,
-                    // La pièce est validée le jour de sa date (la validation la date du jour, heure de Paris).
-                    date,
-                    string.Empty,
-                    string.Empty,
-                ]);
+                    line.Debit,
+                    line.Credit,
+                    lettered ? entry.LetteringCode : null,
+                    lettered ? entry.LetteringDate : null);
             }
         }
-
-        return text.ToString();
     }
 
     private static string KindLabel(InvoiceKind kind) => kind switch

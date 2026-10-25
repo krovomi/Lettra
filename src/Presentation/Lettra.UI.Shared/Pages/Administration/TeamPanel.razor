@@ -1,6 +1,7 @@
 @* Fiche d'une équipe : ses membres, ses dossiers et les rôles qu'elle donne à tous ses membres. Un rôle donné à l'équipe
    « sur ses dossiers » suit les dossiers qu'on y place. *@
 @inject IStringLocalizer<SharedResource> L
+@inject ToastService Toasts
 @inject IAdministrationGateway Gateway
 
 @if (_renaming)
@@ -150,7 +151,6 @@
 
     [Parameter, EditorRequired] public TeamSummary Team { get; set; } = default!;
 
-    [Parameter, EditorRequired] public AdminToasts Toasts { get; set; } = default!;
 
     [Parameter] public EventCallback OnGrant { get; set; }
 
@@ -175,12 +175,12 @@
         OperationResult<bool> renamed = await Gateway.RenameTeamAsync(View.Overview.CabinetId, Team.Id, new RenameTeamRequest { Name = _name }, CancellationToken.None);
         if (!renamed.IsSuccess)
         {
-            Toasts.ShowError(L.Error(renamed.Errors[0].Code));
+            Toasts.Failed(L.Error(renamed.Errors[0].Code));
             return;
         }
 
         _renaming = false;
-        Toasts.Show(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.TeamRenamed"], _name.Trim()));
+        Toasts.Done(L, string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.TeamRenamed"], _name.Trim()));
         await OnChanged.InvokeAsync();
     }
 
@@ -189,11 +189,11 @@
         OperationResult<bool> deleted = await Gateway.DeleteTeamAsync(View.Overview.CabinetId, Team.Id, CancellationToken.None);
         if (!deleted.IsSuccess)
         {
-            Toasts.ShowError(L.Error(deleted.Errors[0].Code));
+            Toasts.Failed(L.Error(deleted.Errors[0].Code));
             return;
         }
 
-        Toasts.Show(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.TeamDeleted"], Team.Name));
+        Toasts.Done(L, string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.TeamDeleted"], Team.Name));
         await OnDeleted.InvokeAsync();
     }
 
@@ -210,11 +210,12 @@
         OperationResult<bool> result = await Gateway.SetTeamMemberAsync(Team.Id, person.Id, member, CancellationToken.None);
         if (!result.IsSuccess)
         {
-            Toasts.ShowError(L.Error(result.Errors[0].Code));
+            Toasts.Failed(L.Error(result.Errors[0].Code));
             return;
         }
 
-        Toasts.Show(
+        Toasts.Done(
+            L,
             string.Format(CultureInfo.CurrentCulture, L[member ? "Admin.Toast.JoinedTeam" : "Admin.Toast.LeftTeam"], View.FirstNameOf(person), Team.Name),
             member ? null : async () =>
             {
@@ -237,11 +238,11 @@
         OperationResult<bool> result = await Gateway.SetTeamDossierAsync(Team.Id, dossierId, placed, CancellationToken.None);
         if (!result.IsSuccess)
         {
-            Toasts.ShowError(L.Error(result.Errors[0].Code));
+            Toasts.Failed(L.Error(result.Errors[0].Code));
             return;
         }
 
-        Toasts.Show(string.Format(CultureInfo.CurrentCulture, L[placed ? "Admin.Toast.DossierPlaced" : "Admin.Toast.DossierRemoved"], View.DossierName(dossierId), Team.Name));
+        Toasts.Done(L, string.Format(CultureInfo.CurrentCulture, L[placed ? "Admin.Toast.DossierPlaced" : "Admin.Toast.DossierRemoved"], View.DossierName(dossierId), Team.Name));
         await OnChanged.InvokeAsync();
     }
 
@@ -250,11 +251,12 @@
         OperationResult<bool> revoked = await Gateway.RevokeAsync(View.Overview.CabinetId, assignment.Id, CancellationToken.None);
         if (!revoked.IsSuccess)
         {
-            Toasts.ShowError(L.Error(revoked.Errors[0].Code));
+            Toasts.Failed(L.Error(revoked.Errors[0].Code));
             return;
         }
 
-        Toasts.Show(
+        Toasts.Done(
+            L,
             string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.Revoked"], View.RoleName(assignment.Role), Team.Name),
             async () =>
             {

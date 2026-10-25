@@ -10,13 +10,13 @@ using Microsoft.Extensions.Options;
 
 namespace Lettra.Infrastructure.Persistence.Cabinet;
 
-public sealed class CabinetOverviewJobOptions
+public sealed class CabinetOverviewJobOptions : IPeriodicJobOptions
 {
     public const string SectionName = "Lettra:CabinetOverview";
 
     public bool Enabled { get; set; } = true;
 
-    /// <summary>Une passe par jour : les compteurs de la vue cabinet sont ceux de la nuit.</summary>
+    /// <summary>Une passe par jour : la première peu après le démarrage, puis toutes les 24 h.</summary>
     public TimeSpan Interval { get; set; } = TimeSpan.FromDays(1);
 
     /// <summary>Attente avant la première passe, le temps que les migrations de démarrage se terminent.</summary>
@@ -72,7 +72,7 @@ internal sealed partial class CabinetOverviewJob(
 public static class CabinetOverviewHosting
 {
     /// <summary>
-    /// Passe de nuit de la vue cabinet. <paramref name="listDossiers"/> donne les dossiers actifs de la cellule (le
+    /// Passe quotidienne de la vue cabinet. <paramref name="listDossiers"/> donne les dossiers actifs de la cellule (le
     /// catalogue) ; réglages sous <c>Lettra:CabinetOverview</c>.
     /// </summary>
     public static IServiceCollection AddCabinetOverviewJob(
@@ -82,7 +82,7 @@ public static class CabinetOverviewHosting
     {
         ArgumentNullException.ThrowIfNull(configuration);
         services.TryAddSingleton(TimeProvider.System);
-        services.AddOptions<CabinetOverviewJobOptions>().Bind(configuration.GetSection(CabinetOverviewJobOptions.SectionName));
+        services.AddOptions<CabinetOverviewJobOptions>().Bind(configuration.GetSection(CabinetOverviewJobOptions.SectionName)).ValidatePeriodicJob(CabinetOverviewJobOptions.SectionName);
         services.AddHostedService(sp => new CabinetOverviewJob(
             sp, listDossiers, sp.GetRequiredService<IOptions<CabinetOverviewJobOptions>>(),
             sp.GetRequiredService<TimeProvider>(), sp.GetRequiredService<ILogger<CabinetOverviewJob>>()));

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="PaymentQr.Title" xml:space="preserve"><value>Payer par QR code</value></data>
+  <data name="PaymentQr.Due" xml:space="preserve"><value>Reste à payer</value></data>
+  <data name="PaymentQr.Caption" xml:space="preserve"><value>Le client scanne ce code avec l'application de sa banque : le virement s'ouvre déjà rempli, avec le numéro de la facture en libellé. Le même code figure sur le PDF.</value></data>
+  <data name="PaymentQr.NoIban" xml:space="preserve"><value>Ajoutez un IBAN valide à la fiche entreprise pour afficher le QR code de paiement, ici et sur le PDF.</value></data>
+  <data name="PaymentQr.CompanyLink" xml:space="preserve"><value>Ouvrir la fiche entreprise</value></data>
+</root>

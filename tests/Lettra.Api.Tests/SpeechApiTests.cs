@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Lettra.Application.Abstractions.Speech;
+using Lettra.Application.Features.Speech;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Serialization;
 using Lettra.Contracts.Speech;
@@ -231,7 +232,7 @@ public sealed class SpeechApiTests(LettraApiFactory factory) : IClassFixture<Let
             Calls++;
             LastRequest = request;
             Result<SpeechTranscript> result = text is null
-                ? new Error(ErrorCodes.Speech.EngineUnavailable, ErrorKind.Unexpected)
+                ? SpeechErrors.EngineUnavailable
                 : new SpeechTranscript(text);
             return Task.FromResult(result);
         }

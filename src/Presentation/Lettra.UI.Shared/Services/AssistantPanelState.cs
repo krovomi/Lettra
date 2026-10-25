@@ -1,6 +1,5 @@
 using Lettra.Contracts.Assistant;
 using Lettra.UI.Abstractions;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.UI.Shared.Services;
 
@@ -9,9 +8,9 @@ namespace Lettra.UI.Shared.Services;
 /// Désactivé par défaut : sans gateway, sans droit ou sans réglage du cabinet, aucune fonction n'est offerte et rien
 /// ne s'affiche. L'assistant propose ; le panneau n'a aucun bouton qui valide, émet ou envoie.
 /// </summary>
-public sealed class AssistantPanelState(IServiceProvider services)
+public sealed class AssistantPanelState(Optional<IAssistantGateway> gateway)
 {
-    private readonly IAssistantGateway? _gateway = services.GetService<IAssistantGateway>();
+    private readonly IAssistantGateway? _gateway = gateway.Value;
     private Task? _loading;
 
     public event EventHandler? Changed;

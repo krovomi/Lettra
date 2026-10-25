@@ -12,7 +12,7 @@ public sealed class KpiExpositionTests
     private static readonly KpiDossier Named = new(Dossier, "Boulangerie \"Le Fournil\"\\Sud", "Cabinet de démonstration");
 
     [Fact]
-    public void Chaque_indicateur_porte_son_aide_son_type_et_le_nom_du_dossier()
+    public void Chaque_indicateur_porte_son_aide_son_type_et_l_identifiant_du_dossier_sans_aucun_nom()
     {
         KpiSnapshot snapshot = new(DateTimeOffset.UnixEpoch, [Named],
         [
@@ -27,10 +27,12 @@ public sealed class KpiExpositionTests
         string[] lines = text.Split('\n', StringSplitOptions.RemoveEmptyEntries);
         lines.Should().Contain("# TYPE lettra_kpi_dso_days gauge");
         lines.Should().Contain(l => l.StartsWith("# HELP lettra_kpi_dso_days Délai moyen", StringComparison.Ordinal));
-        lines.Should().Contain("lettra_kpi_dossier_info{dossier_id=\"0199e3a0-0000-7000-8000-00000000d051\",dossier=\"Boulangerie \\\"Le Fournil\\\"\\\\Sud\",cabinet=\"Cabinet de démonstration\"} 1");
-        lines.Should().Contain("lettra_kpi_dso_days{dossier_id=\"0199e3a0-0000-7000-8000-00000000d051\",dossier=\"Boulangerie \\\"Le Fournil\\\"\\\\Sud\"} 42.5");
+        lines.Should().Contain("lettra_kpi_dossier_info{dossier_id=\"0199e3a0-0000-7000-8000-00000000d051\"} 1");
+        lines.Should().Contain("lettra_kpi_dso_days{dossier_id=\"0199e3a0-0000-7000-8000-00000000d051\"} 42.5");
         lines.Should().Contain(l => l.StartsWith("lettra_kpi_revenue_index{", StringComparison.Ordinal) && l.EndsWith(",month=\"2026-10\"} 120", StringComparison.Ordinal));
         lines.Should().Contain("lettra_kpi_open_alerts{severity=\"S1\"} 2");
+        text.Should().NotContain("Fournil", "le nom d'une entreprise individuelle est celui d'une personne")
+            .And.NotContain("Cabinet de démonstration").And.NotContain("dossier=").And.NotContain("cabinet=");
         text.Should().EndWith("\n");
     }
 

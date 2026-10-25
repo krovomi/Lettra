@@ -1,8 +1,8 @@
-using Lettra.Contracts.Exports;
 using Lettra.Domain.Banking;
 using Lettra.Domain.Billing;
 using Lettra.Domain.SharedKernel;
 using Lettra.Exports.Application.Insights;
+using Lettra.Exports.Domain.Platform;
 using Lettra.Infrastructure.Persistence;
 using Lettra.Infrastructure.Persistence.EInvoicing;
 using Lettra.Infrastructure.Persistence.Tenancy;
@@ -57,7 +57,7 @@ internal sealed class EfPaymentHistoryReader(TenantDbSession session) : IPayment
             .ToDictionary(
                 g => g.Key,
                 g => EfPlatformTransmissionStore.ToTransmission(EfPlatformTransmissionStore.Latest(g)!).History
-                    .Where(e => e is { Status: PlatformStatusDto.Collected, Amount: > 0m })
+                    .Where(e => e is { Status: PlatformStatus.Collected, Amount: > 0m })
                     .Select(e => new PaymentHistoryEntry(LegalCalendar.DateOf(e.At), e.Amount!.Value))
                     .ToArray());
 

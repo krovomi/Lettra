@@ -10,7 +10,7 @@ cellule ou du poste (ADR-0011, ADR-0012), et aucune n'appelle un service payant.
 | Quoi | Comment |
 |---|---|
 | Démarrage | La première fois qu'un utilisateur ouvre un écran, une bulle le présente en 3 à 8 étapes. Elle ne revient plus ensuite, sauf si le parcours change de version. Rien ne démarre avant l'ouverture de la session : l'écran de connexion reste libre, et l'accueil se présente juste après la connexion. |
-| Rejouer | Bouton **?** de la barre du haut (« Tutoriel de cet écran »), ou Ctrl+K puis « Tutoriel de cet écran ». |
+| Rejouer | Bouton **?** de la barre du haut (« Aide et tutoriels »), qui ouvre le panneau d'aide, puis « Tutoriel de cet écran » ; ou Ctrl+K puis « Tutoriel de cet écran ». |
 | Tout revoir | Menu Apparence, **Réinitialiser les tutoriels** (ou Ctrl+K, « Réinitialiser les tutoriels »). |
 | Clavier | Flèches gauche et droite pour reculer et avancer, Échap pour fermer, même si le focus n'est pas encore dans la bulle. |
 | Écrans couverts | Accueil, devis (liste et éditeur), factures (liste et éditeur), clients, catalogue, FEC, synchronisation, alertes, et l'assistant IA à sa première ouverture. |

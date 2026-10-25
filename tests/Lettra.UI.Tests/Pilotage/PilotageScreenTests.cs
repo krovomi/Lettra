@@ -66,6 +66,9 @@ public sealed class PilotageScreenTests : BunitContext
 
         page.Find("#pilotage-search").Input("eole");
         Names(page).Should().Equal("Atelier Éole");
+        page.Find("#pilotage-search").Input("0B0002");
+        Names(page).Should().Equal(["Garage du Centre"], "la référence courte des tableaux Grafana retrouve aussi le dossier");
+        page.Find("#pilotage-dossiers tbody th .lt-pilotage-ref").TextContent.Should().Be("Réf. 000b0002");
         page.Find("#pilotage-search").Input("zzz");
         page.Find("#pilotage-dossiers-filtered").Should().NotBeNull();
         page.Find("#pilotage-search").Input(string.Empty);
@@ -99,7 +102,8 @@ public sealed class PilotageScreenTests : BunitContext
         page.Find("#pilotage-admin-nightly").GetAttribute("data-level").Should().Be("Critical");
 
         page.Find("#pilotage-admin-sort-size").Click();
-        page.Find("#pilotage-admin tbody th").TextContent.Should().Be("Garage du Centre");
+        page.Find("#pilotage-admin tbody th").ChildNodes[0].TextContent.Should().Be("Garage du Centre");
+        page.Find("#pilotage-admin tbody th .lt-pilotage-ref").TextContent.Should().Be("Réf. 000b0002");
     }
 
     [Fact]
@@ -182,7 +186,7 @@ public sealed class PilotageScreenTests : BunitContext
     }
 
     private static List<string> Names(IRenderedComponent<PilotagePage> page) =>
-        [.. page.FindAll("#pilotage-dossiers tbody th").Select(t => t.TextContent.Trim())];
+        [.. page.FindAll("#pilotage-dossiers tbody th").Select(t => t.ChildNodes[0].TextContent.Trim())];
 
     private sealed class FakePilotageGateway : IPilotageGateway
     {

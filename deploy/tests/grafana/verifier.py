@@ -4,7 +4,7 @@
 Par l'API HTTP de Grafana seulement (ses sources de données servent de relais) :
   1. Grafana répond ; les sources Prometheus, Tempo et Loki provisionnées répondent, avec leurs liens
      (exemplaire → trace, trace → journaux, journal → trace) ;
-  2. les trois tableaux de bord sont provisionnés dans le dossier « Lettra » ;
+  2. les six tableaux de bord sont provisionnés dans le dossier « Lettra » ;
   3. chaque requête de chaque panneau rend des données : PromQL dans Prometheus, TraceQL dans Tempo, LogQL dans Loki ;
      un comptage filtré par un seuil (« count(... >= 3) ») peut être vide si la série filtrée existe ;
      seuls les panneaux listés dans SANS_DONNEES_EN_DEMO peuvent rester vides, avec leur raison ;

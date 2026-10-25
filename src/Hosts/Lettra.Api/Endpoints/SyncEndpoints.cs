@@ -13,9 +13,9 @@ using static Lettra.Api.Infrastructure.HttpResults;
 namespace Lettra.Api.Endpoints;
 
 /// <summary>
-/// Synchronisation des postes hors ligne (phase 4, ADR-0008). La route n'exige que d'ouvrir le dossier : chaque intention
-/// est ensuite rejouée par son cas d'usage, qui vérifie sa propre permission ; la réception ne rend que ce que
-/// l'utilisateur peut lire.
+/// Synchronisation des postes hors ligne (phase 4, ADR-0008), par les cas d'usage du module comme toute route. L'envoi
+/// n'exige que d'ouvrir le dossier : chaque intention est ensuite rejouée par son cas d'usage, qui vérifie sa propre
+/// permission ; la réception ne rend que ce que l'utilisateur peut lire.
 /// </summary>
 internal static class SyncEndpoints
 {
@@ -134,21 +134,15 @@ internal static class SyncEndpoints
     private static Guid? DeviceOf(HttpContext http) =>
         Guid.TryParse(http.Request.Headers[SyncHttp.DeviceHeader].ToString(), out Guid id) && id != Guid.Empty ? id : null;
 
-    private static async Task<IResult> OpenDeviceSeriesAsync(OpenDeviceSeriesRequest request, SyncServer sync, CancellationToken cancellationToken)
-    {
-        Result<OpenDeviceSeriesResponse> result = await sync.OpenDeviceSeriesAsync(request, cancellationToken).ConfigureAwait(false);
-        return Ok(result);
-    }
+    private static async Task<IResult> OpenDeviceSeriesAsync(
+        OpenDeviceSeriesRequest request, ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken) =>
+        Ok(await commands.SendAsync(new OpenDeviceSeriesCommand(tenant.Current.DossierId, request), cancellationToken).ConfigureAwait(false));
 
-    private static async Task<IResult> PushAsync(PushSyncIntentsRequest request, SyncServer sync, CancellationToken cancellationToken)
-    {
-        Result<PushSyncIntentsResponse> result = await sync.PushAsync(request, cancellationToken).ConfigureAwait(false);
-        return Ok(result);
-    }
+    private static async Task<IResult> PushAsync(
+        PushSyncIntentsRequest request, ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken) =>
+        Ok(await commands.SendAsync(new PushSyncIntentsCommand(tenant.Current.DossierId, request), cancellationToken).ConfigureAwait(false));
 
-    private static async Task<IResult> PullAsync(HttpContext http, SyncServer sync, CancellationToken cancellationToken, string? token = null, int limit = 500)
-    {
-        Result<SyncChangesResponse> result = await sync.PullAsync(token, limit, cancellationToken, DeviceOf(http)).ConfigureAwait(false);
-        return Ok(result);
-    }
+    private static async Task<IResult> PullAsync(
+        HttpContext http, ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken, string? token = null, int limit = 500) =>
+        Ok(await queries.QueryAsync(new PullSyncChangesQuery(tenant.Current.DossierId, token, limit, DeviceOf(http)), cancellationToken).ConfigureAwait(false));
 }

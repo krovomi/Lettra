@@ -48,6 +48,7 @@
   </Folder>
   <Folder Name="/src/Modules/Exports/">
     <Project Path="src/Modules/Exports/Lettra.Exports.Application/Lettra.Exports.Application.csproj" />
+    <Project Path="src/Modules/Exports/Lettra.Exports.Domain/Lettra.Exports.Domain.csproj" />
     <Project Path="src/Modules/Exports/Lettra.Exports.Infrastructure/Lettra.Exports.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/Composition/">
@@ -82,5 +83,6 @@
     <Project Path="tests/Lettra.Supervision.Tests/Lettra.Supervision.Tests.csproj" />
     <Project Path="tests/Lettra.Sync.Tests/Lettra.Sync.Tests.csproj" />
     <Project Path="tests/Lettra.UI.Tests/Lettra.UI.Tests.csproj" />
+    <Project Path="tests/Lettra.Worker.Tests/Lettra.Worker.Tests.csproj" />
   </Folder>
 </Solution>

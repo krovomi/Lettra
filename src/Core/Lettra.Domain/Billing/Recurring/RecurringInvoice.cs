@@ -375,61 +375,11 @@ public sealed class RecurringInvoice : AggregateRoot<RecurringInvoiceId>, IVersi
 
     private Result Apply(RecurringInvoiceDraft draft)
     {
-        List<Error> errors = [];
         string name = (draft.Name ?? string.Empty).Trim();
-        if (name.Length == 0)
-        {
-            errors.Add(RecurringInvoiceErrors.NameRequired);
-        }
-        else if (name.Length > MaxNameLength)
-        {
-            errors.Add(RecurringInvoiceErrors.NameTooLong);
-        }
-
-        if (draft.CustomerId.Value == Guid.Empty)
-        {
-            errors.Add(BillingErrors.CustomerRequired);
-        }
-
-        if (!Enum.IsDefined(draft.VatRegime))
-        {
-            errors.Add(BillingErrors.VatRegimeInvalid);
-        }
-
         string? subject = Clean(draft.Subject);
-        if (subject is { Length: > BillingDocument<InvoiceId>.MaxSubjectLength })
-        {
-            errors.Add(BillingErrors.SubjectTooLong);
-        }
-
         string? notes = Clean(draft.Notes);
-        if (notes is { Length: > BillingDocument<InvoiceId>.MaxNotesLength })
-        {
-            errors.Add(BillingErrors.NotesTooLong);
-        }
-
         string? terms = Clean(draft.PaymentTerms);
-        if (terms is { Length: > MaxPaymentTermsLength })
-        {
-            errors.Add(BillingErrors.PaymentTermsTooLong);
-        }
-
-        if (!Enum.IsDefined(draft.Frequency))
-        {
-            errors.Add(RecurringInvoiceErrors.FrequencyInvalid);
-        }
-
-        if (!Enum.IsDefined(draft.Timing))
-        {
-            errors.Add(RecurringInvoiceErrors.TimingInvalid);
-        }
-
-        if (draft.EndDate is { } end && end < draft.StartDate)
-        {
-            errors.Add(RecurringInvoiceErrors.EndBeforeStart);
-        }
-
-        errors.AddRange(RevisionErrors(draft));
+        List<Error> errors = [.. DraftErrors(draft, name, subject, notes, terms), .. RevisionErrors(draft)];
         List<DocumentLine> lines = ParseLines(draft.Lines, Enum.IsDefined(draft.VatRegime) ? draft.VatRegime : VatRegime.Standard, errors);
         if (errors.Count > 0)
         {
@@ -452,28 +402,93 @@ public sealed class RecurringInvoice : AggregateRoot<RecurringInvoiceId>, IVersi
         RevisionPercent = draft.Revision == PriceRevisionKind.FixedPercent ? draft.RevisionPercent : null;
         SyntecReferenceIndex = draft.Revision == PriceRevisionKind.SyntecIndex ? draft.SyntecReferenceIndex : null;
         SyntecLatestIndex = draft.Revision == PriceRevisionKind.SyntecIndex ? draft.SyntecLatestIndex ?? draft.SyntecReferenceIndex : null;
-        if (Revision == PriceRevisionKind.None)
-        {
-            NextRevisionDate = null;
-        }
-        else if (revisionChanged || NextRevisionDate is null)
-        {
-            // Premier anniversaire après la dernière période facturée : une révision choisie en cours de contrat ne rattrape pas le passé.
-            DateOnly anniversary = StartDate.AddYears(1);
-            DateOnly from = PeriodAt(GeneratedCount)?.Start ?? StartDate;
-            while (anniversary < from)
-            {
-                anniversary = anniversary.AddYears(1);
-            }
-
-            NextRevisionDate = anniversary;
-        }
+        ScheduleRevision(revisionChanged);
 
         _lines.Clear();
         _lines.AddRange(lines);
         TotalExclTax = DocumentCalculator.Compute(_lines.Select(l => l.ToInput())).TotalExclTax;
         RefreshNextIssueDate();
         return Result.Success();
+    }
+
+    /// <summary>Les erreurs de saisie du modèle (hors lignes et révision), sur les textes déjà nettoyés.</summary>
+    private static IEnumerable<Error> DraftErrors(RecurringInvoiceDraft draft, string name, string? subject, string? notes, string? terms)
+    {
+        if (name.Length == 0)
+        {
+            yield return RecurringInvoiceErrors.NameRequired;
+        }
+        else if (name.Length > MaxNameLength)
+        {
+            yield return RecurringInvoiceErrors.NameTooLong;
+        }
+
+        if (draft.CustomerId.Value == Guid.Empty)
+        {
+            yield return BillingErrors.CustomerRequired;
+        }
+
+        if (!Enum.IsDefined(draft.VatRegime))
+        {
+            yield return BillingErrors.VatRegimeInvalid;
+        }
+
+        if (subject is { Length: > BillingDocument<InvoiceId>.MaxSubjectLength })
+        {
+            yield return BillingErrors.SubjectTooLong;
+        }
+
+        if (notes is { Length: > BillingDocument<InvoiceId>.MaxNotesLength })
+        {
+            yield return BillingErrors.NotesTooLong;
+        }
+
+        if (terms is { Length: > MaxPaymentTermsLength })
+        {
+            yield return BillingErrors.PaymentTermsTooLong;
+        }
+
+        if (!Enum.IsDefined(draft.Frequency))
+        {
+            yield return RecurringInvoiceErrors.FrequencyInvalid;
+        }
+
+        if (!Enum.IsDefined(draft.Timing))
+        {
+            yield return RecurringInvoiceErrors.TimingInvalid;
+        }
+
+        if (draft.EndDate is { } end && end < draft.StartDate)
+        {
+            yield return RecurringInvoiceErrors.EndBeforeStart;
+        }
+    }
+
+    /// <summary>
+    /// La prochaine révision des prix : premier anniversaire après la dernière période facturée, pour qu'une révision
+    /// choisie en cours de contrat ne rattrape pas le passé ; gardée telle quelle si la révision n'a pas changé.
+    /// </summary>
+    private void ScheduleRevision(bool revisionChanged)
+    {
+        if (Revision == PriceRevisionKind.None)
+        {
+            NextRevisionDate = null;
+            return;
+        }
+
+        if (!revisionChanged && NextRevisionDate is not null)
+        {
+            return;
+        }
+
+        DateOnly anniversary = StartDate.AddYears(1);
+        DateOnly from = PeriodAt(GeneratedCount)?.Start ?? StartDate;
+        while (anniversary < from)
+        {
+            anniversary = anniversary.AddYears(1);
+        }
+
+        NextRevisionDate = anniversary;
     }
 
     private static IEnumerable<Error> RevisionErrors(RecurringInvoiceDraft draft)

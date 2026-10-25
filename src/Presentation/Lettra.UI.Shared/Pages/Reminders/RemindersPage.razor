@@ -20,7 +20,7 @@
     </div>
 </div>
 
-<GeneralErrors Errors="_errors" IncludeFieldErrors="true" />
+<GeneralErrors Errors="AllErrors" IncludeFieldErrors="true" />
 
 @if (_overview is { Settings.EmailConfigured: false })
 {
@@ -213,141 +213,22 @@
     </div>
 </Collapsible>
 
-<section class="lettra-card" aria-labelledby="reminders-history-title">
-    <h2 id="reminders-history-title">@L["Reminders.History"]</h2>
-    <ListFilterBar Id="reminders-history-filters" ActiveCount="ActiveHistoryFilters" OnReset="ResetHistoryFiltersAsync">
-        <ChildContent>
-            <div class="lt-filter">
-                <label for="reminders-search">@L["Reminders.History.Search"]</label>
-                <input id="reminders-search" type="search" @bind="_search" @bind:after="ReloadHistoryAsync" autocomplete="off" />
-            </div>
-        </ChildContent>
-        <More>
-            <div class="lt-filter">
-                <label for="reminders-filter-level">@L["Reminders.History.Level"]</label>
-                <select id="reminders-filter-level" @bind="_level" @bind:after="ReloadHistoryAsync">
-                    <option value="">@L["Reminders.History.All"]</option>
-                    @foreach (ReminderLevelDto level in Enum.GetValues<ReminderLevelDto>())
-                    {
-                        <option value="@level">@L[$"ReminderLevel.{level}"]</option>
-                    }
-                </select>
-            </div>
-            <div class="lt-filter">
-                <label for="reminders-filter-outcome">@L["Reminders.History.Outcome"]</label>
-                <select id="reminders-filter-outcome" @bind="_outcome" @bind:after="ReloadHistoryAsync">
-                    <option value="">@L["Reminders.History.All"]</option>
-                    @foreach (ReminderOutcomeDto outcome in Enum.GetValues<ReminderOutcomeDto>())
-                    {
-                        <option value="@outcome">@L[$"ReminderOutcome.{outcome}"]</option>
-                    }
-                </select>
-            </div>
-            <div class="lt-filter">
-                <label for="reminders-filter-channel">@L["Reminders.History.Channel"]</label>
-                <select id="reminders-filter-channel" @bind="_channel" @bind:after="ReloadHistoryAsync">
-                    <option value="">@L["Reminders.History.All"]</option>
-                    @foreach (ReminderChannelDto channel in Enum.GetValues<ReminderChannelDto>())
-                    {
-                        <option value="@channel">@L[$"ReminderChannel.{channel}"]</option>
-                    }
-                </select>
-            </div>
-            <DateRangeFilter Id="reminders-filter-dates" Label="@L["Reminders.History.Period"]" @bind-From="_from" @bind-To="_to" OnChange="ReloadHistoryAsync" />
-            <SortSelect Id="reminders-sort" Options="_historySortOptions" State="_sort" OnSort="ReloadHistoryAsync" />
-        </More>
-    </ListFilterBar>
-
-    @if (_history is null)
-    {
-        <ListSkeleton Columns="6" />
-    }
-    else if (_history.Items.Count == 0)
-    {
-        <EmptyState Id="reminders-history-empty" IconName="mail" Title="@L["Reminders.History.Empty"]" Text="@L["Reminders.History.Empty.Text"]" />
-    }
-    else
-    {
-        <div class="lt-list-scroll">
-        <table class="lettra-table lettra-documents lt-cards" id="reminders-history">
-            <thead>
-                <tr>
-                    <SortHeader Option="HistoryColumn(ReminderSortDto.Date)" State="_sort" OnSort="ReloadHistoryAsync" Id="reminders-sort-date" />
-                    <SortHeader Option="HistoryColumn(ReminderSortDto.Invoice)" State="_sort" OnSort="ReloadHistoryAsync" Id="reminders-sort-invoice" />
-                    <SortHeader Option="HistoryColumn(ReminderSortDto.Customer)" State="_sort" OnSort="ReloadHistoryAsync" Id="reminders-sort-customer" />
-                    <SortHeader Option="HistoryColumn(ReminderSortDto.Level)" State="_sort" OnSort="ReloadHistoryAsync" Id="reminders-sort-level" />
-                    <th scope="col">@L["Reminders.History.Channel"]</th>
-                    <th scope="col">@L["Reminders.History.Outcome"]</th>
-                    <th scope="col">@L["Reminders.Preview.Subject"]</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (PaymentReminderResponse reminder in _history.Items)
-                {
-                    <tr @key="reminder.Id">
-                        <td>@reminder.OccurredAt.ToLocalTime().ToString("g", Culture)</td>
-                        <td data-label="@L["Billing.Column.Number"]"><a href="@($"invoices/{reminder.InvoiceId}")">@reminder.InvoiceNumber</a></td>
-                        <td data-label="@L["Billing.Column.Customer"]">@reminder.CustomerName</td>
-                        <td data-label="@L["Reminders.History.Level"]">@L[$"ReminderLevel.{reminder.Level}"]</td>
-                        <td data-label="@L["Reminders.History.Channel"]">
-                            @L[$"ReminderChannel.{reminder.Channel}"]
-                            @if (reminder.Trigger == ReminderTriggerDto.Schedule)
-                            {
-                                <small class="lettra-muted">@L["Reminders.History.Automatic"]</small>
-                            }
-                        </td>
-                        <td data-label="@L["Reminders.History.Outcome"]">
-                            <span class="lettra-status @(reminder.Outcome == ReminderOutcomeDto.Sent ? "is-issued" : "is-refused")">@L[$"ReminderOutcome.{reminder.Outcome}"]</span>
-                        </td>
-                        <td data-label="@L["Reminders.Preview.Subject"]">
-                            <details class="lt-reminders-sent">
-                                <summary>@reminder.Subject</summary>
-                                @if (reminder.Recipient is { } to)
-                                {
-                                    <p class="lettra-muted">@string.Format(Culture, L["Reminders.History.SentTo"], to)</p>
-                                }
-                                <pre class="lt-reminders-body">@reminder.Body</pre>
-                            </details>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-        </div>
-        @if (_history.TotalCount > _history.PageSize)
-        {
-            <nav class="lt-pager" aria-label="@L["Accounting.Pages"]">
-                <button type="button" class="lettra-button is-secondary" disabled="@(_page <= 1)" @onclick="() => GoToAsync(_page - 1)">@L["Accounting.Previous"]</button>
-                <span>@string.Format(Culture, L["Accounting.PageOf"], _page, PageCount)</span>
-                <button type="button" class="lettra-button is-secondary" disabled="@(_page >= PageCount)" @onclick="() => GoToAsync(_page + 1)">@L["Accounting.Next"]</button>
-            </nav>
-        }
-    }
-</section>
+<ReminderHistory @ref="_historyList" OnErrors="e => _historyErrors = e" />
 
 @code {
     private const int PageSize = 25;
 
     private ReminderOverviewResponse? _overview;
-    private PagedResponse<PaymentReminderResponse>? _history;
     private ReminderInvoiceResponse? _selected;
     private ReminderPreviewResponse? _preview;
     private IReadOnlyList<ErrorDetail> _errors = [];
+    private IReadOnlyList<ErrorDetail> _historyErrors = [];
     private bool _busy;
+    private ReminderHistory _historyList = default!;
 
     private readonly int[] _delays = [3, 15, 30, 45];
     private int _gap = 7;
     private bool _autoSend;
-
-    private string? _search;
-    private ReminderLevelDto? _level;
-    private ReminderOutcomeDto? _outcome;
-    private ReminderChannelDto? _channel;
-    private DateOnly? _from;
-    private DateOnly? _to;
-    private readonly SortState<ReminderSortDto> _sort = new(ReminderSortDto.Date, SortDirectionDto.Descending);
-    private IReadOnlyList<SortOption<ReminderSortDto>> _historySortOptions = [];
-    private int _page = 1;
 
     private string? _invoiceSearch;
     private bool _dueOnly;
@@ -400,16 +281,13 @@
 
     private int ActiveInvoiceFilters => (string.IsNullOrWhiteSpace(_invoiceSearch) ? 0 : 1) + (_dueOnly ? 1 : 0);
 
-    private int ActiveHistoryFilters =>
-        new object?[] { string.IsNullOrWhiteSpace(_search) ? null : _search, _level, _outcome, _channel, _from, _to }.Count(f => f is not null);
-
     private int InvoicePageCount => Math.Max(1, (int)Math.Ceiling(FilteredInvoices.Count / (double)PageSize));
 
     private static CultureInfo Culture => CultureInfo.CurrentCulture;
 
-    private bool CanRun => _overview is { Settings.EmailConfigured: true, DueToday: > 0 };
+    private IReadOnlyList<ErrorDetail> AllErrors => [.. _errors, .. _historyErrors];
 
-    private int PageCount => _history is null ? 1 : Math.Max(1, (int)Math.Ceiling(_history.TotalCount / (double)_history.PageSize));
+    private bool CanRun => _overview is { Settings.EmailConfigured: true, DueToday: > 0 };
 
     private string SettingsSummary => _overview is null
         ? string.Empty
@@ -425,15 +303,7 @@
             new(InvoiceSort.Overdue, L["Reminders.DaysLate"], SortDirectionDto.Descending),
             new(InvoiceSort.Outstanding, L["Reminders.Outstanding"], SortDirectionDto.Descending),
         ];
-        _historySortOptions =
-        [
-            new(ReminderSortDto.Date, L["Billing.Column.Date"], SortDirectionDto.Descending),
-            new(ReminderSortDto.Invoice, L["Billing.Column.Number"]),
-            new(ReminderSortDto.Customer, L["Billing.Column.Customer"]),
-            new(ReminderSortDto.Level, L["Reminders.History.Level"]),
-        ];
         await LoadOverviewAsync();
-        await LoadHistoryAsync();
     }
 
     private async Task LoadOverviewAsync()
@@ -450,42 +320,11 @@
         _autoSend = _overview.Settings.AutoSend;
     }
 
-    private async Task LoadHistoryAsync()
-    {
-        OperationResult<PagedResponse<PaymentReminderResponse>> result = await Reminders.ListHistoryAsync(
-            new ReminderHistoryQuery(null, _level, _outcome, _channel, _from, _to, _search, _sort.Column, _sort.Descending, _page, PageSize), CancellationToken.None);
-        _history = result.Value ?? new PagedResponse<PaymentReminderResponse>([], 1, PageSize, 0);
-        if (!result.IsSuccess)
-        {
-            _errors = result.Errors;
-        }
-    }
-
-    private Task ReloadHistoryAsync()
-    {
-        _page = 1;
-        return LoadHistoryAsync();
-    }
-
     private SortOption<InvoiceSort> InvoiceColumn(InvoiceSort column) => _invoiceSortOptions.First(o => o.Column == column);
-
-    private SortOption<ReminderSortDto> HistoryColumn(ReminderSortDto column) => _historySortOptions.First(o => o.Column == column);
 
     private void ResetInvoiceFilters()
     {
         (_invoiceSearch, _dueOnly, _invoicePage) = (null, false, 1);
-    }
-
-    private Task ResetHistoryFiltersAsync()
-    {
-        (_search, _level, _outcome, _channel, _from, _to) = (null, null, null, null, null, null);
-        return ReloadHistoryAsync();
-    }
-
-    private async Task GoToAsync(int page)
-    {
-        _page = page;
-        await LoadHistoryAsync();
     }
 
     private async Task OpenPreviewAsync(ReminderInvoiceResponse invoice)
@@ -531,7 +370,7 @@
         }
 
         await LoadOverviewAsync();
-        await ReloadHistoryAsync();
+        await _historyList.ReloadAsync();
     }
 
     private async Task RunDueAsync()
@@ -549,7 +388,7 @@
         }
 
         await LoadOverviewAsync();
-        await ReloadHistoryAsync();
+        await _historyList.ReloadAsync();
     }
 
     private async Task SaveSettingsAsync()

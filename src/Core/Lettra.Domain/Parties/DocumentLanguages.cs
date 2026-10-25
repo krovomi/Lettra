@@ -1,3 +1,5 @@
+using Lettra.Calculations;
+
 namespace Lettra.Domain.Parties;
 
 /// <summary>
@@ -6,7 +8,7 @@ namespace Lettra.Domain.Parties;
 /// </summary>
 public static class DocumentLanguages
 {
-    public const string French = "fr-FR";
+    public const string French = LegalLanguage.Name;
     public const string English = "en-US";
 
     public static IReadOnlyList<string> Supported { get; } = [French, English];

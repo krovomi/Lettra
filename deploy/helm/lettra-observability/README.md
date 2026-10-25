@@ -13,7 +13,13 @@ lettra-api ┐                      ┌─ métriques ─► Prometheus (récept
 lettra-worker ┘  filtrant         ├─ journaux ──► Loki                          collector.logs.loki.enabled
                                   ├─ au choix ──► fournisseur hébergé en France collector.fournisseur.enabled
                                   └─ tous ──────► debug (résumé par lot dans le journal du collecteur)
+
+lettra-api /internal/kpi/metrics ─► Prometheus (lecture directe, hors OpenTelemetry)   PAS ENCORE BRANCHÉ dans les charts
 ```
+
+Les tableaux de pilotage et d'administration lisent des indicateurs que Prometheus va chercher sur l'API, avec un jeton
+(`Lettra:Kpi:ScrapeToken`). La démonstration le fait (`deploy/demo/observabilite/prometheus.yml`, tâche `lettra-kpi`) ;
+les charts ne posent encore ni le jeton ni la tâche de lecture : dans une cellule, ces tableaux restent vides.
 
 ### Côté applications
 
@@ -66,6 +72,9 @@ démonstration (`deploy/demo/compose.observabilite.yaml`) monte les mêmes fichi
 | `lettra-slo.json` | Objectifs de service : disponibilité et budget d'erreur, latence des lectures, PgBouncer, alertes. |
 | `lettra-activite.json` | Requêtes par route, latence p50/p95/p99 avec exemplaires, erreurs, cas d'usage, outbox, synchronisations, connexions, assistant, traces (Tempo) et journaux (Loki). |
 | `lettra-metier.json` | Pièces par type et par étape, transmissions à la plateforme par statut, exports FEC : des nombres seulement. |
+| `lettra-pilotage-cabinet.json` | Pilotage du cabinet : indicateurs lus sur `/internal/kpi/metrics` de l'API (tâche Prometheus `lettra-kpi` dans la démonstration ; **pas encore branché** dans les charts, voir plus bas). |
+| `lettra-pilotage-dossier.json` | Pilotage d'un dossier : mêmes indicateurs, par dossier. |
+| `lettra-administration.json` | Administration : requêtes et erreurs de l'API, connexions, alertes graves, postes synchronisés, comptes, dossiers, place occupée. |
 
 Métriques de Lettra (`LettraTelemetry`, compteur Meter `Lettra`) et leurs seules étiquettes, toutes à valeurs fixes :
 `lettra.use_case.count`/`.duration` (`lettra.use_case`, `lettra.outcome`), `lettra.document.count`
@@ -73,7 +82,9 @@ Métriques de Lettra (`LettraTelemetry`, compteur Meter `Lettra`) et leurs seule
 (`lettra.einvoicing.operation`, `lettra.einvoicing.status`), `lettra.fec.export.count` et `lettra.sign_in.count`
 (`lettra.outcome`), `lettra.assistant.call.count` (`lettra.outcome`, `lettra.error.code`), `lettra.sync.duration`
 (`lettra.sync.direction`, `lettra.outcome`), `lettra.outbox.dispatch.count` (`lettra.outbox.kind`,
-`lettra.outbox.result`), jauges `lettra.outbox.pending`, `.parked`, `.oldest_age`. Aucune ne porte de dossier, de
+`lettra.outbox.result`), jauges `lettra.outbox.pending`, `.parked`, `.oldest_age`,
+`lettra.speech.transcription.count`, `lettra.speech.audio.duration` et `lettra.speech.transcription.duration` (moteur,
+mode, issue). Aucune ne porte de dossier, de
 personne, de client ou de montant (`DemoWalkthroughTests`). Les histogrammes gardent des exemplaires (`trace_id`)
 quand la mesure est prise dans une requête tracée.
 

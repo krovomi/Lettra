@@ -3,6 +3,7 @@
 @inject IAdministrationGateway Gateway
 @inject IDossierSelection Selection
 @inject IStringLocalizer<SharedResource> L
+@inject ToastService Toasts
 @inject NavigationManager Navigation
 @inject TimeProvider Clock
 
@@ -269,45 +270,7 @@
                     }
                 </ul>
 
-                <details class="la-collapsible" id="roles-matrix">
-                    <summary><Icon Name="layers" Size="18" />@L["Admin.Matrix.Title"]<Icon Name="chevron-right" Size="18" Class="la-collapsible-chevron" /></summary>
-                    <p class="lettra-hint">@L["Admin.Matrix.Hint"]</p>
-                    <div class="la-matrix-scroll" tabindex="0" role="region" aria-label="@L["Admin.Matrix.Title"]">
-                        <table class="lettra-table la-matrix">
-                            <thead>
-                                <tr>
-                                    <th scope="col">@L["Admin.Matrix.Page"]</th>
-                                    @foreach (RoleDescription role in view.Overview.Roles)
-                                    {
-                                        <th scope="col">@view.RoleName(role.Key)</th>
-                                    }
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (AccessAreaInfo area in AccessAreas.All)
-                                {
-                                    <tr>
-                                        <th scope="row"><Icon Name="@AreaList.AreaIcon(area.Area)" Size="16" />@L[$"Admin.Area.{area.Area}"]</th>
-                                        @foreach (RoleDescription role in view.Overview.Roles)
-                                        {
-                                            AccessLevelDto level = role.Areas.FirstOrDefault(a => a.Area == area.Area)?.Level ?? AccessLevelDto.None;
-                                            <td>
-                                                @if (level == AccessLevelDto.None)
-                                                {
-                                                    <span class="la-dash" aria-label="@L["Admin.Level.None"]">–</span>
-                                                }
-                                                else
-                                                {
-                                                    <LevelBadge Level="level" />
-                                                }
-                                            </td>
-                                        }
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </details>
+                <RolesMatrix View="view" />
             </section>
         }
 
@@ -315,7 +278,6 @@
     }
 </div>
 
-<AdminToasts @ref="_toasts" />
 
 @code {
     private enum Tab { People, Teams, Roles }
@@ -324,7 +286,6 @@
 
     private readonly CancellationTokenSource _disposed = new();
     private AdministrationView? _view;
-    private AdminToasts _toasts = default!;
     private IReadOnlyList<ErrorDetail> _errors = [];
     private bool _denied;
     private Guid? _cabinetId;
@@ -503,7 +464,7 @@
         {
             <AdminDrawer Id="person-drawer" Title="@view.NameOf(person)" OnClose="Close">
                 <ChildContent>
-                    <PersonPanel View="view" Person="person" Toasts="_toasts" OnGrant="() => _mode = Mode.PersonGrant" OnChanged="ReloadAsync" />
+                    <PersonPanel View="view" Person="person" OnGrant="() => _mode = Mode.PersonGrant" OnChanged="ReloadAsync" />
                 </ChildContent>
                 <Footer>
                     @if (view.Overview.Can.ManagePeople)
@@ -550,7 +511,7 @@
         else
         {
             <AdminDrawer Id="team-drawer" Title="@team.Name" Subtitle="@string.Format(CultureInfo.CurrentCulture, L["Admin.Team.Counts"], team.MemberIds.Count, team.DossierIds.Count)" OnClose="Close">
-                <TeamPanel View="view" Team="team" Toasts="_toasts" OnGrant="() => _mode = Mode.TeamGrant" OnChanged="ReloadAsync" OnDeleted="TeamDeletedAsync" />
+                <TeamPanel View="view" Team="team" OnGrant="() => _mode = Mode.TeamGrant" OnChanged="ReloadAsync" OnDeleted="TeamDeletedAsync" />
             </AdminDrawer>
         }
     };
@@ -573,40 +534,9 @@
 
     private RenderFragment RoleDrawer(AdministrationView view, RoleDescription role) => __builder =>
     {
-        PersonSummary[] holders = view.Overview.People.Where(p => p.Assignments.Any(a => a.Role == role.Key)).ToArray();
-        TeamSummary[] teams = view.Overview.Teams.Where(t => t.Assignments.Any(a => a.Role == role.Key)).ToArray();
         <AdminDrawer Id="role-drawer" Title="@view.RoleName(role.Key)" Subtitle="@view.RoleSummary(role.Key)" OnClose="Close">
             <ChildContent>
-                <section class="la-section">
-                    <h3>@L["Admin.Roles.Opens"]</h3>
-                    <AreaList Areas="role.Areas" />
-                    <p class="lettra-hint">@L[$"Admin.Roles.Widest.{role.WidestScope}"]</p>
-                </section>
-                <section class="la-section">
-                    <h3>@string.Format(CultureInfo.CurrentCulture, L["Admin.Roles.Holders"], holders.Length + teams.Length)</h3>
-                    <ul class="la-rows" role="list">
-                        @foreach (PersonSummary person in holders)
-                        {
-                            <li class="la-row">
-                                <AdminAvatar Id="person.Id" Name="@view.NameOf(person)" />
-                                <span class="la-row-text"><strong>@view.NameOf(person)</strong>
-                                    <span>@string.Join(", ", person.Assignments.Where(a => a.Role == role.Key).Select(a => view.ScopeLabel(a.ScopeKind, a.ScopeId)))</span></span>
-                            </li>
-                        }
-                        @foreach (TeamSummary team in teams)
-                        {
-                            <li class="la-row">
-                                <span class="la-row-icon"><Icon Name="users" Size="16" /></span>
-                                <span class="la-row-text"><strong>@team.Name</strong>
-                                    <span>@string.Join(", ", team.Assignments.Where(a => a.Role == role.Key).Select(a => view.ScopeLabel(a.ScopeKind, a.ScopeId)))</span></span>
-                            </li>
-                        }
-                    </ul>
-                    @if (holders.Length + teams.Length == 0)
-                    {
-                        <p class="lettra-hint">@L["Admin.Roles.NoHolder"]</p>
-                    }
-                </section>
+                <RolePanel View="view" Role="role" />
             </ChildContent>
             <Footer>
                 @if (view.Overview.Can.ManageRoles)
@@ -634,17 +564,17 @@
 
     private async Task GrantedAsync(string subject, RoleAssignmentSummary assignment)
     {
-        _toasts.Show(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.Granted"], subject, _view?.RoleName(assignment.Role)));
+        Toasts.Done(L, string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.Granted"], subject, _view?.RoleName(assignment.Role)));
         _mode = assignment.SubjectKind == SubjectKindDto.Group ? Mode.Team : Mode.Person;
         await ReloadAsync();
     }
 
     private async Task InvitedAsync(PersonSummary person)
     {
-        _toasts.Show(string.Format(CultureInfo.CurrentCulture, L[person.InvitationEmail == InvitationEmailStatusDto.Sent ? "Admin.Toast.InvitedByEmail" : "Admin.Toast.Invited"], person.DisplayName));
+        Toasts.Done(L, string.Format(CultureInfo.CurrentCulture, L[person.InvitationEmail == InvitationEmailStatusDto.Sent ? "Admin.Toast.InvitedByEmail" : "Admin.Toast.Invited"], person.DisplayName));
         if (person.InvitationEmail == InvitationEmailStatusDto.Failed)
         {
-            _toasts.ShowError(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.InvitationFailed"], person.DisplayName));
+            Toasts.Failed(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.InvitationFailed"], person.DisplayName));
         }
 
         await ReloadAsync();
@@ -654,7 +584,7 @@
 
     private async Task PersonSavedAsync(PersonSummary person)
     {
-        _toasts.Show(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.PersonSaved"], person.DisplayName));
+        Toasts.Done(L, string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.PersonSaved"], person.DisplayName));
         _mode = Mode.Person;
         await ReloadAsync();
     }
@@ -664,13 +594,14 @@
         OperationResult<bool> result = await Gateway.SetAccountStateAsync(view.Overview.CabinetId, person.Id, state, _disposed.Token);
         if (!result.IsSuccess)
         {
-            _toasts.ShowError(L.Error(result.Errors[0].Code));
+            Toasts.Failed(L.Error(result.Errors[0].Code));
             return;
         }
 
         AccountStateDto previous = person.State;
         string key = state == AccountStateDto.Active ? "Admin.Toast.Reactivated" : "Admin.Toast.Suspended";
-        _toasts.Show(
+        Toasts.Done(
+            L,
             string.Format(CultureInfo.CurrentCulture, L[key], view.FirstNameOf(person)),
             async () =>
             {
@@ -685,11 +616,11 @@
         OperationResult<GroupSummary> created = await Gateway.CreateTeamAsync(view.Overview.CabinetId, new CreateGroupRequest { Name = _newTeam }, _disposed.Token);
         if (!created.IsSuccess || created.Value is not { } team)
         {
-            _toasts.ShowError(L.Error(created.Errors[0].Code));
+            Toasts.Failed(L.Error(created.Errors[0].Code));
             return;
         }
 
-        _toasts.Show(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.TeamCreated"], team.Name));
+        Toasts.Done(L, string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.TeamCreated"], team.Name));
         _tab = Tab.Teams;
         await ReloadAsync();
         Open(Mode.Team, team.Id);
@@ -703,14 +634,14 @@
 
     private async Task RoleSavedAsync(RoleDescription role)
     {
-        _toasts.Show(string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.RoleSaved"], role.Name));
+        Toasts.Done(L, string.Format(CultureInfo.CurrentCulture, L["Admin.Toast.RoleSaved"], role.Name));
         await ReloadAsync();
         OpenRole(role.Key);
     }
 
     private async Task RoleDeletedAsync(string key)
     {
-        _toasts.Show(L["Admin.Toast.RoleDeleted"]);
+        Toasts.Done(L, L["Admin.Toast.RoleDeleted"]);
         Close();
         await ReloadAsync();
     }

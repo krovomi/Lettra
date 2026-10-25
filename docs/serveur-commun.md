@@ -2,18 +2,19 @@
 
 Le navigateur travaille toujours sur le serveur qui l'a servi. Les applications installées (Windows, macOS, Android,
 iOS) travaillaient jusqu'ici seules, chacune avec sa propre base : un client créé sur le téléphone n'apparaissait pas
-dans le navigateur. L'écran **Paramètres › Serveur du cabinet** relie maintenant l'application installée au serveur du
+dans le navigateur. L'écran **Pilotage › Serveur du cabinet** relie maintenant l'application installée au serveur du
 cabinet : elle passe alors par la même API, sur le même dossier que le navigateur, et tous les appareils reliés voient
 les mêmes données.
 
 ## Comment ça marche
 
-1. Sur l'appareil, ouvrir **Serveur du cabinet** (menu Paramètres, ou le lien en bas de l'écran de connexion).
+1. Sur l'appareil, ouvrir **Serveur du cabinet** (section « Pilotage » du menu, ou le lien en bas de l'écran de
+   connexion).
 2. Saisir l'adresse du serveur, par exemple `http://localhost:8080` pour la démo, ou `192.168.1.20:8443` (sans
    `https://`, l'application essaie https puis http).
 3. L'application lit sur le serveur l'adresse `/.well-known/lettra-server` (sans connexion) : elle vérifie que c'est
    bien un serveur Lettra et y trouve l'adresse de connexion du cabinet (Keycloak) et l'identifiant de l'application.
-4. Elle redémarre (Windows : automatiquement ; Android, macOS : bouton « Fermer l'application », puis la rouvrir ; iOS :
+4. Elle redémarre (Windows : automatiquement ; Android, macOS : bouton « Fermer Lettra », puis la rouvrir ; iOS :
    fermer et rouvrir l'application soi-même).
 5. Au lancement suivant, « Se connecter » ouvre la page de connexion du cabinet dans le navigateur du système
    (mot de passe et code à usage unique), puis l'application ouvre le dossier du navigateur.
@@ -69,7 +70,8 @@ devis, factures) sont conservées.
 - API : `GET /.well-known/lettra-server` (`src/Hosts/Lettra.Api/Endpoints/ServerDiscoveryEndpoints.cs`), anonyme ;
   `Lettra:Identity:Oidc:PublicAuthority` et `Lettra:Identity:Oidc:DeviceClientId` permettent de forcer les valeurs.
 - Gateways : `src/Presentation/Lettra.UI.Gateway.Http/Device/SharedServerProbe.cs` (vérification de l'adresse),
-  `SharedServerSession.cs` (connexion puis choix du dossier), `SharedServerDependencyInjection.cs`.
+  `SharedServerSession.cs` (connexion puis choix du dossier), et `SharedServerDependencyInjection.cs` à la racine du
+  projet.
 - Écran : `src/Presentation/Lettra.UI.Shared/Pages/SharedServer.razor`, contrat `IServerConnection`
   (`Lettra.UI.Abstractions/ServerConnection.cs`).
 - Application installée : `src/Hosts/Lettra.App.Maui/SharedServer.cs` (fichier `serveur-commun.json` dans le dossier

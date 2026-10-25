@@ -1,5 +1,6 @@
 using System.Globalization;
 using Lettra.Contracts.Cabinet;
+using Lettra.UI.Shared.Components.Dates;
 
 namespace Lettra.UI.Shared.Pages.Pilotage;
 
@@ -36,11 +37,17 @@ public static class PilotageDisplay
         _ => IndicatorLevelDto.Ok,
     };
 
-    /// <summary>Âge du calcul de nuit de la vue cabinet : orange au-delà de 26 h, rouge au-delà de 50 h (une nuit manquée).</summary>
+    /// <summary>Âge du dernier calcul de la vue cabinet (toutes les 24 h) : orange au-delà de 26 h (un calcul manqué), rouge au-delà de 50 h.</summary>
     public static IndicatorLevelDto NightlyAge(double? seconds) => Above(seconds, 26 * 3600, 50 * 3600);
 
     /// <summary>Un poste silencieux (plus de 7 jours sans synchronisation) est à vérifier.</summary>
     public static IndicatorLevelDto Silent(int count) => count > 0 ? IndicatorLevelDto.Warning : IndicatorLevelDto.Ok;
+
+    /// <summary>
+    /// Référence courte du dossier : les 8 derniers caractères de son identifiant, la même que dans les tableaux Grafana,
+    /// qui ne publient aucun nom de dossier.
+    /// </summary>
+    public static string Reference(Guid dossierId) => dossierId.ToString("N")[^8..];
 
     public static string Days(double? days, CultureInfo culture) =>
         days is double value ? string.Create(culture, $"{Math.Round(value, MidpointRounding.AwayFromZero):N0} j") : "—";
@@ -109,7 +116,7 @@ public static class PilotageDisplay
 
     /// <summary>Le mois <c>2026-10</c> en « oct. » (court) ou « octobre 2026 » (long).</summary>
     public static string Month(string month, bool full, CultureInfo culture) =>
-        DateOnly.TryParseExact(month + "-01", "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly date)
+        DateText.ParseIsoMonth(month) is { } date
             ? date.ToString(full ? "MMMM yyyy" : "MMM", culture)
             : month;
 

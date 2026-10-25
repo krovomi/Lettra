@@ -1,8 +1,5 @@
-using Lettra.Application.Abstractions.Messaging;
-using Lettra.Application.Mapping;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Reminders;
-using Lettra.Domain.Common;
 using Lettra.Exports.Application.Reminders;
 using Lettra.UI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,10 +16,10 @@ internal sealed class InProcessRemindersGateway(IServiceScopeFactory scopes) : I
         InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetReminderPreviewQuery(dossier, invoiceId), ct), cancellationToken);
 
     public Task<OperationResult<PaymentReminderResponse>> SendAsync(Guid invoiceId, ReminderChannelDto channel, CancellationToken cancellationToken) =>
-        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => SendAsync(sp, new SendReminderCommand(dossier, invoiceId, new SendReminderRequest(channel)), ct), cancellationToken);
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.SendAsync(sp, new SendReminderCommand(dossier, invoiceId, new SendReminderRequest(channel)), ct), cancellationToken);
 
     public Task<OperationResult<RunRemindersResponse>> RunDueAsync(CancellationToken cancellationToken) =>
-        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => SendAsync(sp, new RunDueRemindersCommand(dossier), ct), cancellationToken);
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.SendAsync(sp, new RunDueRemindersCommand(dossier), ct), cancellationToken);
 
     public Task<OperationResult<PagedResponse<PaymentReminderResponse>>> ListHistoryAsync(ReminderHistoryQuery query, CancellationToken cancellationToken)
     {
@@ -32,11 +29,5 @@ internal sealed class InProcessRemindersGateway(IServiceScopeFactory scopes) : I
     }
 
     public Task<OperationResult<ReminderSettingsResponse>> UpdateSettingsAsync(UpdateReminderSettingsRequest request, CancellationToken cancellationToken) =>
-        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => SendAsync(sp, new UpdateReminderSettingsCommand(dossier, request), ct), cancellationToken);
-
-    private static async Task<OperationResult<T>> SendAsync<T>(IServiceProvider services, ICommand<Result<T>> command, CancellationToken cancellationToken)
-    {
-        Result<T> result = await services.GetRequiredService<ICommandDispatcher>().SendAsync(command, cancellationToken).ConfigureAwait(false);
-        return result.ToOperationResult();
-    }
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.SendAsync(sp, new UpdateReminderSettingsCommand(dossier, request), ct), cancellationToken);
 }

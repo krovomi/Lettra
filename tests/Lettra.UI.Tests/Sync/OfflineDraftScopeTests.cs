@@ -5,6 +5,7 @@ using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
 using Lettra.UI.Shared.Components;
 using Lettra.UI.Shared.Drafts;
+using Lettra.UI.Tests.Billing;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -135,6 +136,9 @@ public sealed class SignOutDraftsTests : BunitContext
         Services.AddLettraUi();
         Services.AddSingleton<IOfflineDraftStore>(_store);
         Services.AddSingleton<IDossierSelection>(new FixedDossierSelection(Dossier));
+        // L'envoi des brouillons passe par les passerelles des pièces, que tout hôte qui garde des brouillons fournit.
+        Services.AddSingleton<IQuotesGateway>(new FakeQuotesGateway());
+        Services.AddSingleton<IInvoicesGateway>(new FakeInvoicesGateway());
         Services.AddOfflineDrafts();
         Services.AddSingleton<ISessionGateway>(_sessions);
         _sessions.Result = OperationResult<SessionResponse>.Success(

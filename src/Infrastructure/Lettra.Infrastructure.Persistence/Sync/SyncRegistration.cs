@@ -9,7 +9,8 @@ namespace Lettra.Infrastructure.Persistence.Sync;
 /// <summary>Portée enfant installée directement sur le dossier déjà résolu (et autorisé) de la portée parente.</summary>
 internal sealed class IsolatedDossierScope(IServiceScopeFactory scopes, ITenantContext tenant) : IDossierWorkScope
 {
-    public async Task<T> RunAsync<T>(Func<IServiceProvider, CancellationToken, Task<T>> work, CancellationToken cancellationToken)
+    public async Task<T> RunAsync<TService, T>(Func<TService, CancellationToken, Task<T>> work, CancellationToken cancellationToken)
+        where TService : notnull
     {
         ArgumentNullException.ThrowIfNull(work);
         TenantDescriptor current = tenant.Current;
@@ -17,7 +18,7 @@ internal sealed class IsolatedDossierScope(IServiceScopeFactory scopes, ITenantC
         await using (scope.ConfigureAwait(false))
         {
             scope.ServiceProvider.GetRequiredService<TenantContext>().Set(current);
-            return await work(scope.ServiceProvider, cancellationToken).ConfigureAwait(false);
+            return await work(scope.ServiceProvider.GetRequiredService<TService>(), cancellationToken).ConfigureAwait(false);
         }
     }
 }

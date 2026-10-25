@@ -6,7 +6,11 @@
 @implements IDisposable
 @inject IInvoicesGateway Invoices
 @inject IBillingSettingsGateway Settings
-@inject IServiceProvider Services
+@inject Optional<OfflineDrafts> OptionalDrafts
+@inject Optional<EntryPreferences> OptionalEntry
+@inject Optional<ICustomersGateway> OptionalCustomers
+@inject Optional<IPriceListsGateway> OptionalPrices
+@inject TimeProvider Clock
 @inject IDocumentPdfRenderer Pdf
 @inject IFileDownloader Files
 @inject NavigationManager Navigation
@@ -184,6 +188,11 @@ else
 
             <ComplianceChecklist Report="_compliance" OnFindingSelected="FocusFindingAsync" DocumentId="Id" />
 
+            @if (_invoice is { Status: not InvoiceStatusDto.Draft } payable)
+            {
+                <PaymentQrPanel Invoice="payable" Company="_company" />
+            }
+
             @if (_invoice is { Status: not InvoiceStatusDto.Draft, Number: not null } transmitted)
             {
                 <PlatformTransmissionPanel Invoice="transmitted" OnInvoiceChanged="ReloadAsync" />
@@ -221,7 +230,7 @@ else
     private bool _loading = true;
     private bool _conflict;
     private bool _busy;
-    private string _pdfCulture = "fr-FR";
+    private string _pdfCulture = DocumentEditing.DefaultPdfCulture;
     private DraftAutosave _autosave = default!;
     private KeyboardScope _pageScope = default!;
     private CustomerPicker? _customerPicker;
@@ -282,7 +291,7 @@ else
             .Bind("Ctrl+S", L["Billing.Command.Save"], _ => SaveNowAsync(), _ => IsDraft)
             .Bind("Ctrl+Enter", L["Billing.Command.Validate"], _ => ValidateAsync(), _ => CanValidate)
             .Bind("Ctrl+P", L["Billing.Command.Pdf"], _ => DownloadPdfAsync(), _ => _invoice is not null);
-        _drafts = Services.GetService<OfflineDrafts>();
+        _drafts = OptionalDrafts.Value;
         if (_drafts is not null)
         {
             _drafts.Synced += DraftSynced;
@@ -330,7 +339,7 @@ else
 
             Show(loaded.Value);
             // Pièce ouverte : proposée dans « Reprendre où j'en étais » (accueil, palette).
-            _ = EntryPreferences.From(Services)?.RecordUseAsync(UsageKindDto.Invoice, id);
+            _ = OptionalEntry.Value?.RecordUseAsync(UsageKindDto.Invoice, id);
             await RestoreAsync(serverId: id, localId: null);
             await CheckAsync();
             if (Action == "credit-note")
@@ -358,7 +367,7 @@ else
             _invoice = null;
             _request = new SaveInvoiceRequest { VatRegime = _company?.VatFranchise == true ? VatRegimeDto.Franchise : VatRegimeDto.Standard };
             // Valeurs retenues par l'utilisateur pour ce dossier (« Mes préférences ») ; vides, rien ne change.
-            if (EntryPreferences.From(Services) is { } entry)
+            if (OptionalEntry.Value is { } entry)
             {
                 EntryDefaultsDto defaults = await entry.DefaultsAsync();
                 _request.PaymentTerms = defaults.PaymentTerms;
@@ -448,22 +457,14 @@ else
     {
         _request.CustomerId = customer.Id;
         _customerName = customer.Name;
-        _ = EntryPreferences.From(Services)?.RecordUseAsync(UsageKindDto.Customer, customer.Id);
+        _ = OptionalEntry.Value?.RecordUseAsync(UsageKindDto.Customer, customer.Id);
         await PreselectPdfLanguageAsync();
         await ScheduleSaveAsync();
     }
 
     /// <summary>Langue du PDF proposée : celle du client, le français sinon (elle reste modifiable).</summary>
-    private async Task PreselectPdfLanguageAsync()
-    {
-        if (_request.CustomerId == Guid.Empty || Services.GetService(typeof(ICustomersGateway)) is not ICustomersGateway customers)
-        {
-            return;
-        }
-
-        OperationResult<CustomerResponse> customer = await customers.GetAsync(_request.CustomerId, CancellationToken.None);
-        _pdfCulture = customer.Value?.PreferredLanguage ?? "fr-FR";
-    }
+    private async Task PreselectPdfLanguageAsync() =>
+        _pdfCulture = await DocumentEditing.PdfCultureOfAsync(OptionalCustomers, _request.CustomerId) ?? _pdfCulture;
 
     private async Task DateChangedAsync(DateOnly? date, Action<DateOnly?> set)
     {
@@ -479,8 +480,7 @@ else
         await ScheduleSaveAsync();
     }
 
-    /// <summary>Articles déjà sur la facture : les suggestions du client ne les reproposent pas.</summary>
-    private Guid[] PresentItems => [.. _lines.Where(l => l.CatalogItemId is not null).Select(l => l.CatalogItemId!.Value)];
+    private Guid[] PresentItems => DocumentEditing.PresentItems(_lines);
 
     private async Task RegimeChangedAsync(ChangeEventArgs e)
     {
@@ -493,16 +493,8 @@ else
 
     private void TotalsChanged(DocumentTotals totals) => _totals = totals;
 
-    private async Task<ResolvedPrice?> ResolvePriceAsync(Guid catalogItemId)
-    {
-        if (_request.CustomerId == Guid.Empty || Services.GetService(typeof(IPriceListsGateway)) is not IPriceListsGateway prices)
-        {
-            return null;
-        }
-
-        OperationResult<IReadOnlyList<ResolvedPrice>> result = await prices.ResolveAsync(_request.CustomerId, [catalogItemId], CancellationToken.None);
-        return result.Value?.FirstOrDefault();
-    }
+    private Task<ResolvedPrice?> ResolvePriceAsync(Guid catalogItemId) =>
+        DocumentEditing.ResolvePriceAsync(OptionalPrices, _request.CustomerId, catalogItemId);
 
     // ---------- enregistrement du brouillon et checklist ----------
 
@@ -517,7 +509,7 @@ else
         if (_invoice is null && _request.CustomerId == Guid.Empty)
         {
             _errors = [new ErrorDetail(ErrorCodes.Billing.CustomerRequired)];
-            await ExpandAsync(_mainBlock);
+            await DocumentEditing.ExpandAsync(_mainBlock);
             if (_customerPicker is not null)
             {
                 await _customerPicker.FocusAsync();
@@ -572,7 +564,7 @@ else
         if (result.Value is null)
         {
             _errors = result.Errors;
-            _conflict = result.Errors.Any(e => e.Code == ErrorCodes.Concurrency.VersionMismatch);
+            _conflict = result.IsStale;
             StateHasChanged();
             return;
         }
@@ -665,7 +657,7 @@ else
             if (result.Value is null)
             {
                 _errors = result.Errors;
-                _conflict = result.Errors.Any(e => e.Code == ErrorCodes.Concurrency.VersionMismatch);
+                _conflict = result.IsStale;
                 _approvalRequested |= result.Errors.Any(e => e.Code == ErrorCodes.SegregationOfDuties.ManagerApprovalRequired);
                 return;
             }
@@ -740,7 +732,7 @@ else
         }
 
         CultureInfo culture = CultureInfo.GetCultureInfo(_pdfCulture);
-        byte[] pdf = Pdf.Render(PrintableMapper.FromInvoice(_invoice, _company, culture));
+        byte[] pdf = Pdf.Render(PrintableMapper.FromInvoice(_invoice, _company, culture, Clock));
         string name = _invoice.Number ?? L[$"InvoiceKind.{Kind}.FileDraft"];
         await Files.DownloadAsync($"{name}.pdf", "application/pdf", pdf, CancellationToken.None);
     }
@@ -755,7 +747,7 @@ else
         }
 
         CultureInfo culture = CultureInfo.GetCultureInfo(_pdfCulture);
-        byte[] pdf = Pdf.Render(PrintableMapper.FromInvoice(invoice, _company, culture), [PdfAttachment.FacturX(cii)]);
+        byte[] pdf = Pdf.Render(PrintableMapper.FromInvoice(invoice, _company, culture, Clock), [PdfAttachment.FacturX(cii)]);
         await Files.DownloadAsync($"{number}-factur-x.pdf", "application/pdf", pdf, CancellationToken.None);
     }
 
@@ -784,57 +776,28 @@ else
 
     // ---------- checklist → champ fautif ----------
 
-    private async Task FocusFindingAsync(ComplianceFindingResponse finding)
-    {
-        switch (finding.Code)
-        {
-            case var code when code.StartsWith("Mention.Customer", StringComparison.Ordinal):
-                await ExpandAsync(_mainBlock);
-                if (_customerPicker is not null)
-                {
-                    await _customerPicker.FocusAsync();
-                }
+    private Task FocusFindingAsync(ComplianceFindingResponse finding) =>
+        DocumentEditing.FocusFindingAsync(finding, new(Navigation, _mainBlock, _customerPicker, _linesBlock, _linesGrid), FocusOwnFieldAsync);
 
-                break;
-            case var code when code.StartsWith("Mention.Seller", StringComparison.Ordinal)
-                || code is ErrorCodes.Mention.LatePenalties or ErrorCodes.Mention.RecoveryIndemnity
-                    or ErrorCodes.Mention.EarlyPaymentDiscount or ErrorCodes.Mention.VatOnDebits:
-                Navigation.NavigateTo("settings/company");
-                break;
+    /// <summary>Champs propres à la facture : livraison et échéance.</summary>
+    private async Task<bool> FocusOwnFieldAsync(string code)
+    {
+        switch (code)
+        {
             case ErrorCodes.Mention.DeliveryDate:
-                await ExpandAsync(_deliveryBlock);
-                await FocusAsync(_deliveryDate?.Element ?? default);
-                break;
+                await DocumentEditing.ExpandAsync(_deliveryBlock);
+                await DocumentEditing.FocusAsync(_deliveryDate?.Element ?? default);
+                return true;
             case ErrorCodes.Mention.DueDate:
-                await ExpandAsync(_mainBlock);
-                await FocusAsync(_dueDate?.Element ?? default);
-                break;
+                await DocumentEditing.ExpandAsync(_mainBlock);
+                await DocumentEditing.FocusAsync(_dueDate?.Element ?? default);
+                return true;
             case ErrorCodes.Mention.DeliveryAddress:
-                await ExpandAsync(_deliveryBlock);
-                await FocusAsync(_deliveryAddress);
-                break;
+                await DocumentEditing.ExpandAsync(_deliveryBlock);
+                await DocumentEditing.FocusAsync(_deliveryAddress);
+                return true;
             default:
-                await ExpandAsync(_linesBlock);
-                if (_linesGrid is not null)
-                {
-                    await _linesGrid.FocusLineAsync((finding.Line ?? 1) - 1);
-                }
-
-                break;
-        }
-    }
-
-    private static Task ExpandAsync(Collapsible? block) => block?.ExpandAsync() ?? Task.CompletedTask;
-
-    private static async Task FocusAsync(ElementReference element)
-    {
-        try
-        {
-            await element.FocusAsync();
-        }
-        catch (InvalidOperationException)
-        {
-            // Rendu sans navigateur (tests).
+                return false;
         }
     }
 

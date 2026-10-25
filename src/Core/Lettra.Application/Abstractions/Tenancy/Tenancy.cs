@@ -68,6 +68,17 @@ public interface IRequestedDossierSource
     DossierId? RequestedDossier { get; }
 }
 
+/// <summary>
+/// Le dossier ouvert sur un poste (modes 1 et 4), tenu par le registre local. Absent sur un serveur : le dossier y vient
+/// de chaque requête.
+/// </summary>
+public interface IOpenedLocalDossier
+{
+    Guid? ActiveDossierId { get; }
+
+    Task SetActiveAsync(DossierId dossier, CancellationToken cancellationToken);
+}
+
 /// <summary>Une requête qui s'exécute dans un dossier précis. Le pipeline vérifie qu'il s'agit bien du dossier courant.</summary>
 public interface IDossierScoped
 {

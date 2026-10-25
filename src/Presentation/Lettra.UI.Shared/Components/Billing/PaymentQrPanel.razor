@@ -1,0 +1,53 @@
+@using Lettra.Printing.Payments
+@inject IStringLocalizer<SharedResource> L
+@* QR code de virement (standard EPC) d'une facture ou d'un acompte validé, pour le reste à payer : le client le scanne
+   à l'écran avec l'application de sa banque, le virement s'ouvre déjà rempli. Le même code est imprimé sur le PDF. *@
+
+@if (Visible)
+{
+    <section id="payment-qr" class="lettra-payment-qr" aria-labelledby="payment-qr-title">
+        <h2 id="payment-qr-title">@L["PaymentQr.Title"]</h2>
+        @if (_code is { } code)
+        {
+            <figure>
+                <svg viewBox="0 0 @QrImages.ViewBoxSize(code) @QrImages.ViewBoxSize(code)" role="img" aria-labelledby="payment-qr-caption"
+                     shape-rendering="crispEdges" data-payload="@_payload">
+                    <rect width="100%" height="100%" fill="#fff" />
+                    <path d="@QrImages.SvgPath(code)" fill="#000" />
+                </svg>
+                <figcaption id="payment-qr-caption">
+                    <span class="lettra-payment-qr-due">@L["PaymentQr.Due"] <strong id="payment-qr-amount">@GridNumber.FormatAmount(Outstanding, CultureInfo.CurrentCulture)</strong></span>
+                    <span>@L["PaymentQr.Caption"]</span>
+                </figcaption>
+            </figure>
+        }
+        else
+        {
+            <p id="payment-qr-missing-iban" class="lettra-hint">
+                @L["PaymentQr.NoIban"] <a href="settings/company">@L["PaymentQr.CompanyLink"]</a>
+            </p>
+        }
+    </section>
+}
+
+@code {
+    [Parameter, EditorRequired] public InvoiceResponse Invoice { get; set; } = default!;
+
+    [Parameter] public CompanyProfileResponse? Company { get; set; }
+
+    private string? _payload;
+    private QrCode? _code;
+
+    private decimal Outstanding => Invoice.Totals.TotalInclTax - Invoice.CreditedInclTax - Invoice.PaidInclTax;
+
+    /// <summary>Une pièce validée qui se paie (ni avoir, ni brouillon) et reste due.</summary>
+    private bool Visible => Invoice is { Status: not InvoiceStatusDto.Draft, Kind: not InvoiceKindDto.CreditNote, Number: not null }
+        && Outstanding > 0m;
+
+    protected override void OnParametersSet()
+    {
+        string seller = Invoice.Seller?.Name ?? Company?.Name ?? string.Empty;
+        _payload = Visible ? EpcPaymentCode.Payload(seller, Company?.Iban, Company?.Bic, Outstanding, Invoice.Number!) : null;
+        _code = _payload is null ? null : QrCode.Encode(_payload);
+    }
+}

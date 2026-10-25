@@ -2,6 +2,7 @@ using Lettra.Contracts.Common;
 using Lettra.Contracts.Exports;
 using Lettra.Domain.Common;
 using Lettra.Exports.Application.EInvoicing.Platform;
+using Lettra.Exports.Domain.Platform;
 
 namespace Lettra.Exports.Tests.Platform;
 
@@ -22,7 +23,7 @@ public abstract class AccreditedPlatformContract
 
         receipt.IsSuccess.Should().BeTrue();
         receipt.Value.Reference.Should().NotBeNullOrWhiteSpace();
-        receipt.Value.Status.Status.Should().Be(PlatformStatusDto.Deposited);
+        receipt.Value.Status.Status.Should().Be(PlatformStatus.Deposited);
     }
 
     [Fact]
@@ -33,7 +34,7 @@ public abstract class AccreditedPlatformContract
         Result<IReadOnlyList<PlatformStatusEvent>> events = await Platform.GetStatusEventsAsync(receipt.Reference, default);
 
         events.IsSuccess.Should().BeTrue();
-        events.Value[0].Status.Should().Be(PlatformStatusDto.Deposited);
+        events.Value[0].Status.Should().Be(PlatformStatus.Deposited);
         for (int i = 1; i < events.Value.Count; i++)
         {
             PlatformLifecycle.CanMove(events.Value[i - 1].Status, events.Value[i].Status).Should().BeTrue(
@@ -46,11 +47,11 @@ public abstract class AccreditedPlatformContract
     public async Task Un_doublon_est_rejete_avec_son_motif()
     {
         string number = PlatformSamples.NewNumber();
-        (await Platform.SubmitInvoiceAsync(PlatformSamples.Submission(number), default)).Value.Status.Status.Should().Be(PlatformStatusDto.Deposited);
+        (await Platform.SubmitInvoiceAsync(PlatformSamples.Submission(number), default)).Value.Status.Status.Should().Be(PlatformStatus.Deposited);
 
         PlatformReceipt second = (await Platform.SubmitInvoiceAsync(PlatformSamples.Submission(number, EInvoiceFormatDto.Ubl), default)).Value;
 
-        second.Status.Status.Should().Be(PlatformStatusDto.Rejected);
+        second.Status.Status.Should().Be(PlatformStatus.Rejected);
         second.Status.Reason.Should().NotBeNullOrWhiteSpace();
     }
 
@@ -61,7 +62,7 @@ public abstract class AccreditedPlatformContract
 
         PlatformReceipt receipt = (await Platform.SubmitInvoiceAsync(submission, default)).Value;
 
-        receipt.Status.Status.Should().Be(PlatformStatusDto.Rejected);
+        receipt.Status.Status.Should().Be(PlatformStatus.Rejected);
     }
 
     [Fact]
@@ -70,7 +71,7 @@ public abstract class AccreditedPlatformContract
         string number = PlatformSamples.NewNumber();
         PlatformInvoiceSubmission submission = PlatformSamples.Submission(number, EInvoiceFormatDto.Ubl) with { Format = EInvoiceFormatDto.Cii };
 
-        (await Platform.SubmitInvoiceAsync(submission, default)).Value.Status.Status.Should().Be(PlatformStatusDto.Rejected);
+        (await Platform.SubmitInvoiceAsync(submission, default)).Value.Status.Status.Should().Be(PlatformStatus.Rejected);
     }
 
     [Fact]
@@ -78,7 +79,7 @@ public abstract class AccreditedPlatformContract
     {
         PlatformInvoiceSubmission submission = PlatformSamples.Submission(PlatformSamples.NewNumber()) with { InvoiceNumber = PlatformSamples.NewNumber() };
 
-        (await Platform.SubmitInvoiceAsync(submission, default)).Value.Status.Status.Should().Be(PlatformStatusDto.Rejected);
+        (await Platform.SubmitInvoiceAsync(submission, default)).Value.Status.Status.Should().Be(PlatformStatus.Rejected);
     }
 
     [Fact]
@@ -87,7 +88,7 @@ public abstract class AccreditedPlatformContract
         Result<PlatformReceipt> receipt = await Platform.ReportTransactionAsync(PlatformSamples.Transaction(PlatformSamples.NewNumber()), default);
 
         receipt.IsSuccess.Should().BeTrue();
-        receipt.Value.Status.Status.Should().Be(PlatformStatusDto.Deposited);
+        receipt.Value.Status.Status.Should().Be(PlatformStatus.Deposited);
     }
 
     [Fact]
@@ -97,10 +98,10 @@ public abstract class AccreditedPlatformContract
         PlatformReceipt receipt = (await Platform.SubmitInvoiceAsync(PlatformSamples.Submission(number), default)).Value;
 
         Result<PlatformStatusEvent> collected = await Platform.ReportPaymentAsync(
-            new PlatformPaymentReport(PlatformSamples.SellerSiren, number, receipt.Reference, PlatformChannelDto.EInvoice, new DateOnly(2026, 11, 2), 360m), default);
+            new PlatformPaymentReport(PlatformSamples.SellerSiren, number, receipt.Reference, PlatformChannel.EInvoice, new DateOnly(2026, 11, 2), 360m), default);
 
         collected.IsSuccess.Should().BeTrue();
-        collected.Value.Status.Should().Be(PlatformStatusDto.Collected);
+        collected.Value.Status.Should().Be(PlatformStatus.Collected);
         collected.Value.Amount.Should().Be(360m);
         (await Platform.GetStatusEventsAsync(receipt.Reference, default)).Value[^1].Should().Be(collected.Value);
     }

@@ -33,7 +33,7 @@ public sealed record GetCabinetPilotageQuery : IQuery<Result<CabinetPilotageResp
 
 /// <summary>
 /// L'exploitation des dossiers que l'utilisateur administre (droit d'administrer le dossier, dossier par dossier) :
-/// place occupée, postes, fraîcheur du calcul de nuit.
+/// place occupée, postes, fraîcheur du calcul quotidien de la vue cabinet.
 /// </summary>
 public sealed record GetAdministrationPilotageQuery : IQuery<Result<AdministrationPilotageResponse>>, IFilterByPermission
 {

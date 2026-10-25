@@ -1,0 +1,162 @@
+@* Bulle de la démo commentée, posée une fois dans la coque (MainLayout) : elle suit l'utilisateur d'écran en écran
+   pendant que Lettra joue les gestes. Elle ne couvre pas l'écran (rien n'est assombri) : on regarde Lettra travailler.
+   Ordinateur et tablette : carte en bas à gauche du contenu ; téléphone : feuille au-dessus des onglets, réductible. *@
+@implements IDisposable
+@inject DemoPlayer Player
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+
+@if (Player.State != DemoState.Idle && Player.Chapter is var chapter)
+{
+    <section id="demo-card" class="lt-demo-card @(_collapsed ? "is-collapsed" : null) @(Player.State == DemoState.Blocked ? "is-blocked" : null)"
+             aria-labelledby="demo-step-title" aria-live="off">
+        <header class="lt-demo-head">
+            <span class="lt-demo-badge"><Icon Name="circle-play" Size="16" /> @L["Demo.Badge"]</span>
+            <span class="lt-demo-count" id="demo-count">@Count</span>
+            <button type="button" id="demo-collapse" class="lt-icon-button" aria-expanded="@(_collapsed ? "false" : "true")" aria-controls="demo-body"
+                    aria-label="@L[_collapsed ? "Demo.Expand" : "Demo.Collapse"]" title="@L[_collapsed ? "Demo.Expand" : "Demo.Collapse"]" @onclick="ToggleCollapsed">
+                <Icon Name="@(_collapsed ? "chevrons-up-down" : "chevron-down")" Size="18" />
+            </button>
+            <button type="button" id="demo-stop" class="lt-icon-button" aria-label="@L["Demo.Stop"]" title="@L["Demo.Stop"]" @onclick="Player.StopAsync">
+                <Icon Name="x" Size="18" />
+            </button>
+        </header>
+        <div class="lt-demo-progress" role="progressbar" aria-label="@L["Demo.Progress"]" aria-valuemin="0" aria-valuemax="100" aria-valuenow="@Percent">
+            <span style="width: @(Percent)%"></span>
+        </div>
+
+        @if (Player.State == DemoState.Finished)
+        {
+            <div id="demo-body" class="lt-demo-body">
+                <h2 id="demo-step-title">@L["Demo.Finished.Title"]</h2>
+                <p id="demo-step-text">@L["Demo.Finished.Text"]</p>
+                <div class="lt-demo-actions">
+                    <button type="button" id="demo-replay" class="lettra-button is-secondary" @onclick="ReplayAsync"><Icon Name="refresh-cw" Size="18" /> @L["Demo.Replay"]</button>
+                    <button type="button" id="demo-close" class="lettra-button" @onclick="Player.StopAsync">@L["Demo.Close"]</button>
+                </div>
+            </div>
+        }
+        else if (chapter is not null && Player.Step is { } step)
+        {
+            <div id="demo-body" class="lt-demo-body">
+                <p class="lt-demo-chapter"><Icon Name="@chapter.Icon" Size="16" /> @L[chapter.TitleKey]</p>
+                <h2 id="demo-step-title">@L[chapter.StepTitleKey(step)]</h2>
+                <p id="demo-step-text">@L[chapter.StepTextKey(step)]</p>
+                @if (Player.State == DemoState.Blocked)
+                {
+                    <p class="lt-demo-status is-warning" id="demo-blocked" role="alert"><Icon Name="triangle-alert" Size="16" /> @L["Demo.Blocked"]</p>
+                }
+                else if (Player.Acting)
+                {
+                    <p class="lt-demo-status" id="demo-acting"><span class="lt-demo-dot" aria-hidden="true"></span> @L["Demo.Acting"]</p>
+                }
+                else if (Player.State == DemoState.Paused)
+                {
+                    <p class="lt-demo-status" id="demo-paused"><Icon Name="circle-pause" Size="16" /> @L["Demo.Paused"]</p>
+                }
+            </div>
+            <div class="lt-demo-actions">
+                @if (Player.State == DemoState.Blocked)
+                {
+                    <button type="button" id="demo-retry" class="lettra-button" @onclick="Player.Retry"><Icon Name="refresh-cw" Size="18" /> @L["Demo.Retry"]</button>
+                    <button type="button" id="demo-skip" class="lettra-button is-secondary" @onclick="Player.Skip">@L["Demo.Skip"] <Icon Name="arrow-right" Size="18" /></button>
+                }
+                else
+                {
+                    @if (Player.State == DemoState.Paused)
+                    {
+                        <button type="button" id="demo-resume" class="lettra-button" @onclick="Player.Resume"><Icon Name="circle-play" Size="18" /> @L["Demo.Resume"]</button>
+                    }
+                    else
+                    {
+                        <button type="button" id="demo-pause" class="lettra-button is-secondary" @onclick="Player.Pause"><Icon Name="circle-pause" Size="18" /> @L["Demo.Pause"]</button>
+                    }
+                    <button type="button" id="demo-next" class="lettra-button" @onclick="Player.Next">@L["Demo.Next"] <Icon Name="chevron-right" Size="18" /></button>
+                }
+                <label class="lt-demo-speed">
+                    <span>@L["Demo.Speed"]</span>
+                    <select id="demo-speed" value="@SpeedValue(Player.Speed)" @onchange="ChangeSpeed">
+                        @foreach (double speed in DemoPlayer.Speeds)
+                        {
+                            <option value="@SpeedValue(speed)">@SpeedLabel(speed)</option>
+                        }
+                    </select>
+                </label>
+            </div>
+        }
+    </section>
+}
+<div class="lettra-visually-hidden" aria-live="polite" id="demo-live">@_announcement</div>
+
+@code {
+    private bool _collapsed;
+    private string? _announcement;
+    private (int Chapter, int Step, DemoState State)? _announced;
+
+    protected override void OnInitialized()
+    {
+        Player.Changed += OnChanged;
+        Player.MeasureWith(key => L[key].Value.Length);
+        Player.Resolve = value => value.StartsWith(DemoValues.ResourcePrefix, StringComparison.Ordinal)
+            ? L[value[DemoValues.ResourcePrefix.Length..]].Value
+            : value;
+    }
+
+    private void OnChanged(object? sender, EventArgs e) => _ = InvokeAsync(() =>
+    {
+        Announce();
+        StateHasChanged();
+    });
+
+    // Le lecteur d'écran entend chaque nouvelle bulle (titre et texte), une seule fois.
+    private void Announce()
+    {
+        (int, int, DemoState) now = (Player.ChapterIndex, Player.StepIndex, Player.State);
+        if (_announced == now)
+        {
+            return;
+        }
+
+        _announced = now;
+        _announcement = Player.State switch
+        {
+            DemoState.Finished => L["Demo.Finished.Title"],
+            DemoState.Blocked => L["Demo.Blocked"],
+            DemoState.Playing when Player.Chapter is { } chapter && Player.Step is { } step =>
+                $"{L[chapter.StepTitleKey(step)]}. {L[chapter.StepTextKey(step)]}",
+            _ => _announcement,
+        };
+    }
+
+    private int Total => Player.Chapters.Sum(c => c.Steps.Count);
+
+    private int Done => Player.Chapters.Take(Player.ChapterIndex).Sum(c => c.Steps.Count) + Player.StepIndex;
+
+    private int Percent => Player.State == DemoState.Finished || Total == 0 ? 100 : Done * 100 / Total;
+
+    private string Count => Player.State == DemoState.Finished
+        ? L["Demo.Finished.Count"]
+        : string.Format(CultureInfo.CurrentCulture, L["Demo.Count"], Player.ChapterIndex + 1, Player.Chapters.Count);
+
+    private static string SpeedValue(double speed) => speed.ToString(CultureInfo.InvariantCulture);
+
+    private string SpeedLabel(double speed) => L[$"Demo.Speed.{speed.ToString("0.##", CultureInfo.InvariantCulture)}"];
+
+    private void ChangeSpeed(ChangeEventArgs e)
+    {
+        if (double.TryParse(e.Value?.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out double speed))
+        {
+            Player.SetSpeed(speed);
+        }
+    }
+
+    private void ToggleCollapsed() => _collapsed = !_collapsed;
+
+    private Task ReplayAsync()
+    {
+        _ = Player.StartAsync();
+        return Task.CompletedTask;
+    }
+
+    public void Dispose() => Player.Changed -= OnChanged;
+}

@@ -38,6 +38,16 @@ internal sealed class FakeFecGateway : IFecGateway
             : OperationResult<FecDocument>.Success(new FecDocument(FileName, Exported)));
     }
 
+    public List<AccountingSoftwareDto> Bridges { get; } = [];
+
+    public Task<OperationResult<FecDocument>> ExportForAsync(AccountingSoftwareDto software, DateOnly from, DateOnly to, CancellationToken cancellationToken)
+    {
+        Bridges.Add(software);
+        return Task.FromResult(
+            ExportError is { } code ? OperationResult<FecDocument>.Failure(code)
+            : OperationResult<FecDocument>.Success(new FecDocument($"552100554-{software.ToString().ToLowerInvariant()}.csv", Exported)));
+    }
+
     public Task<OperationResult<FecValidationResponse>> ValidateAsync(
         string fileName, byte[] content, DateOnly? from, DateOnly? to, CancellationToken cancellationToken)
     {
@@ -62,6 +72,35 @@ public sealed class FecExportTests : BunitContext
     }
 
     private static void UseCulture(string name) => LettraCultures.Apply(CultureInfo.GetCultureInfo(name));
+
+    [Fact]
+    public void La_passerelle_remet_le_fichier_du_logiciel_choisi_sans_rapport_fec()
+    {
+        IRenderedComponent<FecExport> page = Render<FecExport>();
+        page.FindAll("#fec-software option").Select(o => o.TextContent)
+            .Should().Equal("Quadra (ASCII)", "Sage 100 (import paramétrable)", "Cegid Expert (écritures Excel)", "ACD (import paramétrable)");
+
+        page.Find("#fec-software").Change(nameof(AccountingSoftwareDto.Cegid));
+        page.Find("#fec-bridge-export").Click();
+
+        _fec.Bridges.Should().Equal(AccountingSoftwareDto.Cegid);
+        _files.Files.Should().ContainSingle().Which.Should().Be(("552100554-cegid.csv", "text/csv", FakeFecGateway.Exported));
+        _fec.Validations.Should().BeEmpty();
+        page.FindAll("#fec-report").Should().BeEmpty();
+        this.ToastText().Should().Be("Fichier 552100554-cegid.csv enregistré.");
+    }
+
+    [Fact]
+    public void Un_refus_de_la_passerelle_s_affiche_dans_un_toast()
+    {
+        _fec.ExportError = ErrorCodes.Fec.SirenMissing;
+        IRenderedComponent<FecExport> page = Render<FecExport>();
+
+        page.Find("#fec-bridge-export").Click();
+
+        this.ToastText().Should().Be("Renseignez le SIREN de l'entreprise : il compose le nom du fichier FEC.");
+        _files.Files.Should().BeEmpty();
+    }
 
     [Fact]
     public void L_export_remet_le_fichier_puis_affiche_le_rapport_du_validateur()

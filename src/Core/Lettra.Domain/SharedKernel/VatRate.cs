@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using Lettra.Domain.Common;
 
 namespace Lettra.Domain.SharedKernel;
@@ -15,8 +16,10 @@ public sealed record VatRate
     public static readonly VatRate SuperReduced = new("FR-2.1", 2.1m);
     public static readonly VatRate Zero = new("FR-0", 0m);
 
-    private static readonly IReadOnlyDictionary<string, VatRate> Known =
-        new[] { Normal, Intermediate, Reduced, SuperReduced, Zero }.ToDictionary(r => r.Code, StringComparer.Ordinal);
+    /// <summary>Les taux connus, du normal au nul.</summary>
+    public static IReadOnlyList<VatRate> All { get; } = [Normal, Intermediate, Reduced, SuperReduced, Zero];
+
+    private static readonly FrozenDictionary<string, VatRate> Known = All.ToFrozenDictionary(r => r.Code, StringComparer.Ordinal);
 
     private VatRate(string code, decimal percent)
     {
@@ -27,8 +30,6 @@ public sealed record VatRate
     public string Code { get; }
 
     public decimal Percent { get; }
-
-    public static IReadOnlyCollection<VatRate> All => [.. Known.Values];
 
     public static Result<VatRate> FromCode(string? code) =>
         code is not null && Known.TryGetValue(code, out VatRate? rate) ? rate : SharedKernelErrors.VatRateUnknown;

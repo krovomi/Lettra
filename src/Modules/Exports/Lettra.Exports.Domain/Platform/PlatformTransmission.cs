@@ -1,6 +1,4 @@
-using Lettra.Contracts.Exports;
-
-namespace Lettra.Exports.Application.EInvoicing.Platform;
+namespace Lettra.Exports.Domain.Platform;
 
 /// <summary>
 /// La transmission d'une pièce à la plateforme agréée et l'historique de ses statuts. Une pièce rejetée peut être
@@ -14,8 +12,8 @@ public sealed class PlatformTransmission
         Guid id,
         Guid invoiceId,
         string invoiceNumber,
-        PlatformChannelDto channel,
-        EInvoiceFormatDto? format,
+        PlatformChannel channel,
+        EInvoiceFormat? format,
         string platform,
         string? reference,
         decimal totalInclTax,
@@ -44,9 +42,9 @@ public sealed class PlatformTransmission
 
     public string InvoiceNumber { get; }
 
-    public PlatformChannelDto Channel { get; }
+    public PlatformChannel Channel { get; }
 
-    public EInvoiceFormatDto? Format { get; }
+    public EInvoiceFormat? Format { get; }
 
     public string Platform { get; }
 
@@ -59,11 +57,11 @@ public sealed class PlatformTransmission
 
     public IReadOnlyList<PlatformStatusEvent> History => _history;
 
-    public PlatformStatusDto Status => _history[^1].Status;
+    public PlatformStatus Status => _history[^1].Status;
 
-    public decimal CollectedAmount => _history.Where(e => e.Status == PlatformStatusDto.Collected).Sum(e => e.Amount ?? 0m);
+    public decimal CollectedAmount => _history.Where(e => e.Status == PlatformStatus.Collected).Sum(e => e.Amount ?? 0m);
 
-    public bool IsFinal => PlatformLifecycle.IsTerminal(Status) || (Status == PlatformStatusDto.Collected && CollectedAmount >= TotalInclTax);
+    public bool IsFinal => PlatformLifecycle.IsTerminal(Status) || (Status == PlatformStatus.Collected && CollectedAmount >= TotalInclTax);
 
     public decimal RemainingToCollect => Math.Max(0m, TotalInclTax - CollectedAmount);
 
@@ -96,31 +94,4 @@ public sealed class PlatformTransmission
         known.Status == status.Status
         && known.At.ToUnixTimeMilliseconds() == status.At.ToUnixTimeMilliseconds()
         && known.Amount == status.Amount;
-
-    public PlatformTransmissionResponse ToResponse() => new(
-        Id,
-        InvoiceId,
-        InvoiceNumber,
-        Channel,
-        Format,
-        Platform,
-        Reference,
-        Status,
-        IsFinal,
-        CollectedAmount,
-        SubmittedAt,
-        [.. _history.Select(e => new PlatformStatusEventResponse(e.Status, e.At, e.Reason, e.Amount))]);
-}
-
-/// <summary>Les transmissions d'un dossier, dans sa base.</summary>
-public interface IPlatformTransmissionStore
-{
-    /// <summary>La dernière transmission de la pièce, ou rien si elle n'a jamais été transmise.</summary>
-    Task<PlatformTransmission?> FindLatestAsync(Guid invoiceId, CancellationToken cancellationToken);
-
-    /// <summary>
-    /// Ajoute une nouvelle transmission, ou les statuts ajoutés à une transmission existante, dans la transaction de
-    /// l'appelant (<c>IBillingTransaction</c>) : ils s'enregistrent avec leurs entrées au journal inaltérable.
-    /// </summary>
-    Task StageAsync(PlatformTransmission transmission, CancellationToken cancellationToken);
 }

@@ -1,6 +1,4 @@
-using Lettra.UI.Abstractions;
 using Lettra.UI.Shared.Services;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.UI.Shared.Layout;
 
@@ -22,11 +20,11 @@ public sealed class NavMenuState
     private readonly SessionState? _session;
 
     /// <summary>Sans session (hôte de test, écran isolé), le réglage est celui de l'appareil.</summary>
-    public NavMenuState(UiPreferences preferences, IServiceProvider services)
+    public NavMenuState(UiPreferences preferences, Optional<SessionState> session)
     {
-        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(session);
         _preferences = preferences;
-        _session = services.GetService<ISessionGateway>() is null ? null : services.GetService<SessionState>();
+        _session = session.Value;
         // Un autre utilisateur ouvre sa session sur le poste : son propre menu revient.
         _session?.Changed += (_, _) => _ = LoadAsync();
     }

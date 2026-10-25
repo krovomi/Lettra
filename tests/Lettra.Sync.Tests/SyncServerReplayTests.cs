@@ -1,4 +1,5 @@
 using Lettra.Application.Abstractions.Identity;
+using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Persistence;
 using Lettra.Application.Features.Catalog;
 using Lettra.Application.Features.Customers;
@@ -56,13 +57,30 @@ public sealed class SyncServerReplayTests : IAsyncLifetime
     private DossierId Dossier => _server.Dossier;
 
     private Task<Result<PushSyncIntentsResponse>> PushAsync(PushSyncIntentsRequest request) =>
-        _server.RunAsync(sp => sp.GetRequiredService<SyncServer>().PushAsync(request, default));
+        _server.SendAsync(new PushSyncIntentsCommand(Dossier, request));
 
     private async Task<SyncIntentResult> PushOneAsync(SyncIntent intent)
     {
         Result<PushSyncIntentsResponse> pushed = await PushAsync(new PushSyncIntentsRequest(_device, [intent]));
         pushed.IsSuccess.Should().BeTrue(string.Join(", ", pushed.Errors.Select(e => e.Code)));
         return pushed.Value.Results.Single();
+    }
+
+    /// <summary>Le dossier est ouvert, puis la session se termine avant l'appel : le pipeline refuse.</summary>
+    private async Task<T> SignedOutAsync<T>(Func<IServiceProvider, Task<T>> work)
+    {
+        try
+        {
+            return await _server.RunAsync(sp =>
+            {
+                _server.SignedOut = true;
+                return work(sp);
+            });
+        }
+        finally
+        {
+            _server.SignedOut = false;
+        }
     }
 
     private static IEnumerable<string> Codes<T>(Result<T> result) => result.Errors.Select(e => e.Code);
@@ -98,7 +116,7 @@ public sealed class SyncServerReplayTests : IAsyncLifetime
         Codes(await PushAsync(new PushSyncIntentsRequest(_device, [.. Enumerable.Repeat(one, SyncHttp.MaxBatch + 1)])))
             .Should().Equal(ErrorCodes.Sync.BatchInvalid);
 
-        Func<Task> withoutRequest = () => _server.RunAsync(sp => sp.GetRequiredService<SyncServer>().PushAsync(null!, default));
+        Func<Task> withoutRequest = () => _server.SendAsync(new PushSyncIntentsCommand(Dossier, null!));
         await withoutRequest.Should().ThrowAsync<ArgumentNullException>();
         (await _server.QueryAsync(new ListCustomersQuery(Dossier))).Value.TotalCount.Should().Be(0);
     }
@@ -298,18 +316,17 @@ public sealed class SyncServerReplayTests : IAsyncLifetime
     [Fact]
     public async Task Lecture_des_changements_refusee_sans_connexion_ou_sans_droit_de_lecture()
     {
-        Result<SyncChangesResponse> anonymous = await _server.RunAsync(sp =>
-            ActivatorUtilities.CreateInstance<SyncServer>(sp, new Anonymous()).PullAsync(null, 50, default, _device));
-        Codes(anonymous).Should().Equal(ErrorCodes.Security.Unauthenticated);
+        Codes(await SignedOutAsync(sp => sp.GetRequiredService<IQueryDispatcher>().QueryAsync(new PullSyncChangesQuery(Dossier, null, 50, _device), default)))
+            .Should().Equal(ErrorCodes.Security.Unauthenticated);
 
         _server.Permissions.Granted.Remove(Permission.TiersConsulter);
         _server.Permissions.Granted.Remove(Permission.CatalogueConsulter);
-        Codes(await _server.RunAsync(sp => sp.GetRequiredService<SyncServer>().PullAsync(null, 50, default))).Should().Equal(ErrorCodes.Security.Forbidden);
+        Codes(await _server.QueryAsync(new PullSyncChangesQuery(Dossier, null, 50, null))).Should().Equal(ErrorCodes.Security.Forbidden);
 
         // Le catalogue seul suffit : les tiers sont absents.
         await CreateAsync(_server, Martin());
         _server.Permissions.Granted.Add(Permission.CatalogueConsulter);
-        Result<SyncChangesResponse> catalog = await _server.RunAsync(sp => sp.GetRequiredService<SyncServer>().PullAsync(null, 50, default));
+        Result<SyncChangesResponse> catalog = await _server.QueryAsync(new PullSyncChangesQuery(Dossier, null, 50, null));
         catalog.IsSuccess.Should().BeTrue();
         catalog.Value.Customers.Should().BeEmpty();
     }
@@ -317,7 +334,7 @@ public sealed class SyncServerReplayTests : IAsyncLifetime
     [Fact]
     public async Task Lecture_sans_poste_rend_la_regle_du_cabinet_et_aucun_deblocage()
     {
-        Result<SyncChangesResponse> pulled = await _server.RunAsync(sp => sp.GetRequiredService<SyncServer>().PullAsync(null, 50, default));
+        Result<SyncChangesResponse> pulled = await _server.QueryAsync(new PullSyncChangesQuery(Dossier, null, 50, null));
 
         pulled.IsSuccess.Should().BeTrue();
         pulled.Value.HasMore.Should().BeFalse();
@@ -331,7 +348,7 @@ public sealed class SyncServerReplayTests : IAsyncLifetime
         await CreateAsync(_server, Martin());
         await CreateAsync(_server, Martin() with { Name = "Pâtisserie Martin" });
 
-        Result<SyncChangesResponse> first = await _server.RunAsync(sp => sp.GetRequiredService<SyncServer>().PullAsync(null, 1, default, _device));
+        Result<SyncChangesResponse> first = await _server.QueryAsync(new PullSyncChangesQuery(Dossier, null, 1, _device));
 
         first.Value.HasMore.Should().BeTrue();
         first.Value.Policy.Should().BeNull();
@@ -341,7 +358,7 @@ public sealed class SyncServerReplayTests : IAsyncLifetime
     [Fact]
     public async Task Un_jeton_qui_n_est_pas_du_serveur_est_refuse()
     {
-        Result<SyncChangesResponse> pulled = await _server.RunAsync(sp => sp.GetRequiredService<SyncServer>().PullAsync("pas-un-jeton", 50, default, _device));
+        Result<SyncChangesResponse> pulled = await _server.QueryAsync(new PullSyncChangesQuery(Dossier, "pas-un-jeton", 50, _device));
 
         Codes(pulled).Should().Equal(ErrorCodes.Sync.TokenInvalid);
     }
@@ -349,18 +366,17 @@ public sealed class SyncServerReplayTests : IAsyncLifetime
     [Fact]
     public async Task Series_du_poste_refusees_sans_connexion_sans_poste_ou_sans_droit_de_valider()
     {
-        Result<OpenDeviceSeriesResponse> anonymous = await _server.RunAsync(sp =>
-            ActivatorUtilities.CreateInstance<SyncServer>(sp, new Anonymous()).OpenDeviceSeriesAsync(new OpenDeviceSeriesRequest(_device), default));
-        Codes(anonymous).Should().Equal(ErrorCodes.Security.Unauthenticated);
+        Codes(await SignedOutAsync(sp => sp.GetRequiredService<ICommandDispatcher>().SendAsync(new OpenDeviceSeriesCommand(Dossier, new OpenDeviceSeriesRequest(_device)), default)))
+            .Should().Equal(ErrorCodes.Security.Unauthenticated);
 
-        Codes(await _server.RunAsync(sp => sp.GetRequiredService<SyncServer>().OpenDeviceSeriesAsync(new OpenDeviceSeriesRequest(Guid.Empty), default)))
+        Codes(await _server.SendAsync(new OpenDeviceSeriesCommand(Dossier, new OpenDeviceSeriesRequest(Guid.Empty))))
             .Should().Equal(ErrorCodes.RightsSnapshot.DeviceRequired);
 
-        Func<Task> withoutRequest = () => _server.RunAsync(sp => sp.GetRequiredService<SyncServer>().OpenDeviceSeriesAsync(null!, default));
+        Func<Task> withoutRequest = () => _server.SendAsync(new OpenDeviceSeriesCommand(Dossier, null!));
         await withoutRequest.Should().ThrowAsync<ArgumentNullException>();
 
         _server.Permissions.Granted.Remove(Permission.FactureValider);
-        Codes(await _server.RunAsync(sp => sp.GetRequiredService<SyncServer>().OpenDeviceSeriesAsync(new OpenDeviceSeriesRequest(_device), default)))
+        Codes(await _server.SendAsync(new OpenDeviceSeriesCommand(Dossier, new OpenDeviceSeriesRequest(_device))))
             .Should().Equal(ErrorCodes.Security.Forbidden);
     }
 
@@ -378,13 +394,6 @@ public sealed class SyncServerReplayTests : IAsyncLifetime
 
     /// <summary>Un type d'intention que les contrats ne déclarent pas.</summary>
     private sealed record UnknownIntent(Guid IdempotencyKey, Guid EntityId, DateTimeOffset RecordedAt) : SyncIntent(IdempotencyKey, EntityId, RecordedAt);
-
-    private sealed class Anonymous : ICurrentUser
-    {
-        public bool IsAuthenticated => false;
-
-        public Guid UserId => Guid.Empty;
-    }
 }
 
 /// <summary>Combien de lectures doivent encore rendre une version périmée (un collègue vient d'écrire).</summary>

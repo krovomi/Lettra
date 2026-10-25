@@ -1,8 +1,5 @@
-using Lettra.Application.Abstractions.Messaging;
-using Lettra.Application.Mapping;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Tax;
-using Lettra.Domain.Common;
 using Lettra.Exports.Application.Tax;
 using Lettra.UI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,17 +31,11 @@ internal sealed class InProcessTaxGateway(IServiceScopeFactory scopes) : ITaxGat
         InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetUpcomingFiscalDeadlinesQuery(dossier, days), ct), cancellationToken);
 
     public Task<OperationResult<FiscalDeadlineResponse>> MarkFilingAsync(MarkFiscalFilingRequest request, CancellationToken cancellationToken) =>
-        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => SendAsync(sp, new MarkFiscalFilingCommand(dossier, request), ct), cancellationToken);
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.SendAsync(sp, new MarkFiscalFilingCommand(dossier, request), ct), cancellationToken);
 
     public Task<OperationResult<FiscalSettingsResponse>> GetSettingsAsync(CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetFiscalSettingsQuery(dossier), ct), cancellationToken);
 
     public Task<OperationResult<FiscalSettingsResponse>> UpdateSettingsAsync(UpdateFiscalSettingsRequest request, CancellationToken cancellationToken) =>
-        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => SendAsync(sp, new UpdateFiscalSettingsCommand(dossier, request), ct), cancellationToken);
-
-    private static async Task<OperationResult<T>> SendAsync<T>(IServiceProvider services, ICommand<Result<T>> command, CancellationToken cancellationToken)
-    {
-        Result<T> result = await services.GetRequiredService<ICommandDispatcher>().SendAsync(command, cancellationToken).ConfigureAwait(false);
-        return result.ToOperationResult();
-    }
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.SendAsync(sp, new UpdateFiscalSettingsCommand(dossier, request), ct), cancellationToken);
 }

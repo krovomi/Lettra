@@ -4,6 +4,7 @@ using System.Xml.Linq;
 using Lettra.Contracts.Exports;
 using Lettra.Domain.Common;
 using Lettra.Exports.Application.EInvoicing.Platform;
+using Lettra.Exports.Domain.Platform;
 
 namespace Lettra.Exports.Infrastructure;
 
@@ -24,7 +25,7 @@ public sealed class SimulatedAccreditedPlatform(TimeProvider clock) : IAccredite
     private static readonly XNamespace UblCreditNote = "urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2";
     private static readonly XNamespace Cbc = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2";
 
-    private static readonly PlatformStatusDto[] Routing = [PlatformStatusDto.Issued, PlatformStatusDto.Received, PlatformStatusDto.MadeAvailable];
+    private static readonly PlatformStatus[] Routing = [PlatformStatus.Issued, PlatformStatus.Received, PlatformStatus.MadeAvailable];
 
     private readonly Lock _lock = new();
     private readonly Dictionary<string, Deposit> _deposits = [];
@@ -122,7 +123,7 @@ public sealed class SimulatedAccreditedPlatform(TimeProvider clock) : IAccredite
 
             if (deposit.Routed && deposit.History.Count == 1)
             {
-                foreach (PlatformStatusDto status in Routing)
+                foreach (PlatformStatus status in Routing)
                 {
                     deposit.History.Add(new PlatformStatusEvent(status, Now()));
                 }
@@ -152,7 +153,7 @@ public sealed class SimulatedAccreditedPlatform(TimeProvider clock) : IAccredite
                 return Task.FromResult<Result<PlatformStatusEvent>>(PlatformErrors.ReferenceUnknown);
             }
 
-            PlatformStatusEvent collected = new(PlatformStatusDto.Collected, Now(), null, payment.Amount);
+            PlatformStatusEvent collected = new(PlatformStatus.Collected, Now(), null, payment.Amount);
             deposit.History.Add(collected);
             if (payment.IdempotencyKey is string paid)
             {
@@ -165,7 +166,7 @@ public sealed class SimulatedAccreditedPlatform(TimeProvider clock) : IAccredite
 
     /// <summary>Une réponse de l'acheteur (prise en charge, approbation, litige, refus, paiement transmis…).</summary>
     /// <exception cref="InvalidOperationException">Référence inconnue, ou statut hors du cycle de vie.</exception>
-    public PlatformStatusEvent SimulateBuyerStatus(string reference, PlatformStatusDto status, string? reason = null)
+    public PlatformStatusEvent SimulateBuyerStatus(string reference, PlatformStatus status, string? reason = null)
     {
         lock (_lock)
         {
@@ -252,8 +253,8 @@ public sealed class SimulatedAccreditedPlatform(TimeProvider clock) : IAccredite
         string reference = string.Create(CultureInfo.InvariantCulture, $"PAS-{++_sequence:000000}");
         Deposit deposit = new(reference, sellerSiren, invoiceNumber, accepted, routed && accepted);
         deposit.History.Add(accepted
-            ? new PlatformStatusEvent(PlatformStatusDto.Deposited, Now())
-            : new PlatformStatusEvent(PlatformStatusDto.Rejected, Now(), rejection));
+            ? new PlatformStatusEvent(PlatformStatus.Deposited, Now())
+            : new PlatformStatusEvent(PlatformStatus.Rejected, Now(), rejection));
         _deposits[reference] = deposit;
         return deposit;
     }

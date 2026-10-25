@@ -6,6 +6,7 @@ using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Contracts.Exports;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Common;
+using Lettra.Exports.Application.Bridges;
 using Lettra.Exports.Application.EInvoicing;
 using Lettra.Exports.Application.EInvoicing.Platform;
 using Lettra.Exports.Application.Fec;
@@ -15,7 +16,8 @@ using static Lettra.Api.Infrastructure.HttpResults;
 namespace Lettra.Api.Endpoints;
 
 /// <summary>
-/// Exports du dossier (module Exports, phase 5) : FEC des écritures de vente et validateur intégré, facture électronique
+/// Exports du dossier (module Exports, phase 5) : FEC des écritures de vente et validateur intégré, passerelles vers les
+/// logiciels de production des cabinets, facture électronique
 /// EN 16931 (CII ou UBL) d'une pièce validée et sa transmission à la plateforme agréée (statuts, encaissement), point des
 /// créances du tableau de bord.
 /// </summary>
@@ -43,6 +45,15 @@ internal static class ExportEndpoints
             .RequirePermission(Permission.FecExporter)
             .WithName("ExportFec")
             .Produces(StatusCodes.Status200OK, contentType: FecContentType)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
+        // Passerelles : les mêmes écritures, au format d'import du logiciel de production du cabinet.
+        group.MapGet("/entries", ExportEntriesForSoftwareAsync)
+            .RequirePermission(Permission.FecExporter)
+            .WithName("ExportEntriesForSoftware")
+            .Produces(StatusCodes.Status200OK, contentType: "text/csv")
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict);
@@ -115,6 +126,19 @@ internal static class ExportEndpoints
         Result<FecFile> file = await queries.QueryAsync(new ExportFecQuery(tenant.Current.DossierId, from, to), cancellationToken).ConfigureAwait(false);
         return file.IsSuccess
             ? TypedResults.File(file.Value.Content, FecContentType, file.Value.FileName)
+            : file.Errors.ToProblem();
+    }
+
+    private static async Task<IResult> ExportEntriesForSoftwareAsync(
+        string software, DateOnly from, DateOnly to, ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken)
+    {
+        // Lu comme texte : un nom de logiciel inconnu est un refus métier (400), pas une erreur de liaison.
+        AccountingSoftwareDto target = Enum.TryParse(software, ignoreCase: true, out AccountingSoftwareDto parsed) ? parsed : 0;
+        Result<BridgeFile> file = await queries
+            .QueryAsync(new ExportEntriesForSoftwareQuery(tenant.Current.DossierId, target, from, to), cancellationToken)
+            .ConfigureAwait(false);
+        return file.IsSuccess
+            ? TypedResults.File(file.Value.Content, file.Value.ContentType, file.Value.FileName)
             : file.Errors.ToProblem();
     }
 

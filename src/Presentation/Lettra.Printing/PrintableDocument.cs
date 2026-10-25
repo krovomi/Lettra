@@ -1,4 +1,5 @@
 using System.Globalization;
+using Lettra.Calculations;
 
 namespace Lettra.Printing;
 
@@ -105,5 +106,5 @@ public sealed record PrintableDocument
     public string Currency { get; init; } = "EUR";
 
     /// <summary>Langue du document : celle du client destinataire, pas celle de l'utilisateur (annexe A §4.3).</summary>
-    public CultureInfo Culture { get; init; } = CultureInfo.GetCultureInfo("fr-FR");
+    public CultureInfo Culture { get; init; } = LegalLanguage.Culture;
 }

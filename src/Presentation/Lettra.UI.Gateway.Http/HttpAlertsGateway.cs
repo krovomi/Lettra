@@ -32,18 +32,8 @@ internal sealed class HttpAlertsGateway(HttpClient http) : IAlertsGateway
 
     private static string Flag(bool value) => value ? "true" : "false";
 
-    private async Task<OperationResult<T>> GetAsync<T>(string path, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> typeInfo, CancellationToken cancellationToken)
-    {
-        try
-        {
-            using HttpResponseMessage response = await http.GetAsync(new Uri(path, UriKind.Relative), cancellationToken).ConfigureAwait(false);
-            return await response.ToOperationResultAsync(typeInfo, cancellationToken).ConfigureAwait(false);
-        }
-        catch (Exception e) when (HttpCalls.IsUnreachable(e, cancellationToken))
-        {
-            return OperationResult<T>.Failure(ErrorCodes.Api.Unreachable);
-        }
-    }
+    private Task<OperationResult<T>> GetAsync<T>(string path, System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> typeInfo, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(ct => http.GetAsync(new Uri(path, UriKind.Relative), ct), typeInfo, cancellationToken);
 
     private async Task<OperationResult<AlertDetailResponse>> ActAsync(Guid alertId, string action, HttpContent? content, CancellationToken cancellationToken)
     {

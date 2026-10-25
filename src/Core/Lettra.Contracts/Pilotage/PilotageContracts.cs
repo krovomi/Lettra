@@ -44,7 +44,7 @@ public sealed record DossierPilotageResponse(
 public sealed record CabinetPilotageResponse(bool Available, DateTimeOffset? CollectedAt, IReadOnlyList<DossierPilotageDto> Dossiers);
 
 /// <summary>
-/// L'exploitation d'un dossier : place occupée, postes reliés au serveur, fraîcheur du calcul de nuit de la vue cabinet.
+/// L'exploitation d'un dossier : place occupée, postes reliés au serveur, fraîcheur du dernier calcul de la vue cabinet.
 /// </summary>
 public sealed record DossierOperationsDto(
     Guid DossierId,

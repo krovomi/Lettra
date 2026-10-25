@@ -8,10 +8,11 @@ qui a été imprimé.
 |---|---|
 | **TVA** (`/tax/vat`) | Brouillon de la CA3 (réel normal, mini-réel) ou de la CA12 (réel simplifié) de la période, partie ventes. Chaque case s'ouvre sur les factures, acomptes et avoirs qui la composent ; chaque pièce ouvre sa fiche. |
 | **DES** (`/tax/des`) | Déclaration européenne de services du mois : une ligne par numéro de TVA client de l'Union, montant HT arrondi à l'euro, fichier CSV à déposer soi-même. |
-| **Calendrier** (`/tax/calendar`) | Les échéances de l'année calculées à partir du régime et des réglages ; chacune se marque « déposée ». |
-| **Réglages** (`/tax/settings`) | Date de clôture, CA3 mensuelle ou trimestrielle, jour limite de la TVA (du 15 au 24), IS, CFE. |
+| **Contrôle fiscal** (`/tax/audit-kit`) | Kit contrôle fiscal : l'archive horodatée d'une période, prête à remettre au vérificateur ([kit-controle-fiscal.md](kit-controle-fiscal.md)). |
+| **Calendrier fiscal** (`/tax/calendar`) | Les échéances de l'année calculées à partir du régime et des réglages ; chacune se marque « déposée ». |
+| **Réglages fiscaux** (`/tax/settings`) | Date de clôture, CA3 mensuelle ou trimestrielle, jour limite de la TVA (du 15 au 24), IS, CFE. |
 
-Le régime de TVA se choisit dans **Paramètres › Entreprise** (« Régime de déclaration de la TVA »). Sans régime,
+Le régime de TVA se choisit dans **Pilotage › Entreprise** (« Régime de déclaration de la TVA »). Sans régime,
 l'onglet TVA dit quoi compléter ; en franchise en base, il n'y a pas de déclaration de TVA.
 
 ## Le brouillon de TVA
@@ -45,8 +46,9 @@ l'exercice précédent, dispensés sous 1 000 €).
 | TVA déductible non reprise | avertissement, toujours |
 
 **TVA sur les encaissements.** Le brouillon part de la TVA sur les débits (date de la pièce). Pour les prestations
-de services sans option pour les débits, la TVA est due à l'encaissement : un port `IVatOnReceiptsSource` est prêt à
-recevoir les encaissements de la période ; il sera branché quand le suivi des encaissements arrivera dans Lettra.
+de services sans option pour les débits, la TVA est due à l'encaissement : le port `IVatOnReceiptsSource` est branché
+sur les encaissements du dossier (`EfVatOnReceiptsSource`) ; la TVA des services d'une facture passée en 44574 n'est
+déclarée qu'à la date de chaque encaissement, pour la part payée ([encaissements.md](encaissements.md)).
 
 ## La DES
 
@@ -77,7 +79,8 @@ français (dont lundi de Pâques, Ascension, lundi de Pentecôte) sont pris en c
 échéance n'est « en retard » qu'à partir du premier enregistrement des réglages : avant, Lettra ne sait pas ce qui a
 été déposé ailleurs et la dit simplement « passée ».
 
-**Centre d'alertes.** Une passe du Worker (toutes les 12 heures, `Lettra:Worker:FiscalCalendar`) lève pour chaque
+**Centre d'alertes.** Une passe du Worker (toutes les 12 heures, `Lettra:Worker:FiscalCalendar` ; l'API la fait
+elle-même dans une installation sans Worker, `Lettra:Outbox:Job:HostedByApi`) lève pour chaque
 dossier l'alerte « Échéance fiscale proche » (S3) et « Échéance fiscale dépassée » (S2), et les résout quand
 l'échéance est marquée déposée. Les alertes ne contiennent aucune donnée de client.
 
@@ -89,7 +92,7 @@ l'échéance est marquée déposée. Les alertes ne contiennent aucune donnée d
 | Calculs (fonctions pures) | `Lettra.Exports.Application/Tax/` : `VatOperations`, `VatReturnCalculator`, `DesCalculator`, `FiscalCalendar`, `FrenchCalendar` |
 | Cas d'usage | `TaxDeclarations` et `TaxQueries` (lecture `DossierLire` ; fichier DES, réglages et dépôts `FecExporter`) |
 | Stockage | tables `FiscalSettings` et `FiscalFilings` de la base du dossier (migration `ReglagesFiscaux`, trois fournisseurs) ; `EfTaxStores` |
-| Alertes | `FiscalDeadlineAlertJob`, branché par `AddFiscalDeadlineAlerts` dans le Worker |
+| Alertes | `FiscalDeadlineAlertJob`, branché par `AddFiscalDeadlineAlerts` dans le Worker (ou dans l'API sans Worker) |
 | API | `GET /api/v1/tax/vat-return?date=`, `GET /api/v1/tax/des?year=&month=`, `GET /api/v1/tax/des/file`, `GET /api/v1/tax/calendar?from=&to=`, `GET /api/v1/tax/calendar/upcoming?days=7`, `PUT /api/v1/tax/calendar/filings`, `GET` et `PUT /api/v1/tax/settings` |
 | Écrans | `Lettra.UI.Shared/Pages/Tax/`, `Components/Tax/`, `wwwroot/lettra-tax.css`, ressources `Localization/Modules/Fiscalite*.resx` ; passerelles `ITaxGateway` HTTP et in-process |
 

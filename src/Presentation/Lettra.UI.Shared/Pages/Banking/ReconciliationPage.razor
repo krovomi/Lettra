@@ -3,7 +3,7 @@
 @inject NavigationManager Navigation
 @inject ToastService Toasts
 @inject IStringLocalizer<SharedResource> L
-@inject IServiceProvider Services
+@inject Optional<IDemoDataGateway> OptionalDemo
 @* Rapprochement bancaire (vague 6) : import d'un relevé (CAMT.053, OFX ou CSV, jamais de connexion à la banque),
    propositions déterministes avec leur raison, validation une par une ou en masse, opérations écartées. *@
 
@@ -295,7 +295,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (Services.GetService<IDemoDataGateway>() is { } demo)
+        if (OptionalDemo.Value is { } demo)
         {
             _demoAvailable = (await demo.GetStatusAsync(CancellationToken.None)).Value?.Available ?? false;
         }

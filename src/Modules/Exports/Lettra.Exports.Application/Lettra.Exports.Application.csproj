@@ -4,6 +4,7 @@
        dépendance technique ; port ISalesJournalReader (lu dans la base du dossier) et IExportArchive (export en masse). -->
   <ItemGroup>
     <ProjectReference Include="..\..\..\Core\Lettra.Application\Lettra.Application.csproj" />
+    <ProjectReference Include="..\Lettra.Exports.Domain\Lettra.Exports.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>

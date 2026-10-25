@@ -28,6 +28,27 @@ public sealed class HttpResultsTests
         (await BodyOf(context)).Should().Contain("\"code\":\"Customer.NotFound\"");
     }
 
+    [Theory]
+    [InlineData(ErrorKind.Validation, StatusCodes.Status400BadRequest)]
+    [InlineData(ErrorKind.NotFound, StatusCodes.Status404NotFound)]
+    [InlineData(ErrorKind.Conflict, StatusCodes.Status409Conflict)]
+    [InlineData(ErrorKind.Forbidden, StatusCodes.Status403Forbidden)]
+    [InlineData(ErrorKind.Unauthorized, StatusCodes.Status401Unauthorized)]
+    [InlineData(ErrorKind.Unexpected, StatusCodes.Status500InternalServerError)]
+    [InlineData(ErrorKind.PreconditionFailed, StatusCodes.Status412PreconditionFailed)]
+    [InlineData(ErrorKind.Unavailable, StatusCodes.Status503ServiceUnavailable)]
+    public async Task Chaque_nature_d_erreur_a_son_statut(ErrorKind kind, int status)
+    {
+        HttpContext context = await ExecuteAsync(HttpResults.Ok(Result<string>.Failure(new Error("Test.Code", kind))));
+
+        context.Response.StatusCode.Should().Be(status);
+        (await BodyOf(context)).Should().Contain("\"code\":\"Test.Code\"");
+    }
+
+    [Fact]
+    public void Toutes_les_natures_d_erreur_sont_couvertes() =>
+        Enum.GetValues<ErrorKind>().Should().HaveCount(8, "une nouvelle nature d'erreur a besoin de son statut HTTP dans ErrorResults et ici");
+
     [Fact]
     public async Task Une_commande_reussie_rend_204()
     {

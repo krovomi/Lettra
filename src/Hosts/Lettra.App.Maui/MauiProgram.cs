@@ -6,7 +6,6 @@ using Lettra.DemoData;
 #endif
 using Lettra.Domain.SharedKernel;
 using Lettra.Infrastructure.Persistence.Security;
-using Lettra.Infrastructure.Persistence.Sqlite.Local;
 using Lettra.Infrastructure.Speech.OnDevice;
 using Lettra.Sync.Client;
 using Lettra.UI.Abstractions;
@@ -107,19 +106,24 @@ public static class MauiProgram
         builder.Logging.AddDebug();
 #endif
 
-        MauiApp app = builder.Build();
-        // Avant le premier écran : cabinet local, premier dossier (ou réplique du dossier du serveur), dossier ouvert.
-        app.Services.InitializeLettraAsync(builder.Configuration, CancellationToken.None).GetAwaiter().GetResult();
-        if (server is not null)
-        {
-            ConnectedDevice.StartSyncTriggers(app.Services);
-        }
+        // Avant le premier écran, hors du fil principal (StartupPage) : cabinet local, premier dossier (ou réplique du
+        // dossier du serveur), dossier ouvert ; puis, sur un appareil relié, les déclencheurs de synchronisation.
+        builder.Services.AddSingleton(sp => new AppStartup(
+            token => sp.InitializeLettraAsync(sp.GetRequiredService<IConfiguration>(), token),
+            () =>
+            {
+                if (server is not null)
+                {
+                    ConnectedDevice.StartSyncTriggers(sp);
+                }
+            },
+            sp.GetRequiredService<ILogger<AppStartup>>()));
 
-        return app;
+        return builder.Build();
     }
 
     /// <summary>Le dossier ouvert sur le poste, tenu par le registre local ; le sélecteur de dossier en change.</summary>
-    private sealed class ActiveDossierSelection(LocalDossierRegistry registry) : ISelectableDossierSelection
+    private sealed class ActiveDossierSelection(IOpenedLocalDossier registry) : ISelectableDossierSelection
     {
         public Guid? CurrentDossierId => registry.ActiveDossierId;
 

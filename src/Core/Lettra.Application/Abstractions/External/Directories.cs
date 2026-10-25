@@ -31,7 +31,7 @@ public static class DirectoryErrors
     public static Error QueryTooShort => Error.Validation(QueryTooShortCode, "Query");
 
     /// <summary>Service injoignable, en panne ou saturé : rien n'est perdu, l'utilisateur saisit à la main.</summary>
-    public static Error Unavailable => new(UnavailableCode, ErrorKind.Unexpected);
+    public static Error Unavailable => Error.Unavailable(UnavailableCode);
 
     public static Error VatCountryNotSupported => Error.Validation(VatCountryNotSupportedCode, "VatNumber");
 }

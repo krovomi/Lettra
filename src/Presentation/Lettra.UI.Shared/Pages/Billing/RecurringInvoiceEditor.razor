@@ -425,7 +425,7 @@ else
             if (!deleted.IsSuccess)
             {
                 _errors = deleted.Errors;
-                _conflict = deleted.Errors.Any(e => e.Code == ErrorCodes.Concurrency.VersionMismatch);
+                _conflict = deleted.IsStale;
                 return;
             }
 
@@ -443,7 +443,7 @@ else
         if (result.Value is null || !result.IsSuccess)
         {
             _errors = result.Errors;
-            _conflict = result.Errors.Any(e => e.Code == ErrorCodes.Concurrency.VersionMismatch);
+            _conflict = result.IsStale;
             return false;
         }
 

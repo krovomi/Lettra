@@ -35,6 +35,7 @@ et dans l'application MAUI, sur tous les appareils.
 | Rapprochement bancaire | Opération, date, montant (ordre du relevé par défaut) | Recherche (libellé, tiers, client proposé), période, montant, à traiter ou toutes | Écran |
 | Alertes | Titre, gravité, portée, état, dernière occurrence, occurrences (gravité puis date par défaut) | Recherche, gravité, état, tout le cabinet, closes | Écran |
 | Vue cabinet | Dossier, chaque indicateur (urgence par défaut) | Recherche, à traiter seulement | Écran |
+| Tableaux de bord : Mes dossiers, Administration | Dossier (par défaut), chaque indicateur | Recherche (Mes dossiers) | Écran |
 | Équipe et accès | Personnes : nom, arrivée, accès ; équipes : nom, membres, dossiers | Recherche, filtres existants | Écran |
 | Balance, soldes clients | Client, pièces, débit, crédit, solde (plus gros solde par défaut) | Recherche | Écran |
 | Déclaration européenne de services | Client, ligne, numéro de TVA, montant (ordre du fichier par défaut) | Recherche (client, numéro de TVA) | Écran |
@@ -103,9 +104,16 @@ Les autres listes paginées suivent le même schéma :
 
 Une valeur inconnue renvoie un 400 `Validation.Invalid` sur le champ (`Sort`, `Direction`, `Kind`, `MaxAmount`). Les
 égalités se départagent toujours (nom puis identifiant pour les tiers, référence pour les articles, numéro pour les
-encaissements). La désignation d'un article se trie sur sa forme sans accents ni casse et le prix en réel, d'où le
-même ordre sur SQLite, PostgreSQL et SQL Server. Les règles communes de validation sont dans
+encaissements). La désignation d'un article et le client d'un encaissement se trient sur leur forme sans accents ni casse,
+le prix et le montant en réel, d'où le même ordre sur SQLite, PostgreSQL et SQL Server. Les encaissements sont
+cherchés, triés et paginés en base, comme les pièces. Les règles communes de validation sont dans
 `Lettra.Application/Features/ListSortRules.cs` ; le tri des stores dans `Repositories/ListOrdering.cs`.
+
+La recherche suit une règle unique (`Search/ListSearchTerm.cs`) : un nom ou un libellé se cherche sur sa forme sans
+accents ni casse (colonne `SearchKey`, calculée en C#), un code (numéro, référence) en majuscules. « eclair » trouve
+ainsi « Boulangerie Éclair » sur les trois bases, quelle que soit la langue du serveur. Les pièces et les factures
+récurrentes cherchent encore le nom du client en majuscules seulement (sans retirer les accents sur SQLite) : elles
+passeront à la même règle (écart X13 de `docs/qualite-du-code.md`).
 
 Côté UI : `PartyListQuery` (clients, fournisseurs), `CatalogListQuery` (catalogue) et `PaymentListQuery`
 (encaissements) portent les mêmes critères sur les deux transports. Dans les écrans en deux volets (clients,

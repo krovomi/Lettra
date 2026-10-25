@@ -40,7 +40,8 @@ plateforme n'est plus une créance à suivre, mais sa vente compte toujours dans
 
 ### Vue cabinet (par dossier)
 
-Le tableau du cabinet reprend les compteurs du calcul de nuit de la [Vue cabinet](vue-cabinet.md), sans les recalculer :
+Le tableau du cabinet reprend les compteurs du calcul périodique de la [Vue cabinet](vue-cabinet.md) (peu après le
+démarrage, puis toutes les 24 heures), sans les recalculer :
 `lettra_kpi_cabinet_indicator_count{key}`, `_level{key}` (0 rien, 1 en attente, 2 à traiter, 3 urgent), `_due_days{key}`
 (jours avant l'échéance, négatif en retard) et `_age_seconds` (âge du dernier calcul). Les clés sont celles de la Vue
 cabinet (`factures.retard`, `pa.rejets`, `alertes.ouvertes`, `revue.a-faire`, `tva.a-declarer`, `banque.non-rapprochee`).
@@ -63,15 +64,26 @@ réponse, connexions, outbox) et renvoie vers « Activité technique détaillée
 Les indicateurs publiés sont des **ratios, des délais, des indices et des compteurs**, jamais un montant en euros, un
 nom de client ou une donnée personnelle. Les montants restent dans la base du dossier (ADR-0003, annexe F) ; le
 chiffre d'affaires est donc donné en indice (100 = mois moyen) et le poids du premier client en pourcentage, sans dire
-qui il est. Seuls le nom du dossier et celui du cabinet apparaissent, pour que les tableaux soient lisibles.
+qui il est.
+
+**Aucun nom non plus.** Un dossier n'est désigné que par son identifiant (`dossier_id`) : ni son nom, ni celui du
+cabinet ne sont publiés, car le nom d'une entreprise individuelle est celui d'une personne (décision du DPO).
+Les tableaux affichent une **référence courte**, les 8 derniers caractères de l'identifiant (« Dossier 3f9a21bc »),
+calculée dans la requête (`label_replace`). La même référence apparaît sous le nom de chaque dossier dans le menu
+**Tableaux de bord** de Lettra, qui montre les noms selon les droits de chacun, et la recherche de « Mes dossiers » la
+retrouve.
 
 ## Comment les chiffres arrivent dans Grafana
 
 ```
 API Lettra ── GET /internal/kpi/metrics (Bearer) ──► Prometheus de la cellule ──► Grafana
    │
-   └─ toutes les 5 min : pour chaque dossier actif du catalogue, ouvre sa base
+   └─ à chaque lecture (Prometheus, ou « Mes dossiers » dans Lettra), si la dernière collecte a plus de
+      RefreshInterval (5 min ; 1 min dans la démo) : pour chaque dossier actif du catalogue, ouvre sa base
       (sources IDossierKpiSource), puis catalogue et alertes (ICellKpiSource)
+
+Branché dans la démo Docker ; pas encore branché dans les charts Helm (ni jeton, ni tâche « lettra-kpi ») :
+dans une cellule déployée, les tableaux Grafana de pilotage et d'administration restent vides.
 ```
 
 - **Hors OpenTelemetry.** La télémétrie OTel ne porte aucune donnée de dossier et peut quitter la cellule (annexe G).
@@ -95,13 +107,16 @@ Code : ports dans `Lettra.Application/Abstractions/Kpi`, calcul pur dans `Featur
 dans `Lettra.Infrastructure.Persistence/Kpi`, collecte dans `Lettra.Infrastructure.Catalog/Kpi`, format Prometheus dans
 `Lettra.Infrastructure.Observability/KpiExposition.cs`, route dans `Lettra.Api/Endpoints/KpiEndpoints.cs`. Les tableaux
 sont générés comme du code dans `deploy/helm/lettra-observability/dashboards/` : la démo les monte, et le chart Helm les
-publie dans sa ConfigMap.
+publie dans sa ConfigMap. La collecte, elle, n'est **pas encore branchée** dans Helm : les charts ne règlent ni
+`Lettra:Kpi:ScrapeToken` ni la tâche Prometheus `lettra-kpi`, si bien que dans une cellule déployée les indicateurs
+`lettra_kpi_*` des tableaux « Pilotage » et « Administration » restent vides. La page « Tableaux de bord » de Lettra,
+qui ne passe pas par Prometheus, marche partout.
 
 ## Dans la démo
 
 Avec l'observabilité (voir le README), ouvrir http://localhost:3000, dossier **Lettra**. Le tableau du cabinet
-liste les trois dossiers de démonstration ; cliquer sur un nom ouvre son tableau, ou choisir le dossier en haut du
-tableau du dossier. Les courbes dans le temps se remplissent au fil des collectes (une par minute dans la démo, qui règle
+liste les trois dossiers de démonstration par leur référence courte ; cliquer sur une référence ouvre son tableau, ou
+choisir la référence en haut du tableau du dossier. Les courbes dans le temps se remplissent au fil des collectes (une par minute dans la démo, qui règle
 `Lettra__Kpi__RefreshInterval: "00:01:00"` ; toutes les 5 minutes par défaut).
 
 Vérifié dans la démo Docker, après la mise à jour d'une démo existante (les données de démonstration sont conservées) :
@@ -127,8 +142,8 @@ téléphone, Grafana empile les panneaux sur une colonne et les tableaux défile
 ## Limites et suite
 
 - **Production.** Avec plusieurs répliques de l'API, chacune collecterait : soit Prometheus ne lit qu'une réplique,
-  soit la collecte passe dans le Worker. Le `ServiceMonitor` Helm de la tâche `lettra-kpi` et l'OIDC de Grafana
-  restent à écrire.
+  soit la collecte passe dans le Worker. Le jeton `Lettra:Kpi:ScrapeToken` et la collecte `lettra-kpi` (tâche ou
+  `ServiceMonitor`) dans les charts Helm, ainsi que l'OIDC de Grafana, restent à écrire.
 - **Seuils.** Les seuils de couleur (DSO orange à 45 jours, rouge à 60 ; créances en retard orange à 20 %, rouge à
   40 %…) sont des valeurs de départ à revoir avec un expert-comptable.
 - **Montants.** Afficher des euros demanderait de faire sortir des montants de la base du dossier ; ce n'est pas fait

@@ -1,5 +1,7 @@
+using System.Net;
 using Lettra.Contracts.Cabinet;
 using Lettra.Contracts.Common;
+using Lettra.Contracts.Exports;
 using Lettra.Contracts.Identity;
 using Lettra.Contracts.Speech;
 using Lettra.Domain.SharedKernel;
@@ -75,6 +77,10 @@ public sealed class OtherHttpGatewaysUnreachableTests
 
         List<IReadOnlyList<ErrorDetail>> failures =
         [
+            (await services.GetRequiredService<IPilotageGateway>().GetDossierAsync(default)).Errors,
+            (await services.GetRequiredService<IAssistantGateway>().GetStatusAsync(default)).Errors,
+            (await services.GetRequiredService<IAdministrationGateway>().DeleteTeamAsync(id, id, default)).Errors,
+            (await invoices.GetEInvoiceAsync(id, EInvoiceFormatDto.Ubl, default)).Errors,
             (await customers.GetAsync(id, default)).Errors,
             (await customers.DeleteAsync(id, 1, default)).Errors,
             (await invoices.DeleteAsync(id, 1, default)).Errors,
@@ -85,6 +91,26 @@ public sealed class OtherHttpGatewaysUnreachableTests
         ];
 
         failures.Should().AllSatisfy(errors => errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Api.Unreachable));
+    }
+
+    [Fact]
+    public async Task Une_reponse_sans_corps_json_se_lit_selon_la_route()
+    {
+        await using ServiceProvider services = GatewayHarness.Answering(request => request.RequestUri!.AbsolutePath switch
+        {
+            "/bff/user" => new HttpResponseMessage(HttpStatusCode.Unauthorized),
+            var path when path.EndsWith("/e-invoice", StringComparison.Ordinal) => new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent([1, 2, 3]) },
+            _ => new HttpResponseMessage(HttpStatusCode.NoContent),
+        });
+        Guid id = Guid.CreateVersion7();
+
+        OperationResult<SessionResponse> session = await services.GetRequiredService<ISessionGateway>().GetAsync(default);
+        OperationResult<bool> deleted = await services.GetRequiredService<IAdministrationGateway>().DeleteTeamAsync(id, id, default);
+        OperationResult<byte[]> file = await services.GetRequiredService<IInvoicesGateway>().GetEInvoiceAsync(id, EInvoiceFormatDto.Ubl, default);
+
+        session.Value!.IsAuthenticated.Should().BeFalse("un 401 du BFF veut dire « pas connecté », pas une panne");
+        deleted.Value.Should().BeTrue();
+        file.Value.Should().Equal(1, 2, 3);
     }
 
     [Fact]

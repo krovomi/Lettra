@@ -301,152 +301,192 @@ public sealed class SyncCoordinator(
 
     private async Task<SyncReport> RunInDossierAsync(IServiceProvider services, CancellationToken ct)
     {
-        SyncSummary summary = new(0, 0, 0);
-        int sent = 0, conflicts = 0, rejected = 0, received = 0, kept = 0;
-        SyncReport Report(SyncFailure failure = SyncFailure.None, bool postponed = false) =>
-            new(State, failure, summary, sent, conflicts, rejected, received, kept, postponed);
-
+        SyncTally tally = new();
         Result opened = await services.GetRequiredService<ITenantInitializer>().InitializeAsync(ct).ConfigureAwait(false);
         if (opened.IsFailure)
         {
             Enter(SyncState.Failed);
-            return Report(SyncFailure.DossierUnavailable);
+            return tally.Report(State, SyncFailure.DossierUnavailable);
         }
 
-        Guid dossier = services.GetRequiredService<ITenantContext>().Current.DossierId.Value;
-        ISyncOutbox outbox = services.GetRequiredService<ISyncOutbox>();
-        ISyncReplica replica = services.GetRequiredService<ISyncReplica>();
-        if (await replica.GetSettingAsync(DeviceSettings.RevokedKey, ct).ConfigureAwait(false) is not null)
+        SyncCycle cycle = new(
+            services.GetRequiredService<ITenantContext>().Current.DossierId.Value,
+            services.GetRequiredService<ISyncOutbox>(),
+            services.GetRequiredService<ISyncReplica>(),
+            tally);
+        if (await cycle.Replica.GetSettingAsync(DeviceSettings.RevokedKey, ct).ConfigureAwait(false) is not null)
         {
             Enter(SyncState.Failed);
-            return Report(SyncFailure.DeviceRevoked);
+            return tally.Report(State, SyncFailure.DeviceRevoked);
         }
 
-        IReadOnlyList<SyncOutboxItem> pending = await outbox.ListAsync(SyncOutboxStatus.Pending, ct).ConfigureAwait(false);
-        summary = Summarize(pending);
+        IReadOnlyList<SyncOutboxItem> pending = await cycle.Outbox.ListAsync(SyncOutboxStatus.Pending, ct).ConfigureAwait(false);
+        tally.Summary = Summarize(pending);
 
         // 1. Sonde réelle.
         NetworkStatus network = await probe.ProbeAsync(ct).ConfigureAwait(false);
         if (!network.ServerReachable)
         {
             Enter(SyncState.Offline);
-            return Report();
+            return tally.Report(State);
         }
 
         // 2. Demande à l'utilisateur, seulement si quelque chose part (confirmé par le PO le 14/10/2026).
-        if (!summary.IsEmpty)
+        if (!tally.Summary.IsEmpty && !await ConsentAsync(tally.Summary, pending, network, ct).ConfigureAwait(false))
         {
-            SyncPreference preference = await preferences.GetAsync(ct).ConfigureAwait(false);
-            if (preference == SyncPreference.NeverOnCellular && network.Kind == NetworkKind.Cellular)
-            {
-                Enter(SyncState.PendingConsent);
-                return Report(postponed: true);
-            }
-
-            bool automatic = preference == SyncPreference.AutoOnWifi && network.Kind is NetworkKind.Wifi or NetworkKind.Ethernet;
-            if (!automatic)
-            {
-                Enter(SyncState.PendingConsent);
-                SyncConsent answer;
-                while ((answer = await consent.AskAsync(summary, network.Kind, ct).ConfigureAwait(false)) == SyncConsent.ShowDetail)
-                {
-                    await consent.ShowDetailAsync(pending, ct).ConfigureAwait(false);
-                }
-
-                if (answer == SyncConsent.Later)
-                {
-                    return Report(postponed: true);
-                }
-            }
+            return tally.Report(State, postponed: true);
         }
 
+        return await ExchangeAsync(cycle, pending, ct).ConfigureAwait(false);
+    }
+
+    /// <summary>Vrai si l'envoi part maintenant : selon la préférence de l'utilisateur et le réseau, ou sa réponse.</summary>
+    private async Task<bool> ConsentAsync(SyncSummary summary, IReadOnlyList<SyncOutboxItem> pending, NetworkStatus network, CancellationToken ct)
+    {
+        SyncPreference preference = await preferences.GetAsync(ct).ConfigureAwait(false);
+        if (preference == SyncPreference.NeverOnCellular && network.Kind == NetworkKind.Cellular)
+        {
+            Enter(SyncState.PendingConsent);
+            return false;
+        }
+
+        bool automatic = preference == SyncPreference.AutoOnWifi && network.Kind is NetworkKind.Wifi or NetworkKind.Ethernet;
+        if (automatic)
+        {
+            return true;
+        }
+
+        Enter(SyncState.PendingConsent);
+        SyncConsent answer;
+        while ((answer = await consent.AskAsync(summary, network.Kind, ct).ConfigureAwait(false)) == SyncConsent.ShowDetail)
+        {
+            await consent.ShowDetailAsync(pending, ct).ConfigureAwait(false);
+        }
+
+        return answer != SyncConsent.Later;
+    }
+
+    /// <summary>Les étapes en ligne : envoi, réception, séries débloquées, série du poste, conflits.</summary>
+    private async Task<SyncReport> ExchangeAsync(SyncCycle cycle, IReadOnlyList<SyncOutboxItem> pending, CancellationToken ct)
+    {
         try
         {
             // 3. Envoi, par lots, dans l'ordre de saisie. Acquittement local seulement après la réponse.
             Enter(SyncState.Pushing);
-            async Task PushAsync(IReadOnlyList<SyncOutboxItem> items)
-            {
-                foreach (SyncOutboxItem[] batch in items.Chunk(Math.Max(1, options.BatchSize)))
-                {
-                    PushSyncIntentsResponse response = await transport.PushAsync(
-                        dossier, new PushSyncIntentsRequest(options.DeviceId, [.. batch.Select(i => i.Intent)]), ct).ConfigureAwait(false);
-                    await outbox.AcknowledgeAsync(response.Results, clock.GetUtcNow(), ct).ConfigureAwait(false);
-                    foreach (SyncIntentResult result in response.Results)
-                    {
-                        switch (result.Outcome)
-                        {
-                            // Une pièce qui attend la précédente de sa série reste en attente, sans être comptée refusée.
-                            case SyncIntentOutcome.Rejected when result.IsWaiting():
-                                break;
-                            case SyncIntentOutcome.Rejected:
-                                rejected++;
-                                break;
-                            case SyncIntentOutcome.Conflict:
-                                conflicts++;
-                                break;
-                            default:
-                                sent++;
-                                break;
-                        }
-                    }
-                }
-            }
-
-            await PushAsync(pending).ConfigureAwait(false);
+            await PushAsync(cycle, pending, ct).ConfigureAwait(false);
 
             // 4. Réception par pages ; chaque page et son jeton sont appliqués ensemble.
             Enter(SyncState.Pulling);
-            bool more = true;
-            SyncPolicyResponse? policy = null;
-            IReadOnlyList<string> released = [];
-            while (more)
-            {
-                string? token = await replica.GetTokenAsync(ct).ConfigureAwait(false);
-                SyncChangesResponse changes = await transport.PullAsync(dossier, token, options.PageSize, ct).ConfigureAwait(false);
-                SyncApplyReport applied = await replica.ApplyAsync(changes, ct).ConfigureAwait(false);
-                received += applied.Applied;
-                kept += applied.KeptLocal;
-                more = changes.HasMore;
-                policy = changes.Policy ?? policy;
-                released = changes.Released ?? released;
-            }
+            (SyncPolicyResponse? policy, IReadOnlyList<string> released) = await PullAsync(cycle, ct).ConfigureAwait(false);
 
             // Contact réussi : le compte de la durée hors ligne repart d'ici, avec la règle du cabinet reçue (étape 4.4).
-            await RecordContactAsync(replica, policy, ct).ConfigureAwait(false);
+            await RecordContactAsync(cycle.Replica, policy, ct).ConfigureAwait(false);
 
             // Série débloquée par le cabinet (étape 4.4) : les pièces refusées repartent tout de suite, puis celles qui les attendaient.
-            if (await outbox.RequeueAsync(released, ct).ConfigureAwait(false) > 0)
+            if (await cycle.Outbox.RequeueAsync(released, ct).ConfigureAwait(false) > 0)
             {
                 Enter(SyncState.Pushing);
-                await PushAsync(await outbox.ListAsync(SyncOutboxStatus.Pending, ct).ConfigureAwait(false)).ConfigureAwait(false);
+                await PushAsync(cycle, await cycle.Outbox.ListAsync(SyncOutboxStatus.Pending, ct).ConfigureAwait(false), ct).ConfigureAwait(false);
             }
 
             // 5. Série du poste (ADR-0007), au premier passage en ligne : elle permet ensuite de valider hors ligne.
-            await EnsureDeviceSeriesAsync(dossier, replica, ct).ConfigureAwait(false);
+            await EnsureDeviceSeriesAsync(cycle.Dossier, cycle.Replica, ct).ConfigureAwait(false);
 
             // 6. Conflits : les champs sans conflit sont appliqués, le reste attend l'écran de résolution.
-            int open = (await outbox.ListConflictsAsync(ct).ConfigureAwait(false)).Count;
+            int open = (await cycle.Outbox.ListConflictsAsync(ct).ConfigureAwait(false)).Count;
             Enter(open > 0 ? SyncState.ResolvingConflicts : SyncState.UpToDate);
-            return Report();
+            return cycle.Tally.Report(State);
         }
         catch (SyncRefusedException refused) when (refused.Reason == SyncFailure.DeviceRevoked)
         {
             // Le cabinet a retiré ce poste : rien de ce qui reste ici ne doit rester lisible, outbox comprise.
-            await replica.WipeAsync(ct).ConfigureAwait(false);
-            await replica.SaveSettingAsync(DeviceSettings.RevokedKey, Millis(clock.GetUtcNow()), ct).ConfigureAwait(false);
+            await cycle.Replica.WipeAsync(ct).ConfigureAwait(false);
+            await cycle.Replica.SaveSettingAsync(DeviceSettings.RevokedKey, Millis(clock.GetUtcNow()), ct).ConfigureAwait(false);
             Enter(SyncState.Failed);
-            return Report(SyncFailure.DeviceRevoked);
+            return cycle.Tally.Report(State, SyncFailure.DeviceRevoked);
         }
         catch (SyncRefusedException refused)
         {
             Enter(SyncState.Failed);
-            return Report(refused.Reason);
+            return cycle.Tally.Report(State, refused.Reason);
         }
         catch (Exception e) when (e is HttpRequestException or IOException || (e is TaskCanceledException && !ct.IsCancellationRequested))
         {
             Enter(SyncState.Failed);
-            return Report(SyncFailure.ConnectionLost);
+            return cycle.Tally.Report(State, SyncFailure.ConnectionLost);
         }
+    }
+
+    private async Task PushAsync(SyncCycle cycle, IReadOnlyList<SyncOutboxItem> items, CancellationToken ct)
+    {
+        foreach (SyncOutboxItem[] batch in items.Chunk(Math.Max(1, options.BatchSize)))
+        {
+            PushSyncIntentsResponse response = await transport.PushAsync(
+                cycle.Dossier, new PushSyncIntentsRequest(options.DeviceId, [.. batch.Select(i => i.Intent)]), ct).ConfigureAwait(false);
+            await cycle.Outbox.AcknowledgeAsync(response.Results, clock.GetUtcNow(), ct).ConfigureAwait(false);
+            foreach (SyncIntentResult result in response.Results)
+            {
+                cycle.Tally.Count(result);
+            }
+        }
+    }
+
+    /// <summary>Toutes les pages ; rend la règle du cabinet et les séries débloquées portées par la dernière.</summary>
+    private async Task<(SyncPolicyResponse? Policy, IReadOnlyList<string> Released)> PullAsync(SyncCycle cycle, CancellationToken ct)
+    {
+        bool more = true;
+        SyncPolicyResponse? policy = null;
+        IReadOnlyList<string> released = [];
+        while (more)
+        {
+            string? token = await cycle.Replica.GetTokenAsync(ct).ConfigureAwait(false);
+            SyncChangesResponse changes = await transport.PullAsync(cycle.Dossier, token, options.PageSize, ct).ConfigureAwait(false);
+            cycle.Tally.Add(await cycle.Replica.ApplyAsync(changes, ct).ConfigureAwait(false));
+            more = changes.HasMore;
+            policy = changes.Policy ?? policy;
+            released = changes.Released ?? released;
+        }
+
+        return (policy, released);
+    }
+
+    /// <summary>Le dossier d'un cycle, ses magasins et ses compteurs.</summary>
+    private sealed record SyncCycle(Guid Dossier, ISyncOutbox Outbox, ISyncReplica Replica, SyncTally Tally);
+
+    /// <summary>Ce que compte un cycle, rendu dans son <see cref="SyncReport"/>.</summary>
+    private sealed class SyncTally
+    {
+        private int _sent, _conflicts, _rejected, _received, _kept;
+
+        public SyncSummary Summary { get; set; } = new(0, 0, 0);
+
+        public void Count(SyncIntentResult result)
+        {
+            switch (result.Outcome)
+            {
+                // Une pièce qui attend la précédente de sa série reste en attente, sans être comptée refusée.
+                case SyncIntentOutcome.Rejected when result.IsWaiting():
+                    break;
+                case SyncIntentOutcome.Rejected:
+                    _rejected++;
+                    break;
+                case SyncIntentOutcome.Conflict:
+                    _conflicts++;
+                    break;
+                default:
+                    _sent++;
+                    break;
+            }
+        }
+
+        public void Add(SyncApplyReport applied)
+        {
+            _received += applied.Applied;
+            _kept += applied.KeptLocal;
+        }
+
+        public SyncReport Report(SyncState state, SyncFailure failure = SyncFailure.None, bool postponed = false) =>
+            new(state, failure, Summary, _sent, _conflicts, _rejected, _received, _kept, postponed);
     }
 
     /// <summary>Le rappel à montrer maintenant, d'après la plus ancienne facture validée sur le poste et pas encore envoyée.</summary>

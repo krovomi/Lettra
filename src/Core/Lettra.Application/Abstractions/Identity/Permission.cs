@@ -30,7 +30,7 @@ public enum Permission
     /// <summary>Lancer le contrôle d'intégrité de la chaîne anti-fraude et lire les clôtures.</summary>
     [PermissionCategory(PermissionKind.DossierData)] IntegriteVerifier = 13,
 
-    /// <summary>Clôturer les périodes écoulées (le Worker le fait aussi chaque nuit).</summary>
+    /// <summary>Clôturer les périodes écoulées (le Worker le fait aussi une fois par jour).</summary>
     [PermissionCategory(PermissionKind.DossierData)] ClotureEffectuer = 14,
 
     /// <summary>Télécharger l'archive scellée d'une clôture (contrôle fiscal, auditeur).</summary>

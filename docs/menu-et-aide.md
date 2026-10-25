@@ -23,13 +23,15 @@ macOS, Android, iOS).
   - un champ « Posez votre question » qui comprend le langage courant (« je veux annuler ma facture ») et montre la
     meilleure réponse dépliée, avec un bouton vers l'écran qui répond ;
   - les questions de l'écran affiché en tête (« Sur cet écran »), puis toutes les questions fréquentes ;
-  - « Tutoriel de cet écran », « Chercher partout », les raccourcis utiles et « Revoir tous les tutoriels » ;
+  - « Tutoriel de cet écran », « Démo commentée » (Lettra joue un parcours complet et l'explique,
+    [demo-commentee.md](demo-commentee.md)), « Chercher partout », les raccourcis utiles et « Revoir tous les
+    tutoriels » ;
   - « Demander à l'assistant » seulement si le cabinet a activé l'assistant IA (désactivé par défaut) : la question lui
     est passée telle quelle. L'aide marche entièrement sans lui.
-- **Mémoire** : sections repliées et favoris sont retenus sur l'appareil, **par utilisateur** (deux personnes sur le
-  même poste ont chacune leur menu), dans le stockage local du navigateur ou du WebView MAUI. Ce n'est jamais une
-  donnée de dossier. Quand le serveur le permet, ils sont aussi rangés dans le compte et suivent l'utilisateur sur
-  ses autres appareils ([preferences-utilisateur.md](preferences-utilisateur.md)).
+- **Mémoire** : sections repliées et favoris sont rangés dans le compte et suivent l'utilisateur sur ses autres
+  appareils ([preferences-utilisateur.md](preferences-utilisateur.md)). Sans compte (poste isolé, serveur plus ancien),
+  ils restent sur l'appareil, **par utilisateur** (deux personnes sur le même poste ont chacune leur menu), dans le
+  stockage local du navigateur ou du WebView MAUI. Ce n'est jamais une donnée de dossier.
 
 | Appareil | Menu | Aide |
 |---|---|---|

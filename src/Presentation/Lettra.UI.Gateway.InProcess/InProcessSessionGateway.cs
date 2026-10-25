@@ -1,6 +1,5 @@
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Features.Identity;
-using Lettra.Application.Mapping;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Identity;
 using Lettra.Domain.Common;
@@ -32,25 +31,9 @@ internal sealed class InProcessSessionGateway(IServiceScopeFactory scopes) : ISe
     public Task<OperationResult<SessionResponse>> LockAsync(CancellationToken cancellationToken) =>
         SendAsync(new CloseLocalSessionCommand(), cancellationToken);
 
-    private async Task<OperationResult<SessionResponse>> SendAsync(ICommand<Result<SessionResponse>> command, CancellationToken cancellationToken)
-    {
-        AsyncServiceScope scope = scopes.CreateAsyncScope();
-        await using (scope.ConfigureAwait(false))
-        {
-            Result<SessionResponse> result = await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>()
-                .SendAsync(command, cancellationToken).ConfigureAwait(false);
-            return result.ToOperationResult();
-        }
-    }
+    private Task<OperationResult<SessionResponse>> SendAsync(ICommand<Result<SessionResponse>> command, CancellationToken cancellationToken) =>
+        InProcessScope.OutsideDossierAsync(scopes, sp => InProcessScope.SendAsync(sp, command, cancellationToken));
 
-    private async Task<OperationResult<SessionResponse>> QueryAsync(IQuery<Result<SessionResponse>> query, CancellationToken cancellationToken)
-    {
-        AsyncServiceScope scope = scopes.CreateAsyncScope();
-        await using (scope.ConfigureAwait(false))
-        {
-            Result<SessionResponse> result = await scope.ServiceProvider.GetRequiredService<IQueryDispatcher>()
-                .QueryAsync(query, cancellationToken).ConfigureAwait(false);
-            return result.ToOperationResult();
-        }
-    }
+    private Task<OperationResult<SessionResponse>> QueryAsync(IQuery<Result<SessionResponse>> query, CancellationToken cancellationToken) =>
+        InProcessScope.OutsideDossierAsync(scopes, sp => InProcessScope.QueryAsync(sp, query, cancellationToken));
 }

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <!-- Démo commentée (docs/demo-commentee.md) : bulle, écran de lancement et textes des étapes, écrits pour quelqu'un qui ne connaît pas la comptabilité. -->
+  <data name="Nav.Demo" xml:space="preserve"><value>Démo commentée</value></data>
+  <data name="Nav.Demo.Keywords" xml:space="preserve"><value>démonstration visite parcours découverte tutoriel automatique apprendre</value></data>
+  <data name="Demo.Badge" xml:space="preserve"><value>Démo commentée</value></data>
+  <data name="Demo.Count" xml:space="preserve"><value>Chapitre {0} sur {1}</value></data>
+  <data name="Demo.Progress" xml:space="preserve"><value>Avancement de la démo</value></data>
+  <data name="Demo.Acting" xml:space="preserve"><value>Lettra fait les gestes pour vous…</value></data>
+  <data name="Demo.Paused" xml:space="preserve"><value>En pause : prenez le temps de regarder l'écran.</value></data>
+  <data name="Demo.Blocked" xml:space="preserve"><value>Je n'ai pas trouvé l'élément attendu à l'écran. Réessayez, ou passez cette étape.</value></data>
+  <data name="Demo.Pause" xml:space="preserve"><value>Pause</value></data>
+  <data name="Demo.Resume" xml:space="preserve"><value>Reprendre</value></data>
+  <data name="Demo.Next" xml:space="preserve"><value>Suivant</value></data>
+  <data name="Demo.Retry" xml:space="preserve"><value>Réessayer</value></data>
+  <data name="Demo.Skip" xml:space="preserve"><value>Passer l'étape</value></data>
+  <data name="Demo.Stop" xml:space="preserve"><value>Arrêter la démo</value></data>
+  <data name="Demo.Collapse" xml:space="preserve"><value>Réduire la bulle</value></data>
+  <data name="Demo.Expand" xml:space="preserve"><value>Afficher la bulle</value></data>
+  <data name="Demo.Speed" xml:space="preserve"><value>Vitesse</value></data>
+  <data name="Demo.Speed.0.75" xml:space="preserve"><value>Lente</value></data>
+  <data name="Demo.Speed.1" xml:space="preserve"><value>Normale</value></data>
+  <data name="Demo.Speed.1.5" xml:space="preserve"><value>Rapide</value></data>
+  <data name="Demo.Speed.2" xml:space="preserve"><value>Très rapide</value></data>
+  <data name="Demo.Replay" xml:space="preserve"><value>Rejouer</value></data>
+  <data name="Demo.Close" xml:space="preserve"><value>Fermer</value></data>
+  <data name="Demo.Finished.Title" xml:space="preserve"><value>Démo terminée, bravo !</value></data>
+  <data name="Demo.Finished.Text" xml:space="preserve"><value>Vous avez vu le parcours complet : un client, un devis accepté, une facture conforme transmise, son encaissement, puis ce que la comptabilité, la TVA et le cabinet en font. Tout ce qui a été créé reste dans le dossier de démonstration : explorez librement.</value></data>
+  <data name="Demo.Finished.Count" xml:space="preserve"><value>Parcours terminé</value></data>
+  <data name="Demo.Page.Title" xml:space="preserve"><value>Démo commentée</value></data>
+  <data name="Demo.Page.Subtitle" xml:space="preserve"><value>Lettra se pilote tout seul et vous explique chaque étape, sans jargon.</value></data>
+  <data name="Demo.Start" xml:space="preserve"><value>Lancer la démo</value></data>
+  <data name="Demo.Restart" xml:space="preserve"><value>Relancer depuis le début</value></data>
+  <data name="Demo.Intro.Title" xml:space="preserve"><value>Comment ça marche</value></data>
+  <data name="Demo.Intro.Auto" xml:space="preserve"><value>Lettra ouvre les écrans, remplit les champs et clique à votre place, à vitesse humaine.</value></data>
+  <data name="Demo.Intro.Controls" xml:space="preserve"><value>Une bulle explique chaque étape. Mettez en pause, passez à la suite ou arrêtez quand vous voulez.</value></data>
+  <data name="Demo.Intro.Data" xml:space="preserve"><value>Tout est fictif : la démo crée un vrai client, un devis et une facture dans le dossier de démonstration, comme si vous les saisissiez.</value></data>
+  <data name="Demo.Intro.Words" xml:space="preserve"><value>Aucune connaissance en comptabilité n'est nécessaire : chaque mot du métier est expliqué au moment où il apparaît.</value></data>
+  <data name="Demo.Chapters" xml:space="preserve"><value>Les chapitres</value></data>
+  <data name="Demo.Continues" xml:space="preserve"><value>Suite directe du chapitre précédent.</value></data>
+  <data name="Demo.StartAt" xml:space="preserve"><value>Commencer ici</value></data>
+  <data name="Demo.StartAt.Label" xml:space="preserve"><value>Commencer la démo au chapitre « {0} »</value></data>
+  <data name="Demo.Unavailable.Title" xml:space="preserve"><value>Démo commentée indisponible ici</value></data>
+  <data name="Demo.Unavailable.Text" xml:space="preserve"><value>La démo commentée crée de vraies pièces dans le dossier ouvert. Elle n'est donc proposée que sur une installation de démonstration, avec des données fictives (par exemple la démo Docker), jamais sur un dossier réel.</value></data>
+  <data name="Demo.Help" xml:space="preserve"><value>Démo commentée</value></data>
+  <data name="Demo.Help.Hint" xml:space="preserve"><value>Lettra joue un parcours complet et l'explique.</value></data>
+  <data name="Demo.Palette.Open" xml:space="preserve"><value>Démo commentée : voir Lettra en action</value></data>
+  <data name="Demo.Palette.Stop" xml:space="preserve"><value>Arrêter la démo commentée</value></data>
+  <data name="Demo.Value.Street" xml:space="preserve"><value>12 rue des Lilas</value></data>
+  <data name="Demo.Value.Item" xml:space="preserve"><value>Atelier découverte du numérique</value></data>
+  <data name="Demo.Value.Subject" xml:space="preserve"><value>Formation numérique de l'équipe</value></data>
+  <data name="Demo.Value.Transfer" xml:space="preserve"><value>Virement Boulangerie Dupain</value></data>
+  <data name="Demo.welcome.Title" xml:space="preserve"><value>Bienvenue</value></data>
+  <data name="Demo.welcome.Summary" xml:space="preserve"><value>Le dossier, le tableau de bord et le menu.</value></data>
+  <data name="Demo.welcome.intro.Title" xml:space="preserve"><value>Bienvenue dans Lettra</value></data>
+  <data name="Demo.welcome.intro.Text" xml:space="preserve"><value>Lettra sert à faire ses devis et ses factures, et à préparer la comptabilité qui va avec. Pendant cette démo, vous êtes Atelier Numérique Conseil, une petite entreprise de conseil. Vous n'avez rien à faire : regardez, Lettra s'occupe des clics.</value></data>
+  <data name="Demo.welcome.dossier.Title" xml:space="preserve"><value>Un dossier, c'est une entreprise</value></data>
+  <data name="Demo.welcome.dossier.Text" xml:space="preserve"><value>Un expert-comptable suit beaucoup d'entreprises. Chacune a son « dossier » : ses clients, ses factures, ses comptes. Ce sélecteur indique le dossier ouvert ; les données d'un dossier ne se mélangent jamais avec celles d'un autre.</value></data>
+  <data name="Demo.welcome.revenue.Title" xml:space="preserve"><value>Le chiffre d'affaires</value></data>
+  <data name="Demo.welcome.revenue.Text" xml:space="preserve"><value>C'est le total de ce que l'entreprise a facturé, hors taxes (« HT », c'est-à-dire sans la TVA, qui revient à l'État). Le tableau de bord le suit mois par mois, avec les factures en retard et les devis qui attendent une réponse.</value></data>
+  <data name="Demo.welcome.menu.Title" xml:space="preserve"><value>Tout part du menu</value></data>
+  <data name="Demo.welcome.menu.Text" xml:space="preserve"><value>Ventes, clients, comptabilité, déclarations : chaque écran est rangé par thème. Nous allons les parcourir dans l'ordre où une entreprise les utilise.</value></data>
+  <data name="Demo.company.Title" xml:space="preserve"><value>L'entreprise</value></data>
+  <data name="Demo.company.Summary" xml:space="preserve"><value>Les informations légales qui figurent sur chaque facture.</value></data>
+  <data name="Demo.company.identity.Title" xml:space="preserve"><value>La carte d'identité de l'entreprise</value></data>
+  <data name="Demo.company.identity.Text" xml:space="preserve"><value>Le SIREN est le numéro à 9 chiffres que l'État donne à chaque entreprise française. Il doit figurer sur chaque facture, avec le nom, l'adresse et la forme juridique. Lettra les reprend tout seul.</value></data>
+  <data name="Demo.company.vat.Title" xml:space="preserve"><value>Le numéro de TVA</value></data>
+  <data name="Demo.company.vat.Text" xml:space="preserve"><value>La TVA (taxe sur la valeur ajoutée) est un impôt que l'entreprise ajoute à ses prix puis reverse à l'État. Son numéro de TVA intracommunautaire l'identifie pour cet impôt dans toute l'Europe.</value></data>
+  <data name="Demo.company.terms.Title" xml:space="preserve"><value>Les conditions de paiement</value></data>
+  <data name="Demo.company.terms.Text" xml:space="preserve"><value>Le délai laissé aux clients pour payer et les pénalités en cas de retard. La loi impose de les écrire sur les factures : Lettra les ajoute automatiquement.</value></data>
+  <data name="Demo.customer.Title" xml:space="preserve"><value>Créer un client</value></data>
+  <data name="Demo.customer.Summary" xml:space="preserve"><value>Enregistrer à qui l'on vend.</value></data>
+  <data name="Demo.customer.list.Title" xml:space="preserve"><value>La liste des clients</value></data>
+  <data name="Demo.customer.list.Text" xml:space="preserve"><value>Ce sont les personnes et les entreprises à qui Atelier Numérique Conseil vend ses services. Ajoutons-en un nouveau : une boulangerie lyonnaise qui veut former son équipe au numérique.</value></data>
+  <data name="Demo.customer.new.Title" xml:space="preserve"><value>Un nouveau client</value></data>
+  <data name="Demo.customer.new.Text" xml:space="preserve"><value>On commence par son nom. Lettra peut aussi chercher l'entreprise dans l'annuaire officiel (SIRENE) pour tout remplir d'un coup ; ici, on saisit à la main pour bien voir chaque champ.</value></data>
+  <data name="Demo.customer.siren.Title" xml:space="preserve"><value>Le SIREN du client</value></data>
+  <data name="Demo.customer.siren.Text" xml:space="preserve"><value>Pour un client professionnel, son SIREN est obligatoire : avec la réforme de la facture électronique, il sert à lui adresser ses factures par voie électronique. Ce numéro est fictif, comme toutes les données de la démo.</value></data>
+  <data name="Demo.customer.address.Title" xml:space="preserve"><value>Ses coordonnées</value></data>
+  <data name="Demo.customer.address.Text" xml:space="preserve"><value>L'adresse figure sur la facture, et l'e-mail servira à envoyer les factures et, si besoin, des rappels de paiement. Lettra propose la ville dès qu'on tape le code postal.</value></data>
+  <data name="Demo.customer.saved.Title" xml:space="preserve"><value>Client enregistré</value></data>
+  <data name="Demo.customer.saved.Text" xml:space="preserve"><value>La fiche du client est prête. Elle rassemblera tout ce qui le concerne : ses devis, ses factures, ce qu'il a payé et ce qu'il doit encore.</value></data>
+  <data name="Demo.catalog.Title" xml:space="preserve"><value>Le catalogue</value></data>
+  <data name="Demo.catalog.Summary" xml:space="preserve"><value>Les prestations vendues, avec leur prix et leur TVA.</value></data>
+  <data name="Demo.catalog.list.Title" xml:space="preserve"><value>Le catalogue</value></data>
+  <data name="Demo.catalog.list.Text" xml:space="preserve"><value>C'est la liste des produits et des prestations que l'entreprise vend, avec leur prix. On la remplit une fois, puis on pioche dedans pour faire les devis et les factures sans tout retaper.</value></data>
+  <data name="Demo.catalog.new.Title" xml:space="preserve"><value>Une nouvelle prestation</value></data>
+  <data name="Demo.catalog.new.Text" xml:space="preserve"><value>Une référence courte pour la retrouver vite, et une désignation : le texte qui apparaîtra sur le devis et la facture.</value></data>
+  <data name="Demo.catalog.price.Title" xml:space="preserve"><value>HT, TVA et TTC</value></data>
+  <data name="Demo.catalog.price.Text" xml:space="preserve"><value>Le prix se saisit HT, hors taxes : c'est ce que l'entreprise garde. On y ajoute la TVA (20 % ici) pour obtenir le prix TTC, toutes taxes comprises, que le client paie. 450 € HT font donc 540 € TTC, dont 90 € de TVA à reverser à l'État.</value></data>
+  <data name="Demo.catalog.saved.Title" xml:space="preserve"><value>Prestation ajoutée</value></data>
+  <data name="Demo.catalog.saved.Text" xml:space="preserve"><value>L'atelier est au catalogue. Il ne reste plus qu'à le proposer à notre boulangerie.</value></data>
+  <data name="Demo.quote.Title" xml:space="preserve"><value>Faire un devis</value></data>
+  <data name="Demo.quote.Summary" xml:space="preserve"><value>Proposer un prix, vérifier, valider.</value></data>
+  <data name="Demo.quote.open.Title" xml:space="preserve"><value>Un devis pour la boulangerie</value></data>
+  <data name="Demo.quote.open.Text" xml:space="preserve"><value>Un devis est une proposition de prix : il décrit ce qu'on va faire et combien cela coûtera. Tant que le client ne l'a pas accepté, il ne doit rien. On part de sa fiche : le client est donc déjà choisi.</value></data>
+  <data name="Demo.quote.subject.Title" xml:space="preserve"><value>L'objet du devis</value></data>
+  <data name="Demo.quote.subject.Text" xml:space="preserve"><value>Une phrase qui résume la proposition. Elle aide le client à comprendre de quoi il s'agit, et vous à retrouver le devis plus tard.</value></data>
+  <data name="Demo.quote.line.Title" xml:space="preserve"><value>Les lignes</value></data>
+  <data name="Demo.quote.line.Text" xml:space="preserve"><value>Chaque ligne est une chose vendue. On tape la référence du catalogue : désignation, prix et TVA se remplissent seuls. Il ne reste qu'à indiquer la quantité : deux ateliers.</value></data>
+  <data name="Demo.quote.totals.Title" xml:space="preserve"><value>Les totaux</value></data>
+  <data name="Demo.quote.totals.Text" xml:space="preserve"><value>Lettra calcule tout : 900 € HT, 180 € de TVA, 1 080 € TTC. Pas d'erreur de calcul possible, et chaque taux de TVA est détaillé comme la loi le demande.</value></data>
+  <data name="Demo.quote.compliance.Title" xml:space="preserve"><value>La vérification automatique</value></data>
+  <data name="Demo.quote.compliance.Text" xml:space="preserve"><value>Avant de valider, Lettra contrôle que toutes les mentions obligatoires sont là : identité des deux entreprises, numéros, dates, totaux. Une coche verte par mention ; s'il en manquait une, le bouton Valider resterait grisé.</value></data>
+  <data name="Demo.quote.validate.Title" xml:space="preserve"><value>Le devis est validé</value></data>
+  <data name="Demo.quote.validate.Text" xml:space="preserve"><value>Valider donne au devis son numéro définitif, attribué dans l'ordre, sans trou. Il ne peut plus être modifié : c'est ce document que le client reçoit.</value></data>
+  <data name="Demo.quote.accept.Title" xml:space="preserve"><value>Le client a dit oui</value></data>
+  <data name="Demo.quote.accept.Text" xml:space="preserve"><value>La boulangerie accepte la proposition. Le devis passe à « Accepté » et peut maintenant devenir une facture, en un clic, sans rien ressaisir.</value></data>
+  <data name="Demo.invoice.Title" xml:space="preserve"><value>Facturer</value></data>
+  <data name="Demo.invoice.Summary" xml:space="preserve"><value>La facture, son numéro et sa version électronique.</value></data>
+  <data name="Demo.invoice.draft.Title" xml:space="preserve"><value>La facture reprend le devis</value></data>
+  <data name="Demo.invoice.draft.Text" xml:space="preserve"><value>Une facture est la demande de paiement officielle. Elle reprend le client, l'objet et les lignes du devis. Lettra ajoute la date limite de paiement, calculée avec les conditions de l'entreprise.</value></data>
+  <data name="Demo.invoice.validate.Title" xml:space="preserve"><value>Une facture validée ne se modifie plus</value></data>
+  <data name="Demo.invoice.validate.Text" xml:space="preserve"><value>La loi l'impose : une fois validée, une facture reçoit un numéro qui suit le précédent, et elle ne peut plus être modifiée ni supprimée. Lettra l'inscrit dans une chaîne protégée contre la fraude. Pour corriger une erreur, on fait un « avoir », une sorte de facture négative.</value></data>
+  <data name="Demo.invoice.qrcode.Title" xml:space="preserve"><value>Payer en scannant un code</value></data>
+  <data name="Demo.invoice.qrcode.Text" xml:space="preserve"><value>Dès la validation, la facture porte un QR code de paiement, à l'écran et sur le PDF. Le client le scanne avec l'application de sa banque : le virement s'ouvre déjà rempli, avec le bon IBAN, le bon montant et le numéro de la facture. Il n'a rien à recopier, et le paiement se reconnaît tout seul au rapprochement bancaire.</value></data>
+  <data name="Demo.invoice.facturx.Title" xml:space="preserve"><value>La facture électronique</value></data>
+  <data name="Demo.invoice.facturx.Text" xml:space="preserve"><value>Factur-X, c'est un PDF lisible par un humain qui contient aussi les données de la facture pour les logiciels. C'est un des formats de la réforme qui rend la facture électronique obligatoire entre entreprises en France.</value></data>
+  <data name="Demo.invoice.issue.Title" xml:space="preserve"><value>Envoyée par la plateforme agréée</value></data>
+  <data name="Demo.invoice.issue.Text" xml:space="preserve"><value>Avec la réforme, les factures entre entreprises passent par une « plateforme agréée » par l'État, qui les remet au client et informe l'administration fiscale. Ici, la plateforme est simulée : la facture est déposée et son suivi apparaît dans l'historique.</value></data>
+  <data name="Demo.payment.Title" xml:space="preserve"><value>Encaisser</value></data>
+  <data name="Demo.payment.Summary" xml:space="preserve"><value>Enregistrer le paiement du client et le relier à sa facture.</value></data>
+  <data name="Demo.payment.new.Title" xml:space="preserve"><value>Le client a payé</value></data>
+  <data name="Demo.payment.new.Text" xml:space="preserve"><value>Un « encaissement », c'est l'argent reçu d'un client. La boulangerie a fait un virement : on l'enregistre en choisissant le client. Lettra affiche aussitôt ses factures pas encore payées.</value></data>
+  <data name="Demo.payment.allocate.Title" xml:space="preserve"><value>À quelle facture correspond ce paiement ?</value></data>
+  <data name="Demo.payment.allocate.Text" xml:space="preserve"><value>On saisit le montant reçu, 1 080 €. Lettra le répartit tout seul sur la facture ouverte. Relier un paiement à sa facture s'appelle le « lettrage » : c'est ce qui permet de savoir, à tout moment, qui doit encore quoi.</value></data>
+  <data name="Demo.payment.lettering.Title" xml:space="preserve"><value>Payé et lettré</value></data>
+  <data name="Demo.payment.lettering.Text" xml:space="preserve"><value>Le paiement est enregistré et la facture est soldée. Lettra a aussi écrit l'écriture comptable correspondante : nous la retrouverons dans le journal.</value></data>
+  <data name="Demo.bank.Title" xml:space="preserve"><value>La banque</value></data>
+  <data name="Demo.bank.Summary" xml:space="preserve"><value>Comparer le relevé bancaire avec ce qui est enregistré.</value></data>
+  <data name="Demo.bank.import.Title" xml:space="preserve"><value>Le relevé de banque</value></data>
+  <data name="Demo.bank.import.Text" xml:space="preserve"><value>Régulièrement, on importe le relevé du compte bancaire (ici, un relevé fictif). Lettra compare chaque mouvement avec les factures et les encaissements déjà connus.</value></data>
+  <data name="Demo.bank.match.Title" xml:space="preserve"><value>Le rapprochement bancaire</value></data>
+  <data name="Demo.bank.match.Text" xml:space="preserve"><value>Pour chaque ligne du relevé, Lettra propose le paiement ou la facture correspondant ; on confirme d'un clic. Rapprocher, c'est vérifier que la banque et la comptabilité racontent la même histoire.</value></data>
+  <data name="Demo.reminders.Title" xml:space="preserve"><value>Relancer</value></data>
+  <data name="Demo.reminders.Summary" xml:space="preserve"><value>Rappeler poliment aux clients les factures en retard.</value></data>
+  <data name="Demo.reminders.overview.Title" xml:space="preserve"><value>Les factures en retard</value></data>
+  <data name="Demo.reminders.overview.Text" xml:space="preserve"><value>Quand un client n'a pas payé à la date prévue, la facture est « échue ». Cet écran les liste toutes, avec le nombre de jours de retard et le montant encore dû.</value></data>
+  <data name="Demo.reminders.preview.Title" xml:space="preserve"><value>Une relance toute prête</value></data>
+  <data name="Demo.reminders.preview.Text" xml:space="preserve"><value>Lettra rédige le message de rappel, du plus aimable au plus ferme selon le retard, avec les coordonnées bancaires pour payer. On l'envoie par e-mail, ou on note qu'on a relancé par téléphone. Dans la démo, aucun e-mail ne sort de votre poste.</value></data>
+  <data name="Demo.accounting.Title" xml:space="preserve"><value>La comptabilité</value></data>
+  <data name="Demo.accounting.Summary" xml:space="preserve"><value>Les écritures que Lettra a passées tout seul.</value></data>
+  <data name="Demo.accounting.journal.Title" xml:space="preserve"><value>Le journal comptable</value></data>
+  <data name="Demo.accounting.journal.Text" xml:space="preserve"><value>Chaque facture et chaque paiement produit une « écriture » : des lignes au débit et au crédit, toujours de même total. Lettra les a toutes écrites au fil de la démo ; le comptable n'a rien à ressaisir.</value></data>
+  <data name="Demo.accounting.balance.Title" xml:space="preserve"><value>La balance</value></data>
+  <data name="Demo.accounting.balance.Text" xml:space="preserve"><value>La balance additionne les écritures par compte : 411 pour ce que doivent les clients, 706 pour les ventes de services, 44571 pour la TVA collectée à reverser, 512 pour la banque. D'un coup d'œil, le comptable voit si tout est équilibré.</value></data>
+  <data name="Demo.tax.Title" xml:space="preserve"><value>La TVA et les impôts</value></data>
+  <data name="Demo.tax.Summary" xml:space="preserve"><value>Ce que l'entreprise doit déclarer, et quand.</value></data>
+  <data name="Demo.tax.vat.Title" xml:space="preserve"><value>La déclaration de TVA</value></data>
+  <data name="Demo.tax.vat.Text" xml:space="preserve"><value>Régulièrement, l'entreprise déclare la TVA qu'elle a facturée à ses clients, moins celle qu'elle a payée à ses fournisseurs. La différence est à verser à l'État. Lettra prépare les montants à partir des factures.</value></data>
+  <data name="Demo.tax.checks.Title" xml:space="preserve"><value>Les contrôles avant de déclarer</value></data>
+  <data name="Demo.tax.checks.Text" xml:space="preserve"><value>Brouillons oubliés, factures non transmises, écarts avec la comptabilité : Lettra signale ce qui pourrait fausser la déclaration avant qu'on l'envoie.</value></data>
+  <data name="Demo.tax.calendar.Title" xml:space="preserve"><value>Le calendrier fiscal</value></data>
+  <data name="Demo.tax.calendar.Text" xml:space="preserve"><value>TVA, impôt sur les sociétés, CFE : chaque impôt a ses dates limites. Le calendrier les rassemble pour que rien ne soit oublié, et on coche ce qui est fait.</value></data>
+  <data name="Demo.fec.Title" xml:space="preserve"><value>Le FEC</value></data>
+  <data name="Demo.fec.Summary" xml:space="preserve"><value>Le fichier que l'administration fiscale peut demander.</value></data>
+  <data name="Demo.fec.export.Title" xml:space="preserve"><value>Le fichier des écritures comptables</value></data>
+  <data name="Demo.fec.export.Text" xml:space="preserve"><value>En cas de contrôle fiscal, l'entreprise doit remettre toute sa comptabilité dans un fichier au format officiel, le FEC. Lettra le produit en un clic et le vérifie avant de le télécharger.</value></data>
+  <data name="Demo.cabinet.Title" xml:space="preserve"><value>Le cabinet comptable</value></data>
+  <data name="Demo.cabinet.Summary" xml:space="preserve"><value>La vue de l'expert-comptable sur tous ses dossiers.</value></data>
+  <data name="Demo.cabinet.overview.Title" xml:space="preserve"><value>La vue cabinet</value></data>
+  <data name="Demo.cabinet.overview.Text" xml:space="preserve"><value>Changeons de point de vue : voici l'écran de l'expert-comptable. Tous les dossiers suivis par le cabinet y sont réunis, avec ce qui demande de l'attention : factures en retard, TVA à déclarer, banque à rapprocher.</value></data>
+  <data name="Demo.cabinet.pilotage.Title" xml:space="preserve"><value>Les tableaux de bord</value></data>
+  <data name="Demo.cabinet.pilotage.Text" xml:space="preserve"><value>Des indicateurs simples pour piloter, par exemple le délai moyen de paiement des clients ou la part des devis acceptés. Chacun ne voit que les dossiers auxquels il a droit.</value></data>
+  <data name="Demo.end.Title" xml:space="preserve"><value>Et maintenant ?</value></data>
+  <data name="Demo.end.Summary" xml:space="preserve"><value>Récapitulatif et pistes pour explorer seul.</value></data>
+  <data name="Demo.end.done.Title" xml:space="preserve"><value>Vous avez fait le tour !</value></data>
+  <data name="Demo.end.done.Text" xml:space="preserve"><value>Client, devis, facture électronique, encaissement, banque, relances, comptabilité, TVA et vue cabinet : c'est le cycle complet d'une vente. Tout ce que la démo a créé reste dans le dossier. Le bouton « ? » en haut répond à vos questions, et Ctrl+K retrouve n'importe quel écran.</value></data>
+</root>
