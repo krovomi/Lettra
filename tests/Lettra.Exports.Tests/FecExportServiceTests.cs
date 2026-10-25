@@ -1,8 +1,10 @@
 using Lettra.Application.Abstractions.Persistence;
 using Lettra.Contracts.Common;
+using Lettra.Contracts.Exports;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Common;
 using Lettra.Exports.Application;
+using Lettra.Exports.Application.Bridges;
 using Lettra.Exports.Application.Fec;
 
 namespace Lettra.Exports.Tests;
@@ -28,6 +30,30 @@ public sealed class FecExportServiceTests
         file.Value.FileName.Should().Be("552100554FEC20261231.txt");
         file.Value.Validation.IsValid.Should().BeTrue();
         file.Value.Validation.EntryCount.Should().Be(4);
+    }
+
+    [Fact]
+    public async Task Les_ecritures_partent_au_format_du_logiciel_du_cabinet()
+    {
+        Result<BridgeFile> file = await Service(Profile(Cabinet))
+            .ExportForAsync(AccountingSoftwareDto.Quadra, new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31), default);
+
+        file.IsSuccess.Should().BeTrue();
+        file.Value.FileName.Should().Be("552100554-quadra-20260101-20261231.txt");
+    }
+
+    [Fact]
+    public async Task Une_passerelle_inconnue_est_refusee() =>
+        (await Service(Profile(Cabinet)).ExportForAsync((AccountingSoftwareDto)42, new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31), default))
+            .Errors.Select(e => e.Code).Should().Equal(ErrorCodes.Fec.SoftwareUnknown);
+
+    [Fact]
+    public async Task Une_passerelle_suit_les_refus_du_fec()
+    {
+        (await Service(null).ExportForAsync(AccountingSoftwareDto.Sage, new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31), default))
+            .Errors.Select(e => e.Code).Should().Equal(CompanyProfileErrors.NotFoundCode);
+        (await Service(Profile(Cabinet)).ExportForAsync(AccountingSoftwareDto.Sage, new DateOnly(2026, 12, 31), new DateOnly(2026, 1, 1), default))
+            .Errors.Select(e => e.Code).Should().Equal(ErrorCodes.Fec.PeriodInvalid);
     }
 
     [Fact]

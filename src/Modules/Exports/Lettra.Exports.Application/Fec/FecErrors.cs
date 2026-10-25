@@ -12,6 +12,7 @@ public static class FecErrors
     public const string ExportInvalidCode = ErrorCodes.Fec.ExportInvalid;
     public const string FileTooLargeCode = ErrorCodes.Fec.FileTooLarge;
     public const string FileNameInvalidCode = ErrorCodes.Fec.FileNameInvalid;
+    public const string SoftwareUnknownCode = ErrorCodes.Fec.SoftwareUnknown;
 
     public static Error PeriodInvalid => Error.Validation(PeriodInvalidCode, "To");
 
@@ -26,4 +27,7 @@ public static class FecErrors
     public static Error FileTooLarge => Error.Validation(FileTooLargeCode, "Content");
 
     public static Error FileNameInvalid => Error.Validation(FileNameInvalidCode, "FileName");
+
+    /// <summary>Le logiciel demandé n'a pas de passerelle.</summary>
+    public static Error SoftwareUnknown => Error.Validation(SoftwareUnknownCode, "Software");
 }
