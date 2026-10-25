@@ -163,7 +163,7 @@ La galerie rend 28 écrans avec des données fictives dans les 4 thèmes : accue
 factures, une facture, clients, une fiche client (lecture et saisie), articles, un article, la grille du catalogue,
 journal, balance, grand livre, centre d'alertes, fiche entreprise, sept vues du menu et de l'aide, accueil d'un dossier
 vide, devis sans résultat, Mes préférences et « Reprendre où j'en étais » ; s'y ajoutent les sept vues d'« Équipe et
-accès », en clair et en sombre (`AdministrationGalleryTests`). Le script en tire 378 captures et `audit.json`. Au 16 octobre 2026, avec les 12 premiers écrans (144 captures) : 0 défaut axe, aucun débordement horizontal. Limites : pages rendues sans JavaScript (la grille de saisie y est statique), Chromium
+accès », en clair et en sombre (`AdministrationGalleryTests`). Le script en tire 378 captures et `audit.json`. Avec les 12 premiers écrans (144 captures) : 0 défaut axe, aucun débordement horizontal. Limites : pages rendues sans JavaScript (la grille de saisie y est statique), Chromium
 seulement ; Safari et les vrais téléphones ne sont pas testés ici.
 
 ## Ajouter un écran ou un composant
