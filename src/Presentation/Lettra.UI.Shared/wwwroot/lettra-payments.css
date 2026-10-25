@@ -1,0 +1,8 @@
+/* Se faire payer plus vite : QR code de virement sur la facture. Couleurs : jetons de lettra-tokens.css ; le code
+   lui-même reste noir sur blanc dans tous les thèmes, condition pour que les applications bancaires le lisent. */
+.lettra-payment-qr { margin-top: var(--space-3); display: grid; gap: var(--space-2); }
+.lettra-payment-qr h2 { margin: 0; }
+.lettra-payment-qr figure { margin: 0; display: grid; gap: var(--space-2); justify-items: center; text-align: center; }
+.lettra-payment-qr svg { width: min(100%, 12rem); height: auto; border-radius: var(--radius-sm); border: 1px solid var(--color-border); }
+.lettra-payment-qr figcaption { display: grid; gap: var(--space-1); color: var(--color-fg-muted); }
+.lettra-payment-qr-due strong { color: var(--color-fg); font-size: var(--text-lg); font-variant-numeric: tabular-nums; }

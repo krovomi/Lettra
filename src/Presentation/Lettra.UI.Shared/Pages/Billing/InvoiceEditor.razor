@@ -188,6 +188,11 @@ else
 
             <ComplianceChecklist Report="_compliance" OnFindingSelected="FocusFindingAsync" DocumentId="Id" />
 
+            @if (_invoice is { Status: not InvoiceStatusDto.Draft } payable)
+            {
+                <PaymentQrPanel Invoice="payable" Company="_company" />
+            }
+
             @if (_invoice is { Status: not InvoiceStatusDto.Draft, Number: not null } transmitted)
             {
                 <PlatformTransmissionPanel Invoice="transmitted" OnInvoiceChanged="ReloadAsync" />

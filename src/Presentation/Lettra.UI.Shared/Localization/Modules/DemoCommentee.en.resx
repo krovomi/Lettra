@@ -116,6 +116,8 @@
   <data name="Demo.invoice.draft.Text" xml:space="preserve"><value>An invoice is the official request for payment. It copies the customer, subject and lines of the quote. Lettra adds the payment due date, worked out from the business's terms.</value></data>
   <data name="Demo.invoice.validate.Title" xml:space="preserve"><value>A validated invoice can no longer change</value></data>
   <data name="Demo.invoice.validate.Text" xml:space="preserve"><value>The law requires it: once validated, an invoice gets the number following the previous one, and it can no longer be changed or deleted. Lettra records it in a fraud-proof chain. To fix a mistake, you issue a "credit note", a kind of negative invoice.</value></data>
+  <data name="Demo.invoice.qrcode.Title" xml:space="preserve"><value>Pay by scanning a code</value></data>
+  <data name="Demo.invoice.qrcode.Text" xml:space="preserve"><value>As soon as it is validated, the invoice carries a payment QR code, on screen and on the PDF. The customer scans it with their banking app: the transfer opens already filled in, with the right IBAN, the right amount and the invoice number. Nothing to copy, and the payment is recognised on its own during bank reconciliation.</value></data>
   <data name="Demo.invoice.facturx.Title" xml:space="preserve"><value>The electronic invoice</value></data>
   <data name="Demo.invoice.facturx.Text" xml:space="preserve"><value>Factur-X is a PDF a person can read that also carries the invoice data for software. It is one of the formats of the reform that makes e-invoicing mandatory between businesses in France.</value></data>
   <data name="Demo.invoice.issue.Title" xml:space="preserve"><value>Sent through the approved platform</value></data>

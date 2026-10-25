@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="PaymentQr.Title" xml:space="preserve"><value>Pay by QR code</value></data>
+  <data name="PaymentQr.Due" xml:space="preserve"><value>Amount due</value></data>
+  <data name="PaymentQr.Caption" xml:space="preserve"><value>The customer scans this code with their banking app: the transfer opens already filled in, with the invoice number as reference. The same code is on the PDF.</value></data>
+  <data name="PaymentQr.NoIban" xml:space="preserve"><value>Add a valid IBAN to the company profile to show the payment QR code, here and on the PDF.</value></data>
+  <data name="PaymentQr.CompanyLink" xml:space="preserve"><value>Open the company profile</value></data>
+</root>

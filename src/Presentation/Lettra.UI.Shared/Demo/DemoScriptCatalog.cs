@@ -69,6 +69,7 @@ public static class DemoScriptCatalog
         [
             new("draft", "#lines-title", Click("#final-invoice"), Wait("#validate:not([disabled])")),
             new("validate", "h1", Click("#validate"), Wait("#issue")),
+            new("qrcode", "#payment-qr", Wait("#payment-qr")),
             new("facturx", "#facturx"),
             new("issue", "#platform", Click("#issue"), Click("#platform-transmit"), Wait("#platform-status")),
         ], ContinuesPrevious: true),

@@ -30,6 +30,8 @@
   <data name="Party.VatNumber" xml:space="preserve"><value>N° TVA intracommunautaire {0}</value></data>
   <data name="Payment.Bic" xml:space="preserve"><value>BIC {0}</value></data>
   <data name="Payment.Iban" xml:space="preserve"><value>IBAN {0}</value></data>
+  <data name="Payment.QrCaption" xml:space="preserve"><value>Scanner pour payer</value></data>
+  <data name="Payment.QrCode" xml:space="preserve"><value>Payez en scannant le QR code avec l'application de votre banque : le virement s'ouvre déjà rempli, avec le montant et le numéro de la facture.</value></data>
   <data name="Payment.Terms" xml:space="preserve"><value>Conditions de paiement</value></data>
   <data name="Quote.Acceptance" xml:space="preserve"><value>Bon pour accord : date, nom et signature du client</value></data>
   <data name="Related.CreditNote" xml:space="preserve"><value>Avoir sur la facture n° {0}</value></data>
