@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Worker : jobs enregistrés en continu et en job de déploiement (RunOnce), identité du compte de service. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Hosts\Lettra.Worker\Lettra.Worker.csproj" />
+  </ItemGroup>
+
+</Project>

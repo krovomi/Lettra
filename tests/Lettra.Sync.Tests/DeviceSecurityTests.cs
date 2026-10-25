@@ -99,10 +99,9 @@ public sealed class DeviceSecurityTests : IAsyncLifetime
         await device.SyncAsync();
         await _world.Server.SendAsync(new RevokeSyncDeviceCommand(_world.Dossier, DeviceIdOf(device)));
 
-        Result<SyncChangesResponse> pulled = await _world.Server.RunAsync(sp =>
-            sp.GetRequiredService<Server.SyncServer>().PullAsync(null, 10, default, DeviceIdOf(device)));
-        Result<OpenDeviceSeriesResponse> series = await _world.Server.RunAsync(sp =>
-            sp.GetRequiredService<Server.SyncServer>().OpenDeviceSeriesAsync(new OpenDeviceSeriesRequest(DeviceIdOf(device)), default));
+        Result<SyncChangesResponse> pulled = await _world.Server.QueryAsync(new Server.PullSyncChangesQuery(_world.Dossier, null, 10, DeviceIdOf(device)));
+        Result<OpenDeviceSeriesResponse> series = await _world.Server.SendAsync(
+            new Server.OpenDeviceSeriesCommand(_world.Dossier, new OpenDeviceSeriesRequest(DeviceIdOf(device))));
 
         pulled.Errors.Should().ContainSingle(e => e.Code == ErrorCodes.Sync.DeviceRevoked);
         series.Errors.Should().ContainSingle(e => e.Code == ErrorCodes.Sync.DeviceRevoked);

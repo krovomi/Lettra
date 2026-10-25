@@ -12,6 +12,7 @@ using Lettra.Domain.Common;
 using Lettra.Exports.Application.Accounting;
 using Lettra.Exports.Application.AuditKit;
 using Lettra.Exports.Application.Banking;
+using Lettra.Exports.Application.Bridges;
 using Lettra.Exports.Application.EInvoicing;
 using Lettra.Exports.Application.EInvoicing.Platform;
 using Lettra.Exports.Application.Fec;
@@ -33,6 +34,7 @@ public static class DependencyInjection
     {
         services.AddScoped<FecExportService>();
         services.AddScoped<IQueryHandler<ExportFecQuery, Result<FecFile>>, ExportFecHandler>();
+        services.AddScoped<IQueryHandler<ExportEntriesForSoftwareQuery, Result<BridgeFile>>, ExportEntriesForSoftwareHandler>();
         services.AddScoped<IQueryHandler<ValidateFecQuery, Result<FecValidationResponse>>, ValidateFecHandler>();
         services.AddScoped<IQueryHandler<GetEInvoiceQuery, Result<EInvoiceFile>>, GetEInvoiceHandler>();
         services.AddScoped<ICommandHandler<TransmitInvoiceCommand, Result<PlatformTransmissionResponse>>, TransmitInvoiceHandler>();
@@ -82,6 +84,7 @@ public static class DependencyInjection
         services.AddScoped<IDossierIndicatorSource, VatToDeclareIndicatorSource>();
 
         // Kit contrôle fiscal (vague 7) : FEC, attestation d'intégrité, piste d'audit fiable, XML et transmissions.
+        services.AddScoped<AuditKitIntegrity>();
         services.AddScoped<AuditKitService>();
         services.AddScoped<IQueryHandler<GetAuditKitQuery, Result<AuditKitFile>>, GetAuditKitHandler>();
         // Relances des factures échues (vague 7) : scénario, textes FR/EN, envoi par le port e-mail et historique.

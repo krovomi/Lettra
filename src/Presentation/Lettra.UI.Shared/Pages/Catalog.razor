@@ -1,4 +1,5 @@
 @page "/catalog/grid"
+@implements IDisposable
 @using Lettra.UI.Abstractions.Concurrency
 @inject ICatalogGateway Gateway
 @inject IStringLocalizer<SharedResource> L
@@ -73,6 +74,7 @@
 
     private static readonly VatRateOption FallbackVatRate = new("FR-20", 20m);
 
+    private readonly LatestRequest _load = new();
     private List<CatalogRow> _rows = [];
     private IReadOnlyList<GridColumn<CatalogRow>> _columns = [];
     private CatalogReferenceData _reference = new(["C62"], [FallbackVatRate]);
@@ -142,6 +144,8 @@
         await LoadAsync();
     }
 
+    public void Dispose() => _load.Dispose();
+
     private async Task ReloadAsync()
     {
         _errors = [];
@@ -152,8 +156,13 @@
     private async Task LoadAsync()
     {
         _loading = true;
-        OperationResult<PagedResponse<CatalogItemSummary>> result =
-            await Gateway.ListAsync(new CatalogListQuery(string.IsNullOrWhiteSpace(_search) ? null : _search.Trim(), _includeArchived, PageSize: PageSize), CancellationToken.None);
+        CatalogListQuery query = new(string.IsNullOrWhiteSpace(_search) ? null : _search.Trim(), _includeArchived, PageSize: PageSize);
+        if (await _load.RunAsync(token => Gateway.ListAsync(query, token)) is not { } result)
+        {
+            // Une recherche plus récente a pris la main.
+            return;
+        }
+
         if (result.IsSuccess && result.Value is not null)
         {
             _rows = result.Value.Items.Select(CatalogRow.From).ToList();

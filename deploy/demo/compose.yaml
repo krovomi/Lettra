@@ -118,6 +118,10 @@ services:
       # de la vue cabinet dès la première minute.
       Lettra__CabinetOverview__InitialDelay: "00:00:15"
       Lettra__Kpi__RefreshInterval: "00:01:00"
+      # Chaîne anti-fraude : sans Worker, l'API clôture les mois écoulés et contrôle la chaîne de chaque dossier une fois
+      # par jour, la première fois 30 s après le démarrage plutôt qu'au bout de 5 minutes. L'escalade du centre d'alertes
+      # tourne chaque minute, comme dans le Worker.
+      Lettra__Worker__Integrity__InitialDelay: "00:00:30"
       Lettra__Worker__RecurringInvoices__ServiceAccountId: 0199e3a0-0000-7000-8000-0000000005e1
       Lettra__Worker__RecurringInvoices__InitialDelay: "00:01:00"
       Lettra__Worker__RecurringInvoices__Interval: "00:15:00"

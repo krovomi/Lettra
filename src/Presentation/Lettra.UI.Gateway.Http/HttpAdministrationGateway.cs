@@ -88,22 +88,9 @@ internal sealed class HttpAdministrationGateway(HttpClient http) : IAdministrati
         NoContentAsync(ct => http.DeleteAsync(HttpCalls.Relative($"api/v1/cabinets/{cabinetId}/roles/{Uri.EscapeDataString(key)}"), ct), cancellationToken);
 
     /// <summary>204 : réussite sans corps ; sinon le problème du serveur, comme partout ailleurs.</summary>
-    private static async Task<OperationResult<bool>> NoContentAsync(Func<CancellationToken, Task<HttpResponseMessage>> send, CancellationToken cancellationToken)
-    {
-        try
-        {
-            using HttpResponseMessage response = await send(cancellationToken).ConfigureAwait(false);
-            if (response.IsSuccessStatusCode)
-            {
-                return OperationResult<bool>.Success(true);
-            }
-
-            OperationResult<ProblemResponse> failure = await response.ToOperationResultAsync(Json.ProblemResponse, cancellationToken).ConfigureAwait(false);
-            return OperationResult<bool>.Failure(failure.Errors);
-        }
-        catch (Exception e) when (HttpCalls.IsUnreachable(e, cancellationToken))
-        {
-            return OperationResult<bool>.Failure(ErrorCodes.Api.Unreachable);
-        }
-    }
+    private static Task<OperationResult<bool>> NoContentAsync(Func<CancellationToken, Task<HttpResponseMessage>> send, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            send,
+            (response, ct) => response.IsSuccessStatusCode ? Task.FromResult(OperationResult<bool>.Success(true)) : response.FailureAsync<bool>(ct),
+            cancellationToken);
 }

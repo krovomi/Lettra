@@ -9,6 +9,7 @@ using Lettra.Contracts.Exports;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
+using Lettra.Exports.Domain.Platform;
 using Microsoft.Extensions.Logging;
 
 namespace Lettra.Exports.Application.EInvoicing.Platform;
@@ -76,7 +77,7 @@ internal sealed class TransmitInvoiceHandler(
         }
 
         PlatformTransmission? current = await transmissions.FindLatestAsync(invoice.Id.Value, cancellationToken).ConfigureAwait(false);
-        if (current is not null && current.Status != PlatformStatusDto.Rejected)
+        if (current is not null && current.Status != PlatformStatus.Rejected)
         {
             return await IssuedAsync(command, invoice, current, cancellationToken).ConfigureAwait(false);
         }
@@ -142,7 +143,7 @@ internal sealed class TransmitInvoiceHandler(
     private async Task<Result<PlatformTransmissionResponse>> IssuedAsync(
         TransmitInvoiceCommand command, Invoice invoice, PlatformTransmission transmission, CancellationToken cancellationToken)
     {
-        if (invoice.Status == InvoiceStatus.Validated && transmission.Status != PlatformStatusDto.Rejected)
+        if (invoice.Status == InvoiceStatus.Validated && transmission.Status != PlatformStatus.Rejected)
         {
             Result issued = await commands.SendAsync(new IssueInvoiceCommand(command.Dossier, command.InvoiceId, null), cancellationToken).ConfigureAwait(false);
             if (issued.IsFailure)
@@ -261,7 +262,7 @@ internal sealed class ReportPaymentHandler(
         }
 
         PlatformTransmission? transmission = await transmissions.FindLatestAsync(invoice.Id.Value, cancellationToken).ConfigureAwait(false);
-        if (transmission?.Reference is null || transmission.Status == PlatformStatusDto.Rejected)
+        if (transmission?.Reference is null || transmission.Status == PlatformStatus.Rejected)
         {
             return PlatformErrors.NotTransmitted;
         }

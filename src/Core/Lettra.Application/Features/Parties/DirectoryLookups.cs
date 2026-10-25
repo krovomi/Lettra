@@ -1,6 +1,7 @@
 using Lettra.Application.Abstractions.External;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Messaging;
+using Lettra.Calculations;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Directory;
 using Lettra.Domain.Common;
@@ -67,13 +68,6 @@ internal sealed class SearchCompaniesHandler(ICompanyDirectory directory)
 internal sealed class CheckVatNumberHandler(IVatNumberChecker checker)
     : IQueryHandler<CheckVatNumberQuery, Result<VatNumberCheckResponse>>
 {
-    // Pays interrogeables dans VIES (préfixes TVA : la Grèce est « EL », l'Irlande du Nord « XI »).
-    private static readonly HashSet<string> ViesPrefixes = new(StringComparer.Ordinal)
-    {
-        "AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "EL", "ES", "FI", "FR", "HR", "HU", "IE",
-        "IT", "LT", "LU", "LV", "MT", "NL", "PL", "PT", "RO", "SE", "SI", "SK", "XI",
-    };
-
     public async Task<Result<VatNumberCheckResponse>> HandleAsync(CheckVatNumberQuery query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
@@ -83,7 +77,7 @@ internal sealed class CheckVatNumberHandler(IVatNumberChecker checker)
             return Result<VatNumberCheckResponse>.Failure(vat.Errors.Select(e => e.For(nameof(query.VatNumber))).ToList());
         }
 
-        return ViesPrefixes.Contains(vat.Value.CountryPrefix)
+        return EuropeanUnion.ViesPrefixes.Contains(vat.Value.CountryPrefix)
             ? await checker.CheckAsync(vat.Value, cancellationToken).ConfigureAwait(false)
             : DirectoryErrors.VatCountryNotSupported;
     }

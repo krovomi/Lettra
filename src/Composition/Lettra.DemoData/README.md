@@ -20,7 +20,8 @@ Section `Lettra:Demo` :
 | `AdditionalDossiers` | `2` | Dossiers supplémentaires créés dans le cabinet (0 à 2). |
 
 `LettraDemoData.SeedAsync` refuse en environnement `Production`, quelle que soit la configuration, et ne touche pas un
-dossier qui a déjà des devis ou des factures (`DossierNotEmpty`). L'API l'appelle au démarrage (`Program.cs`, la démo
+dossier qui a déjà des devis ou des factures (`DossierNotEmpty`) ; les dossiers supplémentaires manquants sont tout de
+même créés. L'API l'appelle au démarrage (`Program.cs`, la démo
 Docker tourne en environnement `Demo`) ; l'application installée l'appelle en arrière-plan après l'ouverture du compte.
 
 ## Ce qui est généré
@@ -49,8 +50,11 @@ Ils sont créés par `CreateDossierCommand`, au nom de l'utilisateur de démonst
 
 - **Sur le poste (mode 1)**, son propriétaire administre le cabinet du registre local (`ILocalCabinet`), il crée donc
   les dossiers « bâtiment » et « négoce » ; le dossier ouvert reste celui de l'utilisateur.
-- **Sur le serveur de démonstration**, l'utilisateur est manager et ne crée pas de dossier : le jeu remplit le dossier
-  configuré et le résultat porte une note `Security.Forbidden` (compose : `AdditionalDossiers=0`).
+- **Sur le serveur de démonstration**, l'utilisateur administre aussi le cabinet : au démarrage de l'API, les dossiers
+  « bâtiment » et « négoce » sont créés et remplis (compose : `AdditionalDossiers=2`), une seule fois, y compris dans
+  une démo déjà remplie (un dossier du même nom n'est pas recréé). Sans droit de création, le jeu remplit le dossier
+  configuré et le résultat porte une note `Security.Forbidden`. Le chargement depuis l'accueil
+  (`POST /api/v1/demo/seed`) ne crée jamais d'autre dossier.
 
 ## Ce qui est vérifié et où
 

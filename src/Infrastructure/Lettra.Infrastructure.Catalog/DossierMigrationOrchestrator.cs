@@ -85,7 +85,7 @@ public sealed partial class DossierMigrationOrchestrator(
                     catch (Exception exception) when (exception is not OperationCanceledException)
                     {
                         LogMigrationFailed(logger, exception, dossier.Id);
-                        await ReleaseAsync(dossier.Id, options.Owner, newVersion: null, CatalogDossierProvisioner.Truncate(exception.Message)).ConfigureAwait(false);
+                        await ReleaseAsync(dossier.Id, options.Owner, newVersion: null, CatalogDossierProvisioner.FailureOf(exception)).ConfigureAwait(false);
                         int failures = Interlocked.Increment(ref failed);
                         int attempts = Volatile.Read(ref attempted) + 1;
                         if (attempts >= MinAttemptsBeforeAbort && (double)failures / attempts > options.MaxFailureRatio)

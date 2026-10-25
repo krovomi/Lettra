@@ -112,4 +112,14 @@
   <data name="Fec.Findings.Truncated" xml:space="preserve"><value>Seuls les premiers constats sont affichés : corrigez-les, puis contrôlez de nouveau.</value></data>
   <data name="Fec.Severity.Error" xml:space="preserve"><value>Erreur</value></data>
   <data name="Fec.Severity.Warning" xml:space="preserve"><value>À vérifier</value></data>
+  <data name="Fec.Bridge.Title" xml:space="preserve"><value>Vers le logiciel du cabinet</value></data>
+  <data name="Fec.Bridge.Hint" xml:space="preserve"><value>Les mêmes écritures, sur l'exercice ci-dessus, au format d'import de votre logiciel de production : il reste en place.</value></data>
+  <data name="Fec.Bridge.Software" xml:space="preserve"><value>Logiciel</value></data>
+  <data name="Fec.Bridge.Software.Quadra" xml:space="preserve"><value>Quadra (ASCII)</value></data>
+  <data name="Fec.Bridge.Software.Sage" xml:space="preserve"><value>Sage 100 (import paramétrable)</value></data>
+  <data name="Fec.Bridge.Software.Cegid" xml:space="preserve"><value>Cegid Expert (écritures Excel)</value></data>
+  <data name="Fec.Bridge.Software.Acd" xml:space="preserve"><value>ACD (import paramétrable)</value></data>
+  <data name="Fec.Bridge.Export" xml:space="preserve"><value>Exporter les écritures</value></data>
+  <data name="Fec.Bridge.Done" xml:space="preserve"><value>Fichier {0} enregistré.</value></data>
+  <data name="Error.Fec.SoftwareUnknown" xml:space="preserve"><value>Choisissez un logiciel de la liste.</value></data>
 </root>

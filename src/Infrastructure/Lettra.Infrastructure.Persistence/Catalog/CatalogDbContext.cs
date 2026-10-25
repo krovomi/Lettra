@@ -48,6 +48,17 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
             modelBuilder.HasDefaultSchema(SchemaName);
         }
 
+        ConfigureTopology(modelBuilder);
+        ConfigureAccess(modelBuilder);
+        CatalogAiSettings.Configure(modelBuilder);
+        CatalogDossierIndicator.Configure(modelBuilder);
+        CatalogUserPreferences.Configure(modelBuilder);
+        ConfigurePolicies(modelBuilder);
+    }
+
+    /// <summary>Les cabinets, les grappes de bases et les dossiers qu'elles hébergent.</summary>
+    private static void ConfigureTopology(ModelBuilder modelBuilder)
+    {
         modelBuilder.Entity<CatalogOrganisation>(e =>
         {
             e.ToTable("Organisations");
@@ -85,9 +96,15 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
             e.HasOne<CatalogOrganisation>().WithMany().HasForeignKey(x => x.OrganisationId);
             e.HasOne<CatalogCluster>().WithMany().HasForeignKey(x => x.ClusterId).IsRequired(false);
         });
+    }
 
-        // Registre des droits : pas de clé étrangère vers les dossiers ou les cabinets, le registre peut citer une
-        // portée avant qu'elle n'existe ; la cohérence de cabinet est vérifiée à la lecture.
+    /// <summary>
+    /// Le registre des droits : comptes, groupes, attributions et rôles du cabinet. Pas de clé étrangère vers les
+    /// dossiers ou les cabinets : le registre peut citer une portée avant qu'elle n'existe ; la cohérence de cabinet est
+    /// vérifiée à la lecture.
+    /// </summary>
+    private static void ConfigureAccess(ModelBuilder modelBuilder)
+    {
         modelBuilder.Entity<CatalogUserAccount>(e =>
         {
             e.ToTable("UserAccounts");
@@ -150,11 +167,10 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
             e.Property(x => x.Permission).HasConversion<int>();
             e.HasOne<CatalogCustomRole>().WithMany().HasForeignKey(x => new { x.OrganisationId, x.RoleKey }).OnDelete(DeleteBehavior.Cascade);
         });
+    }
 
-        CatalogAiSettings.Configure(modelBuilder);
-        CatalogDossierIndicator.Configure(modelBuilder);
-        CatalogUserPreferences.Configure(modelBuilder);
-
+    /// <summary>Les règles propres à chaque cabinet.</summary>
+    private static void ConfigurePolicies(ModelBuilder modelBuilder) =>
         modelBuilder.Entity<CatalogOrganisationPolicy>(e =>
         {
             e.ToTable("OrganisationPolicies");
@@ -162,5 +178,4 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
             e.Property(x => x.CreditNoteApprovalThresholdInclTax).HasPrecision(18, 2);
             e.HasOne<CatalogOrganisation>().WithOne().HasForeignKey<CatalogOrganisationPolicy>(x => x.OrganisationId).OnDelete(DeleteBehavior.Cascade);
         });
-    }
 }

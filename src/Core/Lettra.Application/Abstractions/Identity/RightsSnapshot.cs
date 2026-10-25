@@ -1,3 +1,4 @@
+using Lettra.Contracts.Identity;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
 
@@ -32,6 +33,9 @@ public interface IRightsSnapshotIssuer
 
     /// <summary>JWS compact du contenu de <paramref name="snapshot"/>.</summary>
     string Sign(RightsSnapshot snapshot);
+
+    /// <summary>Clés publiques de vérification (la clé courante et les précédentes encore valables). Rien de secret.</summary>
+    RightsSnapshotKeysResponse PublicKeys();
 }
 
 public static class RightsSnapshotErrors

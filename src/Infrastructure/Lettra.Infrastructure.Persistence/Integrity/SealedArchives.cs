@@ -69,6 +69,10 @@ public static class SealedArchiveFormat
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         DefaultIgnoreCondition = JsonIgnoreCondition.Never,
         WriteIndented = false,
+
+        // Une archive modifiée peut omettre un champ ou le mettre à null : la lecture le refuse (JsonException).
+        RespectNullableAnnotations = true,
+        RespectRequiredConstructorParameters = true,
     };
 
     internal static byte[] Write(Guid dossier, PeriodClosing closing, IReadOnlyList<JournalEntry> entries, IntegrityKeyMaterial keys)
@@ -124,8 +128,8 @@ public static class SealedArchiveFormat
         {
             using ZipArchive zip = new(new MemoryStream(archive), ZipArchiveMode.Read);
             Dictionary<string, byte[]> files = zip.Entries.ToDictionary(e => e.FullName, Read, StringComparer.Ordinal);
-            Manifest manifest = JsonSerializer.Deserialize<Manifest>(files[ManifestFile], Json)!;
-            ArchivedClosing closing = JsonSerializer.Deserialize<ArchivedClosing>(files[ClosingFile], Json)!;
+            Manifest manifest = Parse<Manifest>(files[ManifestFile]);
+            ArchivedClosing closing = Parse<ArchivedClosing>(files[ClosingFile]);
 
             if (manifest.Format != Version || manifest.KeyId != expectedKeyId || closing.KeyId != expectedKeyId
                 || IntegrityKeyMaterial.KeyIdOf(Convert.FromBase64String(closing.PublicKey)) != expectedKeyId)
@@ -164,7 +168,7 @@ public static class SealedArchiveFormat
             string? lastHash = null;
             foreach (string line in Encoding.UTF8.GetString(files[JournalFile]).Split('\n', StringSplitOptions.RemoveEmptyEntries))
             {
-                JournalEntry entry = JsonSerializer.Deserialize<ArchivedEntry>(line, Json)!.ToEntry();
+                JournalEntry entry = Parse<ArchivedEntry>(Encoding.UTF8.GetBytes(line)).ToEntry();
                 bool chained = previous.Length == 0 || entry.PreviousHash == previous;
                 if (entry.Sequence != expected || entry.ComputeHash() != entry.Hash || !chained)
                 {
@@ -186,12 +190,15 @@ public static class SealedArchiveFormat
             failure = null;
             return true;
         }
-        catch (Exception exception) when (exception is InvalidDataException or JsonException or KeyNotFoundException or FormatException or NullReferenceException)
+        catch (Exception exception) when (exception is InvalidDataException or JsonException or KeyNotFoundException or FormatException)
         {
             failure = "format";
             return false;
         }
     }
+
+    private static T Parse<T>(byte[] json) =>
+        JsonSerializer.Deserialize<T>(json, Json) ?? throw new InvalidDataException("Fichier vide dans l'archive scellée.");
 
     private static byte[] Read(ZipArchiveEntry entry)
     {

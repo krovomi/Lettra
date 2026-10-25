@@ -176,9 +176,7 @@ else
 
     /// <summary>Par défaut, le mois écoulé : c'est sa DES qu'on dépose ce mois-ci.</summary>
     private DateOnly Requested =>
-        DateOnly.TryParseExact(Month + "-01", "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly day)
-            ? day
-            : new DateOnly(Today.Year, Today.Month, 1).AddMonths(-1);
+        DateText.ParseIsoMonth(Month) ?? new DateOnly(Today.Year, Today.Month, 1).AddMonths(-1);
 
     protected override async Task OnParametersSetAsync()
     {

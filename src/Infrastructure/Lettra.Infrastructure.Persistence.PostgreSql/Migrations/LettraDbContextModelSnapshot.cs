@@ -250,6 +250,13 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.Property<Guid?>("ReversedBy")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("SearchKey")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(400)
+                        .HasColumnType("character varying(400)")
+                        .HasDefaultValue("");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
@@ -269,6 +276,8 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .IsUnique();
 
                     b.ToTable("Payments", (string)null);
+
+                    b.HasAnnotation("Lettra:SearchKeySource", "CustomerName");
                 });
 
             modelBuilder.Entity("Lettra.Domain.Billing.CompanyProfile", b =>

@@ -28,6 +28,7 @@ public static class DependencyInjection
         services.TryAddSingleton<IAiAuditLog, EmptyAiAuditLog>();
         services.TryAddSingleton<IAiEngineFactory, NoAiEngineFactory>();
         services.TryAddSingleton<IAiSettingsStore, NoAiSettingsStore>();
+        services.TryAddSingleton(INamedEntityDetection.None);
         services.TryAddScoped<IAccountingAssistant, UnavailableAccountingAssistant>();
 
         // Voix désactivée tant que le déploiement ne choisit pas de moteur (Lettra.Infrastructure.Speech, ou Whisper sur le poste).

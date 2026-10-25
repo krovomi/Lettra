@@ -14,6 +14,7 @@ using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Common;
+using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Ai.Tools.Tools;
 
@@ -26,7 +27,7 @@ internal static class BillingToolSupport
 {
     public const int MaxResults = 10;
 
-    public static readonly string[] VatRates = ["FR-20", "FR-10", "FR-5.5", "FR-2.1", "FR-0"];
+    public static readonly string[] VatRates = [.. VatRate.All.Select(r => r.Code)];
 
     public static string Amount(decimal value) => value.ToString("0.00", CultureInfo.InvariantCulture);
 
@@ -213,7 +214,7 @@ internal sealed class CreateQuoteDraftTool(ICommandDispatcher commands, IQueryDi
         Designation = FindCustomerTool.Truncate(line.GetProperty("designation").GetString(), 200),
         Quantity = line.GetProperty("quantite").GetDecimal(),
         UnitPriceExclTax = line.GetProperty("prix_unitaire_ht").GetDecimal(),
-        VatRateCode = line.GetProperty("taux_tva").GetString() ?? "FR-20",
+        VatRateCode = line.GetProperty("taux_tva").GetString() ?? VatRate.Normal.Code,
         UnitCode = line.TryGetProperty("unite", out JsonElement unit) && !string.IsNullOrWhiteSpace(unit.GetString()) ? unit.GetString()! : "C62",
     };
 }

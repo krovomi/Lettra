@@ -93,7 +93,8 @@ public sealed class OfflineDraftsTests : IDisposable
         _drafts = Recharger();
     }
 
-    private OfflineDrafts Recharger() => new(_store, _services, new StepClock(() => _now += TimeSpan.FromMinutes(1)));
+    private OfflineDrafts Recharger() =>
+        new(_store, _quotes, _invoices, new Optional<IDossierSelection>(_services), new StepClock(() => _now += TimeSpan.FromMinutes(1)));
 
     private static SaveQuoteRequest Devis(params DocumentLineRequest[] lines) =>
         new() { CustomerId = BillingFixtures.DupontId, VatRegime = VatRegimeDto.Standard, Lines = [.. lines] };

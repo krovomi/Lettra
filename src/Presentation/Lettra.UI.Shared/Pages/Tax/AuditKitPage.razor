@@ -95,7 +95,7 @@
     private const string ZipMimeType = "application/zip";
 
     /// <summary>Le kit va à l'administration française : ses PDF sont en français, quelle que soit la langue de l'écran.</summary>
-    private static readonly CultureInfo DocumentCulture = CultureInfo.GetCultureInfo("fr-FR");
+    private static readonly CultureInfo DocumentCulture = LegalLanguage.Culture;
 
     private DateOnly _from;
     private DateOnly _to;
@@ -147,7 +147,7 @@
     {
         OperationResult<InvoiceResponse> invoice = await Invoices.GetAsync(piece.InvoiceId, cancellationToken);
         byte[]? pdf = invoice.Value is { } value
-            ? Pdf.Render(PrintableMapper.FromInvoice(value, company, DocumentCulture), [PdfAttachment.FacturX(xml)])
+            ? Pdf.Render(PrintableMapper.FromInvoice(value, company, DocumentCulture, Clock), [PdfAttachment.FacturX(xml)])
             : null;
         _done++;
         // Le rendu occupe le fil du navigateur : on lui rend la main pour afficher l'avancement.

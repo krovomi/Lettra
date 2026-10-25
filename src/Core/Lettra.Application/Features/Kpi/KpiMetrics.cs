@@ -21,7 +21,7 @@ public static class KpiMetrics
     public const string QuotesPending = "lettra_kpi_quotes_pending";
     public const string QuotesExpiringSoon = "lettra_kpi_quotes_expiring_soon";
 
-    // Vue cabinet (les compteurs de la nuit, relus dans la base Catalog).
+    // Vue cabinet (les compteurs de la passe quotidienne, relus dans la base Catalog).
     public const string CabinetIndicatorCount = "lettra_kpi_cabinet_indicator_count";
     public const string CabinetIndicatorLevel = "lettra_kpi_cabinet_indicator_level";
     public const string CabinetIndicatorDueDays = "lettra_kpi_cabinet_indicator_due_days";
@@ -39,7 +39,7 @@ public static class KpiMetrics
     public const string CollectionFailures = "lettra_kpi_collect_failures";
     public const string CollectedAt = "lettra_kpi_collected_at_seconds";
 
-    /// <summary>Étiquettes propres aux indicateurs (en plus de <c>dossier_id</c>, <c>dossier</c> et <c>cabinet</c>).</summary>
+    /// <summary>Étiquettes propres aux indicateurs (en plus de <c>dossier_id</c>).</summary>
     public static class Labels
     {
         /// <summary>Mois civil, <c>2026-10</c>.</summary>
@@ -57,7 +57,7 @@ public static class KpiMetrics
 
     /// <summary>
     /// Indicateurs de gestion des dossiers (ventes, devis, vue cabinet), retirés quand une cellule SaaS ne publie que
-    /// l'exploitation. Le nom du dossier (<see cref="DossierInfo"/>) reste : les tailles et les postes en ont besoin.
+    /// l'exploitation. La liste des dossiers suivis (<see cref="DossierInfo"/>) reste : les tailles et les postes en ont besoin.
     /// </summary>
     public static IReadOnlySet<string> Business { get; } = new HashSet<string>(StringComparer.Ordinal)
     {
@@ -69,7 +69,7 @@ public static class KpiMetrics
     /// <summary>Le texte d'aide de chaque indicateur publié (ligne <c># HELP</c> de Prometheus).</summary>
     public static IReadOnlyDictionary<string, string> Help { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        [DossierInfo] = "Dossier suivi (toujours 1) : relie l'identifiant au nom du dossier et du cabinet.",
+        [DossierInfo] = "Dossier suivi (toujours 1), désigné par son seul identifiant : aucun nom de dossier ni de cabinet.",
         [RevenueIndex] = "Chiffre d'affaires HT du mois, en indice : 100 = mois moyen des 12 derniers mois.",
         [InvoicesIssued] = "Factures et acomptes émis dans le mois (hors avoirs).",
         [RevenueTrend] = "Évolution du chiffre d'affaires HT des 3 derniers mois complets par rapport aux 3 mois d'avant.",
@@ -81,7 +81,7 @@ public static class KpiMetrics
         [QuoteConversion] = "Devis acceptés sur les devis tranchés des 12 derniers mois (acceptés, refusés ou expirés).",
         [QuotesPending] = "Devis envoyés en attente de réponse, pas encore expirés.",
         [QuotesExpiringSoon] = "Devis en attente qui expirent dans les 7 jours.",
-        [CabinetIndicatorCount] = "Compteur d'un indicateur de la vue cabinet (calcul de la nuit).",
+        [CabinetIndicatorCount] = "Compteur d'un indicateur de la vue cabinet (calcul quotidien).",
         [CabinetIndicatorLevel] = "Urgence d'un indicateur de la vue cabinet : 0 rien, 1 en attente, 2 à traiter, 3 urgent.",
         [CabinetIndicatorDueDays] = "Jours avant l'échéance d'un indicateur de la vue cabinet (négatif : en retard).",
         [CabinetIndicatorAge] = "Âge du dernier calcul de la vue cabinet du dossier.",

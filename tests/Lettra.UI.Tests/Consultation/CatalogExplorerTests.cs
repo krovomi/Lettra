@@ -20,7 +20,7 @@ public sealed class CatalogExplorerTests : BunitContext
     public CatalogExplorerTests()
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
-        ExplorerSettings.SearchDelay = TimeSpan.FromMilliseconds(1);
+        Services.AddSingleton(new ExplorerSettings { SearchDelay = TimeSpan.FromMilliseconds(1) });
         Services.AddLettraUi();
         Services.AddSingleton<ICatalogGateway>(_gateway);
         LettraCultures.Apply(CultureInfo.GetCultureInfo("fr-FR"));

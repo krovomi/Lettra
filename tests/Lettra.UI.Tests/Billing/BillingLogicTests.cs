@@ -182,8 +182,8 @@ public sealed class PrintableMapperTests
     {
         InvoiceResponse facture = FakeInvoicesGateway.Build(InvoiceKindDto.Invoice, InvoiceStatusDto.Validated, "FAC-2026-0042", Heures);
 
-        PrintableMapper.FromInvoice(facture, null, Fr).Lines.Single().UnitLabel.Should().Be("heure");
-        PrintableMapper.FromInvoice(facture, null, En).Lines.Single().UnitLabel.Should().Be("hour");
+        PrintableMapper.FromInvoice(facture, null, Fr, TimeProvider.System).Lines.Single().UnitLabel.Should().Be("heure");
+        PrintableMapper.FromInvoice(facture, null, En, TimeProvider.System).Lines.Single().UnitLabel.Should().Be("hour");
         PrintableMapper.UnitLabel("XYZ", Fr).Should().Be("XYZ");
     }
 
@@ -195,8 +195,8 @@ public sealed class PrintableMapperTests
         { Seller = BillingFixtures.Cabinet with { Name = "Ancien nom" } };
         InvoiceResponse brouillon = FakeInvoicesGateway.Build(InvoiceKindDto.Invoice, InvoiceStatusDto.Draft, null, Heures);
 
-        PrintableMapper.FromInvoice(validee, BillingFixtures.Company(), Fr).Seller.Name.Should().Be("Ancien nom");
-        PrintableDocument imprime = PrintableMapper.FromInvoice(brouillon, BillingFixtures.Company(), Fr);
+        PrintableMapper.FromInvoice(validee, BillingFixtures.Company(), Fr, TimeProvider.System).Seller.Name.Should().Be("Ancien nom");
+        PrintableDocument imprime = PrintableMapper.FromInvoice(brouillon, BillingFixtures.Company(), Fr, TimeProvider.System);
         imprime.Seller.Name.Should().Be("Cabinet Martin");
         imprime.Seller.AddressLines.Should().Equal("12 avenue Foch", "Bâtiment B", "75116 Paris");
         imprime.Seller.ShareCapital.Should().Be("50\u202f000\u00a0€");
@@ -211,11 +211,23 @@ public sealed class PrintableMapperTests
             with
         { CreditedInvoiceNumber = "FAC-2026-0042", CreditReason = "Remise commerciale", QuoteNumber = "DEV-2026-0001" };
 
-        PrintableDocument imprime = PrintableMapper.FromInvoice(avoir, null, Fr);
+        PrintableDocument imprime = PrintableMapper.FromInvoice(avoir, null, Fr, TimeProvider.System);
 
         imprime.Kind.Should().Be(PrintableDocumentKind.CreditNote);
         imprime.RelatedDocumentNumber.Should().Be("FAC-2026-0042");
         imprime.Notes.Should().Contain("Remise commerciale");
+    }
+
+    [Fact]
+    public void Un_brouillon_sans_date_d_emission_prend_le_jour_de_l_horloge_dans_le_fuseau_du_poste()
+    {
+        // 22 h 30 UTC un 19 octobre : le poste (UTC+2, heure d'été de Paris) est déjà le 20.
+        PosteClock clock = new(new DateTimeOffset(2026, 10, 19, 22, 30, 0, TimeSpan.Zero), TimeZoneInfo.CreateCustomTimeZone("UTC+2", TimeSpan.FromHours(2), "UTC+2", "UTC+2"));
+        InvoiceResponse brouillon = FakeInvoicesGateway.Build(InvoiceKindDto.Invoice, InvoiceStatusDto.Draft, null, Heures) with { IssueDate = null };
+        QuoteResponse devis = new FakeQuotesGateway().Add(QuoteStatusDto.Draft, null, Heures) with { IssueDate = null };
+
+        PrintableMapper.FromInvoice(brouillon, null, Fr, clock).IssueDate.Should().Be(new DateOnly(2026, 10, 20));
+        PrintableMapper.FromQuote(devis, null, Fr, clock).IssueDate.Should().Be(new DateOnly(2026, 10, 20));
     }
 
     [Fact]
@@ -224,11 +236,18 @@ public sealed class PrintableMapperTests
         FakeQuotesGateway devis = new();
         QuoteResponse quote = devis.Add(QuoteStatusDto.Validated, "DEV-2026-0007", Heures);
 
-        PrintableDocument imprime = PrintableMapper.FromQuote(quote, BillingFixtures.Company(), Fr);
+        PrintableDocument imprime = PrintableMapper.FromQuote(quote, BillingFixtures.Company(), Fr, TimeProvider.System);
 
         imprime.Kind.Should().Be(PrintableDocumentKind.Quote);
         imprime.DueDate.Should().Be(new DateOnly(2026, 11, 15));
         imprime.Buyer.Name.Should().Be("Dupont SARL");
         imprime.Notes.Should().Be("Mission annuelle");
     }
+}
+
+internal sealed class PosteClock(DateTimeOffset now, TimeZoneInfo zone) : TimeProvider
+{
+    public override DateTimeOffset GetUtcNow() => now;
+
+    public override TimeZoneInfo LocalTimeZone => zone;
 }

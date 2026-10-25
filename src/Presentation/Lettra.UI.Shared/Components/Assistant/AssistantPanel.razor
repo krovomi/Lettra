@@ -14,6 +14,10 @@
             <button type="button" class="lettra-link" id="assistant-close" @onclick="State.Close">@L["Assistant.Close"]</button>
         </header>
         <p class="lettra-muted">@L["Assistant.Disclaimer"]</p>
+        @if (!State.Offers(AssistantFeature.DraftFromText))
+        {
+            <p class="lettra-muted" id="assistant-draft-blocked">@L["Assistant.DraftFromTextBlocked"]</p>
+        }
 
         <form @onsubmit="AskAsync" @onsubmit:preventDefault>
             <label for="assistant-feature">@L["Assistant.Feature"]</label>

@@ -6,6 +6,7 @@ using Lettra.Domain.Billing;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
 using Lettra.Exports.Application.EInvoicing.Platform;
+using Lettra.Exports.Domain.Platform;
 using Microsoft.Extensions.Logging;
 
 namespace Lettra.Exports.Application.Banking;
@@ -86,7 +87,7 @@ internal sealed partial class PaymentPlatformReporter(
         foreach (PaymentAllocationRequest allocation in request.Allocations)
         {
             PlatformTransmission? transmission = await transmissions.FindLatestAsync(allocation.InvoiceId, cancellationToken).ConfigureAwait(false);
-            if (transmission?.Reference is null || transmission.Status == PlatformStatusDto.Rejected || transmission.IsFinal)
+            if (transmission?.Reference is null || transmission.Status == PlatformStatus.Rejected || transmission.IsFinal)
             {
                 continue;
             }

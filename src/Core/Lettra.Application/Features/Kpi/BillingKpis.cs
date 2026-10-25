@@ -21,8 +21,8 @@ public sealed record InvoiceKpiFact(
     decimal PaidInclTax,
     bool Refused = false);
 
-/// <summary>Ce qu'un devis validé apporte aux indicateurs.</summary>
-public sealed record QuoteKpiFact(QuoteStatus Status, DateOnly IssueDate, DateOnly? ValidUntil);
+/// <summary>Ce qu'un devis validé apporte aux indicateurs (son montant ne sert qu'à l'accueil du dossier).</summary>
+public sealed record QuoteKpiFact(QuoteStatus Status, DateOnly IssueDate, DateOnly? ValidUntil, decimal TotalExclTax = 0m);
 
 /// <summary>Les pièces validées du dossier courant (les brouillons n'y sont jamais).</summary>
 public sealed record BillingKpiFacts(IReadOnlyList<InvoiceKpiFact> Invoices, IReadOnlyList<QuoteKpiFact> Quotes);

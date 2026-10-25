@@ -132,6 +132,35 @@ public sealed class AssistantPanelTests : BunitContext
     }
 
     [Fact]
+    public void Sans_brouillon_de_devis_le_panneau_explique_pourquoi_sans_jargon()
+    {
+        Services.AddSingleton<IAssistantGateway>(_gateway);
+        _gateway.Status = new AssistantStatusResponse([AssistantFeature.ExplainCompliance, AssistantFeature.RegulatoryQuestions], "local:mistral-small");
+        IRenderedComponent<ContainerFragment> screen = RenderScreen();
+        AssistantPanelState state = Services.GetRequiredService<AssistantPanelState>();
+        screen.WaitForAssertion(() => state.IsAvailable.Should().BeTrue());
+
+        state.Open(AssistantFeature.RegulatoryQuestions);
+
+        screen.WaitForElement("#assistant-draft-blocked").TextContent
+            .Should().Be("Le brouillon de devis à partir d'un texte libre arrivera quand Lettra saura masquer les noms tapés dans le texte.");
+        screen.FindAll("#assistant-feature option").Select(o => o.TextContent).Should().NotContain("Brouillon de devis");
+    }
+
+    [Fact]
+    public void Un_brouillon_de_devis_ferme_par_le_serveur_est_explique()
+    {
+        Services.AddSingleton<IAssistantGateway>(_gateway);
+        _gateway.Answer = [new AssistantUnavailableEvent(ErrorCodes.Ai.FeatureBlocked)];
+        IRenderedComponent<ContainerFragment> screen = RenderScreen();
+        screen.WaitForElement(".lettra-why").Click();
+
+        screen.WaitForAssertion(() => screen.Find(".lettra-assistant-events .is-error").TextContent
+            .Should().StartWith("Le brouillon de devis à partir d'un texte libre n'est pas encore disponible"));
+        screen.FindAll("#assistant-draft-blocked").Should().BeEmpty(because: "la passerelle de test propose encore le point 1");
+    }
+
+    [Fact]
     public void Un_refus_du_serveur_est_traduit()
     {
         Services.AddSingleton<IAssistantGateway>(_gateway);

@@ -9,7 +9,9 @@ namespace Lettra.Infrastructure.Observability;
 /// <summary>
 /// Écrit une collecte d'indicateurs au format texte de Prometheus (version 0.0.4), lu par le Prometheus de la cellule.
 /// Ce chemin ne passe pas par le collecteur OpenTelemetry : il ne sort jamais vers un fournisseur hébergé. Seuls les
-/// indicateurs du catalogue (<see cref="KpiMetrics.Help"/>) sont écrits ; une valeur non finie est omise.
+/// indicateurs du catalogue (<see cref="KpiMetrics.Help"/>) sont écrits ; une valeur non finie est omise. Un dossier n'y
+/// est désigné que par son identifiant : ni son nom ni celui du cabinet (celui d'une entreprise individuelle est le nom
+/// d'une personne).
 /// </summary>
 public static class KpiExposition
 {
@@ -51,11 +53,6 @@ public static class KpiExposition
         if (dossier is not null)
         {
             labels.Add(("dossier_id", dossier.Id.Value.ToString()));
-            labels.Add(("dossier", dossier.Name));
-            if (sample.Metric == KpiMetrics.DossierInfo)
-            {
-                labels.Add(("cabinet", dossier.Cabinet));
-            }
         }
 
         if (sample.Label is { } own)

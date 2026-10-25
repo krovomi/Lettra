@@ -115,146 +115,32 @@ internal static class SpokenNumbers
             return true;
         }
 
-        decimal total = 0;
-        decimal current = 0;
-        int? lastAdditive = null;
-        bool lastWasQuatre = false;
-        bool consumed = false;
+        Accumulator number = new();
         int i = index;
         while (i < tokens.Count)
         {
             SpokenToken token = tokens[i];
-            if (token.Kind == TokenKind.Number)
+            Step step = token.Kind switch
             {
-                // Un nombre en chiffres ne se colle qu'au début ou après « mille » (« 2 mille », « mille 200 »).
-                if (consumed && (current != 0 || lastAdditive is not null))
-                {
-                    break;
-                }
-
-                decimal digits = ParseDigits(token.Text);
-                i++;
-                // « 1 200 » : groupes de trois chiffres séparés par une espace.
-                while (digits == decimal.Truncate(digits) && i < tokens.Count && tokens[i].Kind == TokenKind.Number
-                       && tokens[i].Text.Length == 3 && tokens[i].Text.All(char.IsAsciiDigit) && tokens[i].Start - tokens[i - 1].End == 1)
-                {
-                    digits = (digits * 1000) + ParseDigits(tokens[i].Text);
-                    i++;
-                }
-
-                current += digits;
-                consumed = true;
-                lastAdditive = digits == decimal.Truncate(digits) && digits < 100 ? (int)digits : -1;
-                lastWasQuatre = false;
-                if (digits != decimal.Truncate(digits))
-                {
-                    break;
-                }
-
-                continue;
-            }
-
-            if (token.Kind == TokenKind.Symbol && token.IsSymbol('-') && consumed && i + 1 < tokens.Count && IsNumberWord(tokens[i + 1], language))
-            {
-                // Trait d'union entre deux mots du nombre : « dix-sept », « quatre-vingt-dix ».
-                i++;
-                continue;
-            }
-
-            if (token.Kind != TokenKind.Word)
+                TokenKind.Number => ReadDigits(tokens, i, number),
+                TokenKind.Symbol when token.IsSymbol('-') && number.Consumed && i + 1 < tokens.Count && IsNumberWord(tokens[i + 1], language) =>
+                    new Step(i + 1, Stop: false), // Trait d'union entre deux mots du nombre : « dix-sept », « quatre-vingt-dix ».
+                TokenKind.Word => ReadWord(tokens, i, language, number),
+                _ => new Step(i, Stop: true),
+            };
+            i = step.Next;
+            if (step.Stop)
             {
                 break;
             }
-
-            string key = token.Key;
-            if (Units(language).TryGetValue(key, out int unit))
-            {
-                if (key is "vingt" or "vingts" && lastWasQuatre && current % 100 == 4)
-                {
-                    current += 76; // quatre-vingt = 4 × 20
-                    lastAdditive = 80;
-                    lastWasQuatre = false;
-                    consumed = true;
-                    i++;
-                    continue;
-                }
-
-                if (consumed && !CanAdd(current, lastAdditive, unit))
-                {
-                    break;
-                }
-
-                current += unit;
-                lastAdditive = unit;
-                lastWasQuatre = unit == 4;
-                consumed = true;
-                i++;
-                continue;
-            }
-
-            if (IsHundred(language, key))
-            {
-                if (current % 1000 >= 10)
-                {
-                    break;
-                }
-
-                decimal hundreds = current % 1000;
-                current = current - hundreds + ((hundreds == 0 ? 1 : hundreds) * 100);
-                lastAdditive = null;
-                lastWasQuatre = false;
-                consumed = true;
-                i++;
-                continue;
-            }
-
-            if (IsThousand(language, key))
-            {
-                total += (current == 0 ? 1 : current) * 1000;
-                current = 0;
-                lastAdditive = null;
-                lastWasQuatre = false;
-                consumed = true;
-                i++;
-                continue;
-            }
-
-            if (IsMillion(language, key) && consumed)
-            {
-                total = (total + current) * 1_000_000;
-                current = 0;
-                lastAdditive = null;
-                lastWasQuatre = false;
-                i++;
-                continue;
-            }
-
-            if (key == And(language) && consumed && i + 1 < tokens.Count)
-            {
-                // « vingt et un », « vingt-et-un », « soixante et onze », « one hundred and five » ; « et demi » finit le nombre.
-                int afterAnd = tokens[i + 1].IsSymbol('-') && i + 2 < tokens.Count ? i + 2 : i + 1;
-                SpokenToken after = tokens[afterAnd];
-                if (IsHalf(language, after.Key) || (language == SpokenLanguage.English && after.Key == "a" && i + 2 < tokens.Count && IsHalf(language, tokens[i + 2].Key)))
-                {
-                    break;
-                }
-
-                if (Units(language).TryGetValue(after.Key, out int joined) && CanAdd(current, lastAdditive, joined))
-                {
-                    i = afterAnd;
-                    continue;
-                }
-            }
-
-            break;
         }
 
-        if (!consumed)
+        if (!number.Consumed)
         {
             return false;
         }
 
-        value = total + current;
+        value = number.Total + number.Current;
         // Décimales dites : « deux virgule cinq », « 3 virgule 75 », « two point five ».
         if (i + 1 < tokens.Count && tokens[i].IsWord(DecimalWord(language)) && value == decimal.Truncate(value)
             && ReadFraction(tokens, i + 1, language) is (decimal fraction, int afterFraction))
@@ -272,6 +158,142 @@ internal static class SpokenNumbers
 
         next = i;
         return true;
+    }
+
+    /// <summary>Des chiffres : « 12 », « 1 200 » (groupes de trois séparés par une espace), « 2,5 » qui finit le nombre.</summary>
+    private static Step ReadDigits(IReadOnlyList<SpokenToken> tokens, int i, Accumulator number)
+    {
+        // Un nombre en chiffres ne se colle qu'au début ou après « mille » (« 2 mille », « mille 200 »).
+        if (number.Consumed && (number.Current != 0 || number.LastAdditive is not null))
+        {
+            return new Step(i, Stop: true);
+        }
+
+        decimal digits = ParseDigits(tokens[i].Text);
+        i++;
+        while (digits == decimal.Truncate(digits) && i < tokens.Count && tokens[i].Kind == TokenKind.Number
+               && tokens[i].Text.Length == 3 && tokens[i].Text.All(char.IsAsciiDigit) && tokens[i].Start - tokens[i - 1].End == 1)
+        {
+            digits = (digits * 1000) + ParseDigits(tokens[i].Text);
+            i++;
+        }
+
+        number.Current += digits;
+        number.Consumed = true;
+        number.LastAdditive = digits == decimal.Truncate(digits) && digits < 100 ? (int)digits : -1;
+        number.LastWasQuatre = false;
+        return new Step(i, Stop: digits != decimal.Truncate(digits));
+    }
+
+    /// <summary>Un mot du nombre : unité, cent, mille, million, ou « et » entre deux mots.</summary>
+    private static Step ReadWord(IReadOnlyList<SpokenToken> tokens, int i, SpokenLanguage language, Accumulator number)
+    {
+        string key = tokens[i].Key;
+        if (Units(language).TryGetValue(key, out int unit))
+        {
+            return ReadUnit(key, unit, i, number);
+        }
+
+        if (IsHundred(language, key))
+        {
+            if (number.Current % 1000 >= 10)
+            {
+                return new Step(i, Stop: true);
+            }
+
+            decimal hundreds = number.Current % 1000;
+            number.Current = number.Current - hundreds + ((hundreds == 0 ? 1 : hundreds) * 100);
+            number.Multiplied(consumed: true);
+            return new Step(i + 1, Stop: false);
+        }
+
+        if (IsThousand(language, key))
+        {
+            number.Total += (number.Current == 0 ? 1 : number.Current) * 1000;
+            number.Current = 0;
+            number.Multiplied(consumed: true);
+            return new Step(i + 1, Stop: false);
+        }
+
+        if (IsMillion(language, key) && number.Consumed)
+        {
+            number.Total = (number.Total + number.Current) * 1_000_000;
+            number.Current = 0;
+            number.Multiplied(consumed: number.Consumed);
+            return new Step(i + 1, Stop: false);
+        }
+
+        if (key == And(language) && number.Consumed && i + 1 < tokens.Count && ReadJoinedUnit(tokens, i, language, number) is int afterAnd)
+        {
+            return new Step(afterAnd, Stop: false);
+        }
+
+        return new Step(i, Stop: true);
+    }
+
+    private static Step ReadUnit(string key, int unit, int i, Accumulator number)
+    {
+        if (key is "vingt" or "vingts" && number.LastWasQuatre && number.Current % 100 == 4)
+        {
+            number.Current += 76; // quatre-vingt = 4 × 20
+            number.LastAdditive = 80;
+            number.LastWasQuatre = false;
+            number.Consumed = true;
+            return new Step(i + 1, Stop: false);
+        }
+
+        if (number.Consumed && !CanAdd(number.Current, number.LastAdditive, unit))
+        {
+            return new Step(i, Stop: true);
+        }
+
+        number.Current += unit;
+        number.LastAdditive = unit;
+        number.LastWasQuatre = unit == 4;
+        number.Consumed = true;
+        return new Step(i + 1, Stop: false);
+    }
+
+    /// <summary>
+    /// « vingt et un », « vingt-et-un », « soixante et onze », « one hundred and five » : la position de l'unité qui suit
+    /// « et », ou rien si « et » ne relie pas deux mots du nombre (« et demi » finit le nombre).
+    /// </summary>
+    private static int? ReadJoinedUnit(IReadOnlyList<SpokenToken> tokens, int i, SpokenLanguage language, Accumulator number)
+    {
+        int afterAnd = tokens[i + 1].IsSymbol('-') && i + 2 < tokens.Count ? i + 2 : i + 1;
+        SpokenToken after = tokens[afterAnd];
+        if (IsHalf(language, after.Key) || (language == SpokenLanguage.English && after.Key == "a" && i + 2 < tokens.Count && IsHalf(language, tokens[i + 2].Key)))
+        {
+            return null;
+        }
+
+        return Units(language).TryGetValue(after.Key, out int joined) && CanAdd(number.Current, number.LastAdditive, joined) ? afterAnd : null;
+    }
+
+    /// <summary>La position après un morceau du nombre, et s'il faut s'arrêter là.</summary>
+    private readonly record struct Step(int Next, bool Stop);
+
+    /// <summary>Le nombre en cours de lecture : les milliers déjà posés, le groupe en cours et ce qui le précède.</summary>
+    private sealed class Accumulator
+    {
+        public decimal Total { get; set; }
+
+        public decimal Current { get; set; }
+
+        /// <summary>Le dernier terme ajouté au groupe (-1 pour des chiffres qui n'acceptent plus d'unité).</summary>
+        public int? LastAdditive { get; set; }
+
+        public bool LastWasQuatre { get; set; }
+
+        public bool Consumed { get; set; }
+
+        /// <summary>Après cent, mille ou million : le groupe repart, plus d'unité à compléter.</summary>
+        public void Multiplied(bool consumed)
+        {
+            LastAdditive = null;
+            LastWasQuatre = false;
+            Consumed = consumed;
+        }
     }
 
     /// <summary>« et demi(e) » ou « and a half » à cette position : renvoie la position qui suit.</summary>

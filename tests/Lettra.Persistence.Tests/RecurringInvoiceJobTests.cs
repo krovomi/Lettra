@@ -58,7 +58,7 @@ public sealed class RecurringInvoiceJobTests
         services.AddScoped<ICurrentUser>(_ => new Identity(authenticated));
         services.AddScoped<ICommandDispatcher, Dispatcher>();
         ServiceProvider provider = services.BuildServiceProvider();
-        return new RecurringInvoiceJob(provider, provider.GetRequiredService<IServiceScopeFactory>(), new RecurringDossierSource(dossiers),
+        return new RecurringInvoiceJob(provider, provider.GetRequiredService<IServiceScopeFactory>(), new RecurringDossierSource(dossiers), TimeProvider.System,
             Options.Create(new RecurringInvoiceJobOptions { Enabled = enabled, InitialDelay = TimeSpan.Zero, Interval = TimeSpan.FromHours(1) }),
             NullLogger<RecurringInvoiceJob>.Instance);
     }

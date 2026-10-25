@@ -18,6 +18,12 @@ public interface IFecGateway
     /// </summary>
     Task<OperationResult<FecDocument>> ExportAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Exporte les mêmes écritures au format d'import du logiciel de production du cabinet (Quadra, Sage 100, Cegid
+    /// Expert, ACD). Mêmes refus que le FEC, plus <c>Fec.SoftwareUnknown</c>.
+    /// </summary>
+    Task<OperationResult<FecDocument>> ExportForAsync(AccountingSoftwareDto software, DateOnly from, DateOnly to, CancellationToken cancellationToken);
+
     /// <summary>Passe un FEC (celui de Lettra ou d'un autre logiciel) au validateur intégré, éventuellement sur un exercice.</summary>
     Task<OperationResult<FecValidationResponse>> ValidateAsync(
         string fileName, byte[] content, DateOnly? from, DateOnly? to, CancellationToken cancellationToken);

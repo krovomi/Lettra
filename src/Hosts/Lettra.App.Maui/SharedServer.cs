@@ -78,6 +78,7 @@ internal static class SharedServer
         builder.Services.AddSharedServerGateways(server, RememberedDossier(), RememberDossier);
         builder.Services.AddLettraUi();
         builder.Services.AddSharedServerChoice(server.Address);
+        builder.Services.AddSingleton(sp => AppStartup.Nothing(sp.GetRequiredService<ILogger<AppStartup>>()));
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();
         builder.Logging.AddDebug();

@@ -182,6 +182,12 @@ internal sealed class InProcessReceivablesGateway(IServiceScopeFactory scopes) :
         InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetReceivablesSummaryQuery(dossier), ct), cancellationToken);
 }
 
+internal sealed class InProcessBillingDashboardGateway(IServiceScopeFactory scopes) : IBillingDashboardGateway
+{
+    public Task<OperationResult<BillingDashboardResponse>> GetAsync(CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetBillingDashboardQuery(dossier), ct), cancellationToken);
+}
+
 internal sealed class InProcessBillingSettingsGateway(IServiceScopeFactory scopes) : IBillingSettingsGateway
 {
     public Task<OperationResult<BillingReferenceData>> GetReferenceDataAsync(CancellationToken cancellationToken) =>

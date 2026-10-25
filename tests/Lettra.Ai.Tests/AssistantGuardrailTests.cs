@@ -263,6 +263,20 @@ public sealed class AssistantGuardrailTests
     }
 
     [Fact]
+    public async Task L_anciennete_du_skill_pack_se_compte_en_jours_de_Paris()
+    {
+        // 22 h 30 UTC le 18 octobre : à Paris, c'est déjà le 19, au-delà des six mois du skill comptable.
+        await using AssistantHarness h = new(
+            new ScriptedTurnsEngine(_ => Say("ok")),
+            AssistantHarness.Enabled(),
+            now: new DateTimeOffset(2026, 10, 18, 22, 30, 0, TimeSpan.Zero));
+
+        List<AssistantEvent> events = await h.AskAsync(AssistantFeature.RegulatoryQuestions, "?");
+
+        events[0].Should().Be(new AssistantWarningEvent(ErrorCodes.Ai.SkillPackStale, "comptable 2026-04-18"));
+    }
+
+    [Fact]
     public async Task Une_fiche_lue_dans_un_skill_ancien_est_signalee_une_seule_fois()
     {
         await using AssistantHarness h = new(

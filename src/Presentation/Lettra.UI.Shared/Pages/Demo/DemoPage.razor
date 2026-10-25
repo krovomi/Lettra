@@ -1,0 +1,112 @@
+@page "/demo"
+@implements IDisposable
+@inject DemoPlayer Player
+@inject Optional<IDemoDataGateway> OptionalDemo
+@inject IStringLocalizer<SharedResource> L
+
+@* Démo commentée (docs/demo-commentee.md) : Lettra joue lui-même un parcours complet, du premier client à la
+   déclaration de TVA puis à la vue du cabinet, et explique chaque étape avec des mots simples. Les pièces créées sont
+   de vraies pièces du dossier ouvert : l'écran ne propose la démo que là où le jeu de démonstration est permis (hôte de
+   démonstration, jamais en Production), comme le chargement des données fictives de l'accueil. *@
+
+<PageTitle>@L["Demo.Page.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Demo.Page.Title"]</h1>
+        <p>@L["Demo.Page.Subtitle"]</p>
+    </div>
+    @if (_available == true)
+    {
+        <div class="lt-page-actions">
+            <button type="button" id="demo-start" class="lettra-button" @onclick="() => Start(0)">
+                <Icon Name="circle-play" Size="18" /> @L[Player.IsActive ? "Demo.Restart" : "Demo.Start"]
+            </button>
+        </div>
+    }
+</div>
+
+@if (_available is null)
+{
+    <p aria-busy="true">@L["Loading"]</p>
+}
+else if (_available == false)
+{
+    <section class="lt-panel lt-empty" id="demo-unavailable">
+        <span class="lt-empty-icon"><Icon Name="info" Size="28" /></span>
+        <h2>@L["Demo.Unavailable.Title"]</h2>
+        <p>@L["Demo.Unavailable.Text"]</p>
+    </section>
+}
+else
+{
+    <section class="lt-panel lt-demo-intro" aria-labelledby="demo-intro-title">
+        <h2 id="demo-intro-title">@L["Demo.Intro.Title"]</h2>
+        <ul class="lt-demo-points">
+            <li><Icon Name="circle-play" Size="18" /> <span>@L["Demo.Intro.Auto"]</span></li>
+            <li><Icon Name="circle-pause" Size="18" /> <span>@L["Demo.Intro.Controls"]</span></li>
+            <li><Icon Name="database" Size="18" /> <span>@L["Demo.Intro.Data"]</span></li>
+            <li><Icon Name="book-open" Size="18" /> <span>@L["Demo.Intro.Words"]</span></li>
+        </ul>
+        <label class="lt-demo-speed" for="demo-page-speed">
+            <span>@L["Demo.Speed"]</span>
+            <select id="demo-page-speed" value="@Player.Speed.ToString(CultureInfo.InvariantCulture)" @onchange="ChangeSpeed">
+                @foreach (double speed in DemoPlayer.Speeds)
+                {
+                    <option value="@speed.ToString(CultureInfo.InvariantCulture)">@L[$"Demo.Speed.{speed.ToString("0.##", CultureInfo.InvariantCulture)}"]</option>
+                }
+            </select>
+        </label>
+    </section>
+
+    <h2 id="demo-chapters-title" class="lt-demo-chapters-title">@L["Demo.Chapters"]</h2>
+    <ol class="lt-demo-chapters" aria-labelledby="demo-chapters-title">
+        @for (int i = 0; i < Player.Chapters.Count; i++)
+        {
+            int index = i;
+            DemoChapter chapter = Player.Chapters[i];
+            <li class="lt-demo-chapter-card @(Player.IsActive && Player.ChapterIndex == index ? "is-current" : null)">
+                <span class="lt-demo-chapter-icon" aria-hidden="true"><Icon Name="@chapter.Icon" Size="20" /></span>
+                <div>
+                    <h3>@(index + 1). @L[chapter.TitleKey]</h3>
+                    <p>@L[chapter.SummaryKey]</p>
+                </div>
+                @if (chapter.ContinuesPrevious)
+                {
+                    <p class="lt-demo-continues" id="demo-chapter-@chapter.Id-continues">@L["Demo.Continues"]</p>
+                }
+                else
+                {
+                    <button type="button" class="lettra-button is-ghost" id="demo-chapter-@chapter.Id"
+                            aria-label="@string.Format(CultureInfo.CurrentCulture, L["Demo.StartAt.Label"], L[chapter.TitleKey])"
+                            @onclick="() => Start(index)">@L["Demo.StartAt"]</button>
+                }
+            </li>
+        }
+    </ol>
+}
+
+@code {
+    private bool? _available;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Player.Changed += OnChanged;
+        _available = OptionalDemo.Value is { } demo && (await demo.GetStatusAsync(CancellationToken.None)).Value?.Available == true;
+    }
+
+    private void OnChanged(object? sender, EventArgs e) => _ = InvokeAsync(StateHasChanged);
+
+    // La lecture dure toute la démo et change d'écran : elle n'est pas attendue ici.
+    private void Start(int chapter) => _ = Player.StartAsync(chapter);
+
+    private void ChangeSpeed(ChangeEventArgs e)
+    {
+        if (double.TryParse(e.Value?.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out double speed))
+        {
+            Player.SetSpeed(speed);
+        }
+    }
+
+    public void Dispose() => Player.Changed -= OnChanged;
+}

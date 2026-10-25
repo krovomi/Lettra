@@ -8,7 +8,7 @@ namespace Lettra.Application.Features.Integrity;
 
 /// <summary>
 /// Contrôle d'intégrité et clôtures du dossier courant, partagés par les cas d'usage (avec les droits de
-/// l'utilisateur) et par le Worker (passe de nuit sur tous les dossiers). Chaque contrôle publie les deux règles
+/// l'utilisateur) et par le Worker (passe quotidienne sur tous les dossiers). Chaque contrôle publie les deux règles
 /// d'alerte de dossier : déclenchée si le constat existe, levée sinon.
 /// </summary>
 public sealed partial class DossierIntegrityService(
@@ -86,7 +86,7 @@ public sealed partial class DossierIntegrityService(
     }
 
     /// <summary>
-    /// Fait tourner les clés si la version en vigueur a plus de <paramref name="maxAge"/> (passe de nuit). Rien tant
+    /// Fait tourner les clés si la version en vigueur a plus de <paramref name="maxAge"/> (passe quotidienne). Rien tant
     /// que le dossier n'a pas de clé : elle naît avec la première entrée.
     /// </summary>
     public async Task<Result<IntegrityKeyVersion?>> RotateKeysIfDueAsync(TimeSpan maxAge, CancellationToken cancellationToken)

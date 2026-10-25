@@ -21,10 +21,12 @@ Lettra : « 15 128,00 » se lisait « 15128,00 ».
 
 ## Comment c'est fait
 
-- **Une seule culture pour l'écran** : `LettraCultures.Resolve` choisit la langue (celle du navigateur ou du système si
-  elle est prise en charge, sinon le français), `LettraCultures.Apply` la pose pour les textes et les formats
-  (`Localization/SharedResource.cs`). C'est le point d'entrée à appeler pour changer de langue (préférence du compte,
-  par exemple). `Apply` passe la culture par `LettraCultures.ForScreen`, qui remplace l'espace fine des milliers par
+- **Une seule culture pour l'écran** : `LettraCultures.Resolve` choisit la langue (celle choisie dans « Mes
+  préférences », sinon celle du navigateur ou du système, si elle est prise en charge ; sinon le français),
+  `LettraCultures.Apply` la pose pour les textes et les formats (`Localization/SharedResource.cs`). C'est le point
+  d'entrée à appeler pour changer de langue : « Mes préférences » passe par lui (`ScreenLanguage`, voir
+  [preferences-utilisateur.md](preferences-utilisateur.md)) ; l'application MAUI part encore de la langue du système
+  au démarrage. `Apply` passe la culture par `LettraCultures.ForScreen`, qui remplace l'espace fine des milliers par
   une espace insécable ; les PDF, exports et l'API ne passent pas par là et gardent leurs formats.
 - **`DateField`** (`Components/Dates`) remplace tous les champs de date. Il affiche la date courte de la culture, lit
   la saisie dans l'ordre de la langue et ouvre un calendrier localisé. Il se lie comme un champ Blazor :

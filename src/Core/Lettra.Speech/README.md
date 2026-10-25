@@ -48,8 +48,10 @@ démarrage dans le volume `/models` et vérifié par empreinte. L'image publique
 chargement du modèle sur les machines de la CI.
 
 Autres réglages : `Lettra:Speech:Languages` (`fr`, `en`), `Lettra:Speech:MaxSeconds` (30). Une adresse de serveur
-Whisper publique est **refusée au démarrage** : seuls les noms de service, `*.svc`, `*.cluster.local`, `*.internal`,
-`*.local`, `*.lan` et les adresses privées passent.
+Whisper publique est **refusée au démarrage** : seuls les noms de service, `*.svc` (et `*.svc.*`), `*.cluster.local`,
+`*.internal`, `*.local`, `*.lan`, `*.home.arpa`, `*.localhost` et les adresses privées passent, sauf avec
+`Lettra:Speech:WhisperServer:AllowPublicEndpoint=true` (serveur Whisper du cabinet joint par un nom public, jamais un
+service tiers).
 
 Sur le poste, le modèle (`base` par défaut, 142 Mio ; `tiny` et `small` possibles) est téléchargé une fois depuis le
 dépôt public de whisper.cpp, puis vérifié par l'empreinte SHA-1 publiée **et** par le SHA-256 épinglé dans

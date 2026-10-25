@@ -48,7 +48,7 @@ internal static class AccentInsensitiveSearchScenarios
         {
             LettraDbContext db = await scope.ServiceProvider.GetRequiredService<TenantDbSession>().GetAsync(default);
             bool sqlServer = provider == DatabaseProvider.SqlServer;
-            foreach ((string table, string column) in new[] { ("Customers", "Name"), ("Suppliers", "Name"), ("CatalogItems", "Designation") })
+            foreach ((string table, string column) in new[] { ("Customers", "Name"), ("Suppliers", "Name"), ("CatalogItems", "Designation"), ("Payments", "CustomerName") })
             {
                 string quoted = sqlServer ? $"[{table}]" : $"\"{table}\"";
                 string key = sqlServer ? "[SearchKey]" : "\"SearchKey\"";

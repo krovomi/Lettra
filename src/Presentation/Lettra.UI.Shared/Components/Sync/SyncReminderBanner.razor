@@ -1,6 +1,6 @@
 @* Rappel croissant (ADR-0008) : une facture validée sur le poste ne part à la plateforme agréée qu'après la synchronisation. *@
 @implements IDisposable
-@inject IServiceProvider Services
+@inject Optional<ISyncCenter> OptionalSync
 @inject IStringLocalizer<SharedResource> L
 
 @if (_sync?.Current.Reminder is { } reminder && reminder != SyncReminderLevel.None)
@@ -18,7 +18,7 @@
 
     protected override void OnInitialized()
     {
-        _sync = Services.GetService(typeof(ISyncCenter)) as ISyncCenter;
+        _sync = OptionalSync.Value;
         if (_sync is not null)
         {
             _sync.Changed += OnChanged;

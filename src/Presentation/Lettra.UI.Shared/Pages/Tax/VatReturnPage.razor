@@ -171,9 +171,7 @@ else
 
     /// <summary>Par défaut, la période qui vient de se terminer : c'est elle qu'on déclare ce mois-ci.</summary>
     private DateOnly Requested =>
-        DateOnly.TryParseExact(Date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly day)
-            ? day
-            : new DateOnly(Today.Year, Today.Month, 1).AddDays(-1);
+        DateText.ParseIso(Date) ?? new DateOnly(Today.Year, Today.Month, 1).AddDays(-1);
 
     protected override void OnInitialized()
     {
@@ -220,7 +218,7 @@ else
         }
     }
 
-    private string Href(DateOnly date) => $"tax/vat?date={TaxText.Iso(date)}";
+    private string Href(DateOnly date) => $"tax/vat?date={DateText.ToIso(date)}";
 
     private void Toggle(string id)
     {

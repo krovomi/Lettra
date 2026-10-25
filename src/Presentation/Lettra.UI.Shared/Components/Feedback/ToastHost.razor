@@ -9,6 +9,10 @@
         <div class="lt-toast is-@toast.Kind.ToString().ToLowerInvariant()" @key="toast.Id">
             <Icon Name="@IconOf(toast.Kind)" Size="18" />
             <span class="lt-toast-text">@toast.Message</span>
+            @if (toast.Action is { } action)
+            {
+                <button type="button" class="lt-toast-action" @onclick="() => Toasts.RunActionAsync(toast)"><Icon Name="undo-2" Size="16" />@action.Label</button>
+            }
             <button type="button" class="lt-icon-button" aria-label="@L["Toast.Close"]" title="@L["Toast.Close"]" @onclick="() => Toasts.Dismiss(toast.Id)">
                 <Icon Name="x" Size="16" />
             </button>

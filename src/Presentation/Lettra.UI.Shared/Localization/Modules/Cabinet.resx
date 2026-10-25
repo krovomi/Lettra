@@ -40,7 +40,7 @@
   <data name="Cabinet.Review" xml:space="preserve"><value>Revue</value></data>
   <data name="Cabinet.Review.Title" xml:space="preserve"><value>Ouvrir la revue du mois de ce dossier</value></data>
   <data name="Cabinet.AllClear" xml:space="preserve"><value>Tout est à jour</value></data>
-  <data name="Cabinet.Footnote" xml:space="preserve"><value>Les chiffres sont recalculés chaque nuit, et quand vous cliquez sur « Actualiser ». Ce ne sont que des compteurs : aucun montant ni nom de client ne sort du dossier.</value></data>
+  <data name="Cabinet.Footnote" xml:space="preserve"><value>Les chiffres sont calculés peu après le démarrage du serveur, puis toutes les 24 heures, et quand vous cliquez sur « Actualiser ». Ce ne sont que des compteurs : aucun montant ni nom de client ne sort du dossier.</value></data>
   <data name="Cabinet.Indicator.factures.retard" xml:space="preserve"><value>Factures en retard</value></data>
   <data name="Cabinet.Indicator.factures.retard.Due" xml:space="preserve"><value>depuis le {0}</value></data>
   <data name="Cabinet.Indicator.pa.rejets" xml:space="preserve"><value>Rejets plateforme</value></data>

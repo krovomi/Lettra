@@ -1,8 +1,8 @@
 # Préférences de l'utilisateur
 
 Lettra retient ce que chaque utilisateur règle ou choisit souvent, pour alléger la saisie et garder sous la main ce
-qui sert au quotidien. Tout se voit, se règle et s'efface dans **Paramètres › Mes préférences**
-(`/settings/preferences`, menu « Paramètres », palette Ctrl+K « Mes préférences »).
+qui sert au quotidien. Tout se voit, se règle et s'efface dans **Pilotage › Mes préférences**
+(`/settings/preferences`, section « Pilotage » du menu, palette Ctrl+K « Mes préférences »).
 
 ![Mes préférences sur ordinateur](captures/preferences/mes-preferences.light.1440.png)
 
@@ -39,11 +39,11 @@ versionné).
 - **« Retenir par défaut »** apparaît sous les conditions de paiement et les mentions dès que la valeur saisie diffère
   de celle retenue ; un clic la garde pour les prochaines pièces du dossier (toaster de confirmation).
 - **Suggestions** : les clients et articles les plus choisis (puis les plus récents) remontent en tête des listes. La
-  case « Classer les suggestions selon mon usage » le coupe ; « Oublier pour ce dossier » et « Oublier partout »
-  effacent les choix comptés.
+  case « Mettre en tête les clients et articles que je choisis le plus souvent » le coupe ; « Oublier pour ce dossier »
+  et « Oublier partout » effacent les choix comptés.
 - **Reprendre où j'en étais** : la carte de l'accueil et la palette (Ctrl+K, vide) proposent les cinq dernières pièces
   ouvertes dans le dossier. Une pièce supprimée ou devenue inaccessible disparaît.
-- **Réinitialiser mes préférences** (avec confirmation) remet tout aux valeurs de départ, sur tous les appareils.
+- **Tout réinitialiser** (avec confirmation) remet tout aux valeurs de départ, sur tous les appareils.
 
 ## Données personnelles
 
@@ -79,12 +79,13 @@ l'appareil retenait (menu, dossiers, thème, densité, valeurs de saisie) y est 
   par `MainLayout`), `EntryPreferences` (ce que lisent les écrans de saisie), `RecentDocuments`, composants
   `RememberDefault` et `ResumeWork`.
 - **Langue** : `ScreenLanguage` retient la langue sur l'appareil (clé `lettra.langue`) et recharge la page une fois,
-  car le navigateur ne charge les textes d'une langue qu'au démarrage. L'hôte la pose avant le premier rendu avec
-  `ScreenLanguage.ApplyStoredAsync`.
+  car le navigateur ne charge les textes d'une langue qu'au démarrage. L'hôte du navigateur (`Lettra.Web`) la pose avant
+  le premier rendu avec `ScreenLanguage.ApplyStoredAsync` ; l'application MAUI ne l'appelle pas encore et démarre dans
+  la langue du système.
 
 ## Tester
 
-- Ouvrir **Paramètres › Mes préférences**, choisir l'unité « Heure », une validité de 45 jours et des mentions de
+- Ouvrir **Pilotage › Mes préférences**, choisir l'unité « Heure », une validité de 45 jours et des mentions de
   devis, enregistrer : un nouveau devis les reprend.
 - Saisir d'autres conditions de paiement dans une facture : « Retenir par défaut » apparaît dessous.
 - Choisir plusieurs fois le même client : il passe en tête de la liste des clients.

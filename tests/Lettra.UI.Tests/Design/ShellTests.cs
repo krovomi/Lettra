@@ -39,6 +39,7 @@ public sealed class ShellTests : BunitContext
         Services.AddCabinetFakes();
         Services.AddSingleton<IInvoicesGateway>(_invoices);
         Services.AddSingleton<IQuotesGateway>(_quotes);
+        Services.AddFakeBillingDashboard();
         Services.AddSingleton<ISessionGateway>(new FakeSessionGateway(new SessionResponse(true, SessionModeDto.Local, "Claire Martin", true)));
         Services.AddSingleton<TimeProvider>(new ManualClock(new DateTimeOffset(2026, 10, 16, 12, 0, 0, TimeSpan.Zero)));
         LettraCultures.Apply(CultureInfo.GetCultureInfo("fr-FR"));
@@ -58,7 +59,7 @@ public sealed class ShellTests : BunitContext
         IRenderedComponent<MainLayout> coque = Coque();
 
         Libelles(coque.FindAll(".lt-sidebar .lt-nav-link")).Should().Equal(
-            "Accueil", "Vue cabinet", "Devis", "Factures", "Avoirs", "Factures récurrentes", "Clients", "Fournisseurs", "Catalogue", "Encaissements", "Rapprochement bancaire", "Relances", "Météo des paiements", "Journal et balance", "FEC", "Déclarations", "Revue du dossier", "Tableaux de bord", "Alertes", "Entreprise", "Mes préférences", "Serveur du cabinet");
+            "Accueil", "Vue cabinet", "Démo commentée", "Devis", "Factures", "Avoirs", "Factures récurrentes", "Clients", "Fournisseurs", "Catalogue", "Encaissements", "Rapprochement bancaire", "Relances", "Météo des paiements", "Journal et balance", "FEC", "Déclarations", "Revue du dossier", "Tableaux de bord", "Alertes", "Entreprise", "Mes préférences", "Serveur du cabinet");
         coque.FindAll(".lt-sidebar .lt-nav-group").Select(g => g.TextContent).Should().Equal("Ventes", "Tiers", "Comptabilité", "Pilotage");
         Libelles(coque.FindAll(".lt-tabbar .lt-tab")).Should().Equal("Accueil", "Devis", "Factures", "Clients", "Plus");
         coque.Find(".lt-skip").GetAttribute("href").Should().Be("#main");
@@ -75,7 +76,7 @@ public sealed class ShellTests : BunitContext
         coque.Find("#tab-more").GetAttribute("aria-expanded").Should().Be("true");
         IElement feuille = coque.Find("#more-sheet");
         feuille.GetAttribute("role").Should().Be("dialog");
-        Libelles(feuille.QuerySelectorAll(".lt-nav-link")).Should().Equal("Vue cabinet", "Avoirs", "Factures récurrentes", "Fournisseurs", "Catalogue", "Encaissements", "Rapprochement bancaire", "Relances", "Météo des paiements", "Journal et balance", "FEC", "Déclarations", "Revue du dossier", "Tableaux de bord", "Alertes", "Entreprise", "Mes préférences", "Serveur du cabinet");
+        Libelles(feuille.QuerySelectorAll(".lt-nav-link")).Should().Equal("Vue cabinet", "Démo commentée", "Avoirs", "Factures récurrentes", "Fournisseurs", "Catalogue", "Encaissements", "Rapprochement bancaire", "Relances", "Météo des paiements", "Journal et balance", "FEC", "Déclarations", "Revue du dossier", "Tableaux de bord", "Alertes", "Entreprise", "Mes préférences", "Serveur du cabinet");
         feuille.QuerySelectorAll("input[type=radio][name^=lettra-theme]").Should().HaveCount(5);
 
         feuille.KeyDown("Escape");

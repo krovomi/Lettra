@@ -196,7 +196,7 @@ public sealed class CustomersPageTests : BunitContext
     public CustomersPageTests()
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
-        ExplorerSettings.SearchDelay = TimeSpan.FromMilliseconds(1);
+        Services.AddSingleton(new ExplorerSettings { SearchDelay = TimeSpan.FromMilliseconds(1) });
         // Champs assistés (code postal, ville) : module chargé à la demande, sans effet sans navigateur.
         JSInterop.SetupModule(AssistModule.Path).Mode = JSRuntimeMode.Loose;
         Services.AddLettraUi();

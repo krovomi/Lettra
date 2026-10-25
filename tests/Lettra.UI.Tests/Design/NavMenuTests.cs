@@ -35,6 +35,7 @@ public sealed class NavMenuTests : BunitContext
         Services.AddCabinetFakes();
         Services.AddSingleton<IInvoicesGateway>(new FakeInvoicesGateway());
         Services.AddSingleton<IQuotesGateway>(new FakeQuotesGateway());
+        Services.AddFakeBillingDashboard();
         Services.AddSingleton<ISessionGateway>(new FakeSessionGateway(new SessionResponse(true, SessionModeDto.Local, "Claire Martin", true)));
         Services.AddSingleton<TimeProvider>(new ManualClock(new DateTimeOffset(2026, 10, 16, 12, 0, 0, TimeSpan.Zero)));
         LettraCultures.Apply(CultureInfo.GetCultureInfo("fr-FR"));

@@ -25,7 +25,7 @@ public sealed class FacturXTests
         new DocumentLineRequest { Designation = "Guide « TVA »", Quantity = 2, UnitPriceExclTax = 19.99m, VatRateCode = "FR-5.5", Kind = CatalogItemKindDto.Good });
 
     private static byte[] FacturX(InvoiceResponse invoice) => new PdfDocumentRenderer().Render(
-        PrintableMapper.FromInvoice(invoice, Company, CultureInfo.GetCultureInfo("fr-FR")),
+        PrintableMapper.FromInvoice(invoice, Company, CultureInfo.GetCultureInfo("fr-FR"), TimeProvider.System),
         [PdfAttachment.FacturX(EInvoiceSerializer.Write(invoice, Company, EInvoiceFormatDto.Cii))]);
 
     [Fact]
@@ -62,7 +62,7 @@ public sealed class FacturXTests
     [Fact]
     public void Sans_XML_Factur_X_le_PDF_ne_se_declare_pas_Factur_X()
     {
-        string pdf = Encoding.Latin1.GetString(new PdfDocumentRenderer().Render(PrintableMapper.FromInvoice(Invoice(), Company, CultureInfo.GetCultureInfo("fr-FR"))));
+        string pdf = Encoding.Latin1.GetString(new PdfDocumentRenderer().Render(PrintableMapper.FromInvoice(Invoice(), Company, CultureInfo.GetCultureInfo("fr-FR"), TimeProvider.System)));
 
         pdf.Should().NotContain("factur-x");
     }

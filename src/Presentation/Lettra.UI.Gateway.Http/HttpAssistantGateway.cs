@@ -11,18 +11,11 @@ namespace Lettra.UI.Gateway.Http;
 /// <summary>Route <c>/assistant</c> de l'API : la réponse est lue ligne par ligne (<c>application/x-ndjson</c>) dès qu'elle arrive.</summary>
 internal sealed class HttpAssistantGateway(HttpClient http) : IAssistantGateway
 {
-    public async Task<OperationResult<AssistantStatusResponse>> GetStatusAsync(CancellationToken cancellationToken)
-    {
-        try
-        {
-            using HttpResponseMessage response = await http.GetAsync(new Uri("api/v1/assistant/statut", UriKind.Relative), cancellationToken).ConfigureAwait(false);
-            return await response.ToOperationResultAsync(ContractsJsonContext.Default.AssistantStatusResponse, cancellationToken).ConfigureAwait(false);
-        }
-        catch (Exception e) when (HttpCalls.IsUnreachable(e, cancellationToken))
-        {
-            return OperationResult<AssistantStatusResponse>.Failure(ErrorCodes.Api.Unreachable);
-        }
-    }
+    public Task<OperationResult<AssistantStatusResponse>> GetStatusAsync(CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.GetAsync(new Uri("api/v1/assistant/statut", UriKind.Relative), ct),
+            ContractsJsonContext.Default.AssistantStatusResponse,
+            cancellationToken);
 
     public async IAsyncEnumerable<AssistantEvent> AskAsync(AskAssistantRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
     {

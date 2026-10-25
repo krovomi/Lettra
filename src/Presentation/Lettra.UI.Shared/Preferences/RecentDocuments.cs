@@ -5,8 +5,8 @@ using Lettra.Contracts.Preferences;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Shared.Components.Palette;
 using Lettra.UI.Shared.Localization;
+using Lettra.UI.Shared.Services;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 
 namespace Lettra.UI.Shared.Preferences;
@@ -19,7 +19,11 @@ public sealed record RecentDocument(UsageKindDto Kind, Guid Id, string Label, st
 /// identifiants : numéro et client sont relus dans le dossier, une fois par pièce et par session. Une pièce supprimée
 /// ou devenue inaccessible disparaît de la liste.
 /// </summary>
-public sealed class RecentDocuments(IServiceProvider services, IStringLocalizer<SharedResource> localizer)
+public sealed class RecentDocuments(
+    Optional<EntryPreferences> preferences,
+    Optional<IInvoicesGateway> invoices,
+    Optional<IQuotesGateway> quotes,
+    IStringLocalizer<SharedResource> localizer)
 {
     public const int DefaultCount = 5;
 
@@ -27,7 +31,7 @@ public sealed class RecentDocuments(IServiceProvider services, IStringLocalizer<
 
     public async Task<IReadOnlyList<RecentDocument>> ListAsync(int count = DefaultCount, CancellationToken cancellationToken = default)
     {
-        if (EntryPreferences.From(services) is not { DossierId: not null } entry)
+        if (preferences.Value is not { DossierId: not null } entry)
         {
             return [];
         }
@@ -73,12 +77,12 @@ public sealed class RecentDocuments(IServiceProvider services, IStringLocalizer<
 
     private async Task<RecentDocument?> InvoiceAsync(Guid id, CancellationToken cancellationToken)
     {
-        if (services.GetService<IInvoicesGateway>() is not { } invoices)
+        if (invoices.Value is not { } gateway)
         {
             return null;
         }
 
-        OperationResult<InvoiceResponse> read = await invoices.GetAsync(id, cancellationToken).ConfigureAwait(false);
+        OperationResult<InvoiceResponse> read = await gateway.GetAsync(id, cancellationToken).ConfigureAwait(false);
         return read.Value is { } invoice
             ? new(UsageKindDto.Invoice, id, Label("Recent.Invoice", invoice.Number, invoice.Customer.Name), $"invoices/{id}")
             : null;
@@ -86,12 +90,12 @@ public sealed class RecentDocuments(IServiceProvider services, IStringLocalizer<
 
     private async Task<RecentDocument?> QuoteAsync(Guid id, CancellationToken cancellationToken)
     {
-        if (services.GetService<IQuotesGateway>() is not { } quotes)
+        if (quotes.Value is not { } gateway)
         {
             return null;
         }
 
-        OperationResult<QuoteResponse> read = await quotes.GetAsync(id, cancellationToken).ConfigureAwait(false);
+        OperationResult<QuoteResponse> read = await gateway.GetAsync(id, cancellationToken).ConfigureAwait(false);
         return read.Value is { } quote
             ? new(UsageKindDto.Quote, id, Label("Recent.Quote", quote.Number, quote.Customer.Name), $"quotes/{id}")
             : null;

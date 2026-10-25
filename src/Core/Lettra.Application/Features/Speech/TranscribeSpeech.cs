@@ -25,9 +25,9 @@ public static class SpeechErrors
 
     public static Error Disabled => new(DisabledCode, ErrorKind.Forbidden);
 
-    public static Error EngineUnavailable => new(EngineUnavailableCode, ErrorKind.Unexpected);
+    public static Error EngineUnavailable => Error.Unavailable(EngineUnavailableCode);
 
-    public static Error ModelUnavailable => new(ModelUnavailableCode, ErrorKind.Unexpected);
+    public static Error ModelUnavailable => Error.Unavailable(ModelUnavailableCode);
 
     public static Error NothingHeard => Error.Validation(NothingHeardCode);
 }

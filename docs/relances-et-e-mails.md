@@ -180,6 +180,8 @@ Codes d'erreur : `Reminders.InvoiceNotOverdue`, `Reminders.CustomerEmailMissing`
 - Facture des pénalités de retard (Lettra les cite seulement).
 - Balance âgée et DSO.
 - Retour des e-mails non distribués (rebonds) et désinscription d'un client des relances automatiques.
+- Compte Keycloak de la personne invitée : l'invitation l'ajoute dans Lettra et lui écrit, mais ne crée pas son compte
+  de connexion.
 - Les e-mails des factures récurrentes et du kit contrôle fiscal (autres parties de la vague 7) utiliseront le même port.
 
 ## Tests

@@ -4,6 +4,11 @@
        d'usage, codes d'erreur et ressources FR/EN. -->
   <ItemGroup>
     <ProjectReference Include="..\..\src\Composition\Lettra.Bootstrap\Lettra.Bootstrap.csproj" />
+    <!-- Hôtes et jeu de démonstration, pour leurs règles (HostRulesTests). Web (WebAssembly) et MAUI (CI seule) n'y sont
+         pas : l'API référence Web, ses types sont vus à travers elle. -->
+    <ProjectReference Include="..\..\src\Composition\Lettra.DemoData\Lettra.DemoData.csproj" />
+    <ProjectReference Include="..\..\src\Hosts\Lettra.Api\Lettra.Api.csproj" />
+    <ProjectReference Include="..\..\src\Hosts\Lettra.Worker\Lettra.Worker.csproj" />
     <ProjectReference Include="..\..\src\Infrastructure\Lettra.Infrastructure.Speech.OnDevice\Lettra.Infrastructure.Speech.OnDevice.csproj" />
     <ProjectReference Include="..\..\src\Modules\Sync\Lettra.Sync.Client\Lettra.Sync.Client.csproj" />
     <ProjectReference Include="..\..\src\Presentation\Lettra.UI.Shared\Lettra.UI.Shared.csproj" />

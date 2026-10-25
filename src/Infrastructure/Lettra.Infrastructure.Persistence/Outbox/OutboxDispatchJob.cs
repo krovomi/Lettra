@@ -12,7 +12,7 @@ using Microsoft.Extensions.Options;
 
 namespace Lettra.Infrastructure.Persistence.Outbox;
 
-public sealed class OutboxDispatchJobOptions
+public sealed class OutboxDispatchJobOptions : IPeriodicJobOptions
 {
     public const string SectionName = "Lettra:Outbox:Job";
 
@@ -134,7 +134,7 @@ public static class OutboxRegistration
         ArgumentNullException.ThrowIfNull(configuration);
         ArgumentNullException.ThrowIfNull(activeDossiers);
         services.AddOptions<OutboxOptions>().Bind(configuration.GetSection(OutboxOptions.SectionName));
-        services.AddOptions<OutboxDispatchJobOptions>().Bind(configuration.GetSection(OutboxDispatchJobOptions.SectionName));
+        services.AddOptions<OutboxDispatchJobOptions>().Bind(configuration.GetSection(OutboxDispatchJobOptions.SectionName)).ValidatePeriodicJob(OutboxDispatchJobOptions.SectionName);
         services.TryAddSingleton(new OutboxDossierSource(activeDossiers));
         services.AddSingleton<OutboxDispatchJob>();
         services.AddHostedService(sp => sp.GetRequiredService<OutboxDispatchJob>());

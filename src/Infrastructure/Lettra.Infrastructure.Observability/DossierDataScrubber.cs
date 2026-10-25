@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Text.RegularExpressions;
 
 namespace Lettra.Infrastructure.Observability;
@@ -10,6 +11,10 @@ namespace Lettra.Infrastructure.Observability;
 internal static partial class DossierDataScrubber
 {
     public const string Mask = "***";
+
+    // Chaque motif sensible contient un « @ » ou un chiffre : une valeur qui n'en a aucun ne passe pas par l'expression
+    // régulière (recherche vectorisée, quelle que soit sa longueur).
+    private static readonly SearchValues<char> SensitiveMarkers = SearchValues.Create("@0123456789");
 
     /// <summary>Attributs qui peuvent porter une saisie et ne sortent jamais, quelle que soit leur valeur.</summary>
     public static readonly IReadOnlySet<string> DroppedAttributes = new HashSet<string>(StringComparer.Ordinal)
@@ -44,9 +49,11 @@ internal static partial class DossierDataScrubber
         return end < 0 ? url : url[..end];
     }
 
-    public static string Scrub(string value) => Scrub(value, SensitivePattern());
+    public static string Scrub(string value) => CannotMatch(value) ? value : Scrub(value, SensitivePattern());
 
-    public static bool LooksSensitive(string value) => LooksSensitive(value, SensitivePattern());
+    public static bool LooksSensitive(string value) => !CannotMatch(value) && LooksSensitive(value, SensitivePattern());
+
+    private static bool CannotMatch(string value) => value is null || !value.AsSpan().ContainsAny(SensitiveMarkers);
 
     // Délai dépassé (runner chargé, très longue valeur) : on masque tout plutôt que de laisser passer la valeur ou
     // de faire échouer l'appelant (une migration qui journalise son SQL, par exemple).

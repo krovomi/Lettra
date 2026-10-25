@@ -11,6 +11,10 @@ internal sealed class HttpFecGateway(HttpClient http) : IFecGateway
     public Task<OperationResult<FecDocument>> ExportAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken) =>
         HttpFileDownloads.GetAsync(http, $"api/v1/exports/fec?from={from:yyyy-MM-dd}&to={to:yyyy-MM-dd}", "FEC.txt", (name, content) => new FecDocument(name, content), cancellationToken);
 
+    public Task<OperationResult<FecDocument>> ExportForAsync(AccountingSoftwareDto software, DateOnly from, DateOnly to, CancellationToken cancellationToken) =>
+        HttpFileDownloads.GetAsync(
+            http, $"api/v1/exports/entries?software={software}&from={from:yyyy-MM-dd}&to={to:yyyy-MM-dd}", "ecritures.csv", (name, content) => new FecDocument(name, content), cancellationToken);
+
     // Corps brut, comme le fichier sorti du logiciel comptable.
     public Task<OperationResult<FecValidationResponse>> ValidateAsync(
         string fileName, byte[] content, DateOnly? from, DateOnly? to, CancellationToken cancellationToken)

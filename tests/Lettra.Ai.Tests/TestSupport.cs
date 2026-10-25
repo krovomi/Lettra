@@ -13,6 +13,7 @@ using Lettra.Domain.SharedKernel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging.Testing;
 
 namespace Lettra.Ai.Tests;
 
@@ -105,7 +106,8 @@ internal sealed class AssistantHarness : IAsyncDisposable
         ScriptedTurnsEngine engine,
         Dictionary<string, string?>? settings = null,
         HttpMessageHandler? webHandler = null,
-        DateTimeOffset? now = null)
+        DateTimeOffset? now = null,
+        bool namedEntityDetection = false)
     {
         Engine = engine;
         IConfiguration configuration = new ConfigurationBuilder().AddInMemoryCollection(settings ?? []).Build();
@@ -122,6 +124,13 @@ internal sealed class AssistantHarness : IAsyncDisposable
         services.AddSingleton<ICommandDispatcher>(Dispatcher);
         services.AddSingleton<IAiAuditLog, InMemoryAiAuditLog>();
         services.AddSingleton<IAiSettingsStore>(Settings);
+        services.AddFakeLogging();
+        if (namedEntityDetection)
+        {
+            // Le repérage des noms propres n'existe pas encore : ce double ouvre le point 1 pour tester ses outils.
+            services.AddSingleton<INamedEntityDetection>(new AvailableNamedEntityDetection());
+        }
+
         services.AddAiOrchestration(configuration);
         services.AddKeyedSingleton<IAiEngine>(AiEngineKind.ClaudeEu, engine);
         if (webHandler is not null)
@@ -161,6 +170,9 @@ internal sealed class AssistantHarness : IAsyncDisposable
 
         return settings;
     }
+
+    /// <summary>Les journaux techniques écrits pendant le test.</summary>
+    public FakeLogCollector Logs => _services.GetFakeLogCollector();
 
     public T Get<T>()
         where T : notnull => _services.GetRequiredService<T>();
@@ -255,4 +267,9 @@ internal sealed class InMemoryAiSettingsStore : IAiSettingsStore
         _rows[organisation] = row;
         return ValueTask.FromResult<Lettra.Domain.Common.Result<StoredAiSettings>>(row);
     }
+}
+
+internal sealed class AvailableNamedEntityDetection : INamedEntityDetection
+{
+    public bool IsAvailable => true;
 }

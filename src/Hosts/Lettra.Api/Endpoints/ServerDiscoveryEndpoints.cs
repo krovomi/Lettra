@@ -1,6 +1,8 @@
+using Lettra.Api.Infrastructure;
 using Lettra.Api.Security;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Identity;
+using Lettra.Domain.Common;
 using Lettra.Infrastructure.Identity.Oidc;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
@@ -55,9 +57,6 @@ internal static class ServerDiscoveryEndpoints
         return Uri.TryCreate(authority, UriKind.Absolute, out Uri? realm)
             ? TypedResults.Ok(new ServerDiscoveryResponse(ServerDiscoveryResponse.LettraProduct, realm.ToString().TrimEnd('/'), clientId))
             // Keycloak injoignable depuis l'API : l'appareil ne pourrait pas non plus s'y connecter.
-            : TypedResults.Problem(
-                statusCode: StatusCodes.Status503ServiceUnavailable,
-                title: ErrorCodes.Api.Unreachable,
-                extensions: new Dictionary<string, object?>(StringComparer.Ordinal) { ["code"] = ErrorCodes.Api.Unreachable });
+            : new[] { Error.Unavailable(ErrorCodes.Api.Unreachable) }.ToProblem();
     }
 }

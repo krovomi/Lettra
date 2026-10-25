@@ -11,6 +11,7 @@ public static partial class ErrorCodes
         public const string SirenMissing = "Fec.SirenMissing";
         public const string ExportInvalid = "Fec.ExportInvalid";
         public const string FileTooLarge = "Fec.FileTooLarge";
+        public const string SoftwareUnknown = "Fec.SoftwareUnknown";
 
         // Constats du validateur.
         public const string FileNameInvalid = "Fec.FileNameInvalid";

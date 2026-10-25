@@ -24,7 +24,7 @@ internal sealed class EfBillingKpiReader(TenantDbSession session) : IBillingKpiR
             .ToListAsync(cancellationToken).ConfigureAwait(false);
         var quotes = await db.Set<Quote>().AsNoTracking()
             .Where(q => q.Status != QuoteStatus.Draft && q.IssueDate != null)
-            .Select(q => new { q.Status, q.IssueDate, q.ValidUntil })
+            .Select(q => new { q.Status, q.IssueDate, q.ValidUntil, q.TotalExclTax })
             .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         // Encaissements et refus déclarés par la plateforme agréée, comme la vue cabinet (factures en retard).
@@ -47,7 +47,7 @@ internal sealed class EfBillingKpiReader(TenantDbSession session) : IBillingKpiR
                     i.Kind, i.IssueDate!.Value, i.DueDate, i.CustomerId.Value, i.TotalExclTax, i.TotalInclTax, i.CreditedInclTax,
                     Math.Max(i.PaidInclTax, collected.GetValueOrDefault(i.Id.Value)), refused.Contains(i.Id.Value))),
             ],
-            [.. quotes.Select(q => new QuoteKpiFact(q.Status, q.IssueDate!.Value, q.ValidUntil))]);
+            [.. quotes.Select(q => new QuoteKpiFact(q.Status, q.IssueDate!.Value, q.ValidUntil, q.TotalExclTax))]);
     }
 }
 

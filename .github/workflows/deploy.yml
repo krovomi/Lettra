@@ -19,6 +19,10 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  # SDK .NET épinglé : le SDK 10.0.403 (runtime 10.0.14) est annoncé par Microsoft mais ses fichiers ne se
+  # téléchargent pas (HTTP 409), et sans version chaque job prend le dernier SDK. global.json reste ouvert
+  # (10.0.100 et suivants) pour les postes de développement. À relever quand le SDK suivant s'installe.
+  DOTNET_SDK_VERSION: 10.0.402
   PROMETHEUS_VERSION: 3.6.0
   ALERTMANAGER_VERSION: 0.28.1
   KUBECONFORM_VERSION: 0.7.0
@@ -57,7 +61,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-dotnet@v5
         with:
-          global-json-file: global.json
+          dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
       - name: Prometheus et Alertmanager
         run: |
           mkdir -p "$HOME/bin"
@@ -143,12 +147,26 @@ jobs:
           set -a; . ../.env; set +a
           SORTIE="$SORTIE/localhost" node parcours.mjs premier
 
+      # Démo commentée (docs/demo-commentee.md) : le parcours automatique se joue en entier, sans étape bloquée, sur
+      # ordinateur en français et sur téléphone en anglais (TOTP déjà enrôlé par l'étape précédente).
+      - name: Démo commentée jouée de bout en bout (1440 px français, 390 px anglais)
+        working-directory: deploy/demo/e2e
+        run: |
+          set -a; . ../.env; set +a
+          signaler() { echo "::error title=Démo commentée::$(tail -n 40 "$1" | sed -e 's/%/%25/g' | sed -e ':a;N;$!ba;s/\n/%0A/g')"; exit 1; }
+          for essai in "1440 fr-FR" "390 en-US"; do
+            set -- $essai
+            journal="$SORTIE/localhost/demo-commentee-$1.log"
+            SORTIE="$SORTIE/localhost" node demo-commentee.mjs "$1" "$2" 2>&1 | tee "$journal"
+            [ "${PIPESTATUS[0]}" = 0 ] || signaler "$journal"
+          done
+
       # Serveur commun (docs/serveur-commun.md) : la composition de l'application installée reliée au serveur
       # (harnais serveur-commun, sans MAUI) se connecte par PKCE, voit le client du navigateur et en crée un que le
       # navigateur retrouve.
       - uses: actions/setup-dotnet@v5
         with:
-          global-json-file: global.json
+          dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
       - name: Serveur commun — appareil et navigateur sur les mêmes données
         working-directory: deploy/demo/e2e
         run: |

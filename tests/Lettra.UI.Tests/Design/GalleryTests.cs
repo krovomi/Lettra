@@ -54,6 +54,7 @@ public sealed class GalleryTests : BunitContext
         Services.AddCabinetFakes();
         Services.AddSingleton<IInvoicesGateway>(_invoices);
         Services.AddSingleton<IQuotesGateway>(_quotes);
+        Services.AddFakeBillingDashboard();
         Services.AddSingleton<ICustomersGateway>(_customers);
         Services.AddSingleton<IAccountingGateway>(_accounting);
         Services.AddSingleton<ISuppliersGateway>(new FakeSuppliersGateway());

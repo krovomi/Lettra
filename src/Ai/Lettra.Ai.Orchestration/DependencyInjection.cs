@@ -15,6 +15,7 @@ public static class DependencyInjection
     {
         services.AddOptions<AiOptions>().Bind(configuration.GetSection(AiOptions.SectionName));
         services.TryAddSingleton(TimeProvider.System);
+        services.TryAddSingleton(INamedEntityDetection.None);
 
         // Remplace les implémentations « IA désactivée » enregistrées par l'application.
         services.Replace(ServiceDescriptor.Singleton<IAiUsagePolicy, CabinetAiUsagePolicy>());

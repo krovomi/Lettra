@@ -22,8 +22,6 @@ public static class TaxText
 
     public static string Day(DateOnly date) => date.ToString("d MMMM yyyy", CultureInfo.CurrentCulture);
 
-    public static string Iso(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-
     public static string Month(DateOnly date) => Capitalize(date.ToString("MMMM yyyy", CultureInfo.CurrentCulture));
 
     /// <summary>« Septembre 2026 », « 3e trimestre 2026 », « Exercice du 1 janvier au 31 décembre 2026 ».</summary>

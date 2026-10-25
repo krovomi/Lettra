@@ -36,8 +36,8 @@
   <data name="Accounting.Journal.Subtitle" xml:space="preserve"><value>Les écritures enregistrées à la validation des pièces, comme dans le FEC.</value></data>
   <data name="Accounting.Journal.Title" xml:space="preserve"><value>Journal des ventes</value></data>
   <data name="Accounting.Journal.Toggle" xml:space="preserve"><value>Lignes de l'écriture {0}</value></data>
-  <data name="Accounting.Kpi.Receivable" xml:space="preserve"><value>Facturé net aux clients</value></data>
-  <data name="Accounting.Kpi.ReceivableNote" xml:space="preserve"><value>Solde 411, hors encaissements</value></data>
+  <data name="Accounting.Kpi.Receivable" xml:space="preserve"><value>Reste dû par les clients</value></data>
+  <data name="Accounting.Kpi.ReceivableNote" xml:space="preserve"><value>Solde 411, avoirs et encaissements déduits</value></data>
   <data name="Accounting.Kpi.Revenue" xml:space="preserve"><value>Chiffre d'affaires HT</value></data>
   <data name="Accounting.Kpi.RevenueNote" xml:space="preserve"><value>Comptes 706 et 707, avoirs déduits</value></data>
   <data name="Accounting.Kpi.Vat" xml:space="preserve"><value>TVA collectée</value></data>
@@ -47,7 +47,7 @@
   <data name="Accounting.Ledger.Empty" xml:space="preserve"><value>Aucun mouvement sur la période.</value></data>
   <data name="Accounting.Ledger.Opening" xml:space="preserve"><value>Solde d'ouverture au {0}</value></data>
   <data name="Accounting.Ledger.PageTitle" xml:space="preserve"><value>Grand livre {0}</value></data>
-  <data name="Accounting.Ledger.PaymentsNote" xml:space="preserve"><value>Les encaissements ne sont pas encore comptabilisés dans Lettra : le solde 411 est ce qui a été facturé, avoirs déduits.</value></data>
+  <data name="Accounting.Ledger.PaymentsNote" xml:space="preserve"><value>Les encaissements sont comptabilisés au journal de banque (BQ) : le solde 411 est ce qui reste dû, avoirs et encaissements déduits.</value></data>
   <data name="Accounting.Ledger.Subtitle" xml:space="preserve"><value>Mouvements du compte avec le solde cumulé.</value></data>
   <data name="Accounting.Ledger.Title" xml:space="preserve"><value>Grand livre</value></data>
   <data name="Accounting.Next" xml:space="preserve"><value>Suivante</value></data>

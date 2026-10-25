@@ -20,6 +20,9 @@ public static class AiSettingsErrors
     public static Error EngineRequired => Error.Validation(EngineRequiredCode, nameof(SaveAiSettingsRequest.Engine));
 
     public static Error SettingsConflict => Error.Conflict(SettingsConflictCode);
+
+    /// <summary>Le cabinet demande un point fermé sur ce déploiement (<see cref="AiFeatureSafeguards"/>).</summary>
+    public static Error FeatureBlocked => Error.Validation(ErrorCodes.Ai.FeatureBlocked, nameof(SaveAiSettingsRequest.Features));
 }
 
 /// <summary>
@@ -33,7 +36,8 @@ public sealed record GetAiSettingsQuery(OrganisationId Organisation) : IQuery<Re
 
 /// <summary>
 /// Enregistrer les réglages IA du cabinet dans la base Catalog : activation, moteur, fonctions, dossiers exclus.
-/// L'administrateur du cabinet seulement ; l'auteur et la date sont conservés.
+/// L'administrateur du cabinet seulement ; l'auteur et la date sont conservés. Un point fermé par un garde-fou
+/// (<see cref="AiFeatureSafeguards"/>) est refusé, même si l'IA reste éteinte.
 /// </summary>
 public sealed record SaveAiSettingsCommand(OrganisationId Organisation, SaveAiSettingsRequest Request)
     : ICommand<Result<AiSettingsResponse>>, IRequireOrganisationPermission
@@ -41,7 +45,7 @@ public sealed record SaveAiSettingsCommand(OrganisationId Organisation, SaveAiSe
     public Permission Permission => Permission.CabinetAdministrer;
 }
 
-internal sealed class SaveAiSettingsValidator : IValidator<SaveAiSettingsCommand>
+internal sealed class SaveAiSettingsValidator(INamedEntityDetection namedEntities) : IValidator<SaveAiSettingsCommand>
 {
     public IReadOnlyList<Error> Validate(SaveAiSettingsCommand instance)
     {
@@ -66,6 +70,10 @@ internal sealed class SaveAiSettingsValidator : IValidator<SaveAiSettingsCommand
         {
             errors.Add(Error.Validation(ErrorCodes.Validation.Invalid, nameof(request.Features)));
         }
+        else if (request.Features.Any(f => AiFeatureSafeguards.IsBlocked(f, namedEntities)))
+        {
+            errors.Add(AiSettingsErrors.FeatureBlocked);
+        }
 
         if (request.ExcludedDossiers is null || request.ExcludedDossiers.Count > SaveAiSettingsRequest.MaxExcludedDossiers)
         {
@@ -81,7 +89,7 @@ internal sealed class SaveAiSettingsValidator : IValidator<SaveAiSettingsCommand
     }
 }
 
-internal sealed class GetAiSettingsHandler(IAiSettingsStore store, IAiUsagePolicy policy)
+internal sealed class GetAiSettingsHandler(IAiSettingsStore store, IAiUsagePolicy policy, INamedEntityDetection namedEntities)
     : IQueryHandler<GetAiSettingsQuery, Result<AiSettingsResponse>>
 {
     public async Task<Result<AiSettingsResponse>> HandleAsync(GetAiSettingsQuery query, CancellationToken cancellationToken)
@@ -90,15 +98,15 @@ internal sealed class GetAiSettingsHandler(IAiSettingsStore store, IAiUsagePolic
         StoredAiSettings? stored = await store.FindAsync(query.Organisation, cancellationToken).ConfigureAwait(false);
         if (stored is not null)
         {
-            return AiSettingsMapping.ToResponse(stored.Settings, AiSettingsSource.Catalog, stored.Version, stored.UpdatedAt);
+            return AiSettingsMapping.ToResponse(stored.Settings, namedEntities, AiSettingsSource.Catalog, stored.Version, stored.UpdatedAt);
         }
 
         AiSettings effective = await policy.GetSettingsAsync(query.Organisation, cancellationToken).ConfigureAwait(false);
-        return AiSettingsMapping.ToResponse(effective, AiSettingsSource.Configuration, null, null);
+        return AiSettingsMapping.ToResponse(effective, namedEntities, AiSettingsSource.Configuration, null, null);
     }
 }
 
-internal sealed class SaveAiSettingsHandler(IAiSettingsStore store, ICurrentUser user)
+internal sealed class SaveAiSettingsHandler(IAiSettingsStore store, ICurrentUser user, INamedEntityDetection namedEntities)
     : ICommandHandler<SaveAiSettingsCommand, Result<AiSettingsResponse>>
 {
     public async Task<Result<AiSettingsResponse>> HandleAsync(SaveAiSettingsCommand command, CancellationToken cancellationToken)
@@ -123,17 +131,26 @@ internal sealed class SaveAiSettingsHandler(IAiSettingsStore store, ICurrentUser
             .SaveAsync(command.Organisation, settings, request.Version, user.UserId, cancellationToken)
             .ConfigureAwait(false);
         return saved.IsSuccess
-            ? AiSettingsMapping.ToResponse(saved.Value.Settings, AiSettingsSource.Catalog, saved.Value.Version, saved.Value.UpdatedAt)
+            ? AiSettingsMapping.ToResponse(saved.Value.Settings, namedEntities, AiSettingsSource.Catalog, saved.Value.Version, saved.Value.UpdatedAt)
             : Result<AiSettingsResponse>.Failure(saved.Errors);
     }
 }
 
+/// <summary>
+/// Un point fermé par un garde-fou n'apparaît pas dans la réponse, même s'il reste dans un réglage enregistré avant la
+/// fermeture : le réglage n'est pas effacé (les données survivent aux mises à jour), il est ignoré.
+/// </summary>
 internal static class AiSettingsMapping
 {
-    public static AiSettingsResponse ToResponse(AiSettings settings, AiSettingsSource source, long? version, DateTimeOffset? updatedAt) => new(
+    public static AiSettingsResponse ToResponse(
+        AiSettings settings,
+        INamedEntityDetection namedEntities,
+        AiSettingsSource source,
+        long? version,
+        DateTimeOffset? updatedAt) => new(
         settings.Enabled,
         (AssistantEngine)(int)settings.Engine,
-        [.. settings.Features.Order()],
+        [.. settings.Features.Where(f => !AiFeatureSafeguards.IsBlocked(f, namedEntities)).Order()],
         [.. settings.ExcludedDossiers.Select(d => d.Value).Order()],
         settings.OfficialWebLookup,
         settings.MaxToolRounds,

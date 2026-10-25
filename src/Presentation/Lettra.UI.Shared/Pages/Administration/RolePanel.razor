@@ -1,0 +1,50 @@
+@* Un rôle : les espaces qu'il ouvre, sa portée la plus large, et les personnes et équipes qui le tiennent. *@
+@inject IStringLocalizer<SharedResource> L
+
+<section class="la-section">
+    <h3>@L["Admin.Roles.Opens"]</h3>
+    <AreaList Areas="Role.Areas" />
+    <p class="lettra-hint">@L[$"Admin.Roles.Widest.{Role.WidestScope}"]</p>
+</section>
+<section class="la-section">
+    <h3>@string.Format(CultureInfo.CurrentCulture, L["Admin.Roles.Holders"], _holders.Length + _teams.Length)</h3>
+    <ul class="la-rows" role="list">
+        @foreach (PersonSummary person in _holders)
+        {
+            <li class="la-row">
+                <AdminAvatar Id="person.Id" Name="@View.NameOf(person)" />
+                <span class="la-row-text"><strong>@View.NameOf(person)</strong>
+                    <span>@string.Join(", ", person.Assignments.Where(a => a.Role == Role.Key).Select(a => View.ScopeLabel(a.ScopeKind, a.ScopeId)))</span></span>
+            </li>
+        }
+        @foreach (TeamSummary team in _teams)
+        {
+            <li class="la-row">
+                <span class="la-row-icon"><Icon Name="users" Size="16" /></span>
+                <span class="la-row-text"><strong>@team.Name</strong>
+                    <span>@string.Join(", ", team.Assignments.Where(a => a.Role == Role.Key).Select(a => View.ScopeLabel(a.ScopeKind, a.ScopeId)))</span></span>
+            </li>
+        }
+    </ul>
+    @if (_holders.Length + _teams.Length == 0)
+    {
+        <p class="lettra-hint">@L["Admin.Roles.NoHolder"]</p>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public AdministrationView View { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public RoleDescription Role { get; set; } = default!;
+
+    private PersonSummary[] _holders = [];
+    private TeamSummary[] _teams = [];
+
+    protected override void OnParametersSet()
+    {
+        _holders = [.. View.Overview.People.Where(p => p.Assignments.Any(a => a.Role == Role.Key))];
+        _teams = [.. View.Overview.Teams.Where(t => t.Assignments.Any(a => a.Role == Role.Key))];
+    }
+}

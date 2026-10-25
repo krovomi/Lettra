@@ -1,7 +1,7 @@
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
 using Lettra.UI.Abstractions;
-using Microsoft.Extensions.DependencyInjection;
+using Lettra.UI.Shared.Services;
 
 namespace Lettra.UI.Shared.Typing;
 
@@ -69,7 +69,7 @@ public sealed class DossierHistory
 /// Lit les pièces récentes une fois par session (et celles d'un client à sa sélection) au travers des gateways
 /// existantes. Les suggestions sont ensuite servies de la mémoire, sans attendre le réseau.
 /// </summary>
-public sealed class TypingHistory(IServiceProvider services)
+public sealed class TypingHistory(Optional<IInvoicesGateway> invoiceGateway, Optional<IQuotesGateway> quoteGateway)
 {
     /// <summary>Pièces lues au plus pour les désignations, et pour un client.</summary>
     public const int RecentDocuments = 40;
@@ -105,25 +105,25 @@ public sealed class TypingHistory(IServiceProvider services)
     private async Task<DossierHistory> LoadAsync(Guid? customerId, int max)
     {
         List<Func<Task<HistoryDocument?>>> reads = [];
-        if (services.GetService<IInvoicesGateway>() is { } invoices)
+        if (invoiceGateway.Value is { } invoices)
         {
             OperationResult<PagedResponse<InvoiceSummary>> list =
                 await invoices.ListAsync(new BillingListQuery(CustomerId: customerId, PageSize: max / 2), null, null, CancellationToken.None).ConfigureAwait(false);
             reads.AddRange((list.Value?.Items ?? []).Where(i => i.Kind != InvoiceKindDto.CreditNote).Select(i => (Func<Task<HistoryDocument?>>)(async () =>
             {
                 OperationResult<InvoiceResponse> invoice = await invoices.GetAsync(i.Id, CancellationToken.None).ConfigureAwait(false);
-                return invoice.Value is { } v ? new HistoryDocument(v.CustomerId, v.IssueDate ?? DateOnly.FromDateTime(v.CreatedAt.Date), v.PaymentTerms, Lines(v.Lines)) : null;
+                return invoice.Value is { } v ? new HistoryDocument(v.CustomerId, v.IssueDate ?? DateOnly.FromDateTime(v.CreatedAt.LocalDateTime), v.PaymentTerms, Lines(v.Lines)) : null;
             })));
         }
 
-        if (services.GetService<IQuotesGateway>() is { } quotes)
+        if (quoteGateway.Value is { } quotes)
         {
             OperationResult<PagedResponse<QuoteSummary>> list =
                 await quotes.ListAsync(new BillingListQuery(CustomerId: customerId, PageSize: max / 2), null, CancellationToken.None).ConfigureAwait(false);
             reads.AddRange((list.Value?.Items ?? []).Select(q => (Func<Task<HistoryDocument?>>)(async () =>
             {
                 OperationResult<QuoteResponse> quote = await quotes.GetAsync(q.Id, CancellationToken.None).ConfigureAwait(false);
-                return quote.Value is { } v ? new HistoryDocument(v.CustomerId, v.IssueDate ?? DateOnly.FromDateTime(v.CreatedAt.Date), null, Lines(v.Lines)) : null;
+                return quote.Value is { } v ? new HistoryDocument(v.CustomerId, v.IssueDate ?? DateOnly.FromDateTime(v.CreatedAt.LocalDateTime), null, Lines(v.Lines)) : null;
             })));
         }
 

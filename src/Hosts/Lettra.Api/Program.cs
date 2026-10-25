@@ -10,6 +10,7 @@ using Lettra.Exports.Infrastructure;
 using Lettra.Infrastructure.Catalog;
 using Lettra.Infrastructure.Persistence.Billing;
 using Lettra.Infrastructure.Persistence.Cabinet;
+using Lettra.Infrastructure.Persistence.Integrity;
 using Lettra.Infrastructure.Persistence.Outbox;
 using Lettra.Supervision.Infrastructure;
 
@@ -39,7 +40,10 @@ builder.Services.AddHealthChecks();
 
 // Installation sans Worker (démonstration navigateur, petit réseau local) : l'API reprend elle-même les envois à la
 // plateforme agréée mis en file pendant une panne, les passes des alertes du calendrier fiscal, de la vue cabinet, des
-// factures récurrentes et des relances. Ailleurs, c'est le Worker qui s'en charge.
+// factures récurrentes, des relances, de l'escalade du centre d'alertes, de la chaîne anti-fraude (clôtures et contrôle
+// d'intégrité) et l'export FEC en masse (désactivé par défaut, comme dans le Worker). Ailleurs, c'est le Worker qui s'en
+// charge. Les vagues de migration restent au Worker : sans lui, le catalogue est migré au démarrage et chaque base de
+// dossier à sa première ouverture (PersistenceOptions.MigrateOnOpen).
 if (bool.TryParse(builder.Configuration[OutboxApiHosting.Key], out bool outboxInApi) && outboxInApi)
 {
     builder.Services.AddOutboxDispatch(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
@@ -47,6 +51,9 @@ if (bool.TryParse(builder.Configuration[OutboxApiHosting.Key], out bool outboxIn
     builder.Services.AddCabinetOverviewJob(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
     builder.Services.AddRecurringInvoicing(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
     builder.Services.AddPaymentReminders(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
+    builder.Services.AddEscalationJob(builder.Configuration);
+    builder.Services.AddIntegrityCheckJob(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
+    builder.Services.AddFecBulkExport(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
 }
 
 WebApplication app = builder.Build();
