@@ -899,7 +899,8 @@ deploy/            démo Docker, Helm, OpenTofu, Argo CD, cellules, Keycloak, ob
   pousser ([docs/qualite-du-code.md](docs/qualite-du-code.md)).
 - Avertissements bloquants, paquets centralisés (`Directory.Packages.props`), identifiants Guid v7, montants
   `decimal(18,4)`, dates UTC.
-- Migrations : même identifiant dans les trois providers ; la PR fusionnée en second régénère la sienne.
+- Migrations : même identifiant dans les trois providers ; quand deux changements ajoutent chacun une migration, le second
+  intégré régénère la sienne.
 - Tests nommés en français (`Une_entreprise_francaise_sans_siren_est_refusee`).
 - Audit d'architecture d'octobre 2026 : écarts, corrections et reste ouvert dans
   [docs/qualite-du-code.md](docs/qualite-du-code.md).
@@ -928,8 +929,9 @@ alertes, l'essai de panne (API arrêtée, astreinte appelée en S1), Keycloak da
 parcours navigateur (Keycloak, API, PWA), charge k6, télémétrie dans Grafana (chaque vérification en échec devient une
 annotation du job) et scan de sécurité ZAP. Autres workflows : `serveur-commun-android.yml` (navigateur et application
 Android sur les mêmes données, émulateur), `voix.yml` (Whisper réel sur Linux, Windows et macOS),
-`pr-environment.yml` (image d'une PR étiquetée « env:pr », déployée par Argo CD dans la cellule de recette). Sur une PR, un nouveau push annule l'exécution
-en cours ; sur `main`, chaque fusion garde son exécution complète.
+`pr-environment.yml` (image d'une demande de modification étiquetée « env:pr », déployée par Argo CD dans la cellule de
+recette). Pendant la revue d'une modification, un nouvel envoi annule l'exécution en cours ; sur
+`main`, chaque fusion garde son exécution complète.
 
 ### Assistant IA
 
