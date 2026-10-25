@@ -941,7 +941,8 @@ Sur un poste isolé ou relié, il n'y a pas d'API : seul le contrôle 2 s'appliq
 
 `.github/workflows/ci.yml` : build et tests Linux (Testcontainers PostgreSQL, SQL Server, Keycloak) sous couverture
 de code, qui échoue sous 88 % des lignes ou 78 % des branches (rapport par assembly dans le résumé du job ; détails et
-commande locale : [docs/qualite-du-code.md](docs/qualite-du-code.md)), conformité Factur-X, applications MAUI construites et lancées (Windows ; Android sur émulateur ; simulateur iOS ; macOS, non
+commande locale : [docs/qualite-du-code.md](docs/qualite-du-code.md) ; chaque test en échec devient une annotation du job,
+avec son message), conformité Factur-X, applications MAUI construites et lancées (Windows ; Android sur émulateur ; simulateur iOS ; macOS, non
 bloquant tant qu'il n'est pas signé) avec leurs artefacts, captures du design et audit d'accessibilité (Playwright,
 axe-core), gitleaks, SBOM CycloneDX, CodeQL (dépôt public), avis de tiers, images signées (cosign) sur `main`. La
 charge de travail MAUI est épinglée (`MAUI_WORKLOAD_VERSION`, 10.0.401) : un jeu plus récent publié sur nuget.org ne

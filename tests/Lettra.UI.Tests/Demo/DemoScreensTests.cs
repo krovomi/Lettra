@@ -157,7 +157,12 @@ public sealed class DemoScreensTests : BunitContext
             Player.Pause();
         };
         host.Find("#demo-next").Click();
-        host.WaitForAssertion(() => Player.StepIndex.Should().Be(1));
+        // La pause part du surlignage de l'étape 1 : attendre que la bulle l'affiche (bouton Reprendre) avant de lire.
+        host.WaitForAssertion(() =>
+        {
+            Player.StepIndex.Should().Be(1);
+            host.Find("#demo-resume");
+        });
         host.Find("#demo-step-title").TextContent.Should().Be("Un dossier, c'est une entreprise");
         Player.Delay = (_, token) => Task.Delay(Timeout.Infinite, token);   // la lecture dure : le bouton Pause reste là
         host.Find("#demo-resume").Click();
