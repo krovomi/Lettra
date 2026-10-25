@@ -4,6 +4,7 @@
 @inject IFileDownloader Files
 @inject IStringLocalizer<SharedResource> L
 @inject TimeProvider Clock
+@inject ToastService Toasts
 
 @* Fichier des écritures comptables (phase 5) : export sur un exercice, puis rapport du validateur intégré sur le
    fichier remis. Le même validateur contrôle un FEC venu d'un autre logiciel. *@
@@ -23,6 +24,19 @@
         <label for="fec-to">@L["Fec.Period.To"]</label>
         <DateField Id="fec-to" Value="_to" ValueChanged="d => _to = d ?? _to" required />
         <button type="button" id="fec-export" class="lettra-button" disabled="@_busy" @onclick="ExportAsync">@L["Fec.Export"]</button>
+    </div>
+
+    <h3>@L["Fec.Bridge.Title"]</h3>
+    <p class="lettra-hint">@L["Fec.Bridge.Hint"]</p>
+    <div class="lettra-inline">
+        <label for="fec-software">@L["Fec.Bridge.Software"]</label>
+        <select id="fec-software" class="lettra-input" @bind="_software">
+            @foreach (AccountingSoftwareDto software in Enum.GetValues<AccountingSoftwareDto>())
+            {
+                <option value="@software">@L[$"Fec.Bridge.Software.{software}"]</option>
+            }
+        </select>
+        <button type="button" id="fec-bridge-export" class="lettra-button is-secondary" disabled="@_busy" @onclick="ExportForSoftwareAsync">@L["Fec.Bridge.Export"]</button>
     </div>
 
     <h3>@L["Fec.Check.Title"]</h3>
@@ -94,6 +108,10 @@
 
     private const string FecMimeType = "text/plain";
 
+    private const string BridgeMimeType = "text/csv";
+
+    private AccountingSoftwareDto _software = AccountingSoftwareDto.Quadra;
+
     private DateOnly _from;
     private DateOnly _to;
     private IReadOnlyList<ErrorDetail> _errors = [];
@@ -128,6 +146,23 @@
             _report = report.Value;
             await Starter.MarkFecExportedAsync();
             return report.Errors;
+        });
+    }
+
+    /// <summary>Les mêmes écritures, au format d'import du logiciel du cabinet ; pas de rapport du validateur FEC.</summary>
+    private async Task ExportForSoftwareAsync()
+    {
+        await RunAsync(async () =>
+        {
+            OperationResult<FecDocument> file = await Fec.ExportForAsync(_software, _from, _to, CancellationToken.None);
+            if (file is not { IsSuccess: true, Value: { } document })
+            {
+                return file.Errors;
+            }
+
+            await Files.DownloadAsync(document.FileName, BridgeMimeType, document.Content, CancellationToken.None);
+            Toasts.Show(ToastKind.Success, string.Format(Culture, L["Fec.Bridge.Done"], document.FileName));
+            return [];
         });
     }
 

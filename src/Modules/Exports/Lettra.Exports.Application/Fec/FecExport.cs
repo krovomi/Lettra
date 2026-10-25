@@ -5,6 +5,7 @@ using Lettra.Contracts.Exports;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
+using Lettra.Exports.Application.Bridges;
 
 namespace Lettra.Exports.Application.Fec;
 
@@ -31,6 +32,16 @@ public sealed record ValidateFecQuery(DossierId Dossier, string FileName, ReadOn
 }
 
 /// <summary>
+/// Exporter les écritures du dossier sur une période (mêmes bornes que le FEC) au format d'import d'un logiciel de
+/// production du cabinet : Quadra, Sage 100, Cegid Expert ou ACD.
+/// </summary>
+public sealed record ExportEntriesForSoftwareQuery(DossierId Dossier, AccountingSoftwareDto Software, DateOnly From, DateOnly To)
+    : IQuery<Result<BridgeFile>>, IRequirePermission
+{
+    public Permission Permission => Permission.FecExporter;
+}
+
+/// <summary>
 /// Construction du FEC d'un dossier, partagée par la requête de l'utilisateur et l'export en masse du Worker (qui agit
 /// dans la portée du dossier, sans passer par les droits d'un utilisateur).
 /// </summary>
@@ -46,10 +57,38 @@ public sealed class FecExportService(ICompanyProfileRepository profiles, ISalesJ
 
     public async Task<Result<FecFile>> ExportAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken)
     {
+        Result<(string Siren, IReadOnlyList<SalesJournalExportEntry> Entries)> read = await ReadAsync(from, to, cancellationToken).ConfigureAwait(false);
+        if (read.IsFailure)
+        {
+            return Result<FecFile>.Failure(read.Errors);
+        }
+
+        string fileName = FecFormat.FileName(read.Value.Siren, to);
+        byte[] content = FecWriter.Write(read.Value.Entries);
+        FecValidationResponse validation = FecValidator.Validate(fileName, content, from, to);
+        return validation.IsValid ? new FecFile(fileName, content, validation) : FecErrors.ExportInvalid;
+    }
+
+    /// <summary>Les mêmes écritures que le FEC, au format d'import du logiciel du cabinet.</summary>
+    public async Task<Result<BridgeFile>> ExportForAsync(AccountingSoftwareDto software, DateOnly from, DateOnly to, CancellationToken cancellationToken)
+    {
+        if (!Enum.IsDefined(software))
+        {
+            return FecErrors.SoftwareUnknown;
+        }
+
+        Result<(string Siren, IReadOnlyList<SalesJournalExportEntry> Entries)> read = await ReadAsync(from, to, cancellationToken).ConfigureAwait(false);
+        return read.IsFailure
+            ? Result<BridgeFile>.Failure(read.Errors)
+            : BridgeWriters.Write(software, read.Value.Siren, from, to, read.Value.Entries);
+    }
+
+    private async Task<Result<(string Siren, IReadOnlyList<SalesJournalExportEntry> Entries)>> ReadAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken)
+    {
         Result period = ValidatePeriod(from, to);
         if (period.IsFailure)
         {
-            return Result<FecFile>.Failure(period.Errors);
+            return Result<(string, IReadOnlyList<SalesJournalExportEntry>)>.Failure(period.Errors);
         }
 
         CompanyProfile? profile = await profiles.FindAsync(cancellationToken).ConfigureAwait(false);
@@ -64,10 +103,7 @@ public sealed class FecExportService(ICompanyProfileRepository profiles, ISalesJ
         }
 
         IReadOnlyList<SalesJournalExportEntry> entries = await journal.ReadAsync(from, to, cancellationToken).ConfigureAwait(false);
-        string fileName = FecFormat.FileName(siren.Value, to);
-        byte[] content = FecWriter.Write(entries);
-        FecValidationResponse validation = FecValidator.Validate(fileName, content, from, to);
-        return validation.IsValid ? new FecFile(fileName, content, validation) : FecErrors.ExportInvalid;
+        return (siren.Value, entries);
     }
 }
 
@@ -77,6 +113,15 @@ internal sealed class ExportFecHandler(FecExportService service) : IQueryHandler
     {
         ArgumentNullException.ThrowIfNull(query);
         return service.ExportAsync(query.From, query.To, cancellationToken);
+    }
+}
+
+internal sealed class ExportEntriesForSoftwareHandler(FecExportService service) : IQueryHandler<ExportEntriesForSoftwareQuery, Result<BridgeFile>>
+{
+    public Task<Result<BridgeFile>> HandleAsync(ExportEntriesForSoftwareQuery query, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+        return service.ExportForAsync(query.Software, query.From, query.To, cancellationToken);
     }
 }
 
