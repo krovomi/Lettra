@@ -39,7 +39,7 @@ Il n'est pas pour autant exempt de dettes. Les principales :
 
 ## Couverture mesurée
 
-Mesure du 19 octobre 2026 sur la branche principale, 14 projets de tests, 3 290 tests, dont les
+Mesure de départ, sur la branche principale : 14 projets de tests, 3 290 tests, dont les
 tests d'intégration sur SQLite, PostgreSQL et SQL Server (Testcontainers) et l'import du realm
 Keycloak. Sont exclus du calcul : le code généré (migrations EF, `*.Designer.cs`, instantanés
 de modèle) et les bibliothèques tierces.
@@ -264,7 +264,7 @@ Suppressions d'avertissements restantes, chacune justifiée sur place :
 | `WhisperModelStore.cs:129` et deux tests de la voix | CA5350 | whisper.cpp ne publie que des SHA-1 : contrôle d'intégrité, doublé d'un SHA-256 épinglé. |
 | `RedactionTests.cs:129` | CA1848, CA2254 | Le test simule volontairement un journal mal écrit. |
 
-## Audit d'architecture (octobre 2026)
+## Audit d'architecture
 
 Deuxième passage complet, sur la branche principale : frontières entre couches (hôtes et composition compris), cœur et
 modules, interface et passerelles. Chaque écart ci-dessous a été vérifié dans le code ; il s'ajoute à ceux de
@@ -665,7 +665,7 @@ Aucun test existant n'est retiré, désactivé ni affaibli.
 | Base propre | Base propre : règles de l'IDE bloquantes (using inutiles, code mort, mise en forme, simplifications), 160 fichiers corrigés, suppressions d'avertissements revues (voir « Base propre »). | Fait |
 | Dates au calendrier légal | Dates du jour au calendrier légal (D8) : documents imprimables, assistant, kit contrôle fiscal, derniers écrans sur l'horloge système ; tests à minuit à Paris. | Fait |
 | Cas d'usage de l'application | Application : chargement versionné (R5), fin de validation de facture (R8), saisie d'un encaissement (R4, S1, premier `IValidator` d'Exports pour A7), tests. | Fait |
-| Audit d'architecture | Audit d'architecture d'octobre 2026 : voir « Ordre de correction » et « Reste ouvert » ci-dessus (A5, A6 et R9 y sont repris). | Fait |
+| Audit d'architecture | Audit d'architecture : voir « Ordre de correction » et « Reste ouvert » ci-dessus (A5, A6 et R9 y sont repris). | Fait |
 
 Seuil de couverture appliqué par la CI : 88 % des lignes et 78 % des branches au
 global (`fusionner.py --seuil-lignes 88 --seuil-branches 78`) ; chaque changement garde au moins le niveau
