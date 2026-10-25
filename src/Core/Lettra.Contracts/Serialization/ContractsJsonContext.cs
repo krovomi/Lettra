@@ -18,6 +18,7 @@ using Lettra.Contracts.Identity;
 using Lettra.Contracts.Integrity;
 using Lettra.Contracts.Pilotage;
 using Lettra.Contracts.Policies;
+using Lettra.Contracts.Portal;
 using Lettra.Contracts.Preferences;
 using Lettra.Contracts.Presence;
 using Lettra.Contracts.Pricing;
@@ -176,5 +177,9 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(PaymentReminderResponse))]
 [JsonSerializable(typeof(PagedResponse<PaymentReminderResponse>))]
 [JsonSerializable(typeof(RunRemindersResponse))]
+[JsonSerializable(typeof(CreatePortalLinkRequest))]
+[JsonSerializable(typeof(PortalLinkResponse))]
+[JsonSerializable(typeof(IReadOnlyList<PortalLinkSummary>))]
+[JsonSerializable(typeof(QuoteSignatureResponse))]
 [JsonSerializable(typeof(InvitationEmailResponse))]
 public sealed partial class ContractsJsonContext : JsonSerializerContext;

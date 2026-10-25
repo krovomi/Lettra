@@ -5,6 +5,7 @@ using Lettra.Contracts.Accounting;
 using Lettra.Contracts.Banking;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Exports;
+using Lettra.Contracts.Portal;
 using Lettra.Contracts.Reminders;
 using Lettra.Contracts.Tax;
 using Lettra.Domain.Common;
@@ -15,6 +16,7 @@ using Lettra.Exports.Application.Bridges;
 using Lettra.Exports.Application.EInvoicing;
 using Lettra.Exports.Application.EInvoicing.Platform;
 using Lettra.Exports.Application.Fec;
+using Lettra.Exports.Application.Portal;
 using Lettra.Exports.Application.Reminders;
 using Lettra.Exports.Application.Tax;
 using Microsoft.Extensions.DependencyInjection;
@@ -91,6 +93,18 @@ public static class DependencyInjection
         services.AddScoped<IQueryHandler<ListPaymentRemindersQuery, Result<PagedResponse<PaymentReminderResponse>>>, ListPaymentRemindersHandler>();
         services.AddScoped<IQueryHandler<GetReminderSettingsQuery, Result<ReminderSettingsResponse>>, GetReminderSettingsHandler>();
         services.AddScoped<ICommandHandler<UpdateReminderSettingsCommand, Result<ReminderSettingsResponse>>, UpdateReminderSettingsHandler>();
+
+        // Espace client : liens envoyés au client, paiement en ligne et signature des devis. Fermé tant que l'hôte n'en
+        // donne pas le compte de service (ICustomerPortalSettings).
+        services.TryAddSingleton<ICustomerPortalSettings, ClosedCustomerPortal>();
+        services.AddScoped<ICommandHandler<CreatePortalLinkCommand, Result<PortalLinkResponse>>, CreatePortalLinkHandler>();
+        services.AddScoped<IQueryHandler<ListPortalLinksQuery, Result<IReadOnlyList<PortalLinkSummary>>>, ListPortalLinksHandler>();
+        services.AddScoped<ICommandHandler<RevokePortalLinkCommand, Result>, RevokePortalLinkHandler>();
+        services.AddScoped<IQueryHandler<GetQuoteSignatureQuery, Result<QuoteSignatureResponse>>, GetQuoteSignatureHandler>();
+        services.AddScoped<ICommandHandler<OpenPortalCommand, Result<PortalView>>, OpenPortalHandler>();
+        services.AddScoped<ICommandHandler<SignQuoteOnPortalCommand, Result<SignQuoteResult>>, SignQuoteOnPortalHandler>();
+        services.AddScoped<ICommandHandler<StartOnlinePaymentCommand, Result<OnlineCheckoutResponse>>, StartOnlinePaymentHandler>();
+        services.AddScoped<ICommandHandler<CompleteOnlinePaymentCommand, Result<OnlinePaymentResult>>, CompleteOnlinePaymentHandler>();
 
         // Envois à la plateforme par l'outbox du serveur (étape 5.4).
         services.AddScoped<IOutboxHandler, PlatformDepositHandler>();

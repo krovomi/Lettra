@@ -193,6 +193,15 @@ else
                 <PaymentQrPanel Invoice="payable" Company="_company" />
             }
 
+            @if (_invoice is { Status: not InvoiceStatusDto.Draft, Kind: not InvoiceKindDto.CreditNote, Number: not null } online
+                && online.Totals.TotalInclTax - online.CreditedInclTax - online.PaidInclTax > 0m)
+            {
+                <section class="lettra-portal-card" id="invoice-pay-online" aria-labelledby="invoice-pay-online-title">
+                    <h2 id="invoice-pay-online-title">@L["Portal.Invoice.Title"]</h2>
+                    <PortalLinkPanel CustomerId="online.CustomerId" ForInvoice="true" Id="invoice-portal" />
+                </section>
+            }
+
             @if (_invoice is { Status: not InvoiceStatusDto.Draft, Number: not null } transmitted)
             {
                 <PlatformTransmissionPanel Invoice="transmitted" OnInvoiceChanged="ReloadAsync" />

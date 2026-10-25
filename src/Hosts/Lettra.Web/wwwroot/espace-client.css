@@ -1,0 +1,168 @@
+/* Espace client : pages servies par le serveur, sans l'application (aucun script). Lisibles sur un téléphone d'abord,
+   en clair comme en sombre. Les QR codes restent noir sur blanc dans les deux thèmes. */
+
+:root {
+    --ec-bg: #f5f6f8;
+    --ec-surface: #ffffff;
+    --ec-text: #1d2433;
+    --ec-muted: #5b6475;
+    --ec-border: #dfe3ea;
+    --ec-accent: #2f5bd3;
+    --ec-accent-text: #ffffff;
+    --ec-success-bg: #e6f4ea;
+    --ec-success: #1e6b35;
+    --ec-error-bg: #fdecec;
+    --ec-error: #a32121;
+    --ec-late: #b3261e;
+    --ec-todo: #8a5a00;
+    --ec-todo-bg: #fff4d6;
+    --ec-radius: 0.75rem;
+    color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --ec-bg: #12151c;
+        --ec-surface: #1b2029;
+        --ec-text: #e8ebf1;
+        --ec-muted: #a3abba;
+        --ec-border: #2d3442;
+        --ec-accent: #7c9cff;
+        --ec-accent-text: #0d1220;
+        --ec-success-bg: #163222;
+        --ec-success: #8fd9a8;
+        --ec-error-bg: #3a1717;
+        --ec-error: #ffb4ab;
+        --ec-late: #ffb4ab;
+        --ec-todo: #ffd27a;
+        --ec-todo-bg: #3a2c0c;
+    }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--ec-bg);
+    color: var(--ec-text);
+    font: 1rem/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.ec {
+    max-width: 46rem;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 3rem;
+}
+
+.ec-head h1 { font-size: 1.6rem; line-height: 1.25; margin: 0.25rem 0 0.5rem; }
+.ec-from { margin: 0; color: var(--ec-muted); font-weight: 600; letter-spacing: 0.01em; }
+.ec-intro { margin: 0; color: var(--ec-muted); }
+
+.ec-section { margin-top: 2rem; }
+.ec-section h2 { font-size: 1.2rem; margin: 0 0 0.75rem; }
+.ec-total { margin: 0 0 0.75rem; font-weight: 600; }
+.ec-empty { color: var(--ec-muted); }
+
+.ec-card {
+    background: var(--ec-surface);
+    border: 1px solid var(--ec-border);
+    border-radius: var(--ec-radius);
+    padding: 1rem;
+    margin-bottom: 0.875rem;
+}
+
+.ec-card.is-focus { border-color: var(--ec-accent); box-shadow: 0 0 0 1px var(--ec-accent); }
+.ec-card:target { box-shadow: 0 0 0 3px var(--ec-accent); }
+
+.ec-card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.ec-card-head h3 { font-size: 1.05rem; margin: 0; }
+.ec-subject { margin: 0.25rem 0 0; color: var(--ec-muted); }
+
+.ec-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 0.5rem 1rem; margin: 0.75rem 0; }
+.ec-facts dt { color: var(--ec-muted); font-size: 0.85rem; }
+.ec-facts dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.ec-amount { font-size: 1.1rem; }
+.ec-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight: 500; }
+
+.ec-badge { display: inline-block; padding: 0.1rem 0.6rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; background: var(--ec-bg); color: var(--ec-muted); }
+.ec-badge.is-late { background: var(--ec-error-bg); color: var(--ec-late); }
+.ec-badge.is-todo { background: var(--ec-todo-bg); color: var(--ec-todo); }
+.ec-badge.is-done { background: var(--ec-success-bg); color: var(--ec-success); }
+
+.ec-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.6rem 1.25rem;
+    border: 0;
+    border-radius: 0.6rem;
+    background: var(--ec-accent);
+    color: var(--ec-accent-text);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.ec-button:hover { filter: brightness(1.08); }
+.ec-button:focus-visible, .ec-link:focus-visible, summary:focus-visible, input:focus-visible { outline: 3px solid var(--ec-accent); outline-offset: 2px; }
+
+.ec-link { display: block; width: 100%; margin-top: 0.5rem; padding: 0.6rem; border: 0; background: none; color: var(--ec-accent); font: inherit; cursor: pointer; text-decoration: underline; }
+
+details { margin-top: 0.75rem; }
+summary { cursor: pointer; color: var(--ec-accent); font-weight: 600; min-height: 2rem; }
+
+.ec-transfer-body { display: grid; gap: 1rem; margin-top: 0.75rem; }
+.ec-qr { width: min(100%, 12rem); height: auto; justify-self: center; border-radius: 0.5rem; }
+
+.ec-table-wrap { overflow-x: auto; margin-top: 0.5rem; }
+table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+th, td { padding: 0.45rem 0.5rem; border-bottom: 1px solid var(--ec-border); text-align: left; vertical-align: top; }
+th { color: var(--ec-muted); font-weight: 600; }
+.num { text-align: right; white-space: nowrap; }
+tfoot th { text-align: right; }
+
+.ec-form { display: grid; gap: 0.75rem; }
+.ec-sign { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--ec-border); }
+.ec-sign h4 { margin: 0; font-size: 1rem; }
+.ec-field { display: grid; gap: 0.25rem; }
+.ec-field span { font-size: 0.9rem; color: var(--ec-muted); }
+.ec-field input {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--ec-border);
+    border-radius: 0.5rem;
+    background: var(--ec-bg);
+    color: var(--ec-text);
+    font: inherit;
+}
+
+.ec-check { display: flex; gap: 0.6rem; align-items: flex-start; }
+.ec-check input { width: 1.25rem; height: 1.25rem; margin-top: 0.15rem; flex: none; }
+.ec-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+.ec-note { margin: 0; padding: 0.6rem 0.75rem; border-radius: 0.5rem; background: var(--ec-todo-bg); color: var(--ec-text); font-size: 0.92rem; }
+.ec-signed { margin: 0.75rem 0 0; padding: 0.6rem 0.75rem; border-radius: 0.5rem; background: var(--ec-success-bg); color: var(--ec-success); }
+.ec-signed small { color: inherit; opacity: 0.85; overflow-wrap: anywhere; }
+
+.ec-banner { margin: 1.25rem 0 0; padding: 0.75rem 1rem; border-radius: var(--ec-radius); font-weight: 600; }
+.ec-banner.is-success { background: var(--ec-success-bg); color: var(--ec-success); }
+.ec-banner.is-error { background: var(--ec-error-bg); color: var(--ec-error); }
+
+.ec-foot { margin-top: 2.5rem; color: var(--ec-muted); font-size: 0.88rem; }
+.ec-foot p { margin: 0.35rem 0; }
+.ec-brand { font-weight: 600; }
+
+.ec-checkout .ec { max-width: 28rem; }
+.ec-checkout .ec-note { margin: 1rem 0; }
+
+@media (min-width: 40rem) {
+    .ec { padding-top: 2.5rem; }
+    .ec-head h1 { font-size: 2rem; }
+    .ec-card { padding: 1.25rem 1.5rem; }
+    .ec-button { width: auto; }
+    .ec-transfer-body { grid-template-columns: 12rem 1fr; align-items: start; }
+    .ec-link { width: auto; display: inline-block; }
+}

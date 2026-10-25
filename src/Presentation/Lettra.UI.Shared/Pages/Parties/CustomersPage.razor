@@ -191,6 +191,10 @@
                         </dl>
                     </Collapsible>
 
+                    <Collapsible Card="false" Level="3" Id="customer-portal" Title="@L["Portal.Customer.Title"]">
+                        <PortalLinkPanel CustomerId="customer.Id" ShowLinks="true" Id="customer-portal-links" />
+                    </Collapsible>
+
                     <Collapsible Card="false" Level="3" Id="customer-invoices" Title="@L["Customers.LastInvoices"]" Count="@_invoices?.Count">
                         <Actions><a href="@LedgerHref(customer.Id)" id="customer-ledger">@L["Customers.SeeLedger"] <Icon Name="arrow-right" Size="16" /></a></Actions>
                         <ChildContent>

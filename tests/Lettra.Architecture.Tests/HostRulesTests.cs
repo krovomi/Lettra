@@ -22,7 +22,7 @@ public sealed class HostRulesTests
                 "Lettra.Application", "Lettra.Bootstrap", "Lettra.Contracts", "Lettra.DemoData", "Lettra.Domain", "Lettra.Exports.Application",
                 "Lettra.Exports.Infrastructure", "Lettra.Infrastructure.Catalog", "Lettra.Infrastructure.Identity.Oidc",
                 "Lettra.Infrastructure.Observability", "Lettra.Infrastructure.Persistence", "Lettra.Supervision.Application",
-                "Lettra.Supervision.Domain", "Lettra.Supervision.Infrastructure", "Lettra.Sync.Server",
+                "Lettra.Printing", "Lettra.Supervision.Domain", "Lettra.Supervision.Infrastructure", "Lettra.Sync.Server",
             ]
         },
         // Le navigateur ne voit que les écrans et leur passerelle HTTP : ni domaine, ni application, ni infrastructure.

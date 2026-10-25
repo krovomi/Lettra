@@ -194,6 +194,20 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Espace_client_paiement_en_ligne_et_devis_signe()
+    {
+        await using TenantHarness harness = PortalScenarios.Harness(new SqliteConfigurator());
+        await PortalScenarios.CustomerPortalAsync(harness, DatabaseProvider.Sqlite, Database("espace-client"));
+    }
+
+    [Fact]
+    public async Task Espace_client_ferme_sans_compte_de_service()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await PortalScenarios.ClosedPortalAsync(harness, DatabaseProvider.Sqlite, Database("espace-client-ferme"));
+    }
+
+    [Fact]
     public async Task Declarations_de_tva_des_et_calendrier()
     {
         await using TenantHarness harness = new(new SqliteConfigurator());
@@ -633,6 +647,14 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     }
 
     [SkippableFact]
+    public async Task Espace_client_paiement_en_ligne_et_devis_signe()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = PortalScenarios.Harness(new PostgreSqlConfigurator());
+        await PortalScenarios.CustomerPortalAsync(harness, DatabaseProvider.PostgreSql, Database("espace-client"));
+    }
+
+    [SkippableFact]
     public async Task Declarations_de_tva_des_et_calendrier()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
@@ -1019,6 +1041,14 @@ public sealed class SqlServerTests : IAsyncLifetime
         Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new SqlServerConfigurator());
         await RecurringScenarios.RecurringInvoicesAsync(harness, DatabaseProvider.SqlServer, Database("recurrentes"));
+    }
+
+    [SkippableFact]
+    public async Task Espace_client_paiement_en_ligne_et_devis_signe()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = PortalScenarios.Harness(new SqlServerConfigurator());
+        await PortalScenarios.CustomerPortalAsync(harness, DatabaseProvider.SqlServer, Database("espace-client"));
     }
 
     [SkippableFact]
