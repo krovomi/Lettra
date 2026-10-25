@@ -6,6 +6,7 @@
 @inject NavigationManager Navigation
 @inject AssistantPanelState Assistant
 @inject SessionState Session
+@inject DemoPlayer Demo
 @inject IJSRuntime JS
 
 <GuidedTour />
@@ -50,7 +51,8 @@
 
     private async Task AutoStartAsync(TourDefinition? tour)
     {
-        if (tour is null || _starting || Tours.Active is not null || !Session.IsAuthenticated || OnSessionScreen()
+        // Pendant la démo commentée, la bulle du tutoriel couvrirait les gestes que Lettra joue.
+        if (tour is null || _starting || Tours.Active is not null || Demo.IsActive || !Session.IsAuthenticated || OnSessionScreen()
             || !await CanAutoStartAsync())
         {
             return;

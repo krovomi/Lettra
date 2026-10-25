@@ -49,6 +49,9 @@ public static class DependencyInjection
         services.AddScoped<GuidedTours>();
         services.AddScoped<StarterProgress>();
         services.AddScoped<ICommandPaletteProvider, TourPaletteProvider>();
+        services.AddScoped<Demo.IDemoDriver, Demo.JsDemoDriver>();
+        services.AddScoped<Demo.DemoPlayer>();
+        services.AddScoped<ICommandPaletteProvider, Demo.DemoPaletteProvider>();
         // Menu réglable (sections repliées, favoris) et aide sans IA (questions fréquentes).
         services.AddScoped<Layout.NavMenuState>();
         services.AddScoped<HelpPanelState>();
