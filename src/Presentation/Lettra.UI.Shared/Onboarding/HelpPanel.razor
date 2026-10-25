@@ -40,6 +40,10 @@
                         <span><strong>@L["Help.Tour"]</strong><small>@L["Help.Tour.Hint"]</small></span>
                     </button>
                 }
+                <button type="button" id="help-demo" class="lt-help-action" @onclick="OpenDemo">
+                    <Icon Name="circle-play" />
+                    <span><strong>@L["Demo.Help"]</strong><small>@L["Demo.Help.Hint"]</small></span>
+                </button>
                 <button type="button" id="help-palette" class="lt-help-action" @onclick="SearchEverywhereAsync">
                     <Icon Name="search" />
                     <span><strong>@L["Help.Palette"]</strong><small>@L["Help.Palette.Hint"]</small></span>
@@ -214,6 +218,12 @@
             State.Close();
             Tours.Start(tour);
         }
+    }
+
+    private void OpenDemo()
+    {
+        State.Close();
+        Navigation.NavigateTo("demo");
     }
 
     private async Task SearchEverywhereAsync()

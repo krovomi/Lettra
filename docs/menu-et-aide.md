@@ -23,7 +23,9 @@ macOS, Android, iOS).
   - un champ « Posez votre question » qui comprend le langage courant (« je veux annuler ma facture ») et montre la
     meilleure réponse dépliée, avec un bouton vers l'écran qui répond ;
   - les questions de l'écran affiché en tête (« Sur cet écran »), puis toutes les questions fréquentes ;
-  - « Tutoriel de cet écran », « Chercher partout », les raccourcis utiles et « Revoir tous les tutoriels » ;
+  - « Tutoriel de cet écran », « Démo commentée » (Lettra joue un parcours complet et l'explique,
+    [demo-commentee.md](demo-commentee.md)), « Chercher partout », les raccourcis utiles et « Revoir tous les
+    tutoriels » ;
   - « Demander à l'assistant » seulement si le cabinet a activé l'assistant IA (désactivé par défaut) : la question lui
     est passée telle quelle. L'aide marche entièrement sans lui.
 - **Mémoire** : sections repliées et favoris sont rangés dans le compte et suivent l'utilisateur sur ses autres
