@@ -632,6 +632,25 @@ et `/payments`, plus `minAmount` / `maxAmount` (pièces, encaissements) et `kind
 | Navigateur téléphone (375 px) | Démo Docker, mode appareil 375 px, bouton « Filtres » | Oui |
 | Application Windows, macOS, Android, iOS | Mêmes écrans (composants partagés) | Non vérifié sur appareil |
 
+### Démo commentée (parcours automatique)
+
+Pour montrer Lettra à quelqu'un qui ne connaît pas la comptabilité : menu **Démo commentée** (sous Vue cabinet),
+panneau d'aide « ? » ou **Ctrl+K**, puis **Lancer la démo**. Lettra se pilote seul pendant environ deux à quatre
+minutes : il crée un client, un article, un devis, la facture, l'encaissement, importe le relevé bancaire, prépare une
+relance, puis montre la comptabilité, la TVA, le FEC et la vue cabinet. Une bulle explique chaque étape avec des mots
+simples ; on peut mettre en pause, passer à la suite, changer la vitesse ou arrêter. Chaque chapitre peut aussi être
+lancé seul.
+
+La démo crée de vraies pièces fictives dans le dossier ouvert : elle n'est proposée que sur une installation de
+démonstration (`Lettra:Demo:Seed=true`, jamais en Production). Détails : [docs/demo-commentee.md](docs/demo-commentee.md).
+
+| Où | Vérifié |
+|---|---|
+| Navigateur, ordinateur (1440 px), français | **Vérifié** (démo Docker, et à chaque CI : job « Démo navigateur », `deploy/demo/e2e/demo-commentee.mjs`) |
+| Navigateur, téléphone (390 px), anglais | **Vérifié** (même job) |
+| Navigateur, tablette (900 px) | **Vérifié** (démo Docker) |
+| Application MAUI (Windows, macOS, Android, iOS) | **Non vérifié** |
+
 ### Tutoriel, aide à la saisie et voix
 
 - **Tutoriel** : chaque écran se présente la première fois. Le bouton **?** en haut le rejoue, et le menu

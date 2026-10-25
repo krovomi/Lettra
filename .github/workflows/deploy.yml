@@ -147,6 +147,15 @@ jobs:
           set -a; . ../.env; set +a
           SORTIE="$SORTIE/localhost" node parcours.mjs premier
 
+      # Démo commentée (docs/demo-commentee.md) : le parcours automatique se joue en entier, sans étape bloquée, sur
+      # ordinateur en français et sur téléphone en anglais (TOTP déjà enrôlé par l'étape précédente).
+      - name: Démo commentée jouée de bout en bout (1440 px français, 390 px anglais)
+        working-directory: deploy/demo/e2e
+        run: |
+          set -a; . ../.env; set +a
+          SORTIE="$SORTIE/localhost" node demo-commentee.mjs 1440 fr-FR
+          SORTIE="$SORTIE/localhost" node demo-commentee.mjs 390 en-US
+
       # Serveur commun (docs/serveur-commun.md) : la composition de l'application installée reliée au serveur
       # (harnais serveur-commun, sans MAUI) se connecte par PKCE, voit le client du navigateur et en crée un que le
       # navigateur retrouve.
