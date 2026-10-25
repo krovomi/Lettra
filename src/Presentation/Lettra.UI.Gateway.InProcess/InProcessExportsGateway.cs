@@ -1,5 +1,6 @@
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Exports;
+using Lettra.Exports.Application.Bridges;
 using Lettra.Exports.Application.Fec;
 using Lettra.UI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +14,15 @@ internal sealed class InProcessFecGateway(IServiceScopeFactory scopes) : IFecGat
         InProcessScope.RunAsync(scopes, async (sp, dossier, ct) =>
         {
             OperationResult<FecFile> file = await InProcessScope.QueryAsync(sp, new ExportFecQuery(dossier, from, to), ct).ConfigureAwait(false);
+            return file is { IsSuccess: true, Value: { } value }
+                ? OperationResult<FecDocument>.Success(new FecDocument(value.FileName, value.Content))
+                : OperationResult<FecDocument>.Failure(file.Errors);
+        }, cancellationToken);
+
+    public Task<OperationResult<FecDocument>> ExportForAsync(AccountingSoftwareDto software, DateOnly from, DateOnly to, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, async (sp, dossier, ct) =>
+        {
+            OperationResult<BridgeFile> file = await InProcessScope.QueryAsync(sp, new ExportEntriesForSoftwareQuery(dossier, software, from, to), ct).ConfigureAwait(false);
             return file is { IsSuccess: true, Value: { } value }
                 ? OperationResult<FecDocument>.Success(new FecDocument(value.FileName, value.Content))
                 : OperationResult<FecDocument>.Failure(file.Errors);

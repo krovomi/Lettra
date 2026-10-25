@@ -59,11 +59,41 @@ public sealed class ExportApiTests(LettraApiFactory factory) : IClassFixture<Let
     }
 
     [Fact]
+    public async Task Les_ecritures_partent_au_format_du_logiciel_du_cabinet()
+    {
+        using HttpClient manager = InDossier(factory.CreateClient());
+        await ValidatedInvoiceAsync(manager);
+        int year = LegalCalendar.DateOf(DateTimeOffset.UtcNow).Year;
+
+        using HttpResponseMessage response = await manager.GetAsync(Api($"/api/v1/exports/entries?software=Sage&from={year}-01-01&to={year}-12-31"));
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
+        response.Content.Headers.ContentType!.MediaType.Should().Be("text/csv");
+        response.Content.Headers.ContentDisposition!.FileName.Should().EndWith($"-sage-{year}0101-{year}1231.csv");
+        string text = Encoding.Latin1.GetString(await response.Content.ReadAsByteArrayAsync());
+        text.Should().StartWith("Code journal;Date;").And.Contain(";411000;");
+    }
+
+    [Fact]
+    public async Task Une_passerelle_inconnue_est_refusee()
+    {
+        using HttpClient manager = InDossier(factory.CreateClient());
+
+        foreach (string software in new[] { "Ciel", "9" })
+        {
+            using HttpResponseMessage response = await manager.GetAsync(Api($"/api/v1/exports/entries?software={software}&from=2026-01-01&to=2026-12-31"));
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            (await response.Content.ReadAsStringAsync()).Should().Contain(ErrorCodes.Fec.SoftwareUnknown);
+        }
+    }
+
+    [Fact]
     public async Task L_export_exige_sa_permission()
     {
         using HttpClient collaborator = InDossier(factory.ClientFor(LettraApiFactory.CollaborateurId));
 
         (await collaborator.GetAsync(Api("/api/v1/exports/fec?from=2026-01-01&to=2026-12-31"))).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await collaborator.GetAsync(Api("/api/v1/exports/entries?software=Quadra&from=2026-01-01&to=2026-12-31"))).StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
     [Fact]

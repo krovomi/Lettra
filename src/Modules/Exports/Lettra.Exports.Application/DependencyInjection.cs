@@ -11,6 +11,7 @@ using Lettra.Domain.Common;
 using Lettra.Exports.Application.Accounting;
 using Lettra.Exports.Application.AuditKit;
 using Lettra.Exports.Application.Banking;
+using Lettra.Exports.Application.Bridges;
 using Lettra.Exports.Application.EInvoicing;
 using Lettra.Exports.Application.EInvoicing.Platform;
 using Lettra.Exports.Application.Fec;
@@ -31,6 +32,7 @@ public static class DependencyInjection
     {
         services.AddScoped<FecExportService>();
         services.AddScoped<IQueryHandler<ExportFecQuery, Result<FecFile>>, ExportFecHandler>();
+        services.AddScoped<IQueryHandler<ExportEntriesForSoftwareQuery, Result<BridgeFile>>, ExportEntriesForSoftwareHandler>();
         services.AddScoped<IQueryHandler<ValidateFecQuery, Result<FecValidationResponse>>, ValidateFecHandler>();
         services.AddScoped<IQueryHandler<GetEInvoiceQuery, Result<EInvoiceFile>>, GetEInvoiceHandler>();
         services.AddScoped<ICommandHandler<TransmitInvoiceCommand, Result<PlatformTransmissionResponse>>, TransmitInvoiceHandler>();
