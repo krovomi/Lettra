@@ -314,4 +314,18 @@ internal sealed class FakeDirectoryGateway : IDirectoryGateway
         Task.FromResult(VatError is not null
             ? OperationResult<VatNumberCheckResponse>.Failure(VatError)
             : OperationResult<VatNumberCheckResponse>.Success(VatResponse ?? new VatNumberCheckResponse(vatNumber, true, null, null, DateTimeOffset.UnixEpoch)));
+
+    public CustomerDirectoryCheckResponse CustomerCheck { get; set; } = new(0, [], true);
+
+    public string? CustomerCheckError { get; set; }
+
+    public int CustomerChecks { get; private set; }
+
+    public Task<OperationResult<CustomerDirectoryCheckResponse>> CheckCustomersAsync(CancellationToken cancellationToken)
+    {
+        CustomerChecks++;
+        return Task.FromResult(CustomerCheckError is null
+            ? OperationResult<CustomerDirectoryCheckResponse>.Success(CustomerCheck)
+            : OperationResult<CustomerDirectoryCheckResponse>.Failure(CustomerCheckError));
+    }
 }

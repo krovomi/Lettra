@@ -2,6 +2,7 @@ using Lettra.Api.Security;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Tenancy;
+using Lettra.Application.Features.Customers;
 using Lettra.Application.Features.Parties;
 using Lettra.Contracts.Directory;
 using Lettra.Domain.Common;
@@ -30,7 +31,20 @@ internal static class DirectoryEndpoints
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
+        group.MapGet("/customer-check", CheckCustomersAsync)
+            .RequirePermission(Permission.TiersConsulter)
+            .WithName("CheckCustomersInDirectory")
+            .Produces<CustomerDirectoryCheckResponse>()
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
+
         return group;
+    }
+
+    private static async Task<IResult> CheckCustomersAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken)
+    {
+        Result<CustomerDirectoryCheckResponse> result = await queries
+            .QueryAsync(new CheckCustomersInDirectoryQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false);
+        return Ok(result);
     }
 
     private static async Task<IResult> SearchAsync(

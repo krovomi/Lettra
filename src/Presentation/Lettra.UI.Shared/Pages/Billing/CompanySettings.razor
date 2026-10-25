@@ -25,6 +25,10 @@ else
         <fieldset>
             <legend>@L["Company.Identity"]</legend>
 
+            <div class="lettra-field lettra-field-wide">
+                <CompanyLookup Id="company-lookup" OnSelected="Prefill" />
+            </div>
+
             <div class="lettra-field">
                 <label for="company-name">@L["Customers.Field.Name"]</label>
                 <InputText id="company-name" @bind-Value="_request.Name" autocomplete="organization" />
@@ -194,6 +198,24 @@ else
         }
 
         _loaded = true;
+    }
+
+    /// <summary>
+    /// L'annuaire remplit l'identité et l'adresse du siège ; la forme, le capital, le greffe et les conditions de
+    /// paiement restent à la main. Rien n'est enregistré avant « Enregistrer ».
+    /// </summary>
+    private void Prefill(CompanySearchResult company)
+    {
+        _request.Name = company.Name;
+        _request.Siren = company.Siren;
+        _request.Siret = company.Siret;
+        _request.VatNumber = company.VatNumber;
+        _request.AddressLine1 = company.AddressLine1 ?? string.Empty;
+        _request.AddressLine2 = company.AddressLine2;
+        _request.PostalCode = company.PostalCode ?? string.Empty;
+        _request.City = company.City ?? string.Empty;
+        _request.CountryCode = company.CountryCode;
+        _saved = false;
     }
 
     private async Task SaveAsync()

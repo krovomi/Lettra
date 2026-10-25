@@ -170,6 +170,7 @@ public sealed class SuppliersAndCatalogGatewayParityTests(LettraApiFactory facto
             (await catalog.SetArchivedAsync(id, 1, true, default)).Errors,
             (await directory.SearchCompaniesAsync("martin", 5, default)).Errors,
             (await directory.CheckVatNumberAsync("FR44 732829320", default)).Errors,
+            (await directory.CheckCustomersAsync(default)).Errors,
         ];
 
         failures.Should().AllSatisfy(errors => errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Api.Unreachable));

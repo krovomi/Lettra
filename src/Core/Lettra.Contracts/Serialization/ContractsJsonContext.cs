@@ -78,6 +78,7 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(PagedResponse<PriceListSummary>))]
 [JsonSerializable(typeof(IReadOnlyList<ResolvedPrice>))]
 [JsonSerializable(typeof(CompanySearchResponse))]
+[JsonSerializable(typeof(CustomerDirectoryCheckResponse))]
 [JsonSerializable(typeof(VatNumberCheckResponse))]
 [JsonSerializable(typeof(CreateDossierRequest))]
 [JsonSerializable(typeof(DossierSummary))]

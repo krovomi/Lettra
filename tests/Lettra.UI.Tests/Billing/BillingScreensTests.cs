@@ -382,8 +382,29 @@ public sealed class CompanySettingsTests : BunitContext
         Services.AddLettraUi();
         Services.AddCabinetFakes();
         Services.AddSingleton<IBillingSettingsGateway>(_settings);
-        Services.AddSingleton<IDirectoryGateway>(new FakeDirectoryGateway());
+        Services.AddSingleton<IDirectoryGateway>(_directory);
         LettraCultures.Apply(CultureInfo.GetCultureInfo("fr-FR"));
+    }
+
+    private readonly FakeDirectoryGateway _directory = new();
+
+    [Fact]
+    public void L_annuaire_remplit_l_identite_et_l_adresse_sans_toucher_aux_conditions()
+    {
+        _settings.Company = null;
+        _directory.Companies.Add(FakeDirectoryGateway.Danone);
+        IRenderedComponent<CompanySettings> page = Render<CompanySettings>();
+
+        page.Find("#company-lookup-query").Input("danone");
+        page.Find("#company-lookup-query").KeyDown("Enter");
+        page.Find("#company-lookup-query").KeyDown("Enter");
+
+        page.Find("#company-name").GetAttribute("value").Should().Be("DANONE");
+        page.Find("#company-siren").GetAttribute("value").Should().Be("552032534");
+        page.Find("#company-siret").GetAttribute("value").Should().Be("55203253400646");
+        page.Find("#company-vat").GetAttribute("value").Should().Be("FR27552032534");
+        page.Find("#company-line1").GetAttribute("value").Should().Be("17 Boulevard Haussmann");
+        _settings.Saves.Should().BeEmpty("rien n'est enregistré avant « Enregistrer »");
     }
 
     [Fact]
