@@ -421,6 +421,13 @@ La facture s'ouvre en brouillon (menu **Factures** pour la retrouver).
    n'est plus modifiable.
 2. **Télécharger le Factur-X** : le PDF lisible par tous, avec sa facture électronique intégrée. **XML UBL** donne
    l'autre format accepté par les plateformes.
+3. **Payer par QR code** : dès la validation, l'écran de la facture et son PDF portent un QR code de virement (standard
+   du Conseil européen des paiements). Le client le scanne avec l'application de sa banque : le virement s'ouvre déjà
+   rempli avec l'IBAN de la fiche entreprise, le montant et le numéro de la facture, que le rapprochement bancaire
+   reconnaît ensuite tout seul. Sans IBAN valide dans la fiche entreprise, l'écran propose de le saisir. Ni devis, ni
+   avoir, ni brouillon. *(Vérifié : tests automatiques, PDF/A-3b par veraPDF, code relu par un lecteur de QR code sur
+   l'écran et le PDF de la démo Docker ; non vérifié avec une vraie application bancaire ni dans les applications
+   installées.)* Détails : [docs/se-faire-payer.md](docs/se-faire-payer.md).
 
 ### 5. La transmission à la plateforme agréée (simulée)
 
