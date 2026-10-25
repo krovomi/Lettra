@@ -451,6 +451,10 @@ Menu **FEC** : l'exercice est l'année civile en cours (modifiable, 24 mois au p
    débit et crédit, égaux.
 3. **Contrôler un fichier** passe au même validateur un FEC venu d'un autre logiciel ; chaque constat indique la
    ligne, la colonne et l'écriture concernées.
+4. **Vers le logiciel du cabinet** : les écritures de l'exercice partent au format d'import de Quadra (ASCII), Sage 100
+   (import paramétrable), Cegid Expert (écritures Excel) ou ACD (import paramétrable). Ce sont les mêmes écritures que
+   le FEC, rien n'est recalculé. Vérifié dans la démo Docker (navigateur) ; aucun import n'a encore été essayé dans un
+   vrai logiciel de production. Détails : [docs/passerelles-logiciels-cabinet.md](docs/passerelles-logiciels-cabinet.md).
 
 Sans SIREN dans la fiche entreprise, l'export le demande au lieu de produire un fichier.
 
