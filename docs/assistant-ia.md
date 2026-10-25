@@ -17,7 +17,7 @@ Avant tout envoi au moteur, Lettra masque les noms et identifiants **connus du d
 articles). Le point 1 envoie le texte tapé par l'utilisateur : un nom de personne ou d'entreprise qui n'est pas encore
 dans le dossier passerait en clair. L'AIPD (annexe I §7 et §8), l'analyse de risques (annexe J §5.2) et l'annexe F §10
 exigent un repérage des noms propres (détection d'entités nommées) avant d'ouvrir ce texte libre à l'IA. Ce repérage
-n'existe pas encore : le DPO a décidé le 23/10/2026 de fermer le point 1 jusque-là.
+n'existe pas encore : le DPO a décidé de fermer le point 1 jusque-là.
 
 ## Ce que fait Lettra
 

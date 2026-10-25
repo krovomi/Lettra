@@ -67,7 +67,7 @@ chiffre d'affaires est donc donné en indice (100 = mois moyen) et le poids du p
 qui il est.
 
 **Aucun nom non plus.** Un dossier n'est désigné que par son identifiant (`dossier_id`) : ni son nom, ni celui du
-cabinet ne sont publiés, car le nom d'une entreprise individuelle est celui d'une personne (décision du DPO, 24/10/2026).
+cabinet ne sont publiés, car le nom d'une entreprise individuelle est celui d'une personne (décision du DPO).
 Les tableaux affichent une **référence courte**, les 8 derniers caractères de l'identifiant (« Dossier 3f9a21bc »),
 calculée dans la requête (`label_replace`). La même référence apparaît sous le nom de chaque dossier dans le menu
 **Tableaux de bord** de Lettra, qui montre les noms selon les droits de chacun, et la recherche de « Mes dossiers » la

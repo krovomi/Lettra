@@ -764,8 +764,8 @@ données. Sauvegarder les données du navigateur avant une manipulation risquée
 l'enrôlement du code à usage unique de l'utilisateur fictif est à refaire une fois. Les données Lettra sont conservées.
 Le navigateur prend la nouvelle version tout seul, sans fermer ses onglets : un onglet ouvert dans les dix secondes qui
 suivent se recharge de lui-même ; un onglet déjà ouvert affiche « Nouvelle version de Lettra disponible » avec un
-bouton **Recharger**, pour ne jamais perdre une saisie en cours. Seule exception, la première fois après une version
-d'avant le 19 octobre 2026 : appuyez une fois sur F5 (ou fermez et rouvrez la fenêtre installée).
+bouton **Recharger**, pour ne jamais perdre une saisie en cours. Seule exception, la première fois après une ancienne
+version qui n'avait pas encore ce bandeau : appuyez une fois sur F5 (ou fermez et rouvrez la fenêtre installée).
 Sous Windows, fermez Lettra, téléchargez le nouvel artefact et remplacez le dossier extrait : vos
 données, rangées ailleurs, sont conservées. Sous Android, `adb install -r` installe la nouvelle version par-dessus
 l'ancienne et garde les données : les APK de la CI sont signés avec la même clé de démonstration
@@ -902,7 +902,7 @@ deploy/            démo Docker, Helm, OpenTofu, Argo CD, cellules, Keycloak, ob
 - Migrations : même identifiant dans les trois providers ; quand deux changements ajoutent chacun une migration, le second
   intégré régénère la sienne.
 - Tests nommés en français (`Une_entreprise_francaise_sans_siren_est_refusee`).
-- Audit d'architecture d'octobre 2026 : écarts, corrections et reste ouvert dans
+- Audit d'architecture : écarts, corrections et reste ouvert dans
   [docs/qualite-du-code.md](docs/qualite-du-code.md).
 
 Le trajet d'une requête :
