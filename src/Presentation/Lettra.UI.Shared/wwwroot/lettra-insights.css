@@ -1,0 +1,51 @@
+/* Éclairages : météo des paiements. Téléphone d'abord ; tablette dès 768px, bureau dès 1200px. Reprend les chiffres clés
+   des encaissements (lt-banking-stats) ; toutes les couleurs viennent des jetons. */
+
+#weather-stats .lt-banking-stat { min-width: 0; }
+#weather-stats .is-amount strong { font-size: var(--text-lg); white-space: nowrap; }
+.lt-weather-forecast { margin-bottom: var(--space-4); }
+
+/* Prévision : une ligne par semaine, la barre prend la place qui reste. */
+.lt-weather-weeks { list-style: none; margin: var(--space-3) 0 0; padding: 0; display: grid; gap: var(--space-2); }
+.lt-weather-weeks li { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "week amount" "bar bar"; gap: var(--space-1) var(--space-3); align-items: center; }
+.lt-weather-week { grid-area: week; font-size: var(--text-sm); }
+.lt-weather-weeks li.is-current .lt-weather-week { font-weight: 600; }
+.lt-weather-bar { grid-area: bar; display: block; height: 0.625rem; border-radius: 999px; background: var(--color-neutral-bg); overflow: hidden; }
+.lt-weather-bar > span { display: block; height: 100%; border-radius: inherit; background: var(--color-primary); }
+.lt-weather-amount { grid-area: amount; display: inline-flex; flex-direction: column; align-items: flex-end; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Bulletins : une carte par client, colonne unique sur téléphone. */
+.lt-weather-cards { list-style: none; margin: var(--space-3) 0 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+.lt-weather-card { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-4); border: 1px solid var(--color-border); border-left-width: 4px; border-radius: var(--radius-lg); background: var(--color-surface); min-width: 0; }
+.lt-weather-card.is-sunny { border-left-color: var(--color-success); }
+.lt-weather-card.is-cloudy { border-left-color: var(--color-info-fg); }
+.lt-weather-card.is-rainy { border-left-color: var(--color-warning); }
+.lt-weather-card.is-stormy { border-left-color: var(--color-danger); }
+.lt-weather-head { display: flex; align-items: center; gap: var(--space-3); }
+.lt-weather-head h3 { margin: 0; font-size: var(--text-base); overflow-wrap: anywhere; }
+.lt-weather-icon { display: inline-flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; flex: none; border-radius: 50%; background: var(--color-neutral-bg); color: var(--color-neutral-fg); }
+.is-sunny .lt-weather-icon { background: var(--color-success-bg); color: var(--color-success-fg); }
+.is-cloudy .lt-weather-icon { background: var(--color-info-bg); color: var(--color-info-fg); }
+.is-rainy .lt-weather-icon { background: var(--color-warning-bg); color: var(--color-warning-fg); }
+.is-stormy .lt-weather-icon { background: var(--color-danger-bg); color: var(--color-danger-fg); }
+.lt-weather-kind { color: var(--color-fg-muted); font-size: var(--text-sm); }
+.lt-weather-why { margin: 0; }
+.lt-weather-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2) var(--space-3); margin: 0; }
+.lt-weather-facts dt { color: var(--color-fg-muted); font-size: var(--text-sm); }
+.lt-weather-facts dd { margin: 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.lt-weather-expected summary { cursor: pointer; min-height: var(--hit); display: flex; align-items: center; }
+.lt-weather-expected ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-1); }
+.lt-weather-expected li { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); font-size: var(--text-sm); }
+.lt-weather-rules { margin: 0 0 var(--space-3); padding-left: var(--space-4); display: grid; gap: var(--space-2); }
+.lt-weather-rules svg { vertical-align: text-bottom; }
+
+@media (min-width: 768px) {
+    .lt-weather-weeks li { grid-template-columns: 11rem minmax(0, 1fr) 9rem; grid-template-areas: "week bar amount"; }
+    .lt-weather-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1200px) {
+    #weather-stats .is-amount strong { font-size: var(--text-2xl); }
+    .lt-weather-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.lt-weather-doubtful { margin: var(--space-3) 0 0; }

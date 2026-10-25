@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.PaymentWeather" xml:space="preserve"><value>Payment weather</value></data>
+  <data name="Weather.Title" xml:space="preserve"><value>Payment weather</value></data>
+  <data name="Weather.Subtitle" xml:space="preserve"><value>Each customer gets a weather report drawn from their payment history. Lettra uses it to predict when each open invoice should be paid.</value></data>
+  <data name="Weather.Stat.FourWeeks" xml:space="preserve"><value>Expected within 4 weeks</value></data>
+  <data name="Weather.Stat.EightWeeks" xml:space="preserve"><value>Expected over 8 weeks</value></data>
+  <data name="Weather.Stat.Stormy" xml:space="preserve"><value>Stormy customers</value></data>
+  <data name="Weather.Stat.Sunny" xml:space="preserve"><value>Sunny customers</value></data>
+  <data name="Weather.Forecast" xml:space="preserve"><value>Collection forecast</value></data>
+  <data name="Weather.Forecast.Hint" xml:space="preserve"><value>Each open invoice is expected on its due date, shifted by its customer's usual delay, never before tomorrow. Cash planning can reuse these amounts.</value></data>
+  <data name="Weather.Week" xml:space="preserve"><value>Week of {0}</value></data>
+  <data name="Weather.Week.Invoices" xml:space="preserve"><value>{0} invoice(s)</value></data>
+  <data name="Weather.Later" xml:space="preserve"><value>Later: {0} expected beyond eight weeks.</value></data>
+  <data name="Weather.Customers" xml:space="preserve"><value>Report by customer</value></data>
+  <data name="Weather.Empty" xml:space="preserve"><value>No weather yet</value></data>
+  <data name="Weather.Empty.Text" xml:space="preserve"><value>The weather appears once validated invoices have been paid or have reached their due date.</value></data>
+  <data name="Weather.Search" xml:space="preserve"><value>Search a customer</value></data>
+  <data name="Weather.Filter" xml:space="preserve"><value>Weather</value></data>
+  <data name="Weather.Filter.All" xml:space="preserve"><value>All</value></data>
+  <data name="Weather.Count" xml:space="preserve"><value>{0} customer(s) of {1}</value></data>
+  <data name="Weather.NoMatch" xml:space="preserve"><value>No customer matches these filters.</value></data>
+  <data name="Weather.Kind.Sunny" xml:space="preserve"><value>Sunny</value></data>
+  <data name="Weather.Kind.Cloudy" xml:space="preserve"><value>Cloudy</value></data>
+  <data name="Weather.Kind.Rainy" xml:space="preserve"><value>Rainy</value></data>
+  <data name="Weather.Kind.Stormy" xml:space="preserve"><value>Stormy</value></data>
+  <data name="Weather.Kind.Unknown" xml:space="preserve"><value>Not enough history</value></data>
+  <data name="Weather.OnTime" xml:space="preserve"><value>On time</value></data>
+  <data name="Weather.OnTime.Value" xml:space="preserve"><value>{0}% of {1} invoice(s)</value></data>
+  <data name="Weather.Typical" xml:space="preserve"><value>Usual delay</value></data>
+  <data name="Weather.Outstanding" xml:space="preserve"><value>Outstanding</value></data>
+  <data name="Weather.BestDay" xml:space="preserve"><value>Best day to send</value></data>
+  <data name="Weather.BestDay.Value" xml:space="preserve"><value>{0} (paid {1} days sooner)</value></data>
+  <data name="Weather.BestDay.None" xml:space="preserve"><value>No day stands out</value></data>
+  <data name="Weather.Expected" xml:space="preserve"><value>{0} expected payment(s)</value></data>
+  <data name="Weather.Expected.On" xml:space="preserve"><value>expected on {0}</value></data>
+  <data name="Weather.Days.Early" xml:space="preserve"><value>{0} days early</value></data>
+  <data name="Weather.Days.OnTime" xml:space="preserve"><value>on the due date</value></data>
+  <data name="Weather.Days.Late" xml:space="preserve"><value>{0} days after the due date</value></data>
+  <data name="Weather.Why.Overdue" xml:space="preserve"><value>An invoice has been waiting for payment {0} days past its due date.</value></data>
+  <data name="Weather.Why.Unknown" xml:space="preserve"><value>Fewer than two invoices paid or due: Lettra needs more history.</value></data>
+  <data name="Weather.Why.Average" xml:space="preserve"><value>Pays {0} on average.</value></data>
+  <data name="Weather.Sort.Weather" xml:space="preserve"><value>Weather</value></data>
+  <data name="Weather.Sort.Late" xml:space="preserve"><value>Average delay</value></data>
+  <data name="Weather.Rules" xml:space="preserve"><value>How Lettra works out the weather</value></data>
+  <data name="Weather.Rule.Sunny" xml:space="preserve"><value>pays at most 2 days after the due date on average, the time a transfer takes.</value></data>
+  <data name="Weather.Rule.Cloudy" xml:space="preserve"><value>pays 3 to 10 days after the due date on average.</value></data>
+  <data name="Weather.Rule.Rainy" xml:space="preserve"><value>pays 11 to 30 days after the due date on average.</value></data>
+  <data name="Weather.Rule.Stormy" xml:space="preserve"><value>pays more than a month after the due date on average, or one of their invoices is more than 60 days overdue.</value></data>
+  <data name="Weather.Rule.Unknown" xml:space="preserve"><value>fewer than two invoices paid or due over the last twelve months.</value></data>
+  <data name="Weather.Rules.Hint" xml:space="preserve"><value>The average delay is weighted by amounts; an overdue invoice still unpaid counts with its delay so far. The best day to send compares payment delays by the day the invoice was issued. These are simple statistics, worked out each time the screen opens: no AI, nothing is written to the dossier.</value></data>
+  <data name="Weather.Doubtful" xml:space="preserve"><value>Doubtful: {0} of invoices more than {1} days overdue, left out of the forecast. Better chase them.</value></data>
+  <data name="Weather.Expected.Doubtful" xml:space="preserve"><value>doubtful, not forecast</value></data>
+</root>

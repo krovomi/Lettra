@@ -15,6 +15,7 @@ using Lettra.Contracts.Directory;
 using Lettra.Contracts.Dossiers;
 using Lettra.Contracts.Exports;
 using Lettra.Contracts.Identity;
+using Lettra.Contracts.Insights;
 using Lettra.Contracts.Integrity;
 using Lettra.Contracts.Pilotage;
 using Lettra.Contracts.Policies;
@@ -175,4 +176,5 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(PagedResponse<PaymentReminderResponse>))]
 [JsonSerializable(typeof(RunRemindersResponse))]
 [JsonSerializable(typeof(InvitationEmailResponse))]
+[JsonSerializable(typeof(PaymentWeatherResponse))]
 public sealed partial class ContractsJsonContext : JsonSerializerContext;

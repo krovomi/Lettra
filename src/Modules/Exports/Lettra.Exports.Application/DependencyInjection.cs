@@ -5,6 +5,7 @@ using Lettra.Contracts.Accounting;
 using Lettra.Contracts.Banking;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Exports;
+using Lettra.Contracts.Insights;
 using Lettra.Contracts.Reminders;
 using Lettra.Contracts.Tax;
 using Lettra.Domain.Common;
@@ -14,6 +15,7 @@ using Lettra.Exports.Application.Banking;
 using Lettra.Exports.Application.EInvoicing;
 using Lettra.Exports.Application.EInvoicing.Platform;
 using Lettra.Exports.Application.Fec;
+using Lettra.Exports.Application.Insights;
 using Lettra.Exports.Application.Reminders;
 using Lettra.Exports.Application.Tax;
 using Microsoft.Extensions.DependencyInjection;
@@ -38,6 +40,7 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<ReportPaymentCommand, Result<PlatformTransmissionResponse>>, ReportPaymentHandler>();
         services.AddScoped<IQueryHandler<GetPlatformTransmissionQuery, Result<PlatformTransmissionResponse>>, GetPlatformTransmissionHandler>();
         services.AddScoped<IQueryHandler<GetReceivablesSummaryQuery, Result<ReceivablesSummaryResponse>>, GetReceivablesSummaryHandler>();
+        services.AddScoped<IQueryHandler<GetPaymentWeatherQuery, Result<PaymentWeatherResponse>>, GetPaymentWeatherHandler>();
 
         // Consultation de la comptabilité : journal des ventes, balance et grand livre, lus comme le FEC.
         services.AddScoped<IQueryHandler<GetSalesJournalQuery, Result<SalesJournalResponse>>, GetSalesJournalHandler>();

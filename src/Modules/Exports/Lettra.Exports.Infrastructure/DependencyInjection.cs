@@ -4,6 +4,7 @@ using Lettra.Exports.Application;
 using Lettra.Exports.Application.AuditKit;
 using Lettra.Exports.Application.Banking;
 using Lettra.Exports.Application.EInvoicing.Platform;
+using Lettra.Exports.Application.Insights;
 using Lettra.Exports.Application.Reminders;
 using Lettra.Exports.Application.Tax;
 using Microsoft.Extensions.Configuration;
@@ -43,6 +44,7 @@ public static class DependencyInjection
         services.AddScoped<IPaymentReminderRepository, EfPaymentReminderRepository>();
         services.AddScoped<IReminderContextReader, EfReminderContextReader>();
         services.AddScoped<IAuditTrailReader, EfAuditTrailReader>();
+        services.AddScoped<IPaymentHistoryReader, EfPaymentHistoryReader>();
         string platform = configuration?[PlatformKey] ?? "None";
         switch (platform)
         {

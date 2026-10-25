@@ -1,0 +1,299 @@
+@page "/payment-weather"
+@inject IInsightsGateway Insights
+@inject TimeProvider Clock
+@inject IStringLocalizer<SharedResource> L
+@* Météo des paiements : un bulletin par client tiré de son historique (soleil : il paie à l'heure ; orage : il traîne),
+   le meilleur jour pour lui envoyer une facture et la date d'encaissement probable de chaque facture due, regroupées
+   en prévision des huit prochaines semaines. Tout est calculé en C# par le serveur ; l'écran ne fait que montrer. *@
+
+<PageTitle>@L["Weather.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Weather.Title"]</h1>
+        <p class="lettra-muted">@L["Weather.Subtitle"]</p>
+    </div>
+    <div class="lt-page-actions">
+        <a class="lettra-button is-secondary" href="reminders" id="weather-to-reminders"><Icon Name="mail" Size="18" /> @L["Nav.Reminders"]</a>
+    </div>
+</div>
+
+<GeneralErrors Errors="_errors" />
+
+<div class="lt-banking-stats" id="weather-stats">
+    <div class="lt-banking-stat is-amount"><span>@L["Weather.Stat.FourWeeks"]</span><strong id="weather-four-weeks">@ExplorerText.Money(FourWeeks)</strong></div>
+    <div class="lt-banking-stat is-amount"><span>@L["Weather.Stat.EightWeeks"]</span><strong id="weather-eight-weeks">@ExplorerText.Money(_weather?.Forecast.Sum(w => w.ExpectedInclTax) ?? 0m)</strong></div>
+    <div class="lt-banking-stat is-pending"><span>@L["Weather.Stat.Stormy"]</span><strong id="weather-stormy">@Count(PaymentWeatherDto.Stormy)</strong></div>
+    <div class="lt-banking-stat is-proposed"><span>@L["Weather.Stat.Sunny"]</span><strong id="weather-sunny">@Count(PaymentWeatherDto.Sunny)</strong></div>
+</div>
+
+<section class="lettra-card lt-weather-forecast" aria-labelledby="weather-forecast-title">
+    <h2 id="weather-forecast-title">@L["Weather.Forecast"]</h2>
+    <p class="lettra-muted">@L["Weather.Forecast.Hint"]</p>
+    @if (_weather is null)
+    {
+        <ListSkeleton Columns="3" />
+    }
+    else
+    {
+        <ol class="lt-weather-weeks" id="weather-weeks">
+            @foreach (CollectionForecastWeekResponse week in _weather.Forecast)
+            {
+                <li @key="week.WeekStart" class="@(week == _weather.Forecast[0] ? "is-current" : null)">
+                    <span class="lt-weather-week">@string.Format(Culture, L["Weather.Week"], week.WeekStart.ToString("d", Culture))</span>
+                    <span class="lt-weather-bar" aria-hidden="true"><span style="@($"width:{BarWidth(week.ExpectedInclTax).ToString(CultureInfo.InvariantCulture)}%")"></span></span>
+                    <span class="lt-weather-amount">
+                        <strong>@ExplorerText.Money(week.ExpectedInclTax)</strong>
+                        <small class="lettra-muted">@string.Format(Culture, L["Weather.Week.Invoices"], week.Invoices)</small>
+                    </span>
+                </li>
+            }
+        </ol>
+        @if (_weather.Later > 0m)
+        {
+            <p class="lettra-muted" id="weather-later">@string.Format(Culture, L["Weather.Later"], ExplorerText.Money(_weather.Later))</p>
+        }
+        @if (_weather.Doubtful > 0m)
+        {
+            <p class="la-callout lt-weather-doubtful" id="weather-doubtful"><Icon Name="triangle-alert" Size="16" /> @string.Format(Culture, L["Weather.Doubtful"], ExplorerText.Money(_weather.Doubtful), PaymentWeatherResponse.StormOverdueDays)</p>
+        }
+    }
+</section>
+
+<section class="lettra-card" aria-labelledby="weather-customers-title">
+    <h2 id="weather-customers-title">@L["Weather.Customers"]</h2>
+    @if (_weather is null)
+    {
+        <ListSkeleton Columns="4" />
+    }
+    else if (_weather.Customers.Count == 0)
+    {
+        <EmptyState Id="weather-empty" IconName="cloud-sun" Title="@L["Weather.Empty"]" Text="@L["Weather.Empty.Text"]" />
+    }
+    else
+    {
+        <ListFilterBar Id="weather-filters" ActiveCount="ActiveFilters" OnReset="ResetFilters">
+            <ChildContent>
+                <div class="lt-filter">
+                    <label for="weather-search">@L["Weather.Search"]</label>
+                    <input id="weather-search" type="search" @bind="_search" @bind:event="oninput" @bind:after="() => _page = 1" autocomplete="off" />
+                </div>
+            </ChildContent>
+            <More>
+                <div class="lt-filter">
+                    <label for="weather-filter">@L["Weather.Filter"]</label>
+                    <select id="weather-filter" @bind="_filter" @bind:after="() => _page = 1">
+                        <option value="">@L["Weather.Filter.All"]</option>
+                        @foreach (PaymentWeatherDto weather in Weathers)
+                        {
+                            <option value="@weather">@L[$"Weather.Kind.{weather}"]</option>
+                        }
+                    </select>
+                </div>
+                <SortSelect Id="weather-sort" Options="_sortOptions" State="_sort" OnSort="() => _page = 1" />
+            </More>
+        </ListFilterBar>
+        <p class="lettra-muted" id="weather-count">@string.Format(Culture, L["Weather.Count"], Filtered.Count, _weather.Customers.Count)</p>
+        @if (Filtered.Count == 0)
+        {
+            <p class="lettra-muted" id="weather-nomatch">@L["Weather.NoMatch"]</p>
+        }
+        else
+        {
+            <ul class="lt-weather-cards" id="weather-cards">
+                @foreach (CustomerPaymentWeatherResponse customer in Filtered.Skip((_page - 1) * PageSize).Take(PageSize))
+                {
+                    <li @key="customer.CustomerId" class="@($"lt-weather-card is-{customer.Weather.ToString().ToLowerInvariant()}")" id="@($"weather-{customer.CustomerId}")">
+                        <div class="lt-weather-head">
+                            <span class="lt-weather-icon" aria-hidden="true"><Icon Name="@IconOf(customer.Weather)" Size="28" /></span>
+                            <div>
+                                <h3><a href="@($"customers/{customer.CustomerId}")">@customer.CustomerName</a></h3>
+                                <span class="lt-weather-kind">@L[$"Weather.Kind.{customer.Weather}"]</span>
+                            </div>
+                        </div>
+                        <p class="lt-weather-why">@Why(customer)</p>
+                        <dl class="lt-weather-facts">
+                            @if (customer.Weather != PaymentWeatherDto.Unknown || customer.Samples > 0)
+                            {
+                                <div><dt>@L["Weather.OnTime"]</dt><dd>@string.Format(Culture, L["Weather.OnTime.Value"], customer.OnTimePercent, customer.Samples)</dd></div>
+                                <div><dt>@L["Weather.Typical"]</dt><dd>@Days(customer.TypicalDaysLate)</dd></div>
+                            }
+                            <div><dt>@L["Weather.Outstanding"]</dt><dd>@ExplorerText.Money(customer.OutstandingInclTax)</dd></div>
+                            <div>
+                                <dt>@L["Weather.BestDay"]</dt>
+                                <dd class="lt-weather-best">
+                                    @if (customer.BestSendDay is { } day)
+                                    {
+                                        @string.Format(Culture, L["Weather.BestDay.Value"], Culture.DateTimeFormat.GetDayName(day), customer.BestSendDayGainDays)
+                                    }
+                                    else
+                                    {
+                                        <span class="lettra-muted">@L["Weather.BestDay.None"]</span>
+                                    }
+                                </dd>
+                            </div>
+                        </dl>
+                        @if (customer.Expected.Count > 0)
+                        {
+                            <details class="lt-weather-expected">
+                                <summary>@string.Format(Culture, L["Weather.Expected"], customer.Expected.Count)</summary>
+                                <ul>
+                                    @foreach (ExpectedCollectionResponse invoice in customer.Expected)
+                                    {
+                                        <li @key="invoice.InvoiceId">
+                                            <a href="@($"invoices/{invoice.InvoiceId}")">@invoice.Number</a>
+                                            <span>@ExplorerText.Money(invoice.OutstandingInclTax)</span>
+                                            @if (invoice.Doubtful)
+                                            {
+                                                <span class="lettra-status is-refused">@L["Weather.Expected.Doubtful"]</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="lettra-muted">@string.Format(Culture, L["Weather.Expected.On"], invoice.ExpectedDate.ToString("d", Culture))</span>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            </details>
+                        }
+                    </li>
+                }
+            </ul>
+            @if (Filtered.Count > PageSize)
+            {
+                <nav class="lt-pager" aria-label="@L["Accounting.Pages"]" id="weather-pager">
+                    <button type="button" class="lettra-button is-secondary" disabled="@(_page <= 1)" @onclick="() => _page--">@L["Accounting.Previous"]</button>
+                    <span>@string.Format(Culture, L["Accounting.PageOf"], _page, PageCount)</span>
+                    <button type="button" class="lettra-button is-secondary" disabled="@(_page >= PageCount)" @onclick="() => _page++">@L["Accounting.Next"]</button>
+                </nav>
+            }
+        }
+    }
+</section>
+
+<Collapsible Id="weather-rules" Title="@L["Weather.Rules"]" InitiallyOpen="false">
+    <ul class="lt-weather-rules">
+        @foreach (PaymentWeatherDto weather in Weathers)
+        {
+            <li><Icon Name="@IconOf(weather)" Size="18" /> <strong>@L[$"Weather.Kind.{weather}"]</strong> : @L[$"Weather.Rule.{weather}"]</li>
+        }
+    </ul>
+    <p class="lettra-hint">@L["Weather.Rules.Hint"]</p>
+</Collapsible>
+
+@code {
+    private const int PageSize = 24;
+    private static readonly PaymentWeatherDto[] Weathers =
+        [PaymentWeatherDto.Sunny, PaymentWeatherDto.Cloudy, PaymentWeatherDto.Rainy, PaymentWeatherDto.Stormy, PaymentWeatherDto.Unknown];
+
+    private static readonly Dictionary<WeatherSort, Func<CustomerPaymentWeatherResponse, object?>> Keys = new()
+    {
+        [WeatherSort.Weather] = c => Severity(c.Weather),
+        [WeatherSort.Customer] = c => c.CustomerName,
+        [WeatherSort.Outstanding] = c => c.OutstandingInclTax,
+        [WeatherSort.Late] = c => c.Samples == 0 ? null : c.AverageDaysLate,
+    };
+
+    private PaymentWeatherResponse? _weather;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private string? _search;
+    private PaymentWeatherDto? _filter;
+    private int _page = 1;
+    private readonly SortState<WeatherSort> _sort = new(WeatherSort.Weather, SortDirectionDto.Descending);
+    private IReadOnlyList<SortOption<WeatherSort>> _sortOptions = [];
+
+    /// <summary>Tris des bulletins, chargés en entier (un dossier a quelques centaines de clients au plus).</summary>
+    private enum WeatherSort
+    {
+        Weather,
+        Customer,
+        Outstanding,
+        Late,
+    }
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private IReadOnlyList<CustomerPaymentWeatherResponse> Filtered
+    {
+        get
+        {
+            IEnumerable<CustomerPaymentWeatherResponse> rows = _weather?.Customers ?? [];
+            if (_filter is { } weather)
+            {
+                rows = rows.Where(c => c.Weather == weather);
+            }
+
+            rows = rows.Where(c => ListSorting.Matches(c.CustomerName, ListSearch.Normalize(_search)));
+            return ListSorting.Sort(rows, _sort, Keys);
+        }
+    }
+
+    private int ActiveFilters => (ListSearch.Normalize(_search) is null ? 0 : 1) + (_filter is null ? 0 : 1);
+
+    private int PageCount => Math.Max(1, (int)Math.Ceiling(Filtered.Count / (double)PageSize));
+
+    /// <summary>Encaissements attendus d'ici quatre semaines, à compter d'aujourd'hui.</summary>
+    private decimal FourWeeks => _weather is null
+        ? 0m
+        : _weather.Customers.SelectMany(c => c.Expected).Where(e => !e.Doubtful && e.ExpectedDate <= _weather.Today.AddDays(28)).Sum(e => e.OutstandingInclTax);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _sortOptions =
+        [
+            new(WeatherSort.Weather, L["Weather.Sort.Weather"], SortDirectionDto.Descending),
+            new(WeatherSort.Customer, L["Billing.Column.Customer"]),
+            new(WeatherSort.Outstanding, L["Weather.Outstanding"], SortDirectionDto.Descending),
+            new(WeatherSort.Late, L["Weather.Sort.Late"], SortDirectionDto.Descending),
+        ];
+        OperationResult<PaymentWeatherResponse> result = await Insights.GetPaymentWeatherAsync(CancellationToken.None);
+        _errors = result.Errors;
+        _weather = result.Value ?? new PaymentWeatherResponse(Clock.LocalToday(), [], [], 0m);
+    }
+
+    private int Count(PaymentWeatherDto weather) => _weather?.Customers.Count(c => c.Weather == weather) ?? 0;
+
+    private decimal BarWidth(decimal amount)
+    {
+        decimal max = _weather?.Forecast.Select(w => w.ExpectedInclTax).DefaultIfEmpty(0m).Max() ?? 0m;
+        return max <= 0m ? 0m : Math.Round(100m * amount / max, 1);
+    }
+
+    private static int Severity(PaymentWeatherDto weather) => weather switch
+    {
+        PaymentWeatherDto.Stormy => 4,
+        PaymentWeatherDto.Rainy => 3,
+        PaymentWeatherDto.Cloudy => 2,
+        PaymentWeatherDto.Sunny => 1,
+        _ => 0,
+    };
+
+    private static string IconOf(PaymentWeatherDto weather) => weather switch
+    {
+        PaymentWeatherDto.Sunny => "sun",
+        PaymentWeatherDto.Cloudy => "cloud-sun",
+        PaymentWeatherDto.Rainy => "cloud-rain",
+        PaymentWeatherDto.Stormy => "cloud-lightning",
+        _ => "cloud",
+    };
+
+    private string Days(int days) => days switch
+    {
+        < 0 => string.Format(Culture, L["Weather.Days.Early"], -days),
+        0 => L["Weather.Days.OnTime"],
+        _ => string.Format(Culture, L["Weather.Days.Late"], days),
+    };
+
+    /// <summary>La phrase qui explique la météo, avec la règle qui l'a décidée.</summary>
+    private string Why(CustomerPaymentWeatherResponse customer) => customer.Weather switch
+    {
+        PaymentWeatherDto.Stormy when customer.MaxDaysOverdue > PaymentWeatherResponse.StormOverdueDays => string.Format(Culture, L["Weather.Why.Overdue"], customer.MaxDaysOverdue),
+        PaymentWeatherDto.Unknown => L["Weather.Why.Unknown"],
+        _ => string.Format(Culture, L["Weather.Why.Average"], Days(customer.AverageDaysLate)),
+    };
+
+    private void ResetFilters()
+    {
+        (_search, _filter, _page) = (null, null, 1);
+    }
+}

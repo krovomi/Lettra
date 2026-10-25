@@ -120,4 +120,8 @@
   <data name="Help.Faq.assistant.Question" xml:space="preserve"><value>What is the AI assistant for?</value></data>
   <data name="Help.Faq.assistant.Answer" xml:space="preserve"><value>The assistant explains a rule or drafts a quote, which you review and validate yourself: it never validates or sends anything. It is off by default; a firm administrator can turn it on. This help works without it.</value></data>
   <data name="Help.Faq.assistant.Keywords" xml:space="preserve"><value>ai artificial intelligence assistant claude question</value></data>
+  <data name="Nav.PaymentWeather.Keywords" xml:space="preserve"><value>weather forecast collection late payer cash delay</value></data>
+  <data name="Help.Faq.weather.Question" xml:space="preserve"><value>When will my invoices be collected?</value></data>
+  <data name="Help.Faq.weather.Answer" xml:space="preserve"><value>Payment weather gives each customer a weather report drawn from their past payments, and the likely payment date of each open invoice. The eight-week forecast helps plan cash.</value></data>
+  <data name="Help.Faq.weather.Keywords" xml:space="preserve"><value>weather forecast collection cash delay payer</value></data>
 </root>

@@ -120,4 +120,8 @@
   <data name="Help.Faq.assistant.Question" xml:space="preserve"><value>À quoi sert l'assistant IA ?</value></data>
   <data name="Help.Faq.assistant.Answer" xml:space="preserve"><value>L'assistant explique une règle ou prépare un brouillon de devis, que vous relisez et validez vous-même : il ne valide ni n'envoie rien. Il est désactivé par défaut ; un administrateur du cabinet peut l'activer. Cette aide-ci fonctionne sans lui.</value></data>
   <data name="Help.Faq.assistant.Keywords" xml:space="preserve"><value>ia intelligence artificielle assistant claude question</value></data>
+  <data name="Nav.PaymentWeather.Keywords" xml:space="preserve"><value>météo prévision encaissement retard payeur trésorerie délai</value></data>
+  <data name="Help.Faq.weather.Question" xml:space="preserve"><value>Quand mes factures seront-elles encaissées ?</value></data>
+  <data name="Help.Faq.weather.Answer" xml:space="preserve"><value>La météo des paiements donne à chaque client sa météo, tirée de ses paiements passés, et la date probable d'encaissement de chaque facture due. La prévision des huit prochaines semaines aide à prévoir la trésorerie.</value></data>
+  <data name="Help.Faq.weather.Keywords" xml:space="preserve"><value>météo prévision encaissement trésorerie délai payeur</value></data>
 </root>
