@@ -25,6 +25,12 @@ concurrency:
   group: serveur-commun-android-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
   cancel-in-progress: true
 
+env:
+  # SDK .NET épinglé : le SDK 10.0.403 (runtime 10.0.14) est annoncé par Microsoft mais ses fichiers ne se
+  # téléchargent pas (HTTP 409), et sans version chaque job prend le dernier SDK. global.json reste ouvert
+  # (10.0.100 et suivants) pour les postes de développement. À relever quand le SDK suivant s'installe.
+  DOTNET_SDK_VERSION: 10.0.402
+
 jobs:
   android:
     name: Navigateur et application Android sur les mêmes données
@@ -37,7 +43,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-dotnet@v5
         with:
-          global-json-file: global.json
+          dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
       - uses: actions/setup-java@v4
         with:
           distribution: microsoft

@@ -943,7 +943,9 @@ commande locale : [docs/qualite-du-code.md](docs/qualite-du-code.md)), conformit
 bloquant tant qu'il n'est pas signé) avec leurs artefacts, captures du design et audit d'accessibilité (Playwright,
 axe-core), gitleaks, SBOM CycloneDX, CodeQL (dépôt public), avis de tiers, images signées (cosign) sur `main`. La
 charge de travail MAUI est épinglée (`MAUI_WORKLOAD_VERSION`, 10.0.401) : un jeu plus récent publié sur nuget.org ne
-casse pas la CI du jour au lendemain. `.github/workflows/deploy.yml` valide l'IaC, les règles et le routage des
+casse pas la CI du jour au lendemain. Le SDK .NET de la CI l'est aussi (`DOTNET_SDK_VERSION`, 10.0.402), parce que
+le SDK 10.0.403 annoncé par Microsoft ne se télécharge pas ; `global.json` reste ouvert aux SDK 10.0 récents des postes.
+`.github/workflows/deploy.yml` valide l'IaC, les règles et le routage des
 alertes, l'essai de panne (API arrêtée, astreinte appelée en S1), Keycloak dans une cellule kind, puis la démo Docker :
 parcours navigateur (Keycloak, API, PWA), charge k6, télémétrie dans Grafana (chaque vérification en échec devient une
 annotation du job) et scan de sécurité ZAP. Autres workflows : `serveur-commun-android.yml` (navigateur et application
