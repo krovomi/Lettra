@@ -153,8 +153,13 @@ jobs:
         working-directory: deploy/demo/e2e
         run: |
           set -a; . ../.env; set +a
-          SORTIE="$SORTIE/localhost" node demo-commentee.mjs 1440 fr-FR
-          SORTIE="$SORTIE/localhost" node demo-commentee.mjs 390 en-US
+          signaler() { echo "::error title=Démo commentée::$(tail -n 40 "$1" | sed -e 's/%/%25/g' | sed -e ':a;N;$!ba;s/\n/%0A/g')"; exit 1; }
+          for essai in "1440 fr-FR" "390 en-US"; do
+            set -- $essai
+            journal="$SORTIE/localhost/demo-commentee-$1.log"
+            SORTIE="$SORTIE/localhost" node demo-commentee.mjs "$1" "$2" 2>&1 | tee "$journal"
+            [ "${PIPESTATUS[0]}" = 0 ] || signaler "$journal"
+          done
 
       # Serveur commun (docs/serveur-commun.md) : la composition de l'application installée reliée au serveur
       # (harnais serveur-commun, sans MAUI) se connecte par PKCE, voit le client du navigateur et en crée un que le
