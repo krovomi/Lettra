@@ -85,8 +85,40 @@ internal static class SupplierEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict);
 
+        // Nom et IBAN vérifiés : contrôles avant paiement, et vérification du bénéficiaire auprès de la banque (simulée).
+        group.MapGet("/payees", ListPayeeChecksAsync)
+            .RequirePermission(Permission.TiersConsulter)
+            .WithName("ListPayeeChecks")
+            .Produces<PagedResponse<PayeeCheckRowResponse>>()
+            .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        group.MapPost("/{id:guid}/payee-verification", VerifyPayeeAsync)
+            .RequirePermission(Permission.TiersModifier)
+            .WithName("VerifySupplierPayee")
+            .Produces<PayeeCheckResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
+
         return group;
     }
+
+    private static async Task<IResult> ListPayeeChecksAsync(
+        ITenantContext tenant,
+        IQueryDispatcher queries,
+        CancellationToken cancellationToken,
+        bool onlyToReview = true,
+        string? search = null,
+        int page = 1,
+        int pageSize = 50,
+        PayeeCheckSortDto sort = PayeeCheckSortDto.Risk,
+        SortDirectionDto direction = SortDirectionDto.Ascending) =>
+        Ok(await queries
+            .QueryAsync(new ListPayeeChecksQuery(tenant.Current.DossierId, onlyToReview, ListSearch.Normalize(search), page, pageSize, sort, direction), cancellationToken)
+            .ConfigureAwait(false));
+
+    private static async Task<IResult> VerifyPayeeAsync(Guid id, ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken) =>
+        Ok(await commands.SendAsync(new VerifySupplierPayeeCommand(tenant.Current.DossierId, new SupplierId(id)), cancellationToken).ConfigureAwait(false));
 
     private static async Task<IResult> ListIbanChangesAsync(
         ITenantContext tenant,

@@ -1367,6 +1367,10 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("AccountHolderName")
+                        .HasMaxLength(70)
+                        .HasColumnType("character varying(70)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -1385,6 +1389,16 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<int?>("PayeeCheckResult")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PayeeCheckSuggestedName")
+                        .HasMaxLength(70)
+                        .HasColumnType("character varying(70)");
+
+                    b.Property<DateTimeOffset?>("PayeeCheckedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("SearchKey")
                         .IsRequired()

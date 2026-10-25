@@ -59,6 +59,18 @@ internal sealed class FakeIbanChangesGateway : IIbanChangesGateway
         return Decide(changeId, IbanChangeStatusDto.Rejected);
     }
 
+    public List<PayeeCheckRowResponse> Payees { get; } = [];
+
+    public List<PayeeCheckListQuery> PayeeQueries { get; } = [];
+
+    public Task<OperationResult<PagedResponse<PayeeCheckRowResponse>>> ListPayeesAsync(PayeeCheckListQuery query, CancellationToken cancellationToken)
+    {
+        PayeeQueries.Add(query);
+        List<PayeeCheckRowResponse> items =
+            [.. Payees.Where(p => (!query.OnlyToReview || p.ToReview) && (query.Search is null || p.Name.Contains(query.Search, StringComparison.OrdinalIgnoreCase)))];
+        return Task.FromResult(OperationResult<PagedResponse<PayeeCheckRowResponse>>.Success(new(items, query.Page, query.PageSize, items.Count)));
+    }
+
     private Task<OperationResult<bool>> Decide(Guid changeId, IbanChangeStatusDto status)
     {
         if (NextError is { } code)

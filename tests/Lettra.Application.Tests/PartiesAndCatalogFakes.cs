@@ -14,7 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Lettra.Application.Tests;
 
 /// <summary>Faux dépôts des fournisseurs et du catalogue ; un seul « commit » partagé, comme une transaction de dossier.</summary>
-internal sealed class InMemoryPartiesAndCatalog : ISupplierRepository, ISupplierReadStore, ICatalogItemRepository, ICatalogItemReadStore
+internal sealed class InMemoryPartiesAndCatalog : ISupplierRepository, ISupplierReadStore, IPayeeCheckReadStore, ICatalogItemRepository, ICatalogItemReadStore
 {
     public Dictionary<SupplierId, Supplier> Suppliers { get; } = [];
 
@@ -40,6 +40,18 @@ internal sealed class InMemoryPartiesAndCatalog : ISupplierRepository, ISupplier
 
     public Task<SupplierResponse?> GetAsync(SupplierId id, CancellationToken cancellationToken) =>
         Task.FromResult(Suppliers.GetValueOrDefault(id)?.ToResponse());
+
+    /// <summary>Les fournisseurs dont l'IBAN attend sa vérification, comme la table des changements d'IBAN.</summary>
+    public HashSet<SupplierId> PendingIbanChanges { get; } = [];
+
+    public Task<IReadOnlyList<SupplierPayeeRow>> ListPayeesAsync(CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<SupplierPayeeRow>>(
+        [
+            .. Suppliers.Values
+                .Where(s => !s.IsArchived && s.Iban is not null)
+                .Select(s => new SupplierPayeeRow(
+                    s.Id, s.Name, s.AccountHolderName, s.Iban!, s.PayeeCheckResult, s.PayeeCheckedAt, s.PayeeCheckSuggestedName, PendingIbanChanges.Contains(s.Id))),
+        ]);
 
     public Task AddAsync(CatalogItem item, CancellationToken cancellationToken)
     {
@@ -136,6 +148,7 @@ internal static class PartiesAndCatalogFakesRegistration
     {
         services.AddSingleton<ISupplierRepository>(store);
         services.AddSingleton<ISupplierReadStore>(store);
+        services.AddSingleton<IPayeeCheckReadStore>(store);
         services.AddSingleton<ICatalogItemRepository>(store);
         services.AddSingleton<ICatalogItemReadStore>(store);
         InMemoryIbanChanges ibanChanges = ibans ?? new InMemoryIbanChanges(store);

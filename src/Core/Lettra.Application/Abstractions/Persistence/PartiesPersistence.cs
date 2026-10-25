@@ -1,6 +1,7 @@
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Suppliers;
 using Lettra.Domain.Parties;
+using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Application.Abstractions.Persistence;
 
@@ -62,4 +63,21 @@ public interface IIbanChangeReadStore
 
     /// <summary>L'historique d'un fournisseur, du plus récent au plus ancien.</summary>
     Task<IReadOnlyList<IbanChangeResponse>> ForSupplierAsync(SupplierId supplier, CancellationToken cancellationToken);
+}
+
+/// <summary>Un fournisseur payable par virement (non supprimé, avec un IBAN), tel que lu pour les contrôles avant paiement.</summary>
+public sealed record SupplierPayeeRow(
+    SupplierId Id,
+    string Name,
+    string? AccountHolderName,
+    Iban Iban,
+    PayeeMatch? CheckResult,
+    DateTimeOffset? CheckedAt,
+    string? SuggestedName,
+    bool IbanChangePending);
+
+/// <summary>Lecture des bénéficiaires du dossier : les contrôles se calculent dans l'application, les fournisseurs d'un dossier se comptent en centaines.</summary>
+public interface IPayeeCheckReadStore
+{
+    Task<IReadOnlyList<SupplierPayeeRow>> ListPayeesAsync(CancellationToken cancellationToken);
 }

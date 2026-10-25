@@ -26,6 +26,8 @@ public static partial class ErrorCodes
         public const string SirenRequired = "Supplier.SirenRequired";
         public const string SiretSirenMismatch = "Supplier.SiretSirenMismatch";
         public const string NotFound = "Supplier.NotFound";
+        public const string AccountHolderTooLong = "Supplier.AccountHolderTooLong";
+        public const string IbanMissing = "Supplier.IbanMissing";
     }
 
     /// <summary>Changements d'IBAN des fournisseurs, à vérifier avant tout paiement.</summary>

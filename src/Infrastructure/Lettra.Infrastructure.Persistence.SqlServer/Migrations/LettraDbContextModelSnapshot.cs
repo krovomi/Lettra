@@ -1369,6 +1369,10 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("AccountHolderName")
+                        .HasMaxLength(70)
+                        .HasColumnType("nvarchar(70)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -1387,6 +1391,16 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<int?>("PayeeCheckResult")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PayeeCheckSuggestedName")
+                        .HasMaxLength(70)
+                        .HasColumnType("nvarchar(70)");
+
+                    b.Property<DateTimeOffset?>("PayeeCheckedAt")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("SearchKey")
                         .IsRequired()

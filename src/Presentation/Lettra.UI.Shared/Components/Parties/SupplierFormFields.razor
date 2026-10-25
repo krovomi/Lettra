@@ -37,6 +37,12 @@
         <InputText id="iban" @bind-Value="Model.Iban" autocomplete="off" spellcheck="false" />
         <FieldErrors Field="@nameof(CreateSupplierRequest.Iban)" ServerErrors="Errors" />
     </div>
+    <div class="lt-form-field">
+        <label for="account-holder">@L["Suppliers.Field.AccountHolder"]</label>
+        <InputText id="account-holder" @bind-Value="Model.AccountHolderName" maxlength="70" placeholder="@Model.Name" />
+        <span class="lettra-hint">@L["Suppliers.Field.AccountHolder.Hint"]</span>
+        <FieldErrors Field="@nameof(CreateSupplierRequest.AccountHolderName)" ServerErrors="Errors" />
+    </div>
     <div class="lt-form-field lt-form-wide">
         <label for="line1">@L["Customers.Field.AddressLine1"]</label>
         <InputText id="line1" @bind-Value="Model.AddressLine1" autocomplete="address-line1" />

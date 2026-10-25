@@ -39,6 +39,9 @@ public static class DependencyInjection
         services.TryAddSingleton<IEmailSender, NoEmailSender>();
         services.TryAddSingleton(new LettraPublicAddress(null));
 
+        // Vérification du bénéficiaire : impossible tant que l'infrastructure ne branche pas de banque (même simulée).
+        services.TryAddSingleton<Abstractions.External.IPayeeVerification, Abstractions.External.NoPayeeVerification>();
+
         services.AddScoped<ICommandDispatcher, CommandDispatcher>();
         services.AddScoped<IQueryDispatcher, QueryDispatcher>();
 

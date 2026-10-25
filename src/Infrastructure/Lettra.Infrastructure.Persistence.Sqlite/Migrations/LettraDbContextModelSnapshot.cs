@@ -1362,6 +1362,10 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("AccountHolderName")
+                        .HasMaxLength(70)
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -1379,6 +1383,16 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("PayeeCheckResult")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PayeeCheckSuggestedName")
+                        .HasMaxLength(70)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("PayeeCheckedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("SearchKey")

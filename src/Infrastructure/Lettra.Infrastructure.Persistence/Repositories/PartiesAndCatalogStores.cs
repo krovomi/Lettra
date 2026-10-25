@@ -27,7 +27,7 @@ internal sealed class SupplierRepository(TenantDbSession session) : ISupplierRep
     }
 }
 
-internal sealed class SupplierReadStore(TenantDbSession session) : ISupplierReadStore
+internal sealed class SupplierReadStore(TenantDbSession session) : ISupplierReadStore, IPayeeCheckReadStore
 {
     public async Task<PagedResponse<SupplierSummary>> ListAsync(PartyListFilter filter, CancellationToken cancellationToken)
     {
@@ -62,6 +62,26 @@ internal sealed class SupplierReadStore(TenantDbSession session) : ISupplierRead
         IbanChange? pending = await db.Set<IbanChange>().AsNoTracking()
             .FirstOrDefaultAsync(c => c.SupplierId == id && c.Status == IbanChangeStatus.Pending, cancellationToken).ConfigureAwait(false);
         return supplier.ToResponse() with { PendingIbanChange = pending is null ? null : IbanChangeReadStore.ToResponse(pending, supplier.Name) };
+    }
+
+    public async Task<IReadOnlyList<SupplierPayeeRow>> ListPayeesAsync(CancellationToken cancellationToken)
+    {
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        List<SupplierId> pending = await db.Set<IbanChange>().AsNoTracking()
+            .Where(c => c.Status == IbanChangeStatus.Pending)
+            .Select(c => c.SupplierId)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var rows = await db.Set<Supplier>().AsNoTracking()
+            .Where(s => !s.IsArchived && s.Iban != null)
+            .Select(s => new { s.Id, s.Name, s.AccountHolderName, s.Iban, s.PayeeCheckResult, s.PayeeCheckedAt, s.PayeeCheckSuggestedName })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return
+        [
+            .. rows.Select(r => new SupplierPayeeRow(
+                r.Id, r.Name, r.AccountHolderName, r.Iban!, r.PayeeCheckResult, r.PayeeCheckedAt, r.PayeeCheckSuggestedName, pending.Contains(r.Id))),
+        ];
     }
 }
 
@@ -151,7 +171,9 @@ internal static class PartiesAndCatalogRegistration
     public static IServiceCollection AddPartiesAndCatalogStores(this IServiceCollection services)
     {
         services.AddScoped<ISupplierRepository, SupplierRepository>();
-        services.AddScoped<ISupplierReadStore, SupplierReadStore>();
+        services.AddScoped<SupplierReadStore>();
+        services.AddScoped<ISupplierReadStore>(sp => sp.GetRequiredService<SupplierReadStore>());
+        services.AddScoped<IPayeeCheckReadStore>(sp => sp.GetRequiredService<SupplierReadStore>());
         services.AddScoped<IIbanChangeRepository, IbanChangeRepository>();
         services.AddScoped<IIbanChangeReadStore, IbanChangeReadStore>();
         services.AddScoped<ICatalogItemRepository, CatalogItemRepository>();

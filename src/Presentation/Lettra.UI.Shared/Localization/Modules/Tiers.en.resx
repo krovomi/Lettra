@@ -98,4 +98,31 @@
   <data name="Error.IbanChange.NoteRequired" xml:space="preserve"><value>Add a note.</value></data>
   <data name="Error.IbanChange.NoteTooLong" xml:space="preserve"><value>The note is at most 500 characters.</value></data>
   <data name="Error.IbanChange.SameUser" xml:space="preserve"><value>Someone else in the firm must check the IBAN you entered.</value></data>
+  <data name="Suppliers.Field.AccountHolder" xml:space="preserve"><value>Account holder</value></data>
+  <data name="Suppliers.Field.AccountHolder.Hint" xml:space="preserve"><value>Only if it differs from the supplier's name: this is the name the bank checks before a transfer.</value></data>
+  <data name="IbanChanges.Tab" xml:space="preserve"><value>IBAN changes</value></data>
+  <data name="Payees.Tab" xml:space="preserve"><value>Name and IBAN</value></data>
+  <data name="Payees.Title" xml:space="preserve"><value>Payee names and IBANs</value></data>
+  <data name="Payees.Subtitle" xml:space="preserve"><value>Before every transfer, the bank compares the payee's name with the IBAN holder. Review here the suppliers whose name does not match, or is not checked yet.</value></data>
+  <data name="Payees.OnlyToReview" xml:space="preserve"><value>Only those to review</value></data>
+  <data name="Payees.Empty" xml:space="preserve"><value>No payee to review</value></data>
+  <data name="Payees.Empty.Text" xml:space="preserve"><value>Every supplier paid by transfer has a checked name.</value></data>
+  <data name="Payees.ShowAll" xml:space="preserve"><value>Show all payees</value></data>
+  <data name="Payees.SameAsName" xml:space="preserve"><value>the supplier's name</value></data>
+  <data name="Payees.IbanChanged" xml:space="preserve"><value>IBAN changed, to check</value></data>
+  <data name="Payees.Check" xml:space="preserve"><value>Payee verification</value></data>
+  <data name="Payees.Result.Match" xml:space="preserve"><value>Match</value></data>
+  <data name="Payees.Result.CloseMatch" xml:space="preserve"><value>Close match</value></data>
+  <data name="Payees.Result.NoMatch" xml:space="preserve"><value>No match</value></data>
+  <data name="Payees.Result.NotPossible" xml:space="preserve"><value>Cannot be checked</value></data>
+  <data name="Payees.Suggested" xml:space="preserve"><value>Holder: {0}</value></data>
+  <data name="Payees.CheckedAt" xml:space="preserve"><value>Checked on {0}</value></data>
+  <data name="Payees.NeverChecked" xml:space="preserve"><value>Never checked</value></data>
+  <data name="Payees.Verify" xml:space="preserve"><value>Check name and IBAN</value></data>
+  <data name="Payees.Verified" xml:space="preserve"><value>{0}: {1}.</value></data>
+  <data name="Payees.Simulated" xml:space="preserve"><value>Simulated bank: no payee verification provider is connected yet, nothing leaves this device.</value></data>
+  <data name="Payees.Holder.NoMatch" xml:space="preserve"><value>Does not look like the supplier's name</value></data>
+  <data name="Payees.Holder.CloseMatch" xml:space="preserve"><value>Close to the supplier's name</value></data>
+  <data name="Error.Supplier.AccountHolderTooLong" xml:space="preserve"><value>The account holder is at most 70 characters.</value></data>
+  <data name="Error.Supplier.IbanMissing" xml:space="preserve"><value>This supplier has no IBAN: nothing to check.</value></data>
 </root>

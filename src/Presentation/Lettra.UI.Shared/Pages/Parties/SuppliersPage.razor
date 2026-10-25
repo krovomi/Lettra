@@ -168,7 +168,40 @@
                                     <span class="lettra-muted">@L["Suppliers.NoIban"]</span>
                                 }
                             </Fact>
+                            @if (supplier.Iban is { Length: > 0 })
+                            {
+                                <Fact Label="@L["Suppliers.Field.AccountHolder"]">
+                                    <span id="supplier-account-holder">@(supplier.AccountHolderName ?? supplier.Name)</span>
+                                    @if (supplier.HolderNameMatch is PayeeMatchDto.NoMatch or PayeeMatchDto.CloseMatch)
+                                    {
+                                        <span class="lettra-status @(supplier.HolderNameMatch == PayeeMatchDto.NoMatch ? "is-refused" : "is-draft")" id="supplier-holder-match">
+                                            @L[$"Payees.Holder.{supplier.HolderNameMatch}"]
+                                        </span>
+                                    }
+                                </Fact>
+                                <Fact Label="@L["Payees.Check"]">
+                                    <span class="lt-iban-cell" id="supplier-payee-check">
+                                        @if (supplier.PayeeCheck is { } check)
+                                        {
+                                            <span class="lettra-status @PayeeStatusClass(check.Result)">@L[$"Payees.Result.{check.Result}"]</span>
+                                            @if (check.SuggestedName is { } suggested)
+                                            {
+                                                <span>@string.Format(Culture, L["Payees.Suggested"], suggested)</span>
+                                            }
+                                            <span class="lettra-muted">@string.Format(Culture, L["Payees.CheckedAt"], check.CheckedAt.ToLocalTime().ToString("g", Culture))</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="lettra-muted">@L["Payees.NeverChecked"]</span>
+                                        }
+                                        <button type="button" class="lettra-button is-secondary" id="supplier-payee-verify" disabled="@_verifying" @onclick="() => VerifyPayeeAsync(supplier)">
+                                            <Icon Name="shield-check" Size="16" /> @L["Payees.Verify"]
+                                        </button>
+                                    </span>
+                                </Fact>
+                            }
                         </dl>
+                        <p class="lettra-hint">@L["Payees.Simulated"]</p>
                         <p class="lettra-hint">@L["Suppliers.PurchasesLater"]</p>
                     </Collapsible>
                 </article>
@@ -200,7 +233,44 @@
 
     private static CultureInfo Culture => CultureInfo.CurrentCulture;
 
+    private bool _verifying;
+
     protected override string BasePath => "suppliers";
+
+    /// <summary>Vérification du bénéficiaire : la banque (simulée) répond, la fiche relue la garde.</summary>
+    private async Task VerifyPayeeAsync(SupplierResponse supplier)
+    {
+        _verifying = true;
+        try
+        {
+            OperationResult<PayeeCheckResponse> result = await Gateway.VerifyPayeeAsync(supplier.Id, CancellationToken.None);
+            if (!result.IsSuccess || result.Value is not { } check)
+            {
+                Toasts.Show(ToastKind.Error, string.Join(" ", result.Errors.Select(e => L.Error(e.Code))));
+                return;
+            }
+
+            if (await Gateway.GetAsync(supplier.Id, CancellationToken.None) is { IsSuccess: true, Value: { } fresh })
+            {
+                ReplaceRecord(fresh);
+            }
+
+            Toasts.Show(
+                check.Result == PayeeMatchDto.Match ? ToastKind.Success : ToastKind.Warning,
+                string.Format(Culture, L["Payees.Verified"], supplier.Name, L[$"Payees.Result.{check.Result}"]));
+        }
+        finally
+        {
+            _verifying = false;
+        }
+    }
+
+    internal static string PayeeStatusClass(PayeeMatchDto result) => result switch
+    {
+        PayeeMatchDto.Match => "is-issued",
+        PayeeMatchDto.NoMatch => "is-refused",
+        _ => "is-draft",
+    };
 
     protected override string ResourcePrefix => "Suppliers";
 
@@ -236,6 +306,7 @@
         VatNumber = record.VatNumber,
         Email = record.Email,
         Iban = record.Iban,
+        AccountHolderName = record.AccountHolderName,
         AddressLine1 = record.AddressLine1,
         AddressLine2 = record.AddressLine2,
         PostalCode = record.PostalCode,

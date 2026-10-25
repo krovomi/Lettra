@@ -7,7 +7,7 @@ using Lettra.UI.Abstractions;
 
 namespace Lettra.UI.Gateway.Http;
 
-/// <summary>Routes <c>/suppliers/iban-changes</c> et <c>/suppliers/{id}/iban-changes</c>.</summary>
+/// <summary>Routes <c>/suppliers/iban-changes</c>, <c>/suppliers/{id}/iban-changes</c> et <c>/suppliers/payees</c>.</summary>
 internal sealed class HttpIbanChangesGateway(HttpClient http) : IIbanChangesGateway
 {
     public Task<OperationResult<PagedResponse<IbanChangeResponse>>> ListAsync(IbanChangeListQuery query, CancellationToken cancellationToken)
@@ -39,6 +39,19 @@ internal sealed class HttpIbanChangesGateway(HttpClient http) : IIbanChangesGate
         NoContentAsync(
             ct => http.PostAsJsonAsync(HttpCalls.Relative($"api/v1/suppliers/iban-changes/{changeId}/rejection"), request, ContractsJsonContext.Default.RejectIbanChangeRequest, ct),
             cancellationToken);
+
+    public Task<OperationResult<PagedResponse<PayeeCheckRowResponse>>> ListPayeesAsync(PayeeCheckListQuery query, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+        string sort = query.Sort != PayeeCheckSortDto.Risk || query.Direction != SortDirectionDto.Ascending
+            ? $"&sort={query.Sort}&direction={query.Direction}"
+            : string.Empty;
+        string page = string.Create(CultureInfo.InvariantCulture, $"page={query.Page}&pageSize={query.PageSize}&onlyToReview={(query.OnlyToReview ? "true" : "false")}");
+        return HttpCalls.SendAsync(
+            ct => http.GetAsync(HttpCalls.Relative($"api/v1/suppliers/payees?{page}{HttpCalls.SearchParameter(query.Search)}{sort}"), ct),
+            ContractsJsonContext.Default.PagedResponsePayeeCheckRowResponse,
+            cancellationToken);
+    }
 
     private static Task<OperationResult<bool>> NoContentAsync(Func<CancellationToken, Task<HttpResponseMessage>> send, CancellationToken cancellationToken) =>
         HttpCalls.SendAsync(

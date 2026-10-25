@@ -22,6 +22,12 @@ public interface ISuppliersGateway
 
     /// <summary>Supprime un fournisseur (retiré des listes, gardé en base), comme <see cref="ICustomersGateway.DeleteAsync"/>.</summary>
     Task<OperationResult<bool>> DeleteAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Vérifie auprès de la banque que le nom du fournisseur (ou du titulaire donné) est celui du titulaire de l'IBAN, et
+    /// garde la réponse sur la fiche. Exige <c>TiersModifier</c> ; refus : <c>Supplier.IbanMissing</c>, <c>Directory.Unavailable</c>.
+    /// </summary>
+    Task<OperationResult<PayeeCheckResponse>> VerifyPayeeAsync(Guid id, CancellationToken cancellationToken);
 }
 
 /// <summary>

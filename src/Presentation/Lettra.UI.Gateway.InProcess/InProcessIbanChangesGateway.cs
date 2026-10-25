@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.UI.Gateway.InProcess;
 
-/// <summary>Mêmes requêtes et mêmes permissions que les routes <c>/suppliers/iban-changes</c> de l'API.</summary>
+/// <summary>Mêmes requêtes et mêmes permissions que les routes <c>/suppliers/iban-changes</c> et <c>/suppliers/payees</c> de l'API.</summary>
 internal sealed class InProcessIbanChangesGateway(IServiceScopeFactory scopes) : IIbanChangesGateway
 {
     public Task<OperationResult<PagedResponse<IbanChangeResponse>>> ListAsync(IbanChangeListQuery query, CancellationToken cancellationToken)
@@ -40,6 +40,16 @@ internal sealed class InProcessIbanChangesGateway(IServiceScopeFactory scopes) :
         return InProcessScope.RunAsync(
             scopes,
             (sp, dossier, ct) => InProcessScope.SendAsync(sp, new RejectIbanChangeCommand(dossier, new IbanChangeId(changeId), request.Note, request.ExpectedVersion), ct),
+            cancellationToken);
+    }
+
+    public Task<OperationResult<PagedResponse<PayeeCheckRowResponse>>> ListPayeesAsync(PayeeCheckListQuery query, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+        return InProcessScope.RunAsync(
+            scopes,
+            (sp, dossier, ct) => InProcessScope.QueryAsync(
+                sp, new ListPayeeChecksQuery(dossier, query.OnlyToReview, ListSearch.Normalize(query.Search), query.Page, query.PageSize, query.Sort, query.Direction), ct),
             cancellationToken);
     }
 }

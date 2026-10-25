@@ -29,6 +29,10 @@ public sealed record CreateSupplierRequest
     [StringLength(42, ErrorMessage = ErrorCodes.SharedKernel.IbanInvalid)]
     public string? Iban { get; set; }
 
+    /// <summary>Nom exact du titulaire du compte, s'il diffère du nom du fournisseur.</summary>
+    [StringLength(70, ErrorMessage = ErrorCodes.Supplier.AccountHolderTooLong)]
+    public string? AccountHolderName { get; set; }
+
     [Required(ErrorMessage = ErrorCodes.SharedKernel.AddressLineRequired)]
     [StringLength(200, ErrorMessage = ErrorCodes.Validation.TooLong)]
     public string AddressLine1 { get; set; } = string.Empty;
@@ -73,6 +77,15 @@ public sealed record SupplierResponse(
 
     /// <summary>Le changement d'IBAN encore à vérifier : aucun paiement vers ce compte avant sa confirmation.</summary>
     public IbanChangeResponse? PendingIbanChange { get; init; }
+
+    /// <summary>Nom exact du titulaire du compte, s'il diffère du nom du fournisseur.</summary>
+    public string? AccountHolderName { get; init; }
+
+    /// <summary>La dernière vérification du bénéficiaire, pour l'IBAN et le nom actuels.</summary>
+    public PayeeCheckResponse? PayeeCheck { get; init; }
+
+    /// <summary>Contrôle local : le titulaire donné ressemble-t-il au nom du fournisseur ? Vide sans titulaire distinct.</summary>
+    public PayeeMatchDto? HolderNameMatch { get; init; }
 }
 
 /// <summary>Ligne de la liste des fournisseurs.</summary>
