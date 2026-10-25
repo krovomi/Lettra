@@ -24,7 +24,8 @@ Lettra est une seule application, en deux formes :
   Android, iOS et macOS.
 
 « **Vérifié** » signifie que la CI le fait à chaque modification de `main` : construire, lancer et contrôler le
-résultat. « **Non vérifié** » signifie que la méthode est décrite mais que personne ne l'a encore faite de bout en bout.
+résultat. « **Vérifié à la main** » signifie qu'une personne du projet l'a fait sur un vrai appareil, sans
+reproduction automatique. « **Non vérifié** » signifie que la méthode est décrite mais que personne ne l'a encore faite de bout en bout.
 
 | Appareil | Comment | État |
 |---|---|---|
@@ -33,7 +34,7 @@ résultat. « **Non vérifié** » signifie que la méthode est décrite mais qu
 | Téléphone ou tablette Android, iPhone, iPad | [Navigateur sur le même Wi-Fi](#téléphone-ou-tablette-sur-le-même-wi-fi-navigateur), en HTTPS | Profil HTTPS **vérifié** dans Chromium avec une adresse autre que localhost ; **non vérifié sur un vrai téléphone**. |
 | PC Windows 10 ou 11 | [Application Windows](#application-windows) | **Vérifiée** : lancement, cabinet et premier dossier chiffré créés ; le parcours pas à pas est rejoué par les tests. |
 | Émulateur Android (Android Studio) | [Application Android](#android-émulateur-ou-téléphone) | **Vérifiée** sur un émulateur Android 14 (API 34) : lancement sans plantage, premier dossier chiffré créé. |
-| Téléphone Android (7.0 ou plus récent) | Le même APK, [installé à la main](#sur-un-téléphone-android) | **Non vérifié** sur un vrai téléphone. |
+| Téléphone Android (7.0 ou plus récent) | Le même APK, [installé à la main](#sur-un-téléphone-android) | **Vérifié à la main** sur un vrai téléphone : l'application s'installe et fonctionne. |
 | Simulateur iOS (Mac avec puce Apple et Xcode) | [Application iOS pour le simulateur](#simulateur-ios-mac) | **Vérifiée** : lancement, premier dossier chiffré créé, application toujours ouverte 10 s plus tard. |
 | iPhone ou iPad réel | Application native | **Pas encore possible** : il faut un Mac et un compte Apple Developer pour la signer. Utiliser le navigateur. |
 | Mac (macOS) | [Application macOS](#macos-mac-catalyst) | Construite, mais **s'arrête à la création du premier dossier** tant qu'elle n'est pas signée par Apple. Utiliser le navigateur. |
@@ -220,7 +221,8 @@ démonstration en réseau local, par exemple). Une version construite sans démo
 n'accepte que les autorités de certification d'Android : un serveur du cabinet doit alors avoir un certificat
 reconnu par Android.
 
-> Non vérifié sur un vrai téléphone.
+> Vérifié à la main sur un vrai téléphone Android : l'APK s'installe, l'application s'ouvre et fonctionne. Ce test
+> n'est pas rejoué par la CI, qui vérifie l'émulateur.
 
 ### Simulateur iOS (Mac)
 

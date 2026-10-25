@@ -41,8 +41,10 @@ try {
     await page.fill('#username', process.env.LETTRA_DEMO_USER ?? 'demo');
     await page.fill('#password', password);
     await page.click('#kc-login');
-    // Un code déjà utilisé dans la même période est refusé : attendre la période suivante si la fin est proche.
-    while (30 - (Math.floor(Date.now() / 1000) % 30) < 5) await page.waitForTimeout(1000);
+    // Keycloak refuse un code déjà utilisé : la connexion précédente (parcours.mjs, ou la largeur précédente) a pu
+    // prendre celui de la période en cours. Attendre le début de la période suivante donne toujours un code neuf.
+    const period = Math.floor(Date.now() / 30_000);
+    while (Math.floor(Date.now() / 30_000) === period) await page.waitForTimeout(500);
     await page.fill('#otp', totp(secret));
     await page.click('#kc-login');
     await page.locator('.lettra-user').waitFor({ state: 'attached', timeout: 60_000 });
@@ -72,6 +74,12 @@ try {
     }
     await page.screenshot({ path: join(out, `demo-commentee-${width}-${locale}.png`) });
     log(`démo commentée terminée en ${Math.round((Date.now() - started) / 1000)} s (${width} px, ${locale})`);
+} catch (e) {
+    log(`échec sur ${page.url()} : ${e.message}`);
+    const title = await page.locator('h1, #kc-page-title, .alert-error, #input-error').allInnerTexts().catch(() => []);
+    if (title.length) log(`texte affiché : ${title.join(' | ').replace(/\s+/g, ' ').slice(0, 300)}`);
+    await page.screenshot({ path: join(out, `demo-commentee-${width}-echec.png`), fullPage: true }).catch(() => {});
+    throw e;
 } finally {
     await browser.close();
 }
