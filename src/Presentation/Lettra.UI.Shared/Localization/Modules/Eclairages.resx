@@ -123,7 +123,8 @@
   <data name="Audit.Check.Benford" xml:space="preserve"><value>Loi de Benford</value></data>
   <data name="Audit.Check.Benford.Why" xml:space="preserve"><value>Le premier chiffre des montants réels suit une loi connue ; des montants inventés s'en écartent.</value></data>
   <data name="Audit.Check.Benford.Found" xml:space="preserve"><value>Écart moyen de {1} point(s) sur {0} montants : la série s'écarte de la loi.</value></data>
-  <data name="Audit.Check.Benford.Passed" xml:space="preserve"><value>{0} montants lus ; écart moyen de {1} point(s), dans la norme (trop peu de montants : test non concluant).</value></data>
+  <data name="Audit.Check.Benford.Passed" xml:space="preserve"><value>{0} montants lus ; écart moyen de {1} point(s), dans la norme.</value></data>
+  <data name="Audit.Check.Benford.TooFew" xml:space="preserve"><value>Seulement {0} montant(s) d'au moins 10 € : il en faut 200 pour que le test soit concluant.</value></data>
   <data name="Audit.Check.Benford.Fix" xml:space="preserve"><value>Regardez les chiffres les plus éloignés : ils montrent souvent un forfait répété ou une série saisie à la main.</value></data>
   <data name="Audit.Check.CustomerCredit" xml:space="preserve"><value>Clients créditeurs</value></data>
   <data name="Audit.Check.CustomerCredit.Why" xml:space="preserve"><value>Un client qui a trop payé, ou une facture oubliée : le vérificateur demande ce que représente le solde.</value></data>

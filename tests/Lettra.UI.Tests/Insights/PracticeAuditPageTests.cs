@@ -70,15 +70,17 @@ public sealed class PracticeAuditPageTests : BunitContext
     [Fact]
     public void Un_fec_sans_anomalie_et_un_fichier_illisible_ont_chacun_leur_verdict()
     {
-        _insights.Audit = Report(true, Passed("Format"), Passed("Benford", 0.8m));
+        _insights.Audit = Report(true, Passed("Format"), Passed("Benford") with { Count = 12 });
         IRenderedComponent<PracticeAuditPage> page = Render<PracticeAuditPage>();
         page.Find("#audit-run").Click();
         page.Find("#audit-verdict").TextContent.Should().Contain("Aucun des 2 tests");
         page.Find("#audit-verdict").ClassList.Should().Contain("is-success");
+        page.Find("#audit-Benford").TextContent.Should().Contain("Seulement 12 montant(s)", "trop peu de montants : le test ne conclut pas");
 
         _insights.Audit = Report(false, new PracticeAuditCheckResponse("Format", PracticeAuditSeverityDto.Alert, 1, null, ["Fec.HeaderInvalid · L1"]));
         page.FindComponent<InputFile>().UploadFiles(InputFileContent.CreateFromText("Bonjour", "notes.txt"));
         page.WaitForAssertion(() => page.Find("#audit-verdict").TextContent.Should().Contain("n'est pas un FEC lisible"));
+        page.Find("#audit-Format code").TextContent.Should().NotContain("Fec.HeaderInvalid", "le code du validateur est traduit").And.EndWith(" · L1");
         _insights.Runs[^1].Should().Be(("notes.txt", 7, new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31)));
         page.FindAll("#audit-benford").Should().BeEmpty();
     }

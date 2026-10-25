@@ -123,7 +123,8 @@
   <data name="Audit.Check.Benford" xml:space="preserve"><value>Benford's law</value></data>
   <data name="Audit.Check.Benford.Why" xml:space="preserve"><value>The first digit of real amounts follows a known law; made-up amounts drift away from it.</value></data>
   <data name="Audit.Check.Benford.Found" xml:space="preserve"><value>Mean deviation of {1} point(s) over {0} amounts: the series drifts from the law.</value></data>
-  <data name="Audit.Check.Benford.Passed" xml:space="preserve"><value>{0} amounts read; mean deviation of {1} point(s), within the norm (too few amounts: inconclusive).</value></data>
+  <data name="Audit.Check.Benford.Passed" xml:space="preserve"><value>{0} amounts read; mean deviation of {1} point(s), within the norm.</value></data>
+  <data name="Audit.Check.Benford.TooFew" xml:space="preserve"><value>Only {0} amount(s) of at least €10: the test needs 200 to be conclusive.</value></data>
   <data name="Audit.Check.Benford.Fix" xml:space="preserve"><value>Look at the digits furthest away: they often reveal a repeated flat fee or a series typed by hand.</value></data>
   <data name="Audit.Check.CustomerCredit" xml:space="preserve"><value>Customers in credit</value></data>
   <data name="Audit.Check.CustomerCredit.Why" xml:space="preserve"><value>A customer who overpaid, or a forgotten invoice: the inspector asks what the balance stands for.</value></data>

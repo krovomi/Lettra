@@ -67,7 +67,7 @@
                                 <ul>
                                     @foreach (string example in check.Examples)
                                     {
-                                        <li><code>@example</code></li>
+                                        <li><code>@Example(check, example)</code></li>
                                     }
                                 </ul>
                             </details>
@@ -194,7 +194,12 @@
     /// <summary>Ce que le test a trouvé, en une phrase : nombre et valeur mesurée, mis en forme dans la langue de l'écran.</summary>
     private string Found(PracticeAuditCheckResponse check)
     {
-        string key = check.Severity == PracticeAuditSeverityDto.Passed ? $"Audit.Check.{check.Code}.Passed" : $"Audit.Check.{check.Code}.Found";
+        string key = check switch
+        {
+            { Code: "Benford", Value: null } => "Audit.Check.Benford.TooFew",
+            { Severity: PracticeAuditSeverityDto.Passed } => $"Audit.Check.{check.Code}.Passed",
+            _ => $"Audit.Check.{check.Code}.Found",
+        };
         string value = check.Value switch
         {
             null => string.Empty,
@@ -202,6 +207,18 @@
             decimal v => ExplorerText.Money(Math.Abs(v)),
         };
         return string.Format(Culture, L[key], check.Count, value);
+    }
+
+    /// <summary>Les exemples du format sont des codes du validateur (« Fec.EntryUnbalanced · L12 ») : dits dans la langue de l'écran.</summary>
+    private string Example(PracticeAuditCheckResponse check, string example)
+    {
+        if (check.Code != "Format")
+        {
+            return example;
+        }
+
+        int separator = example.IndexOf(" · ", StringComparison.Ordinal);
+        return separator < 0 ? L.Error(example) : $"{L.Error(example[..separator])}{example[separator..]}";
     }
 
     private static string Width(decimal share) =>
