@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Resources;
 using Lettra.Calculations;
+using Lettra.Printing.Payments;
 using MigraDoc.DocumentObjectModel;
 using MigraDoc.DocumentObjectModel.Shapes;
 using MigraDoc.DocumentObjectModel.Tables;
@@ -78,7 +79,7 @@ public sealed class PdfDocumentRenderer : IDocumentPdfRenderer
         AddHeader(section, document, culture);
         AddLines(section, document, culture);
         AddTotals(section, document, totals, culture);
-        AddPaymentAndMentions(section, document, culture);
+        AddPaymentAndMentions(section, document, NetToPay(document, totals), culture);
         return doc;
     }
 
@@ -363,6 +364,9 @@ public sealed class PdfDocumentRenderer : IDocumentPdfRenderer
         section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(12);
     }
 
+    private static decimal NetToPay(PrintableDocument document, DocumentTotals totals) =>
+        totals.TotalInclTax - document.Deductions.Sum(d => d.AmountInclTax);
+
     private static Row AddSum(Table table, string label, decimal amount, CultureInfo culture, string currency)
     {
         Row row = table.AddRow();
@@ -382,25 +386,72 @@ public sealed class PdfDocumentRenderer : IDocumentPdfRenderer
 
     // ---------- paiement, mentions, bon pour accord ----------
 
-    private static void AddPaymentAndMentions(Section section, PrintableDocument document, CultureInfo culture)
+    /// <summary>
+    /// QR code de virement (standard EPC) d'une facture ou d'un acompte validé, payable en euros : l'application de la
+    /// banque du client ouvre le virement déjà rempli, avec le numéro de la facture en libellé. Ni devis, ni avoir, ni
+    /// brouillon (pas encore de numéro à rapprocher).
+    /// </summary>
+    internal static string? PaymentCode(PrintableDocument document, decimal netToPay) =>
+        document.Kind is PrintableDocumentKind.Invoice or PrintableDocumentKind.DownPaymentInvoice
+        && document.Number is not null
+        && document.Currency == "EUR"
+            ? EpcPaymentCode.Payload(document.Seller.Name, document.Iban, document.Bic, netToPay, document.Number)
+            : null;
+
+    private static void AddPaymentText(DocumentElements elements, PrintableDocument document, CultureInfo culture)
+    {
+        if (!string.IsNullOrWhiteSpace(document.PaymentTerms))
+        {
+            elements.AddParagraph(document.PaymentTerms);
+        }
+
+        if (document.Iban is not null)
+        {
+            string bank = Format(culture, "Payment.Iban", document.Iban);
+            if (document.Bic is not null)
+            {
+                bank += "  ·  " + Format(culture, "Payment.Bic", document.Bic);
+            }
+
+            elements.AddParagraph(bank);
+        }
+    }
+
+    private static void AddPaymentWithQrCode(Section section, PrintableDocument document, string code, CultureInfo culture)
+    {
+        Table table = section.AddTable();
+        table.Borders.Visible = false;
+        table.AddColumn(Unit.FromCentimeter(13.4));
+        table.AddColumn(Unit.FromCentimeter(4.0));
+        Row row = table.AddRow();
+        AddPaymentText(row.Cells[0].Elements, document, culture);
+        row.Cells[0].AddParagraph().Format.SpaceAfter = Unit.FromPoint(4);
+        row.Cells[0].AddParagraph(Text(culture, "Payment.QrCode")).Style = "Muted";
+
+        Cell cell = row.Cells[1];
+        cell.Format.Alignment = ParagraphAlignment.Center;
+        Image image = cell.AddImage("base64:" + Convert.ToBase64String(QrImages.Png(QrCode.Encode(code))));
+        image.Width = Unit.FromCentimeter(3.2);
+        image.LockAspectRatio = true;
+        Paragraph caption = cell.AddParagraph(Text(culture, "Payment.QrCaption"));
+        caption.Style = "Muted";
+        caption.Format.Alignment = ParagraphAlignment.Center;
+    }
+
+
+    private static void AddPaymentAndMentions(Section section, PrintableDocument document, decimal netToPay, CultureInfo culture)
     {
         if (!string.IsNullOrWhiteSpace(document.PaymentTerms) || document.Iban is not null)
         {
             section.AddParagraph(Text(culture, "Payment.Terms").ToUpper(culture)).Style = "BlockHeading";
-            if (!string.IsNullOrWhiteSpace(document.PaymentTerms))
+            string? code = PaymentCode(document, netToPay);
+            if (code is null)
             {
-                section.AddParagraph(document.PaymentTerms);
+                AddPaymentText(section.Elements, document, culture);
             }
-
-            if (document.Iban is not null)
+            else
             {
-                string bank = Format(culture, "Payment.Iban", document.Iban);
-                if (document.Bic is not null)
-                {
-                    bank += "  ·  " + Format(culture, "Payment.Bic", document.Bic);
-                }
-
-                section.AddParagraph(bank);
+                AddPaymentWithQrCode(section, document, code, culture);
             }
 
             section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(6);
