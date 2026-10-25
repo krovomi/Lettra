@@ -125,4 +125,10 @@ internal sealed class HttpDirectoryGateway(HttpClient http) : IDirectoryGateway
             ct => http.GetAsync(HttpCalls.Relative($"api/v1/directory/vat-numbers/{Uri.EscapeDataString((vatNumber ?? string.Empty).Replace(" ", string.Empty, StringComparison.Ordinal))}"), ct),
             ContractsJsonContext.Default.VatNumberCheckResponse,
             cancellationToken);
+
+    public Task<OperationResult<CustomerDirectoryCheckResponse>> CheckCustomersAsync(CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.GetAsync(HttpCalls.Relative($"api/v1/directory/customer-check"), ct),
+            ContractsJsonContext.Default.CustomerDirectoryCheckResponse,
+            cancellationToken);
 }

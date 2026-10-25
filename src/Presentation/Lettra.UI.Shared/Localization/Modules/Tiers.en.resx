@@ -125,4 +125,15 @@
   <data name="Payees.Holder.CloseMatch" xml:space="preserve"><value>Close to the supplier's name</value></data>
   <data name="Error.Supplier.AccountHolderTooLong" xml:space="preserve"><value>The account holder is at most 70 characters.</value></data>
   <data name="Error.Supplier.IbanMissing" xml:space="preserve"><value>This supplier has no IBAN: nothing to check.</value></data>
+  <data name="DirectoryCheck.Command" xml:space="preserve"><value>Check in the directory</value></data>
+  <data name="DirectoryCheck.Running" xml:space="preserve"><value>Checking…</value></data>
+  <data name="DirectoryCheck.AllActive" xml:space="preserve"><value>{0} customers checked in the SIRENE directory: all trading.</value></data>
+  <data name="DirectoryCheck.Found" xml:space="preserve"><value>{0} customers to look at out of {1} checked in the SIRENE directory.</value></data>
+  <data name="DirectoryCheck.Partial" xml:space="preserve"><value>The directory did not answer for some customers: run the check again later to cover them.</value></data>
+  <data name="DirectoryCheck.Advice.Ceased" xml:space="preserve"><value>Before invoicing a ceased company, check who took over its business.</value></data>
+  <data name="DirectoryCheck.Advice.NotFound" xml:space="preserve"><value>An unknown SIREN is often a typo: fix the customer record.</value></data>
+  <data name="DirectoryCheck.Close" xml:space="preserve"><value>Close the result</value></data>
+  <data name="DirectoryCheck.Status.Ceased" xml:space="preserve"><value>Ceased</value></data>
+  <data name="DirectoryCheck.Status.NotFound" xml:space="preserve"><value>Unknown SIREN</value></data>
+  <data name="DirectoryCheck.Status.Active" xml:space="preserve"><value>Trading</value></data>
 </root>

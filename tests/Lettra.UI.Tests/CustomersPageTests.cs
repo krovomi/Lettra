@@ -2,12 +2,14 @@ using System.Globalization;
 using Bunit;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
+using Lettra.Contracts.Directory;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
 using Lettra.UI.Shared.Components.Explorer;
 using Lettra.UI.Shared.Keyboard;
 using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Pages.Parties;
+using Lettra.UI.Shared.Services;
 using Lettra.UI.Shared.Typing;
 using Lettra.UI.Tests.Billing;
 using Lettra.UI.Tests.Consultation;
@@ -523,6 +525,44 @@ public sealed class CustomersPageTests : BunitContext
         page.Find("#siret").GetAttribute("value").Should().Be("55203253400646");
         page.Find("#vat").GetAttribute("value").Should().Be("FR27552032534");
         page.Find("#zip").GetAttribute("value").Should().Be("75009");
+    }
+
+    [Fact]
+    public void Le_controle_dans_l_annuaire_liste_les_clients_cesses_avec_un_lien_vers_leur_fiche()
+    {
+        Guid ceased = Guid.CreateVersion7();
+        _directory.CustomerCheck = new CustomerDirectoryCheckResponse(12,
+            [new CustomerDirectoryFinding(ceased, "Ancienne SARL", "732829320", DirectoryStatusDto.Ceased),
+             new CustomerDirectoryFinding(Guid.CreateVersion7(), "Faute SAS", "111111118", DirectoryStatusDto.NotFound)], Complete: false);
+        IRenderedComponent<CustomersPage> page = Open("customers");
+
+        page.Find("#customers-directory-check").Click();
+
+        page.WaitForAssertion(() => page.Find("#customers-directory-title").TextContent.Should().Be("2 clients à regarder sur 12 vérifiés dans l'annuaire SIRENE."));
+        page.Find($"#customers-directory-result a[href='customers/{ceased}']").TextContent.Should().Be("Ancienne SARL");
+        page.FindAll(".lettra-directory-status.is-ceased").Should().ContainSingle().Which.TextContent.Should().Be("Cessée");
+        page.FindAll(".lettra-directory-status.is-notfound").Should().ContainSingle().Which.TextContent.Should().Be("SIREN inconnu");
+        page.FindAll("#customers-directory-partial").Should().ContainSingle();
+        this.Toasts().Should().ContainSingle(t => t.Kind == ToastKind.Warning);
+
+        page.Find("#customers-directory-close").Click();
+        page.FindAll("#customers-directory-result").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Un_controle_sans_surprise_le_dit_et_une_panne_s_affiche_en_message()
+    {
+        _directory.CustomerCheck = new CustomerDirectoryCheckResponse(5, [], Complete: true);
+        IRenderedComponent<CustomersPage> page = Open("customers");
+
+        page.Find("#customers-directory-check").Click();
+        page.WaitForAssertion(() => page.Find("#customers-directory-result.is-clear").TextContent.Should().Contain("5 clients vérifiés"));
+
+        _directory.CustomerCheckError = ErrorCodes.Directory.Unavailable;
+        page.Find("#customers-directory-check").Click();
+        page.WaitForAssertion(() => page.FindAll("#customers-directory-result").Should().BeEmpty());
+        this.Toasts().Should().Contain(t => t.Kind == ToastKind.Error);
+        _directory.CustomerChecks.Should().Be(2);
     }
 
     [Fact]

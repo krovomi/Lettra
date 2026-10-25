@@ -125,4 +125,15 @@
   <data name="Payees.Holder.CloseMatch" xml:space="preserve"><value>Proche du nom du fournisseur</value></data>
   <data name="Error.Supplier.AccountHolderTooLong" xml:space="preserve"><value>Le titulaire du compte fait au plus 70 caractères.</value></data>
   <data name="Error.Supplier.IbanMissing" xml:space="preserve"><value>Ce fournisseur n'a pas d'IBAN : rien à vérifier.</value></data>
+  <data name="DirectoryCheck.Command" xml:space="preserve"><value>Vérifier dans l'annuaire</value></data>
+  <data name="DirectoryCheck.Running" xml:space="preserve"><value>Vérification en cours…</value></data>
+  <data name="DirectoryCheck.AllActive" xml:space="preserve"><value>{0} clients vérifiés dans l'annuaire SIRENE : tous en activité.</value></data>
+  <data name="DirectoryCheck.Found" xml:space="preserve"><value>{0} clients à regarder sur {1} vérifiés dans l'annuaire SIRENE.</value></data>
+  <data name="DirectoryCheck.Partial" xml:space="preserve"><value>L'annuaire n'a pas répondu pour certains clients : relancez la vérification plus tard pour les contrôler.</value></data>
+  <data name="DirectoryCheck.Advice.Ceased" xml:space="preserve"><value>Avant de facturer une entreprise cessée, vérifiez qui reprend son activité.</value></data>
+  <data name="DirectoryCheck.Advice.NotFound" xml:space="preserve"><value>Un SIREN inconnu est souvent une faute de frappe : corrigez la fiche.</value></data>
+  <data name="DirectoryCheck.Close" xml:space="preserve"><value>Fermer le résultat</value></data>
+  <data name="DirectoryCheck.Status.Ceased" xml:space="preserve"><value>Cessée</value></data>
+  <data name="DirectoryCheck.Status.NotFound" xml:space="preserve"><value>SIREN inconnu</value></data>
+  <data name="DirectoryCheck.Status.Active" xml:space="preserve"><value>En activité</value></data>
 </root>

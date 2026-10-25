@@ -1,0 +1,75 @@
+@inject IDirectoryGateway Directory
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+@* Contrôle des clients dans l'annuaire SIRENE, à la demande : les entreprises cessées (radiées) et les SIREN inconnus
+   apparaissent ici, chacune avec un lien vers sa fiche. Seuls les SIREN partent vers l'annuaire public. *@
+
+<button type="button" class="lettra-button is-secondary" id="customers-directory-check" disabled="@_busy" @onclick="CheckAsync">
+    <Icon Name="shield-check" Size="18" /> @(_busy ? L["DirectoryCheck.Running"] : L["DirectoryCheck.Command"])
+</button>
+
+@if (_result is { } result)
+{
+    <section id="customers-directory-result" class="lettra-directory-check @(result.Findings.Count == 0 ? "is-clear" : "is-warning")"
+             role="status" aria-labelledby="customers-directory-title">
+        <header>
+            <h2 id="customers-directory-title">@Summary(result)</h2>
+            <button type="button" class="lettra-button is-ghost" id="customers-directory-close" @onclick="Close"
+                    aria-label="@L["DirectoryCheck.Close"]"><Icon Name="x" Size="18" /></button>
+        </header>
+        @if (!result.Complete)
+        {
+            <p class="lettra-hint" id="customers-directory-partial">@L["DirectoryCheck.Partial"]</p>
+        }
+        @if (result.Findings.Count > 0)
+        {
+            <ul>
+                @foreach (CustomerDirectoryFinding finding in result.Findings)
+                {
+                    <li>
+                        <span class="lettra-directory-status is-@(finding.Status.ToString().ToLowerInvariant())">@L[$"DirectoryCheck.Status.{finding.Status}"]</span>
+                        <a href="@($"customers/{finding.CustomerId}")">@finding.Name</a>
+                        <span class="lettra-muted">@string.Format(CultureInfo.CurrentCulture, L["CompanyLookup.Siren"], finding.Siren)</span>
+                    </li>
+                }
+            </ul>
+            @if (result.Findings.Any(f => f.Status == DirectoryStatusDto.Ceased))
+            {
+                <p class="lettra-hint">@L["DirectoryCheck.Advice.Ceased"]</p>
+            }
+            @if (result.Findings.Any(f => f.Status == DirectoryStatusDto.NotFound))
+            {
+                <p class="lettra-hint">@L["DirectoryCheck.Advice.NotFound"]</p>
+            }
+        }
+    </section>
+}
+
+@code {
+    private CustomerDirectoryCheckResponse? _result;
+    private bool _busy;
+
+    private string Summary(CustomerDirectoryCheckResponse result) =>
+        result.Findings.Count == 0
+            ? string.Format(CultureInfo.CurrentCulture, L["DirectoryCheck.AllActive"], result.Checked)
+            : string.Format(CultureInfo.CurrentCulture, L["DirectoryCheck.Found"], result.Findings.Count, result.Checked);
+
+    private void Close() => _result = null;
+
+    private async Task CheckAsync()
+    {
+        _busy = true;
+        OperationResult<CustomerDirectoryCheckResponse> result = await Directory.CheckCustomersAsync(CancellationToken.None);
+        _busy = false;
+        if (result.IsSuccess && result.Value is { } value)
+        {
+            _result = value;
+            Toasts.Show(value.Findings.Count == 0 ? ToastKind.Success : ToastKind.Warning, Summary(value));
+        }
+        else
+        {
+            _result = null;
+            Toasts.Show(ToastKind.Error, L.Error(result.Errors[0].Code));
+        }
+    }
+}
