@@ -421,6 +421,13 @@ La facture s'ouvre en brouillon (menu **Factures** pour la retrouver).
    n'est plus modifiable.
 2. **Télécharger le Factur-X** : le PDF lisible par tous, avec sa facture électronique intégrée. **XML UBL** donne
    l'autre format accepté par les plateformes.
+3. **Payer par QR code** : dès la validation, l'écran de la facture et son PDF portent un QR code de virement (standard
+   du Conseil européen des paiements). Le client le scanne avec l'application de sa banque : le virement s'ouvre déjà
+   rempli avec l'IBAN de la fiche entreprise, le montant et le numéro de la facture, que le rapprochement bancaire
+   reconnaît ensuite tout seul. Sans IBAN valide dans la fiche entreprise, l'écran propose de le saisir. Ni devis, ni
+   avoir, ni brouillon. *(Vérifié : tests automatiques, PDF/A-3b par veraPDF, code relu par un lecteur de QR code sur
+   l'écran et le PDF de la démo Docker ; non vérifié avec une vraie application bancaire ni dans les applications
+   installées.)* Détails : [docs/se-faire-payer.md](docs/se-faire-payer.md).
 
 ### 5. La transmission à la plateforme agréée (simulée)
 
@@ -451,6 +458,10 @@ Menu **FEC** : l'exercice est l'année civile en cours (modifiable, 24 mois au p
    débit et crédit, égaux.
 3. **Contrôler un fichier** passe au même validateur un FEC venu d'un autre logiciel ; chaque constat indique la
    ligne, la colonne et l'écriture concernées.
+4. **Vers le logiciel du cabinet** : les écritures de l'exercice partent au format d'import de Quadra (ASCII), Sage 100
+   (import paramétrable), Cegid Expert (écritures Excel) ou ACD (import paramétrable). Ce sont les mêmes écritures que
+   le FEC, rien n'est recalculé. Vérifié dans la démo Docker (navigateur) ; aucun import n'a encore été essayé dans un
+   vrai logiciel de production. Détails : [docs/passerelles-logiciels-cabinet.md](docs/passerelles-logiciels-cabinet.md).
 
 Sans SIREN dans la fiche entreprise, l'export le demande au lieu de produire un fichier.
 
