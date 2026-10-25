@@ -35,7 +35,7 @@ apparaît (HT, TTC, TVA, SIREN, devis, avoir, lettrage, rapprochement, échéanc
 | 3. Créer un client | Crée « Boulangerie Dupain » (SIREN fictif, adresse à Lyon) | Pourquoi le SIREN du client est obligatoire avec la facture électronique |
 | 4. Le catalogue | Ajoute « Atelier découverte du numérique » à 450 € HT | HT, TVA et TTC sur un exemple chiffré |
 | 5. Faire un devis | Devis depuis la fiche client, objet, deux ateliers, validation, acceptation | Devis, lignes, totaux, contrôle des mentions obligatoires, numéro définitif |
-| 6. Facturer | Facture depuis le devis, validation, marquée émise, déposée sur la plateforme (simulée) | Numérotation sans trou, facture non modifiable, avoir, Factur-X, plateforme agréée |
+| 6. Facturer | Facture depuis le devis, validation, QR code de paiement, marquée émise, déposée sur la plateforme (simulée) | Numérotation sans trou, facture non modifiable, avoir, Factur-X, plateforme agréée |
 | 7. Encaisser | Saisit le virement de 1 080 € et le répartit sur la facture | Encaissement, lettrage |
 | 8. La banque | Importe le relevé fictif | Rapprochement bancaire |
 | 9. Relancer | Ouvre l'aperçu d'une relance (rien n'est envoyé) | Facture échue, niveaux de relance |
