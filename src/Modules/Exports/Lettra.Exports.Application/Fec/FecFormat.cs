@@ -63,6 +63,19 @@ public static partial class FecFormat
     public static bool TryParseDate(string value, out DateOnly date) =>
         DateOnly.TryParseExact(value, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
 
+    /// <summary>Le texte d'un FEC : UTF-8 s'il en est (marque d'ordre retirée), sinon ISO 8859-15.</summary>
+    public static string Decode(ReadOnlySpan<byte> content)
+    {
+        try
+        {
+            return new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true).GetString(content).TrimStart('\uFEFF');
+        }
+        catch (DecoderFallbackException)
+        {
+            return Encoding.GetString(content);
+        }
+    }
+
     /// <summary>Montant à deux décimales, virgule décimale, sans séparateur de milliers.</summary>
     public static string FormatAmount(decimal amount) =>
         amount.ToString("0.00", CultureInfo.InvariantCulture).Replace('.', ',');

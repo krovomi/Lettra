@@ -11,4 +11,12 @@ internal sealed class InProcessInsightsGateway(IServiceScopeFactory scopes) : II
 {
     public Task<OperationResult<PaymentWeatherResponse>> GetPaymentWeatherAsync(CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetPaymentWeatherQuery(dossier), ct), cancellationToken);
+
+    public Task<OperationResult<PracticeAuditResponse>> GetPracticeAuditAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetPracticeAuditQuery(dossier, from, to), ct), cancellationToken);
+
+    public Task<OperationResult<PracticeAuditResponse>> RunPracticeAuditAsync(
+        string fileName, byte[] content, DateOnly? from, DateOnly? to, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(
+            scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new RunPracticeAuditQuery(dossier, fileName, content, from, to), ct), cancellationToken);
 }

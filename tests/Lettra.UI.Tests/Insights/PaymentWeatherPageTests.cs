@@ -1,6 +1,5 @@
 using System.Globalization;
 using Bunit;
-using Lettra.Contracts.Common;
 using Lettra.Contracts.Insights;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
@@ -136,15 +135,5 @@ public sealed class PaymentWeatherPageTests : BunitContext
         page.FindAll("#weather-cards > li").Should().HaveCount(24);
         page.FindAll("#weather-pager button")[1].Click();
         page.FindAll("#weather-cards > li").Should().HaveCount(6);
-    }
-
-    private sealed class FakeInsightsGateway : IInsightsGateway
-    {
-        public PaymentWeatherResponse? Weather { get; set; }
-
-        public Task<OperationResult<PaymentWeatherResponse>> GetPaymentWeatherAsync(CancellationToken cancellationToken) =>
-            Task.FromResult(Weather is null
-                ? OperationResult<PaymentWeatherResponse>.Failure([new ErrorDetail(ErrorCodes.Tenancy.DossierNotFound)])
-                : OperationResult<PaymentWeatherResponse>.Success(Weather));
     }
 }

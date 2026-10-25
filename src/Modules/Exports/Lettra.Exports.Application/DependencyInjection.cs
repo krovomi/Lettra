@@ -41,6 +41,8 @@ public static class DependencyInjection
         services.AddScoped<IQueryHandler<GetPlatformTransmissionQuery, Result<PlatformTransmissionResponse>>, GetPlatformTransmissionHandler>();
         services.AddScoped<IQueryHandler<GetReceivablesSummaryQuery, Result<ReceivablesSummaryResponse>>, GetReceivablesSummaryHandler>();
         services.AddScoped<IQueryHandler<GetPaymentWeatherQuery, Result<PaymentWeatherResponse>>, GetPaymentWeatherHandler>();
+        services.AddScoped<IQueryHandler<GetPracticeAuditQuery, Result<PracticeAuditResponse>>, GetPracticeAuditHandler>();
+        services.AddScoped<IQueryHandler<RunPracticeAuditQuery, Result<PracticeAuditResponse>>, RunPracticeAuditHandler>();
 
         // Consultation de la comptabilité : journal des ventes, balance et grand livre, lus comme le FEC.
         services.AddScoped<IQueryHandler<GetSalesJournalQuery, Result<SalesJournalResponse>>, GetSalesJournalHandler>();

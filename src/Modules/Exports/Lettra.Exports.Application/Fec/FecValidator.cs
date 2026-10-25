@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.RegularExpressions;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Exports;
@@ -20,7 +19,7 @@ public static partial class FecValidator
         Report report = new();
         ValidateFileName(fileName, periodEnd, report);
 
-        string text = Decode(content);
+        string text = FecFormat.Decode(content);
         List<string> lines = [.. text.Split('\n').Select(l => l.TrimEnd('\r'))];
         if (lines.Count > 0 && lines[^1].Length == 0)
         {
@@ -226,18 +225,6 @@ public static partial class FecValidator
     }
 
     /// <summary>UTF-8 s'il est valide (avec ou sans BOM), sinon ISO 8859-15 : les deux encodages que les logiciels produisent.</summary>
-    private static string Decode(ReadOnlySpan<byte> content)
-    {
-        try
-        {
-            return new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true).GetString(content).TrimStart('﻿');
-        }
-        catch (DecoderFallbackException)
-        {
-            return FecFormat.Encoding.GetString(content);
-        }
-    }
-
     [GeneratedRegex(@"^(?<siren>\d{9})FEC(?<date>\d{8})(\.txt|\.xml)?$", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)]
     private static partial Regex FileNamePattern();
 

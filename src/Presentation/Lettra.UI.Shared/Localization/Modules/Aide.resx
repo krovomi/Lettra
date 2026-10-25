@@ -124,4 +124,7 @@
   <data name="Help.Faq.weather.Question" xml:space="preserve"><value>Quand mes factures seront-elles encaissées ?</value></data>
   <data name="Help.Faq.weather.Answer" xml:space="preserve"><value>La météo des paiements donne à chaque client sa météo, tirée de ses paiements passés, et la date probable d'encaissement de chaque facture due. La prévision des huit prochaines semaines aide à prévoir la trésorerie.</value></data>
   <data name="Help.Faq.weather.Keywords" xml:space="preserve"><value>météo prévision encaissement trésorerie délai payeur</value></data>
+  <data name="Help.Faq.practice-audit.Question" xml:space="preserve"><value>Que relèverait un vérificateur dans ma comptabilité ?</value></data>
+  <data name="Help.Faq.practice-audit.Answer" xml:space="preserve"><value>Le contrôle à blanc, dans Déclarations, passe sur le FEC les tests d'un vérificateur : trous de numérotation, écritures un dimanche, caisse négative, espèces au-delà de 1 000 €, montants ronds, doublons, loi de Benford, clients créditeurs, taux de TVA. Il dit quoi corriger ou justifier.</value></data>
+  <data name="Help.Faq.practice-audit.Keywords" xml:space="preserve"><value>contrôle fiscal vérificateur entraînement blanc fec benford anomalie</value></data>
 </root>

@@ -49,3 +49,36 @@
     .lt-weather-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 .lt-weather-doubtful { margin: var(--space-3) 0 0; }
+
+/* Contrôle fiscal d'entraînement : un test par carte, alertes d'abord ; loi de Benford en barres doubles. */
+.lt-audit-checks { list-style: none; margin: var(--space-3) 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+.lt-audit-check { display: flex; gap: var(--space-3); padding: var(--space-3) var(--space-4); border: 1px solid var(--color-border); border-left-width: 4px; border-radius: var(--radius-lg); background: var(--color-surface); min-width: 0; }
+.lt-audit-check.is-passed { border-left-color: var(--color-success); }
+.lt-audit-check.is-watch { border-left-color: var(--color-warning); }
+.lt-audit-check.is-alert { border-left-color: var(--color-danger); }
+.lt-audit-icon { flex: none; color: var(--color-success-fg); }
+.is-watch .lt-audit-icon { color: var(--color-warning-fg); }
+.is-alert .lt-audit-icon { color: var(--color-danger-fg); }
+.lt-audit-body { min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+.lt-audit-body h3 { margin: 0; font-size: var(--text-base); display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.lt-audit-body p { margin: 0; }
+.lt-audit-examples summary { cursor: pointer; min-height: var(--hit); display: flex; align-items: center; }
+.lt-audit-examples ul { margin: 0; padding-left: var(--space-4); display: grid; gap: var(--space-1); }
+.lt-audit-examples code { overflow-wrap: anywhere; font-size: var(--text-sm); }
+.lt-audit-fix svg { vertical-align: text-bottom; }
+.lt-audit-benford { list-style: none; margin: var(--space-2) 0 var(--space-3); padding: 0; display: grid; gap: var(--space-2); }
+.lt-audit-benford li { display: grid; grid-template-columns: 1.5rem minmax(0, 1fr); grid-template-areas: "digit bars" "digit shares"; gap: var(--space-1) var(--space-2); align-items: center; }
+.lt-audit-digit { grid-area: digit; font-weight: 600; font-variant-numeric: tabular-nums; }
+.lt-audit-bars { grid-area: bars; display: grid; gap: 2px; }
+.lt-audit-bars > span { display: block; height: 0.5rem; border-radius: 999px; }
+.lt-audit-bars .is-observed { background: var(--color-primary); }
+.lt-audit-bars .is-expected { background: var(--color-border-strong); }
+.lt-audit-shares { grid-area: shares; color: var(--color-fg-muted); font-size: var(--text-sm); font-variant-numeric: tabular-nums; }
+
+@media (min-width: 768px) {
+    .lt-audit-benford li { grid-template-columns: 1.5rem minmax(0, 1fr) 12rem; grid-template-areas: "digit bars shares"; }
+}
+
+@media (min-width: 1200px) {
+    .lt-audit-checks { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

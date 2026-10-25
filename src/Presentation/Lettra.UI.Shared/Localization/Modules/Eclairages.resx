@@ -55,4 +55,89 @@
   <data name="Weather.Rules.Hint" xml:space="preserve"><value>Le retard moyen est pondéré par les montants ; une facture échue encore due compte pour son retard à ce jour. Le meilleur jour d'envoi compare les délais de paiement selon le jour d'émission. Ce sont des statistiques simples, recalculées à chaque ouverture : aucune IA, rien n'est écrit dans le dossier.</value></data>
   <data name="Weather.Doubtful" xml:space="preserve"><value>Douteux : {0} de factures à plus de {1} jours de retard, laissés hors de la prévision. Mieux vaut les relancer.</value></data>
   <data name="Weather.Expected.Doubtful" xml:space="preserve"><value>douteuse, hors prévision</value></data>
+  <data name="Audit.Tab" xml:space="preserve"><value>Contrôle à blanc</value></data>
+  <data name="Audit.Title" xml:space="preserve"><value>Contrôle fiscal d'entraînement</value></data>
+  <data name="Audit.Subtitle" xml:space="preserve"><value>Lettra passe sur le FEC les tests qu'un vérificateur ferait avec ses outils, et dit ce qu'il relèverait avant qu'il ne le relève.</value></data>
+  <data name="Audit.Run" xml:space="preserve"><value>Lancer le contrôle à blanc</value></data>
+  <data name="Audit.Other.Title" xml:space="preserve"><value>Contrôler le FEC d'un autre logiciel</value></data>
+  <data name="Audit.Other.Hint" xml:space="preserve"><value>Choisissez un FEC (texte tabulé ou à barres verticales) : les mêmes tests passent, sur l'exercice indiqué ci-dessus.</value></data>
+  <data name="Audit.Working" xml:space="preserve"><value>Contrôle en cours…</value></data>
+  <data name="Audit.Result.Title" xml:space="preserve"><value>Ce que relèverait le vérificateur sur {0}</value></data>
+  <data name="Audit.Read" xml:space="preserve"><value>{0} écriture(s) et {1} ligne(s) lues.</value></data>
+  <data name="Audit.Verdict.Clean" xml:space="preserve"><value>Aucun des {0} tests ne relève quoi que ce soit.</value></data>
+  <data name="Audit.Verdict.Findings" xml:space="preserve"><value>{0} point(s) que le vérificateur relèverait, {1} question(s) qu'il poserait.</value></data>
+  <data name="Audit.Verdict.Unreadable" xml:space="preserve"><value>Ce fichier n'est pas un FEC lisible (en-tête ou colonnes) : aucun test n'a pu passer.</value></data>
+  <data name="Audit.Severity.Passed" xml:space="preserve"><value>Rien à relever</value></data>
+  <data name="Audit.Severity.Watch" xml:space="preserve"><value>Question probable</value></data>
+  <data name="Audit.Severity.Alert" xml:space="preserve"><value>À corriger ou justifier</value></data>
+  <data name="Audit.Examples" xml:space="preserve"><value>{0} exemple(s)</value></data>
+  <data name="Audit.Benford.Title" xml:space="preserve"><value>Premiers chiffres des montants (loi de Benford)</value></data>
+  <data name="Audit.Benford.Hint" xml:space="preserve"><value>Dans des montants réels, le premier chiffre est un 1 environ trois fois sur dix et un 9 moins d'une fois sur vingt. Barre bleue : vos montants ; barre grise : la loi.</value></data>
+  <data name="Audit.Benford.Shares" xml:space="preserve"><value>{0:0.0} % observés, {1:0.0} % attendus</value></data>
+  <data name="Audit.Disclaimer" xml:space="preserve"><value>C'est un entraînement, pas un avis fiscal : rien n'est envoyé à l'administration, et un vérificateur dispose d'autres sources (relevés bancaires, recoupements). Les tests et leurs seuils sont décrits dans la documentation.</value></data>
+  <data name="Audit.Check.Format" xml:space="preserve"><value>Format du fichier</value></data>
+  <data name="Audit.Check.Format.Why" xml:space="preserve"><value>Le fichier respecte-t-il l'article A47 A-1 : colonnes, dates, montants, équilibre des écritures ? Un FEC non conforme peut valoir une amende.</value></data>
+  <data name="Audit.Check.Format.Found" xml:space="preserve"><value>{0} anomalie(s) de format.</value></data>
+  <data name="Audit.Check.Format.Passed" xml:space="preserve"><value>Le fichier est conforme.</value></data>
+  <data name="Audit.Check.Format.Fix" xml:space="preserve"><value>Corrigez dans le logiciel qui produit le FEC, puis exportez-le à nouveau ; l'onglet FEC donne le détail ligne par ligne.</value></data>
+  <data name="Audit.Check.EntryNumberGap" xml:space="preserve"><value>Numéros d'écriture qui sautent</value></data>
+  <data name="Audit.Check.EntryNumberGap.Why" xml:space="preserve"><value>Dans chaque journal, les écritures se suivent sans trou : un numéro manquant fait penser à une écriture supprimée.</value></data>
+  <data name="Audit.Check.EntryNumberGap.Found" xml:space="preserve"><value>{0} numéro(s) manquant(s).</value></data>
+  <data name="Audit.Check.EntryNumberGap.Passed" xml:space="preserve"><value>Aucun numéro ne manque.</value></data>
+  <data name="Audit.Check.EntryNumberGap.Fix" xml:space="preserve"><value>Retrouvez la raison de chaque trou (écriture annulée, changement d'exercice) et gardez-en la trace écrite.</value></data>
+  <data name="Audit.Check.PieceNumberGap" xml:space="preserve"><value>Factures qui manquent dans la suite</value></data>
+  <data name="Audit.Check.PieceNumberGap.Why" xml:space="preserve"><value>Les factures sont numérotées en une suite continue, sans trou (article 242 nonies A de l'annexe II du CGI) : un numéro absent fait soupçonner une vente non déclarée.</value></data>
+  <data name="Audit.Check.PieceNumberGap.Found" xml:space="preserve"><value>{0} numéro(s) de pièce absent(s) du journal des ventes.</value></data>
+  <data name="Audit.Check.PieceNumberGap.Passed" xml:space="preserve"><value>La suite des factures est continue.</value></data>
+  <data name="Audit.Check.PieceNumberGap.Fix" xml:space="preserve"><value>Vérifiez si la pièce existe hors de la période (avant ou après) ; sinon, préparez son explication.</value></data>
+  <data name="Audit.Check.SundayOrHoliday" xml:space="preserve"><value>Écritures un dimanche ou un jour férié</value></data>
+  <data name="Audit.Check.SundayOrHoliday.Why" xml:space="preserve"><value>Une activité un jour fermé est possible (commerce, saisie tardive), mais le vérificateur demande pourquoi.</value></data>
+  <data name="Audit.Check.SundayOrHoliday.Found" xml:space="preserve"><value>{0} écriture(s) datée(s) d'un dimanche ou d'un jour férié.</value></data>
+  <data name="Audit.Check.SundayOrHoliday.Passed" xml:space="preserve"><value>Aucune écriture un jour fermé.</value></data>
+  <data name="Audit.Check.SundayOrHoliday.Fix" xml:space="preserve"><value>Si l'activité ouvre ces jours-là, rien à faire ; sinon, vérifiez la date de la pièce.</value></data>
+  <data name="Audit.Check.LateValidation" xml:space="preserve"><value>Écritures validées longtemps après leur date</value></data>
+  <data name="Audit.Check.LateValidation.Why" xml:space="preserve"><value>Plus de 60 jours entre la date d'une écriture et sa validation : le vérificateur cherche les écritures antidatées.</value></data>
+  <data name="Audit.Check.LateValidation.Found" xml:space="preserve"><value>{0} écriture(s) validée(s) plus de 60 jours après leur date.</value></data>
+  <data name="Audit.Check.LateValidation.Passed" xml:space="preserve"><value>Toutes les écritures sont validées à temps.</value></data>
+  <data name="Audit.Check.LateValidation.Fix" xml:space="preserve"><value>Gardez la pièce qui explique le retard (facture reçue tard, régularisation de clôture).</value></data>
+  <data name="Audit.Check.NegativeCash" xml:space="preserve"><value>Caisse négative</value></data>
+  <data name="Audit.Check.NegativeCash.Why" xml:space="preserve"><value>Une caisse ne peut pas payer plus qu'elle ne contient : un solde négatif fait penser à des recettes non enregistrées.</value></data>
+  <data name="Audit.Check.NegativeCash.Found" xml:space="preserve"><value>{0} jour(s) où la caisse finit négative (jusqu'à {1}).</value></data>
+  <data name="Audit.Check.NegativeCash.Passed" xml:space="preserve"><value>La caisse n'est jamais négative.</value></data>
+  <data name="Audit.Check.NegativeCash.Fix" xml:space="preserve"><value>Retrouvez les recettes en espèces manquantes ou corrigez les dates des sorties de caisse.</value></data>
+  <data name="Audit.Check.CashOverLimit" xml:space="preserve"><value>Espèces au-delà de 1 000 €</value></data>
+  <data name="Audit.Check.CashOverLimit.Why" xml:space="preserve"><value>Un règlement en espèces dépasse le plafond légal de 1 000 € (article L112-6 du code monétaire et financier).</value></data>
+  <data name="Audit.Check.CashOverLimit.Found" xml:space="preserve"><value>{0} mouvement(s) de caisse de plus de 1 000 €, {1} au total.</value></data>
+  <data name="Audit.Check.CashOverLimit.Passed" xml:space="preserve"><value>Aucun mouvement d'espèces au-delà du plafond.</value></data>
+  <data name="Audit.Check.CashOverLimit.Fix" xml:space="preserve"><value>Vérifiez qu'il s'agit d'un dépôt en banque ou d'un retrait, et non d'un règlement entre professionnels.</value></data>
+  <data name="Audit.Check.RoundAmounts" xml:space="preserve"><value>Montants ronds</value></data>
+  <data name="Audit.Check.RoundAmounts.Why" xml:space="preserve"><value>Des écritures d'au moins 1 000 € tombant pile sur la centaine sont rares dans une activité réelle et fréquentes dans une estimation.</value></data>
+  <data name="Audit.Check.RoundAmounts.Found" xml:space="preserve"><value>{0} écriture(s) ronde(s), soit {1} % des écritures d'au moins 1 000 €.</value></data>
+  <data name="Audit.Check.RoundAmounts.Passed" xml:space="preserve"><value>Peu de montants ronds ({1} % des écritures d'au moins 1 000 €).</value></data>
+  <data name="Audit.Check.RoundAmounts.Fix" xml:space="preserve"><value>Gardez la pièce de chaque montant rond (contrat, forfait, acompte).</value></data>
+  <data name="Audit.Check.DuplicateLines" xml:space="preserve"><value>Lignes en double</value></data>
+  <data name="Audit.Check.DuplicateLines.Why" xml:space="preserve"><value>Même jour, même compte, même montant et même libellé dans deux écritures : une saisie en double gonfle les charges ou les ventes.</value></data>
+  <data name="Audit.Check.DuplicateLines.Found" xml:space="preserve"><value>{0} groupe(s) de lignes identiques.</value></data>
+  <data name="Audit.Check.DuplicateLines.Passed" xml:space="preserve"><value>Aucune ligne en double.</value></data>
+  <data name="Audit.Check.DuplicateLines.Fix" xml:space="preserve"><value>Si ce sont deux opérations réelles, distinguez leurs libellés ; sinon, contre-passez le doublon.</value></data>
+  <data name="Audit.Check.Benford" xml:space="preserve"><value>Loi de Benford</value></data>
+  <data name="Audit.Check.Benford.Why" xml:space="preserve"><value>Le premier chiffre des montants réels suit une loi connue ; des montants inventés s'en écartent.</value></data>
+  <data name="Audit.Check.Benford.Found" xml:space="preserve"><value>Écart moyen de {1} point(s) sur {0} montants : la série s'écarte de la loi.</value></data>
+  <data name="Audit.Check.Benford.Passed" xml:space="preserve"><value>{0} montants lus ; écart moyen de {1} point(s), dans la norme (trop peu de montants : test non concluant).</value></data>
+  <data name="Audit.Check.Benford.Fix" xml:space="preserve"><value>Regardez les chiffres les plus éloignés : ils montrent souvent un forfait répété ou une série saisie à la main.</value></data>
+  <data name="Audit.Check.CustomerCredit" xml:space="preserve"><value>Clients créditeurs</value></data>
+  <data name="Audit.Check.CustomerCredit.Why" xml:space="preserve"><value>Un client qui a trop payé, ou une facture oubliée : le vérificateur demande ce que représente le solde.</value></data>
+  <data name="Audit.Check.CustomerCredit.Found" xml:space="preserve"><value>{0} client(s) au solde créditeur, {1} au total.</value></data>
+  <data name="Audit.Check.CustomerCredit.Passed" xml:space="preserve"><value>Aucun client créditeur.</value></data>
+  <data name="Audit.Check.CustomerCredit.Fix" xml:space="preserve"><value>Lettrez l'encaissement avec sa facture, ou remboursez le trop-perçu.</value></data>
+  <data name="Audit.Check.SupplierDebit" xml:space="preserve"><value>Fournisseurs débiteurs</value></data>
+  <data name="Audit.Check.SupplierDebit.Why" xml:space="preserve"><value>Un fournisseur payé sans facture enregistrée : charge manquante ou acompte à justifier.</value></data>
+  <data name="Audit.Check.SupplierDebit.Found" xml:space="preserve"><value>{0} fournisseur(s) au solde débiteur, {1} au total.</value></data>
+  <data name="Audit.Check.SupplierDebit.Passed" xml:space="preserve"><value>Aucun fournisseur débiteur.</value></data>
+  <data name="Audit.Check.SupplierDebit.Fix" xml:space="preserve"><value>Enregistrez la facture d'achat manquante ou classez l'acompte versé.</value></data>
+  <data name="Audit.Check.VatRate" xml:space="preserve"><value>TVA collectée et chiffre d'affaires</value></data>
+  <data name="Audit.Check.VatRate.Why" xml:space="preserve"><value>La TVA collectée rapportée au chiffre d'affaires ne peut pas dépasser le taux normal de 20 %.</value></data>
+  <data name="Audit.Check.VatRate.Found" xml:space="preserve"><value>La TVA collectée représente {1} % du chiffre d'affaires : plus que le taux normal.</value></data>
+  <data name="Audit.Check.VatRate.Passed" xml:space="preserve"><value>Taux apparent de TVA collectée : {1} % du chiffre d'affaires.</value></data>
+  <data name="Audit.Check.VatRate.Fix" xml:space="preserve"><value>Cherchez une TVA comptée deux fois ou une vente enregistrée hors des comptes 70.</value></data>
 </root>

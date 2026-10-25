@@ -41,6 +41,7 @@ public static class HelpCatalog
         new("recurring", ["recurring-invoices", "recurring-invoices/*", "invoices"], "recurring-invoices", "Nav.RecurringInvoices"),
         new("customer", ["customers", "customers/*", "suppliers", "suppliers/*"], "customers/new", "Nav.Customers"),
         new("vat", ["tax", "tax/*"], "tax", "Nav.Tax"),
+        new("practice-audit", ["tax/practice-audit", "tax/audit-kit", "exports/fec"], "tax/practice-audit", "Audit.Tab"),
         new("fec", ["exports/fec", "accounting", "accounting/*", "tax/*"], "exports/fec", "Nav.Fec"),
         new("dossier", ["", "cabinet", "review", "review/*"], "cabinet", "Nav.Cabinet"),
         new("team", ["admin"], "admin", "Nav.Admin"),

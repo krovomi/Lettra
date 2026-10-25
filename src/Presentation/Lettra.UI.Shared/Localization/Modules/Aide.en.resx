@@ -124,4 +124,7 @@
   <data name="Help.Faq.weather.Question" xml:space="preserve"><value>When will my invoices be collected?</value></data>
   <data name="Help.Faq.weather.Answer" xml:space="preserve"><value>Payment weather gives each customer a weather report drawn from their past payments, and the likely payment date of each open invoice. The eight-week forecast helps plan cash.</value></data>
   <data name="Help.Faq.weather.Keywords" xml:space="preserve"><value>weather forecast collection cash delay payer</value></data>
+  <data name="Help.Faq.practice-audit.Question" xml:space="preserve"><value>What would a tax inspector point out in my books?</value></data>
+  <data name="Help.Faq.practice-audit.Answer" xml:space="preserve"><value>The mock audit, under Tax returns, runs an inspector's tests on the FEC: numbering gaps, Sunday entries, negative cash, cash above €1,000, round amounts, duplicates, Benford's law, customers in credit, VAT rate. It tells you what to fix or justify.</value></data>
+  <data name="Help.Faq.practice-audit.Keywords" xml:space="preserve"><value>tax audit inspector practice mock fec benford anomaly</value></data>
 </root>
