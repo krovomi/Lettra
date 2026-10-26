@@ -6,11 +6,39 @@ Logiciel de devis et de factures pour les cabinets d'experts-comptables : une ba
 > **Prototype interne.** Lettra se présente aujourd'hui en interne, sur **données fictives uniquement**. La plateforme
 > agréée est **simulée** : rien ne quitte l'ordinateur. Ne saisissez aucune donnée réelle de client.
 
+- [Principes de conception](#principes-de-conception) : SOLID, KISS, DRY, Clean Architecture
 - [Choisir sa façon d'essayer](#choisir-sa-façon-dessayer) : Navigateur, Windows, Android, iPhone, Mac
 - [Premier usage, pas à pas](#premier-usage-pas-à-pas)
 - [Ce que la démo ne fait pas encore](#ce-que-la-démo-ne-fait-pas-encore)
 - [En cas de problème](#en-cas-de-problème)
 - [Pour les développeurs](#pour-les-développeurs)
+
+---
+
+## Principes de conception
+
+Le code C# (.NET 10) suit la Clean Architecture et les principes SOLID, KISS et DRY. Chaque point ci-dessous est
+vérifié à chaque modification, en local comme en CI, et non simplement déclaré :
+
+- **Clean Architecture, ports et adaptateurs** : domaine, application, infrastructure, présentation et hôtes sont
+  des projets séparés ; les dépendances vont toujours vers le domaine. Le domaine n'utilise aucun framework,
+  l'application déclare des ports (interfaces) que l'infrastructure implémente, et l'interface ne parle qu'à des
+  passerelles, HTTP ou en processus, qui rendent le même résultat. Des tests d'architecture le contrôlent
+  ([Règles tenues par les tests](#règles-tenues-par-les-tests)).
+- **SOLID** : un gestionnaire par cas d'usage derrière un médiateur ; les préoccupations transverses (journal,
+  dossier ouvert, permission, validation, concurrence) sont des comportements du pipeline, ajoutés sans toucher aux
+  cas d'usage ; tout est injecté, aucun écran ne reçoit de localisateur de services.
+- **KISS** : un médiateur maison de quelques fichiers, les échecs métier en valeurs (`Result`) plutôt qu'en
+  exceptions, des correspondances écrites à la main.
+- **DRY** : un seul calendrier légal, une seule traduction `Result` → HTTP, un seul chargement concurrent, des
+  composants de liste partagés ; les doublons relevés par l'audit ont été retirés.
+- **Base propre** : zéro avertissement (avertissements traités en erreurs, analyseurs .NET en mode `Recommended`),
+  21 règles de style de l'IDE en erreur de build, couverture minimale imposée en CI (88 % des lignes, 78 % des
+  branches ; environ 92 % et 82 % mesurés).
+
+Le détail, les mesures et ce qui reste ouvert (l'hôte de l'application installée, compilé seulement en CI, n'est
+pas encore sous les mêmes règles) sont dans [docs/qualite-du-code.md](docs/qualite-du-code.md). Tous les documents :
+[docs/README.md](docs/README.md).
 
 ---
 
@@ -381,6 +409,11 @@ données de démonstration, la fiche est déjà remplie (« Atelier Numérique C
 Cliquez sur **Enregistrer** : « Fiche entreprise enregistrée. » N'utilisez pas le bouton « Vérifier (VIES) » : il
 interroge le service européen, qui ne connaît pas ces numéros fictifs.
 
+Le champ **Rechercher l'entreprise (annuaire SIRENE)** remplit le nom, le SIREN, le SIRET, le numéro de TVA et
+l'adresse du siège ; la forme juridique, le capital, le greffe et les conditions de paiement restent à saisir. Rien
+n'est enregistré avant **Enregistrer**. *(Vérifié : tests automatiques et démo Docker.)* Détails :
+[docs/annuaire.md](docs/annuaire.md).
+
 ### 2. Un client
 
 Menu **Clients**. La liste est à gauche, la fiche à droite (sur téléphone et tablette, l'une ou l'autre, avec
@@ -396,6 +429,11 @@ Cliquez sur **Créer** : la fiche s'affiche en lecture. **Modifier** (**F2**) re
 **Échap** revient sans enregistrer (Lettra demande avant d'abandonner une saisie modifiée). Les blocs de la fiche
 (Coordonnées, Dernières factures, Derniers devis) se replient d'un clic. Les **Fournisseurs** ont la même
 présentation.
+
+**Vérifier dans l'annuaire** (écran Clients) contrôle tous les clients entreprises dans l'annuaire SIRENE : les
+entreprises cessées (radiées) et les SIREN inconnus s'affichent avec un lien vers leur fiche. Seuls les SIREN partent
+vers l'annuaire public. Dans la démo, l'annuaire répond pour les entreprises fictives du jeu, dont quelques clients
+cessés ; toute autre recherche part vers l'annuaire réel. *(Vérifié : tests automatiques et démo Docker.)*
 
 ### 3. Un devis
 
