@@ -1,0 +1,401 @@
+@page "/vigilance"
+@using Lettra.Contracts.Vigilance
+@inject IVigilanceGateway Vigilance
+@inject ToastService Toasts
+@inject TimeProvider Clock
+@inject IStringLocalizer<SharedResource> L
+@* Fiche anti-blanchiment du client (LCB-FT) : pièces d'identification reçues, bénéficiaires effectifs, niveau de risque et
+   sa justification, date de la revue. La prochaine revue suit le risque ; la fiche est gardée cinq ans après la fin de
+   la relation. Elle reste confidentielle : ni l'auditeur ni le client n'y ont accès. *@
+
+<PageTitle>@L["Vigilance.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Vigilance.Title"]</h1>
+        <p class="lettra-muted">@L["Vigilance.Subtitle"]</p>
+    </div>
+</div>
+
+<GeneralErrors Errors="_errors" />
+
+@if (_view is not { } view)
+{
+    <ListSkeleton Columns="4" />
+}
+else
+{
+    <section class="lt-banking-stats" id="vigilance-stats" aria-label="@L["Vigilance.Stats"]">
+        <div class="@($"lt-banking-stat {StatusTone(view.Status)}")">
+            <span>@L["Vigilance.Stat.Status"]</span>
+            <strong id="vigilance-status">@L[$"Vigilance.Status.{view.Status}"]</strong>
+            <small class="lettra-muted">@L[$"Vigilance.Status.{view.Status}.Hint"]</small>
+        </div>
+        <div class="lt-banking-stat">
+            <span>@L["Vigilance.Level"]</span>
+            <strong id="vigilance-level">@(view.File is { } level ? L[$"Vigilance.Level.{level.Level}"] : "—")</strong>
+            @if (view.File is { } interval)
+            {
+                <small class="lettra-muted">@L[$"Vigilance.Level.{interval.Level}.Hint"]</small>
+            }
+        </div>
+        <div class="@($"lt-banking-stat {(view.Status == DueDiligenceStatusDto.ReviewDue ? "is-pending" : null)}")">
+            <span>@L["Vigilance.Stat.NextReview"]</span>
+            <strong id="vigilance-next">@(view.File is { RelationshipEndedOn: null } next ? DateText.Format(next.NextReviewOn, Culture) : "—")</strong>
+            @if (view.File is { } last)
+            {
+                <small class="lettra-muted">@string.Format(Culture, L["Vigilance.Stat.LastReview"], DateText.Format(last.ReviewedOn, Culture), last.ReviewedByName ?? L["Vigilance.Someone"])</small>
+            }
+        </div>
+        <div class="lt-banking-stat">
+            <span>@L["Vigilance.Stat.Owners"]</span>
+            <strong id="vigilance-owners-count">@(view.File?.Owners.Count ?? 0)</strong>
+            @if (view.File?.KeepUntil is { } keep)
+            {
+                <small class="lettra-muted" id="vigilance-keep">@string.Format(Culture, L["Vigilance.KeepUntil"], DateText.Format(keep, Culture))</small>
+            }
+        </div>
+    </section>
+
+    <section class="lettra-card lt-mission-panel" aria-labelledby="vigilance-form-title">
+        <div class="lt-panel-head">
+            <h2 id="vigilance-form-title">@L["Vigilance.Form"]</h2>
+            @if (view.File is not null && !_editing)
+            {
+                <button type="button" class="lettra-button is-secondary is-small" id="vigilance-edit" @onclick="Edit">@L["Vigilance.Review"]</button>
+            }
+        </div>
+        @if (_editing)
+        {
+            <form class="lettra-form-grid" id="vigilance-form" @onsubmit="SaveAsync" @onsubmit:preventDefault="true">
+                <fieldset>
+                    <legend>@L["Vigilance.Form.Identity"]</legend>
+                    <div class="lettra-field lettra-field-wide" role="group" aria-labelledby="vigilance-evidence-label">
+                        <span id="vigilance-evidence-label" class="lettra-label">@L["Vigilance.Evidence"]</span>
+                        <div class="lt-mission-services">
+                            @foreach (IdentityEvidenceDto evidence in Enum.GetValues<IdentityEvidenceDto>())
+                            {
+                                <label class="lettra-check">
+                                    <input type="checkbox" id="@($"vigilance-evidence-{evidence}")" checked="@_evidence.Contains(evidence)" @onchange="e => Toggle(_evidence, evidence, e)" />
+                                    @L[$"Vigilance.Evidence.{evidence}"]
+                                </label>
+                            }
+                        </div>
+                        <FieldErrors Field="Evidence" ServerErrors="_fieldErrors" />
+                    </div>
+                    <div class="lettra-field">
+                        <label for="vigilance-verified">@L["Vigilance.VerifiedOn"]</label>
+                        <DateField Id="vigilance-verified" Value="_model.IdentityVerifiedOn" Max="Today" ValueChanged="d => _model.IdentityVerifiedOn = d" />
+                    </div>
+                    <p class="lettra-hint lettra-field-wide">@L["Vigilance.Evidence.Hint"]</p>
+                </fieldset>
+                <fieldset>
+                    <legend>@L["Vigilance.Form.Owners"]</legend>
+                    <p class="lettra-hint lettra-field-wide">@L["Vigilance.Owners.Hint"]</p>
+                    <ol class="lt-vigilance-owners lettra-field-wide" id="vigilance-owners">
+                        @for (int index = 0; index < _owners.Count; index++)
+                        {
+                            int row = index;
+                            BeneficialOwnerDto owner = _owners[row];
+                            <li>
+                                <div class="lettra-field">
+                                    <label for="@($"owner-name-{row}")">@L["Vigilance.Owner.Name"]</label>
+                                    <input id="@($"owner-name-{row}")" maxlength="120" autocomplete="off" @bind="owner.Name" required />
+                                </div>
+                                <div class="lettra-field">
+                                    <label for="@($"owner-kind-{row}")">@L["Vigilance.Owner.Kind"]</label>
+                                    <select id="@($"owner-kind-{row}")" value="@owner.Kind" @onchange="e => SetKind(owner, e)">
+                                        @foreach (OwnershipKindDto kind in Enum.GetValues<OwnershipKindDto>())
+                                        {
+                                            <option value="@kind">@L[$"Vigilance.Ownership.{kind}"]</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="lettra-field">
+                                    <label for="@($"owner-share-{row}")">@L["Vigilance.Owner.Share"]</label>
+                                    <input id="@($"owner-share-{row}")" type="number" inputmode="decimal" step="0.01" min="25.01" max="100"
+                                           disabled="@(!HoldsShare(owner.Kind))" @bind="owner.SharePercent" />
+                                </div>
+                                <button type="button" class="lettra-button is-small is-ghost" id="@($"owner-remove-{row}")"
+                                        aria-label="@string.Format(Culture, L["Vigilance.Owner.Remove.Label"], owner.Name)" @onclick="() => _owners.RemoveAt(row)">
+                                    <Icon Name="trash-2" Size="16" /> @L["Vigilance.Owner.Remove"]
+                                </button>
+                            </li>
+                        }
+                    </ol>
+                    <div class="lettra-field-wide">
+                        <button type="button" class="lettra-button is-secondary is-small" id="vigilance-owner-add" disabled="@(_owners.Count >= MaxOwners)" @onclick="AddOwner">
+                            <Icon Name="plus" Size="16" /> @L["Vigilance.Owner.Add"]
+                        </button>
+                        <FieldErrors Field="Owners" ServerErrors="_fieldErrors" />
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <legend>@L["Vigilance.Form.Risk"]</legend>
+                    <div class="lettra-field lettra-field-wide" role="group" aria-labelledby="vigilance-factors-label">
+                        <span id="vigilance-factors-label" class="lettra-label">@L["Vigilance.Factors"]</span>
+                        <div class="lt-mission-services">
+                            @foreach (RiskFactorDto factor in Enum.GetValues<RiskFactorDto>())
+                            {
+                                <label class="lettra-check">
+                                    <input type="checkbox" id="@($"vigilance-factor-{factor}")" checked="@_factors.Contains(factor)" @onchange="e => Toggle(_factors, factor, e)" />
+                                    @L[$"Vigilance.Factor.{factor}"]
+                                </label>
+                            }
+                        </div>
+                    </div>
+                    <div class="lettra-field">
+                        <label for="vigilance-level-select">@L["Vigilance.Level"]</label>
+                        <select id="vigilance-level-select" @bind="_model.Level">
+                            @foreach (RiskLevelDto choice in Enum.GetValues<RiskLevelDto>())
+                            {
+                                <option value="@choice">@L[$"Vigilance.Level.{choice}"]</option>
+                            }
+                        </select>
+                        <FieldErrors Field="Level" ServerErrors="_fieldErrors" />
+                    </div>
+                    @if (RequiresHigh && _model.Level != RiskLevelDto.High && !_fieldErrors.Any(e => e.Target == "Level"))
+                    {
+                        <p class="lettra-hint lt-late" id="vigilance-high-hint" role="status">@L["Vigilance.Level.MustBeHigh"]</p>
+                    }
+                    <div class="lettra-field lettra-field-wide">
+                        <label for="vigilance-justification">@L["Vigilance.Justification"]</label>
+                        <textarea id="vigilance-justification" rows="3" maxlength="1000" @bind="_model.Justification"></textarea>
+                        <FieldErrors Field="Justification" ServerErrors="_fieldErrors" />
+                    </div>
+                    <p class="lettra-hint lettra-field-wide">@L["Vigilance.Justification.Hint"]</p>
+                </fieldset>
+                <fieldset>
+                    <legend>@L["Vigilance.Form.Review"]</legend>
+                    <div class="lettra-field">
+                        <label for="vigilance-reviewed">@L["Vigilance.ReviewedOn"]</label>
+                        <DateField Id="vigilance-reviewed" Value="_model.ReviewedOn" Max="Today" ValueChanged="d => _model.ReviewedOn = d ?? Today" required />
+                        <FieldErrors Field="ReviewedOn" ServerErrors="_fieldErrors" />
+                    </div>
+                    <div class="lettra-field">
+                        <label for="vigilance-ended">@L["Vigilance.EndedOn"]</label>
+                        <DateField Id="vigilance-ended" Value="_model.RelationshipEndedOn" Max="Today" ValueChanged="d => _model.RelationshipEndedOn = d" />
+                    </div>
+                    <p class="lettra-hint lettra-field-wide">@L["Vigilance.EndedOn.Hint"]</p>
+                </fieldset>
+                <div class="lt-form-actions">
+                    <button type="submit" class="lettra-button" id="vigilance-save" disabled="@_busy">@L["Vigilance.Save"]</button>
+                    @if (view.File is not null)
+                    {
+                        <button type="button" class="lettra-button is-ghost" id="vigilance-cancel" @onclick="() => _editing = false">@L["Explorer.Cancel"]</button>
+                    }
+                    @if (_fieldErrors.Any(e => e.Target is not null))
+                    {
+                        @* Les erreurs s'affichent sous leur champ, parfois loin du bouton : on le dit à côté du bouton. *@
+                        <p class="validation-message" id="vigilance-not-saved" role="alert">@L["Vigilance.NotSaved"]</p>
+                    }
+                </div>
+            </form>
+        }
+        else if (view.File is { } file)
+        {
+            <dl class="lt-mission-summary" id="vigilance-summary">
+                <div>
+                    <dt>@L["Vigilance.Evidence"]</dt>
+                    <dd>@(file.Evidence.Count == 0 ? "—" : string.Join(", ", file.Evidence.Select(e => L[$"Vigilance.Evidence.{e}"].Value)))</dd>
+                </div>
+                <div><dt>@L["Vigilance.VerifiedOn"]</dt><dd>@(file.IdentityVerifiedOn is { } verified ? DateText.Format(verified, Culture) : "—")</dd></div>
+                <div>
+                    <dt>@L["Vigilance.Factors"]</dt>
+                    <dd>@(file.Factors.Count == 0 ? L["Vigilance.Factors.None"] : string.Join(", ", file.Factors.Select(f => L[$"Vigilance.Factor.{f}"].Value)))</dd>
+                </div>
+                <div><dt>@L["Vigilance.Justification"]</dt><dd>@(file.Justification ?? "—")</dd></div>
+            </dl>
+            @if (file.Owners.Count == 0)
+            {
+                <EmptyState Id="vigilance-owners-empty" IconName="users" Title="@L["Vigilance.Owners.Empty"]" Text="@L["Vigilance.Owners.Hint"]" />
+            }
+            else
+            {
+                <ul class="lt-vigilance-owner-cards" id="vigilance-owner-list" aria-label="@L["Vigilance.Form.Owners"]">
+                    @foreach (BeneficialOwnerDto owner in file.Owners)
+                    {
+                        <li>
+                            <strong>@owner.Name</strong>
+                            <span class="lettra-muted">@OwnerLine(owner)</span>
+                        </li>
+                    }
+                </ul>
+            }
+        }
+    </section>
+}
+
+@code {
+    private const int MaxOwners = 10;
+
+    private VigilanceOverviewResponse? _view;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private IReadOnlyList<ErrorDetail> _fieldErrors = [];
+    private bool _busy;
+    private bool _editing;
+    private SaveDueDiligenceRequest _model = new();
+    private List<BeneficialOwnerDto> _owners = [];
+    private HashSet<IdentityEvidenceDto> _evidence = [];
+    private HashSet<RiskFactorDto> _factors = [];
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private DateOnly Today => Clock.LocalToday();
+
+    /// <summary>Personne politiquement exposée ou pays à risque : le niveau ne peut être qu'élevé.</summary>
+    private bool RequiresHigh => _factors.Contains(RiskFactorDto.PoliticallyExposed) || _factors.Contains(RiskFactorDto.HighRiskCountry);
+
+    protected override async Task OnInitializedAsync()
+    {
+        OperationResult<VigilanceOverviewResponse> result = await Vigilance.GetAsync(CancellationToken.None);
+        _errors = result.Errors;
+        Show(result.Value);
+    }
+
+    private void Show(VigilanceOverviewResponse? view)
+    {
+        _view = view ?? new VigilanceOverviewResponse(null, DueDiligenceStatusDto.Missing);
+        if (_view.File is null)
+        {
+            // Pas encore de fiche : le formulaire s'ouvre, avec un premier bénéficiaire à renseigner.
+            _model = new SaveDueDiligenceRequest { ReviewedOn = Today, Level = RiskLevelDto.Standard };
+            _owners = [new BeneficialOwnerDto { Kind = OwnershipKindDto.Capital }];
+            _evidence = [];
+            _factors = [];
+            _editing = true;
+        }
+    }
+
+    private void Edit()
+    {
+        if (_view?.File is not { } file)
+        {
+            return;
+        }
+
+        // Revoir la fiche, c'est la relire et l'enregistrer à nouveau : la date de revue devient celle du jour.
+        _model = new SaveDueDiligenceRequest
+        {
+            IdentityVerifiedOn = file.IdentityVerifiedOn,
+            Level = file.Level,
+            Justification = file.Justification,
+            ReviewedOn = Today,
+            RelationshipEndedOn = file.RelationshipEndedOn,
+        };
+        _owners = [.. file.Owners.Select(o => o with { })];
+        _evidence = [.. file.Evidence];
+        _factors = [.. file.Factors];
+        _fieldErrors = [];
+        _editing = true;
+    }
+
+    private static void Toggle<T>(HashSet<T> set, T value, ChangeEventArgs e)
+    {
+        if (e.Value is true)
+        {
+            set.Add(value);
+        }
+        else
+        {
+            set.Remove(value);
+        }
+    }
+
+    private void AddOwner() => _owners.Add(new BeneficialOwnerDto { Kind = OwnershipKindDto.Capital });
+
+    private static void SetKind(BeneficialOwnerDto owner, ChangeEventArgs e)
+    {
+        if (Enum.TryParse(e.Value?.ToString(), out OwnershipKindDto kind))
+        {
+            owner.Kind = kind;
+            if (!HoldsShare(kind))
+            {
+                owner.SharePercent = null;
+            }
+        }
+    }
+
+    private static bool HoldsShare(OwnershipKindDto kind) => kind is OwnershipKindDto.Capital or OwnershipKindDto.VotingRights;
+
+    private async Task SaveAsync()
+    {
+        _busy = true;
+        try
+        {
+            _model.Evidence = [.. Enum.GetValues<IdentityEvidenceDto>().Where(_evidence.Contains)];
+            _model.Factors = [.. Enum.GetValues<RiskFactorDto>().Where(_factors.Contains)];
+            _model.Owners = [.. _owners];
+
+            // Les règles qu'un expert-comptable peut enfreindre en remplissant la fiche sont vérifiées ici d'abord : un refus
+            // prévisible ne part pas au serveur (le serveur les vérifie de toute façon).
+            _fieldErrors = Check();
+            if (_fieldErrors.Count > 0)
+            {
+                return;
+            }
+
+            OperationResult<VigilanceOverviewResponse> saved = await Vigilance.SaveAsync(_model, _view?.File?.Version, CancellationToken.None);
+            if (saved is { IsSuccess: true, Value: { } view })
+            {
+                _fieldErrors = [];
+                _errors = [];
+                _editing = false;
+                Show(view);
+                Toasts.Show(ToastKind.Success, L["Vigilance.Saved"]);
+            }
+            else
+            {
+                _fieldErrors = saved.Errors;
+                _errors = [.. saved.Errors.Where(e => e.Target is null)];
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    /// <summary>Les règles de la fiche (mêmes codes que le serveur), pour signaler un oubli sans aller-retour.</summary>
+    private List<ErrorDetail> Check()
+    {
+        List<ErrorDetail> errors = [];
+        if (_owners.Any(o => string.IsNullOrWhiteSpace(o.Name)))
+        {
+            errors.Add(new ErrorDetail(ErrorCodes.Vigilance.OwnerNameInvalid, "Owners"));
+        }
+
+        if (_owners.Any(o => HoldsShare(o.Kind) ? o.SharePercent is not (> 25m and <= 100m) : o.SharePercent is not null))
+        {
+            errors.Add(new ErrorDetail(ErrorCodes.Vigilance.OwnerShareInvalid, "Owners"));
+        }
+        else if (_owners.GroupBy(o => o.Kind).Any(g => g.Sum(o => o.SharePercent ?? 0m) > 100m))
+        {
+            errors.Add(new ErrorDetail(ErrorCodes.Vigilance.SharesOver100, "Owners"));
+        }
+
+        if (RequiresHigh && _model.Level != RiskLevelDto.High)
+        {
+            errors.Add(new ErrorDetail(ErrorCodes.Vigilance.LevelTooLow, "Level"));
+        }
+
+        if (_model.Level != RiskLevelDto.Standard && string.IsNullOrWhiteSpace(_model.Justification))
+        {
+            errors.Add(new ErrorDetail(ErrorCodes.Vigilance.JustificationRequired, "Justification"));
+        }
+
+        return errors;
+    }
+
+    private string OwnerLine(BeneficialOwnerDto owner) =>
+        owner.SharePercent is { } share
+            ? string.Format(Culture, L[$"Vigilance.Ownership.{owner.Kind}.Share"], share.ToString("0.##", Culture))
+            : L[$"Vigilance.Ownership.{owner.Kind}"];
+
+    private static string? StatusTone(DueDiligenceStatusDto status) => status switch
+    {
+        DueDiligenceStatusDto.UpToDate => "is-proposed",
+        DueDiligenceStatusDto.Ended => null,
+        _ => "is-pending",
+    };
+}

@@ -30,6 +30,7 @@ using Lettra.Contracts.Speech;
 using Lettra.Contracts.Suppliers;
 using Lettra.Contracts.Sync;
 using Lettra.Contracts.Tax;
+using Lettra.Contracts.Vigilance;
 
 namespace Lettra.Contracts.Serialization;
 
@@ -189,6 +190,9 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(SaveMissionRequest))]
 [JsonSerializable(typeof(AddTimeEntryRequest))]
 [JsonSerializable(typeof(TimeEntryResponse))]
+[JsonSerializable(typeof(VigilanceOverviewResponse))]
+[JsonSerializable(typeof(DueDiligenceResponse))]
+[JsonSerializable(typeof(SaveDueDiligenceRequest))]
 [JsonSerializable(typeof(ReceiptsResponse))]
 [JsonSerializable(typeof(RequestReceiptsRequest))]
 [JsonSerializable(typeof(RequestReceiptsResponse))]

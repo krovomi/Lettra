@@ -49,6 +49,7 @@
   <data name="Mission.SignedOn" xml:space="preserve"><value>Letter signed on</value></data>
   <data name="Mission.Signed" xml:space="preserve"><value>Signed on {0}</value></data>
   <data name="Mission.NotSigned" xml:space="preserve"><value>Not signed yet</value></data>
+  <data name="Mission.Vigilance.Link" xml:space="preserve"><value>Fill in the anti-money laundering file</value></data>
   <data name="Mission.Saved" xml:space="preserve"><value>Engagement saved.</value></data>
   <data name="Mission.Actions" xml:space="preserve"><value>Actions</value></data>
   <data name="Mission.Letter.Download" xml:space="preserve"><value>Engagement letter (PDF)</value></data>
@@ -126,4 +127,5 @@
   <data name="Error.Mission.NoteTooLong" xml:space="preserve"><value>The note is 200 characters at most.</value></data>
   <data name="Error.Mission.TimeEntryNotFound" xml:space="preserve"><value>This time entry no longer exists.</value></data>
   <data name="Error.Mission.TimeEntryNotYours" xml:space="preserve"><value>Only the team member who entered this time can delete it.</value></data>
+  <data name="Error.Mission.DueDiligenceRequired" xml:space="preserve"><value>The letter cannot be signed until the client's anti-money laundering file is complete and up to date.</value></data>
 </root>

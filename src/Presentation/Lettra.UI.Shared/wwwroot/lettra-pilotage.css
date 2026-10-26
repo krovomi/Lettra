@@ -91,3 +91,20 @@
     #mission-stats .lt-banking-stat strong { font-size: var(--text-xl); }
     .lt-mission-time-form .lt-mission-time-note { grid-column: auto; }
 }
+
+/* « Anti-blanchiment » : un bénéficiaire effectif par ligne (nom, titre, part, retrait), en colonnes sur grand écran ;
+   en lecture, une carte par bénéficiaire. Les panneaux et le résumé reprennent ceux de la lettre de mission. */
+.lt-vigilance-owners { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+.lt-vigilance-owners li { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1.5fr) minmax(0, 1fr) auto; gap: var(--space-3); align-items: end;
+    padding: var(--space-3); border-radius: var(--radius-md); background: var(--color-surface-2); }
+.lt-vigilance-owner-cards { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); }
+.lt-vigilance-owner-cards li { display: grid; gap: var(--space-1); padding: var(--space-3); border-radius: var(--radius-md); background: var(--color-surface-2); min-width: 0; overflow-wrap: anywhere; }
+#vigilance-stats .lt-banking-stat { min-width: 0; }
+#vigilance-stats .lt-banking-stat strong { overflow-wrap: anywhere; }
+@media (max-width: 40rem) {
+    .lt-vigilance-owners li { grid-template-columns: minmax(0, 1fr); }
+    #vigilance-stats .lt-banking-stat strong { font-size: var(--text-xl); }
+}
+/* Cases à cocher des listes de choix (travaux de la mission, pièces et facteurs de risque) : la case garde sa taille, le texte suit. */
+.lt-mission-services .lettra-check { align-items: flex-start; text-align: start; }
+.lt-mission-services .lettra-check input { width: auto; flex: none; margin-top: 0.2em; }

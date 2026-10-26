@@ -278,6 +278,7 @@ public static class MissionErrors
     public const string NoteTooLongCode = "Mission.NoteTooLong";
     public const string TimeEntryNotFoundCode = "Mission.TimeEntryNotFound";
     public const string TimeEntryNotYoursCode = "Mission.TimeEntryNotYours";
+    public const string DueDiligenceRequiredCode = "Mission.DueDiligenceRequired";
 
     public static Error NotFound => Error.NotFound(NotFoundCode);
 
@@ -306,4 +307,7 @@ public static class MissionErrors
     public static Error TimeEntryNotFound => Error.NotFound(TimeEntryNotFoundCode);
 
     public static Error TimeEntryNotYours => new(TimeEntryNotYoursCode, ErrorKind.Forbidden);
+
+    /// <summary>La lettre ne se signe pas sans fiche anti-blanchiment complète et à jour : le cabinet connaît son client avant de s'engager.</summary>
+    public static Error DueDiligenceRequired => Error.Validation(DueDiligenceRequiredCode, "SignedOn");
 }

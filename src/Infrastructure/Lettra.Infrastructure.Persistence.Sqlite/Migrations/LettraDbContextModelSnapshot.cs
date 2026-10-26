@@ -1933,6 +1933,48 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.ToTable("ReviewMarks", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Domain.Vigilance.ClientDueDiligence", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Evidence")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Factors")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly?>("IdentityVerifiedOn")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Justification")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly?>("RelationshipEndedOn")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ReviewedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("ReviewedOn")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ClientDueDiligence", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Ai.AiJournalRecord", b =>
                 {
                     b.Property<long>("Id")
@@ -3108,6 +3150,39 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.Navigation("Customers");
 
                     b.Navigation("Entries");
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Vigilance.ClientDueDiligence", b =>
+                {
+                    b.OwnsMany("Lettra.Domain.Vigilance.BeneficialOwner", "Owners", b1 =>
+                        {
+                            b1.Property<Guid>("ClientDueDiligenceId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<int>("Position")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<int>("Kind")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasMaxLength(120)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<decimal?>("SharePercent")
+                                .HasPrecision(5, 2)
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("ClientDueDiligenceId", "Position");
+
+                            b1.ToTable("BeneficialOwners", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("ClientDueDiligenceId");
+                        });
+
+                    b.Navigation("Owners");
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Banking.BankJournalLineRecord", b =>

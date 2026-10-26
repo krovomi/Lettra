@@ -12,6 +12,7 @@ using Lettra.Domain.Common;
 using Lettra.Domain.Parties;
 using Lettra.Domain.Review;
 using Lettra.Domain.SharedKernel;
+using Lettra.Domain.Vigilance;
 using Lettra.Infrastructure.Persistence;
 using Lettra.Infrastructure.Persistence.Cabinet;
 using Lettra.Infrastructure.Persistence.EInvoicing;
@@ -356,6 +357,44 @@ public sealed class CabinetIndicatorTests : IDisposable
         options.Interval.Should().Be(TimeSpan.FromDays(1));
         options.InitialDelay.Should().Be(TimeSpan.FromMinutes(2));
         CabinetOverviewJobOptions.SectionName.Should().Be("Lettra:CabinetOverview");
+    }
+
+    [Fact]
+    public async Task La_fiche_anti_blanchiment_et_ses_beneficiaires_se_relisent_et_alimentent_la_vue_cabinet()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        DossierId dossier = harness.AddDossier(DatabaseProvider.Sqlite, Database("lcb-ft"));
+        DateOnly today = LegalCalendar.DateOf(DateTimeOffset.UtcNow);
+        ClientDueDiligence.Draft draft = new(
+            IdentityEvidence.Required, today, [new("Jeanne Martin", 60m, OwnershipKind.Capital), new("Paul Martin", 40m, OwnershipKind.VotingRights)],
+            RiskLevel.Standard, RiskFactors.CashIntensive, null, today, null);
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            (await Source<ClientDueDiligenceIndicatorSource>(scope).ComputeAsync(today, default)).Should().Equal(
+                new DossierIndicator(DossierIndicatorKeys.ClientDueDiligence, 1, IndicatorLevel.Warning));
+            await scope.ServiceProvider.GetRequiredService<IVigilanceStore>().AddAsync(ClientDueDiligence.Create(draft, Guid.CreateVersion7(), today, DateTimeOffset.UtcNow).Value, default);
+            await (await scope.ServiceProvider.GetRequiredService<TenantDbSession>().GetAsync(default)).SaveChangesAsync();
+        }
+
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            (await Source<ClientDueDiligenceIndicatorSource>(scope).ComputeAsync(today, default)).Should().BeEmpty("la fiche est à jour");
+            ClientDueDiligence.Draft reviewed = draft with { Owners = [new("Jeanne Martin", null, OwnershipKind.LegalRepresentative)], Level = RiskLevel.High, Justification = "Activité en espèces." };
+            ClientDueDiligence file = (await scope.ServiceProvider.GetRequiredService<IVigilanceStore>().FindAsync(default))!;
+            file.Update(reviewed, Guid.CreateVersion7(), today, DateTimeOffset.UtcNow).IsSuccess.Should().BeTrue();
+            await (await scope.ServiceProvider.GetRequiredService<TenantDbSession>().GetAsync(default)).SaveChangesAsync();
+        }
+
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            ClientDueDiligence file = (await scope.ServiceProvider.GetRequiredService<IVigilanceStore>().FindAsync(default))!;
+            file.Owners.Should().ContainSingle().Which.Kind.Should().Be(OwnershipKind.LegalRepresentative);
+            file.Level.Should().Be(RiskLevel.High);
+            file.Factors.Should().Be(RiskFactors.CashIntensive);
+            file.Version.Should().Be(2);
+            (await Source<ClientDueDiligenceIndicatorSource>(scope).ComputeAsync(today.AddYears(1), default)).Should().ContainSingle()
+                .Which.Level.Should().Be(IndicatorLevel.Critical, "revue d'un risque élevé en retard");
+        }
     }
 
     public void Dispose()

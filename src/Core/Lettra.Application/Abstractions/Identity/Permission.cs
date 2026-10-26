@@ -88,6 +88,15 @@ public enum Permission
 
     /// <summary>Voir les postes du dossier, en révoquer un, régler la durée maximale hors ligne.</summary>
     [PermissionCategory(PermissionKind.DossierData)] PostesGerer = 110,
+
+    // 120-129 : lutte contre le blanchiment (LCB-FT). La fiche du client est confidentielle : ni l'auditeur ni le
+    // client ne la voient (interdiction de divulgation, art. L561-18 du Code monétaire et financier).
+
+    /// <summary>Lire la fiche anti-blanchiment du client.</summary>
+    [PermissionCategory(PermissionKind.DossierData)] VigilanceConsulter = 120,
+
+    /// <summary>Remplir la fiche, fixer le niveau de risque, la revoir.</summary>
+    [PermissionCategory(PermissionKind.DossierData)] VigilanceGerer = 121,
 }
 
 /// <summary>Ce qu'une permission ouvre.</summary>

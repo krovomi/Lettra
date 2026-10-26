@@ -98,7 +98,8 @@ public sealed record TimeTaskTotal(TimeTaskDto Task, int Minutes);
 /// <summary>
 /// L'écran « Mission » : la mission (vide tant qu'elle n'est pas saisie), l'année de mission en cours, le temps passé
 /// et ce qu'il rapporte (honoraires acquis au prorata des jours écoulés, divisés par les heures), et les temps saisis.
-/// Sans mission, l'année est celle des douze derniers mois.
+/// Sans mission, l'année est celle des douze derniers mois. <paramref name="ClientKnown"/> dit si la fiche anti-blanchiment
+/// est à jour, condition pour signer la lettre (sans rien dévoiler de la fiche).
 /// </summary>
 public sealed record MissionOverviewResponse(
     MissionResponse? Mission,
@@ -109,7 +110,8 @@ public sealed record MissionOverviewResponse(
     decimal EarnedExclTax,
     decimal? EffectiveHourlyRate,
     IReadOnlyList<TimeTaskTotal> ByTask,
-    IReadOnlyList<TimeEntryResponse> Entries);
+    IReadOnlyList<TimeEntryResponse> Entries,
+    bool ClientKnown = false);
 
 /// <summary>Saisir un temps passé.</summary>
 public sealed record AddTimeEntryRequest

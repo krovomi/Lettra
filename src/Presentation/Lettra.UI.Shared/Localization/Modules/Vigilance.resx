@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.Vigilance" xml:space="preserve"><value>Anti-blanchiment</value></data>
+  <data name="Vigilance.Title" xml:space="preserve"><value>Connaissance du client (anti-blanchiment)</value></data>
+  <data name="Vigilance.Subtitle" xml:space="preserve"><value>La fiche que le cabinet tient sur son client au titre de la lutte contre le blanchiment : pièces d'identité, bénéficiaires effectifs, niveau de risque et date de la prochaine revue. Elle reste au cabinet.</value></data>
+  <data name="Vigilance.Stats" xml:space="preserve"><value>État de la fiche</value></data>
+  <data name="Vigilance.Stat.Status" xml:space="preserve"><value>Fiche</value></data>
+  <data name="Vigilance.Status.Missing" xml:space="preserve"><value>À faire</value></data>
+  <data name="Vigilance.Status.Missing.Hint" xml:space="preserve"><value>Aucune fiche pour ce client : la lettre de mission ne peut pas être signée.</value></data>
+  <data name="Vigilance.Status.Incomplete" xml:space="preserve"><value>Incomplète</value></data>
+  <data name="Vigilance.Status.Incomplete.Hint" xml:space="preserve"><value>Il manque l'extrait K-bis, la pièce d'identité du dirigeant, la date de vérification ou un bénéficiaire effectif.</value></data>
+  <data name="Vigilance.Status.ReviewDue" xml:space="preserve"><value>À revoir</value></data>
+  <data name="Vigilance.Status.ReviewDue.Hint" xml:space="preserve"><value>La date de revue est passée : relisez la fiche et enregistrez-la.</value></data>
+  <data name="Vigilance.Status.UpToDate" xml:space="preserve"><value>À jour</value></data>
+  <data name="Vigilance.Status.UpToDate.Hint" xml:space="preserve"><value>Le client est identifié et son risque évalué.</value></data>
+  <data name="Vigilance.Status.Ended" xml:space="preserve"><value>Relation terminée</value></data>
+  <data name="Vigilance.Status.Ended.Hint" xml:space="preserve"><value>La fiche est gardée cinq ans après la fin de la relation.</value></data>
+  <data name="Vigilance.Level" xml:space="preserve"><value>Niveau de risque</value></data>
+  <data name="Vigilance.Level.Low" xml:space="preserve"><value>Faible</value></data>
+  <data name="Vigilance.Level.Low.Hint" xml:space="preserve"><value>Revue tous les trois ans</value></data>
+  <data name="Vigilance.Level.Standard" xml:space="preserve"><value>Standard</value></data>
+  <data name="Vigilance.Level.Standard.Hint" xml:space="preserve"><value>Revue tous les deux ans</value></data>
+  <data name="Vigilance.Level.High" xml:space="preserve"><value>Élevé</value></data>
+  <data name="Vigilance.Level.High.Hint" xml:space="preserve"><value>Revue chaque année, vigilance renforcée</value></data>
+  <data name="Vigilance.Level.MustBeHigh" xml:space="preserve"><value>Une personne politiquement exposée ou un pays à risque impose le niveau élevé.</value></data>
+  <data name="Vigilance.Stat.NextReview" xml:space="preserve"><value>Prochaine revue</value></data>
+  <data name="Vigilance.Stat.LastReview" xml:space="preserve"><value>Revue le {0} par {1}</value></data>
+  <data name="Vigilance.Someone" xml:space="preserve"><value>un membre du cabinet</value></data>
+  <data name="Vigilance.Stat.Owners" xml:space="preserve"><value>Bénéficiaires effectifs</value></data>
+  <data name="Vigilance.KeepUntil" xml:space="preserve"><value>À garder jusqu'au {0}</value></data>
+  <data name="Vigilance.Form" xml:space="preserve"><value>La fiche du client</value></data>
+  <data name="Vigilance.Review" xml:space="preserve"><value>Revoir la fiche</value></data>
+  <data name="Vigilance.Form.Identity" xml:space="preserve"><value>Identification</value></data>
+  <data name="Vigilance.Evidence" xml:space="preserve"><value>Pièces reçues</value></data>
+  <data name="Vigilance.Evidence.CompanyRegistration" xml:space="preserve"><value>Extrait K-bis de moins de trois mois</value></data>
+  <data name="Vigilance.Evidence.ManagerIdentity" xml:space="preserve"><value>Pièce d'identité du dirigeant</value></data>
+  <data name="Vigilance.Evidence.BeneficialOwnersRegister" xml:space="preserve"><value>Extrait du registre des bénéficiaires effectifs</value></data>
+  <data name="Vigilance.Evidence.Statutes" xml:space="preserve"><value>Statuts à jour</value></data>
+  <data name="Vigilance.Evidence.Hint" xml:space="preserve"><value>L'extrait K-bis et la pièce d'identité du dirigeant sont exigés. Lettra note les pièces reçues ; les originaux restent dans le dossier du cabinet.</value></data>
+  <data name="Vigilance.VerifiedOn" xml:space="preserve"><value>Identité vérifiée le</value></data>
+  <data name="Vigilance.Form.Owners" xml:space="preserve"><value>Bénéficiaires effectifs</value></data>
+  <data name="Vigilance.Owners.Hint" xml:space="preserve"><value>Les personnes physiques qui détiennent plus de 25 % du capital ou des droits de vote, ou qui contrôlent la société. À défaut, le représentant légal.</value></data>
+  <data name="Vigilance.Owners.Empty" xml:space="preserve"><value>Aucun bénéficiaire effectif</value></data>
+  <data name="Vigilance.Owner.Name" xml:space="preserve"><value>Nom et prénom</value></data>
+  <data name="Vigilance.Owner.Kind" xml:space="preserve"><value>À quel titre</value></data>
+  <data name="Vigilance.Owner.Share" xml:space="preserve"><value>Part détenue (%)</value></data>
+  <data name="Vigilance.Owner.Add" xml:space="preserve"><value>Ajouter un bénéficiaire</value></data>
+  <data name="Vigilance.Owner.Remove" xml:space="preserve"><value>Retirer</value></data>
+  <data name="Vigilance.Owner.Remove.Label" xml:space="preserve"><value>Retirer le bénéficiaire {0}</value></data>
+  <data name="Vigilance.Ownership.Capital" xml:space="preserve"><value>Capital</value></data>
+  <data name="Vigilance.Ownership.Capital.Share" xml:space="preserve"><value>{0} % du capital</value></data>
+  <data name="Vigilance.Ownership.VotingRights" xml:space="preserve"><value>Droits de vote</value></data>
+  <data name="Vigilance.Ownership.VotingRights.Share" xml:space="preserve"><value>{0} % des droits de vote</value></data>
+  <data name="Vigilance.Ownership.Control" xml:space="preserve"><value>Contrôle par d'autres moyens</value></data>
+  <data name="Vigilance.Ownership.LegalRepresentative" xml:space="preserve"><value>Représentant légal</value></data>
+  <data name="Vigilance.Form.Risk" xml:space="preserve"><value>Évaluation du risque</value></data>
+  <data name="Vigilance.Factors" xml:space="preserve"><value>Facteurs de risque</value></data>
+  <data name="Vigilance.Factors.None" xml:space="preserve"><value>Aucun</value></data>
+  <data name="Vigilance.Factor.PoliticallyExposed" xml:space="preserve"><value>Personne politiquement exposée</value></data>
+  <data name="Vigilance.Factor.HighRiskCountry" xml:space="preserve"><value>Pays à risque élevé</value></data>
+  <data name="Vigilance.Factor.CashIntensive" xml:space="preserve"><value>Activité qui manie beaucoup d'espèces</value></data>
+  <data name="Vigilance.Factor.ComplexStructure" xml:space="preserve"><value>Montage complexe ou opaque</value></data>
+  <data name="Vigilance.Factor.RemoteRelationship" xml:space="preserve"><value>Client jamais rencontré</value></data>
+  <data name="Vigilance.Factor.UnusualTransactions" xml:space="preserve"><value>Opérations inhabituelles</value></data>
+  <data name="Vigilance.Justification" xml:space="preserve"><value>Justification du niveau</value></data>
+  <data name="Vigilance.Justification.Hint" xml:space="preserve"><value>Exigée pour un risque faible ou élevé : c'est ce que l'Ordre relit lors d'un contrôle.</value></data>
+  <data name="Vigilance.Form.Review" xml:space="preserve"><value>Revue</value></data>
+  <data name="Vigilance.ReviewedOn" xml:space="preserve"><value>Fiche revue le</value></data>
+  <data name="Vigilance.EndedOn" xml:space="preserve"><value>Fin de la relation</value></data>
+  <data name="Vigilance.EndedOn.Hint" xml:space="preserve"><value>Quand le client quitte le cabinet : la fiche est alors gardée cinq ans, puis peut être effacée.</value></data>
+  <data name="Vigilance.Save" xml:space="preserve"><value>Enregistrer la revue</value></data>
+  <data name="Vigilance.Saved" xml:space="preserve"><value>Fiche enregistrée. Prochaine revue calculée selon le risque.</value></data>
+  <data name="Vigilance.NotSaved" xml:space="preserve"><value>La fiche n'est pas enregistrée : corrigez les champs signalés.</value></data>
+  <data name="Error.Vigilance.EvidenceInvalid" xml:space="preserve"><value>Pièce d'identification inconnue.</value></data>
+  <data name="Error.Vigilance.DateInFuture" xml:space="preserve"><value>Une date de vérification, de revue ou de fin ne peut pas être dans le futur.</value></data>
+  <data name="Error.Vigilance.TooManyOwners" xml:space="preserve"><value>Dix bénéficiaires effectifs au plus.</value></data>
+  <data name="Error.Vigilance.OwnerNameInvalid" xml:space="preserve"><value>Chaque bénéficiaire a un nom de 120 caractères au plus.</value></data>
+  <data name="Error.Vigilance.OwnerShareInvalid" xml:space="preserve"><value>Une part de capital ou de droits de vote dépasse 25 % sans aller au-delà de 100 % ; un contrôle ou un représentant légal n'a pas de part.</value></data>
+  <data name="Error.Vigilance.SharesOver100" xml:space="preserve"><value>Les parts additionnées dépassent 100 %.</value></data>
+  <data name="Error.Vigilance.LevelInvalid" xml:space="preserve"><value>Choisissez le niveau de risque.</value></data>
+  <data name="Error.Vigilance.LevelTooLow" xml:space="preserve"><value>Une personne politiquement exposée ou un pays à risque impose le niveau élevé.</value></data>
+  <data name="Error.Vigilance.FactorsInvalid" xml:space="preserve"><value>Facteur de risque inconnu.</value></data>
+  <data name="Error.Vigilance.JustificationRequired" xml:space="preserve"><value>Justifiez un niveau de risque faible ou élevé.</value></data>
+  <data name="Error.Vigilance.JustificationTooLong" xml:space="preserve"><value>La justification tient en 1 000 caractères au plus.</value></data>
+</root>

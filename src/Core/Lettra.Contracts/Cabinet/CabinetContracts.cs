@@ -40,9 +40,15 @@ public static class DossierIndicatorKeys
     /// </summary>
     public const string EInvoicingReadiness = "facture-electronique.preparation";
 
+    /// <summary>
+    /// Fiche anti-blanchiment du client (LCB-FT) absente, incomplète ou à revoir ; échéance = la date de la revue. Ni nom
+    /// ni niveau de risque : la fiche reste dans la base du dossier.
+    /// </summary>
+    public const string ClientDueDiligence = "lcb-ft.fiche";
+
     /// <summary>Ordre des colonnes du tableau (les clés inconnues suivent, par ordre alphabétique).</summary>
     public static IReadOnlyList<string> Known { get; } =
-        [OverdueInvoices, PlatformRejections, EInvoicingReadiness, VatToDeclare, BankUnreconciled, SupplierIbanToVerify, OpenAlerts, ReviewPending];
+        [OverdueInvoices, PlatformRejections, EInvoicingReadiness, VatToDeclare, BankUnreconciled, SupplierIbanToVerify, ClientDueDiligence, OpenAlerts, ReviewPending];
 }
 
 /// <summary>Urgence d'un indicateur : décide de la couleur et de l'ordre des dossiers.</summary>

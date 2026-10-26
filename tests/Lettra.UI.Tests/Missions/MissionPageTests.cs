@@ -166,6 +166,31 @@ public sealed class MissionPageTests : BunitContext
     }
 
     [Fact]
+    public void La_lettre_ne_se_signe_pas_sans_fiche_anti_blanchiment_a_jour()
+    {
+        _missions.Mission = FakeMissionGateway.Sample();
+        IRenderedComponent<MissionPage> page = Open();
+
+        page.Find("#mission-edit").Click();
+        page.Find("#mission-signed").Change("20/10/2026");
+        page.Find("#mission-form").Submit();
+
+        _missions.Saves.Should().BeEmpty("refus prévisible : rien ne part au serveur");
+        page.Markup.Should().Contain("La lettre ne se signe pas tant que la fiche anti-blanchiment du client n'est pas complète et à jour.");
+        page.Find("#mission-vigilance-link").GetAttribute("href").Should().Be("vigilance");
+
+        _missions.ClientKnown = true;
+        page.Find("#mission-cancel").Click();
+        page.Find("#mission-time-form").Submit();
+        page.WaitForAssertion(() => _missions.Entries.Should().ContainSingle());
+        page.Find("#mission-edit").Click();
+        page.Find("#mission-signed").Change("20/10/2026");
+        page.Find("#mission-form").Submit();
+
+        page.WaitForAssertion(() => _missions.Saves.Should().ContainSingle().Which.Request.SignedOn.Should().Be(new DateOnly(2026, 10, 20)));
+    }
+
+    [Fact]
     public void Un_refus_du_serveur_s_affiche()
     {
         _missions.Mission = FakeMissionGateway.Sample();

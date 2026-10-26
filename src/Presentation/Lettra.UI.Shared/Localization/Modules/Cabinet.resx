@@ -112,5 +112,7 @@
   <data name="Error.Review.NoteTooLong" xml:space="preserve"><value>La note dépasse 500 caractères.</value></data>
   <data name="Cabinet.Indicator.fournisseurs.iban-a-verifier" xml:space="preserve"><value>IBAN à vérifier</value></data>
   <data name="Cabinet.Indicator.fournisseurs.iban-a-verifier.Due" xml:space="preserve"><value>depuis le {0}</value></data>
+  <data name="Cabinet.Indicator.lcb-ft.fiche" xml:space="preserve"><value>Anti-blanchiment</value></data>
+  <data name="Cabinet.Indicator.lcb-ft.fiche.Due" xml:space="preserve"><value>revue le {0}</value></data>
   <data name="Cabinet.Indicator.facture-electronique.preparation" xml:space="preserve"><value>E-facture</value></data>
 </root>

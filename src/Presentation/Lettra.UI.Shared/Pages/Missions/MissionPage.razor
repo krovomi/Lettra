@@ -148,6 +148,11 @@ else
                     <div class="lettra-field">
                         <label for="mission-signed">@L["Mission.SignedOn"]</label>
                         <DateField Id="mission-signed" Value="_model.SignedOn" ValueChanged="d => _model.SignedOn = d" />
+                        <FieldErrors Field="SignedOn" ServerErrors="_fieldErrors" />
+                        @if (_fieldErrors.Any(e => e.Code == ErrorCodes.Mission.DueDiligenceRequired))
+                        {
+                            <a href="vigilance" id="mission-vigilance-link">@L["Mission.Vigilance.Link"]</a>
+                        }
                     </div>
                 </fieldset>
                 <div class="lt-form-actions">
@@ -416,6 +421,13 @@ else
         try
         {
             _model.Services = [.. Enum.GetValues<MissionServiceDto>().Where(_services.Contains)];
+            if (_model.SignedOn is not null && _view?.Mission?.SignedOn is null && _view?.ClientKnown != true)
+            {
+                // Refus prévisible : la fiche anti-blanchiment n'est pas à jour, la lettre ne se signe pas (le serveur le vérifie aussi).
+                _fieldErrors = [new ErrorDetail(ErrorCodes.Mission.DueDiligenceRequired, "SignedOn")];
+                return;
+            }
+
             OperationResult<MissionOverviewResponse> saved = await Missions.SaveAsync(_model, _view?.Mission?.Version, CancellationToken.None);
             if (saved is { IsSuccess: true, Value: { } view })
             {
