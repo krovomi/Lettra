@@ -14,6 +14,7 @@ using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Pages.Billing;
 using Lettra.UI.Shared.Services;
 using Lettra.UI.Tests.Cabinet;
+using Lettra.UI.Tests.Portal;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -34,6 +35,7 @@ public sealed class InvoiceEditorTests : BunitContext
         _platform = new FakePlatformTransmissionGateway(_invoices);
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddLettraUi();
+        Services.AddSingleton<IPortalGateway>(new FakePortalGateway());
         Services.AddCabinetFakes();
         Services.AddSingleton<IInvoicesGateway>(_invoices);
         Services.AddSingleton<IPlatformTransmissionGateway>(_platform);
@@ -292,6 +294,7 @@ public sealed class BillingListTests : BunitContext
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddLettraUi();
+        Services.AddSingleton<IPortalGateway>(new FakePortalGateway());
         Services.AddCabinetFakes();
         Services.AddSingleton<IInvoicesGateway>(_invoices);
         Services.AddSingleton<IQuotesGateway>(_quotes);
@@ -348,6 +351,7 @@ public sealed class CompanySettingsTests : BunitContext
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddLettraUi();
+        Services.AddSingleton<IPortalGateway>(new FakePortalGateway());
         Services.AddCabinetFakes();
         Services.AddSingleton<IBillingSettingsGateway>(_settings);
         Services.AddSingleton<IDirectoryGateway>(_directory);
@@ -429,6 +433,7 @@ public sealed class CommandPaletteTests : BunitContext
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddLettraUi();
+        Services.AddSingleton<IPortalGateway>(new FakePortalGateway());
         Services.AddCabinetFakes();
         Services.AddSingleton<IInvoicesGateway>(_invoices);
         Services.AddSingleton<IQuotesGateway>(new FakeQuotesGateway());
@@ -502,6 +507,7 @@ public sealed class DensityTests : BunitContext
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddLettraUi();
+        Services.AddSingleton<IPortalGateway>(new FakePortalGateway());
         Services.AddCabinetFakes();
     }
 

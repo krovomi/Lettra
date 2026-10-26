@@ -22,7 +22,7 @@ public sealed record PaymentListQuery(
 /// <summary>
 /// Pages Encaissements et Rapprochement bancaire (vague 6). Lecture : <c>DossierLire</c> ; saisie, contre-passation,
 /// import et validation : <c>FactureEmettre</c> ; seuil d'écart : <c>CatalogueGerer</c>. Les relevés viennent de
-/// fichiers (CAMT.053, OFX, CSV), jamais d'une connexion à la banque.
+/// fichiers (CAMT.053, OFX, CSV) ; une banque connectée passe par <see cref="IBankConnectionsGateway"/>.
 /// </summary>
 public interface IBankingGateway
 {

@@ -18,7 +18,7 @@ namespace Lettra.Api.Endpoints;
 /// <summary>
 /// Encaissements, rapprochement bancaire et lettrage (module Exports, vague 6) : saisie et contre-passation des
 /// encaissements, import de relevés (CAMT.053, OFX, CSV), propositions de rapprochement et leur validation, réglages,
-/// état du rapprochement pour la vue cabinet. Aucune connexion bancaire : les relevés viennent de fichiers.
+/// état du rapprochement pour la vue cabinet. Les opérations viennent de fichiers ou d'une banque connectée (agrégateur).
 /// </summary>
 internal static class BankingEndpoints
 {
@@ -153,6 +153,40 @@ internal static class BankingEndpoints
             .Produces(StatusCodes.Status200OK, contentType: "application/octet-stream")
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        // Banques connectées (agrégateur DSP2) : le consentement se donne sur la page de la banque, les opérations lues
+        // arrivent au rapprochement comme un relevé.
+        bank.MapGet("/connections", GetConnectionsAsync)
+            .RequirePermission(Permission.DossierLire)
+            .WithName("GetBankConnections")
+            .Produces<BankConnectionsResponse>();
+
+        bank.MapPost("/connections", StartConnectionAsync)
+            .RequirePermission(Permission.FactureEmettre)
+            .WithName("StartBankConnection")
+            .Produces<BankConsentRedirectResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
+
+        bank.MapPost("/connections/{id:guid}/complete", CompleteConnectionAsync)
+            .RequirePermission(Permission.FactureEmettre)
+            .WithName("CompleteBankConnection")
+            .Produces<BankConnectionCompletedResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
+        bank.MapPost("/connections/sync", SyncConnectionsAsync)
+            .RequirePermission(Permission.FactureEmettre)
+            .WithName("SyncBankConnections")
+            .Produces<SyncBankConnectionsResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        bank.MapPost("/connections/{id:guid}/revoke", RevokeConnectionAsync)
+            .RequirePermission(Permission.FactureEmettre)
+            .WithName("RevokeBankConnection")
+            .Produces<BankConnectionResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
         return bank;
     }
 
@@ -224,6 +258,24 @@ internal static class BankingEndpoints
     private static async Task<IResult> UpdateSettingsAsync(
         UpdateBankingSettingsRequest request, ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken) =>
         Ok(await commands.SendAsync(new UpdateBankingSettingsCommand(tenant.Current.DossierId, request), cancellationToken).ConfigureAwait(false));
+
+    private static async Task<IResult> GetConnectionsAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken) =>
+        Ok(await queries.QueryAsync(new GetBankConnectionsQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false));
+
+    private static async Task<IResult> StartConnectionAsync(
+        StartBankConnectionRequest request, ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken) =>
+        Ok(await commands.SendAsync(new StartBankConnectionCommand(tenant.Current.DossierId, request), cancellationToken).ConfigureAwait(false));
+
+    private static async Task<IResult> CompleteConnectionAsync(
+        Guid id, CompleteBankConnectionRequest request, ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken) =>
+        Ok(await commands.SendAsync(new CompleteBankConnectionCommand(tenant.Current.DossierId, id, request), cancellationToken).ConfigureAwait(false));
+
+    private static async Task<IResult> SyncConnectionsAsync(
+        SyncBankConnectionsRequest request, ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken) =>
+        Ok(await commands.SendAsync(new SyncBankConnectionsCommand(tenant.Current.DossierId, request), cancellationToken).ConfigureAwait(false));
+
+    private static async Task<IResult> RevokeConnectionAsync(Guid id, ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken) =>
+        Ok(await commands.SendAsync(new RevokeBankConnectionCommand(tenant.Current.DossierId, id), cancellationToken).ConfigureAwait(false));
 
     private static async Task<IResult> GetStatusAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken) =>
         Ok(await queries.QueryAsync(new GetBankReconciliationStatusQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false));

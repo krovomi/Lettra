@@ -449,3 +449,26 @@ internal sealed class EfReceivableDocumentReader(TenantDbSession session) : IRec
             p => (IReadOnlyDictionary<decimal, decimal>)p.Value.Where(r => r.Value > 0m).ToDictionary(r => r.Key, r => r.Value));
     }
 }
+
+internal sealed class EfBankConnectionRepository(TenantDbSession session) : IBankConnectionRepository
+{
+    public async Task AddAsync(BankConnection connection, CancellationToken cancellationToken)
+    {
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        await db.Set<BankConnection>().AddAsync(connection, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<BankConnection?> FindAsync(Guid id, CancellationToken cancellationToken)
+    {
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        return await db.Set<BankConnection>().FirstOrDefaultAsync(c => c.Id == id, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<IReadOnlyList<BankConnection>> ListAsync(CancellationToken cancellationToken)
+    {
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        // Quelques comptes par dossier : tri en mémoire (SQLite ne trie pas les dates avec fuseau).
+        List<BankConnection> all = await db.Set<BankConnection>().ToListAsync(cancellationToken).ConfigureAwait(false);
+        return [.. all.OrderByDescending(c => c.CreatedAt)];
+    }
+}

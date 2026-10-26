@@ -1,0 +1,41 @@
+@inject IPortalGateway Portal
+@inject IStringLocalizer<SharedResource> L
+@* La preuve d'un devis signé en ligne par le client : qui, quand, l'empreinte du devis signé, le prestataire de
+   signature et sa référence, et la facture d'acompte créée à la suite. Rien si le devis n'a pas été signé en ligne. *@
+
+@if (_signature is { } signature)
+{
+    <section id="quote-signature" class="lettra-quote-signature" aria-labelledby="quote-signature-title">
+        <h2 id="quote-signature-title"><Icon Name="badge-check" Size="18" /> @L["Portal.Signature.Title"]</h2>
+        <p id="quote-signature-by">@string.Format(CultureInfo.CurrentCulture, L["Portal.Signature.By"], signature.SignerName, signature.SignedAt.ToLocalTime().ToString("g", CultureInfo.CurrentCulture))</p>
+        <p class="lettra-quote-signature-fact"><span>@L["Portal.Signature.Provider"]</span> <code>@signature.Provider · @signature.ProviderReference</code></p>
+        <p class="lettra-quote-signature-fact"><span>@L["Portal.Signature.Hash"]</span> <code title="@signature.DocumentHash">@signature.DocumentHash[..Math.Min(16, signature.DocumentHash.Length)]…</code></p>
+        @if (signature.DownPaymentInvoiceId is Guid invoice)
+        {
+            <p><a href="@($"invoices/{invoice}")" id="quote-signature-down-payment">@L["Portal.Signature.SeeDownPayment"]</a></p>
+        }
+        <p class="lettra-hint">@L["Portal.Signature.Simulated"]</p>
+    </section>
+}
+
+@code {
+    [Parameter, EditorRequired] public Guid QuoteId { get; set; }
+
+    /// <summary>La version du devis : relue quand elle change (devis accepté entre-temps).</summary>
+    [Parameter] public long Version { get; set; }
+
+    private QuoteSignatureResponse? _signature;
+    private (Guid, long) _loaded;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_loaded == (QuoteId, Version))
+        {
+            return;
+        }
+
+        _loaded = (QuoteId, Version);
+        OperationResult<QuoteSignatureResponse> result = await Portal.GetQuoteSignatureAsync(QuoteId, CancellationToken.None);
+        _signature = result.IsSuccess ? result.Value : null;
+    }
+}

@@ -4,6 +4,7 @@ using Lettra.Exports.Application;
 using Lettra.Exports.Application.AuditKit;
 using Lettra.Exports.Application.Banking;
 using Lettra.Exports.Application.EInvoicing.Platform;
+using Lettra.Exports.Application.Portal;
 using Lettra.Exports.Application.Reminders;
 using Lettra.Exports.Application.Tax;
 using Lettra.Infrastructure.Persistence.Hosting;
@@ -46,6 +47,8 @@ public static class DependencyInjection
         services.AddScoped<IPaymentReminderRepository, EfPaymentReminderRepository>();
         services.AddScoped<IReminderContextReader, EfReminderContextReader>();
         services.AddScoped<IAuditTrailReader, EfAuditTrailReader>();
+        AddPortalProviders(services, configuration);
+        AddBankAggregator(services, configuration);
         string platform = configuration?[PlatformKey] ?? "None";
         switch (platform)
         {
@@ -60,6 +63,55 @@ public static class DependencyInjection
         }
 
         return services.AddExportsApplication();
+    }
+
+    /// <summary>Clé de l'agrégateur des banques connectées : <c>Simulated</c> (par défaut) ou <c>None</c> (import de relevés seulement).</summary>
+    public const string BankAggregatorKey = "Lettra:BankConnections:Aggregator";
+
+    /// <summary>Banques connectées : connexions dans la base du dossier, agrégateur simulé (ou aucun, <see cref="BankAggregatorKey"/>).</summary>
+    private static void AddBankAggregator(IServiceCollection services, IConfiguration? configuration)
+    {
+        services.AddScoped<IBankConnectionRepository, EfBankConnectionRepository>();
+        string aggregator = configuration?[BankAggregatorKey] ?? "Simulated";
+        switch (aggregator)
+        {
+            case "Simulated":
+                services.TryAddScoped<IBankAggregator, SimulatedBankAggregator>();
+                break;
+            case "None":
+                services.TryAddSingleton<IBankAggregator, NoBankAggregator>();
+                break;
+            default:
+                throw new InvalidOperationException($"{BankAggregatorKey} : « {aggregator} » inconnu (Simulated ou None).");
+        }
+    }
+
+    /// <summary>Clé du prestataire de paiement en ligne de l'espace client : <c>Simulated</c> (par défaut) ou <c>None</c>.</summary>
+    public const string OnlinePaymentKey = "Lettra:CustomerPortal:Payments";
+
+    /// <summary>
+    /// Espace client : liens et preuves de signature dans la base du dossier, prestataire de paiement simulé (ou aucun,
+    /// <see cref="OnlinePaymentKey"/>) et signature électronique simulée. Rien ne sort du processus.
+    /// </summary>
+    private static void AddPortalProviders(IServiceCollection services, IConfiguration? configuration)
+    {
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddScoped<IPortalLinkRepository, EfPortalLinkRepository>();
+        services.AddScoped<IQuoteSignatureRepository, EfQuoteSignatureRepository>();
+        services.TryAddSingleton<IElectronicSignatureProvider, SimulatedSignatureProvider>();
+        string payments = configuration?[OnlinePaymentKey] ?? "Simulated";
+        switch (payments)
+        {
+            case "Simulated":
+                services.TryAddSingleton<SimulatedPaymentProvider>();
+                services.TryAddSingleton<IOnlinePaymentProvider>(sp => sp.GetRequiredService<SimulatedPaymentProvider>());
+                break;
+            case "None":
+                services.TryAddSingleton<IOnlinePaymentProvider, NoOnlinePayment>();
+                break;
+            default:
+                throw new InvalidOperationException($"{OnlinePaymentKey} : « {payments} » inconnu (Simulated ou None).");
+        }
     }
 
     /// <summary>La plateforme agréée simulée, en mémoire (démonstration et tests ; données fictives).</summary>

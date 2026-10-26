@@ -31,6 +31,7 @@ internal static class ExportEndpoints
         api.MapAccounting();
         api.MapBanking();
         api.MapReminders();
+        api.MapPortalLinks();
 
         // Les déclarations fiscales lisent les mêmes pièces et le même journal.
         api.MapTax();

@@ -5,6 +5,7 @@ using Bunit;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
+using Lettra.Contracts.Portal;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
 using Lettra.UI.Shared.Billing;
@@ -12,6 +13,7 @@ using Lettra.UI.Shared.Components.DataEntryGrid;
 using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Pages.Billing;
 using Lettra.UI.Shared.Services;
+using Lettra.UI.Tests.Portal;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -39,6 +41,7 @@ public sealed class QuoteEditorTests : BunitContext
     private readonly FakeCustomersGateway _customers = new();
     private readonly FakePriceListsGateway _prices = new();
     private readonly FakeFileDownloader _files = new();
+    private readonly FakePortalGateway _portal = new();
 
     private static readonly DocumentLineRequest Conseil = new() { Designation = "Conseil", UnitCode = "HUR", Quantity = 2m, UnitPriceExclTax = 100m };
     private static readonly DocumentLineRequest Livre = new() { Designation = "Ouvrage", UnitCode = "C62", Quantity = 1m, UnitPriceExclTax = 30m, VatRateCode = "FR-5.5" };
@@ -47,6 +50,7 @@ public sealed class QuoteEditorTests : BunitContext
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddLettraUi();
+        Services.AddSingleton<IPortalGateway>(_portal);
         Services.AddSingleton<IQuotesGateway>(_quotes);
         Services.AddSingleton<IBillingSettingsGateway>(_settings);
         Services.AddSingleton<ICatalogGateway>(_catalog);
@@ -372,6 +376,45 @@ public sealed class QuoteEditorTests : BunitContext
 
         _quotes.LastDownPayment!.Percent.Should().Be(40m);
         Services.GetRequiredService<NavigationManager>().Uri.Should().Contain("/invoices/");
+    }
+
+    [Fact]
+    public void Un_devis_valide_se_fait_signer_en_ligne_avec_un_acompte()
+    {
+        QuoteResponse devis = _quotes.Add(QuoteStatusDto.Validated, "DEV-2026-0007", Conseil);
+        IRenderedComponent<QuoteEditor> page = Ouvrir(devis.Id);
+
+        page.Find("#quote-portal-down-payment").Change("40");
+        page.Find("#quote-portal-create").Click();
+
+        page.WaitForAssertion(() => page.Find("#quote-portal-url").GetAttribute("value").Should().StartWith("https://lettra.test/espace-client/"));
+        _portal.Created.Should().ContainSingle().Which.Should().BeEquivalentTo(new { QuoteId = (Guid?)devis.Id, DownPaymentPercent = (decimal?)40m, devis.CustomerId });
+        this.ToastText().Should().Be("Lien de signature créé.");
+    }
+
+    [Fact]
+    public void Un_brouillon_ne_propose_ni_signature_ni_preuve()
+    {
+        QuoteResponse devis = _quotes.Add(QuoteStatusDto.Draft, null, Conseil);
+        IRenderedComponent<QuoteEditor> page = Ouvrir(devis.Id);
+
+        page.FindAll("#quote-sign-online").Should().BeEmpty();
+        page.FindAll("#quote-signature").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Un_devis_signe_en_ligne_montre_sa_preuve_et_son_acompte()
+    {
+        QuoteResponse devis = _quotes.Add(QuoteStatusDto.Accepted, "DEV-2026-0007", Conseil);
+        Guid acompte = Guid.CreateVersion7();
+        _portal.Signatures[devis.Id] = new QuoteSignatureResponse(devis.Id, "Marie Dupont", new DateTimeOffset(2026, 10, 16, 9, 30, 0, TimeSpan.Zero),
+            new string('a', 64), "Signature simulée", "sig_sim_1", acompte);
+
+        IRenderedComponent<QuoteEditor> page = Ouvrir(devis.Id);
+
+        page.WaitForAssertion(() => Texte(page, "#quote-signature-by").Should().Contain("Marie Dupont"));
+        page.FindAll("#quote-sign-online").Should().BeEmpty("un devis accepté ne se signe plus");
+        page.Find("#quote-signature-down-payment").GetAttribute("href").Should().Be($"invoices/{acompte}");
     }
 
     [Fact]
