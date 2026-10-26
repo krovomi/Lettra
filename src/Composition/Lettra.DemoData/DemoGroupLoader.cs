@@ -35,15 +35,43 @@ internal sealed class DemoGroupLoader(IServiceProvider services, DemoSession ses
         ("Migration de la messagerie du groupe", 20m, 100m),
     ];
 
-    public async Task LoadAsync(Guid seller, Guid buyer, DateOnly today, CancellationToken cancellationToken)
+    /// <summary>
+    /// Cherche parmi <paramref name="dossiers"/> le prestataire et le négoce du jeu (par le SIREN de leur fiche) ; une
+    /// fiche changée à la main, ou un dossier absent, et rien n'est fait.
+    /// </summary>
+    public async Task LoadAsync(IEnumerable<Guid> dossiers, DateOnly today, CancellationToken cancellationToken)
     {
-        CompanyProfileResponse? sold = await ProfileAsync(seller, cancellationToken).ConfigureAwait(false);
-        CompanyProfileResponse? bought = await ProfileAsync(buyer, cancellationToken).ConfigureAwait(false);
-        if (sold is not { Siren: { } sellerSiren, Iban: { } sellerIban } || bought is not { Siren: { } buyerSiren, Iban: { } buyerIban })
+        ArgumentNullException.ThrowIfNull(dossiers);
+        string sellerSiren = FrenchIdentifiers.Siren(DemoCompanies.For(DemoBusiness.Services).SirenOrdinal);
+        string buyerSiren = FrenchIdentifiers.Siren(DemoCompanies.For(DemoBusiness.Trading).SirenOrdinal);
+        (Guid Dossier, CompanyProfileResponse Profile)? sold = null;
+        (Guid Dossier, CompanyProfileResponse Profile)? bought = null;
+        foreach (Guid dossier in dossiers.Distinct())
+        {
+            CompanyProfileResponse? profile = await ProfileAsync(dossier, cancellationToken).ConfigureAwait(false);
+            if (profile?.Siren == sellerSiren)
+            {
+                sold = (dossier, profile);
+            }
+            else if (profile?.Siren == buyerSiren)
+            {
+                bought = (dossier, profile);
+            }
+        }
+
+        if (sold is not (Guid seller, { Iban: { } sellerIban } soldProfile) || bought is not (Guid buyer, { Iban: { } buyerIban } boughtProfile))
         {
             return;
         }
 
+        await LoadAsync(seller, soldProfile, sellerIban, buyer, boughtProfile, buyerIban, today, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task LoadAsync(
+        Guid seller, CompanyProfileResponse sold, string sellerIban, Guid buyer, CompanyProfileResponse bought, string buyerIban, DateOnly today, CancellationToken cancellationToken)
+    {
+        string sellerSiren = sold.Siren!;
+        string buyerSiren = bought.Siren!;
         session.CurrentDossierId = seller;
         PagedResponse<CustomerSummary> known = DemoDossierLoader.Ok(await _customers.SearchAsync(new PartyListQuery(bought.Name, PageSize: 20), cancellationToken).ConfigureAwait(false), "clients");
         if (known.Items.Any(c => c.Siren == buyerSiren))
