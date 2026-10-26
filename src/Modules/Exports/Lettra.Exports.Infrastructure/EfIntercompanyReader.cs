@@ -4,6 +4,7 @@ using Lettra.Domain.Billing;
 using Lettra.Domain.Parties;
 using Lettra.Domain.SharedKernel;
 using Lettra.Exports.Application.Banking;
+using Lettra.Exports.Application.Insights;
 using Lettra.Infrastructure.Persistence;
 using Lettra.Infrastructure.Persistence.EInvoicing;
 using Lettra.Infrastructure.Persistence.Integrity;

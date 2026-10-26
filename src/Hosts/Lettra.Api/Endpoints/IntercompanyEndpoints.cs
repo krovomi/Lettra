@@ -1,9 +1,9 @@
 using Lettra.Api.Security;
-using Lettra.Exports.Application.Insights;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Contracts.Insights;
 using Lettra.Domain.Common;
+using Lettra.Exports.Application.Insights;
 using static Lettra.Api.Infrastructure.HttpResults;
 
 namespace Lettra.Api.Endpoints;

@@ -1,10 +1,10 @@
-using Lettra.Exports.Application.Insights;
 using Lettra.Application.Features.Cabinet;
 using Lettra.Application.Features.Dossiers;
 using Lettra.Contracts.Cabinet;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Dossiers;
 using Lettra.Contracts.Insights;
+using Lettra.Exports.Application.Insights;
 using Lettra.UI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
