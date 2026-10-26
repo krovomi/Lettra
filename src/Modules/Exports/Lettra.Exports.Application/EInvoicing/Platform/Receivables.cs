@@ -8,7 +8,10 @@ using Lettra.Exports.Domain.Platform;
 
 namespace Lettra.Exports.Application.EInvoicing.Platform;
 
-/// <summary>Une pièce validée du dossier telle que le point des créances la lit, avec sa dernière transmission.</summary>
+/// <summary>
+/// Une pièce validée du dossier telle que le point des créances la lit, avec sa dernière transmission. La date
+/// d'émission et le total hors taxes servent à expliquer le chiffre d'affaires d'un mois (« Pourquoi ce chiffre ? »).
+/// </summary>
 public sealed record ReceivableRow(
     Guid InvoiceId,
     InvoiceKind Kind,
@@ -18,7 +21,9 @@ public sealed record ReceivableRow(
     decimal TotalInclTax,
     decimal CreditedInclTax,
     PlatformTransmission? Transmission,
-    decimal PaidInclTax = 0m);
+    decimal PaidInclTax = 0m,
+    DateOnly? IssueDate = null,
+    decimal TotalExclTax = 0m);
 
 /// <summary>Lecture des pièces validées ou émises du dossier et de leur dernière transmission (lecture seule).</summary>
 public interface IReceivablesReader
@@ -50,9 +55,8 @@ public static class ReceivablesSummary
         OverdueInvoiceResponse[] overdue =
         [
             .. all
-                .Where(r => r is { Kind: not InvoiceKind.CreditNote, DueDate: { } due } && due < today)
+                .Where(r => IsOverdue(r, today))
                 .Select(r => (Row: r, Outstanding: Outstanding(r)))
-                .Where(r => r.Outstanding > 0m)
                 .Select(r => new OverdueInvoiceResponse(
                     r.Row.InvoiceId, r.Row.Number, r.Row.CustomerName, r.Row.DueDate!.Value, today.DayNumber - r.Row.DueDate.Value.DayNumber, r.Outstanding))
                 .OrderBy(o => o.DueDate)
@@ -73,8 +77,22 @@ public static class ReceivablesSummary
             collected);
     }
 
-    private static decimal Outstanding(ReceivableRow row) =>
-        Math.Max(0m, row.TotalInclTax - row.CreditedInclTax - Math.Max(row.PaidInclTax, row.Transmission?.CollectedAmount ?? 0m));
+    /// <summary>Ce qui est encaissé : le plus élevé de ce qui est saisi dans Lettra et de ce qui est déclaré à la plateforme.</summary>
+    public static decimal Collected(ReceivableRow row)
+    {
+        ArgumentNullException.ThrowIfNull(row);
+        return Math.Max(row.PaidInclTax, row.Transmission?.CollectedAmount ?? 0m);
+    }
+
+    /// <summary>Reste dû : TTC − avoirs − encaissé, jamais négatif.</summary>
+    public static decimal Outstanding(ReceivableRow row) => Math.Max(0m, row.TotalInclTax - row.CreditedInclTax - Collected(row));
+
+    /// <summary>Une facture ou un acompte échu la veille ou avant, dont il reste quelque chose à payer.</summary>
+    public static bool IsOverdue(ReceivableRow row, DateOnly today)
+    {
+        ArgumentNullException.ThrowIfNull(row);
+        return row is { Kind: not InvoiceKind.CreditNote, DueDate: { } due } && due < today && Outstanding(row) > 0m;
+    }
 }
 
 internal sealed class GetReceivablesSummaryHandler(IReceivablesReader reader, TimeProvider clock)

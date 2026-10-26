@@ -239,4 +239,104 @@
   <data name="AsOf.Event.PaymentReversed" xml:space="preserve"><value>Payment reversed</value></data>
   <data name="AsOf.Event.PeriodClosed" xml:space="preserve"><value>Signed closing</value></data>
   <data name="AsOf.Event.KeyRotated" xml:space="preserve"><value>New file key</value></data>
+  <data name="Nav.Why" xml:space="preserve"><value>Why this figure?</value></data>
+  <data name="Why.Title" xml:space="preserve"><value>Why this figure?</value></data>
+  <data name="Why.Subtitle" xml:space="preserve"><value>A figure from the home page broken down to the documents behind it, with the rule that produces it. Nothing is changed.</value></data>
+  <data name="Why.Figures" xml:space="preserve"><value>Explained figures</value></data>
+  <data name="Why.Figure.MonthRevenue" xml:space="preserve"><value>Revenue this month</value></data>
+  <data name="Why.Figure.Overdue" xml:space="preserve"><value>Overdue amount</value></data>
+  <data name="Why.Value.MonthRevenue" xml:space="preserve"><value>excluding tax</value></data>
+  <data name="Why.Value.Overdue" xml:space="preserve"><value>including tax still due on invoices past their due date</value></data>
+  <data name="Why.Equation" xml:space="preserve"><value>The calculation</value></data>
+  <data name="Why.Term.Invoices" xml:space="preserve"><value>Invoices and down payments</value></data>
+  <data name="Why.Term.CreditNotes" xml:space="preserve"><value>minus credit notes</value></data>
+  <data name="Why.Term.Total" xml:space="preserve"><value>Total of overdue invoices incl. tax</value></data>
+  <data name="Why.Term.Credited" xml:space="preserve"><value>minus credit notes</value></data>
+  <data name="Why.Term.Collected" xml:space="preserve"><value>minus payments received</value></data>
+  <data name="Why.Rule.Text.MonthRevenue" xml:space="preserve"><value>It is the sum excluding tax of the {0} invoices and down payments issued from {1} to {2}, minus the {3} credit notes issued over the same period.</value></data>
+  <data name="Why.Rule.Text.MonthRevenue.NoCredit" xml:space="preserve"><value>It is the sum excluding tax of the {0} invoices and down payments issued from {1} to {2}. No credit note was issued over the same period.</value></data>
+  <data name="Why.Rule.Text.Future" xml:space="preserve"><value>{0} has not started yet: no document counts yet.</value></data>
+  <data name="Why.Rule.Text.Overdue" xml:space="preserve"><value>It is what is still due on the {0} invoices past their due date on {1}: for each one, the total including tax, minus credit notes, minus what has been received.</value></data>
+  <data name="Why.Same" xml:space="preserve"><value>The calculation is the home page's, with the same rules:</value></data>
+  <data name="Why.Lines" xml:space="preserve"><value>The documents behind this figure</value></data>
+  <data name="Why.Empty.MonthRevenue" xml:space="preserve"><value>No invoice or credit note issued this month.</value></data>
+  <data name="Why.Empty.Overdue" xml:space="preserve"><value>No overdue invoice: nothing is due past its due date.</value></data>
+  <data name="Why.Search" xml:space="preserve"><value>Search a document or a customer</value></data>
+  <data name="Why.Count" xml:space="preserve"><value>{0} documents shown out of {1}</value></data>
+  <data name="Why.Sort.Date" xml:space="preserve"><value>Date</value></data>
+  <data name="Why.Sort.Amount" xml:space="preserve"><value>Amount counted</value></data>
+  <data name="Why.Line.Issued" xml:space="preserve"><value>issued on {0}</value></data>
+  <data name="Why.Line.CreditNote" xml:space="preserve"><value>credit note issued on {0}</value></data>
+  <data name="Why.Line.Late" xml:space="preserve"><value>due on {0}, {1} days late</value></data>
+  <data name="Why.Line.Terms" xml:space="preserve"><value>{0} − {1} − {2}</value></data>
+  <data name="Why.Line.Plus" xml:space="preserve"><value>added</value></data>
+  <data name="Why.Line.Minus" xml:space="preserve"><value>subtracted</value></data>
+  <data name="Why.Rules" xml:space="preserve"><value>How this figure is obtained</value></data>
+  <data name="Why.Rule.Deterministic" xml:space="preserve"><value>Lettra computes it without artificial intelligence: the same documents always give the same figure, and each document in the list opens in one click.</value></data>
+  <data name="Why.Rule.MonthRevenue" xml:space="preserve"><value>A month's revenue counts invoices and down payments on their issue date, excluding tax, up to today for the current month. Credit notes issued in the month are subtracted. Drafts do not count.</value></data>
+  <data name="Why.Rule.Overdue" xml:space="preserve"><value>An invoice is overdue when its due date has passed and something is left to pay. Down payments and credit notes have no due date to chase.</value></data>
+  <data name="Why.Rule.Collected" xml:space="preserve"><value>What an invoice has received is the larger of what is recorded in Lettra and what is reported as collected to the platform: a payment never counts twice.</value></data>
+  <data name="Home.Kpi.Why" xml:space="preserve"><value>Why this figure?</value></data>
+  <data name="Nav.WhatIf" xml:space="preserve"><value>What if…?</value></data>
+  <data name="WhatIf.Title" xml:space="preserve"><value>What if…?</value></data>
+  <data name="WhatIf.Subtitle" xml:space="preserve"><value>Try before you decide: grant more time, invoice before or after month end, change VAT scheme, hire. Lettra shows the effect on cash, VAT and deadlines.</value></data>
+  <data name="WhatIf.Sandbox" xml:space="preserve"><value>Sandbox: nothing you try here is written to the file.</value></data>
+  <data name="WhatIf.Levers" xml:space="preserve"><value>The scenario</value></data>
+  <data name="WhatIf.Delay" xml:space="preserve"><value>Grant customers more time</value></data>
+  <data name="WhatIf.Delay.Days" xml:space="preserve"><value>Extra days</value></data>
+  <data name="WhatIf.Delay.Hint" xml:space="preserve"><value>Every expected payment arrives that much later.</value></data>
+  <data name="WhatIf.Invoice" xml:space="preserve"><value>Issue an invoice</value></data>
+  <data name="WhatIf.Invoice.Amount" xml:space="preserve"><value>Amount excluding tax (€)</value></data>
+  <data name="WhatIf.Invoice.Rate" xml:space="preserve"><value>VAT rate</value></data>
+  <data name="WhatIf.Invoice.Issue" xml:space="preserve"><value>Issue date</value></data>
+  <data name="WhatIf.Invoice.Term" xml:space="preserve"><value>Payment term (days)</value></data>
+  <data name="WhatIf.Invoice.Closing" xml:space="preserve"><value>Before or after month end</value></data>
+  <data name="WhatIf.Invoice.Before" xml:space="preserve"><value>Last day of the month</value></data>
+  <data name="WhatIf.Invoice.After" xml:space="preserve"><value>1st of next month</value></data>
+  <data name="WhatIf.Vat" xml:space="preserve"><value>VAT scheme</value></data>
+  <data name="WhatIf.Vat.Regime" xml:space="preserve"><value>Scheme tried</value></data>
+  <data name="WhatIf.Vat.Hint" xml:space="preserve"><value>It applies to the trial invoice: return period, due date, or no VAT under the small business exemption.</value></data>
+  <data name="WhatIf.Vat.Current" xml:space="preserve"><value>The file's ({0})</value></data>
+  <data name="WhatIf.Vat.Monthly" xml:space="preserve"><value>Monthly CA3</value></data>
+  <data name="WhatIf.Vat.Quarterly" xml:space="preserve"><value>Quarterly CA3</value></data>
+  <data name="WhatIf.Vat.Franchise" xml:space="preserve"><value>Small business exemption</value></data>
+  <data name="WhatIf.Hire" xml:space="preserve"><value>Hire someone</value></data>
+  <data name="WhatIf.Hire.Salary" xml:space="preserve"><value>Monthly gross salary (€)</value></data>
+  <data name="WhatIf.Hire.Start" xml:space="preserve"><value>Start date</value></data>
+  <data name="WhatIf.Hire.Charges" xml:space="preserve"><value>Employer contributions (%)</value></data>
+  <data name="WhatIf.Run" xml:space="preserve"><value>Simulate</value></data>
+  <data name="WhatIf.Reset" xml:space="preserve"><value>Reset</value></data>
+  <data name="WhatIf.Working" xml:space="preserve"><value>Simulating…</value></data>
+  <data name="WhatIf.Result" xml:space="preserve"><value>The effect over the next {0} weeks</value></data>
+  <data name="WhatIf.Stat.Baseline" xml:space="preserve"><value>Expected payments, without the scenario</value></data>
+  <data name="WhatIf.Stat.Scenario" xml:space="preserve"><value>Expected payments, with it</value></data>
+  <data name="WhatIf.Stat.Out" xml:space="preserve"><value>Extra outflows</value></data>
+  <data name="WhatIf.Stat.Gap" xml:space="preserve"><value>Cash difference</value></data>
+  <data name="WhatIf.Summary.None" xml:space="preserve"><value>No lever chosen: here is the expected cash as it stands.</value></data>
+  <data name="WhatIf.Summary.More" xml:space="preserve"><value>With this scenario, cash is {0} higher after {1} weeks.</value></data>
+  <data name="WhatIf.Summary.Less" xml:space="preserve"><value>With this scenario, cash is {0} lower after {1} weeks.</value></data>
+  <data name="WhatIf.Invoice.Revenue" xml:space="preserve"><value>The invoice counts in the revenue of {0}, in the financial year ending on {1}.</value></data>
+  <data name="WhatIf.Invoice.Vat" xml:space="preserve"><value>Its VAT of {0} is declared for {1} and paid on {2}.</value></data>
+  <data name="WhatIf.Invoice.NoVat" xml:space="preserve"><value>Under the small business exemption, it carries no VAT.</value></data>
+  <data name="WhatIf.Invoice.Collected" xml:space="preserve"><value>Its {0} incl. tax arrive around {1}.</value></data>
+  <data name="WhatIf.Quarter" xml:space="preserve"><value>{0} to {1}</value></data>
+  <data name="WhatIf.Hire.Cost" xml:space="preserve"><value>The hire costs {0} a month with contributions, {1} over the {2} weeks and {3} over a year.</value></data>
+  <data name="WhatIf.Weeks" xml:space="preserve"><value>Week by week</value></data>
+  <data name="WhatIf.Legend.Baseline" xml:space="preserve"><value>without the scenario</value></data>
+  <data name="WhatIf.Legend.Scenario" xml:space="preserve"><value>with the scenario</value></data>
+  <data name="WhatIf.Week" xml:space="preserve"><value>Week of {0}</value></data>
+  <data name="WhatIf.Week.Detail" xml:space="preserve"><value>without: {0} · running difference: {1}</value></data>
+  <data name="WhatIf.Effects" xml:space="preserve"><value>What the scenario changes</value></data>
+  <data name="WhatIf.Effects.Empty" xml:space="preserve"><value>Nothing changes: pick a lever, then “Simulate”.</value></data>
+  <data name="WhatIf.Effect.CollectionMoved" xml:space="preserve"><value>{0} paid later (expected on {1})</value></data>
+  <data name="WhatIf.Effect.InvoiceCollected" xml:space="preserve"><value>Payment of the trial invoice</value></data>
+  <data name="WhatIf.Effect.VatPaid" xml:space="preserve"><value>VAT of the trial invoice</value></data>
+  <data name="WhatIf.Effect.SalaryPaid" xml:space="preserve"><value>Salary with contributions</value></data>
+  <data name="WhatIf.Rules" xml:space="preserve"><value>Calculation assumptions</value></data>
+  <data name="WhatIf.Rule.Baseline" xml:space="preserve"><value>The baseline is the payment weather forecast: each invoice due, expected on its due date shifted by the customer's usual delay. Doubtful invoices (more than 60 days late) are left out.</value></data>
+  <data name="WhatIf.Rule.Delay" xml:space="preserve"><value>Extra time shifts every expected payment, and the trial invoice's due date, by that many days.</value></data>
+  <data name="WhatIf.Rule.Invoice" xml:space="preserve"><value>The trial invoice counts in the revenue of its issue month and in the financial year containing that date.</value></data>
+  <data name="WhatIf.Rule.Vat" xml:space="preserve"><value>Its VAT is declared for the period of its issue date (VAT on invoicing) and paid on the due date of the file's tax calendar. VAT on receipts and the annual CA12 are not simulated.</value></data>
+  <data name="WhatIf.Rule.Hire" xml:space="preserve"><value>The hire costs gross salary plus employer contributions, paid on the last day of the month, pro rata for the first month. Adjust the contribution rate with the firm.</value></data>
+  <data name="WhatIf.Rule.Sandbox" xml:space="preserve"><value>Lettra computes it without artificial intelligence, at each simulation. Nothing is written to the file.</value></data>
 </root>

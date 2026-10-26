@@ -138,4 +138,12 @@
   <data name="Help.Faq.as-of.Question" xml:space="preserve"><value>Comment revoir le dossier tel qu'il était à une date passée ?</value></data>
   <data name="Help.Faq.as-of.Answer" xml:space="preserve"><value>Dans Comptabilité, Remonter le temps, choisissez un jour et une heure, par exemple le 31 décembre à 18 h. Lettra rejoue le journal inaltérable jusqu'à cet instant et montre le chiffre d'affaires, la TVA, les factures dues et les soldes des clients de ce moment-là, à côté de ceux d'aujourd'hui. La chaîne est vérifiée au passage et rien n'est modifié.</value></data>
   <data name="Help.Faq.as-of.Keywords" xml:space="preserve"><value>remonter temps passé historique situation date</value></data>
+  <data name="Nav.Why.Keywords" xml:space="preserve"><value>pourquoi chiffre explication détail calcul composé comprendre justifier chiffre d'affaires retard</value></data>
+  <data name="Help.Faq.why.Question" xml:space="preserve"><value>D'où vient un chiffre de l'accueil ?</value></data>
+  <data name="Help.Faq.why.Answer" xml:space="preserve"><value>Touchez le point d'interrogation d'une carte de l'accueil, ou ouvrez Comptabilité, Pourquoi ce chiffre ?. Lettra montre la règle en une phrase, le calcul et chaque facture ou avoir qui le compose ; chaque pièce s'ouvre d'un clic. Les mois précédents se parcourent avec les flèches.</value></data>
+  <data name="Help.Faq.why.Keywords" xml:space="preserve"><value>pourquoi chiffre explication détail calcul</value></data>
+  <data name="Nav.WhatIf.Keywords" xml:space="preserve"><value>et si simulateur simulation scénario essayer délai embauche embaucher salaire régime tva franchise trimestrielle clôture trésorerie</value></data>
+  <data name="Help.Faq.what-if.Question" xml:space="preserve"><value>Comment voir l'effet d'une décision avant de la prendre ?</value></data>
+  <data name="Help.Faq.what-if.Answer" xml:space="preserve"><value>Dans Comptabilité, Et si… ?, choisissez un ou plusieurs leviers : jours de délai accordés aux clients, une facture à émettre (avant ou après la fin du mois), un régime de TVA, une embauche. Simuler montre la trésorerie des treize prochaines semaines sans et avec le scénario, la TVA à payer et quand, et le coût de l'embauche. Rien n'est écrit dans le dossier.</value></data>
+  <data name="Help.Faq.what-if.Keywords" xml:space="preserve"><value>et si simulateur scénario délai embauche régime tva</value></data>
 </root>

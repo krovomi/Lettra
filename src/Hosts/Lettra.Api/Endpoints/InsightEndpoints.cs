@@ -17,7 +17,9 @@ namespace Lettra.Api.Endpoints;
 /// sans rien écrire : la météo des paiements (un bulletin par client et la prévision des encaissements), le contrôle
 /// fiscal d'entraînement (les tests d'un vérificateur sur le FEC du dossier ou sur celui d'un autre logiciel), la
 /// preuve d'authenticité des factures (signée par la clé du dossier, vérifiable hors ligne) et le dossier tel qu'il
-/// était à un instant passé (rejoué depuis le journal inaltérable).
+/// était à un instant passé (rejoué depuis le journal inaltérable) ; enfin « Pourquoi ce chiffre ? », la chaîne d'un
+/// chiffre de l'accueil jusqu'aux pièces qui le composent, et le simulateur « et si ? » qui essaie un scénario sur la
+/// trésorerie attendue.
 /// </summary>
 internal static class InsightEndpoints
 {
@@ -72,6 +74,21 @@ internal static class InsightEndpoints
             .RequirePermission(Permission.DossierLire)
             .WithName("GetDossierAsOf")
             .Produces<DossierAsOfResponse>();
+
+        insights.MapGet("/why", (ExplainedFigureDto figure, DateOnly? month, ITenantContext tenant, IQueryDispatcher queries, CancellationToken ct) =>
+                QueryAsync(queries, new ExplainFigureQuery(tenant.Current.DossierId, figure, month), ct))
+            .RequirePermission(Permission.DossierLire)
+            .WithName("ExplainFigure")
+            .Produces<FigureExplanationResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        // Une lecture : le scénario voyage dans le corps de la requête, rien n'est écrit dans le dossier.
+        insights.MapPost("/what-if", (WhatIfRequest scenario, ITenantContext tenant, IQueryDispatcher queries, CancellationToken ct) =>
+                QueryAsync(queries, new SimulateWhatIfQuery(tenant.Current.DossierId, scenario), ct))
+            .RequirePermission(Permission.DossierLire)
+            .WithName("SimulateWhatIf")
+            .Produces<WhatIfResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest);
 
         return insights;
     }
