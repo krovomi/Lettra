@@ -42,6 +42,7 @@ public static class NavItems
         new("credit-notes", "Nav.CreditNotes", "file-minus", "Nav.Group.Sales"),
         new("recurring-invoices", "Nav.RecurringInvoices", "repeat", "Nav.Group.Sales"),
         new("invoice-proof", "Nav.InvoiceProof", "scan-qr-code", "Nav.Group.Sales"),
+        new("e-invoicing-readiness", "Nav.EInvoicingReadiness", "badge-check", "Nav.Group.Sales"),
         new("customers", "Nav.Customers", "users", "Nav.Group.Parties", InTabBar: true),
         new("suppliers", "Nav.Suppliers", "truck", "Nav.Group.Parties"),
         new("iban-changes", "Nav.IbanChanges", "shield-alert", "Nav.Group.Parties"),

@@ -112,4 +112,5 @@
   <data name="Error.Review.NoteTooLong" xml:space="preserve"><value>The note exceeds 500 characters.</value></data>
   <data name="Cabinet.Indicator.fournisseurs.iban-a-verifier" xml:space="preserve"><value>IBANs to check</value></data>
   <data name="Cabinet.Indicator.fournisseurs.iban-a-verifier.Due" xml:space="preserve"><value>since {0}</value></data>
+  <data name="Cabinet.Indicator.facture-electronique.preparation" xml:space="preserve"><value>E-invoicing</value></data>
 </root>

@@ -55,6 +55,8 @@ public static class DependencyInjection
         services.AddScoped<IQueryHandler<ExplainFigureQuery, Result<FigureExplanationResponse>>, ExplainFigureHandler>();
         services.AddScoped<IQueryHandler<GetCallSheetQuery, Result<CallSheetResponse>>, GetCallSheetHandler>();
         services.AddScoped<IQueryHandler<SimulateWhatIfQuery, Result<WhatIfResponse>>, SimulateWhatIfHandler>();
+        services.AddScoped<IQueryHandler<GetEInvoicingReadinessQuery, Result<EInvoicingReadinessResponse>>, GetEInvoicingReadinessHandler>();
+        services.AddScoped<IDossierIndicatorSource, EInvoicingReadinessIndicatorSource>();
 
         // Les mêmes éclairages pour l'assistant IA du poste (MCP), en lecture seule et avec les droits de l'utilisateur.
         services.AddScoped<IAiTool, PaymentWeatherTool>();

@@ -148,4 +148,8 @@
   <data name="Help.Faq.call-sheet.Question" xml:space="preserve"><value>Comment préparer un appel de relance ?</value></data>
   <data name="Help.Faq.call-sheet.Answer" xml:space="preserve"><value>Dans Comptabilité, Fiche d'appel (ou depuis la météo des paiements, Préparer l'appel), choisissez le client. Lettra montre ce qu'il doit et depuis quand, ses habitudes de paiement, les relances déjà faites et les points à aborder dans l'ordre : un litige d'abord, puis les factures douteuses, l'étape des relances et l'indemnité de 40 € d'un client professionnel.</value></data>
   <data name="Help.Faq.call-sheet.Keywords" xml:space="preserve"><value>fiche appel appeler téléphone litige</value></data>
+  <data name="Nav.EInvoicingReadiness.Keywords" xml:space="preserve"><value>facture électronique e-facture réforme plateforme agréée PA SIREN préparation conformité e-reporting</value></data>
+  <data name="Help.Faq.einvoicing-readiness.Question" xml:space="preserve"><value>Mon dossier est-il prêt pour la facture électronique ?</value></data>
+  <data name="Help.Faq.einvoicing-readiness.Answer" xml:space="preserve"><value>Dans Ventes, Prêt pour l'e-facture : Lettra donne un score de 0 à 100 et, pour chaque contrôle (identifiants de l'entreprise, SIREN des clients et des fournisseurs, TVA des clients européens, factures transmises), ce qu'il reste à corriger avec un lien pour le faire. La vue cabinet montre le nombre de contrôles à revoir de chaque dossier.</value></data>
+  <data name="Help.Faq.einvoicing-readiness.Keywords" xml:space="preserve"><value>facture électronique e-facture réforme préparation prêt score</value></data>
 </root>

@@ -36,6 +36,9 @@ public interface IInsightsGateway
     /// <summary>La fiche à lire avant d'appeler un client en retard.</summary>
     Task<OperationResult<CallSheetResponse>> GetCallSheetAsync(Guid customerId, CancellationToken cancellationToken);
 
+    /// <summary>Le score de préparation du dossier à la facture électronique et ce qu'il reste à corriger.</summary>
+    Task<OperationResult<EInvoicingReadinessResponse>> GetEInvoicingReadinessAsync(CancellationToken cancellationToken);
+
     /// <summary>Le simulateur « et si ? » : un scénario essayé sur la trésorerie attendue, sans rien écrire.</summary>
     Task<OperationResult<WhatIfResponse>> SimulateWhatIfAsync(WhatIfRequest scenario, CancellationToken cancellationToken);
 }

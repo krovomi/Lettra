@@ -89,6 +89,12 @@ internal static class InsightEndpoints
             .Produces<CallSheetResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        insights.MapGet("/e-invoicing-readiness", (ITenantContext tenant, IQueryDispatcher queries, CancellationToken ct) =>
+                QueryAsync(queries, new GetEInvoicingReadinessQuery(tenant.Current.DossierId), ct))
+            .RequirePermission(Permission.DossierLire)
+            .WithName("GetEInvoicingReadiness")
+            .Produces<EInvoicingReadinessResponse>();
+
         // Une lecture : le scénario voyage dans le corps de la requête, rien n'est écrit dans le dossier.
         insights.MapPost("/what-if", (WhatIfRequest scenario, ITenantContext tenant, IQueryDispatcher queries, CancellationToken ct) =>
                 QueryAsync(queries, new SimulateWhatIfQuery(tenant.Current.DossierId, scenario), ct))

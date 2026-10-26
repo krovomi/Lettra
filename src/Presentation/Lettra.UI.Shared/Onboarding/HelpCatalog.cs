@@ -40,6 +40,7 @@ public static class HelpCatalog
         new("weather", ["payment-weather", "reminders", "customers/*"], "payment-weather", "Nav.PaymentWeather"),
         new("call-sheet", ["call-sheet", "reminders", "payment-weather"], "call-sheet", "Nav.CallSheet"),
         new("invoice-proof", ["invoice-proof", "invoices/*"], "invoice-proof", "Nav.InvoiceProof"),
+        new("einvoicing-readiness", ["e-invoicing-readiness", "settings/company", "cabinet"], "e-invoicing-readiness", "Nav.EInvoicingReadiness"),
         new("recurring", ["recurring-invoices", "recurring-invoices/*", "invoices"], "recurring-invoices", "Nav.RecurringInvoices"),
         new("customer", ["customers", "customers/*", "suppliers", "suppliers/*"], "customers/new", "Nav.Customers"),
         new("vat", ["tax", "tax/*"], "tax", "Nav.Tax"),

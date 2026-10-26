@@ -376,4 +376,44 @@
   <data name="CallSheet.Point.NeverReminded.Many" xml:space="preserve"><value>Aucune relance encore pour les {0} factures échues, soit {1} : commencez par un rappel amical.</value></data>
   <data name="CallSheet.Point.Indemnity.One" xml:space="preserve"><value>Client professionnel : l'indemnité forfaitaire de 40 € est due pour la facture en retard.</value></data>
   <data name="CallSheet.Point.Indemnity.Many" xml:space="preserve"><value>Client professionnel : l'indemnité forfaitaire de 40 € par facture en retard est due, soit {0} pour {1} factures.</value></data>
+  <data name="Nav.EInvoicingReadiness" xml:space="preserve"><value>Prêt pour l'e-facture</value></data>
+  <data name="Readiness.Title" xml:space="preserve"><value>Prêt pour la facture électronique ?</value></data>
+  <data name="Readiness.Subtitle" xml:space="preserve"><value>Ce qu'il reste à faire dans ce dossier avant que ses factures passent par une plateforme agréée : identifiants de l'entreprise, des clients et des fournisseurs, factures transmises.</value></data>
+  <data name="Readiness.Level.Ready" xml:space="preserve"><value>Dossier prêt</value></data>
+  <data name="Readiness.Level.Almost" xml:space="preserve"><value>Presque prêt</value></data>
+  <data name="Readiness.Level.Halfway" xml:space="preserve"><value>À mi-chemin</value></data>
+  <data name="Readiness.Level.Late" xml:space="preserve"><value>En retard</value></data>
+  <data name="Readiness.Summary.None" xml:space="preserve"><value>Tous les contrôles sont satisfaits.</value></data>
+  <data name="Readiness.Summary.One" xml:space="preserve"><value>Un contrôle reste à satisfaire.</value></data>
+  <data name="Readiness.Summary.Many" xml:space="preserve"><value>{0} contrôles restent à satisfaire.</value></data>
+  <data name="Readiness.Period" xml:space="preserve"><value>Factures contrôlées : émises depuis le {0}.</value></data>
+  <data name="Readiness.Check.CompanyIdentity" xml:space="preserve"><value>SIREN et SIRET de l'entreprise</value></data>
+  <data name="Readiness.Check.CompanyIdentity.Why" xml:space="preserve"><value>Sans eux, aucune facture ne part à la plateforme.</value></data>
+  <data name="Readiness.Check.CompanyVat" xml:space="preserve"><value>Numéro de TVA de l'entreprise</value></data>
+  <data name="Readiness.Check.CompanyVat.Why" xml:space="preserve"><value>Obligatoire sur chaque facture, sauf en franchise en base.</value></data>
+  <data name="Readiness.Check.CompanyIban" xml:space="preserve"><value>IBAN de l'entreprise</value></data>
+  <data name="Readiness.Check.CompanyIban.Why" xml:space="preserve"><value>Il figure sur les factures pour être payé par virement.</value></data>
+  <data name="Readiness.Check.FrenchCustomers" xml:space="preserve"><value>SIREN des clients professionnels français</value></data>
+  <data name="Readiness.Check.FrenchCustomers.Why" xml:space="preserve"><value>Le SIREN est l'adresse de leur facture électronique.</value></data>
+  <data name="Readiness.Check.EuropeanCustomers" xml:space="preserve"><value>TVA des clients professionnels européens</value></data>
+  <data name="Readiness.Check.EuropeanCustomers.Why" xml:space="preserve"><value>Leurs ventes sont déclarées en e-reporting avec leur numéro de TVA.</value></data>
+  <data name="Readiness.Check.Suppliers" xml:space="preserve"><value>SIREN des fournisseurs français</value></data>
+  <data name="Readiness.Check.Suppliers.Why" xml:space="preserve"><value>Leurs factures arriveront par la plateforme : il faut pouvoir les reconnaître.</value></data>
+  <data name="Readiness.Check.Transmissions" xml:space="preserve"><value>Factures transmises à la plateforme</value></data>
+  <data name="Readiness.Check.Transmissions.Why" xml:space="preserve"><value>Les factures des 90 derniers jours à des professionnels français, parties et non rejetées.</value></data>
+  <data name="Readiness.Count.Done" xml:space="preserve"><value>Fait</value></data>
+  <data name="Readiness.Count.Missing" xml:space="preserve"><value>Manquant</value></data>
+  <data name="Readiness.Count.NotConcerned" xml:space="preserve"><value>Non concerné</value></data>
+  <data name="Readiness.Count.Ratio" xml:space="preserve"><value>{0} sur {1}</value></data>
+  <data name="Readiness.Fix.CompanyIdentity" xml:space="preserve"><value>Compléter la fiche entreprise</value></data>
+  <data name="Readiness.Fix.CompanyVat" xml:space="preserve"><value>Compléter la fiche entreprise</value></data>
+  <data name="Readiness.Fix.CompanyIban" xml:space="preserve"><value>Compléter la fiche entreprise</value></data>
+  <data name="Readiness.Fix.FrenchCustomers" xml:space="preserve"><value>Voir les clients</value></data>
+  <data name="Readiness.Fix.EuropeanCustomers" xml:space="preserve"><value>Voir les clients</value></data>
+  <data name="Readiness.Fix.Suppliers" xml:space="preserve"><value>Voir les fournisseurs</value></data>
+  <data name="Readiness.Fix.Transmissions" xml:space="preserve"><value>Voir les factures</value></data>
+  <data name="Readiness.Rules" xml:space="preserve"><value>Comment le score est calculé</value></data>
+  <data name="Readiness.Rule.Score" xml:space="preserve"><value>Chaque contrôle est noté de 0 à 100 selon la part des éléments prêts ; le score est leur moyenne. Un contrôle sans élément concerné compte pour 100.</value></data>
+  <data name="Readiness.Rule.Calendar" xml:space="preserve"><value>Toutes les entreprises doivent pouvoir recevoir des factures électroniques depuis le 1er septembre 2026 ; les PME et micro-entreprises devront les émettre à partir du 1er septembre 2027.</value></data>
+  <data name="Readiness.Rule.Cabinet" xml:space="preserve"><value>La vue cabinet ne montre que le nombre de contrôles à revoir de chaque dossier, jamais un nom ni un montant.</value></data>
 </root>

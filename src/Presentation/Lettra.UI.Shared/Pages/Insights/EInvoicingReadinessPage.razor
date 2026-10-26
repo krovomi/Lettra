@@ -1,0 +1,126 @@
+@page "/e-invoicing-readiness"
+@inject IInsightsGateway Insights
+@inject IStringLocalizer<SharedResource> L
+@* Le dossier est-il prêt pour la facture électronique ? Un score de 0 à 100 et, pour chaque contrôle, ce qu'il reste à
+   corriger avec un lien pour le faire. Le serveur calcule tout ; rien n'est écrit. *@
+
+<PageTitle>@L["Readiness.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Readiness.Title"]</h1>
+        <p class="lettra-muted">@L["Readiness.Subtitle"]</p>
+    </div>
+</div>
+
+<GeneralErrors Errors="_errors" />
+
+@if (_readiness is null)
+{
+    @if (_errors.Count == 0)
+    {
+        <ExplorerSkeleton Rows="6" />
+    }
+}
+else
+{
+    <section class="lettra-card lt-ready-head" id="ready-head" aria-labelledby="ready-score-label">
+        <div class="lt-ready-score" data-level="@Level" style="--score: @_readiness.Score">
+            <strong id="ready-score">@_readiness.Score</strong><span aria-hidden="true">/100</span>
+        </div>
+        <div>
+            <h2 id="ready-score-label">@L[$"Readiness.Level.{Level}"]</h2>
+            <p class="lettra-muted" id="ready-summary">@Summary</p>
+            <p class="lettra-hint">@string.Format(Culture, L["Readiness.Period"], _readiness.Since.ToString("d", Culture))</p>
+        </div>
+    </section>
+
+    <ol class="lt-ready-checks" id="ready-checks">
+        @foreach (EInvoicingCheckResponse check in _readiness.Checks)
+        {
+            <li class="lettra-card lt-ready-check @(check.Ok ? "is-ok" : null)" id="@($"ready-{Slug(check.Check)}")">
+                <div class="lt-ready-check-head">
+                    <span class="lt-ready-check-icon" aria-hidden="true"><Icon Name="@(check.Ok ? "circle-check" : "circle-alert")" Size="20" /></span>
+                    <div class="lt-ready-check-text">
+                        <h3>@L[$"Readiness.Check.{check.Check}"]</h3>
+                        <p class="lettra-muted">@L[$"Readiness.Check.{check.Check}.Why"]</p>
+                    </div>
+                    <span class="lt-ready-check-count">@Count(check)</span>
+                </div>
+                <progress class="lt-review-progress" max="100" value="@check.Percent" aria-label="@L[$"Readiness.Check.{check.Check}"]"></progress>
+                @if (!check.Ok)
+                {
+                    @if (check.Gaps.Count > 0)
+                    {
+                        <ul class="lt-ready-gaps">
+                            @foreach (EInvoicingGapResponse gap in check.Gaps)
+                            {
+                                <li @key="gap.Id"><a href="@GapLink(check.Check, gap)">@gap.Label</a></li>
+                            }
+                        </ul>
+                    }
+                    <a class="lettra-button is-secondary is-small" href="@FixLink(check.Check)"><Icon Name="arrow-right" Size="16" /> @L[$"Readiness.Fix.{check.Check}"]</a>
+                }
+            </li>
+        }
+    </ol>
+
+    <Collapsible Id="ready-rules" Title="@L["Readiness.Rules"]" InitiallyOpen="false">
+        <ul>
+            <li>@L["Readiness.Rule.Score"]</li>
+            <li>@L["Readiness.Rule.Calendar"]</li>
+            <li>@L["Readiness.Rule.Cabinet"]</li>
+        </ul>
+    </Collapsible>
+}
+
+@code {
+    private EInvoicingReadinessResponse? _readiness;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    /// <summary>Le même palier que la vue cabinet : prêt, presque, à surveiller, en retard.</summary>
+    private string Level => _readiness?.Score switch
+    {
+        100 => "Ready",
+        >= 80 => "Almost",
+        >= 50 => "Halfway",
+        _ => "Late",
+    };
+
+    private string Summary => _readiness!.Failing switch
+    {
+        0 => L["Readiness.Summary.None"],
+        1 => L["Readiness.Summary.One"],
+        int n => string.Format(Culture, L["Readiness.Summary.Many"], n),
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        OperationResult<EInvoicingReadinessResponse> result = await Insights.GetEInvoicingReadinessAsync(CancellationToken.None);
+        (_readiness, _errors) = (result.Value, result.Errors);
+    }
+
+    private string Count(EInvoicingCheckResponse check) => check.Check switch
+    {
+        EInvoicingCheckDto.CompanyIdentity or EInvoicingCheckDto.CompanyVat or EInvoicingCheckDto.CompanyIban =>
+            check.Ok ? L["Readiness.Count.Done"] : L["Readiness.Count.Missing"],
+        _ when check.Total == 0 => L["Readiness.Count.NotConcerned"],
+        _ => string.Format(Culture, L["Readiness.Count.Ratio"], check.Passing, check.Total),
+    };
+
+    private static string Slug(EInvoicingCheckDto check) => check.ToString().ToLowerInvariant();
+
+    private static string FixLink(EInvoicingCheckDto check) => check switch
+    {
+        EInvoicingCheckDto.FrenchCustomers or EInvoicingCheckDto.EuropeanCustomers => "customers",
+        EInvoicingCheckDto.Suppliers => "suppliers",
+        EInvoicingCheckDto.Transmissions => "invoices",
+        _ => "settings/company",
+    };
+
+    /// <summary>Un tiers s'ouvre sur sa fiche à modifier ; une facture, sur son détail (la transmettre ou la corriger).</summary>
+    private static string GapLink(EInvoicingCheckDto check, EInvoicingGapResponse gap) =>
+        check == EInvoicingCheckDto.Transmissions ? $"invoices/{gap.Id}" : $"{FixLink(check)}/{gap.Id}/edit";
+}

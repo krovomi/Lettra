@@ -769,10 +769,10 @@ a.lt-kpi:hover { border-color: var(--color-primary); box-shadow: var(--shadow-md
 .lt-cabinet-table tr[data-level="Warning"] { --lt-level-fg: var(--color-warning-fg); --lt-level-bg: var(--color-warning-bg); }
 .lt-cabinet-table tr[data-level="Critical"] { --lt-level-fg: var(--color-danger-fg); --lt-level-bg: var(--color-danger-bg); }
 .lettra-table.lt-cabinet-table th, .lettra-table.lt-cabinet-table .lg-num { white-space: normal; }
-.lettra-table.lt-cabinet-table thead .lt-sort { padding-inline: var(--space-2); }
+.lettra-table.lt-cabinet-table thead .lt-sort { padding-inline: var(--space-1); }
 .lettra-table.lt-cabinet-table tbody :is(th, td) { padding-block: var(--space-3); }
 .lettra-table.lt-cabinet-table tbody td { padding-inline: var(--space-2); }
-.lt-cabinet-table tbody th[scope="row"] { min-width: 15rem; background: transparent; color: var(--color-fg); font-size: var(--text-sm); font-weight: var(--weight-regular); letter-spacing: normal; text-transform: none; text-align: left; box-shadow: inset 3px 0 0 var(--lt-level-fg); }
+.lt-cabinet-table tbody th[scope="row"] { min-width: 13rem; background: transparent; color: var(--color-fg); font-size: var(--text-sm); font-weight: var(--weight-regular); letter-spacing: normal; text-transform: none; text-align: left; box-shadow: inset 3px 0 0 var(--lt-level-fg); }
 .lt-cabinet-name { display: flex; align-items: center; gap: var(--space-3); }
 .lt-cabinet-avatar { display: inline-grid; place-items: center; flex: none; width: 2.5rem; height: 2.5rem; border-radius: var(--radius-md); background: var(--lt-level-bg); color: var(--lt-level-fg); font-size: var(--text-sm); font-weight: var(--weight-bold); letter-spacing: 0.02em; }
 .lt-cabinet-label { display: grid; gap: 2px; min-width: 0; }
@@ -795,9 +795,9 @@ a.lt-kpi:hover { border-color: var(--color-primary); box-shadow: var(--shadow-md
 .lt-cabinet-review { padding-inline: var(--space-2); }
 .lt-cabinet-review-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-/* Moins de 60rem de large (tablette, téléphone, petit écran avec le menu déplié) : une carte par dossier, deux
-   colonnes dès qu'il y a la place. Les compteurs à zéro sont masqués ; « Tout est à jour » les remplace. */
-@container lt-cabinet (max-width: 59.99rem) {
+/* Moins de 67rem de large (tablette, téléphone, écran moyen avec le menu déplié : huit colonnes d'indicateurs n'y tiennent pas) :
+   une carte par dossier, deux colonnes dès qu'il y a la place. Les compteurs à zéro sont masqués ; « Tout est à jour » les remplace. */
+@container lt-cabinet (max-width: 66.99rem) {
     .lt-cabinet-panel .lt-sort-select { display: grid; }
     .lt-cabinet-panel .lt-list-scroll { overflow-x: visible; }
     .lt-cabinet-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

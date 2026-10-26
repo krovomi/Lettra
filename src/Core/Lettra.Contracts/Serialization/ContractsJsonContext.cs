@@ -210,6 +210,7 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(DossierAsOfResponse))]
 [JsonSerializable(typeof(FigureExplanationResponse))]
 [JsonSerializable(typeof(CallSheetResponse))]
+[JsonSerializable(typeof(EInvoicingReadinessResponse))]
 [JsonSerializable(typeof(WhatIfRequest))]
 [JsonSerializable(typeof(WhatIfResponse))]
 public sealed partial class ContractsJsonContext : JsonSerializerContext;

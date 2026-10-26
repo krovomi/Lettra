@@ -93,6 +93,20 @@ public sealed class InsightsGatewayParityTests(LettraApiFactory factory) : IClas
 
     [Theory]
     [MemberData(nameof(Transports))]
+    public async Task Preparation_a_la_facture_electronique_meme_reponse_par_les_deux_transports(string transport)
+    {
+        await using ServiceProvider services = _harness.Gateway(transport);
+        IInsightsGateway insights = services.GetRequiredService<IInsightsGateway>();
+
+        OperationResult<EInvoicingReadinessResponse> readiness = await insights.GetEInvoicingReadinessAsync(default);
+
+        readiness.IsSuccess.Should().BeTrue(string.Join(", ", readiness.Errors.Select(e => e.Code)));
+        readiness.Value!.Checks.Select(c => c.Check).Should().Equal(Enum.GetValues<EInvoicingCheckDto>());
+        readiness.Value.Score.Should().BeInRange(0, 100);
+    }
+
+    [Theory]
+    [MemberData(nameof(Transports))]
     public async Task Pourquoi_ce_chiffre_meme_explication_par_les_deux_transports(string transport)
     {
         await using ServiceProvider services = _harness.Gateway(transport);

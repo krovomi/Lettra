@@ -376,4 +376,44 @@
   <data name="CallSheet.Point.NeverReminded.Many" xml:space="preserve"><value>No reminder yet for the {0} overdue invoices, {1} in total: start with a friendly reminder.</value></data>
   <data name="CallSheet.Point.Indemnity.One" xml:space="preserve"><value>Business customer: the fixed €40 recovery fee is due for the late invoice.</value></data>
   <data name="CallSheet.Point.Indemnity.Many" xml:space="preserve"><value>Business customer: the fixed €40 recovery fee per late invoice is due, {0} for {1} invoices.</value></data>
+  <data name="Nav.EInvoicingReadiness" xml:space="preserve"><value>E-invoicing readiness</value></data>
+  <data name="Readiness.Title" xml:space="preserve"><value>Ready for e-invoicing?</value></data>
+  <data name="Readiness.Subtitle" xml:space="preserve"><value>What is left to do in this dossier before its invoices go through an accredited platform: company, customer and supplier identifiers, invoices sent.</value></data>
+  <data name="Readiness.Level.Ready" xml:space="preserve"><value>Dossier ready</value></data>
+  <data name="Readiness.Level.Almost" xml:space="preserve"><value>Almost ready</value></data>
+  <data name="Readiness.Level.Halfway" xml:space="preserve"><value>Halfway there</value></data>
+  <data name="Readiness.Level.Late" xml:space="preserve"><value>Behind</value></data>
+  <data name="Readiness.Summary.None" xml:space="preserve"><value>Every check is met.</value></data>
+  <data name="Readiness.Summary.One" xml:space="preserve"><value>One check is still to meet.</value></data>
+  <data name="Readiness.Summary.Many" xml:space="preserve"><value>{0} checks are still to meet.</value></data>
+  <data name="Readiness.Period" xml:space="preserve"><value>Invoices checked: issued since {0}.</value></data>
+  <data name="Readiness.Check.CompanyIdentity" xml:space="preserve"><value>Company SIREN and SIRET</value></data>
+  <data name="Readiness.Check.CompanyIdentity.Why" xml:space="preserve"><value>Without them, no invoice reaches the platform.</value></data>
+  <data name="Readiness.Check.CompanyVat" xml:space="preserve"><value>Company VAT number</value></data>
+  <data name="Readiness.Check.CompanyVat.Why" xml:space="preserve"><value>Required on every invoice, unless under the VAT exemption threshold.</value></data>
+  <data name="Readiness.Check.CompanyIban" xml:space="preserve"><value>Company IBAN</value></data>
+  <data name="Readiness.Check.CompanyIban.Why" xml:space="preserve"><value>Printed on invoices so customers can pay by transfer.</value></data>
+  <data name="Readiness.Check.FrenchCustomers" xml:space="preserve"><value>SIREN of French business customers</value></data>
+  <data name="Readiness.Check.FrenchCustomers.Why" xml:space="preserve"><value>The SIREN is the address of their e-invoices.</value></data>
+  <data name="Readiness.Check.EuropeanCustomers" xml:space="preserve"><value>VAT number of EU business customers</value></data>
+  <data name="Readiness.Check.EuropeanCustomers.Why" xml:space="preserve"><value>Their sales are e-reported with their VAT number.</value></data>
+  <data name="Readiness.Check.Suppliers" xml:space="preserve"><value>SIREN of French suppliers</value></data>
+  <data name="Readiness.Check.Suppliers.Why" xml:space="preserve"><value>Their invoices will arrive through the platform: they must be recognised.</value></data>
+  <data name="Readiness.Check.Transmissions" xml:space="preserve"><value>Invoices sent to the platform</value></data>
+  <data name="Readiness.Check.Transmissions.Why" xml:space="preserve"><value>Invoices of the last 90 days to French businesses, sent and not rejected.</value></data>
+  <data name="Readiness.Count.Done" xml:space="preserve"><value>Done</value></data>
+  <data name="Readiness.Count.Missing" xml:space="preserve"><value>Missing</value></data>
+  <data name="Readiness.Count.NotConcerned" xml:space="preserve"><value>Not applicable</value></data>
+  <data name="Readiness.Count.Ratio" xml:space="preserve"><value>{0} of {1}</value></data>
+  <data name="Readiness.Fix.CompanyIdentity" xml:space="preserve"><value>Complete the company profile</value></data>
+  <data name="Readiness.Fix.CompanyVat" xml:space="preserve"><value>Complete the company profile</value></data>
+  <data name="Readiness.Fix.CompanyIban" xml:space="preserve"><value>Complete the company profile</value></data>
+  <data name="Readiness.Fix.FrenchCustomers" xml:space="preserve"><value>See customers</value></data>
+  <data name="Readiness.Fix.EuropeanCustomers" xml:space="preserve"><value>See customers</value></data>
+  <data name="Readiness.Fix.Suppliers" xml:space="preserve"><value>See suppliers</value></data>
+  <data name="Readiness.Fix.Transmissions" xml:space="preserve"><value>See invoices</value></data>
+  <data name="Readiness.Rules" xml:space="preserve"><value>How the score is computed</value></data>
+  <data name="Readiness.Rule.Score" xml:space="preserve"><value>Each check scores 0 to 100 from the share of items that are ready; the score is their average. A check with nothing to check counts as 100.</value></data>
+  <data name="Readiness.Rule.Calendar" xml:space="preserve"><value>Every French company must be able to receive e-invoices since 1 September 2026; SMEs and micro-businesses must issue them from 1 September 2027.</value></data>
+  <data name="Readiness.Rule.Cabinet" xml:space="preserve"><value>The practice view only shows how many checks each dossier has left, never a name or an amount.</value></data>
 </root>

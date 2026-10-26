@@ -66,6 +66,10 @@ internal sealed class FakeInsightsGateway : IInsightsGateway
 
     public Dictionary<Guid, CallSheetResponse> CallSheets { get; } = [];
 
+    public EInvoicingReadinessResponse? Readiness { get; set; }
+
+    public Task<OperationResult<EInvoicingReadinessResponse>> GetEInvoicingReadinessAsync(CancellationToken cancellationToken) => Answer(Readiness);
+
     public Task<OperationResult<CallSheetResponse>> GetCallSheetAsync(Guid customerId, CancellationToken cancellationToken) =>
         Answer(CallSheets.GetValueOrDefault(customerId));
 
