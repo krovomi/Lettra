@@ -158,4 +158,5 @@
   <data name="Help.Faq.peers.Answer" xml:space="preserve"><value>Renseignez le code NAF dans la fiche entreprise. Le tableau de bord du dossier compare alors son délai de paiement, ses retards, son encaissement, l'évolution de son chiffre d'affaires, ses devis acceptés, le poids de son premier client et son taux d'avoirs à la médiane des autres dossiers du cabinet de la même division NAF. Il faut au moins 5 dossiers du même secteur : seules des médianes sont montrées, jamais un dossier ni un montant.</value></data>
   <data name="Help.Faq.peers.Keywords" xml:space="preserve"><value>pairs secteur NAF APE comparer comparaison médiane concurrents benchmark</value></data>
   <data name="Nav.Brief.Keywords" xml:space="preserve"><value>tableau de bord dirigeant résumé chiffres du mois téléphone trésorerie encaissements</value></data>
+  <data name="Nav.Mission.Keywords" xml:space="preserve"><value>lettre de mission honoraires forfait temps passé rentabilité</value></data>
 </root>

@@ -59,6 +59,7 @@ public static class NavItems
         new("exports/fec", "Nav.Fec", "file-spreadsheet", "Nav.Group.Accounting"),
         new("tax", "Nav.Tax", "calendar-clock", "Nav.Group.Accounting"),
         new("review", "Nav.Review", "list-checks", "Nav.Group.Accounting"),
+        new("mission", "Nav.Mission", "handshake", "Nav.Group.Accounting"),
         new("as-of", "Nav.AsOf", "history", "Nav.Group.Accounting"),
         new("why", "Nav.Why", "circle-help", "Nav.Group.Accounting"),
         new("what-if", "Nav.WhatIf", "flask-conical", "Nav.Group.Accounting"),

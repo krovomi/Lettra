@@ -343,6 +343,13 @@ Sur un dossier vide, il propose à la place de compléter la fiche entreprise et
 **Charger les données de démonstration** remplit le dossier d'un an d'activité fictive en une demi-minute. Ce bouton
 est absent en Production et pour qui n'a pas le droit d'émettre des factures.
 
+**En bref.** L'écran du dirigeant, pensé pour le téléphone (menu, juste sous l'**Accueil**). Les chiffres du mois
+d'un coup d'œil : chiffre d'affaires HT et tendance, encaissé, TVA à payer avec son échéance, mouvements bancaires,
+factures en retard. Puis « À surveiller » : les gros encaissements des 30 derniers jours, au seuil choisi, et les
+factures en retard. Chaque carte mène à l'écran détaillé et suit ses droits. Pas encore de notification sur le
+téléphone : l'écran se consulte. *(Vérifié : démo Docker, navigateur sur ordinateur et téléphone.)* Détails :
+[docs/en-bref.md](docs/en-bref.md).
+
 **Les données de démonstration.** Le dossier ouvert arrive avec un an d'activité d'une entreprise fictive,
 « Atelier Numérique Conseil » (SARL de conseil et services numériques, Lyon) : sa fiche entreprise, 30 à 50 clients
 (entreprises et particuliers), des fournisseurs, un catalogue de prestations et de matériel, des grilles tarifaires,
@@ -361,7 +368,7 @@ Le prestataire de services a opté pour la TVA sur les débits : ses factures et
 Le jeu ne s'ajoute jamais à un dossier qui a déjà des devis ou des factures. Pour repartir d'un dossier rempli à neuf,
 voir « Repartir de zéro » dans [En cas de problème](#en-cas-de-problème).
 
-**La navigation.** **Accueil** et **Vue cabinet**, puis **Ventes** (**Devis**, **Factures**, **Avoirs**, **Factures
+**La navigation.** **Accueil**, **En bref** et **Vue cabinet**, puis **Ventes** (**Devis**, **Factures**, **Avoirs**, **Factures
 récurrentes**), **Tiers** (**Clients**, **Fournisseurs**, **Catalogue**), **Comptabilité** (**Encaissements**,
 **Rapprochement bancaire**, **Relances**, **Journal et balance**, **FEC**, **Déclarations**, **Revue du dossier**) et
 **Pilotage** (**Tableaux de bord**, **Alertes**, **Entreprise**, **Mes préférences**, **Équipe et accès** pour qui

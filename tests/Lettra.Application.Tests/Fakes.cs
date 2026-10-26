@@ -184,6 +184,40 @@ internal sealed class InMemoryCabinetStores :
     }
 }
 
+/// <summary>Mission et temps passés en mémoire.</summary>
+internal sealed class InMemoryMissionStore : Lettra.Application.Abstractions.Cabinet.IMissionStore
+{
+    private readonly ConcurrentDictionary<Guid, Lettra.Domain.Missions.TimeEntry> _time = new();
+    private Lettra.Domain.Missions.Mission? _mission;
+
+    public Task<Lettra.Domain.Missions.Mission?> FindAsync(CancellationToken cancellationToken) => Task.FromResult(_mission);
+
+    public Task AddAsync(Lettra.Domain.Missions.Mission mission, CancellationToken cancellationToken)
+    {
+        _mission = mission;
+        return Task.CompletedTask;
+    }
+
+    public Task<IReadOnlyList<Lettra.Domain.Missions.TimeEntry>> ListTimeAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<Lettra.Domain.Missions.TimeEntry>>(
+            [.. _time.Values.Where(t => t.Date >= from && t.Date <= to).OrderByDescending(t => t.Date)]);
+
+    public Task<Lettra.Domain.Missions.TimeEntry?> FindTimeAsync(Guid id, CancellationToken cancellationToken) =>
+        Task.FromResult(_time.GetValueOrDefault(id));
+
+    public Task AddTimeAsync(Lettra.Domain.Missions.TimeEntry entry, CancellationToken cancellationToken)
+    {
+        _time[entry.Id] = entry;
+        return Task.CompletedTask;
+    }
+
+    public Task RemoveTimeAsync(Lettra.Domain.Missions.TimeEntry entry, CancellationToken cancellationToken)
+    {
+        _time.TryRemove(entry.Id, out _);
+        return Task.CompletedTask;
+    }
+}
+
 /// <summary>Tableau de bord d'un dossier vide : aucune pièce.</summary>
 internal sealed class NoBillingKpis : Lettra.Application.Features.Kpi.IBillingKpiReader
 {
@@ -200,6 +234,7 @@ internal static class CabinetFakesRegistration
         services.AddSingleton<Lettra.Application.Abstractions.Cabinet.IDossierIndicatorStore>(stores);
         services.AddSingleton<Lettra.Application.Abstractions.Cabinet.IDossierIndicatorRefresher>(stores);
         services.AddSingleton<Lettra.Application.Abstractions.Cabinet.IDossierReviewStore>(stores);
+        services.AddSingleton<Lettra.Application.Abstractions.Cabinet.IMissionStore>(new InMemoryMissionStore());
         services.AddSingleton<Lettra.Application.Features.Kpi.IBillingKpiReader>(new NoBillingKpis());
         return services.AddRecurringFakes();
     }

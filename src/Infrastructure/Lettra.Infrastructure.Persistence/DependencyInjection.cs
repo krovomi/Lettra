@@ -58,6 +58,7 @@ public static class DependencyInjection
         // Vue cabinet : revue de dossier et indicateurs du dossier ; les indicateurs sont rangés en mémoire tant que la
         // base Catalog ne remplace pas ce magasin (modes 2, 3 et 5).
         services.AddScoped<IDossierReviewStore, EfDossierReviewStore>();
+        services.AddScoped<IMissionStore, EfMissionStore>();
         services.AddScoped<IDossierIndicatorSource, OverdueInvoicesIndicatorSource>();
         services.AddScoped<IDossierIndicatorSource, PlatformRejectionsIndicatorSource>();
         services.AddScoped<IDossierIndicatorSource, ReviewPendingIndicatorSource>();
