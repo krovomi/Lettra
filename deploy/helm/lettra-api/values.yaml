@@ -11,6 +11,9 @@ settings:
   Lettra__DeploymentMode: HostedSaaS
   Lettra__Observability__ServiceName: lettra-api
   Lettra__Supervision__PublicBaseAddress: https://app.lettra.fr/
+  # Banque connectée et paiement en ligne de l'espace client : simulés dans la démo, aucun prestataire réel branché ici.
+  Lettra__BankConnections__Aggregator: None
+  Lettra__CustomerPortal__Payments: None
 
 # Fournisseur d'identité (Keycloak, realm lettra) : obligatoire dès le mode 2 (ADR-0010). Le secret du client BFF
 # (Lettra__Identity__Oidc__BffClientSecret) est dans existingSecret.
