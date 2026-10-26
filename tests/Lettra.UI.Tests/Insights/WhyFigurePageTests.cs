@@ -72,9 +72,14 @@ public sealed class WhyFigurePageTests : BunitContext
     [Fact]
     public void Un_mois_passe_est_demande_par_l_adresse()
     {
-        Open("why?figure=MonthRevenue&month=2026-07");
+        _insights.Explanations[ExplainedFigureDto.MonthRevenue] = new(
+            ExplainedFigureDto.MonthRevenue, 1_000m, Today, new DateOnly(2026, 7, 1),
+            [new(Guid.CreateVersion7(), "FA-2026-0004", "Atelier Dupont", ExplanationLineKindDto.Invoice, new DateOnly(2026, 7, 2), 1_000m)]);
+
+        IRenderedComponent<WhyFigurePage> page = Open("why?figure=MonthRevenue&month=2026-07");
 
         _insights.Explained.Should().Equal([(ExplainedFigureDto.MonthRevenue, (DateOnly?)new DateOnly(2026, 7, 1))]);
+        page.Find("#why-rule").TextContent.Should().Be("C'est la somme hors taxes des 1 factures et acomptes émis du 01/07/2026 au 31/07/2026. Aucun avoir n'a été émis sur la même période.");
     }
 
     [Fact]

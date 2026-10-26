@@ -183,7 +183,7 @@ else if (_view is { } view)
         DateOnly until = view.Today < last ? view.Today : last;
         return until < first
             ? string.Format(Culture, L["Why.Rule.Text.Future"], TaxText.Month(first))
-            : string.Format(Culture, L["Why.Rule.Text.MonthRevenue"], invoices, first.ToString("d", Culture), until.ToString("d", Culture), credits);
+            : string.Format(Culture, L[credits == 0 ? "Why.Rule.Text.MonthRevenue.NoCredit" : "Why.Rule.Text.MonthRevenue"], invoices, first.ToString("d", Culture), until.ToString("d", Culture), credits);
     }
 
     /// <summary>Les termes de l'opération : ce qui s'ajoute, ce qui se retranche et le résultat.</summary>

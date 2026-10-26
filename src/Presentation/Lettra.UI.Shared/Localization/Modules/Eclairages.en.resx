@@ -254,6 +254,7 @@
   <data name="Why.Term.Credited" xml:space="preserve"><value>minus credit notes</value></data>
   <data name="Why.Term.Collected" xml:space="preserve"><value>minus payments received</value></data>
   <data name="Why.Rule.Text.MonthRevenue" xml:space="preserve"><value>It is the sum excluding tax of the {0} invoices and down payments issued from {1} to {2}, minus the {3} credit notes issued over the same period.</value></data>
+  <data name="Why.Rule.Text.MonthRevenue.NoCredit" xml:space="preserve"><value>It is the sum excluding tax of the {0} invoices and down payments issued from {1} to {2}. No credit note was issued over the same period.</value></data>
   <data name="Why.Rule.Text.Future" xml:space="preserve"><value>{0} has not started yet: no document counts yet.</value></data>
   <data name="Why.Rule.Text.Overdue" xml:space="preserve"><value>It is what is still due on the {0} invoices past their due date on {1}: for each one, the total including tax, minus credit notes, minus what has been received.</value></data>
   <data name="Why.Same" xml:space="preserve"><value>The calculation is the home page's, with the same rules:</value></data>

@@ -254,6 +254,7 @@
   <data name="Why.Term.Credited" xml:space="preserve"><value>moins les avoirs</value></data>
   <data name="Why.Term.Collected" xml:space="preserve"><value>moins les encaissements</value></data>
   <data name="Why.Rule.Text.MonthRevenue" xml:space="preserve"><value>C'est la somme hors taxes des {0} factures et acomptes émis du {1} au {2}, moins les {3} avoirs émis sur la même période.</value></data>
+  <data name="Why.Rule.Text.MonthRevenue.NoCredit" xml:space="preserve"><value>C'est la somme hors taxes des {0} factures et acomptes émis du {1} au {2}. Aucun avoir n'a été émis sur la même période.</value></data>
   <data name="Why.Rule.Text.Future" xml:space="preserve"><value>{0} n'a pas encore commencé : aucune pièce ne compte encore.</value></data>
   <data name="Why.Rule.Text.Overdue" xml:space="preserve"><value>C'est ce qui reste dû sur les {0} factures dont l'échéance est passée au {1} : pour chacune, le total TTC, moins les avoirs, moins ce qui est encaissé.</value></data>
   <data name="Why.Same" xml:space="preserve"><value>Le calcul est celui de l'accueil, avec les mêmes règles :</value></data>
