@@ -144,4 +144,8 @@
   <data name="Help.Faq.what-if.Question" xml:space="preserve"><value>Comment voir l'effet d'une décision avant de la prendre ?</value></data>
   <data name="Help.Faq.what-if.Answer" xml:space="preserve"><value>Dans Comptabilité, Et si… ?, choisissez un ou plusieurs leviers : jours de délai accordés aux clients, une facture à émettre (avant ou après la fin du mois), un régime de TVA, une embauche. Simuler montre la trésorerie des treize prochaines semaines sans et avec le scénario, la TVA à payer et quand, et le coût de l'embauche. Rien n'est écrit dans le dossier.</value></data>
   <data name="Help.Faq.what-if.Keywords" xml:space="preserve"><value>et si simulateur scénario délai embauche régime tva</value></data>
+  <data name="Nav.CallSheet.Keywords" xml:space="preserve"><value>fiche appel appeler téléphone relance relancer client retard impayé litige recouvrement</value></data>
+  <data name="Help.Faq.call-sheet.Question" xml:space="preserve"><value>Comment préparer un appel de relance ?</value></data>
+  <data name="Help.Faq.call-sheet.Answer" xml:space="preserve"><value>Dans Comptabilité, Fiche d'appel (ou depuis la météo des paiements, Préparer l'appel), choisissez le client. Lettra montre ce qu'il doit et depuis quand, ses habitudes de paiement, les relances déjà faites et les points à aborder dans l'ordre : un litige d'abord, puis les factures douteuses, l'étape des relances et l'indemnité de 40 € d'un client professionnel.</value></data>
+  <data name="Help.Faq.call-sheet.Keywords" xml:space="preserve"><value>fiche appel appeler téléphone litige</value></data>
 </root>

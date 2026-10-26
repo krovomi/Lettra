@@ -144,4 +144,8 @@
   <data name="Help.Faq.what-if.Question" xml:space="preserve"><value>How do I see the effect of a decision before making it?</value></data>
   <data name="Help.Faq.what-if.Answer" xml:space="preserve"><value>In Accounting, What if…?, pick one or more levers: extra days for customers, an invoice to issue (before or after month end), a VAT scheme, a hire. Simulate shows cash over the next thirteen weeks without and with the scenario, the VAT to pay and when, and the cost of the hire. Nothing is written to the file.</value></data>
   <data name="Help.Faq.what-if.Keywords" xml:space="preserve"><value>what if simulator scenario delay hire vat scheme</value></data>
+  <data name="Nav.CallSheet.Keywords" xml:space="preserve"><value>call sheet phone reminder chase customer late unpaid dispute collection</value></data>
+  <data name="Help.Faq.call-sheet.Question" xml:space="preserve"><value>How do I prepare a reminder call?</value></data>
+  <data name="Help.Faq.call-sheet.Answer" xml:space="preserve"><value>In Accounting, Call sheet (or from the payment weather, Prepare the call), choose the customer. Lettra shows what they owe and since when, their payment habits, the reminders already sent and the points to raise in order: a dispute first, then doubtful invoices, the reminder stage and the €40 recovery fee for a business customer.</value></data>
+  <data name="Help.Faq.call-sheet.Keywords" xml:space="preserve"><value>call sheet phone dispute</value></data>
 </root>

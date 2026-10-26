@@ -50,6 +50,7 @@ public static class NavItems
         new("bank", "Nav.Bank", "landmark", "Nav.Group.Accounting"),
         new("reminders", "Nav.Reminders", "mail", "Nav.Group.Accounting"),
         new("payment-weather", "Nav.PaymentWeather", "cloud-sun", "Nav.Group.Accounting"),
+        new("call-sheet", "Nav.CallSheet", "phone", "Nav.Group.Accounting"),
         new("accounting", "Nav.Accounting", "book-open", "Nav.Group.Accounting"),
         new("exports/fec", "Nav.Fec", "file-spreadsheet", "Nav.Group.Accounting"),
         new("tax", "Nav.Tax", "calendar-clock", "Nav.Group.Accounting"),

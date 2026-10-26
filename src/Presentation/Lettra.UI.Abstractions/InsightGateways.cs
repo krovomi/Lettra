@@ -33,6 +33,9 @@ public interface IInsightsGateway
     /// <summary>« Pourquoi ce chiffre ? » : les pièces qui composent un chiffre de l'accueil, un mois donné s'il y a lieu.</summary>
     Task<OperationResult<FigureExplanationResponse>> ExplainFigureAsync(ExplainedFigureDto figure, DateOnly? month, CancellationToken cancellationToken);
 
+    /// <summary>La fiche à lire avant d'appeler un client en retard.</summary>
+    Task<OperationResult<CallSheetResponse>> GetCallSheetAsync(Guid customerId, CancellationToken cancellationToken);
+
     /// <summary>Le simulateur « et si ? » : un scénario essayé sur la trésorerie attendue, sans rien écrire.</summary>
     Task<OperationResult<WhatIfResponse>> SimulateWhatIfAsync(WhatIfRequest scenario, CancellationToken cancellationToken);
 }

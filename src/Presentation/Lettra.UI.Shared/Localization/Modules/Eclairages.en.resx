@@ -339,4 +339,41 @@
   <data name="WhatIf.Rule.Vat" xml:space="preserve"><value>Its VAT is declared for the period of its issue date (VAT on invoicing) and paid on the due date of the file's tax calendar. VAT on receipts and the annual CA12 are not simulated.</value></data>
   <data name="WhatIf.Rule.Hire" xml:space="preserve"><value>The hire costs gross salary plus employer contributions, paid on the last day of the month, pro rata for the first month. Adjust the contribution rate with the firm.</value></data>
   <data name="WhatIf.Rule.Sandbox" xml:space="preserve"><value>Lettra computes it without artificial intelligence, at each simulation. Nothing is written to the file.</value></data>
+  <data name="Nav.CallSheet" xml:space="preserve"><value>Call sheet</value></data>
+  <data name="CallSheet.Title" xml:space="preserve"><value>Call sheet</value></data>
+  <data name="CallSheet.Subtitle" xml:space="preserve"><value>Before calling a late customer: what they owe and since when, their habits, the reminders already sent and the points to raise, in order.</value></data>
+  <data name="CallSheet.Prepare" xml:space="preserve"><value>Prepare the call</value></data>
+  <data name="CallSheet.Customer" xml:space="preserve"><value>Customer to call</value></data>
+  <data name="CallSheet.Customer.Choose" xml:space="preserve"><value>Choose a customer</value></data>
+  <data name="CallSheet.Nobody" xml:space="preserve"><value>No customer owes anything: nobody to call.</value></data>
+  <data name="CallSheet.Empty" xml:space="preserve"><value>Choose a customer</value></data>
+  <data name="CallSheet.Empty.Text" xml:space="preserve"><value>The list shows the customers who still owe something, the latest first.</value></data>
+  <data name="CallSheet.Outstanding" xml:space="preserve"><value>Outstanding</value></data>
+  <data name="CallSheet.Overdue" xml:space="preserve"><value>Of which overdue</value></data>
+  <data name="CallSheet.Invoices" xml:space="preserve"><value>Invoices due</value></data>
+  <data name="CallSheet.Reminders" xml:space="preserve"><value>Reminders sent</value></data>
+  <data name="CallSheet.Points" xml:space="preserve"><value>Points to raise, in order</value></data>
+  <data name="CallSheet.Points.Empty" xml:space="preserve"><value>Nothing special: this customer has no overdue invoice.</value></data>
+  <data name="CallSheet.Point.Disputed" xml:space="preserve"><value>Invoice {0} ({1}) is disputed on the platform: settle the dispute before talking about payment.</value></data>
+  <data name="CallSheet.Point.LastReminder" xml:space="preserve"><value>Last reminder: {0} on {1}, for invoice {2}.</value></data>
+  <data name="CallSheet.Point.Habit" xml:space="preserve"><value>This customer usually pays {0}; {1}% of their invoices are paid on time.</value></data>
+  <data name="CallSheet.Point.LastPayment" xml:space="preserve"><value>Last payment received: {0} on {1}.</value></data>
+  <data name="CallSheet.Invoices.Title" xml:space="preserve"><value>Invoices due, latest first</value></data>
+  <data name="CallSheet.Invoices.Empty" xml:space="preserve"><value>No invoice due.</value></data>
+  <data name="CallSheet.DueOn" xml:space="preserve"><value>due on {0}</value></data>
+  <data name="CallSheet.LastReminder" xml:space="preserve"><value>{0} on {1}</value></data>
+  <data name="CallSheet.Reminders.Title" xml:space="preserve"><value>Reminders already sent</value></data>
+  <data name="CallSheet.Reminders.Empty" xml:space="preserve"><value>No reminder sent to this customer.</value></data>
+  <data name="CallSheet.Rules" xml:space="preserve"><value>How the sheet is built</value></data>
+  <data name="CallSheet.Rule.Order" xml:space="preserve"><value>Points come in the order to raise them: a disputed invoice first (you do not chase what is disputed), then doubtful invoices, the reminder stage, the recovery fee, the customer's habit and their last payment.</value></data>
+  <data name="CallSheet.Rule.Indemnity" xml:space="preserve"><value>The fixed €40 recovery fee is owed by a business customer for each invoice paid late (French Commercial Code, articles L441-10 and D441-5).</value></data>
+  <data name="CallSheet.Rule.Deterministic" xml:space="preserve"><value>Lettra builds the sheet each time it opens, without artificial intelligence, from invoices, payments, reminders and platform statuses. Nothing is written to the dossier.</value></data>
+  <data name="CallSheet.Point.Doubtful.One" xml:space="preserve"><value>One invoice is more than two months late ({1} days), {2}: the risk of non-payment is real.</value></data>
+  <data name="CallSheet.Point.Doubtful.Many" xml:space="preserve"><value>{0} invoices are more than two months late (up to {1} days), {2} in total: the risk of non-payment is real.</value></data>
+  <data name="CallSheet.Point.FinalSent.One" xml:space="preserve"><value>The final reminder has already gone out for invoice {1}: the next step is a formal notice.</value></data>
+  <data name="CallSheet.Point.FinalSent.Many" xml:space="preserve"><value>The final reminder has already gone out for {0} invoices, including {1}: the next step is a formal notice.</value></data>
+  <data name="CallSheet.Point.NeverReminded.One" xml:space="preserve"><value>No reminder yet for the overdue invoice, {1}: start with a friendly reminder.</value></data>
+  <data name="CallSheet.Point.NeverReminded.Many" xml:space="preserve"><value>No reminder yet for the {0} overdue invoices, {1} in total: start with a friendly reminder.</value></data>
+  <data name="CallSheet.Point.Indemnity.One" xml:space="preserve"><value>Business customer: the fixed €40 recovery fee is due for the late invoice.</value></data>
+  <data name="CallSheet.Point.Indemnity.Many" xml:space="preserve"><value>Business customer: the fixed €40 recovery fee per late invoice is due, {0} for {1} invoices.</value></data>
 </root>

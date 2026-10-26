@@ -339,4 +339,41 @@
   <data name="WhatIf.Rule.Vat" xml:space="preserve"><value>Sa TVA est déclarée sur la période de sa date d'émission (TVA sur les débits) et payée à l'échéance du calendrier fiscal du dossier. La TVA sur les encaissements et la CA12 ne sont pas simulées.</value></data>
   <data name="WhatIf.Rule.Hire" xml:space="preserve"><value>L'embauche coûte le salaire brut plus les charges patronales, payé le dernier jour du mois, au prorata des jours le premier mois. Le taux de charges est à ajuster avec le cabinet.</value></data>
   <data name="WhatIf.Rule.Sandbox" xml:space="preserve"><value>Le calcul est fait par Lettra, sans intelligence artificielle, à chaque simulation. Rien n'est écrit dans le dossier.</value></data>
+  <data name="Nav.CallSheet" xml:space="preserve"><value>Fiche d'appel</value></data>
+  <data name="CallSheet.Title" xml:space="preserve"><value>Fiche d'appel</value></data>
+  <data name="CallSheet.Subtitle" xml:space="preserve"><value>Avant d'appeler un client en retard : ce qu'il doit et depuis quand, ses habitudes, les relances déjà faites et les points à aborder, dans l'ordre.</value></data>
+  <data name="CallSheet.Prepare" xml:space="preserve"><value>Préparer l'appel</value></data>
+  <data name="CallSheet.Customer" xml:space="preserve"><value>Client à appeler</value></data>
+  <data name="CallSheet.Customer.Choose" xml:space="preserve"><value>Choisir un client</value></data>
+  <data name="CallSheet.Nobody" xml:space="preserve"><value>Aucun client ne doit rien : personne à appeler.</value></data>
+  <data name="CallSheet.Empty" xml:space="preserve"><value>Choisissez un client</value></data>
+  <data name="CallSheet.Empty.Text" xml:space="preserve"><value>La liste montre les clients qui doivent encore quelque chose, les plus en retard d'abord.</value></data>
+  <data name="CallSheet.Outstanding" xml:space="preserve"><value>Reste dû</value></data>
+  <data name="CallSheet.Overdue" xml:space="preserve"><value>Dont échu</value></data>
+  <data name="CallSheet.Invoices" xml:space="preserve"><value>Factures dues</value></data>
+  <data name="CallSheet.Reminders" xml:space="preserve"><value>Relances faites</value></data>
+  <data name="CallSheet.Points" xml:space="preserve"><value>Points à aborder, dans l'ordre</value></data>
+  <data name="CallSheet.Points.Empty" xml:space="preserve"><value>Rien de particulier : ce client n'a pas de facture échue.</value></data>
+  <data name="CallSheet.Point.Disputed" xml:space="preserve"><value>La facture {0} ({1}) est contestée à la plateforme : réglez d'abord le litige avant de parler de paiement.</value></data>
+  <data name="CallSheet.Point.LastReminder" xml:space="preserve"><value>Dernière relance : {0} le {1}, pour la facture {2}.</value></data>
+  <data name="CallSheet.Point.Habit" xml:space="preserve"><value>D'habitude, ce client paie {0} ; {1} % de ses factures sont réglées à l'heure.</value></data>
+  <data name="CallSheet.Point.LastPayment" xml:space="preserve"><value>Dernier paiement reçu : {0} le {1}.</value></data>
+  <data name="CallSheet.Invoices.Title" xml:space="preserve"><value>Factures dues, les plus en retard d'abord</value></data>
+  <data name="CallSheet.Invoices.Empty" xml:space="preserve"><value>Aucune facture due.</value></data>
+  <data name="CallSheet.DueOn" xml:space="preserve"><value>échéance le {0}</value></data>
+  <data name="CallSheet.LastReminder" xml:space="preserve"><value>{0} le {1}</value></data>
+  <data name="CallSheet.Reminders.Title" xml:space="preserve"><value>Relances déjà faites</value></data>
+  <data name="CallSheet.Reminders.Empty" xml:space="preserve"><value>Aucune relance faite à ce client.</value></data>
+  <data name="CallSheet.Rules" xml:space="preserve"><value>Comment la fiche est faite</value></data>
+  <data name="CallSheet.Rule.Order" xml:space="preserve"><value>Les points viennent dans l'ordre où il faut les dire : une facture contestée d'abord (on ne réclame pas ce qui est contesté), puis les factures douteuses, l'étape des relances, l'indemnité, l'habitude du client et son dernier paiement.</value></data>
+  <data name="CallSheet.Rule.Indemnity" xml:space="preserve"><value>L'indemnité forfaitaire de 40 € pour frais de recouvrement est due par un client professionnel pour chaque facture payée en retard (articles L441-10 et D441-5 du Code de commerce).</value></data>
+  <data name="CallSheet.Rule.Deterministic" xml:space="preserve"><value>Lettra calcule la fiche à chaque ouverture, sans intelligence artificielle, à partir des factures, des encaissements, des relances et des statuts de la plateforme. Rien n'est écrit dans le dossier.</value></data>
+  <data name="CallSheet.Point.Doubtful.One" xml:space="preserve"><value>Une facture a plus de deux mois de retard ({1} j), soit {2} : le risque d'impayé est réel.</value></data>
+  <data name="CallSheet.Point.Doubtful.Many" xml:space="preserve"><value>{0} factures ont plus de deux mois de retard (jusqu'à {1} j), soit {2} : le risque d'impayé est réel.</value></data>
+  <data name="CallSheet.Point.FinalSent.One" xml:space="preserve"><value>La dernière relance est déjà partie pour la facture {1} : l'étape suivante est la mise en demeure.</value></data>
+  <data name="CallSheet.Point.FinalSent.Many" xml:space="preserve"><value>La dernière relance est déjà partie pour {0} factures, dont {1} : l'étape suivante est la mise en demeure.</value></data>
+  <data name="CallSheet.Point.NeverReminded.One" xml:space="preserve"><value>Aucune relance encore pour la facture échue, soit {1} : commencez par un rappel amical.</value></data>
+  <data name="CallSheet.Point.NeverReminded.Many" xml:space="preserve"><value>Aucune relance encore pour les {0} factures échues, soit {1} : commencez par un rappel amical.</value></data>
+  <data name="CallSheet.Point.Indemnity.One" xml:space="preserve"><value>Client professionnel : l'indemnité forfaitaire de 40 € est due pour la facture en retard.</value></data>
+  <data name="CallSheet.Point.Indemnity.Many" xml:space="preserve"><value>Client professionnel : l'indemnité forfaitaire de 40 € par facture en retard est due, soit {0} pour {1} factures.</value></data>
 </root>

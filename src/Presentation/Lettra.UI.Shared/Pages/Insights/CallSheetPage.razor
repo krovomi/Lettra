@@ -1,0 +1,238 @@
+@page "/call-sheet"
+@inject IInsightsGateway Insights
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+@* La fiche à lire avant d'appeler un client en retard : ce qu'il doit et depuis quand, ses habitudes, les relances déjà
+   faites et les points à aborder dans l'ordre (litige d'abord). Le serveur calcule tout ; l'écran le met en phrases.
+   Rien n'est écrit. *@
+
+<PageTitle>@L["CallSheet.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["CallSheet.Title"]</h1>
+        <p class="lettra-muted">@L["CallSheet.Subtitle"]</p>
+    </div>
+    <div class="lt-page-actions">
+        <a class="lettra-button is-secondary" href="payment-weather" id="call-to-weather"><Icon Name="cloud-sun" Size="18" /> @L["Nav.PaymentWeather"]</a>
+    </div>
+</div>
+
+<GeneralErrors Errors="_errors" />
+
+<section class="lettra-card lt-call-pick" aria-labelledby="call-pick-label">
+    <div class="lt-filter">
+        <label for="call-customer" id="call-pick-label">@L["CallSheet.Customer"]</label>
+        <select id="call-customer" value="@(Customer?.ToString() ?? string.Empty)" @onchange="PickAsync" disabled="@(_customers is null)">
+            <option value="">@L["CallSheet.Customer.Choose"]</option>
+            @foreach (CustomerPaymentWeatherResponse customer in _customers ?? [])
+            {
+                <option value="@customer.CustomerId">@customer.CustomerName · @ExplorerText.Money(customer.OutstandingInclTax)</option>
+            }
+        </select>
+    </div>
+    @if (_customers is { Count: 0 })
+    {
+        <p class="lettra-muted" id="call-nobody">@L["CallSheet.Nobody"]</p>
+    }
+</section>
+
+@if (_loading)
+{
+    <ExplorerSkeleton Rows="5" />
+}
+else if (_sheet is { } sheet)
+{
+    <section class="lettra-card lt-call-head" id="call-sheet" aria-labelledby="call-name">
+        <div class="lt-weather-head">
+            <span class="lt-weather-icon" aria-hidden="true"><Icon Name="@WeatherText.Icon(sheet.Weather?.Weather ?? PaymentWeatherDto.Unknown)" Size="28" /></span>
+            <div>
+                <h2 id="call-name"><a href="@($"customers/{sheet.CustomerId}")">@sheet.CustomerName</a></h2>
+                <span class="lt-weather-kind">@L[$"Weather.Kind.{sheet.Weather?.Weather ?? PaymentWeatherDto.Unknown}"]</span>
+                @if (sheet.Email is { } email)
+                {
+                    <a class="lettra-muted lt-call-email" href="@($"mailto:{email}")" id="call-email">@email</a>
+                }
+            </div>
+        </div>
+        <div class="lt-banking-stats" id="call-stats">
+            <div class="lt-banking-stat is-amount"><span>@L["CallSheet.Outstanding"]</span><strong id="call-outstanding">@ExplorerText.Money(sheet.OutstandingInclTax)</strong></div>
+            <div class="lt-banking-stat is-pending"><span>@L["CallSheet.Overdue"]</span><strong id="call-overdue">@ExplorerText.Money(sheet.OverdueInclTax)</strong></div>
+            <div class="lt-banking-stat"><span>@L["CallSheet.Invoices"]</span><strong id="call-invoice-count">@sheet.Invoices.Count</strong></div>
+            <div class="lt-banking-stat"><span>@L["CallSheet.Reminders"]</span><strong id="call-reminder-count">@sheet.Reminders.Count</strong></div>
+        </div>
+    </section>
+
+    <section class="lettra-card" aria-labelledby="call-points-title">
+        <h2 id="call-points-title">@L["CallSheet.Points"]</h2>
+        @if (sheet.Points.Count == 0)
+        {
+            <p class="lettra-muted" id="call-points-empty">@L["CallSheet.Points.Empty"]</p>
+        }
+        else
+        {
+            <ol class="lt-call-points" id="call-points">
+                @foreach (CallPointResponse point in sheet.Points)
+                {
+                    <li class="@($"is-{point.Kind.ToString().ToLowerInvariant()}")"><Icon Name="@IconOf(point.Kind)" Size="18" /> <span>@Sentence(point)</span></li>
+                }
+            </ol>
+        }
+    </section>
+
+    <section class="lettra-card" aria-labelledby="call-invoices-title">
+        <h2 id="call-invoices-title">@L["CallSheet.Invoices.Title"]</h2>
+        @if (sheet.Invoices.Count == 0)
+        {
+            <p class="lettra-muted" id="call-invoices-empty">@L["CallSheet.Invoices.Empty"]</p>
+        }
+        else
+        {
+            <ul class="lt-asof-rows" id="call-invoices">
+                @foreach (CallSheetInvoiceResponse invoice in sheet.Invoices.Skip((_page - 1) * PageSize).Take(PageSize))
+                {
+                    <li @key="invoice.InvoiceId">
+                        <span class="lt-asof-main">
+                            <a href="@($"invoices/{invoice.InvoiceId}")">@invoice.Number</a>
+                            <small class="lettra-muted">@Due(invoice)@LastReminder(invoice)</small>
+                        </span>
+                        <span class="lt-asof-amount">
+                            @if (invoice.PlatformStatus is PlatformStatusDto.Disputed or PlatformStatusDto.Refused)
+                            {
+                                <span class="lettra-status is-refused">@L[$"Platform.Status.{invoice.PlatformStatus}"]</span>
+                            }
+                            else if (invoice.DaysLate > PaymentWeatherResponse.StormOverdueDays)
+                            {
+                                <span class="lettra-status is-refused">@L["Weather.Expected.Doubtful"]</span>
+                            }
+                        </span>
+                        <span class="lt-asof-amount"><strong>@ExplorerText.Money(invoice.OutstandingInclTax)</strong></span>
+                    </li>
+                }
+            </ul>
+            <ListPager Id="call-pager" Page="_page" Count="sheet.Invoices.Count" Size="PageSize" OnPage="p => _page = p" />
+        }
+    </section>
+
+    <section class="lettra-card" aria-labelledby="call-reminders-title">
+        <h2 id="call-reminders-title">@L["CallSheet.Reminders.Title"]</h2>
+        @if (sheet.Reminders.Count == 0)
+        {
+            <p class="lettra-muted" id="call-reminders-empty">@L["CallSheet.Reminders.Empty"]</p>
+        }
+        else
+        {
+            <ul class="lt-asof-rows" id="call-reminders">
+                @foreach (CallSheetReminderResponse reminder in sheet.Reminders)
+                {
+                    <li>
+                        <span class="lt-asof-main">
+                            <strong>@L[$"ReminderLevel.{reminder.Level}"]</strong>
+                            <small class="lettra-muted">@reminder.InvoiceNumber · @L[$"ReminderChannel.{reminder.Channel}"]</small>
+                        </span>
+                        <span class="lt-asof-amount">@reminder.On.ToString("d", Culture)</span>
+                    </li>
+                }
+            </ul>
+        }
+        <p><a class="lettra-button is-secondary" href="reminders" id="call-to-reminders"><Icon Name="mail" Size="18" /> @L["Nav.Reminders"]</a></p>
+    </section>
+}
+else if (Customer is null && _customers is { Count: > 0 })
+{
+    <EmptyState Id="call-empty" IconName="phone" Title="@L["CallSheet.Empty"]" Text="@L["CallSheet.Empty.Text"]" />
+}
+
+<Collapsible Id="call-rules" Title="@L["CallSheet.Rules"]" InitiallyOpen="false">
+    <ul>
+        <li>@L["CallSheet.Rule.Order"]</li>
+        <li>@L["CallSheet.Rule.Indemnity"]</li>
+        <li>@L["CallSheet.Rule.Deterministic"]</li>
+    </ul>
+</Collapsible>
+
+@code {
+    private const int PageSize = 20;
+
+    private IReadOnlyList<CustomerPaymentWeatherResponse>? _customers;
+    private CallSheetResponse? _sheet;
+    private bool _loading;
+    private int _page = 1;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+
+    [SupplyParameterFromQuery(Name = "customer")] public string? CustomerText { get; set; }
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private Guid? Customer => Guid.TryParse(CustomerText, out Guid id) ? id : null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Le choix du client : ceux qui doivent encore quelque chose, les plus en retard d'abord.
+        OperationResult<PaymentWeatherResponse> weather = await Insights.GetPaymentWeatherAsync(CancellationToken.None);
+        _customers = [.. (weather.Value?.Customers ?? [])
+            .Where(c => c.OutstandingInclTax > 0m)
+            .OrderByDescending(c => c.MaxDaysOverdue)
+            .ThenBy(c => c.CustomerName, StringComparer.CurrentCultureIgnoreCase)];
+        _errors = weather.Errors;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        (_sheet, _page) = (null, 1);
+        if (Customer is not { } customer)
+        {
+            return;
+        }
+
+        _loading = true;
+        OperationResult<CallSheetResponse> result = await Insights.GetCallSheetAsync(customer, CancellationToken.None);
+        (_sheet, _errors, _loading) = (result.Value, result.Errors, false);
+    }
+
+    private void PickAsync(ChangeEventArgs args) =>
+        Navigation.NavigateTo(Guid.TryParse(args.Value?.ToString(), out Guid id) ? $"call-sheet?customer={id}" : "call-sheet");
+
+    private static string IconOf(CallPointKindDto kind) => kind switch
+    {
+        CallPointKindDto.Disputed => "shield-alert",
+        CallPointKindDto.Doubtful => "triangle-alert",
+        CallPointKindDto.FinalSent or CallPointKindDto.LastReminder or CallPointKindDto.NeverReminded => "mail",
+        CallPointKindDto.Indemnity => "scale",
+        CallPointKindDto.Habit => "cloud-sun",
+        _ => "hand-coins",
+    };
+
+    /// <summary>Le point à aborder, en une phrase avec ses nombres.</summary>
+    private string Sentence(CallPointResponse point) => point.Kind switch
+    {
+        CallPointKindDto.Disputed => Format("CallSheet.Point.Disputed", point.Number, Money(point.Amount)),
+        CallPointKindDto.Doubtful => Format(Counted("CallSheet.Point.Doubtful", point), point.Count, point.Days, Money(point.Amount)),
+        CallPointKindDto.FinalSent => Format(Counted("CallSheet.Point.FinalSent", point), point.Count, point.Number),
+        CallPointKindDto.NeverReminded => Format(Counted("CallSheet.Point.NeverReminded", point), point.Count, Money(point.Amount)),
+        CallPointKindDto.LastReminder => Format("CallSheet.Point.LastReminder", L[$"ReminderLevel.{point.Level}"].Value, point.Date?.ToString("d", Culture), point.Number),
+        CallPointKindDto.Indemnity => Format(Counted("CallSheet.Point.Indemnity", point), Money(point.Amount), point.Count),
+        CallPointKindDto.Habit => Format("CallSheet.Point.Habit", Days(point.Days ?? 0), point.Percent),
+        _ => Format("CallSheet.Point.LastPayment", Money(point.Amount), point.Date?.ToString("d", Culture)),
+    };
+
+    /// <summary>La phrase au singulier pour une seule facture, au pluriel au-delà.</summary>
+    private static string Counted(string key, CallPointResponse point) => key + (point.Count == 1 ? ".One" : ".Many");
+
+    private string Format(string key, params object?[] values) => string.Format(Culture, L[key], values);
+
+    private static string Money(decimal? amount) => ExplorerText.Money(amount ?? 0m);
+
+    private string Days(int days) => WeatherText.Days(L, days);
+
+    private string Due(CallSheetInvoiceResponse invoice) => invoice switch
+    {
+        { DaysLate: > 0, DueDate: { } due } => string.Format(Culture, L["Why.Line.Late"], due.ToString("d", Culture), invoice.DaysLate),
+        { DueDate: { } due } => string.Format(Culture, L["CallSheet.DueOn"], due.ToString("d", Culture)),
+        _ => string.Empty,
+    };
+
+    private string LastReminder(CallSheetInvoiceResponse invoice) => invoice is { LastReminderLevel: { } level, LastReminderOn: { } on }
+        ? " · " + string.Format(Culture, L["CallSheet.LastReminder"], L[$"ReminderLevel.{level}"].Value, on.ToString("d", Culture))
+        : string.Empty;
+}

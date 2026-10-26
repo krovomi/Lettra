@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.Api.Tests;
 
-/// <summary>ADR-0005 : la météo des paiements, le contrôle fiscal d'entraînement, la preuve d'authenticité, le dossier d'un instant passé, « Pourquoi ce chiffre ? » et le simulateur « et si ? » se lisent de la même façon par HTTP (WASM) et en direct (MAUI hors ligne).</summary>
+/// <summary>ADR-0005 : la météo des paiements, le contrôle fiscal d'entraînement, la preuve d'authenticité, le dossier d'un instant passé, « Pourquoi ce chiffre ? », le simulateur « et si ? » et la fiche d'appel se lisent de la même façon par HTTP (WASM) et en direct (MAUI hors ligne).</summary>
 public sealed class InsightsGatewayParityTests(LettraApiFactory factory) : IClassFixture<LettraApiFactory>, IDisposable
 {
     private readonly GatewayHarness _harness = new(factory);
@@ -77,6 +77,18 @@ public sealed class InsightsGatewayParityTests(LettraApiFactory factory) : IClas
         past.Value!.EntriesReplayed.Should().Be(0);
         past.Value.ChainIntact.Should().BeTrue();
         past.Value.LegalDate.Should().Be(new DateOnly(2000, 1, 1));
+    }
+
+    [Theory]
+    [MemberData(nameof(Transports))]
+    public async Task Fiche_d_appel_meme_refus_par_les_deux_transports_pour_un_client_inconnu(string transport)
+    {
+        await using ServiceProvider services = _harness.Gateway(transport);
+        IInsightsGateway insights = services.GetRequiredService<IInsightsGateway>();
+
+        OperationResult<CallSheetResponse> unknown = await insights.GetCallSheetAsync(Guid.CreateVersion7(), default);
+
+        unknown.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Customer.NotFound);
     }
 
     [Theory]

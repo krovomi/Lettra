@@ -82,6 +82,13 @@ internal static class InsightEndpoints
             .Produces<FigureExplanationResponse>()
             .ProducesProblem(StatusCodes.Status400BadRequest);
 
+        insights.MapGet("/call-sheet/{customerId:guid}", (Guid customerId, ITenantContext tenant, IQueryDispatcher queries, CancellationToken ct) =>
+                QueryAsync(queries, new GetCallSheetQuery(tenant.Current.DossierId, customerId), ct))
+            .RequirePermission(Permission.DossierLire)
+            .WithName("GetCallSheet")
+            .Produces<CallSheetResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         // Une lecture : le scénario voyage dans le corps de la requête, rien n'est écrit dans le dossier.
         insights.MapPost("/what-if", (WhatIfRequest scenario, ITenantContext tenant, IQueryDispatcher queries, CancellationToken ct) =>
                 QueryAsync(queries, new SimulateWhatIfQuery(tenant.Current.DossierId, scenario), ct))

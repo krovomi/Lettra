@@ -135,6 +135,27 @@ internal sealed class DossierAsOfTool(IQueryDispatcher queries) : InsightTool(qu
     }
 }
 
+internal sealed class CallSheetTool(IQueryDispatcher queries) : InsightTool(queries)
+{
+    public override string Name => "fiche_d_appel";
+
+    public override string Description =>
+        "Fiche à lire avant d'appeler un client en retard : reste dû, factures dues les plus en retard d'abord, relances faites et " +
+        "points à aborder dans l'ordre (litige, factures douteuses, étape des relances, indemnité de 40 €, habitude, dernier " +
+        "paiement). L'identifiant du client (CustomerId) vient de meteo_des_paiements.";
+
+    public override JsonElement InputSchema { get; } = Schema(
+        """{"type":"object","properties":{"client":{"type":"string","description":"Identifiant du client (CustomerId)"}},"required":["client"],"additionalProperties":false}""");
+
+    public override Task<AiToolResult> InvokeAsync(JsonElement input, AiToolContext context, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        return Guid.TryParse(Text(input, "client"), out Guid customer)
+            ? AskAsync(new GetCallSheetQuery(context.Dossier, customer), cancellationToken)
+            : Task.FromResult(AiToolResult.Error("Identifiant de client attendu (CustomerId de meteo_des_paiements)."));
+    }
+}
+
 internal sealed class WhatIfTool(IQueryDispatcher queries) : InsightTool(queries)
 {
     private static readonly JsonSerializerOptions Read = new(JsonSerializerDefaults.Web) { Converters = { new JsonStringEnumConverter() } };

@@ -53,6 +53,7 @@ public static class DependencyInjection
         services.AddScoped<IQueryHandler<ListInvoiceProofKeysQuery, Result<IReadOnlyList<InvoiceProofKeyResponse>>>, ListInvoiceProofKeysHandler>();
         services.AddScoped<IQueryHandler<GetDossierAsOfQuery, Result<DossierAsOfResponse>>, GetDossierAsOfHandler>();
         services.AddScoped<IQueryHandler<ExplainFigureQuery, Result<FigureExplanationResponse>>, ExplainFigureHandler>();
+        services.AddScoped<IQueryHandler<GetCallSheetQuery, Result<CallSheetResponse>>, GetCallSheetHandler>();
         services.AddScoped<IQueryHandler<SimulateWhatIfQuery, Result<WhatIfResponse>>, SimulateWhatIfHandler>();
 
         // Les mêmes éclairages pour l'assistant IA du poste (MCP), en lecture seule et avec les droits de l'utilisateur.
@@ -61,6 +62,7 @@ public static class DependencyInjection
         services.AddScoped<IAiTool, MonthRevenueTool>();
         services.AddScoped<IAiTool, DossierAsOfTool>();
         services.AddScoped<IAiTool, WhatIfTool>();
+        services.AddScoped<IAiTool, CallSheetTool>();
 
         // Consultation de la comptabilité : journal des ventes, balance et grand livre, lus comme le FEC.
         services.AddScoped<IQueryHandler<GetSalesJournalQuery, Result<SalesJournalResponse>>, GetSalesJournalHandler>();

@@ -105,7 +105,7 @@
                 {
                     <li @key="customer.CustomerId" class="@($"lt-weather-card is-{customer.Weather.ToString().ToLowerInvariant()}")" id="@($"weather-{customer.CustomerId}")">
                         <div class="lt-weather-head">
-                            <span class="lt-weather-icon" aria-hidden="true"><Icon Name="@IconOf(customer.Weather)" Size="28" /></span>
+                            <span class="lt-weather-icon" aria-hidden="true"><Icon Name="@WeatherText.Icon(customer.Weather)" Size="28" /></span>
                             <div>
                                 <h3><a href="@($"customers/{customer.CustomerId}")">@customer.CustomerName</a></h3>
                                 <span class="lt-weather-kind">@L[$"Weather.Kind.{customer.Weather}"]</span>
@@ -133,6 +133,12 @@
                                 </dd>
                             </div>
                         </dl>
+                        @if (customer.OutstandingInclTax > 0m)
+                        {
+                            <a class="lettra-button is-ghost lt-weather-call" href="@($"call-sheet?customer={customer.CustomerId}")" id="@($"weather-call-{customer.CustomerId}")">
+                                <Icon Name="phone" Size="16" /> @L["CallSheet.Prepare"]
+                            </a>
+                        }
                         @if (customer.Expected.Count > 0)
                         {
                             <details class="lt-weather-expected">
@@ -168,7 +174,7 @@
     <ul class="lt-weather-rules">
         @foreach (PaymentWeatherDto weather in Weathers)
         {
-            <li><Icon Name="@IconOf(weather)" Size="18" /> <strong>@L[$"Weather.Kind.{weather}"]</strong> : @L[$"Weather.Rule.{weather}"]</li>
+            <li><Icon Name="@WeatherText.Icon(weather)" Size="18" /> <strong>@L[$"Weather.Kind.{weather}"]</strong> : @L[$"Weather.Rule.{weather}"]</li>
         }
     </ul>
     <p class="lettra-hint">@L["Weather.Rules.Hint"]</p>
@@ -259,21 +265,7 @@
         _ => 0,
     };
 
-    private static string IconOf(PaymentWeatherDto weather) => weather switch
-    {
-        PaymentWeatherDto.Sunny => "sun",
-        PaymentWeatherDto.Cloudy => "cloud-sun",
-        PaymentWeatherDto.Rainy => "cloud-rain",
-        PaymentWeatherDto.Stormy => "cloud-lightning",
-        _ => "cloud",
-    };
-
-    private string Days(int days) => days switch
-    {
-        < 0 => string.Format(Culture, L["Weather.Days.Early"], -days),
-        0 => L["Weather.Days.OnTime"],
-        _ => string.Format(Culture, L["Weather.Days.Late"], days),
-    };
+    private string Days(int days) => WeatherText.Days(L, days);
 
     /// <summary>La phrase qui explique la météo, avec la règle qui l'a décidée.</summary>
     private string Why(CustomerPaymentWeatherResponse customer) => customer.Weather switch
