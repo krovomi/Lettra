@@ -27,6 +27,8 @@ if (mode == DeploymentMode.IsolatedDesktop)
 builder.WebHost.ConfigureKestrel(o => o.AddServerHeader = false);
 
 builder.Services.AddLettra(builder.Configuration);
+// Démonstration : les entreprises fictives du jeu répondent dans l'annuaire SIRENE (rien hors Lettra:Demo:Seed=true ni en Production).
+builder.Services.AddDemoCompanyDirectory(builder.Configuration, builder.Environment.EnvironmentName);
 builder.Services.AddLettraApiAuthentication(builder.Configuration);
 builder.Services.AddLettraRateLimiting(builder.Configuration);
 builder.Services.AddLettraPresence();
