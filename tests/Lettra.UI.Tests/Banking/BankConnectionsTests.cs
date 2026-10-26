@@ -187,13 +187,25 @@ public sealed class BankConnectionsTests : BunitContext
     [Fact]
     public void Un_refus_au_retour_s_affiche_avec_le_chemin_du_rapprochement()
     {
-        _bank.NextError = ErrorCodes.BankConnection.ConsentRefused;
+        _bank.Refuse = true;
         Navigation.NavigateTo($"bank/connected?connection={Guid.CreateVersion7()}&code=refuse");
 
         IRenderedComponent<BankConnectedPage> page = Render<BankConnectedPage>();
 
         page.Find("#bank-callback-error").TextContent.Should().Contain("Le compte n'a pas été relié").And.Contain("L'accord a été refusé");
         page.Find("#bank-callback-back").GetAttribute("href").Should().Be("bank");
+        this.Toasts().Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Une_erreur_au_retour_s_affiche_avec_son_motif()
+    {
+        _bank.NextError = ErrorCodes.BankConnection.BankUnreachable;
+        Navigation.NavigateTo($"bank/connected?connection={Guid.CreateVersion7()}&code=accorde");
+
+        IRenderedComponent<BankConnectedPage> page = Render<BankConnectedPage>();
+
+        page.Find("#bank-callback-error").TextContent.Should().Contain("Le compte n'a pas été relié").And.Contain("La banque n'a pas répondu");
     }
 
     [Fact]

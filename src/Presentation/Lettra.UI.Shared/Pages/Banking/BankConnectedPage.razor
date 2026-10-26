@@ -44,6 +44,12 @@
 
         OperationResult<BankConnectionCompletedResponse> result = await Connections.CompleteAsync(
             id, new CompleteBankConnectionRequest { Code = Code }, CancellationToken.None);
+        if (result is { IsSuccess: true, Value: { Granted: false } })
+        {
+            _error = ErrorCodes.BankConnection.ConsentRefused;
+            return;
+        }
+
         if (result is { IsSuccess: true, Value: { } completed })
         {
             Toasts.Show(ToastKind.Success, string.Format(
