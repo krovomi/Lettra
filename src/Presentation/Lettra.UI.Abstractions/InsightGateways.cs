@@ -26,4 +26,7 @@ public interface IInsightsGateway
 
     /// <summary>Le registre des clés publiques du dossier, au format PEM.</summary>
     Task<OperationResult<IReadOnlyList<InvoiceProofKeyResponse>>> ListInvoiceProofKeysAsync(CancellationToken cancellationToken);
+
+    /// <summary>Le dossier tel qu'il était à un instant passé, rejoué depuis le journal inaltérable.</summary>
+    Task<OperationResult<DossierAsOfResponse>> GetDossierAsOfAsync(DateTimeOffset at, CancellationToken cancellationToken);
 }

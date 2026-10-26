@@ -159,6 +159,9 @@ public sealed class IntegrityVerification
 
     public long EntriesChecked { get; private set; }
 
+    /// <summary>Les constats relevés jusqu'ici : un contrôle arrêté à un instant passé les lit sans terminer.</summary>
+    public IReadOnlyList<IntegrityFinding> Findings => _findings;
+
     /// <summary>L'entrée suivante, dans l'ordre des numéros d'entrée.</summary>
     public void Check(JournalEntry entry)
     {

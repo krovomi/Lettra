@@ -173,4 +173,70 @@
   <data name="Proof.Key.Current" xml:space="preserve"><value>en vigueur depuis le {0}</value></data>
   <data name="Proof.Key.Retired" xml:space="preserve"><value>du {0} au {1} (vérification seule)</value></data>
   <data name="Proof.Key.Download" xml:space="preserve"><value>Télécharger la clé</value></data>
+  <data name="Nav.AsOf" xml:space="preserve"><value>Remonter le temps</value></data>
+  <data name="AsOf.Title" xml:space="preserve"><value>Remonter le temps</value></data>
+  <data name="AsOf.Subtitle" xml:space="preserve"><value>Le dossier tel qu'il était à l'instant choisi, rejoué depuis le journal inaltérable : chiffre d'affaires, TVA, factures dues et soldes des clients. Rien n'est modifié.</value></data>
+  <data name="AsOf.When" xml:space="preserve"><value>À quel instant ?</value></data>
+  <data name="AsOf.Date" xml:space="preserve"><value>Jour</value></data>
+  <data name="AsOf.Time" xml:space="preserve"><value>Heure</value></data>
+  <data name="AsOf.Time.Hint" xml:space="preserve"><value>Heure de votre poste, par exemple 18:00 ou 18h.</value></data>
+  <data name="AsOf.Time.Invalid" xml:space="preserve"><value>Heure illisible : écrivez-la comme 18:00.</value></data>
+  <data name="AsOf.Go" xml:space="preserve"><value>Voir le dossier à cet instant</value></data>
+  <data name="AsOf.Presets" xml:space="preserve"><value>Instants proposés</value></data>
+  <data name="AsOf.Preset.YearEnd" xml:space="preserve"><value>31 décembre dernier</value></data>
+  <data name="AsOf.Preset.MonthEnd" xml:space="preserve"><value>Fin du mois dernier</value></data>
+  <data name="AsOf.Preset.WeekAgo" xml:space="preserve"><value>Il y a une semaine</value></data>
+  <data name="AsOf.Working" xml:space="preserve"><value>Rejeu du journal…</value></data>
+  <data name="AsOf.Moment" xml:space="preserve"><value>Le dossier le {0} à {1}</value></data>
+  <data name="AsOf.Empty" xml:space="preserve"><value>Le dossier était encore vide à cet instant.</value></data>
+  <data name="AsOf.Empty.Before" xml:space="preserve"><value>Le dossier était encore vide à cet instant : sa première pièce date du {0}.</value></data>
+  <data name="AsOf.Chain.Intact" xml:space="preserve"><value>Chaîne vérifiée jusqu'à cet instant : {0} entrées rejouées, aucune n'a été modifiée.</value></data>
+  <data name="AsOf.Chain.Broken" xml:space="preserve"><value>Attention : la chaîne présente une anomalie avant cet instant ({0} entrées rejouées). Le centre d'alertes en dit plus.</value></data>
+  <data name="AsOf.Since" xml:space="preserve"><value>Depuis, {0} événements ont été écrits au journal.</value></data>
+  <data name="AsOf.Stat.Revenue" xml:space="preserve"><value>Chiffre d'affaires HT {0}</value></data>
+  <data name="AsOf.Stat.Vat" xml:space="preserve"><value>TVA facturée</value></data>
+  <data name="AsOf.Stat.Receivables" xml:space="preserve"><value>Dû par les clients</value></data>
+  <data name="AsOf.Now" xml:space="preserve"><value>aujourd'hui : {0}</value></data>
+  <data name="AsOf.Stat.Documents" xml:space="preserve"><value>Factures et acomptes</value></data>
+  <data name="AsOf.Counts" xml:space="preserve"><value>{0} avoirs · {1} devis · {2} encaissements</value></data>
+  <data name="AsOf.Months" xml:space="preserve"><value>Mois par mois, {0}</value></data>
+  <data name="AsOf.Months.Hint" xml:space="preserve"><value>Hors taxes, avoirs déduits, à la date d'émission des pièces, comme les clôtures.</value></data>
+  <data name="AsOf.Month.Vat" xml:space="preserve"><value>TVA {0}</value></data>
+  <data name="AsOf.Documents" xml:space="preserve"><value>Factures dues à cet instant</value></data>
+  <data name="AsOf.Documents.Empty" xml:space="preserve"><value>Aucune facture n'était due à cet instant.</value></data>
+  <data name="AsOf.Documents.Search" xml:space="preserve"><value>Rechercher un numéro ou un client</value></data>
+  <data name="AsOf.Documents.Count" xml:space="preserve"><value>{0} sur {1}</value></data>
+  <data name="AsOf.DownPayment" xml:space="preserve"><value>acompte</value></data>
+  <data name="AsOf.Then" xml:space="preserve"><value>alors</value></data>
+  <data name="AsOf.Today" xml:space="preserve"><value>aujourd'hui</value></data>
+  <data name="AsOf.Settled" xml:space="preserve"><value>soldée</value></data>
+  <data name="AsOf.Customers" xml:space="preserve"><value>Soldes des clients</value></data>
+  <data name="AsOf.Customers.Empty" xml:space="preserve"><value>Aucun client n'avait de solde à cet instant.</value></data>
+  <data name="AsOf.Customers.Search" xml:space="preserve"><value>Rechercher un client</value></data>
+  <data name="AsOf.Customer.Detail" xml:space="preserve"><value>facturé {0} · avoirs {1} · encaissé {2}</value></data>
+  <data name="AsOf.Events" xml:space="preserve"><value>Derniers événements avant cet instant</value></data>
+  <data name="AsOf.Events.Empty" xml:space="preserve"><value>Aucun événement.</value></data>
+  <data name="AsOf.Closing" xml:space="preserve"><value>Dernière clôture signée : {0}, période arrêtée au {1}, cumul {2}.</value></data>
+  <data name="AsOf.Sort.Date" xml:space="preserve"><value>Date d'émission</value></data>
+  <data name="AsOf.Sort.Due" xml:space="preserve"><value>Reste dû</value></data>
+  <data name="AsOf.Sort.Balance" xml:space="preserve"><value>Solde</value></data>
+  <data name="AsOf.Sort.Change" xml:space="preserve"><value>Évolution depuis</value></data>
+  <data name="AsOf.Rules" xml:space="preserve"><value>Comment ces chiffres sont obtenus</value></data>
+  <data name="AsOf.Rule.Journal" xml:space="preserve"><value>Le journal inaltérable garde chaque validation, avoir, encaissement et clôture, chaîné au précédent. Lettra le rejoue jusqu'à l'instant choisi et vérifie la chaîne en passant.</value></data>
+  <data name="AsOf.Rule.Revenue" xml:space="preserve"><value>Le chiffre d'affaires est celui de l'année de l'instant : factures et acomptes moins les avoirs, à leur date d'émission.</value></data>
+  <data name="AsOf.Rule.Due" xml:space="preserve"><value>Le reste dû d'une facture est son total, moins les avoirs et les encaissements enregistrés à cet instant. Un encaissement contre-passé plus tard compte encore.</value></data>
+  <data name="AsOf.Rule.Today" xml:space="preserve"><value>Les montants « aujourd'hui » viennent du dossier actuel, pour voir ce qui a changé depuis. Les noms des clients sont ceux d'aujourd'hui.</value></data>
+  <data name="AsOf.Event.QuoteValidated" xml:space="preserve"><value>Devis validé</value></data>
+  <data name="AsOf.Event.InvoiceValidated" xml:space="preserve"><value>Facture validée</value></data>
+  <data name="AsOf.Event.InvoiceIssued" xml:space="preserve"><value>Facture émise</value></data>
+  <data name="AsOf.Event.CreditNoteValidated" xml:space="preserve"><value>Avoir validé</value></data>
+  <data name="AsOf.Event.CreditNoteIssued" xml:space="preserve"><value>Avoir émis</value></data>
+  <data name="AsOf.Event.DocumentCancelled" xml:space="preserve"><value>Pièce annulée</value></data>
+  <data name="AsOf.Event.PlatformTransmitted" xml:space="preserve"><value>Dépôt à la plateforme</value></data>
+  <data name="AsOf.Event.PlatformStatusReceived" xml:space="preserve"><value>Statut de la plateforme</value></data>
+  <data name="AsOf.Event.PlatformPaymentReported" xml:space="preserve"><value>Encaissement déclaré à la plateforme</value></data>
+  <data name="AsOf.Event.PaymentRecorded" xml:space="preserve"><value>Encaissement enregistré</value></data>
+  <data name="AsOf.Event.PaymentReversed" xml:space="preserve"><value>Encaissement contre-passé</value></data>
+  <data name="AsOf.Event.PeriodClosed" xml:space="preserve"><value>Clôture signée</value></data>
+  <data name="AsOf.Event.KeyRotated" xml:space="preserve"><value>Nouvelle clé du dossier</value></data>
 </root>

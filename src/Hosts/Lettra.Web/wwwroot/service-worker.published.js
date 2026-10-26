@@ -14,7 +14,7 @@ const offlineAssetsInclude = [ /\.dll$/, /\.pdb$/, /\.wasm/, /\.html/, /\.js$/, 
 const offlineAssetsExclude = [ /^service-worker\.js$/ ];
 
 // Chemins servis par le serveur : jamais interceptés, jamais mis en cache.
-const networkOnlyPrefixes = [ '/api/', '/bff/', '/health' ];
+const networkOnlyPrefixes = [ '/api/', '/bff/', '/health', '/espace-client/', '/paiement-simule/' ];
 
 const base = "/";
 const baseUrl = new URL(base, self.origin);

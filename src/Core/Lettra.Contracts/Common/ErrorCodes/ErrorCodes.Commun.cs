@@ -27,6 +27,7 @@ public static partial class ErrorCodes
 
     public static class Api
     {
+        public const string BadRequest = "Api.BadRequest";
         public const string IdempotencyKeyReused = "Api.IdempotencyKeyReused";
         public const string TooManyRequests = "Api.TooManyRequests";
         public const string Unexpected = "Api.Unexpected";

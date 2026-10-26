@@ -213,4 +213,5 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(VerifyInvoiceProofRequest))]
 [JsonSerializable(typeof(InvoiceProofCheckResponse))]
 [JsonSerializable(typeof(IReadOnlyList<InvoiceProofKeyResponse>))]
+[JsonSerializable(typeof(DossierAsOfResponse))]
 public sealed partial class ContractsJsonContext : JsonSerializerContext;

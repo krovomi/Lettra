@@ -1,0 +1,27 @@
+@inject IStringLocalizer<SharedResource> L
+@* Pages précédente et suivante d'une liste chargée en entier et paginée à l'écran. Rien ne s'affiche tant que la liste
+   tient sur une page. *@
+
+@if (Count > Size)
+{
+    <nav class="lt-pager" aria-label="@L["Accounting.Pages"]" id="@Id">
+        <button type="button" class="lettra-button is-secondary" disabled="@(Page <= 1)" @onclick="() => OnPage.InvokeAsync(Page - 1)">@L["Accounting.Previous"]</button>
+        <span>@string.Format(CultureInfo.CurrentCulture, L["Accounting.PageOf"], Page, PageCount)</span>
+        <button type="button" class="lettra-button is-secondary" disabled="@(Page >= PageCount)" @onclick="() => OnPage.InvokeAsync(Page + 1)">@L["Accounting.Next"]</button>
+    </nav>
+}
+
+@code {
+    [Parameter, EditorRequired] public int Page { get; set; }
+
+    /// <summary>Le nombre d'éléments de la liste, filtres appliqués.</summary>
+    [Parameter, EditorRequired] public int Count { get; set; }
+
+    [Parameter, EditorRequired] public int Size { get; set; }
+
+    [Parameter] public EventCallback<int> OnPage { get; set; }
+
+    [Parameter] public string? Id { get; set; }
+
+    private int PageCount => Math.Max(1, (int)Math.Ceiling(Count / (double)Size));
+}

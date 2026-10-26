@@ -159,14 +159,7 @@
                     </li>
                 }
             </ul>
-            @if (Filtered.Count > PageSize)
-            {
-                <nav class="lt-pager" aria-label="@L["Accounting.Pages"]" id="weather-pager">
-                    <button type="button" class="lettra-button is-secondary" disabled="@(_page <= 1)" @onclick="() => _page--">@L["Accounting.Previous"]</button>
-                    <span>@string.Format(Culture, L["Accounting.PageOf"], _page, PageCount)</span>
-                    <button type="button" class="lettra-button is-secondary" disabled="@(_page >= PageCount)" @onclick="() => _page++">@L["Accounting.Next"]</button>
-                </nav>
-            }
+            <ListPager Id="weather-pager" Page="_page" Count="Filtered.Count" Size="PageSize" OnPage="p => _page = p" />
         }
     }
 </section>
@@ -229,8 +222,6 @@
     }
 
     private int ActiveFilters => (ListSearch.Normalize(_search) is null ? 0 : 1) + (_filter is null ? 0 : 1);
-
-    private int PageCount => Math.Max(1, (int)Math.Ceiling(Filtered.Count / (double)PageSize));
 
     /// <summary>Encaissements attendus d'ici quatre semaines, à compter d'aujourd'hui.</summary>
     private decimal FourWeeks => _weather is null

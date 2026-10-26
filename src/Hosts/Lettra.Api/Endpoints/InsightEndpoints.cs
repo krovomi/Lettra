@@ -15,8 +15,9 @@ namespace Lettra.Api.Endpoints;
 /// <summary>
 /// Éclairages du dossier (module Exports) : des lectures calculées en C# déterministe sur les pièces et les encaissements,
 /// sans rien écrire : la météo des paiements (un bulletin par client et la prévision des encaissements), le contrôle
-/// fiscal d'entraînement (les tests d'un vérificateur sur le FEC du dossier ou sur celui d'un autre logiciel) et la
-/// preuve d'authenticité des factures (signée par la clé du dossier, vérifiable hors ligne).
+/// fiscal d'entraînement (les tests d'un vérificateur sur le FEC du dossier ou sur celui d'un autre logiciel), la
+/// preuve d'authenticité des factures (signée par la clé du dossier, vérifiable hors ligne) et le dossier tel qu'il
+/// était à un instant passé (rejoué depuis le journal inaltérable).
 /// </summary>
 internal static class InsightEndpoints
 {
@@ -65,6 +66,12 @@ internal static class InsightEndpoints
             .RequirePermission(Permission.DossierLire)
             .WithName("ListInvoiceProofKeys")
             .Produces<IReadOnlyList<InvoiceProofKeyResponse>>();
+
+        insights.MapGet("/as-of", (DateTimeOffset at, ITenantContext tenant, IQueryDispatcher queries, CancellationToken ct) =>
+                QueryAsync(queries, new GetDossierAsOfQuery(tenant.Current.DossierId, at), ct))
+            .RequirePermission(Permission.DossierLire)
+            .WithName("GetDossierAsOf")
+            .Produces<DossierAsOfResponse>();
 
         return insights;
     }

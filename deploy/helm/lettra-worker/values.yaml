@@ -9,6 +9,8 @@ environment: development
 settings:
   Lettra__DeploymentMode: HostedSaaS
   Lettra__Observability__ServiceName: lettra-worker
+  # Banque connectée : agrégateur simulé dans la démo, aucun agrégateur réel branché ici.
+  Lettra__BankConnections__Aggregator: None
 
 existingSecret: ""
 
