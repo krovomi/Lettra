@@ -26,4 +26,7 @@ public interface IAccountingGateway
 
     /// <summary>Grand livre d'un compte ; avec <paramref name="customerId"/>, le compte client (411) de ce seul client.</summary>
     Task<OperationResult<AccountLedgerResponse>> GetLedgerAsync(string account, DateOnly from, DateOnly to, Guid? customerId, CancellationToken cancellationToken);
+
+    /// <summary>Révision assistée à une date de clôture ; sans date, la clôture du dernier exercice terminé.</summary>
+    Task<OperationResult<ClosingReviewResponse>> GetClosingReviewAsync(DateOnly? closingDate, CancellationToken cancellationToken);
 }

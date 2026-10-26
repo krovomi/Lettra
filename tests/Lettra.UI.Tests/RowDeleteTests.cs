@@ -13,6 +13,7 @@ using Lettra.UI.Shared.Pages.Parties;
 using Lettra.UI.Shared.Services;
 using Lettra.UI.Tests.Billing;
 using Lettra.UI.Tests.Consultation;
+using Lettra.UI.Tests.Portal;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,6 +38,7 @@ public sealed class RowDeleteTests : BunitContext
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddSingleton(new ExplorerSettings { SearchDelay = TimeSpan.FromMilliseconds(1) });
         Services.AddLettraUi();
+        Services.AddSingleton<IPortalGateway>(new FakePortalGateway());
         Services.AddSingleton<IInvoicesGateway>(_invoices);
         Services.AddSingleton<IQuotesGateway>(_quotes);
         Services.AddSingleton<ICustomersGateway>(_customers);

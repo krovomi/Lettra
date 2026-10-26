@@ -63,6 +63,51 @@ public sealed class TaxGatewayParityTests(LettraApiFactory factory) : IClassFixt
 
     [Theory]
     [MemberData(nameof(Transports))]
+    public async Task Le_tableau_des_delais_de_paiement_classe_une_facture_due_selon_la_date_de_cloture(string transport)
+    {
+        await using ServiceProvider services = _harness.Gateway(transport);
+        ITaxGateway tax = services.GetRequiredService<ITaxGateway>();
+        InvoiceResponse invoice = await GatewayHarness.ValidatedInvoiceAsync(services);
+
+        OperationResult<PaymentDelaysResponse> today = await tax.GetPaymentDelaysAsync(Today, default);
+        OperationResult<PaymentDelaysResponse> later = await tax.GetPaymentDelaysAsync(Today.AddDays(400), default);
+        OperationResult<PaymentDelaysResponse> lastClosing = await tax.GetPaymentDelaysAsync(null, default);
+
+        today.IsSuccess.Should().BeTrue(GatewayHarness.Codes(today));
+        PaymentDelayInvoiceResponse due = today.Value!.Invoices.Should().ContainSingle(i => i.InvoiceId == invoice.Id).Subject;
+        due.OutstandingInclTax.Should().Be(invoice.Totals.TotalInclTax);
+        due.DaysLate.Should().BeLessThanOrEqualTo(0);
+        today.Value.TurnoverInclTax.Should().BeGreaterThanOrEqualTo(invoice.Totals.TotalInclTax);
+        today.Value.TermBreaches.Should().NotContain(b => b.InvoiceId == invoice.Id);
+        later.Value!.Invoices.Should().ContainSingle(i => i.InvoiceId == invoice.Id).Which.Bracket.Should().Be(4);
+        later.Value.Brackets[4].Count.Should().BeGreaterThanOrEqualTo(1);
+        lastClosing.Value!.ClosingDate.Should().BeBefore(Today);
+        lastClosing.Value.Invoices.Should().NotContain(i => i.InvoiceId == invoice.Id);
+    }
+
+    [Theory]
+    [MemberData(nameof(Transports))]
+    public async Task Une_echeance_au_dela_du_plafond_legal_est_signalee(string transport)
+    {
+        await using ServiceProvider services = _harness.Gateway(transport);
+        ITaxGateway tax = services.GetRequiredService<ITaxGateway>();
+        IInvoicesGateway invoices = services.GetRequiredService<IInvoicesGateway>();
+        Guid customer = (await services.GetRequiredService<ICustomersGateway>().CreateAsync(CustomerApiTests.Martin(), default)).Value!.Id;
+        await GatewayHarness.SaveCompanyProfileAsync(services);
+        InvoiceResponse draft = (await invoices.CreateAsync(
+            new SaveInvoiceRequest { CustomerId = customer, DueDate = Today.AddDays(150), Lines = [GatewayHarness.Conseil()] }, default)).Value!;
+        InvoiceResponse invoice = (await invoices.ValidateAsync(draft.Id, draft.Version, default)).Value!;
+
+        OperationResult<PaymentDelaysResponse> report = await tax.GetPaymentDelaysAsync(Today, default);
+
+        PaymentTermBreachResponse breach = report.Value!.TermBreaches.Should().ContainSingle(b => b.InvoiceId == invoice.Id).Subject;
+        breach.DueDate.Should().Be(Today.AddDays(150));
+        breach.DaysOver.Should().BePositive();
+        breach.LegalCeiling.Should().BeBefore(breach.DueDate);
+    }
+
+    [Theory]
+    [MemberData(nameof(Transports))]
     public async Task Les_reglages_se_changent_une_fois_par_version_et_refusent_un_jour_impossible(string transport)
     {
         await using ServiceProvider services = _harness.Gateway(transport);

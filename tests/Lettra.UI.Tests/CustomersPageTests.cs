@@ -13,6 +13,7 @@ using Lettra.UI.Shared.Services;
 using Lettra.UI.Shared.Typing;
 using Lettra.UI.Tests.Billing;
 using Lettra.UI.Tests.Consultation;
+using Lettra.UI.Tests.Portal;
 using Lettra.UI.Tests.Security;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -202,6 +203,7 @@ public sealed class CustomersPageTests : BunitContext
         // Champs assistés (code postal, ville) : module chargé à la demande, sans effet sans navigateur.
         JSInterop.SetupModule(AssistModule.Path).Mode = JSRuntimeMode.Loose;
         Services.AddLettraUi();
+        Services.AddSingleton<IPortalGateway>(new FakePortalGateway());
         Services.AddSingleton<ICustomersGateway>(_gateway);
         Services.AddSingleton<IDirectoryGateway>(_directory);
         Services.AddSingleton<IAccountingGateway>(_accounting);

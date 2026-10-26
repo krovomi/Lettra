@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+    <data name="Portal.Customer.Title" xml:space="preserve"><value>Espace client</value></data>
+  <data name="Portal.Customer.Help" xml:space="preserve"><value>Envoyez ce lien à votre client : il y retrouve ses factures et ses devis, paie en ligne et signe ses devis, sans créer de compte.</value></data>
+  <data name="Portal.Customer.Create" xml:space="preserve"><value>Créer un lien d'espace client</value></data>
+  <data name="Portal.Customer.Created" xml:space="preserve"><value>Lien d'espace client créé.</value></data>
+  <data name="Portal.Invoice.Title" xml:space="preserve"><value>Paiement en ligne</value></data>
+  <data name="Portal.Invoice.Help" xml:space="preserve"><value>Envoyez ce lien à votre client : il paie par carte en quelques secondes et l'encaissement s'enregistre tout seul, imputé sur la facture.</value></data>
+  <data name="Portal.Invoice.Create" xml:space="preserve"><value>Créer un lien de paiement</value></data>
+  <data name="Portal.Invoice.Created" xml:space="preserve"><value>Lien de paiement créé.</value></data>
+  <data name="Portal.Quote.Title" xml:space="preserve"><value>Signature en ligne</value></data>
+  <data name="Portal.Quote.Help" xml:space="preserve"><value>Votre client signe le devis en ligne : il passe accepté aussitôt et, si vous le demandez, la facture d'acompte est créée et validée à la suite.</value></data>
+  <data name="Portal.Quote.Create" xml:space="preserve"><value>Faire signer en ligne</value></data>
+  <data name="Portal.Quote.Created" xml:space="preserve"><value>Lien de signature créé.</value></data>
+  <data name="Portal.DownPayment" xml:space="preserve"><value>Acompte demandé à la signature</value></data>
+  <data name="Portal.DownPayment.None" xml:space="preserve"><value>Aucun acompte</value></data>
+  <data name="Portal.DownPayment.Percent" xml:space="preserve"><value>acompte de {0} %</value></data>
+  <data name="Portal.Url" xml:space="preserve"><value>Adresse du lien</value></data>
+  <data name="Portal.Copy" xml:space="preserve"><value>Copier</value></data>
+  <data name="Portal.Copied" xml:space="preserve"><value>Lien copié : collez-le dans votre message au client.</value></data>
+  <data name="Portal.CopyFailed" xml:space="preserve"><value>Copie impossible : sélectionnez l'adresse dans le champ.</value></data>
+  <data name="Portal.Open" xml:space="preserve"><value>Ouvrir</value></data>
+  <data name="Portal.ValidUntil" xml:space="preserve"><value>Valable jusqu'au {0}. Lettra ne garde pas l'adresse complète : copiez-la maintenant.</value></data>
+  <data name="Portal.Sent" xml:space="preserve"><value>Liens envoyés</value></data>
+  <data name="Portal.Kind.Customer" xml:space="preserve"><value>Espace client</value></data>
+  <data name="Portal.Kind.Quote" xml:space="preserve"><value>Signature de devis</value></data>
+  <data name="Portal.OpenedOn" xml:space="preserve"><value>ouvert le {0}</value></data>
+  <data name="Portal.NeverOpened" xml:space="preserve"><value>pas encore ouvert</value></data>
+  <data name="Portal.State.Active" xml:space="preserve"><value>Actif jusqu'au {0}</value></data>
+  <data name="Portal.State.Expired" xml:space="preserve"><value>Expiré</value></data>
+  <data name="Portal.State.Revoked" xml:space="preserve"><value>Révoqué</value></data>
+  <data name="Portal.Revoke" xml:space="preserve"><value>Révoquer</value></data>
+  <data name="Portal.Revoked" xml:space="preserve"><value>Lien révoqué : il ne s'ouvre plus.</value></data>
+  <data name="Portal.Disabled" xml:space="preserve"><value>L'espace client demande le serveur du cabinet, avec un compte de service déclaré pour lui. Il n'est pas ouvert sur cette installation.</value></data>
+  <data name="Portal.Signature.Title" xml:space="preserve"><value>Signé en ligne</value></data>
+  <data name="Portal.Signature.By" xml:space="preserve"><value>Signé par {0} le {1}.</value></data>
+  <data name="Portal.Signature.Provider" xml:space="preserve"><value>Prestataire et référence</value></data>
+  <data name="Portal.Signature.Hash" xml:space="preserve"><value>Empreinte du devis signé</value></data>
+  <data name="Portal.Signature.DownPayment" xml:space="preserve"><value>Acompte</value></data>
+  <data name="Portal.Signature.SeeDownPayment" xml:space="preserve"><value>Voir la facture d'acompte</value></data>
+  <data name="Portal.Signature.Simulated" xml:space="preserve"><value>Démonstration : signature électronique simple par un prestataire simulé (nom, accord, horodatage, empreinte).</value></data>
+  <data name="Error.Portal.Disabled" xml:space="preserve"><value>L'espace client n'est pas ouvert sur cette installation (il demande le serveur du cabinet).</value></data>
+  <data name="Error.Portal.LinkNotFound" xml:space="preserve"><value>Ce lien n'existe pas, a expiré ou a été révoqué.</value></data>
+  <data name="Error.Portal.LinkRevoked" xml:space="preserve"><value>Ce lien est déjà révoqué.</value></data>
+  <data name="Error.Portal.ValidityInvalid" xml:space="preserve"><value>La durée d'un lien va de 1 à 90 jours.</value></data>
+  <data name="Error.Portal.DownPaymentInvalid" xml:space="preserve"><value>L'acompte va de 0,01 à 100 %, et seulement sur un lien de devis.</value></data>
+  <data name="Error.Portal.QuoteNotSignable" xml:space="preserve"><value>Ce devis ne peut pas être signé en ligne : il doit être validé, encore valable, et adressé à ce client.</value></data>
+  <data name="Error.Portal.SignerNameInvalid" xml:space="preserve"><value>Le nom du signataire va de 2 à 120 caractères.</value></data>
+  <data name="Error.Portal.ConsentRequired" xml:space="preserve"><value>Le signataire doit donner son accord.</value></data>
+  <data name="Error.Portal.AlreadySigned" xml:space="preserve"><value>Ce devis est déjà signé.</value></data>
+  <data name="Error.Portal.NothingToPay" xml:space="preserve"><value>Cette facture est déjà réglée.</value></data>
+  <data name="Error.Portal.PaymentDeclined" xml:space="preserve"><value>Le paiement a été refusé.</value></data>
+  <data name="Error.Portal.CheckoutNotFound" xml:space="preserve"><value>Ce paiement en ligne est inconnu ou a expiré.</value></data>
+  <data name="Error.Portal.SignatureNotFound" xml:space="preserve"><value>Ce devis n'a pas été signé en ligne.</value></data>
+</root>

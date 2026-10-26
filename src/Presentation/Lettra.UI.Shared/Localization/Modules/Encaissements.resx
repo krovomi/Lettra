@@ -69,7 +69,7 @@
   <data name="Payments.Reverse.Confirm" xml:space="preserve"><value>Confirmer la contre-passation</value></data>
   <data name="Payments.Reversed" xml:space="preserve"><value>Encaissement {0} contre-passé.</value></data>
   <data name="Bank.Title" xml:space="preserve"><value>Rapprochement bancaire</value></data>
-  <data name="Bank.Subtitle" xml:space="preserve"><value>Importez le relevé de la banque : Lettra propose les factures correspondantes, vous validez.</value></data>
+  <data name="Bank.Subtitle" xml:space="preserve"><value>Reliez votre banque ou importez son relevé : Lettra propose les factures correspondantes, vous validez.</value></data>
   <data name="Bank.Pending" xml:space="preserve"><value>À rapprocher</value></data>
   <data name="Bank.Proposals" xml:space="preserve"><value>Propositions</value></data>
   <data name="Bank.Matched" xml:space="preserve"><value>Rapprochées</value></data>

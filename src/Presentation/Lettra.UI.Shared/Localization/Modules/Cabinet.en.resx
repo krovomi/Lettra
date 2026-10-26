@@ -110,4 +110,6 @@
   <data name="Error.Review.PeriodInvalid" xml:space="preserve"><value>This period is not recognised (expected: 2026-09 or 2026-T3).</value></data>
   <data name="Error.Review.ItemUnknown" xml:space="preserve"><value>This item is not part of the checklist.</value></data>
   <data name="Error.Review.NoteTooLong" xml:space="preserve"><value>The note exceeds 500 characters.</value></data>
+  <data name="Cabinet.Indicator.fournisseurs.iban-a-verifier" xml:space="preserve"><value>IBANs to check</value></data>
+  <data name="Cabinet.Indicator.fournisseurs.iban-a-verifier.Due" xml:space="preserve"><value>since {0}</value></data>
 </root>

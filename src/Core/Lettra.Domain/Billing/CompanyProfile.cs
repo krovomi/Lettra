@@ -75,6 +75,15 @@ public sealed class CompanyProfile : AggregateRoot<Guid>, IVersioned
 
     public string? Bic { get; private set; }
 
+    /// <summary>
+    /// Nom exact du titulaire du compte, quand il diffère de la raison sociale (nom commercial, ancien nom) : c'est
+    /// celui que la banque du client compare à l'IBAN avant un virement (vérification du bénéficiaire).
+    /// </summary>
+    public string? AccountHolderName { get; private set; }
+
+    /// <summary>Nom présenté avec l'IBAN sur les factures, le QR code de paiement et la facture électronique.</summary>
+    public string PayeeName => AccountHolderName ?? Name;
+
     public long Version { get; private set; }
 
     public DateTimeOffset UpdatedAt { get; private set; }
@@ -101,7 +110,8 @@ public sealed class CompanyProfile : AggregateRoot<Guid>, IVersioned
         string? EarlyPaymentDiscount,
         string? Iban,
         string? Bic,
-        VatDeclarationRegime? VatDeclarationRegime = null);
+        VatDeclarationRegime? VatDeclarationRegime = null,
+        string? AccountHolderName = null);
 
     public static Result<CompanyProfile> Create(Draft draft, DateTimeOffset now)
     {
@@ -159,6 +169,7 @@ public sealed class CompanyProfile : AggregateRoot<Guid>, IVersioned
         string? terms = Clean(draft.PaymentTerms, Invoice.MaxPaymentTermsLength, nameof(PaymentTerms), errors);
         string? discount = Clean(draft.EarlyPaymentDiscount, 200, nameof(EarlyPaymentDiscount), errors);
         string? bic = Clean(draft.Bic, 11, nameof(Bic), errors)?.ToUpperInvariant();
+        string? holder = Clean(draft.AccountHolderName, Parties.Supplier.MaxAccountHolderLength, nameof(AccountHolderName), errors);
 
         if (errors.Count > 0)
         {
@@ -182,6 +193,7 @@ public sealed class CompanyProfile : AggregateRoot<Guid>, IVersioned
         EarlyPaymentDiscount = discount;
         Iban = iban;
         Bic = bic;
+        AccountHolderName = holder;
         UpdatedAt = now;
         Version++;
         return Result.Success();

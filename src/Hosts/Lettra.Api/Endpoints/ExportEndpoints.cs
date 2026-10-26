@@ -31,6 +31,7 @@ internal static class ExportEndpoints
         api.MapAccounting();
         api.MapBanking();
         api.MapReminders();
+        api.MapPortalLinks();
 
         // La météo des paiements lit les mêmes pièces et les mêmes encaissements.
         api.MapInsights();

@@ -4,6 +4,7 @@ using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Exports;
 using Lettra.Contracts.Pricing;
+using Lettra.Contracts.Suppliers;
 using Lettra.Exports.Application.EInvoicing;
 using Lettra.UI.Abstractions;
 
@@ -69,6 +70,9 @@ internal sealed class FakeBillingSettingsGateway : IBillingSettingsGateway
 {
     public CompanyProfileResponse? Company { get; set; } = BillingFixtures.Company();
 
+    /// <summary>Le contrôle local du titulaire tel que le serveur le rendrait après enregistrement.</summary>
+    public PayeeMatchDto HolderAnswer { get; set; } = PayeeMatchDto.Match;
+
     /// <summary>Serveur injoignable (brouillons hors ligne, étape 4.5).</summary>
     public bool Offline { get; set; }
 
@@ -90,7 +94,8 @@ internal sealed class FakeBillingSettingsGateway : IBillingSettingsGateway
         Company = new CompanyProfileResponse((Company?.Version ?? 0) + 1, request.Name, request.LegalForm, request.ShareCapital, request.Siren,
             request.Siret, request.Rcs, request.VatNumber, request.AddressLine1, request.AddressLine2, request.PostalCode, request.City,
             request.CountryCode, request.VatFranchise, request.VatOnDebits, request.PaymentDays, request.PaymentTerms, request.LatePenaltyRate,
-            request.EarlyPaymentDiscount, request.Iban, request.Bic, DateTimeOffset.UnixEpoch);
+            request.EarlyPaymentDiscount, request.Iban, request.Bic, DateTimeOffset.UnixEpoch, AccountHolderName: request.AccountHolderName,
+            HolderNameMatch: request.AccountHolderName is null ? null : HolderAnswer);
         return Task.FromResult(OperationResult<CompanyProfileResponse>.Success(Company));
     }
 }

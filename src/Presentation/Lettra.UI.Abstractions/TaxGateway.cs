@@ -20,6 +20,9 @@ public interface ITaxGateway
 
     Task<OperationResult<DesResponse>> GetDesAsync(int year, int month, CancellationToken cancellationToken);
 
+    /// <summary>Délais de paiement à une date de clôture (sans date : la clôture du dernier exercice terminé).</summary>
+    Task<OperationResult<PaymentDelaysResponse>> GetPaymentDelaysAsync(DateOnly? closingDate, CancellationToken cancellationToken);
+
     Task<OperationResult<DesDocument>> ExportDesAsync(int year, int month, CancellationToken cancellationToken);
 
     Task<OperationResult<FiscalCalendarResponse>> GetCalendarAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken);

@@ -44,6 +44,8 @@ public sealed class OtherHttpGatewaysUnreachableTests
             (await accounting.GetBalanceAsync(Today, Today, default)).Errors,
             (await accounting.GetLedgerAsync("411", Today, Today, id, default)).Errors,
             (await accounting.GetLedgerAsync("512", Today, Today, null, default)).Errors,
+            (await accounting.GetClosingReviewAsync(Today, default)).Errors,
+            (await accounting.GetClosingReviewAsync(null, default)).Errors,
             (await cabinet.ListDossiersAsync(default)).Errors,
             (await cabinet.GetOverviewAsync(default)).Errors,
             (await cabinet.RefreshOverviewAsync(id, default)).Errors,

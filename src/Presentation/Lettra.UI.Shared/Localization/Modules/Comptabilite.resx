@@ -73,4 +73,46 @@
   <data name="Nav.Accounting" xml:space="preserve"><value>Journal et balance</value></data>
   <data name="Nav.Balance" xml:space="preserve"><value>Balance</value></data>
   <data name="Nav.Journal" xml:space="preserve"><value>Journal des ventes</value></data>
+  <data name="ClosingReview.Title" xml:space="preserve"><value>Révision avant clôture</value></data>
+  <data name="ClosingReview.Tab" xml:space="preserve"><value>Révision</value></data>
+  <data name="ClosingReview.Subtitle" xml:space="preserve"><value>Contrôles automatiques de l'exercice, les plus graves en tête. Chaque anomalie mène à ses pièces.</value></data>
+  <data name="ClosingReview.At" xml:space="preserve"><value>Révision au {0}</value></data>
+  <data name="ClosingReview.Year" xml:space="preserve"><value>Exercice ouvert le {0}</value></data>
+  <data name="ClosingReview.Summary" xml:space="preserve"><value>Contrôles par gravité</value></data>
+  <data name="ClosingReview.Checks" xml:space="preserve"><value>Contrôles</value></data>
+  <data name="ClosingReview.Severity.Warning" xml:space="preserve"><value>À traiter</value></data>
+  <data name="ClosingReview.Severity.Info" xml:space="preserve"><value>À regarder</value></data>
+  <data name="ClosingReview.Severity.Ok" xml:space="preserve"><value>Sans anomalie</value></data>
+  <data name="ClosingReview.Filter.Severity" xml:space="preserve"><value>Gravité</value></data>
+  <data name="ClosingReview.Filter.All" xml:space="preserve"><value>Tous les contrôles</value></data>
+  <data name="ClosingReview.Empty" xml:space="preserve"><value>Aucun contrôle pour ce filtre.</value></data>
+  <data name="ClosingReview.More" xml:space="preserve"><value>Tout afficher ({0})</value></data>
+  <data name="ClosingReview.Less" xml:space="preserve"><value>Réduire</value></data>
+  <data name="ClosingReview.DaysLate" xml:space="preserve"><value>{0} j de retard</value></data>
+  <data name="ClosingReview.Bank.Oldest" xml:space="preserve"><value>Plus ancienne opération à rapprocher : {0}</value></data>
+  <data name="ClosingReview.Limits" xml:space="preserve"><value>Contrôles indicatifs, à relire avec l'expert-comptable. Les fournisseurs débiteurs et les comptes d'attente viendront avec les factures reçues ; une dépréciation reste une décision du cabinet.</value></data>
+  <data name="ClosingReview.CustomersInCredit.Title" xml:space="preserve"><value>Clients créditeurs</value></data>
+  <data name="ClosingReview.CustomersInCredit.Ok" xml:space="preserve"><value>Aucun client au crédit du compte 411.</value></data>
+  <data name="ClosingReview.CustomersInCredit.Warning" xml:space="preserve"><value>{0} client(s) au crédit du compte 411, pour {1} : trop-perçu ou avoir non remboursé, à rembourser ou à reclasser.</value></data>
+  <data name="ClosingReview.DownPaymentsUnapplied.Title" xml:space="preserve"><value>Acomptes reçus non imputés</value></data>
+  <data name="ClosingReview.DownPaymentsUnapplied.Ok" xml:space="preserve"><value>Tous les acomptes reçus sont imputés sur une facture finale.</value></data>
+  <data name="ClosingReview.DownPaymentsUnapplied.Info" xml:space="preserve"><value>{0} client(s) avec un acompte encore au compte 4191, pour {1} : la facture finale reste-t-elle à émettre ?</value></data>
+  <data name="ClosingReview.DoubtfulReceivables.Title" xml:space="preserve"><value>Créances douteuses</value></data>
+  <data name="ClosingReview.DoubtfulReceivables.Ok" xml:space="preserve"><value>Aucune facture en retard de plus de six mois.</value></data>
+  <data name="ClosingReview.DoubtfulReceivables.Warning" xml:space="preserve"><value>{0} facture(s) en retard de plus de six mois, pour {1} TTC restant dû : une dépréciation est à envisager.</value></data>
+  <data name="ClosingReview.DisputedReceivables.Title" xml:space="preserve"><value>Créances litigieuses</value></data>
+  <data name="ClosingReview.DisputedReceivables.Ok" xml:space="preserve"><value>Aucune facture contestée sur la plateforme.</value></data>
+  <data name="ClosingReview.DisputedReceivables.Warning" xml:space="preserve"><value>{0} facture(s) contestée(s) sur la plateforme, pour {1} TTC : à provisionner ou à régler avec le client.</value></data>
+  <data name="ClosingReview.BankUnreconciled.Title" xml:space="preserve"><value>Rapprochement bancaire</value></data>
+  <data name="ClosingReview.BankUnreconciled.Ok" xml:space="preserve"><value>Toutes les opérations du relevé sont rapprochées.</value></data>
+  <data name="ClosingReview.BankUnreconciled.Warning" xml:space="preserve"><value>{0} opération(s) du relevé à rapprocher, dont certaines d'avant la clôture.</value></data>
+  <data name="ClosingReview.BankUnreconciled.Info" xml:space="preserve"><value>{0} opération(s) du relevé à rapprocher, toutes postérieures à la clôture.</value></data>
+  <data name="ClosingReview.VatRate.Title" xml:space="preserve"><value>TVA et chiffre d'affaires</value></data>
+  <data name="ClosingReview.VatRate.None" xml:space="preserve"><value>Aucun chiffre d'affaires sur l'exercice.</value></data>
+  <data name="ClosingReview.VatRate.Ok" xml:space="preserve"><value>TVA collectée : {2} du chiffre d'affaires HT ({1}), cohérente avec les taux en vigueur.</value></data>
+  <data name="ClosingReview.VatRate.Warning" xml:space="preserve"><value>TVA collectée : {2} du chiffre d'affaires HT ({1}), au-dessus du taux normal : un taux ou un compte est à vérifier.</value></data>
+  <data name="ClosingReview.VatRate.Info" xml:space="preserve"><value>Aucune TVA collectée sur {1} de chiffre d'affaires HT : franchise, export ou autoliquidation à justifier.</value></data>
+  <data name="ClosingReview.OldDrafts.Title" xml:space="preserve"><value>Brouillons oubliés</value></data>
+  <data name="ClosingReview.OldDrafts.Ok" xml:space="preserve"><value>Aucun brouillon créé avant la clôture.</value></data>
+  <data name="ClosingReview.OldDrafts.Info" xml:space="preserve"><value>{0} brouillon(s) créé(s) avant la clôture et jamais validé(s) : une vente oubliée, ou un brouillon à supprimer.</value></data>
 </root>

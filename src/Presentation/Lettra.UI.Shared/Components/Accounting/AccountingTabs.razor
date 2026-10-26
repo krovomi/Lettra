@@ -5,6 +5,7 @@
     <NavLink class="lt-subnav-link" href="@($"accounting/journal?{Period.Query}")" Match="NavLinkMatch.Prefix" id="tab-journal"><Icon Name="book-open" Size="18" /> @L["Accounting.Journal.Title"]</NavLink>
     <NavLink class="lt-subnav-link" href="@($"accounting/balance?{Period.Query}")" Match="NavLinkMatch.Prefix" id="tab-balance"><Icon Name="scale" Size="18" /> @L["Accounting.Balance.Title"]</NavLink>
     <NavLink class="lt-subnav-link" href="@($"accounting/accounts/{SalesAccounts.Customers}?{Period.Query}")" Match="NavLinkMatch.Prefix" id="tab-ledger"><Icon Name="users" Size="18" /> @L["Accounting.Ledger.Title"]</NavLink>
+    <NavLink class="lt-subnav-link" href="accounting/review" Match="NavLinkMatch.Prefix" id="tab-review"><Icon Name="list-checks" Size="18" /> @L["ClosingReview.Tab"]</NavLink>
     <NavLink class="lt-subnav-link" href="exports/fec" Match="NavLinkMatch.Prefix" id="tab-fec"><Icon Name="file-spreadsheet" Size="18" /> @L["Nav.Fec"]</NavLink>
 </nav>
 

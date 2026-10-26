@@ -30,6 +30,7 @@ public sealed class BankingPagesTests : BunitContext
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddLettraUi();
         Services.AddSingleton<IBankingGateway>(_banking);
+        Services.AddSingleton<IBankConnectionsGateway>(new FakeBankConnectionsGateway());
         Services.AddSingleton<IAccountingGateway>(_accounting);
         Services.AddSingleton<ICustomersGateway>(new FakeCustomersGateway());
         Services.AddSingleton<TimeProvider>(new ManualClock(new DateTimeOffset(2026, 10, 16, 12, 0, 0, TimeSpan.Zero)));

@@ -29,6 +29,7 @@
   <data name="Party.Siren" xml:space="preserve"><value>SIREN {0}</value></data>
   <data name="Party.VatNumber" xml:space="preserve"><value>EU VAT number {0}</value></data>
   <data name="Payment.Bic" xml:space="preserve"><value>BIC {0}</value></data>
+  <data name="Payment.Holder" xml:space="preserve"><value>Account holder {0}</value></data>
   <data name="Payment.Iban" xml:space="preserve"><value>IBAN {0}</value></data>
   <data name="Payment.QrCaption" xml:space="preserve"><value>Scan to pay</value></data>
   <data name="Payment.QrCode" xml:space="preserve"><value>Pay by scanning the QR code with your banking app: the transfer opens already filled in, with the amount and the invoice number.</value></data>

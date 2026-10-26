@@ -69,6 +69,23 @@ internal sealed class FakeSuppliersGateway : ISuppliersGateway
 
     public List<(Guid Id, long? ExpectedVersion)> Deletes { get; } = [];
 
+    /// <summary>Réponse de la banque simulée du test ; la fiche la garde, comme le serveur.</summary>
+    public PayeeCheckResponse PayeeAnswer { get; set; } = new(PayeeMatchDto.Match, DateTimeOffset.UnixEpoch, null);
+
+    public List<Guid> PayeeVerifications { get; } = [];
+
+    public Task<OperationResult<PayeeCheckResponse>> VerifyPayeeAsync(Guid id, CancellationToken cancellationToken)
+    {
+        PayeeVerifications.Add(id);
+        if (TakeErrors() is { } errors)
+        {
+            return Task.FromResult(OperationResult<PayeeCheckResponse>.Failure(errors));
+        }
+
+        Records[id] = Records[id] with { PayeeCheck = PayeeAnswer, Version = Records[id].Version + 1 };
+        return Task.FromResult(OperationResult<PayeeCheckResponse>.Success(PayeeAnswer));
+    }
+
     public Task<OperationResult<bool>> DeleteAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken)
     {
         Deletes.Add((id, expectedVersion));

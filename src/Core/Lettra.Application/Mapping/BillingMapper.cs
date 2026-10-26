@@ -1,8 +1,10 @@
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Pricing;
+using Lettra.Contracts.Suppliers;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Catalog;
+using Lettra.Domain.Parties;
 using Lettra.Domain.Pricing;
 
 namespace Lettra.Application.Mapping;
@@ -71,7 +73,8 @@ public static class BillingMapper
             request.EarlyPaymentDiscount,
             request.Iban,
             request.Bic,
-            (VatDeclarationRegime?)(int?)request.VatDeclarationRegime);
+            (VatDeclarationRegime?)(int?)request.VatDeclarationRegime,
+            request.AccountHolderName);
     }
 
     public static IReadOnlyList<PriceListEntryDraft> ToDrafts(this IEnumerable<PriceListEntryRequest>? entries) =>
@@ -228,7 +231,9 @@ public static class BillingMapper
             profile.Iban?.Value,
             profile.Bic,
             profile.UpdatedAt,
-            (VatDeclarationRegimeDto?)(int?)profile.VatDeclarationRegime);
+            (VatDeclarationRegimeDto?)(int?)profile.VatDeclarationRegime,
+            profile.AccountHolderName,
+            profile.AccountHolderName is { } holder ? (PayeeMatchDto)PayeeNames.Compare(profile.Name, holder) : null);
     }
 
     public static ComplianceReportResponse ToResponse(this Calculations.Compliance.ComplianceReport report)

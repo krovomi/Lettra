@@ -1,9 +1,10 @@
-@* Onglets des déclarations : TVA, DES, kit contrôle fiscal, contrôle d'entraînement, calendrier fiscal et réglages. *@
+@* Onglets des déclarations : TVA, DES, délais de paiement, kit contrôle fiscal, contrôle d'entraînement, calendrier fiscal et réglages. *@
 @inject IStringLocalizer<SharedResource> L
 
 <nav class="lt-subnav" aria-label="@L["Nav.Tax"]">
     <NavLink class="lt-subnav-link" href="tax/vat" Match="NavLinkMatch.Prefix" id="tab-vat"><Icon Name="receipt" Size="18" /> @L["Tax.Vat.Tab"]</NavLink>
     <NavLink class="lt-subnav-link" href="tax/des" Match="NavLinkMatch.Prefix" id="tab-des"><Icon Name="send" Size="18" /> @L["Tax.Des.Tab"]</NavLink>
+    <NavLink class="lt-subnav-link" href="tax/payment-delays" Match="NavLinkMatch.Prefix" id="tab-payment-delays"><Icon Name="clock" Size="18" /> @L["Tax.Delays.Tab"]</NavLink>
     <NavLink class="lt-subnav-link" href="tax/audit-kit" Match="NavLinkMatch.Prefix" id="tab-audit-kit"><Icon Name="shield-check" Size="18" /> @L["AuditKit.Tab"]</NavLink>
     <NavLink class="lt-subnav-link" href="tax/practice-audit" Match="NavLinkMatch.Prefix" id="tab-practice-audit"><Icon Name="search" Size="18" /> @L["Audit.Tab"]</NavLink>
     <NavLink class="lt-subnav-link" href="tax/calendar" Match="NavLinkMatch.Prefix" id="tab-calendar"><Icon Name="calendar-clock" Size="18" /> @L["Tax.Calendar.Tab"]</NavLink>

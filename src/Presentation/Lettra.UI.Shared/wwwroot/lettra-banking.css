@@ -62,3 +62,31 @@
     .lt-banking-detail { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
     .lt-banking-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+/* Banque connectée : comptes reliés par l'agrégateur, consentement, retour de la banque. */
+.lt-bank-connections { list-style: none; margin: var(--space-3) 0; padding: 0; display: grid; gap: var(--space-2); }
+.lt-bank-connection { display: grid; gap: var(--space-2); padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); min-width: 0; }
+.lt-bank-connection-name { display: flex; gap: var(--space-2); align-items: center; min-width: 0; }
+.lt-bank-connection-name > span { display: grid; min-width: 0; overflow-wrap: anywhere; }
+.lt-bank-connection-state { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-2); align-items: center; }
+.lt-bank-connection-state .lettra-status { margin-left: 0; }
+.lt-bank-connection-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.lt-bank-connect { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: end; }
+.lt-bank-connect .lt-field { flex: 1 1 14rem; display: grid; gap: var(--space-1); }
+.lt-bank-consent { max-width: 34rem; margin: var(--space-4) auto; display: grid; gap: var(--space-3); }
+.lt-bank-consent h1 { margin: 0; font-size: var(--text-xl); }
+.lt-bank-consent p { margin: 0; }
+.lt-bank-consent-bank { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.lt-bank-consent-bank .lettra-status { margin-left: 0; }
+.lt-bank-consent-scope { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+.lt-bank-consent-scope li { display: flex; gap: var(--space-2); align-items: center; }
+.lt-bank-consent-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.lt-bank-callback { display: grid; gap: var(--space-2); }
+
+@media (max-width: 767px) {
+    .lt-bank-connection-actions > *, .lt-bank-connect > .lettra-button, .lt-bank-consent-actions > * { flex: 1 1 100%; }
+}
+
+@media (min-width: 768px) {
+    .lt-bank-connection { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto; align-items: center; }
+}

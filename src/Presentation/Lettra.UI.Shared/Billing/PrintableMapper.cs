@@ -34,6 +34,7 @@ public static class PrintableMapper
             Notes = Join(quote.Subject, quote.Notes),
             Iban = company?.Iban,
             Bic = company?.Bic,
+            AccountHolderName = company?.AccountHolderName,
             Culture = culture,
         };
     }
@@ -65,6 +66,7 @@ public static class PrintableMapper
             Notes = Join(invoice.Subject, invoice.Notes, invoice.CreditReason),
             Iban = company?.Iban,
             Bic = company?.Bic,
+            AccountHolderName = company?.AccountHolderName,
             Culture = culture,
         };
     }

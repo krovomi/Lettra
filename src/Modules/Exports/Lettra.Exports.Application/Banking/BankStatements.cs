@@ -16,15 +16,7 @@ namespace Lettra.Exports.Application.Banking;
 /// importées (même compte, date, montant, libellé, référence, rang) sont écartées et comptées. Seules les nouvelles sont
 /// enregistrées. Aucune écriture comptable : elles viennent de la validation des rapprochements.
 /// </summary>
-internal sealed class ImportBankStatementHandler(
-    IBankStatementRepository statements,
-    IReceivableDocumentReader receivables,
-    IKnownIbanStore knownIbans,
-    IIbanFingerprints ibans,
-    IBankingSettingsRepository settings,
-    IUnitOfWork unitOfWork,
-    ICurrentUser user,
-    TimeProvider clock) : ICommandHandler<ImportBankStatementCommand, Result<BankImportResponse>>
+internal sealed class ImportBankStatementHandler(BankLineImporter importer) : ICommandHandler<ImportBankStatementCommand, Result<BankImportResponse>>
 {
     public async Task<Result<BankImportResponse>> HandleAsync(ImportBankStatementCommand command, CancellationToken cancellationToken)
     {
@@ -56,21 +48,13 @@ internal sealed class ImportBankStatementHandler(
             return Result<BankImportResponse>.Failure(parsed.Errors);
         }
 
-        return await BankImport.StoreAsync(
-            request.FileName, parsed.Value, statements, receivables, knownIbans, ibans, settings, unitOfWork, user.UserId, clock.GetUtcNow(), cancellationToken).ConfigureAwait(false);
+        return await importer.StoreAsync(request.FileName, parsed.Value, cancellationToken).ConfigureAwait(false);
     }
 }
 
 /// <summary>Démo : un relevé CAMT.053 fictif fabriqué à partir des factures dues, importé comme un vrai.</summary>
-internal sealed class ImportDemoBankStatementHandler(
-    IBankStatementRepository statements,
-    IReceivableDocumentReader receivables,
-    IKnownIbanStore knownIbans,
-    IIbanFingerprints ibans,
-    IBankingSettingsRepository settings,
-    IUnitOfWork unitOfWork,
-    ICurrentUser user,
-    TimeProvider clock) : ICommandHandler<ImportDemoBankStatementCommand, Result<BankImportResponse>>
+internal sealed class ImportDemoBankStatementHandler(IReceivableDocumentReader receivables, BankLineImporter importer, TimeProvider clock)
+    : ICommandHandler<ImportDemoBankStatementCommand, Result<BankImportResponse>>
 {
     public async Task<Result<BankImportResponse>> HandleAsync(ImportDemoBankStatementCommand command, CancellationToken cancellationToken)
     {
@@ -84,25 +68,25 @@ internal sealed class ImportDemoBankStatementHandler(
             return Result<BankImportResponse>.Failure(parsed.Errors);
         }
 
-        return await BankImport.StoreAsync(
-            DemoBankStatement.FileName(today), parsed.Value, statements, receivables, knownIbans, ibans, settings, unitOfWork, user.UserId, clock.GetUtcNow(), cancellationToken).ConfigureAwait(false);
+        return await importer.StoreAsync(DemoBankStatement.FileName(today), parsed.Value, cancellationToken).ConfigureAwait(false);
     }
 }
 
-internal static class BankImport
+/// <summary>
+/// Enregistre les opérations d'un relevé lu, quelle que soit leur origine (fichier importé, banque connectée) : mêmes
+/// empreintes, mêmes doublons écartés, mêmes propositions de rapprochement.
+/// </summary>
+internal sealed class BankLineImporter(
+    IBankStatementRepository statements,
+    IReceivableDocumentReader receivables,
+    IKnownIbanStore knownIbans,
+    IIbanFingerprints ibans,
+    IBankingSettingsRepository settings,
+    IUnitOfWork unitOfWork,
+    ICurrentUser user,
+    TimeProvider clock)
 {
-    public static async Task<Result<BankImportResponse>> StoreAsync(
-        string? fileName,
-        ParsedBankStatement statement,
-        IBankStatementRepository statements,
-        IReceivableDocumentReader receivables,
-        IKnownIbanStore knownIbans,
-        IIbanFingerprints ibans,
-        IBankingSettingsRepository settings,
-        IUnitOfWork unitOfWork,
-        Guid userId,
-        DateTimeOffset now,
-        CancellationToken cancellationToken)
+    public async Task<Result<BankImportResponse>> StoreAsync(string? fileName, ParsedBankStatement statement, CancellationToken cancellationToken)
     {
         // Rang de chaque opération parmi les opérations identiques du fichier : deux virements identiques le même jour
         // restent deux opérations, un fichier réimporté ne crée rien.
@@ -127,7 +111,7 @@ internal static class BankImport
         }
 
         BankStatementImport import = BankStatementImport.Create(
-            importId, string.IsNullOrWhiteSpace(fileName) ? "releve" : fileName, statement, lines.Count, keyed.Count - lines.Count, userId, now);
+            importId, string.IsNullOrWhiteSpace(fileName) ? "releve" : fileName, statement, lines.Count, keyed.Count - lines.Count, user.UserId, clock.GetUtcNow());
         await statements.AddImportAsync(import, lines, cancellationToken).ConfigureAwait(false);
         await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 

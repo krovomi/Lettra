@@ -73,6 +73,7 @@ public static class DependencyInjection
 
         Configure(services.AddHttpClient<ICustomersGateway, HttpCustomersGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<ISuppliersGateway, HttpSuppliersGateway>(client => client.BaseAddress = apiBaseAddress));
+        Configure(services.AddHttpClient<IIbanChangesGateway, HttpIbanChangesGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<ICatalogGateway, HttpCatalogGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IDirectoryGateway, HttpDirectoryGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IQuotesGateway, HttpQuotesGateway>(client => client.BaseAddress = apiBaseAddress));
@@ -87,6 +88,8 @@ public static class DependencyInjection
         Configure(services.AddHttpClient<IBankingGateway, HttpBankingGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IRemindersGateway, HttpRemindersGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IInsightsGateway, HttpInsightsGateway>(client => client.BaseAddress = apiBaseAddress));
+        Configure(services.AddHttpClient<IPortalGateway, HttpPortalGateway>(client => client.BaseAddress = apiBaseAddress));
+        Configure(services.AddHttpClient<IBankConnectionsGateway, HttpBankConnectionsGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<ICabinetGateway, HttpCabinetGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IPilotageGateway, HttpPilotageGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<ITaxGateway, HttpTaxGateway>(client => client.BaseAddress = apiBaseAddress));

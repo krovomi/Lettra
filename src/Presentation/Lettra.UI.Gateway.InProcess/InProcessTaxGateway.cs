@@ -15,6 +15,9 @@ internal sealed class InProcessTaxGateway(IServiceScopeFactory scopes) : ITaxGat
     public Task<OperationResult<DesResponse>> GetDesAsync(int year, int month, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetDesQuery(dossier, year, month), ct), cancellationToken);
 
+    public Task<OperationResult<PaymentDelaysResponse>> GetPaymentDelaysAsync(DateOnly? closingDate, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetPaymentDelaysQuery(dossier, closingDate), ct), cancellationToken);
+
     public Task<OperationResult<DesDocument>> ExportDesAsync(int year, int month, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(scopes, async (sp, dossier, ct) =>
         {

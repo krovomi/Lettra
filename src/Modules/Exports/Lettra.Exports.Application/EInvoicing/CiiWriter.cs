@@ -141,7 +141,10 @@ internal static class CiiWriter
             invoice.Iban is { } iban
                 ? new XElement(Ram + "SpecifiedTradeSettlementPaymentMeans",
                     new XElement(Ram + "TypeCode", EInvoice.SepaCreditTransfer),
-                    new XElement(Ram + "PayeePartyCreditorFinancialAccount", new XElement(Ram + "IBANID", iban)),
+                    new XElement(
+                        Ram + "PayeePartyCreditorFinancialAccount",
+                        new XElement(Ram + "IBANID", iban),
+                        invoice.PaymentAccountName is { } name ? new XElement(Ram + "AccountName", name) : null),
                     invoice.Bic is { } bic ? new XElement(Ram + "PayeeSpecifiedCreditorFinancialInstitution", new XElement(Ram + "BICID", bic)) : null)
                 : null,
             invoice.Vat.Select(v => new XElement(Ram + "ApplicableTradeTax",

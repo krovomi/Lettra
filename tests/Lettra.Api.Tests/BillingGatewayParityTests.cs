@@ -4,6 +4,7 @@ using Lettra.Contracts.Common;
 using Lettra.Contracts.Demo;
 using Lettra.Contracts.Exports;
 using Lettra.Contracts.Pricing;
+using Lettra.Contracts.Suppliers;
 using Lettra.Domain.SharedKernel;
 using Lettra.UI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
@@ -169,6 +170,28 @@ public sealed class BillingGatewayParityTests(LettraApiFactory factory) : IClass
         ];
 
         failures.Should().AllSatisfy(errors => errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Invoice.NotFound));
+    }
+
+    [Theory]
+    [MemberData(nameof(Transports))]
+    public async Task Le_titulaire_du_compte_de_la_fiche_entreprise_est_garde_et_compare_a_la_raison_sociale(string transport)
+    {
+        await using ServiceProvider services = _harness.Gateway(transport);
+        IBillingSettingsGateway settings = services.GetRequiredService<IBillingSettingsGateway>();
+        SaveCompanyProfileRequest odd = GatewayHarness.CompanyProfile();
+        odd.AccountHolderName = "Jean Dupont";
+        SaveCompanyProfileRequest close = GatewayHarness.CompanyProfile();
+        close.AccountHolderName = "Lettra Conseil SAS";
+
+        OperationResult<CompanyProfileResponse> first = await settings.SaveCompanyProfileAsync(odd, null, default);
+        OperationResult<CompanyProfileResponse> second = await settings.SaveCompanyProfileAsync(close, null, default);
+        OperationResult<CompanyProfileResponse> restored = await settings.SaveCompanyProfileAsync(GatewayHarness.CompanyProfile(), null, default);
+
+        first.Value!.AccountHolderName.Should().Be("Jean Dupont");
+        first.Value.HolderNameMatch.Should().Be(PayeeMatchDto.NoMatch);
+        second.Value!.HolderNameMatch.Should().Be(PayeeMatchDto.Match);
+        (await settings.GetCompanyProfileAsync(default)).Value!.AccountHolderName.Should().BeNull();
+        restored.Value!.HolderNameMatch.Should().BeNull();
     }
 
     [Theory]

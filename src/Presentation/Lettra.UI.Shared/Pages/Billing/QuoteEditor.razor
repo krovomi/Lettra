@@ -129,6 +129,19 @@ else
             </div>
 
             <ComplianceChecklist Report="_compliance" OnFindingSelected="FocusFindingAsync" DocumentId="Id" />
+
+            @if (_quote is { Status: QuoteStatusDto.Validated, IsExpired: false } signable)
+            {
+                <section class="lettra-portal-card" id="quote-sign-online" aria-labelledby="quote-sign-online-title">
+                    <h2 id="quote-sign-online-title">@L["Portal.Quote.Title"]</h2>
+                    <PortalLinkPanel CustomerId="signable.CustomerId" QuoteId="signable.Id" Id="quote-portal" />
+                </section>
+            }
+
+            @if (_quote is { Status: not QuoteStatusDto.Draft } signed)
+            {
+                <QuoteSignaturePanel QuoteId="signed.Id" Version="signed.Version" />
+            }
         </aside>
     </div>
 }

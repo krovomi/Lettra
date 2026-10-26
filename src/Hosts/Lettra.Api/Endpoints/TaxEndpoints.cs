@@ -32,6 +32,13 @@ internal static class TaxEndpoints
             .Produces<DesResponse>()
             .ProducesProblem(StatusCodes.Status400BadRequest);
 
+        // Délais de paiement : tableau du rapport de gestion à la clôture et échéances au-delà du plafond légal.
+        group.MapGet("/payment-delays", GetPaymentDelaysAsync)
+            .RequirePermission(Permission.DossierLire)
+            .WithName("GetPaymentDelays")
+            .Produces<PaymentDelaysResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest);
+
         group.MapGet("/des/file", ExportDesAsync)
             .RequirePermission(Permission.FecExporter)
             .WithName("ExportDes")
@@ -79,6 +86,9 @@ internal static class TaxEndpoints
 
     private static async Task<IResult> GetDesAsync(int year, int month, ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken) =>
         Ok(await queries.QueryAsync(new GetDesQuery(tenant.Current.DossierId, year, month), cancellationToken).ConfigureAwait(false));
+
+    private static async Task<IResult> GetPaymentDelaysAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken, DateOnly? closingDate = null) =>
+        Ok(await queries.QueryAsync(new GetPaymentDelaysQuery(tenant.Current.DossierId, closingDate), cancellationToken).ConfigureAwait(false));
 
     private static async Task<IResult> ExportDesAsync(int year, int month, ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken)
     {

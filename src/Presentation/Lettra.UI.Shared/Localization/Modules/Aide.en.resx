@@ -26,11 +26,11 @@
   <data name="Nav.Suppliers.Keywords" xml:space="preserve"><value>party vendor purchase siren</value></data>
   <data name="Nav.Catalog.Keywords" xml:space="preserve"><value>items products services prices rates</value></data>
   <data name="Nav.Payments.Keywords" xml:space="preserve"><value>payment receipt transfer cheque matching</value></data>
-  <data name="Nav.Bank.Keywords" xml:space="preserve"><value>bank statement reconcile import</value></data>
+  <data name="Nav.Bank.Keywords" xml:space="preserve"><value>bank statement reconcile import connected bank sync PSD2</value></data>
   <data name="Nav.Reminders.Keywords" xml:space="preserve"><value>overdue unpaid dunning email due</value></data>
-  <data name="Nav.Accounting.Keywords" xml:space="preserve"><value>entries journal trial balance ledger accounts</value></data>
+  <data name="Nav.Accounting.Keywords" xml:space="preserve"><value>entries journal trial balance ledger accounts review closing checks issues</value></data>
   <data name="Nav.Fec.Keywords" xml:space="preserve"><value>accounting entries file export tax audit bridge quadra sage cegid acd production software</value></data>
-  <data name="Nav.Tax.Keywords" xml:space="preserve"><value>vat tax return ca3 calendar audit kit</value></data>
+  <data name="Nav.Tax.Keywords" xml:space="preserve"><value>vat tax return ca3 calendar audit kit payment terms late management report closing</value></data>
   <data name="Nav.Review.Keywords" xml:space="preserve"><value>checklist closing monthly review</value></data>
   <data name="Nav.Alerts.Keywords" xml:space="preserve"><value>notifications incidents warnings monitoring</value></data>
   <data name="Nav.Company.Keywords" xml:space="preserve"><value>settings company profile siret logo</value></data>
@@ -131,4 +131,5 @@
   <data name="Help.Faq.invoice-proof.Question" xml:space="preserve"><value>How do I know an invoice is genuine?</value></data>
   <data name="Help.Faq.invoice-proof.Answer" xml:space="preserve"><value>Every validated invoice carries a “Proof of authenticity” QR code signed with the dossier's key. Under Sales, Check an invoice, paste the text of this QR code: Lettra tells you whether the invoice comes from this dossier and whether its number, date or amount were changed. The public key also lets anyone check without Lettra.</value></data>
   <data name="Help.Faq.invoice-proof.Keywords" xml:space="preserve"><value>proof authenticity qr signature fake invoice fraud</value></data>
+  <data name="Nav.IbanChanges.Keywords" xml:space="preserve"><value>iban bank details fraud fake supplier change verification transfer account holder payee name</value></data>
 </root>

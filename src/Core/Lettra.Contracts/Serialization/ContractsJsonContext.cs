@@ -19,6 +19,7 @@ using Lettra.Contracts.Insights;
 using Lettra.Contracts.Integrity;
 using Lettra.Contracts.Pilotage;
 using Lettra.Contracts.Policies;
+using Lettra.Contracts.Portal;
 using Lettra.Contracts.Preferences;
 using Lettra.Contracts.Presence;
 using Lettra.Contracts.Pricing;
@@ -50,6 +51,14 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(CreateSupplierRequest))]
 [JsonSerializable(typeof(SupplierResponse))]
 [JsonSerializable(typeof(PagedResponse<SupplierSummary>))]
+[JsonSerializable(typeof(IbanChangeResponse))]
+[JsonSerializable(typeof(PagedResponse<IbanChangeResponse>))]
+[JsonSerializable(typeof(IReadOnlyList<IbanChangeResponse>))]
+[JsonSerializable(typeof(ConfirmIbanChangeRequest))]
+[JsonSerializable(typeof(RejectIbanChangeRequest))]
+[JsonSerializable(typeof(PayeeCheckResponse))]
+[JsonSerializable(typeof(PayeeCheckRowResponse))]
+[JsonSerializable(typeof(PagedResponse<PayeeCheckRowResponse>))]
 [JsonSerializable(typeof(SaveCatalogItemRequest))]
 [JsonSerializable(typeof(SetCatalogItemArchivedRequest))]
 [JsonSerializable(typeof(CatalogItemResponse))]
@@ -161,8 +170,18 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(BankingSettingsResponse))]
 [JsonSerializable(typeof(UpdateBankingSettingsRequest))]
 [JsonSerializable(typeof(BankReconciliationStatusResponse))]
+[JsonSerializable(typeof(BankConnectionsResponse))]
+[JsonSerializable(typeof(StartBankConnectionRequest))]
+[JsonSerializable(typeof(BankConsentRedirectResponse))]
+[JsonSerializable(typeof(CompleteBankConnectionRequest))]
+[JsonSerializable(typeof(BankConnectionCompletedResponse))]
+[JsonSerializable(typeof(SyncBankConnectionsRequest))]
+[JsonSerializable(typeof(SyncBankConnectionsResponse))]
+[JsonSerializable(typeof(BankConnectionResponse))]
 [JsonSerializable(typeof(VatReturnResponse))]
 [JsonSerializable(typeof(DesResponse))]
+[JsonSerializable(typeof(PaymentDelaysResponse))]
+[JsonSerializable(typeof(ClosingReviewResponse))]
 [JsonSerializable(typeof(FiscalCalendarResponse))]
 [JsonSerializable(typeof(FiscalSettingsResponse))]
 [JsonSerializable(typeof(UpdateFiscalSettingsRequest))]
@@ -177,6 +196,10 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(PaymentReminderResponse))]
 [JsonSerializable(typeof(PagedResponse<PaymentReminderResponse>))]
 [JsonSerializable(typeof(RunRemindersResponse))]
+[JsonSerializable(typeof(CreatePortalLinkRequest))]
+[JsonSerializable(typeof(PortalLinkResponse))]
+[JsonSerializable(typeof(IReadOnlyList<PortalLinkSummary>))]
+[JsonSerializable(typeof(QuoteSignatureResponse))]
 [JsonSerializable(typeof(InvitationEmailResponse))]
 [JsonSerializable(typeof(PaymentWeatherResponse))]
 [JsonSerializable(typeof(PracticeAuditResponse))]

@@ -41,6 +41,7 @@ public static class SyncRequests
             VatNumber = supplier.VatNumber,
             Email = supplier.Email,
             Iban = supplier.Iban,
+            AccountHolderName = supplier.AccountHolderName,
             AddressLine1 = supplier.AddressLine1,
             AddressLine2 = supplier.AddressLine2,
             PostalCode = supplier.PostalCode,

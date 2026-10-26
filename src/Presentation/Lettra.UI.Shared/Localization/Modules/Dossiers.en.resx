@@ -39,4 +39,7 @@
   <data name="Company.Field.EarlyPaymentDiscount" xml:space="preserve"><value>Early payment discount</value></data>
   <data name="Company.Field.Bic" xml:space="preserve"><value>BIC</value></data>
   <data name="Company.Saved" xml:space="preserve"><value>Company profile saved.</value></data>
+  <data name="Company.Field.AccountHolder.Hint" xml:space="preserve"><value>Optional. The exact account name if it differs from the company name: it appears with the IBAN on invoices, the payment QR code and the e-invoice, so your customers' bank answers "match" before their transfers.</value></data>
+  <data name="Company.Holder.NoMatch" xml:space="preserve"><value>Does not look like the company name: check with the bank</value></data>
+  <data name="Company.Holder.CloseMatch" xml:space="preserve"><value>Close to the company name</value></data>
 </root>

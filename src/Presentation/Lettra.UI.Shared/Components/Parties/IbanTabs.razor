@@ -1,0 +1,6 @@
+@inject IStringLocalizer<SharedResource> L
+@* Les deux contrôles avant de payer un fournisseur : un IBAN qui vient de changer, un nom qui ne correspond pas au compte. *@
+<nav class="lt-subnav" aria-label="@L["Nav.IbanChanges"]">
+    <NavLink class="lt-subnav-link" href="iban-changes" Match="NavLinkMatch.All" id="tab-iban-changes"><Icon Name="shield-alert" Size="18" /> @L["IbanChanges.Tab"]</NavLink>
+    <NavLink class="lt-subnav-link" href="iban-changes/payees" Match="NavLinkMatch.All" id="tab-payees"><Icon Name="shield-check" Size="18" /> @L["Payees.Tab"]</NavLink>
+</nav>

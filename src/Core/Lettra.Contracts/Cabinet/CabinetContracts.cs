@@ -28,9 +28,15 @@ public static class DossierIndicatorKeys
     /// <summary>Lignes bancaires non rapprochées (chantier « Encaissements et rapprochement ») ; échéance = la plus ancienne.</summary>
     public const string BankUnreconciled = "banque.non-rapprochee";
 
+    /// <summary>
+    /// Changements d'IBAN de fournisseurs à vérifier avant tout paiement (fraude au faux fournisseur) ; échéance = le
+    /// plus ancien. Absent quand aucun n'attend.
+    /// </summary>
+    public const string SupplierIbanToVerify = "fournisseurs.iban-a-verifier";
+
     /// <summary>Ordre des colonnes du tableau (les clés inconnues suivent, par ordre alphabétique).</summary>
     public static IReadOnlyList<string> Known { get; } =
-        [OverdueInvoices, PlatformRejections, VatToDeclare, BankUnreconciled, OpenAlerts, ReviewPending];
+        [OverdueInvoices, PlatformRejections, VatToDeclare, BankUnreconciled, SupplierIbanToVerify, OpenAlerts, ReviewPending];
 }
 
 /// <summary>Urgence d'un indicateur : décide de la couleur et de l'ordre des dossiers.</summary>

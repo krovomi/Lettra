@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+    <data name="Portal.Customer.Title" xml:space="preserve"><value>Customer area</value></data>
+  <data name="Portal.Customer.Help" xml:space="preserve"><value>Send this link to your customer: they find their invoices and quotes, pay online and sign quotes, without creating an account.</value></data>
+  <data name="Portal.Customer.Create" xml:space="preserve"><value>Create a customer area link</value></data>
+  <data name="Portal.Customer.Created" xml:space="preserve"><value>Customer area link created.</value></data>
+  <data name="Portal.Invoice.Title" xml:space="preserve"><value>Online payment</value></data>
+  <data name="Portal.Invoice.Help" xml:space="preserve"><value>Send this link to your customer: they pay by card in seconds and the payment is recorded automatically against the invoice.</value></data>
+  <data name="Portal.Invoice.Create" xml:space="preserve"><value>Create a payment link</value></data>
+  <data name="Portal.Invoice.Created" xml:space="preserve"><value>Payment link created.</value></data>
+  <data name="Portal.Quote.Title" xml:space="preserve"><value>Online signature</value></data>
+  <data name="Portal.Quote.Help" xml:space="preserve"><value>Your customer signs the quote online: it is accepted at once and, if you ask for it, the down payment invoice is created and validated right after.</value></data>
+  <data name="Portal.Quote.Create" xml:space="preserve"><value>Get it signed online</value></data>
+  <data name="Portal.Quote.Created" xml:space="preserve"><value>Signature link created.</value></data>
+  <data name="Portal.DownPayment" xml:space="preserve"><value>Down payment on signature</value></data>
+  <data name="Portal.DownPayment.None" xml:space="preserve"><value>No down payment</value></data>
+  <data name="Portal.DownPayment.Percent" xml:space="preserve"><value>{0} % down payment</value></data>
+  <data name="Portal.Url" xml:space="preserve"><value>Link address</value></data>
+  <data name="Portal.Copy" xml:space="preserve"><value>Copy</value></data>
+  <data name="Portal.Copied" xml:space="preserve"><value>Link copied: paste it into your message to the customer.</value></data>
+  <data name="Portal.CopyFailed" xml:space="preserve"><value>Could not copy: select the address in the field.</value></data>
+  <data name="Portal.Open" xml:space="preserve"><value>Open</value></data>
+  <data name="Portal.ValidUntil" xml:space="preserve"><value>Valid until {0}. Lettra does not keep the full address: copy it now.</value></data>
+  <data name="Portal.Sent" xml:space="preserve"><value>Links sent</value></data>
+  <data name="Portal.Kind.Customer" xml:space="preserve"><value>Customer area</value></data>
+  <data name="Portal.Kind.Quote" xml:space="preserve"><value>Quote signature</value></data>
+  <data name="Portal.OpenedOn" xml:space="preserve"><value>opened on {0}</value></data>
+  <data name="Portal.NeverOpened" xml:space="preserve"><value>not opened yet</value></data>
+  <data name="Portal.State.Active" xml:space="preserve"><value>Active until {0}</value></data>
+  <data name="Portal.State.Expired" xml:space="preserve"><value>Expired</value></data>
+  <data name="Portal.State.Revoked" xml:space="preserve"><value>Revoked</value></data>
+  <data name="Portal.Revoke" xml:space="preserve"><value>Revoke</value></data>
+  <data name="Portal.Revoked" xml:space="preserve"><value>Link revoked: it no longer opens.</value></data>
+  <data name="Portal.Disabled" xml:space="preserve"><value>The customer area needs the firm's server, with a service account declared for it. It is not open on this installation.</value></data>
+  <data name="Portal.Signature.Title" xml:space="preserve"><value>Signed online</value></data>
+  <data name="Portal.Signature.By" xml:space="preserve"><value>Signed by {0} on {1}.</value></data>
+  <data name="Portal.Signature.Provider" xml:space="preserve"><value>Provider and reference</value></data>
+  <data name="Portal.Signature.Hash" xml:space="preserve"><value>Fingerprint of the signed quote</value></data>
+  <data name="Portal.Signature.DownPayment" xml:space="preserve"><value>Down payment</value></data>
+  <data name="Portal.Signature.SeeDownPayment" xml:space="preserve"><value>See the down payment invoice</value></data>
+  <data name="Portal.Signature.Simulated" xml:space="preserve"><value>Demonstration: simple electronic signature by a simulated provider (name, consent, timestamp, fingerprint).</value></data>
+  <data name="Error.Portal.Disabled" xml:space="preserve"><value>The customer area is not open on this installation (it needs the firm's server).</value></data>
+  <data name="Error.Portal.LinkNotFound" xml:space="preserve"><value>This link does not exist, has expired or has been revoked.</value></data>
+  <data name="Error.Portal.LinkRevoked" xml:space="preserve"><value>This link is already revoked.</value></data>
+  <data name="Error.Portal.ValidityInvalid" xml:space="preserve"><value>A link lasts from 1 to 90 days.</value></data>
+  <data name="Error.Portal.DownPaymentInvalid" xml:space="preserve"><value>The down payment goes from 0.01 to 100 %, and only on a quote link.</value></data>
+  <data name="Error.Portal.QuoteNotSignable" xml:space="preserve"><value>This quote cannot be signed online: it must be validated, still valid, and addressed to this customer.</value></data>
+  <data name="Error.Portal.SignerNameInvalid" xml:space="preserve"><value>The signer's name goes from 2 to 120 characters.</value></data>
+  <data name="Error.Portal.ConsentRequired" xml:space="preserve"><value>The signer must give their consent.</value></data>
+  <data name="Error.Portal.AlreadySigned" xml:space="preserve"><value>This quote is already signed.</value></data>
+  <data name="Error.Portal.NothingToPay" xml:space="preserve"><value>This invoice is already paid.</value></data>
+  <data name="Error.Portal.PaymentDeclined" xml:space="preserve"><value>The payment was declined.</value></data>
+  <data name="Error.Portal.CheckoutNotFound" xml:space="preserve"><value>This online payment is unknown or has expired.</value></data>
+  <data name="Error.Portal.SignatureNotFound" xml:space="preserve"><value>This quote was not signed online.</value></data>
+</root>

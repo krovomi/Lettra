@@ -99,6 +99,9 @@ internal sealed record EInvoice
 
     public string? Iban { get; init; }
 
+    /// <summary>Nom du compte de paiement (BT-85), quand le titulaire diffère du vendeur.</summary>
+    public string? PaymentAccountName { get; init; }
+
     public string? Bic { get; init; }
 
     public required IReadOnlyList<EInvoiceLine> Lines { get; init; }
@@ -166,6 +169,7 @@ internal sealed record EInvoice
             PrecedingInvoiceDate = credit ? precedingInvoiceDate : null,
             PaymentTerms = credit ? null : invoice.PaymentTerms ?? profile?.PaymentTerms,
             Iban = credit ? null : profile?.Iban,
+            PaymentAccountName = credit ? null : profile?.AccountHolderName,
             Bic = credit ? null : profile?.Bic,
             Lines = [.. invoice.Lines.OrderBy(l => l.Position).Select(Line)],
             Vat = [.. invoice.Totals.Breakdown.Select(b => new EInvoiceVat(

@@ -23,4 +23,7 @@ internal sealed class InProcessAccountingGateway(IServiceScopeFactory scopes) : 
     public Task<OperationResult<AccountLedgerResponse>> GetLedgerAsync(string account, DateOnly from, DateOnly to, Guid? customerId, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(
             scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetAccountLedgerQuery(dossier, account, from, to, customerId), ct), cancellationToken);
+
+    public Task<OperationResult<ClosingReviewResponse>> GetClosingReviewAsync(DateOnly? closingDate, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetClosingReviewQuery(dossier, closingDate), ct), cancellationToken);
 }
