@@ -171,6 +171,16 @@ public sealed class PaymentQrTests
     }
 
     [Fact]
+    public void Le_titulaire_exact_du_compte_remplace_le_nom_de_l_emetteur_dans_le_QR_code_et_sous_l_iban()
+    {
+        PrintableDocument facture = PdfDocumentRendererTests.Facture() with { AccountHolderName = "Dupont Jean" };
+
+        PdfDocumentRenderer.PaymentCode(facture, 100m)!.Split('\n')[5].Should().Be("Dupont Jean");
+        PdfDocumentRendererTests.TextOf(PdfDocumentRenderer.Build(facture)).Should().Contain("Titulaire Dupont Jean");
+        PdfDocumentRendererTests.TextOf(PdfDocumentRenderer.Build(PdfDocumentRendererTests.Facture())).Should().NotContain("Titulaire");
+    }
+
+    [Fact]
     public void Le_QR_code_est_traduit_dans_la_langue_du_document() =>
         PdfDocumentRendererTests.TextOf(PdfDocumentRenderer.Build(PdfDocumentRendererTests.Facture(CultureInfo.GetCultureInfo("en-US"))))
             .Should().Contain("Scan to pay").And.Contain("your banking app");

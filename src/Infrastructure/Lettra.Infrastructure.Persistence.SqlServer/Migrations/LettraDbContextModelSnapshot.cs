@@ -285,6 +285,10 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("AccountHolderName")
+                        .HasMaxLength(70)
+                        .HasColumnType("nvarchar(70)");
+
                     b.Property<string>("Bic")
                         .HasMaxLength(11)
                         .HasColumnType("nvarchar(11)");

@@ -280,6 +280,10 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("AccountHolderName")
+                        .HasMaxLength(70)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Bic")
                         .HasMaxLength(11)
                         .HasColumnType("TEXT");

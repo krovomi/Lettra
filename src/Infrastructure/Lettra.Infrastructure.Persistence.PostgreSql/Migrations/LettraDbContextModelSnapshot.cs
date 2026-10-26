@@ -285,6 +285,10 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("AccountHolderName")
+                        .HasMaxLength(70)
+                        .HasColumnType("character varying(70)");
+
                     b.Property<string>("Bic")
                         .HasMaxLength(11)
                         .HasColumnType("character varying(11)");
