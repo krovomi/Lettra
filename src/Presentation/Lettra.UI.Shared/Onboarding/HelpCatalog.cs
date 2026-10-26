@@ -47,6 +47,7 @@ public static class HelpCatalog
         new("practice-audit", ["tax/practice-audit", "tax/audit-kit", "exports/fec"], "tax/practice-audit", "Audit.Tab"),
         new("fec", ["exports/fec", "accounting", "accounting/*", "tax/*"], "exports/fec", "Nav.Fec"),
         new("dossier", ["", "cabinet", "review", "review/*"], "cabinet", "Nav.Cabinet"),
+        new("intercompany", ["intercompany", "cabinet", "suppliers"], "intercompany", "Nav.Intercompany"),
         new("as-of", ["as-of", "review", "accounting"], "as-of", "Nav.AsOf"),
         new("why", ["why", ""], "why", "Nav.Why"),
         new("what-if", ["what-if", "payment-weather", "tax"], "what-if", "Nav.WhatIf"),

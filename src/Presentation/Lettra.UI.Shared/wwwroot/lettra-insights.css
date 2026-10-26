@@ -226,3 +226,13 @@
 .lt-ready-gaps { margin: 0; padding-left: var(--space-5); display: grid; gap: var(--space-1); font-size: var(--text-sm); }
 .lt-ready-gaps a { overflow-wrap: anywhere; }
 .lt-ready-check > .lettra-button { align-self: flex-start; }
+
+/* Comptes intra-groupe : une carte par couple (vendeur → acheteur), les écarts en liste, les factures repliées. */
+.lt-ic-pairs { list-style: none; margin: var(--space-4) 0; padding: 0; display: grid; gap: var(--space-4); }
+.lt-ic-pair.has-gaps { border-left: 4px solid var(--color-danger-fg); }
+.lt-ic-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-3); }
+.lt-ic-head h2 { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); overflow-wrap: anywhere; font-size: var(--text-lg); }
+.lt-ic-head h2 > svg { color: var(--color-fg-muted); flex: none; }
+.lt-ic-gaps { margin-top: var(--space-3); }
+.lt-ic-gaps li > svg { color: var(--color-danger-fg); }
+.lt-ic-no-bank { margin: var(--space-2) 0 0; }

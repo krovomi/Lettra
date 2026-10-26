@@ -40,6 +40,7 @@ internal static class DossierEndpoints
         dossiers.MapMyAccess();
         dossiers.MapCabinetOverview();
         dossiers.MapCabinetPilotage();
+        dossiers.MapIntercompany();
         return dossiers;
     }
 

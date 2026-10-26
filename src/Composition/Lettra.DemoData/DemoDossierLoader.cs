@@ -298,7 +298,8 @@ internal sealed class DemoDossierLoader(IServiceProvider services, DemoClock clo
 
     private void Plan(DateTimeOffset at, Func<CancellationToken, Task> run) => _steps.Add(new Step(at, _steps.Count, run));
 
-    private static T Ok<T>(OperationResult<T> result, string what)
+    /// <summary>La valeur d'un appel du jeu ; un refus arrête le chargement avec ses codes.</summary>
+    internal static T Ok<T>(OperationResult<T> result, string what)
     {
         if (result is { IsSuccess: true, Value: { } value })
         {

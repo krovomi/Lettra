@@ -31,7 +31,7 @@ public static class DemoBankStatement
             .. documents.Where(d => d.Kind != InvoiceKind.CreditNote && d.Outstanding > 0m)
                 .OrderBy(d => d.DueDate ?? d.IssueDate).ThenBy(d => d.Number, StringComparer.Ordinal),
         ];
-        List<(DateOnly Date, decimal Amount, string Label, string? Name, string? Iban)> entries = [];
+        List<DemoBankEntry> entries = [];
         HashSet<ReceivableDocument> used = [];
         DateOnly DateFor(ReceivableDocument d, int daysAgo)
         {
@@ -45,14 +45,14 @@ public static class DemoBankStatement
         if (open.ElementAtOrDefault(0) is { } first)
         {
             used.Add(first);
-            entries.Add((DateFor(first, 6), first.Outstanding, $"VIR SEPA {Upper(first.CustomerName)} REF FACTURE {first.Number}", first.CustomerName, PayerIban));
+            entries.Add(new(DateFor(first, 6), first.Outstanding, $"VIR SEPA {Upper(first.CustomerName)} REF FACTURE {first.Number}", first.CustomerName, PayerIban));
         }
 
         // 2. Virement du montant exact, au nom du client, sans numéro.
         if (open.Skip(1).FirstOrDefault(d => !used.Contains(d)) is { } second)
         {
             used.Add(second);
-            entries.Add((DateFor(second, 5), second.Outstanding, $"VIR {Upper(second.CustomerName)} REGLEMENT", second.CustomerName, null));
+            entries.Add(new(DateFor(second, 5), second.Outstanding, $"VIR {Upper(second.CustomerName)} REGLEMENT", second.CustomerName, null));
         }
 
         // 3. Règlement partiel : la moitié, numéro cité.
@@ -60,14 +60,14 @@ public static class DemoBankStatement
         {
             used.Add(partial);
             decimal half = decimal.Round(partial.Outstanding / 2m, 2, MidpointRounding.ToZero);
-            entries.Add((DateFor(partial, 4), half, $"VIR ACOMPTE {partial.Number} {Upper(partial.CustomerName)}", partial.CustomerName, null));
+            entries.Add(new(DateFor(partial, 4), half, $"VIR ACOMPTE {partial.Number} {Upper(partial.CustomerName)}", partial.CustomerName, null));
         }
 
         // 4. Règlement amputé de 0,40 € de frais : écart de règlement sous le seuil.
         if (open.FirstOrDefault(d => !used.Contains(d) && d.Outstanding > 10m) is { } shortPaid)
         {
             used.Add(shortPaid);
-            entries.Add((DateFor(shortPaid, 3), shortPaid.Outstanding - 0.40m, $"VIR INTL {shortPaid.Number} FRAIS DEDUITS", shortPaid.CustomerName, null));
+            entries.Add(new(DateFor(shortPaid, 3), shortPaid.Outstanding - 0.40m, $"VIR INTL {shortPaid.Number} FRAIS DEDUITS", shortPaid.CustomerName, null));
         }
 
         // 5. Deux factures d'un même client payées par un seul virement, sans numéro.
@@ -76,36 +76,46 @@ public static class DemoBankStatement
         {
             ReceivableDocument[] two = [.. pair.Take(2)];
             used.UnionWith(two);
-            entries.Add((DateFor(two[1], 2), two[0].Outstanding + two[1].Outstanding, $"VIREMENT {Upper(two[0].CustomerName)} FACTURES", two[0].CustomerName, null));
+            entries.Add(new(DateFor(two[1], 2), two[0].Outstanding + two[1].Outstanding, $"VIREMENT {Upper(two[0].CustomerName)} FACTURES", two[0].CustomerName, null));
         }
 
         // 6. Ni facture ni client : frais bancaires (débit) et remise de chèque.
-        entries.Add((today.AddDays(-2), -12.50m, "FRAIS TENUE DE COMPTE", null, null));
+        entries.Add(new(today.AddDays(-2), -12.50m, "FRAIS TENUE DE COMPTE", null, null));
 
         // 7. Dépenses payées par le compte, dont le cabinet réclamera les justificatifs.
-        entries.Add((today.AddDays(-9), -84.60m, "PRLV SEPA ENERGIE DU SUD", "Énergie du Sud", null));
-        entries.Add((today.AddDays(-7), -46.80m, "CB FOURNITURES PLUS 0412", "Fournitures Plus", null));
-        entries.Add((today.AddDays(-3), -950.00m, "VIR LOYER SCI DU PORT", "SCI du Port", null));
-        entries.Add((today.AddDays(-1), 250.00m, "REMISE CHEQUE 4521873", null, null));
+        entries.Add(new(today.AddDays(-9), -84.60m, "PRLV SEPA ENERGIE DU SUD", "Énergie du Sud", null));
+        entries.Add(new(today.AddDays(-7), -46.80m, "CB FOURNITURES PLUS 0412", "Fournitures Plus", null));
+        entries.Add(new(today.AddDays(-3), -950.00m, "VIR LOYER SCI DU PORT", "SCI du Port", null));
+        entries.Add(new(today.AddDays(-1), 250.00m, "REMISE CHEQUE 4521873", null, null));
 
+        return Statement(AccountIban, $"DEMO-{today:yyyyMMdd}", entries, today);
+    }
+
+    /// <summary>
+    /// Un relevé CAMT.053 du compte <paramref name="accountIban"/> fait des opérations données (montant signé : négatif
+    /// pour un débit), identifié par <paramref name="id"/>. Sert aussi aux autres dossiers de la démonstration.
+    /// </summary>
+    public static byte[] Statement(string accountIban, string id, IReadOnlyList<DemoBankEntry> entries, DateOnly today)
+    {
+        ArgumentNullException.ThrowIfNull(entries);
         DateOnly from = entries.Min(e => e.Date);
         XElement statement = new(
             Ns + "Stmt",
-            new XElement(Ns + "Id", $"DEMO-{today:yyyyMMdd}"),
+            new XElement(Ns + "Id", id),
             new XElement(Ns + "CreDtTm", today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + "T07:00:00"),
             new XElement(Ns + "FrToDt",
                 new XElement(Ns + "FrDtTm", from.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + "T00:00:00"),
                 new XElement(Ns + "ToDtTm", today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + "T23:59:59")),
             new XElement(Ns + "Acct",
-                new XElement(Ns + "Id", new XElement(Ns + "IBAN", AccountIban)),
+                new XElement(Ns + "Id", new XElement(Ns + "IBAN", accountIban)),
                 new XElement(Ns + "Ccy", "EUR")),
-            entries.OrderBy(e => e.Date).Select((e, i) => Entry(e.Date, e.Amount, e.Label, e.Name, e.Iban, i + 1, today)));
+            entries.OrderBy(e => e.Date).Select((e, i) => Entry(e, i + 1, today)));
         XDocument document = new(
             new XDeclaration("1.0", "UTF-8", null),
             new XElement(Ns + "Document",
                 new XElement(Ns + "BkToCstmrStmt",
                     new XElement(Ns + "GrpHdr",
-                        new XElement(Ns + "MsgId", $"LETTRA-DEMO-{today:yyyyMMdd}"),
+                        new XElement(Ns + "MsgId", $"LETTRA-{id}"),
                         new XElement(Ns + "CreDtTm", today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + "T07:00:00")),
                     statement)));
         using MemoryStream stream = new();
@@ -117,8 +127,9 @@ public static class DemoBankStatement
         return stream.ToArray();
     }
 
-    private static XElement Entry(DateOnly date, decimal amount, string label, string? name, string? iban, int rank, DateOnly today)
+    private static XElement Entry(DemoBankEntry entry, int rank, DateOnly today)
     {
+        (DateOnly date, decimal amount, string label, string? name, string? iban) = entry;
         bool credit = amount > 0m;
         string day = date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         string value = Math.Abs(amount).ToString("0.00", CultureInfo.InvariantCulture);
@@ -143,3 +154,6 @@ public static class DemoBankStatement
                     new XElement(Ns + "RmtInf", new XElement(Ns + "Ustrd", label)))));
     }
 }
+
+/// <summary>Une opération d'un relevé de démonstration : montant signé (négatif pour un débit), contrepartie facultative.</summary>
+public sealed record DemoBankEntry(DateOnly Date, decimal Amount, string Label, string? Name, string? Iban);

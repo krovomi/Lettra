@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.Intercompany" xml:space="preserve"><value>Intercompany accounts</value></data>
+  <data name="Intercompany.Title" xml:space="preserve"><value>Intercompany accounts</value></data>
+  <data name="Intercompany.Subtitle" xml:space="preserve"><value>What the companies of a group invoice and pay each other.</value></data>
+  <data name="Intercompany.Subtitle.Period" xml:space="preserve"><value>What the companies of a group invoice and pay each other since {0}, among your {1} dossiers.</value></data>
+  <data name="Intercompany.Empty" xml:space="preserve"><value>No company in your dossiers invoices another one</value></data>
+  <data name="Intercompany.Empty.Text" xml:space="preserve"><value>Two dossiers form a pair when one has as customer the SIREN in the other's company profile, with at least one issued invoice in the last twelve months.</value></data>
+  <data name="Intercompany.Kpis" xml:space="preserve"><value>Key figures</value></data>
+  <data name="Intercompany.Kpi.Pairs" xml:space="preserve"><value>Company pairs</value></data>
+  <data name="Intercompany.Kpi.ToSettle" xml:space="preserve"><value>To settle</value></data>
+  <data name="Intercompany.Kpi.Invoiced" xml:space="preserve"><value>Invoiced between them</value></data>
+  <data name="Intercompany.Kpi.Gap" xml:space="preserve"><value>Payment gap</value></data>
+  <data name="Intercompany.Search" xml:space="preserve"><value>Company</value></data>
+  <data name="Intercompany.OnlyGaps" xml:space="preserve"><value>Gaps only</value></data>
+  <data name="Intercompany.Sort.Default" xml:space="preserve"><value>Gaps first</value></data>
+  <data name="Intercompany.Sort.Seller" xml:space="preserve"><value>Seller</value></data>
+  <data name="Intercompany.Filtered.Empty" xml:space="preserve"><value>No pair matches these filters</value></data>
+  <data name="Intercompany.Status.Gaps" xml:space="preserve"><value>To settle</value></data>
+  <data name="Intercompany.Status.Ok" xml:space="preserve"><value>Matching</value></data>
+  <data name="Intercompany.Invoiced" xml:space="preserve"><value>Invoiced</value></data>
+  <data name="Intercompany.PaidBySeller" xml:space="preserve"><value>Collected according to the seller</value></data>
+  <data name="Intercompany.PaidByBuyer" xml:space="preserve"><value>Paid according to the buyer's bank</value></data>
+  <data name="Intercompany.Difference" xml:space="preserve"><value>Gap</value></data>
+  <data name="Intercompany.NoBank" xml:space="preserve"><value>{0} has no bank transaction in the period: payments are not compared.</value></data>
+  <data name="Intercompany.Gap.SupplierMissing" xml:space="preserve"><value>{0} does not have {1} among its suppliers: its invoices have nowhere to land.</value></data>
+  <data name="Intercompany.Gap.SupplierIbanDiffers" xml:space="preserve"><value>At {0}, the supplier record “{1}” has another IBAN than the seller's company profile: a transfer would go elsewhere.</value></data>
+  <data name="Intercompany.Gap.PaidNotSeen" xml:space="preserve"><value>Invoices collected according to the seller with no transfer seen in {1}'s bank: {0}.</value></data>
+  <data name="Intercompany.Gap.SeenNotPaid" xml:space="preserve"><value>Invoices paid by {1}'s bank that the seller still expects: {0}.</value></data>
+  <data name="Intercompany.Gap.TotalsDiffer" xml:space="preserve"><value>The seller says it collected {0}, the buyer's bank paid {1}.</value></data>
+  <data name="Intercompany.Invoices" xml:space="preserve"><value>Invoices ({0})</value></data>
+  <data name="Intercompany.Invoice.Paid" xml:space="preserve"><value>collected</value></data>
+  <data name="Intercompany.Invoice.PartlyPaid" xml:space="preserve"><value>{0} collected</value></data>
+  <data name="Intercompany.Invoice.Unpaid" xml:space="preserve"><value>not collected</value></data>
+  <data name="Intercompany.InvoiceGap.PaidNotSeen" xml:space="preserve"><value>Transfer not seen</value></data>
+  <data name="Intercompany.InvoiceGap.SeenNotPaid" xml:space="preserve"><value>Paid, not collected</value></data>
+  <data name="Intercompany.Seen" xml:space="preserve"><value>Transfer seen</value></data>
+  <data name="Intercompany.Rules" xml:space="preserve"><value>How this reconciliation works</value></data>
+  <data name="Intercompany.Rule.Pairs" xml:space="preserve"><value>A pair: the seller invoiced the buyer (customer SIREN equal to the one in the other dossier's company profile) in the last twelve months. Issued invoices and down payments, net of credit notes.</value></data>
+  <data name="Intercompany.Rule.Matching" xml:space="preserve"><value>Each invoice looks for the buyer's transfer to the seller's IBAN: first the one whose label carries its number, otherwise a transfer of the same amount. A transfer pays only one invoice.</value></data>
+  <data name="Intercompany.Rule.Purchases" xml:space="preserve"><value>Received invoices are not recorded in Lettra yet: the buyer's side is its supplier record and its bank.</value></data>
+  <data name="Intercompany.Rule.Rights" xml:space="preserve"><value>Only the dossiers you can read are reconciled. Statement IBANs are never kept in clear: they are recognised by their fingerprint.</value></data>
+</root>

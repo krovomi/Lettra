@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.Intercompany" xml:space="preserve"><value>Comptes intra-groupe</value></data>
+  <data name="Intercompany.Title" xml:space="preserve"><value>Comptes intra-groupe</value></data>
+  <data name="Intercompany.Subtitle" xml:space="preserve"><value>Ce que les sociétés d'un même groupe se facturent et se paient.</value></data>
+  <data name="Intercompany.Subtitle.Period" xml:space="preserve"><value>Ce que les sociétés d'un même groupe se facturent et se paient depuis le {0}, parmi vos {1} dossiers.</value></data>
+  <data name="Intercompany.Empty" xml:space="preserve"><value>Aucune société de vos dossiers n'en facture une autre</value></data>
+  <data name="Intercompany.Empty.Text" xml:space="preserve"><value>Deux dossiers forment un couple quand l'un a pour client le SIREN inscrit dans la fiche entreprise de l'autre, avec au moins une facture validée dans les douze derniers mois.</value></data>
+  <data name="Intercompany.Kpis" xml:space="preserve"><value>Chiffres clés</value></data>
+  <data name="Intercompany.Kpi.Pairs" xml:space="preserve"><value>Couples de sociétés</value></data>
+  <data name="Intercompany.Kpi.ToSettle" xml:space="preserve"><value>À régler</value></data>
+  <data name="Intercompany.Kpi.Invoiced" xml:space="preserve"><value>Facturé entre elles</value></data>
+  <data name="Intercompany.Kpi.Gap" xml:space="preserve"><value>Écart de paiement</value></data>
+  <data name="Intercompany.Search" xml:space="preserve"><value>Société</value></data>
+  <data name="Intercompany.OnlyGaps" xml:space="preserve"><value>Seulement les écarts</value></data>
+  <data name="Intercompany.Sort.Default" xml:space="preserve"><value>Écarts d'abord</value></data>
+  <data name="Intercompany.Sort.Seller" xml:space="preserve"><value>Vendeur</value></data>
+  <data name="Intercompany.Filtered.Empty" xml:space="preserve"><value>Aucun couple ne répond à ces filtres</value></data>
+  <data name="Intercompany.Status.Gaps" xml:space="preserve"><value>À régler</value></data>
+  <data name="Intercompany.Status.Ok" xml:space="preserve"><value>Concordant</value></data>
+  <data name="Intercompany.Invoiced" xml:space="preserve"><value>Facturé</value></data>
+  <data name="Intercompany.PaidBySeller" xml:space="preserve"><value>Encaissé selon le vendeur</value></data>
+  <data name="Intercompany.PaidByBuyer" xml:space="preserve"><value>Payé selon la banque de l'acheteur</value></data>
+  <data name="Intercompany.Difference" xml:space="preserve"><value>Écart</value></data>
+  <data name="Intercompany.NoBank" xml:space="preserve"><value>{0} n'a aucune opération bancaire sur la période : les paiements ne sont pas comparés.</value></data>
+  <data name="Intercompany.Gap.SupplierMissing" xml:space="preserve"><value>{0} n'a pas {1} dans ses fournisseurs : ses factures n'ont nulle part où arriver.</value></data>
+  <data name="Intercompany.Gap.SupplierIbanDiffers" xml:space="preserve"><value>Chez {0}, la fiche fournisseur « {1} » porte un autre IBAN que la fiche entreprise du vendeur : un virement partirait ailleurs.</value></data>
+  <data name="Intercompany.Gap.PaidNotSeen" xml:space="preserve"><value>Factures encaissées selon le vendeur sans virement vu dans la banque de {1} : {0}.</value></data>
+  <data name="Intercompany.Gap.SeenNotPaid" xml:space="preserve"><value>Factures payées par la banque de {1} que le vendeur attend encore : {0}.</value></data>
+  <data name="Intercompany.Gap.TotalsDiffer" xml:space="preserve"><value>Le vendeur dit avoir encaissé {0}, la banque de l'acheteur a payé {1}.</value></data>
+  <data name="Intercompany.Invoices" xml:space="preserve"><value>Factures ({0})</value></data>
+  <data name="Intercompany.Invoice.Paid" xml:space="preserve"><value>encaissée</value></data>
+  <data name="Intercompany.Invoice.PartlyPaid" xml:space="preserve"><value>{0} encaissés</value></data>
+  <data name="Intercompany.Invoice.Unpaid" xml:space="preserve"><value>non encaissée</value></data>
+  <data name="Intercompany.InvoiceGap.PaidNotSeen" xml:space="preserve"><value>Virement non vu</value></data>
+  <data name="Intercompany.InvoiceGap.SeenNotPaid" xml:space="preserve"><value>Payée, non encaissée</value></data>
+  <data name="Intercompany.Seen" xml:space="preserve"><value>Virement vu</value></data>
+  <data name="Intercompany.Rules" xml:space="preserve"><value>Comment ce rapprochement est fait</value></data>
+  <data name="Intercompany.Rule.Pairs" xml:space="preserve"><value>Un couple : le vendeur a facturé l'acheteur (SIREN du client égal à celui de la fiche entreprise de l'autre dossier) dans les douze derniers mois. Factures et acomptes validés, avoirs déduits.</value></data>
+  <data name="Intercompany.Rule.Matching" xml:space="preserve"><value>Chaque facture cherche le virement de l'acheteur vers l'IBAN du vendeur : d'abord celui dont le libellé porte son numéro, sinon un virement du même montant. Un virement ne paie qu'une facture.</value></data>
+  <data name="Intercompany.Rule.Purchases" xml:space="preserve"><value>Les factures reçues ne sont pas encore enregistrées dans Lettra : le côté de l'acheteur, c'est sa fiche fournisseur et sa banque.</value></data>
+  <data name="Intercompany.Rule.Rights" xml:space="preserve"><value>Seuls les dossiers que vous pouvez lire sont rapprochés. Les IBAN des relevés ne sont jamais gardés en clair : ils sont reconnus par leur empreinte.</value></data>
+</root>

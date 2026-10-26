@@ -111,5 +111,6 @@ internal static class IconPaths
         ["link"] = "<path d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'/> <path d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'/>",
         ["copy"] = "<rect width='14' height='14' x='8' y='8' rx='2' ry='2'/> <path d='M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2'/>",
         ["external-link"] = "<path d='M15 3h6v6'/> <path d='M10 14 21 3'/> <path d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'/>",
+        ["arrow-left-right"] = "<path d='M8 3 4 7l4 4'/> <path d='M4 7h16'/> <path d='m16 21 4-4-4-4'/> <path d='M20 17H4'/>",
     };
 }

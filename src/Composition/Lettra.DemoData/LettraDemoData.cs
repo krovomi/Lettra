@@ -196,6 +196,16 @@ public static partial class LettraDemoData
             await new DemoDossierLoader(services, clock).CompleteProfileAsync(DemoCompanies.ActivityCodesBySiren, cancellationToken).ConfigureAwait(false);
         }
 
+        // Les comptes intra-groupe : le dossier principal facture le négoce, une seule fois (démonstrations anciennes comprises).
+        string trading = DemoCompanies.For(DemoBusiness.Trading).Name;
+        Guid? buyer = reports.FirstOrDefault(r => r.Business == DemoBusiness.Trading)?.DossierId
+            ?? existing.FirstOrDefault(d => string.Equals(d.Name, trading, StringComparison.Ordinal))?.Id;
+        if (buyer is Guid group)
+        {
+            clock.Set(TimeProvider.System.GetUtcNow());
+            await new DemoGroupLoader(services, session).LoadAsync(dossier, group, today, cancellationToken).ConfigureAwait(false);
+        }
+
         // Créer un dossier sur le poste l'ouvre : on rouvre celui de l'utilisateur.
         if (registry is not null && active is Guid opened && registry.ActiveDossierId != opened)
         {
