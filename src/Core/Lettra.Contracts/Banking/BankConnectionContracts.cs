@@ -79,8 +79,12 @@ public sealed record BankConnectionSyncOutcome(
 
 public sealed record SyncBankConnectionsResponse(IReadOnlyList<BankConnectionSyncOutcome> Outcomes);
 
-/// <summary>Le compte relié après le consentement, et sa première synchronisation (90 jours d'historique).</summary>
-public sealed record BankConnectionCompletedResponse(BankConnectionResponse Connection, BankConnectionSyncOutcome FirstSync);
+/// <summary>
+/// Le retour de la banque. Accord (<see cref="Granted"/>) : le compte relié et sa première synchronisation (90 jours
+/// d'historique). Refus sur la page de la banque : une issue normale du parcours, pas une erreur ; la connexion reste
+/// en attente, sans opération lue.
+/// </summary>
+public sealed record BankConnectionCompletedResponse(bool Granted, BankConnectionResponse Connection, BankConnectionSyncOutcome FirstSync);
 
 /// <summary>
 /// Les pages de l'application dans le parcours de consentement : le retour de la banque (<see cref="Callback"/>, avec

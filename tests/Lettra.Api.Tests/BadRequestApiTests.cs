@@ -13,6 +13,7 @@ public sealed class BadRequestApiTests(LettraApiFactory factory) : IClassFixture
     [InlineData("/api/v1/tax/payment-delays?closingDate=hier")]
     [InlineData("/api/v1/accounting/closing-review?closingDate=31-12-2025x")]
     [InlineData("/api/v1/customers?page=abc")]
+    [InlineData("/api/v1/insights/as-of?at=hier")]
     [InlineData("/api/v1/insights/practice-audit?from=hier&to=2025-12-31")]
     public async Task Un_parametre_illisible_rend_400_et_non_500(string path)
     {

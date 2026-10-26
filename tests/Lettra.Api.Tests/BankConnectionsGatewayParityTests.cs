@@ -29,7 +29,7 @@ public sealed partial class GatewayParityTests
         offer.Available.Should().BeTrue();
         unknown.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.BankConnection.InstitutionUnknown);
         consent.RedirectUrl.Should().StartWith(BankConnectionRoutes.SimulatedConsent);
-        refused.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.BankConnection.ConsentRefused);
+        refused.Value!.Granted.Should().BeFalse();
         linked.Connection.InstitutionName.Should().Be("Néo Compte (simulé)");
         linked.FirstSync.Imported.Should().BeGreaterThan(0);
         again.Outcomes.Should().ContainSingle().Which.Imported.Should().Be(0);
