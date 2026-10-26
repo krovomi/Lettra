@@ -223,6 +223,7 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(DossierAsOfResponse))]
 [JsonSerializable(typeof(FigureExplanationResponse))]
 [JsonSerializable(typeof(CallSheetResponse))]
+[JsonSerializable(typeof(IntercompanyResponse))]
 [JsonSerializable(typeof(EInvoicingReadinessResponse))]
 [JsonSerializable(typeof(WhatIfRequest))]
 [JsonSerializable(typeof(WhatIfResponse))]
