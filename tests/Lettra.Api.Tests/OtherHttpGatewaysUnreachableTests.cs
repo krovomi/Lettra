@@ -40,6 +40,7 @@ public sealed class OtherHttpGatewaysUnreachableTests
             (await insights.GetInvoiceProofAsync(id, default)).Errors,
             (await insights.VerifyInvoiceProofAsync("LETTRA-PREUVE-1", default)).Errors,
             (await insights.ListInvoiceProofKeysAsync(default)).Errors,
+            (await insights.GetDossierAsOfAsync(DateTimeOffset.UnixEpoch, default)).Errors,
             (await accounting.GetJournalAsync(new JournalQuery(Today, Today, "x", "411", id), default)).Errors,
             (await accounting.GetBalanceAsync(Today, Today, default)).Errors,
             (await accounting.GetLedgerAsync("411", Today, Today, id, default)).Errors,

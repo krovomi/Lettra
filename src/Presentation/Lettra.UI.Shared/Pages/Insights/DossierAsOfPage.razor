@@ -1,0 +1,342 @@
+@page "/as-of"
+@inject IInsightsGateway Insights
+@inject TimeProvider Clock
+@inject IStringLocalizer<SharedResource> L
+@* Le dossier qui remonte le temps : le journal inaltérable rejoué jusqu'à l'instant choisi (par exemple le 31 décembre
+   à 18 h) montre le chiffre d'affaires, la TVA, les factures dues et les soldes des clients de ce moment-là, à côté
+   de ceux d'aujourd'hui. Le rejeu vérifie la chaîne en passant ; rien n'est écrit. *@
+
+<PageTitle>@L["AsOf.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["AsOf.Title"]</h1>
+        <p class="lettra-muted">@L["AsOf.Subtitle"]</p>
+    </div>
+</div>
+
+<GeneralErrors Errors="_errors" />
+
+<section class="lt-panel lt-asof-form" aria-labelledby="asof-form-title">
+    <h2 id="asof-form-title">@L["AsOf.When"]</h2>
+    <div class="lt-asof-fields">
+        <label for="asof-date">@L["AsOf.Date"]
+            <DateField Id="asof-date" Value="_date" ValueChanged="d => _date = d ?? _date" Disabled="_busy" required />
+        </label>
+        <label for="asof-time">@L["AsOf.Time"]
+            <input id="asof-time" type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="18:00" @bind="_time" disabled="@_busy" aria-describedby="asof-time-hint" />
+        </label>
+        <button type="button" id="asof-go" class="lettra-button" disabled="@_busy" @onclick="LoadAsync">
+            <Icon Name="history" Size="18" /> @L["AsOf.Go"]
+        </button>
+    </div>
+    <p class="lettra-hint" id="asof-time-hint">@L["AsOf.Time.Hint"]</p>
+    @if (_timeInvalid)
+    {
+        <p class="lettra-field-error" id="asof-time-error" role="alert">@L["AsOf.Time.Invalid"]</p>
+    }
+    <div class="lt-asof-presets" role="group" aria-label="@L["AsOf.Presets"]">
+        <button type="button" id="asof-preset-year" class="lettra-button is-secondary" disabled="@_busy" @onclick="() => PresetAsync(YearEnd)">@L["AsOf.Preset.YearEnd"]</button>
+        <button type="button" id="asof-preset-month" class="lettra-button is-secondary" disabled="@_busy" @onclick="() => PresetAsync(MonthEnd)">@L["AsOf.Preset.MonthEnd"]</button>
+        <button type="button" id="asof-preset-week" class="lettra-button is-secondary" disabled="@_busy" @onclick="() => PresetAsync(WeekAgo)">@L["AsOf.Preset.WeekAgo"]</button>
+    </div>
+    @if (_busy)
+    {
+        <p role="status" aria-live="polite">@L["AsOf.Working"]</p>
+    }
+</section>
+
+@if (_view is { } view)
+{
+    <section class="lettra-card" id="asof-result" aria-labelledby="asof-moment">
+        <h2 id="asof-moment">@string.Format(Culture, L["AsOf.Moment"], Local(view.At).ToString("D", Culture), Local(view.At).ToString("t", Culture))</h2>
+        @if (view.EntriesReplayed == 0)
+        {
+            <p class="lettra-banner is-info" id="asof-empty">
+                <Icon Name="info" Size="18" />
+                @(view.FirstEntryAt is { } first ? string.Format(Culture, L["AsOf.Empty.Before"], Local(first).ToString("d", Culture)) : L["AsOf.Empty"])
+            </p>
+        }
+        else
+        {
+            <p class="@($"lettra-banner {(view.ChainIntact ? "is-success" : "is-danger")}")" id="asof-chain">
+                <Icon Name="@(view.ChainIntact ? "shield-check" : "triangle-alert")" Size="18" />
+                @string.Format(Culture, L[view.ChainIntact ? "AsOf.Chain.Intact" : "AsOf.Chain.Broken"], view.EntriesReplayed)
+            </p>
+        }
+        <p class="lettra-muted" id="asof-since">@string.Format(Culture, L["AsOf.Since"], view.EntriesAfter)</p>
+
+        <div class="lt-banking-stats" id="asof-stats">
+            <div class="lt-banking-stat is-amount"><span>@string.Format(Culture, L["AsOf.Stat.Revenue"], view.LegalDate.Year)</span><strong id="asof-revenue">@ExplorerText.Money(view.Year.ExclTax)</strong></div>
+            <div class="lt-banking-stat is-amount"><span>@L["AsOf.Stat.Vat"]</span><strong id="asof-vat">@ExplorerText.Money(view.Year.Vat)</strong></div>
+            <div class="lt-banking-stat is-pending">
+                <span>@L["AsOf.Stat.Receivables"]</span><strong id="asof-receivables">@ExplorerText.Money(view.ReceivablesInclTax)</strong>
+                <small class="lettra-muted" id="asof-receivables-now">@string.Format(Culture, L["AsOf.Now"], ExplorerText.Money(view.ReceivablesNowInclTax))</small>
+            </div>
+            <div class="lt-banking-stat is-proposed">
+                <span>@L["AsOf.Stat.Documents"]</span><strong id="asof-invoices">@view.Counts.Invoices</strong>
+                <small class="lettra-muted" id="asof-counts">@string.Format(Culture, L["AsOf.Counts"], view.Counts.CreditNotes, view.Counts.Quotes, view.Counts.Payments)</small>
+            </div>
+        </div>
+    </section>
+
+    <section class="lettra-card" aria-labelledby="asof-months-title">
+        <h2 id="asof-months-title">@string.Format(Culture, L["AsOf.Months"], view.LegalDate.Year)</h2>
+        <p class="lettra-muted">@L["AsOf.Months.Hint"]</p>
+        <ol class="lt-weather-weeks" id="asof-months">
+            @foreach (DossierAsOfMonthResponse month in view.Months)
+            {
+                <li @key="month.Month" class="@(month.Month == view.LegalDate.Month ? "is-current" : null)">
+                    <span class="lt-weather-week">@Culture.DateTimeFormat.GetMonthName(month.Month)</span>
+                    <span class="lt-weather-bar" aria-hidden="true"><span style="@($"width:{MonthWidth(view, month).ToString(CultureInfo.InvariantCulture)}%")"></span></span>
+                    <span class="lt-weather-amount">
+                        <strong>@ExplorerText.Money(month.ExclTax)</strong>
+                        <small class="lettra-muted">@string.Format(Culture, L["AsOf.Month.Vat"], ExplorerText.Money(month.Vat))</small>
+                    </span>
+                </li>
+            }
+        </ol>
+    </section>
+
+    <section class="lettra-card" aria-labelledby="asof-documents-title">
+        <h2 id="asof-documents-title">@L["AsOf.Documents"]</h2>
+        @if (view.OpenDocuments.Count == 0)
+        {
+            <p class="lettra-muted" id="asof-documents-empty">@L["AsOf.Documents.Empty"]</p>
+        }
+        else
+        {
+            <ListFilterBar Id="asof-documents-filters" ActiveCount="@(ListSearch.Normalize(_documentSearch) is null ? 0 : 1)" OnReset="() => { _documentSearch = null; _documentPage = 1; }">
+                <ChildContent>
+                    <div class="lt-filter">
+                        <label for="asof-documents-search">@L["AsOf.Documents.Search"]</label>
+                        <input id="asof-documents-search" type="search" @bind="_documentSearch" @bind:event="oninput" @bind:after="() => _documentPage = 1" autocomplete="off" />
+                    </div>
+                </ChildContent>
+                <More>
+                    <SortSelect Id="asof-documents-sort" Options="_documentSortOptions" State="_documentSort" OnSort="() => _documentPage = 1" />
+                </More>
+            </ListFilterBar>
+            <p class="lettra-muted" id="asof-documents-count">@string.Format(Culture, L["AsOf.Documents.Count"], Documents.Count, view.OpenDocuments.Count)</p>
+            <ul class="lt-asof-rows" id="asof-documents">
+                @foreach (DossierAsOfDocumentResponse document in Documents.Skip((_documentPage - 1) * PageSize).Take(PageSize))
+                {
+                    <li @key="document.DocumentId">
+                        <span class="lt-asof-main">
+                            <a href="@($"invoices/{document.DocumentId}")">@document.Number</a>
+                            <small class="lettra-muted">@document.CustomerName · @document.IssueDate.ToString("d", Culture)@(document.Kind == DossierAsOfDocumentKindDto.DownPaymentInvoice ? " · " + L["AsOf.DownPayment"] : string.Empty)</small>
+                        </span>
+                        <span class="lt-asof-amount"><small class="lettra-muted">@L["AsOf.Then"]</small> <strong>@ExplorerText.Money(document.OutstandingInclTax)</strong></span>
+                        <span class="lt-asof-amount"><small class="lettra-muted">@L["AsOf.Today"]</small> @NowText(document.OutstandingNowInclTax)</span>
+                    </li>
+                }
+            </ul>
+            <ListPager Id="asof-documents-pager" Page="_documentPage" Count="Documents.Count" Size="PageSize" OnPage="p => _documentPage = p" />
+        }
+    </section>
+
+    <section class="lettra-card" aria-labelledby="asof-customers-title">
+        <h2 id="asof-customers-title">@L["AsOf.Customers"]</h2>
+        @if (view.Customers.Count == 0)
+        {
+            <p class="lettra-muted" id="asof-customers-empty">@L["AsOf.Customers.Empty"]</p>
+        }
+        else
+        {
+            <ListFilterBar Id="asof-customers-filters" ActiveCount="@(ListSearch.Normalize(_customerSearch) is null ? 0 : 1)" OnReset="() => { _customerSearch = null; _customerPage = 1; }">
+                <ChildContent>
+                    <div class="lt-filter">
+                        <label for="asof-customers-search">@L["AsOf.Customers.Search"]</label>
+                        <input id="asof-customers-search" type="search" @bind="_customerSearch" @bind:event="oninput" @bind:after="() => _customerPage = 1" autocomplete="off" />
+                    </div>
+                </ChildContent>
+                <More>
+                    <SortSelect Id="asof-customers-sort" Options="_customerSortOptions" State="_customerSort" OnSort="() => _customerPage = 1" />
+                </More>
+            </ListFilterBar>
+            <ul class="lt-asof-rows" id="asof-customers">
+                @foreach (DossierAsOfCustomerResponse customer in Customers.Skip((_customerPage - 1) * PageSize).Take(PageSize))
+                {
+                    <li @key="customer.CustomerId">
+                        <span class="lt-asof-main">
+                            <a href="@($"customers/{customer.CustomerId}")">@customer.CustomerName</a>
+                            <small class="lettra-muted">@string.Format(Culture, L["AsOf.Customer.Detail"], ExplorerText.Money(customer.InvoicedInclTax), ExplorerText.Money(customer.CreditedInclTax), ExplorerText.Money(customer.PaidInclTax))</small>
+                        </span>
+                        <span class="lt-asof-amount"><small class="lettra-muted">@L["AsOf.Then"]</small> <strong>@ExplorerText.Money(customer.BalanceInclTax)</strong></span>
+                        <span class="lt-asof-amount"><small class="lettra-muted">@L["AsOf.Today"]</small> @NowText(customer.BalanceNowInclTax)</span>
+                    </li>
+                }
+            </ul>
+            <ListPager Id="asof-customers-pager" Page="_customerPage" Count="Customers.Count" Size="PageSize" OnPage="p => _customerPage = p" />
+        }
+    </section>
+
+    <section class="lettra-card" aria-labelledby="asof-events-title">
+        <h2 id="asof-events-title">@L["AsOf.Events"]</h2>
+        @if (view.LastClosing is { } closing)
+        {
+            <p id="asof-closing">
+                <Icon Name="lock" Size="16" />
+                @string.Format(Culture, L["AsOf.Closing"], closing.Number, closing.PeriodEnd.ToString("d", Culture), ExplorerText.Money(closing.CumulativeInclTax))
+            </p>
+        }
+        @if (view.LastEvents.Count == 0)
+        {
+            <p class="lettra-muted">@L["AsOf.Events.Empty"]</p>
+        }
+        else
+        {
+            <ol class="lt-asof-events" id="asof-events">
+                @foreach (DossierAsOfEventResponse entry in view.LastEvents)
+                {
+                    <li @key="entry.Sequence">
+                        <time datetime="@entry.At.ToString("O", CultureInfo.InvariantCulture)">@Local(entry.At).ToString("g", Culture)</time>
+                        <span>@L[$"AsOf.Event.{entry.Kind}"] @entry.Number</span>
+                        @if (entry.AmountInclTax is { } amount && amount != 0m)
+                        {
+                            <span class="lt-asof-amount">@ExplorerText.Money(amount)</span>
+                        }
+                    </li>
+                }
+            </ol>
+        }
+    </section>
+}
+
+<Collapsible Id="asof-rules" Title="@L["AsOf.Rules"]" InitiallyOpen="false">
+    <ul>
+        <li>@L["AsOf.Rule.Journal"]</li>
+        <li>@L["AsOf.Rule.Revenue"]</li>
+        <li>@L["AsOf.Rule.Due"]</li>
+        <li>@L["AsOf.Rule.Today"]</li>
+    </ul>
+</Collapsible>
+
+@code {
+    private const int PageSize = 20;
+
+    private static readonly Dictionary<DocumentSort, Func<DossierAsOfDocumentResponse, object?>> DocumentKeys = new()
+    {
+        [DocumentSort.Date] = d => d.IssueDate,
+        [DocumentSort.Due] = d => d.OutstandingInclTax,
+        [DocumentSort.Customer] = d => d.CustomerName,
+    };
+
+    private static readonly Dictionary<CustomerSort, Func<DossierAsOfCustomerResponse, object?>> CustomerKeys = new()
+    {
+        [CustomerSort.Balance] = c => c.BalanceInclTax,
+        [CustomerSort.Customer] = c => c.CustomerName,
+        [CustomerSort.Change] = c => c.BalanceNowInclTax - c.BalanceInclTax,
+    };
+
+    private DateOnly _date;
+    private string _time = "23:59";
+    private bool _timeInvalid;
+    private DossierAsOfResponse? _view;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private bool _busy;
+    private string? _documentSearch;
+    private string? _customerSearch;
+    private int _documentPage = 1;
+    private int _customerPage = 1;
+    private readonly SortState<DocumentSort> _documentSort = new(DocumentSort.Date, SortDirectionDto.Ascending);
+    private readonly SortState<CustomerSort> _customerSort = new(CustomerSort.Balance, SortDirectionDto.Descending);
+    private IReadOnlyList<SortOption<DocumentSort>> _documentSortOptions = [];
+    private IReadOnlyList<SortOption<CustomerSort>> _customerSortOptions = [];
+
+    private enum DocumentSort
+    {
+        Date,
+        Due,
+        Customer,
+    }
+
+    private enum CustomerSort
+    {
+        Balance,
+        Customer,
+        Change,
+    }
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private IReadOnlyList<DossierAsOfDocumentResponse> Documents =>
+        ListSorting.Sort(
+            (_view?.OpenDocuments ?? []).Where(d => ListSorting.Matches(d.Number + " " + d.CustomerName, ListSearch.Normalize(_documentSearch))),
+            _documentSort,
+            DocumentKeys);
+
+    private IReadOnlyList<DossierAsOfCustomerResponse> Customers =>
+        ListSorting.Sort(
+            (_view?.Customers ?? []).Where(c => ListSorting.Matches(c.CustomerName, ListSearch.Normalize(_customerSearch))),
+            _customerSort,
+            CustomerKeys);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _documentSortOptions =
+        [
+            new(DocumentSort.Date, L["AsOf.Sort.Date"]),
+            new(DocumentSort.Due, L["AsOf.Sort.Due"], SortDirectionDto.Descending),
+            new(DocumentSort.Customer, L["Billing.Column.Customer"]),
+        ];
+        _customerSortOptions =
+        [
+            new(CustomerSort.Balance, L["AsOf.Sort.Balance"], SortDirectionDto.Descending),
+            new(CustomerSort.Customer, L["Billing.Column.Customer"]),
+            new(CustomerSort.Change, L["AsOf.Sort.Change"]),
+        ];
+        await PresetAsync(MonthEnd);
+    }
+
+    /// <summary>Le dernier jour du mois précédent, à 23 h 59.</summary>
+    private static (DateOnly, string) MonthEnd(DateOnly today) => (new DateOnly(today.Year, today.Month, 1).AddDays(-1), "23:59");
+
+    /// <summary>Le 31 décembre de l'an dernier, à 23 h 59.</summary>
+    private static (DateOnly, string) YearEnd(DateOnly today) => (new DateOnly(today.Year - 1, 12, 31), "23:59");
+
+    /// <summary>Il y a sept jours, à 18 h.</summary>
+    private static (DateOnly, string) WeekAgo(DateOnly today) => (today.AddDays(-7), "18:00");
+
+    private async Task PresetAsync(Func<DateOnly, (DateOnly Date, string Time)> preset)
+    {
+        (_date, _time) = preset(Clock.LocalToday());
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        if (!AsOfTime.TryParse(_time, out TimeOnly time))
+        {
+            _timeInvalid = true;
+            return;
+        }
+
+        _timeInvalid = false;
+        _busy = true;
+        _errors = [];
+        try
+        {
+            OperationResult<DossierAsOfResponse> result = await Insights.GetDossierAsOfAsync(AsOfTime.Instant(_date, time, Clock.LocalTimeZone), CancellationToken.None);
+            _errors = result.Errors;
+            _view = result.Value;
+            (_documentPage, _customerPage) = (1, 1);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private DateTime Local(DateTimeOffset at) => TimeZoneInfo.ConvertTime(at, Clock.LocalTimeZone).DateTime;
+
+    private static decimal MonthWidth(DossierAsOfResponse view, DossierAsOfMonthResponse month)
+    {
+        decimal max = view.Months.Select(m => m.ExclTax).DefaultIfEmpty(0m).Max();
+        return max <= 0m || month.ExclTax <= 0m ? 0m : Math.Round(100m * month.ExclTax / max, 1);
+    }
+
+    private MarkupString NowText(decimal now) => new(now == 0m
+        ? $"<span class=\"lettra-status is-accepted\">{System.Net.WebUtility.HtmlEncode(L["AsOf.Settled"])}</span>"
+        : $"<span>{System.Net.WebUtility.HtmlEncode(ExplorerText.Money(now))}</span>");
+}

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net.Http.Json;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Insights;
@@ -46,4 +47,10 @@ internal sealed class HttpInsightsGateway(HttpClient http) : IInsightsGateway
     public Task<OperationResult<IReadOnlyList<InvoiceProofKeyResponse>>> ListInvoiceProofKeysAsync(CancellationToken cancellationToken) =>
         HttpCalls.SendAsync(
             ct => http.GetAsync(HttpCalls.Relative($"api/v1/insights/invoice-proof/keys"), ct), ContractsJsonContext.Default.IReadOnlyListInvoiceProofKeyResponse, cancellationToken);
+
+    public Task<OperationResult<DossierAsOfResponse>> GetDossierAsOfAsync(DateTimeOffset at, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.GetAsync(HttpCalls.Relative($"api/v1/insights/as-of?at={Uri.EscapeDataString(at.ToString("O", CultureInfo.InvariantCulture))}"), ct),
+            ContractsJsonContext.Default.DossierAsOfResponse,
+            cancellationToken);
 }
