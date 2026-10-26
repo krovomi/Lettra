@@ -89,7 +89,11 @@ internal sealed class FakeDossierContext : IAiDossierContext
 /// <summary>Horloge fixe : le badge de fraîcheur du skill pack dépend de la date.</summary>
 internal sealed class FixedTime(DateTimeOffset now) : TimeProvider
 {
-    public override DateTimeOffset GetUtcNow() => now;
+    private DateTimeOffset _now = now;
+
+    public override DateTimeOffset GetUtcNow() => _now;
+
+    public void Advance(TimeSpan delay) => _now += delay;
 }
 
 /// <summary>Monte la couche IA réelle (outils, orchestrateur, politique par configuration) autour d'un moteur scripté.</summary>
@@ -107,7 +111,8 @@ internal sealed class AssistantHarness : IAsyncDisposable
         Dictionary<string, string?>? settings = null,
         HttpMessageHandler? webHandler = null,
         DateTimeOffset? now = null,
-        bool namedEntityDetection = false)
+        bool namedEntityDetection = false,
+        Action<IServiceCollection>? configure = null)
     {
         Engine = engine;
         IConfiguration configuration = new ConfigurationBuilder().AddInMemoryCollection(settings ?? []).Build();
@@ -138,6 +143,7 @@ internal sealed class AssistantHarness : IAsyncDisposable
             services.AddHttpClient(nameof(Lettra.Ai.Tools.Tools.OfficialWebLookupTool)).ConfigurePrimaryHttpMessageHandler(() => webHandler);
         }
 
+        configure?.Invoke(services);
         _services = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
     }
 

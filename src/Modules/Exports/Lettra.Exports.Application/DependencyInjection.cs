@@ -1,3 +1,4 @@
+using Lettra.Application.Abstractions.Ai;
 using Lettra.Application.Abstractions.Cabinet;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Outbox;
@@ -53,6 +54,13 @@ public static class DependencyInjection
         services.AddScoped<IQueryHandler<GetDossierAsOfQuery, Result<DossierAsOfResponse>>, GetDossierAsOfHandler>();
         services.AddScoped<IQueryHandler<ExplainFigureQuery, Result<FigureExplanationResponse>>, ExplainFigureHandler>();
         services.AddScoped<IQueryHandler<SimulateWhatIfQuery, Result<WhatIfResponse>>, SimulateWhatIfHandler>();
+
+        // Les mêmes éclairages pour l'assistant IA du poste (MCP), en lecture seule et avec les droits de l'utilisateur.
+        services.AddScoped<IAiTool, PaymentWeatherTool>();
+        services.AddScoped<IAiTool, OverdueTool>();
+        services.AddScoped<IAiTool, MonthRevenueTool>();
+        services.AddScoped<IAiTool, DossierAsOfTool>();
+        services.AddScoped<IAiTool, WhatIfTool>();
 
         // Consultation de la comptabilité : journal des ventes, balance et grand livre, lus comme le FEC.
         services.AddScoped<IQueryHandler<GetSalesJournalQuery, Result<SalesJournalResponse>>, GetSalesJournalHandler>();
