@@ -148,7 +148,10 @@ internal sealed class CompleteBankConnectionHandler(
         Result<BankConsentGrant> grant = await aggregator.CompleteConsentAsync(connection.ProviderReference, command.Request?.Code, cancellationToken).ConfigureAwait(false);
         if (grant.IsFailure)
         {
-            return Result<BankConnectionCompletedResponse>.Failure(grant.Errors);
+            return grant.Errors.Any(e => e.Code == BankConnectionErrors.ConsentRefusedCode)
+                ? new BankConnectionCompletedResponse(
+                    false, BankConnectionView.ToResponse(connection, clock.GetUtcNow()), new BankConnectionSyncOutcome(connection.Id, connection.InstitutionName, 0, 0, 0, []))
+                : Result<BankConnectionCompletedResponse>.Failure(grant.Errors);
         }
 
         DateTimeOffset now = clock.GetUtcNow();
@@ -167,7 +170,7 @@ internal sealed class CompleteBankConnectionHandler(
 
         await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         BankConnectionSyncOutcome first = await sync.RunAsync(connection, cancellationToken).ConfigureAwait(false);
-        return new BankConnectionCompletedResponse(BankConnectionView.ToResponse(connection, clock.GetUtcNow()), first);
+        return new BankConnectionCompletedResponse(true, BankConnectionView.ToResponse(connection, clock.GetUtcNow()), first);
     }
 }
 

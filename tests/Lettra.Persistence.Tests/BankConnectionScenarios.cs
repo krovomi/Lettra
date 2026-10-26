@@ -86,8 +86,10 @@ internal static class BankConnectionScenarios
         BankConsentRedirectResponse consent = (await StartAsync(harness, dossier)).Value;
         consent.RedirectUrl.Should().StartWith($"{BankConnectionRoutes.SimulatedConsent}?connection={consent.ConnectionId}&bank=");
         (await Query(harness, dossier, new GetBankConnectionsQuery(dossier))).Value.Connections.Should().BeEmpty("un consentement pas encore donné n'est pas montré");
-        (await CompleteAsync(harness, dossier, consent.ConnectionId, BankConnectionRoutes.SimulatedRefusedCode))
-            .Errors[0].Code.Should().Be(ErrorCodes.BankConnection.ConsentRefused);
+        BankConnectionCompletedResponse refused = (await CompleteAsync(harness, dossier, consent.ConnectionId, BankConnectionRoutes.SimulatedRefusedCode)).Value;
+        refused.Granted.Should().BeFalse("un refus est une issue du parcours, pas une erreur");
+        refused.Connection.Status.Should().Be(BankConnectionStatusDto.Pending);
+        refused.FirstSync.Imported.Should().Be(0);
         (await CompleteAsync(harness, dossier, Guid.CreateVersion7(), BankConnectionRoutes.SimulatedGrantedCode))
             .Errors[0].Code.Should().Be(ErrorCodes.BankConnection.NotFound);
 
