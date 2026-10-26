@@ -11,7 +11,7 @@ namespace Lettra.Application.Features.Dossiers;
 /// dossiers situés d'un coup, puis chacun passe par le même calcul que le pipeline. Partagé par le sélecteur de dossier
 /// et la vue cabinet.
 /// </summary>
-internal sealed class AccessibleDossiers(
+public sealed class AccessibleDossiers(
     ICurrentUser user,
     IAuthorizationDirectory directory,
     IDossierDirectory dossiers,

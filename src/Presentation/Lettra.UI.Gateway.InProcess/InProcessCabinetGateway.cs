@@ -3,6 +3,8 @@ using Lettra.Application.Features.Dossiers;
 using Lettra.Contracts.Cabinet;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Dossiers;
+using Lettra.Contracts.Insights;
+using Lettra.Exports.Application.Insights;
 using Lettra.UI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -23,6 +25,9 @@ internal sealed class InProcessCabinetGateway(IServiceScopeFactory scopes) : ICa
     public Task<OperationResult<CabinetOverviewRefreshResponse>> RefreshOverviewAsync(Guid? dossierId, CancellationToken cancellationToken) =>
         InProcessScope.OutsideDossierAsync(
             scopes, sp => InProcessScope.SendAsync(sp, new RefreshCabinetOverviewCommand(dossierId is Guid id ? [id] : null), cancellationToken));
+
+    public Task<OperationResult<IntercompanyResponse>> GetIntercompanyAsync(CancellationToken cancellationToken) =>
+        InProcessScope.OutsideDossierAsync(scopes, sp => InProcessScope.QueryAsync(sp, new GetIntercompanyQuery(), cancellationToken));
 
     public Task<OperationResult<DossierReviewResponse>> GetReviewAsync(string period, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetDossierReviewQuery(dossier, period), ct), cancellationToken);

@@ -54,6 +54,7 @@ public sealed class OtherHttpGatewaysUnreachableTests
             (await accounting.GetClosingReviewAsync(null, default)).Errors,
             (await cabinet.ListDossiersAsync(default)).Errors,
             (await cabinet.GetOverviewAsync(default)).Errors,
+            (await cabinet.GetIntercompanyAsync(default)).Errors,
             (await cabinet.RefreshOverviewAsync(id, default)).Errors,
             (await cabinet.RefreshOverviewAsync(null, default)).Errors,
             (await cabinet.GetReviewAsync("2026-10", default)).Errors,
@@ -103,6 +104,7 @@ public sealed class OtherHttpGatewaysUnreachableTests
             (await invoices.DeleteAsync(id, 1, default)).Errors,
             (await alerts.GetAsync(id, false, default)).Errors,
             (await cabinet.GetOverviewAsync(default)).Errors,
+            (await cabinet.GetIntercompanyAsync(default)).Errors,
             (await session.GetAsync(default)).Errors,
             (await fec.ExportAsync(Today, Today, default)).Errors,
         ];

@@ -1,0 +1,214 @@
+@page "/intercompany"
+@using Lettra.Contracts.Insights
+@using Lettra.UI.Shared.Components.Explorer
+@inject ICabinetGateway Gateway
+@inject IStringLocalizer<SharedResource> L
+@* Les comptes intra-groupe : pour chaque couple de dossiers lisibles dont l'un a facturé l'autre, ce que le vendeur a
+   facturé et dit encaissé, ce que la banque de l'acheteur a payé, et les écarts à régler avant la clôture. Le serveur
+   rapproche tout ; rien n'est écrit. Cartes à toutes les tailles d'écran, les couples à régler d'abord. *@
+
+<PageTitle>@L["Intercompany.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Intercompany.Title"]</h1>
+        <p class="lettra-muted" id="ic-subtitle">@Subtitle</p>
+    </div>
+    <div class="lt-page-actions">
+        <a class="lettra-button is-ghost" href="cabinet" id="ic-cabinet"><Icon Name="layers" Size="18" /> @L["Nav.Cabinet"]</a>
+    </div>
+</div>
+
+<GeneralErrors Errors="_errors" />
+
+@if (_response is null)
+{
+    @if (_errors.Count == 0)
+    {
+        <ExplorerSkeleton Rows="4" />
+    }
+}
+else if (_response.Pairs.Count == 0)
+{
+    <EmptyState Id="ic-empty" IconName="arrow-left-right" Title="@L["Intercompany.Empty"]" Text="@L["Intercompany.Empty.Text"]" />
+}
+else
+{
+    <section class="lettra-card" aria-labelledby="ic-kpis-title">
+        <h2 id="ic-kpis-title" class="lettra-visually-hidden">@L["Intercompany.Kpis"]</h2>
+        <div class="lt-banking-stats" id="ic-stats">
+            <div class="lt-banking-stat"><span>@L["Intercompany.Kpi.Pairs"]</span><strong id="ic-pair-count">@_response.Pairs.Count</strong></div>
+            <div class="lt-banking-stat @(ToSettle > 0 ? "is-pending" : null)"><span>@L["Intercompany.Kpi.ToSettle"]</span><strong id="ic-to-settle">@ToSettle</strong></div>
+            <div class="lt-banking-stat is-amount"><span>@L["Intercompany.Kpi.Invoiced"]</span><strong id="ic-invoiced">@ExplorerText.Money(_response.Pairs.Sum(p => p.InvoicedInclTax))</strong></div>
+            <div class="lt-banking-stat"><span>@L["Intercompany.Kpi.Gap"]</span><strong id="ic-gap">@ExplorerText.Money(_response.Pairs.Where(p => p.BuyerBankLinked).Sum(p => Math.Abs(p.Difference)))</strong></div>
+        </div>
+    </section>
+
+    <ListFilterBar Id="ic-filters" ActiveCount="ActiveFilters" OnReset="ResetFilters">
+        <ChildContent>
+            <div class="lt-filter">
+                <label for="ic-search">@L["Intercompany.Search"]</label>
+                <input id="ic-search" type="search" autocomplete="off" @bind="_query" @bind:event="oninput" />
+            </div>
+            <label class="lt-chip"><input type="checkbox" id="ic-only-gaps" @bind="_onlyGaps" /> @L["Intercompany.OnlyGaps"]</label>
+        </ChildContent>
+        <More>
+            <SortSelect Id="ic-sort" Options="SortOptions" State="_sort" OnSort="StateHasChanged" DefaultLabel="@L["Intercompany.Sort.Default"]" PhoneOnly="false" />
+        </More>
+    </ListFilterBar>
+
+    @if (Pairs.Count == 0)
+    {
+        <EmptyState Id="ic-filtered-empty" IconName="circle-check" Title="@L["Intercompany.Filtered.Empty"]" />
+    }
+
+    <ul class="lt-ic-pairs" id="ic-pairs">
+        @foreach (IntercompanyPairResponse pair in Pairs)
+        {
+            <li class="lettra-card lt-ic-pair @(pair.Gaps.Count > 0 ? "has-gaps" : null)" @key="(pair.SellerDossierId, pair.BuyerDossierId)" id="@PairId(pair)">
+                <div class="lt-ic-head">
+                    <h2>
+                        <span class="lt-ic-seller">@pair.SellerName</span>
+                        <Icon Name="arrow-right" Size="18" />
+                        <span class="lt-ic-buyer">@pair.BuyerName</span>
+                    </h2>
+                    <span class="lettra-status @(pair.Gaps.Count > 0 ? "is-refused" : "is-paid")">@(pair.Gaps.Count > 0 ? L["Intercompany.Status.Gaps"] : L["Intercompany.Status.Ok"])</span>
+                </div>
+                <div class="lt-banking-stats">
+                    <div class="lt-banking-stat is-amount"><span>@L["Intercompany.Invoiced"]</span><strong>@ExplorerText.Money(pair.InvoicedInclTax)</strong></div>
+                    <div class="lt-banking-stat"><span>@L["Intercompany.PaidBySeller"]</span><strong>@ExplorerText.Money(pair.PaidBySeller)</strong></div>
+                    <div class="lt-banking-stat"><span>@L["Intercompany.PaidByBuyer"]</span><strong>@(pair.BuyerBankLinked ? ExplorerText.Money(pair.PaidByBuyer) : "—")</strong></div>
+                    <div class="lt-banking-stat @(pair.BuyerBankLinked && Math.Abs(pair.Difference) >= IntercompanyResponse.Tolerance ? "is-pending" : null)"><span>@L["Intercompany.Difference"]</span><strong>@(pair.BuyerBankLinked ? ExplorerText.Money(pair.Difference) : "—")</strong></div>
+                </div>
+                @if (!pair.BuyerBankLinked)
+                {
+                    <p class="lettra-hint lt-ic-no-bank">@string.Format(Culture, L["Intercompany.NoBank"], pair.BuyerName)</p>
+                }
+                @if (pair.Gaps.Count > 0)
+                {
+                    <ul class="lt-call-points lt-ic-gaps">
+                        @foreach (IntercompanyGapDto gap in pair.Gaps)
+                        {
+                            <li class="@($"is-{gap.ToString().ToLowerInvariant()}")"><Icon Name="@IconOf(gap)" Size="18" /> <span>@GapText(pair, gap)</span></li>
+                        }
+                    </ul>
+                }
+                <Collapsible Id="@($"{PairId(pair)}-invoices")" Title="@string.Format(Culture, L["Intercompany.Invoices"], pair.Invoices.Count)" InitiallyOpen="false">
+                    <ul class="lt-asof-rows">
+                        @foreach (IntercompanyInvoiceResponse invoice in pair.Invoices)
+                        {
+                            <li @key="invoice.InvoiceId">
+                                <span class="lt-asof-main">
+                                    <strong>@invoice.Number</strong>
+                                    <small class="lettra-muted">@invoice.IssueDate.ToString("d", Culture) · @Paid(invoice)</small>
+                                </span>
+                                <span class="lt-asof-amount">
+                                    @if (invoice.Gap is { } gap)
+                                    {
+                                        <span class="lettra-status is-refused">@L[$"Intercompany.InvoiceGap.{gap}"]</span>
+                                    }
+                                    else if (invoice.SeenAtBuyer)
+                                    {
+                                        <span class="lettra-status is-paid">@L["Intercompany.Seen"]</span>
+                                    }
+                                </span>
+                                <span class="lt-asof-amount"><strong>@ExplorerText.Money(invoice.NetInclTax)</strong></span>
+                            </li>
+                        }
+                    </ul>
+                </Collapsible>
+            </li>
+        }
+    </ul>
+}
+
+<Collapsible Id="ic-rules" Title="@L["Intercompany.Rules"]" InitiallyOpen="false">
+    <ul>
+        <li>@L["Intercompany.Rule.Pairs"]</li>
+        <li>@L["Intercompany.Rule.Matching"]</li>
+        <li>@L["Intercompany.Rule.Purchases"]</li>
+        <li>@L["Intercompany.Rule.Rights"]</li>
+    </ul>
+</Collapsible>
+
+@code {
+    private const string SellerColumn = "seller";
+    private const string InvoicedColumn = "invoiced";
+    private const string DifferenceColumn = "difference";
+
+    private IntercompanyResponse? _response;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private string? _query;
+    private bool _onlyGaps;
+
+    // Clé vide : l'ordre du serveur (les couples à régler d'abord), tant que l'utilisateur n'a pas choisi un tri.
+    private readonly SortState<string> _sort = new(string.Empty);
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private int ToSettle => _response?.Pairs.Count(p => p.Gaps.Count > 0) ?? 0;
+
+    private string Subtitle => _response is null
+        ? L["Intercompany.Subtitle"]
+        : string.Format(Culture, L["Intercompany.Subtitle.Period"], _response.Since.ToString("d", Culture), _response.Dossiers);
+
+    private int ActiveFilters => (string.IsNullOrWhiteSpace(_query) ? 0 : 1) + (_onlyGaps ? 1 : 0);
+
+    private IReadOnlyList<SortOption<string>> SortOptions =>
+    [
+        new(SellerColumn, L["Intercompany.Sort.Seller"]),
+        new(InvoicedColumn, L["Intercompany.Invoiced"], SortDirectionDto.Descending),
+        new(DifferenceColumn, L["Intercompany.Difference"], SortDirectionDto.Descending),
+    ];
+
+    private IReadOnlyList<IntercompanyPairResponse> Pairs
+    {
+        get
+        {
+            IEnumerable<IntercompanyPairResponse> pairs = (_response?.Pairs ?? [])
+                .Where(p => !_onlyGaps || p.Gaps.Count > 0)
+                .Where(p => ListSorting.Matches(p.SellerName, _query) || ListSorting.Matches(p.BuyerName, _query));
+            Dictionary<string, Func<IntercompanyPairResponse, object?>> keys = new(StringComparer.Ordinal)
+            {
+                [SellerColumn] = p => p.SellerName,
+                [InvoicedColumn] = p => p.InvoicedInclTax,
+                [DifferenceColumn] = p => p.BuyerBankLinked ? Math.Abs(p.Difference) : null,
+            };
+            return ListSorting.Sort(pairs, _sort, keys);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        OperationResult<IntercompanyResponse> result = await Gateway.GetIntercompanyAsync(CancellationToken.None);
+        (_response, _errors) = (result.Value, result.Errors);
+    }
+
+    private void ResetFilters() => (_query, _onlyGaps) = (null, false);
+
+    private static string PairId(IntercompanyPairResponse pair) => $"ic-{pair.SellerDossierId:N}-{pair.BuyerDossierId:N}";
+
+    private static string IconOf(IntercompanyGapDto gap) => gap switch
+    {
+        IntercompanyGapDto.SupplierMissing => "truck",
+        IntercompanyGapDto.SupplierIbanDiffers => "shield-alert",
+        IntercompanyGapDto.TotalsDiffer => "scale",
+        _ => "landmark",
+    };
+
+    private string GapText(IntercompanyPairResponse pair, IntercompanyGapDto gap) => gap switch
+    {
+        IntercompanyGapDto.SupplierMissing or IntercompanyGapDto.SupplierIbanDiffers =>
+            string.Format(Culture, L[$"Intercompany.Gap.{gap}"], pair.BuyerName, pair.SellerName),
+        IntercompanyGapDto.TotalsDiffer =>
+            string.Format(Culture, L["Intercompany.Gap.TotalsDiffer"], ExplorerText.Money(pair.PaidBySeller), ExplorerText.Money(pair.PaidByBuyer)),
+        _ => string.Format(Culture, L[$"Intercompany.Gap.{gap}"], pair.Invoices.Count(i => i.Gap == gap), pair.BuyerName),
+    };
+
+    private string Paid(IntercompanyInvoiceResponse invoice) =>
+        invoice.PaidBySeller >= invoice.NetInclTax - IntercompanyResponse.Tolerance && invoice.NetInclTax >= IntercompanyResponse.Tolerance
+            ? L["Intercompany.Invoice.Paid"]
+            : invoice.PaidBySeller > 0m
+                ? string.Format(Culture, L["Intercompany.Invoice.PartlyPaid"], ExplorerText.Money(invoice.PaidBySeller))
+                : L["Intercompany.Invoice.Unpaid"];
+}

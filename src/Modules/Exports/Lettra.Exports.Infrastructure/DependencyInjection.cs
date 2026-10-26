@@ -51,6 +51,7 @@ public static class DependencyInjection
         services.AddScoped<IPaymentHistoryReader, EfPaymentHistoryReader>();
         services.AddScoped<IIssuedInvoiceReader, EfIssuedInvoiceReader>();
         services.AddScoped<IEInvoicingReadinessReader, EfEInvoicingReadinessReader>();
+        services.AddScoped<IIntercompanyReader, EfIntercompanyReader>();
         AddPortalProviders(services, configuration);
         AddBankAggregator(services, configuration);
         services.AddScoped<IDossierPresentReader, EfDossierPresentReader>();
