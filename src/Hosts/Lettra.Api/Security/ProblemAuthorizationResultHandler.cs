@@ -30,7 +30,7 @@ internal sealed class ProblemAuthorizationResultHandler : IAuthorizationMiddlewa
 
         if (error == SecurityErrors.Unauthenticated || error == SecurityErrors.MfaRequired)
         {
-            context.Response.Headers.WWWAuthenticate = "Bearer";
+            context.Response.Headers.WWWAuthenticate = McpClientConnection.WwwAuthenticate(context.Request);
         }
 
         await new[] { error }.ToProblem().ExecuteAsync(context).ConfigureAwait(false);

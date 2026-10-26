@@ -184,6 +184,27 @@ public sealed class RealmConfigurationTests
     }
 
     [Fact]
+    public void L_assistant_IA_du_poste_est_un_client_public_PKCE_limite_a_la_boucle_locale()
+    {
+        // Un client MCP (Claude Desktop, VS Code…) choisit son chemin de retour : le joker ne porte que sur le chemin
+        // d'une adresse de bouclage, sans port ni « localhost » (RFC 8252 §7.3 et §8.3). Pas de jeton hors ligne.
+        JsonElement mcp = Client("lettra-mcp");
+
+        Bool(mcp, "publicClient").Should().BeTrue();
+        mcp.TryGetProperty("secret", out _).Should().BeFalse();
+        Bool(mcp, "standardFlowEnabled").Should().BeTrue();
+        Bool(mcp, "implicitFlowEnabled").Should().BeFalse();
+        Bool(mcp, "directAccessGrantsEnabled").Should().BeFalse();
+        Bool(mcp, "fullScopeAllowed").Should().BeFalse();
+        mcp.GetProperty("attributes").GetProperty("pkce.code.challenge.method").GetString().Should().Be("S256");
+        mcp.GetProperty("redirectUris").EnumerateArray().Select(u => u.GetString()).Should().Equal("http://127.0.0.1/*");
+        mcp.GetProperty("optionalClientScopes").EnumerateArray().Should().BeEmpty();
+        mcp.GetProperty("defaultClientScopes").EnumerateArray().Select(s => s.GetString()).Should().Contain(["basic", "profile", "acr"]);
+        mcp.GetProperty("protocolMappers").EnumerateArray().Select(m => m.GetProperty("name").GetString())
+            .Should().Contain(["amr", "organization", "audience-lettra-api"], "l'API vérifie le second facteur, le cabinet et l'audience");
+    }
+
+    [Fact]
     public void Le_BFF_est_confidentiel_et_son_secret_vient_de_l_environnement()
     {
         JsonElement bff = Client("lettra-bff");

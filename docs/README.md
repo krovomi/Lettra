@@ -14,6 +14,7 @@ dans le [README](../README.md#principes-de-conception), le détail, les mesures 
 - [Accompagnement, aide à la saisie et voix dans l'interface](aide-a-la-saisie.md)
 - [Annuaire SIRENE](annuaire.md)
 - [Assistant IA : points ouverts et point fermé](assistant-ia.md)
+- [Lettra dans l'assistant IA du poste (MCP)](assistant-du-poste.md)
 - [Banque connectée](banque-connectee.md)
 - [Changement d'IBAN d'un fournisseur, nom et IBAN vérifiés](iban-fournisseurs.md)
 - [Dates et nombres dans la langue de l'écran](dates-et-langue.md)
