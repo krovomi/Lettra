@@ -1,0 +1,185 @@
+@page "/brief"
+@using Lettra.Contracts.Banking
+@using Lettra.Contracts.Tax
+@using Lettra.UI.Shared.Components.Explorer
+@using Lettra.UI.Shared.Brief
+@inject IBillingDashboardGateway Dashboard
+@inject IBankingGateway Banking
+@inject ITaxGateway Tax
+@inject Optional<IReceivablesGateway> OptionalReceivables
+@inject TimeProvider Clock
+@inject IStringLocalizer<SharedResource> L
+@* « En bref » : l'écran du dirigeant sur son téléphone. Chiffre d'affaires, encaissements, TVA à payer et mouvements
+   bancaires du mois, puis ce qui mérite un coup d'œil : les gros encaissements récents et les factures en retard.
+   Chaque carte reprend un chiffre que Lettra calcule déjà pour un autre écran ; une carte dont la lecture est
+   refusée (droits) ne s'affiche pas, les autres restent. *@
+
+<PageTitle>@L["Brief.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Brief.Title"]</h1>
+        <p class="lettra-muted" id="brief-today">@string.Format(Culture, L["Brief.Subtitle"], Today.ToString("MMMM yyyy", Culture))</p>
+    </div>
+</div>
+
+<GeneralErrors Errors="_errors" />
+
+@if (!_loaded)
+{
+    <div class="lt-kpis" aria-busy="true" aria-label="@L["Loading"]">
+        @for (int i = 0; i < 4; i++)
+        {
+            <div class="lt-kpi"><span class="lt-skeleton" style="height: 1rem; width: 50%"></span><span class="lt-skeleton" style="height: 2rem; width: 70%"></span></div>
+        }
+    </div>
+}
+else
+{
+    <section class="lt-kpis lt-brief-kpis" aria-label="@L["Brief.Kpis"]">
+        @if (_revenue is { } revenue)
+        {
+            <a class="lt-kpi" href="invoices" id="brief-revenue">
+                <span class="lt-kpi-head">@L["Brief.Revenue"]<span class="lt-kpi-icon"><Icon Name="trending-up" /></span></span>
+                <span class="lt-kpi-value">@ExplorerText.Money(revenue.ThisMonth)</span>
+                <span class="lt-kpi-note">
+                    @if (revenue.Trend is { } trend)
+                    {
+                        <span class="lt-trend @(trend >= 0 ? "is-up" : "is-down")">
+                            <Icon Name="@(trend >= 0 ? "trending-up" : "trending-down")" Size="14" />@trend.ToString("+0;-0;0", Culture) %
+                        </span>
+                        @(" " + L["Home.Kpi.VsPrevious"])
+                    }
+                    else
+                    {
+                        @L["Home.Kpi.NoPrevious"]
+                    }
+                </span>
+            </a>
+        }
+        @if (_payments is { } payments)
+        {
+            <a class="lt-kpi" href="payments" id="brief-collected">
+                <span class="lt-kpi-head">@L["Brief.Collected"]<span class="lt-kpi-icon"><Icon Name="hand-coins" /></span></span>
+                <span class="lt-kpi-value">@ExplorerText.Money(OwnerBrief.Collected(payments.Items, MonthStart, Today))</span>
+                <span class="lt-kpi-note">@(payments.TotalCount > payments.Items.Count ? L["Brief.Collected.Partial"] : L["Brief.Collected.Note"])</span>
+            </a>
+        }
+        @if (_vat is { } vat)
+        {
+            <a class="@($"lt-kpi {(vat.NetVatDue > 0m ? "is-alert" : null)}")" href="tax" id="brief-vat">
+                <span class="lt-kpi-head">@(vat.VatCredit > 0m ? L["Brief.VatCredit"] : L["Brief.Vat"])<span class="lt-kpi-icon"><Icon Name="calendar-clock" /></span></span>
+                <span class="lt-kpi-value">@ExplorerText.Money(vat.VatCredit > 0m ? vat.VatCredit : vat.NetVatDue)</span>
+                <span class="lt-kpi-note">@string.Format(Culture, L["Brief.Vat.Note"], DateText.Format(vat.From, Culture), DateText.Format(vat.To, Culture), DateText.Format(vat.DueDate, Culture))</span>
+            </a>
+        }
+        @if (_bank is { } bank)
+        {
+            <a class="lt-kpi" href="bank" id="brief-bank">
+                <span class="lt-kpi-head">@L["Brief.Bank"]<span class="lt-kpi-icon"><Icon Name="landmark" /></span></span>
+                <span class="lt-kpi-value">@Signed(bank.Net)</span>
+                <span class="lt-kpi-note">@string.Format(Culture, L["Brief.Bank.Note"], ExplorerText.Money(bank.In), ExplorerText.Money(bank.Out))</span>
+            </a>
+        }
+        @if (_receivables is { } due)
+        {
+            <a class="@($"lt-kpi {(due.OverdueCount > 0 ? "is-alert" : null)}")" href="reminders" id="brief-overdue">
+                <span class="lt-kpi-head">@L["Home.Kpi.Overdue"]<span class="lt-kpi-icon"><Icon Name="clock" /></span></span>
+                <span class="lt-kpi-value">@ExplorerText.Money(due.OverdueInclTax)</span>
+                <span class="lt-kpi-note">@(due.OverdueCount > 0 ? string.Format(Culture, L["Home.Kpi.OverdueNote"], due.OverdueCount) : L["Home.Kpi.OverdueNone"])</span>
+            </a>
+        }
+    </section>
+
+    <section class="lt-panel" aria-labelledby="brief-watch-title" id="brief-watch">
+        <div class="lt-panel-head">
+            <h2 id="brief-watch-title">@L["Brief.Watch"]</h2>
+            @if (_payments is not null)
+            {
+                <div class="lt-filter lt-brief-threshold">
+                    <label for="brief-threshold">@L["Brief.Threshold"]</label>
+                    <select id="brief-threshold" @bind="_threshold">
+                        @foreach (decimal option in OwnerBrief.Thresholds)
+                        {
+                            <option value="@option.ToString(CultureInfo.InvariantCulture)">@ExplorerText.Money(option)</option>
+                        }
+                    </select>
+                </div>
+            }
+        </div>
+        @if (BigPayments.Count == 0 && (_receivables?.Oldest.Count ?? 0) == 0)
+        {
+            <p class="lt-panel-ok" id="brief-watch-none"><Icon Name="circle-check" Size="18" /> @L["Brief.Watch.None"]</p>
+        }
+        else
+        {
+            <ul class="lt-list" id="brief-watch-list">
+                @foreach (PaymentSummary payment in BigPayments)
+                {
+                    <li @key="payment.Id" class="is-good">
+                        <a href="@($"payments/{payment.Id}")">
+                            <span class="lt-list-title"><Icon Name="hand-coins" Size="16" /> @string.Format(Culture, L["Brief.Watch.Paid"], payment.CustomerName)</span>
+                            <span class="lt-list-meta">@DateText.Format(payment.Date, Culture) · @string.Join(", ", payment.InvoiceNumbers)</span>
+                            <span class="lt-list-amount">@ExplorerText.Money(payment.Amount)</span>
+                        </a>
+                    </li>
+                }
+                @foreach (OverdueInvoiceResponse invoice in _receivables?.Oldest ?? [])
+                {
+                    <li @key="invoice.InvoiceId">
+                        <a href="@($"invoices/{invoice.InvoiceId}")">
+                            <span class="lt-list-title"><Icon Name="clock" Size="16" /> @string.Format(Culture, L["Brief.Watch.Late"], invoice.CustomerName)</span>
+                            <span class="lt-list-meta">@invoice.Number · <span class="lt-late">@string.Format(Culture, L["Home.Overdue.Late"], invoice.DaysLate)</span></span>
+                            <span class="lt-list-amount">@ExplorerText.Money(invoice.OutstandingInclTax)</span>
+                        </a>
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+}
+
+@code {
+    private bool _loaded;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private DashboardFigures? _revenue;
+    private PagedResponse<PaymentSummary>? _payments;
+    private VatReturnResponse? _vat;
+    private BankFlows? _bank;
+    private ReceivablesSummaryResponse? _receivables;
+    private decimal _threshold = OwnerBrief.DefaultThreshold;
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private DateOnly Today => Clock.LocalToday();
+
+    private DateOnly MonthStart => OwnerBrief.MonthStart(Today);
+
+    private IReadOnlyList<PaymentSummary> BigPayments => _payments is null ? [] : OwnerBrief.BigPayments(_payments.Items, Today, _threshold);
+
+    protected override async Task OnInitializedAsync()
+    {
+        Task<OperationResult<ReceivablesSummaryResponse>>? receivables = OptionalReceivables.Value?.GetSummaryAsync(CancellationToken.None);
+        Task<OperationResult<BillingDashboardResponse>> dashboard = Dashboard.GetAsync(CancellationToken.None);
+        Task<OperationResult<PagedResponse<PaymentSummary>>> payments = Banking.ListPaymentsAsync(
+            new PaymentListQuery(From: OwnerBrief.PaymentsFrom(Today), To: Today, PageSize: OwnerBrief.PaymentsPageSize), CancellationToken.None);
+        Task<OperationResult<VatReturnResponse>> vat = Tax.GetVatReturnAsync(Today, CancellationToken.None);
+        Task<OperationResult<ReconciliationResponse>> bank = Banking.GetReconciliationAsync(CancellationToken.None);
+        await Task.WhenAll(dashboard, payments, vat, bank);
+
+        _revenue = (await dashboard).Value is { } figures ? new DashboardFigures(figures, [], []) : null;
+        _payments = (await payments).Value;
+        _vat = (await vat).Value;
+        _bank = (await bank).Value is { } statement && statement.Lines.Count > 0 ? OwnerBrief.Flows(statement.Lines, MonthStart, Today) : null;
+        _receivables = receivables is null ? null : (await receivables).Value;
+        // Un refus de droits masque seulement sa carte ; une panne (réseau) est la même pour chaque lecture : affichée une fois.
+        _errors = [.. new IReadOnlyList<ErrorDetail>[] { (await dashboard).Errors, (await payments).Errors, (await vat).Errors, (await bank).Errors }
+            .SelectMany(e => e)
+            .Where(e => e.Code != ErrorCodes.Security.Forbidden)
+            .Select(e => e with { Target = null })
+            .DistinctBy(e => e.Code)];
+        _loaded = true;
+    }
+
+    private string Signed(decimal value) => (value > 0m ? "+" : string.Empty) + ExplorerText.Money(value);
+}

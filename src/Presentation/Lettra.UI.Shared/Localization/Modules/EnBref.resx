@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.Brief" xml:space="preserve"><value>En bref</value></data>
+  <data name="Brief.Title" xml:space="preserve"><value>En bref</value></data>
+  <data name="Brief.Subtitle" xml:space="preserve"><value>Votre entreprise en {0}, d'un coup d'œil.</value></data>
+  <data name="Brief.Kpis" xml:space="preserve"><value>Les chiffres du mois</value></data>
+  <data name="Brief.Revenue" xml:space="preserve"><value>Chiffre d'affaires HT du mois</value></data>
+  <data name="Brief.Collected" xml:space="preserve"><value>Encaissé ce mois</value></data>
+  <data name="Brief.Collected.Note" xml:space="preserve"><value>Règlements reçus depuis le 1er du mois</value></data>
+  <data name="Brief.Collected.Partial" xml:space="preserve"><value>Au moins : trop d'encaissements pour les lire d'un coup</value></data>
+  <data name="Brief.Vat" xml:space="preserve"><value>TVA à payer</value></data>
+  <data name="Brief.VatCredit" xml:space="preserve"><value>Crédit de TVA</value></data>
+  <data name="Brief.Vat.Note" xml:space="preserve"><value>Période du {0} au {1}, à déclarer avant le {2}</value></data>
+  <data name="Brief.Bank" xml:space="preserve"><value>Mouvements bancaires du mois</value></data>
+  <data name="Brief.Bank.Note" xml:space="preserve"><value>Entrées {0} · sorties {1}</value></data>
+  <data name="Brief.Watch" xml:space="preserve"><value>À surveiller</value></data>
+  <data name="Brief.Threshold" xml:space="preserve"><value>Encaissements à partir de</value></data>
+  <data name="Brief.Watch.None" xml:space="preserve"><value>Rien à signaler : aucune facture en retard et aucun gros encaissement depuis 30 jours.</value></data>
+  <data name="Brief.Watch.Paid" xml:space="preserve"><value>{0} a payé</value></data>
+  <data name="Brief.Watch.Late" xml:space="preserve"><value>{0} est en retard</value></data>
+</root>
