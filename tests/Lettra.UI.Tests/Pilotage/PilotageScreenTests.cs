@@ -51,6 +51,25 @@ public sealed class PilotageScreenTests : BunitContext
     }
 
     [Fact]
+    public void Chaque_bloc_a_son_commentaire_ecrit_et_le_bouton_le_copie()
+    {
+        IRenderedComponent<PilotagePage> page = Render<PilotagePage>();
+        page.WaitForAssertion(() => page.FindAll(".lt-pilotage-comment").Should().HaveCount(4));
+
+        Plain(page.Find("#pilotage-comment-clients p").TextContent).Should().StartWith("Le délai moyen de paiement des clients est de 62 jours : c'est trop long");
+        page.Find("#pilotage-comment-sales p").TextContent.Should().Contain("en baisse de 12 %");
+        page.Find("#pilotage-chart-index-comment p").TextContent.Should().Contain("l'activité est à l'indice 95");
+        page.Find("#pilotage-chart-invoices-comment p").TextContent.Should().Contain("10 factures émises en septembre 2026, contre 9 en août 2026");
+
+        page.Find("#pilotage-comment-sales button").Click();
+
+        JSInterop.VerifyInvoke("navigator.clipboard.writeText").Arguments[0].Should().Be(page.Find("#pilotage-comment-sales p").TextContent);
+        this.ToastText().Should().Be("Commentaire copié.");
+        page.Find("#pilotage-tab-dossiers").Click();
+        page.Find("#pilotage-comment-cabinet p").TextContent.Should().StartWith("3 dossiers suivis.");
+    }
+
+    [Fact]
     public void Mes_dossiers_se_filtre_se_trie_et_ouvre_un_dossier_en_le_disant_dans_le_toaster()
     {
         IRenderedComponent<PilotagePage> page = Render<PilotagePage>();

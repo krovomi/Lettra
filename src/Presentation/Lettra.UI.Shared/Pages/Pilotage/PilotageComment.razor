@@ -1,0 +1,32 @@
+@inject IJSRuntime JS
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+@* Le commentaire écrit d'un bloc des tableaux de bord, avec un bouton pour le copier dans un rapport au client. *@
+
+<div class="lt-pilotage-comment" id="@Id">
+    <Icon Name="text-quote" Size="18" />
+    <p>@Text</p>
+    <button type="button" class="lettra-button is-ghost is-small" title="@L["Pilotage.Comment.Copy.Title"]" @onclick="CopyAsync">
+        <Icon Name="copy" Size="16" /> <span>@L["Pilotage.Comment.Copy"]</span>
+    </button>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Id { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired] public string Text { get; set; } = string.Empty;
+
+    private async Task CopyAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", Text);
+            Toasts.Show(ToastKind.Success, L["Pilotage.Comment.Copied"]);
+        }
+        catch (JSException)
+        {
+            // Presse-papiers refusé (page non sécurisée, permission) : le texte reste sélectionnable.
+            Toasts.Show(ToastKind.Warning, L["Pilotage.Comment.CopyFailed"]);
+        }
+    }
+}

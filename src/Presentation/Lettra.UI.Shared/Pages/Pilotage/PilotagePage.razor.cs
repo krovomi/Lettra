@@ -213,6 +213,7 @@ public sealed partial class PilotagePage
         Contracts.Cabinet.DossierIndicatorKeys.OverdueInvoices or Contracts.Cabinet.DossierIndicatorKeys.PlatformRejections => "invoices",
         Contracts.Cabinet.DossierIndicatorKeys.VatToDeclare => "tax",
         Contracts.Cabinet.DossierIndicatorKeys.BankUnreconciled => "bank",
+        Contracts.Cabinet.DossierIndicatorKeys.EInvoicingReadiness => "e-invoicing-readiness",
         Contracts.Cabinet.DossierIndicatorKeys.OpenAlerts => "alerts",
         Contracts.Cabinet.DossierIndicatorKeys.ReviewPending => "review",
         _ => "cabinet",

@@ -57,3 +57,10 @@
     .lt-pilotage-kpi .lt-kpi-value { font-size: var(--text-2xl); }
     .lt-pilotage-chart .lt-bar-value { font-size: var(--text-xs); }
 }
+
+/* Le commentaire écrit sous chaque bloc : des phrases tirées des mêmes chiffres, à copier dans un rapport. */
+.lt-pilotage-comment { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-1) var(--space-2); align-items: start; margin: var(--space-3) 0 var(--space-4); padding: var(--space-3); border-radius: var(--radius-md); background: var(--color-primary-soft); color: var(--color-fg); }
+.lt-pilotage-comment > svg { margin-top: 2px; color: var(--color-primary-soft-fg); }
+.lt-pilotage-comment p { margin: 0; font-size: var(--text-sm); line-height: 1.5; overflow-wrap: anywhere; }
+.lt-pilotage-comment .lettra-button { grid-column: 2; justify-self: start; }
+.lt-panel .lt-pilotage-comment { margin-bottom: 0; }

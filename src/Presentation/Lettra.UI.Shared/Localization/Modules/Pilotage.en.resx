@@ -82,4 +82,51 @@
   <data name="Pilotage.Reference" xml:space="preserve"><value>Ref. {0}</value></data>
   <data name="Pilotage.Reference.Help" xml:space="preserve"><value>The dossier's reference in the Grafana dashboards, which show no names.</value></data>
   <data name="Pilotage.Footnote" xml:space="preserve"><value>Ratios, delays and indices only: no amounts or customer names. You only see the dossiers your rights open.</value></data>
+  <data name="Pilotage.Comment.Copy" xml:space="preserve"><value>Copy</value></data>
+  <data name="Pilotage.Comment.Copy.Title" xml:space="preserve"><value>Copy this comment for a client report</value></data>
+  <data name="Pilotage.Comment.Copied" xml:space="preserve"><value>Comment copied.</value></data>
+  <data name="Pilotage.Comment.CopyFailed" xml:space="preserve"><value>The browser refused the copy: select the text to copy it.</value></data>
+  <data name="Pilotage.Comment.Empty" xml:space="preserve"><value>Not enough documents yet to comment on these figures.</value></data>
+  <data name="Pilotage.Comment.Dso.Ok" xml:space="preserve"><value>Customers pay in {0} on average: a good delay.</value></data>
+  <data name="Pilotage.Comment.Dso.Warning" xml:space="preserve"><value>Customers pay in {0} on average: worth watching, above 45 days.</value></data>
+  <data name="Pilotage.Comment.Dso.Critical" xml:space="preserve"><value>Customers pay in {0} on average: too long, above 60 days.</value></data>
+  <data name="Pilotage.Comment.Overdue.None" xml:space="preserve"><value>No receivable is overdue.</value></data>
+  <data name="Pilotage.Comment.Overdue.Ok" xml:space="preserve"><value>{0} of what is still owed is overdue.</value></data>
+  <data name="Pilotage.Comment.Overdue.Warning" xml:space="preserve"><value>{0} of what is still owed is overdue: reminders need attention.</value></data>
+  <data name="Pilotage.Comment.Overdue.Critical" xml:space="preserve"><value>{0} of what is still owed is overdue: chase payments first.</value></data>
+  <data name="Pilotage.Comment.Collection.Ok" xml:space="preserve"><value>{0} of what was invoiced over 12 months has been collected.</value></data>
+  <data name="Pilotage.Comment.Collection.Warning" xml:space="preserve"><value>Only {0} of what was invoiced over 12 months has been collected.</value></data>
+  <data name="Pilotage.Comment.Collection.Critical" xml:space="preserve"><value>Only {0} of what was invoiced over 12 months has been collected: cash is suffering.</value></data>
+  <data name="Pilotage.Comment.TopCustomer.Ok" xml:space="preserve"><value>The largest customer weighs {0} of revenue, among {1} active customers: no dependency.</value></data>
+  <data name="Pilotage.Comment.TopCustomer.Warning" xml:space="preserve"><value>The largest customer weighs {0} of revenue, among {1} active customers: a dependency to watch.</value></data>
+  <data name="Pilotage.Comment.TopCustomer.Critical" xml:space="preserve"><value>The largest customer weighs {0} of revenue, among {1} active customers: a strong dependency.</value></data>
+  <data name="Pilotage.Comment.Trend.Up" xml:space="preserve"><value>Revenue over the last three months is up {0} on the three before.</value></data>
+  <data name="Pilotage.Comment.Trend.Down" xml:space="preserve"><value>Revenue over the last three months is down {0} on the three before.</value></data>
+  <data name="Pilotage.Comment.Trend.Stable" xml:space="preserve"><value>Revenue over the last three months is flat on the three before.</value></data>
+  <data name="Pilotage.Comment.Conversion" xml:space="preserve"><value>{0} of decided quotes were accepted.</value></data>
+  <data name="Pilotage.Comment.Pending.None" xml:space="preserve"><value>No quote is awaiting an answer.</value></data>
+  <data name="Pilotage.Comment.Pending.One" xml:space="preserve"><value>One quote is awaiting an answer.</value></data>
+  <data name="Pilotage.Comment.Pending.Many" xml:space="preserve"><value>{0} quotes are awaiting an answer.</value></data>
+  <data name="Pilotage.Comment.Pending.Expiring.One" xml:space="preserve"><value>One quote is awaiting an answer and expires soon.</value></data>
+  <data name="Pilotage.Comment.Pending.Expiring.Many" xml:space="preserve"><value>{0} quotes are awaiting an answer; to chase before they expire: {1}.</value></data>
+  <data name="Pilotage.Comment.Activity.None" xml:space="preserve"><value>No sales over the last twelve months.</value></data>
+  <data name="Pilotage.Comment.Activity.Above" xml:space="preserve"><value>In {0}, activity is at index {1}: {2} above the year's average month.</value></data>
+  <data name="Pilotage.Comment.Activity.Below" xml:space="preserve"><value>In {0}, activity is at index {1}: {2} below the year's average month.</value></data>
+  <data name="Pilotage.Comment.Activity.Average" xml:space="preserve"><value>In {0}, activity is at index {1}, in line with the year's average.</value></data>
+  <data name="Pilotage.Comment.Activity.Best" xml:space="preserve"><value>The best month of the year is {0} (index {1}).</value></data>
+  <data name="Pilotage.Comment.Activity.BestIsLast" xml:space="preserve"><value>It is the best month of the year.</value></data>
+  <data name="Pilotage.Comment.Invoices.None" xml:space="preserve"><value>No invoice issued over the last twelve months.</value></data>
+  <data name="Pilotage.Comment.Invoices.One" xml:space="preserve"><value>{0} invoice issued in {1}, against {2} in {3}.</value></data>
+  <data name="Pilotage.Comment.Invoices.Many" xml:space="preserve"><value>{0} invoices issued in {1}, against {2} in {3}.</value></data>
+  <data name="Pilotage.Comment.Invoices.Total" xml:space="preserve"><value>{0} in total over the last twelve months.</value></data>
+  <data name="Pilotage.Comment.Cabinet.Count.One" xml:space="preserve"><value>One dossier followed.</value></data>
+  <data name="Pilotage.Comment.Cabinet.Count.Many" xml:space="preserve"><value>{0} dossiers followed.</value></data>
+  <data name="Pilotage.Comment.Cabinet.AllGood" xml:space="preserve"><value>None needs attention: overdue, delays and activity are all normal.</value></data>
+  <data name="Pilotage.Comment.Cabinet.Late.One" xml:space="preserve"><value>One dossier has more than 20% of receivables overdue.</value></data>
+  <data name="Pilotage.Comment.Cabinet.Late.Many" xml:space="preserve"><value>{0} dossiers have more than 20% of receivables overdue.</value></data>
+  <data name="Pilotage.Comment.Cabinet.Slow.One" xml:space="preserve"><value>One dossier has a payment delay above 45 days.</value></data>
+  <data name="Pilotage.Comment.Cabinet.Slow.Many" xml:space="preserve"><value>{0} dossiers have a payment delay above 45 days.</value></data>
+  <data name="Pilotage.Comment.Cabinet.Falling.One" xml:space="preserve"><value>One dossier's revenue is down more than 10%.</value></data>
+  <data name="Pilotage.Comment.Cabinet.Falling.Many" xml:space="preserve"><value>{0} dossiers' revenue is down more than 10%.</value></data>
+  <data name="Pilotage.Comment.Days" xml:space="preserve"><value>{0:N0} days</value></data>
 </root>
