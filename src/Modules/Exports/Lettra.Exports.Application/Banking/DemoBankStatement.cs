@@ -9,7 +9,8 @@ namespace Lettra.Exports.Application.Banking;
 /// Démo : un relevé ISO 20022 <c>camt.053.001.08</c> fictif, fabriqué à partir des factures dues du dossier, qui montre
 /// chaque règle de rapprochement : numéro de facture dans le libellé, montant et nom du client, règlement partiel,
 /// règlement amputé de frais (écart de règlement), plusieurs factures payées d'un coup. S'y ajoutent des frais bancaires
-/// et une remise de chèque sans facture, à écarter ou imputer à la main. Comptes et IBAN fictifs.
+/// et une remise de chèque sans facture, à écarter ou imputer à la main, et trois dépenses dont on réclamera les
+/// justificatifs. Comptes et IBAN fictifs.
 /// </summary>
 public static class DemoBankStatement
 {
@@ -80,6 +81,11 @@ public static class DemoBankStatement
 
         // 6. Ni facture ni client : frais bancaires (débit) et remise de chèque.
         entries.Add((today.AddDays(-2), -12.50m, "FRAIS TENUE DE COMPTE", null, null));
+
+        // 7. Dépenses payées par le compte, dont le cabinet réclamera les justificatifs.
+        entries.Add((today.AddDays(-9), -84.60m, "PRLV SEPA ENERGIE DU SUD", "Énergie du Sud", null));
+        entries.Add((today.AddDays(-7), -46.80m, "CB FOURNITURES PLUS 0412", "Fournitures Plus", null));
+        entries.Add((today.AddDays(-3), -950.00m, "VIR LOYER SCI DU PORT", "SCI du Port", null));
         entries.Add((today.AddDays(-1), 250.00m, "REMISE CHEQUE 4521873", null, null));
 
         DateOnly from = entries.Min(e => e.Date);

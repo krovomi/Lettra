@@ -48,6 +48,8 @@ public static class NavItems
         new("catalog", "Nav.Catalog", "package", "Nav.Group.Parties"),
         new("payments", "Nav.Payments", "hand-coins", "Nav.Group.Accounting"),
         new("bank", "Nav.Bank", "landmark", "Nav.Group.Accounting"),
+        new("receipts", "Nav.Receipts", "paperclip", "Nav.Group.Accounting"),
+        new("my-receipts", "Nav.ReceiptsToProvide", "camera", "Nav.Group.Accounting", Page: AccessAreaDto.Portal),
         new("reminders", "Nav.Reminders", "mail", "Nav.Group.Accounting"),
         new("payment-weather", "Nav.PaymentWeather", "cloud-sun", "Nav.Group.Accounting"),
         new("accounting", "Nav.Accounting", "book-open", "Nav.Group.Accounting"),

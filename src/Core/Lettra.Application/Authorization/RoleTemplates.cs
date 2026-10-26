@@ -27,6 +27,9 @@ public static class RoleTemplates
     [
         Permission.TiersConsulter, Permission.TiersCreer, Permission.TiersModifier, Permission.DossierLire, Permission.CatalogueConsulter, Permission.DevisCreer,
         Permission.FactureSaisir, Permission.IaUtiliser, Permission.AlertesLire,
+
+        // Un collaborateur dépose aussi la pièce qu'un client lui a envoyée autrement (e-mail, courrier).
+        Permission.PiecesDeposer,
     ];
 
     public static FrozenDictionary<string, RoleDefinition> All { get; } = new RoleDefinition[]
