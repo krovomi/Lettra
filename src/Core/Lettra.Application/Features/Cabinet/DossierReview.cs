@@ -28,8 +28,7 @@ public sealed record SetDossierReviewItemCommand(DossierId Dossier, string Perio
 internal sealed class DossierReviewHandlers(
     IDossierReviewStore store,
     ICurrentUser user,
-    IAuthorizationDirectory directory,
-    IAuthorizationRegistry registry,
+    CabinetPeopleReader people,
     TimeProvider clock) :
     IQueryHandler<GetDossierReviewQuery, Result<DossierReviewResponse>>,
     ICommandHandler<SetDossierReviewItemCommand, Result<DossierReviewResponse>>
@@ -89,22 +88,6 @@ internal sealed class DossierReviewHandlers(
     }
 
     /// <summary>Le nom de qui a coché, lu dans le registre du cabinet ; inconnu sur un hôte sans registre (poste isolé).</summary>
-    private async Task<IReadOnlyDictionary<Guid, string>> NamesAsync(IReadOnlyList<DossierReviewMark> marks, CancellationToken cancellationToken)
-    {
-        if (marks.Count == 0)
-        {
-            return new Dictionary<Guid, string>();
-        }
-
-        UserAuthorizationProfile? profile = await directory.FindUserAsync(user.UserId, cancellationToken).ConfigureAwait(false);
-        if (profile?.Cabinet is not OrganisationId cabinet)
-        {
-            return new Dictionary<Guid, string>();
-        }
-
-        CabinetRegistry? read = await registry.ReadAsync(cabinet, cancellationToken).ConfigureAwait(false);
-        return (read?.People ?? [])
-            .Where(p => !string.IsNullOrWhiteSpace(p.DisplayName))
-            .ToDictionary(p => p.Id, p => p.DisplayName!);
-    }
+    private async Task<IReadOnlyDictionary<Guid, string>> NamesAsync(IReadOnlyList<DossierReviewMark> marks, CancellationToken cancellationToken) =>
+        marks.Count == 0 ? new Dictionary<Guid, string>() : (await people.ReadAsync(cancellationToken).ConfigureAwait(false)).Names;
 }

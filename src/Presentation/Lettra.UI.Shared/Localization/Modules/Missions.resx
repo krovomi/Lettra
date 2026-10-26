@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.Mission" xml:space="preserve"><value>Lettre de mission</value></data>
+  <data name="Mission.Title" xml:space="preserve"><value>Lettre de mission et honoraires</value></data>
+  <data name="Mission.Subtitle" xml:space="preserve"><value>La mission du cabinet pour ce dossier, son forfait et le temps passé, pour voir ce que rapporte le dossier.</value></data>
+  <data name="Mission.Stats" xml:space="preserve"><value>Honoraires et temps passé</value></data>
+  <data name="Mission.Stat.Fee" xml:space="preserve"><value>Forfait annuel HT</value></data>
+  <data name="Mission.Stat.Fee.Monthly" xml:space="preserve"><value>{0} HT par mois</value></data>
+  <data name="Mission.Stat.Fee.Quarterly" xml:space="preserve"><value>{0} HT par trimestre</value></data>
+  <data name="Mission.Stat.Fee.Yearly" xml:space="preserve"><value>Facturé une fois par an</value></data>
+  <data name="Mission.Stat.Time" xml:space="preserve"><value>Temps passé</value></data>
+  <data name="Mission.Stat.Budget" xml:space="preserve"><value>Budget : {0} h</value></data>
+  <data name="Mission.Stat.Earned" xml:space="preserve"><value>Honoraires acquis</value></data>
+  <data name="Mission.Stat.Year" xml:space="preserve"><value>Année de mission du {0} au {1}</value></data>
+  <data name="Mission.Stat.Rate" xml:space="preserve"><value>Taux horaire réalisé</value></data>
+  <data name="Mission.Stat.Target" xml:space="preserve"><value>Visé : {0} de l'heure</value></data>
+  <data name="Mission.PerHour" xml:space="preserve"><value>{0}/h</value></data>
+  <data name="Mission.Hours" xml:space="preserve"><value>{0} h {1}</value></data>
+  <data name="Mission.Form" xml:space="preserve"><value>La mission</value></data>
+  <data name="Mission.Edit" xml:space="preserve"><value>Modifier</value></data>
+  <data name="Mission.Form.Nature" xml:space="preserve"><value>Nature et travaux</value></data>
+  <data name="Mission.Form.Fees" xml:space="preserve"><value>Honoraires</value></data>
+  <data name="Mission.Form.Signatures" xml:space="preserve"><value>Signatures</value></data>
+  <data name="Mission.Kind" xml:space="preserve"><value>Nature de la mission</value></data>
+  <data name="Mission.Kind.Presentation" xml:space="preserve"><value>Présentation des comptes annuels</value></data>
+  <data name="Mission.Kind.Bookkeeping" xml:space="preserve"><value>Tenue de la comptabilité</value></data>
+  <data name="Mission.Kind.Review" xml:space="preserve"><value>Examen limité des comptes</value></data>
+  <data name="Mission.Start" xml:space="preserve"><value>Début de la mission</value></data>
+  <data name="Mission.Services" xml:space="preserve"><value>Travaux compris</value></data>
+  <data name="Mission.Service.Bookkeeping" xml:space="preserve"><value>Tenue de la comptabilité</value></data>
+  <data name="Mission.Service.VatReturns" xml:space="preserve"><value>Déclarations de TVA</value></data>
+  <data name="Mission.Service.AnnualAccounts" xml:space="preserve"><value>Établissement des comptes annuels</value></data>
+  <data name="Mission.Service.TaxReturns" xml:space="preserve"><value>Liasse fiscale et déclaration de résultat</value></data>
+  <data name="Mission.Service.Payroll" xml:space="preserve"><value>Bulletins de paie et déclarations sociales</value></data>
+  <data name="Mission.Service.Legal" xml:space="preserve"><value>Secrétariat juridique annuel (approbation des comptes)</value></data>
+  <data name="Mission.AnnualFee" xml:space="preserve"><value>Forfait annuel HT (€)</value></data>
+  <data name="Mission.Schedule" xml:space="preserve"><value>Facturation</value></data>
+  <data name="Mission.Schedule.Monthly" xml:space="preserve"><value>Mensuelle</value></data>
+  <data name="Mission.Schedule.Quarterly" xml:space="preserve"><value>Trimestrielle</value></data>
+  <data name="Mission.Schedule.Yearly" xml:space="preserve"><value>Annuelle</value></data>
+  <data name="Mission.TargetRate" xml:space="preserve"><value>Taux horaire visé (€ HT)</value></data>
+  <data name="Mission.TargetRate.Hint" xml:space="preserve"><value>Facultatif : le forfait divisé par ce taux donne le budget d'heures du dossier.</value></data>
+  <data name="Mission.Signatory" xml:space="preserve"><value>Signataire pour le client</value></data>
+  <data name="Mission.Manager" xml:space="preserve"><value>Expert-comptable responsable</value></data>
+  <data name="Mission.SignedOn" xml:space="preserve"><value>Lettre signée le</value></data>
+  <data name="Mission.Signed" xml:space="preserve"><value>Signée le {0}</value></data>
+  <data name="Mission.NotSigned" xml:space="preserve"><value>Pas encore signée</value></data>
+  <data name="Mission.Saved" xml:space="preserve"><value>Mission enregistrée.</value></data>
+  <data name="Mission.Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Mission.Letter.Download" xml:space="preserve"><value>Lettre de mission (PDF)</value></data>
+  <data name="Mission.Letter.Hint" xml:space="preserve"><value>La lettre suit le plan de la lettre type de la profession. Relisez-la et complétez-la avant de l'envoyer pour signature.</value></data>
+  <data name="Mission.Letter.FileName" xml:space="preserve"><value>lettre-de-mission-{0}.pdf</value></data>
+  <data name="Mission.Time" xml:space="preserve"><value>Temps passé</value></data>
+  <data name="Mission.Time.Hours" xml:space="preserve"><value>Durée (heures)</value></data>
+  <data name="Mission.Time.Task" xml:space="preserve"><value>Nature</value></data>
+  <data name="Mission.Time.Note" xml:space="preserve"><value>Note</value></data>
+  <data name="Mission.Time.Add" xml:space="preserve"><value>Ajouter</value></data>
+  <data name="Mission.Time.Added" xml:space="preserve"><value>{0} ajoutées.</value></data>
+  <data name="Mission.Time.Deleted" xml:space="preserve"><value>Temps supprimé.</value></data>
+  <data name="Mission.Time.ByTask" xml:space="preserve"><value>Temps passé par nature</value></data>
+  <data name="Mission.Time.AllTasks" xml:space="preserve"><value>Toutes</value></data>
+  <data name="Mission.Time.Who" xml:space="preserve"><value>Collaborateur</value></data>
+  <data name="Mission.Time.Someone" xml:space="preserve"><value>Un collaborateur</value></data>
+  <data name="Mission.Time.Duration" xml:space="preserve"><value>Durée</value></data>
+  <data name="Mission.Time.Delete" xml:space="preserve"><value>Supprimer</value></data>
+  <data name="Mission.Time.Delete.Label" xml:space="preserve"><value>Supprimer le temps du {0}</value></data>
+  <data name="Mission.Time.Empty" xml:space="preserve"><value>Aucun temps saisi sur cette année de mission</value></data>
+  <data name="Mission.Time.Empty.Text" xml:space="preserve"><value>Chaque collaborateur note ici le temps passé sur le dossier : le cabinet voit ce que rapporte le forfait.</value></data>
+  <data name="Mission.Task.Bookkeeping" xml:space="preserve"><value>Saisie</value></data>
+  <data name="Mission.Task.Vat" xml:space="preserve"><value>TVA</value></data>
+  <data name="Mission.Task.Closing" xml:space="preserve"><value>Clôture</value></data>
+  <data name="Mission.Task.Payroll" xml:space="preserve"><value>Social</value></data>
+  <data name="Mission.Task.Legal" xml:space="preserve"><value>Juridique</value></data>
+  <data name="Mission.Task.Advice" xml:space="preserve"><value>Conseil</value></data>
+  <data name="Mission.Task.Other" xml:space="preserve"><value>Autre</value></data>
+  <data name="Mission.Letter.ClientFallback" xml:space="preserve"><value>Le client</value></data>
+  <data name="Mission.Letter.CabinetFallback" xml:space="preserve"><value>Le cabinet d'expertise comptable</value></data>
+  <data name="Mission.Letter.Siren" xml:space="preserve"><value>SIREN {0}</value></data>
+  <data name="Mission.Letter.Attention" xml:space="preserve"><value>À l'attention de {0}</value></data>
+  <data name="Mission.Letter.Manager" xml:space="preserve"><value>{0}, expert-comptable</value></data>
+  <data name="Mission.Letter.Dateline" xml:space="preserve"><value>Le {0}</value></data>
+  <data name="Mission.Letter.Title" xml:space="preserve"><value>Lettre de mission : {0}</value></data>
+  <data name="Mission.Letter.Kind.Presentation" xml:space="preserve"><value>présentation des comptes annuels</value></data>
+  <data name="Mission.Letter.Kind.Bookkeeping" xml:space="preserve"><value>tenue de la comptabilité</value></data>
+  <data name="Mission.Letter.Kind.Review" xml:space="preserve"><value>examen limité des comptes annuels</value></data>
+  <data name="Mission.Letter.Object" xml:space="preserve"><value>1. Objet de la mission</value></data>
+  <data name="Mission.Letter.Object.Text" xml:space="preserve"><value>{0} nous confie une mission de {1}, à compter de l'exercice ouvert le {2}.</value></data>
+  <data name="Mission.Letter.Object.Presentation" xml:space="preserve"><value>Cette mission est réalisée selon la norme professionnelle de l'Ordre des experts-comptables applicable à la mission de présentation des comptes. Elle n'est ni un audit ni un examen limité : à son terme, nous délivrerons une attestation de présentation des comptes annuels.</value></data>
+  <data name="Mission.Letter.Object.Bookkeeping" xml:space="preserve"><value>Cette mission porte sur l'enregistrement de vos opérations et le suivi de votre comptabilité. Elle ne comprend pas l'établissement des comptes annuels, sauf s'il figure parmi les travaux ci-dessous.</value></data>
+  <data name="Mission.Letter.Object.Review" xml:space="preserve"><value>Cette mission est réalisée selon la norme professionnelle applicable à l'examen limité. Elle vise une assurance modérée que les comptes ne comportent pas d'anomalies significatives ; elle est moins étendue qu'un audit.</value></data>
+  <data name="Mission.Letter.Services" xml:space="preserve"><value>2. Travaux confiés</value></data>
+  <data name="Mission.Letter.Services.Text" xml:space="preserve"><value>La mission comprend les travaux suivants :</value></data>
+  <data name="Mission.Letter.Duration" xml:space="preserve"><value>3. Durée</value></data>
+  <data name="Mission.Letter.Duration.Text" xml:space="preserve"><value>La mission prend effet le {0} pour une durée d'un an. Elle se renouvelle chaque année par tacite reconduction, sauf dénonciation par lettre recommandée avec accusé de réception trois mois au moins avant son échéance.</value></data>
+  <data name="Mission.Letter.ClientDuties" xml:space="preserve"><value>4. Vos engagements</value></data>
+  <data name="Mission.Letter.ClientDuties.Text" xml:space="preserve"><value>Vous vous engagez à nous remettre en temps utile l'ensemble des pièces justificatives et informations nécessaires, à nous informer de tout fait important ou exceptionnel, et à confirmer par écrit, au terme de la mission, que les documents remis sont complets (lettre d'affirmation).</value></data>
+  <data name="Mission.Letter.CabinetDuties" xml:space="preserve"><value>5. Nos engagements</value></data>
+  <data name="Mission.Letter.CabinetDuties.Text" xml:space="preserve"><value>Nous réaliserons la mission dans le respect du Code de déontologie de la profession et du secret professionnel. Notre responsabilité civile professionnelle est couverte par une assurance souscrite auprès d'un assureur notoirement solvable.</value></data>
+  <data name="Mission.Letter.Fees" xml:space="preserve"><value>6. Honoraires</value></data>
+  <data name="Mission.Letter.Fees.Text" xml:space="preserve"><value>Nos honoraires sont fixés forfaitairement à {0} hors taxes par an, facturés {1} ({2} hors taxes par facture).</value></data>
+  <data name="Mission.Letter.Fees.Extra" xml:space="preserve"><value>Les travaux qui ne figurent pas dans la présente lettre feront l'objet d'honoraires complémentaires, après votre accord.</value></data>
+  <data name="Mission.Letter.Schedule.Monthly" xml:space="preserve"><value>mensuellement</value></data>
+  <data name="Mission.Letter.Schedule.Quarterly" xml:space="preserve"><value>trimestriellement</value></data>
+  <data name="Mission.Letter.Schedule.Yearly" xml:space="preserve"><value>en une fois chaque année</value></data>
+  <data name="Mission.Letter.Privacy" xml:space="preserve"><value>7. Données personnelles</value></data>
+  <data name="Mission.Letter.Privacy.Text" xml:space="preserve"><value>Les données personnelles nécessaires à la mission sont traitées conformément au règlement général sur la protection des données (RGPD), pour la seule exécution de la mission et pendant la durée de conservation imposée à la profession.</value></data>
+  <data name="Mission.Letter.Closing" xml:space="preserve"><value>8. Acceptation</value></data>
+  <data name="Mission.Letter.Closing.Text" xml:space="preserve"><value>Les conditions générales jointes font partie de la présente lettre. Nous vous remercions de nous en retourner un exemplaire daté et signé, précédé de la mention « Bon pour accord ».</value></data>
+  <data name="Mission.Letter.Sign.Cabinet" xml:space="preserve"><value>Pour le cabinet</value></data>
+  <data name="Mission.Letter.Sign.Client" xml:space="preserve"><value>Pour {0}, « Bon pour accord »</value></data>
+  <data name="Error.Mission.NotFound" xml:space="preserve"><value>La mission n'est pas encore saisie.</value></data>
+  <data name="Error.Mission.KindInvalid" xml:space="preserve"><value>Choisissez la nature de la mission.</value></data>
+  <data name="Error.Mission.ServicesInvalid" xml:space="preserve"><value>Cochez au moins un travail compris dans la mission.</value></data>
+  <data name="Error.Mission.FeeInvalid" xml:space="preserve"><value>Le forfait annuel doit être positif, au centime près.</value></data>
+  <data name="Error.Mission.ScheduleInvalid" xml:space="preserve"><value>Choisissez le rythme de facturation.</value></data>
+  <data name="Error.Mission.RateInvalid" xml:space="preserve"><value>Le taux horaire visé doit être compris entre 0 et 10 000 €.</value></data>
+  <data name="Error.Mission.SignatoryRequired" xml:space="preserve"><value>Indiquez qui signe pour le client.</value></data>
+  <data name="Error.Mission.NameTooLong" xml:space="preserve"><value>Un nom tient en 120 caractères au plus.</value></data>
+  <data name="Error.Mission.DurationInvalid" xml:space="preserve"><value>La durée va d'un quart d'heure à 12 heures.</value></data>
+  <data name="Error.Mission.TaskInvalid" xml:space="preserve"><value>Choisissez la nature du temps passé.</value></data>
+  <data name="Error.Mission.DateInFuture" xml:space="preserve"><value>Un temps passé ne se saisit pas à l'avance.</value></data>
+  <data name="Error.Mission.NoteTooLong" xml:space="preserve"><value>La note tient en 200 caractères au plus.</value></data>
+  <data name="Error.Mission.TimeEntryNotFound" xml:space="preserve"><value>Ce temps n'existe plus.</value></data>
+  <data name="Error.Mission.TimeEntryNotYours" xml:space="preserve"><value>Seul le collaborateur qui a saisi ce temps peut le supprimer.</value></data>
+</root>
