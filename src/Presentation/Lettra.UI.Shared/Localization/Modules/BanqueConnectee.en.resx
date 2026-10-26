@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+      <data name="BankConnection.Title" xml:space="preserve"><value>Connected bank</value></data>
+  <data name="BankConnection.Help" xml:space="preserve"><value>Link the company's bank account: its transactions arrive here automatically, with no file to download. You give your consent on your bank's own page; Lettra only sees the transactions, never your credentials, and cannot make any payment.</value></data>
+  <data name="BankConnection.Summary" xml:space="preserve"><value>{0} linked account(s)</value></data>
+  <data name="BankConnection.Institution" xml:space="preserve"><value>Bank</value></data>
+  <data name="BankConnection.Connect" xml:space="preserve"><value>Connect the account</value></data>
+  <data name="BankConnection.Sync" xml:space="preserve"><value>Sync</value></data>
+  <data name="BankConnection.Renew" xml:space="preserve"><value>Renew consent</value></data>
+  <data name="BankConnection.Revoke" xml:space="preserve"><value>Disconnect</value></data>
+  <data name="BankConnection.Provider" xml:space="preserve"><value>Account access through: {0}.</value></data>
+  <data name="BankConnection.State.Active" xml:space="preserve"><value>Consent valid until {0}</value></data>
+  <data name="BankConnection.State.Renew" xml:space="preserve"><value>Renew consent before {0}</value></data>
+  <data name="BankConnection.State.Expired" xml:space="preserve"><value>Consent expired: renew it</value></data>
+  <data name="BankConnection.State.Pending" xml:space="preserve"><value>Waiting for consent</value></data>
+  <data name="BankConnection.LastSync" xml:space="preserve"><value>Read on {0} · {1} new transaction(s)</value></data>
+  <data name="BankConnection.NeverSynced" xml:space="preserve"><value>Not read yet</value></data>
+  <data name="BankConnection.Synced" xml:space="preserve"><value>Bank read: {0} new transaction(s), {1} suggestion(s).</value></data>
+  <data name="BankConnection.Revoked" xml:space="preserve"><value>{0} is disconnected. Transactions already read are kept.</value></data>
+  <data name="BankConnection.Connected" xml:space="preserve"><value>{0} is linked: {1} transaction(s) imported, {2} suggestion(s).</value></data>
+  <data name="BankConnection.Callback.Title" xml:space="preserve"><value>Bank connection</value></data>
+  <data name="BankConnection.Callback.Working" xml:space="preserve"><value>Saving the consent and reading the transactions…</value></data>
+  <data name="BankConnection.Callback.Failed" xml:space="preserve"><value>The account was not linked</value></data>
+  <data name="BankConnection.Simulated.Badge" xml:space="preserve"><value>Simulated bank, demo</value></data>
+  <data name="BankConnection.Simulated.Bank" xml:space="preserve"><value>Simulated bank</value></data>
+  <data name="BankConnection.Simulated.Title" xml:space="preserve"><value>Allow Lettra to view your account</value></data>
+  <data name="BankConnection.Simulated.Intro" xml:space="preserve"><value>Lettra asks for read-only access to your business current account, through its licensed bank aggregator (EU PSD2 directive).</value></data>
+  <data name="BankConnection.Simulated.Read" xml:space="preserve"><value>Read transactions and balance</value></data>
+  <data name="BankConnection.Simulated.Duration" xml:space="preserve"><value>For 180 days, revocable at any time</value></data>
+  <data name="BankConnection.Simulated.NoPayment" xml:space="preserve"><value>No transfer or payment possible with this access</value></data>
+  <data name="BankConnection.Simulated.Hint" xml:space="preserve"><value>Demo: no real bank is contacted. A real bank would ask you to sign in here.</value></data>
+  <data name="BankConnection.Simulated.Accept" xml:space="preserve"><value>Allow</value></data>
+  <data name="BankConnection.Simulated.Refuse" xml:space="preserve"><value>Decline</value></data>
+  <data name="Error.BankConnection.Unavailable" xml:space="preserve"><value>No bank aggregator is configured on this installation: import the bank statement instead.</value></data>
+  <data name="Error.BankConnection.InstitutionUnknown" xml:space="preserve"><value>Choose a bank from the list.</value></data>
+  <data name="Error.BankConnection.NotFound" xml:space="preserve"><value>This linked account cannot be found in this company file.</value></data>
+  <data name="Error.BankConnection.NotActive" xml:space="preserve"><value>This account is not linked: consent was not given, or it was disconnected.</value></data>
+  <data name="Error.BankConnection.AlreadyCompleted" xml:space="preserve"><value>The consent for this connection was already recorded.</value></data>
+  <data name="Error.BankConnection.ConsentRefused" xml:space="preserve"><value>Consent was declined or abandoned on the bank's page.</value></data>
+  <data name="Error.BankConnection.ConsentExpired" xml:space="preserve"><value>The consent given to the bank has expired: renew it to read the account.</value></data>
+  <data name="Error.BankConnection.SyncInProgress" xml:space="preserve"><value>This account is already being read. Try again in a moment.</value></data>
+  <data name="Error.BankConnection.BankUnreachable" xml:space="preserve"><value>The bank did not answer. The next sync will try again.</value></data>
+</root>

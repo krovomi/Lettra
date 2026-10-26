@@ -32,6 +32,7 @@ public enum BankStatementFormatDto
     Camt053 = 1,
     Ofx = 2,
     Csv = 3,
+    Connection = 4,
 }
 
 /// <summary>État d'une opération du relevé : à rapprocher, rapprochée, écartée.</summary>

@@ -201,6 +201,14 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Banque_connectee_consentement_synchronisation_et_renouvellement()
+    {
+        ManualClock clock = new(BankConnectionScenarios.Start);
+        await using TenantHarness harness = new(new SqliteConfigurator(), clock);
+        await BankConnectionScenarios.ConnectedBankAsync(harness, clock, DatabaseProvider.Sqlite, Database("banque-connectee"));
+    }
+
+    [Fact]
     public async Task Espace_client_ferme_sans_compte_de_service()
     {
         await using TenantHarness harness = new(new SqliteConfigurator());
@@ -655,6 +663,15 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     }
 
     [SkippableFact]
+    public async Task Banque_connectee_consentement_synchronisation_et_renouvellement()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        ManualClock clock = new(BankConnectionScenarios.Start);
+        await using TenantHarness harness = new(new PostgreSqlConfigurator(), clock);
+        await BankConnectionScenarios.ConnectedBankAsync(harness, clock, DatabaseProvider.PostgreSql, Database("banque-connectee"));
+    }
+
+    [SkippableFact]
     public async Task Declarations_de_tva_des_et_calendrier()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
@@ -1049,6 +1066,15 @@ public sealed class SqlServerTests : IAsyncLifetime
         Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = PortalScenarios.Harness(new SqlServerConfigurator());
         await PortalScenarios.CustomerPortalAsync(harness, DatabaseProvider.SqlServer, Database("espace-client"));
+    }
+
+    [SkippableFact]
+    public async Task Banque_connectee_consentement_synchronisation_et_renouvellement()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        ManualClock clock = new(BankConnectionScenarios.Start);
+        await using TenantHarness harness = new(new SqlServerConfigurator(), clock);
+        await BankConnectionScenarios.ConnectedBankAsync(harness, clock, DatabaseProvider.SqlServer, Database("banque-connectee"));
     }
 
     [SkippableFact]

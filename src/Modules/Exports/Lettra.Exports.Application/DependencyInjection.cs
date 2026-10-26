@@ -65,6 +65,15 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<UpdateBankingSettingsCommand, Result<BankingSettingsResponse>>, UpdateBankingSettingsHandler>();
         services.AddScoped<IQueryHandler<GetBankReconciliationStatusQuery, Result<BankReconciliationStatusResponse>>, GetBankReconciliationStatusHandler>();
         services.AddScoped<IDossierIndicatorSource, BankUnreconciledIndicatorSource>();
+        // Banques connectées : l'agrégateur (IBankAggregator) vient de l'infrastructure ; ses opérations passent par le
+        // même import que les relevés.
+        services.AddScoped<BankLineImporter>();
+        services.AddScoped<BankConnectionSync>();
+        services.AddScoped<IQueryHandler<GetBankConnectionsQuery, Result<BankConnectionsResponse>>, GetBankConnectionsHandler>();
+        services.AddScoped<ICommandHandler<StartBankConnectionCommand, Result<BankConsentRedirectResponse>>, StartBankConnectionHandler>();
+        services.AddScoped<ICommandHandler<CompleteBankConnectionCommand, Result<BankConnectionCompletedResponse>>, CompleteBankConnectionHandler>();
+        services.AddScoped<ICommandHandler<SyncBankConnectionsCommand, Result<SyncBankConnectionsResponse>>, SyncBankConnectionsHandler>();
+        services.AddScoped<ICommandHandler<RevokeBankConnectionCommand, Result<BankConnectionResponse>>, RevokeBankConnectionHandler>();
         // Déclarations fiscales : brouillons de CA3/CA12 et de DES, calendrier fiscal (la TVA sur les encaissements se
         // branche en remplaçant IVatOnReceiptsSource).
         services.TryAddScoped<IVatOnReceiptsSource, NoVatOnReceipts>();

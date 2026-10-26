@@ -1,0 +1,57 @@
+@page "/bank/connected"
+@inject IBankConnectionsGateway Connections
+@inject NavigationManager Navigation
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+@* Retour de la banque après le consentement : le compte est relié, ses 90 derniers jours d'opérations arrivent au
+   rapprochement, puis retour à l'écran du rapprochement. Un refus ou une erreur s'affiche ici, avec le chemin du retour. *@
+
+<PageTitle>@L["BankConnection.Callback.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["BankConnection.Callback.Title"]</h1>
+    </div>
+</div>
+
+<section class="lettra-card lt-bank-callback" id="bank-callback" aria-live="polite">
+    @if (_error is null)
+    {
+        <p aria-busy="true"><Icon Name="refresh-cw" Size="18" /> @L["BankConnection.Callback.Working"]</p>
+    }
+    else
+    {
+        <EmptyState Id="bank-callback-error" IconName="circle-alert" Title="@L["BankConnection.Callback.Failed"]" Text="@L.Error(_error)">
+            <a class="lettra-button" href="bank" id="bank-callback-back"><Icon Name="arrow-left" Size="18" /> @L["Bank.Title"]</a>
+        </EmptyState>
+    }
+</section>
+
+@code {
+    [SupplyParameterFromQuery(Name = "connection")] public Guid? ConnectionId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "code")] public string? Code { get; set; }
+
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (ConnectionId is not Guid id)
+        {
+            _error = ErrorCodes.BankConnection.NotFound;
+            return;
+        }
+
+        OperationResult<BankConnectionCompletedResponse> result = await Connections.CompleteAsync(
+            id, new CompleteBankConnectionRequest { Code = Code }, CancellationToken.None);
+        if (result is { IsSuccess: true, Value: { } completed })
+        {
+            Toasts.Show(ToastKind.Success, string.Format(
+                CultureInfo.CurrentCulture, L["BankConnection.Connected"], completed.Connection.InstitutionName, completed.FirstSync.Imported, completed.FirstSync.Proposals));
+            Navigation.NavigateTo("bank", replace: true);
+            return;
+        }
+
+        _error = result.Errors.Count > 0 ? result.Errors[0].Code : ErrorCodes.Api.Unexpected;
+    }
+}

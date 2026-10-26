@@ -4,7 +4,7 @@
 @inject ToastService Toasts
 @inject IStringLocalizer<SharedResource> L
 @inject Optional<IDemoDataGateway> OptionalDemo
-@* Rapprochement bancaire (vague 6) : import d'un relevé (CAMT.053, OFX ou CSV, jamais de connexion à la banque),
+@* Rapprochement bancaire (vague 6) : opérations d'une banque connectée ou d'un relevé importé (CAMT.053, OFX, CSV),
    propositions déterministes avec leur raison, validation une par une ou en masse, opérations écartées. *@
 
 <PageTitle>@L["Bank.Title"] · Lettra</PageTitle>
@@ -27,6 +27,8 @@
     <div class="lt-banking-stat"><span>@L["Bank.Matched"]</span><strong>@(_view?.Matched ?? 0)</strong></div>
     <div class="lt-banking-stat"><span>@L["Bank.Ignored"]</span><strong>@(_view?.Ignored ?? 0)</strong></div>
 </div>
+
+<BankConnectionsPanel OnSynced="LoadAsync" />
 
 <Collapsible Id="bank-import" Title="@L["Bank.Import"]" InitiallyOpen="@(_view is null || _view.Lines.Count == 0)" Summary="@ImportSummary">
     <p class="lettra-muted">@L["Bank.Import.Hint"]</p>

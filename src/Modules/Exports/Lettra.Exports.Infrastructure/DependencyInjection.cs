@@ -46,6 +46,7 @@ public static class DependencyInjection
         services.AddScoped<IReminderContextReader, EfReminderContextReader>();
         services.AddScoped<IAuditTrailReader, EfAuditTrailReader>();
         AddPortalProviders(services, configuration);
+        AddBankAggregator(services, configuration);
         string platform = configuration?[PlatformKey] ?? "None";
         switch (platform)
         {
@@ -60,6 +61,27 @@ public static class DependencyInjection
         }
 
         return services.AddExportsApplication();
+    }
+
+    /// <summary>Clé de l'agrégateur des banques connectées : <c>Simulated</c> (par défaut) ou <c>None</c> (import de relevés seulement).</summary>
+    public const string BankAggregatorKey = "Lettra:BankConnections:Aggregator";
+
+    /// <summary>Banques connectées : connexions dans la base du dossier, agrégateur simulé (ou aucun, <see cref="BankAggregatorKey"/>).</summary>
+    private static void AddBankAggregator(IServiceCollection services, IConfiguration? configuration)
+    {
+        services.AddScoped<IBankConnectionRepository, EfBankConnectionRepository>();
+        string aggregator = configuration?[BankAggregatorKey] ?? "Simulated";
+        switch (aggregator)
+        {
+            case "Simulated":
+                services.TryAddScoped<IBankAggregator, SimulatedBankAggregator>();
+                break;
+            case "None":
+                services.TryAddSingleton<IBankAggregator, NoBankAggregator>();
+                break;
+            default:
+                throw new InvalidOperationException($"{BankAggregatorKey} : « {aggregator} » inconnu (Simulated ou None).");
+        }
     }
 
     /// <summary>Clé du prestataire de paiement en ligne de l'espace client : <c>Simulated</c> (par défaut) ou <c>None</c>.</summary>

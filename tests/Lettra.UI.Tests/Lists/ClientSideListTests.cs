@@ -230,6 +230,7 @@ public sealed class ClientSideListTests : BunitContext
         BankLineResponse martin = Line("VIR MARTIN", 80m, 3, "Boulangerie Martin");
         Line("FRAIS TENUE DE COMPTE", -12.5m, 5);
         Services.AddSingleton<IBankingGateway>(banking);
+        Services.AddSingleton<IBankConnectionsGateway>(new FakeBankConnectionsGateway());
         Services.AddSingleton<IAccountingGateway>(new FakeAccountingGateway());
         Services.AddSingleton<ICustomersGateway>(new FakeCustomersGateway());
         Services.AddSingleton<TimeProvider>(new ManualClock(new DateTimeOffset(2026, 10, 16, 12, 0, 0, TimeSpan.Zero)));
