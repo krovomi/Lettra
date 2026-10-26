@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Fees.Tab" xml:space="preserve"><value>Fees (DAS 2)</value></data>
+  <data name="Fees.Title" xml:space="preserve"><value>Fees to declare (DAS 2)</value></data>
+  <data name="Fees.Subtitle" xml:space="preserve"><value>Fees, commissions, brokerage and royalties paid to the same payee above €1,200 incl. VAT in the year are declared with the annual tax return. Lettra reads the bank transfers to each tracked payee's IBAN.</value></data>
+  <data name="Fees.Due" xml:space="preserve"><value>To file by {0}</value></data>
+  <data name="Fees.Due.None" xml:space="preserve"><value>Track a payee to see this year's deadline.</value></data>
+  <data name="Fees.Stats" xml:space="preserve"><value>This year's return</value></data>
+  <data name="Fees.Stat.ToDeclare" xml:space="preserve"><value>Payees to declare</value></data>
+  <data name="Fees.Stat.ToDeclare.Hint" xml:space="preserve"><value>Above {0} incl. VAT in the financial year</value></data>
+  <data name="Fees.Stat.Amount" xml:space="preserve"><value>Amount to declare</value></data>
+  <data name="Fees.Stat.Below" xml:space="preserve"><value>Below the threshold</value></data>
+  <data name="Fees.Stat.Bank" xml:space="preserve"><value>Statements imported up to</value></data>
+  <data name="Fees.Stat.Bank.Hint" xml:space="preserve"><value>Later transfers are not counted yet</value></data>
+  <data name="Fees.SiretMissing.Banner" xml:space="preserve"><value>A payee to declare, based in France, has no SIRET: complete their supplier record, the return asks for it.</value></data>
+  <data name="Fees.Form.Add" xml:space="preserve"><value>Track a payee</value></data>
+  <data name="Fees.Form.Edit" xml:space="preserve"><value>Fees paid to {0}</value></data>
+  <data name="Fees.Supplier" xml:space="preserve"><value>Supplier</value></data>
+  <data name="Fees.Supplier.Choose" xml:space="preserve"><value>Choose a supplier</value></data>
+  <data name="Fees.Nature" xml:space="preserve"><value>Type of payment</value></data>
+  <data name="Fees.Nature.Fees" xml:space="preserve"><value>Fees</value></data>
+  <data name="Fees.Nature.Commissions" xml:space="preserve"><value>Commissions</value></data>
+  <data name="Fees.Nature.Brokerage" xml:space="preserve"><value>Brokerage</value></data>
+  <data name="Fees.Nature.Rebates" xml:space="preserve"><value>Rebates</value></data>
+  <data name="Fees.Nature.Copyright" xml:space="preserve"><value>Copyright royalties</value></data>
+  <data name="Fees.Nature.InventorRoyalties" xml:space="preserve"><value>Patent royalties</value></data>
+  <data name="Fees.Nature.Other" xml:space="preserve"><value>Other remuneration</value></data>
+  <data name="Fees.Profession" xml:space="preserve"><value>Payee's profession</value></data>
+  <data name="Fees.Profession.Placeholder" xml:space="preserve"><value>Lawyer, architect, sales agent…</value></data>
+  <data name="Fees.PaidOutside.Label" xml:space="preserve"><value>Paid outside bank statements ({0})</value></data>
+  <data name="Fees.PaidOutside.Hint" xml:space="preserve"><value>Cheques, cash or offsets in the financial year, incl. VAT: transfers to the supplier's IBAN are already counted from the statements.</value></data>
+  <data name="Fees.NotSaved" xml:space="preserve"><value>Nothing was saved: fix the highlighted fields.</value></data>
+  <data name="Fees.Saved.ToDeclare" xml:space="preserve"><value>{0}: to declare.</value></data>
+  <data name="Fees.Saved.Below" xml:space="preserve"><value>{0}: tracked, below the threshold.</value></data>
+  <data name="Fees.Removed" xml:space="preserve"><value>{0} is no longer tracked.</value></data>
+  <data name="Fees.List" xml:space="preserve"><value>Tracked payees</value></data>
+  <data name="Fees.Add" xml:space="preserve"><value>Track a payee</value></data>
+  <data name="Fees.Beneficiary" xml:space="preserve"><value>Payee</value></data>
+  <data name="Fees.PaidByBank" xml:space="preserve"><value>Bank transfers</value></data>
+  <data name="Fees.PaidOutside" xml:space="preserve"><value>Outside statements</value></data>
+  <data name="Fees.Total" xml:space="preserve"><value>Total incl. VAT</value></data>
+  <data name="Fees.NoIban" xml:space="preserve"><value>No IBAN</value></data>
+  <data name="Fees.State" xml:space="preserve"><value>Status</value></data>
+  <data name="Fees.AllStates" xml:space="preserve"><value>All</value></data>
+  <data name="Fees.State.ToDeclare" xml:space="preserve"><value>To declare</value></data>
+  <data name="Fees.State.Below" xml:space="preserve"><value>Below threshold</value></data>
+  <data name="Fees.State.SiretMissing" xml:space="preserve"><value>SIRET missing</value></data>
+  <data name="Fees.Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Fees.Edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="Fees.Edit.Label" xml:space="preserve"><value>Edit tracking of {0}</value></data>
+  <data name="Fees.Remove" xml:space="preserve"><value>Stop tracking</value></data>
+  <data name="Fees.Remove.Label" xml:space="preserve"><value>Stop tracking {0}</value></data>
+  <data name="Fees.Remove.Question" xml:space="preserve"><value>Stop tracking this payee?</value></data>
+  <data name="Fees.Empty" xml:space="preserve"><value>No payee tracked</value></data>
+  <data name="Fees.Empty.Text" xml:space="preserve"><value>Track the suppliers this company pays fees, commissions or royalties to: lawyer, expert, architect, sales agent, author.</value></data>
+  <data name="Fees.Disclaimer" xml:space="preserve"><value>A draft to prepare the return (form 2460-2-SD or TD-DAS2 file): Lettra does not file it. Amounts include VAT, as paid during the financial year.</value></data>
+  <data name="Error.Fee.SupplierNotFound" xml:space="preserve"><value>Choose one of this company's suppliers.</value></data>
+  <data name="Error.Fee.BeneficiaryNotFound" xml:space="preserve"><value>This payee is no longer tracked.</value></data>
+  <data name="Error.Fee.NatureInvalid" xml:space="preserve"><value>Choose the type of payment.</value></data>
+  <data name="Error.Fee.ProfessionRequired" xml:space="preserve"><value>Enter the payee's profession.</value></data>
+  <data name="Error.Fee.ProfessionTooLong" xml:space="preserve"><value>The profession fits in 60 characters.</value></data>
+  <data name="Error.Fee.AmountInvalid" xml:space="preserve"><value>The amount is positive, to the cent.</value></data>
+  <data name="Error.Fee.YearInvalid" xml:space="preserve"><value>This financial year does not exist for this company.</value></data>
+</root>

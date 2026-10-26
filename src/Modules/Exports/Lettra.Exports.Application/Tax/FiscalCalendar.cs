@@ -11,7 +11,8 @@ public sealed record FiscalCalendarInput(
     DateOnly Today,
     IReadOnlySet<DateOnly> DesMonths,
     IReadOnlyDictionary<DateOnly, decimal> VatByFiscalYearEnd,
-    IReadOnlyList<FiscalFiling> Filings);
+    IReadOnlyList<FiscalFiling> Filings,
+    bool FeeBeneficiaries = false);
 
 /// <summary>
 /// Calendrier fiscal d'un dossier, calculé à partir du régime de TVA et des réglages (annexe Paperasse
@@ -23,7 +24,8 @@ public sealed record FiscalCalendarInput(
 /// précédent, dispensés sous 1 000 € ;</item>
 /// <item>DES : le 10e jour ouvrable du mois qui suit, pour un mois qui a des prestations intracommunautaires ;</item>
 /// <item>CFE : le 15 décembre ; IS : acomptes le 15 du 3e, 6e, 9e et 12e mois de l'exercice, solde le 15 mai (exercice
-/// civil) ou le 15 du 4e mois après la clôture, liasse comme la CA12.</item>
+/// civil) ou le 15 du 4e mois après la clôture, liasse comme la CA12 ;</item>
+/// <item>DAS 2 (honoraires versés) : avec la déclaration de résultats, comme la CA12, dès qu'un bénéficiaire est suivi.</item>
 /// </list>
 /// Une date limite qui tombe un jour non ouvré n'est pas reportée : Lettra rappelle la date la plus tôt.
 /// </summary>
@@ -87,6 +89,11 @@ public static class FiscalCalendar
                 DateOnly balanceMonth = settings.IsCalendarYear ? new DateOnly(year + 1, 5, 1) : fyEnd.AddDays(1).AddMonths(3);
                 items.Add((FiscalObligationDto.CorporateTaxBalance, fyStart, fyEnd, new DateOnly(balanceMonth.Year, balanceMonth.Month, 15), false, null));
                 items.Add((FiscalObligationDto.TaxReturn, fyStart, fyEnd, declarationDue, false, null));
+            }
+
+            if (input.FeeBeneficiaries)
+            {
+                items.Add((FiscalObligationDto.FeeReturnDas2, fyStart, fyEnd, declarationDue, false, settings.IsCalendarYear ? "Ca12" : "Ca12NonCalendar"));
             }
         }
 

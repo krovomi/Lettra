@@ -122,6 +122,7 @@
   <data name="Tax.Obligation.CorporateTaxInstallment" xml:space="preserve"><value>Acompte d'impôt sur les sociétés</value></data>
   <data name="Tax.Obligation.CorporateTaxBalance" xml:space="preserve"><value>Solde de l'impôt sur les sociétés</value></data>
   <data name="Tax.Obligation.TaxReturn" xml:space="preserve"><value>Liasse fiscale</value></data>
+  <data name="Tax.Obligation.FeeReturnDas2" xml:space="preserve"><value>Déclaration des honoraires (DAS 2)</value></data>
   <data name="Tax.Note.VatDeadlineDay" xml:space="preserve"><value>Le {0} du mois, selon les réglages.</value></data>
   <data name="Tax.Note.Ca12" xml:space="preserve"><value>Deuxième jour ouvré après le 1er mai.</value></data>
   <data name="Tax.Note.Ca12NonCalendar" xml:space="preserve"><value>Trois mois après la clôture.</value></data>

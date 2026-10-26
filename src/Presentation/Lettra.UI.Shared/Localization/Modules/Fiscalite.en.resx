@@ -122,6 +122,7 @@
   <data name="Tax.Obligation.CorporateTaxInstallment" xml:space="preserve"><value>Corporate tax instalment</value></data>
   <data name="Tax.Obligation.CorporateTaxBalance" xml:space="preserve"><value>Corporate tax balance</value></data>
   <data name="Tax.Obligation.TaxReturn" xml:space="preserve"><value>Annual tax return</value></data>
+  <data name="Tax.Obligation.FeeReturnDas2" xml:space="preserve"><value>Fees return (DAS 2)</value></data>
   <data name="Tax.Note.VatDeadlineDay" xml:space="preserve"><value>The {0}th of the month, per settings.</value></data>
   <data name="Tax.Note.Ca12" xml:space="preserve"><value>Second working day after 1 May.</value></data>
   <data name="Tax.Note.Ca12NonCalendar" xml:space="preserve"><value>Three months after year end.</value></data>

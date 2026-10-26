@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Fees.Tab" xml:space="preserve"><value>Honoraires (DAS 2)</value></data>
+  <data name="Fees.Title" xml:space="preserve"><value>Honoraires à déclarer (DAS 2)</value></data>
+  <data name="Fees.Subtitle" xml:space="preserve"><value>Les honoraires, commissions, courtages et droits d'auteur versés à un même bénéficiaire au-delà de 1 200 € TTC dans l'année se déclarent avec la déclaration de résultats. Lettra lit les virements des relevés vers l'IBAN de chaque bénéficiaire suivi.</value></data>
+  <data name="Fees.Due" xml:space="preserve"><value>À déposer au plus tard le {0}</value></data>
+  <data name="Fees.Due.None" xml:space="preserve"><value>Suivez un bénéficiaire pour voir l'échéance de cet exercice.</value></data>
+  <data name="Fees.Stats" xml:space="preserve"><value>La déclaration de l'exercice</value></data>
+  <data name="Fees.Stat.ToDeclare" xml:space="preserve"><value>Bénéficiaires à déclarer</value></data>
+  <data name="Fees.Stat.ToDeclare.Hint" xml:space="preserve"><value>Au-delà de {0} TTC dans l'exercice</value></data>
+  <data name="Fees.Stat.Amount" xml:space="preserve"><value>Montant à déclarer</value></data>
+  <data name="Fees.Stat.Below" xml:space="preserve"><value>Sous le seuil</value></data>
+  <data name="Fees.Stat.Bank" xml:space="preserve"><value>Relevés importés jusqu'au</value></data>
+  <data name="Fees.Stat.Bank.Hint" xml:space="preserve"><value>Les virements plus récents ne sont pas encore comptés</value></data>
+  <data name="Fees.SiretMissing.Banner" xml:space="preserve"><value>Un bénéficiaire à déclarer, établi en France, n'a pas de SIRET : complétez sa fiche fournisseur, la déclaration le demande.</value></data>
+  <data name="Fees.Form.Add" xml:space="preserve"><value>Suivre un bénéficiaire</value></data>
+  <data name="Fees.Form.Edit" xml:space="preserve"><value>Honoraires de {0}</value></data>
+  <data name="Fees.Supplier" xml:space="preserve"><value>Fournisseur</value></data>
+  <data name="Fees.Supplier.Choose" xml:space="preserve"><value>Choisissez un fournisseur</value></data>
+  <data name="Fees.Nature" xml:space="preserve"><value>Nature des sommes</value></data>
+  <data name="Fees.Nature.Fees" xml:space="preserve"><value>Honoraires et vacations</value></data>
+  <data name="Fees.Nature.Commissions" xml:space="preserve"><value>Commissions</value></data>
+  <data name="Fees.Nature.Brokerage" xml:space="preserve"><value>Courtages</value></data>
+  <data name="Fees.Nature.Rebates" xml:space="preserve"><value>Ristournes</value></data>
+  <data name="Fees.Nature.Copyright" xml:space="preserve"><value>Droits d'auteur</value></data>
+  <data name="Fees.Nature.InventorRoyalties" xml:space="preserve"><value>Droits d'inventeur</value></data>
+  <data name="Fees.Nature.Other" xml:space="preserve"><value>Autres rémunérations</value></data>
+  <data name="Fees.Profession" xml:space="preserve"><value>Profession du bénéficiaire</value></data>
+  <data name="Fees.Profession.Placeholder" xml:space="preserve"><value>Avocat, architecte, agent commercial…</value></data>
+  <data name="Fees.PaidOutside.Label" xml:space="preserve"><value>Versé hors relevés ({0})</value></data>
+  <data name="Fees.PaidOutside.Hint" xml:space="preserve"><value>Chèques, espèces ou compensations de l'exercice, TTC : les virements vers l'IBAN du fournisseur sont déjà comptés à partir des relevés.</value></data>
+  <data name="Fees.NotSaved" xml:space="preserve"><value>Rien n'est enregistré : corrigez les champs signalés.</value></data>
+  <data name="Fees.Saved.ToDeclare" xml:space="preserve"><value>{0} : à déclarer.</value></data>
+  <data name="Fees.Saved.Below" xml:space="preserve"><value>{0} : suivi, sous le seuil.</value></data>
+  <data name="Fees.Removed" xml:space="preserve"><value>{0} n'est plus suivi.</value></data>
+  <data name="Fees.List" xml:space="preserve"><value>Bénéficiaires suivis</value></data>
+  <data name="Fees.Add" xml:space="preserve"><value>Suivre un bénéficiaire</value></data>
+  <data name="Fees.Beneficiary" xml:space="preserve"><value>Bénéficiaire</value></data>
+  <data name="Fees.PaidByBank" xml:space="preserve"><value>Virements des relevés</value></data>
+  <data name="Fees.PaidOutside" xml:space="preserve"><value>Hors relevés</value></data>
+  <data name="Fees.Total" xml:space="preserve"><value>Total TTC</value></data>
+  <data name="Fees.NoIban" xml:space="preserve"><value>Pas d'IBAN</value></data>
+  <data name="Fees.State" xml:space="preserve"><value>État</value></data>
+  <data name="Fees.AllStates" xml:space="preserve"><value>Tous</value></data>
+  <data name="Fees.State.ToDeclare" xml:space="preserve"><value>À déclarer</value></data>
+  <data name="Fees.State.Below" xml:space="preserve"><value>Sous le seuil</value></data>
+  <data name="Fees.State.SiretMissing" xml:space="preserve"><value>SIRET manquant</value></data>
+  <data name="Fees.Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Fees.Edit" xml:space="preserve"><value>Modifier</value></data>
+  <data name="Fees.Edit.Label" xml:space="preserve"><value>Modifier le suivi de {0}</value></data>
+  <data name="Fees.Remove" xml:space="preserve"><value>Ne plus suivre</value></data>
+  <data name="Fees.Remove.Label" xml:space="preserve"><value>Ne plus suivre {0}</value></data>
+  <data name="Fees.Remove.Question" xml:space="preserve"><value>Ne plus suivre ce bénéficiaire ?</value></data>
+  <data name="Fees.Empty" xml:space="preserve"><value>Aucun bénéficiaire suivi</value></data>
+  <data name="Fees.Empty.Text" xml:space="preserve"><value>Suivez les fournisseurs à qui le dossier verse des honoraires, commissions ou droits d'auteur : avocat, expert, architecte, agent commercial, auteur.</value></data>
+  <data name="Fees.Disclaimer" xml:space="preserve"><value>Un brouillon pour préparer la déclaration (formulaire 2460-2-SD ou fichier TD-DAS2) : Lettra ne la dépose pas. Les montants s'entendent TTC, tels que versés pendant l'exercice.</value></data>
+  <data name="Error.Fee.SupplierNotFound" xml:space="preserve"><value>Choisissez un fournisseur du dossier.</value></data>
+  <data name="Error.Fee.BeneficiaryNotFound" xml:space="preserve"><value>Ce bénéficiaire n'est plus suivi.</value></data>
+  <data name="Error.Fee.NatureInvalid" xml:space="preserve"><value>Choisissez la nature des sommes versées.</value></data>
+  <data name="Error.Fee.ProfessionRequired" xml:space="preserve"><value>Indiquez la profession du bénéficiaire.</value></data>
+  <data name="Error.Fee.ProfessionTooLong" xml:space="preserve"><value>La profession tient en 60 caractères.</value></data>
+  <data name="Error.Fee.AmountInvalid" xml:space="preserve"><value>Le montant est positif, au centime près.</value></data>
+  <data name="Error.Fee.YearInvalid" xml:space="preserve"><value>Cet exercice n'existe pas dans le dossier.</value></data>
+</root>

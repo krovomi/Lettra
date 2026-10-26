@@ -52,9 +52,15 @@ public static class DossierIndicatorKeys
     /// </summary>
     public const string SupplierAttestations = "fournisseurs.attestations-vigilance";
 
+    /// <summary>
+    /// Déclaration des honoraires (DAS 2) du dernier exercice clos pas encore marquée déposée, avec des bénéficiaires au-delà
+    /// de 1 200 € ; compteur = ces bénéficiaires, échéance = la date limite de dépôt. Ni nom ni montant.
+    /// </summary>
+    public const string FeeReturn = "honoraires.das2";
+
     /// <summary>Ordre des colonnes du tableau (les clés inconnues suivent, par ordre alphabétique).</summary>
     public static IReadOnlyList<string> Known { get; } =
-        [OverdueInvoices, PlatformRejections, EInvoicingReadiness, VatToDeclare, BankUnreconciled, SupplierIbanToVerify, SupplierAttestations, ClientDueDiligence, OpenAlerts, ReviewPending];
+        [OverdueInvoices, PlatformRejections, EInvoicingReadiness, VatToDeclare, FeeReturn, BankUnreconciled, SupplierIbanToVerify, SupplierAttestations, ClientDueDiligence, OpenAlerts, ReviewPending];
 }
 
 /// <summary>Urgence d'un indicateur : décide de la couleur et de l'ordre des dossiers.</summary>

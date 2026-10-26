@@ -122,6 +122,13 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<UpdateFiscalSettingsCommand, Result<FiscalSettingsResponse>>, UpdateFiscalSettingsHandler>();
         services.AddScoped<ICommandHandler<MarkFiscalFilingCommand, Result<FiscalDeadlineResponse>>, MarkFiscalFilingHandler>();
         services.AddScoped<IDossierIndicatorSource, VatToDeclareIndicatorSource>();
+        // Déclaration des honoraires (DAS 2) : bénéficiaires suivis, virements des relevés, échéance du calendrier fiscal.
+        services.AddScoped<FeeReturns>();
+        services.AddScoped<FeeReturnHandlers>();
+        services.AddScoped<IQueryHandler<GetFeeReturnQuery, Result<FeeReturnResponse>>>(sp => sp.GetRequiredService<FeeReturnHandlers>());
+        services.AddScoped<ICommandHandler<SaveFeeBeneficiaryCommand, Result>>(sp => sp.GetRequiredService<FeeReturnHandlers>());
+        services.AddScoped<ICommandHandler<RemoveFeeBeneficiaryCommand, Result>>(sp => sp.GetRequiredService<FeeReturnHandlers>());
+        services.AddScoped<IDossierIndicatorSource, FeeReturnIndicatorSource>();
 
         // Kit contrôle fiscal (vague 7) : FEC, attestation d'intégrité, piste d'audit fiable, XML et transmissions.
         services.AddScoped<AuditKitIntegrity>();

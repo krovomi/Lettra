@@ -116,5 +116,7 @@
   <data name="Cabinet.Indicator.lcb-ft.fiche.Due" xml:space="preserve"><value>review on {0}</value></data>
   <data name="Cabinet.Indicator.fournisseurs.attestations-vigilance" xml:space="preserve"><value>URSSAF certificates</value></data>
   <data name="Cabinet.Indicator.fournisseurs.attestations-vigilance.Due" xml:space="preserve"><value>ends {0}</value></data>
+  <data name="Cabinet.Indicator.honoraires.das2" xml:space="preserve"><value>DAS 2 fees</value></data>
+  <data name="Cabinet.Indicator.honoraires.das2.Due" xml:space="preserve"><value>by {0}</value></data>
   <data name="Cabinet.Indicator.facture-electronique.preparation" xml:space="preserve"><value>E-invoicing</value></data>
 </root>
