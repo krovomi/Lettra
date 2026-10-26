@@ -29,4 +29,7 @@ internal sealed class InProcessInsightsGateway(IServiceScopeFactory scopes) : II
 
     public Task<OperationResult<IReadOnlyList<InvoiceProofKeyResponse>>> ListInvoiceProofKeysAsync(CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new ListInvoiceProofKeysQuery(dossier), ct), cancellationToken);
+
+    public Task<OperationResult<DossierAsOfResponse>> GetDossierAsOfAsync(DateTimeOffset at, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetDossierAsOfQuery(dossier, at), ct), cancellationToken);
 }

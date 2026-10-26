@@ -100,3 +100,32 @@
 @media (max-width: 599px) {
     .lt-proof-form .lettra-button, .lt-proof-keys .lettra-button { justify-self: stretch; }
 }
+
+/* Remonter le temps : le formulaire de l'instant, puis des lignes « alors / aujourd'hui » qui passent sur une seule
+   ligne dès la tablette. */
+.lt-asof-form { display: grid; gap: var(--space-2); margin-bottom: var(--space-4); }
+.lt-asof-fields { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3); }
+.lt-asof-fields label { display: grid; gap: var(--space-1); }
+.lt-asof-fields input[type="text"] { width: 6rem; font-variant-numeric: tabular-nums; }
+.lt-asof-presets { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+#asof-stats .lt-banking-stat { min-width: 0; }
+#asof-stats strong { font-size: var(--text-lg); white-space: nowrap; }
+#asof-result, #asof-result + .lettra-card { margin-bottom: var(--space-4); }
+.lt-asof-rows, .lt-asof-events { list-style: none; margin: var(--space-3) 0 0; padding: 0; display: grid; gap: var(--space-2); }
+.lt-asof-rows li { display: grid; grid-template-columns: 1fr 1fr; grid-template-areas: "main main" "then now"; gap: var(--space-1) var(--space-3); padding: var(--space-2) 0; border-bottom: 1px solid var(--color-border); }
+.lt-asof-main { grid-area: main; display: grid; min-width: 0; }
+.lt-asof-main small { overflow-wrap: anywhere; }
+.lt-asof-rows .lt-asof-amount:nth-of-type(2) { grid-area: then; }
+.lt-asof-rows .lt-asof-amount:nth-of-type(3) { grid-area: now; justify-self: end; }
+.lt-asof-amount { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lt-asof-events li { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); align-items: baseline; }
+.lt-asof-events time { color: var(--color-fg-muted); font-variant-numeric: tabular-nums; min-width: 9rem; }
+.lt-asof-events .lt-asof-amount { margin-left: auto; }
+@media (max-width: 599px) {
+    .lt-asof-fields > label, .lt-asof-fields > .lettra-button, .lt-asof-presets .lettra-button { flex: 1 1 100%; }
+    .lt-asof-fields input[type="text"] { width: 100%; }
+}
+@media (min-width: 768px) {
+    .lt-asof-rows li { grid-template-columns: minmax(0, 1fr) 10rem 10rem; grid-template-areas: "main then now"; align-items: center; }
+    .lt-asof-rows .lt-asof-amount { justify-self: end; }
+}

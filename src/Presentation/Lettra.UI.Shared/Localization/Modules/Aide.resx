@@ -132,4 +132,8 @@
   <data name="Help.Faq.invoice-proof.Answer" xml:space="preserve"><value>Chaque facture validée porte un QR code « Preuve d'authenticité » signé par la clé du dossier. Dans Ventes, Vérifier une facture, collez le texte de ce QR code : Lettra dit si la facture vient de ce dossier et si son numéro, sa date ou son montant ont été modifiés. La clé publique permet aussi de vérifier sans Lettra.</value></data>
   <data name="Help.Faq.invoice-proof.Keywords" xml:space="preserve"><value>preuve authenticité qr signature fausse facture fraude</value></data>
   <data name="Nav.IbanChanges.Keywords" xml:space="preserve"><value>iban rib fraude faux fournisseur changement coordonnées bancaires vérification virement titulaire bénéficiaire nom du compte</value></data>
+  <data name="Nav.AsOf.Keywords" xml:space="preserve"><value>remonter temps passé historique date instant 31 décembre situation rejouer journal</value></data>
+  <data name="Help.Faq.as-of.Question" xml:space="preserve"><value>Comment revoir le dossier tel qu'il était à une date passée ?</value></data>
+  <data name="Help.Faq.as-of.Answer" xml:space="preserve"><value>Dans Comptabilité, Remonter le temps, choisissez un jour et une heure, par exemple le 31 décembre à 18 h. Lettra rejoue le journal inaltérable jusqu'à cet instant et montre le chiffre d'affaires, la TVA, les factures dues et les soldes des clients de ce moment-là, à côté de ceux d'aujourd'hui. La chaîne est vérifiée au passage et rien n'est modifié.</value></data>
+  <data name="Help.Faq.as-of.Keywords" xml:space="preserve"><value>remonter temps passé historique situation date</value></data>
 </root>

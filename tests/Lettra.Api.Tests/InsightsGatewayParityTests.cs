@@ -64,5 +64,20 @@ public sealed class InsightsGatewayParityTests(LettraApiFactory factory) : IClas
         missing.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Invoice.NotFound);
     }
 
+    [Theory]
+    [MemberData(nameof(Transports))]
+    public async Task Le_dossier_d_un_instant_passe_meme_reponse_par_les_deux_transports(string transport)
+    {
+        await using ServiceProvider services = _harness.Gateway(transport);
+        IInsightsGateway insights = services.GetRequiredService<IInsightsGateway>();
+
+        OperationResult<DossierAsOfResponse> past = await insights.GetDossierAsOfAsync(new DateTimeOffset(2000, 1, 1, 0, 0, 0, TimeSpan.FromHours(1)), default);
+
+        past.IsSuccess.Should().BeTrue(string.Join(", ", past.Errors.Select(e => e.Code)));
+        past.Value!.EntriesReplayed.Should().Be(0);
+        past.Value.ChainIntact.Should().BeTrue();
+        past.Value.LegalDate.Should().Be(new DateOnly(2000, 1, 1));
+    }
+
     public void Dispose() => _harness.Dispose();
 }

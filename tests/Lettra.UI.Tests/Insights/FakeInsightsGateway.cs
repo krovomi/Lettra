@@ -44,6 +44,16 @@ internal sealed class FakeInsightsGateway : IInsightsGateway
 
     public Task<OperationResult<IReadOnlyList<InvoiceProofKeyResponse>>> ListInvoiceProofKeysAsync(CancellationToken cancellationToken) => Answer(Keys);
 
+    public DossierAsOfResponse? AsOf { get; set; }
+
+    public List<DateTimeOffset> Moments { get; } = [];
+
+    public Task<OperationResult<DossierAsOfResponse>> GetDossierAsOfAsync(DateTimeOffset at, CancellationToken cancellationToken)
+    {
+        Moments.Add(at);
+        return Answer(AsOf);
+    }
+
     private static Task<OperationResult<T>> Answer<T>(T? value)
         where T : class =>
         Task.FromResult(value is null
