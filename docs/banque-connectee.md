@@ -11,6 +11,9 @@ Lettra propose les factures correspondantes comme pour un relevé importé.
 3. La banque renvoie vers `bank/connected?connection=…&code=…`.
 4. Lettra enregistre l'accord (compte masqué, échéance) et lit 90 jours d'opérations.
 
+Un refus sur la page de la banque est une issue normale du parcours, pas une erreur : l'API répond `Granted = false`,
+la connexion reste en attente et l'écran de retour l'explique, sans erreur dans la console du navigateur.
+
 ## Synchronisation
 
 - Le compte est relu à l'ouverture du rapprochement si la dernière lecture date de plus de 6 heures, ou à la demande
