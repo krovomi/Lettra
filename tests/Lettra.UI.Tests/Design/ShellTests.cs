@@ -59,7 +59,7 @@ public sealed class ShellTests : BunitContext
         IRenderedComponent<MainLayout> coque = Coque();
 
         Libelles(coque.FindAll(".lt-sidebar .lt-nav-link")).Should().Equal(
-            "Accueil", "Vue cabinet", "Démo commentée", "Devis", "Factures", "Avoirs", "Factures récurrentes", "Vérifier une facture", "Clients", "Fournisseurs", "IBAN à vérifier", "Catalogue", "Encaissements", "Rapprochement bancaire", "Relances", "Météo des paiements", "Journal et balance", "FEC", "Déclarations", "Revue du dossier", "Remonter le temps", "Tableaux de bord", "Alertes", "Entreprise", "Mes préférences", "Serveur du cabinet");
+            "Accueil", "Vue cabinet", "Démo commentée", "Devis", "Factures", "Avoirs", "Factures récurrentes", "Vérifier une facture", "Clients", "Fournisseurs", "IBAN à vérifier", "Catalogue", "Encaissements", "Rapprochement bancaire", "Relances", "Météo des paiements", "Journal et balance", "FEC", "Déclarations", "Revue du dossier", "Remonter le temps", "Pourquoi ce chiffre ?", "Tableaux de bord", "Alertes", "Entreprise", "Mes préférences", "Serveur du cabinet");
         coque.FindAll(".lt-sidebar .lt-nav-group").Select(g => g.TextContent).Should().Equal("Ventes", "Tiers", "Comptabilité", "Pilotage");
         Libelles(coque.FindAll(".lt-tabbar .lt-tab")).Should().Equal("Accueil", "Devis", "Factures", "Clients", "Plus");
         coque.Find(".lt-skip").GetAttribute("href").Should().Be("#main");
@@ -76,7 +76,7 @@ public sealed class ShellTests : BunitContext
         coque.Find("#tab-more").GetAttribute("aria-expanded").Should().Be("true");
         IElement feuille = coque.Find("#more-sheet");
         feuille.GetAttribute("role").Should().Be("dialog");
-        Libelles(feuille.QuerySelectorAll(".lt-nav-link")).Should().Equal("Vue cabinet", "Démo commentée", "Avoirs", "Factures récurrentes", "Vérifier une facture", "Fournisseurs", "IBAN à vérifier", "Catalogue", "Encaissements", "Rapprochement bancaire", "Relances", "Météo des paiements", "Journal et balance", "FEC", "Déclarations", "Revue du dossier", "Remonter le temps", "Tableaux de bord", "Alertes", "Entreprise", "Mes préférences", "Serveur du cabinet");
+        Libelles(feuille.QuerySelectorAll(".lt-nav-link")).Should().Equal("Vue cabinet", "Démo commentée", "Avoirs", "Factures récurrentes", "Vérifier une facture", "Fournisseurs", "IBAN à vérifier", "Catalogue", "Encaissements", "Rapprochement bancaire", "Relances", "Météo des paiements", "Journal et balance", "FEC", "Déclarations", "Revue du dossier", "Remonter le temps", "Pourquoi ce chiffre ?", "Tableaux de bord", "Alertes", "Entreprise", "Mes préférences", "Serveur du cabinet");
         feuille.QuerySelectorAll("input[type=radio][name^=lettra-theme]").Should().HaveCount(5);
 
         feuille.KeyDown("Escape");
@@ -162,6 +162,7 @@ public sealed class ShellTests : BunitContext
 
         accueil.WaitForAssertion(() => accueil.Find("#kpi-revenue .lt-kpi-value").TextContent.Should().Be("200 €"));
         accueil.Find("#kpi-revenue .lt-kpi-note").TextContent.Trim().Should().Be("Aucune facture le mois dernier");
+        accueil.Find("#kpi-revenue-why").GetAttribute("href").Should().Be("why?figure=MonthRevenue");
         accueil.Find("#kpi-invoices .lt-kpi-value").TextContent.Should().Be("1");
         accueil.Find("#kpi-pending .lt-kpi-value").TextContent.Should().Be("1");
         accueil.Find("#kpi-pending .lt-kpi-note").TextContent.Should().Be("400 € HT en attente de réponse");
@@ -197,6 +198,7 @@ public sealed class ShellTests : BunitContext
 
         accueil.WaitForAssertion(() => accueil.Find("#kpi-overdue .lt-kpi-value").TextContent.Should().Be("4\u00A0250 €"));
         accueil.Find("#kpi-overdue").ClassList.Should().Contain("is-alert");
+        accueil.Find("#kpi-overdue-why").GetAttribute("aria-label").Should().Be("Pourquoi ce chiffre ? Factures en retard");
         accueil.Find("#kpi-overdue .lt-kpi-note").TextContent.Should().Be("3 à relancer, TTC restant dû");
         accueil.FindAll("#kpi-invoices").Should().BeEmpty("le retard remplace le nombre de factures du mois");
         accueil.Find("#home-overdue .lt-list a").GetAttribute("href").Should().Be($"invoices/{retard}");

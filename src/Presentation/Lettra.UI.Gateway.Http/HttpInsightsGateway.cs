@@ -53,4 +53,12 @@ internal sealed class HttpInsightsGateway(HttpClient http) : IInsightsGateway
             ct => http.GetAsync(HttpCalls.Relative($"api/v1/insights/as-of?at={Uri.EscapeDataString(at.ToString("O", CultureInfo.InvariantCulture))}"), ct),
             ContractsJsonContext.Default.DossierAsOfResponse,
             cancellationToken);
+
+    public Task<OperationResult<FigureExplanationResponse>> ExplainFigureAsync(ExplainedFigureDto figure, DateOnly? month, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.GetAsync(month is { } m
+                ? HttpCalls.Relative($"api/v1/insights/why?figure={figure}&month={m.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}")
+                : HttpCalls.Relative($"api/v1/insights/why?figure={figure}"), ct),
+            ContractsJsonContext.Default.FigureExplanationResponse,
+            cancellationToken);
 }

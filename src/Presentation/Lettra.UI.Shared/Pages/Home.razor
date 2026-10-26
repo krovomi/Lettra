@@ -69,6 +69,7 @@ else if (IsEmpty(figures))
 else
 {
     <section class="lt-kpis" aria-label="@L["Home.Kpis"]">
+        <div class="lt-kpi-why">
         <a class="lt-kpi" href="invoices" id="kpi-revenue">
             <span class="lt-kpi-head">@L["Home.Kpi.Revenue"]<span class="lt-kpi-icon"><Icon Name="trending-up" /></span></span>
             <span class="lt-kpi-value">@Money(figures.ThisMonth)</span>
@@ -86,13 +87,18 @@ else
                 }
             </span>
         </a>
+        <a class="lt-kpi-why-link" href="why?figure=MonthRevenue" id="kpi-revenue-why" title="@L["Home.Kpi.Why"]" aria-label="@($"{L["Home.Kpi.Why"]} {L["Home.Kpi.Revenue"]}")"><Icon Name="circle-help" Size="18" /></a>
+        </div>
         @if (_receivables is { } due)
         {
+            <div class="lt-kpi-why">
             <a class="lt-kpi @(due.OverdueCount > 0 ? "is-alert" : null)" href="invoices" id="kpi-overdue">
                 <span class="lt-kpi-head">@L["Home.Kpi.Overdue"]<span class="lt-kpi-icon"><Icon Name="calendar-clock" /></span></span>
                 <span class="lt-kpi-value">@Money(due.OverdueInclTax)</span>
                 <span class="lt-kpi-note">@(due.OverdueCount > 0 ? string.Format(Culture, L["Home.Kpi.OverdueNote"], due.OverdueCount) : L["Home.Kpi.OverdueNone"])</span>
             </a>
+            <a class="lt-kpi-why-link" href="why?figure=Overdue" id="kpi-overdue-why" title="@L["Home.Kpi.Why"]" aria-label="@($"{L["Home.Kpi.Why"]} {L["Home.Kpi.Overdue"]}")"><Icon Name="circle-help" Size="18" /></a>
+            </div>
         }
         else
         {

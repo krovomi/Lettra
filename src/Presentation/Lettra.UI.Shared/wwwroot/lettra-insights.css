@@ -130,3 +130,24 @@
     .lt-asof-rows li { grid-template-columns: minmax(0, 1fr) 10rem 10rem; grid-template-areas: "main then now"; align-items: center; }
     .lt-asof-rows .lt-asof-amount { justify-self: end; }
 }
+
+/* Pourquoi ce chiffre ? : un point d'interrogation au coin des cartes de l'accueil (un lien voisin de la carte, jamais
+   dedans), puis l'écran qui déroule le calcul : la valeur, la règle en une phrase, l'opération et les pièces. */
+.lt-kpi-why { position: relative; display: grid; }
+.lt-kpi-why > .lt-kpi { height: 100%; }
+.lt-kpi-why .lt-kpi-note { padding-right: 2.5rem; }
+.lt-kpi-why-link { position: absolute; right: var(--space-2); bottom: var(--space-2); display: inline-grid; place-items: center; width: var(--hit, 2.75rem); height: var(--hit, 2.75rem); border-radius: var(--radius-full); color: var(--color-fg-muted); }
+.lt-kpi-why-link:hover, .lt-kpi-why-link:focus-visible { color: var(--color-primary); background: var(--color-primary-soft); }
+.lt-why-head { display: grid; gap: var(--space-3); margin-bottom: var(--space-4); }
+.lt-why-value { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-3); margin: 0; }
+.lt-why-value strong { font-size: var(--text-2xl); font-variant-numeric: tabular-nums; }
+#why-rule { margin: 0; }
+.lt-why-equation { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-1); }
+.lt-why-equation li { display: flex; justify-content: space-between; gap: var(--space-3); padding: var(--space-1) 0; }
+.lt-why-equation strong { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lt-why-equation .is-result { border-top: 2px solid var(--color-border); padding-top: var(--space-2); font-weight: var(--weight-bold); }
+.lt-why-rows li.is-credit .lt-asof-amount strong { color: var(--color-danger-fg); }
+.lt-why-terms { color: var(--color-fg-muted); }
+@media (min-width: 768px) {
+    .lt-why-equation { max-width: 32rem; }
+}

@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.Api.Tests;
 
-/// <summary>ADR-0005 : la météo des paiements, le contrôle fiscal d'entraînement et la preuve d'authenticité se lisent de la même façon par HTTP (WASM) et en direct (MAUI hors ligne).</summary>
+/// <summary>ADR-0005 : la météo des paiements, le contrôle fiscal d'entraînement, la preuve d'authenticité, le dossier d'un instant passé et « Pourquoi ce chiffre ? » se lisent de la même façon par HTTP (WASM) et en direct (MAUI hors ligne).</summary>
 public sealed class InsightsGatewayParityTests(LettraApiFactory factory) : IClassFixture<LettraApiFactory>, IDisposable
 {
     private readonly GatewayHarness _harness = new(factory);
@@ -77,6 +77,23 @@ public sealed class InsightsGatewayParityTests(LettraApiFactory factory) : IClas
         past.Value!.EntriesReplayed.Should().Be(0);
         past.Value.ChainIntact.Should().BeTrue();
         past.Value.LegalDate.Should().Be(new DateOnly(2000, 1, 1));
+    }
+
+    [Theory]
+    [MemberData(nameof(Transports))]
+    public async Task Pourquoi_ce_chiffre_meme_explication_par_les_deux_transports(string transport)
+    {
+        await using ServiceProvider services = _harness.Gateway(transport);
+        IInsightsGateway insights = services.GetRequiredService<IInsightsGateway>();
+
+        OperationResult<FigureExplanationResponse> past = await insights.ExplainFigureAsync(ExplainedFigureDto.MonthRevenue, new DateOnly(2001, 2, 10), default);
+        OperationResult<FigureExplanationResponse> overdue = await insights.ExplainFigureAsync(ExplainedFigureDto.Overdue, null, default);
+
+        past.IsSuccess.Should().BeTrue(string.Join(", ", past.Errors.Select(e => e.Code)));
+        past.Value!.Month.Should().Be(new DateOnly(2001, 2, 1));
+        past.Value.Lines.Should().BeEmpty();
+        overdue.Value!.Figure.Should().Be(ExplainedFigureDto.Overdue);
+        overdue.Value.Month.Should().BeNull();
     }
 
     public void Dispose() => _harness.Dispose();

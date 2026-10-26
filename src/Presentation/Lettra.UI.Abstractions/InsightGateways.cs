@@ -29,4 +29,7 @@ public interface IInsightsGateway
 
     /// <summary>Le dossier tel qu'il était à un instant passé, rejoué depuis le journal inaltérable.</summary>
     Task<OperationResult<DossierAsOfResponse>> GetDossierAsOfAsync(DateTimeOffset at, CancellationToken cancellationToken);
+
+    /// <summary>« Pourquoi ce chiffre ? » : les pièces qui composent un chiffre de l'accueil, un mois donné s'il y a lieu.</summary>
+    Task<OperationResult<FigureExplanationResponse>> ExplainFigureAsync(ExplainedFigureDto figure, DateOnly? month, CancellationToken cancellationToken);
 }

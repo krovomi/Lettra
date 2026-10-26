@@ -136,4 +136,8 @@
   <data name="Help.Faq.as-of.Question" xml:space="preserve"><value>How do I see the file as it was on a past date?</value></data>
   <data name="Help.Faq.as-of.Answer" xml:space="preserve"><value>In Accounting, Back in time, choose a day and a time, for example 31 December at 18:00. Lettra replays the tamper-proof journal up to that moment and shows the revenue, VAT, invoices due and customer balances of that moment, next to today's. The chain is checked on the way and nothing is changed.</value></data>
   <data name="Help.Faq.as-of.Keywords" xml:space="preserve"><value>back time past history snapshot date</value></data>
+  <data name="Nav.Why.Keywords" xml:space="preserve"><value>why figure explanation detail calculation breakdown understand justify revenue overdue</value></data>
+  <data name="Help.Faq.why.Question" xml:space="preserve"><value>Where does a home page figure come from?</value></data>
+  <data name="Help.Faq.why.Answer" xml:space="preserve"><value>Tap the question mark on a home page card, or open Accounting, Why this figure?. Lettra shows the rule in one sentence, the calculation and every invoice or credit note behind it; each document opens in one click. Use the arrows to browse earlier months.</value></data>
+  <data name="Help.Faq.why.Keywords" xml:space="preserve"><value>why figure explanation detail calculation</value></data>
 </root>

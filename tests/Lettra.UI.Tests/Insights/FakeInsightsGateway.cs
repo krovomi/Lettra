@@ -54,6 +54,16 @@ internal sealed class FakeInsightsGateway : IInsightsGateway
         return Answer(AsOf);
     }
 
+    public Dictionary<ExplainedFigureDto, FigureExplanationResponse> Explanations { get; } = [];
+
+    public List<(ExplainedFigureDto Figure, DateOnly? Month)> Explained { get; } = [];
+
+    public Task<OperationResult<FigureExplanationResponse>> ExplainFigureAsync(ExplainedFigureDto figure, DateOnly? month, CancellationToken cancellationToken)
+    {
+        Explained.Add((figure, month));
+        return Answer(Explanations.GetValueOrDefault(figure));
+    }
+
     private static Task<OperationResult<T>> Answer<T>(T? value)
         where T : class =>
         Task.FromResult(value is null
