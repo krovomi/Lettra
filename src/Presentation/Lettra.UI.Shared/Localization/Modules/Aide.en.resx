@@ -147,4 +147,5 @@
   <data name="Help.Faq.what-if.Answer" xml:space="preserve"><value>In Accounting, What if…?, pick one or more levers: extra days for customers, an invoice to issue (before or after month end), a VAT scheme, a hire. Simulate shows cash over the next thirteen weeks without and with the scenario, the VAT to pay and when, and the cost of the hire. Nothing is written to the file.</value></data>
   <data name="Help.Faq.what-if.Keywords" xml:space="preserve"><value>what if simulator scenario delay hire vat scheme</value></data>
   <data name="Nav.Brief.Keywords" xml:space="preserve"><value>owner dashboard summary monthly figures phone cash payments</value></data>
+  <data name="Nav.Mission.Keywords" xml:space="preserve"><value>engagement letter fees fixed fee time spent profitability</value></data>
 </root>
