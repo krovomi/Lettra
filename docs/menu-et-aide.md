@@ -10,6 +10,8 @@ macOS, Android, iOS).
 
 - **Plus de barre horizontale** : seule la liste des écrans défile, en hauteur. Un libellé trop long se termine par
   « … » (le nom entier est dans l'info-bulle). L'aide et « Replier le menu » restent en bas, hors de la liste.
+- **Hors sections**, en tête : Accueil, En bref, Vue cabinet, Comptes intra-groupe (flèches gauche-droite) et Démo
+  commentée.
 - **Sections repliables** : un clic sur le titre d'une section (Ventes, Tiers, Comptabilité, Pilotage) la replie ou la
   déplie ; son chevron tourne. Une section repliée qui contient l'écran affiché porte un point bleu.
 - **Favoris** : l'étoile, au survol d'un écran (toujours visible au doigt), l'épingle dans la section **Favoris**, sous
@@ -22,7 +24,8 @@ macOS, Android, iOS).
 - **Aide et questions** (bas du menu, bouton « ? » de la barre du haut, feuille « Plus » du téléphone, palette Ctrl+K) :
   - un champ « Posez votre question » qui comprend le langage courant (« je veux annuler ma facture ») et montre la
     meilleure réponse dépliée, avec un bouton vers l'écran qui répond ;
-  - les questions de l'écran affiché en tête (« Sur cet écran »), puis toutes les questions fréquentes ;
+  - les questions de l'écran affiché en tête (« Sur cet écran »), puis toutes les questions fréquentes (par exemple
+    « Comment vérifier les comptes entre les sociétés d'un même groupe ? », qui mène aux comptes intra-groupe) ;
   - « Tutoriel de cet écran », « Démo commentée » (Lettra joue un parcours complet et l'explique,
     [demo-commentee.md](demo-commentee.md)), « Chercher partout », les raccourcis utiles et « Revoir tous les
     tutoriels » ;

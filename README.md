@@ -34,7 +34,23 @@ vérifié à chaque modification, en local comme en CI, et non simplement décla
   composants de liste partagés ; les doublons relevés par l'audit ont été retirés.
 - **Base propre** : zéro avertissement (avertissements traités en erreurs, analyseurs .NET en mode `Recommended`),
   21 règles de style de l'IDE en erreur de build, couverture minimale imposée en CI (88 % des lignes, 78 % des
-  branches ; environ 92 % et 82 % mesurés).
+  branches ; 91,4 % et 84,0 % mesurés en local avec les dernières fonctions, hors tests PostgreSQL et SQL Server,
+  qui demandent leurs conteneurs).
+- **Les fonctions récentes suivent les mêmes règles**, contrôlées par les mêmes tests :
+  - les lectures du cabinet et du dirigeant (fiche d'appel, prêt pour l'e-facture, comptes intra-groupe, météo des
+    paiements, remonter le temps, « Pourquoi ce chiffre ? », « Et si ? ») sont des cas d'usage de la couche
+    application du module Exports, calculés en C# sans IA et sans rien écrire ;
+  - la lettre de mission a son domaine (mission, temps passé), ses cas d'usage et ses dépôts derrière des ports,
+    comme une facture ; la comparaison aux pairs est un cas d'usage de l'application qui ne lit que la collecte des
+    indicateurs ;
+  - les services extérieurs pas encore choisis (banque connectée, paiement en ligne, plateforme agréée, vérification
+    du nom et de l'IBAN) sont des ports de l'application ; l'infrastructure fournit pour l'instant des adaptateurs
+    simulés, qu'un adaptateur réel remplacera sans toucher aux cas d'usage ;
+  - l'assistant IA du poste (MCP) est un adaptateur de protocole de la couche IA : ses outils appellent les cas
+    d'usage des écrans, en lecture seule (`ToolRegistryTests`, `AiGuardrailTests`) ; sa connexion OAuth vit dans
+    l'hôte de l'API seulement ;
+  - « En bref » ne vit que dans l'interface et ne lit que des passerelles existantes ; chaque nouvelle route de l'API
+    déclare sa permission (`AuthenticationApiTests`).
 
 Le détail, les mesures et ce qui reste ouvert (l'hôte de l'application installée, compilé seulement en CI, n'est
 pas encore sous les mêmes règles) sont dans [docs/qualite-du-code.md](docs/qualite-du-code.md). Tous les documents :
@@ -323,6 +339,33 @@ l'a posée et quand. Détails : [docs/vue-cabinet.md](docs/vue-cabinet.md).
 application installée (seule ou reliée au serveur commun) : même écran, changement de dossier branché, **non lancée**
 sur un appareil.
 
+**Comptes intra-groupe.** Quand le cabinet suit plusieurs sociétés d'un même groupe, l'écran « Comptes intra-groupe »
+(menu, sous Vue cabinet) rapproche ce qu'elles se facturent et se paient. Deux dossiers forment un couple dès que l'un
+a facturé l'autre dans les douze derniers mois : le SIREN du client est celui de la fiche entreprise de l'autre
+dossier. Pour chaque couple, Lettra montre ce qui a été facturé (avoirs déduits), ce que le vendeur dit encaissé et ce
+que la banque de l'acheteur a payé, et signale en phrases les écarts à régler avant la clôture :
+- l'acheteur n'a pas le vendeur dans ses fournisseurs ;
+- sa fiche fournisseur porte un autre IBAN que la fiche entreprise du vendeur (un virement partirait ailleurs) ;
+- une facture encaissée selon le vendeur sans virement vu chez l'acheteur, ou l'inverse ;
+- des totaux qui ne concordent pas.
+
+Chaque facture cherche le virement de l'acheteur vers l'IBAN du vendeur : d'abord celui dont le libellé porte son
+numéro, sinon un virement du même montant ; un virement ne paie qu'une facture. Sans opération bancaire chez
+l'acheteur, les paiements ne sont pas comparés. Les factures reçues ne sont pas encore enregistrées dans Lettra : le
+côté de l'acheteur, c'est sa fiche fournisseur et sa banque. Seuls les dossiers que l'utilisateur peut lire sont
+rapprochés ; les IBAN des relevés restent reconnus par leur empreinte, jamais gardés en clair. Rien n'est écrit.
+Droit : « Lire le dossier », dossier par dossier. Route : `GET /api/v1/dossiers/intercompany`.
+
+Dans la démo, le dossier principal facture au négoce l'informatique du groupe : trois factures, deux encaissées ; chez
+le négoce, la fiche fournisseur porte un autre IBAN et la banque montre deux virements. Une démo déjà installée reçoit
+ce jeu au prochain démarrage ; ses autres données restent les mêmes.
+
+| Où | Vérifié |
+|---|---|
+| Navigateur, ordinateur (1440 px, 1024 px), téléphone (390 px), français et anglais | Oui, démo Docker |
+| Poste isolé (rapprochement en direct, sans serveur) | Oui, test automatique du jeu de démonstration |
+| Application MAUI (Windows, macOS, Android, iOS) | Non vérifié |
+
 ### Lettre de mission et honoraires
 
 Menu Comptabilité > **Lettre de mission**, dans le dossier du client. Le cabinet y saisit sa mission : nature, travaux
@@ -378,7 +421,7 @@ Le prestataire de services a opté pour la TVA sur les débits : ses factures et
 Le jeu ne s'ajoute jamais à un dossier qui a déjà des devis ou des factures. Pour repartir d'un dossier rempli à neuf,
 voir « Repartir de zéro » dans [En cas de problème](#en-cas-de-problème).
 
-**La navigation.** **Accueil**, **En bref** et **Vue cabinet**, puis **Ventes** (**Devis**, **Factures**, **Avoirs**, **Factures
+**La navigation.** **Accueil**, **En bref**, **Vue cabinet** et **Comptes intra-groupe**, puis **Ventes** (**Devis**, **Factures**, **Avoirs**, **Factures
 récurrentes**), **Tiers** (**Clients**, **Fournisseurs**, **Catalogue**), **Comptabilité** (**Encaissements**,
 **Rapprochement bancaire**, **Relances**, **Journal et balance**, **FEC**, **Déclarations**, **Revue du dossier**, **Lettre de mission**) et
 **Pilotage** (**Tableaux de bord**, **Alertes**, **Entreprise**, **Mes préférences**, **Équipe et accès** pour qui
@@ -1062,6 +1105,10 @@ Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou 
 | Envoi des devis et factures par e-mail | Non : on télécharge le PDF ou le Factur-X, factures récurrentes comprises. Seules les relances, les invitations et les demandes de pièces justificatives partent par e-mail. |
 | Relances par courrier ou en PDF, facture des pénalités | Non : Lettra envoie la relance par e-mail ou la note comme faite à la main ; il cite les pénalités sans les facturer. |
 | Tableaux de pilotage dans le Grafana d'une cellule | Dans la démo, Prometheus lit les indicateurs sur l'API (`/internal/kpi/metrics`). Les charts Helm ne posent pas encore ce jeton ni cette lecture : dans une cellule déployée, « Pilotage du cabinet », « Pilotage d'un dossier » et « Administration » restent vides dans Grafana. La page **Tableaux de bord** de Lettra, elle, fonctionne partout. |
+| Notifications sur le téléphone | Non : « En bref » se consulte ; aucune notification n'arrive quand une grosse facture est payée ou passe en retard. |
+| Lettre de mission signée et forfait facturé | Non : la lettre se télécharge en PDF et se signe hors de Lettra ; la facture du forfait reste à créer (facture récurrente). |
+| Factures reçues | Pas encore enregistrées : les comptes intra-groupe comparent ce que le vendeur a facturé à la fiche fournisseur et à la banque de l'acheteur, pas facture contre facture. |
+| Assistant IA du poste avec Claude Desktop ou VS Code | Non vérifié : la connexion a été vérifiée avec le client MCP officiel (SDK TypeScript) dans la démo. |
 | Applications signées | Non : avertissement de Windows au premier lancement, APK Android installé à la main, application macOS arrêtée par le Trousseau, pas de version pour iPhone réel. |
 
 ---
@@ -1169,6 +1216,7 @@ flowchart LR
   nav["Navigateur"] -->|"HTTPS, cookie de session"| api
   m4 -->|"synchronisation, avec l'accord de l'utilisateur"| api
   sc["Application reliée au serveur commun<br/>(en ligne seulement)"] -->|"HTTPS"| api
+  ia["Assistant IA du poste (MCP)<br/>lecture seule, fermé par défaut"] -->|"HTTPS, jeton Keycloak lettra-mcp"| api
 ```
 
 **Serveur et version web (mode 2).** L'API exige un realm Keycloak (`Lettra:Identity:Oidc:Authority`, MFA
@@ -1229,6 +1277,8 @@ deploy/            démo Docker, Helm, OpenTofu, Argo CD, cellules, Keycloak, ob
 | Les noms écrits dans les empreintes d'intégrité scellées ne changent jamais | `SealedFingerprintTests` |
 | Un calendrier de tâche de fond invalide empêche l'hôte de démarrer | `PeriodicJobOptionsTests` |
 | Les écrans et services de l'interface déclarent leurs dépendances (injection, `Optional<T>`) ; aucun ne reçoit `IServiceProvider` | `UiDependencyRulesTests` |
+| Chaque route de l'API déclare sa permission | `AuthenticationApiTests` |
+| La couche IA n'envoie aucune commande hors du brouillon de devis ; un outil ne peut que lire ou rédiger un brouillon | `AiGuardrailTests`, `ToolRegistryTests` |
 | Factur-X conforme PDF/A-3b et EN 16931 | CI : veraPDF et validateurs EN 16931 |
 
 ### Conventions
@@ -1253,16 +1303,21 @@ Le trajet d'une requête :
 
 ```mermaid
 flowchart LR
-  r["Requête<br/>cookie, en-tête X-Dossier"] --> c1["Contrôle 1, à l'entrée de l'API<br/>connexion et double facteur,<br/>anti-CSRF, dossier accessible,<br/>permission déclarée par la route"]
+  r["Requête<br/>cookie ou jeton, en-tête X-Dossier"] --> c1["Contrôle 1, à l'entrée de l'API<br/>connexion et double facteur,<br/>anti-CSRF, dossier accessible,<br/>permission déclarée par la route"]
   c1 --> c2["Contrôle 2, dans le médiateur<br/>journalisation, garde du dossier,<br/>autorisation, validation, concurrence"]
   c2 --> uc["Cas d'usage<br/>base du seul dossier demandé"]
   p["Page de l'espace client<br/>lien personnel, sans cookie"] --> cp["Contrôle du lien<br/>empreinte du secret, lien actif,<br/>débit limité, même origine"]
   cp -->|"compte de service de l'espace client"| c2
+  mcp["Assistant IA du poste (MCP)<br/>jeton porteur, en-tête X-Dossier"] --> o["Origin d'une page web :<br/>même hôte seulement"]
+  o --> c1
+  uc --> t["Outils de l'assistant :<br/>mêmes cas d'usage, lecture seule,<br/>noms pseudonymisés, journal IA"]
 ```
 
 Sur un poste isolé ou relié, il n'y a pas d'API : seul le contrôle 2 s'applique. Les pages de l'espace client
 (`/espace-client/`) n'ont ni session ni double facteur : le lien personnel tient lieu de contrôle 1, puis le contrôle 2
-s'applique sous le compte de service de l'espace client, au rôle limité.
+s'applique sous le compte de service de l'espace client, au rôle limité. L'assistant IA du poste passe les deux
+contrôles comme un autre client, après le refus des pages web d'un autre hôte ; ses outils n'appellent que des cas
+d'usage en lecture.
 
 ### CI
 

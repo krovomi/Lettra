@@ -1,8 +1,7 @@
 # Encaissements, rapprochement bancaire et lettrage
 
-Jusqu'ici Lettra savait émettre une facture mais pas dire si elle était payée : le solde du compte client (411) valait
-« facturé moins avoirs ». La vague 6 ajoute les règlements reçus, leur écriture de banque, le lettrage du compte client
-et le rapprochement avec le relevé de la banque. Deux écrans, dans le groupe **Comptabilité** du menu :
+Une facture émise se suit jusqu'à son paiement. Lettra enregistre les règlements reçus, leur écriture de banque, le
+lettrage du compte client (411) et le rapprochement avec le relevé de la banque. Deux écrans, dans le groupe **Comptabilité** du menu :
 
 - **Encaissements** (`/payments`) : la liste des règlements reçus, la saisie d'un règlement, sa fiche et sa
   contre-passation ;
