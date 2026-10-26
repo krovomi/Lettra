@@ -33,6 +33,9 @@ internal static class ExportEndpoints
         api.MapReminders();
         api.MapPortalLinks();
 
+        // La météo des paiements lit les mêmes pièces et les mêmes encaissements.
+        api.MapInsights();
+
         // Les déclarations fiscales lisent les mêmes pièces et le même journal.
         api.MapTax();
 

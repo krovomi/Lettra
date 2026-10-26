@@ -4,6 +4,7 @@ using Lettra.Exports.Application;
 using Lettra.Exports.Application.AuditKit;
 using Lettra.Exports.Application.Banking;
 using Lettra.Exports.Application.EInvoicing.Platform;
+using Lettra.Exports.Application.Insights;
 using Lettra.Exports.Application.Portal;
 using Lettra.Exports.Application.Reminders;
 using Lettra.Exports.Application.Tax;
@@ -47,6 +48,8 @@ public static class DependencyInjection
         services.AddScoped<IPaymentReminderRepository, EfPaymentReminderRepository>();
         services.AddScoped<IReminderContextReader, EfReminderContextReader>();
         services.AddScoped<IAuditTrailReader, EfAuditTrailReader>();
+        services.AddScoped<IPaymentHistoryReader, EfPaymentHistoryReader>();
+        services.AddScoped<IIssuedInvoiceReader, EfIssuedInvoiceReader>();
         AddPortalProviders(services, configuration);
         AddBankAggregator(services, configuration);
         string platform = configuration?[PlatformKey] ?? "None";

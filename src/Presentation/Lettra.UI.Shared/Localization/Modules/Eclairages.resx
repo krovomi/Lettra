@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.PaymentWeather" xml:space="preserve"><value>Météo des paiements</value></data>
+  <data name="Weather.Title" xml:space="preserve"><value>Météo des paiements</value></data>
+  <data name="Weather.Subtitle" xml:space="preserve"><value>Chaque client a sa météo, tirée de son historique de paiement. Lettra en déduit quand chaque facture due devrait être payée.</value></data>
+  <data name="Weather.Stat.FourWeeks" xml:space="preserve"><value>Attendu d'ici 4 semaines</value></data>
+  <data name="Weather.Stat.EightWeeks" xml:space="preserve"><value>Attendu sur 8 semaines</value></data>
+  <data name="Weather.Stat.Stormy" xml:space="preserve"><value>Clients sous l'orage</value></data>
+  <data name="Weather.Stat.Sunny" xml:space="preserve"><value>Clients au soleil</value></data>
+  <data name="Weather.Forecast" xml:space="preserve"><value>Prévision des encaissements</value></data>
+  <data name="Weather.Forecast.Hint" xml:space="preserve"><value>Chaque facture due est attendue à son échéance, décalée du retard habituel de son client, jamais avant demain. La trésorerie peut reprendre ces montants.</value></data>
+  <data name="Weather.Week" xml:space="preserve"><value>Semaine du {0}</value></data>
+  <data name="Weather.Week.Invoices" xml:space="preserve"><value>{0} facture(s)</value></data>
+  <data name="Weather.Later" xml:space="preserve"><value>Plus tard : {0} attendus au-delà de huit semaines.</value></data>
+  <data name="Weather.Customers" xml:space="preserve"><value>Bulletin par client</value></data>
+  <data name="Weather.Empty" xml:space="preserve"><value>Pas encore de météo</value></data>
+  <data name="Weather.Empty.Text" xml:space="preserve"><value>La météo apparaît dès que des factures validées ont été payées ou sont arrivées à échéance.</value></data>
+  <data name="Weather.Search" xml:space="preserve"><value>Rechercher un client</value></data>
+  <data name="Weather.Filter" xml:space="preserve"><value>Météo</value></data>
+  <data name="Weather.Filter.All" xml:space="preserve"><value>Toutes</value></data>
+  <data name="Weather.Count" xml:space="preserve"><value>{0} client(s) sur {1}</value></data>
+  <data name="Weather.NoMatch" xml:space="preserve"><value>Aucun client ne correspond à ces filtres.</value></data>
+  <data name="Weather.Kind.Sunny" xml:space="preserve"><value>Ensoleillé</value></data>
+  <data name="Weather.Kind.Cloudy" xml:space="preserve"><value>Nuageux</value></data>
+  <data name="Weather.Kind.Rainy" xml:space="preserve"><value>Pluvieux</value></data>
+  <data name="Weather.Kind.Stormy" xml:space="preserve"><value>Orageux</value></data>
+  <data name="Weather.Kind.Unknown" xml:space="preserve"><value>Pas assez d'historique</value></data>
+  <data name="Weather.OnTime" xml:space="preserve"><value>À l'heure</value></data>
+  <data name="Weather.OnTime.Value" xml:space="preserve"><value>{0} % sur {1} facture(s)</value></data>
+  <data name="Weather.Typical" xml:space="preserve"><value>Retard habituel</value></data>
+  <data name="Weather.Outstanding" xml:space="preserve"><value>Reste dû</value></data>
+  <data name="Weather.BestDay" xml:space="preserve"><value>Meilleur jour d'envoi</value></data>
+  <data name="Weather.BestDay.Value" xml:space="preserve"><value>le {0} (payé {1} j plus tôt)</value></data>
+  <data name="Weather.BestDay.None" xml:space="preserve"><value>Pas de jour qui se détache</value></data>
+  <data name="Weather.Expected" xml:space="preserve"><value>{0} encaissement(s) attendu(s)</value></data>
+  <data name="Weather.Expected.On" xml:space="preserve"><value>attendu le {0}</value></data>
+  <data name="Weather.Days.Early" xml:space="preserve"><value>{0} j d'avance</value></data>
+  <data name="Weather.Days.OnTime" xml:space="preserve"><value>à l'échéance</value></data>
+  <data name="Weather.Days.Late" xml:space="preserve"><value>{0} j après l'échéance</value></data>
+  <data name="Weather.Why.Overdue" xml:space="preserve"><value>Une facture attend son paiement depuis {0} jours après l'échéance.</value></data>
+  <data name="Weather.Why.Unknown" xml:space="preserve"><value>Moins de deux factures payées ou échues : Lettra attend d'en savoir plus.</value></data>
+  <data name="Weather.Why.Average" xml:space="preserve"><value>Paie en moyenne {0}.</value></data>
+  <data name="Weather.Sort.Weather" xml:space="preserve"><value>Météo</value></data>
+  <data name="Weather.Sort.Late" xml:space="preserve"><value>Retard moyen</value></data>
+  <data name="Weather.Rules" xml:space="preserve"><value>Comment Lettra calcule la météo</value></data>
+  <data name="Weather.Rule.Sunny" xml:space="preserve"><value>paie en moyenne au plus 2 jours après l'échéance, le temps d'un virement.</value></data>
+  <data name="Weather.Rule.Cloudy" xml:space="preserve"><value>paie en moyenne 3 à 10 jours après l'échéance.</value></data>
+  <data name="Weather.Rule.Rainy" xml:space="preserve"><value>paie en moyenne 11 à 30 jours après l'échéance.</value></data>
+  <data name="Weather.Rule.Stormy" xml:space="preserve"><value>paie en moyenne plus d'un mois après l'échéance, ou une de ses factures a plus de 60 jours de retard.</value></data>
+  <data name="Weather.Rule.Unknown" xml:space="preserve"><value>moins de deux factures payées ou échues sur les douze derniers mois.</value></data>
+  <data name="Weather.Rules.Hint" xml:space="preserve"><value>Le retard moyen est pondéré par les montants ; une facture échue encore due compte pour son retard à ce jour. Le meilleur jour d'envoi compare les délais de paiement selon le jour d'émission. Ce sont des statistiques simples, recalculées à chaque ouverture : aucune IA, rien n'est écrit dans le dossier.</value></data>
+  <data name="Weather.Doubtful" xml:space="preserve"><value>Douteux : {0} de factures à plus de {1} jours de retard, laissés hors de la prévision. Mieux vaut les relancer.</value></data>
+  <data name="Weather.Expected.Doubtful" xml:space="preserve"><value>douteuse, hors prévision</value></data>
+  <data name="Audit.Tab" xml:space="preserve"><value>Contrôle à blanc</value></data>
+  <data name="Audit.Title" xml:space="preserve"><value>Contrôle fiscal d'entraînement</value></data>
+  <data name="Audit.Subtitle" xml:space="preserve"><value>Lettra passe sur le FEC les tests qu'un vérificateur ferait avec ses outils, et dit ce qu'il relèverait avant qu'il ne le relève.</value></data>
+  <data name="Audit.Run" xml:space="preserve"><value>Lancer le contrôle à blanc</value></data>
+  <data name="Audit.Other.Title" xml:space="preserve"><value>Contrôler le FEC d'un autre logiciel</value></data>
+  <data name="Audit.Other.Hint" xml:space="preserve"><value>Choisissez un FEC (texte tabulé ou à barres verticales) : les mêmes tests passent, sur l'exercice indiqué ci-dessus.</value></data>
+  <data name="Audit.Working" xml:space="preserve"><value>Contrôle en cours…</value></data>
+  <data name="Audit.Result.Title" xml:space="preserve"><value>Ce que relèverait le vérificateur sur {0}</value></data>
+  <data name="Audit.Read" xml:space="preserve"><value>{0} écriture(s) et {1} ligne(s) lues.</value></data>
+  <data name="Audit.Verdict.Clean" xml:space="preserve"><value>Aucun des {0} tests ne relève quoi que ce soit.</value></data>
+  <data name="Audit.Verdict.Findings" xml:space="preserve"><value>{0} point(s) que le vérificateur relèverait, {1} question(s) qu'il poserait.</value></data>
+  <data name="Audit.Verdict.Unreadable" xml:space="preserve"><value>Ce fichier n'est pas un FEC lisible (en-tête ou colonnes) : aucun test n'a pu passer.</value></data>
+  <data name="Audit.Severity.Passed" xml:space="preserve"><value>Rien à relever</value></data>
+  <data name="Audit.Severity.Watch" xml:space="preserve"><value>Question probable</value></data>
+  <data name="Audit.Severity.Alert" xml:space="preserve"><value>À corriger ou justifier</value></data>
+  <data name="Audit.Examples" xml:space="preserve"><value>{0} exemple(s)</value></data>
+  <data name="Audit.Benford.Title" xml:space="preserve"><value>Premiers chiffres des montants (loi de Benford)</value></data>
+  <data name="Audit.Benford.Hint" xml:space="preserve"><value>Dans des montants réels, le premier chiffre est un 1 environ trois fois sur dix et un 9 moins d'une fois sur vingt. Barre bleue : vos montants ; barre grise : la loi.</value></data>
+  <data name="Audit.Benford.Shares" xml:space="preserve"><value>{0:0.0} % observés, {1:0.0} % attendus</value></data>
+  <data name="Audit.Disclaimer" xml:space="preserve"><value>C'est un entraînement, pas un avis fiscal : rien n'est envoyé à l'administration, et un vérificateur dispose d'autres sources (relevés bancaires, recoupements). Les tests et leurs seuils sont décrits dans la documentation.</value></data>
+  <data name="Audit.Check.Format" xml:space="preserve"><value>Format du fichier</value></data>
+  <data name="Audit.Check.Format.Why" xml:space="preserve"><value>Le fichier respecte-t-il l'article A47 A-1 : colonnes, dates, montants, équilibre des écritures ? Un FEC non conforme peut valoir une amende.</value></data>
+  <data name="Audit.Check.Format.Found" xml:space="preserve"><value>{0} anomalie(s) de format.</value></data>
+  <data name="Audit.Check.Format.Passed" xml:space="preserve"><value>Le fichier est conforme.</value></data>
+  <data name="Audit.Check.Format.Fix" xml:space="preserve"><value>Corrigez dans le logiciel qui produit le FEC, puis exportez-le à nouveau ; l'onglet FEC donne le détail ligne par ligne.</value></data>
+  <data name="Audit.Check.EntryNumberGap" xml:space="preserve"><value>Numéros d'écriture qui sautent</value></data>
+  <data name="Audit.Check.EntryNumberGap.Why" xml:space="preserve"><value>Dans chaque journal, les écritures se suivent sans trou : un numéro manquant fait penser à une écriture supprimée.</value></data>
+  <data name="Audit.Check.EntryNumberGap.Found" xml:space="preserve"><value>{0} numéro(s) manquant(s).</value></data>
+  <data name="Audit.Check.EntryNumberGap.Passed" xml:space="preserve"><value>Aucun numéro ne manque.</value></data>
+  <data name="Audit.Check.EntryNumberGap.Fix" xml:space="preserve"><value>Retrouvez la raison de chaque trou (écriture annulée, changement d'exercice) et gardez-en la trace écrite.</value></data>
+  <data name="Audit.Check.PieceNumberGap" xml:space="preserve"><value>Factures qui manquent dans la suite</value></data>
+  <data name="Audit.Check.PieceNumberGap.Why" xml:space="preserve"><value>Les factures sont numérotées en une suite continue, sans trou (article 242 nonies A de l'annexe II du CGI) : un numéro absent fait soupçonner une vente non déclarée.</value></data>
+  <data name="Audit.Check.PieceNumberGap.Found" xml:space="preserve"><value>{0} numéro(s) de pièce absent(s) du journal des ventes.</value></data>
+  <data name="Audit.Check.PieceNumberGap.Passed" xml:space="preserve"><value>La suite des factures est continue.</value></data>
+  <data name="Audit.Check.PieceNumberGap.Fix" xml:space="preserve"><value>Vérifiez si la pièce existe hors de la période (avant ou après) ; sinon, préparez son explication.</value></data>
+  <data name="Audit.Check.SundayOrHoliday" xml:space="preserve"><value>Écritures un dimanche ou un jour férié</value></data>
+  <data name="Audit.Check.SundayOrHoliday.Why" xml:space="preserve"><value>Une activité un jour fermé est possible (commerce, saisie tardive), mais le vérificateur demande pourquoi.</value></data>
+  <data name="Audit.Check.SundayOrHoliday.Found" xml:space="preserve"><value>{0} écriture(s) datée(s) d'un dimanche ou d'un jour férié.</value></data>
+  <data name="Audit.Check.SundayOrHoliday.Passed" xml:space="preserve"><value>Aucune écriture un jour fermé.</value></data>
+  <data name="Audit.Check.SundayOrHoliday.Fix" xml:space="preserve"><value>Si l'activité ouvre ces jours-là, rien à faire ; sinon, vérifiez la date de la pièce.</value></data>
+  <data name="Audit.Check.LateValidation" xml:space="preserve"><value>Écritures validées longtemps après leur date</value></data>
+  <data name="Audit.Check.LateValidation.Why" xml:space="preserve"><value>Plus de 60 jours entre la date d'une écriture et sa validation : le vérificateur cherche les écritures antidatées.</value></data>
+  <data name="Audit.Check.LateValidation.Found" xml:space="preserve"><value>{0} écriture(s) validée(s) plus de 60 jours après leur date.</value></data>
+  <data name="Audit.Check.LateValidation.Passed" xml:space="preserve"><value>Toutes les écritures sont validées à temps.</value></data>
+  <data name="Audit.Check.LateValidation.Fix" xml:space="preserve"><value>Gardez la pièce qui explique le retard (facture reçue tard, régularisation de clôture).</value></data>
+  <data name="Audit.Check.NegativeCash" xml:space="preserve"><value>Caisse négative</value></data>
+  <data name="Audit.Check.NegativeCash.Why" xml:space="preserve"><value>Une caisse ne peut pas payer plus qu'elle ne contient : un solde négatif fait penser à des recettes non enregistrées.</value></data>
+  <data name="Audit.Check.NegativeCash.Found" xml:space="preserve"><value>{0} jour(s) où la caisse finit négative (jusqu'à {1}).</value></data>
+  <data name="Audit.Check.NegativeCash.Passed" xml:space="preserve"><value>La caisse n'est jamais négative.</value></data>
+  <data name="Audit.Check.NegativeCash.Fix" xml:space="preserve"><value>Retrouvez les recettes en espèces manquantes ou corrigez les dates des sorties de caisse.</value></data>
+  <data name="Audit.Check.CashOverLimit" xml:space="preserve"><value>Espèces au-delà de 1 000 €</value></data>
+  <data name="Audit.Check.CashOverLimit.Why" xml:space="preserve"><value>Un règlement en espèces dépasse le plafond légal de 1 000 € (article L112-6 du code monétaire et financier).</value></data>
+  <data name="Audit.Check.CashOverLimit.Found" xml:space="preserve"><value>{0} mouvement(s) de caisse de plus de 1 000 €, {1} au total.</value></data>
+  <data name="Audit.Check.CashOverLimit.Passed" xml:space="preserve"><value>Aucun mouvement d'espèces au-delà du plafond.</value></data>
+  <data name="Audit.Check.CashOverLimit.Fix" xml:space="preserve"><value>Vérifiez qu'il s'agit d'un dépôt en banque ou d'un retrait, et non d'un règlement entre professionnels.</value></data>
+  <data name="Audit.Check.RoundAmounts" xml:space="preserve"><value>Montants ronds</value></data>
+  <data name="Audit.Check.RoundAmounts.Why" xml:space="preserve"><value>Des écritures d'au moins 1 000 € tombant pile sur la centaine sont rares dans une activité réelle et fréquentes dans une estimation.</value></data>
+  <data name="Audit.Check.RoundAmounts.Found" xml:space="preserve"><value>{0} écriture(s) ronde(s), soit {1} % des écritures d'au moins 1 000 €.</value></data>
+  <data name="Audit.Check.RoundAmounts.Passed" xml:space="preserve"><value>Peu de montants ronds ({1} % des écritures d'au moins 1 000 €).</value></data>
+  <data name="Audit.Check.RoundAmounts.Fix" xml:space="preserve"><value>Gardez la pièce de chaque montant rond (contrat, forfait, acompte).</value></data>
+  <data name="Audit.Check.DuplicateLines" xml:space="preserve"><value>Lignes en double</value></data>
+  <data name="Audit.Check.DuplicateLines.Why" xml:space="preserve"><value>Même jour, même compte, même montant et même libellé dans deux écritures : une saisie en double gonfle les charges ou les ventes.</value></data>
+  <data name="Audit.Check.DuplicateLines.Found" xml:space="preserve"><value>{0} groupe(s) de lignes identiques.</value></data>
+  <data name="Audit.Check.DuplicateLines.Passed" xml:space="preserve"><value>Aucune ligne en double.</value></data>
+  <data name="Audit.Check.DuplicateLines.Fix" xml:space="preserve"><value>Si ce sont deux opérations réelles, distinguez leurs libellés ; sinon, contre-passez le doublon.</value></data>
+  <data name="Audit.Check.Benford" xml:space="preserve"><value>Loi de Benford</value></data>
+  <data name="Audit.Check.Benford.Why" xml:space="preserve"><value>Le premier chiffre des montants réels suit une loi connue ; des montants inventés s'en écartent.</value></data>
+  <data name="Audit.Check.Benford.Found" xml:space="preserve"><value>Écart moyen de {1} point(s) sur {0} montants : la série s'écarte de la loi.</value></data>
+  <data name="Audit.Check.Benford.Passed" xml:space="preserve"><value>{0} montants lus ; écart moyen de {1} point(s), dans la norme.</value></data>
+  <data name="Audit.Check.Benford.TooFew" xml:space="preserve"><value>Seulement {0} montant(s) d'au moins 10 € : il en faut 200 pour que le test soit concluant.</value></data>
+  <data name="Audit.Check.Benford.Fix" xml:space="preserve"><value>Regardez les chiffres les plus éloignés : ils montrent souvent un forfait répété ou une série saisie à la main.</value></data>
+  <data name="Audit.Check.CustomerCredit" xml:space="preserve"><value>Clients créditeurs</value></data>
+  <data name="Audit.Check.CustomerCredit.Why" xml:space="preserve"><value>Un client qui a trop payé, ou une facture oubliée : le vérificateur demande ce que représente le solde.</value></data>
+  <data name="Audit.Check.CustomerCredit.Found" xml:space="preserve"><value>{0} client(s) au solde créditeur, {1} au total.</value></data>
+  <data name="Audit.Check.CustomerCredit.Passed" xml:space="preserve"><value>Aucun client créditeur.</value></data>
+  <data name="Audit.Check.CustomerCredit.Fix" xml:space="preserve"><value>Lettrez l'encaissement avec sa facture, ou remboursez le trop-perçu.</value></data>
+  <data name="Audit.Check.SupplierDebit" xml:space="preserve"><value>Fournisseurs débiteurs</value></data>
+  <data name="Audit.Check.SupplierDebit.Why" xml:space="preserve"><value>Un fournisseur payé sans facture enregistrée : charge manquante ou acompte à justifier.</value></data>
+  <data name="Audit.Check.SupplierDebit.Found" xml:space="preserve"><value>{0} fournisseur(s) au solde débiteur, {1} au total.</value></data>
+  <data name="Audit.Check.SupplierDebit.Passed" xml:space="preserve"><value>Aucun fournisseur débiteur.</value></data>
+  <data name="Audit.Check.SupplierDebit.Fix" xml:space="preserve"><value>Enregistrez la facture d'achat manquante ou classez l'acompte versé.</value></data>
+  <data name="Audit.Check.VatRate" xml:space="preserve"><value>TVA collectée et chiffre d'affaires</value></data>
+  <data name="Audit.Check.VatRate.Why" xml:space="preserve"><value>La TVA collectée rapportée au chiffre d'affaires ne peut pas dépasser le taux normal de 20 %.</value></data>
+  <data name="Audit.Check.VatRate.Found" xml:space="preserve"><value>La TVA collectée représente {1} % du chiffre d'affaires : plus que le taux normal.</value></data>
+  <data name="Audit.Check.VatRate.Passed" xml:space="preserve"><value>Taux apparent de TVA collectée : {1} % du chiffre d'affaires.</value></data>
+  <data name="Audit.Check.VatRate.Fix" xml:space="preserve"><value>Cherchez une TVA comptée deux fois ou une vente enregistrée hors des comptes 70.</value></data>
+  <data name="Nav.InvoiceProof" xml:space="preserve"><value>Vérifier une facture</value></data>
+  <data name="Proof.Title" xml:space="preserve"><value>Vérifier une facture</value></data>
+  <data name="Proof.Subtitle" xml:space="preserve"><value>Chaque facture validée porte un QR code signé par le dossier. Collez ici le texte lu par un lecteur de QR code : Lettra dit si la facture vient bien de ce dossier et si elle n'a pas été modifiée.</value></data>
+  <data name="Proof.Code" xml:space="preserve"><value>Texte du QR code</value></data>
+  <data name="Proof.Code.Hint" xml:space="preserve"><value>Le texte commence par LETTRA-PREUVE-1. L'appareil photo d'un téléphone lit le QR code et permet de copier ce texte.</value></data>
+  <data name="Proof.Verify" xml:space="preserve"><value>Vérifier</value></data>
+  <data name="Proof.Working" xml:space="preserve"><value>Vérification en cours…</value></data>
+  <data name="Proof.Verdict.Authentic" xml:space="preserve"><value>Facture authentique : signée par ce dossier, et identique à la pièce enregistrée.</value></data>
+  <data name="Proof.Verdict.Mismatch" xml:space="preserve"><value>Signée par ce dossier, mais la pièce enregistrée ne dit plus la même chose.</value></data>
+  <data name="Proof.Verdict.Forged" xml:space="preserve"><value>Signature invalide : le texte a été modifié après la signature. Ne payez pas sans vérifier.</value></data>
+  <data name="Proof.Verdict.Foreign" xml:space="preserve"><value>Cette facture n'a pas été émise par ce dossier (sa clé n'est pas au registre).</value></data>
+  <data name="Proof.Verdict.Unreadable" xml:space="preserve"><value>Ce texte n'est pas une preuve Lettra.</value></data>
+  <data name="Proof.Fact.Siren" xml:space="preserve"><value>SIREN de l'émetteur</value></data>
+  <data name="Proof.Fact.Number" xml:space="preserve"><value>Numéro</value></data>
+  <data name="Proof.Fact.Date" xml:space="preserve"><value>Date d'émission</value></data>
+  <data name="Proof.Fact.Total" xml:space="preserve"><value>Total TTC</value></data>
+  <data name="Proof.Fact.Key" xml:space="preserve"><value>Clé de signature</value></data>
+  <data name="Proof.Fact.None" xml:space="preserve"><value>non indiqué</value></data>
+  <data name="Proof.Open" xml:space="preserve"><value>Ouvrir la facture</value></data>
+  <data name="Proof.Credited" xml:space="preserve"><value>Cette facture est entièrement annulée par un ou plusieurs avoirs.</value></data>
+  <data name="Proof.Differences" xml:space="preserve"><value>Ce qui diffère</value></data>
+  <data name="Proof.Difference.Missing" xml:space="preserve"><value>Aucune pièce validée de ce numéro dans le dossier.</value></data>
+  <data name="Proof.Difference.IssueDate" xml:space="preserve"><value>La date d'émission n'est pas la même.</value></data>
+  <data name="Proof.Difference.TotalInclTax" xml:space="preserve"><value>Le total TTC n'est pas le même.</value></data>
+  <data name="Proof.Difference.Siren" xml:space="preserve"><value>Le SIREN de l'entreprise n'est pas le même.</value></data>
+  <data name="Proof.Offline.Title" xml:space="preserve"><value>Vérifier sans Lettra</value></data>
+  <data name="Proof.Offline.Hint" xml:space="preserve"><value>Le texte signé est le QR code sans son dernier champ ; le dernier champ est la signature ECDSA P-256 (SHA-256, format DER) en base 64 URL. Avec la clé publique du dossier ci-dessous, OpenSSL la vérifie :</value></data>
+  <data name="Proof.Keys" xml:space="preserve"><value>Registre des clés publiques</value></data>
+  <data name="Proof.Keys.Empty" xml:space="preserve"><value>Le dossier n'a pas encore de clé : elle est créée à la première pièce validée.</value></data>
+  <data name="Proof.Key.Current" xml:space="preserve"><value>en vigueur depuis le {0}</value></data>
+  <data name="Proof.Key.Retired" xml:space="preserve"><value>du {0} au {1} (vérification seule)</value></data>
+  <data name="Proof.Key.Download" xml:space="preserve"><value>Télécharger la clé</value></data>
+</root>

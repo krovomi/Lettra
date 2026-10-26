@@ -120,6 +120,17 @@
   <data name="Help.Faq.assistant.Question" xml:space="preserve"><value>What is the AI assistant for?</value></data>
   <data name="Help.Faq.assistant.Answer" xml:space="preserve"><value>The assistant explains a rule or drafts a quote, which you review and validate yourself: it never validates or sends anything. It is off by default; a firm administrator can turn it on. This help works without it.</value></data>
   <data name="Help.Faq.assistant.Keywords" xml:space="preserve"><value>ai artificial intelligence assistant claude question</value></data>
+  <data name="Nav.PaymentWeather.Keywords" xml:space="preserve"><value>weather forecast collection late payer cash delay</value></data>
+  <data name="Help.Faq.weather.Question" xml:space="preserve"><value>When will my invoices be collected?</value></data>
+  <data name="Help.Faq.weather.Answer" xml:space="preserve"><value>Payment weather gives each customer a weather report drawn from their past payments, and the likely payment date of each open invoice. The eight-week forecast helps plan cash.</value></data>
+  <data name="Help.Faq.weather.Keywords" xml:space="preserve"><value>weather forecast collection cash delay payer</value></data>
+  <data name="Help.Faq.practice-audit.Question" xml:space="preserve"><value>What would a tax inspector point out in my books?</value></data>
+  <data name="Help.Faq.practice-audit.Answer" xml:space="preserve"><value>The mock audit, under Tax returns, runs an inspector's tests on the FEC: numbering gaps, Sunday entries, negative cash, cash above €1,000, round amounts, duplicates, Benford's law, customers in credit, VAT rate. It tells you what to fix or justify.</value></data>
+  <data name="Help.Faq.practice-audit.Keywords" xml:space="preserve"><value>tax audit inspector practice mock fec benford anomaly</value></data>
+  <data name="Nav.InvoiceProof.Keywords" xml:space="preserve"><value>proof authenticity qr code signature fake invoice fraud check</value></data>
+  <data name="Help.Faq.invoice-proof.Question" xml:space="preserve"><value>How do I know an invoice is genuine?</value></data>
+  <data name="Help.Faq.invoice-proof.Answer" xml:space="preserve"><value>Every validated invoice carries a “Proof of authenticity” QR code signed with the dossier's key. Under Sales, Check an invoice, paste the text of this QR code: Lettra tells you whether the invoice comes from this dossier and whether its number, date or amount were changed. The public key also lets anyone check without Lettra.</value></data>
+  <data name="Help.Faq.invoice-proof.Keywords" xml:space="preserve"><value>proof authenticity qr signature fake invoice fraud</value></data>
   <data name="Nav.IbanChanges.Keywords" xml:space="preserve"><value>iban bank details fraud fake supplier change verification transfer account holder payee name</value></data>
   <data name="Nav.Receipts.Keywords" xml:space="preserve"><value>receipts missing documents purchase invoices tickets photo expenses</value></data>
   <data name="Nav.ReceiptsToProvide.Keywords" xml:space="preserve"><value>upload receipt photo ticket</value></data>

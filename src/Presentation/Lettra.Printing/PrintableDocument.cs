@@ -105,6 +105,15 @@ public sealed record PrintableDocument
 
     public string? Notes { get; init; }
 
+    /// <summary>
+    /// Preuve d'authenticité d'une pièce validée (texte <c>LETTRA-PREUVE-1;…</c> signé par la clé du dossier), imprimée en
+    /// QR code ; rien pour un brouillon ou hors connexion.
+    /// </summary>
+    public string? ProofCode { get; init; }
+
+    /// <summary>Version de clé qui a signé <see cref="ProofCode"/>, imprimée sous le QR code.</summary>
+    public string? ProofKeyId { get; init; }
+
     /// <summary>Devise ISO 4217. Lettra facture en euros.</summary>
     public string Currency { get; init; } = "EUR";
 

@@ -1,0 +1,226 @@
+@page "/tax/practice-audit"
+@using Lettra.Contracts.Insights
+@inject IInsightsGateway Insights
+@inject IStringLocalizer<SharedResource> L
+@inject TimeProvider Clock
+@* Contrôle fiscal d'entraînement : le serveur passe sur le FEC de l'exercice (ou sur celui d'un autre logiciel) les
+   tests de cohérence qu'un vérificateur ferait, et dit ce qu'il relèverait, avec des exemples et la façon d'y répondre.
+   Rien n'est envoyé à l'administration ; c'est un entraînement, pas un avis fiscal. *@
+
+<PageTitle>@L["Audit.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Audit.Title"]</h1>
+        <p class="lettra-muted">@L["Audit.Subtitle"]</p>
+    </div>
+</div>
+
+<TaxTabs />
+<GeneralErrors Errors="_errors" />
+
+<section class="lt-panel lt-audit-kit" aria-labelledby="audit-period">
+    <h2 id="audit-period">@L["AuditKit.Period"]</h2>
+    <div class="lt-audit-kit-form">
+        <label for="audit-from">@L["Fec.Period.From"]
+            <DateField Id="audit-from" Value="_from" ValueChanged="d => _from = d ?? _from" Disabled="_busy" required />
+        </label>
+        <label for="audit-to">@L["Fec.Period.To"]
+            <DateField Id="audit-to" Value="_to" ValueChanged="d => _to = d ?? _to" Disabled="_busy" required />
+        </label>
+        <button type="button" id="audit-run" class="lettra-button" disabled="@_busy" @onclick="RunOwnAsync">
+            <Icon Name="search" Size="18" /> @L["Audit.Run"]
+        </button>
+    </div>
+    <h3>@L["Audit.Other.Title"]</h3>
+    <p class="lettra-hint">@L["Audit.Other.Hint"]</p>
+    <InputFile id="audit-file" accept=".txt,.csv" disabled="@_busy" OnChange="RunFileAsync" />
+    @if (_busy)
+    {
+        <p id="audit-progress" role="status" aria-live="polite">@L["Audit.Working"]</p>
+    }
+</section>
+
+@if (_report is { } report)
+{
+    <section class="lt-panel" id="audit-result" aria-labelledby="audit-result-title">
+        <h2 id="audit-result-title">@string.Format(Culture, L["Audit.Result.Title"], report.FileName)</h2>
+        <p id="audit-verdict" class="lettra-banner @VerdictClass(report)">
+            <Icon Name="@(Alerts(report) > 0 ? "triangle-alert" : Watches(report) > 0 ? "circle-help" : "badge-check")" Size="18" />
+            @Verdict(report)
+        </p>
+        <p class="lettra-muted" id="audit-read">@string.Format(Culture, L["Audit.Read"], report.Entries, report.Lines)</p>
+
+        <ul class="lt-audit-checks" id="audit-checks">
+            @foreach (PracticeAuditCheckResponse check in report.Checks)
+            {
+                <li @key="check.Code" class="@($"lt-audit-check is-{check.Severity.ToString().ToLowerInvariant()}")" id="@($"audit-{check.Code}")">
+                    <span class="lt-audit-icon" aria-hidden="true"><Icon Name="@IconOf(check.Severity)" Size="20" /></span>
+                    <div class="lt-audit-body">
+                        <h3>@L[$"Audit.Check.{check.Code}"] <span class="lettra-status @StatusClass(check.Severity)">@L[$"Audit.Severity.{check.Severity}"]</span></h3>
+                        <p class="lettra-muted">@L[$"Audit.Check.{check.Code}.Why"]</p>
+                        <p class="lt-audit-found">@Found(check)</p>
+                        @if (check.Examples.Count > 0)
+                        {
+                            <details class="lt-audit-examples">
+                                <summary>@string.Format(Culture, L["Audit.Examples"], check.Examples.Count)</summary>
+                                <ul>
+                                    @foreach (string example in check.Examples)
+                                    {
+                                        <li><code>@Example(check, example)</code></li>
+                                    }
+                                </ul>
+                            </details>
+                        }
+                        @if (check.Severity != PracticeAuditSeverityDto.Passed)
+                        {
+                            <p class="lettra-hint lt-audit-fix"><Icon Name="info" Size="16" /> @L[$"Audit.Check.{check.Code}.Fix"]</p>
+                        }
+                    </div>
+                </li>
+            }
+        </ul>
+
+        @if (report.Benford.Count > 0)
+        {
+            <h3 id="audit-benford-title">@L["Audit.Benford.Title"]</h3>
+            <p class="lettra-hint">@L["Audit.Benford.Hint"]</p>
+            <ol class="lt-audit-benford" id="audit-benford" aria-labelledby="audit-benford-title">
+                @foreach (BenfordDigitResponse digit in report.Benford)
+                {
+                    <li @key="digit.Digit">
+                        <span class="lt-audit-digit">@digit.Digit</span>
+                        <span class="lt-audit-bars" aria-hidden="true">
+                            <span class="is-observed" style="@Width(digit.Observed)"></span>
+                            <span class="is-expected" style="@Width(digit.Expected)"></span>
+                        </span>
+                        <span class="lt-audit-shares">@string.Format(Culture, L["Audit.Benford.Shares"], digit.Observed, digit.Expected)</span>
+                    </li>
+                }
+            </ol>
+        }
+        <p class="lettra-hint" id="audit-disclaimer">@L["Audit.Disclaimer"]</p>
+    </section>
+}
+
+@code {
+    /// <summary>Plafond du contrôle (<c>ValidateFecQuery.MaxContentLength</c>), le même que le validateur.</summary>
+    private const long MaxFileSize = 64 * 1024 * 1024;
+
+    private DateOnly _from;
+    private DateOnly _to;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private PracticeAuditResponse? _report;
+    private bool _busy;
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    /// <summary>Par défaut, l'exercice civil en cours, comme l'export du FEC.</summary>
+    protected override void OnInitialized()
+    {
+        int year = Clock.LocalToday().Year;
+        _from = new DateOnly(year, 1, 1);
+        _to = new DateOnly(year, 12, 31);
+    }
+
+    private Task RunOwnAsync() => RunAsync(() => Insights.GetPracticeAuditAsync(_from, _to, CancellationToken.None));
+
+    private async Task RunFileAsync(InputFileChangeEventArgs e)
+    {
+        IBrowserFile file = e.File;
+        if (file.Size > MaxFileSize)
+        {
+            _errors = [new ErrorDetail(ErrorCodes.Fec.FileTooLarge)];
+            return;
+        }
+
+        await RunAsync(async () =>
+        {
+            using MemoryStream content = new();
+            await using (Stream stream = file.OpenReadStream(MaxFileSize))
+            {
+                await stream.CopyToAsync(content);
+            }
+
+            return await Insights.RunPracticeAuditAsync(file.Name, content.ToArray(), _from, _to, CancellationToken.None);
+        });
+    }
+
+    private async Task RunAsync(Func<Task<OperationResult<PracticeAuditResponse>>> operation)
+    {
+        _busy = true;
+        _errors = [];
+        _report = null;
+        try
+        {
+            OperationResult<PracticeAuditResponse> result = await operation();
+            // Les refus de période visent le champ « au » : affichés en tête, comme les autres.
+            _errors = [.. result.Errors.Select(e => e with { Target = null })];
+            _report = result.Value;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private static int Alerts(PracticeAuditResponse report) => report.Checks.Count(c => c.Severity == PracticeAuditSeverityDto.Alert);
+
+    private static int Watches(PracticeAuditResponse report) => report.Checks.Count(c => c.Severity == PracticeAuditSeverityDto.Watch);
+
+    private string Verdict(PracticeAuditResponse report) => !report.Readable
+        ? L["Audit.Verdict.Unreadable"]
+        : Alerts(report) + Watches(report) == 0
+            ? string.Format(Culture, L["Audit.Verdict.Clean"], report.Checks.Count)
+            : string.Format(Culture, L["Audit.Verdict.Findings"], Alerts(report), Watches(report));
+
+    private static string VerdictClass(PracticeAuditResponse report) =>
+        !report.Readable || Alerts(report) > 0 ? "is-danger" : Watches(report) > 0 ? "is-warning" : "is-success";
+
+    private static string IconOf(PracticeAuditSeverityDto severity) => severity switch
+    {
+        PracticeAuditSeverityDto.Alert => "triangle-alert",
+        PracticeAuditSeverityDto.Watch => "circle-help",
+        _ => "circle-check",
+    };
+
+    private static string StatusClass(PracticeAuditSeverityDto severity) => severity switch
+    {
+        PracticeAuditSeverityDto.Alert => "is-refused",
+        PracticeAuditSeverityDto.Watch => "is-draft",
+        _ => "is-issued",
+    };
+
+    /// <summary>Ce que le test a trouvé, en une phrase : nombre et valeur mesurée, mis en forme dans la langue de l'écran.</summary>
+    private string Found(PracticeAuditCheckResponse check)
+    {
+        string key = check switch
+        {
+            { Code: "Benford", Value: null } => "Audit.Check.Benford.TooFew",
+            { Severity: PracticeAuditSeverityDto.Passed } => $"Audit.Check.{check.Code}.Passed",
+            _ => $"Audit.Check.{check.Code}.Found",
+        };
+        string value = check.Value switch
+        {
+            null => string.Empty,
+            decimal v when check.Code is "RoundAmounts" or "VatRate" or "Benford" => v.ToString("0.##", Culture),
+            decimal v => ExplorerText.Money(Math.Abs(v)),
+        };
+        return string.Format(Culture, L[key], check.Count, value);
+    }
+
+    /// <summary>Les exemples du format sont des codes du validateur (« Fec.EntryUnbalanced · L12 ») : dits dans la langue de l'écran.</summary>
+    private string Example(PracticeAuditCheckResponse check, string example)
+    {
+        if (check.Code != "Format")
+        {
+            return example;
+        }
+
+        int separator = example.IndexOf(" · ", StringComparison.Ordinal);
+        return separator < 0 ? L.Error(example) : $"{L.Error(example[..separator])}{example[separator..]}";
+    }
+
+    private static string Width(decimal share) =>
+        $"width:{Math.Min(100m, share * 2m).ToString("0.#", CultureInfo.InvariantCulture)}%";
+}

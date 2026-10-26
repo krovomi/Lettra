@@ -19,7 +19,7 @@ public sealed class OtherHttpGatewaysUnreachableTests
     private static DateOnly Today => LegalCalendar.DateOf(DateTimeOffset.UtcNow);
 
     [Fact]
-    public async Task Serveur_injoignable_comptabilite_cabinet_exports_voix_clients_et_session_rendent_Api_Unreachable()
+    public async Task Serveur_injoignable_eclairages_comptabilite_cabinet_exports_voix_clients_et_session_rendent_Api_Unreachable()
     {
         await using ServiceProvider services = GatewayHarness.Unreachable();
         IAccountingGateway accounting = services.GetRequiredService<IAccountingGateway>();
@@ -28,10 +28,18 @@ public sealed class OtherHttpGatewaysUnreachableTests
         ISpeechGateway speech = services.GetRequiredService<ISpeechGateway>();
         ICustomersGateway customers = services.GetRequiredService<ICustomersGateway>();
         ISessionGateway session = services.GetRequiredService<ISessionGateway>();
+        IInsightsGateway insights = services.GetRequiredService<IInsightsGateway>();
         Guid id = Guid.CreateVersion7();
 
         List<IReadOnlyList<ErrorDetail>> failures =
         [
+            (await insights.GetPaymentWeatherAsync(default)).Errors,
+            (await insights.GetPracticeAuditAsync(Today, Today, default)).Errors,
+            (await insights.RunPracticeAuditAsync("FEC.txt", [1, 2, 3], Today, Today, default)).Errors,
+            (await insights.RunPracticeAuditAsync("FEC.txt", [1, 2, 3], null, null, default)).Errors,
+            (await insights.GetInvoiceProofAsync(id, default)).Errors,
+            (await insights.VerifyInvoiceProofAsync("LETTRA-PREUVE-1", default)).Errors,
+            (await insights.ListInvoiceProofKeysAsync(default)).Errors,
             (await accounting.GetJournalAsync(new JournalQuery(Today, Today, "x", "411", id), default)).Errors,
             (await accounting.GetBalanceAsync(Today, Today, default)).Errors,
             (await accounting.GetLedgerAsync("411", Today, Today, id, default)).Errors,

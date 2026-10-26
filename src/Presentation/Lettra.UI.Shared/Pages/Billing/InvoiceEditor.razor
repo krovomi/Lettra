@@ -1,6 +1,7 @@
 @page "/invoices/new"
 @page "/invoices/{Id:guid}"
 @page "/invoices/draft/{LocalId:guid}"
+@using Lettra.Contracts.Insights
 @using Lettra.Contracts.Serialization
 @using Microsoft.Extensions.DependencyInjection
 @implements IDisposable
@@ -10,6 +11,7 @@
 @inject Optional<EntryPreferences> OptionalEntry
 @inject Optional<ICustomersGateway> OptionalCustomers
 @inject Optional<IPriceListsGateway> OptionalPrices
+@inject Optional<IInsightsGateway> OptionalInsights
 @inject TimeProvider Clock
 @inject IDocumentPdfRenderer Pdf
 @inject IFileDownloader Files
@@ -741,7 +743,7 @@ else
         }
 
         CultureInfo culture = CultureInfo.GetCultureInfo(_pdfCulture);
-        byte[] pdf = Pdf.Render(PrintableMapper.FromInvoice(_invoice, _company, culture, Clock));
+        byte[] pdf = Pdf.Render(await WithProofAsync(PrintableMapper.FromInvoice(_invoice, _company, culture, Clock), _invoice));
         string name = _invoice.Number ?? L[$"InvoiceKind.{Kind}.FileDraft"];
         await Files.DownloadAsync($"{name}.pdf", "application/pdf", pdf, CancellationToken.None);
     }
@@ -756,8 +758,23 @@ else
         }
 
         CultureInfo culture = CultureInfo.GetCultureInfo(_pdfCulture);
-        byte[] pdf = Pdf.Render(PrintableMapper.FromInvoice(invoice, _company, culture, Clock), [PdfAttachment.FacturX(cii)]);
+        byte[] pdf = Pdf.Render(await WithProofAsync(PrintableMapper.FromInvoice(invoice, _company, culture, Clock), invoice), [PdfAttachment.FacturX(cii)]);
         await Files.DownloadAsync($"{number}-factur-x.pdf", "application/pdf", pdf, CancellationToken.None);
+    }
+
+    /// <summary>
+    /// La preuve d'authenticité d'une pièce validée, signée par le serveur (ou par la base locale) : sans elle (clé pas
+    /// encore créée, serveur injoignable), le PDF part sans QR code de preuve, comme avant.
+    /// </summary>
+    private async Task<PrintableDocument> WithProofAsync(PrintableDocument document, InvoiceResponse invoice)
+    {
+        if (invoice.Number is null || OptionalInsights.Value is not { } insights)
+        {
+            return document;
+        }
+
+        OperationResult<InvoiceProofResponse> proof = await insights.GetInvoiceProofAsync(invoice.Id, CancellationToken.None);
+        return proof.Value is { } signed ? document with { ProofCode = signed.Code, ProofKeyId = signed.KeyId } : document;
     }
 
     private async Task DownloadUblAsync()

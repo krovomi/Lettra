@@ -5,6 +5,7 @@ using Lettra.Contracts.Accounting;
 using Lettra.Contracts.Banking;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Exports;
+using Lettra.Contracts.Insights;
 using Lettra.Contracts.Portal;
 using Lettra.Contracts.Reminders;
 using Lettra.Contracts.Tax;
@@ -16,6 +17,7 @@ using Lettra.Exports.Application.Bridges;
 using Lettra.Exports.Application.EInvoicing;
 using Lettra.Exports.Application.EInvoicing.Platform;
 using Lettra.Exports.Application.Fec;
+using Lettra.Exports.Application.Insights;
 using Lettra.Exports.Application.Portal;
 using Lettra.Exports.Application.Reminders;
 using Lettra.Exports.Application.Tax;
@@ -42,6 +44,12 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<ReportPaymentCommand, Result<PlatformTransmissionResponse>>, ReportPaymentHandler>();
         services.AddScoped<IQueryHandler<GetPlatformTransmissionQuery, Result<PlatformTransmissionResponse>>, GetPlatformTransmissionHandler>();
         services.AddScoped<IQueryHandler<GetReceivablesSummaryQuery, Result<ReceivablesSummaryResponse>>, GetReceivablesSummaryHandler>();
+        services.AddScoped<IQueryHandler<GetPaymentWeatherQuery, Result<PaymentWeatherResponse>>, GetPaymentWeatherHandler>();
+        services.AddScoped<IQueryHandler<GetPracticeAuditQuery, Result<PracticeAuditResponse>>, GetPracticeAuditHandler>();
+        services.AddScoped<IQueryHandler<RunPracticeAuditQuery, Result<PracticeAuditResponse>>, RunPracticeAuditHandler>();
+        services.AddScoped<IQueryHandler<GetInvoiceProofQuery, Result<InvoiceProofResponse>>, GetInvoiceProofHandler>();
+        services.AddScoped<IQueryHandler<VerifyInvoiceProofQuery, Result<InvoiceProofCheckResponse>>, VerifyInvoiceProofHandler>();
+        services.AddScoped<IQueryHandler<ListInvoiceProofKeysQuery, Result<IReadOnlyList<InvoiceProofKeyResponse>>>, ListInvoiceProofKeysHandler>();
 
         // Consultation de la comptabilité : journal des ventes, balance et grand livre, lus comme le FEC.
         services.AddScoped<IQueryHandler<GetSalesJournalQuery, Result<SalesJournalResponse>>, GetSalesJournalHandler>();
