@@ -39,6 +39,7 @@ public static class DependencyInjection
         // Un hôte peut remplacer le téléchargement (enregistrement natif en MAUI) en l'enregistrant avant.
         services.TryAddScoped<IFileDownloader, JsFileDownloader>();
         services.AddSingleton<IDocumentPdfRenderer, PdfDocumentRenderer>();
+        services.AddSingleton<ILetterPdfRenderer, LetterPdfRenderer>();
         // Pièces ouvertes récemment, en tête de la palette quand rien n'est saisi.
         services.AddScoped<Preferences.RecentDocuments>();
         services.AddScoped<ICommandPaletteProvider, Preferences.RecentDocumentsPaletteProvider>();

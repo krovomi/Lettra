@@ -17,6 +17,7 @@ using Lettra.Contracts.Exports;
 using Lettra.Contracts.Identity;
 using Lettra.Contracts.Insights;
 using Lettra.Contracts.Integrity;
+using Lettra.Contracts.Missions;
 using Lettra.Contracts.Pilotage;
 using Lettra.Contracts.Policies;
 using Lettra.Contracts.Portal;
@@ -182,6 +183,11 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(DesResponse))]
 [JsonSerializable(typeof(PaymentDelaysResponse))]
 [JsonSerializable(typeof(ClosingReviewResponse))]
+[JsonSerializable(typeof(MissionOverviewResponse))]
+[JsonSerializable(typeof(MissionResponse))]
+[JsonSerializable(typeof(SaveMissionRequest))]
+[JsonSerializable(typeof(AddTimeEntryRequest))]
+[JsonSerializable(typeof(TimeEntryResponse))]
 [JsonSerializable(typeof(ReceiptsResponse))]
 [JsonSerializable(typeof(RequestReceiptsRequest))]
 [JsonSerializable(typeof(RequestReceiptsResponse))]

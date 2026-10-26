@@ -146,4 +146,6 @@
   <data name="Help.Faq.what-if.Question" xml:space="preserve"><value>Comment voir l'effet d'une décision avant de la prendre ?</value></data>
   <data name="Help.Faq.what-if.Answer" xml:space="preserve"><value>Dans Comptabilité, Et si… ?, choisissez un ou plusieurs leviers : jours de délai accordés aux clients, une facture à émettre (avant ou après la fin du mois), un régime de TVA, une embauche. Simuler montre la trésorerie des treize prochaines semaines sans et avec le scénario, la TVA à payer et quand, et le coût de l'embauche. Rien n'est écrit dans le dossier.</value></data>
   <data name="Help.Faq.what-if.Keywords" xml:space="preserve"><value>et si simulateur scénario délai embauche régime tva</value></data>
+  <data name="Nav.Brief.Keywords" xml:space="preserve"><value>tableau de bord dirigeant résumé chiffres du mois téléphone trésorerie encaissements</value></data>
+  <data name="Nav.Mission.Keywords" xml:space="preserve"><value>lettre de mission honoraires forfait temps passé rentabilité</value></data>
 </root>

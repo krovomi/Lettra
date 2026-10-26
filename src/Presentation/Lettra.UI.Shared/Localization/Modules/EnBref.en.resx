@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.Brief" xml:space="preserve"><value>At a glance</value></data>
+  <data name="Brief.Title" xml:space="preserve"><value>At a glance</value></data>
+  <data name="Brief.Subtitle" xml:space="preserve"><value>Your business in {0}, at a glance.</value></data>
+  <data name="Brief.Kpis" xml:space="preserve"><value>This month's figures</value></data>
+  <data name="Brief.Revenue" xml:space="preserve"><value>Revenue this month (excl. VAT)</value></data>
+  <data name="Brief.Collected" xml:space="preserve"><value>Collected this month</value></data>
+  <data name="Brief.Collected.Note" xml:space="preserve"><value>Payments received since the 1st of the month</value></data>
+  <data name="Brief.Collected.Partial" xml:space="preserve"><value>At least: too many payments to read at once</value></data>
+  <data name="Brief.Vat" xml:space="preserve"><value>VAT to pay</value></data>
+  <data name="Brief.VatCredit" xml:space="preserve"><value>VAT credit</value></data>
+  <data name="Brief.Vat.Note" xml:space="preserve"><value>Period {0} to {1}, to file by {2}</value></data>
+  <data name="Brief.Bank" xml:space="preserve"><value>Bank movements this month</value></data>
+  <data name="Brief.Bank.Note" xml:space="preserve"><value>In {0} · out {1}</value></data>
+  <data name="Brief.Watch" xml:space="preserve"><value>Keep an eye on</value></data>
+  <data name="Brief.Threshold" xml:space="preserve"><value>Payments from</value></data>
+  <data name="Brief.Watch.None" xml:space="preserve"><value>Nothing to report: no overdue invoice and no large payment in the last 30 days.</value></data>
+  <data name="Brief.Watch.Paid" xml:space="preserve"><value>{0} paid</value></data>
+  <data name="Brief.Watch.Late" xml:space="preserve"><value>{0} is overdue</value></data>
+</root>

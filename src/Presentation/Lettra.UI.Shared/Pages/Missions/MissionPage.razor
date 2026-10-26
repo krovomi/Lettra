@@ -1,0 +1,512 @@
+@page "/mission"
+@using Lettra.Contracts.Missions
+@using Lettra.Printing
+@using Lettra.UI.Shared.Missions
+@using Lettra.UI.Shared.Components.Explorer
+@inject IMissionGateway Missions
+@inject IBillingSettingsGateway Settings
+@inject ILetterPdfRenderer Letters
+@inject IFileDownloader Files
+@inject ToastService Toasts
+@inject TimeProvider Clock
+@inject IStringLocalizer<SharedResource> L
+@* Lettre de mission et honoraires du dossier : la mission (nature, travaux, forfait annuel et son rythme, taux horaire
+   visé), la lettre en PDF d'après le modèle de la profession, et le temps passé par le cabinet sur l'année de mission,
+   avec ce qu'il rapporte : honoraires acquis au prorata des jours écoulés, divisés par les heures passées. *@
+
+<PageTitle>@L["Mission.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Mission.Title"]</h1>
+        <p class="lettra-muted">@L["Mission.Subtitle"]</p>
+    </div>
+    @if (_view?.Mission is not null)
+    {
+        <div class="lt-page-actions">
+            <button type="button" class="lettra-button is-secondary" id="mission-letter" disabled="@_busy" @onclick="DownloadLetterAsync">
+                <Icon Name="download" Size="18" /> @L["Mission.Letter.Download"]
+            </button>
+        </div>
+    }
+</div>
+
+<GeneralErrors Errors="_errors" />
+
+@if (_view is not { } view)
+{
+    <ListSkeleton Columns="4" />
+}
+else
+{
+    <section class="lt-banking-stats" id="mission-stats" aria-label="@L["Mission.Stats"]">
+        <div class="lt-banking-stat">
+            <span>@L["Mission.Stat.Fee"]</span>
+            <strong id="mission-fee">@(view.Mission is { } m ? ExplorerText.Money(m.AnnualFeeExclTax) : "—")</strong>
+            @if (view.Mission is { } fee)
+            {
+                <small class="lettra-muted">@string.Format(Culture, L[$"Mission.Stat.Fee.{fee.Schedule}"], ExplorerText.Money(fee.FeePerInstalment))</small>
+            }
+        </div>
+        <div class="lt-banking-stat">
+            <span>@L["Mission.Stat.Time"]</span>
+            <strong id="mission-time">@Hours(view.MinutesSpent)</strong>
+            @if (view.Mission?.BudgetHours is { } budget)
+            {
+                <small class="@($"lettra-muted {(view.MinutesSpent / 60m > budget ? "lt-late" : null)}")" id="mission-budget">@string.Format(Culture, L["Mission.Stat.Budget"], budget.ToString("0.#", Culture))</small>
+            }
+        </div>
+        <div class="lt-banking-stat">
+            <span>@L["Mission.Stat.Earned"]</span>
+            <strong id="mission-earned">@ExplorerText.Money(view.EarnedExclTax)</strong>
+            <small class="lettra-muted">@string.Format(Culture, L["Mission.Stat.Year"], DateText.Format(view.YearStart, Culture), DateText.Format(view.YearEnd, Culture))</small>
+        </div>
+        <div class="@($"lt-banking-stat {(IsBelowTarget(view) ? "is-pending" : "is-proposed")}")">
+            <span>@L["Mission.Stat.Rate"]</span>
+            <strong id="mission-rate">@(view.EffectiveHourlyRate is { } rate ? string.Format(Culture, L["Mission.PerHour"], ExplorerText.Money(rate)) : "—")</strong>
+            @if (view.Mission?.TargetHourlyRate is { } target)
+            {
+                <small class="lettra-muted">@string.Format(Culture, L["Mission.Stat.Target"], ExplorerText.Money(target))</small>
+            }
+        </div>
+    </section>
+
+    <section class="lettra-card lt-mission-panel" aria-labelledby="mission-form-title">
+        <div class="lt-panel-head">
+            <h2 id="mission-form-title">@L["Mission.Form"]</h2>
+            @if (view.Mission is not null && !_editing)
+            {
+                <button type="button" class="lettra-button is-secondary is-small" id="mission-edit" @onclick="Edit">@L["Mission.Edit"]</button>
+            }
+        </div>
+        @if (_editing)
+        {
+            <form class="lettra-form-grid" id="mission-form" @onsubmit="SaveAsync" @onsubmit:preventDefault="true">
+                <fieldset>
+                    <legend>@L["Mission.Form.Nature"]</legend>
+                    <div class="lettra-field">
+                        <label for="mission-kind">@L["Mission.Kind"]</label>
+                        <select id="mission-kind" @bind="_model.Kind">
+                            @foreach (MissionKindDto kind in Enum.GetValues<MissionKindDto>())
+                            {
+                                <option value="@kind">@L[$"Mission.Kind.{kind}"]</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="lettra-field">
+                        <label for="mission-start">@L["Mission.Start"]</label>
+                        <DateField Id="mission-start" Value="_model.StartDate" ValueChanged="d => _model.StartDate = d ?? _model.StartDate" required />
+                    </div>
+                    <div class="lettra-field lettra-field-wide" role="group" aria-labelledby="mission-services-label">
+                        <span id="mission-services-label" class="lettra-label">@L["Mission.Services"]</span>
+                        <div class="lt-mission-services">
+                            @foreach (MissionServiceDto service in Enum.GetValues<MissionServiceDto>())
+                            {
+                                <label class="lettra-check">
+                                    <input type="checkbox" id="@($"mission-service-{service}")" checked="@_services.Contains(service)" @onchange="e => Toggle(service, e)" />
+                                    @L[$"Mission.Service.{service}"]
+                                </label>
+                            }
+                        </div>
+                        <FieldErrors Field="Services" ServerErrors="_fieldErrors" />
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <legend>@L["Mission.Form.Fees"]</legend>
+                    <div class="lettra-field">
+                        <label for="mission-annual-fee">@L["Mission.AnnualFee"]</label>
+                        <input id="mission-annual-fee" type="number" inputmode="decimal" step="0.01" min="0" @bind="_model.AnnualFeeExclTax" required />
+                        <FieldErrors Field="AnnualFeeExclTax" ServerErrors="_fieldErrors" />
+                    </div>
+                    <div class="lettra-field">
+                        <label for="mission-schedule">@L["Mission.Schedule"]</label>
+                        <select id="mission-schedule" @bind="_model.Schedule">
+                            @foreach (FeeScheduleDto schedule in Enum.GetValues<FeeScheduleDto>())
+                            {
+                                <option value="@schedule">@L[$"Mission.Schedule.{schedule}"]</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="lettra-field">
+                        <label for="mission-rate-target">@L["Mission.TargetRate"]</label>
+                        <input id="mission-rate-target" type="number" inputmode="decimal" step="1" min="0" @bind="_model.TargetHourlyRate" />
+                        <FieldErrors Field="TargetHourlyRate" ServerErrors="_fieldErrors" />
+                    </div>
+                    <p class="lettra-hint lettra-field-wide">@L["Mission.TargetRate.Hint"]</p>
+                </fieldset>
+                <fieldset>
+                    <legend>@L["Mission.Form.Signatures"]</legend>
+                    <div class="lettra-field">
+                        <label for="mission-signatory">@L["Mission.Signatory"]</label>
+                        <input id="mission-signatory" maxlength="120" autocomplete="name" @bind="_model.ClientSignatory" required />
+                        <FieldErrors Field="ClientSignatory" ServerErrors="_fieldErrors" />
+                    </div>
+                    <div class="lettra-field">
+                        <label for="mission-manager">@L["Mission.Manager"]</label>
+                        <input id="mission-manager" maxlength="120" @bind="_model.Manager" />
+                    </div>
+                    <div class="lettra-field">
+                        <label for="mission-signed">@L["Mission.SignedOn"]</label>
+                        <DateField Id="mission-signed" Value="_model.SignedOn" ValueChanged="d => _model.SignedOn = d" />
+                    </div>
+                </fieldset>
+                <div class="lt-form-actions">
+                    <button type="submit" class="lettra-button" id="mission-save" disabled="@_busy">@L["Billing.Command.Save"]</button>
+                    @if (view.Mission is not null)
+                    {
+                        <button type="button" class="lettra-button is-ghost" id="mission-cancel" @onclick="() => _editing = false">@L["Explorer.Cancel"]</button>
+                    }
+                </div>
+            </form>
+        }
+        else if (view.Mission is { } mission)
+        {
+            <dl class="lt-mission-summary" id="mission-summary">
+                <div><dt>@L["Mission.Kind"]</dt><dd>@L[$"Mission.Kind.{mission.Kind}"]</dd></div>
+                <div><dt>@L["Mission.Start"]</dt><dd>@DateText.Format(mission.StartDate, Culture)</dd></div>
+                <div><dt>@L["Mission.Services"]</dt><dd>@string.Join(", ", mission.Services.Select(s => L[$"Mission.Service.{s}"].Value))</dd></div>
+                <div><dt>@L["Mission.Signatory"]</dt><dd>@mission.ClientSignatory</dd></div>
+                <div><dt>@L["Mission.Manager"]</dt><dd>@(mission.Manager ?? "—")</dd></div>
+                <div>
+                    <dt>@L["Mission.SignedOn"]</dt>
+                    <dd>
+                        @if (mission.SignedOn is { } signed)
+                        {
+                            <span class="lettra-status is-issued">@string.Format(Culture, L["Mission.Signed"], DateText.Format(signed, Culture))</span>
+                        }
+                        else
+                        {
+                            <span class="lettra-status is-draft">@L["Mission.NotSigned"]</span>
+                        }
+                    </dd>
+                </div>
+            </dl>
+            <p class="lettra-hint"><Icon Name="info" Size="16" /> @L["Mission.Letter.Hint"]</p>
+        }
+    </section>
+
+    <section class="lettra-card lt-mission-panel" aria-labelledby="mission-time-title">
+        <div class="lt-panel-head">
+            <h2 id="mission-time-title">@L["Mission.Time"]</h2>
+        </div>
+        <form class="lt-mission-time-form" id="mission-time-form" @onsubmit="AddTimeAsync" @onsubmit:preventDefault="true">
+            <div class="lettra-field">
+                <label for="time-date">@L["Billing.Column.Date"]</label>
+                <DateField Id="time-date" Value="_time.Date" Max="Today" ValueChanged="d => _time.Date = d ?? Today" required />
+            </div>
+            <div class="lettra-field">
+                <label for="time-hours">@L["Mission.Time.Hours"]</label>
+                <input id="time-hours" type="number" inputmode="decimal" step="0.25" min="0.25" max="12" @bind="_hours" required />
+            </div>
+            <div class="lettra-field">
+                <label for="time-task">@L["Mission.Time.Task"]</label>
+                <select id="time-task" @bind="_time.Task">
+                    @foreach (TimeTaskDto task in Enum.GetValues<TimeTaskDto>())
+                    {
+                        <option value="@task">@L[$"Mission.Task.{task}"]</option>
+                    }
+                </select>
+            </div>
+            <div class="lettra-field lt-mission-time-note">
+                <label for="time-note">@L["Mission.Time.Note"]</label>
+                <input id="time-note" maxlength="200" @bind="_time.Note" />
+            </div>
+            <button type="submit" class="lettra-button" id="time-add" disabled="@_busy"><Icon Name="plus" Size="18" /> @L["Mission.Time.Add"]</button>
+        </form>
+
+        @if (view.ByTask.Count > 0)
+        {
+            <ul class="lt-mission-tasks" id="mission-by-task" aria-label="@L["Mission.Time.ByTask"]">
+                @foreach (TimeTaskTotal total in view.ByTask)
+                {
+                    <li style="@($"--share: {Share(total.Minutes, view.MinutesSpent)}")">
+                        <span>@L[$"Mission.Task.{total.Task}"]</span>
+                        <strong>@Hours(total.Minutes)</strong>
+                    </li>
+                }
+            </ul>
+        }
+
+        @if (view.Entries.Count == 0)
+        {
+            <EmptyState Id="mission-time-empty" IconName="clock" Title="@L["Mission.Time.Empty"]" Text="@L["Mission.Time.Empty.Text"]" />
+        }
+        else
+        {
+            <ListFilterBar Id="time-filters" ActiveCount="ActiveFilters" OnReset="ResetFilters">
+                <ChildContent>
+                    <div class="lt-filter">
+                        <label for="time-search">@L["Lists.Search"]</label>
+                        <input id="time-search" type="search" @bind="_search" @bind:event="oninput" autocomplete="off" />
+                    </div>
+                    <div class="lt-filter">
+                        <label for="time-filter-task">@L["Mission.Time.Task"]</label>
+                        <select id="time-filter-task" @bind="_task">
+                            <option value="">@L["Mission.Time.AllTasks"]</option>
+                            @foreach (TimeTaskDto task in Enum.GetValues<TimeTaskDto>())
+                            {
+                                <option value="@task">@L[$"Mission.Task.{task}"]</option>
+                            }
+                        </select>
+                    </div>
+                    <SortSelect Id="time-sort" Options="SortOptions" State="_sort" OnSort="StateHasChanged" />
+                </ChildContent>
+            </ListFilterBar>
+            @if (Shown.Count == 0)
+            {
+                <EmptyState Id="time-filtered-empty" IconName="search" Title="@L["Lists.Empty.FilteredTitle"]" Text="@L["Lists.Empty.Filtered"]" />
+            }
+            else
+            {
+                <div class="lt-list-scroll">
+                    <table class="lettra-table lt-cards" id="mission-entries">
+                        <thead>
+                            <tr>
+                                <SortHeader Option="SortOptions[0]" State="_sort" OnSort="StateHasChanged" Id="time-sort-date" />
+                                <SortHeader Option="SortOptions[1]" State="_sort" OnSort="StateHasChanged" Id="time-sort-user" />
+                                <SortHeader Option="SortOptions[2]" State="_sort" OnSort="StateHasChanged" Id="time-sort-task" />
+                                <SortHeader Option="SortOptions[3]" State="_sort" OnSort="StateHasChanged" Id="time-sort-duration" Class="lg-num" />
+                                <th scope="col"><span class="lettra-visually-hidden">@L["Mission.Actions"]</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (TimeEntryResponse entry in Shown)
+                            {
+                                <tr @key="entry.Id" id="@($"time-{entry.Id}")">
+                                    <td>
+                                        <strong>@DateText.Format(entry.Date, Culture)</strong>
+                                        @if (entry.Note is not null)
+                                        {
+                                            <small class="lettra-muted lt-mission-note">@entry.Note</small>
+                                        }
+                                    </td>
+                                    <td data-label="@L["Mission.Time.Who"]">@(entry.UserName ?? L["Mission.Time.Someone"])</td>
+                                    <td data-label="@L["Mission.Time.Task"]">@L[$"Mission.Task.{entry.Task}"]</td>
+                                    <td data-label="@L["Mission.Time.Duration"]" class="lg-num">@Hours(entry.Minutes)</td>
+                                    <td class="lt-banking-line-actions">
+                                        @if (entry.Mine)
+                                        {
+                                            <button type="button" class="lettra-button is-small is-ghost" id="@($"time-delete-{entry.Id}")" disabled="@_busy"
+                                                    aria-label="@string.Format(Culture, L["Mission.Time.Delete.Label"], DateText.Format(entry.Date, Culture))" @onclick="() => DeleteTimeAsync(entry)">
+                                                <Icon Name="trash-2" Size="16" /> @L["Mission.Time.Delete"]
+                                            </button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        }
+    </section>
+}
+
+@code {
+    private MissionOverviewResponse? _view;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private IReadOnlyList<ErrorDetail> _fieldErrors = [];
+    private bool _busy;
+    private bool _editing;
+    private SaveMissionRequest _model = new();
+    private HashSet<MissionServiceDto> _services = [];
+    private AddTimeEntryRequest _time = new();
+    private decimal _hours = 1m;
+    private string? _search;
+    private string _task = string.Empty;
+
+    // Les plus récents d'abord.
+    private readonly SortState<TimeColumn> _sort = new(TimeColumn.Date, SortDirectionDto.Descending);
+
+    private enum TimeColumn
+    {
+        Date,
+        User,
+        Task,
+        Duration,
+    }
+
+    private IReadOnlyList<SortOption<TimeColumn>> SortOptions =>
+    [
+        new(TimeColumn.Date, L["Billing.Column.Date"], SortDirectionDto.Descending),
+        new(TimeColumn.User, L["Mission.Time.Who"]),
+        new(TimeColumn.Task, L["Mission.Time.Task"]),
+        new(TimeColumn.Duration, L["Mission.Time.Duration"], SortDirectionDto.Descending),
+    ];
+
+    private static readonly Dictionary<TimeColumn, Func<TimeEntryResponse, object?>> SortKeys = new()
+    {
+        [TimeColumn.Date] = e => e.Date,
+        [TimeColumn.User] = e => e.UserName,
+        [TimeColumn.Task] = e => (int)e.Task,
+        [TimeColumn.Duration] = e => e.Minutes,
+    };
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private DateOnly Today => Clock.LocalToday();
+
+    private IReadOnlyList<TimeEntryResponse> Shown => ListSorting.Sort(
+        (_view?.Entries ?? [])
+            .Where(e => string.IsNullOrWhiteSpace(_search) || ListSorting.Matches(e.Note, _search) || ListSorting.Matches(e.UserName, _search))
+            .Where(e => _task.Length == 0 || e.Task.ToString() == _task),
+        _sort,
+        SortKeys);
+
+    private int ActiveFilters => (string.IsNullOrWhiteSpace(_search) ? 0 : 1) + (_task.Length == 0 ? 0 : 1);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _time.Date = Today;
+        OperationResult<MissionOverviewResponse> result = await Missions.GetAsync(CancellationToken.None);
+        _errors = result.Errors;
+        Show(result.Value);
+    }
+
+    private void Show(MissionOverviewResponse? view)
+    {
+        _view = view ?? new MissionOverviewResponse(null, null, Today.AddYears(-1).AddDays(1), Today, 0, 0m, null, [], []);
+        if (_view.Mission is null)
+        {
+            // Pas encore de mission : le formulaire s'ouvre, prérempli avec la mission la plus courante.
+            _model = new SaveMissionRequest { StartDate = new DateOnly(Today.Year, 1, 1) };
+            _services = [MissionServiceDto.Bookkeeping, MissionServiceDto.VatReturns, MissionServiceDto.AnnualAccounts, MissionServiceDto.TaxReturns];
+            _editing = true;
+        }
+    }
+
+    private void Edit()
+    {
+        if (_view?.Mission is not { } mission)
+        {
+            return;
+        }
+
+        _model = new SaveMissionRequest
+        {
+            Kind = mission.Kind,
+            StartDate = mission.StartDate,
+            AnnualFeeExclTax = mission.AnnualFeeExclTax,
+            Schedule = mission.Schedule,
+            TargetHourlyRate = mission.TargetHourlyRate,
+            ClientSignatory = mission.ClientSignatory,
+            Manager = mission.Manager,
+            SignedOn = mission.SignedOn,
+        };
+        _services = [.. mission.Services];
+        _fieldErrors = [];
+        _editing = true;
+    }
+
+    private void Toggle(MissionServiceDto service, ChangeEventArgs e)
+    {
+        if (e.Value is true)
+        {
+            _services.Add(service);
+        }
+        else
+        {
+            _services.Remove(service);
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        _busy = true;
+        try
+        {
+            _model.Services = [.. Enum.GetValues<MissionServiceDto>().Where(_services.Contains)];
+            OperationResult<MissionOverviewResponse> saved = await Missions.SaveAsync(_model, _view?.Mission?.Version, CancellationToken.None);
+            if (saved is { IsSuccess: true, Value: { } view })
+            {
+                _fieldErrors = [];
+                _editing = false;
+                Show(view);
+                Toasts.Show(ToastKind.Success, L["Mission.Saved"]);
+            }
+            else
+            {
+                _fieldErrors = saved.Errors;
+                _errors = [.. saved.Errors.Where(e => e.Target is null)];
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private Task AddTimeAsync() => RunAsync(async () =>
+    {
+        _time.Minutes = (int)Math.Round(_hours * 60m, MidpointRounding.AwayFromZero);
+        OperationResult<MissionOverviewResponse> result = await Missions.AddTimeAsync(_time, CancellationToken.None);
+        if (result.IsSuccess)
+        {
+            Toasts.Show(ToastKind.Success, string.Format(Culture, L["Mission.Time.Added"], Hours(_time.Minutes)));
+            _time = new AddTimeEntryRequest { Date = _time.Date, Task = _time.Task };
+        }
+
+        return result;
+    });
+
+    private Task DeleteTimeAsync(TimeEntryResponse entry) => RunAsync(async () =>
+    {
+        OperationResult<MissionOverviewResponse> result = await Missions.DeleteTimeAsync(entry.Id, CancellationToken.None);
+        if (result.IsSuccess)
+        {
+            Toasts.Show(ToastKind.Success, L["Mission.Time.Deleted"]);
+        }
+
+        return result;
+    });
+
+    private async Task RunAsync(Func<Task<OperationResult<MissionOverviewResponse>>> action)
+    {
+        _busy = true;
+        try
+        {
+            OperationResult<MissionOverviewResponse> result = await action();
+            _errors = result.Errors;
+            if (result.Value is { } view)
+            {
+                _view = view;
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task DownloadLetterAsync()
+    {
+        if (_view?.Mission is not { } mission)
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            // La fiche de l'entreprise donne l'adresse du client ; sans elle, la lettre reste rédigée.
+            OperationResult<CompanyProfileResponse> company = await Settings.GetCompanyProfileAsync(CancellationToken.None);
+            PrintableLetter letter = EngagementLetter.Compose(mission, company.Value, _view.CabinetName, Today, L, Culture);
+            byte[] pdf = Letters.Render(letter);
+            await Files.DownloadAsync(string.Format(Culture, L["Mission.Letter.FileName"], Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)), "application/pdf", pdf, CancellationToken.None);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void ResetFilters() => (_search, _task) = (null, string.Empty);
+
+    private bool IsBelowTarget(MissionOverviewResponse view) =>
+        view is { EffectiveHourlyRate: { } rate, Mission.TargetHourlyRate: { } target } && rate < target;
+
+    private string Hours(int minutes) => string.Format(Culture, L["Mission.Hours"], minutes / 60, (minutes % 60).ToString("00", Culture));
+
+    private static string Share(int minutes, int total) =>
+        (total == 0 ? 0m : Math.Round(minutes * 100m / total, 1)).ToString(CultureInfo.InvariantCulture) + "%";
+}
