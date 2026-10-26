@@ -35,6 +35,7 @@ public static class NavItems
     public static IReadOnlyList<NavItem> All { get; } =
     [
         new("", "Nav.Home", "layout-dashboard", null, InTabBar: true, Match: NavLinkMatch.All),
+        new("brief", "Nav.Brief", "gauge", null),
         new("cabinet", "Nav.Cabinet", "layers", null),
         new("demo", "Nav.Demo", "circle-play", null),
         new("quotes", "Nav.Quotes", "file-text", "Nav.Group.Sales", InTabBar: true),

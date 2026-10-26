@@ -64,3 +64,9 @@
 .lt-pilotage-comment p { margin: 0; font-size: var(--text-sm); line-height: 1.5; overflow-wrap: anywhere; }
 .lt-pilotage-comment .lettra-button { grid-column: 2; justify-self: start; }
 .lt-panel .lt-pilotage-comment { margin-bottom: 0; }
+
+/* « En bref » : le seuil des gros encaissements reste compact, à côté du titre ; les icônes des alertes suivent le texte. */
+.lt-filter.lt-brief-threshold { flex: 0 1 auto; display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.lt-filter.lt-brief-threshold select { width: auto; min-width: 9rem; }
+#brief-watch .lt-list-title { display: inline-flex; align-items: center; gap: var(--space-1); }
+#brief-watch .lt-panel-head { flex-wrap: wrap; gap: var(--space-2); }
