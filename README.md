@@ -565,6 +565,24 @@ Sous la facture validée, le panneau **Plateforme agréée** :
 La plateforme simulée garde ses statuts en mémoire : après un redémarrage de Lettra, la facture reste émise et
 transmise, mais l'historique des statuts repart de zéro.
 
+#### Prêt pour l'e-facture
+
+Menu **Ventes > Prêt pour l'e-facture** (Ctrl+K « e-facture »). Un score de 0 à 100 dit si le dossier est prêt pour
+la facture électronique, avec sept contrôles : identité de l'entreprise (SIREN, SIRET), son numéro de TVA, son IBAN,
+le SIREN des clients français, le numéro de TVA des clients européens, le SIREN des fournisseurs et les factures des
+90 derniers jours transmises sans refus. Chaque contrôle montre ce qu'il reste à corriger (au plus cinq exemples) et
+un lien pour le faire. Le score est la moyenne des contrôles.
+
+La vue cabinet a une colonne **E-facture** : le nombre de contrôles à revoir de chaque dossier, rouge sous 50,
+orange sous 80. Aucun nom ni montant n'y figure. Calcul en C#, sans IA, sans rien écrire. Droit : « Lire le dossier ».
+Route : `GET /api/v1/insights/e-invoicing-readiness`.
+
+| Où | Vérifié |
+|---|---|
+| Navigateur, ordinateur (1440 px), tablette (900 px), téléphone (390 px), français et anglais | Oui, démo Docker |
+| Vue cabinet de 1366 à 1600 px (tableau), en dessous (cartes) | Oui, démo Docker |
+| Application MAUI (Windows, macOS, Android, iOS) | Non vérifié |
+
 ### 6. Un avoir
 
 Sur la facture émise, saisissez un **Motif de l'avoir** (*Geste commercial*), puis **Avoir**. L'avoir reprend toute
@@ -762,6 +780,22 @@ compte sont ceux saisis dans Lettra, ou à défaut ceux déclarés à la platefo
 dossier ». Route : `GET /api/v1/insights/payment-weather`. *(Vérifié : démo Docker, navigateur à 1440, 900 et 390 px,
 en français et en anglais ; non vérifié dans les applications installées.)*
 
+#### Fiche d'appel
+
+Menu **Comptabilité > Fiche d'appel** (Ctrl+K « appel ») ou bouton **Préparer l'appel** de la météo des paiements.
+On choisit un client ; Lettra montre ce qu'il doit et ce qui est échu, ses factures dues (les plus en retard d'abord,
+avec leur statut à la plateforme et la dernière relance), les relances déjà faites et les points à aborder dans
+l'ordre : un litige d'abord, puis les factures douteuses, l'étape des relances, l'indemnité forfaitaire de 40 € d'un
+client professionnel, son habitude de paiement et son dernier encaissement.
+
+Calcul en C# sur la météo des paiements et l'historique des relances, sans IA, sans rien écrire. Droit : « Lire le
+dossier ». Route : `GET /api/v1/insights/call-sheet/{client}`. L'assistant IA du poste a l'outil `fiche_d_appel`.
+
+| Où | Vérifié |
+|---|---|
+| Navigateur, ordinateur (1440 px), tablette (900 px), téléphone (390 px), français et anglais | Oui, démo Docker |
+| Application MAUI (Windows, macOS, Android, iOS) | Non vérifié |
+
 #### Remonter le temps
 
 Menu **Comptabilité > Remonter le temps** (ou Ctrl+K « remonter »). On choisit un jour et une heure, ou l'un des
@@ -839,6 +873,26 @@ installées.)*
   tableaux Grafana sous chaque nom. Dans la démo Docker,
   les trois onglets sont remplis pour les trois dossiers ; sur un poste isolé ou relié, seul « Ce dossier » est
   disponible. Voir [docs/tableaux-de-bord.md](docs/tableaux-de-bord.md).
+- **Commentaire écrit** (sous chaque bloc des tableaux de bord : clients, ventes, les deux graphiques, « Mes
+  dossiers ») : quelques phrases disent ce que montrent les chiffres (délai de paiement, retards, encaissement,
+  dépendance au premier client, tendance, devis, dernier mois complet et meilleur mois). **Copier** les met dans le
+  presse-papiers, pour un rapport au client. Le texte est tiré des mêmes valeurs et des mêmes seuils que les vignettes,
+  en C# et sans IA : les mêmes chiffres donnent toujours le même texte. Ratios, délais et indices seulement.
+  *(Vérifié : démo Docker, navigateur à 1440 et 390 px, français et anglais, copie. Applications installées non
+  vérifiées.)*
+- **Comparé aux dossiers du même secteur** (tableau de bord du dossier) : délai de paiement, créances en retard,
+  encaissement, évolution du chiffre d'affaires, devis acceptés, poids du premier client et taux d'avoirs, comparés à
+  la **médiane** des autres dossiers du cabinet de la même division NAF (les deux premiers chiffres du code), avec
+  pour chacun « mieux », « comparable » (à 3 jours ou 3 points près) ou « moins bien », et un commentaire écrit. Il
+  faut le **code NAF** dans la fiche entreprise (« Code NAF (APE) », repris de l'annuaire SIRENE) et au moins 5 autres
+  dossiers du même secteur ; en dessous, l'écran dit combien il en manque et ne montre rien, pour qu'aucune médiane
+  ne laisse deviner un dossier. Seules des médianes sortent : aucun dossier, aucun nom, aucun montant. Les pairs sont
+  lus dans la dernière collecte des indicateurs : la comparaison n'existe que sur le serveur du cabinet. Droit :
+  « Lire le dossier ». Route : `GET /api/v1/pilotage/peers`. Dans la démo Docker, cinq petits dossiers de services
+  numériques (division 62) s'ajoutent au cabinet et le dossier principal se compare à eux ; une démo déjà installée
+  les reçoit au prochain démarrage, avec le code NAF des trois dossiers d'origine, sans rien effacer (premier
+  chargement de quelques minutes, en arrière-plan). *(Vérifié : démo Docker, navigateur à 1440, 1024 et 390 px,
+  français et anglais. Applications installées non vérifiées : la comparaison demande le serveur.)*
 - **Équipe et accès** (menu **Pilotage**) : qui travaille dans le cabinet et ce que chacun peut ouvrir. Onglet
   **Personnes** : ajoutez une personne (nom et adresse), puis donnez-lui un accès en trois questions (quel rôle, où,
   jusqu'à quand) ; sa fiche dit en clair ce qu'elle peut faire, page par page. Onglet **Équipes** : regroupez des
@@ -1249,6 +1303,7 @@ Outils proposés :
 - `chiffre_d_affaires_du_mois` ;
 - `dossier_a_un_instant` ;
 - `simuler_et_si` ;
+- `fiche_d_appel` ;
 - les outils communs de l'assistant : calculatrice et références réglementaires.
 
 Chaque outil appelle le même cas d'usage que l'écran, donc avec les mêmes droits et le même calcul C#.
