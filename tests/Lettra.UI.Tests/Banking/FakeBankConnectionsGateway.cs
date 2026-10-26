@@ -25,6 +25,9 @@ internal sealed class FakeBankConnectionsGateway : IBankConnectionsGateway
 
     public string? NextError { get; set; }
 
+    /// <summary>Le titulaire refuse sur la page de la banque : une issue du parcours, pas une erreur.</summary>
+    public bool Refuse { get; set; }
+
     public string RedirectUrl { get; set; } = "bank/simulated-consent?connection=00000000-0000-0000-0000-000000000001&bank=Banque";
 
     public static BankConnectionResponse Connection(
@@ -56,10 +59,14 @@ internal sealed class FakeBankConnectionsGateway : IBankConnectionsGateway
             return Task.FromResult(OperationResult<BankConnectionCompletedResponse>.Failure(error));
         }
 
-        BankConnectionResponse connection = Connection();
-        Connections.Add(connection);
+        BankConnectionResponse connection = Connection(Refuse ? BankConnectionStatusDto.Pending : BankConnectionStatusDto.Active);
+        if (!Refuse)
+        {
+            Connections.Add(connection);
+        }
+
         return Task.FromResult(OperationResult<BankConnectionCompletedResponse>.Success(new BankConnectionCompletedResponse(
-            connection, new BankConnectionSyncOutcome(connection.Id, connection.InstitutionName, NextImported, 0, 1, []))));
+            !Refuse, connection, new BankConnectionSyncOutcome(connection.Id, connection.InstitutionName, NextImported, 0, 1, []))));
     }
 
     public Task<OperationResult<SyncBankConnectionsResponse>> SyncAsync(SyncBankConnectionsRequest request, CancellationToken cancellationToken)

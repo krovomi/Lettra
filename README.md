@@ -734,6 +734,20 @@ compte sont ceux saisis dans Lettra, ou à défaut ceux déclarés à la platefo
 dossier ». Route : `GET /api/v1/insights/payment-weather`. *(Vérifié : démo Docker, navigateur à 1440, 900 et 390 px,
 en français et en anglais ; non vérifié dans les applications installées.)*
 
+#### Remonter le temps
+
+Menu **Comptabilité > Remonter le temps** (ou Ctrl+K « remonter »). On choisit un jour et une heure, ou l'un des
+instants proposés (31 décembre dernier, fin du mois dernier, il y a une semaine). Lettra rejoue le journal inaltérable
+jusqu'à cet instant et montre le dossier tel qu'il était : chiffre d'affaires hors taxes et TVA de l'année, mois par
+mois (avoirs déduits, à la date d'émission, comme les clôtures), factures dues et soldes des clients à cet instant, à
+côté de ceux d'aujourd'hui, dernière clôture signée et derniers événements. Le rejeu vérifie la chaîne des entrées
+rejouées (empreintes, chaînage, sceaux, clôtures) : l'écran dit si elle est intacte jusqu'à cet instant.
+
+Tout est calculé en C# à chaque demande, sans IA et sans rien écrire. Les noms des clients et les montants
+« aujourd'hui » viennent du dossier actuel. Droit : « Lire le dossier ». Route : `GET /api/v1/insights/as-of?at=…`
+(instant au format ISO 8601 ; un instant illisible est refusé en 400). *(Vérifié : démo Docker, navigateur à 1440, 900
+et 390 px, en français et en anglais ; non vérifié dans les applications installées.)*
+
 ### Et ensuite
 
 - **Catalogue** : les articles et prestations, même présentation que les clients (liste, fiche, **Modifier**,
