@@ -36,7 +36,7 @@ services:
       # Révision du realm de démonstration, à changer avec realm-lettra.json ou keycloak/ : la mise à jour (up -d --build)
       # recrée alors Keycloak, qui importe le realm corrigé dans une base neuve (keycloak/start.sh). Les saisies de
       # Lettra ne sont pas dans Keycloak ; seul l'enrôlement TOTP de l'utilisateur fictif est à refaire.
-      LETTRA_DEMO_REALM_REVISION: "2026-10-17 serveur commun"
+      LETTRA_DEMO_REALM_REVISION: "2026-10-26 assistant du poste"
     ports:
       - "127.0.0.1:${LETTRA_DEMO_KEYCLOAK_PORT:-8081}:8080"
     volumes:
@@ -80,7 +80,7 @@ services:
       LETTRA_DEMO_EMETTEUR: http://localhost:${LETTRA_DEMO_KEYCLOAK_PORT:-8081}/realms/lettra
       # Même révision que Keycloak : l'API est recréée avec lui et relit ses nouvelles clés de signature (sans quoi la
       # première connexion après la mise à jour échoue une fois).
-      LETTRA_DEMO_REALM_REVISION: "2026-10-17 serveur commun"
+      LETTRA_DEMO_REALM_REVISION: "2026-10-26 assistant du poste"
       # Cabinet de démonstration : même identifiant que l'organisation Keycloak.
       Lettra__Organisations__0__Id: 0199e3a0-0000-7000-8000-0000000000c1
       Lettra__Organisations__0__Name: Cabinet de démonstration

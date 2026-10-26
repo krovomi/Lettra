@@ -86,6 +86,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseBlazorFrameworkFiles();
 app.UseStaticFiles();
+app.UseMcpOriginCheck();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
@@ -137,6 +138,9 @@ app.MapUserPreferences();
 
 // Serveur commun : ce que l'application installée lit pour se connecter (realm Keycloak public), sans connexion.
 app.MapServerDiscovery();
+
+// Assistant IA du poste (MCP) : où trouver Keycloak pour obtenir un jeton (RFC 9728), sans connexion.
+app.MapMcpProtectedResource();
 
 app.MapLettraPresence();
 app.MapLettraBff();
