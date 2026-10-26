@@ -682,6 +682,17 @@ Pour l'essayer dans la démo Docker :
 cas d'usage, écrans non vérifiés sur appareil ; banque réelle non réalisée.)* Détails :
 [docs/banque-connectee.md](docs/banque-connectee.md).
 
+#### Pièces justificatives
+
+Menu Comptabilité > **Pièces justificatives** : les dépenses du relevé bancaire sans facture ni ticket. Le cabinet les
+réclame au client d'un seul e-mail (français et anglais), dépose lui-même une pièce reçue autrement, ou indique
+qu'aucune n'est attendue (frais bancaires). Le client dépose chaque pièce en photo depuis son téléphone, ou en PDF,
+depuis l'écran **Pièces à fournir** (`/my-receipts`, lien de l'e-mail). Photo (JPEG, PNG, WebP, HEIC) ou PDF, 5 Mo au
+plus ; le type se lit dans le contenu du fichier, jamais dans son nom. Dans la démo, le relevé de démonstration
+contient trois dépenses (électricité, fournitures, loyer) et des frais bancaires, et l'e-mail arrive dans MailPit. *(Vérifié : démo Docker,
+navigateur sur ordinateur et téléphone, e-mail reçu dans MailPit ; non vérifié dans les applications installées.)*
+Détails : [docs/pieces-justificatives.md](docs/pieces-justificatives.md).
+
 ### 10. Factures récurrentes
 
 Menu Ventes > **Factures récurrentes** > **Nouveau modèle** : un nom, le client, les lignes, la fréquence (mensuelle,
@@ -977,7 +988,7 @@ Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou 
 | Hors ligne sur un appareil relié au serveur commun | Relié au serveur commun, l'appareil a besoin du réseau. Reste à étendre la synchronisation aux devis, factures et règlements, ou à y ouvrir les brouillons hors ligne. |
 | Invitations | Une personne ajoutée dans **Équipe et accès** reçoit une invitation par e-mail (MailPit dans la démo) et des accès, mais Lettra ne crée pas encore son compte de connexion (Keycloak) : elle ne peut pas encore se connecter. |
 | Télédéclaration de la TVA et de la DES | Non : Lettra prépare le brouillon et le fichier, le dépôt se fait sur impots.gouv ou le service en ligne des douanes. La TVA déductible (achats) n'est pas encore reprise. |
-| Envoi des devis et factures par e-mail | Non : on télécharge le PDF ou le Factur-X, factures récurrentes comprises. Seules les relances et les invitations partent par e-mail. |
+| Envoi des devis et factures par e-mail | Non : on télécharge le PDF ou le Factur-X, factures récurrentes comprises. Seules les relances, les invitations et les demandes de pièces justificatives partent par e-mail. |
 | Relances par courrier ou en PDF, facture des pénalités | Non : Lettra envoie la relance par e-mail ou la note comme faite à la main ; il cite les pénalités sans les facturer. |
 | Tableaux de pilotage dans le Grafana d'une cellule | Dans la démo, Prometheus lit les indicateurs sur l'API (`/internal/kpi/metrics`). Les charts Helm ne posent pas encore ce jeton ni cette lecture : dans une cellule déployée, « Pilotage du cabinet », « Pilotage d'un dossier » et « Administration » restent vides dans Grafana. La page **Tableaux de bord** de Lettra, elle, fonctionne partout. |
 | Applications signées | Non : avertissement de Windows au premier lancement, APK Android installé à la main, application macOS arrêtée par le Trousseau, pas de version pour iPhone réel. |
