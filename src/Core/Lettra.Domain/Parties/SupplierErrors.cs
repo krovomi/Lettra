@@ -10,10 +10,16 @@ public static class SupplierErrors
     public const string SirenRequiredCode = "Supplier.SirenRequired";
     public const string SiretSirenMismatchCode = "Supplier.SiretSirenMismatch";
     public const string NotFoundCode = "Supplier.NotFound";
+    public const string AccountHolderTooLongCode = "Supplier.AccountHolderTooLong";
+    public const string IbanMissingCode = "Supplier.IbanMissing";
 
     public static Error NameRequired => Error.Validation(NameRequiredCode, nameof(Supplier.Name));
     public static Error NameTooLong => Error.Validation(NameTooLongCode, nameof(Supplier.Name));
     public static Error SirenRequired => Error.Validation(SirenRequiredCode, nameof(Supplier.Siren));
     public static Error SiretSirenMismatch => Error.Validation(SiretSirenMismatchCode, nameof(Supplier.Siret));
     public static Error NotFound => Error.NotFound(NotFoundCode);
+    public static Error AccountHolderTooLong => Error.Validation(AccountHolderTooLongCode, nameof(Supplier.AccountHolderName));
+
+    /// <summary>Pas d'IBAN sur la fiche : rien à vérifier auprès de la banque.</summary>
+    public static Error IbanMissing => Error.Validation(IbanMissingCode, nameof(Supplier.Iban));
 }

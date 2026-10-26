@@ -86,3 +86,29 @@
     .lt-audit-kit-form > label, .lt-audit-kit-form > .lettra-button { flex: 1 1 100%; }
     .lt-audit-kit > .lettra-button { width: 100%; }
 }
+
+/* Délais de paiement : date de clôture, tableau du rapport de gestion (défile à l'horizontale sur téléphone) et parties B et C. */
+.lt-delays-period { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--space-3); }
+.lt-delays-period h2 { margin: 0; }
+.lt-delays-table { min-width: 36rem; }
+.lt-delays-table th[scope="row"] { text-align: left; font-weight: 600; min-width: 12rem; }
+.lt-delays-table thead th { white-space: normal; }
+.lt-delays-parts { display: grid; gap: var(--space-2); margin: var(--space-3) 0 0; }
+.lt-delays-parts > div { display: grid; gap: var(--space-1); }
+.lt-delays-parts dt { font-weight: 600; }
+.lt-delays-parts dd { margin: 0; color: var(--color-fg-muted); }
+@media (min-width: 48rem) {
+    .lt-delays-parts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+/* Le tableau du rapport garde ses colonnes : il défile dans son cadre, jamais la page. */
+.lt-delays-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+.lt-delays-scroll:focus-visible { outline: 2px solid var(--color-focus, currentColor); outline-offset: 2px; }
+.lt-delays-cards { display: none; list-style: none; margin: 0; padding: 0; gap: var(--space-2); }
+.lt-delays-cards > li { display: grid; grid-template-columns: 1fr auto; gap: var(--space-1) var(--space-3); padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.lt-delays-cards > li > .lettra-muted { grid-column: 1 / -1; }
+.lt-delays-cards > li.is-total { font-weight: 600; background: var(--color-surface-2); }
+.lt-delays-card-title { font-weight: 600; }
+@media (max-width: 767px) {
+    .lt-delays-scroll { display: none; }
+    .lt-delays-cards { display: grid; }
+}

@@ -52,6 +52,7 @@ internal static class UblWriter
                         new XElement(Cbc + "PaymentMeansCode", EInvoice.SepaCreditTransfer),
                         new XElement(Cac + "PayeeFinancialAccount",
                             new XElement(Cbc + "ID", iban),
+                            invoice.PaymentAccountName is { } name ? new XElement(Cbc + "Name", name) : null,
                             invoice.Bic is { } bic ? new XElement(Cac + "FinancialInstitutionBranch", new XElement(Cbc + "ID", bic)) : null))
                     : null,
                 invoice.PaymentTerms is { } terms ? new XElement(Cac + "PaymentTerms", new XElement(Cbc + "Note", terms)) : null,

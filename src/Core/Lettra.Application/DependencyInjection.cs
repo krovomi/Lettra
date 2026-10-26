@@ -39,6 +39,9 @@ public static class DependencyInjection
         services.TryAddSingleton<IEmailSender, NoEmailSender>();
         services.TryAddSingleton(new LettraPublicAddress(null));
 
+        // Vérification du bénéficiaire : impossible tant que l'infrastructure ne branche pas de banque (même simulée).
+        services.TryAddSingleton<Abstractions.External.IPayeeVerification, Abstractions.External.NoPayeeVerification>();
+
         services.AddScoped<ICommandDispatcher, CommandDispatcher>();
         services.AddScoped<IQueryDispatcher, QueryDispatcher>();
 
@@ -50,6 +53,7 @@ public static class DependencyInjection
         services.TryAddScoped<IDeviceSeriesRegistry, NoDeviceSeriesRegistry>();
         services.TryAddScoped<ISyncDeviceRegistry, NoSyncDeviceRegistry>();
         services.AddScoped<DossierIntegrityService>();
+        services.AddScoped<Features.Parties.IbanChangeDecisions>();
 
         // Vue cabinet : les dossiers accessibles, partagés par le sélecteur et le tableau de supervision.
         services.AddScoped<Features.Dossiers.AccessibleDossiers>();

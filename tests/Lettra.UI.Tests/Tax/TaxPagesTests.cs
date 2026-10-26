@@ -199,6 +199,40 @@ internal sealed class FakeTaxGateway : ITaxGateway
     public Task<OperationResult<DesResponse>> GetDesAsync(int year, int month, CancellationToken cancellationToken) =>
         Task.FromResult(OperationResult<DesResponse>.Success(Des(year, month)));
 
+    public List<DateOnly?> DelayQueries { get; } = [];
+
+    /// <summary>Le tableau rendu par le serveur ; <c>null</c> pour un refus.</summary>
+    public PaymentDelaysResponse? Delays { get; set; } = SampleDelays(new DateOnly(2025, 12, 31));
+
+    public Task<OperationResult<PaymentDelaysResponse>> GetPaymentDelaysAsync(DateOnly? closingDate, CancellationToken cancellationToken)
+    {
+        DelayQueries.Add(closingDate);
+        return Task.FromResult(Delays is { } delays
+            ? OperationResult<PaymentDelaysResponse>.Success(closingDate is { } date ? delays with { ClosingDate = date } : delays)
+            : OperationResult<PaymentDelaysResponse>.Failure(ErrorCodes.Validation.Invalid));
+    }
+
+    public static PaymentDelaysResponse SampleDelays(DateOnly closing) => new(
+        closing.AddYears(-1).AddDays(1),
+        closing,
+        100_000m,
+        [new(0, 1, 500m, 0.5m), new(1, 2, 3000m, 3m), new(2, 0, 0m, 0m), new(3, 0, 0m, 0m), new(4, 1, 1200m, 1.2m)],
+        new(-1, 3, 4200m, 4.2m),
+        1,
+        800m,
+        30,
+        1,
+        2000m,
+        [
+            new(Guid.Parse("0199a000-0000-7000-8000-000000000101"), "FAC-000101", "Atelier Durand", closing.AddDays(-150), closing.AddDays(-120), 120, 4, 1200m, false),
+            new(Guid.Parse("0199a000-0000-7000-8000-000000000102"), "FAC-000102", "Boulangerie Martin", closing.AddDays(-40), closing.AddDays(-10), 10, 1, 1000m, false),
+            new(Guid.Parse("0199a000-0000-7000-8000-000000000103"), "FAC-000103", "Cave Leroy", closing.AddDays(-45), closing.AddDays(-15), 15, 1, 2000m, false),
+            new(Guid.Parse("0199a000-0000-7000-8000-000000000104"), "FAC-000104", "Atelier Durand", closing.AddDays(-30), closing, 0, 0, 500m, false),
+            new(Guid.Parse("0199a000-0000-7000-8000-000000000105"), "FAC-000105", "Garage Petit", closing.AddDays(-10), closing.AddDays(20), -20, null, 2000m, false),
+            new(Guid.Parse("0199a000-0000-7000-8000-000000000106"), "FAC-000106", "Garage Petit", closing.AddDays(-90), closing.AddDays(-60), 60, null, 800m, true),
+        ],
+        [new(Guid.Parse("0199a000-0000-7000-8000-000000000107"), "FAC-000107", "Cave Leroy", closing.AddDays(-100), closing.AddDays(-10), closing.AddDays(-40), 30)]);
+
     public Task<OperationResult<DesDocument>> ExportDesAsync(int year, int month, CancellationToken cancellationToken) =>
         Task.FromResult(OperationResult<DesDocument>.Success(new DesDocument($"DES-{year:D4}-{month:D2}.csv", Encoding.UTF8.GetBytes("ligne;numero_tva_client;montant_eur;periode\r\n"))));
 

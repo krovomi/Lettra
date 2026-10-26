@@ -57,6 +57,74 @@
   <data name="Vies.Check" xml:space="preserve"><value>Vérifier (VIES)</value></data>
   <data name="Vies.Invalid" xml:space="preserve"><value>Numéro inconnu de VIES ou inactif</value></data>
   <data name="Vies.Valid" xml:space="preserve"><value>Numéro valide</value></data>
+  <data name="IbanChanges.Title" xml:space="preserve"><value>Changements d'IBAN</value></data>
+  <data name="IbanChanges.Subtitle" xml:space="preserve"><value>Un nouvel IBAN de fournisseur se vérifie par un autre canal que la demande, par exemple au numéro de téléphone habituel, avant tout paiement : c'est la parade contre la fraude au faux fournisseur.</value></data>
+  <data name="IbanChanges.Search" xml:space="preserve"><value>Rechercher un fournisseur</value></data>
+  <data name="IbanChanges.Status.All" xml:space="preserve"><value>Tous les états</value></data>
+  <data name="IbanChanges.Status.Pending" xml:space="preserve"><value>À vérifier</value></data>
+  <data name="IbanChanges.Status.Confirmed" xml:space="preserve"><value>Confirmé</value></data>
+  <data name="IbanChanges.Status.Rejected" xml:space="preserve"><value>Refusé</value></data>
+  <data name="IbanChanges.Status.Superseded" xml:space="preserve"><value>Remplacé</value></data>
+  <data name="IbanChanges.Supplier" xml:space="preserve"><value>Fournisseur</value></data>
+  <data name="IbanChanges.Previous" xml:space="preserve"><value>Ancien IBAN</value></data>
+  <data name="IbanChanges.New" xml:space="preserve"><value>Nouvel IBAN</value></data>
+  <data name="IbanChanges.NoPrevious" xml:space="preserve"><value>aucun</value></data>
+  <data name="IbanChanges.ChangedAt" xml:space="preserve"><value>Modifié le</value></data>
+  <data name="IbanChanges.Actions" xml:space="preserve"><value>Décision</value></data>
+  <data name="IbanChanges.CountryChanged" xml:space="preserve"><value>Le compte change de pays</value></data>
+  <data name="IbanChanges.Empty" xml:space="preserve"><value>Aucun IBAN à vérifier</value></data>
+  <data name="IbanChanges.Empty.Text" xml:space="preserve"><value>Quand l'IBAN d'un fournisseur change, il apparaît ici jusqu'à sa vérification.</value></data>
+  <data name="IbanChanges.Confirm" xml:space="preserve"><value>Confirmer</value></data>
+  <data name="IbanChanges.Reject" xml:space="preserve"><value>Refuser</value></data>
+  <data name="IbanChanges.Confirm.Title" xml:space="preserve"><value>Confirmer le nouvel IBAN de {0} ({1})</value></data>
+  <data name="IbanChanges.Confirm.Hint" xml:space="preserve"><value>Confirmez seulement après avoir joint le fournisseur par un canal que vous connaissiez avant la demande. Jamais au numéro ou à l'adresse donnés dans le message qui annonce le changement.</value></data>
+  <data name="IbanChanges.Reject.Title" xml:space="preserve"><value>Refuser le nouvel IBAN de {0} ({1})</value></data>
+  <data name="IbanChanges.Reject.Hint" xml:space="preserve"><value>Le fournisseur ne confirme pas : la demande est suspecte. Remettez son IBAN habituel sur sa fiche et prévenez le dirigeant.</value></data>
+  <data name="IbanChanges.Method" xml:space="preserve"><value>Vérifié par</value></data>
+  <data name="IbanChanges.Method.Choose" xml:space="preserve"><value>Choisir le canal</value></data>
+  <data name="IbanChanges.Method.KnownPhoneNumber" xml:space="preserve"><value>Appel au numéro habituel</value></data>
+  <data name="IbanChanges.Method.SignedLetter" xml:space="preserve"><value>Courrier signé ou RIB reçu par un canal connu</value></data>
+  <data name="IbanChanges.Method.InPerson" xml:space="preserve"><value>En personne</value></data>
+  <data name="IbanChanges.Method.Other" xml:space="preserve"><value>Autre (à préciser)</value></data>
+  <data name="IbanChanges.Note" xml:space="preserve"><value>Note (facultative, obligatoire pour « Autre »)</value></data>
+  <data name="IbanChanges.Note.Required" xml:space="preserve"><value>Pourquoi ce refus ?</value></data>
+  <data name="IbanChanges.Confirmed" xml:space="preserve"><value>Nouvel IBAN de {0} confirmé.</value></data>
+  <data name="IbanChanges.Rejected" xml:space="preserve"><value>Nouvel IBAN de {0} refusé.</value></data>
+  <data name="IbanChanges.Banner" xml:space="preserve"><value>IBAN modifié le {0} ({1}) : à vérifier par un autre canal avant tout paiement.</value></data>
+  <data name="IbanChanges.Verify" xml:space="preserve"><value>Vérifier</value></data>
+  <data name="Error.IbanChange.NotFound" xml:space="preserve"><value>Ce changement d'IBAN n'existe pas.</value></data>
+  <data name="Error.IbanChange.AlreadyDecided" xml:space="preserve"><value>Ce changement d'IBAN a déjà été traité : rechargez la liste.</value></data>
+  <data name="Error.IbanChange.MethodRequired" xml:space="preserve"><value>Dites par quel canal le nouvel IBAN a été vérifié.</value></data>
+  <data name="Error.IbanChange.NoteRequired" xml:space="preserve"><value>Ajoutez une note.</value></data>
+  <data name="Error.IbanChange.NoteTooLong" xml:space="preserve"><value>La note fait au plus 500 caractères.</value></data>
+  <data name="Error.IbanChange.SameUser" xml:space="preserve"><value>Une autre personne du cabinet doit vérifier l'IBAN que vous avez saisi.</value></data>
+  <data name="Suppliers.Field.AccountHolder" xml:space="preserve"><value>Titulaire du compte</value></data>
+  <data name="Suppliers.Field.AccountHolder.Hint" xml:space="preserve"><value>Seulement s'il diffère du nom du fournisseur : c'est le nom que la banque vérifie avant un virement.</value></data>
+  <data name="IbanChanges.Tab" xml:space="preserve"><value>Changements d'IBAN</value></data>
+  <data name="Payees.Tab" xml:space="preserve"><value>Nom et IBAN</value></data>
+  <data name="Payees.Title" xml:space="preserve"><value>Nom et IBAN des bénéficiaires</value></data>
+  <data name="Payees.Subtitle" xml:space="preserve"><value>Avant chaque virement, la banque compare le nom du bénéficiaire au titulaire de l'IBAN. Contrôlez ici les fournisseurs dont le nom ne correspond pas, ou pas encore vérifié.</value></data>
+  <data name="Payees.OnlyToReview" xml:space="preserve"><value>Seulement ceux à contrôler</value></data>
+  <data name="Payees.Empty" xml:space="preserve"><value>Aucun bénéficiaire à contrôler</value></data>
+  <data name="Payees.Empty.Text" xml:space="preserve"><value>Tous les fournisseurs payables par virement ont un nom vérifié.</value></data>
+  <data name="Payees.ShowAll" xml:space="preserve"><value>Voir tous les bénéficiaires</value></data>
+  <data name="Payees.SameAsName" xml:space="preserve"><value>le nom du fournisseur</value></data>
+  <data name="Payees.IbanChanged" xml:space="preserve"><value>IBAN modifié, à vérifier</value></data>
+  <data name="Payees.Check" xml:space="preserve"><value>Vérification du bénéficiaire</value></data>
+  <data name="Payees.Result.Match" xml:space="preserve"><value>Correspond</value></data>
+  <data name="Payees.Result.CloseMatch" xml:space="preserve"><value>Correspond presque</value></data>
+  <data name="Payees.Result.NoMatch" xml:space="preserve"><value>Ne correspond pas</value></data>
+  <data name="Payees.Result.NotPossible" xml:space="preserve"><value>Impossible à vérifier</value></data>
+  <data name="Payees.Suggested" xml:space="preserve"><value>Titulaire : {0}</value></data>
+  <data name="Payees.CheckedAt" xml:space="preserve"><value>Vérifié le {0}</value></data>
+  <data name="Payees.NeverChecked" xml:space="preserve"><value>Jamais vérifié</value></data>
+  <data name="Payees.Verify" xml:space="preserve"><value>Vérifier le nom et l'IBAN</value></data>
+  <data name="Payees.Verified" xml:space="preserve"><value>{0} : {1}.</value></data>
+  <data name="Payees.Simulated" xml:space="preserve"><value>Banque simulée : aucun prestataire de vérification du bénéficiaire n'est encore branché, rien ne quitte le poste.</value></data>
+  <data name="Payees.Holder.NoMatch" xml:space="preserve"><value>Ne ressemble pas au nom du fournisseur</value></data>
+  <data name="Payees.Holder.CloseMatch" xml:space="preserve"><value>Proche du nom du fournisseur</value></data>
+  <data name="Error.Supplier.AccountHolderTooLong" xml:space="preserve"><value>Le titulaire du compte fait au plus 70 caractères.</value></data>
+  <data name="Error.Supplier.IbanMissing" xml:space="preserve"><value>Ce fournisseur n'a pas d'IBAN : rien à vérifier.</value></data>
   <data name="DirectoryCheck.Command" xml:space="preserve"><value>Vérifier dans l'annuaire</value></data>
   <data name="DirectoryCheck.Running" xml:space="preserve"><value>Vérification en cours…</value></data>
   <data name="DirectoryCheck.AllActive" xml:space="preserve"><value>{0} clients vérifiés dans l'annuaire SIRENE : tous en activité.</value></data>

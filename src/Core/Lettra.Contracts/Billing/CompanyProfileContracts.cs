@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using Lettra.Contracts.Common;
+using Lettra.Contracts.Suppliers;
 
 namespace Lettra.Contracts.Billing;
 
@@ -98,6 +99,13 @@ public sealed record SaveCompanyProfileRequest
 
     [StringLength(11, ErrorMessage = ErrorCodes.Validation.Invalid)]
     public string? Bic { get; set; }
+
+    /// <summary>
+    /// Nom exact du titulaire du compte quand il diffère de la raison sociale (70 caractères au plus, limite d'un
+    /// virement SEPA) : la banque du client le compare à l'IBAN avant de payer.
+    /// </summary>
+    [StringLength(70, ErrorMessage = ErrorCodes.Validation.TooLong)]
+    public string? AccountHolderName { get; set; }
 }
 
 /// <summary>Fiche entreprise telle qu'affichée ; <c>null</c> côté API tant qu'elle n'a pas été remplie.</summary>
@@ -124,4 +132,6 @@ public sealed record CompanyProfileResponse(
     string? Iban,
     string? Bic,
     DateTimeOffset UpdatedAt,
-    VatDeclarationRegimeDto? VatDeclarationRegime = null);
+    VatDeclarationRegimeDto? VatDeclarationRegime = null,
+    string? AccountHolderName = null,
+    PayeeMatchDto? HolderNameMatch = null);

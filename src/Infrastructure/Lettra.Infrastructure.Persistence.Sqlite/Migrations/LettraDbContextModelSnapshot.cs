@@ -280,6 +280,10 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("AccountHolderName")
+                        .HasMaxLength(70)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Bic")
                         .HasMaxLength(11)
                         .HasColumnType("TEXT");
@@ -1302,9 +1306,68 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.HasAnnotation("Lettra:SearchKeySource", "Name");
                 });
 
+            modelBuilder.Entity("Lettra.Domain.Parties.IbanChange", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("ChangedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ChangedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("CountryChanged")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset?>("DecidedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DecidedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Method")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("NewIban")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PreviousIban")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("SupplierId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("SupplierId", "Status");
+
+                    b.ToTable("SupplierIbanChanges", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Domain.Parties.Supplier", b =>
                 {
                     b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AccountHolderName")
+                        .HasMaxLength(70)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -1324,6 +1387,16 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("PayeeCheckResult")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PayeeCheckSuggestedName")
+                        .HasMaxLength(70)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("PayeeCheckedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("SearchKey")

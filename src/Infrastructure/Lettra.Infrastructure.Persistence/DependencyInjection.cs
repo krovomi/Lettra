@@ -60,6 +60,7 @@ public static class DependencyInjection
         services.AddScoped<IDossierIndicatorSource, OverdueInvoicesIndicatorSource>();
         services.AddScoped<IDossierIndicatorSource, PlatformRejectionsIndicatorSource>();
         services.AddScoped<IDossierIndicatorSource, ReviewPendingIndicatorSource>();
+        services.AddScoped<IDossierIndicatorSource, Repositories.IbanChangesIndicatorSource>();
         services.TryAddSingleton<IDossierIndicatorStore, InMemoryDossierIndicatorStore>();
         services.AddSingleton<IDossierIndicatorRefresher, DossierIndicatorRefresher>();
 

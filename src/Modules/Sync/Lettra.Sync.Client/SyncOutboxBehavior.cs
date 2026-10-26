@@ -123,6 +123,7 @@ internal static class DraftRequests
         VatNumber = draft.VatNumber,
         Email = draft.Email,
         Iban = draft.Iban,
+        AccountHolderName = draft.AccountHolderName,
         AddressLine1 = draft.AddressLine1 ?? string.Empty,
         AddressLine2 = draft.AddressLine2,
         PostalCode = draft.PostalCode ?? string.Empty,

@@ -95,3 +95,7 @@
 @media (max-width: 40rem) {
     .lt-date-calendar .lt-icon-button { width: var(--hit); height: var(--hit); }
 }
+
+/* Choix d'une date de clôture (délais de paiement, révision) : le champ et ses deux raccourcis. */
+.lt-closing-date { display: grid; gap: var(--space-1); min-width: min(100%, 16rem); }
+.lt-closing-shortcuts { display: flex; flex-wrap: wrap; gap: var(--space-2); }

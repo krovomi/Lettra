@@ -28,9 +28,9 @@
   <data name="Nav.Payments.Keywords" xml:space="preserve"><value>paiement règlement reçu virement chèque lettrage encaisser</value></data>
   <data name="Nav.Bank.Keywords" xml:space="preserve"><value>banque relevé rapprocher import</value></data>
   <data name="Nav.Reminders.Keywords" xml:space="preserve"><value>retard impayé relancer e-mail courriel échéance</value></data>
-  <data name="Nav.Accounting.Keywords" xml:space="preserve"><value>écritures journal balance grand livre comptes compta</value></data>
+  <data name="Nav.Accounting.Keywords" xml:space="preserve"><value>écritures journal balance grand livre comptes compta révision clôture contrôles anomalies</value></data>
   <data name="Nav.Fec.Keywords" xml:space="preserve"><value>fichier des écritures comptables export contrôle fiscal passerelle quadra sage cegid acd logiciel de production</value></data>
-  <data name="Nav.Tax.Keywords" xml:space="preserve"><value>tva impôts déclaration ca3 des calendrier fiscalité kit contrôle</value></data>
+  <data name="Nav.Tax.Keywords" xml:space="preserve"><value>tva impôts déclaration ca3 des calendrier fiscalité kit contrôle délais paiement retard rapport gestion d441-6 clôture</value></data>
   <data name="Nav.Review.Keywords" xml:space="preserve"><value>contrôle clôture liste vérification mensuelle</value></data>
   <data name="Nav.Alerts.Keywords" xml:space="preserve"><value>notifications incidents avertissements supervision</value></data>
   <data name="Nav.Company.Keywords" xml:space="preserve"><value>paramètres réglages société profil siret logo mentions</value></data>
@@ -120,4 +120,5 @@
   <data name="Help.Faq.assistant.Question" xml:space="preserve"><value>À quoi sert l'assistant IA ?</value></data>
   <data name="Help.Faq.assistant.Answer" xml:space="preserve"><value>L'assistant explique une règle ou prépare un brouillon de devis, que vous relisez et validez vous-même : il ne valide ni n'envoie rien. Il est désactivé par défaut ; un administrateur du cabinet peut l'activer. Cette aide-ci fonctionne sans lui.</value></data>
   <data name="Help.Faq.assistant.Keywords" xml:space="preserve"><value>ia intelligence artificielle assistant claude question</value></data>
+  <data name="Nav.IbanChanges.Keywords" xml:space="preserve"><value>iban rib fraude faux fournisseur changement coordonnées bancaires vérification virement titulaire bénéficiaire nom du compte</value></data>
 </root>

@@ -34,4 +34,12 @@ internal sealed class HttpAccountingGateway(HttpClient http) : IAccountingGatewa
             ContractsJsonContext.Default.AccountLedgerResponse,
             cancellationToken);
     }
+
+    public Task<OperationResult<ClosingReviewResponse>> GetClosingReviewAsync(DateOnly? closingDate, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.GetAsync(closingDate is { } date
+                ? HttpCalls.Relative($"api/v1/accounting/closing-review?closingDate={QueryText.Day(date)}")
+                : HttpCalls.Relative($"api/v1/accounting/closing-review"), ct),
+            ContractsJsonContext.Default.ClosingReviewResponse,
+            cancellationToken);
 }

@@ -16,6 +16,11 @@ internal sealed class FakeAccountingGateway : IAccountingGateway
 
     public string? NextError { get; set; }
 
+    /// <summary>Révision rendue par la passerelle ; les dates de clôture demandées sont notées dans <see cref="ReviewQueries"/>.</summary>
+    public ClosingReviewResponse Review { get; set; } = new(new DateOnly(2025, 1, 1), new DateOnly(2025, 12, 31), []);
+
+    public List<DateOnly?> ReviewQueries { get; } = [];
+
     public static JournalEntryResponse Invoice(string piece, DateOnly date, Guid customerId, string customerName, decimal net, decimal vat, string revenueAccount = "706") =>
         new(Guid.CreateVersion7(), InvoiceKindDto.Invoice, piece, date, customerId, customerName, net + vat,
         [
@@ -98,6 +103,12 @@ internal sealed class FakeAccountingGateway : IAccountingGateway
         decimal credit = lines.Sum(l => l.Credit);
         return Task.FromResult(OperationResult<AccountLedgerResponse>.Success(
             new AccountLedgerResponse(account, customerId, from, to, opening, lines, debit, credit, opening + debit - credit)));
+    }
+
+    public Task<OperationResult<ClosingReviewResponse>> GetClosingReviewAsync(DateOnly? closingDate, CancellationToken cancellationToken)
+    {
+        ReviewQueries.Add(closingDate);
+        return Task.FromResult(Error<ClosingReviewResponse>() ?? OperationResult<ClosingReviewResponse>.Success(Review));
     }
 
     private IEnumerable<JournalEntryResponse> InPeriod(DateOnly from, DateOnly to) => Entries.Where(e => e.Date >= from && e.Date <= to);

@@ -26,6 +26,19 @@ public static partial class ErrorCodes
         public const string SirenRequired = "Supplier.SirenRequired";
         public const string SiretSirenMismatch = "Supplier.SiretSirenMismatch";
         public const string NotFound = "Supplier.NotFound";
+        public const string AccountHolderTooLong = "Supplier.AccountHolderTooLong";
+        public const string IbanMissing = "Supplier.IbanMissing";
+    }
+
+    /// <summary>Changements d'IBAN des fournisseurs, à vérifier avant tout paiement.</summary>
+    public static class IbanChange
+    {
+        public const string NotFound = "IbanChange.NotFound";
+        public const string AlreadyDecided = "IbanChange.AlreadyDecided";
+        public const string MethodRequired = "IbanChange.MethodRequired";
+        public const string NoteRequired = "IbanChange.NoteRequired";
+        public const string NoteTooLong = "IbanChange.NoteTooLong";
+        public const string SameUser = "IbanChange.SameUser";
     }
 
     /// <summary>Annuaires publics consultés depuis Lettra (SIRENE, VIES).</summary>

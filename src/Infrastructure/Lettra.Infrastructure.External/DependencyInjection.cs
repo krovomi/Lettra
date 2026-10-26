@@ -1,6 +1,7 @@
 using Lettra.Application.Abstractions.External;
 using Lettra.Application.Abstractions.Mail;
 using Lettra.Infrastructure.External.Mail;
+using Lettra.Infrastructure.External.Payees;
 using Lettra.Infrastructure.External.Sirene;
 using Lettra.Infrastructure.External.Vies;
 using Microsoft.Extensions.Configuration;
@@ -15,7 +16,7 @@ namespace Lettra.Infrastructure.External;
 public static class DependencyInjection
 {
     /// <summary>
-    /// Services externes (SIRENE, VIES, envoi d'e-mails), dans tous les modes. Hors ligne, les appels échouent vite et
+    /// Services externes (SIRENE, VIES, envoi d'e-mails, vérification du bénéficiaire simulée), dans tous les modes. Hors ligne, les appels échouent vite et
     /// renvoient <c>Directory.Unavailable</c> ; <c>Lettra:External:Enabled=false</c> coupe les annuaires. L'envoi
     /// d'e-mails a son propre réglage (<see cref="EmailOptions"/>), coupé par défaut.
     /// </summary>
@@ -26,6 +27,9 @@ public static class DependencyInjection
         IConfigurationSection section = configuration.GetSection(ExternalServicesOptions.SectionName);
         services.AddOptions<ExternalServicesOptions>().Bind(section);
         services.TryAddSingleton(TimeProvider.System);
+
+        // Vérification du bénéficiaire : banque simulée, sans réseau, tant qu'aucun prestataire n'est sous contrat.
+        services.Replace(ServiceDescriptor.Singleton<IPayeeVerification, SimulatedPayeeVerification>());
 
         ExternalServicesOptions settings = section.Get<ExternalServicesOptions>() ?? new ExternalServicesOptions();
         if (!settings.Enabled)
