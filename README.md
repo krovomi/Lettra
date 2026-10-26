@@ -40,7 +40,8 @@ vérifié à chaque modification, en local comme en CI, et non simplement décla
     paiements, remonter le temps, « Pourquoi ce chiffre ? », « Et si ? ») sont des cas d'usage de la couche
     application du module Exports, calculés en C# sans IA et sans rien écrire ;
   - la lettre de mission a son domaine (mission, temps passé), ses cas d'usage et ses dépôts derrière des ports,
-    comme une facture ; la comparaison aux pairs est un cas d'usage de l'application qui ne lit que la collecte des
+    comme une facture ; la fiche anti-blanchiment aussi, avec ses règles (risque, bénéficiaires effectifs, rythme
+    des revues) dans le domaine ; la comparaison aux pairs est un cas d'usage de l'application qui ne lit que la collecte des
     indicateurs ;
   - les services extérieurs pas encore choisis (banque connectée, paiement en ligne, plateforme agréée, vérification
     du nom et de l'IBAN) sont des ports de l'application ; l'infrastructure fournit pour l'instant des adaptateurs
@@ -375,6 +376,16 @@ visé et au budget d'heures. La facture du forfait reste à créer (facture réc
 Lettra. *(Vérifié : démo Docker, navigateur sur ordinateur et téléphone.)* Détails :
 [docs/lettre-de-mission.md](docs/lettre-de-mission.md).
 
+### Connaissance du client (anti-blanchiment)
+
+Menu Comptabilité > **Anti-blanchiment**, dans le dossier du client. C'est la fiche que l'expert-comptable doit tenir
+pour chaque client au titre de la lutte contre le blanchiment (LCB-FT) : pièces d'identification reçues, bénéficiaires
+effectifs, facteurs et niveau de risque avec sa justification, date de la revue. La prochaine revue suit le risque (un
+an, deux ans ou trois ans) ; la fiche est gardée cinq ans après la fin de la relation. La vue cabinet signale les
+fiches manquantes, incomplètes ou à revoir, et la lettre de mission ne se signe pas sans fiche à jour. Ni l'auditeur
+ni le client n'y ont accès. *(Vérifié : démo Docker, navigateur sur ordinateur et téléphone.)* Détails :
+[docs/anti-blanchiment.md](docs/anti-blanchiment.md).
+
 ---
 
 ## Premier usage, pas à pas
@@ -421,8 +432,9 @@ Le jeu ne s'ajoute jamais à un dossier qui a déjà des devis ou des factures. 
 voir « Repartir de zéro » dans [En cas de problème](#en-cas-de-problème).
 
 **La navigation.** **Accueil**, **En bref**, **Vue cabinet** et **Comptes intra-groupe**, puis **Ventes** (**Devis**, **Factures**, **Avoirs**, **Factures
-récurrentes**), **Tiers** (**Clients**, **Fournisseurs**, **Catalogue**), **Comptabilité** (**Encaissements**,
-**Rapprochement bancaire**, **Relances**, **Journal et balance**, **FEC**, **Déclarations**, **Revue du dossier**, **Lettre de mission**) et
+récurrentes**), **Tiers** (**Clients**, **Fournisseurs**, **IBAN à vérifier**,
+**Attestations de vigilance**, **Catalogue**), **Comptabilité** (**Encaissements**,
+**Rapprochement bancaire**, **Relances**, **Journal et balance**, **FEC**, **Déclarations**, **Revue du dossier**, **Lettre de mission**, **Anti-blanchiment**) et
 **Pilotage** (**Tableaux de bord**, **Alertes**, **Entreprise**, **Mes préférences**, **Équipe et accès** pour qui
 administre le cabinet, **Serveur du cabinet**). Sur un
 ordinateur, le menu est à gauche et se replie en icônes ; sur une tablette, c'est une colonne d'icônes ; sur un
@@ -508,6 +520,13 @@ les bénéficiaires à contrôler, du plus risqué au plus sûr. La fiche entrep
 compte : il figure sur le PDF, le QR code de paiement et la facture électronique. *(Vérifié : démo Docker, navigateur
 sur ordinateur et téléphone ; aucune banque réelle interrogée.)* Détails :
 [docs/iban-fournisseurs.md](docs/iban-fournisseurs.md).
+
+**Attestations de vigilance des sous-traitants.** Menu **Tiers > Attestations de vigilance**. Pour chaque fournisseur
+dont le contrat atteint 5 000 € HT, Lettra suit l'attestation URSSAF reçue à la signature puis tous les six mois, son
+code de sécurité et la date de sa vérification sur le site de l'URSSAF. L'écran montre d'abord les fournisseurs à ne
+pas payer en l'état (attestation manquante, expirée ou non vérifiée), puis celles qui expirent dans les trente jours.
+Le contrôle avant paiement (« Nom et IBAN ») et la Vue cabinet les signalent aussi. *(Vérifié : démo Docker,
+navigateur sur ordinateur et téléphone.)* Détails : [docs/attestations-vigilance.md](docs/attestations-vigilance.md).
 
 ### 3. Un devis
 
@@ -1106,6 +1125,8 @@ Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou 
 | Tableaux de pilotage dans le Grafana d'une cellule | Dans la démo, Prometheus lit les indicateurs sur l'API (`/internal/kpi/metrics`). Les charts Helm ne posent pas encore ce jeton ni cette lecture : dans une cellule déployée, « Pilotage du cabinet », « Pilotage d'un dossier » et « Administration » restent vides dans Grafana. La page **Tableaux de bord** de Lettra, elle, fonctionne partout. |
 | Notifications sur le téléphone | Non : « En bref » se consulte ; aucune notification n'arrive quand une grosse facture est payée ou passe en retard. |
 | Lettre de mission signée et forfait facturé | Non : la lettre se télécharge en PDF et se signe hors de Lettra ; la facture du forfait reste à créer (facture récurrente). |
+| Anti-blanchiment : pièces, registres et Tracfin | Non : Lettra note quelles pièces ont été reçues sans les stocker, ne consulte ni le registre des bénéficiaires effectifs, ni les listes de gel des avoirs ou des personnes politiquement exposées, ne fait pas la déclaration de soupçon et n'efface pas la fiche cinq ans après la fin de la relation. |
+| Attestations de vigilance : dépôt et vérification | Non : Lettra note la date et le code de l'attestation sans la stocker, ne vérifie pas le code auprès de l'URSSAF, ne suit ni l'attestation de régularité fiscale ni la liste des salariés étrangers, et signale sans bloquer un virement (il ne paie pas les fournisseurs). |
 | Factures reçues | Pas encore enregistrées : les comptes intra-groupe comparent ce que le vendeur a facturé à la fiche fournisseur et à la banque de l'acheteur, pas facture contre facture. |
 | Assistant IA du poste avec Claude Desktop ou VS Code | Non vérifié : la connexion a été vérifiée avec le client MCP officiel (SDK TypeScript) dans la démo. |
 | Applications signées | Non : avertissement de Windows au premier lancement, APK Android installé à la main, application macOS arrêtée par le Trousseau, pas de version pour iPhone réel. |

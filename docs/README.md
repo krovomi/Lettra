@@ -6,16 +6,18 @@ Le code C# (.NET 10) suit la Clean Architecture et les principes SOLID, KISS et 
 plutôt que simplement déclarés : tests d'architecture (dépendances vers le domaine, domaine sans framework, ports
 déclarés par l'application et implémentés par l'infrastructure, passerelles HTTP et en processus au même résultat),
 zéro avertissement, 21 règles de style de l'IDE en erreur de build, couverture minimale imposée en CI. Les fonctions
-récentes (lectures du cabinet, lettre de mission, banque connectée, espace client, assistant IA du poste, comptes
-intra-groupe) suivent les mêmes règles : cas d'usage de l'application, services extérieurs derrière des ports avec
-des adaptateurs simulés, outils de l'assistant en lecture seule. Le résumé est
-dans le [README](../README.md#principes-de-conception), le détail, les mesures et ce qui reste ouvert dans
+récentes (lectures du cabinet, lettre de mission, anti-blanchiment, attestations de vigilance, banque connectée,
+espace client, assistant IA du poste, comptes intra-groupe) suivent les mêmes règles : cas d'usage de l'application,
+services extérieurs derrière des ports avec des adaptateurs simulés, outils de l'assistant en lecture seule. Le résumé
+est dans le [README](../README.md#principes-de-conception), le détail, les mesures et ce qui reste ouvert dans
 [Qualité du code et couverture des tests](qualite-du-code.md).
 
 ## Documents
 
 - [Accompagnement, aide à la saisie et voix dans l'interface](aide-a-la-saisie.md)
 - [Annuaire SIRENE](annuaire.md)
+- [Anti-blanchiment : connaissance du client](anti-blanchiment.md)
+- [Attestations de vigilance des sous-traitants](attestations-vigilance.md)
 - [Assistant IA : points ouverts et point fermé](assistant-ia.md)
 - [Lettra dans l'assistant IA du poste (MCP)](assistant-du-poste.md)
 - [Banque connectée](banque-connectee.md)

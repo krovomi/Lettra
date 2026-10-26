@@ -12,6 +12,9 @@ Nature (présentation des comptes annuels, tenue de la comptabilité, examen lim
 facturation (mensuel, trimestriel, annuel), taux horaire visé (facultatif), signataire pour le client, expert-comptable
 responsable, date de signature. Sans mission saisie, le formulaire s'ouvre prérempli avec la mission la plus courante.
 
+La date de signature ne s'enregistre pas tant que la fiche [anti-blanchiment](anti-blanchiment.md) du dossier n'est pas
+à jour (identification et bénéficiaires effectifs complets, revue non échue). Une lettre déjà signée le reste.
+
 ## La lettre en PDF
 
 Objet, travaux, durée et tacite reconduction, engagements du client et du cabinet, honoraires, données personnelles,
