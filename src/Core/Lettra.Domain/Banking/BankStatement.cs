@@ -150,6 +150,17 @@ public sealed class BankStatementLine : AggregateRoot<Guid>, IVersioned
 
     public long Version { get; private set; }
 
+    /// <summary>Justificatif de l'opération : seule une opération débitrice (une dépense) en appelle un.</summary>
+    public ReceiptStatus ReceiptStatus { get; private set; }
+
+    /// <summary>Dernière demande de la pièce au client, et à quelle adresse.</summary>
+    public DateTimeOffset? ReceiptRequestedAt { get; private set; }
+
+    public string? ReceiptRequestedTo { get; private set; }
+
+    /// <summary>Nombre de demandes envoyées (la première, puis les relances).</summary>
+    public int ReceiptRequests { get; private set; }
+
     public bool IsCredit => Amount > 0m;
 
     public static BankStatementLine Create(Guid id, Guid importId, BankTransaction transaction, string fingerprint, string? ibanHash)
@@ -211,6 +222,55 @@ public sealed class BankStatementLine : AggregateRoot<Guid>, IVersioned
         PaymentId = null;
         Changed(userId, now);
     }
+
+    /// <summary>La pièce est réclamée au client, ou réclamée de nouveau (relance).</summary>
+    public Result RequestReceipt(string email, Guid userId, DateTimeOffset now)
+    {
+        if (ReceiptGuard() is { } error)
+        {
+            return error;
+        }
+
+        ReceiptStatus = ReceiptStatus.Requested;
+        ReceiptRequestedAt = now;
+        ReceiptRequestedTo = email;
+        ReceiptRequests++;
+        Changed(userId, now);
+        return Result.Success();
+    }
+
+    /// <summary>Aucune pièce n'est attendue (le relevé suffit), ou elle l'est de nouveau.</summary>
+    public Result SetReceiptNotNeeded(bool notNeeded, Guid userId, DateTimeOffset now)
+    {
+        if (ReceiptGuard() is { } error)
+        {
+            return error;
+        }
+
+        ReceiptStatus = notNeeded ? ReceiptStatus.NotNeeded
+            : ReceiptRequestedAt is null ? ReceiptStatus.Missing
+            : ReceiptStatus.Requested;
+        Changed(userId, now);
+        return Result.Success();
+    }
+
+    /// <summary>La pièce est déposée ; un nouveau dépôt la remplace.</summary>
+    public Result ReceiptReceived(Guid userId, DateTimeOffset now)
+    {
+        if (IsCredit)
+        {
+            return ReceiptErrors.LineNotDebit;
+        }
+
+        ReceiptStatus = ReceiptStatus.Received;
+        Changed(userId, now);
+        return Result.Success();
+    }
+
+    private Error? ReceiptGuard() =>
+        IsCredit ? ReceiptErrors.LineNotDebit
+        : ReceiptStatus == ReceiptStatus.Received ? ReceiptErrors.AlreadyReceived
+        : null;
 
     private void Changed(Guid userId, DateTimeOffset now)
     {

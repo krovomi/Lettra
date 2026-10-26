@@ -188,6 +188,8 @@ internal sealed class BankStatementLineConfiguration : IEntityTypeConfiguration<
         builder.Property(l => l.CounterpartyIbanHash).HasMaxLength(64);
         builder.Property(l => l.Fingerprint).HasMaxLength(64).IsRequired();
         builder.Property(l => l.Status).HasConversion<int>();
+        builder.Property(l => l.ReceiptStatus).HasConversion<int>();
+        builder.Property(l => l.ReceiptRequestedTo).HasMaxLength(254);
         builder.IsVersioned();
         builder.Ignore(l => l.IsCredit);
         builder.Ignore(l => l.DomainEvents);
@@ -195,6 +197,22 @@ internal sealed class BankStatementLineConfiguration : IEntityTypeConfiguration<
         builder.HasIndex(l => l.Fingerprint).IsUnique();
         builder.HasIndex(l => l.Status);
         builder.HasIndex(l => l.ImportId);
+    }
+}
+
+/// <summary>La pièce justificative d'une dépense du relevé : une par opération, contenu compris.</summary>
+internal sealed class BankLineReceiptConfiguration : IEntityTypeConfiguration<BankLineReceipt>
+{
+    public void Configure(EntityTypeBuilder<BankLineReceipt> builder)
+    {
+        builder.ToTable("BankLineReceipts");
+        builder.HasKey(r => r.Id);
+        builder.Property(r => r.Id).ValueGeneratedNever();
+        builder.Property(r => r.FileName).HasMaxLength(BankLineReceipt.MaxFileNameLength).IsRequired();
+        builder.Property(r => r.ContentType).HasMaxLength(100).IsRequired();
+        builder.Property(r => r.Content).IsRequired();
+        builder.HasIndex(r => r.LineId).IsUnique();
+        builder.HasOne<BankStatementLine>().WithMany().HasForeignKey(r => r.LineId).OnDelete(DeleteBehavior.Cascade);
     }
 }
 

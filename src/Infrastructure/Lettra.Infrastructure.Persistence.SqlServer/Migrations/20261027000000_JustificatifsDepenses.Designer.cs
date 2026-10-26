@@ -4,88 +4,93 @@ using System.Collections.Generic;
 using Lettra.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
+namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
 {
     [DbContext(typeof(LettraDbContext))]
-    [Migration("20261026120000_ActiviteEntreprise")]
-    partial class ActiviteEntreprise
+    [Migration("20261027000000_JustificatifsDepenses")]
+    partial class JustificatifsDepenses
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.13");
+            modelBuilder
+                .HasAnnotation("ProductVersion", "10.0.13")
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
             modelBuilder.Entity("Lettra.Domain.Banking.BankConnection", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("AccountDisplay")
                         .HasMaxLength(20)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<DateTimeOffset?>("ActivatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<DateTimeOffset?>("ConsentExpiresAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("InstitutionId")
                         .IsRequired()
                         .HasMaxLength(60)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(60)");
 
                     b.Property<string>("InstitutionName")
                         .IsRequired()
                         .HasMaxLength(120)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(120)");
 
                     b.Property<DateTimeOffset?>("LastSyncAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<int>("LastSyncImported")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<string>("Provider")
                         .IsRequired()
                         .HasMaxLength(40)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(40)");
 
                     b.Property<string>("ProviderReference")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<Guid?>("ReplacesId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset?>("RevokedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid?>("RevokedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<DateTimeOffset?>("SyncStartedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -95,40 +100,79 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.ToTable("BankConnections", (string)null);
                 });
 
-            modelBuilder.Entity("Lettra.Domain.Banking.BankStatementImport", b =>
+            modelBuilder.Entity("Lettra.Domain.Banking.BankLineReceipt", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("AccountDisplay")
-                        .HasMaxLength(20)
-                        .HasColumnType("TEXT");
+                    b.Property<DateTimeOffset>("AddedAt")
+                        .HasColumnType("datetimeoffset");
 
-                    b.Property<int>("Duplicates")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("AddedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("Content")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("FileName")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("LineId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Size")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LineId")
+                        .IsUnique();
+
+                    b.ToTable("BankLineReceipts", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Banking.BankStatementImport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AccountDisplay")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("Duplicates")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<int>("Format")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<DateOnly?>("From")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<int>("Imported")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<DateTimeOffset>("ImportedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("ImportedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateOnly?>("To")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.HasKey("Id");
 
@@ -138,59 +182,72 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Domain.Banking.BankStatementLine", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("Amount")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<DateOnly>("BookingDate")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<DateTimeOffset?>("ChangedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid?>("ChangedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("CounterpartyIbanDisplay")
                         .HasMaxLength(20)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("CounterpartyIbanHash")
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("CounterpartyName")
                         .HasMaxLength(140)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(140)");
 
                     b.Property<string>("Fingerprint")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<Guid>("ImportId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Label")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<Guid?>("PaymentId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ReceiptRequestedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("ReceiptRequestedTo")
+                        .HasMaxLength(254)
+                        .HasColumnType("nvarchar(254)");
+
+                    b.Property<int>("ReceiptRequests")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReceiptStatus")
+                        .HasColumnType("int");
 
                     b.Property<string>("Reference")
                         .HasMaxLength(140)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(140)");
 
                     b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -207,21 +264,21 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Domain.Banking.BankingSettings", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<decimal>("WriteOffThreshold")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.HasKey("Id");
 
@@ -231,34 +288,34 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Domain.Banking.Lettering", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("CancelReason")
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<DateTimeOffset?>("CancelledAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid?>("CancelledBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(8)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(8)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("CustomerId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateOnly>("Date")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.HasKey("Id");
 
@@ -271,70 +328,70 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Domain.Banking.Payment", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("Amount")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<Guid?>("BankLineId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("CustomerId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("CustomerName")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateOnly>("Date")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<int>("Method")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<string>("Number")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<string>("Reference")
                         .HasMaxLength(140)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(140)");
 
                     b.Property<DateOnly?>("ReversalDate")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<string>("ReversalReason")
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<DateTimeOffset?>("ReversedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid?>("ReversedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("SearchKey")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(400)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("nvarchar(400)")
                         .HasDefaultValue("");
 
                     b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -355,83 +412,79 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Domain.Billing.CompanyProfile", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("AccountHolderName")
                         .HasMaxLength(70)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ActivityCode")
-                        .HasMaxLength(6)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(70)");
 
                     b.Property<string>("Bic")
                         .HasMaxLength(11)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(11)");
 
                     b.Property<string>("EarlyPaymentDiscount")
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Iban")
                         .HasMaxLength(34)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(34)");
 
                     b.Property<decimal?>("LatePenaltyRate")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("LegalForm")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<int>("PaymentDays")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<string>("PaymentTerms")
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Rcs")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<decimal?>("ShareCapital")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("Siren")
                         .HasMaxLength(9)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(9)");
 
                     b.Property<string>("Siret")
                         .HasMaxLength(14)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(14)");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<int?>("VatDeclarationRegime")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<bool>("VatFranchise")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bit");
 
                     b.Property<string>("VatNumber")
                         .HasMaxLength(15)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(15)");
 
                     b.Property<bool>("VatOnDebits")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bit");
 
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Address", "Lettra.Domain.Billing.CompanyProfile.Address#PostalAddress", b1 =>
                         {
@@ -440,30 +493,30 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                             b1.Property<string>("City")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("City");
 
                             b1.Property<string>("Country")
                                 .IsRequired()
                                 .HasMaxLength(2)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(2)")
                                 .HasColumnName("Country");
 
                             b1.Property<string>("Line1")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("AddressLine1");
 
                             b1.Property<string>("Line2")
                                 .HasMaxLength(200)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("AddressLine2");
 
                             b1.Property<string>("PostalCode")
                                 .IsRequired()
                                 .HasMaxLength(16)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(16)")
                                 .HasColumnName("PostalCode");
                         });
 
@@ -475,155 +528,155 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Domain.Billing.Invoice", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateOnly?>("BillingPeriodEnd")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<DateOnly?>("BillingPeriodStart")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<string>("ContentHash")
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset?>("CreditApprovedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid?>("CreditApprovedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("CreditReason")
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<decimal>("CreditedInclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<Guid?>("CreditedInvoiceId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("CreditedInvoiceNumber")
                         .HasMaxLength(32)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<Guid>("CustomerId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("DeliveryAddress")
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<DateOnly?>("DeliveryDate")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<Guid?>("DeviceId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateOnly?>("DueDate")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<string>("EarlyPaymentDiscount")
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<DateOnly?>("IssueDate")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<DateTimeOffset?>("IssuedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid?>("IssuedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Kind")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<Guid>("LastModifiedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal?>("LatePenaltyRate")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("LegalMentions")
                         .IsRequired()
                         .HasMaxLength(4000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(4000)");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(4000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(4000)");
 
                     b.Property<string>("Number")
                         .HasMaxLength(32)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<decimal>("PaidInclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("PaymentTerms")
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("PurchaseOrderReference")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<Guid?>("QuoteId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("QuoteNumber")
                         .HasMaxLength(32)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<string>("SeriesCode")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<string>("Subject")
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<decimal>("TotalExclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("TotalInclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("TotalVat")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<DateTimeOffset?>("ValidatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid?>("ValidatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("VatRegime")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Customer", "Lettra.Domain.Billing.Invoice.Customer#PartySnapshot", b1 =>
                         {
@@ -632,70 +685,70 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                             b1.Property<string>("AddressLine1")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("CustomerAddressLine1");
 
                             b1.Property<string>("AddressLine2")
                                 .HasMaxLength(200)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("CustomerAddressLine2");
 
                             b1.Property<string>("City")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("CustomerCity");
 
                             b1.Property<string>("CountryCode")
                                 .IsRequired()
                                 .HasMaxLength(2)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(2)")
                                 .HasColumnName("CustomerCountry");
 
                             b1.Property<bool>("IsBusiness")
-                                .HasColumnType("INTEGER")
+                                .HasColumnType("bit")
                                 .HasColumnName("CustomerIsBusiness");
 
                             b1.Property<string>("LegalForm")
                                 .HasMaxLength(100)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(100)")
                                 .HasColumnName("CustomerLegalForm");
 
                             b1.Property<string>("Name")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("CustomerName");
 
                             b1.Property<string>("PostalCode")
                                 .IsRequired()
                                 .HasMaxLength(16)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(16)")
                                 .HasColumnName("CustomerPostalCode");
 
                             b1.Property<string>("Rcs")
                                 .HasMaxLength(100)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(100)")
                                 .HasColumnName("CustomerRcs");
 
                             b1.Property<decimal?>("ShareCapital")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("decimal(18,4)")
                                 .HasColumnName("CustomerShareCapital");
 
                             b1.Property<string>("Siren")
                                 .HasMaxLength(9)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(9)")
                                 .HasColumnName("CustomerSiren");
 
                             b1.Property<string>("Siret")
                                 .HasMaxLength(14)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(14)")
                                 .HasColumnName("CustomerSiret");
 
                             b1.Property<string>("VatNumber")
                                 .HasMaxLength(15)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(15)")
                                 .HasColumnName("CustomerVatNumber");
                         });
 
@@ -704,70 +757,70 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                             b1.Property<string>("AddressLine1")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("SellerAddressLine1");
 
                             b1.Property<string>("AddressLine2")
                                 .HasMaxLength(200)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("SellerAddressLine2");
 
                             b1.Property<string>("City")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("SellerCity");
 
                             b1.Property<string>("CountryCode")
                                 .IsRequired()
                                 .HasMaxLength(2)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(2)")
                                 .HasColumnName("SellerCountry");
 
                             b1.Property<bool>("IsBusiness")
-                                .HasColumnType("INTEGER")
+                                .HasColumnType("bit")
                                 .HasColumnName("SellerIsBusiness");
 
                             b1.Property<string>("LegalForm")
                                 .HasMaxLength(100)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(100)")
                                 .HasColumnName("SellerLegalForm");
 
                             b1.Property<string>("Name")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("SellerName");
 
                             b1.Property<string>("PostalCode")
                                 .IsRequired()
                                 .HasMaxLength(16)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(16)")
                                 .HasColumnName("SellerPostalCode");
 
                             b1.Property<string>("Rcs")
                                 .HasMaxLength(100)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(100)")
                                 .HasColumnName("SellerRcs");
 
                             b1.Property<decimal?>("ShareCapital")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("decimal(18,4)")
                                 .HasColumnName("SellerShareCapital");
 
                             b1.Property<string>("Siren")
                                 .HasMaxLength(9)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(9)")
                                 .HasColumnName("SellerSiren");
 
                             b1.Property<string>("Siret")
                                 .HasMaxLength(14)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(14)")
                                 .HasColumnName("SellerSiret");
 
                             b1.Property<string>("VatNumber")
                                 .HasMaxLength(15)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(15)")
                                 .HasColumnName("SellerVatNumber");
                         });
 
@@ -784,7 +837,8 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.HasIndex("Kind", "Status");
 
                     b.HasIndex("SeriesCode", "Number")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[Number] IS NOT NULL");
 
                     b.ToTable("Invoices", (string)null);
                 });
@@ -792,88 +846,88 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Domain.Billing.Quote", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("CustomerId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("DeviceId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("DownPaymentsInclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<Guid?>("FinalInvoiceId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateOnly?>("IssueDate")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<Guid>("LastModifiedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("LegalMentions")
                         .IsRequired()
                         .HasMaxLength(4000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(4000)");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(4000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(4000)");
 
                     b.Property<string>("Number")
                         .HasMaxLength(32)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<string>("SeriesCode")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<string>("Subject")
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<decimal>("TotalExclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("TotalInclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("TotalVat")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<DateOnly?>("ValidUntil")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<DateTimeOffset?>("ValidatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid?>("ValidatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("VatRegime")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Customer", "Lettra.Domain.Billing.Quote.Customer#PartySnapshot", b1 =>
                         {
@@ -882,70 +936,70 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                             b1.Property<string>("AddressLine1")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("CustomerAddressLine1");
 
                             b1.Property<string>("AddressLine2")
                                 .HasMaxLength(200)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("CustomerAddressLine2");
 
                             b1.Property<string>("City")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("CustomerCity");
 
                             b1.Property<string>("CountryCode")
                                 .IsRequired()
                                 .HasMaxLength(2)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(2)")
                                 .HasColumnName("CustomerCountry");
 
                             b1.Property<bool>("IsBusiness")
-                                .HasColumnType("INTEGER")
+                                .HasColumnType("bit")
                                 .HasColumnName("CustomerIsBusiness");
 
                             b1.Property<string>("LegalForm")
                                 .HasMaxLength(100)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(100)")
                                 .HasColumnName("CustomerLegalForm");
 
                             b1.Property<string>("Name")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("CustomerName");
 
                             b1.Property<string>("PostalCode")
                                 .IsRequired()
                                 .HasMaxLength(16)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(16)")
                                 .HasColumnName("CustomerPostalCode");
 
                             b1.Property<string>("Rcs")
                                 .HasMaxLength(100)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(100)")
                                 .HasColumnName("CustomerRcs");
 
                             b1.Property<decimal?>("ShareCapital")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("decimal(18,4)")
                                 .HasColumnName("CustomerShareCapital");
 
                             b1.Property<string>("Siren")
                                 .HasMaxLength(9)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(9)")
                                 .HasColumnName("CustomerSiren");
 
                             b1.Property<string>("Siret")
                                 .HasMaxLength(14)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(14)")
                                 .HasColumnName("CustomerSiret");
 
                             b1.Property<string>("VatNumber")
                                 .HasMaxLength(15)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(15)")
                                 .HasColumnName("CustomerVatNumber");
                         });
 
@@ -958,7 +1012,8 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.HasIndex("Status");
 
                     b.HasIndex("SeriesCode", "Number")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[Number] IS NOT NULL");
 
                     b.ToTable("Quotes", (string)null);
                 });
@@ -966,92 +1021,92 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Domain.Billing.RecurringInvoice", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("CustomerId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateOnly?>("EndDate")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<int>("Frequency")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<int>("GeneratedCount")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bit");
 
                     b.Property<Guid>("LastModifiedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(120)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(120)");
 
                     b.Property<DateOnly?>("NextIssueDate")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<DateOnly?>("NextRevisionDate")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(4000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(4000)");
 
                     b.Property<string>("PaymentTerms")
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<int>("Revision")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<decimal?>("RevisionPercent")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<DateOnly>("StartDate")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<string>("Subject")
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<decimal?>("SyntecLatestIndex")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal?>("SyntecReferenceIndex")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<int>("Timing")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<decimal>("TotalExclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<bool>("ValidateAutomatically")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bit");
 
                     b.Property<int>("VatRegime")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -1065,63 +1120,63 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Domain.Catalog.CatalogItem", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Description")
                         .HasMaxLength(2000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<string>("Designation")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<bool>("IsArchived")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bit");
 
                     b.Property<int>("Kind")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<string>("Reference")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("ReferenceKey")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("SearchKey")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(400)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("nvarchar(400)")
                         .HasDefaultValue("");
 
                     b.Property<string>("Unit")
                         .IsRequired()
                         .HasMaxLength(3)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(3)");
 
                     b.Property<decimal>("UnitPriceExclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("VatRate")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -1138,76 +1193,76 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Domain.Integrity.JournalEntry", b =>
                 {
                     b.Property<long>("Sequence")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<string>("ContentHash")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("Currency")
                         .HasMaxLength(3)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(3)");
 
                     b.Property<Guid?>("CustomerId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("DocumentId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int?>("DocumentKind")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<string>("Hash")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<DateOnly?>("IssueDate")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<string>("KeyId")
                         .HasMaxLength(32)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<int>("Kind")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<string>("Number")
                         .HasMaxLength(40)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(40)");
 
                     b.Property<long>("OccurredAt")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<string>("PreviousHash")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<Guid?>("RelatedDocumentId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Seal")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("SeriesCode")
                         .HasMaxLength(16)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<decimal>("TotalExclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("TotalInclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("TotalVat")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.HasKey("Sequence");
 
@@ -1221,71 +1276,71 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Domain.Integrity.PeriodClosing", b =>
                 {
                     b.Property<int>("Number")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<long>("ClosedAt")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<decimal>("CumulativeInclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<long>("FirstSequence")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Hash")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("KeyId")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<string>("LastEntryHash")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<long>("LastSequence")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<DateOnly>("PeriodEnd")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<int>("PeriodKind")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<DateOnly>("PeriodStart")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<string>("PreviousClosingHash")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("PublicKey")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("Signature")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<decimal>("TotalExclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("TotalInclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("TotalVat")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.HasKey("Number");
 
@@ -1295,52 +1350,52 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Domain.Parties.Customer", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Email")
                         .HasMaxLength(254)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(254)");
 
                     b.Property<bool>("IsArchived")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bit");
 
                     b.Property<int>("Kind")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("PreferredLanguage")
                         .HasMaxLength(10)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<string>("SearchKey")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(400)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("nvarchar(400)")
                         .HasDefaultValue("");
 
                     b.Property<string>("Siren")
                         .HasMaxLength(9)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(9)");
 
                     b.Property<string>("Siret")
                         .HasMaxLength(14)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(14)");
 
                     b.Property<string>("VatNumber")
                         .HasMaxLength(15)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(15)");
 
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "BillingAddress", "Lettra.Domain.Parties.Customer.BillingAddress#PostalAddress", b1 =>
                         {
@@ -1349,30 +1404,30 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                             b1.Property<string>("City")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("BillingCity");
 
                             b1.Property<string>("Country")
                                 .IsRequired()
                                 .HasMaxLength(2)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(2)")
                                 .HasColumnName("BillingCountry");
 
                             b1.Property<string>("Line1")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("BillingLine1");
 
                             b1.Property<string>("Line2")
                                 .HasMaxLength(200)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("BillingLine2");
 
                             b1.Property<string>("PostalCode")
                                 .IsRequired()
                                 .HasMaxLength(16)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(16)")
                                 .HasColumnName("BillingPostalCode");
                         });
 
@@ -1390,48 +1445,48 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Domain.Parties.IbanChange", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("ChangedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("ChangedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("CountryChanged")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bit");
 
                     b.Property<DateTimeOffset?>("DecidedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid?>("DecidedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int?>("Method")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<string>("NewIban")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("Note")
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("PreviousIban")
                         .HasMaxLength(20)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<Guid>("SupplierId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -1445,63 +1500,63 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Domain.Parties.Supplier", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("AccountHolderName")
                         .HasMaxLength(70)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(70)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Email")
                         .HasMaxLength(254)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(254)");
 
                     b.Property<string>("Iban")
                         .HasMaxLength(34)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(34)");
 
                     b.Property<bool>("IsArchived")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<int?>("PayeeCheckResult")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<string>("PayeeCheckSuggestedName")
                         .HasMaxLength(70)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(70)");
 
                     b.Property<DateTimeOffset?>("PayeeCheckedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("SearchKey")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(400)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("nvarchar(400)")
                         .HasDefaultValue("");
 
                     b.Property<string>("Siren")
                         .HasMaxLength(9)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(9)");
 
                     b.Property<string>("Siret")
                         .HasMaxLength(14)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(14)");
 
                     b.Property<string>("VatNumber")
                         .HasMaxLength(15)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(15)");
 
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Address", "Lettra.Domain.Parties.Supplier.Address#PostalAddress", b1 =>
                         {
@@ -1510,30 +1565,30 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                             b1.Property<string>("City")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("City");
 
                             b1.Property<string>("Country")
                                 .IsRequired()
                                 .HasMaxLength(2)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(2)")
                                 .HasColumnName("Country");
 
                             b1.Property<string>("Line1")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("AddressLine1");
 
                             b1.Property<string>("Line2")
                                 .HasMaxLength(200)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(200)")
                                 .HasColumnName("AddressLine2");
 
                             b1.Property<string>("PostalCode")
                                 .IsRequired()
                                 .HasMaxLength(16)
-                                .HasColumnType("TEXT")
+                                .HasColumnType("nvarchar(16)")
                                 .HasColumnName("PostalCode");
                         });
 
@@ -1551,40 +1606,40 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Domain.Portal.PortalLink", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("CreatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("CustomerId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal?>("DownPaymentPercent")
                         .HasPrecision(5, 2)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(5,2)");
 
                     b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<DateTimeOffset?>("LastOpenedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid?>("QuoteId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset?>("RevokedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid?>("RevokedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("SecretHash")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(64)");
 
                     b.HasKey("Id");
 
@@ -1599,39 +1654,39 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Domain.Portal.QuoteSignature", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("DocumentHash")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<Guid?>("DownPaymentInvoiceId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("PortalLinkId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Provider")
                         .IsRequired()
                         .HasMaxLength(40)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(40)");
 
                     b.Property<string>("ProviderReference")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<Guid>("QuoteId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("SignedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("SignerName")
                         .IsRequired()
                         .HasMaxLength(120)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(120)");
 
                     b.HasKey("Id");
 
@@ -1644,19 +1699,19 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Domain.Pricing.PriceList", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -1666,69 +1721,69 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Domain.Reminders.PaymentReminder", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Body")
                         .IsRequired()
                         .HasMaxLength(8000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Channel")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<Guid>("CustomerId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("DaysOverdue")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<string>("ErrorCode")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<Guid>("InvoiceId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("InvoiceNumber")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<string>("Language")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<int>("Level")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<DateTimeOffset>("OccurredAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<DateOnly>("OccurredOn")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<int>("Outcome")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<decimal>("Outstanding")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("Recipient")
                         .HasMaxLength(320)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(320)");
 
                     b.Property<string>("Subject")
                         .IsRequired()
                         .HasMaxLength(300)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(300)");
 
                     b.Property<int>("Trigger")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -1744,35 +1799,35 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Domain.Reminders.ReminderSettings", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("AutoSend")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bit");
 
                     b.Property<int>("FinalDays")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<int>("FormalNoticeDays")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<int>("FriendlyDays")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<int>("MinimumGapDays")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<int>("ReminderDays")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -1783,21 +1838,21 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                 {
                     b.Property<string>("Period")
                         .HasMaxLength(7)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(7)");
 
                     b.Property<string>("ItemKey")
                         .HasMaxLength(40)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(40)");
 
                     b.Property<DateTimeOffset>("CheckedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("CheckedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Note")
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(500)");
 
                     b.HasKey("Period", "ItemKey");
 
@@ -1808,24 +1863,26 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<DateTimeOffset>("At")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Detail")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Engine")
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<int>("Kind")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -1835,27 +1892,27 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Banking.BankJournalLineRecord", b =>
                 {
                     b.Property<Guid>("EntryId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("LineNumber")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<string>("Account")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<decimal>("Credit")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("Debit")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal?>("VatRatePercent")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.HasKey("EntryId", "LineNumber");
 
@@ -1865,29 +1922,29 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Banking.BankJournalRecord", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("CustomerId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("CustomerName")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateOnly>("Date")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<bool>("IsReversal")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bit");
 
                     b.Property<Guid>("PaymentId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("PieceNumber")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(32)");
 
                     b.HasKey("Id");
 
@@ -1902,14 +1959,14 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Banking.KnownCustomerIbanRecord", b =>
                 {
                     b.Property<Guid>("CustomerId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("IbanHash")
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<long>("LearnedAtMs")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.HasKey("CustomerId", "IbanHash");
 
@@ -1921,27 +1978,27 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Billing.SalesJournalLineRecord", b =>
                 {
                     b.Property<Guid>("EntryId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("LineNumber")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<string>("Account")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<decimal>("Credit")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("Debit")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal?>("VatRatePercent")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.HasKey("EntryId", "LineNumber");
 
@@ -1951,26 +2008,26 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Billing.SalesJournalRecord", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("CustomerId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("CustomerName")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateOnly>("Date")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<Guid>("InvoiceId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("PieceNumber")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(32)");
 
                     b.HasKey("Id");
 
@@ -1985,24 +2042,24 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.EInvoicing.PlatformStatusEventRecord", b =>
                 {
                     b.Property<Guid>("TransmissionId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Sequence")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<decimal?>("Amount")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<long>("AtMs")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Reason")
                         .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.HasKey("TransmissionId", "Sequence");
 
@@ -2012,37 +2069,37 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.EInvoicing.PlatformTransmissionRecord", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Channel")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<int?>("Format")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<Guid>("InvoiceId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("InvoiceNumber")
                         .IsRequired()
                         .HasMaxLength(40)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(40)");
 
                     b.Property<string>("Platform")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Reference")
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<long>("SubmittedAtMs")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<decimal>("TotalInclTax")
                         .HasPrecision(18, 4)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,4)");
 
                     b.HasKey("Id");
 
@@ -2054,19 +2111,19 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Integrity.IntegrityChainHead", b =>
                 {
                     b.Property<int>("Id")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<string>("LastHash")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<long>("LastSequence")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -2085,25 +2142,25 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Integrity.StoredIntegrityKey", b =>
                 {
                     b.Property<int>("Version")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<long>("CreatedAt")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<string>("KeyId")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<string>("PublicKey")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<byte[]>("WrappedSecret")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("BLOB");
+                        .HasColumnType("varbinary(128)");
 
                     b.HasKey("Version");
 
@@ -2117,19 +2174,19 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                 {
                     b.Property<string>("Code")
                         .HasMaxLength(16)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<long>("Next")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Prefix")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<long>("Version")
                         .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.HasKey("Code");
 
@@ -2139,46 +2196,46 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Outbox.OutboxRecord", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Attempts")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<long?>("DeliveredAtMs")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<long>("EnqueuedAtMs")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<string>("IdempotencyKey")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Kind")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("LastError")
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<Guid?>("LeaseOwner")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<long?>("LeaseUntilMs")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<long>("NextAttemptAtMs")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<long?>("ParkedAtMs")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Payload")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -2194,21 +2251,21 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                 {
                     b.Property<string>("Code")
                         .HasMaxLength(16)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<string>("BaseSeries")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(16)");
 
                     b.Property<long?>("ClosedAtMs")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<Guid>("DeviceId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<long>("OpenedAtMs")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.HasKey("Code");
 
@@ -2221,36 +2278,38 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<string>("BaseValue")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<long>("DetectedAtMs")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<int>("Entity")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<Guid>("EntityId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Field")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<Guid>("IdempotencyKey")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("MineValue")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ServerValue")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -2262,25 +2321,25 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.SyncDeviceRecord", b =>
                 {
                     b.Property<Guid>("DeviceId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<long>("FirstSeenAtMs")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<long>("LastSeenAtMs")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<Guid?>("LastUserId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<long?>("RevokedAtMs")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<Guid?>("RevokedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<long?>("WipedAtMs")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.HasKey("DeviceId");
 
@@ -2291,16 +2350,18 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                 {
                     b.Property<long>("Sequence")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Sequence"));
 
                     b.Property<long>("ChangedAtMs")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<int>("Entity")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<Guid>("EntityId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Sequence");
 
@@ -2313,33 +2374,35 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                 {
                     b.Property<long>("Sequence")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Sequence"));
 
                     b.Property<long?>("AcknowledgedAtMs")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Detail")
                         .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<int>("Entity")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<Guid>("EntityId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("IdempotencyKey")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Payload")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<long>("RecordedAtMs")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.HasKey("Sequence");
 
@@ -2354,22 +2417,22 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Sync.SyncReceiptRecord", b =>
                 {
                     b.Property<Guid>("IdempotencyKey")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("DeviceId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<long>("ReceivedAtMs")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<string>("RequestHash")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("Result")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("IdempotencyKey");
 
@@ -2380,24 +2443,24 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                 {
                     b.Property<string>("Number")
                         .HasMaxLength(32)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<long?>("ConsumedAtMs")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<Guid>("DeviceId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<long>("ReleasedAtMs")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<Guid>("ReleasedBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("SeriesCode")
                         .IsRequired()
                         .HasMaxLength(16)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(16)");
 
                     b.HasKey("Number");
 
@@ -2410,12 +2473,12 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                 {
                     b.Property<string>("Key")
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("Key");
 
@@ -2425,16 +2488,16 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Tax.FiscalFilingRecord", b =>
                 {
                     b.Property<int>("Obligation")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<DateOnly>("PeriodStart")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<long>("FiledAtMs")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<Guid>("FiledBy")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Obligation", "PeriodStart");
 
@@ -2444,34 +2507,34 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Tax.FiscalSettingsRecord", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("Cfe")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bit");
 
                     b.Property<bool>("CorporateIncomeTax")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bit");
 
                     b.Property<int>("FiscalYearEndDay")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<int>("FiscalYearEndMonth")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<DateOnly?>("TrackedFrom")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("date");
 
                     b.Property<long>("UpdatedAtMs")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.Property<int>("VatDeadlineDay")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<int>("VatPeriodicity")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<long>("Version")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -2481,20 +2544,29 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Tenancy.DossierStamp", b =>
                 {
                     b.Property<int>("Id")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<Guid>("DossierId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("OrganisationId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
                     b.ToTable("DossierStamp", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Banking.BankLineReceipt", b =>
+                {
+                    b.HasOne("Lettra.Domain.Banking.BankStatementLine", null)
+                        .WithMany()
+                        .HasForeignKey("LineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Lettra.Domain.Banking.Lettering", b =>
@@ -2502,13 +2574,13 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.OwnsMany("Lettra.Domain.Banking.LetteringItem", "Items", b1 =>
                         {
                             b1.Property<Guid>("LetteringId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<int>("Kind")
-                                .HasColumnType("INTEGER");
+                                .HasColumnType("int");
 
                             b1.Property<Guid>("DocumentId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.HasKey("LetteringId", "Kind", "DocumentId");
 
@@ -2528,19 +2600,19 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.OwnsMany("Lettra.Domain.Banking.PaymentAllocation", "Allocations", b1 =>
                         {
                             b1.Property<Guid>("PaymentId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<Guid>("InvoiceId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<decimal>("Amount")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<string>("InvoiceNumber")
                                 .IsRequired()
                                 .HasMaxLength(32)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(32)");
 
                             b1.HasKey("PaymentId", "InvoiceId");
 
@@ -2555,18 +2627,18 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.OwnsMany("Lettra.Domain.Banking.PaymentVatShare", "VatShares", b1 =>
                         {
                             b1.Property<Guid>("PaymentId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<Guid>("InvoiceId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<decimal>("VatRatePercent")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<decimal>("Amount")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.HasKey("PaymentId", "InvoiceId", "VatRatePercent");
 
@@ -2586,68 +2658,68 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.OwnsMany("Lettra.Domain.Billing.DocumentLine", "Lines", b1 =>
                         {
                             b1.Property<Guid>("DocumentId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<int>("Position")
-                                .HasColumnType("INTEGER");
+                                .HasColumnType("int");
 
                             b1.Property<Guid?>("CatalogItemId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("Description")
                                 .HasMaxLength(2000)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(2000)");
 
                             b1.Property<string>("Designation")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(200)");
 
                             b1.Property<decimal>("DiscountPercent")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<int>("Nature")
-                                .HasColumnType("INTEGER");
+                                .HasColumnType("int");
 
                             b1.Property<decimal>("Quantity")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<string>("Reference")
                                 .HasMaxLength(50)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(50)");
 
                             b1.Property<decimal>("TotalExclTax")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<string>("UnitCode")
                                 .IsRequired()
                                 .HasMaxLength(3)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(3)");
 
                             b1.Property<decimal>("UnitPriceExclTax")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<string>("VatCategory")
                                 .IsRequired()
                                 .HasMaxLength(2)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(2)");
 
                             b1.Property<string>("VatExemptionCode")
                                 .HasMaxLength(30)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(30)");
 
                             b1.Property<string>("VatRateCode")
                                 .IsRequired()
                                 .HasMaxLength(10)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(10)");
 
                             b1.Property<decimal>("VatRatePercent")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.HasKey("DocumentId", "Position");
 
@@ -2660,27 +2732,27 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.OwnsMany("Lettra.Domain.Billing.VatSummary", "VatSummaries", b1 =>
                         {
                             b1.Property<Guid>("DocumentId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("Category")
                                 .HasMaxLength(2)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(2)");
 
                             b1.Property<decimal>("RatePercent")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<decimal>("BaseExclTax")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<string>("ExemptionCode")
                                 .HasMaxLength(30)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(30)");
 
                             b1.Property<decimal>("VatAmount")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.HasKey("DocumentId", "Category", "RatePercent");
 
@@ -2700,68 +2772,68 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.OwnsMany("Lettra.Domain.Billing.DocumentLine", "Lines", b1 =>
                         {
                             b1.Property<Guid>("DocumentId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<int>("Position")
-                                .HasColumnType("INTEGER");
+                                .HasColumnType("int");
 
                             b1.Property<Guid?>("CatalogItemId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("Description")
                                 .HasMaxLength(2000)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(2000)");
 
                             b1.Property<string>("Designation")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(200)");
 
                             b1.Property<decimal>("DiscountPercent")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<int>("Nature")
-                                .HasColumnType("INTEGER");
+                                .HasColumnType("int");
 
                             b1.Property<decimal>("Quantity")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<string>("Reference")
                                 .HasMaxLength(50)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(50)");
 
                             b1.Property<decimal>("TotalExclTax")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<string>("UnitCode")
                                 .IsRequired()
                                 .HasMaxLength(3)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(3)");
 
                             b1.Property<decimal>("UnitPriceExclTax")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<string>("VatCategory")
                                 .IsRequired()
                                 .HasMaxLength(2)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(2)");
 
                             b1.Property<string>("VatExemptionCode")
                                 .HasMaxLength(30)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(30)");
 
                             b1.Property<string>("VatRateCode")
                                 .IsRequired()
                                 .HasMaxLength(10)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(10)");
 
                             b1.Property<decimal>("VatRatePercent")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.HasKey("DocumentId", "Position");
 
@@ -2774,27 +2846,27 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.OwnsMany("Lettra.Domain.Billing.VatSummary", "VatSummaries", b1 =>
                         {
                             b1.Property<Guid>("DocumentId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("Category")
                                 .HasMaxLength(2)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(2)");
 
                             b1.Property<decimal>("RatePercent")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<decimal>("BaseExclTax")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<string>("ExemptionCode")
                                 .HasMaxLength(30)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(30)");
 
                             b1.Property<decimal>("VatAmount")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.HasKey("DocumentId", "Category", "RatePercent");
 
@@ -2814,68 +2886,68 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.OwnsMany("Lettra.Domain.Billing.DocumentLine", "Lines", b1 =>
                         {
                             b1.Property<Guid>("RecurringInvoiceId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<int>("Position")
-                                .HasColumnType("INTEGER");
+                                .HasColumnType("int");
 
                             b1.Property<Guid?>("CatalogItemId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("Description")
                                 .HasMaxLength(2000)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(2000)");
 
                             b1.Property<string>("Designation")
                                 .IsRequired()
                                 .HasMaxLength(200)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(200)");
 
                             b1.Property<decimal>("DiscountPercent")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<int>("Nature")
-                                .HasColumnType("INTEGER");
+                                .HasColumnType("int");
 
                             b1.Property<decimal>("Quantity")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<string>("Reference")
                                 .HasMaxLength(50)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(50)");
 
                             b1.Property<decimal>("TotalExclTax")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<string>("UnitCode")
                                 .IsRequired()
                                 .HasMaxLength(3)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(3)");
 
                             b1.Property<decimal>("UnitPriceExclTax")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<string>("VatCategory")
                                 .IsRequired()
                                 .HasMaxLength(2)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(2)");
 
                             b1.Property<string>("VatExemptionCode")
                                 .HasMaxLength(30)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(30)");
 
                             b1.Property<string>("VatRateCode")
                                 .IsRequired()
                                 .HasMaxLength(10)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("nvarchar(10)");
 
                             b1.Property<decimal>("VatRatePercent")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.HasKey("RecurringInvoiceId", "Position");
 
@@ -2888,23 +2960,23 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.OwnsMany("Lettra.Domain.Billing.RecurringOccurrence", "Occurrences", b1 =>
                         {
                             b1.Property<Guid>("RecurringInvoiceId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<DateOnly>("PeriodStart")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("date");
 
                             b1.Property<DateTimeOffset>("CreatedAt")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("datetimeoffset");
 
                             b1.Property<Guid>("InvoiceId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<DateOnly>("PeriodEnd")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("date");
 
                             b1.Property<decimal?>("RevisionCoefficient")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.HasKey("RecurringInvoiceId", "PeriodStart");
 
@@ -2927,10 +2999,10 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.OwnsMany("Lettra.Domain.Pricing.PriceListCustomer", "Customers", b1 =>
                         {
                             b1.Property<Guid>("PriceListId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<Guid>("CustomerId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.HasKey("PriceListId", "CustomerId");
 
@@ -2946,18 +3018,18 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.OwnsMany("Lettra.Domain.Pricing.PriceListEntry", "Entries", b1 =>
                         {
                             b1.Property<Guid>("PriceListId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<Guid>("CatalogItemId")
-                                .HasColumnType("TEXT");
+                                .HasColumnType("uniqueidentifier");
 
                             b1.Property<decimal?>("DiscountPercent")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.Property<decimal?>("UnitPriceExclTax")
                                 .HasPrecision(18, 4)
-                                .HasColumnType("TEXT");
+                                .HasColumnType("decimal(18,4)");
 
                             b1.HasKey("PriceListId", "CatalogItemId");
 

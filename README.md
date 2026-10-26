@@ -748,6 +748,35 @@ Tout est calculé en C# à chaque demande, sans IA et sans rien écrire. Les nom
 (instant au format ISO 8601 ; un instant illisible est refusé en 400). *(Vérifié : démo Docker, navigateur à 1440, 900
 et 390 px, en français et en anglais ; non vérifié dans les applications installées.)*
 
+#### Pourquoi ce chiffre ?
+
+Sur l'accueil, le point d'interrogation des cartes **Chiffre d'affaires HT du mois** et **Factures en retard** ouvre
+l'explication du chiffre (aussi : menu **Comptabilité > Pourquoi ce chiffre ?**, Ctrl+K « pourquoi »). Lettra montre
+la valeur, la règle en une phrase, le calcul (factures et acomptes moins avoirs ; ou total TTC moins avoirs moins
+encaissements) et chaque pièce qui le compose, qui s'ouvre d'un clic. Les mois précédents se parcourent avec les
+flèches ; la liste a la recherche, le tri et la pagination.
+
+Le calcul est fait en C# avec les règles mêmes de l'accueil et du point des créances : l'explication retombe toujours
+sur le chiffre affiché (un test le vérifie par l'API). Sans IA, sans rien écrire. Droit : « Lire le dossier ». Route :
+`GET /api/v1/insights/why?figure=MonthRevenue|Overdue&month=AAAA-MM-JJ`. *(Vérifié : démo Docker, navigateur à 1440,
+900 et 390 px, en français et en anglais ; non vérifié dans les applications installées.)*
+
+#### Et si… ?
+
+Menu **Comptabilité > Et si… ?** (Ctrl+K « et si », « simuler »). Avant de décider, on essaie un ou plusieurs leviers :
+jours de délai accordés aux clients, une facture à émettre (avec les boutons « le dernier jour du mois » et « le 1er du
+mois prochain » pour comparer avant et après la clôture), un régime de TVA (CA3 mensuelle, trimestrielle, franchise en
+base) et une embauche (salaire brut, date d'arrivée, charges patronales). Lettra montre la trésorerie attendue des
+treize prochaines semaines sans et avec le scénario, semaine par semaine, l'écart, la TVA de la facture et sa date de
+paiement, l'exercice où elle compte et le coût chargé de l'embauche.
+
+Bac à sable : rien n'est écrit dans le dossier. La base est la prévision de la météo des paiements ; les échéances de
+TVA viennent du calendrier fiscal du dossier. Les hypothèses sont affichées sous l'écran (TVA sur les débits, CA12 et
+TVA sur les encaissements non simulées, salaire payé le dernier jour du mois). Calcul en C#, sans IA. Droit :
+« Lire le dossier ». Route : `POST /api/v1/insights/what-if` (le scénario dans le corps, lecture seule). *(Vérifié :
+démo Docker, navigateur à 1440, 900 et 390 px, en français et en anglais ; non vérifié dans les applications
+installées.)*
+
 ### Et ensuite
 
 - **Catalogue** : les articles et prestations, même présentation que les clients (liste, fiche, **Modifier**,

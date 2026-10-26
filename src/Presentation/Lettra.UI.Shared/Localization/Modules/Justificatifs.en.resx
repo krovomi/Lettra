@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.Receipts" xml:space="preserve"><value>Receipts</value></data>
+  <data name="Nav.ReceiptsToProvide" xml:space="preserve"><value>Receipts to provide</value></data>
+  <data name="Receipts.Title" xml:space="preserve"><value>Receipts</value></data>
+  <data name="Receipts.Subtitle" xml:space="preserve"><value>Statement expenses and their receipts. Ask the client for the missing ones: they upload a photo from their phone.</value></data>
+  <data name="Receipts.Stat.Missing" xml:space="preserve"><value>To obtain</value></data>
+  <data name="Receipts.Stat.MissingAmount" xml:space="preserve"><value>Amount without receipt</value></data>
+  <data name="Receipts.Stat.Requested" xml:space="preserve"><value>Requested</value></data>
+  <data name="Receipts.Stat.Received" xml:space="preserve"><value>Uploaded</value></data>
+  <data name="Receipts.Lines" xml:space="preserve"><value>Statement expenses</value></data>
+  <data name="Receipts.Filter.Status" xml:space="preserve"><value>Receipt</value></data>
+  <data name="Receipts.Filter.ToObtain" xml:space="preserve"><value>To obtain (missing or requested)</value></data>
+  <data name="Receipts.Filter.All" xml:space="preserve"><value>All expenses</value></data>
+  <data name="Receipts.Status.Missing" xml:space="preserve"><value>Missing</value></data>
+  <data name="Receipts.Status.Requested" xml:space="preserve"><value>Requested</value></data>
+  <data name="Receipts.Status.Received" xml:space="preserve"><value>Uploaded</value></data>
+  <data name="Receipts.Status.NotNeeded" xml:space="preserve"><value>Not needed</value></data>
+  <data name="Receipts.Empty" xml:space="preserve"><value>No expense in the statement</value></data>
+  <data name="Receipts.Empty.Text" xml:space="preserve"><value>Import a bank statement: each expense calls for a receipt.</value></data>
+  <data name="Receipts.SelectAll" xml:space="preserve"><value>Select the {0} expenses to obtain</value></data>
+  <data name="Receipts.RequestSelected" xml:space="preserve"><value>Request ({0})</value></data>
+  <data name="Receipts.Request.Title" xml:space="preserve"><value>Request {0} receipt(s), for {1}</value></data>
+  <data name="Receipts.Request.Email" xml:space="preserve"><value>Client's e-mail address</value></data>
+  <data name="Receipts.Request.Note" xml:space="preserve"><value>Message (optional)</value></data>
+  <data name="Receipts.Request.NotePlaceholder" xml:space="preserve"><value>Hello, we are missing these receipts for the closing.</value></data>
+  <data name="Receipts.Request.Send" xml:space="preserve"><value>Send the request</value></data>
+  <data name="Receipts.Request.EmailOff" xml:space="preserve"><value>This installation does not send e-mails: the requests will be recorded, let the client know yourself.</value></data>
+  <data name="Receipts.Requested.Sent" xml:space="preserve"><value>{0} receipt(s) requested: the e-mail has been sent.</value></data>
+  <data name="Receipts.Requested.NotConfigured" xml:space="preserve"><value>{0} receipt(s) requested, but this installation does not send e-mails: let the client know.</value></data>
+  <data name="Receipts.Requested.Failed" xml:space="preserve"><value>{0} receipt(s) requested, but the e-mail was not sent: try again later.</value></data>
+  <data name="Receipts.RequestedOn" xml:space="preserve"><value>on {0} ({1} request(s))</value></data>
+  <data name="Receipts.Upload" xml:space="preserve"><value>Upload</value></data>
+  <data name="Receipts.Replace" xml:space="preserve"><value>Replace</value></data>
+  <data name="Receipts.Uploaded" xml:space="preserve"><value>Receipt uploaded, thank you.</value></data>
+  <data name="Receipts.Download" xml:space="preserve"><value>Download</value></data>
+  <data name="Receipts.NotNeeded" xml:space="preserve"><value>Not needed</value></data>
+  <data name="Receipts.Needed" xml:space="preserve"><value>Needed</value></data>
+  <data name="Receipts.NotNeeded.Toast" xml:space="preserve"><value>No receipt is expected for this expense.</value></data>
+  <data name="Receipts.Needed.Toast" xml:space="preserve"><value>The receipt is expected again.</value></data>
+  <data name="Receipts.ToProvide.Title" xml:space="preserve"><value>Receipts to provide</value></data>
+  <data name="Receipts.ToProvide.Subtitle" xml:space="preserve"><value>Your accounting firm needs the receipt (invoice, ticket) for these expenses.</value></data>
+  <data name="Receipts.ToProvide.Count" xml:space="preserve"><value>{0} receipt(s) to provide, for {1}</value></data>
+  <data name="Receipts.ToProvide.Empty" xml:space="preserve"><value>Nothing to provide</value></data>
+  <data name="Receipts.ToProvide.Empty.Text" xml:space="preserve"><value>Your accounting firm is not waiting for any receipt. Thank you!</value></data>
+  <data name="Receipts.ToProvide.Hint" xml:space="preserve"><value>A clear photo is enough, or a PDF. 5 MB at most per receipt.</value></data>
+  <data name="Error.Receipt.LineNotDebit" xml:space="preserve"><value>Only an expense (debit transaction) calls for a receipt.</value></data>
+  <data name="Error.Receipt.AlreadyReceived" xml:space="preserve"><value>The receipt is already uploaded.</value></data>
+  <data name="Error.Receipt.FileRequired" xml:space="preserve"><value>Choose a photo or a PDF.</value></data>
+  <data name="Error.Receipt.FileTooLarge" xml:space="preserve"><value>The receipt exceeds 5 MB: take a lighter photo.</value></data>
+  <data name="Error.Receipt.FileTypeInvalid" xml:space="preserve"><value>Only photos (JPEG, PNG, WebP, HEIC) and PDFs are accepted.</value></data>
+  <data name="Error.Receipt.LinesRequired" xml:space="preserve"><value>Choose between 1 and 100 expenses.</value></data>
+  <data name="Error.Receipt.EmailInvalid" xml:space="preserve"><value>The e-mail address is not valid.</value></data>
+  <data name="Error.Receipt.NoteTooLong" xml:space="preserve"><value>The message exceeds 500 characters.</value></data>
+  <data name="Error.Receipt.NotFound" xml:space="preserve"><value>No receipt has been uploaded for this expense.</value></data>
+</root>

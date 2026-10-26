@@ -77,6 +77,7 @@ public static class DependencyInjection
         services.AddSingleton<IAuditKitGateway, InProcessAuditKitGateway>();
         services.AddSingleton<IAccountingGateway, InProcessAccountingGateway>();
         services.AddSingleton<IBankingGateway, InProcessBankingGateway>();
+        services.AddSingleton<IReceiptsGateway, InProcessReceiptsGateway>();
         services.AddSingleton<IRemindersGateway, InProcessRemindersGateway>();
         services.AddSingleton<IInsightsGateway, InProcessInsightsGateway>();
         services.AddSingleton<IPortalGateway, InProcessPortalGateway>();
