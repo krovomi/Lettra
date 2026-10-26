@@ -27,6 +27,7 @@ dans le [README](../README.md#principes-de-conception), le détail, les mesures 
 - [Kit contrôle fiscal](kit-controle-fiscal.md)
 - [Menu réglable et aide](menu-et-aide.md)
 - [Passerelles vers les logiciels du cabinet](passerelles-logiciels-cabinet.md)
+- [Pièces justificatives des dépenses](pieces-justificatives.md)
 - [Préférences de l'utilisateur](preferences-utilisateur.md)
 - [Qualité du code et couverture des tests](qualite-du-code.md)
 - [Relances des factures échues et envoi d'e-mails](relances-et-e-mails.md)
