@@ -33,9 +33,8 @@ vérifié à chaque modification, en local comme en CI, et non simplement décla
 - **DRY** : un seul calendrier légal, une seule traduction `Result` → HTTP, un seul chargement concurrent, des
   composants de liste partagés ; les doublons relevés par l'audit ont été retirés.
 - **Base propre** : zéro avertissement (avertissements traités en erreurs, analyseurs .NET en mode `Recommended`),
-  21 règles de style de l'IDE en erreur de build, couverture minimale imposée en CI (88 % des lignes, 78 % des
-  branches ; 91,4 % et 84,0 % mesurés en local avec les dernières fonctions, hors tests PostgreSQL et SQL Server,
-  qui demandent leurs conteneurs).
+  21 règles de style de l'IDE en erreur de build, couverture de 93,3 % des lignes et 82,9 % des branches, mesurés
+  par la CI avec tous les tests (PostgreSQL et SQL Server compris), seuils bloquants 88 % et 78 %.
 - **Les fonctions récentes suivent les mêmes règles**, contrôlées par les mêmes tests :
   - les lectures du cabinet et du dirigeant (fiche d'appel, prêt pour l'e-facture, comptes intra-groupe, météo des
     paiements, remonter le temps, « Pourquoi ce chiffre ? », « Et si ? ») sont des cas d'usage de la couche
