@@ -12,6 +12,7 @@ dans le [README](../README.md#principes-de-conception), le détail, les mesures 
 ## Documents
 
 - [Accompagnement, aide à la saisie et voix dans l'interface](aide-a-la-saisie.md)
+- [Annuaire SIRENE](annuaire.md)
 - [Assistant IA : points ouverts et point fermé](assistant-ia.md)
 - [Dates et nombres dans la langue de l'écran](dates-et-langue.md)
 - [Déclarations : TVA, DES et calendrier fiscal](declarations-fiscales.md)
