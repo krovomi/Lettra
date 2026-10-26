@@ -32,6 +32,7 @@ public static class DependencyInjection
         services.AddScoped<IPaymentRepository, EfPaymentRepository>();
         services.AddScoped<IBankJournal, EfBankJournal>();
         services.AddScoped<IBankStatementRepository, EfBankStatementRepository>();
+        services.AddScoped<IReceiptStore, EfReceiptStore>();
         services.AddScoped<ILetteringRepository, EfLetteringRepository>();
         services.AddScoped<IBankingSettingsRepository, EfBankingSettingsRepository>();
         services.AddScoped<IKnownIbanStore, EfKnownIbanStore>();

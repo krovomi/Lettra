@@ -1,3 +1,4 @@
+using Lettra.Api.Infrastructure;
 using Lettra.Api.Security;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Messaging;
@@ -5,6 +6,7 @@ using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Contracts.Banking;
 using Lettra.Contracts.Common;
 using Lettra.DemoData;
+using Lettra.Domain.Banking;
 using Lettra.Domain.Common;
 using Lettra.Exports.Application.Banking;
 using Lettra.Exports.Application.Banking.Statements;
@@ -22,6 +24,9 @@ internal static class BankingEndpoints
 {
     /// <summary>Un relevé de 5 Mo encodé en base64 dans du JSON, avec de la marge.</summary>
     private const long MaxImportBodyLength = (BankStatementParser.MaxContentLength / 3 * 4) + (64 * 1024);
+
+    /// <summary>Une pièce justificative de 5 Mo encodée en base64 dans du JSON, avec de la marge.</summary>
+    private const long MaxReceiptBodyLength = (BankLineReceipt.MaxContentLength / 3 * 4) + (64 * 1024);
 
     public static RouteGroupBuilder MapBanking(this RouteGroupBuilder api)
     {
@@ -108,6 +113,46 @@ internal static class BankingEndpoints
             .WithName("GetBankReconciliationStatus")
             .Produces<BankReconciliationStatusResponse>();
 
+        // Pièces justificatives des dépenses : le cabinet les réclame, le client les dépose depuis son téléphone.
+        bank.MapGet("/receipts", GetReceiptsAsync)
+            .RequirePermission(Permission.DossierLire)
+            .WithName("GetReceipts")
+            .Produces<ReceiptsResponse>();
+
+        bank.MapGet("/receipts/requested", GetRequestedReceiptsAsync)
+            .RequirePermission(Permission.PiecesDeposer)
+            .WithName("GetRequestedReceipts")
+            .Produces<ReceiptsResponse>();
+
+        bank.MapPost("/receipts/requests", RequestReceiptsAsync)
+            .RequirePermission(Permission.FactureEmettre)
+            .WithName("RequestReceipts")
+            .Produces<RequestReceiptsResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
+        bank.MapPost("/lines/{id:guid}/receipt-not-needed", SetReceiptNotNeededAsync)
+            .RequirePermission(Permission.FactureEmettre)
+            .WithName("SetReceiptNotNeeded")
+            .Produces<ReceiptLineResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
+        bank.MapPut("/lines/{id:guid}/receipt", UploadReceiptAsync)
+            .RequirePermission(Permission.PiecesDeposer)
+            .WithName("UploadReceipt")
+            .WithMetadata(new RequestSizeLimitAttribute(MaxReceiptBodyLength))
+            .Produces<ReceiptLineResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        bank.MapGet("/lines/{id:guid}/receipt", GetReceiptFileAsync)
+            .RequirePermission(Permission.DossierLire)
+            .WithName("GetReceiptFile")
+            .Produces(StatusCodes.Status200OK, contentType: "application/octet-stream")
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         return bank;
     }
 
@@ -182,4 +227,28 @@ internal static class BankingEndpoints
 
     private static async Task<IResult> GetStatusAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken) =>
         Ok(await queries.QueryAsync(new GetBankReconciliationStatusQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false));
+
+    private static async Task<IResult> GetReceiptsAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken, int max = 500) =>
+        Ok(await queries.QueryAsync(new GetReceiptsQuery(tenant.Current.DossierId, max), cancellationToken).ConfigureAwait(false));
+
+    private static async Task<IResult> GetRequestedReceiptsAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken) =>
+        Ok(await queries.QueryAsync(new GetRequestedReceiptsQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false));
+
+    private static async Task<IResult> RequestReceiptsAsync(RequestReceiptsRequest request, ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken) =>
+        Ok(await commands.SendAsync(new RequestReceiptsCommand(tenant.Current.DossierId, request), cancellationToken).ConfigureAwait(false));
+
+    private static async Task<IResult> SetReceiptNotNeededAsync(
+        Guid id, SetReceiptNotNeededRequest request, ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken) =>
+        Ok(await commands.SendAsync(new SetReceiptNotNeededCommand(tenant.Current.DossierId, id, request), cancellationToken).ConfigureAwait(false));
+
+    private static async Task<IResult> UploadReceiptAsync(
+        Guid id, UploadReceiptRequest request, ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken) =>
+        Ok(await commands.SendAsync(new UploadReceiptCommand(tenant.Current.DossierId, id, request), cancellationToken).ConfigureAwait(false));
+
+    /// <summary>Toujours en pièce jointe : un fichier déposé par un tiers ne s'ouvre jamais dans la page de Lettra.</summary>
+    private static async Task<IResult> GetReceiptFileAsync(Guid id, ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken)
+    {
+        Result<ReceiptFile> file = await queries.QueryAsync(new GetReceiptFileQuery(tenant.Current.DossierId, id), cancellationToken).ConfigureAwait(false);
+        return file.IsSuccess ? TypedResults.File(file.Value.Content, file.Value.ContentType, file.Value.FileName) : file.Errors.ToProblem();
+    }
 }

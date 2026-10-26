@@ -23,6 +23,45 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Lettra.Domain.Banking.BankLineReceipt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("AddedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("AddedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<byte[]>("Content")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("LineId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Size")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LineId")
+                        .IsUnique();
+
+                    b.ToTable("BankLineReceipts", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Domain.Banking.BankStatementImport", b =>
                 {
                     b.Property<Guid>("Id")
@@ -108,6 +147,19 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
 
                     b.Property<Guid?>("PaymentId")
                         .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ReceiptRequestedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReceiptRequestedTo")
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)");
+
+                    b.Property<int>("ReceiptRequests")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ReceiptStatus")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Reference")
                         .HasMaxLength(140)
@@ -2334,6 +2386,15 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("DossierStamp", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Banking.BankLineReceipt", b =>
+                {
+                    b.HasOne("Lettra.Domain.Banking.BankStatementLine", null)
+                        .WithMany()
+                        .HasForeignKey("LineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Lettra.Domain.Banking.Lettering", b =>

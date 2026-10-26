@@ -62,3 +62,22 @@
     .lt-banking-detail { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
     .lt-banking-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+/* Pièces justificatives : formulaire de demande, cartes « Pièces à fournir » (téléphone d'abord). */
+.lt-receipts-request { display: grid; gap: var(--space-3); padding: var(--space-4); margin-bottom: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-2); max-width: 40rem; }
+.lt-receipts-request h3 { margin: 0; font-size: var(--text-base); }
+.lt-receipts-request textarea { width: 100%; }
+.lt-receipts-request-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.lt-receipts-when { display: block; margin-top: 2px; overflow-wrap: anywhere; }
+.lt-receipts-lines label.lettra-button { cursor: pointer; }
+.lt-receipts-count { font-weight: var(--weight-bold); margin: 0 0 var(--space-3); }
+.lt-receipts-search { max-width: 24rem; margin-bottom: var(--space-3); }
+.lt-receipts-cards { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr)); }
+.lt-receipts-cards > li { display: grid; gap: var(--space-2); margin: 0; }
+.lt-receipts-cards p { margin: 0; overflow-wrap: anywhere; }
+.lt-receipts-card-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-2); }
+.lt-receipts-card-head strong { overflow-wrap: anywhere; }
+.lt-receipts-cards .lettra-button.is-block { display: flex; justify-content: center; width: 100%; min-height: var(--hit); cursor: pointer; }
+.lt-receipts-lines .lt-banking-label { flex-direction: row; align-items: flex-start; gap: var(--space-2); }
+.lt-receipts-lines .lt-banking-label > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.lt-receipts-lines .lt-banking-label input { margin-top: 3px; flex: none; }

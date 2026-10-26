@@ -121,4 +121,6 @@
   <data name="Help.Faq.assistant.Answer" xml:space="preserve"><value>L'assistant explique une règle ou prépare un brouillon de devis, que vous relisez et validez vous-même : il ne valide ni n'envoie rien. Il est désactivé par défaut ; un administrateur du cabinet peut l'activer. Cette aide-ci fonctionne sans lui.</value></data>
   <data name="Help.Faq.assistant.Keywords" xml:space="preserve"><value>ia intelligence artificielle assistant claude question</value></data>
   <data name="Nav.IbanChanges.Keywords" xml:space="preserve"><value>iban rib fraude faux fournisseur changement coordonnées bancaires vérification virement titulaire bénéficiaire nom du compte</value></data>
+  <data name="Nav.Receipts.Keywords" xml:space="preserve"><value>justificatifs pièces manquantes factures d'achat tickets photo dépenses</value></data>
+  <data name="Nav.ReceiptsToProvide.Keywords" xml:space="preserve"><value>déposer pièce photo justificatif ticket</value></data>
 </root>

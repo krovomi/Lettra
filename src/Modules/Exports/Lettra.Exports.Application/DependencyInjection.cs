@@ -59,6 +59,14 @@ public static class DependencyInjection
         services.AddScoped<IQueryHandler<GetReconciliationQuery, Result<ReconciliationResponse>>, GetReconciliationHandler>();
         services.AddScoped<ICommandHandler<ConfirmMatchesCommand, Result<ConfirmMatchesResponse>>, ConfirmMatchesHandler>();
         services.AddScoped<ICommandHandler<IgnoreBankLineCommand, Result<BankLineResponse>>, IgnoreBankLineHandler>();
+        // Pièces justificatives des dépenses : réclamées au client par e-mail, déposées en photo depuis son téléphone.
+        services.AddScoped<ReceiptRequestMailer>();
+        services.AddScoped<IQueryHandler<GetReceiptsQuery, Result<ReceiptsResponse>>, GetReceiptsHandler>();
+        services.AddScoped<IQueryHandler<GetRequestedReceiptsQuery, Result<ReceiptsResponse>>, GetRequestedReceiptsHandler>();
+        services.AddScoped<ICommandHandler<RequestReceiptsCommand, Result<RequestReceiptsResponse>>, RequestReceiptsHandler>();
+        services.AddScoped<ICommandHandler<SetReceiptNotNeededCommand, Result<ReceiptLineResponse>>, SetReceiptNotNeededHandler>();
+        services.AddScoped<ICommandHandler<UploadReceiptCommand, Result<ReceiptLineResponse>>, UploadReceiptHandler>();
+        services.AddScoped<IQueryHandler<GetReceiptFileQuery, Result<ReceiptFile>>, GetReceiptFileHandler>();
         services.AddScoped<IQueryHandler<GetBankingSettingsQuery, Result<BankingSettingsResponse>>, GetBankingSettingsHandler>();
         services.AddScoped<ICommandHandler<UpdateBankingSettingsCommand, Result<BankingSettingsResponse>>, UpdateBankingSettingsHandler>();
         services.AddScoped<IQueryHandler<GetBankReconciliationStatusQuery, Result<BankReconciliationStatusResponse>>, GetBankReconciliationStatusHandler>();

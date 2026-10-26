@@ -1,0 +1,66 @@
+@* Dépôt d'une pièce justificative : sur téléphone, le sélecteur propose l'appareil photo ; ailleurs, un fichier.
+   Photo (JPEG, PNG, WebP, HEIC) ou PDF, 5 Mo au plus ; le serveur vérifie le type d'après le contenu. Partagé par
+   l'écran du cabinet et l'écran « Pièces à fournir » du client. *@
+@using Lettra.Contracts.Banking
+@inject IReceiptsGateway Receipts
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+
+<label class="@($"lettra-button {Class}")" for="@Id" aria-disabled="@(_busy ? "true" : null)">
+    <Icon Name="camera" Size="18" /> @(Replace ? L["Receipts.Replace"] : L["Receipts.Upload"])
+</label>
+<InputFile id="@Id" class="lettra-visually-hidden" accept="image/*,application/pdf" disabled="@_busy" OnChange="UploadAsync" />
+
+@code {
+    /// <summary>La limite du serveur (5 Mo) : un fichier plus lourd est refusé avant l'envoi.</summary>
+    public const long MaxFileSize = 5 * 1024 * 1024;
+
+    private bool _busy;
+
+    [Parameter, EditorRequired] public string Id { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired] public Guid LineId { get; set; }
+
+    /// <summary>Une pièce est déjà déposée : le bouton dit « Remplacer ».</summary>
+    [Parameter] public bool Replace { get; set; }
+
+    [Parameter] public string Class { get; set; } = "is-small";
+
+    [Parameter] public EventCallback<ReceiptLineResponse> OnUploaded { get; set; }
+
+    private async Task UploadAsync(InputFileChangeEventArgs e)
+    {
+        IBrowserFile file = e.File;
+        if (file.Size > MaxFileSize)
+        {
+            Toasts.Show(ToastKind.Error, L.Error(ErrorCodes.Receipt.FileTooLarge));
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            using MemoryStream content = new();
+            await using (Stream stream = file.OpenReadStream(MaxFileSize))
+            {
+                await stream.CopyToAsync(content);
+            }
+
+            OperationResult<ReceiptLineResponse> result = await Receipts.UploadAsync(
+                LineId, new UploadReceiptRequest { FileName = file.Name, ContentBase64 = Convert.ToBase64String(content.ToArray()) }, CancellationToken.None);
+            if (result is { IsSuccess: true, Value: { } line })
+            {
+                Toasts.Show(ToastKind.Success, L["Receipts.Uploaded"]);
+                await OnUploaded.InvokeAsync(line);
+            }
+            else
+            {
+                Toasts.Show(ToastKind.Error, string.Join(" ", result.Errors.Select(err => L.Error(err.Code)).Distinct(StringComparer.Ordinal)));
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}
