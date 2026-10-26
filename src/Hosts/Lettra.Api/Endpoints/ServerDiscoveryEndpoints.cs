@@ -36,6 +36,15 @@ internal static class ServerDiscoveryEndpoints
     private static async Task<IResult> DiscoverAsync(IConfiguration configuration, IOptionsMonitor<JwtBearerOptions> bearer, CancellationToken cancellationToken)
     {
         string clientId = configuration[DeviceClientIdKey] is { Length: > 0 } configured ? configured : "lettra-maui";
+        return await PublicAuthorityAsync(configuration, bearer, cancellationToken).ConfigureAwait(false) is { } realm
+            ? TypedResults.Ok(new ServerDiscoveryResponse(ServerDiscoveryResponse.LettraProduct, realm, clientId))
+            // Keycloak injoignable depuis l'API : l'appareil ne pourrait pas non plus s'y connecter.
+            : new[] { Error.Unavailable(ErrorCodes.Api.Unreachable) }.ToProblem();
+    }
+
+    /// <summary>Le realm Keycloak tel qu'un appareil le voit, sans barre finale ; <c>null</c> si Keycloak est injoignable.</summary>
+    internal static async Task<string?> PublicAuthorityAsync(IConfiguration configuration, IOptionsMonitor<JwtBearerOptions> bearer, CancellationToken cancellationToken)
+    {
         string? authority = configuration[PublicAuthorityKey];
         if (string.IsNullOrWhiteSpace(authority))
         {
@@ -54,9 +63,6 @@ internal static class ServerDiscoveryEndpoints
             }
         }
 
-        return Uri.TryCreate(authority, UriKind.Absolute, out Uri? realm)
-            ? TypedResults.Ok(new ServerDiscoveryResponse(ServerDiscoveryResponse.LettraProduct, realm.ToString().TrimEnd('/'), clientId))
-            // Keycloak injoignable depuis l'API : l'appareil ne pourrait pas non plus s'y connecter.
-            : new[] { Error.Unavailable(ErrorCodes.Api.Unreachable) }.ToProblem();
+        return Uri.TryCreate(authority, UriKind.Absolute, out Uri? realm) ? realm.ToString().TrimEnd('/') : null;
     }
 }

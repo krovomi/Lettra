@@ -56,6 +56,7 @@ rafraîchit sans que le navigateur ne voie jamais un jeton.
 |---|---|---|
 | `lettra-bff` | Confidentiel, code + PKCE S256 | Navigateur via le BFF de l'API : cookie `__Host-lettra`, jetons gardés côté serveur. |
 | `lettra-maui` | Public, code + PKCE S256 | Application MAUI (modes 2 à 5), redirection par schéma `fr.lettra.app://` ou boucle locale `http://127.0.0.1/callback` (RFC 8252 §7.3). Le poste écoute sur un port libre tiré à chaque connexion (`LoopbackAuthorizationBrowser`) : Keycloak ignore le port d'une adresse de bouclage, l'URL enregistrée n'en porte donc pas. |
+| `lettra-mcp` | Public, code + PKCE S256 | Assistant IA du poste (Claude Desktop, VS Code ou tout client MCP) branché sur `/api/v1/assistant/mcp`. Retour par la boucle locale `http://127.0.0.1/*` : chaque client choisit son chemin, le joker ne couvre que le chemin d'une adresse de bouclage, sans port ni `localhost`. Pas de jeton hors ligne. L'API publie `/.well-known/oauth-protected-resource` pour que le client trouve ce realm seul. |
 | `lettra-api` | Bearer only | Audience des jetons ; l'API la vérifie. |
 
 Aucun client n'autorise le flux implicite ni le mot de passe direct (`directAccessGrantsEnabled: false`).

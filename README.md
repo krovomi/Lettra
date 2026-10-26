@@ -323,6 +323,16 @@ l'a posée et quand. Détails : [docs/vue-cabinet.md](docs/vue-cabinet.md).
 application installée (seule ou reliée au serveur commun) : même écran, changement de dossier branché, **non lancée**
 sur un appareil.
 
+### Lettre de mission et honoraires
+
+Menu Comptabilité > **Lettre de mission**, dans le dossier du client. Le cabinet y saisit sa mission : nature, travaux
+compris, forfait annuel HT et son rythme de facturation, taux horaire visé, signataires. Il télécharge la lettre de
+mission en PDF, sur le plan de la lettre type de la profession, et note son temps passé. L'écran montre ce que le
+dossier rapporte : honoraires acquis au prorata de l'année de mission, divisés par les heures passées, comparés au taux
+visé et au budget d'heures. La facture du forfait reste à créer (facture récurrente), la lettre à signer hors de
+Lettra. *(Vérifié : démo Docker, navigateur sur ordinateur et téléphone.)* Détails :
+[docs/lettre-de-mission.md](docs/lettre-de-mission.md).
+
 ---
 
 ## Premier usage, pas à pas
@@ -370,7 +380,7 @@ voir « Repartir de zéro » dans [En cas de problème](#en-cas-de-problème).
 
 **La navigation.** **Accueil**, **En bref** et **Vue cabinet**, puis **Ventes** (**Devis**, **Factures**, **Avoirs**, **Factures
 récurrentes**), **Tiers** (**Clients**, **Fournisseurs**, **Catalogue**), **Comptabilité** (**Encaissements**,
-**Rapprochement bancaire**, **Relances**, **Journal et balance**, **FEC**, **Déclarations**, **Revue du dossier**) et
+**Rapprochement bancaire**, **Relances**, **Journal et balance**, **FEC**, **Déclarations**, **Revue du dossier**, **Lettre de mission**) et
 **Pilotage** (**Tableaux de bord**, **Alertes**, **Entreprise**, **Mes préférences**, **Équipe et accès** pour qui
 administre le cabinet, **Serveur du cabinet**). Sur un
 ordinateur, le menu est à gauche et se replie en icônes ; sur une tablette, c'est une colonne d'icônes ; sur un
@@ -1226,6 +1236,49 @@ Désactivé par défaut. Il explique et rédige, ne valide ni n'émet rien, ne v
 passe toujours par l'orchestrateur du serveur. Le moteur « Claude UE » exige un point d'accès en région UE (Amazon
 Bedrock, Google Vertex AI) et refuse de démarrer sinon. Réglages : section `Lettra:Ai` ; la clé ne va jamais dans un
 fichier versionné (`Lettra__Ai__Claude__ApiKey`).
+
+### Lettra dans l'assistant IA du poste (MCP)
+
+Un assistant IA installé sur le poste (Claude Desktop, VS Code, ou tout client compatible avec le protocole MCP) peut
+interroger Lettra en lecture seule, avec les droits de l'utilisateur connecté. Adresse : `POST /api/v1/assistant/mcp`
+(protocole MCP, transport HTTP, réponses JSON ; `DELETE` ferme la session).
+
+Outils proposés :
+- `meteo_des_paiements` ;
+- `factures_en_retard` ;
+- `chiffre_d_affaires_du_mois` ;
+- `dossier_a_un_instant` ;
+- `simuler_et_si` ;
+- les outils communs de l'assistant : calculatrice et références réglementaires.
+
+Chaque outil appelle le même cas d'usage que l'écran, donc avec les mêmes droits et le même calcul C#.
+
+- **Rien ne s'écrit** : seuls des outils en lecture seule sont proposés.
+- **Aucun nom ne sort en clair** : les clients, fournisseurs et personnes deviennent des jetons comme `[CLIENT_1]`.
+  Un jeton renvoyé par l'assistant est rétabli côté serveur. La table de correspondance reste en mémoire et est
+  oubliée à la fermeture de la session ou après 30 minutes sans appel.
+- **Tout est tracé** : chaque connexion, appel et refus va au journal IA du dossier
+  (`GET /api/v1/assistant/journal`), lui aussi pseudonymisé.
+- **Fermé par défaut** : le cabinet ouvre le point « Assistant IA du poste (MCP) » dans ses réglages IA
+  (`PUT /api/v1/cabinets/{cabinet}/assistant/reglages`, pas encore d'écran). Ouvert seul, il ne demande aucun moteur
+  à Lettra, car l'IA est celle du poste. Les autres points ne l'ouvrent pas. Un dossier exclu de l'IA l'est aussi ici.
+- **Accord du DPO** : envoyer des données du cabinet, même pseudonymisées, à une IA extérieure demande l'accord du
+  DPO avant d'ouvrir ce point.
+- Droit requis : « Utiliser l'assistant IA », plus « Lire le dossier » pour les outils du dossier.
+
+**Connexion du client du poste.** Sans jeton, le point répond 401 et indique où lire ses métadonnées
+(`/.well-known/oauth-protected-resource`, RFC 9728), qui désignent le realm Keycloak. Le client s'y connecte avec le
+client public `lettra-mcp` (code, PKCE, retour par `http://127.0.0.1` sur le port et le chemin de son choix) :
+mot de passe et second facteur, comme dans le navigateur. Il envoie ensuite le jeton et l'en-tête `X-Dossier`
+(dossier choisi). Une page web d'un autre hôte est refusée (403). Le client doit permettre de saisir l'identifiant
+`lettra-mcp` : Keycloak n'ouvre pas l'enregistrement dynamique. Détail et exemple de configuration :
+[docs/assistant-du-poste.md](docs/assistant-du-poste.md).
+
+| Où | Vérifié |
+|---|---|
+| Démo Docker, client MCP officiel (SDK TypeScript) : connexion Keycloak `lettra-mcp` par la boucle locale, outils listés et appelés, noms pseudonymisés | Oui |
+| Démo Docker, point fermé (403) et page d'un autre hôte (403) | Oui |
+| Claude Desktop ou VS Code branchés sur la démo | Non vérifié |
 
 ## Licence
 
