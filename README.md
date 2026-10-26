@@ -323,6 +323,16 @@ l'a posée et quand. Détails : [docs/vue-cabinet.md](docs/vue-cabinet.md).
 application installée (seule ou reliée au serveur commun) : même écran, changement de dossier branché, **non lancée**
 sur un appareil.
 
+### Lettre de mission et honoraires
+
+Menu Comptabilité > **Lettre de mission**, dans le dossier du client. Le cabinet y saisit sa mission : nature, travaux
+compris, forfait annuel HT et son rythme de facturation, taux horaire visé, signataires. Il télécharge la lettre de
+mission en PDF, sur le plan de la lettre type de la profession, et note son temps passé. L'écran montre ce que le
+dossier rapporte : honoraires acquis au prorata de l'année de mission, divisés par les heures passées, comparés au taux
+visé et au budget d'heures. La facture du forfait reste à créer (facture récurrente), la lettre à signer hors de
+Lettra. *(Vérifié : démo Docker, navigateur sur ordinateur et téléphone.)* Détails :
+[docs/lettre-de-mission.md](docs/lettre-de-mission.md).
+
 ---
 
 ## Premier usage, pas à pas
@@ -370,7 +380,7 @@ voir « Repartir de zéro » dans [En cas de problème](#en-cas-de-problème).
 
 **La navigation.** **Accueil**, **En bref** et **Vue cabinet**, puis **Ventes** (**Devis**, **Factures**, **Avoirs**, **Factures
 récurrentes**), **Tiers** (**Clients**, **Fournisseurs**, **Catalogue**), **Comptabilité** (**Encaissements**,
-**Rapprochement bancaire**, **Relances**, **Journal et balance**, **FEC**, **Déclarations**, **Revue du dossier**) et
+**Rapprochement bancaire**, **Relances**, **Journal et balance**, **FEC**, **Déclarations**, **Revue du dossier**, **Lettre de mission**) et
 **Pilotage** (**Tableaux de bord**, **Alertes**, **Entreprise**, **Mes préférences**, **Équipe et accès** pour qui
 administre le cabinet, **Serveur du cabinet**). Sur un
 ordinateur, le menu est à gauche et se replie en icônes ; sur une tablette, c'est une colonne d'icônes ; sur un
