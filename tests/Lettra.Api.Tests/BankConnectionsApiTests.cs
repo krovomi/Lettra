@@ -45,8 +45,8 @@ public sealed class BankConnectionsApiTests(LettraApiFactory factory) : IClassFi
         consent.RedirectUrl.Should().StartWith("bank/simulated-consent?connection=");
 
         using HttpResponseMessage refused = await CompleteAsync(manager, consent.ConnectionId, BankConnectionRoutes.SimulatedRefusedCode);
-        refused.StatusCode.Should().Be(HttpStatusCode.Conflict);
-        (await refused.Content.ReadAsStringAsync()).Should().Contain(ErrorCodes.BankConnection.ConsentRefused);
+        refused.StatusCode.Should().Be(HttpStatusCode.OK, "un refus n'est pas une erreur : aucune erreur dans la console du navigateur");
+        (await refused.Content.ReadFromJsonAsync(ContractsJsonContext.Default.BankConnectionCompletedResponse))!.Granted.Should().BeFalse();
 
         using HttpResponseMessage granted = await CompleteAsync(manager, consent.ConnectionId, BankConnectionRoutes.SimulatedGrantedCode);
         granted.StatusCode.Should().Be(HttpStatusCode.OK, await granted.Content.ReadAsStringAsync());
