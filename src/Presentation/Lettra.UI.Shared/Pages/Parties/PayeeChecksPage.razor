@@ -74,7 +74,15 @@
                     @foreach (PayeeCheckRowResponse row in _page.Items)
                     {
                         <tr @key="row.SupplierId" data-supplier="@row.SupplierId">
-                            <td><a href="@($"suppliers/{row.SupplierId}")">@row.Name</a></td>
+                            <td>
+                                <span class="lt-iban-cell">
+                                    <a href="@($"suppliers/{row.SupplierId}")">@row.Name</a>
+                                    @if (row.AttestationDue)
+                                    {
+                                        <a class="lettra-status is-refused" href="attestations" id="@($"payee-attestation-{row.SupplierId}")">@L["Payees.AttestationDue"]</a>
+                                    }
+                                </span>
+                            </td>
                             <td data-label="@L["Suppliers.Field.AccountHolder"]">
                                 <span class="lt-iban-cell">
                                     <span>@(row.AccountHolderName ?? L["Payees.SameAsName"])</span>

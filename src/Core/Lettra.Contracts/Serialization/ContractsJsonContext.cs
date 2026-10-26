@@ -193,6 +193,8 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(VigilanceOverviewResponse))]
 [JsonSerializable(typeof(DueDiligenceResponse))]
 [JsonSerializable(typeof(SaveDueDiligenceRequest))]
+[JsonSerializable(typeof(SupplierAttestationsResponse))]
+[JsonSerializable(typeof(SaveAttestationRequest))]
 [JsonSerializable(typeof(ReceiptsResponse))]
 [JsonSerializable(typeof(RequestReceiptsRequest))]
 [JsonSerializable(typeof(RequestReceiptsResponse))]

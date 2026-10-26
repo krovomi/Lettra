@@ -8,6 +8,7 @@ using Lettra.Contracts.Suppliers;
 using Lettra.Domain.Common;
 using Lettra.Domain.Parties;
 using Lettra.Domain.SharedKernel;
+using Lettra.Domain.Vigilance;
 
 namespace Lettra.Application.Features.Parties;
 
@@ -87,15 +88,22 @@ internal sealed class VerifySupplierPayeeHandler(
     }
 }
 
-internal sealed class ListPayeeChecksHandler(IPayeeCheckReadStore store)
+internal sealed class ListPayeeChecksHandler(IPayeeCheckReadStore store, IAttestationStore attestations, TimeProvider clock)
     : IQueryHandler<ListPayeeChecksQuery, Result<PagedResponse<PayeeCheckRowResponse>>>
 {
     public async Task<Result<PagedResponse<PayeeCheckRowResponse>>> HandleAsync(ListPayeeChecksQuery query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
         IReadOnlyList<string> needle = PayeeNames.Words(ListSearch.Normalize(query.Search));
+        DateOnly today = LegalCalendar.DateOf(clock.GetUtcNow());
+        HashSet<SupplierId> attestationDue =
+        [
+            .. (await attestations.ListAsync(cancellationToken).ConfigureAwait(false))
+                .Where(e => e.Attestation is { } a && SubcontractorAttestation.BlocksPayment(a.StatusOn(today)))
+                .Select(e => e.SupplierId),
+        ];
         IEnumerable<PayeeCheckRowResponse> rows = (await store.ListPayeesAsync(cancellationToken).ConfigureAwait(false))
-            .Select(PayeeChecks.ToRow)
+            .Select(r => PayeeChecks.ToRow(r, attestationDue.Contains(r.Id)))
             .Where(r => !query.OnlyToReview || r.ToReview)
             .Where(r => needle.Count == 0 || PayeeChecks.Matches(r, needle));
 
@@ -115,26 +123,31 @@ internal sealed class ListPayeeChecksHandler(IPayeeCheckReadStore store)
 /// <summary>Règles des contrôles avant paiement : ce qui met un bénéficiaire « à contrôler », et dans quel ordre.</summary>
 internal static class PayeeChecks
 {
-    public static PayeeCheckRowResponse ToRow(SupplierPayeeRow row)
+    public static PayeeCheckRowResponse ToRow(SupplierPayeeRow row, bool attestationDue = false)
     {
         PayeeMatchDto? holder = row.AccountHolderName is { } name ? (PayeeMatchDto)PayeeNames.Compare(row.Name, name) : null;
         PayeeCheckResponse? check = row.CheckResult is { } result && row.CheckedAt is { } at
             ? new PayeeCheckResponse((PayeeMatchDto)result, at, row.SuggestedName)
             : null;
-        bool toReview = row.IbanChangePending || holder == PayeeMatchDto.NoMatch || check?.Result != PayeeMatchDto.Match;
-        return new PayeeCheckRowResponse(row.Id.Value, row.Name, row.AccountHolderName, IbanChange.Mask(row.Iban), holder, check, row.IbanChangePending, toReview);
+        bool toReview = row.IbanChangePending || attestationDue || holder == PayeeMatchDto.NoMatch || check?.Result != PayeeMatchDto.Match;
+        return new PayeeCheckRowResponse(
+            row.Id.Value, row.Name, row.AccountHolderName, IbanChange.Mask(row.Iban), holder, check, row.IbanChangePending, toReview, attestationDue);
     }
 
-    /// <summary>Du plus risqué au plus sûr : ne correspond pas, IBAN changé, correspond presque, impossible à vérifier, jamais vérifié, vérifié.</summary>
+    /// <summary>
+    /// Du plus risqué au plus sûr : ne correspond pas, IBAN changé, attestation de vigilance à obtenir, correspond presque,
+    /// impossible à vérifier, jamais vérifié, vérifié.
+    /// </summary>
     public static int Risk(PayeeCheckRowResponse row) =>
         row.Check?.Result == PayeeMatchDto.NoMatch || row.HolderNameMatch == PayeeMatchDto.NoMatch ? 0
         : row.IbanChangePending ? 1
+        : row.AttestationDue ? 2
         : row.Check?.Result switch
         {
-            PayeeMatchDto.CloseMatch => 2,
-            PayeeMatchDto.NotPossible => 3,
-            null => 4,
-            _ => 5,
+            PayeeMatchDto.CloseMatch => 3,
+            PayeeMatchDto.NotPossible => 4,
+            null => 5,
+            _ => 6,
         };
 
     public static bool Matches(PayeeCheckRowResponse row, IReadOnlyList<string> needle)

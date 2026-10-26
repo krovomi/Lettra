@@ -66,6 +66,20 @@ public sealed class PayeeChecksPageTests : BunitContext
     }
 
     [Fact]
+    public void Un_sous_traitant_sans_attestation_de_vigilance_renvoie_a_l_ecran_des_attestations()
+    {
+        PayeeCheckRowResponse due = Add("Maçonnerie Roux", check: new(PayeeMatchDto.Match, DateTimeOffset.UnixEpoch, null)) with { ToReview = true, AttestationDue = true };
+        _changes.Payees[0] = due;
+        PayeeCheckRowResponse close = Add("Minoterie Dupuis", check: new(PayeeMatchDto.CloseMatch, DateTimeOffset.UnixEpoch, "Minoterie Dupuy"));
+
+        IRenderedComponent<PayeeChecksPage> page = Open();
+
+        page.Find($"#payee-attestation-{due.SupplierId}").TextContent.Should().Be("Attestation de vigilance à obtenir");
+        page.Find($"#payee-attestation-{due.SupplierId}").GetAttribute("href").Should().Be("attestations");
+        page.FindAll($"#payee-attestation-{close.SupplierId}").Should().BeEmpty();
+    }
+
+    [Fact]
     public void Verifier_un_beneficiaire_annonce_la_reponse_et_relit_la_liste()
     {
         PayeeCheckRowResponse row = Add("Hébergeur Les Pins");

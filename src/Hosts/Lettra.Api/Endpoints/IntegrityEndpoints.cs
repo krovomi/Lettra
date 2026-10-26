@@ -55,6 +55,7 @@ internal static class IntegrityEndpoints
         // Lettre de mission, honoraires et temps passé du dossier ouvert (docs/lettre-de-mission.md).
         api.MapMission();
         api.MapVigilance();
+        api.MapAttestations();
 
         // Tableau de bord du dossier ouvert (docs/tableaux-de-bord.md).
         api.MapDossierPilotage();

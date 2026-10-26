@@ -1975,6 +1975,37 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.ToTable("ClientDueDiligence", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Domain.Vigilance.SubcontractorAttestation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("ContractAmountExclTax")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("IssuedOn")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SecurityCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("VerifiedOn")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SubcontractorAttestations", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Ai.AiJournalRecord", b =>
                 {
                     b.Property<long>("Id")
@@ -3183,6 +3214,15 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                         });
 
                     b.Navigation("Owners");
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Vigilance.SubcontractorAttestation", b =>
+                {
+                    b.HasOne("Lettra.Domain.Parties.Supplier", null)
+                        .WithOne()
+                        .HasForeignKey("Lettra.Domain.Vigilance.SubcontractorAttestation", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Banking.BankJournalLineRecord", b =>

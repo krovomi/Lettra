@@ -46,9 +46,15 @@ public static class DossierIndicatorKeys
     /// </summary>
     public const string ClientDueDiligence = "lcb-ft.fiche";
 
+    /// <summary>
+    /// Fournisseurs dont l'attestation de vigilance URSSAF est exigée mais absente, périmée ou non vérifiée (à ne pas payer
+    /// en l'état), sinon qui expire dans les trente jours ; échéance = la plus proche fin de validité.
+    /// </summary>
+    public const string SupplierAttestations = "fournisseurs.attestations-vigilance";
+
     /// <summary>Ordre des colonnes du tableau (les clés inconnues suivent, par ordre alphabétique).</summary>
     public static IReadOnlyList<string> Known { get; } =
-        [OverdueInvoices, PlatformRejections, EInvoicingReadiness, VatToDeclare, BankUnreconciled, SupplierIbanToVerify, ClientDueDiligence, OpenAlerts, ReviewPending];
+        [OverdueInvoices, PlatformRejections, EInvoicingReadiness, VatToDeclare, BankUnreconciled, SupplierIbanToVerify, SupplierAttestations, ClientDueDiligence, OpenAlerts, ReviewPending];
 }
 
 /// <summary>Urgence d'un indicateur : décide de la couleur et de l'ordre des dossiers.</summary>

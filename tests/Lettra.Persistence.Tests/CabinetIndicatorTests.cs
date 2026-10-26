@@ -1,8 +1,10 @@
 using Lettra.Application.Abstractions.Cabinet;
 using Lettra.Application.Abstractions.Messaging;
+using Lettra.Application.Abstractions.Persistence;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Features.Billing;
 using Lettra.Application.Features.Customers;
+using Lettra.Application.Features.Parties;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Cabinet;
 using Lettra.Contracts.Catalog;
@@ -16,6 +18,7 @@ using Lettra.Domain.Vigilance;
 using Lettra.Infrastructure.Persistence;
 using Lettra.Infrastructure.Persistence.Cabinet;
 using Lettra.Infrastructure.Persistence.EInvoicing;
+using Lettra.Infrastructure.Persistence.Repositories;
 using Lettra.Infrastructure.Persistence.Sqlite;
 using Lettra.Infrastructure.Persistence.Tenancy;
 using Microsoft.EntityFrameworkCore;
@@ -395,6 +398,53 @@ public sealed class CabinetIndicatorTests : IDisposable
             (await Source<ClientDueDiligenceIndicatorSource>(scope).ComputeAsync(today.AddYears(1), default)).Should().ContainSingle()
                 .Which.Level.Should().Be(IndicatorLevel.Critical, "revue d'un risque élevé en retard");
         }
+    }
+
+    [Fact]
+    public async Task Les_attestations_de_vigilance_se_relisent_suivent_leur_fournisseur_et_alimentent_la_vue_cabinet()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        DossierId dossier = harness.AddDossier(DatabaseProvider.Sqlite, Database("vigilance"));
+        DateOnly today = LegalCalendar.DateOf(DateTimeOffset.UtcNow);
+        SupplierId roux, petit;
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            ICommandDispatcher commands = scope.ServiceProvider.GetRequiredService<ICommandDispatcher>();
+            roux = (await commands.SendAsync(new CreateSupplierCommand(dossier, Supplier("Maçonnerie Roux")), default)).Value;
+            petit = (await commands.SendAsync(new CreateSupplierCommand(dossier, Supplier("Charpente Petit")), default)).Value;
+            (await Source<SupplierAttestationsIndicatorSource>(scope).ComputeAsync(today, default)).Should().BeEmpty("aucun fournisseur suivi");
+            IAttestationStore store = scope.ServiceProvider.GetRequiredService<IAttestationStore>();
+            await store.AddAsync(SubcontractorAttestation.Create(roux, new(18_000m, null, null, null), today, DateTimeOffset.UtcNow).Value, default);
+            await store.AddAsync(SubcontractorAttestation.Create(petit, new(9_000m, today, "ab12 cd34 ef56", null), today, DateTimeOffset.UtcNow).Value, default);
+            await (await scope.ServiceProvider.GetRequiredService<TenantDbSession>().GetAsync(default)).SaveChangesAsync();
+        }
+
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            (await Source<SupplierAttestationsIndicatorSource>(scope).ComputeAsync(today, default)).Should().Equal(
+                new DossierIndicator(DossierIndicatorKeys.SupplierAttestations, 2, IndicatorLevel.Warning, today.AddMonths(6).AddDays(-1)));
+            SubcontractorAttestation attestation = (await scope.ServiceProvider.GetRequiredService<IAttestationStore>().FindAsync(petit, default))!;
+            attestation.SecurityCode.Should().Be("AB12CD34EF56");
+            attestation.ContractAmountExclTax.Should().Be(9_000m);
+            attestation.Update(new(9_000m, today, "AB12CD34EF56", today), today, DateTimeOffset.UtcNow).IsSuccess.Should().BeTrue();
+            await (await scope.ServiceProvider.GetRequiredService<TenantDbSession>().GetAsync(default)).SaveChangesAsync();
+            (await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>().SendAsync(new DeleteSupplierCommand(dossier, roux, null), default))
+                .IsSuccess.Should().BeTrue();
+        }
+
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            IReadOnlyList<SupplierAttestationEntry> entries = await scope.ServiceProvider.GetRequiredService<IAttestationStore>().ListAsync(default);
+            entries.Should().ContainSingle("le fournisseur supprimé sort de la liste").Which.SupplierName.Should().Be("Charpente Petit");
+            entries[0].Attestation!.Version.Should().Be(2);
+            entries[0].Attestation!.VerifiedOn.Should().Be(today);
+            (await Source<SupplierAttestationsIndicatorSource>(scope).ComputeAsync(today, default)).Should().BeEmpty("l'attestation restante est vérifiée");
+            (await Source<SupplierAttestationsIndicatorSource>(scope).ComputeAsync(today.AddMonths(6), default)).Should().ContainSingle()
+                .Which.Level.Should().Be(IndicatorLevel.Critical, "attestation périmée");
+        }
+
+        static Supplier.Draft Supplier(string name) =>
+            new(name, null, null, null, null, null, "Rue Neuve 1", null, "1000", "Bruxelles", "BE");
     }
 
     public void Dispose()
