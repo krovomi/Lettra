@@ -13,7 +13,7 @@ namespace Lettra.UI.Tests.Insights;
 [Collection("culture")]
 public sealed class DossierAsOfPageTests : BunitContext
 {
-    private static readonly TimeZoneInfo Paris = TimeZoneInfo.FindSystemTimeZoneById("Europe/Paris");
+    private static readonly TimeZoneInfo Paris = ParisClock.Paris;
     private readonly FakeInsightsGateway _insights = new();
 
     public DossierAsOfPageTests()
@@ -165,11 +165,4 @@ public sealed class DossierAsOfPageTests : BunitContext
     [Fact]
     public void L_heure_vecue_deux_fois_a_l_automne_prend_la_premiere() =>
         AsOfTime.Instant(new DateOnly(2026, 10, 25), new TimeOnly(2, 30), Paris).Should().Be(new DateTimeOffset(2026, 10, 25, 2, 30, 0, TimeSpan.FromHours(2)));
-
-    private sealed class ParisClock(DateTimeOffset now) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => now;
-
-        public override TimeZoneInfo LocalTimeZone => Paris;
-    }
 }

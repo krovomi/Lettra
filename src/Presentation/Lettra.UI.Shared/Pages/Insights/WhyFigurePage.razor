@@ -1,0 +1,218 @@
+@page "/why"
+@inject IInsightsGateway Insights
+@inject TimeProvider Clock
+@inject IStringLocalizer<SharedResource> L
+@* « Pourquoi ce chiffre ? » : un chiffre de l'accueil (chiffre d'affaires du mois, montant en retard) déroulé jusqu'aux
+   pièces qui le composent, avec la règle en mots simples. Le serveur fait le calcul avec les règles mêmes de l'accueil ;
+   l'écran le met en phrases. Rien n'est écrit. *@
+
+<PageTitle>@L["Why.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Why.Title"]</h1>
+        <p class="lettra-muted">@L["Why.Subtitle"]</p>
+    </div>
+</div>
+
+<nav class="lt-subnav" aria-label="@L["Why.Figures"]">
+    @foreach (ExplainedFigureDto figure in Enum.GetValues<ExplainedFigureDto>())
+    {
+        <a class="@($"lt-subnav-link{(figure == Figure ? " active" : string.Empty)}")" href="@Href(figure, null)" id="@($"why-tab-{figure}")"
+           aria-current="@(figure == Figure ? "page" : null)">
+            <Icon Name="@(figure == ExplainedFigureDto.MonthRevenue ? "trending-up" : "calendar-clock")" Size="18" /> @L[$"Why.Figure.{figure}"]
+        </a>
+    }
+</nav>
+
+<GeneralErrors Errors="_errors" />
+
+@if (_loading)
+{
+    <ExplorerSkeleton Rows="5" />
+}
+else if (_view is { } view)
+{
+    <section class="lettra-card lt-why-head" id="why-result" aria-labelledby="why-value">
+        @if (view.Month is { } month)
+        {
+            <div class="lt-tax-nav">
+                <a class="lettra-button is-ghost" href="@Href(view.Figure, month.AddMonths(-1))" id="why-previous" aria-label="@L["Tax.Period.Previous"]"><Icon Name="chevrons-left" Size="18" /></a>
+                <div class="lt-tax-period">
+                    <h2 id="why-period">@TaxText.Month(month)</h2>
+                </div>
+                <a class="lettra-button is-ghost" href="@Href(view.Figure, month.AddMonths(1))" id="why-next" aria-label="@L["Tax.Period.Next"]"><Icon Name="chevrons-right" Size="18" /></a>
+            </div>
+        }
+        <p class="lt-why-value" id="why-value">
+            <strong>@ExplorerText.Money(view.Value)</strong>
+            <span class="lettra-muted">@L[$"Why.Value.{view.Figure}"]</span>
+        </p>
+        <p id="why-rule">@Rule(view)</p>
+        <ol class="lt-why-equation" id="why-equation" aria-label="@L["Why.Equation"]">
+            @foreach ((string label, decimal amount, string css) in Terms(view))
+            {
+                <li class="@css"><span>@label</span><strong>@ExplorerText.Money(amount)</strong></li>
+            }
+        </ol>
+        <p class="lettra-hint" id="why-same">@L["Why.Same"] <a href="">@L["Nav.Home"]</a></p>
+    </section>
+
+    <section class="lettra-card" aria-labelledby="why-lines-title">
+        <h2 id="why-lines-title">@L["Why.Lines"]</h2>
+        @if (view.Lines.Count == 0)
+        {
+            <p class="lettra-muted" id="why-empty">@L[$"Why.Empty.{view.Figure}"]</p>
+        }
+        else
+        {
+            <ListFilterBar Id="why-filters" ActiveCount="@(ListSearch.Normalize(_search) is null ? 0 : 1)" OnReset="() => { _search = null; _page = 1; }">
+                <ChildContent>
+                    <div class="lt-filter">
+                        <label for="why-search">@L["Why.Search"]</label>
+                        <input id="why-search" type="search" @bind="_search" @bind:event="oninput" @bind:after="() => _page = 1" autocomplete="off" />
+                    </div>
+                </ChildContent>
+                <More>
+                    <SortSelect Id="why-sort" Options="_sortOptions" State="_sort" OnSort="() => _page = 1" />
+                </More>
+            </ListFilterBar>
+            <p class="lettra-muted" id="why-count">@string.Format(Culture, L["Why.Count"], Lines.Count, view.Lines.Count)</p>
+            <ul class="lt-asof-rows lt-why-rows" id="why-lines">
+                @foreach (ExplanationLineResponse line in Lines.Skip((_page - 1) * PageSize).Take(PageSize))
+                {
+                    <li @key="line.DocumentId" class="@(line.Kind == ExplanationLineKindDto.CreditNote ? "is-credit" : null)">
+                        <span class="lt-asof-main">
+                            <a href="@($"invoices/{line.DocumentId}")">@line.Number</a>
+                            <small class="lettra-muted">@line.CustomerName · @Detail(line)</small>
+                        </span>
+                        <span class="lt-asof-amount lt-why-terms">@Terms(line)</span>
+                        <span class="lt-asof-amount"><strong>@ExplorerText.Money(line.Amount)</strong></span>
+                    </li>
+                }
+            </ul>
+            <ListPager Id="why-pager" Page="_page" Count="Lines.Count" Size="PageSize" OnPage="p => _page = p" />
+        }
+    </section>
+}
+
+<Collapsible Id="why-rules" Title="@L["Why.Rules"]" InitiallyOpen="false">
+    <ul>
+        <li>@L["Why.Rule.Deterministic"]</li>
+        <li>@L["Why.Rule.MonthRevenue"]</li>
+        <li>@L["Why.Rule.Overdue"]</li>
+        <li>@L["Why.Rule.Collected"]</li>
+    </ul>
+</Collapsible>
+
+@code {
+    private const int PageSize = 20;
+
+    private static readonly Dictionary<LineSort, Func<ExplanationLineResponse, object?>> SortKeys = new()
+    {
+        [LineSort.Date] = l => l.Date,
+        [LineSort.Amount] = l => l.Amount,
+        [LineSort.Customer] = l => l.CustomerName,
+    };
+
+    private FigureExplanationResponse? _view;
+    private bool _loading = true;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private string? _search;
+    private int _page = 1;
+    private readonly SortState<LineSort> _sort = new(LineSort.Date, SortDirectionDto.Ascending);
+    private IReadOnlyList<SortOption<LineSort>> _sortOptions = [];
+
+    private enum LineSort
+    {
+        Date,
+        Amount,
+        Customer,
+    }
+
+    [SupplyParameterFromQuery(Name = "figure")] public string? FigureText { get; set; }
+
+    [SupplyParameterFromQuery(Name = "month")] public string? MonthText { get; set; }
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    /// <summary>Le chiffre demandé dans l'adresse ; le chiffre d'affaires du mois par défaut.</summary>
+    private ExplainedFigureDto Figure =>
+        Enum.TryParse(FigureText, ignoreCase: true, out ExplainedFigureDto figure) && Enum.IsDefined(figure) ? figure : ExplainedFigureDto.MonthRevenue;
+
+    private IReadOnlyList<ExplanationLineResponse> Lines =>
+        ListSorting.Sort(
+            (_view?.Lines ?? []).Where(l => ListSorting.Matches(l.Number + " " + l.CustomerName, ListSearch.Normalize(_search))),
+            _sort,
+            SortKeys);
+
+    protected override void OnInitialized() =>
+        _sortOptions =
+        [
+            new(LineSort.Date, L["Why.Sort.Date"]),
+            new(LineSort.Amount, L["Why.Sort.Amount"], SortDirectionDto.Descending),
+            new(LineSort.Customer, L["Billing.Column.Customer"]),
+        ];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        (_view, _loading) = (null, true);
+        (_search, _page) = (null, 1);
+        DateOnly? month = Figure == ExplainedFigureDto.MonthRevenue ? DateText.ParseIsoMonth(MonthText) : null;
+        OperationResult<FigureExplanationResponse> result = await Insights.ExplainFigureAsync(Figure, month, CancellationToken.None);
+        _errors = result.Errors;
+        (_view, _loading) = (result.Value, false);
+    }
+
+    private static string Href(ExplainedFigureDto figure, DateOnly? month) =>
+        month is { } m ? $"why?figure={figure}&month={m:yyyy-MM}" : $"why?figure={figure}";
+
+    /// <summary>La règle du chiffre, en une phrase avec ses nombres.</summary>
+    private string Rule(FigureExplanationResponse view)
+    {
+        int invoices = view.Lines.Count(l => l.Kind == ExplanationLineKindDto.Invoice);
+        int credits = view.Lines.Count - invoices;
+        if (view.Figure == ExplainedFigureDto.Overdue)
+        {
+            return string.Format(Culture, L["Why.Rule.Text.Overdue"], invoices, view.Today.ToString("d", Culture));
+        }
+
+        DateOnly first = view.Month ?? view.Today;
+        DateOnly last = first.AddMonths(1).AddDays(-1);
+        DateOnly until = view.Today < last ? view.Today : last;
+        return until < first
+            ? string.Format(Culture, L["Why.Rule.Text.Future"], TaxText.Month(first))
+            : string.Format(Culture, L[credits == 0 ? "Why.Rule.Text.MonthRevenue.NoCredit" : "Why.Rule.Text.MonthRevenue"], invoices, first.ToString("d", Culture), until.ToString("d", Culture), credits);
+    }
+
+    /// <summary>Les termes de l'opération : ce qui s'ajoute, ce qui se retranche et le résultat.</summary>
+    private IEnumerable<(string Label, decimal Amount, string Css)> Terms(FigureExplanationResponse view)
+    {
+        if (view.Figure == ExplainedFigureDto.MonthRevenue)
+        {
+            yield return (L["Why.Term.Invoices"], view.Lines.Where(l => l.Kind == ExplanationLineKindDto.Invoice).Sum(l => l.Amount), "is-plus");
+            yield return (L["Why.Term.CreditNotes"], -view.Lines.Where(l => l.Kind == ExplanationLineKindDto.CreditNote).Sum(l => l.Amount), "is-minus");
+        }
+        else
+        {
+            yield return (L["Why.Term.Total"], view.Lines.Sum(l => l.TotalInclTax ?? 0m), "is-plus");
+            yield return (L["Why.Term.Credited"], view.Lines.Sum(l => l.CreditedInclTax ?? 0m), "is-minus");
+            yield return (L["Why.Term.Collected"], view.Lines.Sum(l => l.CollectedInclTax ?? 0m), "is-minus");
+        }
+
+        yield return (L[$"Why.Figure.{view.Figure}"], view.Value, "is-result");
+    }
+
+    private string Detail(ExplanationLineResponse line) => line switch
+    {
+        { DaysLate: { } days, Date: { } due } => string.Format(Culture, L["Why.Line.Late"], due.ToString("d", Culture), days),
+        { Kind: ExplanationLineKindDto.CreditNote, Date: { } date } => string.Format(Culture, L["Why.Line.CreditNote"], date.ToString("d", Culture)),
+        { Date: { } date } => string.Format(Culture, L["Why.Line.Issued"], date.ToString("d", Culture)),
+        _ => string.Empty,
+    };
+
+    /// <summary>Le calcul d'une pièce en retard : total, moins les avoirs, moins l'encaissé.</summary>
+    private string Terms(ExplanationLineResponse line) => line.TotalInclTax is { } total
+        ? string.Format(Culture, L["Why.Line.Terms"], ExplorerText.Money(total), ExplorerText.Money(line.CreditedInclTax ?? 0m), ExplorerText.Money(line.CollectedInclTax ?? 0m))
+        : L[line.Kind == ExplanationLineKindDto.CreditNote ? "Why.Line.Minus" : "Why.Line.Plus"];
+}
