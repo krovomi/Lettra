@@ -18,7 +18,7 @@ namespace Lettra.Ai.Orchestration;
 /// par les mêmes contrôles : politique du cabinet, droits, minimisation, pseudonymisation, outils sans pouvoir,
 /// validation des entrées, journal, contrôle de la réponse. Le moteur ne fait que proposer.
 /// </summary>
-internal sealed partial class AccountingAssistant(
+internal sealed class AccountingAssistant(
     IAiUsagePolicy policy,
     INamedEntityDetection namedEntities,
     IAiEngineFactory engines,
@@ -288,27 +288,14 @@ internal sealed partial class AccountingAssistant(
             return (AiToolResult.Error($"Outil « {call.Name} » indisponible. Outils disponibles : {string.Join(", ", available.Select(t => t.Name))}."), events);
         }
 
-        if (JsonSchemaValidator.Validate(call.Input, tool.InputSchema) is { } invalid)
+        if (ToolInvocation.Reject(tool, call.Input) is { } invalid)
         {
             await AuditAsync(request, AiAuditKind.ToolRejected, $"{call.Name} : entrée invalide ({invalid})", engineName, cancellationToken).ConfigureAwait(false);
             events.Add(new AssistantToolUsedEvent(tool.Name, tool.Risk, Succeeded: false));
             return (AiToolResult.Error($"Paramètres invalides : {invalid}"), events);
         }
 
-        AiToolResult result;
-        try
-        {
-            result = await tool
-                .InvokeAsync(tool.ReceivesRealValues ? privacy.RestoreJson(call.Input) : call.Input, context, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or InvalidOperationException or FormatException or KeyNotFoundException
-            && !cancellationToken.IsCancellationRequested)
-        {
-            // Le message technique ne part ni vers le moteur ni vers les journaux : il peut contenir des données.
-            LogToolFailed(logger, tool.Name, exception.GetType().Name);
-            result = AiToolResult.Error("L'outil a échoué.");
-        }
+        AiToolResult result = await ToolInvocation.RunAsync(tool, call.Input, context, privacy, logger, cancellationToken).ConfigureAwait(false);
 
         // Le journal garde l'entrée telle que le moteur l'a écrite, donc pseudonymisée.
         await AuditAsync(request, AiAuditKind.ToolCall, $"{tool.Name} {call.Input.GetRawText()} → {(result.IsError ? "erreur" : "ok")}", engineName, cancellationToken).ConfigureAwait(false);
@@ -334,7 +321,4 @@ internal sealed partial class AccountingAssistant(
 
     private ValueTask AuditAsync(AssistantRequest request, AiAuditKind kind, string detail, string? engine, CancellationToken cancellationToken) =>
         audit.AppendAsync(new AiAuditEntry(time.GetUtcNow(), request.Dossier, request.UserId, kind, detail, engine), cancellationToken);
-
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Outil de l'assistant {Tool} en échec ({ExceptionType}).")]
-    private static partial void LogToolFailed(ILogger logger, string tool, string exceptionType);
 }

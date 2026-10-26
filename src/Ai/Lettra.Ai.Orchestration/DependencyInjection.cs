@@ -24,6 +24,10 @@ public static class DependencyInjection
 
         // Par requête : le client HTTP de la consultation web vient de la fabrique à chaque fois (rotation DNS).
         services.AddScoped(sp => new ToolRegistry(sp.GetServices<IAiTool>()));
+
+        // Assistant IA du poste (MCP) : les sessions et leurs pseudonymes vivent en mémoire, le temps d'une conversation.
+        services.TryAddSingleton<McpSessions>();
+        services.Replace(ServiceDescriptor.Scoped<IMcpServer, McpServer>());
         return services;
     }
 }

@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using Lettra.Contracts.Assistant;
 using Lettra.Contracts.Common;
 using Lettra.Domain.Common;
@@ -52,4 +53,12 @@ internal sealed class UnavailableAccountingAssistant : IAccountingAssistant
         await Task.CompletedTask.ConfigureAwait(false);
         yield return new AssistantUnavailableEvent(ErrorCodes.Ai.EngineUnavailable);
     }
+}
+
+internal sealed class NoMcpServer : IMcpServer
+{
+    public Task<McpReply> HandleAsync(string? sessionId, JsonElement message, McpCaller caller, CancellationToken cancellationToken) =>
+        Task.FromResult(new McpReply(404));
+
+    public bool End(string sessionId, McpCaller caller) => false;
 }

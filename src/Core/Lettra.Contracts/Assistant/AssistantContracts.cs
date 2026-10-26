@@ -22,6 +22,12 @@ public enum AssistantFeature
 
     /// <summary>Point 6 : questions TVA et réglementaires.</summary>
     RegulatoryQuestions = 6,
+
+    /// <summary>
+    /// Lettra dans l'assistant IA du poste : un serveur MCP en lecture seule, avec les droits de l'utilisateur, des noms
+    /// pseudonymisés et chaque appel journalisé. L'IA est celle du poste, pas celle de Lettra ; l'activer revient au DPO.
+    /// </summary>
+    ExternalAssistant = 7,
 }
 
 /// <summary>Pouvoir d'un outil. Il n'existe volontairement ni « valide », ni « émet », ni « supprime » (ADR-0006, ADR-0012).</summary>

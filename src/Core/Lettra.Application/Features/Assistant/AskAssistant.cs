@@ -55,7 +55,8 @@ public static class AiErrors
             return DossierExcluded;
         }
 
-        return settings.Engine == AiEngineKind.None ? EngineUnavailable : null;
+        // L'assistant externe apporte son propre moteur : Lettra ne fait que répondre à ses appels d'outils.
+        return settings.Engine == AiEngineKind.None && feature != AssistantFeature.ExternalAssistant ? EngineUnavailable : null;
     }
 }
 
@@ -138,7 +139,9 @@ internal sealed class GetAssistantStatusHandler(
         IAiEngine? engine = engines.Resolve(settings.Engine);
         AssistantFeature[] features = engine is null
             ? []
-            : [.. Enum.GetValues<AssistantFeature>().Where(f => AiErrors.CheckPolicy(settings, f, query.Dossier, namedEntities) is null)];
+            : [.. Enum.GetValues<AssistantFeature>()
+                .Where(f => f != AssistantFeature.ExternalAssistant) // pas dans le panneau : il se branche dans l'IA du poste
+                .Where(f => AiErrors.CheckPolicy(settings, f, query.Dossier, namedEntities) is null)];
         return new AssistantStatusResponse(features, features.Length == 0 ? null : engine?.Name);
     }
 }
