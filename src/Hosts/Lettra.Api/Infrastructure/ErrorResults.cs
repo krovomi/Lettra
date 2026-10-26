@@ -2,6 +2,7 @@ using Lettra.Application.Abstractions.Persistence;
 using Lettra.Application.Mapping;
 using Lettra.Contracts.Common;
 using Lettra.Domain.Common;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Lettra.Api.Infrastructure;
 
@@ -40,9 +41,18 @@ internal static class ErrorResults
         return TypedResults.Problem(statusCode: status, title: first.Code, extensions: extensions);
     }
 
-    public static IResult Unexpected() =>
+    public static IResult Unexpected() => Problem(StatusCodes.Status500InternalServerError, ErrorCodes.Api.Unexpected);
+
+    /// <summary>
+    /// La réponse à une exception non traitée. Une requête que la liaison des paramètres n'a pas pu lire (une date ou un
+    /// nombre illisible) garde son statut 4xx : elle n'arrive ici que là où la liaison lève (en développement).
+    /// </summary>
+    public static IResult FromException(Exception? exception) =>
+        exception is BadHttpRequestException bad ? Problem(bad.StatusCode, ErrorCodes.Api.BadRequest) : Unexpected();
+
+    private static ProblemHttpResult Problem(int status, string code) =>
         TypedResults.Problem(
-            statusCode: StatusCodes.Status500InternalServerError,
-            title: ErrorCodes.Api.Unexpected,
-            extensions: new Dictionary<string, object?>(StringComparer.Ordinal) { ["code"] = ErrorCodes.Api.Unexpected });
+            statusCode: status,
+            title: code,
+            extensions: new Dictionary<string, object?>(StringComparer.Ordinal) { ["code"] = code });
 }

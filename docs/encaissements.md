@@ -8,7 +8,8 @@ et le rapprochement avec le relevé de la banque. Deux écrans, dans le groupe *
   contre-passation ;
 - **Rapprochement bancaire** (`/bank`) : l'import d'un relevé, les propositions de Lettra, leur validation.
 
-Aucune connexion à la banque : les relevés viennent de fichiers exportés depuis l'espace en ligne de la banque.
+Les relevés viennent de fichiers exportés depuis l'espace en ligne de la banque, ou d'un compte relié par un agrégateur
+(voir [Banque connectée](banque-connectee.md)).
 
 ## Saisir un règlement
 

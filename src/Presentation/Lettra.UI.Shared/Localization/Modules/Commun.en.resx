@@ -9,6 +9,7 @@
   <data name="Error.Address.CityRequired" xml:space="preserve"><value>The city is required.</value></data>
   <data name="Error.Address.LineRequired" xml:space="preserve"><value>The address is required.</value></data>
   <data name="Error.Address.PostalCodeInvalid" xml:space="preserve"><value>This postal code is not valid (5 digits in France).</value></data>
+  <data name="Error.Api.BadRequest" xml:space="preserve"><value>The request is malformed: a parameter cannot be read.</value></data>
   <data name="Error.Api.IdempotencyKeyReused" xml:space="preserve"><value>This operation was already sent with different content.</value></data>
   <data name="Error.Api.Unexpected" xml:space="preserve"><value>An unexpected error occurred. Please try again.</value></data>
   <data name="Error.Api.Unreachable" xml:space="preserve"><value>The server cannot be reached. Check the connection.</value></data>
