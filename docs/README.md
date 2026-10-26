@@ -20,6 +20,7 @@ dans le [README](../README.md#principes-de-conception), le détail, les mesures 
 - [Déclarations : TVA, DES et calendrier fiscal](declarations-fiscales.md)
 - [Délais de paiement](delais-de-paiement.md)
 - [Démo commentée](demo-commentee.md)
+- [En bref : les chiffres du mois du dirigeant](en-bref.md)
 - [Encaissements, rapprochement bancaire et lettrage](encaissements.md)
 - [Espace client : paiement en ligne et devis signé](espace-client.md)
 - [Factures récurrentes](factures-recurrentes.md)
