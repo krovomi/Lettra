@@ -98,6 +98,7 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(BillingDashboardResponse))]
 [JsonSerializable(typeof(CabinetPilotageResponse))]
 [JsonSerializable(typeof(AdministrationPilotageResponse))]
+[JsonSerializable(typeof(PeerComparisonResponse))]
 [JsonSerializable(typeof(DossierReviewResponse))]
 [JsonSerializable(typeof(SetDossierReviewItemRequest))]
 [JsonSerializable(typeof(SetUserAccountRequest))]

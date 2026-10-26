@@ -15,11 +15,13 @@ public static class KpiMetrics
     public const string DaysSalesOutstanding = "lettra_kpi_dso_days";
     public const string OverdueReceivables = "lettra_kpi_overdue_receivables_ratio";
     public const string Collection = "lettra_kpi_collection_ratio";
+    public const string CreditNotes = "lettra_kpi_credit_note_ratio";
     public const string TopCustomerShare = "lettra_kpi_top_customer_share_ratio";
     public const string ActiveCustomers = "lettra_kpi_active_customers";
     public const string QuoteConversion = "lettra_kpi_quote_conversion_ratio";
     public const string QuotesPending = "lettra_kpi_quotes_pending";
     public const string QuotesExpiringSoon = "lettra_kpi_quotes_expiring_soon";
+    public const string DossierSector = "lettra_kpi_dossier_sector";
 
     // Vue cabinet (les compteurs de la passe quotidienne, relus dans la base Catalog).
     public const string CabinetIndicatorCount = "lettra_kpi_cabinet_indicator_count";
@@ -53,6 +55,9 @@ public static class KpiMetrics
 
         /// <summary>Gravité d'une alerte : <c>S1</c> à <c>S4</c>.</summary>
         public const string Severity = "severity";
+
+        /// <summary>Division NAF du dossier (<c>62</c>), tirée du code de la fiche entreprise.</summary>
+        public const string Sector = "sector";
     }
 
     /// <summary>
@@ -61,8 +66,8 @@ public static class KpiMetrics
     /// </summary>
     public static IReadOnlySet<string> Business { get; } = new HashSet<string>(StringComparer.Ordinal)
     {
-        RevenueIndex, InvoicesIssued, RevenueTrend, DaysSalesOutstanding, OverdueReceivables, Collection, TopCustomerShare,
-        ActiveCustomers, QuoteConversion, QuotesPending, QuotesExpiringSoon, CabinetIndicatorCount, CabinetIndicatorLevel,
+        RevenueIndex, InvoicesIssued, RevenueTrend, DaysSalesOutstanding, OverdueReceivables, Collection, CreditNotes, TopCustomerShare,
+        ActiveCustomers, QuoteConversion, QuotesPending, QuotesExpiringSoon, DossierSector, CabinetIndicatorCount, CabinetIndicatorLevel,
         CabinetIndicatorDueDays,
     };
 
@@ -76,11 +81,13 @@ public static class KpiMetrics
         [DaysSalesOutstanding] = "Délai moyen de paiement des clients (DSO), en jours, sur les ventes TTC des 90 derniers jours.",
         [OverdueReceivables] = "Part des créances clients échues dans le reste à encaisser.",
         [Collection] = "Part encaissée des factures émises sur 12 mois (hors avoirs).",
+        [CreditNotes] = "Avoirs des 12 derniers mois rapportés aux factures et acomptes de la même période (TTC).",
         [TopCustomerShare] = "Part du premier client dans le chiffre d'affaires HT des 12 derniers mois.",
         [ActiveCustomers] = "Clients facturés dans les 12 derniers mois.",
         [QuoteConversion] = "Devis acceptés sur les devis tranchés des 12 derniers mois (acceptés, refusés ou expirés).",
         [QuotesPending] = "Devis envoyés en attente de réponse, pas encore expirés.",
         [QuotesExpiringSoon] = "Devis en attente qui expirent dans les 7 jours.",
+        [DossierSector] = "Secteur du dossier (toujours 1) : la division NAF de sa fiche entreprise, pour la comparaison aux pairs.",
         [CabinetIndicatorCount] = "Compteur d'un indicateur de la vue cabinet (calcul quotidien).",
         [CabinetIndicatorLevel] = "Urgence d'un indicateur de la vue cabinet : 0 rien, 1 en attente, 2 à traiter, 3 urgent.",
         [CabinetIndicatorDueDays] = "Jours avant l'échéance d'un indicateur de la vue cabinet (négatif : en retard).",

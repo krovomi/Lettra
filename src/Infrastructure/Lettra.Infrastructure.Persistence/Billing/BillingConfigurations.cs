@@ -150,6 +150,7 @@ internal sealed class CompanyProfileConfiguration : IEntityTypeConfiguration<Com
         builder.Property(p => p.Iban).HasConversion(v => v!.Value, v => Iban.Create(v).Value).HasMaxLength(34);
         builder.Property(p => p.Bic).HasMaxLength(11);
         builder.Property(p => p.AccountHolderName).HasMaxLength(Domain.Parties.Supplier.MaxAccountHolderLength);
+        builder.Property(p => p.ActivityCode).HasMaxLength(NafCode.Length);
         builder.Ignore(p => p.PayeeName);
         builder.Property(p => p.VatDeclarationRegime).HasConversion<int?>();
         builder.IsVersioned();

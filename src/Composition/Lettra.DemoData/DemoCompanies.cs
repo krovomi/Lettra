@@ -30,7 +30,9 @@ internal sealed record DemoCompany(
     int RecurringCustomers,
     IReadOnlyList<string> QuoteSubjects,
     IReadOnlyList<DemoItemTemplate> Items,
-    IReadOnlyList<string> SupplierActivities);
+    IReadOnlyList<string> SupplierActivities,
+    string? ActivityCode = null,
+    int Variant = 0);
 
 internal static class DemoCompanies
 {
@@ -91,7 +93,8 @@ internal static class DemoCompanies
             new("Formation", "Accompagnement individuel", null, true, "HUR", 80m, "FR-20"),
             new("Infogérance", "Messagerie professionnelle (par compte)", null, true, "MON", 6m, "FR-20"),
         ],
-        ["Hébergeur", "Grossiste informatique", "Éditeur de logiciels", "Opérateur télécom", "Fournitures de bureau", "Location de salles", "Expert-comptable", "Assurance"]);
+        ["Hébergeur", "Grossiste informatique", "Éditeur de logiciels", "Opérateur télécom", "Fournitures de bureau", "Location de salles", "Expert-comptable", "Assurance"],
+        ActivityCode: "62.02A");
 
     private static readonly DemoCompany Building = new(
         DemoBusiness.Building,
@@ -142,7 +145,8 @@ internal static class DemoCompanies
             new("Fournitures", "Location d'échafaudage", null, true, "DAY", 75m, "FR-20"),
             new("Toiture", "Réfection de toiture en tuiles", null, true, "MTK", 95m, "FR-10"),
         ],
-        ["Négoce de matériaux", "Location de matériel", "Grossiste en carrelage", "Menuiserie industrielle", "Grossiste électricité", "Plombier sous-traitant", "Déchetterie professionnelle", "Assurance décennale", "Garage"]);
+        ["Négoce de matériaux", "Location de matériel", "Grossiste en carrelage", "Menuiserie industrielle", "Grossiste électricité", "Plombier sous-traitant", "Déchetterie professionnelle", "Assurance décennale", "Garage"],
+        ActivityCode: "43.39Z");
 
     private static readonly DemoCompany Trading = new(
         DemoBusiness.Trading,
@@ -194,5 +198,44 @@ internal static class DemoCompanies
             new("Frais", "Charcuterie corse (assortiment)", null, false, "KGM", 32m, "FR-5.5"),
             new("Emballages", "Barquettes compostables (lot de 200)", null, false, "C62", 44m, "FR-20"),
         ],
-        ["Producteur d'huile d'olive", "Coopérative agricole", "Transporteur frigorifique", "Fabricant d'emballages", "Grossiste en boissons", "Loueur de véhicules", "Entrepôt logistique", "Assurance", "Maintenance du froid", "Fromagerie", "Torréfacteur", "Expert-comptable"]);
+        ["Producteur d'huile d'olive", "Coopérative agricole", "Transporteur frigorifique", "Fabricant d'emballages", "Grossiste en boissons", "Loueur de véhicules", "Entrepôt logistique", "Assurance", "Maintenance du froid", "Fromagerie", "Torréfacteur", "Expert-comptable"],
+        ActivityCode: "46.39B");
+
+    /// <summary>
+    /// Cinq petites sociétés de services numériques (division NAF 62), comme le dossier principal : avec lui, elles
+    /// donnent à la comparaison aux pairs les cinq dossiers du même secteur qu'il lui faut. Chacune a son nom, sa ville,
+    /// son rythme et son tirage, sur le catalogue et la clientèle du métier. Déclarées après les trois métiers : elles
+    /// partent de Services, qui doit être initialisé avant elles.
+    /// </summary>
+    public static IReadOnlyList<DemoCompany> Peers { get; } =
+    [
+        Peer(1, "Pixel et Code Studio", "SARL", 1_011, "9 quai des Chartrons", new DemoCity("33000", "Bordeaux"), 30, 40, 0.5, "62.01Z"),
+        Peer(2, "Datacime Ingénierie", "SAS", 1_012, "31 allée des Demoiselles", new DemoCity("31000", "Toulouse"), 45, 30, 0.7, "62.02A"),
+        Peer(3, "Réseaux et Services de l'Ouest", "SARL", 1_013, "12 rue de la Monnaie", new DemoCity("35000", "Rennes"), 30, 35, 0.58, "62.03Z"),
+        Peer(4, "Logiciels du Beffroi", "SAS", 1_014, "5 place du Théâtre", new DemoCity("59000", "Lille"), 60, 25, 0.45, "62.01Z"),
+        Peer(5, "Infogérance des Alpes", "EURL", 1_015, "40 cours Berriat", new DemoCity("38000", "Grenoble"), 30, 30, 0.66, "62.02B"),
+    ];
+
+    /// <summary>Le code NAF de chaque entreprise du jeu, par SIREN : de quoi compléter un dossier chargé avant lui.</summary>
+    public static IReadOnlyDictionary<string, string> ActivityCodesBySiren { get; } =
+        new[] { Services, Building, Trading }.Concat(Peers)
+            .ToDictionary(c => FrenchIdentifiers.Siren(c.SirenOrdinal), c => c.ActivityCode!, StringComparer.Ordinal);
+
+    private static DemoCompany Peer(
+        int variant, string name, string legalForm, int sirenOrdinal, string address, DemoCity city, int paymentDays, int quotesPerYear, double acceptance, string activity) =>
+        Services with
+        {
+            Name = name,
+            LegalForm = legalForm,
+            ShareCapital = 5_000m * variant,
+            SirenOrdinal = sirenOrdinal,
+            AddressLine1 = address,
+            City = city,
+            PaymentDays = paymentDays,
+            QuotesPerYear = quotesPerYear,
+            AcceptanceRate = acceptance,
+            RecurringCustomers = 2 + (variant % 3),
+            ActivityCode = activity,
+            Variant = variant,
+        };
 }

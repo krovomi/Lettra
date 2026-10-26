@@ -62,11 +62,11 @@ internal sealed class DemoDirectoryData(IReadOnlyDictionary<string, CompanySearc
         DateOnly today = new(2026, 1, 15);
         int months = Math.Clamp(options.Months, 2, 36);
         Dictionary<string, CompanySearchResult> companies = new(StringComparer.Ordinal);
-        foreach (DemoBusiness business in Enum.GetValues<DemoBusiness>())
+        foreach (DemoCompany company in Enum.GetValues<DemoBusiness>().Select(DemoCompanies.For).Concat(DemoCompanies.Peers))
         {
-            DemoScenario scenario = DemoScenarioGenerator.Generate(business, options.RandomSeed, today, months);
+            DemoScenario scenario = DemoScenarioGenerator.Generate(company, options.RandomSeed, today, months);
             Add(companies, scenario.Profile.Siren, scenario.Profile.Siret, scenario.Profile.Name, scenario.Profile.AddressLine1,
-                scenario.Profile.PostalCode, scenario.Profile.City, active: true);
+                scenario.Profile.PostalCode, scenario.Profile.City, active: true, scenario.Profile.ActivityCode);
             foreach (DemoCustomer customer in scenario.Customers.Where(c => c.IsCompany()))
             {
                 Add(companies, customer.Request.Siren, customer.Request.Siret, customer.Request.Name, customer.Request.AddressLine1,
@@ -84,7 +84,7 @@ internal sealed class DemoDirectoryData(IReadOnlyDictionary<string, CompanySearc
     }
 
     private static void Add(Dictionary<string, CompanySearchResult> companies, string? siren, string? siret, string name,
-        string? address, string? postalCode, string? city, bool active)
+        string? address, string? postalCode, string? city, bool active, string? activityCode = null)
     {
         if (siren is null)
         {
@@ -92,7 +92,7 @@ internal sealed class DemoDirectoryData(IReadOnlyDictionary<string, CompanySearc
         }
 
         companies[siren] = new CompanySearchResult(siren, siret, name.ToUpper(CultureInfo.GetCultureInfo("fr-FR")), address, null,
-            postalCode, city, "FR", FrenchIdentifiers.VatNumber(siren), null, active);
+            postalCode, city, "FR", FrenchIdentifiers.VatNumber(siren), activityCode, active);
     }
 }
 

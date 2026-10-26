@@ -22,4 +22,10 @@ public sealed class DemoDataOptions
 
     /// <summary>Dossiers créés en plus du dossier ouvert (bâtiment, puis négoce), de 0 à 2.</summary>
     public int AdditionalDossiers { get; set; } = 2;
+
+    /// <summary>
+    /// Dossiers pairs du dossier principal (même secteur), de 0 à 5 : créés seulement avec les deux dossiers en plus et là
+    /// où le serveur collecte les indicateurs, pour la comparaison aux pairs des tableaux de bord.
+    /// </summary>
+    public int PeerDossiers { get; set; } = 5;
 }

@@ -18,6 +18,7 @@ Section `Lettra:Demo` :
 | `RandomSeed` | `2026` | Graine du tirage : même graine, même jeu. |
 | `Months` | `12` | Profondeur de l'historique (2 à 36 mois). |
 | `AdditionalDossiers` | `2` | Dossiers supplémentaires créés dans le cabinet (0 à 2). |
+| `PeerDossiers` | `5` | Petits dossiers du même secteur que le dossier principal (0 à 5), pour la comparaison aux pairs. Créés seulement avec `AdditionalDossiers=2` et là où le serveur collecte les indicateurs. |
 
 `LettraDemoData.SeedAsync` refuse en environnement `Production`, quelle que soit la configuration, et ne touche pas un
 dossier qui a déjà des devis ou des factures (`DossierNotEmpty`) ; les dossiers supplémentaires manquants sont tout de
@@ -28,11 +29,11 @@ Docker tourne en environnement `Demo`) ; l'application installée l'appelle en a
 
 Trois entreprises fictives, une par dossier :
 
-| Activité | Entreprise | TVA |
-|---|---|---|
-| Services (dossier ouvert) | Atelier Numérique Conseil, Lyon | option pour les débits |
-| Bâtiment | Bâti Rénov' Lemoine | sur les encaissements |
-| Négoce | Négoce Méditerranée Distribution | à la livraison, réel normal |
+| Activité | Entreprise | TVA | Code NAF |
+|---|---|---|---|
+| Services (dossier ouvert) | Atelier Numérique Conseil, Lyon | option pour les débits | 62.02A |
+| Bâtiment | Bâti Rénov' Lemoine | sur les encaissements | 43.39Z |
+| Négoce | Négoce Méditerranée Distribution | à la livraison, réel normal | 46.39B |
 
 Pour chacune : fiche entreprise, 30 à 50 clients avec leurs articles habituels (popularité de Zipf), 10 à 15
 fournisseurs, catalogue (deux articles archivés), deux grilles tarifaires (−10 % et −15 %), devis à tous les stades,
@@ -44,6 +45,11 @@ d'alertes : deux sur le dossier (une résolue), une sur le cabinet.
 Identifiants fictifs mais valides : SIREN commençant par 9 (clé de Luhn), numéro de TVA intracommunautaire calculé,
 IBAN avec un code banque 99xxx.
 
+Sur le serveur s'y ajoutent cinq petites sociétés de services numériques de la même division NAF 62 (Pixel et Code
+Studio, Datacime Ingénierie, Réseaux et Services de l'Ouest, Logiciels du Beffroi, Infogérance des Alpes) : même
+métier, mais leur nom, leur ville, leur rythme commercial et leur propre tirage. Elles donnent au tableau de bord du
+dossier principal les cinq pairs qu'il faut pour se comparer au secteur.
+
 ## Dossiers supplémentaires
 
 Ils sont créés par `CreateDossierCommand`, au nom de l'utilisateur de démonstration :
@@ -53,7 +59,9 @@ Ils sont créés par `CreateDossierCommand`, au nom de l'utilisateur de démonst
 - **Sur le serveur de démonstration**, l'utilisateur administre aussi le cabinet : au démarrage de l'API, les dossiers
   « bâtiment » et « négoce » sont créés et remplis (compose : `AdditionalDossiers=2`), une seule fois, y compris dans
   une démo déjà remplie (un dossier du même nom n'est pas recréé). Sans droit de création, le jeu remplit le dossier
-  configuré et le résultat porte une note `Security.Forbidden`. Le chargement depuis l'accueil
+  configuré et le résultat porte une note `Security.Forbidden`. Les cinq dossiers pairs suivent la même règle, après le
+  bâtiment et le négoce. Une démo remplie par une version précédente reçoit le code NAF sur la fiche de chacun de ses
+  dossiers, s'il manque et si le SIREN est toujours celui du jeu. Le chargement depuis l'accueil
   (`POST /api/v1/demo/seed`) ne crée jamais d'autre dossier.
 
 ## Ce qui est vérifié et où

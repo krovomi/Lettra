@@ -152,4 +152,7 @@
   <data name="Help.Faq.einvoicing-readiness.Question" xml:space="preserve"><value>Is my dossier ready for e-invoicing?</value></data>
   <data name="Help.Faq.einvoicing-readiness.Answer" xml:space="preserve"><value>In Sales, E-invoicing readiness: Lettra gives a score from 0 to 100 and, for each check (company identifiers, customer and supplier SIREN, EU customers' VAT numbers, invoices sent), what is left to fix with a link to do it. The practice view shows how many checks each dossier has left.</value></data>
   <data name="Help.Faq.einvoicing-readiness.Keywords" xml:space="preserve"><value>e-invoicing e-invoice reform readiness ready score</value></data>
+  <data name="Help.Faq.peers.Question" xml:space="preserve"><value>How does my dossier compare with businesses in the same sector?</value></data>
+  <data name="Help.Faq.peers.Answer" xml:space="preserve"><value>Enter the NAF code in the company profile. The dossier's dashboard then compares its payment time, overdue receivables, collection, revenue trend, accepted quotes, top customer share and credit note rate with the median of the firm's other dossiers in the same NAF division. At least 5 dossiers of the same sector are needed: only medians are shown, never a dossier or an amount.</value></data>
+  <data name="Help.Faq.peers.Keywords" xml:space="preserve"><value>peers sector NAF APE compare comparison median competitors benchmark</value></data>
 </root>

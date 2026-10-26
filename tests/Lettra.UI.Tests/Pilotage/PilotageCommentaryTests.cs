@@ -97,6 +97,27 @@ public sealed class PilotageCommentaryTests : BunitContext
     }
 
     [Fact]
+    public void La_comparaison_aux_pairs_dit_ce_qui_est_mieux_moins_bien_ou_proche()
+    {
+        PeerComparisonResponse peers = Peers(
+            new PeerMetricComparisonDto(PeerMetricDto.DaysSalesOutstanding, 41, 50, 6, PeerPositionDto.Better),
+            new PeerMetricComparisonDto(PeerMetricDto.Collection, 0.95, 0.85, 6, PeerPositionDto.Better),
+            new PeerMetricComparisonDto(PeerMetricDto.OverdueReceivables, 0.3, 0.2, 6, PeerPositionDto.Worse),
+            new PeerMetricComparisonDto(PeerMetricDto.QuoteConversion, 0.6, 0.61, 6, PeerPositionDto.Similar),
+            new PeerMetricComparisonDto(PeerMetricDto.TopCustomerShare, null, 0.3, 6, null));
+
+        PilotageCommentary.Peers(peers, L, French).Should().Be(
+            "Comparé à 6 dossiers du cabinet de la division NAF 62. Mieux que la médiane : délai de paiement et encaissement. "
+            + "Moins bien que la médiane : créances en retard. Proche de la médiane : devis acceptés.");
+        PilotageCommentary.Peers(Peers(new PeerMetricComparisonDto(PeerMetricDto.DaysSalesOutstanding, 49, 50, 6, PeerPositionDto.Similar)), L, French)
+            .Should().EndWith("Tous les indicateurs sont proches de la médiane du secteur.");
+        PilotageCommentary.Peers(peers with { Status = PeerComparisonStatusDto.TooFewPeers }, L, French).Should().BeEmpty();
+    }
+
+    private static PeerComparisonResponse Peers(params PeerMetricComparisonDto[] metrics) =>
+        new(PeerComparisonStatusDto.Available, "62.02A", "62", 6, DateTimeOffset.UnixEpoch, metrics);
+
+    [Fact]
     public void Le_commentaire_s_ecrit_aussi_en_anglais()
     {
         CultureInfo english = CultureInfo.GetCultureInfo("en-US");
@@ -104,5 +125,7 @@ public sealed class PilotageCommentaryTests : BunitContext
 
         PilotageCommentary.Sales(Dossier(), L, english).Should().Be(
             "Revenue over the last three months is up 8% on the three before. 60% of decided quotes were accepted. 4 quotes are awaiting an answer; to chase before they expire: 1.");
+        PilotageCommentary.Peers(Peers(new PeerMetricComparisonDto(PeerMetricDto.DaysSalesOutstanding, 41, 50, 6, PeerPositionDto.Better)), L, english).Should().Be(
+            "Compared with 6 dossiers of the firm in NAF division 62. Better than the median: payment time.");
     }
 }

@@ -72,6 +72,7 @@ public static class BillingKpiCalculator
         AddTrend(samples, invoices, currentMonth);
         AddReceivables(samples, invoices, receivables, today);
         AddCollection(samples, receivables, windowStart, today);
+        AddCreditNotes(samples, invoices, windowStart, today);
         AddCustomers(samples, invoices, sales, windowStart, today);
         AddQuotes(samples, facts.Quotes, windowStart, today);
         return samples;
@@ -132,6 +133,17 @@ public static class BillingKpiCalculator
         if (due > 0m)
         {
             samples.Add(new KpiSample(KpiMetrics.Collection, Round(Math.Min(1m, issued.Sum(i => i.PaidInclTax) / due), 4)));
+        }
+    }
+
+    /// <summary>Les avoirs des douze derniers mois rapportés aux factures et acomptes de la même période (TTC).</summary>
+    private static void AddCreditNotes(List<KpiSample> samples, InvoiceKpiFact[] invoices, DateOnly windowStart, DateOnly today)
+    {
+        InvoiceKpiFact[] year = [.. invoices.Where(i => i.IssueDate >= windowStart && i.IssueDate <= today)];
+        decimal sold = year.Where(i => i.Kind != InvoiceKind.CreditNote).Sum(i => i.TotalInclTax);
+        if (sold > 0m)
+        {
+            samples.Add(new KpiSample(KpiMetrics.CreditNotes, Round(year.Where(i => i.Kind == InvoiceKind.CreditNote).Sum(i => i.TotalInclTax) / sold, 4)));
         }
     }
 

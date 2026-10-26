@@ -137,6 +137,43 @@ public static class PilotageCommentary
         return Join(sentences, l);
     }
 
+    /// <summary>
+    /// La comparaison aux pairs : combien de dossiers, puis les indicateurs mieux, moins bien et proches de la médiane.
+    /// Vide tant que la comparaison n'est pas disponible (l'écran dit pourquoi).
+    /// </summary>
+    public static string Peers(PeerComparisonResponse peers, IStringLocalizer l, CultureInfo culture)
+    {
+        ArgumentNullException.ThrowIfNull(peers);
+        ArgumentNullException.ThrowIfNull(l);
+        if (peers.Status != PeerComparisonStatusDto.Available)
+        {
+            return string.Empty;
+        }
+
+        List<string> sentences = [Format(l, culture, "Pilotage.Comment.Peers.Intro", peers.Peers, peers.Sector)];
+        PeerMetricComparisonDto[] placed = [.. peers.Metrics.Where(m => m.Position is not null)];
+        if (placed.Length > 0 && placed.All(m => m.Position == PeerPositionDto.Similar))
+        {
+            sentences.Add(l["Pilotage.Comment.Peers.AllSimilar"]);
+            return Join(sentences, l);
+        }
+
+        foreach (PeerPositionDto position in new[] { PeerPositionDto.Better, PeerPositionDto.Worse, PeerPositionDto.Similar })
+        {
+            string[] names = [.. placed.Where(m => m.Position == position).Select(m => l[$"Pilotage.Peers.Name.{m.Metric}"].Value)];
+            if (names.Length > 0)
+            {
+                sentences.Add(Format(l, culture, $"Pilotage.Comment.Peers.{position}", List(names, l)));
+            }
+        }
+
+        return Join(sentences, l);
+    }
+
+    /// <summary>« a, b et c ».</summary>
+    private static string List(string[] names, IStringLocalizer l) =>
+        names.Length == 1 ? names[0] : string.Join(", ", names[..^1]) + l["Pilotage.Comment.Peers.And"] + names[^1];
+
     /// <summary>La phrase au singulier pour un seul élément, au pluriel au-delà.</summary>
     private static string Counted(string key, int count) => key + (count == 1 ? ".One" : ".Many");
 

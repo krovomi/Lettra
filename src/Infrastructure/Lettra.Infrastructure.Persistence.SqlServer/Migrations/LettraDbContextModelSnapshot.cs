@@ -363,6 +363,10 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                         .HasMaxLength(70)
                         .HasColumnType("nvarchar(70)");
 
+                    b.Property<string>("ActivityCode")
+                        .HasMaxLength(6)
+                        .HasColumnType("nvarchar(6)");
+
                     b.Property<string>("Bic")
                         .HasMaxLength(11)
                         .HasColumnType("nvarchar(11)");

@@ -155,6 +155,24 @@ internal sealed class DemoDossierLoader(IServiceProvider services, DemoClock clo
             watch.Elapsed);
     }
 
+    /// <summary>
+    /// Pose le code NAF sur la fiche d'un dossier déjà chargé, s'il manque et si la fiche est toujours celle d'une
+    /// entreprise du jeu (même SIREN) : une fiche changée à la main reste celle de l'utilisateur.
+    /// </summary>
+    public async Task CompleteProfileAsync(IReadOnlyDictionary<string, string> activityCodesBySiren, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(activityCodesBySiren);
+        OperationResult<CompanyProfileResponse> current = await _settings.GetCompanyProfileAsync(cancellationToken).ConfigureAwait(false);
+        if (current.Value is not { ActivityCode: null, Siren: { } siren } saved || !activityCodesBySiren.TryGetValue(siren, out string? code))
+        {
+            return;
+        }
+
+        SaveCompanyProfileRequest completed = SaveCompanyProfileRequest.From(saved);
+        completed.ActivityCode = code;
+        Ok(await _settings.SaveCompanyProfileAsync(completed, saved.Version, cancellationToken).ConfigureAwait(false), "code NAF de la fiche entreprise");
+    }
+
     private async Task SaveProfileAsync(SaveCompanyProfileRequest profile, CancellationToken cancellationToken)
     {
         // Une fiche déjà remplie à la main reste celle de l'utilisateur.

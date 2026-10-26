@@ -129,4 +129,41 @@
   <data name="Pilotage.Comment.Cabinet.Falling.One" xml:space="preserve"><value>One dossier's revenue is down more than 10%.</value></data>
   <data name="Pilotage.Comment.Cabinet.Falling.Many" xml:space="preserve"><value>{0} dossiers' revenue is down more than 10%.</value></data>
   <data name="Pilotage.Comment.Days" xml:space="preserve"><value>{0:N0} days</value></data>
+  <data name="Pilotage.Peers.Title" xml:space="preserve"><value>Compared with dossiers in the same sector</value></data>
+  <data name="Pilotage.Peers.Subtitle" xml:space="preserve"><value>NAF division {0} (code {1}) · {2} dossiers of the firm · medians from the last collection</value></data>
+  <data name="Pilotage.Peers.Status.NoSector" xml:space="preserve"><value>Enter the company's NAF code to compare this dossier with the firm's other dossiers in the same sector.</value></data>
+  <data name="Pilotage.Peers.Status.NoSector.Link" xml:space="preserve"><value>Enter the NAF code</value></data>
+  <data name="Pilotage.Peers.Status.NoCollection" xml:space="preserve"><value>The comparison runs on the firm's server: it is not available on this device.</value></data>
+  <data name="Pilotage.Peers.Metric" xml:space="preserve"><value>Indicator</value></data>
+  <data name="Pilotage.Peers.Own" xml:space="preserve"><value>This dossier</value></data>
+  <data name="Pilotage.Peers.Median" xml:space="preserve"><value>Peer median</value></data>
+  <data name="Pilotage.Peers.Position" xml:space="preserve"><value>Position</value></data>
+  <data name="Pilotage.Peers.Position.Better" xml:space="preserve"><value>Better</value></data>
+  <data name="Pilotage.Peers.Position.Similar" xml:space="preserve"><value>Similar</value></data>
+  <data name="Pilotage.Peers.Position.Worse" xml:space="preserve"><value>Worse</value></data>
+  <data name="Pilotage.Peers.Position.None" xml:space="preserve"><value>No value</value></data>
+  <data name="Pilotage.Peers.Metric.DaysSalesOutstanding" xml:space="preserve"><value>Average payment time</value></data>
+  <data name="Pilotage.Peers.Metric.OverdueReceivables" xml:space="preserve"><value>Overdue receivables</value></data>
+  <data name="Pilotage.Peers.Metric.Collection" xml:space="preserve"><value>Collection rate</value></data>
+  <data name="Pilotage.Peers.Metric.RevenueTrend" xml:space="preserve"><value>Revenue trend</value></data>
+  <data name="Pilotage.Peers.Metric.QuoteConversion" xml:space="preserve"><value>Quotes accepted</value></data>
+  <data name="Pilotage.Peers.Metric.TopCustomerShare" xml:space="preserve"><value>Top customer share</value></data>
+  <data name="Pilotage.Peers.Name.DaysSalesOutstanding" xml:space="preserve"><value>payment time</value></data>
+  <data name="Pilotage.Peers.Name.OverdueReceivables" xml:space="preserve"><value>overdue receivables</value></data>
+  <data name="Pilotage.Peers.Name.Collection" xml:space="preserve"><value>collection</value></data>
+  <data name="Pilotage.Peers.Name.RevenueTrend" xml:space="preserve"><value>revenue trend</value></data>
+  <data name="Pilotage.Peers.Name.QuoteConversion" xml:space="preserve"><value>quotes accepted</value></data>
+  <data name="Pilotage.Peers.Name.TopCustomerShare" xml:space="preserve"><value>top customer share</value></data>
+  <data name="Pilotage.Peers.Rule" xml:space="preserve"><value>Peers are the firm's other dossiers in the same NAF division. Only medians of at least 5 dossiers are shown: no dossier, no name, no amount. Similar: within 3 days or 3 points.</value></data>
+  <data name="Pilotage.Comment.Peers.Intro" xml:space="preserve"><value>Compared with {0} dossiers of the firm in NAF division {1}.</value></data>
+  <data name="Pilotage.Comment.Peers.Better" xml:space="preserve"><value>Better than the median: {0}.</value></data>
+  <data name="Pilotage.Comment.Peers.Worse" xml:space="preserve"><value>Worse than the median: {0}.</value></data>
+  <data name="Pilotage.Comment.Peers.Similar" xml:space="preserve"><value>Close to the median: {0}.</value></data>
+  <data name="Pilotage.Comment.Peers.AllSimilar" xml:space="preserve"><value>Every indicator is close to the sector median.</value></data>
+  <data name="Pilotage.Comment.Peers.And" xml:space="preserve"><value> and </value></data>
+  <data name="Pilotage.Peers.Status.TooFewPeers.None" xml:space="preserve"><value>No other dossier of the firm is in NAF division {1}. At least 5 are needed so that no median gives a dossier away.</value></data>
+  <data name="Pilotage.Peers.Status.TooFewPeers.One" xml:space="preserve"><value>Only one other dossier of the firm is in NAF division {1}. At least 5 are needed so that no median gives a dossier away.</value></data>
+  <data name="Pilotage.Peers.Status.TooFewPeers.Many" xml:space="preserve"><value>Only {0} other dossiers of the firm are in NAF division {1}. At least 5 are needed so that no median gives a dossier away.</value></data>
+  <data name="Pilotage.Peers.Metric.CreditNotes" xml:space="preserve"><value>Credit note rate</value></data>
+  <data name="Pilotage.Peers.Name.CreditNotes" xml:space="preserve"><value>credit note rate</value></data>
 </root>

@@ -1,4 +1,5 @@
 using System.Globalization;
+using Lettra.Contracts.Cabinet;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Pilotage;
 using Lettra.UI.Shared.Components.Lists;
@@ -27,6 +28,7 @@ public sealed partial class PilotagePage
     private readonly SortState<string> _adminSort = new(NameColumn);
     private PilotageTab _tab = PilotageTab.Dossier;
     private DossierPilotageResponse? _dossier;
+    private PeerComparisonResponse? _peers;
     private CabinetPilotageResponse? _cabinet;
     private AdministrationPilotageResponse? _administration;
     private IReadOnlyList<ErrorDetail> _errors = [];
@@ -129,6 +131,7 @@ public sealed partial class PilotagePage
         {
             // Les trois lectures partent ensemble : l'onglet affiché ne fait pas attendre les deux autres plus longtemps.
             Task<OperationResult<DossierPilotageResponse>> dossier = Gateway.GetDossierAsync(_disposed.Token);
+            Task<OperationResult<PeerComparisonResponse>> peers = Gateway.GetPeersAsync(_disposed.Token);
             Task<OperationResult<CabinetPilotageResponse>> cabinet = Gateway.GetCabinetAsync(_disposed.Token);
             Task<OperationResult<AdministrationPilotageResponse>> administration = Gateway.GetAdministrationAsync(_disposed.Token);
             OperationResult<DossierPilotageResponse> d = await dossier;
@@ -138,6 +141,7 @@ public sealed partial class PilotagePage
             // Dossier illisible (droit retiré, aucun dossier ouvert) : l'onglet le dit, les autres restent utilisables.
             _dossier = d.IsSuccess ? d.Value : null;
             _dossierError = d.IsSuccess || d.Errors.Count == 0 ? null : d.Errors[0];
+            _peers = (await peers).Value;
             _cabinet = c.IsSuccess ? c.Value : _cabinet ?? new CabinetPilotageResponse(true, null, []);
             // Refusé (aucun dossier administré) : l'onglet reste caché, sans message d'erreur.
             _administration = a.IsSuccess ? a.Value : null;
@@ -189,6 +193,7 @@ public sealed partial class PilotagePage
             OperationResult<DossierPilotageResponse> loaded = await Gateway.GetDossierAsync(_disposed.Token);
             _dossier = loaded.IsSuccess ? loaded.Value : null;
             _dossierError = loaded.IsSuccess || loaded.Errors.Count == 0 ? null : loaded.Errors[0];
+            _peers = (await Gateway.GetPeersAsync(_disposed.Token)).Value;
         }
 
         SetTab(PilotageTab.Dossier);
@@ -217,6 +222,21 @@ public sealed partial class PilotagePage
         Contracts.Cabinet.DossierIndicatorKeys.OpenAlerts => "alerts",
         Contracts.Cabinet.DossierIndicatorKeys.ReviewPending => "review",
         _ => "cabinet",
+    };
+
+    /// <summary>Un délai en jours, une évolution signée, sinon un pourcentage.</summary>
+    private static string PeerValue(PeerMetricDto metric, double? value) => metric switch
+    {
+        PeerMetricDto.DaysSalesOutstanding => PilotageDisplay.Days(value, Culture),
+        PeerMetricDto.RevenueTrend => PilotageDisplay.SignedPercent(value, Culture),
+        _ => PilotageDisplay.Percent(value, Culture),
+    };
+
+    private static IndicatorLevelDto PeerLevel(PeerPositionDto? position) => position switch
+    {
+        PeerPositionDto.Better => IndicatorLevelDto.Ok,
+        PeerPositionDto.Worse => IndicatorLevelDto.Warning,
+        _ => IndicatorLevelDto.Info,
     };
 
     private string ToDoLine(DateTimeOffset? at) =>

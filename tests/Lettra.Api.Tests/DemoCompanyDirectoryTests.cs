@@ -51,7 +51,7 @@ public sealed class DemoCompanyDirectoryTests
         string word = any.Name.Split(' ')[0].ToLowerInvariant();
 
         Result<CompanySearchResponse> online = await new DemoCompanyDirectory(Data, new Recording { Answer = [FakeCompany("552032534", "AUTRE")] })
-            .SearchAsync(word, 25, default);
+            .SearchAsync(word, 200, default);
         Result<CompanySearchResponse> offline = await new DemoCompanyDirectory(Data, new Recording { Fail = true }).SearchAsync(word, 25, default);
         Result<CompanySearchResponse> nothing = await new DemoCompanyDirectory(Data, new Recording { Fail = true }).SearchAsync("zzzz introuvable", 5, default);
 

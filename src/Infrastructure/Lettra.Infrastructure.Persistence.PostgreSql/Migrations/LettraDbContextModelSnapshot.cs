@@ -363,6 +363,10 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .HasMaxLength(70)
                         .HasColumnType("character varying(70)");
 
+                    b.Property<string>("ActivityCode")
+                        .HasMaxLength(6)
+                        .HasColumnType("character varying(6)");
+
                     b.Property<string>("Bic")
                         .HasMaxLength(11)
                         .HasColumnType("character varying(11)");

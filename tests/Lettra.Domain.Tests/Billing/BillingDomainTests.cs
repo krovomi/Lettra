@@ -234,6 +234,40 @@ public sealed class BillingDomainTests
         profile.AccountHolderName.Should().BeNull();
     }
 
+    [Fact]
+    public void Le_code_naf_est_facultatif_s_ecrit_comme_l_insee_et_refuse_ce_qui_n_en_est_pas_un()
+    {
+        CompanyProfile.Draft draft = new(
+            "Conseil Lettra", "SAS", null, "552100554", null, null, "FR96552100554", "10 avenue de l'Opéra", null, "75001", "Paris", "FR",
+            VatFranchise: false, VatOnDebits: false, PaymentDays: 30, null, null, null, null, null);
+        CompanyProfile profile = CompanyProfile.Create(draft, Now).Value;
+        profile.ActivityCode.Should().BeNull();
+
+        profile.Update(draft with { ActivityCode = " 6202a " }, Now).IsSuccess.Should().BeTrue();
+        profile.ActivityCode.Should().Be("62.02A");
+
+        profile.Update(draft with { ActivityCode = "62.0" }, Now)
+            .Errors.Should().ContainSingle().Which.Target.Should().Be(nameof(CompanyProfile.ActivityCode));
+        profile.Update(draft with { ActivityCode = "" }, Now).IsSuccess.Should().BeTrue();
+        profile.ActivityCode.Should().BeNull();
+    }
+
+    [Theory]
+    [InlineData("47.24Z", "47.24Z", "47")]
+    [InlineData("4724z", "47.24Z", "47")]
+    [InlineData("62 02 A", "62.02A", "62")]
+    [InlineData("A6202", null, null)]
+    [InlineData("62.021", null, null)]
+    [InlineData(null, null, null)]
+    public void Un_code_naf_se_normalise_et_donne_sa_division(string? input, string? code, string? division)
+    {
+        NafCode.Normalize(input).Should().Be(code);
+        if (code is not null)
+        {
+            NafCode.Division(code).Should().Be(division);
+        }
+    }
+
     [Theory]
     [InlineData(30, null, 0.3)]
     [InlineData(null, 300, 0.25)]

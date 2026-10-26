@@ -129,4 +129,41 @@
   <data name="Pilotage.Comment.Cabinet.Falling.One" xml:space="preserve"><value>Un dossier voit son chiffre d'affaires baisser de plus de 10 %.</value></data>
   <data name="Pilotage.Comment.Cabinet.Falling.Many" xml:space="preserve"><value>{0} dossiers voient leur chiffre d'affaires baisser de plus de 10 %.</value></data>
   <data name="Pilotage.Comment.Days" xml:space="preserve"><value>{0:N0} jours</value></data>
+  <data name="Pilotage.Peers.Title" xml:space="preserve"><value>Comparé aux dossiers du même secteur</value></data>
+  <data name="Pilotage.Peers.Subtitle" xml:space="preserve"><value>Division NAF {0} (code {1}) · {2} dossiers du cabinet · médianes de la dernière collecte</value></data>
+  <data name="Pilotage.Peers.Status.NoSector" xml:space="preserve"><value>Renseignez le code NAF de l'entreprise pour comparer ce dossier aux autres dossiers du cabinet du même secteur.</value></data>
+  <data name="Pilotage.Peers.Status.NoSector.Link" xml:space="preserve"><value>Renseigner le code NAF</value></data>
+  <data name="Pilotage.Peers.Status.NoCollection" xml:space="preserve"><value>La comparaison se fait sur le serveur du cabinet : elle n'est pas disponible sur ce poste.</value></data>
+  <data name="Pilotage.Peers.Metric" xml:space="preserve"><value>Indicateur</value></data>
+  <data name="Pilotage.Peers.Own" xml:space="preserve"><value>Ce dossier</value></data>
+  <data name="Pilotage.Peers.Median" xml:space="preserve"><value>Médiane des pairs</value></data>
+  <data name="Pilotage.Peers.Position" xml:space="preserve"><value>Position</value></data>
+  <data name="Pilotage.Peers.Position.Better" xml:space="preserve"><value>Mieux</value></data>
+  <data name="Pilotage.Peers.Position.Similar" xml:space="preserve"><value>Comparable</value></data>
+  <data name="Pilotage.Peers.Position.Worse" xml:space="preserve"><value>Moins bien</value></data>
+  <data name="Pilotage.Peers.Position.None" xml:space="preserve"><value>Pas de valeur</value></data>
+  <data name="Pilotage.Peers.Metric.DaysSalesOutstanding" xml:space="preserve"><value>Délai moyen de paiement</value></data>
+  <data name="Pilotage.Peers.Metric.OverdueReceivables" xml:space="preserve"><value>Créances en retard</value></data>
+  <data name="Pilotage.Peers.Metric.Collection" xml:space="preserve"><value>Taux d'encaissement</value></data>
+  <data name="Pilotage.Peers.Metric.RevenueTrend" xml:space="preserve"><value>Évolution du chiffre d'affaires</value></data>
+  <data name="Pilotage.Peers.Metric.QuoteConversion" xml:space="preserve"><value>Devis acceptés</value></data>
+  <data name="Pilotage.Peers.Metric.TopCustomerShare" xml:space="preserve"><value>Poids du premier client</value></data>
+  <data name="Pilotage.Peers.Name.DaysSalesOutstanding" xml:space="preserve"><value>délai de paiement</value></data>
+  <data name="Pilotage.Peers.Name.OverdueReceivables" xml:space="preserve"><value>créances en retard</value></data>
+  <data name="Pilotage.Peers.Name.Collection" xml:space="preserve"><value>encaissement</value></data>
+  <data name="Pilotage.Peers.Name.RevenueTrend" xml:space="preserve"><value>évolution du chiffre d'affaires</value></data>
+  <data name="Pilotage.Peers.Name.QuoteConversion" xml:space="preserve"><value>devis acceptés</value></data>
+  <data name="Pilotage.Peers.Name.TopCustomerShare" xml:space="preserve"><value>poids du premier client</value></data>
+  <data name="Pilotage.Peers.Rule" xml:space="preserve"><value>Les pairs sont les autres dossiers du cabinet de la même division NAF. Seules des médianes d'au moins 5 dossiers sont montrées : aucun dossier, aucun nom, aucun montant. Comparable : à 3 jours ou 3 points près.</value></data>
+  <data name="Pilotage.Comment.Peers.Intro" xml:space="preserve"><value>Comparé à {0} dossiers du cabinet de la division NAF {1}.</value></data>
+  <data name="Pilotage.Comment.Peers.Better" xml:space="preserve"><value>Mieux que la médiane : {0}.</value></data>
+  <data name="Pilotage.Comment.Peers.Worse" xml:space="preserve"><value>Moins bien que la médiane : {0}.</value></data>
+  <data name="Pilotage.Comment.Peers.Similar" xml:space="preserve"><value>Proche de la médiane : {0}.</value></data>
+  <data name="Pilotage.Comment.Peers.AllSimilar" xml:space="preserve"><value>Tous les indicateurs sont proches de la médiane du secteur.</value></data>
+  <data name="Pilotage.Comment.Peers.And" xml:space="preserve"><value> et </value></data>
+  <data name="Pilotage.Peers.Status.TooFewPeers.None" xml:space="preserve"><value>Aucun autre dossier du cabinet n'est de la division NAF {1}. Il en faut au moins 5 pour qu'aucune médiane ne laisse deviner un dossier.</value></data>
+  <data name="Pilotage.Peers.Status.TooFewPeers.One" xml:space="preserve"><value>Un seul autre dossier du cabinet est de la division NAF {1}. Il en faut au moins 5 pour qu'aucune médiane ne laisse deviner un dossier.</value></data>
+  <data name="Pilotage.Peers.Status.TooFewPeers.Many" xml:space="preserve"><value>Seuls {0} autres dossiers du cabinet sont de la division NAF {1}. Il en faut au moins 5 pour qu'aucune médiane ne laisse deviner un dossier.</value></data>
+  <data name="Pilotage.Peers.Metric.CreditNotes" xml:space="preserve"><value>Taux d'avoirs</value></data>
+  <data name="Pilotage.Peers.Name.CreditNotes" xml:space="preserve"><value>taux d'avoirs</value></data>
 </root>

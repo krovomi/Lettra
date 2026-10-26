@@ -15,6 +15,9 @@ internal sealed class InProcessPilotageGateway(IServiceScopeFactory scopes) : IP
     public Task<OperationResult<DossierPilotageResponse>> GetDossierAsync(CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetDossierPilotageQuery(dossier), ct), cancellationToken);
 
+    public Task<OperationResult<PeerComparisonResponse>> GetPeersAsync(CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetPeerComparisonQuery(dossier), ct), cancellationToken);
+
     public Task<OperationResult<CabinetPilotageResponse>> GetCabinetAsync(CancellationToken cancellationToken) =>
         InProcessScope.OutsideDossierAsync(scopes, sp => InProcessScope.QueryAsync(sp, new GetCabinetPilotageQuery(), cancellationToken));
 

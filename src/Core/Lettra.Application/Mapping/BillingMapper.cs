@@ -74,7 +74,8 @@ public static class BillingMapper
             request.Iban,
             request.Bic,
             (VatDeclarationRegime?)(int?)request.VatDeclarationRegime,
-            request.AccountHolderName);
+            request.AccountHolderName,
+            request.ActivityCode);
     }
 
     public static IReadOnlyList<PriceListEntryDraft> ToDrafts(this IEnumerable<PriceListEntryRequest>? entries) =>
@@ -233,7 +234,8 @@ public static class BillingMapper
             profile.UpdatedAt,
             (VatDeclarationRegimeDto?)(int?)profile.VatDeclarationRegime,
             profile.AccountHolderName,
-            profile.AccountHolderName is { } holder ? (PayeeMatchDto)PayeeNames.Compare(profile.Name, holder) : null);
+            profile.AccountHolderName is { } holder ? (PayeeMatchDto)PayeeNames.Compare(profile.Name, holder) : null,
+            profile.ActivityCode);
     }
 
     public static ComplianceReportResponse ToResponse(this Calculations.Compliance.ComplianceReport report)

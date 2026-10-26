@@ -81,6 +81,12 @@ public sealed class CompanyProfile : AggregateRoot<Guid>, IVersioned
     /// </summary>
     public string? AccountHolderName { get; private set; }
 
+    /// <summary>
+    /// Code NAF (APE) de l'activité principale, écrit « 47.24Z » : il range le dossier avec ceux du même secteur pour la
+    /// comparaison aux pairs. Facultatif.
+    /// </summary>
+    public string? ActivityCode { get; private set; }
+
     /// <summary>Nom présenté avec l'IBAN sur les factures, le QR code de paiement et la facture électronique.</summary>
     public string PayeeName => AccountHolderName ?? Name;
 
@@ -111,7 +117,8 @@ public sealed class CompanyProfile : AggregateRoot<Guid>, IVersioned
         string? Iban,
         string? Bic,
         VatDeclarationRegime? VatDeclarationRegime = null,
-        string? AccountHolderName = null);
+        string? AccountHolderName = null,
+        string? ActivityCode = null);
 
     public static Result<CompanyProfile> Create(Draft draft, DateTimeOffset now)
     {
@@ -170,6 +177,11 @@ public sealed class CompanyProfile : AggregateRoot<Guid>, IVersioned
         string? discount = Clean(draft.EarlyPaymentDiscount, 200, nameof(EarlyPaymentDiscount), errors);
         string? bic = Clean(draft.Bic, 11, nameof(Bic), errors)?.ToUpperInvariant();
         string? holder = Clean(draft.AccountHolderName, Parties.Supplier.MaxAccountHolderLength, nameof(AccountHolderName), errors);
+        string? activity = NafCode.Normalize(draft.ActivityCode);
+        if (activity is null && !string.IsNullOrWhiteSpace(draft.ActivityCode))
+        {
+            errors.Add(CompanyProfileErrors.Invalid(nameof(ActivityCode)));
+        }
 
         if (errors.Count > 0)
         {
@@ -194,6 +206,7 @@ public sealed class CompanyProfile : AggregateRoot<Guid>, IVersioned
         Iban = iban;
         Bic = bic;
         AccountHolderName = holder;
+        ActivityCode = activity;
         UpdatedAt = now;
         Version++;
         return Result.Success();

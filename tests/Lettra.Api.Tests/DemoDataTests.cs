@@ -109,6 +109,25 @@ public sealed class DemoDataTests : IDisposable
     }
 
     [Fact]
+    public void Les_dossiers_pairs_sont_du_secteur_du_dossier_principal_et_chacun_a_son_tirage()
+    {
+        DemoScenario main = DemoScenarioGenerator.Generate(DemoBusiness.Services, 2026, Today);
+        DemoScenario[] peers = [.. DemoCompanies.Peers.Select(p => DemoScenarioGenerator.Generate(p, 2026, Today))];
+
+        DemoCompanies.Peers.Should().HaveCount(5);
+        peers.Select(p => p.Profile.ActivityCode).Prepend(main.Profile.ActivityCode)
+            .Should().OnlyContain(code => code != null && NafCode.Division(code) == "62", "la comparaison demande cinq pairs du même secteur");
+        peers.Select(p => p.Profile.Siren).Prepend(main.Profile.Siren).Should().OnlyHaveUniqueItems();
+        peers.Select(p => p.Profile.Name).Prepend(main.Profile.Name).Should().OnlyHaveUniqueItems();
+        peers.Select(p => string.Join('|', Fingerprint(p))).Prepend(string.Join('|', Fingerprint(main)))
+            .Should().OnlyHaveUniqueItems("chaque pair a son propre tirage");
+        Fingerprint(DemoScenarioGenerator.Generate(DemoCompanies.Peers[0], 2026, Today)).Should().Equal(Fingerprint(peers[0]));
+        peers.Should().OnlyContain(p => p.Quotes.Count < main.Quotes.Count, "de petits dossiers");
+        DemoScenarioGenerator.Generate(DemoBusiness.Building, 2026, Today).Profile.ActivityCode.Should().Be("43.39Z");
+        DemoScenarioGenerator.Generate(DemoBusiness.Trading, 2026, Today).Profile.ActivityCode.Should().Be("46.39B");
+    }
+
+    [Fact]
     public async Task Le_jeu_se_charge_par_les_cas_d_usage_dans_les_trois_dossiers_du_poste()
     {
         InMemoryKekStore keys = new();
@@ -125,6 +144,8 @@ public sealed class DemoDataTests : IDisposable
         result.Status.Should().Be(DemoSeedStatus.Seeded);
         result.Notes.Should().BeEmpty();
         result.Dossiers.Select(d => d.Business).Should().Equal(DemoBusiness.Services, DemoBusiness.Building, DemoBusiness.Trading);
+        result.Dossiers.Should().HaveCount(3, "sans collecte des indicateurs sur le poste, les dossiers pairs ne serviraient à rien");
+        (await app.GetRequiredService<IBillingSettingsGateway>().GetCompanyProfileAsync(default)).Value!.ActivityCode.Should().Be("62.02A");
         result.Dossiers[0].DossierId.Should().Be(opened, "le dossier ouvert reçoit le jeu principal");
         new LocalDossierRegistry(Path.Combine(_folder, "dossiers")).ActiveDossierId.Should().Be(opened, "les dossiers créés ne prennent pas la place du dossier ouvert");
         result.Dossiers.Should().OnlyContain(d => d.Quotes > 40 && d.Invoices > 30 && d.Payments > 10 && d.Transmissions > 10);

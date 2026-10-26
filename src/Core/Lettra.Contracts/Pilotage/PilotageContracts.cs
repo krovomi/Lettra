@@ -60,3 +60,58 @@ public sealed record DossierOperationsDto(
 /// Le tableau d'administration : les dossiers que l'utilisateur administre, lus dans la dernière collecte du serveur.
 /// </summary>
 public sealed record AdministrationPilotageResponse(bool Available, DateTimeOffset? CollectedAt, IReadOnlyList<DossierOperationsDto> Dossiers);
+
+/// <summary>Un indicateur comparé aux dossiers du même secteur.</summary>
+public enum PeerMetricDto
+{
+    DaysSalesOutstanding = 1,
+    OverdueReceivables = 2,
+    Collection = 3,
+    RevenueTrend = 4,
+    QuoteConversion = 5,
+    TopCustomerShare = 6,
+    CreditNotes = 7,
+}
+
+/// <summary>
+/// Pourquoi la comparaison est rendue ou non : pas de code NAF sur la fiche entreprise, pas de collecte sur ce poste, ou
+/// moins de <see cref="PeerComparisonResponse.MinimumPeers"/> dossiers du même secteur dans le cabinet.
+/// </summary>
+public enum PeerComparisonStatusDto
+{
+    Available = 1,
+    NoSector = 2,
+    NoCollection = 3,
+    TooFewPeers = 4,
+}
+
+/// <summary>Le dossier par rapport à la médiane de ses pairs : mieux, comparable ou moins bien.</summary>
+public enum PeerPositionDto
+{
+    Better = 1,
+    Similar = 2,
+    Worse = 3,
+}
+
+/// <summary>
+/// Un indicateur du dossier et la médiane des pairs qui en ont un (<paramref name="Peers"/>, jamais moins de
+/// <see cref="PeerComparisonResponse.MinimumPeers"/>). <paramref name="Position"/> est vide quand le dossier n'a pas la
+/// valeur (aucune vente, aucun devis tranché…).
+/// </summary>
+public sealed record PeerMetricComparisonDto(PeerMetricDto Metric, double? Value, double Median, int Peers, PeerPositionDto? Position);
+
+/// <summary>
+/// Le dossier ouvert comparé aux autres dossiers du cabinet de la même division NAF (<paramref name="Sector"/>, « 62 »),
+/// lus dans la dernière collecte. Rien que des médianes : aucun dossier, aucun nom, aucun montant n'est rendu.
+/// </summary>
+public sealed record PeerComparisonResponse(
+    PeerComparisonStatusDto Status,
+    string? ActivityCode,
+    string? Sector,
+    int Peers,
+    DateTimeOffset? CollectedAt,
+    IReadOnlyList<PeerMetricComparisonDto> Metrics)
+{
+    /// <summary>En dessous de cinq pairs, une médiane laisserait deviner un dossier : rien n'est rendu.</summary>
+    public const int MinimumPeers = 5;
+}

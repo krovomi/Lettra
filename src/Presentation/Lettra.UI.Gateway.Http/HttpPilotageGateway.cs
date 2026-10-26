@@ -11,6 +11,9 @@ internal sealed class HttpPilotageGateway(HttpClient http) : IPilotageGateway
     public Task<OperationResult<DossierPilotageResponse>> GetDossierAsync(CancellationToken cancellationToken) =>
         GetAsync("api/v1/pilotage", ContractsJsonContext.Default.DossierPilotageResponse, cancellationToken);
 
+    public Task<OperationResult<PeerComparisonResponse>> GetPeersAsync(CancellationToken cancellationToken) =>
+        GetAsync("api/v1/pilotage/peers", ContractsJsonContext.Default.PeerComparisonResponse, cancellationToken);
+
     public Task<OperationResult<CabinetPilotageResponse>> GetCabinetAsync(CancellationToken cancellationToken) =>
         GetAsync("api/v1/dossiers/pilotage", ContractsJsonContext.Default.CabinetPilotageResponse, cancellationToken);
 

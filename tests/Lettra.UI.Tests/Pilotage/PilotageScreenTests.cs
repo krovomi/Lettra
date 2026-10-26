@@ -70,6 +70,38 @@ public sealed class PilotageScreenTests : BunitContext
     }
 
     [Fact]
+    public void Le_dossier_se_compare_a_ses_pairs_ou_dit_pourquoi_il_ne_le_peut_pas()
+    {
+        _gateway.Peers = new PeerComparisonResponse(PeerComparisonStatusDto.Available, "62.02A", "62", 6, DateTimeOffset.UnixEpoch,
+        [
+            new(PeerMetricDto.DaysSalesOutstanding, 62, 45, 6, PeerPositionDto.Worse),
+            new(PeerMetricDto.Collection, 0.9, 0.89, 6, PeerPositionDto.Similar),
+            new(PeerMetricDto.RevenueTrend, -0.12, 0.02, 6, PeerPositionDto.Worse),
+        ]);
+        IRenderedComponent<PilotagePage> page = Render<PilotagePage>();
+
+        page.WaitForAssertion(() => page.FindAll("#pilotage-peers-table tbody tr").Should().HaveCount(3));
+        Plain(page.Find("#pilotage-peers-subtitle").TextContent).Should().Be("Division NAF 62 (code 62.02A) · 6 dossiers du cabinet · médianes de la dernière collecte");
+        Plain(page.Find("#pilotage-peers-dayssalesoutstanding").TextContent).Should().Contain("62 j").And.Contain("45 j").And.Contain("Moins bien");
+        Plain(page.Find("#pilotage-peers-revenuetrend").TextContent).Should().Contain("−12 %").And.Contain("+2 %");
+        page.Find("#pilotage-peers-collection .lt-indicator").GetAttribute("data-level").Should().Be("Info");
+        page.Find("#pilotage-comment-peers p").TextContent.Should().StartWith("Comparé à 6 dossiers");
+
+        _gateway.Peers = new PeerComparisonResponse(PeerComparisonStatusDto.NoSector, null, null, 0, null, []);
+        page.Find("#pilotage-refresh").Click();
+        page.WaitForAssertion(() => page.Find("#pilotage-peers-naf").GetAttribute("href").Should().Be("settings/company"));
+
+        _gateway.Peers = new PeerComparisonResponse(PeerComparisonStatusDto.TooFewPeers, "62.02A", "62", 2, DateTimeOffset.UnixEpoch, []);
+        page.Find("#pilotage-refresh").Click();
+        page.WaitForAssertion(() => page.Find("#pilotage-peers-status").TextContent.Should().StartWith("Seuls 2 autres dossiers du cabinet sont de la division NAF 62."));
+        page.FindAll("#pilotage-peers-table").Should().BeEmpty();
+
+        _gateway.Peers = null;
+        page.Find("#pilotage-refresh").Click();
+        page.WaitForAssertion(() => page.FindAll("#pilotage-peers").Should().BeEmpty("sans réponse du serveur, la section n'apparaît pas"));
+    }
+
+    [Fact]
     public void Mes_dossiers_se_filtre_se_trie_et_ouvre_un_dossier_en_le_disant_dans_le_toaster()
     {
         IRenderedComponent<PilotagePage> page = Render<PilotagePage>();
@@ -167,7 +199,16 @@ public sealed class PilotageScreenTests : BunitContext
     [InlineData(7200d, "2 h")]
     [InlineData(259_200d, "3 j")]
     public void Les_durees_s_ecrivent_dans_l_unite_lisible(double? seconds, string expected) =>
-        Plain(PilotageDisplay.Duration(seconds, CultureInfo.InvariantCulture)).Should().Be(expected);
+        Plain(PilotageDisplay.Duration(seconds, CultureInfo.GetCultureInfo("fr-FR"))).Should().Be(expected);
+
+    [Fact]
+    public void Les_jours_s_abregent_dans_la_langue_de_l_interface()
+    {
+        CultureInfo english = CultureInfo.GetCultureInfo("en-US");
+        Plain(PilotageDisplay.Days(38.4, english)).Should().Be("38 d");
+        Plain(PilotageDisplay.Duration(259_200d, english)).Should().Be("3 d");
+        Plain(PilotageDisplay.Days(38.4, CultureInfo.GetCultureInfo("fr-FR"))).Should().Be("38 j");
+    }
 
     [Fact]
     public void Les_seuils_suivent_ceux_des_tableaux_grafana()
@@ -241,6 +282,13 @@ public sealed class PilotageScreenTests : BunitContext
             return Task.FromResult(OperationResult<DossierPilotageResponse>.Success(new(At, dossier, At,
                 [new DossierIndicatorDto(DossierIndicatorKeys.OverdueInvoices, 3, IndicatorLevelDto.Warning, null)])));
         }
+
+        public PeerComparisonResponse? Peers { get; set; }
+
+        public Task<OperationResult<PeerComparisonResponse>> GetPeersAsync(CancellationToken cancellationToken) =>
+            Task.FromResult(Peers is { } p
+                ? OperationResult<PeerComparisonResponse>.Success(p)
+                : OperationResult<PeerComparisonResponse>.Failure(ErrorCodes.Security.Forbidden));
 
         public Task<OperationResult<CabinetPilotageResponse>> GetCabinetAsync(CancellationToken cancellationToken) =>
             Task.FromResult(OperationResult<CabinetPilotageResponse>.Success(Cabinet));

@@ -69,6 +69,7 @@ public static class DependencyInjection
         services.AddScoped<IBillingKpiReader, EfBillingKpiReader>();
         services.AddScoped<IDossierKpiSource, BillingKpiSource>();
         services.AddScoped<IDossierKpiSource, DossierOperationsKpiSource>();
+        services.AddScoped<IDossierKpiSource, CompanyKpiSource>();
 
         // Journal IA dans la base du dossier (remplace le journal vide enregistré par l'application).
         services.Replace(ServiceDescriptor.Scoped<IAiAuditLog, DossierAiAuditLog>());
