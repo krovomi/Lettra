@@ -16,6 +16,21 @@ onglets et le dit dans le toaster ; changer de dossier depuis « Mes dossiers »
 
 ![Ce dossier, sur ordinateur](captures/tableaux-de-bord/pilotage-dossier-ordinateur.png)
 
+## Commentaire écrit
+
+Sous chaque bloc (clients, ventes, les deux graphiques, « Mes dossiers »), quelques phrases disent ce que montrent les
+chiffres, tirées des mêmes valeurs et des mêmes seuils que les vignettes, en C# et sans IA : les mêmes chiffres donnent
+toujours le même texte. **Copier** les met dans le presse-papiers. Ratios, délais et indices seulement.
+
+## Comparé aux dossiers du même secteur
+
+L'onglet « Ce dossier » compare sept indicateurs (délai de paiement, créances en retard, encaissement, évolution du
+chiffre d'affaires, devis acceptés, poids du premier client, taux d'avoirs) à la médiane des autres dossiers du
+cabinet de la même division NAF, lue dans la dernière collecte des indicateurs (`GET /api/v1/pilotage/peers`). Chaque
+ligne dit « mieux », « comparable » (à 3 jours ou 3 points près) ou « moins bien ». Il faut le code NAF dans la fiche
+entreprise et au moins 5 pairs : en dessous, rien n'est montré, pour qu'aucune médiane ne laisse deviner un dossier.
+Seules des médianes sortent. Sur un poste isolé, la comparaison n'existe pas (elle demande le serveur du cabinet).
+
 ## Droits : qui voit quoi
 
 Grafana OSS ne sait pas filtrer un tableau selon la personne connectée : une page Grafana intégrée telle quelle (iframe)

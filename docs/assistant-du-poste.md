@@ -15,6 +15,7 @@ Outils proposés, tous en lecture seule :
 - `chiffre_d_affaires_du_mois` ;
 - `dossier_a_un_instant` ;
 - `simuler_et_si` ;
+- `fiche_d_appel` ;
 - les outils communs de l'assistant : calculatrice et références réglementaires.
 
 Chaque outil appelle le même cas d'usage que l'écran correspondant, donc avec les mêmes droits et le même calcul C#.

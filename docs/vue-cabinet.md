@@ -11,7 +11,7 @@ configuration, sans moyen d'en changer. La vague 6 ajoute trois choses :
    dossiers que l'utilisateur peut ouvrir, les plus urgents d'abord. Chaque dossier a une pastille à ses initiales et
    un badge de niveau (« Urgent », « À traiter », « À surveiller », « À jour ») dans la couleur du niveau, l'heure du
    dernier calcul, et ses compteurs (factures en retard, rejets de la plateforme, alertes ouvertes, revue du mois, et
-   ceux des autres modules comme « TVA à déclarer » et « Banque non rapprochée »). Un compteur à zéro reste discret ;
+   ceux des autres modules comme « TVA à déclarer », « Banque non rapprochée » et « E-facture »). Un compteur à zéro reste discret ;
    seuls ceux qui demandent une action sont en couleur. « Ouvrir » et « Revue » changent de dossier en un clic. La
    recherche, « Seulement ceux à traiter » et « Effacer les filtres » utilisent la barre de filtres commune des listes
    ([tris-et-filtres.md](tris-et-filtres.md)).
@@ -50,6 +50,13 @@ Selon l'installation :
   choisi est retenu sur l'appareil comme celui de la connexion.
 - **Poste isolé (mode 1)** : la vue cabinet et la revue marchent sur les dossiers du poste ; le sélecteur propose
   aussi d'en changer, parmi les dossiers du poste (câblage de `MauiProgram.cs`, voir plus bas).
+
+## La colonne « E-facture »
+
+Clé `facture-electronique.preparation` : le nombre de contrôles de préparation à la facture électronique à revoir
+(fiche entreprise, numéros des clients et des fournisseurs, transmissions récentes ; voir « Prêt pour l'e-facture »
+dans le [README](../README.md)). Niveau selon le score du dossier : à jour à 100, information de 80 à 99, attention
+de 50 à 79, critique sous 50. Aucun nom ni montant.
 
 ## Les droits
 
