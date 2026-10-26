@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.Receipts" xml:space="preserve"><value>Pièces justificatives</value></data>
+  <data name="Nav.ReceiptsToProvide" xml:space="preserve"><value>Pièces à fournir</value></data>
+  <data name="Receipts.Title" xml:space="preserve"><value>Pièces justificatives</value></data>
+  <data name="Receipts.Subtitle" xml:space="preserve"><value>Les dépenses du relevé et leur justificatif. Réclamez au client les pièces qui manquent : il les dépose en photo depuis son téléphone.</value></data>
+  <data name="Receipts.Stat.Missing" xml:space="preserve"><value>À obtenir</value></data>
+  <data name="Receipts.Stat.MissingAmount" xml:space="preserve"><value>Montant sans pièce</value></data>
+  <data name="Receipts.Stat.Requested" xml:space="preserve"><value>Réclamées</value></data>
+  <data name="Receipts.Stat.Received" xml:space="preserve"><value>Déposées</value></data>
+  <data name="Receipts.Lines" xml:space="preserve"><value>Dépenses du relevé</value></data>
+  <data name="Receipts.Filter.Status" xml:space="preserve"><value>Justificatif</value></data>
+  <data name="Receipts.Filter.ToObtain" xml:space="preserve"><value>À obtenir (manquantes ou réclamées)</value></data>
+  <data name="Receipts.Filter.All" xml:space="preserve"><value>Toutes les dépenses</value></data>
+  <data name="Receipts.Status.Missing" xml:space="preserve"><value>Manquante</value></data>
+  <data name="Receipts.Status.Requested" xml:space="preserve"><value>Réclamée</value></data>
+  <data name="Receipts.Status.Received" xml:space="preserve"><value>Déposée</value></data>
+  <data name="Receipts.Status.NotNeeded" xml:space="preserve"><value>Non attendue</value></data>
+  <data name="Receipts.Empty" xml:space="preserve"><value>Aucune dépense dans le relevé</value></data>
+  <data name="Receipts.Empty.Text" xml:space="preserve"><value>Importez un relevé bancaire : chaque dépense y appelle une pièce justificative.</value></data>
+  <data name="Receipts.SelectAll" xml:space="preserve"><value>Sélectionner les {0} dépenses à obtenir</value></data>
+  <data name="Receipts.RequestSelected" xml:space="preserve"><value>Réclamer ({0})</value></data>
+  <data name="Receipts.Request.Title" xml:space="preserve"><value>Réclamer {0} pièce(s), pour {1}</value></data>
+  <data name="Receipts.Request.Email" xml:space="preserve"><value>Adresse e-mail du client</value></data>
+  <data name="Receipts.Request.Note" xml:space="preserve"><value>Message (facultatif)</value></data>
+  <data name="Receipts.Request.NotePlaceholder" xml:space="preserve"><value>Bonjour, il nous manque ces justificatifs pour la clôture.</value></data>
+  <data name="Receipts.Request.Send" xml:space="preserve"><value>Envoyer la demande</value></data>
+  <data name="Receipts.Request.EmailOff" xml:space="preserve"><value>Cette installation n'envoie pas d'e-mails : les demandes seront notées, prévenez le client vous-même.</value></data>
+  <data name="Receipts.Requested.Sent" xml:space="preserve"><value>{0} pièce(s) réclamée(s) : l'e-mail est parti.</value></data>
+  <data name="Receipts.Requested.NotConfigured" xml:space="preserve"><value>{0} pièce(s) réclamée(s), mais cette installation n'envoie pas d'e-mails : prévenez le client.</value></data>
+  <data name="Receipts.Requested.Failed" xml:space="preserve"><value>{0} pièce(s) réclamée(s), mais l'e-mail n'est pas parti : réessayez plus tard.</value></data>
+  <data name="Receipts.RequestedOn" xml:space="preserve"><value>le {0} ({1} demande(s))</value></data>
+  <data name="Receipts.Upload" xml:space="preserve"><value>Déposer</value></data>
+  <data name="Receipts.Replace" xml:space="preserve"><value>Remplacer</value></data>
+  <data name="Receipts.Uploaded" xml:space="preserve"><value>Pièce déposée, merci.</value></data>
+  <data name="Receipts.Download" xml:space="preserve"><value>Télécharger</value></data>
+  <data name="Receipts.NotNeeded" xml:space="preserve"><value>Non attendue</value></data>
+  <data name="Receipts.Needed" xml:space="preserve"><value>Attendue</value></data>
+  <data name="Receipts.NotNeeded.Toast" xml:space="preserve"><value>Aucune pièce n'est attendue pour cette dépense.</value></data>
+  <data name="Receipts.Needed.Toast" xml:space="preserve"><value>La pièce est de nouveau attendue.</value></data>
+  <data name="Receipts.ToProvide.Title" xml:space="preserve"><value>Pièces à fournir</value></data>
+  <data name="Receipts.ToProvide.Subtitle" xml:space="preserve"><value>Votre cabinet attend le justificatif (facture, ticket) de ces dépenses.</value></data>
+  <data name="Receipts.ToProvide.Count" xml:space="preserve"><value>{0} pièce(s) à fournir, pour {1}</value></data>
+  <data name="Receipts.ToProvide.Empty" xml:space="preserve"><value>Rien à fournir</value></data>
+  <data name="Receipts.ToProvide.Empty.Text" xml:space="preserve"><value>Votre cabinet n'attend aucune pièce. Merci !</value></data>
+  <data name="Receipts.ToProvide.Hint" xml:space="preserve"><value>Une photo nette suffit, ou un PDF. 5 Mo au plus par pièce.</value></data>
+  <data name="Error.Receipt.LineNotDebit" xml:space="preserve"><value>Seule une dépense (opération débitrice) appelle une pièce justificative.</value></data>
+  <data name="Error.Receipt.AlreadyReceived" xml:space="preserve"><value>La pièce est déjà déposée.</value></data>
+  <data name="Error.Receipt.FileRequired" xml:space="preserve"><value>Choisissez une photo ou un PDF.</value></data>
+  <data name="Error.Receipt.FileTooLarge" xml:space="preserve"><value>La pièce dépasse 5 Mo : prenez une photo moins lourde.</value></data>
+  <data name="Error.Receipt.FileTypeInvalid" xml:space="preserve"><value>Seules les photos (JPEG, PNG, WebP, HEIC) et les PDF sont acceptés.</value></data>
+  <data name="Error.Receipt.LinesRequired" xml:space="preserve"><value>Choisissez de 1 à 100 dépenses.</value></data>
+  <data name="Error.Receipt.EmailInvalid" xml:space="preserve"><value>L'adresse e-mail n'est pas valide.</value></data>
+  <data name="Error.Receipt.NoteTooLong" xml:space="preserve"><value>Le message dépasse 500 caractères.</value></data>
+  <data name="Error.Receipt.NotFound" xml:space="preserve"><value>Aucune pièce n'est déposée pour cette dépense.</value></data>
+</root>

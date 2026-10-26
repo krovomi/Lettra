@@ -97,6 +97,45 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.ToTable("BankConnections", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Domain.Banking.BankLineReceipt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("AddedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("AddedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("Content")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("LineId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Size")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LineId")
+                        .IsUnique();
+
+                    b.ToTable("BankLineReceipts", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Domain.Banking.BankStatementImport", b =>
                 {
                     b.Property<Guid>("Id")
@@ -182,6 +221,19 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
 
                     b.Property<Guid?>("PaymentId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ReceiptRequestedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("ReceiptRequestedTo")
+                        .HasMaxLength(254)
+                        .HasColumnType("nvarchar(254)");
+
+                    b.Property<int>("ReceiptRequests")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReceiptStatus")
+                        .HasColumnType("int");
 
                     b.Property<string>("Reference")
                         .HasMaxLength(140)
@@ -2503,6 +2555,15 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("DossierStamp", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Banking.BankLineReceipt", b =>
+                {
+                    b.HasOne("Lettra.Domain.Banking.BankStatementLine", null)
+                        .WithMany()
+                        .HasForeignKey("LineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Lettra.Domain.Banking.Lettering", b =>

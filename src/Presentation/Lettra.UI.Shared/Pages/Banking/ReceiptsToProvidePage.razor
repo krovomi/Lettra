@@ -1,0 +1,73 @@
+@page "/my-receipts"
+@inject IReceiptsGateway Receipts
+@inject IStringLocalizer<SharedResource> L
+@* « Pièces à fournir », côté client : les dépenses dont le cabinet attend le justificatif, une carte chacune, avec
+   un gros bouton qui ouvre l'appareil photo du téléphone. L'e-mail de demande mène ici. *@
+
+<PageTitle>@L["Receipts.ToProvide.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Receipts.ToProvide.Title"]</h1>
+        <p class="lettra-muted">@L["Receipts.ToProvide.Subtitle"]</p>
+    </div>
+</div>
+
+<GeneralErrors Errors="_errors" />
+
+@if (_view is null)
+{
+    <ListSkeleton Columns="3" />
+}
+else if (_view.Lines.Count == 0)
+{
+    <EmptyState Id="to-provide-empty" IconName="circle-check" Title="@L["Receipts.ToProvide.Empty"]" Text="@L["Receipts.ToProvide.Empty.Text"]" />
+}
+else
+{
+    <section aria-labelledby="to-provide-count">
+        <p id="to-provide-count" class="lt-receipts-count">
+            @string.Format(Culture, L["Receipts.ToProvide.Count"], _view.Lines.Count, ExplorerText.Money(_view.MissingAmount))
+        </p>
+        <div class="lt-filter lt-receipts-search">
+            <label for="to-provide-search">@L["Lists.Search"]</label>
+            <input id="to-provide-search" type="search" @bind="_search" @bind:event="oninput" autocomplete="off" />
+        </div>
+        <ul class="lt-receipts-cards" id="to-provide-list">
+            @foreach (ReceiptLineResponse line in Shown)
+            {
+                <li @key="line.LineId" class="lettra-card" id="@($"to-provide-{line.LineId}")">
+                    <div class="lt-receipts-card-head">
+                        <strong>@(line.CounterpartyName ?? line.Label)</strong>
+                        <span class="lt-banking-money">@ExplorerText.Money(line.Amount)</span>
+                    </div>
+                    <p class="lettra-muted">@DateText.Format(line.Date, Culture) · @line.Label</p>
+                    <ReceiptUpload Id="@($"to-provide-upload-{line.LineId}")" LineId="line.LineId" Class="is-block" OnUploaded="LoadAsync" />
+                </li>
+            }
+        </ul>
+        <p class="lettra-hint"><Icon Name="info" Size="16" /> @L["Receipts.ToProvide.Hint"]</p>
+    </section>
+}
+
+@code {
+    private ReceiptsResponse? _view;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private string? _search;
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    /// <summary>Les plus anciennes d'abord : ce sont celles que le cabinet attend depuis le plus longtemps.</summary>
+    private IEnumerable<ReceiptLineResponse> Shown => (_view?.Lines ?? [])
+        .Where(l => string.IsNullOrWhiteSpace(_search) || ListSorting.Matches(l.Label, _search) || ListSorting.Matches(l.CounterpartyName, _search))
+        .OrderBy(l => l.Date);
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        OperationResult<ReceiptsResponse> result = await Receipts.GetRequestedAsync(CancellationToken.None);
+        _errors = result.Errors;
+        _view = result.Value ?? new ReceiptsResponse([], 0, 0m, 0, 0, null, false);
+    }
+}

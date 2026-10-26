@@ -1,0 +1,367 @@
+@page "/receipts"
+@inject IReceiptsGateway Receipts
+@inject IFileDownloader Files
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+@* Pièces justificatives des dépenses du relevé, côté cabinet : ce qui manque, ce qui est réclamé, ce qui est déposé.
+   On réclame d'un coup les pièces choisies par un e-mail au client, qui les dépose en photo depuis son téléphone
+   (écran « Pièces à fournir ») ; on peut aussi déposer une pièce reçue autrement, ou dire qu'aucune n'est attendue. *@
+
+<PageTitle>@L["Receipts.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Receipts.Title"]</h1>
+        <p class="lettra-muted">@L["Receipts.Subtitle"]</p>
+    </div>
+    <div class="lt-page-actions">
+        <a class="lettra-button is-secondary" href="bank" id="receipts-to-bank"><Icon Name="landmark" Size="18" /> @L["Bank.Title"]</a>
+    </div>
+</div>
+
+<GeneralErrors Errors="_errors" IncludeFieldErrors="true" />
+
+<div class="lt-banking-stats" id="receipts-stats">
+    <div class="lt-banking-stat is-pending"><span>@L["Receipts.Stat.Missing"]</span><strong id="receipts-missing">@(_view?.MissingCount ?? 0)</strong></div>
+    <div class="lt-banking-stat"><span>@L["Receipts.Stat.MissingAmount"]</span><strong id="receipts-missing-amount">@ExplorerText.Money(_view?.MissingAmount ?? 0m)</strong></div>
+    <div class="lt-banking-stat is-proposed"><span>@L["Receipts.Stat.Requested"]</span><strong id="receipts-requested">@(_view?.RequestedCount ?? 0)</strong></div>
+    <div class="lt-banking-stat"><span>@L["Receipts.Stat.Received"]</span><strong id="receipts-received">@(_view?.ReceivedCount ?? 0)</strong></div>
+</div>
+
+<section class="lettra-card" aria-labelledby="receipts-lines-title">
+    <div class="lt-banking-section-head">
+        <h2 id="receipts-lines-title">@L["Receipts.Lines"]</h2>
+    </div>
+
+    @if (_view is not null && _view.Lines.Count > 0)
+    {
+        <ListFilterBar Id="receipts-filters" ActiveCount="ActiveFilters" OnReset="ResetFilters">
+            <ChildContent>
+                <div class="lt-filter">
+                    <label for="receipts-search">@L["Lists.Search"]</label>
+                    <input id="receipts-search" type="search" @bind="_search" @bind:event="oninput" autocomplete="off" />
+                </div>
+                <div class="lt-filter">
+                    <label for="receipts-status">@L["Receipts.Filter.Status"]</label>
+                    <select id="receipts-status" @bind="_status">
+                        <option value="@ToObtain">@L["Receipts.Filter.ToObtain"]</option>
+                        <option value="@All">@L["Receipts.Filter.All"]</option>
+                        @foreach (ReceiptStatusDto status in Enum.GetValues<ReceiptStatusDto>())
+                        {
+                            <option value="@status">@L[$"Receipts.Status.{status}"]</option>
+                        }
+                    </select>
+                </div>
+            </ChildContent>
+            <More>
+                <DateRangeFilter Id="receipts-dates" Label="@L["Billing.Column.Date"]" @bind-From="_from" @bind-To="_to" />
+                <SortSelect Id="receipts-sort" Options="SortOptions" State="_sort" OnSort="StateHasChanged" />
+            </More>
+        </ListFilterBar>
+    }
+
+    @if (_view is null)
+    {
+        <ListSkeleton Columns="5" />
+    }
+    else if (_view.Lines.Count == 0)
+    {
+        <EmptyState Id="receipts-empty" IconName="paperclip" Title="@L["Receipts.Empty"]" Text="@L["Receipts.Empty.Text"]">
+            <a class="lettra-button is-secondary" href="bank">@L["Bank.Title"]</a>
+        </EmptyState>
+    }
+    else if (Shown.Count == 0)
+    {
+        <EmptyState Id="receipts-filtered-empty" IconName="search" Title="@L["Lists.Empty.FilteredTitle"]" Text="@L["Lists.Empty.Filtered"]">
+            <button type="button" class="lettra-button is-secondary" id="receipts-empty-reset" @onclick="ResetFilters">@L["Lists.Filters.Reset"]</button>
+        </EmptyState>
+    }
+    else
+    {
+        @if (Requestable.Count > 0)
+        {
+            <div class="lt-banking-bulk" id="receipts-bulk">
+                <label class="lt-banking-check">
+                    <input type="checkbox" id="receipts-select-all" checked="@(Selected.Count == Requestable.Count)" @onchange="SelectAll" />
+                    @string.Format(Culture, L["Receipts.SelectAll"], Requestable.Count)
+                </label>
+                <button type="button" class="lettra-button" id="receipts-request-selected" disabled="@(Selected.Count == 0 || _busy)" @onclick="OpenRequest">
+                    <Icon Name="send" Size="18" /> @string.Format(Culture, L["Receipts.RequestSelected"], Selected.Count)
+                </button>
+            </div>
+        }
+
+        @if (_requesting)
+        {
+            <form class="lt-receipts-request" id="receipts-request-form" @onsubmit="RequestAsync" @onsubmit:preventDefault="true">
+                <h3>@string.Format(Culture, L["Receipts.Request.Title"], Selected.Count, ExplorerText.Money(Selected.Sum(l => l.Amount)))</h3>
+                @if (!_view.EmailConfigured)
+                {
+                    <p class="lettra-banner is-warning" id="receipts-email-off" role="status"><Icon Name="triangle-alert" Size="18" /> @L["Receipts.Request.EmailOff"]</p>
+                }
+                <div class="lt-field">
+                    <label for="receipts-email">@L["Receipts.Request.Email"]</label>
+                    <input id="receipts-email" type="email" autocomplete="email" maxlength="254" required @bind="_email" />
+                </div>
+                <div class="lt-field">
+                    <label for="receipts-note">@L["Receipts.Request.Note"]</label>
+                    <textarea id="receipts-note" rows="3" maxlength="500" placeholder="@L["Receipts.Request.NotePlaceholder"]" @bind="_note"></textarea>
+                </div>
+                <div class="lt-receipts-request-actions">
+                    <button type="submit" class="lettra-button" id="receipts-request-send" disabled="@_busy"><Icon Name="send" Size="18" /> @L["Receipts.Request.Send"]</button>
+                    <button type="button" class="lettra-button is-ghost" id="receipts-request-cancel" @onclick="() => _requesting = false">@L["Explorer.Cancel"]</button>
+                </div>
+            </form>
+        }
+
+        <div class="lt-list-scroll">
+            <table class="lettra-table lt-cards lt-receipts-lines" id="receipts-lines">
+                <thead>
+                    <tr>
+                        <SortHeader Option="SortOptions[0]" State="_sort" OnSort="StateHasChanged" Id="receipts-sort-label" />
+                        <SortHeader Option="SortOptions[1]" State="_sort" OnSort="StateHasChanged" Id="receipts-sort-date" />
+                        <SortHeader Option="SortOptions[2]" State="_sort" OnSort="StateHasChanged" Id="receipts-sort-amount" Class="lg-num" />
+                        <SortHeader Option="SortOptions[3]" State="_sort" OnSort="StateHasChanged" Id="receipts-sort-status" />
+                        <th scope="col"><span class="lettra-visually-hidden">@L["Bank.Actions"]</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (ReceiptLineResponse line in Shown)
+                    {
+                        <tr @key="line.LineId" id="@($"receipt-{line.LineId}")">
+                            <td>
+                                <div class="lt-banking-label">
+                                    @if (IsRequestable(line))
+                                    {
+                                        <input type="checkbox" aria-label="@string.Format(Culture, L["Bank.SelectLine"], line.Label)" checked="@_selected.Contains(line.LineId)" @onchange="e => Select(line, e)" />
+                                    }
+                                    <span>
+                                        <strong>@(line.CounterpartyName ?? line.Label)</strong>
+                                        @if (line.CounterpartyName is not null)
+                                        {
+                                            <small class="lettra-muted">@line.Label</small>
+                                        }
+                                    </span>
+                                </div>
+                            </td>
+                            <td data-label="@L["Billing.Column.Date"]">@DateText.Format(line.Date, Culture)</td>
+                            <td data-label="@L["Payments.Amount"]" class="lg-num lt-banking-money">@ExplorerText.Money(line.Amount)</td>
+                            <td data-label="@L["Receipts.Filter.Status"]">
+                                <span class="@($"lettra-status {StatusClass(line.Status)}")">@L[$"Receipts.Status.{line.Status}"]</span>
+                                @if (line is { Status: ReceiptStatusDto.Requested, RequestedAt: { } at })
+                                {
+                                    <small class="lettra-muted lt-receipts-when">@string.Format(Culture, L["Receipts.RequestedOn"], at.ToLocalTime().ToString("d", Culture), line.Requests)</small>
+                                }
+                                @if (line.Receipt is { } receipt)
+                                {
+                                    <small class="lettra-muted lt-receipts-when">@receipt.FileName</small>
+                                }
+                            </td>
+                            <td class="lt-banking-line-actions">
+                                @if (line.Receipt is not null)
+                                {
+                                    <button type="button" class="lettra-button is-small is-secondary" id="@($"receipt-download-{line.LineId}")" disabled="@_busy" @onclick="() => DownloadAsync(line)">
+                                        <Icon Name="download" Size="16" /> @L["Receipts.Download"]
+                                    </button>
+                                }
+                                @if (line.Status != ReceiptStatusDto.NotNeeded)
+                                {
+                                    <ReceiptUpload Id="@($"receipt-upload-{line.LineId}")" LineId="line.LineId" Replace="@(line.Receipt is not null)" Class="is-small is-secondary" OnUploaded="Replaced" />
+                                }
+                                @if (line.Status is ReceiptStatusDto.Missing or ReceiptStatusDto.Requested)
+                                {
+                                    <button type="button" class="lettra-button is-small is-ghost" id="@($"receipt-not-needed-{line.LineId}")" disabled="@_busy" @onclick="() => NotNeededAsync(line, true)">@L["Receipts.NotNeeded"]</button>
+                                }
+                                else if (line.Status == ReceiptStatusDto.NotNeeded)
+                                {
+                                    <button type="button" class="lettra-button is-small is-ghost" id="@($"receipt-needed-{line.LineId}")" disabled="@_busy" @onclick="() => NotNeededAsync(line, false)">@L["Receipts.Needed"]</button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+@code {
+    private const string ToObtain = "to-obtain";
+    private const string All = "all";
+
+    private readonly HashSet<Guid> _selected = [];
+    private ReceiptsResponse? _view;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private bool _busy;
+    private bool _requesting;
+    private string? _email;
+    private string? _note;
+    private string? _search;
+    private string _status = ToObtain;
+    private DateOnly? _from;
+    private DateOnly? _to;
+
+    // Les plus récentes d'abord, comme le relevé.
+    private readonly SortState<ReceiptColumn> _sort = new(ReceiptColumn.Date, SortDirectionDto.Descending);
+
+    private enum ReceiptColumn
+    {
+        Label,
+        Date,
+        Amount,
+        Status,
+    }
+
+    private IReadOnlyList<SortOption<ReceiptColumn>> SortOptions =>
+    [
+        new(ReceiptColumn.Label, L["Bank.Operation"]),
+        new(ReceiptColumn.Date, L["Billing.Column.Date"], SortDirectionDto.Descending),
+        new(ReceiptColumn.Amount, L["Payments.Amount"], SortDirectionDto.Descending),
+        new(ReceiptColumn.Status, L["Receipts.Filter.Status"]),
+    ];
+
+    private static readonly Dictionary<ReceiptColumn, Func<ReceiptLineResponse, object?>> SortKeys = new()
+    {
+        [ReceiptColumn.Label] = l => l.CounterpartyName ?? l.Label,
+        [ReceiptColumn.Date] = l => l.Date,
+        [ReceiptColumn.Amount] = l => l.Amount,
+        [ReceiptColumn.Status] = l => (int)l.Status,
+    };
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private IEnumerable<ReceiptLineResponse> Filtered => (_view?.Lines ?? [])
+        .Where(l => string.IsNullOrWhiteSpace(_search) || ListSorting.Matches(l.Label, _search) || ListSorting.Matches(l.CounterpartyName, _search))
+        .Where(l => _status switch
+        {
+            ToObtain => IsRequestable(l),
+            All => true,
+            _ => Enum.TryParse(_status, out ReceiptStatusDto status) && l.Status == status,
+        })
+        .Where(l => (_from is null || l.Date >= _from) && (_to is null || l.Date <= _to));
+
+    private IReadOnlyList<ReceiptLineResponse> Shown => ListSorting.Sort(Filtered, _sort, SortKeys);
+
+    /// <summary>« Tout sélectionner » et « Réclamer » ne portent que sur les dépenses que les filtres laissent voir.</summary>
+    private IReadOnlyList<ReceiptLineResponse> Requestable => [.. Filtered.Where(IsRequestable)];
+
+    private IReadOnlyList<ReceiptLineResponse> Selected => [.. Requestable.Where(l => _selected.Contains(l.LineId))];
+
+    private int ActiveFilters => (string.IsNullOrWhiteSpace(_search) ? 0 : 1) + (_status == ToObtain ? 0 : 1) + (_from is null ? 0 : 1) + (_to is null ? 0 : 1);
+
+    private static bool IsRequestable(ReceiptLineResponse line) => line.Status is ReceiptStatusDto.Missing or ReceiptStatusDto.Requested;
+
+    private static string StatusClass(ReceiptStatusDto status) => status switch
+    {
+        ReceiptStatusDto.Missing => "is-refused",
+        ReceiptStatusDto.Requested => "is-draft",
+        ReceiptStatusDto.Received => "is-issued",
+        _ => string.Empty,
+    };
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        OperationResult<ReceiptsResponse> result = await Receipts.GetReceiptsAsync(CancellationToken.None);
+        _errors = result.Errors;
+        _view = result.Value ?? new ReceiptsResponse([], 0, 0m, 0, 0, null, false);
+        _email ??= _view.LastRecipient;
+        _selected.IntersectWith(Requestable.Select(l => l.LineId));
+    }
+
+    private void ResetFilters() => (_search, _status, _from, _to) = (null, ToObtain, null, null);
+
+    private void Select(ReceiptLineResponse line, ChangeEventArgs e)
+    {
+        if (e.Value is true)
+        {
+            _selected.Add(line.LineId);
+        }
+        else
+        {
+            _selected.Remove(line.LineId);
+        }
+    }
+
+    private void SelectAll(ChangeEventArgs e)
+    {
+        if (e.Value is true)
+        {
+            _selected.UnionWith(Requestable.Select(l => l.LineId));
+        }
+        else
+        {
+            _selected.Clear();
+        }
+    }
+
+    private void OpenRequest() => _requesting = true;
+
+    private Task RequestAsync() => RunAsync(async () =>
+    {
+        OperationResult<RequestReceiptsResponse> result = await Receipts.RequestAsync(
+            new RequestReceiptsRequest { LineIds = [.. Selected.Select(l => l.LineId)], Email = _email?.Trim() ?? string.Empty, Note = _note },
+            CancellationToken.None);
+        if (result is { IsSuccess: true, Value: { } sent })
+        {
+            Toasts.Show(
+                sent.Email == InvitationEmailStatusDto.Sent ? ToastKind.Success : ToastKind.Warning,
+                string.Format(Culture, L[$"Receipts.Requested.{sent.Email}"], sent.Requested));
+            _selected.Clear();
+            _requesting = false;
+            _note = null;
+        }
+
+        return result.Errors;
+    });
+
+    private Task NotNeededAsync(ReceiptLineResponse line, bool notNeeded) => RunAsync(async () =>
+    {
+        OperationResult<ReceiptLineResponse> result = await Receipts.SetNotNeededAsync(line.LineId, notNeeded, CancellationToken.None);
+        if (result.IsSuccess)
+        {
+            _selected.Remove(line.LineId);
+            Toasts.Show(ToastKind.Success, notNeeded ? L["Receipts.NotNeeded.Toast"] : L["Receipts.Needed.Toast"]);
+        }
+
+        return result.Errors;
+    });
+
+    private async Task DownloadAsync(ReceiptLineResponse line)
+    {
+        OperationResult<ReceiptDocument> file = await Receipts.DownloadAsync(line.LineId, CancellationToken.None);
+        if (file is { IsSuccess: true, Value: { } document })
+        {
+            await Files.DownloadAsync(document.FileName, document.ContentType, document.Content, CancellationToken.None);
+        }
+        else
+        {
+            _errors = file.Errors;
+        }
+    }
+
+    private Task Replaced(ReceiptLineResponse line)
+    {
+        _selected.Remove(line.LineId);
+        return LoadAsync();
+    }
+
+    private async Task RunAsync(Func<Task<IReadOnlyList<ErrorDetail>>> action)
+    {
+        _busy = true;
+        try
+        {
+            IReadOnlyList<ErrorDetail> errors = await action();
+            await LoadAsync();
+            if (errors.Count > 0)
+            {
+                _errors = errors;
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}
