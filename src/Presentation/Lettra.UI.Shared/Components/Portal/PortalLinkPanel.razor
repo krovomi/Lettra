@@ -1,0 +1,190 @@
+@inject IPortalGateway Portal
+@inject ToastService Toasts
+@inject IJSRuntime JS
+@inject TimeProvider Clock
+@inject IStringLocalizer<SharedResource> L
+@* Espace client, côté cabinet : créer le lien à envoyer au client (espace complet, lien de paiement d'une facture, ou
+   signature d'un devis avec acompte), le copier, voir les liens déjà envoyés et en révoquer un. Le jeton n'est montré
+   qu'à la création : Lettra n'en garde que l'empreinte. *@
+
+<section id="@Id" class="lettra-portal-links" aria-label="@L[$"Portal.{Kind}.Title"]">
+    <p class="lettra-hint">@L[$"Portal.{Kind}.Help"]</p>
+
+    @if (_disabled)
+    {
+        <p class="lettra-hint" id="@($"{Id}-disabled")">@L["Portal.Disabled"]</p>
+    }
+    else
+    {
+        <div class="lettra-portal-create">
+            @if (Kind == PortalLinkKind.Quote)
+            {
+                <label class="lettra-field" for="@($"{Id}-down-payment")">
+                    <span>@L["Portal.DownPayment"]</span>
+                    <select id="@($"{Id}-down-payment")" @bind="_downPayment">
+                        <option value="0">@L["Portal.DownPayment.None"]</option>
+                        @foreach (int percent in DownPaymentChoices)
+                        {
+                            <option value="@percent">@string.Format(CultureInfo.CurrentCulture, L["Portal.DownPayment.Percent"], percent)</option>
+                        }
+                    </select>
+                </label>
+            }
+            <button type="button" class="lettra-button is-secondary" id="@($"{Id}-create")" disabled="@_busy" @onclick="CreateAsync">
+                <Icon Name="@(Kind == PortalLinkKind.Quote ? "file-pen-line" : "link")" Size="18" /> @L[$"Portal.{Kind}.Create"]
+            </button>
+        </div>
+    }
+
+    @if (_created is { } created)
+    {
+        <div class="lettra-portal-url" id="@($"{Id}-created")">
+            <label class="lettra-visually-hidden" for="@($"{Id}-url")">@L["Portal.Url"]</label>
+            <input id="@($"{Id}-url")" type="text" readonly value="@created.Url" />
+            <button type="button" class="lettra-button" id="@($"{Id}-copy")" @onclick="CopyAsync"><Icon Name="copy" Size="18" /> @L["Portal.Copy"]</button>
+            <a class="lettra-button is-ghost" id="@($"{Id}-open")" href="@created.Url" target="_blank" rel="noopener noreferrer">
+                <Icon Name="external-link" Size="18" /> @L["Portal.Open"]
+            </a>
+        </div>
+        <p class="lettra-hint" id="@($"{Id}-expires")">@string.Format(CultureInfo.CurrentCulture, L["Portal.ValidUntil"], created.Link.ExpiresAt.ToLocalTime().ToString("d", CultureInfo.CurrentCulture))</p>
+    }
+
+    @if (ShowLinks && _links is { Count: > 0 } links)
+    {
+        <h4 class="lettra-portal-list-title">@L["Portal.Sent"]</h4>
+        <ul class="lt-mini-list lettra-portal-list" id="@($"{Id}-list")">
+            @foreach (PortalLinkSummary link in links)
+            {
+                <li @key="link.Id" data-link="@link.Id">
+                    <span>@L[link.QuoteId is null ? "Portal.Kind.Customer" : "Portal.Kind.Quote"]@(link.DownPaymentPercent is { } p ? $" · {string.Format(CultureInfo.CurrentCulture, L["Portal.DownPayment.Percent"], p)}" : null)</span>
+                    <span class="lt-mini-meta">@Opened(link)</span>
+                    <span class="lettra-status @(link.IsActive ? "is-active" : "is-muted")">@State(link)</span>
+                    @if (link.IsActive)
+                    {
+                        <button type="button" class="lettra-button is-ghost" id="@($"{Id}-revoke-{link.Id:N}")" @onclick="() => RevokeAsync(link)"
+                                aria-label="@L["Portal.Revoke"]">@L["Portal.Revoke"]</button>
+                    }
+                </li>
+            }
+        </ul>
+    }
+</section>
+
+@code {
+    private static readonly int[] DownPaymentChoices = [20, 30, 40, 50];
+
+    [Parameter, EditorRequired] public Guid CustomerId { get; set; }
+
+    /// <summary>Un lien de signature de ce devis (validé) ; vide pour l'espace complet.</summary>
+    [Parameter] public Guid? QuoteId { get; set; }
+
+    /// <summary>Le lien part d'une facture : on parle de lien de paiement.</summary>
+    [Parameter] public bool ForInvoice { get; set; }
+
+    /// <summary>Montre les liens déjà envoyés à ce client (fiche client).</summary>
+    [Parameter] public bool ShowLinks { get; set; }
+
+    [Parameter] public string Id { get; set; } = "portal-links";
+
+    private PortalLinkKind Kind => QuoteId is not null ? PortalLinkKind.Quote : ForInvoice ? PortalLinkKind.Invoice : PortalLinkKind.Customer;
+
+    private PortalLinkCreated? _created;
+    private IReadOnlyList<PortalLinkSummary>? _links;
+    private Guid _loadedFor;
+    private int _downPayment = 30;
+    private bool _busy;
+    private bool _disabled;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_loadedFor != CustomerId)
+        {
+            _loadedFor = CustomerId;
+            _created = null;
+            await LoadLinksAsync();
+        }
+    }
+
+    private async Task LoadLinksAsync()
+    {
+        if (!ShowLinks)
+        {
+            return;
+        }
+
+        OperationResult<IReadOnlyList<PortalLinkSummary>> result = await Portal.ListLinksAsync(CustomerId, CancellationToken.None);
+        _links = result.IsSuccess ? result.Value : null;
+    }
+
+    private async Task CreateAsync()
+    {
+        _busy = true;
+        CreatePortalLinkRequest request = new()
+        {
+            CustomerId = CustomerId,
+            QuoteId = QuoteId,
+            DownPaymentPercent = Kind == PortalLinkKind.Quote && _downPayment > 0 ? _downPayment : null,
+        };
+        OperationResult<PortalLinkCreated> result = await Portal.CreateLinkAsync(request, CancellationToken.None);
+        _busy = false;
+        if (result.IsSuccess && result.Value is { } created)
+        {
+            _created = created;
+            Toasts.Show(ToastKind.Success, L[$"Portal.{Kind}.Created"]);
+            await LoadLinksAsync();
+            return;
+        }
+
+        _disabled = result.Errors[0].Code == ErrorCodes.Portal.Disabled;
+        Toasts.Show(ToastKind.Error, L.Error(result.Errors[0].Code));
+    }
+
+    private async Task CopyAsync()
+    {
+        if (_created is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", _created.Url);
+            Toasts.Show(ToastKind.Success, L["Portal.Copied"]);
+        }
+        catch (JSException)
+        {
+            // Presse-papiers refusé (page non sécurisée, permission) : l'adresse reste sélectionnable dans le champ.
+            Toasts.Show(ToastKind.Warning, L["Portal.CopyFailed"]);
+        }
+    }
+
+    private async Task RevokeAsync(PortalLinkSummary link)
+    {
+        OperationResult<bool> result = await Portal.RevokeLinkAsync(link.Id, CancellationToken.None);
+        if (result.IsSuccess)
+        {
+            Toasts.Show(ToastKind.Success, L["Portal.Revoked"]);
+            await LoadLinksAsync();
+        }
+        else
+        {
+            Toasts.Show(ToastKind.Error, L.Error(result.Errors[0].Code));
+        }
+    }
+
+    private string Opened(PortalLinkSummary link) => link.LastOpenedAt is { } opened
+        ? string.Format(CultureInfo.CurrentCulture, L["Portal.OpenedOn"], opened.ToLocalTime().ToString("g", CultureInfo.CurrentCulture))
+        : L["Portal.NeverOpened"];
+
+    private string State(PortalLinkSummary link) =>
+        link.RevokedAt is not null ? L["Portal.State.Revoked"]
+        : !link.IsActive || link.ExpiresAt <= Clock.GetUtcNow() ? L["Portal.State.Expired"]
+        : string.Format(CultureInfo.CurrentCulture, L["Portal.State.Active"], link.ExpiresAt.ToLocalTime().ToString("d", CultureInfo.CurrentCulture));
+
+    private enum PortalLinkKind
+    {
+        Customer,
+        Invoice,
+        Quote,
+    }
+}

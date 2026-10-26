@@ -16,6 +16,9 @@ public enum BankStatementFormat
 
     /// <summary>Fichier à séparateurs, colonnes paramétrables.</summary>
     Csv = 3,
+
+    /// <summary>Opérations lues par une banque connectée (agrégateur DSP2), sans fichier.</summary>
+    Connection = 4,
 }
 
 /// <summary>État d'une ligne du relevé (valeurs identiques à <c>BankLineStatusDto</c>).</summary>

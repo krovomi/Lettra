@@ -69,7 +69,7 @@
   <data name="Payments.Reverse.Confirm" xml:space="preserve"><value>Confirm the reversal</value></data>
   <data name="Payments.Reversed" xml:space="preserve"><value>Payment {0} reversed.</value></data>
   <data name="Bank.Title" xml:space="preserve"><value>Bank reconciliation</value></data>
-  <data name="Bank.Subtitle" xml:space="preserve"><value>Import the bank statement: Lettra suggests the matching invoices, you confirm.</value></data>
+  <data name="Bank.Subtitle" xml:space="preserve"><value>Link your bank or import its statement: Lettra suggests the matching invoices, you confirm.</value></data>
   <data name="Bank.Pending" xml:space="preserve"><value>To match</value></data>
   <data name="Bank.Proposals" xml:space="preserve"><value>Suggestions</value></data>
   <data name="Bank.Matched" xml:space="preserve"><value>Matched</value></data>

@@ -1,0 +1,201 @@
+@inject IBankConnectionsGateway Connections
+@inject NavigationManager Navigation
+@inject ToastService Toasts
+@inject TimeProvider Clock
+@inject IStringLocalizer<SharedResource> L
+@* Banques connectées, dans le rapprochement : relier un compte par l'agrégateur (le consentement se donne sur la page
+   de la banque), le synchroniser, renouveler le consentement avant son échéance, le déconnecter. À l'ouverture, un
+   compte relu il y a plus de 6 heures est relu ; les opérations arrivent dans la liste comme celles d'un relevé.
+   Sans agrégateur configuré, rien n'est affiché. *@
+
+@if (_view is { Available: true } view)
+{
+    <Collapsible Id="bank-connections" Title="@L["BankConnection.Title"]" InitiallyOpen="true" Summary="@Summary">
+        <p class="lettra-muted">@L["BankConnection.Help"]</p>
+
+        @if (Visible.Count > 0)
+        {
+            <ul class="lt-bank-connections" id="bank-connections-list">
+                @foreach (BankConnectionResponse connection in Visible)
+                {
+                    <li @key="connection.Id" class="lt-bank-connection" data-connection="@connection.Id">
+                        <div class="lt-bank-connection-name">
+                            <Icon Name="landmark" Size="20" />
+                            <span>
+                                <strong>@connection.InstitutionName</strong>
+                                @if (connection.AccountDisplay is not null)
+                                {
+                                    <small class="lettra-muted">@connection.AccountDisplay</small>
+                                }
+                            </span>
+                        </div>
+                        <div class="lt-bank-connection-state">
+                            <span class="lettra-status @StatusClass(connection)">@StatusText(connection)</span>
+                            <small class="lettra-muted">@SyncText(connection)</small>
+                        </div>
+                        <div class="lt-bank-connection-actions">
+                            @if (connection.Status == BankConnectionStatusDto.Active)
+                            {
+                                <button type="button" class="lettra-button is-small is-secondary" id="@($"bank-sync-{connection.Id:N}")" disabled="@_busy"
+                                        @onclick="() => SyncAsync(connection)">
+                                    <Icon Name="refresh-cw" Size="16" /> @L["BankConnection.Sync"]
+                                </button>
+                            }
+                            @if (connection.NeedsRenewal)
+                            {
+                                <button type="button" class="lettra-button is-small" id="@($"bank-renew-{connection.Id:N}")" disabled="@_busy"
+                                        @onclick="() => RenewAsync(connection)">
+                                    <Icon Name="repeat" Size="16" /> @L["BankConnection.Renew"]
+                                </button>
+                            }
+                            <button type="button" class="lettra-button is-small is-ghost" id="@($"bank-revoke-{connection.Id:N}")" disabled="@_busy"
+                                    @onclick="() => RevokeAsync(connection)">@L["BankConnection.Revoke"]</button>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+
+        <div class="lt-bank-connect">
+            <div class="lt-field">
+                <label for="bank-institution">@L["BankConnection.Institution"]</label>
+                <select id="bank-institution" @bind="_institution">
+                    @foreach (BankInstitutionResponse institution in view.Institutions)
+                    {
+                        <option value="@institution.Id">@institution.Name</option>
+                    }
+                </select>
+            </div>
+            <button type="button" class="lettra-button" id="bank-connect" disabled="@(_busy || string.IsNullOrEmpty(_institution))" @onclick="ConnectAsync">
+                <Icon Name="link" Size="18" /> @L["BankConnection.Connect"]
+            </button>
+        </div>
+        <p class="lettra-hint" id="bank-connections-provider">@string.Format(Culture, L["BankConnection.Provider"], view.Provider)</p>
+    </Collapsible>
+}
+
+@code {
+    /// <summary>Des opérations nouvelles sont arrivées : l'écran relit le rapprochement.</summary>
+    [Parameter] public EventCallback OnSynced { get; set; }
+
+    private BankConnectionsResponse? _view;
+    private string? _institution;
+    private bool _busy;
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private IReadOnlyList<BankConnectionResponse> Visible => [.. (_view?.Connections ?? []).Where(c => c.Status != BankConnectionStatusDto.Revoked)];
+
+    private string? Summary => Visible.Count == 0
+        ? null
+        : string.Format(Culture, L["BankConnection.Summary"], Visible.Count(c => c.Status == BankConnectionStatusDto.Active));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+        DateTimeOffset now = Clock.GetUtcNow();
+        if (Visible.Any(c => c.Status == BankConnectionStatusDto.Active && (c.LastSyncAt is null || now - c.LastSyncAt >= SyncInterval)))
+        {
+            // Relecture discrète : un refus (droits, banque injoignable) n'interrompt pas l'écran.
+            OperationResult<SyncBankConnectionsResponse> result = await Connections.SyncAsync(new SyncBankConnectionsRequest { OnlyDue = true }, CancellationToken.None);
+            await ReportAsync(result, quiet: true);
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        OperationResult<BankConnectionsResponse> result = await Connections.GetAsync(CancellationToken.None);
+        _view = result.Value;
+        _institution ??= _view?.Institutions.FirstOrDefault()?.Id;
+    }
+
+    private Task ConnectAsync() => StartAsync(new StartBankConnectionRequest { InstitutionId = _institution ?? string.Empty });
+
+    private Task RenewAsync(BankConnectionResponse connection) =>
+        StartAsync(new StartBankConnectionRequest { InstitutionId = connection.InstitutionId, ReplacesId = connection.Id });
+
+    private async Task StartAsync(StartBankConnectionRequest request)
+    {
+        _busy = true;
+        OperationResult<BankConsentRedirectResponse> result = await Connections.StartAsync(request, CancellationToken.None);
+        _busy = false;
+        if (result is { IsSuccess: true, Value: { } redirect })
+        {
+            // La banque réelle est un autre site (rechargement complet) ; la banque simulée est une page de l'application.
+            Navigation.NavigateTo(redirect.RedirectUrl, forceLoad: Uri.IsWellFormedUriString(redirect.RedirectUrl, UriKind.Absolute));
+            return;
+        }
+
+        Toasts.Show(ToastKind.Error, L.Error(result.Errors[0].Code));
+    }
+
+    private async Task SyncAsync(BankConnectionResponse connection)
+    {
+        _busy = true;
+        OperationResult<SyncBankConnectionsResponse> result = await Connections.SyncAsync(new SyncBankConnectionsRequest { ConnectionId = connection.Id }, CancellationToken.None);
+        _busy = false;
+        await ReportAsync(result, quiet: false);
+    }
+
+    private async Task RevokeAsync(BankConnectionResponse connection)
+    {
+        _busy = true;
+        OperationResult<BankConnectionResponse> result = await Connections.RevokeAsync(connection.Id, CancellationToken.None);
+        _busy = false;
+        if (result.IsSuccess)
+        {
+            Toasts.Show(ToastKind.Success, string.Format(Culture, L["BankConnection.Revoked"], connection.InstitutionName));
+            await LoadAsync();
+            return;
+        }
+
+        Toasts.Show(ToastKind.Error, L.Error(result.Errors[0].Code));
+    }
+
+    /// <summary>Compte rendu dans le toaster ; <paramref name="quiet"/> (relecture à l'ouverture) : seulement s'il y a du nouveau.</summary>
+    private async Task ReportAsync(OperationResult<SyncBankConnectionsResponse> result, bool quiet)
+    {
+        IReadOnlyList<BankConnectionSyncOutcome> outcomes = result.Value?.Outcomes ?? [];
+        int imported = outcomes.Sum(o => o.Imported);
+        if (outcomes.Any(o => o.Errors.Count == 0) && (imported > 0 || !quiet))
+        {
+            Toasts.Show(ToastKind.Success, string.Format(Culture, L["BankConnection.Synced"], imported, outcomes.Sum(o => o.Proposals)));
+        }
+
+        if (!quiet)
+        {
+            foreach (string code in outcomes.SelectMany(o => o.Errors).Select(e => e.Code).Concat(result.Errors.Select(e => e.Code)).Distinct(StringComparer.Ordinal))
+            {
+                Toasts.Show(ToastKind.Error, L.Error(code));
+            }
+        }
+
+        await LoadAsync();
+        if (imported > 0)
+        {
+            await OnSynced.InvokeAsync();
+        }
+    }
+
+    private static readonly TimeSpan SyncInterval = TimeSpan.FromHours(6);
+
+    private static string StatusClass(BankConnectionResponse connection) => connection.Status switch
+    {
+        BankConnectionStatusDto.Expired => "is-expired",
+        _ when connection.NeedsRenewal => "is-validated",
+        BankConnectionStatusDto.Active => "is-issued",
+        _ => string.Empty,
+    };
+
+    private string StatusText(BankConnectionResponse connection) => connection switch
+    {
+        { Status: BankConnectionStatusDto.Expired } => L["BankConnection.State.Expired"],
+        { Status: BankConnectionStatusDto.Active, ConsentExpiresAt: { } until } => string.Format(
+            Culture, L[connection.NeedsRenewal ? "BankConnection.State.Renew" : "BankConnection.State.Active"], until.ToLocalTime().ToString("d", Culture)),
+        _ => L["BankConnection.State.Pending"],
+    };
+
+    private string SyncText(BankConnectionResponse connection) => connection.LastSyncAt is { } last
+        ? string.Format(Culture, L["BankConnection.LastSync"], last.ToLocalTime().ToString("g", Culture), connection.LastSyncImported)
+        : L["BankConnection.NeverSynced"];
+}

@@ -6,3 +6,22 @@
 .lettra-payment-qr svg { width: min(100%, 12rem); height: auto; border-radius: var(--radius-sm); border: 1px solid var(--color-border); }
 .lettra-payment-qr figcaption { display: grid; gap: var(--space-1); color: var(--color-fg-muted); }
 .lettra-payment-qr-due strong { color: var(--color-fg); font-size: var(--text-lg); font-variant-numeric: tabular-nums; }
+
+/* Espace client : liens envoyés au client (paiement en ligne, signature des devis, espace complet). */
+.lettra-portal-card { margin-top: var(--space-3); display: grid; gap: var(--space-2); }
+.lettra-portal-card h2 { margin: 0; }
+.lettra-portal-links { display: grid; gap: var(--space-2); min-width: 0; }
+.lettra-portal-links .lettra-hint { margin: 0; }
+.lettra-portal-create { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: end; }
+.lettra-portal-create .lettra-field { display: grid; gap: var(--space-1); min-width: min(100%, 12rem); }
+/* L'adresse sur sa propre ligne (la colonne latérale des pièces est étroite), les boutons dessous. */
+.lettra-portal-url { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; min-width: 0; }
+.lettra-portal-url input { flex: 1 1 100%; min-width: 0; font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--text-sm); }
+.lettra-portal-list-title { margin: var(--space-2) 0 0; font-size: var(--text-base); }
+.lettra-portal-list li { flex-wrap: wrap; }
+.lettra-quote-signature { margin-top: var(--space-3); display: grid; gap: var(--space-2); min-width: 0; }
+.lettra-quote-signature-fact { display: grid; gap: var(--space-1); font-size: var(--text-sm); }
+.lettra-quote-signature-fact span { color: var(--color-fg-muted); }
+.lettra-quote-signature code { overflow-wrap: anywhere; }
+.lettra-quote-signature h2 { margin: 0; display: flex; gap: var(--space-1); align-items: center; color: var(--color-success, inherit); }
+.lettra-quote-signature p { margin: 0; }

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+      <data name="BankConnection.Title" xml:space="preserve"><value>Banque connectée</value></data>
+  <data name="BankConnection.Help" xml:space="preserve"><value>Reliez le compte bancaire du dossier : ses opérations arrivent ici automatiquement, sans fichier à télécharger. Vous donnez votre accord sur la page de votre banque ; Lettra ne voit que les opérations, jamais vos identifiants, et ne peut faire aucun paiement.</value></data>
+  <data name="BankConnection.Summary" xml:space="preserve"><value>{0} compte(s) relié(s)</value></data>
+  <data name="BankConnection.Institution" xml:space="preserve"><value>Banque</value></data>
+  <data name="BankConnection.Connect" xml:space="preserve"><value>Connecter le compte</value></data>
+  <data name="BankConnection.Sync" xml:space="preserve"><value>Synchroniser</value></data>
+  <data name="BankConnection.Renew" xml:space="preserve"><value>Renouveler l'accord</value></data>
+  <data name="BankConnection.Revoke" xml:space="preserve"><value>Déconnecter</value></data>
+  <data name="BankConnection.Provider" xml:space="preserve"><value>Accès aux comptes par : {0}.</value></data>
+  <data name="BankConnection.State.Active" xml:space="preserve"><value>Accord valable jusqu'au {0}</value></data>
+  <data name="BankConnection.State.Renew" xml:space="preserve"><value>Accord à renouveler avant le {0}</value></data>
+  <data name="BankConnection.State.Expired" xml:space="preserve"><value>Accord échu : à renouveler</value></data>
+  <data name="BankConnection.State.Pending" xml:space="preserve"><value>En attente de l'accord</value></data>
+  <data name="BankConnection.LastSync" xml:space="preserve"><value>Relu le {0} · {1} nouvelle(s) opération(s)</value></data>
+  <data name="BankConnection.NeverSynced" xml:space="preserve"><value>Pas encore relu</value></data>
+  <data name="BankConnection.Synced" xml:space="preserve"><value>Banque relue : {0} nouvelle(s) opération(s), {1} proposition(s).</value></data>
+  <data name="BankConnection.Revoked" xml:space="preserve"><value>{0} est déconnecté. Les opérations déjà lues restent.</value></data>
+  <data name="BankConnection.Connected" xml:space="preserve"><value>{0} est relié : {1} opération(s) importée(s), {2} proposition(s).</value></data>
+  <data name="BankConnection.Callback.Title" xml:space="preserve"><value>Connexion de la banque</value></data>
+  <data name="BankConnection.Callback.Working" xml:space="preserve"><value>Enregistrement de l'accord et lecture des opérations…</value></data>
+  <data name="BankConnection.Callback.Failed" xml:space="preserve"><value>Le compte n'a pas été relié</value></data>
+  <data name="BankConnection.Simulated.Badge" xml:space="preserve"><value>Banque simulée, démonstration</value></data>
+  <data name="BankConnection.Simulated.Bank" xml:space="preserve"><value>Banque simulée</value></data>
+  <data name="BankConnection.Simulated.Title" xml:space="preserve"><value>Autoriser Lettra à consulter votre compte</value></data>
+  <data name="BankConnection.Simulated.Intro" xml:space="preserve"><value>Lettra demande un accès en lecture seule à votre compte courant professionnel, par l'intermédiaire de son agrégateur bancaire agréé (directive européenne DSP2).</value></data>
+  <data name="BankConnection.Simulated.Read" xml:space="preserve"><value>Lecture des opérations et du solde</value></data>
+  <data name="BankConnection.Simulated.Duration" xml:space="preserve"><value>Pendant 180 jours, révocable à tout moment</value></data>
+  <data name="BankConnection.Simulated.NoPayment" xml:space="preserve"><value>Aucun virement ni paiement possible avec cet accès</value></data>
+  <data name="BankConnection.Simulated.Hint" xml:space="preserve"><value>Démonstration : aucune banque réelle n'est contactée. Une vraie banque vous demanderait ici de vous identifier.</value></data>
+  <data name="BankConnection.Simulated.Accept" xml:space="preserve"><value>Autoriser</value></data>
+  <data name="BankConnection.Simulated.Refuse" xml:space="preserve"><value>Refuser</value></data>
+  <data name="Error.BankConnection.Unavailable" xml:space="preserve"><value>Aucun agrégateur bancaire n'est configuré sur cette installation : importez le relevé de la banque.</value></data>
+  <data name="Error.BankConnection.InstitutionUnknown" xml:space="preserve"><value>Choisissez une banque de la liste.</value></data>
+  <data name="Error.BankConnection.NotFound" xml:space="preserve"><value>Ce compte relié est introuvable dans ce dossier.</value></data>
+  <data name="Error.BankConnection.NotActive" xml:space="preserve"><value>Ce compte n'est pas relié : son accord n'est pas donné, ou il a été déconnecté.</value></data>
+  <data name="Error.BankConnection.AlreadyCompleted" xml:space="preserve"><value>L'accord de cette connexion a déjà été enregistré.</value></data>
+  <data name="Error.BankConnection.ConsentRefused" xml:space="preserve"><value>L'accord a été refusé ou abandonné sur la page de la banque.</value></data>
+  <data name="Error.BankConnection.ConsentExpired" xml:space="preserve"><value>L'accord donné à la banque est échu : renouvelez-le pour relire le compte.</value></data>
+  <data name="Error.BankConnection.SyncInProgress" xml:space="preserve"><value>Ce compte est déjà en cours de lecture. Réessayez dans un instant.</value></data>
+  <data name="Error.BankConnection.BankUnreachable" xml:space="preserve"><value>La banque n'a pas répondu. La prochaine synchronisation réessaiera.</value></data>
+</root>

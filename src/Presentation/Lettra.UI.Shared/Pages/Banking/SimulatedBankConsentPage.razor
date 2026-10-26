@@ -1,0 +1,41 @@
+@page "/bank/simulated-consent"
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+@* La banque, jouée par l'application pour l'agrégateur simulé (démonstration) : la demande de consentement DSP2 telle
+   qu'une banque la présente (lecture seule, 180 jours, révocable), puis le retour vers Lettra avec l'accord ou le
+   refus. Une vraie banque montre cette page sur son propre site ; rien ici ne touche à un compte réel. *@
+
+<PageTitle>@Bank · Lettra</PageTitle>
+
+<section class="lettra-card lt-bank-consent" id="bank-consent" aria-labelledby="bank-consent-title">
+    <p class="lt-bank-consent-bank"><Icon Name="landmark" Size="22" /> <strong id="bank-consent-bank">@Bank</strong>
+        <span class="lettra-status is-validated">@L["BankConnection.Simulated.Badge"]</span></p>
+    <h1 id="bank-consent-title" tabindex="-1">@L["BankConnection.Simulated.Title"]</h1>
+    <p>@L["BankConnection.Simulated.Intro"]</p>
+    <ul class="lt-bank-consent-scope">
+        <li><Icon Name="check" Size="16" /> @L["BankConnection.Simulated.Read"]</li>
+        <li><Icon Name="calendar-clock" Size="16" /> @L["BankConnection.Simulated.Duration"]</li>
+        <li><Icon Name="lock" Size="16" /> @L["BankConnection.Simulated.NoPayment"]</li>
+    </ul>
+    <p class="lettra-hint">@L["BankConnection.Simulated.Hint"]</p>
+    <div class="lt-bank-consent-actions">
+        <button type="button" class="lettra-button" id="bank-consent-accept" disabled="@(ConnectionId is null)"
+                @onclick="() => Answer(BankConnectionRoutes.SimulatedGrantedCode)">
+            <Icon Name="shield-check" Size="18" /> @L["BankConnection.Simulated.Accept"]
+        </button>
+        <button type="button" class="lettra-button is-ghost" id="bank-consent-refuse" disabled="@(ConnectionId is null)"
+                @onclick="() => Answer(BankConnectionRoutes.SimulatedRefusedCode)">@L["BankConnection.Simulated.Refuse"]</button>
+    </div>
+</section>
+
+@code {
+    [SupplyParameterFromQuery(Name = "connection")] public Guid? ConnectionId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "bank")] public string? BankName { get; set; }
+
+    private string Bank => string.IsNullOrWhiteSpace(BankName) ? L["BankConnection.Simulated.Bank"] : BankName;
+
+    // Retour toujours vers la page de l'application, jamais vers une adresse reçue : pas de redirection ouverte.
+    private void Answer(string code) =>
+        Navigation.NavigateTo($"{BankConnectionRoutes.Callback}?connection={ConnectionId}&code={code}", replace: true);
+}

@@ -142,6 +142,25 @@ internal sealed class PaymentConfiguration : IEntityTypeConfiguration<Payment>
     }
 }
 
+/// <summary>Banques connectées : le compte n'est gardé que masqué, la référence de l'agrégateur suffit à le lire.</summary>
+internal sealed class BankConnectionConfiguration : IEntityTypeConfiguration<BankConnection>
+{
+    public void Configure(EntityTypeBuilder<BankConnection> builder)
+    {
+        builder.ToTable("BankConnections");
+        builder.HasKey(c => c.Id);
+        builder.Property(c => c.Id).ValueGeneratedNever();
+        builder.Property(c => c.Provider).HasMaxLength(BankConnection.MaxProviderLength).IsRequired();
+        builder.Property(c => c.InstitutionId).HasMaxLength(BankConnection.MaxInstitutionIdLength).IsRequired();
+        builder.Property(c => c.InstitutionName).HasMaxLength(BankConnection.MaxInstitutionNameLength).IsRequired();
+        builder.Property(c => c.ProviderReference).HasMaxLength(BankConnection.MaxReferenceLength).IsRequired();
+        builder.Property(c => c.AccountDisplay).HasMaxLength(20);
+        builder.Property(c => c.Status).HasConversion<int>();
+        builder.IsVersioned();
+        builder.HasIndex(c => c.ProviderReference).IsUnique();
+    }
+}
+
 internal sealed class BankStatementImportConfiguration : IEntityTypeConfiguration<BankStatementImport>
 {
     public void Configure(EntityTypeBuilder<BankStatementImport> builder)
