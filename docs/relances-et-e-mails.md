@@ -1,6 +1,6 @@
 # Relances des factures échues et envoi d'e-mails
 
-La vague 7 donne à Lettra une sortie e-mail et s'en sert pour deux choses :
+Lettra a une sortie e-mail et s'en sert pour deux choses :
 
 - **relancer les factures échues** : l'écran **Relances** (`/reminders`, groupe **Comptabilité** du menu), l'envoi
   quotidien par le Worker et l'historique de chaque relance ;
@@ -12,7 +12,7 @@ Rien ne sort de la machine.
 ## Quelles factures sont à relancer
 
 Une facture est **échue** quand son échéance est passée (date du jour à Paris), que ce n'est pas un avoir et qu'il en
-reste quelque chose à payer. Le reste dû est celui des encaissements (vague 6) : total TTC, moins les avoirs, moins les
+reste quelque chose à payer. Le reste dû est celui des encaissements : total TTC, moins les avoirs, moins les
 règlements imputés. Une facture soldée n'est donc jamais relancée, et une facture payée en partie est relancée pour
 ce qui reste.
 
@@ -182,7 +182,7 @@ Codes d'erreur : `Reminders.InvoiceNotOverdue`, `Reminders.CustomerEmailMissing`
 - Retour des e-mails non distribués (rebonds) et désinscription d'un client des relances automatiques.
 - Compte Keycloak de la personne invitée : l'invitation l'ajoute dans Lettra et lui écrit, mais ne crée pas son compte
   de connexion.
-- Les e-mails des factures récurrentes et du kit contrôle fiscal (autres parties de la vague 7) utiliseront le même port.
+- Les e-mails des factures récurrentes et du kit contrôle fiscal utiliseront le même port.
 
 ## Tests
 

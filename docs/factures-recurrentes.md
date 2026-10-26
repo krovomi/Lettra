@@ -1,7 +1,7 @@
 # Factures récurrentes
 
-Beaucoup de clients d'un cabinet paient un forfait : tenue comptable mensuelle, abonnement, maintenance annuelle. La
-vague 7 ajoute des **modèles de facture récurrente** : Lettra prépare la facture de chaque période à son échéance, avec
+Beaucoup de clients d'un cabinet paient un forfait : tenue comptable mensuelle, abonnement, maintenance annuelle. Les
+**modèles de facture récurrente** y répondent : Lettra prépare la facture de chaque période à son échéance, avec
 la période facturée écrite sur la facture et dans la facture électronique. Un écran, dans le groupe **Ventes** du menu :
 
 - **Factures récurrentes** (`/recurring-invoices`) : la liste des modèles, leur prochaine facture et la création des
@@ -139,7 +139,7 @@ Codes d'erreur : `RecurringInvoice.NotFound`, `NameRequired`, `NameTooLong`, `Fr
 ## Limites connues
 
 - La validation automatique se choisit **par modèle**, pas pour tout le dossier.
-- Pas d'envoi par e-mail des factures créées : le port e-mail de la vague 7 existe (`IEmailSender`,
+- Pas d'envoi par e-mail des factures créées : le port e-mail existe (`IEmailSender`,
   [relances-et-e-mails.md](relances-et-e-mails.md)), mais les factures récurrentes ne s'en servent pas encore.
 - Les modèles ne se synchronisent pas entre appareils : sur un poste isolé (mode 1), ils restent dans la base locale ;
   la réplique d'une facture synchronisée ne porte pas sa période.

@@ -1,7 +1,6 @@
 # Vue cabinet : tous les dossiers d'un coup d'œil
 
-Un collaborateur suit plusieurs dizaines de dossiers. Jusqu'ici Lettra ouvrait un seul dossier, fixé par la
-configuration, sans moyen d'en changer. La vague 6 ajoute trois choses :
+Un collaborateur suit plusieurs dizaines de dossiers. Lettra lui donne trois outils :
 
 1. **Le sélecteur de dossier**, dans la barre du haut : le dossier ouvert, et un panneau pour en changer (recherche sans
    accents au-delà de 5 dossiers, favoris avec l'étoile, récents, lien vers la vue cabinet). La palette (Ctrl+K) propose

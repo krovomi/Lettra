@@ -1,7 +1,7 @@
 # Indicateurs de pilotage dans Grafana
 
-Grafana montrait jusqu'ici la santé technique de Lettra (requêtes, erreurs, objectifs de service). Trois tableaux de
-bord s'ajoutent pour aider les personnes qui utilisent et administrent Lettra :
+Grafana montre la santé technique de Lettra (requêtes, erreurs, objectifs de service). Trois tableaux de bord
+servent en plus à aider les personnes qui utilisent et administrent Lettra :
 
 | Tableau | Pour qui | Ce qu'il dit |
 |---|---|---|

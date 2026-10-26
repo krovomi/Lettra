@@ -1,8 +1,8 @@
 # Serveur commun : les mêmes données sur tous les appareils
 
 Le navigateur travaille toujours sur le serveur qui l'a servi. Les applications installées (Windows, macOS, Android,
-iOS) travaillaient jusqu'ici seules, chacune avec sa propre base : un client créé sur le téléphone n'apparaissait pas
-dans le navigateur. L'écran **Pilotage › Serveur du cabinet** relie maintenant l'application installée au serveur du
+iOS) peuvent travailler seules, chacune avec sa propre base : un client créé sur le téléphone n'apparaît alors pas
+dans le navigateur. L'écran **Pilotage › Serveur du cabinet** relie l'application installée au serveur du
 cabinet : elle passe alors par la même API, sur le même dossier que le navigateur, et tous les appareils reliés voient
 les mêmes données.
 

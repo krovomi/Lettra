@@ -1,7 +1,7 @@
 # Système de design de Lettra
 
-Vague 5, lane B. Ce document décrit l'apparence commune de Lettra : jetons, thèmes, coque par appareil, tableau de
-bord d'accueil, et comment le vérifier. Les écrans de la vague 5 (tutoriel, aide à la saisie, voix) s'appuient dessus.
+Ce document décrit l'apparence commune de Lettra : jetons, thèmes, coque par appareil, tableau de
+bord d'accueil, et comment le vérifier. Les écrans du tutoriel, de l'aide à la saisie et de la voix s'appuient dessus.
 
 ![Accueil, thème clair, 1440 px](captures/accueil-clair-1440.png)
 

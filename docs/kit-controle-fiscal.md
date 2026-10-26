@@ -24,7 +24,7 @@ manager et auditeur, et le niveau « Approuver » de l'espace d'administration.
 | `piste-audit-fiable/pieces.csv` | Une ligne par facture, acompte ou avoir validé de la période : qui l'a créé, validé, émis (et approuvé pour un avoir), quand, son empreinte figée et son dernier statut à la plateforme. | pièces de la base du dossier |
 | `piste-audit-fiable/encaissements.csv` | Les encaissements datés de la période, contre-passés compris, avec leur auteur. | encaissements |
 | `piste-audit-fiable/journal.csv` | Les entrées de la chaîne datées de la période ou enregistrées pendant la période, avec leurs empreintes. | journal inaltérable |
-| `plateforme/transmissions.csv` | Chaque statut reçu de la plateforme agréée, dans l'ordre. | transmissions (phase 5.3) |
+| `plateforme/transmissions.csv` | Chaque statut reçu de la plateforme agréée, dans l'ordre. | transmissions à la plateforme |
 | `factures/<numéro>-cii.xml` | Le XML CII (EN 16931) de chaque pièce. | `EInvoiceSerializer` |
 | `factures/<numéro>-factur-x.pdf` | Le PDF/A-3 Factur-X de chaque pièce, qui embarque le XML ci-dessus octet pour octet. | rendu par l'écran, comme depuis la fiche de la facture |
 

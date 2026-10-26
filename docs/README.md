@@ -5,7 +5,10 @@
 Le code C# (.NET 10) suit la Clean Architecture et les principes SOLID, KISS et DRY, vérifiés à chaque modification
 plutôt que simplement déclarés : tests d'architecture (dépendances vers le domaine, domaine sans framework, ports
 déclarés par l'application et implémentés par l'infrastructure, passerelles HTTP et en processus au même résultat),
-zéro avertissement, 21 règles de style de l'IDE en erreur de build, couverture minimale imposée en CI. Le résumé est
+zéro avertissement, 21 règles de style de l'IDE en erreur de build, couverture minimale imposée en CI. Les fonctions
+récentes (lectures du cabinet, lettre de mission, banque connectée, espace client, assistant IA du poste, comptes
+intra-groupe) suivent les mêmes règles : cas d'usage de l'application, services extérieurs derrière des ports avec
+des adaptateurs simulés, outils de l'assistant en lecture seule. Le résumé est
 dans le [README](../README.md#principes-de-conception), le détail, les mesures et ce qui reste ouvert dans
 [Qualité du code et couverture des tests](qualite-du-code.md).
 
