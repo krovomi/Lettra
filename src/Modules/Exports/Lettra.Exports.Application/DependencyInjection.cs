@@ -54,6 +54,7 @@ public static class DependencyInjection
         services.AddScoped<IQueryHandler<GetDossierAsOfQuery, Result<DossierAsOfResponse>>, GetDossierAsOfHandler>();
         services.AddScoped<IQueryHandler<ExplainFigureQuery, Result<FigureExplanationResponse>>, ExplainFigureHandler>();
         services.AddScoped<IQueryHandler<GetCallSheetQuery, Result<CallSheetResponse>>, GetCallSheetHandler>();
+        services.AddScoped<IQueryHandler<GetIntercompanyQuery, Result<IntercompanyResponse>>, IntercompanyHandler>();
         services.AddScoped<IQueryHandler<SimulateWhatIfQuery, Result<WhatIfResponse>>, SimulateWhatIfHandler>();
         services.AddScoped<IQueryHandler<GetEInvoicingReadinessQuery, Result<EInvoicingReadinessResponse>>, GetEInvoicingReadinessHandler>();
         services.AddScoped<IDossierIndicatorSource, EInvoicingReadinessIndicatorSource>();

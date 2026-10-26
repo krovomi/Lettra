@@ -37,6 +37,7 @@ public static class NavItems
         new("", "Nav.Home", "layout-dashboard", null, InTabBar: true, Match: NavLinkMatch.All),
         new("brief", "Nav.Brief", "gauge", null),
         new("cabinet", "Nav.Cabinet", "layers", null),
+        new("intercompany", "Nav.Intercompany", "arrow-left-right", null),
         new("demo", "Nav.Demo", "circle-play", null),
         new("quotes", "Nav.Quotes", "file-text", "Nav.Group.Sales", InTabBar: true),
         new("invoices", "Nav.Invoices", "receipt", "Nav.Group.Sales", InTabBar: true),

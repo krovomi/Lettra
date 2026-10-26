@@ -1,6 +1,7 @@
 using Lettra.Contracts.Cabinet;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Dossiers;
+using Lettra.Contracts.Insights;
 
 namespace Lettra.UI.Abstractions;
 
@@ -16,6 +17,9 @@ public interface ICabinetGateway
 
     /// <summary>Recalcule maintenant les indicateurs (tous les dossiers accessibles, ou <paramref name="dossierId"/>).</summary>
     Task<OperationResult<CabinetOverviewRefreshResponse>> RefreshOverviewAsync(Guid? dossierId, CancellationToken cancellationToken);
+
+    /// <summary>Les comptes entre les sociétés d'un même groupe, parmi les dossiers que l'utilisateur peut lire.</summary>
+    Task<OperationResult<IntercompanyResponse>> GetIntercompanyAsync(CancellationToken cancellationToken);
 
     /// <summary>La revue du dossier ouvert pour <paramref name="period"/> (<c>2026-09</c> ou <c>2026-T3</c>).</summary>
     Task<OperationResult<DossierReviewResponse>> GetReviewAsync(string period, CancellationToken cancellationToken);

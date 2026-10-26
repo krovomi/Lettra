@@ -50,6 +50,13 @@ Studio, Datacime Ingénierie, Réseaux et Services de l'Ouest, Logiciels du Beff
 métier, mais leur nom, leur ville, leur rythme commercial et leur propre tirage. Elles donnent au tableau de bord du
 dossier principal les cinq pairs qu'il faut pour se comparer au secteur.
 
+Le dossier principal et le négoce forment un groupe (`DemoGroupLoader`) : le prestataire facture au négoce
+l'informatique du groupe, trois factures du jour dont il a encaissé deux. Chez le négoce, la fiche fournisseur du
+prestataire porte un autre IBAN que sa fiche entreprise, et un relevé montre deux virements vers lui : l'un cite la
+première facture, l'autre paie la troisième sans la citer. L'écran « Comptes intra-groupe » a ainsi chaque écart à
+montrer. Fait une seule fois, y compris dans une démo déjà remplie : rien n'est refait quand le prestataire a déjà le
+négoce pour client.
+
 ## Dossiers supplémentaires
 
 Ils sont créés par `CreateDossierCommand`, au nom de l'utilisateur de démonstration :
@@ -68,5 +75,6 @@ Ils sont créés par `CreateDossierCommand`, au nom de l'utilisateur de démonst
 
 `tests/Lettra.Api.Tests/DemoDataTests.cs` : tirage reproductible et dans le passé, identifiants acceptés par le
 domaine, données croisées, chargement des trois dossiers sur le poste (statuts relus par les écrans, FEC valide,
-chaîne intacte, mention « débits » sur les avoirs, alertes du dossier et du cabinet, second appel sans effet),
+chaîne intacte, mention « débits » sur les avoirs, alertes du dossier et du cabinet, écarts des comptes
+intra-groupe, second appel sans effet),
 chargement côté serveur, refus en production. Durée : environ 25 s pour le dossier principal, 50 s pour les trois.

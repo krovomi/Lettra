@@ -4,6 +4,7 @@ using System.Text.Json.Serialization.Metadata;
 using Lettra.Contracts.Cabinet;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Dossiers;
+using Lettra.Contracts.Insights;
 using Lettra.Contracts.Serialization;
 using Lettra.UI.Abstractions;
 
@@ -24,6 +25,9 @@ internal sealed class HttpCabinetGateway(HttpClient http) : ICabinetGateway
             null,
             ContractsJsonContext.Default.CabinetOverviewRefreshResponse,
             cancellationToken);
+
+    public Task<OperationResult<IntercompanyResponse>> GetIntercompanyAsync(CancellationToken cancellationToken) =>
+        SendAsync(HttpMethod.Get, "api/v1/dossiers/intercompany", null, ContractsJsonContext.Default.IntercompanyResponse, cancellationToken);
 
     public Task<OperationResult<DossierReviewResponse>> GetReviewAsync(string period, CancellationToken cancellationToken) =>
         SendAsync(HttpMethod.Get, $"api/v1/review/{Uri.EscapeDataString(period)}", null, ContractsJsonContext.Default.DossierReviewResponse, cancellationToken);

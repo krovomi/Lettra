@@ -10,6 +10,7 @@ using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
 using Lettra.Contracts.Exports;
+using Lettra.Contracts.Insights;
 using Lettra.Contracts.Integrity;
 using Lettra.Contracts.Pricing;
 using Lettra.DemoData;
@@ -228,8 +229,16 @@ public sealed class DemoDataTests : IDisposable
         AlertCentreResponse cabinetAlerts = (await app.GetRequiredService<IAlertsGateway>().ListAsync(cabinetWide: true, includeClosed: true, default)).Value!;
         cabinetAlerts.Alerts.Should().HaveCountGreaterThan(alerts.Alerts.Count, "le propriétaire du poste voit aussi les alertes du cabinet");
 
-        // Une seconde demande ne mélange rien : le dossier a déjà des pièces.
+        // Comptes intra-groupe : le prestataire facture le négoce, avec chaque écart à trouver.
+        ICabinetGateway cabinet = app.GetRequiredService<ICabinetGateway>();
+        IntercompanyPairResponse group = (await cabinet.GetIntercompanyAsync(default)).Value!.Pairs.Should().ContainSingle().Subject;
+        (group.SellerDossierId, group.BuyerDossierId).Should().Be((opened, result.Dossiers[2].DossierId));
+        group.Gaps.Should().Equal(IntercompanyGapDto.SupplierIbanDiffers, IntercompanyGapDto.PaidNotSeen, IntercompanyGapDto.SeenNotPaid, IntercompanyGapDto.TotalsDiffer);
+        group.Invoices.Select(i => i.SeenAtBuyer).Should().Equal(true, false, true);
+
+        // Une seconde demande ne mélange rien : le dossier a déjà des pièces, le groupe ses factures.
         (await LettraDemoData.SeedAsync(configuration, "Demo", s => s.AddSingleton<IKekStore>(keys), user)).Status.Should().Be(DemoSeedStatus.DossierNotEmpty);
+        (await cabinet.GetIntercompanyAsync(default)).Value!.Pairs.Should().ContainSingle().Which.Invoices.Should().HaveCount(3);
     }
 
     [Fact]

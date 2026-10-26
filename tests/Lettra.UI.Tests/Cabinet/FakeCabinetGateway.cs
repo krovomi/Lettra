@@ -1,6 +1,7 @@
 using Lettra.Contracts.Cabinet;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Dossiers;
+using Lettra.Contracts.Insights;
 using Lettra.UI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -56,6 +57,26 @@ internal sealed class FakeCabinetGateway : ICabinetGateway
         Computed = true;
         return Task.FromResult(OperationResult<CabinetOverviewRefreshResponse>.Success(new(Dossiers.Count, 0)));
     }
+
+    /// <summary>Deux couples : l'atelier facture le garage (écarts), la boulangerie facture l'atelier (concordant).</summary>
+    public IntercompanyResponse Intercompany { get; set; } = new(
+        new DateOnly(2026, 10, 19),
+        new DateOnly(2025, 10, 19),
+        3,
+        [
+            new(Atelier, "Atelier Éole", Garage, "Garage du Centre", 3_600m, 2_400m, 1_200m, true,
+                [IntercompanyGapDto.SupplierIbanDiffers, IntercompanyGapDto.PaidNotSeen, IntercompanyGapDto.TotalsDiffer],
+                [
+                    new(Guid.NewGuid(), "F-2026-0101", new DateOnly(2026, 6, 2), 1_200m, 1_200m, true, null),
+                    new(Guid.NewGuid(), "F-2026-0140", new DateOnly(2026, 8, 3), 1_200m, 1_200m, false, IntercompanyGapDto.PaidNotSeen),
+                    new(Guid.NewGuid(), "F-2026-0177", new DateOnly(2026, 10, 1), 1_200m, 0m, false, null),
+                ]),
+            new(Boulangerie, "Boulangerie Martin", Atelier, "Atelier Éole", 480m, 480m, 0m, false, [],
+                [new(Guid.NewGuid(), "B-2026-0007", new DateOnly(2026, 9, 12), 480m, 480m, false, null)]),
+        ]);
+
+    public Task<OperationResult<IntercompanyResponse>> GetIntercompanyAsync(CancellationToken cancellationToken) =>
+        Task.FromResult(OperationResult<IntercompanyResponse>.Success(Intercompany));
 
     public Task<OperationResult<DossierReviewResponse>> GetReviewAsync(string period, CancellationToken cancellationToken) =>
         Task.FromResult(OperationResult<DossierReviewResponse>.Success(Review(period)));
