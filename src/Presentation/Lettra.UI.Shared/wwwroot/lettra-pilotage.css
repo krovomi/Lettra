@@ -57,3 +57,9 @@
     .lt-pilotage-kpi .lt-kpi-value { font-size: var(--text-2xl); }
     .lt-pilotage-chart .lt-bar-value { font-size: var(--text-xs); }
 }
+
+/* « En bref » : le seuil des gros encaissements reste compact, à côté du titre ; les icônes des alertes suivent le texte. */
+.lt-filter.lt-brief-threshold { flex: 0 1 auto; display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.lt-filter.lt-brief-threshold select { width: auto; min-width: 9rem; }
+#brief-watch .lt-list-title { display: inline-flex; align-items: center; gap: var(--space-1); }
+#brief-watch .lt-panel-head { flex-wrap: wrap; gap: var(--space-2); }
