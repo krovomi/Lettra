@@ -46,6 +46,7 @@ public static class DependencyInjection
         services.AddSingleton<IDossierKeyring, AesGcmDossierKeyring>();
         services.AddScoped<EnvelopedIntegrityKeyring>();
         services.AddScoped<IIntegrityKeyring>(sp => sp.GetRequiredService<EnvelopedIntegrityKeyring>());
+        services.AddScoped<IDocumentSigner, IntegrityDocumentSigner>();
         services.AddScoped<IIntegrityJournal, EfIntegrityJournal>();
         services.AddScoped<IIntegrityStore, EfIntegrityStore>();
         services.AddScoped<ISealedArchiveBuilder, EfSealedArchiveBuilder>();

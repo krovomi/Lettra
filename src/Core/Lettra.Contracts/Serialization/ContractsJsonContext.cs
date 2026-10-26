@@ -15,6 +15,7 @@ using Lettra.Contracts.Directory;
 using Lettra.Contracts.Dossiers;
 using Lettra.Contracts.Exports;
 using Lettra.Contracts.Identity;
+using Lettra.Contracts.Insights;
 using Lettra.Contracts.Integrity;
 using Lettra.Contracts.Pilotage;
 using Lettra.Contracts.Policies;
@@ -200,4 +201,10 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(IReadOnlyList<PortalLinkSummary>))]
 [JsonSerializable(typeof(QuoteSignatureResponse))]
 [JsonSerializable(typeof(InvitationEmailResponse))]
+[JsonSerializable(typeof(PaymentWeatherResponse))]
+[JsonSerializable(typeof(PracticeAuditResponse))]
+[JsonSerializable(typeof(InvoiceProofResponse))]
+[JsonSerializable(typeof(VerifyInvoiceProofRequest))]
+[JsonSerializable(typeof(InvoiceProofCheckResponse))]
+[JsonSerializable(typeof(IReadOnlyList<InvoiceProofKeyResponse>))]
 public sealed partial class ContractsJsonContext : JsonSerializerContext;

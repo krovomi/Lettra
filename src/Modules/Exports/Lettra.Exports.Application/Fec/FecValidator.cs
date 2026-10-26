@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.RegularExpressions;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Exports;
@@ -60,7 +59,7 @@ public static partial class FecValidator
     /// <summary>Les lignes du fichier, sans fin de ligne ni dernière ligne vide.</summary>
     private static List<string> ReadLines(ReadOnlySpan<byte> content)
     {
-        List<string> lines = [.. Decode(content).Split('\n').Select(l => l.TrimEnd('\r'))];
+        List<string> lines = [.. FecFormat.Decode(content).Split('\n').Select(l => l.TrimEnd('\r'))];
         if (lines.Count > 0 && lines[^1].Length == 0)
         {
             lines.RemoveAt(lines.Count - 1);
@@ -194,19 +193,6 @@ public static partial class FecValidator
         if ((row[first].Length == 0) != (row[second].Length == 0))
         {
             report.Add(code, FecFindingSeverityDto.Error, line, row[first].Length == 0 ? first : second, number);
-        }
-    }
-
-    /// <summary>UTF-8 s'il est valide (avec ou sans BOM), sinon ISO 8859-15 : les deux encodages que les logiciels produisent.</summary>
-    private static string Decode(ReadOnlySpan<byte> content)
-    {
-        try
-        {
-            return new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true).GetString(content).TrimStart('﻿');
-        }
-        catch (DecoderFallbackException)
-        {
-            return FecFormat.Encoding.GetString(content);
         }
     }
 

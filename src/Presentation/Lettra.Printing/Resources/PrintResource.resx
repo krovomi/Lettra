@@ -51,4 +51,7 @@
   <data name="Vat.Amount" xml:space="preserve"><value>Montant de TVA</value></data>
   <data name="Vat.Base" xml:space="preserve"><value>Base HT</value></data>
   <data name="Vat.Rate" xml:space="preserve"><value>Taux de TVA</value></data>
+  <data name="Proof.Title" xml:space="preserve"><value>Preuve d'authenticité</value></data>
+  <data name="Proof.Hint" xml:space="preserve"><value>Ce QR code est signé par l'émetteur : scannez-le et vérifiez-le dans Lettra (Ventes, Vérifier une facture) ou avec la clé publique de l'émetteur. Toute modification du numéro, de la date ou du montant le rend invalide.</value></data>
+  <data name="Proof.Key" xml:space="preserve"><value>Clé de signature {0}</value></data>
 </root>

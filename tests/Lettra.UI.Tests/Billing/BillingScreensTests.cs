@@ -6,6 +6,7 @@ using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
 using Lettra.Contracts.Exports;
 using Lettra.Contracts.Suppliers;
+using Lettra.Printing;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
 using Lettra.UI.Shared.Components.Palette;
@@ -166,6 +167,38 @@ public sealed class InvoiceEditorTests : BunitContext
         nomXml.Should().Be("FAC-2026-0042-ubl.xml");
         typeXml.Should().Be("application/xml");
         Encoding.UTF8.GetString(xml).Should().Contain("urn:oasis:names:specification:ubl:schema:xsd:Invoice-2").And.Contain("FAC-2026-0042");
+    }
+
+    [Fact]
+    public void Le_pdf_d_une_facture_validee_porte_sa_preuve_d_authenticite_signee()
+    {
+        RecordingPdfRenderer pdf = new();
+        Services.AddSingleton<IDocumentPdfRenderer>(pdf);
+        Services.AddSingleton<IInsightsGateway>(new Insights.FakeInsightsGateway());
+        InvoiceResponse facture = _invoices.Add(InvoiceKindDto.Invoice, InvoiceStatusDto.Validated, "FAC-2026-0042", Conseil);
+        IRenderedComponent<InvoiceEditor> page = Ouvrir(facture.Id);
+
+        page.Find("#facturx").Click();
+
+        page.WaitForAssertion(() => pdf.Documents.Should().ContainSingle());
+        pdf.Documents[0].ProofCode.Should().StartWith("LETTRA-PREUVE-1;");
+        pdf.Documents[0].ProofKeyId.Should().Be("p256-0123456789abcdef");
+    }
+
+    /// <summary>Le vrai rendu, avec les pièces qu'on lui a données.</summary>
+    private sealed class RecordingPdfRenderer : IDocumentPdfRenderer
+    {
+        private readonly PdfDocumentRenderer _inner = new();
+
+        public List<PrintableDocument> Documents { get; } = [];
+
+        public byte[] Render(PrintableDocument document) => Render(document, []);
+
+        public byte[] Render(PrintableDocument document, IReadOnlyList<PdfAttachment> attachments)
+        {
+            Documents.Add(document);
+            return _inner.Render(document, attachments);
+        }
     }
 
     [Fact]

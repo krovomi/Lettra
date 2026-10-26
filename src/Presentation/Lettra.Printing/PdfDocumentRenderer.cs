@@ -473,6 +473,11 @@ public sealed class PdfDocumentRenderer : IDocumentPdfRenderer
             section.AddParagraph(document.Notes);
         }
 
+        if (document.ProofCode is { } proof)
+        {
+            AddProof(section, proof, document.ProofKeyId, culture);
+        }
+
         if (document.Kind == PrintableDocumentKind.Quote)
         {
             section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(14);
@@ -484,6 +489,27 @@ public sealed class PdfDocumentRenderer : IDocumentPdfRenderer
             frame.MarginLeft = Unit.FromPoint(6);
             frame.MarginTop = Unit.FromPoint(6);
             frame.AddParagraph(Text(culture, "Quote.Acceptance")).Style = "Muted";
+        }
+    }
+
+    /// <summary>La preuve d'authenticité : un petit QR code signé, et comment le vérifier.</summary>
+    private static void AddProof(Section section, string proof, string? keyId, CultureInfo culture)
+    {
+        section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(6);
+        Table table = section.AddTable();
+        table.Borders.Visible = false;
+        table.AddColumn(Unit.FromCentimeter(2.6));
+        table.AddColumn(Unit.FromCentimeter(14.8));
+        Row row = table.AddRow();
+        Image image = row.Cells[0].AddImage("base64:" + Convert.ToBase64String(QrImages.Png(QrCode.Encode(proof), scale: 4)));
+        image.Width = Unit.FromCentimeter(2.2);
+        image.LockAspectRatio = true;
+        row.Cells[1].VerticalAlignment = VerticalAlignment.Center;
+        row.Cells[1].AddParagraph(Text(culture, "Proof.Title")).Style = "BlockHeading";
+        row.Cells[1].AddParagraph(Text(culture, "Proof.Hint")).Style = "Muted";
+        if (keyId is not null)
+        {
+            row.Cells[1].AddParagraph(Format(culture, "Proof.Key", keyId)).Style = "Muted";
         }
     }
 

@@ -1,0 +1,102 @@
+/* Éclairages : météo des paiements. Téléphone d'abord ; tablette dès 768px, bureau dès 1200px. Reprend les chiffres clés
+   des encaissements (lt-banking-stats) ; toutes les couleurs viennent des jetons. */
+
+#weather-stats .lt-banking-stat { min-width: 0; }
+#weather-stats .is-amount strong { font-size: var(--text-lg); white-space: nowrap; }
+.lt-weather-forecast { margin-bottom: var(--space-4); }
+
+/* Prévision : une ligne par semaine, la barre prend la place qui reste. */
+.lt-weather-weeks { list-style: none; margin: var(--space-3) 0 0; padding: 0; display: grid; gap: var(--space-2); }
+.lt-weather-weeks li { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "week amount" "bar bar"; gap: var(--space-1) var(--space-3); align-items: center; }
+.lt-weather-week { grid-area: week; font-size: var(--text-sm); }
+.lt-weather-weeks li.is-current .lt-weather-week { font-weight: 600; }
+.lt-weather-bar { grid-area: bar; display: block; height: 0.625rem; border-radius: 999px; background: var(--color-neutral-bg); overflow: hidden; }
+.lt-weather-bar > span { display: block; height: 100%; border-radius: inherit; background: var(--color-primary); }
+.lt-weather-amount { grid-area: amount; display: inline-flex; flex-direction: column; align-items: flex-end; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Bulletins : une carte par client, colonne unique sur téléphone. */
+.lt-weather-cards { list-style: none; margin: var(--space-3) 0 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+.lt-weather-card { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-4); border: 1px solid var(--color-border); border-left-width: 4px; border-radius: var(--radius-lg); background: var(--color-surface); min-width: 0; }
+.lt-weather-card.is-sunny { border-left-color: var(--color-success); }
+.lt-weather-card.is-cloudy { border-left-color: var(--color-info-fg); }
+.lt-weather-card.is-rainy { border-left-color: var(--color-warning); }
+.lt-weather-card.is-stormy { border-left-color: var(--color-danger); }
+.lt-weather-head { display: flex; align-items: center; gap: var(--space-3); }
+.lt-weather-head h3 { margin: 0; font-size: var(--text-base); overflow-wrap: anywhere; }
+.lt-weather-icon { display: inline-flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; flex: none; border-radius: 50%; background: var(--color-neutral-bg); color: var(--color-neutral-fg); }
+.is-sunny .lt-weather-icon { background: var(--color-success-bg); color: var(--color-success-fg); }
+.is-cloudy .lt-weather-icon { background: var(--color-info-bg); color: var(--color-info-fg); }
+.is-rainy .lt-weather-icon { background: var(--color-warning-bg); color: var(--color-warning-fg); }
+.is-stormy .lt-weather-icon { background: var(--color-danger-bg); color: var(--color-danger-fg); }
+.lt-weather-kind { color: var(--color-fg-muted); font-size: var(--text-sm); }
+.lt-weather-why { margin: 0; }
+.lt-weather-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2) var(--space-3); margin: 0; }
+.lt-weather-facts dt { color: var(--color-fg-muted); font-size: var(--text-sm); }
+.lt-weather-facts dd { margin: 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.lt-weather-expected summary { cursor: pointer; min-height: var(--hit); display: flex; align-items: center; }
+.lt-weather-expected ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-1); }
+.lt-weather-expected li { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); font-size: var(--text-sm); }
+.lt-weather-rules { margin: 0 0 var(--space-3); padding-left: var(--space-4); display: grid; gap: var(--space-2); }
+.lt-weather-rules svg { vertical-align: text-bottom; }
+
+@media (min-width: 768px) {
+    .lt-weather-weeks li { grid-template-columns: 11rem minmax(0, 1fr) 9rem; grid-template-areas: "week bar amount"; }
+    .lt-weather-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1200px) {
+    #weather-stats .is-amount strong { font-size: var(--text-2xl); }
+    .lt-weather-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.lt-weather-doubtful { margin: var(--space-3) 0 0; }
+
+/* Contrôle fiscal d'entraînement : un test par carte, alertes d'abord ; loi de Benford en barres doubles. */
+.lt-audit-checks { list-style: none; margin: var(--space-3) 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+.lt-audit-check { display: flex; gap: var(--space-3); padding: var(--space-3) var(--space-4); border: 1px solid var(--color-border); border-left-width: 4px; border-radius: var(--radius-lg); background: var(--color-surface); min-width: 0; }
+.lt-audit-check.is-passed { border-left-color: var(--color-success); }
+.lt-audit-check.is-watch { border-left-color: var(--color-warning); }
+.lt-audit-check.is-alert { border-left-color: var(--color-danger); }
+.lt-audit-icon { flex: none; color: var(--color-success-fg); }
+.is-watch .lt-audit-icon { color: var(--color-warning-fg); }
+.is-alert .lt-audit-icon { color: var(--color-danger-fg); }
+.lt-audit-body { min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+.lt-audit-body h3 { margin: 0; font-size: var(--text-base); display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.lt-audit-body p { margin: 0; }
+.lt-audit-examples summary { cursor: pointer; min-height: var(--hit); display: flex; align-items: center; }
+.lt-audit-examples ul { margin: 0; padding-left: var(--space-4); display: grid; gap: var(--space-1); }
+.lt-audit-examples code { overflow-wrap: anywhere; font-size: var(--text-sm); }
+.lt-audit-fix svg { vertical-align: text-bottom; }
+.lt-audit-benford { list-style: none; margin: var(--space-2) 0 var(--space-3); padding: 0; display: grid; gap: var(--space-2); }
+.lt-audit-benford li { display: grid; grid-template-columns: 1.5rem minmax(0, 1fr); grid-template-areas: "digit bars" "digit shares"; gap: var(--space-1) var(--space-2); align-items: center; }
+.lt-audit-digit { grid-area: digit; font-weight: 600; font-variant-numeric: tabular-nums; }
+.lt-audit-bars { grid-area: bars; display: grid; gap: 2px; }
+.lt-audit-bars > span { display: block; height: 0.5rem; border-radius: 999px; }
+.lt-audit-bars .is-observed { background: var(--color-primary); }
+.lt-audit-bars .is-expected { background: var(--color-border-strong); }
+.lt-audit-shares { grid-area: shares; color: var(--color-fg-muted); font-size: var(--text-sm); font-variant-numeric: tabular-nums; }
+
+@media (min-width: 768px) {
+    .lt-audit-benford li { grid-template-columns: 1.5rem minmax(0, 1fr) 12rem; grid-template-areas: "digit bars shares"; }
+}
+
+@media (min-width: 1200px) {
+    .lt-audit-checks { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ---------- Vérifier une facture (preuve d'authenticité) ---------- */
+.lt-proof-form { display: grid; gap: var(--space-2); }
+.lt-proof-form textarea { width: 100%; font-family: var(--font-mono); font-size: 0.875rem; word-break: break-all; }
+.lt-proof-form .lettra-button { justify-self: start; }
+#proof-result { display: grid; gap: var(--space-3); }
+#proof-facts dd { overflow-wrap: anywhere; }
+.lt-proof-recipe, .lt-proof-keys pre {
+    margin: 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md);
+    background: var(--color-surface-2);
+    font-size: 0.8125rem; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.lt-proof-keys { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+.lt-proof-keys li { display: grid; gap: var(--space-2); }
+.lt-proof-keys .lettra-button { justify-self: start; }
+@media (max-width: 599px) {
+    .lt-proof-form .lettra-button, .lt-proof-keys .lettra-button { justify-self: stretch; }
+}

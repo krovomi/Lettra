@@ -90,6 +90,17 @@ internal sealed class EnvelopedIntegrityKeyring(TenantDbSession session, ITenant
         return first;
     }
 
+    /// <summary>
+    /// La dernière version enregistrée, sans en créer : pour signer une pièce hors de la chaîne. Rien si le dossier n'a
+    /// encore aucune version (sa première écriture dans la chaîne la crée).
+    /// </summary>
+    internal async Task<Result<IntegrityKeyMaterial>> RecordedCurrentAsync(LettraDbContext db, CancellationToken cancellationToken)
+    {
+        byte[]? kek = await kekStore.FindAsync(tenant.Current.OrganisationId, cancellationToken).ConfigureAwait(false);
+        StoredIntegrityKey? current = kek is null ? null : await LatestAsync(db, cancellationToken).ConfigureAwait(false);
+        return current is not null && TryOpen(kek!, current) is { } material ? material : IntegrityErrors.KeyUnavailable;
+    }
+
     /// <summary>Prépare la version suivante (non ajoutée) : l'appelant l'annonce dans la chaîne, puis l'ajoute.</summary>
     internal async Task<Result<(IntegrityKeyMaterial Keys, StoredIntegrityKey Row)>> PrepareNextAsync(
         LettraDbContext db, CancellationToken cancellationToken)
@@ -360,6 +371,25 @@ internal sealed class IntegrityKeyMaterial
 
     public string Sign(string closingHash) =>
         Convert.ToBase64String(_signing.SignData(Encoding.ASCII.GetBytes(closingHash), HashAlgorithmName.SHA256));
+
+    /// <summary>Signature d'une pièce (texte UTF-8), au format DER : celui qu'attend <c>openssl dgst -verify</c>.</summary>
+    public byte[] SignStatement(string statement) =>
+        _signing.SignData(Encoding.UTF8.GetBytes(statement), HashAlgorithmName.SHA256, DSASignatureFormat.Rfc3279DerSequence);
+
+    /// <summary>Vérification d'une signature de pièce avec la seule clé publique.</summary>
+    public static bool VerifyStatement(string publicKey, string statement, byte[] signature)
+    {
+        try
+        {
+            using ECDsa verifier = ECDsa.Create();
+            verifier.ImportSubjectPublicKeyInfo(Convert.FromBase64String(publicKey), out _);
+            return verifier.VerifyData(Encoding.UTF8.GetBytes(statement), signature, HashAlgorithmName.SHA256, DSASignatureFormat.Rfc3279DerSequence);
+        }
+        catch (Exception exception) when (exception is FormatException or CryptographicException)
+        {
+            return false;
+        }
+    }
 
     /// <summary>Vérification avec la seule clé publique : ce que fait un auditeur avec une archive scellée.</summary>
     public static bool VerifyWithPublicKey(string publicKey, string hash, string signature)

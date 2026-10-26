@@ -1,0 +1,159 @@
+@page "/invoice-proof"
+@using System.Text
+@inject IInsightsGateway Insights
+@inject IFileDownloader Files
+@inject TimeProvider Clock
+@inject IStringLocalizer<SharedResource> L
+@* Vérifier une facture : le texte du QR code « preuve d'authenticité » d'une facture, contrôlé contre le registre
+   des clés du dossier et ses pièces validées. Le registre des clés publiques permet aussi de vérifier sans Lettra. *@
+
+<PageTitle>@L["Proof.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Proof.Title"]</h1>
+        <p class="lettra-muted">@L["Proof.Subtitle"]</p>
+    </div>
+</div>
+
+<GeneralErrors Errors="_errors" />
+
+<section class="lt-panel lt-proof-form" aria-labelledby="proof-form-title">
+    <h2 id="proof-form-title" class="lettra-visually-hidden">@L["Proof.Title"]</h2>
+    <label for="proof-code">@L["Proof.Code"]</label>
+    <textarea id="proof-code" rows="3" maxlength="1000" spellcheck="false" autocomplete="off" @bind="_code" @bind:event="oninput" disabled="@_busy"></textarea>
+    <p class="lettra-hint">@L["Proof.Code.Hint"]</p>
+    <button type="button" id="proof-verify" class="lettra-button" disabled="@(_busy || string.IsNullOrWhiteSpace(_code))" @onclick="VerifyAsync">
+        <Icon Name="shield-check" Size="18" /> @L["Proof.Verify"]
+    </button>
+    @if (_busy)
+    {
+        <p role="status" aria-live="polite">@L["Proof.Working"]</p>
+    }
+</section>
+
+@if (_check is { } check)
+{
+    <section class="lt-panel" id="proof-result" aria-live="polite">
+        <p id="proof-verdict" class="lettra-banner @VerdictClass(check.Verdict)">
+            <Icon Name="@(check.Verdict == InvoiceProofVerdictDto.Authentic ? "badge-check" : "triangle-alert")" Size="18" />
+            @L[$"Proof.Verdict.{check.Verdict}"]
+        </p>
+        @if (check.Verdict != InvoiceProofVerdictDto.Unreadable)
+        {
+            <dl class="lettra-platform-facts" id="proof-facts">
+                <dt>@L["Proof.Fact.Siren"]</dt><dd>@(check.Siren ?? L["Proof.Fact.None"])</dd>
+                <dt>@L["Proof.Fact.Number"]</dt><dd>@check.Number</dd>
+                <dt>@L["Proof.Fact.Date"]</dt><dd>@check.IssueDate?.ToString("d", Culture)</dd>
+                <dt>@L["Proof.Fact.Total"]</dt><dd>@(check.TotalInclTax is { } total ? ExplorerText.Money(total) : string.Empty)</dd>
+                <dt>@L["Proof.Fact.Key"]</dt><dd><code>@check.KeyId</code></dd>
+            </dl>
+        }
+        @if (check.Differences.Count > 0)
+        {
+            <h3>@L["Proof.Differences"]</h3>
+            <ul id="proof-differences">
+                @foreach (string difference in check.Differences)
+                {
+                    <li>@L[$"Proof.Difference.{difference}"]</li>
+                }
+            </ul>
+        }
+        @if (check.FullyCredited)
+        {
+            <p class="lettra-banner is-warning" id="proof-credited">@L["Proof.Credited"]</p>
+        }
+        @if (check.InvoiceId is { } invoiceId)
+        {
+            <a id="proof-open" class="lettra-button is-secondary" href="@($"invoices/{invoiceId}")">@L["Proof.Open"]</a>
+        }
+    </section>
+}
+
+<Collapsible Id="proof-offline" Title="@L["Proof.Offline.Title"]">
+    <p class="lettra-hint">@L["Proof.Offline.Hint"]</p>
+    <pre class="lt-proof-recipe"><code>@OpenSslRecipe</code></pre>
+    <h3>@L["Proof.Keys"]</h3>
+    @if (_keys is null)
+    {
+        <ListSkeleton Rows="2" />
+    }
+    else if (_keys.Count == 0)
+    {
+        <p class="lettra-hint" id="proof-keys-empty">@L["Proof.Keys.Empty"]</p>
+    }
+    else
+    {
+        <ul class="lt-proof-keys" id="proof-keys">
+            @foreach (InvoiceProofKeyResponse key in _keys)
+            {
+                <li @key="key.KeyId">
+                    <p><code>@key.KeyId</code> · @Period(key)</p>
+                    <pre><code>@key.PublicKeyPem</code></pre>
+                    <button type="button" class="lettra-button is-secondary" @onclick="() => DownloadAsync(key)">
+                        <Icon Name="download" Size="16" /> @L["Proof.Key.Download"]
+                    </button>
+                </li>
+            }
+        </ul>
+    }
+</Collapsible>
+
+@code {
+    /// <summary>La vérification avec OpenSSL : le texte signé et la signature tirés du QR code, puis la clé publique.</summary>
+    private const string OpenSslRecipe =
+        "code='LETTRA-PREUVE-1;…'\n"
+        + "printf '%s' \"${code%;*}\" > texte.txt\n"
+        + "s=${code##*;}; while [ $((${#s} % 4)) -ne 0 ]; do s=\"$s=\"; done\n"
+        + "printf '%s' \"$s\" | tr '_-' '/+' | base64 -d > signature.der\n"
+        + "openssl dgst -sha256 -verify cle.pem -signature signature.der texte.txt";
+
+    private string _code = string.Empty;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private InvoiceProofCheckResponse? _check;
+    private IReadOnlyList<InvoiceProofKeyResponse>? _keys;
+    private bool _busy;
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    protected override async Task OnInitializedAsync()
+    {
+        OperationResult<IReadOnlyList<InvoiceProofKeyResponse>> keys = await Insights.ListInvoiceProofKeysAsync(CancellationToken.None);
+        _keys = keys.Value ?? [];
+        _errors = keys.Errors;
+    }
+
+    private async Task VerifyAsync()
+    {
+        _busy = true;
+        _errors = [];
+        _check = null;
+        try
+        {
+            OperationResult<InvoiceProofCheckResponse> check = await Insights.VerifyInvoiceProofAsync(_code.Trim(), CancellationToken.None);
+            _errors = check.Errors;
+            _check = check.Value;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private Task DownloadAsync(InvoiceProofKeyResponse key) =>
+        Files.DownloadAsync($"{key.KeyId}.pem", "application/x-pem-file", Encoding.ASCII.GetBytes(key.PublicKeyPem), CancellationToken.None);
+
+    private string Period(InvoiceProofKeyResponse key) => key.RetiredAt is { } retired
+        ? string.Format(Culture, L["Proof.Key.Retired"], Day(key.CreatedAt), Day(retired))
+        : string.Format(Culture, L["Proof.Key.Current"], Day(key.CreatedAt));
+
+    /// <summary>Le jour d'une entrée en vigueur, dans le fuseau du poste (celui de l'horloge injectée).</summary>
+    private string Day(DateTimeOffset at) => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(at, Clock.LocalTimeZone).DateTime).ToString("d", Culture);
+
+    private static string VerdictClass(InvoiceProofVerdictDto verdict) => verdict switch
+    {
+        InvoiceProofVerdictDto.Authentic => "is-success",
+        InvoiceProofVerdictDto.Mismatch or InvoiceProofVerdictDto.Unreadable => "is-warning",
+        _ => "is-danger",
+    };
+}
