@@ -61,8 +61,9 @@ internal sealed class SaveAiSettingsValidator(INamedEntityDetection namedEntitie
         {
             errors.Add(Error.Validation(ErrorCodes.Validation.Invalid, nameof(request.Engine)));
         }
-        else if (request.Enabled && request.Engine == AssistantEngine.None)
+        else if (request.Enabled && request.Engine == AssistantEngine.None && !OnlyExternalAssistant(request.Features))
         {
+            // Seul l'assistant IA du poste apporte son propre moteur : ouvert seul, il n'en demande pas à Lettra.
             errors.Add(AiSettingsErrors.EngineRequired);
         }
 
@@ -87,6 +88,9 @@ internal sealed class SaveAiSettingsValidator(INamedEntityDetection namedEntitie
 
         return errors;
     }
+
+    private static bool OnlyExternalAssistant(List<AssistantFeature>? features) =>
+        features is { Count: > 0 } && features.TrueForAll(f => f == AssistantFeature.ExternalAssistant);
 }
 
 internal sealed class GetAiSettingsHandler(IAiSettingsStore store, IAiUsagePolicy policy, INamedEntityDetection namedEntities)

@@ -94,6 +94,34 @@ public sealed class AiSettingsApiTests(LettraApiFactory factory) : IClassFixture
     }
 
     [Fact]
+    public async Task L_assistant_du_poste_s_ouvre_seul_sans_moteur_et_n_apparait_pas_dans_le_panneau()
+    {
+        InMemoryAiSettingsStore store = new(AiSettings.Disabled);
+        using WebApplicationFactory<Program> withStore = factory.WithWebHostBuilder(builder =>
+            builder.ConfigureTestServices(services => services.AddSingleton<IAiSettingsStore>(store)));
+        using HttpClient admin = withStore.CreateClient();
+        admin.DefaultRequestHeaders.Authorization = new("Bearer", LettraApiFactory.TokenFor(LettraApiFactory.AdministrateurCabinetId));
+        using HttpClient manager = withStore.CreateClient();
+        manager.DefaultRequestHeaders.Add(LettraHeaders.Dossier, LettraApiFactory.DossierId.ToString());
+
+        HttpResponseMessage alone = await admin.PutAsJsonAsync(
+            Settings(LettraApiFactory.CabinetId),
+            new SaveAiSettingsRequest { Enabled = true, Features = [AssistantFeature.ExternalAssistant] },
+            ContractsJsonContext.Default.SaveAiSettingsRequest);
+        HttpResponseMessage withPanel = await admin.PutAsJsonAsync(
+            Settings(LettraApiFactory.CabinetId),
+            new SaveAiSettingsRequest { Enabled = true, Features = [AssistantFeature.ExternalAssistant, AssistantFeature.RegulatoryQuestions], Version = 1 },
+            ContractsJsonContext.Default.SaveAiSettingsRequest);
+        AssistantStatusResponse status = (await manager.GetFromJsonAsync("/api/v1/assistant/statut", ContractsJsonContext.Default.AssistantStatusResponse))!;
+
+        alone.StatusCode.Should().Be(HttpStatusCode.OK, await alone.Content.ReadAsStringAsync());
+        withPanel.StatusCode.Should().Be(HttpStatusCode.BadRequest, "les points du panneau ont besoin d'un moteur");
+        (await withPanel.Content.ReadAsStringAsync()).Should().Contain(ErrorCodes.Ai.EngineRequired);
+        store.Stored!.Settings.Features.Should().Equal(AssistantFeature.ExternalAssistant);
+        status.Features.Should().BeEmpty("l'assistant du poste ne passe pas par le panneau de Lettra");
+    }
+
+    [Fact]
     public async Task Le_brouillon_de_devis_en_texte_libre_ne_peut_pas_etre_active()
     {
         using HttpClient admin = factory.ClientFor(LettraApiFactory.AdministrateurCabinetId);

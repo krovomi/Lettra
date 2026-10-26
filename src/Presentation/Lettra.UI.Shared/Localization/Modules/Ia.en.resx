@@ -29,6 +29,7 @@
   <data name="Assistant.Feature.ExplainCompliance" xml:space="preserve"><value>Why? (compliance)</value></data>
   <data name="Assistant.Feature.EInvoicingDiagnosis" xml:space="preserve"><value>E-invoicing diagnosis</value></data>
   <data name="Assistant.Feature.RegulatoryQuestions" xml:space="preserve"><value>VAT or regulatory question</value></data>
+  <data name="Assistant.Feature.ExternalAssistant" xml:space="preserve"><value>Desktop AI assistant (MCP)</value></data>
   <data name="Assistant.Prompt.DraftFromText" xml:space="preserve"><value>Describe the quote</value></data>
   <data name="Assistant.Prompt.ExplainCompliance" xml:space="preserve"><value>Your question about the open document's compliance</value></data>
   <data name="Assistant.Prompt.EInvoicingDiagnosis" xml:space="preserve"><value>Your question about e-invoicing for the open document</value></data>
