@@ -1,5 +1,6 @@
 using Lettra.Api.Endpoints;
 using Lettra.Api.Infrastructure;
+using Lettra.Api.Portal;
 using Lettra.Api.Presence;
 using Lettra.Api.Security;
 using Lettra.Application.Abstractions.Tenancy;
@@ -13,6 +14,7 @@ using Lettra.Infrastructure.Persistence.Cabinet;
 using Lettra.Infrastructure.Persistence.Integrity;
 using Lettra.Infrastructure.Persistence.Outbox;
 using Lettra.Supervision.Infrastructure;
+using Microsoft.AspNetCore.Diagnostics;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +32,7 @@ builder.Services.AddLettra(builder.Configuration);
 // Démonstration : les entreprises fictives du jeu répondent dans l'annuaire SIRENE (rien hors Lettra:Demo:Seed=true ni en Production).
 builder.Services.AddDemoCompanyDirectory(builder.Configuration, builder.Environment.EnvironmentName);
 builder.Services.AddLettraApiAuthentication(builder.Configuration);
+builder.Services.AddCustomerPortal(builder.Configuration);
 builder.Services.AddLettraRateLimiting(builder.Configuration);
 builder.Services.AddLettraPresence();
 builder.Services.AddHttpContextAccessor();
@@ -71,7 +74,8 @@ await LettraDemoData.SeedAsync(app.Configuration, app.Environment.EnvironmentNam
 app.UseLettraSecurityHeaders(app.Environment);
 
 // Aucune exception ni pile d'appel ne sort : un code générique, le détail reste dans la trace technique.
-app.UseExceptionHandler(errorApp => errorApp.Run(context => ErrorResults.Unexpected().ExecuteAsync(context)));
+app.UseExceptionHandler(errorApp => errorApp.Run(context =>
+    ErrorResults.FromException(context.Features.Get<IExceptionHandlerFeature>()?.Error).ExecuteAsync(context)));
 app.UseStatusCodePages();
 
 if (app.Environment.IsDevelopment())
@@ -143,6 +147,7 @@ app.MapSupervisionWebhooks();
 
 // Indicateurs de pilotage pour le Prometheus de la cellule, puis Grafana : exposés seulement si un jeton est configuré.
 app.MapKpiScrape();
+app.MapCustomerPortal();
 app.MapFallbackToFile("index.html");
 
 await app.RunAsync().ConfigureAwait(false);

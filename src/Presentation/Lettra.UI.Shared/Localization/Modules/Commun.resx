@@ -9,6 +9,7 @@
   <data name="Error.Address.CityRequired" xml:space="preserve"><value>La ville est obligatoire.</value></data>
   <data name="Error.Address.LineRequired" xml:space="preserve"><value>L'adresse est obligatoire.</value></data>
   <data name="Error.Address.PostalCodeInvalid" xml:space="preserve"><value>Ce code postal n'est pas valide (5 chiffres en France).</value></data>
+  <data name="Error.Api.BadRequest" xml:space="preserve"><value>La demande est mal formée : un paramètre est illisible.</value></data>
   <data name="Error.Api.IdempotencyKeyReused" xml:space="preserve"><value>Cette opération a déjà été envoyée avec un contenu différent.</value></data>
   <data name="Error.Api.Unexpected" xml:space="preserve"><value>Une erreur inattendue est survenue. Réessayez.</value></data>
   <data name="Error.Api.Unreachable" xml:space="preserve"><value>Le serveur est injoignable. Vérifiez la connexion.</value></data>
