@@ -15,7 +15,9 @@ Le code est **globalement sain** : avertissements traités en erreurs avec les a
 mode `Recommended`, aucune utilisation de `DateTime.Now` côté serveur, aucun `.Result` / `.Wait()`,
 exceptions typées et journalisées, règles de dépendance entre couches vérifiées par
 `tests/Lettra.Architecture.Tests`. La couverture est déjà élevée (**88 % des lignes, 77 % des
-branches** à cette mesure ; 92,2 % et 82,1 % après la base propre, 92,3 % et 82,1 % après les dates au calendrier légal).
+branches** à la mesure de départ). **Chiffre de référence aujourd'hui : 93,3 % des lignes et 82,9 % des
+branches**, mesurés par la CI sur la branche principale avec tous les tests, PostgreSQL et SQL Server
+compris (voir « Dernière mesure »).
 
 Il n'est pas pour autant exempt de dettes. Les principales :
 
@@ -75,6 +77,25 @@ branches** (13 829 / 16 949).
 
 Les autres assemblies (IA, voix, identité, impression, données de démonstration, observabilité)
 sont entre 90 et 100 %.
+
+### Dernière mesure
+
+Mesure de la CI sur la branche principale, étape « Couverture de code (seuils) » : **93,3 % des
+lignes** (46 455 / 49 815) et **82,9 % des branches** (20 890 / 25 204), 4 730 tests mesurés (les 66
+tests d'architecture tournent à part, sans couverture). Le périmètre est celui de `Lettra.Ci.slnf` :
+tous les projets sauf l'application MAUI, tests d'intégration PostgreSQL et SQL Server compris
+(Testcontainers), code généré exclu. C'est ce chiffre que citent ce document et le README.
+
+Le même calcul refait en local sur la version courante, avec Docker, donne 93,4 % des lignes et
+84,6 % des branches (4 801 tests). L'instrumentation n'y compte pas le même nombre de branches
+(22 456 contre 25 204 en CI), d'où l'écart sur les branches : c'est la CI qui fait foi.
+Sans Docker, les tests PostgreSQL et SQL Server ne tournent pas, et la mesure locale descend autour
+de 91 % des lignes : elle ne sert alors qu'à repérer les fichiers peu couverts.
+
+Assemblies les moins couvertes à cette mesure (lignes) : hôte Worker (32,8 %), configurateurs
+SQL Server et PostgreSQL (58,0 % et 64,3 %), dictée sur l'appareil (59,6 %), composition
+`Lettra.Bootstrap` (84,4 %) et synchronisation du poste (84,5 %). Toutes les autres sont à 89 % ou
+plus.
 
 Les trous les plus importants :
 
