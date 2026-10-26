@@ -173,4 +173,70 @@
   <data name="Proof.Key.Current" xml:space="preserve"><value>in force since {0}</value></data>
   <data name="Proof.Key.Retired" xml:space="preserve"><value>from {0} to {1} (verification only)</value></data>
   <data name="Proof.Key.Download" xml:space="preserve"><value>Download the key</value></data>
+  <data name="Nav.AsOf" xml:space="preserve"><value>Back in time</value></data>
+  <data name="AsOf.Title" xml:space="preserve"><value>Back in time</value></data>
+  <data name="AsOf.Subtitle" xml:space="preserve"><value>The file as it was at the moment you choose, replayed from the tamper-proof journal: revenue, VAT, invoices due and customer balances. Nothing is changed.</value></data>
+  <data name="AsOf.When" xml:space="preserve"><value>At what moment?</value></data>
+  <data name="AsOf.Date" xml:space="preserve"><value>Day</value></data>
+  <data name="AsOf.Time" xml:space="preserve"><value>Time</value></data>
+  <data name="AsOf.Time.Hint" xml:space="preserve"><value>Your device's time, for example 18:00.</value></data>
+  <data name="AsOf.Time.Invalid" xml:space="preserve"><value>Unreadable time: write it like 18:00.</value></data>
+  <data name="AsOf.Go" xml:space="preserve"><value>Show the file at that moment</value></data>
+  <data name="AsOf.Presets" xml:space="preserve"><value>Suggested moments</value></data>
+  <data name="AsOf.Preset.YearEnd" xml:space="preserve"><value>Last 31 December</value></data>
+  <data name="AsOf.Preset.MonthEnd" xml:space="preserve"><value>End of last month</value></data>
+  <data name="AsOf.Preset.WeekAgo" xml:space="preserve"><value>A week ago</value></data>
+  <data name="AsOf.Working" xml:space="preserve"><value>Replaying the journal…</value></data>
+  <data name="AsOf.Moment" xml:space="preserve"><value>The file on {0} at {1}</value></data>
+  <data name="AsOf.Empty" xml:space="preserve"><value>The file was still empty at that moment.</value></data>
+  <data name="AsOf.Empty.Before" xml:space="preserve"><value>The file was still empty at that moment: its first document dates from {0}.</value></data>
+  <data name="AsOf.Chain.Intact" xml:space="preserve"><value>Chain verified up to that moment: {0} entries replayed, none was altered.</value></data>
+  <data name="AsOf.Chain.Broken" xml:space="preserve"><value>Warning: the chain shows an anomaly before that moment ({0} entries replayed). The alert centre tells you more.</value></data>
+  <data name="AsOf.Since" xml:space="preserve"><value>Since then, {0} events have been written to the journal.</value></data>
+  <data name="AsOf.Stat.Revenue" xml:space="preserve"><value>Revenue excl. VAT {0}</value></data>
+  <data name="AsOf.Stat.Vat" xml:space="preserve"><value>VAT invoiced</value></data>
+  <data name="AsOf.Stat.Receivables" xml:space="preserve"><value>Owed by customers</value></data>
+  <data name="AsOf.Now" xml:space="preserve"><value>today: {0}</value></data>
+  <data name="AsOf.Stat.Documents" xml:space="preserve"><value>Invoices and down payments</value></data>
+  <data name="AsOf.Counts" xml:space="preserve"><value>{0} credit notes · {1} quotes · {2} payments</value></data>
+  <data name="AsOf.Months" xml:space="preserve"><value>Month by month, {0}</value></data>
+  <data name="AsOf.Months.Hint" xml:space="preserve"><value>Excluding VAT, net of credit notes, by issue date, like the period closings.</value></data>
+  <data name="AsOf.Month.Vat" xml:space="preserve"><value>VAT {0}</value></data>
+  <data name="AsOf.Documents" xml:space="preserve"><value>Invoices due at that moment</value></data>
+  <data name="AsOf.Documents.Empty" xml:space="preserve"><value>No invoice was due at that moment.</value></data>
+  <data name="AsOf.Documents.Search" xml:space="preserve"><value>Search a number or a customer</value></data>
+  <data name="AsOf.Documents.Count" xml:space="preserve"><value>{0} of {1}</value></data>
+  <data name="AsOf.DownPayment" xml:space="preserve"><value>down payment</value></data>
+  <data name="AsOf.Then" xml:space="preserve"><value>then</value></data>
+  <data name="AsOf.Today" xml:space="preserve"><value>today</value></data>
+  <data name="AsOf.Settled" xml:space="preserve"><value>settled</value></data>
+  <data name="AsOf.Customers" xml:space="preserve"><value>Customer balances</value></data>
+  <data name="AsOf.Customers.Empty" xml:space="preserve"><value>No customer had a balance at that moment.</value></data>
+  <data name="AsOf.Customers.Search" xml:space="preserve"><value>Search a customer</value></data>
+  <data name="AsOf.Customer.Detail" xml:space="preserve"><value>invoiced {0} · credit notes {1} · received {2}</value></data>
+  <data name="AsOf.Events" xml:space="preserve"><value>Latest events before that moment</value></data>
+  <data name="AsOf.Events.Empty" xml:space="preserve"><value>No events.</value></data>
+  <data name="AsOf.Closing" xml:space="preserve"><value>Last signed closing: {0}, period ending {1}, cumulative {2}.</value></data>
+  <data name="AsOf.Sort.Date" xml:space="preserve"><value>Issue date</value></data>
+  <data name="AsOf.Sort.Due" xml:space="preserve"><value>Amount due</value></data>
+  <data name="AsOf.Sort.Balance" xml:space="preserve"><value>Balance</value></data>
+  <data name="AsOf.Sort.Change" xml:space="preserve"><value>Change since</value></data>
+  <data name="AsOf.Rules" xml:space="preserve"><value>How these figures are obtained</value></data>
+  <data name="AsOf.Rule.Journal" xml:space="preserve"><value>The tamper-proof journal keeps every validation, credit note, payment and closing, chained to the previous one. Lettra replays it up to the chosen moment and checks the chain on the way.</value></data>
+  <data name="AsOf.Rule.Revenue" xml:space="preserve"><value>Revenue is that of the moment's year: invoices and down payments minus credit notes, by issue date.</value></data>
+  <data name="AsOf.Rule.Due" xml:space="preserve"><value>An invoice's amount due is its total, minus the credit notes and payments recorded at that moment. A payment reversed later still counts.</value></data>
+  <data name="AsOf.Rule.Today" xml:space="preserve"><value>The “today” amounts come from the current file, to show what has changed since. Customer names are today's.</value></data>
+  <data name="AsOf.Event.QuoteValidated" xml:space="preserve"><value>Quote validated</value></data>
+  <data name="AsOf.Event.InvoiceValidated" xml:space="preserve"><value>Invoice validated</value></data>
+  <data name="AsOf.Event.InvoiceIssued" xml:space="preserve"><value>Invoice issued</value></data>
+  <data name="AsOf.Event.CreditNoteValidated" xml:space="preserve"><value>Credit note validated</value></data>
+  <data name="AsOf.Event.CreditNoteIssued" xml:space="preserve"><value>Credit note issued</value></data>
+  <data name="AsOf.Event.DocumentCancelled" xml:space="preserve"><value>Document cancelled</value></data>
+  <data name="AsOf.Event.PlatformTransmitted" xml:space="preserve"><value>Sent to the platform</value></data>
+  <data name="AsOf.Event.PlatformStatusReceived" xml:space="preserve"><value>Platform status</value></data>
+  <data name="AsOf.Event.PlatformPaymentReported" xml:space="preserve"><value>Payment reported to the platform</value></data>
+  <data name="AsOf.Event.PaymentRecorded" xml:space="preserve"><value>Payment recorded</value></data>
+  <data name="AsOf.Event.PaymentReversed" xml:space="preserve"><value>Payment reversed</value></data>
+  <data name="AsOf.Event.PeriodClosed" xml:space="preserve"><value>Signed closing</value></data>
+  <data name="AsOf.Event.KeyRotated" xml:space="preserve"><value>New file key</value></data>
 </root>

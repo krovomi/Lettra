@@ -51,6 +51,7 @@ public static class DependencyInjection
         services.AddScoped<IIssuedInvoiceReader, EfIssuedInvoiceReader>();
         AddPortalProviders(services, configuration);
         AddBankAggregator(services, configuration);
+        services.AddScoped<IDossierPresentReader, EfDossierPresentReader>();
         string platform = configuration?[PlatformKey] ?? "None";
         switch (platform)
         {
