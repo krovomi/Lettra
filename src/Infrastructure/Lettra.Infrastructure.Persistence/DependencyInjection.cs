@@ -59,10 +59,12 @@ public static class DependencyInjection
         // base Catalog ne remplace pas ce magasin (modes 2, 3 et 5).
         services.AddScoped<IDossierReviewStore, EfDossierReviewStore>();
         services.AddScoped<IMissionStore, EfMissionStore>();
+        services.AddScoped<IVigilanceStore, EfVigilanceStore>();
         services.AddScoped<IDossierIndicatorSource, OverdueInvoicesIndicatorSource>();
         services.AddScoped<IDossierIndicatorSource, PlatformRejectionsIndicatorSource>();
         services.AddScoped<IDossierIndicatorSource, ReviewPendingIndicatorSource>();
         services.AddScoped<IDossierIndicatorSource, Repositories.IbanChangesIndicatorSource>();
+        services.AddScoped<IDossierIndicatorSource, ClientDueDiligenceIndicatorSource>();
         services.TryAddSingleton<IDossierIndicatorStore, InMemoryDossierIndicatorStore>();
         services.AddSingleton<IDossierIndicatorRefresher, DossierIndicatorRefresher>();
 

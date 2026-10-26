@@ -6,6 +6,7 @@ using Lettra.Contracts.Missions;
 using Lettra.Domain.Common;
 using Lettra.Domain.Missions;
 using Lettra.Domain.SharedKernel;
+using Lettra.Domain.Vigilance;
 
 namespace Lettra.Application.Features.Cabinet;
 
@@ -18,7 +19,8 @@ public sealed record GetMissionOverviewQuery(DossierId Dossier)
 
 /// <summary>
 /// Créer ou modifier la mission. Ce qui engage le cabinet (nature, forfait) est l'affaire de qui valide les factures
-/// (manager, collaborateur étendu) : un collaborateur saisit son temps, il ne change pas les honoraires.
+/// (manager, collaborateur étendu) : un collaborateur saisit son temps, il ne change pas les honoraires. La lettre ne se
+/// signe pas sans fiche anti-blanchiment à jour ; une lettre déjà signée le reste.
 /// </summary>
 public sealed record SaveMissionCommand(DossierId Dossier, Mission.Draft Data, long? ExpectedVersion)
     : ICommand<Result>, IRequirePermission, IVersionedCommand
@@ -42,6 +44,7 @@ public sealed record DeleteTimeEntryCommand(DossierId Dossier, Guid Id)
 
 internal sealed class MissionHandlers(
     IMissionStore store,
+    IVigilanceStore vigilance,
     IUnitOfWork unitOfWork,
     ICurrentUser user,
     CabinetPeopleReader people,
@@ -58,6 +61,11 @@ internal sealed class MissionHandlers(
     {
         ArgumentNullException.ThrowIfNull(command);
         Mission? mission = await store.FindAsync(cancellationToken).ConfigureAwait(false);
+        if (command.Data.SignedOn is not null && mission?.SignedOn is null && !await KnowsClientAsync(cancellationToken).ConfigureAwait(false))
+        {
+            return MissionErrors.DueDiligenceRequired;
+        }
+
         if (mission is null)
         {
             Result<Mission> created = Mission.Create(command.Data, clock.GetUtcNow());
@@ -120,6 +128,13 @@ internal sealed class MissionHandlers(
         return await OverviewAsync(cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>La fiche anti-blanchiment du client est complète et à jour : le cabinet peut s'engager.</summary>
+    private async Task<bool> KnowsClientAsync(CancellationToken cancellationToken)
+    {
+        ClientDueDiligence? file = await vigilance.FindAsync(cancellationToken).ConfigureAwait(false);
+        return file?.StatusOn(LegalCalendar.DateOf(clock.GetUtcNow())) == DueDiligenceStatus.UpToDate;
+    }
+
     private async Task<Result<MissionOverviewResponse>> OverviewAsync(CancellationToken cancellationToken)
     {
         DateOnly today = LegalCalendar.DateOf(clock.GetUtcNow());
@@ -127,7 +142,10 @@ internal sealed class MissionHandlers(
         (DateOnly from, DateOnly to) = MissionOverview.Year(mission, today);
         IReadOnlyList<TimeEntry> entries = await store.ListTimeAsync(from, to, cancellationToken).ConfigureAwait(false);
         CabinetPeople cabinet = await people.ReadAsync(cancellationToken).ConfigureAwait(false);
-        return MissionOverview.Build(mission, today, entries, cabinet, user.UserId);
+        return MissionOverview.Build(mission, today, entries, cabinet, user.UserId) with
+        {
+            ClientKnown = await KnowsClientAsync(cancellationToken).ConfigureAwait(false),
+        };
     }
 }
 

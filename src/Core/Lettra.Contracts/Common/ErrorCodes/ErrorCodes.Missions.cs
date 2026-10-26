@@ -19,5 +19,6 @@ public static partial class ErrorCodes
         public const string NoteTooLong = "Mission.NoteTooLong";
         public const string TimeEntryNotFound = "Mission.TimeEntryNotFound";
         public const string TimeEntryNotYours = "Mission.TimeEntryNotYours";
+        public const string DueDiligenceRequired = "Mission.DueDiligenceRequired";
     }
 }

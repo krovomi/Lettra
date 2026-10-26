@@ -30,6 +30,9 @@ public static class RoleTemplates
 
         // Un collaborateur dépose aussi la pièce qu'un client lui a envoyée autrement (e-mail, courrier).
         Permission.PiecesDeposer,
+
+        // Il lit la fiche anti-blanchiment du client ; qui valide les factures la remplit et fixe le risque.
+        Permission.VigilanceConsulter,
     ];
 
     public static FrozenDictionary<string, RoleDefinition> All { get; } = new RoleDefinition[]
@@ -41,9 +44,10 @@ public static class RoleTemplates
         new(Manager, Set([.. Production,
             Permission.CatalogueGerer, Permission.FactureValider, Permission.FactureEmettre, Permission.AvoirCreer, Permission.AvoirApprouver, Permission.FecExporter,
             Permission.DelegationsApprouver, Permission.AlertesTraiter,
-            Permission.IntegriteVerifier, Permission.ClotureEffectuer, Permission.ArchivesExporter, Permission.IntegriteClesGerer, Permission.PostesGerer]), ScopeKind.Cabinet),
+            Permission.IntegriteVerifier, Permission.ClotureEffectuer, Permission.ArchivesExporter, Permission.IntegriteClesGerer, Permission.PostesGerer,
+            Permission.VigilanceGerer]), ScopeKind.Cabinet),
         new(AdministrateurGroupe, Set(Permission.GroupeGerer, Permission.DossierAdministrer), ScopeKind.Groupe),
-        new(CollaborateurEtendu, Set([.. Production, Permission.FactureValider, Permission.FactureEmettre]), ScopeKind.Groupe),
+        new(CollaborateurEtendu, Set([.. Production, Permission.FactureValider, Permission.FactureEmettre, Permission.VigilanceGerer]), ScopeKind.Groupe),
         new(Collaborateur, Set(Production), ScopeKind.Groupe),
         new(Auditeur, Set(
             Permission.TiersConsulter, Permission.CatalogueConsulter, Permission.DossierLire, Permission.FecExporter,

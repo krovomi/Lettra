@@ -221,6 +221,7 @@ public sealed partial class PilotagePage
         Contracts.Cabinet.DossierIndicatorKeys.EInvoicingReadiness => "e-invoicing-readiness",
         Contracts.Cabinet.DossierIndicatorKeys.OpenAlerts => "alerts",
         Contracts.Cabinet.DossierIndicatorKeys.ReviewPending => "review",
+        Contracts.Cabinet.DossierIndicatorKeys.ClientDueDiligence => "vigilance",
         _ => "cabinet",
     };
 

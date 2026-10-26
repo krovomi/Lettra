@@ -19,6 +19,9 @@ internal sealed class FakeMissionGateway : IMissionGateway
 
     public string? NextError { get; set; }
 
+    /// <summary>La fiche anti-blanchiment est à jour : la lettre peut se signer.</summary>
+    public bool ClientKnown { get; set; }
+
     public static MissionResponse Sample(decimal? targetRate = 80m) =>
         new(MissionKindDto.Presentation, [MissionServiceDto.Bookkeeping, MissionServiceDto.AnnualAccounts], new DateOnly(2026, 1, 1),
             2400m, FeeScheduleDto.Monthly, 200m, targetRate, targetRate is { } r ? Math.Round(2400m / r, 1) : null, "Jeanne Martin", "Paul Leroy", null, 3);
@@ -58,6 +61,6 @@ internal sealed class FakeMissionGateway : IMissionGateway
         TimeTaskTotal[] byTask = [.. Entries.GroupBy(e => e.Task).Select(g => new TimeTaskTotal(g.Key, g.Sum(e => e.Minutes))).OrderByDescending(t => t.Minutes)];
         return Task.FromResult(OperationResult<MissionOverviewResponse>.Success(new MissionOverviewResponse(
             Mission, "Cabinet Exemple", new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31), minutes, Earned,
-            minutes == 0 ? null : Math.Round(Earned / (minutes / 60m), 2), byTask, [.. Entries])));
+            minutes == 0 ? null : Math.Round(Earned / (minutes / 60m), 2), byTask, [.. Entries], ClientKnown)));
     }
 }

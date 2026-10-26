@@ -218,6 +218,20 @@ internal sealed class InMemoryMissionStore : Lettra.Application.Abstractions.Cab
     }
 }
 
+/// <summary>Fiche anti-blanchiment en mémoire.</summary>
+internal sealed class InMemoryVigilanceStore : Lettra.Application.Abstractions.Cabinet.IVigilanceStore
+{
+    public Lettra.Domain.Vigilance.ClientDueDiligence? File { get; private set; }
+
+    public Task<Lettra.Domain.Vigilance.ClientDueDiligence?> FindAsync(CancellationToken cancellationToken) => Task.FromResult(File);
+
+    public Task AddAsync(Lettra.Domain.Vigilance.ClientDueDiligence file, CancellationToken cancellationToken)
+    {
+        File = file;
+        return Task.CompletedTask;
+    }
+}
+
 /// <summary>Tableau de bord d'un dossier vide : aucune pièce.</summary>
 internal sealed class NoBillingKpis : Lettra.Application.Features.Kpi.IBillingKpiReader
 {
@@ -235,6 +249,7 @@ internal static class CabinetFakesRegistration
         services.AddSingleton<Lettra.Application.Abstractions.Cabinet.IDossierIndicatorRefresher>(stores);
         services.AddSingleton<Lettra.Application.Abstractions.Cabinet.IDossierReviewStore>(stores);
         services.AddSingleton<Lettra.Application.Abstractions.Cabinet.IMissionStore>(new InMemoryMissionStore());
+        services.AddSingleton<Lettra.Application.Abstractions.Cabinet.IVigilanceStore>(new InMemoryVigilanceStore());
         services.AddSingleton<Lettra.Application.Features.Kpi.IBillingKpiReader>(new NoBillingKpis());
         return services.AddRecurringFakes();
     }
