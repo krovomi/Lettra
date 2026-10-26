@@ -132,4 +132,8 @@
   <data name="Help.Faq.invoice-proof.Answer" xml:space="preserve"><value>Every validated invoice carries a “Proof of authenticity” QR code signed with the dossier's key. Under Sales, Check an invoice, paste the text of this QR code: Lettra tells you whether the invoice comes from this dossier and whether its number, date or amount were changed. The public key also lets anyone check without Lettra.</value></data>
   <data name="Help.Faq.invoice-proof.Keywords" xml:space="preserve"><value>proof authenticity qr signature fake invoice fraud</value></data>
   <data name="Nav.IbanChanges.Keywords" xml:space="preserve"><value>iban bank details fraud fake supplier change verification transfer account holder payee name</value></data>
+  <data name="Nav.AsOf.Keywords" xml:space="preserve"><value>back time past history date moment snapshot replay journal</value></data>
+  <data name="Help.Faq.as-of.Question" xml:space="preserve"><value>How do I see the file as it was on a past date?</value></data>
+  <data name="Help.Faq.as-of.Answer" xml:space="preserve"><value>In Accounting, Back in time, choose a day and a time, for example 31 December at 18:00. Lettra replays the tamper-proof journal up to that moment and shows the revenue, VAT, invoices due and customer balances of that moment, next to today's. The chain is checked on the way and nothing is changed.</value></data>
+  <data name="Help.Faq.as-of.Keywords" xml:space="preserve"><value>back time past history snapshot date</value></data>
 </root>
