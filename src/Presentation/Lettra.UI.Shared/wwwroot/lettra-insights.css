@@ -106,6 +106,7 @@
 .lt-asof-form { display: grid; gap: var(--space-2); margin-bottom: var(--space-4); }
 .lt-asof-fields { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3); }
 .lt-asof-fields label { display: grid; gap: var(--space-1); }
+.lt-asof-fields .lt-date { width: 100%; min-width: 11rem; }
 .lt-asof-fields input[type="text"] { width: 6rem; font-variant-numeric: tabular-nums; }
 .lt-asof-presets { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 #asof-stats .lt-banking-stat { min-width: 0; }
