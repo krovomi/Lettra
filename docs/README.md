@@ -26,6 +26,7 @@ dans le [README](../README.md#principes-de-conception), le détail, les mesures 
 - [Factures récurrentes](factures-recurrentes.md)
 - [Indicateurs de pilotage dans Grafana](indicateurs-grafana.md)
 - [Kit contrôle fiscal](kit-controle-fiscal.md)
+- [Lettre de mission et honoraires](lettre-de-mission.md)
 - [Menu réglable et aide](menu-et-aide.md)
 - [Passerelles vers les logiciels du cabinet](passerelles-logiciels-cabinet.md)
 - [Pièces justificatives des dépenses](pieces-justificatives.md)
