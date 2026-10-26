@@ -435,6 +435,21 @@ entreprises cessées (radiées) et les SIREN inconnus s'affichent avec un lien v
 vers l'annuaire public. Dans la démo, l'annuaire répond pour les entreprises fictives du jeu, dont quelques clients
 cessés ; toute autre recherche part vers l'annuaire réel. *(Vérifié : tests automatiques et démo Docker.)*
 
+**Alerte au changement d'IBAN d'un fournisseur.** Un nouvel IBAN saisi sur une fiche fournisseur s'affiche en bandeau
+sur la fiche (rouge si le compte change de pays), entre dans l'écran **Tiers > IBAN à vérifier**, lève une alerte de
+sécurité du dossier et une colonne de la Vue cabinet, jusqu'à ce qu'un collaborateur le confirme (en disant par quel
+canal il l'a vérifié) ou le refuse. C'est la parade contre la fraude au faux fournisseur. *(Vérifié : démo Docker,
+navigateur sur ordinateur et téléphone.)*
+
+**Nom et IBAN vérifiés.** Une fiche fournisseur peut porter le nom exact du titulaire du compte (« Titulaire du
+compte »). Lettra signale un titulaire qui ne ressemble pas au nom du fournisseur et vérifie le bénéficiaire auprès
+d'une banque simulée (correspond, correspond presque, ne correspond pas, impossible à vérifier), comme le fait chaque
+banque avant un virement SEPA depuis le 9 octobre 2025. L'onglet **Nom et IBAN** de l'écran « IBAN à vérifier » liste
+les bénéficiaires à contrôler, du plus risqué au plus sûr. La fiche entreprise peut aussi porter le titulaire exact du
+compte : il figure sur le PDF, le QR code de paiement et la facture électronique. *(Vérifié : démo Docker, navigateur
+sur ordinateur et téléphone ; aucune banque réelle interrogée.)* Détails :
+[docs/iban-fournisseurs.md](docs/iban-fournisseurs.md).
+
 ### 3. Un devis
 
 Menu **Devis**, **Nouveau devis**. L'écran est découpé en blocs repliables (Informations, Livraison et paiement,
@@ -466,6 +481,59 @@ La facture s'ouvre en brouillon (menu **Factures** pour la retrouver).
    avoir, ni brouillon. *(Vérifié : tests automatiques, PDF/A-3b par veraPDF, code relu par un lecteur de QR code sur
    l'écran et le PDF de la démo Docker ; non vérifié avec une vraie application bancaire ni dans les applications
    installées.)* Détails : [docs/se-faire-payer.md](docs/se-faire-payer.md).
+
+#### Preuve d'authenticité des factures
+
+Chaque facture, acompte ou avoir validé porte sur son PDF un second QR code, « Preuve d'authenticité ». Il contient le
+SIREN de l'émetteur, le numéro, la date d'émission, le total TTC et l'identifiant de la clé, signés en ECDSA P-256 par
+la clé de signature du dossier (celle qui signe déjà les clôtures de la chaîne anti-fraude ; la clé privée ne quitte
+jamais son enveloppe). Changer un seul caractère du numéro, de la date ou du montant rend la preuve invalide.
+
+Menu **Ventes > Vérifier une facture** (ou Ctrl+K « preuve ») : on colle le texte lu par l'appareil photo d'un
+téléphone, et Lettra répond : authentique (signée par ce dossier et identique à la pièce enregistrée), signée mais
+différente de la pièce enregistrée (avec les écarts), signature invalide (texte modifié), émise ailleurs (clé inconnue
+du registre) ou illisible. Le bloc « Vérifier sans Lettra » donne le registre des clés publiques au format PEM et la
+commande OpenSSL qui vérifie la preuve hors ligne. Tout est en C# déterministe, sans IA. Droit : « Lire le dossier ».
+Routes : `GET /api/v1/insights/invoice-proof/{id}`, `POST /api/v1/insights/invoice-proof/verification`,
+`GET /api/v1/insights/invoice-proof/keys`. *(Vérifié : démo Docker, PDF d'une facture validée et écran à 1440, 900 et
+390 px en français et en anglais, preuve authentique et preuve retouchée ; vérification hors ligne avec OpenSSL en
+ligne de commande ; non vérifié dans les applications installées.)*
+
+#### Espace client : paiement en ligne et devis signé
+
+Le cabinet crée pour son client un lien personnel, sans compte à créer, et le lui envoie (bouton **Copier**). Il le
+crée à trois endroits :
+
+- depuis la **fiche client**, section « Espace client », pour un lien vers l'espace complet ;
+- depuis une **facture due**, section « Paiement en ligne », pour un lien de paiement ;
+- depuis un **devis validé**, section « Signature en ligne », pour un lien de signature avec, au choix, un acompte de
+  20 à 50 %.
+
+Sur son téléphone ou son ordinateur, le client voit ses factures dues, le QR code de virement, ses devis et ses
+factures réglées.
+
+- **Payer par carte.** Dans la démo, le prestataire de paiement est simulé : la carte 4000 0000 0000 0002 est refusée,
+  toute autre est acceptée et aucune carte n'est débitée. Le paiement accepté devient un encaissement par carte,
+  imputé sur la facture.
+- **Signer un devis.** Le client signe en ligne (nom, case « bon pour accord »). Le devis passe « Accepté », et la
+  facture d'acompte demandée est créée, validée et aussitôt payable en ligne. La preuve de signature (signataire,
+  date, référence, empreinte du devis) s'affiche sur le devis côté cabinet.
+
+Chaque lien dure 30 jours (90 au plus). Le cabinet voit quand il a été ouvert et peut le révoquer. L'espace client
+demande le serveur du cabinet et un compte de service déclaré au registre des droits
+(`Lettra:CustomerPortal:ServiceAccountId`) ; la démo Docker en déclare un. Sur un poste isolé, l'espace client est
+fermé, par conception.
+
+Pour l'essayer dans la démo Docker :
+
+1. Ouvrez une facture émise non soldée, puis « Paiement en ligne » > **Créer un lien de paiement** > **Ouvrir**.
+2. Payez avec 4000 0000 0000 0002 (refus), puis avec 4242 4242 4242 4242 (accepté).
+3. Ouvrez un devis validé, choisissez « Signature en ligne » avec un acompte de 30 % puis **Faire signer en ligne**,
+   et ouvrez le lien.
+4. Signez : la facture d'acompte apparaît et se paie.
+
+*(Vérifié : démo Docker, navigateur au téléphone (390 px) et sur bureau (1440 px) ; applications installées reliées
+au serveur commun non vérifiées, mêmes écrans côté cabinet.)* Détails : [docs/espace-client.md](docs/espace-client.md).
 
 ### 5. La transmission à la plateforme agréée (simulée)
 
@@ -521,6 +589,10 @@ Menu **Déclarations** (groupe Comptabilité). Lettra prépare, le cabinet dépo
    par le Worker ou, dans la démo sans Worker, par l'API).
 5. Onglet **Réglages fiscaux** : date de clôture, CA3 mensuelle ou trimestrielle, jour limite de la TVA (du 15 au 24), IS et
    CFE.
+6. Onglet **Délais de paiement** : à la date de clôture, le tableau des factures émises non réglées par tranche de
+   retard, au format du rapport de gestion (article D441-6), et la liste des factures à un professionnel dont
+   l'échéance dépasse le plafond légal (60 jours date de facture ou 45 jours fin de mois). *(Vérifié : démo Docker,
+   navigateur sur ordinateur et téléphone.)* Détails : [docs/delais-de-paiement.md](docs/delais-de-paiement.md).
 
 Les correspondances de cases et les dates sont à faire relire par un expert-comptable. *(Vérifié : navigateur,
 Chromium Linux à 1440, 768 et 375 px, données conservées après une mise à jour de la démo ; non vérifié : application
@@ -538,6 +610,28 @@ l'administration. Permission : `ArchivesExporter` (rôles manager et auditeur). 
 expert-comptable : [docs/kit-controle-fiscal.md](docs/kit-controle-fiscal.md). *(Vérifié : démo Docker (navigateur,
 1440, 768 et 375 px) ; application installée non vérifiée sur appareil.)*
 
+#### Contrôle fiscal d'entraînement
+
+Menu **Comptabilité > Déclarations**, onglet **Contrôle à blanc** (ou Ctrl+K « contrôle à blanc »). Lettra passe sur
+le FEC les tests de cohérence qu'un vérificateur fait avec ses outils d'analyse des fichiers, et dit ce qu'il
+relèverait, avec des exemples et la façon d'y répondre. Le kit prépare les pièces ; le contrôle à blanc dit ce qu'un
+vérificateur relèverait. Treize tests, du plus grave au plus anodin :
+
+- format du fichier (le validateur intégré du FEC) ;
+- numéros d'écriture qui sautent dans un journal, numéros de facture qui manquent dans la suite des ventes ;
+- écritures datées d'un dimanche ou d'un jour férié, écritures validées plus de 60 jours après leur date ;
+- caisse négative en fin de journée, mouvements d'espèces de plus de 1 000 € ;
+- montants ronds trop fréquents (écritures d'au moins 1 000 € pile sur la centaine), lignes en double ;
+- loi de Benford sur le premier chiffre des montants (à partir de 200 montants d'au moins 10 €) ;
+- clients créditeurs, fournisseurs débiteurs, taux de TVA collectée supérieur au taux normal.
+
+Le contrôle porte sur le FEC que Lettra produit pour l'exercice choisi, ou sur le FEC d'un autre logiciel (texte
+tabulé ou à barres verticales, 64 Mo au plus). Tout est calculé en C# déterministe, sans IA, sans rien écrire ni rien
+envoyer : c'est un entraînement, pas un avis fiscal. Droit : « Exporter le FEC ». Routes :
+`GET /api/v1/insights/practice-audit?from=…&to=…` et `POST /api/v1/insights/practice-audit?fileName=…` (corps : le
+fichier). *(Vérifié : démo Docker, navigateur à 1440, 900 et 390 px, en français et en anglais, FEC du dossier et FEC
+d'un autre logiciel ; non vérifié dans les applications installées.)*
+
 ### 9. Encaissements et rapprochement bancaire
 
 Menu Comptabilité > **Encaissements** : saisissez un règlement reçu (virement, chèque, carte, espèces, prélèvement),
@@ -545,8 +639,8 @@ total, partiel ou réparti sur plusieurs factures. Chaque règlement passe son �
 512/411) et lettre le compte client (codes A, B, C…). Un règlement se contre-passe avec un motif ; il n'est jamais
 supprimé.
 
-Menu Comptabilité > **Rapprochement bancaire** : importez un relevé CAMT.053, OFX ou CSV (aucune connexion à la
-banque). Lettra propose les factures correspondantes avec sa raison (numéro dans le libellé, montant et nom, montant et
+Menu Comptabilité > **Rapprochement bancaire** : importez un relevé CAMT.053, OFX ou CSV, ou reliez le compte (banque
+connectée, ci-dessous). Lettra propose les factures correspondantes avec sa raison (numéro dans le libellé, montant et nom, montant et
 IBAN connu, somme de plusieurs factures) ; vous validez une par une ou en masse. Les petits écarts, sous un seuil
 réglable, sont soldés en 658/758. La TVA des prestations de services passe de 44574 à 44571 à l'encaissement, pour les
 factures validées à partir de cette version. Dans la démo, le bouton **Importer un relevé de démonstration** fabrique
@@ -556,6 +650,37 @@ Les comptes utilisés sont à faire relire par un expert-comptable. *(Vérifié 
 automatiques ; non vérifié à la main dans la démo Docker ni dans les applications installées. Hors ligne : sur le
 serveur ou dans la base locale du poste seul, pas encore de synchronisation de la réplique.)* Détails :
 [docs/encaissements.md](docs/encaissements.md).
+
+#### Banque connectée
+
+Dans **Rapprochement bancaire**, la section « Banque connectée » relie le compte bancaire du dossier par un agrégateur
+(accès aux comptes DSP2). Plus besoin de télécharger le relevé : les opérations arrivent d'elles-mêmes et Lettra
+propose les factures correspondantes, comme pour un relevé importé.
+
+- **Connecter le compte.** Choisissez la banque, puis donnez votre accord sur sa page : lecture seule, 180 jours,
+  révocable. Les 90 derniers jours d'opérations arrivent aussitôt.
+- **Synchroniser.** Le compte est relu à chaque ouverture du rapprochement s'il date de plus de 6 heures, ou à la
+  demande. Les opérations déjà lues ne sont jamais comptées deux fois.
+- **Renouveler l'accord.** Le bouton apparaît dans les 15 jours qui précèdent l'échéance, et après.
+- **Déconnecter.** L'accès est retiré ; les opérations déjà lues restent.
+
+Dans la démo, l'agrégateur est **simulé** : trois banques fictives, une page qui joue la banque, des virements
+fabriqués à partir des factures dues (environ deux sur trois) et des frais mensuels. Aucune banque réelle n'est
+contactée, et ces virements ne deviennent des encaissements qu'après votre validation. Un vrai agrégateur est un
+prestataire d'information sur les comptes enregistré auprès de l'ACPR ; aucun n'est encore choisi, et les charts Helm
+gardent l'import de fichiers seul (`Lettra:BankConnections:Aggregator=None`).
+
+Pour l'essayer dans la démo Docker :
+
+1. Ouvrez Rapprochement bancaire, choisissez « Banque Lumière (simulée) », puis **Connecter le compte**.
+2. Sur la page de la banque, cliquez sur **Refuser** : le compte n'est pas relié. Revenez et recommencez avec
+   **Autoriser**.
+3. Le compte apparaît avec son échéance, et les opérations arrivent avec leurs propositions. Validez-en une.
+4. **Synchroniser** : aucune nouvelle opération, pas de doublon.
+
+*(Vérifié : démo Docker, navigateur au téléphone (390 px) et sur bureau (1440 px) ; applications installées : mêmes
+cas d'usage, écrans non vérifiés sur appareil ; banque réelle non réalisée.)* Détails :
+[docs/banque-connectee.md](docs/banque-connectee.md).
 
 ### 10. Factures récurrentes
 
@@ -591,6 +716,24 @@ envoi, relance notée, passe du jour, invitation et passe automatique vérifiés
 MailPit, à 1440 et 375 px. Non vérifié dans les applications installées.)* Détails :
 [docs/relances-et-e-mails.md](docs/relances-et-e-mails.md).
 
+#### Météo des paiements
+
+Menu **Comptabilité > Météo des paiements** (ou Ctrl+K « météo »). Chaque client reçoit sa météo, tirée de son
+historique de paiement : soleil (il paie à l'échéance, à deux jours près), nuages (3 à 10 jours de retard moyen),
+pluie (11 à 30 jours), orage (plus d'un mois, ou une facture qui a plus de 60 jours de retard). Moins de deux factures
+payées ou échues : pas encore de météo.
+
+Pour chaque client, l'écran dit pourquoi en une phrase, la part de factures payées à l'heure, le retard habituel, le
+meilleur jour pour lui envoyer une facture (le jour d'émission après lequel il a payé le plus vite, quand l'écart est
+net) et la date d'encaissement attendue de chaque facture due : l'échéance décalée de son retard habituel, jamais
+avant demain. Ces dates forment la prévision des encaissements des huit prochaines semaines. Une facture qui a plus de
+60 jours de retard est dite douteuse : elle sort de la prévision et son montant est affiché à part.
+
+Tout est calculé en C# à chaque ouverture, sans IA et sans rien écrire dans le dossier. Les encaissements pris en
+compte sont ceux saisis dans Lettra, ou à défaut ceux déclarés à la plateforme agréée. Lecture : droit « Lire le
+dossier ». Route : `GET /api/v1/insights/payment-weather`. *(Vérifié : démo Docker, navigateur à 1440, 900 et 390 px,
+en français et en anglais ; non vérifié dans les applications installées.)*
+
 ### Et ensuite
 
 - **Catalogue** : les articles et prestations, même présentation que les clients (liste, fiche, **Modifier**,
@@ -600,6 +743,11 @@ MailPit, à 1440 et 375 px. Non vérifié dans les applications installées.)* D
 - **Journal et balance** : les écritures de vente de la période (journal, balance, grand livre d'un compte ou d'un
   client), en lecture, les mêmes que dans le FEC. La fiche d'un client y renvoie par **Compte client**. Les
   encaissements y figurent au journal de banque (BQ) et lettrent le compte 411 (étape 9).
+- **Révision avant clôture** (onglet **Révision** de la comptabilité) : l'exercice passé au crible à la date de
+  clôture : clients créditeurs, acomptes non imputés, créances de plus de six mois, créances contestées, opérations
+  bancaires à rapprocher, TVA collectée incohérente avec le chiffre d'affaires, brouillons oubliés. Chaque anomalie
+  mène à sa pièce (compte du client, facture, rapprochement). *(Vérifié : démo Docker, navigateur sur ordinateur et
+  téléphone.)* Détails : [docs/revision-avant-cloture.md](docs/revision-avant-cloture.md).
 - **Supprimer une ligne** : chaque tableau a une corbeille en bout de ligne. Un clic, une confirmation dans la ligne,
   puis un message. Un devis ou une facture ne se supprime qu'en brouillon (sinon le message dit quoi faire : refuser,
   laisser expirer, émettre un avoir). Un client ou un fournisseur supprimé disparaît des listes, ses pièces restent
@@ -780,6 +928,7 @@ Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou 
 |---|---|
 | Assistant IA | Les écrans existent : le panneau « Assistant IA » (bouton en haut) et le lien « Pourquoi ? » de la checklist de conformité. Ils restent masqués tant que l'IA est désactivée, ce qui est le réglage par défaut (section `Lettra:Ai`) et celui de la démo. L'assistant propose et explique ; il ne valide ni n'émet jamais rien. Le brouillon de devis à partir d'un texte libre est fermé tant que Lettra ne sait pas repérer les noms propres dans le texte ([docs/assistant-ia.md](docs/assistant-ia.md)). |
 | Vraie plateforme agréée | En attente d'un partenaire ; la démo utilise la plateforme simulée. |
+| Vrais prestataires de paiement, de signature et de banque | L'espace client, la banque connectée et la vérification du bénéficiaire passent par des prestataires simulés, derrière des ports : aucun prestataire réel n'est choisi. La signature est une signature électronique simple ; les paiements en cours sont gardés en mémoire, sans webhook. |
 | Serveur du cabinet en production | La démonstration navigateur tourne sur un poste avec Docker ; un vrai serveur du cabinet ou une cellule SaaS demande Keycloak, des certificats et une infrastructure (voir plus bas). |
 | Poste relié à un serveur, synchronisation | Prête dans l'application (fichier `lettra.json`), mais demande un serveur Lettra et Keycloak. Sur un poste isolé, la page Synchronisation indique « Ce poste ne synchronise pas ». |
 | Hors ligne sur un appareil relié au serveur commun | Relié au serveur commun, l'appareil a besoin du réseau. Reste à étendre la synchronisation aux devis, factures et règlements, ou à y ouvrir les brouillons hors ligne. |
@@ -982,9 +1131,13 @@ flowchart LR
   r["Requête<br/>cookie, en-tête X-Dossier"] --> c1["Contrôle 1, à l'entrée de l'API<br/>connexion et double facteur,<br/>anti-CSRF, dossier accessible,<br/>permission déclarée par la route"]
   c1 --> c2["Contrôle 2, dans le médiateur<br/>journalisation, garde du dossier,<br/>autorisation, validation, concurrence"]
   c2 --> uc["Cas d'usage<br/>base du seul dossier demandé"]
+  p["Page de l'espace client<br/>lien personnel, sans cookie"] --> cp["Contrôle du lien<br/>empreinte du secret, lien actif,<br/>débit limité, même origine"]
+  cp -->|"compte de service de l'espace client"| c2
 ```
 
-Sur un poste isolé ou relié, il n'y a pas d'API : seul le contrôle 2 s'applique.
+Sur un poste isolé ou relié, il n'y a pas d'API : seul le contrôle 2 s'applique. Les pages de l'espace client
+(`/espace-client/`) n'ont ni session ni double facteur : le lien personnel tient lieu de contrôle 1, puis le contrôle 2
+s'applique sous le compte de service de l'espace client, au rôle limité.
 
 ### CI
 
