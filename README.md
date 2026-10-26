@@ -6,11 +6,39 @@ Logiciel de devis et de factures pour les cabinets d'experts-comptables : une ba
 > **Prototype interne.** Lettra se présente aujourd'hui en interne, sur **données fictives uniquement**. La plateforme
 > agréée est **simulée** : rien ne quitte l'ordinateur. Ne saisissez aucune donnée réelle de client.
 
+- [Principes de conception](#principes-de-conception) : SOLID, KISS, DRY, Clean Architecture
 - [Choisir sa façon d'essayer](#choisir-sa-façon-dessayer) : Navigateur, Windows, Android, iPhone, Mac
 - [Premier usage, pas à pas](#premier-usage-pas-à-pas)
 - [Ce que la démo ne fait pas encore](#ce-que-la-démo-ne-fait-pas-encore)
 - [En cas de problème](#en-cas-de-problème)
 - [Pour les développeurs](#pour-les-développeurs)
+
+---
+
+## Principes de conception
+
+Le code C# (.NET 10) suit la Clean Architecture et les principes SOLID, KISS et DRY. Chaque point ci-dessous est
+vérifié à chaque modification, en local comme en CI, et non simplement déclaré :
+
+- **Clean Architecture, ports et adaptateurs** : domaine, application, infrastructure, présentation et hôtes sont
+  des projets séparés ; les dépendances vont toujours vers le domaine. Le domaine n'utilise aucun framework,
+  l'application déclare des ports (interfaces) que l'infrastructure implémente, et l'interface ne parle qu'à des
+  passerelles, HTTP ou en processus, qui rendent le même résultat. Des tests d'architecture le contrôlent
+  ([Règles tenues par les tests](#règles-tenues-par-les-tests)).
+- **SOLID** : un gestionnaire par cas d'usage derrière un médiateur ; les préoccupations transverses (journal,
+  dossier ouvert, permission, validation, concurrence) sont des comportements du pipeline, ajoutés sans toucher aux
+  cas d'usage ; tout est injecté, aucun écran ne reçoit de localisateur de services.
+- **KISS** : un médiateur maison de quelques fichiers, les échecs métier en valeurs (`Result`) plutôt qu'en
+  exceptions, des correspondances écrites à la main.
+- **DRY** : un seul calendrier légal, une seule traduction `Result` → HTTP, un seul chargement concurrent, des
+  composants de liste partagés ; les doublons relevés par l'audit ont été retirés.
+- **Base propre** : zéro avertissement (avertissements traités en erreurs, analyseurs .NET en mode `Recommended`),
+  21 règles de style de l'IDE en erreur de build, couverture minimale imposée en CI (88 % des lignes, 78 % des
+  branches ; environ 92 % et 82 % mesurés).
+
+Le détail, les mesures et ce qui reste ouvert (l'hôte de l'application installée, compilé seulement en CI, n'est
+pas encore sous les mêmes règles) sont dans [docs/qualite-du-code.md](docs/qualite-du-code.md). Tous les documents :
+[docs/README.md](docs/README.md).
 
 ---
 
