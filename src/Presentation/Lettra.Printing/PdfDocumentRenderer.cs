@@ -395,7 +395,7 @@ public sealed class PdfDocumentRenderer : IDocumentPdfRenderer
         document.Kind is PrintableDocumentKind.Invoice or PrintableDocumentKind.DownPaymentInvoice
         && document.Number is not null
         && document.Currency == "EUR"
-            ? EpcPaymentCode.Payload(document.Seller.Name, document.Iban, document.Bic, netToPay, document.Number)
+            ? EpcPaymentCode.Payload(document.AccountHolderName ?? document.Seller.Name, document.Iban, document.Bic, netToPay, document.Number)
             : null;
 
     private static void AddPaymentText(DocumentElements elements, PrintableDocument document, CultureInfo culture)
@@ -411,6 +411,11 @@ public sealed class PdfDocumentRenderer : IDocumentPdfRenderer
             if (document.Bic is not null)
             {
                 bank += "  ·  " + Format(culture, "Payment.Bic", document.Bic);
+            }
+
+            if (document.AccountHolderName is not null)
+            {
+                bank += "  ·  " + Format(culture, "Payment.Holder", document.AccountHolderName);
             }
 
             elements.AddParagraph(bank);

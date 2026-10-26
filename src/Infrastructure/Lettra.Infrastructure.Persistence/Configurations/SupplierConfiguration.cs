@@ -20,7 +20,10 @@ internal sealed class SupplierConfiguration : IEntityTypeConfiguration<Supplier>
         builder.Property(s => s.VatNumber).HasConversion(v => v!.Value, v => VatNumber.Create(v).Value).HasMaxLength(15);
         builder.Property(s => s.Email).HasConversion(v => v!.Value, v => Email.Create(v).Value).HasMaxLength(254);
         builder.Property(s => s.Iban).HasConversion(v => v!.Value, v => Iban.Create(v).Value).HasMaxLength(34);
+        builder.Property(s => s.AccountHolderName).HasMaxLength(Supplier.MaxAccountHolderLength);
+        builder.Property(s => s.PayeeCheckSuggestedName).HasMaxLength(Supplier.MaxAccountHolderLength);
         builder.Property(s => s.CreatedAt).IsRequired();
+        builder.Ignore(s => s.PayeeName);
 
         builder.ComplexProperty(s => s.Address, address =>
         {

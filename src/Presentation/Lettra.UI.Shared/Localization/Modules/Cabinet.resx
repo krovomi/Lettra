@@ -110,4 +110,6 @@
   <data name="Error.Review.PeriodInvalid" xml:space="preserve"><value>Cette période n'est pas reconnue (attendu : 2026-09 ou 2026-T3).</value></data>
   <data name="Error.Review.ItemUnknown" xml:space="preserve"><value>Ce point ne fait pas partie de la liste de contrôle.</value></data>
   <data name="Error.Review.NoteTooLong" xml:space="preserve"><value>La note dépasse 500 caractères.</value></data>
+  <data name="Cabinet.Indicator.fournisseurs.iban-a-verifier" xml:space="preserve"><value>IBAN à vérifier</value></data>
+  <data name="Cabinet.Indicator.fournisseurs.iban-a-verifier.Due" xml:space="preserve"><value>depuis le {0}</value></data>
 </root>

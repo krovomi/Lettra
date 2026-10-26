@@ -426,7 +426,7 @@ internal sealed class EfSyncReplica(TenantDbSession session, TimeProvider clock)
             server.Name, server.LegalForm, server.ShareCapital, server.Siren, server.Siret, server.Rcs, server.VatNumber,
             server.AddressLine1, server.AddressLine2, server.PostalCode, server.City, server.CountryCode,
             server.VatFranchise, server.VatOnDebits, server.PaymentDays, server.PaymentTerms, server.LatePenaltyRate,
-            server.EarlyPaymentDiscount, server.Iban, server.Bic);
+            server.EarlyPaymentDiscount, server.Iban, server.Bic, AccountHolderName: server.AccountHolderName);
         CompanyProfile? local = await db.Set<CompanyProfile>().AsTracking().FirstOrDefaultAsync(ct).ConfigureAwait(false);
         if (local is null)
         {

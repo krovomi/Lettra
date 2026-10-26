@@ -1,0 +1,198 @@
+@page "/accounting/review"
+@using Lettra.UI.Shared.Components.Tax
+@inject IAccountingGateway Accounting
+@inject IStringLocalizer<SharedResource> L
+@inject TimeProvider Clock
+@* Révision assistée avant la clôture : les contrôles automatiques de l'exercice (clients créditeurs, acomptes non
+   imputés, créances douteuses ou litigieuses, banque, TVA, brouillons), les plus graves en tête. Chaque anomalie
+   mène à ses pièces. Calcul en C# sur le serveur, rien ne quitte le dossier. *@
+
+<PageTitle>@L["ClosingReview.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["ClosingReview.Title"]</h1>
+        <p class="lettra-muted">@L["ClosingReview.Subtitle"]</p>
+    </div>
+</div>
+
+<AccountingTabs Period="Period" />
+<GeneralErrors Errors="_errors" />
+
+@if (_review is null)
+{
+    <ExplorerSkeleton Rows="5" />
+}
+else
+{
+    ClosingReviewResponse review = _review;
+    <section class="lt-panel lt-review-head" aria-labelledby="review-period">
+        <div class="lt-review-period">
+            <div>
+                <h2 id="review-period">@string.Format(Culture, L["ClosingReview.At"], TaxText.Day(review.ClosingDate))</h2>
+                <p class="lettra-muted" id="review-year">@string.Format(Culture, L["ClosingReview.Year"], TaxText.Day(review.FiscalYearStart))</p>
+            </div>
+            <ClosingDatePicker IdPrefix="review" Path="accounting/review" Value="review.ClosingDate" Today="Today" />
+        </div>
+        <dl class="lt-stats" id="review-stats" aria-label="@L["ClosingReview.Summary"]">
+            @foreach (ReviewSeverityDto severity in Severities)
+            {
+                <div id="@($"review-count-{Key(severity)}")">
+                    <dt>@L[$"ClosingReview.Severity.{severity}"]</dt>
+                    <dd>@review.Checks.Count(c => c.Severity == severity).ToString("N0", Culture)</dd>
+                </div>
+            }
+        </dl>
+    </section>
+
+    <section class="lt-panel" aria-labelledby="review-checks-title">
+        <h2 id="review-checks-title" class="lettra-visually-hidden">@L["ClosingReview.Checks"]</h2>
+        <ListFilterBar Id="review-filters" ActiveCount="@(_severity is null ? 0 : 1)" OnReset="() => _severity = null">
+            <div class="lt-filter">
+                <label for="review-severity">@L["ClosingReview.Filter.Severity"]</label>
+                <select id="review-severity" @bind="_severity">
+                    <option value="">@L["ClosingReview.Filter.All"]</option>
+                    @foreach (ReviewSeverityDto severity in Severities)
+                    {
+                        <option value="@severity">@L[$"ClosingReview.Severity.{severity}"]</option>
+                    }
+                </select>
+            </div>
+        </ListFilterBar>
+
+        @if (VisibleChecks.Count == 0)
+        {
+            <p class="lt-explorer-empty" id="review-empty">@L["ClosingReview.Empty"]</p>
+        }
+        <ul class="lt-review-list" id="review-checks">
+            @foreach (ReviewCheckResponse check in VisibleChecks)
+            {
+                <li class="@($"lt-review-check is-{Key(check.Severity)}")" id="@($"review-{check.Code}")">
+                    <span class="lt-review-icon" aria-hidden="true"><Icon Name="@IconOf(check.Severity)" Size="20" /></span>
+                    <div class="lt-review-body">
+                        <div class="lt-review-title">
+                            <h3>@L[$"ClosingReview.{check.Code}.Title"]</h3>
+                            <span class="@($"lettra-status {StatusClass(check.Severity)}")">@L[$"ClosingReview.Severity.{check.Severity}"]</span>
+                        </div>
+                        <p class="lt-review-detail">@Detail(check)</p>
+                        @if (check.Items.Count > 0)
+                        {
+                            bool expanded = _expanded.Contains(check.Code);
+                            <ul class="lt-review-items">
+                                @foreach (ReviewItemResponse item in expanded ? check.Items : check.Items.Take(ItemsShown))
+                                {
+                                    <li>
+                                        <a href="@Href(item)">@ItemLabel(item)</a>
+                                        @if (item.Days is { } days)
+                                        {
+                                            <span class="lettra-muted">@string.Format(Culture, L["ClosingReview.DaysLate"], days)</span>
+                                        }
+                                        @if (item.Amount is { } amount)
+                                        {
+                                            <span class="lt-review-amount">@ExplorerText.Money(amount)</span>
+                                        }
+                                    </li>
+                                }
+                            </ul>
+                            @if (check.Items.Count > ItemsShown)
+                            {
+                                <button type="button" class="lettra-link" id="@($"review-{check.Code}-more")" aria-expanded="@(expanded ? "true" : "false")"
+                                        @onclick="() => Toggle(check.Code)">
+                                    @(expanded ? L["ClosingReview.Less"] : string.Format(Culture, L["ClosingReview.More"], check.Items.Count))
+                                </button>
+                            }
+                        }
+                    </div>
+                </li>
+            }
+        </ul>
+        <p class="lettra-hint" id="review-limits"><Icon Name="info" Size="16" /> @L["ClosingReview.Limits"]</p>
+    </section>
+}
+
+@code {
+    /// <summary>Au-delà, la liste d'un contrôle se replie derrière « Tout afficher ».</summary>
+    private const int ItemsShown = 5;
+
+    private static readonly ReviewSeverityDto[] Severities = [ReviewSeverityDto.Warning, ReviewSeverityDto.Info, ReviewSeverityDto.Ok];
+
+    private ClosingReviewResponse? _review;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private ReviewSeverityDto? _severity;
+    private readonly HashSet<string> _expanded = [];
+
+    [SupplyParameterFromQuery(Name = "closing")] public string? Closing { get; set; }
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private DateOnly Today => Clock.LocalToday();
+
+    /// <summary>La période des autres onglets suit l'exercice révisé.</summary>
+    private AccountingPeriod Period => _review is { } review
+        ? new AccountingPeriod(review.FiscalYearStart, review.ClosingDate)
+        : AccountingPeriod.Of(PeriodPreset.ThisYear, Today);
+
+    private IReadOnlyList<ReviewCheckResponse> VisibleChecks =>
+        [.. (_review?.Checks ?? []).Where(c => _severity is null || c.Severity == _severity)];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _errors = [];
+        _expanded.Clear();
+        OperationResult<ClosingReviewResponse> result = await Accounting.GetClosingReviewAsync(DateText.ParseIso(Closing), CancellationToken.None);
+        DateOnly closing = DateText.ParseIso(Closing) ?? Today;
+        _review = result.Value ?? new ClosingReviewResponse(closing, closing, []);
+        _errors = result.Errors;
+    }
+
+    private void Toggle(string code)
+    {
+        if (!_expanded.Remove(code))
+        {
+            _expanded.Add(code);
+        }
+    }
+
+    private static string Key(ReviewSeverityDto severity) => severity.ToString().ToLowerInvariant();
+
+    private static string IconOf(ReviewSeverityDto severity) => severity switch
+    {
+        ReviewSeverityDto.Warning => "triangle-alert",
+        ReviewSeverityDto.Info => "info",
+        _ => "check",
+    };
+
+    private static string StatusClass(ReviewSeverityDto severity) => severity switch
+    {
+        ReviewSeverityDto.Warning => "is-refused",
+        ReviewSeverityDto.Info => "is-draft",
+        _ => "is-issued",
+    };
+
+    /// <summary>Phrase du contrôle : {0} le nombre d'anomalies, {1} le montant, {2} la valeur mesurée (un taux).</summary>
+    private string Detail(ReviewCheckResponse check)
+    {
+        string key = check is { Code: "VatRate", Severity: ReviewSeverityDto.Ok, Measure: null }
+            ? "ClosingReview.VatRate.None"
+            : $"ClosingReview.{check.Code}.{check.Severity}";
+        return string.Format(
+            Culture,
+            L[key],
+            check.Count,
+            check.Amount is { } amount ? ExplorerText.Money(amount) : string.Empty,
+            check.Measure is { } measure ? (measure / 100m).ToString("P2", Culture) : string.Empty);
+    }
+
+    private string ItemLabel(ReviewItemResponse item) => item.Kind == ReviewItemKindDto.Bank
+        ? string.Format(Culture, L["ClosingReview.Bank.Oldest"], item.Date is { } date ? TaxText.Day(date) : "—")
+        : item.Label;
+
+    /// <summary>Le compte du client sur l'exercice, la facture, la liste des factures (brouillon sans numéro) ou la banque.</summary>
+    private string Href(ReviewItemResponse item) => item switch
+    {
+        { Kind: ReviewItemKindDto.Customer, Id: { } customer } => $"accounting/accounts/{SalesAccounts.Customers}?{Period.Query}&customer={customer}",
+        { Kind: ReviewItemKindDto.Invoice, Id: { } invoice } => $"invoices/{invoice}",
+        { Kind: ReviewItemKindDto.Bank } => "bank",
+        _ => "invoices",
+    };
+}

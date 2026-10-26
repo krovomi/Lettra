@@ -164,6 +164,17 @@ else
                 <InputText id="company-bic" @bind-Value="_request.Bic" autocomplete="off" spellcheck="false" />
                 <FieldErrors Field="@nameof(SaveCompanyProfileRequest.Bic)" ServerErrors="_errors" />
             </div>
+
+            <div class="lettra-field">
+                <label for="company-account-holder">@L["Suppliers.Field.AccountHolder"]</label>
+                <InputText id="company-account-holder" @bind-Value="_request.AccountHolderName" placeholder="@_request.Name" maxlength="70" autocomplete="off" aria-describedby="company-account-holder-hint" />
+                <p class="lettra-hint" id="company-account-holder-hint">@L["Company.Field.AccountHolder.Hint"]</p>
+                @if (_holderMatch is PayeeMatchDto.NoMatch or PayeeMatchDto.CloseMatch)
+                {
+                    <p class="lettra-status @(_holderMatch == PayeeMatchDto.NoMatch ? "is-refused" : "is-draft")" id="company-holder-match">@L[$"Company.Holder.{_holderMatch}"]</p>
+                }
+                <FieldErrors Field="@nameof(SaveCompanyProfileRequest.AccountHolderName)" ServerErrors="_errors" />
+            </div>
         </fieldset>
 
         <GeneralErrors Errors="_errors" />
@@ -180,6 +191,7 @@ else
     private SaveCompanyProfileRequest _request = new();
     private IReadOnlyList<ErrorDetail> _errors = [];
     private long? _version;
+    private PayeeMatchDto? _holderMatch;
     private bool _loaded;
     private bool _busy;
     private bool _saved;
@@ -268,6 +280,8 @@ else
             EarlyPaymentDiscount = profile.EarlyPaymentDiscount,
             Iban = profile.Iban,
             Bic = profile.Bic,
+            AccountHolderName = profile.AccountHolderName,
         };
+        _holderMatch = profile.HolderNameMatch;
     }
 }

@@ -11,12 +11,17 @@ namespace Lettra.Domain.Parties;
 /// <item>un fournisseur français a un SIREN : c'est par lui que les factures électroniques reçues
 /// (réforme 2026-2027) seront rapprochées du fournisseur ;</item>
 /// <item>un SIRET, s'il est donné, appartient au SIREN ; un numéro de TVA français aussi ;</item>
-/// <item>un IBAN, s'il est donné, a une clé valide.</item>
+/// <item>un IBAN, s'il est donné, a une clé valide ;</item>
+/// <item>le titulaire du compte, s'il est donné, tient en 70 caractères (limite des virements SEPA) ;</item>
+/// <item>la dernière vérification du bénéficiaire vaut pour l'IBAN et le nom vérifiés : changer l'un ou l'autre l'efface.</item>
 /// </list>
 /// </summary>
 public sealed class Supplier : AggregateRoot<SupplierId>, IVersioned
 {
     public const int MaxNameLength = 200;
+
+    /// <summary>Nom du bénéficiaire d'un virement SEPA : 70 caractères au plus.</summary>
+    public const int MaxAccountHolderLength = 70;
 
     // Constructeur réservé à la persistance (EF), repris par le constructeur métier.
     private Supplier(SupplierId id)
@@ -26,16 +31,17 @@ public sealed class Supplier : AggregateRoot<SupplierId>, IVersioned
         Address = null!;
     }
 
-    private Supplier(SupplierId id, string name, PartyIdentification ids, Email? email, Iban? iban, PostalAddress address, DateTimeOffset createdAt)
+    private Supplier(SupplierId id, Values values, DateTimeOffset createdAt)
         : this(id)
     {
-        Name = name;
-        Siren = ids.Siren;
-        Siret = ids.Siret;
-        VatNumber = ids.VatNumber;
-        Email = email;
-        Iban = iban;
-        Address = address;
+        Name = values.Name;
+        Siren = values.Ids.Siren;
+        Siret = values.Ids.Siret;
+        VatNumber = values.Ids.VatNumber;
+        Email = values.Email;
+        Iban = values.Iban;
+        AccountHolderName = values.AccountHolderName;
+        Address = values.Address;
         CreatedAt = createdAt;
     }
 
@@ -50,6 +56,20 @@ public sealed class Supplier : AggregateRoot<SupplierId>, IVersioned
     public Email? Email { get; private set; }
 
     public Iban? Iban { get; private set; }
+
+    /// <summary>Nom exact du titulaire du compte, s'il diffère du nom du fournisseur (nom commercial, gérant…).</summary>
+    public string? AccountHolderName { get; private set; }
+
+    /// <summary>Le nom à présenter à la banque pour un virement : le titulaire s'il est donné, sinon le nom du fournisseur.</summary>
+    public string PayeeName => AccountHolderName ?? Name;
+
+    /// <summary>Réponse de la dernière vérification du bénéficiaire, pour l'IBAN et le nom actuels.</summary>
+    public PayeeMatch? PayeeCheckResult { get; private set; }
+
+    public DateTimeOffset? PayeeCheckedAt { get; private set; }
+
+    /// <summary>Le nom du titulaire que la banque propose quand le nom « correspond presque ».</summary>
+    public string? PayeeCheckSuggestedName { get; private set; }
 
     public PostalAddress Address { get; private set; }
 
@@ -73,7 +93,8 @@ public sealed class Supplier : AggregateRoot<SupplierId>, IVersioned
         string? AddressLine2,
         string? PostalCode,
         string? City,
-        string? CountryCode);
+        string? CountryCode,
+        string? AccountHolderName = null);
 
     /// <summary>Crée un fournisseur en accumulant toutes les erreurs de saisie.</summary>
     public static Result<Supplier> Create(SupplierId id, Draft draft, DateTimeOffset now)
@@ -85,7 +106,7 @@ public sealed class Supplier : AggregateRoot<SupplierId>, IVersioned
         }
 
         Values v = values.Value;
-        Supplier supplier = new(id, v.Name, v.Ids, v.Email, v.Iban, v.Address, now);
+        Supplier supplier = new(id, v, now);
         supplier.Raise(new SupplierCreated(id, now));
         return supplier;
     }
@@ -100,13 +121,21 @@ public sealed class Supplier : AggregateRoot<SupplierId>, IVersioned
         }
 
         Values v = values.Value;
+        string payeeBefore = PayeeName;
+        Iban? ibanBefore = Iban;
         Name = v.Name;
         Siren = v.Ids.Siren;
         Siret = v.Ids.Siret;
         VatNumber = v.Ids.VatNumber;
         Email = v.Email;
         Iban = v.Iban;
+        AccountHolderName = v.AccountHolderName;
         Address = v.Address;
+        if (ibanBefore != Iban || !string.Equals(payeeBefore, PayeeName, StringComparison.Ordinal))
+        {
+            (PayeeCheckResult, PayeeCheckedAt, PayeeCheckSuggestedName) = (null, null, null);
+        }
+
         Raise(new SupplierUpdated(Id, now));
         return Result.Success();
     }
@@ -121,6 +150,28 @@ public sealed class Supplier : AggregateRoot<SupplierId>, IVersioned
 
         IsArchived = archived;
         Raise(new SupplierArchiveChanged(Id, archived, now));
+    }
+
+    /// <summary>
+    /// Garde la réponse de la vérification du bénéficiaire pour l'IBAN et le nom actuels. Le nom proposé par la banque
+    /// n'a de sens que si le nom « correspond presque » : il est ignoré sinon.
+    /// </summary>
+    public Result RecordPayeeCheck(PayeeMatch result, string? suggestedName, DateTimeOffset at)
+    {
+        if (Iban is null)
+        {
+            return SupplierErrors.IbanMissing;
+        }
+
+        if (!Enum.IsDefined(result))
+        {
+            throw new ArgumentOutOfRangeException(nameof(result), result, null);
+        }
+
+        string? suggested = result == PayeeMatch.CloseMatch && !string.IsNullOrWhiteSpace(suggestedName) ? suggestedName.Trim() : null;
+        (PayeeCheckResult, PayeeCheckedAt, PayeeCheckSuggestedName) =
+            (result, at, suggested is { Length: > MaxAccountHolderLength } ? suggested[..MaxAccountHolderLength] : suggested);
+        return Result.Success();
     }
 
     private static Result<Values> Read(Draft draft)
@@ -141,6 +192,11 @@ public sealed class Supplier : AggregateRoot<SupplierId>, IVersioned
         PartyIdentification ids = PartyIdentification.Read(draft.Siren, draft.Siret, draft.VatNumber, SupplierErrors.SiretSirenMismatch, errors);
         Email? email = PartyIdentification.Optional(draft.Email, SharedKernel.Email.Create, nameof(Email), errors);
         Iban? iban = PartyIdentification.Optional(draft.Iban, SharedKernel.Iban.Create, nameof(Iban), errors);
+        string? holder = string.IsNullOrWhiteSpace(draft.AccountHolderName) ? null : draft.AccountHolderName.Trim();
+        if (holder is { Length: > MaxAccountHolderLength })
+        {
+            errors.Add(SupplierErrors.AccountHolderTooLong);
+        }
 
         Result<PostalAddress> address = PostalAddress.Create(
             draft.AddressLine1, draft.AddressLine2, draft.PostalCode, draft.City, draft.CountryCode);
@@ -154,8 +210,8 @@ public sealed class Supplier : AggregateRoot<SupplierId>, IVersioned
 
         return errors.Count > 0
             ? Result<Values>.Failure(errors)
-            : new Values(name, ids, email, iban, address.Value);
+            : new Values(name, ids, email, iban, holder, address.Value);
     }
 
-    private sealed record Values(string Name, PartyIdentification Ids, Email? Email, Iban? Iban, PostalAddress Address);
+    private sealed record Values(string Name, PartyIdentification Ids, Email? Email, Iban? Iban, string? AccountHolderName, PostalAddress Address);
 }

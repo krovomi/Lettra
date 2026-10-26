@@ -35,7 +35,8 @@ public static class PartiesAndCatalogMapper
                 request.AddressLine2,
                 request.PostalCode,
                 request.City,
-                request.CountryCode);
+                request.CountryCode,
+                request.AccountHolderName);
     }
 
     public static SupplierResponse ToResponse(this Supplier supplier)
@@ -58,6 +59,11 @@ public static class PartiesAndCatalogMapper
         {
             Version = supplier.Version,
             IsArchived = supplier.IsArchived,
+            AccountHolderName = supplier.AccountHolderName,
+            PayeeCheck = supplier.PayeeCheckResult is { } result && supplier.PayeeCheckedAt is { } at
+                ? new PayeeCheckResponse((PayeeMatchDto)result, at, supplier.PayeeCheckSuggestedName)
+                : null,
+            HolderNameMatch = supplier.AccountHolderName is { } holder ? (PayeeMatchDto)PayeeNames.Compare(supplier.Name, holder) : null,
         };
     }
 

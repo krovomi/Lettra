@@ -43,6 +43,12 @@ internal sealed class HttpSuppliersGateway(HttpClient http) : ISuppliersGateway
 
     public Task<OperationResult<bool>> DeleteAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken) =>
         VersionedCalls.DeleteAsync(http, HttpCalls.Relative($"api/v1/suppliers/{id}"), expectedVersion, cancellationToken);
+
+    public Task<OperationResult<PayeeCheckResponse>> VerifyPayeeAsync(Guid id, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.PostAsync(HttpCalls.Relative($"api/v1/suppliers/{id}/payee-verification"), null, ct),
+            ContractsJsonContext.Default.PayeeCheckResponse,
+            cancellationToken);
 }
 
 internal sealed class HttpCatalogGateway(HttpClient http) : ICatalogGateway

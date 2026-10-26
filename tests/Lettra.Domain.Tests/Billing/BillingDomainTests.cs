@@ -214,6 +214,26 @@ public sealed class BillingDomainTests
             .Errors.Should().ContainSingle().Which.Target.Should().Be(nameof(CompanyProfile.VatDeclarationRegime));
     }
 
+    [Fact]
+    public void Le_titulaire_du_compte_est_facultatif_et_borne_a_la_limite_d_un_virement_sepa()
+    {
+        CompanyProfile.Draft draft = new(
+            "Conseil Lettra", "SAS", null, "552100554", null, null, "FR96552100554", "10 avenue de l'Opéra", null, "75001", "Paris", "FR",
+            VatFranchise: false, VatOnDebits: false, PaymentDays: 30, null, null, null, "FR7630006000011234567890189", null);
+        CompanyProfile profile = CompanyProfile.Create(draft, Now).Value;
+        profile.AccountHolderName.Should().BeNull();
+        profile.PayeeName.Should().Be("Conseil Lettra");
+
+        profile.Update(draft with { AccountHolderName = "  Lettra Conseil SAS " }, Now).IsSuccess.Should().BeTrue();
+        profile.AccountHolderName.Should().Be("Lettra Conseil SAS");
+        profile.PayeeName.Should().Be("Lettra Conseil SAS");
+
+        profile.Update(draft with { AccountHolderName = new string('A', 71) }, Now)
+            .Errors.Should().ContainSingle().Which.Target.Should().Be(nameof(CompanyProfile.AccountHolderName));
+        profile.Update(draft with { AccountHolderName = " " }, Now).IsSuccess.Should().BeTrue();
+        profile.AccountHolderName.Should().BeNull();
+    }
+
     [Theory]
     [InlineData(30, null, 0.3)]
     [InlineData(null, 300, 0.25)]

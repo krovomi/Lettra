@@ -359,6 +359,10 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("AccountHolderName")
+                        .HasMaxLength(70)
+                        .HasColumnType("nvarchar(70)");
+
                     b.Property<string>("Bic")
                         .HasMaxLength(11)
                         .HasColumnType("nvarchar(11)");
@@ -1383,10 +1387,69 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.HasAnnotation("Lettra:SearchKeySource", "Name");
                 });
 
+            modelBuilder.Entity("Lettra.Domain.Parties.IbanChange", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("ChangedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("ChangedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("CountryChanged")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset?>("DecidedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DecidedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("Method")
+                        .HasColumnType("int");
+
+                    b.Property<string>("NewIban")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("PreviousIban")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SupplierId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("SupplierId", "Status");
+
+                    b.ToTable("SupplierIbanChanges", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Domain.Parties.Supplier", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AccountHolderName")
+                        .HasMaxLength(70)
+                        .HasColumnType("nvarchar(70)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
@@ -1406,6 +1469,16 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<int?>("PayeeCheckResult")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PayeeCheckSuggestedName")
+                        .HasMaxLength(70)
+                        .HasColumnType("nvarchar(70)");
+
+                    b.Property<DateTimeOffset?>("PayeeCheckedAt")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("SearchKey")
                         .IsRequired()

@@ -1,6 +1,7 @@
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Domain.Common;
+using Lettra.Domain.Parties;
 using Lettra.Domain.SharedKernel;
 
 namespace Lettra.Application.Authorization;
@@ -44,6 +45,14 @@ internal sealed class SegregationOfDutiesService(
         SegregationOfDutiesPolicy policy = await PolicyAsync(cancellationToken).ConfigureAwait(false);
         return policy.Enabled && createdBy == user.UserId
             ? SegregationOfDutiesErrors.ApproverIsCreator
+            : Result.Success();
+    }
+
+    public async Task<Result> EnsureCanDecideIbanChangeAsync(Guid changedBy, CancellationToken cancellationToken)
+    {
+        SegregationOfDutiesPolicy policy = await PolicyAsync(cancellationToken).ConfigureAwait(false);
+        return policy.Enabled && changedBy == user.UserId
+            ? IbanChangeErrors.SameUser
             : Result.Success();
     }
 

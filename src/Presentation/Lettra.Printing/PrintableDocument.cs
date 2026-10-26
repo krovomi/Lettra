@@ -100,6 +100,9 @@ public sealed record PrintableDocument
 
     public string? Bic { get; init; }
 
+    /// <summary>Titulaire exact du compte, quand il diffère du nom de l'émetteur (vérification du bénéficiaire).</summary>
+    public string? AccountHolderName { get; init; }
+
     public string? Notes { get; init; }
 
     /// <summary>Devise ISO 4217. Lettra facture en euros.</summary>

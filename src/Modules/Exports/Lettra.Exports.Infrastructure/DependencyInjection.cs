@@ -39,6 +39,7 @@ public static class DependencyInjection
         services.AddScoped<IIbanFingerprints, KeyedIbanFingerprints>();
         services.AddScoped<IReceivableDocumentReader, EfReceivableDocumentReader>();
         services.AddScoped<ITaxDocumentReader, EfTaxDocumentReader>();
+        services.AddScoped<IPaymentDelaysReader, EfPaymentDelaysReader>();
         services.AddScoped<IFiscalStore, EfFiscalStore>();
         services.AddScoped<IVatOnReceiptsSource, EfVatOnReceiptsSource>();
         services.AddScoped<IReminderSettingsRepository, EfReminderSettingsRepository>();

@@ -15,4 +15,7 @@
   <data name="Dates.Calendar.Next" xml:space="preserve"><value>Next month</value></data>
   <data name="Dates.Calendar.Today" xml:space="preserve"><value>Today</value></data>
   <data name="Dates.Calendar.Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Dates.Closing.Label" xml:space="preserve"><value>Closing date</value></data>
+  <data name="Dates.Closing.Last" xml:space="preserve"><value>Last closing</value></data>
+  <data name="Dates.Closing.Today" xml:space="preserve"><value>Today</value></data>
 </root>

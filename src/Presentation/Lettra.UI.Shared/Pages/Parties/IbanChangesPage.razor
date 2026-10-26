@@ -1,0 +1,259 @@
+@page "/iban-changes"
+@inject IIbanChangesGateway Changes
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+@* Changements d'IBAN des fournisseurs : la parade contre la fraude au faux fournisseur. Un nouvel IBAN se vérifie par
+   un autre canal que la demande (le numéro de téléphone habituel, pas celui de l'e-mail), puis se confirme ou se refuse.
+   Par défaut, seuls les changements à vérifier, les plus récents en tête. *@
+
+<PageTitle>@L["IbanChanges.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["IbanChanges.Title"]</h1>
+        <p class="lettra-muted">@L["IbanChanges.Subtitle"]</p>
+    </div>
+    <div class="lt-page-actions">
+        <a class="lettra-button is-secondary" href="suppliers" id="iban-changes-to-suppliers"><Icon Name="truck" Size="18" /> @L["Suppliers.Title"]</a>
+    </div>
+</div>
+
+<IbanTabs />
+
+<section class="lettra-card" aria-labelledby="iban-changes-list-title">
+    <h2 id="iban-changes-list-title" class="lettra-visually-hidden">@L["IbanChanges.Title"]</h2>
+    <ListFilterBar Id="iban-changes-filters" ActiveCount="ActiveFilters" OnReset="ResetFiltersAsync">
+        <ChildContent>
+            <div class="lt-filter">
+                <label for="iban-changes-search">@L["IbanChanges.Search"]</label>
+                <input id="iban-changes-search" type="search" @bind="_search" @bind:after="ReloadAsync" autocomplete="off" />
+            </div>
+        </ChildContent>
+        <More>
+            <div class="lt-filter">
+                <label for="iban-changes-status">@L["Billing.Status"]</label>
+                <select id="iban-changes-status" @bind="_status" @bind:after="ReloadAsync">
+                    <option value="">@L["IbanChanges.Status.All"]</option>
+                    @foreach (IbanChangeStatusDto status in Enum.GetValues<IbanChangeStatusDto>())
+                    {
+                        <option value="@status">@L[$"IbanChanges.Status.{status}"]</option>
+                    }
+                </select>
+            </div>
+            <SortSelect Id="iban-changes-sort" Options="SortOptions" State="_sort" OnSort="ReloadAsync" />
+        </More>
+    </ListFilterBar>
+
+    <GeneralErrors Errors="_errors" IncludeFieldErrors="true" />
+
+    @if (_page is null)
+    {
+        <ListSkeleton Columns="6" />
+    }
+    else if (_page.Items.Count == 0 && ActiveFilters > 0)
+    {
+        <EmptyState Id="iban-changes-filtered-empty" IconName="search" Title="@L["Lists.Empty.FilteredTitle"]" Text="@L["Lists.Empty.Filtered"]">
+            <button type="button" class="lettra-button is-secondary" id="iban-changes-empty-reset" @onclick="ResetFiltersAsync">@L["Lists.Filters.Reset"]</button>
+        </EmptyState>
+    }
+    else if (_page.Items.Count == 0)
+    {
+        <EmptyState Id="iban-changes-empty" IconName="shield-check" Title="@L["IbanChanges.Empty"]" Text="@L["IbanChanges.Empty.Text"]" />
+    }
+    else
+    {
+        <div class="lt-list-scroll">
+            <table class="lettra-table lettra-documents lt-cards" id="iban-changes-table">
+                <thead>
+                    <tr>
+                        <SortHeader Option="Column(IbanChangeSortDto.Supplier)" State="_sort" OnSort="ReloadAsync" Id="iban-changes-sort-supplier" />
+                        <th scope="col">@L["IbanChanges.Previous"]</th>
+                        <th scope="col">@L["IbanChanges.New"]</th>
+                        <SortHeader Option="Column(IbanChangeSortDto.ChangedAt)" State="_sort" OnSort="ReloadAsync" Id="iban-changes-sort-date" />
+                        <th scope="col">@L["Billing.Status"]</th>
+                        <th scope="col"><span class="lettra-visually-hidden">@L["IbanChanges.Actions"]</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (IbanChangeResponse change in _page.Items)
+                    {
+                        <tr @key="change.Id" data-change="@change.Id">
+                            <td><a href="@($"suppliers/{change.SupplierId}")">@change.SupplierName</a></td>
+                            <td data-label="@L["IbanChanges.Previous"]"><span class="lt-iban">@(change.PreviousIban ?? L["IbanChanges.NoPrevious"])</span></td>
+                            <td data-label="@L["IbanChanges.New"]">
+                                <span class="lt-iban-cell">
+                                    <span class="lt-iban">@change.NewIban</span>
+                                    @if (change.CountryChanged)
+                                    {
+                                        <span class="lettra-status is-refused"><Icon Name="shield-alert" Size="14" /> @L["IbanChanges.CountryChanged"]</span>
+                                    }
+                                </span>
+                            </td>
+                            <td data-label="@L["IbanChanges.ChangedAt"]">@change.ChangedAt.ToLocalTime().ToString("g", Culture)</td>
+                            <td data-label="@L["Billing.Status"]">
+                                <span class="lt-iban-cell">
+                                    <span class="lettra-status @StatusClass(change.Status)">@L[$"IbanChanges.Status.{change.Status}"]</span>
+                                    @if (change.Method is { } method)
+                                    {
+                                        <span class="lettra-muted">@L[$"IbanChanges.Method.{method}"]</span>
+                                    }
+                                </span>
+                            </td>
+                            <td>
+                                @if (change.Status == IbanChangeStatusDto.Pending)
+                                {
+                                    <div class="lettra-inline">
+                                        <button type="button" class="lettra-button is-secondary" id="@($"iban-confirm-{change.Id}")" @onclick="() => Open(change, confirm: true)">@L["IbanChanges.Confirm"]</button>
+                                        <button type="button" class="lettra-button is-ghost" id="@($"iban-reject-{change.Id}")" @onclick="() => Open(change, confirm: false)">@L["IbanChanges.Reject"]</button>
+                                    </div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (_page.TotalCount > _page.PageSize)
+        {
+            <nav class="lt-pager" aria-label="@L["Accounting.Pages"]">
+                <button type="button" class="lettra-button is-secondary" disabled="@(_pageNumber <= 1)" @onclick="() => GoToAsync(_pageNumber - 1)">@L["Accounting.Previous"]</button>
+                <span>@string.Format(Culture, L["Accounting.PageOf"], _pageNumber, PageCount)</span>
+                <button type="button" class="lettra-button is-secondary" disabled="@(_pageNumber >= PageCount)" @onclick="() => GoToAsync(_pageNumber + 1)">@L["Accounting.Next"]</button>
+            </nav>
+        }
+    }
+</section>
+
+@if (_deciding is { } deciding)
+{
+    <section class="lettra-card" aria-labelledby="iban-decision-title" id="iban-decision">
+        <h2 id="iban-decision-title" tabindex="-1">
+            @string.Format(Culture, L[_confirming ? "IbanChanges.Confirm.Title" : "IbanChanges.Reject.Title"], deciding.SupplierName, deciding.NewIban)
+        </h2>
+        <p class="lettra-hint">@L[_confirming ? "IbanChanges.Confirm.Hint" : "IbanChanges.Reject.Hint"]</p>
+        @if (_confirming)
+        {
+            <div class="lt-filter">
+                <label for="iban-decision-method">@L["IbanChanges.Method"]</label>
+                <select id="iban-decision-method" class="lettra-input" @bind="_method">
+                    <option value="">@L["IbanChanges.Method.Choose"]</option>
+                    @foreach (IbanVerificationMethodDto method in Enum.GetValues<IbanVerificationMethodDto>())
+                    {
+                        <option value="@method">@L[$"IbanChanges.Method.{method}"]</option>
+                    }
+                </select>
+            </div>
+        }
+        <div class="lt-filter">
+            <label for="iban-decision-note">@L[_confirming ? "IbanChanges.Note" : "IbanChanges.Note.Required"]</label>
+            <textarea id="iban-decision-note" class="lettra-input" rows="3" maxlength="500" @bind="_note"></textarea>
+        </div>
+        <div class="lettra-inline">
+            <button type="button" class="lettra-button @(_confirming ? null : "is-danger")" id="iban-decision-submit" disabled="@_busy" @onclick="DecideAsync">
+                @L[_confirming ? "IbanChanges.Confirm" : "IbanChanges.Reject"]
+            </button>
+            <button type="button" class="lettra-button is-ghost" id="iban-decision-cancel" @onclick="Close">@L["Explorer.Cancel"]</button>
+        </div>
+    </section>
+}
+
+@code {
+    private const int PageSize = 50;
+
+    private PagedResponse<IbanChangeResponse>? _page;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private string? _search;
+    private IbanChangeStatusDto? _status = IbanChangeStatusDto.Pending;
+    private int _pageNumber = 1;
+    private IbanChangeResponse? _deciding;
+    private bool _confirming;
+    private IbanVerificationMethodDto? _method;
+    private string? _note;
+    private bool _busy;
+
+    // Tri sur le serveur : le plus récent en tête par défaut.
+    private readonly SortState<IbanChangeSortDto> _sort = new(IbanChangeSortDto.ChangedAt, SortDirectionDto.Descending);
+
+    private IReadOnlyList<SortOption<IbanChangeSortDto>> SortOptions =>
+    [
+        new(IbanChangeSortDto.Supplier, L["IbanChanges.Supplier"]),
+        new(IbanChangeSortDto.ChangedAt, L["IbanChanges.ChangedAt"], SortDirectionDto.Descending),
+    ];
+
+    private SortOption<IbanChangeSortDto> Column(IbanChangeSortDto column) => SortOptions.First(o => o.Column == column);
+
+    /// <summary>La recherche, et l'état s'il n'est plus « à vérifier ».</summary>
+    private int ActiveFilters => (string.IsNullOrWhiteSpace(_search) ? 0 : 1) + (_status == IbanChangeStatusDto.Pending ? 0 : 1);
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private int PageCount => _page is null ? 1 : Math.Max(1, (int)Math.Ceiling(_page.TotalCount / (double)_page.PageSize));
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        OperationResult<PagedResponse<IbanChangeResponse>> result = await Changes.ListAsync(
+            new IbanChangeListQuery(_status, _search, _pageNumber, PageSize, _sort.Column, _sort.Direction), CancellationToken.None);
+        _errors = result.Errors;
+        _page = result.Value ?? new PagedResponse<IbanChangeResponse>([], 1, PageSize, 0);
+    }
+
+    private Task ReloadAsync() => GoToAsync(1);
+
+    private Task ResetFiltersAsync()
+    {
+        (_search, _status) = (null, IbanChangeStatusDto.Pending);
+        return ReloadAsync();
+    }
+
+    private async Task GoToAsync(int page)
+    {
+        _pageNumber = page;
+        await LoadAsync();
+    }
+
+    private void Open(IbanChangeResponse change, bool confirm)
+    {
+        (_deciding, _confirming, _method, _note) = (change, confirm, null, null);
+    }
+
+    private void Close() => _deciding = null;
+
+    private async Task DecideAsync()
+    {
+        if (_deciding is not { } change)
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            OperationResult<bool> result = _confirming
+                ? await Changes.ConfirmAsync(change.Id, new ConfirmIbanChangeRequest { Method = _method, Note = _note, ExpectedVersion = change.Version }, CancellationToken.None)
+                : await Changes.RejectAsync(change.Id, new RejectIbanChangeRequest { Note = _note, ExpectedVersion = change.Version }, CancellationToken.None);
+            if (!result.IsSuccess)
+            {
+                Toasts.Show(ToastKind.Error, string.Join(" ", result.Errors.Select(e => L.Error(e.Code))));
+                return;
+            }
+
+            Toasts.Show(ToastKind.Success, string.Format(Culture, L[_confirming ? "IbanChanges.Confirmed" : "IbanChanges.Rejected"], change.SupplierName));
+            _deciding = null;
+            await LoadAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private static string? StatusClass(IbanChangeStatusDto status) => status switch
+    {
+        IbanChangeStatusDto.Pending => "is-draft",
+        IbanChangeStatusDto.Confirmed => "is-issued",
+        IbanChangeStatusDto.Rejected => "is-refused",
+        _ => null,
+    };
+}

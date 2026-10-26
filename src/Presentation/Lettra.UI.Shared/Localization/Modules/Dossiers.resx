@@ -39,4 +39,7 @@
   <data name="Company.Field.EarlyPaymentDiscount" xml:space="preserve"><value>Escompte pour paiement anticipé</value></data>
   <data name="Company.Field.Bic" xml:space="preserve"><value>BIC</value></data>
   <data name="Company.Saved" xml:space="preserve"><value>Fiche entreprise enregistrée.</value></data>
+  <data name="Company.Field.AccountHolder.Hint" xml:space="preserve"><value>Facultatif. Le nom exact du compte s'il diffère de la raison sociale : il figure avec l'IBAN sur les factures, le QR code de paiement et la facture électronique, pour que la banque de vos clients réponde « correspond » avant leurs virements.</value></data>
+  <data name="Company.Holder.NoMatch" xml:space="preserve"><value>Ne ressemble pas à la raison sociale : vérifiez auprès de la banque</value></data>
+  <data name="Company.Holder.CloseMatch" xml:space="preserve"><value>Proche de la raison sociale</value></data>
 </root>

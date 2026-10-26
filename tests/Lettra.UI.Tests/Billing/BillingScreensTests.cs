@@ -5,6 +5,7 @@ using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
 using Lettra.Contracts.Exports;
+using Lettra.Contracts.Suppliers;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
 using Lettra.UI.Shared.Components.Palette;
@@ -392,6 +393,21 @@ public sealed class CompanySettingsTests : BunitContext
         requete.Rcs.Should().Be("RCS Lyon");
         requete.Iban.Should().Be("FR7630006000011234567890189");
         this.ToastText().Should().Be("Fiche entreprise enregistrée.");
+    }
+
+    [Fact]
+    public void Un_titulaire_du_compte_sans_rapport_avec_la_raison_sociale_est_signale_apres_enregistrement()
+    {
+        _settings.HolderAnswer = PayeeMatchDto.NoMatch;
+        IRenderedComponent<CompanySettings> page = Render<CompanySettings>();
+        page.Find("#company-account-holder").GetAttribute("placeholder").Should().Be("Cabinet Martin");
+        page.FindAll("#company-holder-match").Should().BeEmpty();
+
+        page.Find("#company-account-holder").Change("Jean Dupont");
+        page.Find("form").Submit();
+
+        _settings.Saves.Should().ContainSingle().Which.Request.AccountHolderName.Should().Be("Jean Dupont");
+        page.Find("#company-holder-match").TextContent.Should().Contain("Ne ressemble pas à la raison sociale");
     }
 
     [Fact]

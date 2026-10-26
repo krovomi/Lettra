@@ -164,4 +164,48 @@
   <data name="Error.Tax.DeadlineUnknown" xml:space="preserve"><value>Cette échéance n'est pas dans le calendrier du dossier.</value></data>
   <data name="Alerts.Rule.fiscal-echeance-proche" xml:space="preserve"><value>Échéance fiscale d'un dossier dans les 7 jours</value></data>
   <data name="Alerts.Rule.fiscal-echeance-depassee" xml:space="preserve"><value>Échéance fiscale d'un dossier dépassée</value></data>
+  <data name="Tax.Delays.Tab" xml:space="preserve"><value>Délais de paiement</value></data>
+  <data name="Tax.Delays.Title" xml:space="preserve"><value>Délais de paiement</value></data>
+  <data name="Tax.Delays.Subtitle" xml:space="preserve"><value>Le tableau des factures émises non réglées pour le rapport de gestion, et les échéances au-delà du plafond légal.</value></data>
+  <data name="Tax.Delays.At" xml:space="preserve"><value>Situation au {0}</value></data>
+  <data name="Tax.Delays.Year" xml:space="preserve"><value>Exercice ouvert le {0} · chiffre d'affaires TTC {1}</value></data>
+  <data name="Tax.Delays.BreachBanner" xml:space="preserve"><value>{0} facture(s) de l'exercice à un professionnel ont une échéance au-delà du plafond légal. Voir la liste plus bas.</value></data>
+  <data name="Tax.Delays.Table" xml:space="preserve"><value>Factures émises non réglées à la date de clôture dont le terme est échu</value></data>
+  <data name="Tax.Delays.TableHint" xml:space="preserve"><value>Modèle du rapport de gestion (article D441-6 du Code de commerce). Montants TTC restant dus à la clôture.</value></data>
+  <data name="Tax.Delays.PartA" xml:space="preserve"><value>(A) Tranches de retard de paiement</value></data>
+  <data name="Tax.Delays.Bracket.0" xml:space="preserve"><value>0 jour (indicatif)</value></data>
+  <data name="Tax.Delays.Bracket.1" xml:space="preserve"><value>1 à 30 jours</value></data>
+  <data name="Tax.Delays.Bracket.2" xml:space="preserve"><value>31 à 60 jours</value></data>
+  <data name="Tax.Delays.Bracket.3" xml:space="preserve"><value>61 à 90 jours</value></data>
+  <data name="Tax.Delays.Bracket.4" xml:space="preserve"><value>91 jours et plus</value></data>
+  <data name="Tax.Delays.Bracket.Total" xml:space="preserve"><value>Total (1 jour et plus)</value></data>
+  <data name="Tax.Delays.Row.Count" xml:space="preserve"><value>Nombre de factures concernées</value></data>
+  <data name="Tax.Delays.Row.Amount" xml:space="preserve"><value>Montant total des factures concernées (TTC)</value></data>
+  <data name="Tax.Delays.Row.Percent" xml:space="preserve"><value>Pourcentage du chiffre d'affaires TTC de l'exercice</value></data>
+  <data name="Tax.Delays.PartB" xml:space="preserve"><value>(B) Factures exclues du (A) relatives à des créances litigieuses</value></data>
+  <data name="Tax.Delays.PartB.Value" xml:space="preserve"><value>{0} facture(s) · {1}</value></data>
+  <data name="Tax.Delays.PartC" xml:space="preserve"><value>(C) Délais de paiement de référence utilisés</value></data>
+  <data name="Tax.Delays.PartC.Contractual" xml:space="preserve"><value>Délais contractuels : {0} jours le plus souvent</value></data>
+  <data name="Tax.Delays.PartC.Legal" xml:space="preserve"><value>Délais légaux : 60 jours date de facture ou 45 jours fin de mois</value></data>
+  <data name="Tax.Delays.NotDue" xml:space="preserve"><value>Non échues à la clôture</value></data>
+  <data name="Tax.Delays.Disputed" xml:space="preserve"><value>Litigieuse</value></data>
+  <data name="Tax.Delays.Breaches" xml:space="preserve"><value>Échéances au-delà du plafond légal</value></data>
+  <data name="Tax.Delays.BreachesHint" xml:space="preserve"><value>Factures de l'exercice à un professionnel dont l'échéance dépasse 60 jours après la date de facture ou 45 jours fin de mois. Un délai convenu plus long expose à une amende administrative.</value></data>
+  <data name="Tax.Delays.Breaches.Empty" xml:space="preserve"><value>Toutes les échéances respectent le plafond légal</value></data>
+  <data name="Tax.Delays.Breaches.EmptyText" xml:space="preserve"><value>Aucune facture de l'exercice à un professionnel ne dépasse 60 jours ou 45 jours fin de mois.</value></data>
+  <data name="Tax.Delays.Invoices" xml:space="preserve"><value>Factures non réglées à la clôture</value></data>
+  <data name="Tax.Delays.Invoices.Empty" xml:space="preserve"><value>Tout était réglé à cette date</value></data>
+  <data name="Tax.Delays.Invoices.EmptyText" xml:space="preserve"><value>Aucune facture émise ne restait due à la date choisie.</value></data>
+  <data name="Tax.Delays.AllBrackets" xml:space="preserve"><value>Toutes</value></data>
+  <data name="Tax.Delays.Column.Number" xml:space="preserve"><value>Facture</value></data>
+  <data name="Tax.Delays.Column.Issue" xml:space="preserve"><value>Date de facture</value></data>
+  <data name="Tax.Delays.Column.Due" xml:space="preserve"><value>Échéance</value></data>
+  <data name="Tax.Delays.Column.Ceiling" xml:space="preserve"><value>Plafond légal</value></data>
+  <data name="Tax.Delays.Column.Over" xml:space="preserve"><value>Dépassement</value></data>
+  <data name="Tax.Delays.Column.Late" xml:space="preserve"><value>Retard</value></data>
+  <data name="Tax.Delays.Column.Bracket" xml:space="preserve"><value>Tranche</value></data>
+  <data name="Tax.Delays.Column.Outstanding" xml:space="preserve"><value>Reste dû TTC</value></data>
+  <data name="Tax.Delays.Days" xml:space="preserve"><value>{0} j</value></data>
+  <data name="Tax.Delays.Disclaimer" xml:space="preserve"><value>Brouillon à relire avec l'expert-comptable : « 0 jour » réunit les factures échues le jour de la clôture ; les factures contestées sur la plateforme sont classées litigieuses ; les délais propres à certains secteurs (transport, denrées périssables, export) ne sont pas traités. Les factures reçues des fournisseurs viendront quand Lettra les recevra.</value></data>
+  <data name="Tax.Delays.NotDueShort" xml:space="preserve"><value>Non échue</value></data>
 </root>

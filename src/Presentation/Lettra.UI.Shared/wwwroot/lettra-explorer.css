@@ -130,6 +130,9 @@
 .lt-fact dd { margin: 0; overflow-wrap: anywhere; }
 .lt-address { font-style: normal; }
 .lt-mono { font-family: var(--font-mono); font-size: var(--text-sm); }
+/* IBAN masqué (« FR76 •••• 0189 ») : jamais coupé, même dans une carte de téléphone ; ses repères passent dessous. */
+.lt-iban { font-family: var(--font-mono); font-size: var(--text-sm); white-space: nowrap; }
+.lt-iban-cell { display: inline-flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); }
 .lt-prewrap { white-space: pre-wrap; margin: 0; }
 
 /* Dernières pièces : une ligne par pièce, qui se replie en deux lignes sur téléphone. */
@@ -277,4 +280,30 @@
 
 @media (prefers-reduced-motion: reduce) {
     .lt-disclosure svg, .lt-record { transition: none; }
+}
+
+/* Révision avant clôture : en-tête (date et compteurs), puis un contrôle par carte, la gravité en couleur à gauche. */
+.lt-review-head { display: grid; gap: var(--space-3); }
+.lt-review-period { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--space-3); }
+.lt-review-period h2 { margin: 0; }
+.lt-review-list { list-style: none; margin: var(--space-3) 0 0; padding: 0; display: grid; gap: var(--space-2); }
+.lt-review-check { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-3); padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--color-border); border-left-width: 4px; border-radius: var(--radius-md); background: var(--color-surface); }
+.lt-review-check.is-warning { border-left-color: var(--color-danger); }
+.lt-review-check.is-info { border-left-color: var(--color-warning); }
+.lt-review-check.is-ok { border-left-color: var(--color-success); }
+.lt-review-check.is-warning .lt-review-icon { color: var(--color-danger); }
+.lt-review-check.is-info .lt-review-icon { color: var(--color-warning-fg); }
+.lt-review-check.is-ok .lt-review-icon { color: var(--color-success); }
+.lt-review-body { display: grid; gap: var(--space-1); min-width: 0; }
+.lt-review-title { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.lt-review-title h3 { margin: 0; font-size: var(--text-base); }
+.lt-review-detail { margin: 0; color: var(--color-fg-muted); }
+.lt-review-items { list-style: none; margin: var(--space-1) 0 0; padding: 0; display: grid; gap: var(--space-1); max-width: 48rem; }
+.lt-review-body > .lettra-link { justify-self: start; }
+.lt-review-items li { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); min-width: 0; }
+.lt-review-items a { overflow-wrap: anywhere; min-height: var(--hit); display: inline-flex; align-items: center; }
+.lt-review-amount { margin-left: auto; font-variant-numeric: tabular-nums; white-space: nowrap; }
+@media (min-width: 48rem) {
+    .lt-review-items a { min-height: 0; }
 }

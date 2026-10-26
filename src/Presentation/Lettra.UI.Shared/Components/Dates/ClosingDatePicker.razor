@@ -1,0 +1,37 @@
+@* Choix d'une date de clôture : le champ de date, « Dernière clôture » (l'écran sans date, que le serveur résout avec
+   les réglages fiscaux) et « Aujourd'hui ». Chaque choix change l'adresse de la page : <c>{Path}?closing=AAAA-MM-JJ</c>. *@
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+
+<div class="lt-closing-date">
+    <label for="@($"{IdPrefix}-closing")">@L["Dates.Closing.Label"]</label>
+    <DateField Id="@($"{IdPrefix}-closing")" Value="Value" ValueChanged="PickAsync" Max="Today" />
+    <div class="lt-closing-shortcuts">
+        <a class="lettra-button is-ghost" href="@Path" id="@($"{IdPrefix}-last-closing")">@L["Dates.Closing.Last"]</a>
+        <a class="lettra-button is-ghost" href="@Href(Path, Today)" id="@($"{IdPrefix}-today")">@L["Dates.Closing.Today"]</a>
+    </div>
+</div>
+
+@code {
+    /// <summary>Préfixe des identifiants : <c>{IdPrefix}-closing</c>, <c>-last-closing</c>, <c>-today</c>.</summary>
+    [Parameter, EditorRequired] public string IdPrefix { get; set; } = string.Empty;
+
+    /// <summary>Adresse relative de la page, sans paramètre (par exemple <c>tax/payment-delays</c>).</summary>
+    [Parameter, EditorRequired] public string Path { get; set; } = string.Empty;
+
+    [Parameter] public DateOnly? Value { get; set; }
+
+    [Parameter, EditorRequired] public DateOnly Today { get; set; }
+
+    public static string Href(string path, DateOnly date) => $"{path}?closing={date:yyyy-MM-dd}";
+
+    private Task PickAsync(DateOnly? date)
+    {
+        if (date is { } picked)
+        {
+            Navigation.NavigateTo(Href(Path, picked));
+        }
+
+        return Task.CompletedTask;
+    }
+}

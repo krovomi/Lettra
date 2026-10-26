@@ -81,6 +81,8 @@ public static class DependencyInjection
         services.AddScoped<TaxDeclarations>();
         services.AddScoped<IQueryHandler<GetVatReturnQuery, Result<VatReturnResponse>>, GetVatReturnHandler>();
         services.AddScoped<IQueryHandler<GetDesQuery, Result<DesResponse>>, GetDesHandler>();
+        services.AddScoped<IQueryHandler<GetPaymentDelaysQuery, Result<PaymentDelaysResponse>>, GetPaymentDelaysHandler>();
+        services.AddScoped<IQueryHandler<GetClosingReviewQuery, Result<ClosingReviewResponse>>, GetClosingReviewHandler>();
         services.AddScoped<IQueryHandler<ExportDesQuery, Result<DesFile>>, ExportDesHandler>();
         services.AddScoped<IQueryHandler<GetFiscalCalendarQuery, Result<FiscalCalendarResponse>>, GetFiscalCalendarHandler>();
         services.AddScoped<IQueryHandler<GetUpcomingFiscalDeadlinesQuery, Result<IReadOnlyList<FiscalDeadlineResponse>>>, GetUpcomingFiscalDeadlinesHandler>();

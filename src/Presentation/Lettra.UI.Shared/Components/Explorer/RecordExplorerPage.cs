@@ -459,6 +459,15 @@ public abstract class RecordExplorerPage<TSummary, TRecord, TForm> : ComponentBa
         Original = null;
     }
 
+    /// <summary>Remplace la fiche affichée par sa version relue, après une action qui l'a modifiée hors du formulaire.</summary>
+    protected void ReplaceRecord(TRecord record)
+    {
+        if (Record is not null && IdOf(record) == IdOf(Record))
+        {
+            Record = record;
+        }
+    }
+
     private async Task LoadRecordAsync(Guid id)
     {
         LoadingRecord = true;

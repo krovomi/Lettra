@@ -45,6 +45,10 @@ internal sealed class InProcessSuppliersGateway(IServiceScopeFactory scopes) : I
     public Task<OperationResult<bool>> DeleteAsync(Guid id, long? expectedVersion, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(
             scopes, (sp, dossier, ct) => InProcessScope.SendAsync(sp, new DeleteSupplierCommand(dossier, new SupplierId(id), expectedVersion), ct), cancellationToken);
+
+    public Task<OperationResult<PayeeCheckResponse>> VerifyPayeeAsync(Guid id, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(
+            scopes, (sp, dossier, ct) => InProcessScope.SendAsync(sp, new VerifySupplierPayeeCommand(dossier, new SupplierId(id)), ct), cancellationToken);
 }
 
 internal sealed class InProcessCatalogGateway(IServiceScopeFactory scopes) : ICatalogGateway

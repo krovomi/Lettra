@@ -70,6 +70,23 @@ public sealed class SegregationOfDutiesTests
         (await Service().EnsureCanIssueAsync([Guid.CreateVersion7()], default)).IsSuccess.Should().BeTrue();
     }
 
+    [Fact]
+    public async Task Politique_active_celui_qui_a_saisi_le_nouvel_iban_ne_le_verifie_pas()
+    {
+        Active();
+
+        Result own = await Service().EnsureCanDecideIbanChangeAsync(_user.UserId, default);
+        Result other = await Service().EnsureCanDecideIbanChangeAsync(Guid.CreateVersion7(), default);
+
+        own.Errors.Should().ContainSingle().Which.Should().Be(Lettra.Domain.Parties.IbanChangeErrors.SameUser);
+        own.Errors[0].Kind.Should().Be(ErrorKind.Forbidden);
+        other.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Politique_inactive_celui_qui_a_saisi_le_nouvel_iban_peut_le_verifier() =>
+        (await Service().EnsureCanDecideIbanChangeAsync(_user.UserId, default)).IsSuccess.Should().BeTrue();
+
     [Theory]
     [InlineData(999.99, CreditNoteApproval.NotRequired)]
     [InlineData(1000, CreditNoteApproval.NotRequired)]
