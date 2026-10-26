@@ -43,6 +43,7 @@ public sealed class OtherHttpGatewaysUnreachableTests
             (await insights.ListInvoiceProofKeysAsync(default)).Errors,
             (await insights.GetDossierAsOfAsync(DateTimeOffset.UnixEpoch, default)).Errors,
             (await insights.ExplainFigureAsync(ExplainedFigureDto.MonthRevenue, Today, default)).Errors,
+            (await insights.SimulateWhatIfAsync(new WhatIfRequest(), default)).Errors,
             (await accounting.GetJournalAsync(new JournalQuery(Today, Today, "x", "411", id), default)).Errors,
             (await accounting.GetBalanceAsync(Today, Today, default)).Errors,
             (await accounting.GetLedgerAsync("411", Today, Today, id, default)).Errors,

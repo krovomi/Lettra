@@ -277,4 +277,66 @@
   <data name="Why.Rule.Overdue" xml:space="preserve"><value>Une facture est en retard quand son échéance est passée et qu'il en reste quelque chose à payer. Les acomptes et les avoirs n'ont pas d'échéance à relancer.</value></data>
   <data name="Why.Rule.Collected" xml:space="preserve"><value>L'encaissé d'une facture est le plus grand de ce qui est saisi dans Lettra et de ce qui est déclaré encaissé à la plateforme : un même paiement ne compte jamais deux fois.</value></data>
   <data name="Home.Kpi.Why" xml:space="preserve"><value>Pourquoi ce chiffre ?</value></data>
+  <data name="Nav.WhatIf" xml:space="preserve"><value>Et si… ?</value></data>
+  <data name="WhatIf.Title" xml:space="preserve"><value>Et si… ?</value></data>
+  <data name="WhatIf.Subtitle" xml:space="preserve"><value>Avant de décider, essayez : accorder un délai, facturer avant ou après la clôture, changer de régime de TVA, embaucher. Lettra montre l'effet sur la trésorerie, la TVA et les échéances.</value></data>
+  <data name="WhatIf.Sandbox" xml:space="preserve"><value>Bac à sable : rien de ce que vous essayez ici n'est écrit dans le dossier.</value></data>
+  <data name="WhatIf.Levers" xml:space="preserve"><value>Le scénario</value></data>
+  <data name="WhatIf.Delay" xml:space="preserve"><value>Accorder un délai aux clients</value></data>
+  <data name="WhatIf.Delay.Days" xml:space="preserve"><value>Jours de délai en plus</value></data>
+  <data name="WhatIf.Delay.Hint" xml:space="preserve"><value>Chaque encaissement attendu arrive d'autant plus tard.</value></data>
+  <data name="WhatIf.Invoice" xml:space="preserve"><value>Émettre une facture</value></data>
+  <data name="WhatIf.Invoice.Amount" xml:space="preserve"><value>Montant hors taxes (€)</value></data>
+  <data name="WhatIf.Invoice.Rate" xml:space="preserve"><value>Taux de TVA</value></data>
+  <data name="WhatIf.Invoice.Issue" xml:space="preserve"><value>Date d'émission</value></data>
+  <data name="WhatIf.Invoice.Term" xml:space="preserve"><value>Délai de paiement (jours)</value></data>
+  <data name="WhatIf.Invoice.Closing" xml:space="preserve"><value>Avant ou après la fin du mois</value></data>
+  <data name="WhatIf.Invoice.Before" xml:space="preserve"><value>Le dernier jour du mois</value></data>
+  <data name="WhatIf.Invoice.After" xml:space="preserve"><value>Le 1er du mois prochain</value></data>
+  <data name="WhatIf.Vat" xml:space="preserve"><value>Régime de TVA</value></data>
+  <data name="WhatIf.Vat.Regime" xml:space="preserve"><value>Régime essayé</value></data>
+  <data name="WhatIf.Vat.Hint" xml:space="preserve"><value>Il s'applique à la facture essayée : période de déclaration, échéance, ou pas de TVA en franchise.</value></data>
+  <data name="WhatIf.Vat.Current" xml:space="preserve"><value>Celui du dossier ({0})</value></data>
+  <data name="WhatIf.Vat.Monthly" xml:space="preserve"><value>CA3 mensuelle</value></data>
+  <data name="WhatIf.Vat.Quarterly" xml:space="preserve"><value>CA3 trimestrielle</value></data>
+  <data name="WhatIf.Vat.Franchise" xml:space="preserve"><value>Franchise en base</value></data>
+  <data name="WhatIf.Hire" xml:space="preserve"><value>Embaucher</value></data>
+  <data name="WhatIf.Hire.Salary" xml:space="preserve"><value>Salaire brut mensuel (€)</value></data>
+  <data name="WhatIf.Hire.Start" xml:space="preserve"><value>Date d'arrivée</value></data>
+  <data name="WhatIf.Hire.Charges" xml:space="preserve"><value>Charges patronales (%)</value></data>
+  <data name="WhatIf.Run" xml:space="preserve"><value>Simuler</value></data>
+  <data name="WhatIf.Reset" xml:space="preserve"><value>Remettre à zéro</value></data>
+  <data name="WhatIf.Working" xml:space="preserve"><value>Simulation en cours…</value></data>
+  <data name="WhatIf.Result" xml:space="preserve"><value>L'effet sur les {0} prochaines semaines</value></data>
+  <data name="WhatIf.Stat.Baseline" xml:space="preserve"><value>Encaissements attendus, sans le scénario</value></data>
+  <data name="WhatIf.Stat.Scenario" xml:space="preserve"><value>Encaissements attendus, avec</value></data>
+  <data name="WhatIf.Stat.Out" xml:space="preserve"><value>Sorties en plus</value></data>
+  <data name="WhatIf.Stat.Gap" xml:space="preserve"><value>Écart de trésorerie</value></data>
+  <data name="WhatIf.Summary.None" xml:space="preserve"><value>Aucun levier n'est choisi : voici la trésorerie attendue telle quelle.</value></data>
+  <data name="WhatIf.Summary.More" xml:space="preserve"><value>Avec ce scénario, la trésorerie compte {0} de plus au bout de {1} semaines.</value></data>
+  <data name="WhatIf.Summary.Less" xml:space="preserve"><value>Avec ce scénario, la trésorerie compte {0} de moins au bout de {1} semaines.</value></data>
+  <data name="WhatIf.Invoice.Revenue" xml:space="preserve"><value>La facture compte dans le chiffre d'affaires de {0}, sur l'exercice clos le {1}.</value></data>
+  <data name="WhatIf.Invoice.Vat" xml:space="preserve"><value>Sa TVA de {0} est déclarée pour {1} et se paie le {2}.</value></data>
+  <data name="WhatIf.Invoice.NoVat" xml:space="preserve"><value>En franchise en base, elle ne porte pas de TVA.</value></data>
+  <data name="WhatIf.Invoice.Collected" xml:space="preserve"><value>Ses {0} TTC arrivent vers le {1}.</value></data>
+  <data name="WhatIf.Quarter" xml:space="preserve"><value>{0} à {1}</value></data>
+  <data name="WhatIf.Hire.Cost" xml:space="preserve"><value>L'embauche coûte {0} par mois chargé, {1} sur les {2} semaines et {3} sur un an.</value></data>
+  <data name="WhatIf.Weeks" xml:space="preserve"><value>Semaine par semaine</value></data>
+  <data name="WhatIf.Legend.Baseline" xml:space="preserve"><value>sans le scénario</value></data>
+  <data name="WhatIf.Legend.Scenario" xml:space="preserve"><value>avec le scénario</value></data>
+  <data name="WhatIf.Week" xml:space="preserve"><value>Semaine du {0}</value></data>
+  <data name="WhatIf.Week.Detail" xml:space="preserve"><value>sans : {0} · écart cumulé : {1}</value></data>
+  <data name="WhatIf.Effects" xml:space="preserve"><value>Ce que le scénario change</value></data>
+  <data name="WhatIf.Effects.Empty" xml:space="preserve"><value>Rien ne change : choisissez un levier puis « Simuler ».</value></data>
+  <data name="WhatIf.Effect.CollectionMoved" xml:space="preserve"><value>{0} encaissée plus tard (attendue le {1})</value></data>
+  <data name="WhatIf.Effect.InvoiceCollected" xml:space="preserve"><value>Encaissement de la facture essayée</value></data>
+  <data name="WhatIf.Effect.VatPaid" xml:space="preserve"><value>TVA de la facture essayée</value></data>
+  <data name="WhatIf.Effect.SalaryPaid" xml:space="preserve"><value>Salaire chargé de l'embauche</value></data>
+  <data name="WhatIf.Rules" xml:space="preserve"><value>Les hypothèses du calcul</value></data>
+  <data name="WhatIf.Rule.Baseline" xml:space="preserve"><value>La base est la prévision de la météo des paiements : chaque facture due, attendue à son échéance décalée du retard habituel du client. Les factures douteuses (plus de 60 jours de retard) n'y sont pas.</value></data>
+  <data name="WhatIf.Rule.Delay" xml:space="preserve"><value>Un délai accordé décale d'autant chaque encaissement attendu, et l'échéance de la facture essayée.</value></data>
+  <data name="WhatIf.Rule.Invoice" xml:space="preserve"><value>La facture essayée compte dans le chiffre d'affaires de son mois d'émission et sur l'exercice qui contient cette date.</value></data>
+  <data name="WhatIf.Rule.Vat" xml:space="preserve"><value>Sa TVA est déclarée sur la période de sa date d'émission (TVA sur les débits) et payée à l'échéance du calendrier fiscal du dossier. La TVA sur les encaissements et la CA12 ne sont pas simulées.</value></data>
+  <data name="WhatIf.Rule.Hire" xml:space="preserve"><value>L'embauche coûte le salaire brut plus les charges patronales, payé le dernier jour du mois, au prorata des jours le premier mois. Le taux de charges est à ajuster avec le cabinet.</value></data>
+  <data name="WhatIf.Rule.Sandbox" xml:space="preserve"><value>Le calcul est fait par Lettra, sans intelligence artificielle, à chaque simulation. Rien n'est écrit dans le dossier.</value></data>
 </root>

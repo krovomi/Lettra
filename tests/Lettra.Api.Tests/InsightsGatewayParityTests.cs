@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.Api.Tests;
 
-/// <summary>ADR-0005 : la météo des paiements, le contrôle fiscal d'entraînement, la preuve d'authenticité, le dossier d'un instant passé et « Pourquoi ce chiffre ? » se lisent de la même façon par HTTP (WASM) et en direct (MAUI hors ligne).</summary>
+/// <summary>ADR-0005 : la météo des paiements, le contrôle fiscal d'entraînement, la preuve d'authenticité, le dossier d'un instant passé, « Pourquoi ce chiffre ? » et le simulateur « et si ? » se lisent de la même façon par HTTP (WASM) et en direct (MAUI hors ligne).</summary>
 public sealed class InsightsGatewayParityTests(LettraApiFactory factory) : IClassFixture<LettraApiFactory>, IDisposable
 {
     private readonly GatewayHarness _harness = new(factory);
@@ -94,6 +94,21 @@ public sealed class InsightsGatewayParityTests(LettraApiFactory factory) : IClas
         past.Value.Lines.Should().BeEmpty();
         overdue.Value!.Figure.Should().Be(ExplainedFigureDto.Overdue);
         overdue.Value.Month.Should().BeNull();
+    }
+
+    [Theory]
+    [MemberData(nameof(Transports))]
+    public async Task Le_simulateur_meme_reponse_et_meme_refus_par_les_deux_transports(string transport)
+    {
+        await using ServiceProvider services = _harness.Gateway(transport);
+        IInsightsGateway insights = services.GetRequiredService<IInsightsGateway>();
+
+        OperationResult<WhatIfResponse> simulated = await insights.SimulateWhatIfAsync(new WhatIfRequest(ExtraDelayDays: 15), default);
+        OperationResult<WhatIfResponse> refused = await insights.SimulateWhatIfAsync(new WhatIfRequest(ExtraDelayDays: 999), default);
+
+        simulated.IsSuccess.Should().BeTrue(string.Join(", ", simulated.Errors.Select(e => e.Code)));
+        simulated.Value!.Weeks.Should().HaveCount(WhatIfRequest.Weeks);
+        refused.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Validation.Invalid);
     }
 
     public void Dispose() => _harness.Dispose();

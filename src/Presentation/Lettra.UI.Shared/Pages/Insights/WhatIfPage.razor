@@ -1,0 +1,298 @@
+@page "/what-if"
+@inject IInsightsGateway Insights
+@inject TimeProvider Clock
+@inject IStringLocalizer<SharedResource> L
+@* Le simulateur « et si ? » : avant de décider (accorder un délai, facturer avant ou après la clôture, changer de régime
+   de TVA, embaucher), Lettra essaie le scénario sur la trésorerie attendue des treize prochaines semaines et dit son
+   effet sur la TVA, le chiffre d'affaires et les échéances. Bac à sable : rien n'est écrit dans le dossier. *@
+
+<PageTitle>@L["WhatIf.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["WhatIf.Title"]</h1>
+        <p class="lettra-muted">@L["WhatIf.Subtitle"]</p>
+    </div>
+</div>
+
+<p class="lettra-banner is-info" id="whatif-sandbox"><Icon Name="flask-conical" Size="18" /> @L["WhatIf.Sandbox"]</p>
+
+<GeneralErrors Errors="_errors" IncludeFieldErrors="true" />
+
+<div class="lt-whatif">
+    <form class="lt-panel lt-whatif-form" id="whatif-form" @onsubmit="SimulateAsync" @onsubmit:preventDefault aria-labelledby="whatif-form-title">
+        <h2 id="whatif-form-title">@L["WhatIf.Levers"]</h2>
+
+        <fieldset>
+            <legend>@L["WhatIf.Delay"]</legend>
+            <label for="whatif-delay">@L["WhatIf.Delay.Days"]</label>
+            <input id="whatif-delay" type="number" inputmode="numeric" min="0" max="@WhatIfRequest.MaxExtraDelayDays" @bind="_delay" />
+            <p class="lettra-hint">@L["WhatIf.Delay.Hint"]</p>
+        </fieldset>
+
+        <fieldset>
+            <legend>
+                <label class="lt-whatif-toggle"><input id="whatif-invoice-on" type="checkbox" @bind="_invoiceOn" /> @L["WhatIf.Invoice"]</label>
+            </legend>
+            @if (_invoiceOn)
+            {
+                <div class="lt-whatif-fields">
+                    <label for="whatif-amount">@L["WhatIf.Invoice.Amount"]
+                        <input id="whatif-amount" type="number" inputmode="decimal" min="0" step="0.01" @bind="_amount" />
+                    </label>
+                    <label for="whatif-rate">@L["WhatIf.Invoice.Rate"]
+                        <select id="whatif-rate" @bind="_rate">
+                            @foreach (decimal rate in Rates)
+                            {
+                                <option value="@rate.ToString(CultureInfo.InvariantCulture)">@rate.ToString("0.#", Culture) %</option>
+                            }
+                        </select>
+                    </label>
+                    <label for="whatif-issue">@L["WhatIf.Invoice.Issue"]
+                        <DateField Id="whatif-issue" Value="_issue" ValueChanged="d => _issue = d ?? _issue" />
+                    </label>
+                    <label for="whatif-term">@L["WhatIf.Invoice.Term"]
+                        <input id="whatif-term" type="number" inputmode="numeric" min="0" max="@WhatIfInvoiceRequest.MaxPaymentTermDays" @bind="_term" />
+                    </label>
+                </div>
+                <div class="lt-asof-presets" role="group" aria-label="@L["WhatIf.Invoice.Closing"]">
+                    <button type="button" id="whatif-before" class="lettra-button is-secondary" @onclick="() => _issue = MonthEnd">@L["WhatIf.Invoice.Before"]</button>
+                    <button type="button" id="whatif-after" class="lettra-button is-secondary" @onclick="() => _issue = MonthEnd.AddDays(1)">@L["WhatIf.Invoice.After"]</button>
+                </div>
+            }
+        </fieldset>
+
+        <fieldset>
+            <legend>@L["WhatIf.Vat"]</legend>
+            <label for="whatif-vat">@L["WhatIf.Vat.Regime"]</label>
+            <select id="whatif-vat" @bind="_vat">
+                @foreach (WhatIfVatDto vat in Enum.GetValues<WhatIfVatDto>())
+                {
+                    <option value="@vat">@VatLabel(vat)</option>
+                }
+            </select>
+            <p class="lettra-hint">@L["WhatIf.Vat.Hint"]</p>
+        </fieldset>
+
+        <fieldset>
+            <legend>
+                <label class="lt-whatif-toggle"><input id="whatif-hire-on" type="checkbox" @bind="_hireOn" /> @L["WhatIf.Hire"]</label>
+            </legend>
+            @if (_hireOn)
+            {
+                <div class="lt-whatif-fields">
+                    <label for="whatif-salary">@L["WhatIf.Hire.Salary"]
+                        <input id="whatif-salary" type="number" inputmode="decimal" min="0" step="0.01" @bind="_salary" />
+                    </label>
+                    <label for="whatif-start">@L["WhatIf.Hire.Start"]
+                        <DateField Id="whatif-start" Value="_start" ValueChanged="d => _start = d ?? _start" />
+                    </label>
+                    <label for="whatif-charges">@L["WhatIf.Hire.Charges"]
+                        <input id="whatif-charges" type="number" inputmode="decimal" min="0" max="100" step="0.1" @bind="_charges" />
+                    </label>
+                </div>
+            }
+        </fieldset>
+
+        <div class="lt-page-actions">
+            <button type="submit" id="whatif-run" class="lettra-button" disabled="@_busy"><Icon Name="flask-conical" Size="18" /> @L["WhatIf.Run"]</button>
+            <button type="button" id="whatif-reset" class="lettra-button is-secondary" disabled="@_busy" @onclick="ResetAsync">@L["WhatIf.Reset"]</button>
+        </div>
+        @if (_busy)
+        {
+            <p role="status" aria-live="polite">@L["WhatIf.Working"]</p>
+        }
+    </form>
+
+    <div class="lt-whatif-result">
+        @if (_view is { } view)
+        {
+            <section class="lettra-card" id="whatif-result" aria-labelledby="whatif-result-title">
+                <h2 id="whatif-result-title">@string.Format(Culture, L["WhatIf.Result"], WhatIfRequest.Weeks)</h2>
+                <div class="lt-banking-stats" id="whatif-stats">
+                    <div class="lt-banking-stat"><span>@L["WhatIf.Stat.Baseline"]</span><strong id="whatif-baseline">@ExplorerText.Money(view.BaselineIn)</strong></div>
+                    <div class="lt-banking-stat"><span>@L["WhatIf.Stat.Scenario"]</span><strong id="whatif-scenario">@ExplorerText.Money(view.ScenarioIn)</strong></div>
+                    <div class="lt-banking-stat is-pending"><span>@L["WhatIf.Stat.Out"]</span><strong id="whatif-out">@ExplorerText.Money(view.ScenarioOut)</strong></div>
+                    <div class="@($"lt-banking-stat lt-whatif-gap {(view.Gap < 0m ? "is-down" : view.Gap > 0m ? "is-up" : null)}")">
+                        <span>@L["WhatIf.Stat.Gap"]</span><strong id="whatif-gap">@Signed(view.Gap)</strong>
+                    </div>
+                </div>
+                <p id="whatif-summary">@Summary(view)</p>
+                @if (view.Invoice is { } invoice)
+                {
+                    <p id="whatif-invoice">
+                        <Icon Name="receipt" Size="16" />
+                        @string.Format(Culture, L["WhatIf.Invoice.Revenue"], TaxText.Month(invoice.RevenueMonth), invoice.FiscalYearEnd.ToString("d", Culture))
+                        @(" ")
+                        @(invoice.VatDueDate is { } vatDue && invoice.VatPeriodStart is { } start
+                            ? string.Format(Culture, L["WhatIf.Invoice.Vat"], ExplorerText.Money(invoice.Vat), Period(start, invoice.VatPeriodEnd!.Value), vatDue.ToString("d", Culture))
+                            : L["WhatIf.Invoice.NoVat"])
+                        @(" ")
+                        @string.Format(Culture, L["WhatIf.Invoice.Collected"], ExplorerText.Money(invoice.TotalInclTax), invoice.ExpectedCollection.ToString("d", Culture))
+                    </p>
+                }
+                @if (view.Hire is { } hire)
+                {
+                    <p id="whatif-hire">
+                        <Icon Name="users" Size="16" />
+                        @string.Format(Culture, L["WhatIf.Hire.Cost"], ExplorerText.Money(hire.MonthlyCost), ExplorerText.Money(hire.CostInHorizon), WhatIfRequest.Weeks, ExplorerText.Money(hire.FirstYearCost))
+                    </p>
+                }
+            </section>
+
+            <section class="lettra-card" aria-labelledby="whatif-weeks-title">
+                <h2 id="whatif-weeks-title">@L["WhatIf.Weeks"]</h2>
+                <p class="lt-whatif-legend lettra-muted" aria-hidden="true">
+                    <span class="lt-whatif-swatch is-baseline"></span> @L["WhatIf.Legend.Baseline"]
+                    <span class="lt-whatif-swatch is-scenario"></span> @L["WhatIf.Legend.Scenario"]
+                </p>
+                <ol class="lt-weather-weeks lt-whatif-weeks" id="whatif-weeks">
+                    @foreach (WhatIfWeekResponse week in view.Weeks)
+                    {
+                        <li @key="week.WeekStart">
+                            <span class="lt-weather-week">@string.Format(Culture, L["WhatIf.Week"], week.WeekStart.ToString("d MMM", Culture))</span>
+                            <span class="lt-whatif-bars" aria-hidden="true">
+                                <span class="lt-weather-bar is-baseline"><span style="@Width(view, week.BaselineIn)"></span></span>
+                                <span class="lt-weather-bar"><span style="@Width(view, week.ScenarioIn)"></span></span>
+                            </span>
+                            <span class="lt-weather-amount">
+                                <strong>@ExplorerText.Money(week.ScenarioIn - week.ScenarioOut)</strong>
+                                <small class="lettra-muted">@string.Format(Culture, L["WhatIf.Week.Detail"], ExplorerText.Money(week.BaselineIn), Signed(week.CumulativeGap))</small>
+                            </span>
+                        </li>
+                    }
+                </ol>
+            </section>
+
+            <section class="lettra-card" aria-labelledby="whatif-effects-title">
+                <h2 id="whatif-effects-title">@L["WhatIf.Effects"]</h2>
+                @if (view.Effects.Count == 0)
+                {
+                    <p class="lettra-muted" id="whatif-effects-empty">@L["WhatIf.Effects.Empty"]</p>
+                }
+                else
+                {
+                    <ul class="lt-asof-events lt-whatif-effects" id="whatif-effects">
+                        @foreach (WhatIfEffectResponse effect in view.Effects.Skip((_page - 1) * PageSize).Take(PageSize))
+                        {
+                            <li>
+                                <time datetime="@effect.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)">@effect.Date.ToString("d", Culture)</time>
+                                <span>@Describe(effect)</span>
+                                @if (effect.Kind == WhatIfEffectKindDto.CollectionMoved)
+                                {
+                                    <span class="lt-asof-amount is-moved">@ExplorerText.Money(effect.Amount)</span>
+                                }
+                                else
+                                {
+                                    <span class="@($"lt-asof-amount {(effect.Amount < 0m ? "is-out" : null)}")">@Signed(effect.Amount)</span>
+                                }
+                            </li>
+                        }
+                    </ul>
+                    <ListPager Id="whatif-pager" Page="_page" Count="view.Effects.Count" Size="PageSize" OnPage="p => _page = p" />
+                }
+            </section>
+        }
+        else if (_busy)
+        {
+            <ExplorerSkeleton Rows="5" />
+        }
+    </div>
+</div>
+
+<Collapsible Id="whatif-rules" Title="@L["WhatIf.Rules"]" InitiallyOpen="false">
+    <ul>
+        <li>@L["WhatIf.Rule.Baseline"]</li>
+        <li>@L["WhatIf.Rule.Delay"]</li>
+        <li>@L["WhatIf.Rule.Invoice"]</li>
+        <li>@L["WhatIf.Rule.Vat"]</li>
+        <li>@L["WhatIf.Rule.Hire"]</li>
+        <li>@L["WhatIf.Rule.Sandbox"]</li>
+    </ul>
+</Collapsible>
+
+@code {
+    private const int PageSize = 15;
+    private static readonly decimal[] Rates = [20m, 10m, 5.5m, 2.1m, 0m];
+
+    private WhatIfResponse? _view;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private bool _busy;
+    private int _page = 1;
+    private int _delay;
+    private bool _invoiceOn;
+    private decimal _amount = 10_000m;
+    private string _rate = "20";
+    private DateOnly _issue;
+    private int _term = 30;
+    private WhatIfVatDto _vat;
+    private bool _hireOn;
+    private decimal _salary = 2_500m;
+    private DateOnly _start;
+    private decimal _charges = WhatIfHireRequest.DefaultEmployerChargesPercent;
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private DateOnly Today => Clock.LocalToday();
+
+    private DateOnly MonthEnd => new DateOnly(Today.Year, Today.Month, 1).AddMonths(1).AddDays(-1);
+
+    protected override Task OnInitializedAsync() => ResetAsync();
+
+    private async Task ResetAsync()
+    {
+        (_delay, _invoiceOn, _amount, _rate, _issue, _term, _vat) = (0, false, 10_000m, "20", MonthEnd, 30, WhatIfVatDto.Current);
+        (_hireOn, _salary, _start, _charges) = (false, 2_500m, MonthEnd.AddDays(1), WhatIfHireRequest.DefaultEmployerChargesPercent);
+        await SimulateAsync();
+    }
+
+    private async Task SimulateAsync()
+    {
+        _busy = true;
+        try
+        {
+            WhatIfRequest scenario = new(
+                _delay,
+                _invoiceOn ? new WhatIfInvoiceRequest(_amount, decimal.Parse(_rate, CultureInfo.InvariantCulture), _issue, _term) : null,
+                _vat,
+                _hireOn ? new WhatIfHireRequest(_salary, _start, _charges) : null);
+            OperationResult<WhatIfResponse> result = await Insights.SimulateWhatIfAsync(scenario, CancellationToken.None);
+            _errors = result.Errors;
+            if (result.Value is { } view)
+            {
+                (_view, _page) = (view, 1);
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private string VatLabel(WhatIfVatDto vat) => vat == WhatIfVatDto.Current && _view is { } view
+        ? string.Format(Culture, L["WhatIf.Vat.Current"], L[$"WhatIf.Vat.{view.CurrentPeriodicity}"])
+        : L[$"WhatIf.Vat.{vat}"];
+
+    private string Summary(WhatIfResponse view) => view.Effects.Count == 0
+        ? L["WhatIf.Summary.None"]
+        : string.Format(Culture, L[view.Gap < 0m ? "WhatIf.Summary.Less" : "WhatIf.Summary.More"], ExplorerText.Money(Math.Abs(view.Gap)), WhatIfRequest.Weeks);
+
+    private string Describe(WhatIfEffectResponse effect) => effect.Kind switch
+    {
+        WhatIfEffectKindDto.CollectionMoved => string.Format(Culture, L["WhatIf.Effect.CollectionMoved"], effect.Label, effect.From?.ToString("d", Culture)),
+        _ => L[$"WhatIf.Effect.{effect.Kind}"],
+    };
+
+    private string Period(DateOnly start, DateOnly end) => start.Month == end.Month
+        ? TaxText.Month(start)
+        : string.Format(Culture, L["WhatIf.Quarter"], TaxText.Month(start), TaxText.Month(end));
+
+    private static string Signed(decimal amount) => amount > 0m ? "+" + ExplorerText.Money(amount) : ExplorerText.Money(amount);
+
+    private static string Width(WhatIfResponse view, decimal amount)
+    {
+        decimal max = view.Weeks.Select(w => Math.Max(w.BaselineIn, w.ScenarioIn)).DefaultIfEmpty(0m).Max();
+        decimal width = max <= 0m || amount <= 0m ? 0m : Math.Round(100m * amount / max, 1);
+        return $"width:{width.ToString(CultureInfo.InvariantCulture)}%";
+    }
+}

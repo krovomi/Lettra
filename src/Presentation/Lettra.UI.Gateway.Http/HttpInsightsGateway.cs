@@ -61,4 +61,10 @@ internal sealed class HttpInsightsGateway(HttpClient http) : IInsightsGateway
                 : HttpCalls.Relative($"api/v1/insights/why?figure={figure}"), ct),
             ContractsJsonContext.Default.FigureExplanationResponse,
             cancellationToken);
+
+    public Task<OperationResult<WhatIfResponse>> SimulateWhatIfAsync(WhatIfRequest scenario, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.PostAsJsonAsync(HttpCalls.Relative($"api/v1/insights/what-if"), scenario, ContractsJsonContext.Default.WhatIfRequest, ct),
+            ContractsJsonContext.Default.WhatIfResponse,
+            cancellationToken);
 }

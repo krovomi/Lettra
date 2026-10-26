@@ -35,4 +35,7 @@ internal sealed class InProcessInsightsGateway(IServiceScopeFactory scopes) : II
 
     public Task<OperationResult<FigureExplanationResponse>> ExplainFigureAsync(ExplainedFigureDto figure, DateOnly? month, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new ExplainFigureQuery(dossier, figure, month), ct), cancellationToken);
+
+    public Task<OperationResult<WhatIfResponse>> SimulateWhatIfAsync(WhatIfRequest scenario, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new SimulateWhatIfQuery(dossier, scenario), ct), cancellationToken);
 }

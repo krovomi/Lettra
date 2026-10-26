@@ -56,6 +56,7 @@ public static class NavItems
         new("review", "Nav.Review", "list-checks", "Nav.Group.Accounting"),
         new("as-of", "Nav.AsOf", "history", "Nav.Group.Accounting"),
         new("why", "Nav.Why", "circle-help", "Nav.Group.Accounting"),
+        new("what-if", "Nav.WhatIf", "flask-conical", "Nav.Group.Accounting"),
         new("pilotage", "Nav.Pilotage", "chart-column", "Nav.Group.Settings"),
         new("alerts", "Nav.Alerts", "bell", "Nav.Group.Settings"),
         new("settings/company", "Nav.Company", "building-2", "Nav.Group.Settings", Match: NavLinkMatch.All),

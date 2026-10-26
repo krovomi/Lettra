@@ -64,6 +64,16 @@ internal sealed class FakeInsightsGateway : IInsightsGateway
         return Answer(Explanations.GetValueOrDefault(figure));
     }
 
+    public Func<WhatIfRequest, WhatIfResponse?> WhatIf { get; set; } = _ => null;
+
+    public List<WhatIfRequest> Scenarios { get; } = [];
+
+    public Task<OperationResult<WhatIfResponse>> SimulateWhatIfAsync(WhatIfRequest scenario, CancellationToken cancellationToken)
+    {
+        Scenarios.Add(scenario);
+        return Answer(WhatIf(scenario));
+    }
+
     private static Task<OperationResult<T>> Answer<T>(T? value)
         where T : class =>
         Task.FromResult(value is null

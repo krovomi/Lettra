@@ -140,4 +140,8 @@
   <data name="Help.Faq.why.Question" xml:space="preserve"><value>Where does a home page figure come from?</value></data>
   <data name="Help.Faq.why.Answer" xml:space="preserve"><value>Tap the question mark on a home page card, or open Accounting, Why this figure?. Lettra shows the rule in one sentence, the calculation and every invoice or credit note behind it; each document opens in one click. Use the arrows to browse earlier months.</value></data>
   <data name="Help.Faq.why.Keywords" xml:space="preserve"><value>why figure explanation detail calculation</value></data>
+  <data name="Nav.WhatIf.Keywords" xml:space="preserve"><value>what if simulator simulation scenario try delay hire salary scheme vat exemption quarterly closing cash</value></data>
+  <data name="Help.Faq.what-if.Question" xml:space="preserve"><value>How do I see the effect of a decision before making it?</value></data>
+  <data name="Help.Faq.what-if.Answer" xml:space="preserve"><value>In Accounting, What if…?, pick one or more levers: extra days for customers, an invoice to issue (before or after month end), a VAT scheme, a hire. Simulate shows cash over the next thirteen weeks without and with the scenario, the VAT to pay and when, and the cost of the hire. Nothing is written to the file.</value></data>
+  <data name="Help.Faq.what-if.Keywords" xml:space="preserve"><value>what if simulator scenario delay hire vat scheme</value></data>
 </root>

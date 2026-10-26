@@ -151,3 +151,34 @@
 @media (min-width: 768px) {
     .lt-why-equation { max-width: 32rem; }
 }
+
+/* Et si… ? : les leviers à gauche, l'effet à droite dès l'ordinateur ; deux barres par semaine, sans et avec le scénario. */
+.lt-whatif { display: grid; gap: var(--space-4); align-items: start; margin-bottom: var(--space-4); }
+.lt-whatif-form { display: grid; gap: var(--space-3); margin-bottom: 0; }
+.lt-whatif-form h2 { margin: 0; }
+.lt-whatif-form fieldset { display: grid; gap: var(--space-2); margin: 0; padding: var(--space-3) 0 0; border: 0; border-top: 1px solid var(--color-border); min-width: 0; }
+.lt-whatif-form legend { font-weight: var(--weight-medium); padding: 0; }
+.lt-whatif-form input[type="number"], .lt-whatif-form select { width: 100%; }
+.lt-whatif-toggle { display: inline-flex; align-items: center; gap: var(--space-2); cursor: pointer; }
+.lt-whatif-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: var(--space-3); }
+.lt-whatif-fields label { display: grid; gap: var(--space-1); min-width: 0; }
+.lt-whatif-fields .lt-date { width: 100%; }
+.lt-whatif-result { display: grid; gap: var(--space-4); min-width: 0; }
+.lt-whatif-result .lettra-card { margin: 0; }
+#whatif-stats .lt-banking-stat { min-width: 0; }
+#whatif-stats strong { font-size: var(--text-lg); white-space: nowrap; }
+.lt-whatif-gap.is-up strong { color: var(--color-success-fg); }
+.lt-whatif-gap.is-down strong { color: var(--color-danger-fg); }
+.lt-whatif-bars { grid-area: bar; display: grid; gap: 3px; }
+.lt-whatif-bars .lt-weather-bar { height: 0.5rem; }
+.lt-weather-bar.is-baseline > span, .lt-whatif-swatch.is-baseline { background: var(--color-fg-muted); opacity: 0.45; }
+.lt-whatif-legend { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); font-size: var(--text-sm); margin: 0; }
+.lt-whatif-swatch { display: inline-block; width: 1rem; height: 0.5rem; border-radius: 999px; background: var(--color-primary); }
+.lt-whatif-effects .is-out { color: var(--color-danger-fg); }
+.lt-whatif-effects .is-moved { color: var(--color-fg-muted); }
+@media (max-width: 599px) {
+    .lt-whatif-form .lt-page-actions .lettra-button, .lt-whatif-form .lt-asof-presets .lettra-button { flex: 1 1 100%; }
+}
+@media (min-width: 1100px) {
+    .lt-whatif { grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr); }
+}

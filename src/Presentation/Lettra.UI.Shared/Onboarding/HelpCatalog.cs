@@ -47,6 +47,7 @@ public static class HelpCatalog
         new("dossier", ["", "cabinet", "review", "review/*"], "cabinet", "Nav.Cabinet"),
         new("as-of", ["as-of", "review", "accounting"], "as-of", "Nav.AsOf"),
         new("why", ["why", ""], "why", "Nav.Why"),
+        new("what-if", ["what-if", "payment-weather", "tax"], "what-if", "Nav.WhatIf"),
         new("team", ["admin"], "admin", "Nav.Admin"),
         new("devices", ["session/serveur", "synchronisation", "synchronisation/*"], "session/serveur", "Nav.SharedServer"),
         new("offline", ["synchronisation", "synchronisation/*", "session/serveur"]),
