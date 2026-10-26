@@ -1,0 +1,384 @@
+@page "/tax/payment-delays"
+@inject ITaxGateway Tax
+@inject NavigationManager Navigation
+@inject IStringLocalizer<SharedResource> L
+@inject TimeProvider Clock
+@* Délais de paiement, côté factures émises : le tableau du rapport de gestion (art. D441-6) à la date de clôture, les
+   factures non réglées derrière chaque tranche, et les factures à un professionnel dont l'échéance dépasse le
+   plafond légal (60 jours date de facture ou 45 jours fin de mois). Calcul en C#, rien ne quitte le dossier. *@
+
+<PageTitle>@L["Tax.Delays.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Tax.Delays.Title"]</h1>
+        <p class="lettra-muted">@L["Tax.Delays.Subtitle"]</p>
+    </div>
+</div>
+
+<TaxTabs />
+<GeneralErrors Errors="_errors" />
+
+@if (_report is null)
+{
+    <ExplorerSkeleton Rows="5" />
+}
+else
+{
+    PaymentDelaysResponse report = _report;
+    <section class="lt-panel lt-tax-head" aria-labelledby="delays-period">
+        <div class="lt-delays-period">
+            <div>
+                <h2 id="delays-period">@string.Format(CultureInfo.CurrentCulture, L["Tax.Delays.At"], TaxText.Day(report.ClosingDate))</h2>
+                <p class="lettra-muted" id="delays-year">@string.Format(CultureInfo.CurrentCulture, L["Tax.Delays.Year"], TaxText.Day(report.FiscalYearStart), TaxText.Euros(report.TurnoverInclTax))</p>
+            </div>
+            <div class="lt-delays-date">
+                <label for="delays-closing">@L["Tax.Delays.Closing"]</label>
+                <DateField Id="delays-closing" Value="report.ClosingDate" ValueChanged="PickAsync" Max="Today" />
+                <div class="lt-delays-shortcuts">
+                    <a class="lettra-button is-ghost" href="tax/payment-delays" id="delays-last-closing">@L["Tax.Delays.LastClosing"]</a>
+                    <a class="lettra-button is-ghost" href="@Href(Today)" id="delays-today">@L["Tax.Delays.Today"]</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    @if (report.TermBreaches.Count > 0)
+    {
+        <p class="lettra-banner is-warning" id="delays-breach-banner" role="status">
+            <Icon Name="triangle-alert" Size="18" /> @string.Format(CultureInfo.CurrentCulture, L["Tax.Delays.BreachBanner"], report.TermBreaches.Count)
+        </p>
+    }
+
+    <section class="lt-panel" aria-labelledby="delays-table-title">
+        <div class="lt-panel-head">
+            <h2 id="delays-table-title">@L["Tax.Delays.Table"]</h2>
+        </div>
+        <p class="lettra-muted">@L["Tax.Delays.TableHint"]</p>
+        <div class="lt-delays-scroll" tabindex="0" role="region" aria-labelledby="delays-table-title">
+            <table class="lettra-table lt-delays-table" id="delays-table">
+                <caption class="lettra-visually-hidden">@L["Tax.Delays.Table"]</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">@L["Tax.Delays.PartA"]</th>
+                        @for (int b = 0; b < report.Brackets.Count; b++)
+                        {
+                            <th scope="col" class="lg-num">@L[$"Tax.Delays.Bracket.{b}"]</th>
+                        }
+                        <th scope="col" class="lg-num">@L["Tax.Delays.Bracket.Total"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr id="delays-row-count">
+                        <th scope="row">@L["Tax.Delays.Row.Count"]</th>
+                        @foreach (PaymentDelayBracketResponse bracket in report.Brackets)
+                        {
+                            <td class="lg-num" id="@($"delays-count-{bracket.Bracket}")">@bracket.Count.ToString("N0", CultureInfo.CurrentCulture)</td>
+                        }
+                        <td class="lg-num" id="delays-count-total"><strong>@report.Late.Count.ToString("N0", CultureInfo.CurrentCulture)</strong></td>
+                    </tr>
+                    <tr id="delays-row-amount">
+                        <th scope="row">@L["Tax.Delays.Row.Amount"]</th>
+                        @foreach (PaymentDelayBracketResponse bracket in report.Brackets)
+                        {
+                            <td class="lg-num" id="@($"delays-amount-{bracket.Bracket}")">@TaxText.Euros(bracket.AmountInclTax)</td>
+                        }
+                        <td class="lg-num" id="delays-amount-total"><strong>@TaxText.Euros(report.Late.AmountInclTax)</strong></td>
+                    </tr>
+                    <tr id="delays-row-percent">
+                        <th scope="row">@L["Tax.Delays.Row.Percent"]</th>
+                        @foreach (PaymentDelayBracketResponse bracket in report.Brackets)
+                        {
+                            <td class="lg-num">@Percent(bracket.TurnoverPercent)</td>
+                        }
+                        <td class="lg-num" id="delays-percent-total"><strong>@Percent(report.Late.TurnoverPercent)</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        @* Sur téléphone, une carte par tranche : le tableau à sept colonnes ne tient pas. *@
+        <ul class="lt-delays-cards" id="delays-cards">
+            @foreach (PaymentDelayBracketResponse bracket in report.Brackets.Append(report.Late))
+            {
+                <li class="@(bracket.Bracket < 0 ? "is-total" : null)">
+                    <span class="lt-delays-card-title">@(bracket.Bracket < 0 ? L["Tax.Delays.Bracket.Total"] : L[$"Tax.Delays.Bracket.{bracket.Bracket}"])</span>
+                    <span>@string.Format(CultureInfo.CurrentCulture, L["Tax.Delays.PartB.Value"], bracket.Count, TaxText.Euros(bracket.AmountInclTax))</span>
+                    <span class="lettra-muted">@Percent(bracket.TurnoverPercent)</span>
+                </li>
+            }
+        </ul>
+        <dl class="lt-delays-parts">
+            <div id="delays-part-b">
+                <dt>@L["Tax.Delays.PartB"]</dt>
+                <dd>@string.Format(CultureInfo.CurrentCulture, L["Tax.Delays.PartB.Value"], report.ExcludedCount, TaxText.Euros(report.ExcludedAmountInclTax))</dd>
+            </div>
+            <div id="delays-part-c">
+                <dt>@L["Tax.Delays.PartC"]</dt>
+                <dd>
+                    @(report.ContractualDays is { } days
+                        ? string.Format(CultureInfo.CurrentCulture, L["Tax.Delays.PartC.Contractual"], days)
+                        : L["Tax.Delays.PartC.Legal"].Value)
+                </dd>
+            </div>
+            <div id="delays-not-due">
+                <dt>@L["Tax.Delays.NotDue"]</dt>
+                <dd>@string.Format(CultureInfo.CurrentCulture, L["Tax.Delays.PartB.Value"], report.NotDueCount, TaxText.Euros(report.NotDueAmountInclTax))</dd>
+            </div>
+        </dl>
+    </section>
+
+    <section class="lt-panel" aria-labelledby="delays-breaches-title">
+        <div class="lt-panel-head">
+            <h2 id="delays-breaches-title">@L["Tax.Delays.Breaches"]</h2>
+        </div>
+        <p class="lettra-muted">@L["Tax.Delays.BreachesHint"]</p>
+        @if (report.TermBreaches.Count == 0)
+        {
+            <EmptyState Id="delays-breaches-empty" IconName="circle-check" Title="@L["Tax.Delays.Breaches.Empty"]" Text="@L["Tax.Delays.Breaches.EmptyText"]" />
+        }
+        else
+        {
+            <div class="lt-list-scroll">
+                <table class="lettra-table lt-cards" id="delays-breaches">
+                    <thead>
+                        <tr>
+                            <SortHeader Option="BreachOptions[0]" State="_breachSort" OnSort="StateHasChanged" Id="delays-breaches-sort-number" />
+                            <SortHeader Option="BreachOptions[1]" State="_breachSort" OnSort="StateHasChanged" Id="delays-breaches-sort-customer" />
+                            <SortHeader Option="BreachOptions[2]" State="_breachSort" OnSort="StateHasChanged" Id="delays-breaches-sort-issue" />
+                            <th scope="col">@L["Tax.Delays.Column.Due"]</th>
+                            <th scope="col">@L["Tax.Delays.Column.Ceiling"]</th>
+                            <SortHeader Option="BreachOptions[3]" State="_breachSort" OnSort="StateHasChanged" Id="delays-breaches-sort-over" Class="lg-num" />
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (PaymentTermBreachResponse breach in Breaches)
+                        {
+                            <tr @key="breach.InvoiceId" data-invoice="@breach.InvoiceId">
+                                <td><a href="@($"invoices/{breach.InvoiceId}")">@breach.Number</a></td>
+                                <td data-label="@L["Billing.Column.Customer"]">@breach.CustomerName</td>
+                                <td data-label="@L["Tax.Delays.Column.Issue"]">@DateText.Format(breach.IssueDate, CultureInfo.CurrentCulture)</td>
+                                <td data-label="@L["Tax.Delays.Column.Due"]">@DateText.Format(breach.DueDate, CultureInfo.CurrentCulture)</td>
+                                <td data-label="@L["Tax.Delays.Column.Ceiling"]">@DateText.Format(breach.LegalCeiling, CultureInfo.CurrentCulture)</td>
+                                <td class="lg-num" data-label="@L["Tax.Delays.Column.Over"]">
+                                    <span class="lettra-status is-refused">@string.Format(CultureInfo.CurrentCulture, L["Tax.Delays.Days"], breach.DaysOver)</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+
+    <section class="lt-panel" aria-labelledby="delays-invoices-title">
+        <div class="lt-panel-head">
+            <h2 id="delays-invoices-title">@L["Tax.Delays.Invoices"]</h2>
+        </div>
+        @if (report.Invoices.Count == 0)
+        {
+            <EmptyState Id="delays-invoices-empty" IconName="circle-check" Title="@L["Tax.Delays.Invoices.Empty"]" Text="@L["Tax.Delays.Invoices.EmptyText"]" />
+        }
+        else
+        {
+            <ListFilterBar Id="delays-filters" ActiveCount="ActiveFilters" OnReset="ResetFilters">
+                <ChildContent>
+                    <div class="lt-filter">
+                        <label for="delays-search">@L["Lists.Search"]</label>
+                        <input id="delays-search" type="search" @bind="_search" @bind:event="oninput" @bind:after="FirstPage" autocomplete="off" />
+                    </div>
+                </ChildContent>
+                <More>
+                    <div class="lt-filter">
+                        <label for="delays-bracket">@L["Tax.Delays.Column.Bracket"]</label>
+                        <select id="delays-bracket" @bind="_bracket" @bind:after="FirstPage">
+                            <option value="">@L["Tax.Delays.AllBrackets"]</option>
+                            <option value="late">@L["Tax.Delays.Bracket.Total"]</option>
+                            @for (int b = 0; b < PaymentDelaysBrackets; b++)
+                            {
+                                <option value="@b">@L[$"Tax.Delays.Bracket.{b}"]</option>
+                            }
+                            <option value="not-due">@L["Tax.Delays.NotDue"]</option>
+                            <option value="disputed">@L["Tax.Delays.Disputed"]</option>
+                        </select>
+                    </div>
+                    <SortSelect Id="delays-sort" Options="InvoiceOptions" State="_invoiceSort" OnSort="StateHasChanged" />
+                </More>
+            </ListFilterBar>
+            @if (VisibleInvoices.Count == 0)
+            {
+                <EmptyState Id="delays-invoices-filtered-empty" IconName="search" Title="@L["Lists.Empty.FilteredTitle"]" Text="@L["Lists.Empty.Filtered"]">
+                    <button type="button" class="lettra-button is-secondary" id="delays-empty-reset" @onclick="ResetFilters">@L["Lists.Filters.Reset"]</button>
+                </EmptyState>
+            }
+            else
+            {
+                <div class="lt-list-scroll">
+                    <table class="lettra-table lt-cards" id="delays-invoices">
+                        <thead>
+                            <tr>
+                                <SortHeader Option="InvoiceOptions[0]" State="_invoiceSort" OnSort="StateHasChanged" Id="delays-invoices-sort-number" />
+                                <SortHeader Option="InvoiceOptions[1]" State="_invoiceSort" OnSort="StateHasChanged" Id="delays-invoices-sort-customer" />
+                                <th scope="col">@L["Tax.Delays.Column.Due"]</th>
+                                <SortHeader Option="InvoiceOptions[2]" State="_invoiceSort" OnSort="StateHasChanged" Id="delays-invoices-sort-late" />
+                                <SortHeader Option="InvoiceOptions[3]" State="_invoiceSort" OnSort="StateHasChanged" Id="delays-invoices-sort-amount" Class="lg-num" />
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (PaymentDelayInvoiceResponse invoice in VisibleInvoices.Skip((_page - 1) * PageSize).Take(PageSize))
+                            {
+                                <tr @key="invoice.InvoiceId" data-invoice="@invoice.InvoiceId">
+                                    <td><a href="@($"invoices/{invoice.InvoiceId}")">@invoice.Number</a></td>
+                                    <td data-label="@L["Billing.Column.Customer"]">@invoice.CustomerName</td>
+                                    <td data-label="@L["Tax.Delays.Column.Due"]">@DateText.Format(invoice.DueDate, CultureInfo.CurrentCulture)</td>
+                                    <td data-label="@L["Tax.Delays.Column.Late"]">
+                                        <span class="lettra-status @StatusClass(invoice)">@LateText(invoice)</span>
+                                    </td>
+                                    <td class="lg-num" data-label="@L["Tax.Delays.Column.Outstanding"]">@TaxText.Exact(invoice.OutstandingInclTax)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                @if (VisibleInvoices.Count > PageSize)
+                {
+                    <nav class="lt-pager" aria-label="@L["Accounting.Pages"]" id="delays-pager">
+                        <button type="button" class="lettra-button is-secondary" id="delays-previous" disabled="@(_page <= 1)" @onclick="() => _page--">@L["Accounting.Previous"]</button>
+                        <span>@string.Format(CultureInfo.CurrentCulture, L["Accounting.PageOf"], _page, PageCount)</span>
+                        <button type="button" class="lettra-button is-secondary" id="delays-next" disabled="@(_page >= PageCount)" @onclick="() => _page++">@L["Accounting.Next"]</button>
+                    </nav>
+                }
+            }
+        }
+    </section>
+
+    <p class="lettra-hint" id="delays-disclaimer">@L["Tax.Delays.Disclaimer"]</p>
+}
+
+@code {
+    private const int PaymentDelaysBrackets = 5;
+    private const int PageSize = 25;
+
+    private PaymentDelaysResponse? _report;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private string? _search;
+    private string? _bracket;
+    private int _page = 1;
+
+    private enum BreachColumn
+    {
+        Number,
+        Customer,
+        Issue,
+        Over,
+    }
+
+    private enum InvoiceColumn
+    {
+        Number,
+        Customer,
+        Late,
+        Amount,
+    }
+
+    // Le plus gros dépassement et le plus gros retard en tête.
+    private readonly SortState<BreachColumn> _breachSort = new(BreachColumn.Over, SortDirectionDto.Descending);
+    private readonly SortState<InvoiceColumn> _invoiceSort = new(InvoiceColumn.Late, SortDirectionDto.Descending);
+
+    private IReadOnlyList<SortOption<BreachColumn>> BreachOptions =>
+    [
+        new(BreachColumn.Number, L["Tax.Delays.Column.Number"]),
+        new(BreachColumn.Customer, L["Billing.Column.Customer"]),
+        new(BreachColumn.Issue, L["Tax.Delays.Column.Issue"]),
+        new(BreachColumn.Over, L["Tax.Delays.Column.Over"], SortDirectionDto.Descending),
+    ];
+
+    private IReadOnlyList<SortOption<InvoiceColumn>> InvoiceOptions =>
+    [
+        new(InvoiceColumn.Number, L["Tax.Delays.Column.Number"]),
+        new(InvoiceColumn.Customer, L["Billing.Column.Customer"]),
+        new(InvoiceColumn.Late, L["Tax.Delays.Column.Late"], SortDirectionDto.Descending),
+        new(InvoiceColumn.Amount, L["Tax.Delays.Column.Outstanding"], SortDirectionDto.Descending),
+    ];
+
+    private static readonly Dictionary<BreachColumn, Func<PaymentTermBreachResponse, object?>> BreachKeys = new()
+    {
+        [BreachColumn.Number] = b => b.Number,
+        [BreachColumn.Customer] = b => b.CustomerName,
+        [BreachColumn.Issue] = b => b.IssueDate,
+        [BreachColumn.Over] = b => b.DaysOver,
+    };
+
+    private static readonly Dictionary<InvoiceColumn, Func<PaymentDelayInvoiceResponse, object?>> InvoiceKeys = new()
+    {
+        [InvoiceColumn.Number] = i => i.Number,
+        [InvoiceColumn.Customer] = i => i.CustomerName,
+        [InvoiceColumn.Late] = i => i.DaysLate,
+        [InvoiceColumn.Amount] = i => i.OutstandingInclTax,
+    };
+
+    private IReadOnlyList<PaymentTermBreachResponse> Breaches => ListSorting.Sort(_report?.TermBreaches ?? [], _breachSort, BreachKeys);
+
+    private IReadOnlyList<PaymentDelayInvoiceResponse> VisibleInvoices => ListSorting.Sort(
+        (_report?.Invoices ?? []).Where(InBracket).Where(i => ListSorting.Matches(i.Number, _search) || ListSorting.Matches(i.CustomerName, _search)),
+        _invoiceSort,
+        InvoiceKeys);
+
+    private int PageCount => Math.Max(1, (int)Math.Ceiling(VisibleInvoices.Count / (double)PageSize));
+
+    private int ActiveFilters => (string.IsNullOrWhiteSpace(_search) ? 0 : 1) + (string.IsNullOrEmpty(_bracket) ? 0 : 1);
+
+    [SupplyParameterFromQuery(Name = "closing")] public string? Closing { get; set; }
+
+    private DateOnly Today => Clock.LocalToday();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _errors = [];
+        OperationResult<PaymentDelaysResponse> result = await Tax.GetPaymentDelaysAsync(DateText.ParseIso(Closing), CancellationToken.None);
+        _report = result.Value ?? Empty(DateText.ParseIso(Closing) ?? Today);
+        _errors = result.Errors;
+    }
+
+    private static PaymentDelaysResponse Empty(DateOnly closing) => new(
+        closing, closing, 0m, [.. Enumerable.Range(0, PaymentDelaysBrackets).Select(b => new PaymentDelayBracketResponse(b, 0, 0m, null))],
+        new PaymentDelayBracketResponse(-1, 0, 0m, null), 0, 0m, null, 0, 0m, [], []);
+
+    private static string Href(DateOnly date) => $"tax/payment-delays?closing={date:yyyy-MM-dd}";
+
+    private Task PickAsync(DateOnly? date)
+    {
+        if (date is { } picked)
+        {
+            Navigation.NavigateTo(Href(picked));
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private bool InBracket(PaymentDelayInvoiceResponse invoice) => _bracket switch
+    {
+        null or "" => true,
+        "late" => invoice.Bracket is >= 1,
+        "not-due" => invoice is { Disputed: false, DaysLate: < 0 },
+        "disputed" => invoice.Disputed,
+        _ => int.TryParse(_bracket, CultureInfo.InvariantCulture, out int bracket) && invoice.Bracket == bracket,
+    };
+
+    private void FirstPage() => _page = 1;
+
+    private void ResetFilters() => (_search, _bracket, _page) = (null, null, 1);
+
+    private static string Percent(decimal? value) =>
+        value is { } percent ? (percent / 100m).ToString("P1", CultureInfo.CurrentCulture) : "—";
+
+    private string LateText(PaymentDelayInvoiceResponse invoice) =>
+        invoice.Disputed ? L["Tax.Delays.Disputed"]
+        : invoice.DaysLate < 0 ? L["Tax.Delays.NotDueShort"]
+        : string.Format(CultureInfo.CurrentCulture, L["Tax.Delays.Days"], invoice.DaysLate);
+
+    private static string StatusClass(PaymentDelayInvoiceResponse invoice) =>
+        invoice.Disputed ? "is-platform-disputed"
+        : invoice.DaysLate > 60 ? "is-refused"
+        : invoice.DaysLate > 0 ? "is-draft"
+        : "is-validated";
+}

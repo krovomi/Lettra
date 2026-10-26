@@ -20,6 +20,14 @@ internal sealed class HttpTaxGateway(HttpClient http) : ITaxGateway
             ContractsJsonContext.Default.DesResponse,
             cancellationToken);
 
+    public Task<OperationResult<PaymentDelaysResponse>> GetPaymentDelaysAsync(DateOnly? closingDate, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.GetAsync(closingDate is { } date
+                ? HttpCalls.Relative($"api/v1/tax/payment-delays?closingDate={QueryText.Day(date)}")
+                : HttpCalls.Relative($"api/v1/tax/payment-delays"), ct),
+            ContractsJsonContext.Default.PaymentDelaysResponse,
+            cancellationToken);
+
     public Task<OperationResult<DesDocument>> ExportDesAsync(int year, int month, CancellationToken cancellationToken) =>
         HttpFileDownloads.GetAsync(http, $"api/v1/tax/des/file?year={year}&month={month}", "DES.csv", (name, content) => new DesDocument(name, content), cancellationToken);
 
