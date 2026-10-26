@@ -169,9 +169,6 @@
   <data name="Tax.Delays.Subtitle" xml:space="preserve"><value>The table of unpaid issued invoices for the management report, and due dates beyond the legal ceiling.</value></data>
   <data name="Tax.Delays.At" xml:space="preserve"><value>Position at {0}</value></data>
   <data name="Tax.Delays.Year" xml:space="preserve"><value>Financial year started on {0} · turnover incl. VAT {1}</value></data>
-  <data name="Tax.Delays.Closing" xml:space="preserve"><value>Closing date</value></data>
-  <data name="Tax.Delays.LastClosing" xml:space="preserve"><value>Last closing</value></data>
-  <data name="Tax.Delays.Today" xml:space="preserve"><value>Today</value></data>
   <data name="Tax.Delays.BreachBanner" xml:space="preserve"><value>{0} invoice(s) of the year to a business customer have a due date beyond the legal ceiling. See the list below.</value></data>
   <data name="Tax.Delays.Table" xml:space="preserve"><value>Issued invoices unpaid at the closing date and past due</value></data>
   <data name="Tax.Delays.TableHint" xml:space="preserve"><value>Management report template (French Commercial Code, article D441-6). Amounts incl. VAT still due at closing.</value></data>

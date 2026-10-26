@@ -169,9 +169,6 @@
   <data name="Tax.Delays.Subtitle" xml:space="preserve"><value>Le tableau des factures émises non réglées pour le rapport de gestion, et les échéances au-delà du plafond légal.</value></data>
   <data name="Tax.Delays.At" xml:space="preserve"><value>Situation au {0}</value></data>
   <data name="Tax.Delays.Year" xml:space="preserve"><value>Exercice ouvert le {0} · chiffre d'affaires TTC {1}</value></data>
-  <data name="Tax.Delays.Closing" xml:space="preserve"><value>Date de clôture</value></data>
-  <data name="Tax.Delays.LastClosing" xml:space="preserve"><value>Dernière clôture</value></data>
-  <data name="Tax.Delays.Today" xml:space="preserve"><value>Aujourd'hui</value></data>
   <data name="Tax.Delays.BreachBanner" xml:space="preserve"><value>{0} facture(s) de l'exercice à un professionnel ont une échéance au-delà du plafond légal. Voir la liste plus bas.</value></data>
   <data name="Tax.Delays.Table" xml:space="preserve"><value>Factures émises non réglées à la date de clôture dont le terme est échu</value></data>
   <data name="Tax.Delays.TableHint" xml:space="preserve"><value>Modèle du rapport de gestion (article D441-6 du Code de commerce). Montants TTC restant dus à la clôture.</value></data>

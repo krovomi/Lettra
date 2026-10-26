@@ -28,7 +28,7 @@
   <data name="Nav.Payments.Keywords" xml:space="preserve"><value>paiement règlement reçu virement chèque lettrage encaisser</value></data>
   <data name="Nav.Bank.Keywords" xml:space="preserve"><value>banque relevé rapprocher import</value></data>
   <data name="Nav.Reminders.Keywords" xml:space="preserve"><value>retard impayé relancer e-mail courriel échéance</value></data>
-  <data name="Nav.Accounting.Keywords" xml:space="preserve"><value>écritures journal balance grand livre comptes compta</value></data>
+  <data name="Nav.Accounting.Keywords" xml:space="preserve"><value>écritures journal balance grand livre comptes compta révision clôture contrôles anomalies</value></data>
   <data name="Nav.Fec.Keywords" xml:space="preserve"><value>fichier des écritures comptables export contrôle fiscal passerelle quadra sage cegid acd logiciel de production</value></data>
   <data name="Nav.Tax.Keywords" xml:space="preserve"><value>tva impôts déclaration ca3 des calendrier fiscalité kit contrôle délais paiement retard rapport gestion d441-6 clôture</value></data>
   <data name="Nav.Review.Keywords" xml:space="preserve"><value>contrôle clôture liste vérification mensuelle</value></data>

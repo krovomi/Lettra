@@ -1,6 +1,5 @@
 @page "/tax/payment-delays"
 @inject ITaxGateway Tax
-@inject NavigationManager Navigation
 @inject IStringLocalizer<SharedResource> L
 @inject TimeProvider Clock
 @* Délais de paiement, côté factures émises : le tableau du rapport de gestion (art. D441-6) à la date de clôture, les
@@ -32,14 +31,7 @@ else
                 <h2 id="delays-period">@string.Format(CultureInfo.CurrentCulture, L["Tax.Delays.At"], TaxText.Day(report.ClosingDate))</h2>
                 <p class="lettra-muted" id="delays-year">@string.Format(CultureInfo.CurrentCulture, L["Tax.Delays.Year"], TaxText.Day(report.FiscalYearStart), TaxText.Euros(report.TurnoverInclTax))</p>
             </div>
-            <div class="lt-delays-date">
-                <label for="delays-closing">@L["Tax.Delays.Closing"]</label>
-                <DateField Id="delays-closing" Value="report.ClosingDate" ValueChanged="PickAsync" Max="Today" />
-                <div class="lt-delays-shortcuts">
-                    <a class="lettra-button is-ghost" href="tax/payment-delays" id="delays-last-closing">@L["Tax.Delays.LastClosing"]</a>
-                    <a class="lettra-button is-ghost" href="@Href(Today)" id="delays-today">@L["Tax.Delays.Today"]</a>
-                </div>
-            </div>
+            <ClosingDatePicker IdPrefix="delays" Path="tax/payment-delays" Value="report.ClosingDate" Today="Today" />
         </div>
     </section>
 
@@ -342,18 +334,6 @@ else
     private static PaymentDelaysResponse Empty(DateOnly closing) => new(
         closing, closing, 0m, [.. Enumerable.Range(0, PaymentDelaysBrackets).Select(b => new PaymentDelayBracketResponse(b, 0, 0m, null))],
         new PaymentDelayBracketResponse(-1, 0, 0m, null), 0, 0m, null, 0, 0m, [], []);
-
-    private static string Href(DateOnly date) => $"tax/payment-delays?closing={date:yyyy-MM-dd}";
-
-    private Task PickAsync(DateOnly? date)
-    {
-        if (date is { } picked)
-        {
-            Navigation.NavigateTo(Href(picked));
-        }
-
-        return Task.CompletedTask;
-    }
 
     private bool InBracket(PaymentDelayInvoiceResponse invoice) => _bracket switch
     {

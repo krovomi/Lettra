@@ -90,8 +90,6 @@
 /* Délais de paiement : date de clôture, tableau du rapport de gestion (défile à l'horizontale sur téléphone) et parties B et C. */
 .lt-delays-period { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--space-3); }
 .lt-delays-period h2 { margin: 0; }
-.lt-delays-date { display: grid; gap: var(--space-1); min-width: min(100%, 16rem); }
-.lt-delays-shortcuts { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .lt-delays-table { min-width: 36rem; }
 .lt-delays-table th[scope="row"] { text-align: left; font-weight: 600; min-width: 12rem; }
 .lt-delays-table thead th { white-space: normal; }

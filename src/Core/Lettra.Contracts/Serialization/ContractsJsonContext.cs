@@ -171,6 +171,7 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(VatReturnResponse))]
 [JsonSerializable(typeof(DesResponse))]
 [JsonSerializable(typeof(PaymentDelaysResponse))]
+[JsonSerializable(typeof(ClosingReviewResponse))]
 [JsonSerializable(typeof(FiscalCalendarResponse))]
 [JsonSerializable(typeof(FiscalSettingsResponse))]
 [JsonSerializable(typeof(UpdateFiscalSettingsRequest))]

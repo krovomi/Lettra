@@ -73,4 +73,46 @@
   <data name="Nav.Accounting" xml:space="preserve"><value>Journal &amp; balance</value></data>
   <data name="Nav.Balance" xml:space="preserve"><value>Trial balance</value></data>
   <data name="Nav.Journal" xml:space="preserve"><value>Sales journal</value></data>
+  <data name="ClosingReview.Title" xml:space="preserve"><value>Pre-closing review</value></data>
+  <data name="ClosingReview.Tab" xml:space="preserve"><value>Review</value></data>
+  <data name="ClosingReview.Subtitle" xml:space="preserve"><value>Automatic checks of the fiscal year, most serious first. Each issue leads to its documents.</value></data>
+  <data name="ClosingReview.At" xml:space="preserve"><value>Review at {0}</value></data>
+  <data name="ClosingReview.Year" xml:space="preserve"><value>Fiscal year opened on {0}</value></data>
+  <data name="ClosingReview.Summary" xml:space="preserve"><value>Checks by severity</value></data>
+  <data name="ClosingReview.Checks" xml:space="preserve"><value>Checks</value></data>
+  <data name="ClosingReview.Severity.Warning" xml:space="preserve"><value>To fix</value></data>
+  <data name="ClosingReview.Severity.Info" xml:space="preserve"><value>To look at</value></data>
+  <data name="ClosingReview.Severity.Ok" xml:space="preserve"><value>No issue</value></data>
+  <data name="ClosingReview.Filter.Severity" xml:space="preserve"><value>Severity</value></data>
+  <data name="ClosingReview.Filter.All" xml:space="preserve"><value>All checks</value></data>
+  <data name="ClosingReview.Empty" xml:space="preserve"><value>No check for this filter.</value></data>
+  <data name="ClosingReview.More" xml:space="preserve"><value>Show all ({0})</value></data>
+  <data name="ClosingReview.Less" xml:space="preserve"><value>Show less</value></data>
+  <data name="ClosingReview.DaysLate" xml:space="preserve"><value>{0} days late</value></data>
+  <data name="ClosingReview.Bank.Oldest" xml:space="preserve"><value>Oldest transaction to reconcile: {0}</value></data>
+  <data name="ClosingReview.Limits" xml:space="preserve"><value>Indicative checks, to review with the chartered accountant. Suppliers in debit and suspense accounts will come with received invoices; an impairment remains the firm's decision.</value></data>
+  <data name="ClosingReview.CustomersInCredit.Title" xml:space="preserve"><value>Customers in credit</value></data>
+  <data name="ClosingReview.CustomersInCredit.Ok" xml:space="preserve"><value>No customer in credit on account 411.</value></data>
+  <data name="ClosingReview.CustomersInCredit.Warning" xml:space="preserve"><value>{0} customer(s) in credit on account 411, for {1}: overpayment or credit note not refunded, to refund or reclassify.</value></data>
+  <data name="ClosingReview.DownPaymentsUnapplied.Title" xml:space="preserve"><value>Down payments not applied</value></data>
+  <data name="ClosingReview.DownPaymentsUnapplied.Ok" xml:space="preserve"><value>Every down payment received is applied to a final invoice.</value></data>
+  <data name="ClosingReview.DownPaymentsUnapplied.Info" xml:space="preserve"><value>{0} customer(s) with a down payment still on account 4191, for {1}: is the final invoice still to be issued?</value></data>
+  <data name="ClosingReview.DoubtfulReceivables.Title" xml:space="preserve"><value>Doubtful receivables</value></data>
+  <data name="ClosingReview.DoubtfulReceivables.Ok" xml:space="preserve"><value>No invoice more than six months late.</value></data>
+  <data name="ClosingReview.DoubtfulReceivables.Warning" xml:space="preserve"><value>{0} invoice(s) more than six months late, for {1} incl. VAT outstanding: consider an impairment.</value></data>
+  <data name="ClosingReview.DisputedReceivables.Title" xml:space="preserve"><value>Disputed receivables</value></data>
+  <data name="ClosingReview.DisputedReceivables.Ok" xml:space="preserve"><value>No invoice disputed on the platform.</value></data>
+  <data name="ClosingReview.DisputedReceivables.Warning" xml:space="preserve"><value>{0} invoice(s) disputed on the platform, for {1} incl. VAT: to provision or settle with the customer.</value></data>
+  <data name="ClosingReview.BankUnreconciled.Title" xml:space="preserve"><value>Bank reconciliation</value></data>
+  <data name="ClosingReview.BankUnreconciled.Ok" xml:space="preserve"><value>Every statement transaction is reconciled.</value></data>
+  <data name="ClosingReview.BankUnreconciled.Warning" xml:space="preserve"><value>{0} statement transaction(s) to reconcile, some dated before closing.</value></data>
+  <data name="ClosingReview.BankUnreconciled.Info" xml:space="preserve"><value>{0} statement transaction(s) to reconcile, all after closing.</value></data>
+  <data name="ClosingReview.VatRate.Title" xml:space="preserve"><value>VAT and revenue</value></data>
+  <data name="ClosingReview.VatRate.None" xml:space="preserve"><value>No revenue in the fiscal year.</value></data>
+  <data name="ClosingReview.VatRate.Ok" xml:space="preserve"><value>Output VAT: {2} of revenue excl. VAT ({1}), consistent with current rates.</value></data>
+  <data name="ClosingReview.VatRate.Warning" xml:space="preserve"><value>Output VAT: {2} of revenue excl. VAT ({1}), above the standard rate: a rate or an account needs checking.</value></data>
+  <data name="ClosingReview.VatRate.Info" xml:space="preserve"><value>No output VAT on {1} of revenue excl. VAT: exemption, export or reverse charge to justify.</value></data>
+  <data name="ClosingReview.OldDrafts.Title" xml:space="preserve"><value>Forgotten drafts</value></data>
+  <data name="ClosingReview.OldDrafts.Ok" xml:space="preserve"><value>No draft created before closing.</value></data>
+  <data name="ClosingReview.OldDrafts.Info" xml:space="preserve"><value>{0} draft(s) created before closing and never validated: a forgotten sale, or a draft to delete.</value></data>
 </root>

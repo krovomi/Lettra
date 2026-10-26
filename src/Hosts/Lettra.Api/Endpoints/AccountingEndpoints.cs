@@ -12,7 +12,8 @@ namespace Lettra.Api.Endpoints;
 
 /// <summary>
 /// Consultation de la comptabilité du dossier (module Exports) : journal des ventes, balance et grand livre d'un compte,
-/// lus dans les écritures enregistrées à la validation des pièces, comme le FEC. Lecture seule.
+/// lus dans les écritures enregistrées à la validation des pièces, comme le FEC, et révision assistée avant la clôture.
+/// Lecture seule.
 /// </summary>
 internal static class AccountingEndpoints
 {
@@ -37,6 +38,11 @@ internal static class AccountingEndpoints
             .WithName("GetAccountLedger")
             .Produces<AccountLedgerResponse>()
             .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        group.MapGet("/closing-review", GetClosingReviewAsync)
+            .RequirePermission(Permission.DossierLire)
+            .WithName("GetClosingReview")
+            .Produces<ClosingReviewResponse>();
 
         return group;
     }
@@ -74,6 +80,14 @@ internal static class AccountingEndpoints
     {
         Result<AccountLedgerResponse> result = await queries
             .QueryAsync(new GetAccountLedgerQuery(tenant.Current.DossierId, account, from, to, customerId), cancellationToken)
+            .ConfigureAwait(false);
+        return Ok(result);
+    }
+
+    private static async Task<IResult> GetClosingReviewAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken, DateOnly? closingDate = null)
+    {
+        Result<ClosingReviewResponse> result = await queries
+            .QueryAsync(new GetClosingReviewQuery(tenant.Current.DossierId, closingDate), cancellationToken)
             .ConfigureAwait(false);
         return Ok(result);
     }
