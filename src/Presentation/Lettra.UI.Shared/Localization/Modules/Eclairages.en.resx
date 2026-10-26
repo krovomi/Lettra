@@ -339,4 +339,81 @@
   <data name="WhatIf.Rule.Vat" xml:space="preserve"><value>Its VAT is declared for the period of its issue date (VAT on invoicing) and paid on the due date of the file's tax calendar. VAT on receipts and the annual CA12 are not simulated.</value></data>
   <data name="WhatIf.Rule.Hire" xml:space="preserve"><value>The hire costs gross salary plus employer contributions, paid on the last day of the month, pro rata for the first month. Adjust the contribution rate with the firm.</value></data>
   <data name="WhatIf.Rule.Sandbox" xml:space="preserve"><value>Lettra computes it without artificial intelligence, at each simulation. Nothing is written to the file.</value></data>
+  <data name="Nav.CallSheet" xml:space="preserve"><value>Call sheet</value></data>
+  <data name="CallSheet.Title" xml:space="preserve"><value>Call sheet</value></data>
+  <data name="CallSheet.Subtitle" xml:space="preserve"><value>Before calling a late customer: what they owe and since when, their habits, the reminders already sent and the points to raise, in order.</value></data>
+  <data name="CallSheet.Prepare" xml:space="preserve"><value>Prepare the call</value></data>
+  <data name="CallSheet.Customer" xml:space="preserve"><value>Customer to call</value></data>
+  <data name="CallSheet.Customer.Choose" xml:space="preserve"><value>Choose a customer</value></data>
+  <data name="CallSheet.Nobody" xml:space="preserve"><value>No customer owes anything: nobody to call.</value></data>
+  <data name="CallSheet.Empty" xml:space="preserve"><value>Choose a customer</value></data>
+  <data name="CallSheet.Empty.Text" xml:space="preserve"><value>The list shows the customers who still owe something, the latest first.</value></data>
+  <data name="CallSheet.Outstanding" xml:space="preserve"><value>Outstanding</value></data>
+  <data name="CallSheet.Overdue" xml:space="preserve"><value>Of which overdue</value></data>
+  <data name="CallSheet.Invoices" xml:space="preserve"><value>Invoices due</value></data>
+  <data name="CallSheet.Reminders" xml:space="preserve"><value>Reminders sent</value></data>
+  <data name="CallSheet.Points" xml:space="preserve"><value>Points to raise, in order</value></data>
+  <data name="CallSheet.Points.Empty" xml:space="preserve"><value>Nothing special: this customer has no overdue invoice.</value></data>
+  <data name="CallSheet.Point.Disputed" xml:space="preserve"><value>Invoice {0} ({1}) is disputed on the platform: settle the dispute before talking about payment.</value></data>
+  <data name="CallSheet.Point.LastReminder" xml:space="preserve"><value>Last reminder: {0} on {1}, for invoice {2}.</value></data>
+  <data name="CallSheet.Point.Habit" xml:space="preserve"><value>This customer usually pays {0}; {1}% of their invoices are paid on time.</value></data>
+  <data name="CallSheet.Point.LastPayment" xml:space="preserve"><value>Last payment received: {0} on {1}.</value></data>
+  <data name="CallSheet.Invoices.Title" xml:space="preserve"><value>Invoices due, latest first</value></data>
+  <data name="CallSheet.Invoices.Empty" xml:space="preserve"><value>No invoice due.</value></data>
+  <data name="CallSheet.DueOn" xml:space="preserve"><value>due on {0}</value></data>
+  <data name="CallSheet.LastReminder" xml:space="preserve"><value>{0} on {1}</value></data>
+  <data name="CallSheet.Reminders.Title" xml:space="preserve"><value>Reminders already sent</value></data>
+  <data name="CallSheet.Reminders.Empty" xml:space="preserve"><value>No reminder sent to this customer.</value></data>
+  <data name="CallSheet.Rules" xml:space="preserve"><value>How the sheet is built</value></data>
+  <data name="CallSheet.Rule.Order" xml:space="preserve"><value>Points come in the order to raise them: a disputed invoice first (you do not chase what is disputed), then doubtful invoices, the reminder stage, the recovery fee, the customer's habit and their last payment.</value></data>
+  <data name="CallSheet.Rule.Indemnity" xml:space="preserve"><value>The fixed €40 recovery fee is owed by a business customer for each invoice paid late (French Commercial Code, articles L441-10 and D441-5).</value></data>
+  <data name="CallSheet.Rule.Deterministic" xml:space="preserve"><value>Lettra builds the sheet each time it opens, without artificial intelligence, from invoices, payments, reminders and platform statuses. Nothing is written to the dossier.</value></data>
+  <data name="CallSheet.Point.Doubtful.One" xml:space="preserve"><value>One invoice is more than two months late ({1} days), {2}: the risk of non-payment is real.</value></data>
+  <data name="CallSheet.Point.Doubtful.Many" xml:space="preserve"><value>{0} invoices are more than two months late (up to {1} days), {2} in total: the risk of non-payment is real.</value></data>
+  <data name="CallSheet.Point.FinalSent.One" xml:space="preserve"><value>The final reminder has already gone out for invoice {1}: the next step is a formal notice.</value></data>
+  <data name="CallSheet.Point.FinalSent.Many" xml:space="preserve"><value>The final reminder has already gone out for {0} invoices, including {1}: the next step is a formal notice.</value></data>
+  <data name="CallSheet.Point.NeverReminded.One" xml:space="preserve"><value>No reminder yet for the overdue invoice, {1}: start with a friendly reminder.</value></data>
+  <data name="CallSheet.Point.NeverReminded.Many" xml:space="preserve"><value>No reminder yet for the {0} overdue invoices, {1} in total: start with a friendly reminder.</value></data>
+  <data name="CallSheet.Point.Indemnity.One" xml:space="preserve"><value>Business customer: the fixed €40 recovery fee is due for the late invoice.</value></data>
+  <data name="CallSheet.Point.Indemnity.Many" xml:space="preserve"><value>Business customer: the fixed €40 recovery fee per late invoice is due, {0} for {1} invoices.</value></data>
+  <data name="Nav.EInvoicingReadiness" xml:space="preserve"><value>E-invoicing readiness</value></data>
+  <data name="Readiness.Title" xml:space="preserve"><value>Ready for e-invoicing?</value></data>
+  <data name="Readiness.Subtitle" xml:space="preserve"><value>What is left to do in this dossier before its invoices go through an accredited platform: company, customer and supplier identifiers, invoices sent.</value></data>
+  <data name="Readiness.Level.Ready" xml:space="preserve"><value>Dossier ready</value></data>
+  <data name="Readiness.Level.Almost" xml:space="preserve"><value>Almost ready</value></data>
+  <data name="Readiness.Level.Halfway" xml:space="preserve"><value>Halfway there</value></data>
+  <data name="Readiness.Level.Late" xml:space="preserve"><value>Behind</value></data>
+  <data name="Readiness.Summary.None" xml:space="preserve"><value>Every check is met.</value></data>
+  <data name="Readiness.Summary.One" xml:space="preserve"><value>One check is still to meet.</value></data>
+  <data name="Readiness.Summary.Many" xml:space="preserve"><value>{0} checks are still to meet.</value></data>
+  <data name="Readiness.Period" xml:space="preserve"><value>Invoices checked: issued since {0}.</value></data>
+  <data name="Readiness.Check.CompanyIdentity" xml:space="preserve"><value>Company SIREN and SIRET</value></data>
+  <data name="Readiness.Check.CompanyIdentity.Why" xml:space="preserve"><value>Without them, no invoice reaches the platform.</value></data>
+  <data name="Readiness.Check.CompanyVat" xml:space="preserve"><value>Company VAT number</value></data>
+  <data name="Readiness.Check.CompanyVat.Why" xml:space="preserve"><value>Required on every invoice, unless under the VAT exemption threshold.</value></data>
+  <data name="Readiness.Check.CompanyIban" xml:space="preserve"><value>Company IBAN</value></data>
+  <data name="Readiness.Check.CompanyIban.Why" xml:space="preserve"><value>Printed on invoices so customers can pay by transfer.</value></data>
+  <data name="Readiness.Check.FrenchCustomers" xml:space="preserve"><value>SIREN of French business customers</value></data>
+  <data name="Readiness.Check.FrenchCustomers.Why" xml:space="preserve"><value>The SIREN is the address of their e-invoices.</value></data>
+  <data name="Readiness.Check.EuropeanCustomers" xml:space="preserve"><value>VAT number of EU business customers</value></data>
+  <data name="Readiness.Check.EuropeanCustomers.Why" xml:space="preserve"><value>Their sales are e-reported with their VAT number.</value></data>
+  <data name="Readiness.Check.Suppliers" xml:space="preserve"><value>SIREN of French suppliers</value></data>
+  <data name="Readiness.Check.Suppliers.Why" xml:space="preserve"><value>Their invoices will arrive through the platform: they must be recognised.</value></data>
+  <data name="Readiness.Check.Transmissions" xml:space="preserve"><value>Invoices sent to the platform</value></data>
+  <data name="Readiness.Check.Transmissions.Why" xml:space="preserve"><value>Invoices of the last 90 days to French businesses, sent and not rejected.</value></data>
+  <data name="Readiness.Count.Done" xml:space="preserve"><value>Done</value></data>
+  <data name="Readiness.Count.Missing" xml:space="preserve"><value>Missing</value></data>
+  <data name="Readiness.Count.NotConcerned" xml:space="preserve"><value>Not applicable</value></data>
+  <data name="Readiness.Count.Ratio" xml:space="preserve"><value>{0} of {1}</value></data>
+  <data name="Readiness.Fix.CompanyIdentity" xml:space="preserve"><value>Complete the company profile</value></data>
+  <data name="Readiness.Fix.CompanyVat" xml:space="preserve"><value>Complete the company profile</value></data>
+  <data name="Readiness.Fix.CompanyIban" xml:space="preserve"><value>Complete the company profile</value></data>
+  <data name="Readiness.Fix.FrenchCustomers" xml:space="preserve"><value>See customers</value></data>
+  <data name="Readiness.Fix.EuropeanCustomers" xml:space="preserve"><value>See customers</value></data>
+  <data name="Readiness.Fix.Suppliers" xml:space="preserve"><value>See suppliers</value></data>
+  <data name="Readiness.Fix.Transmissions" xml:space="preserve"><value>See invoices</value></data>
+  <data name="Readiness.Rules" xml:space="preserve"><value>How the score is computed</value></data>
+  <data name="Readiness.Rule.Score" xml:space="preserve"><value>Each check scores 0 to 100 from the share of items that are ready; the score is their average. A check with nothing to check counts as 100.</value></data>
+  <data name="Readiness.Rule.Calendar" xml:space="preserve"><value>Every French company must be able to receive e-invoices since 1 September 2026; SMEs and micro-businesses must issue them from 1 September 2027.</value></data>
+  <data name="Readiness.Rule.Cabinet" xml:space="preserve"><value>The practice view only shows how many checks each dossier has left, never a name or an amount.</value></data>
 </root>

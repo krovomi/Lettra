@@ -99,6 +99,7 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(BillingDashboardResponse))]
 [JsonSerializable(typeof(CabinetPilotageResponse))]
 [JsonSerializable(typeof(AdministrationPilotageResponse))]
+[JsonSerializable(typeof(PeerComparisonResponse))]
 [JsonSerializable(typeof(DossierReviewResponse))]
 [JsonSerializable(typeof(SetDossierReviewItemRequest))]
 [JsonSerializable(typeof(SetUserAccountRequest))]
@@ -221,6 +222,8 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(IReadOnlyList<InvoiceProofKeyResponse>))]
 [JsonSerializable(typeof(DossierAsOfResponse))]
 [JsonSerializable(typeof(FigureExplanationResponse))]
+[JsonSerializable(typeof(CallSheetResponse))]
+[JsonSerializable(typeof(EInvoicingReadinessResponse))]
 [JsonSerializable(typeof(WhatIfRequest))]
 [JsonSerializable(typeof(WhatIfResponse))]
 public sealed partial class ContractsJsonContext : JsonSerializerContext;

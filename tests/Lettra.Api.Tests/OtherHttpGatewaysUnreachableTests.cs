@@ -44,6 +44,8 @@ public sealed class OtherHttpGatewaysUnreachableTests
             (await insights.GetDossierAsOfAsync(DateTimeOffset.UnixEpoch, default)).Errors,
             (await insights.ExplainFigureAsync(ExplainedFigureDto.MonthRevenue, Today, default)).Errors,
             (await insights.SimulateWhatIfAsync(new WhatIfRequest(), default)).Errors,
+            (await insights.GetCallSheetAsync(id, default)).Errors,
+            (await insights.GetEInvoicingReadinessAsync(default)).Errors,
             (await accounting.GetJournalAsync(new JournalQuery(Today, Today, "x", "411", id), default)).Errors,
             (await accounting.GetBalanceAsync(Today, Today, default)).Errors,
             (await accounting.GetLedgerAsync("411", Today, Today, id, default)).Errors,
@@ -92,6 +94,7 @@ public sealed class OtherHttpGatewaysUnreachableTests
         List<IReadOnlyList<ErrorDetail>> failures =
         [
             (await services.GetRequiredService<IPilotageGateway>().GetDossierAsync(default)).Errors,
+            (await services.GetRequiredService<IPilotageGateway>().GetPeersAsync(default)).Errors,
             (await services.GetRequiredService<IAssistantGateway>().GetStatusAsync(default)).Errors,
             (await services.GetRequiredService<IAdministrationGateway>().DeleteTeamAsync(id, id, default)).Errors,
             (await invoices.GetEInvoiceAsync(id, EInvoiceFormatDto.Ubl, default)).Errors,

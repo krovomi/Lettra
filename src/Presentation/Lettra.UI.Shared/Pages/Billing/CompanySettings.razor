@@ -65,6 +65,13 @@ else
                 <FieldErrors Field="@nameof(SaveCompanyProfileRequest.Rcs)" ServerErrors="_errors" />
             </div>
 
+            <div class="lettra-field">
+                <label for="company-activity">@L["Company.Field.ActivityCode"]</label>
+                <InputText id="company-activity" @bind-Value="_request.ActivityCode" placeholder="47.24Z" maxlength="8" autocomplete="off" aria-describedby="company-activity-hint" />
+                <p class="lettra-hint" id="company-activity-hint">@L["Company.Field.ActivityCode.Hint"]</p>
+                <FieldErrors Field="@nameof(SaveCompanyProfileRequest.ActivityCode)" ServerErrors="_errors" />
+            </div>
+
             <div class="lettra-field lettra-field-wide">
                 <label for="company-vat">@L["Customers.Field.VatNumber"]</label>
                 <div class="lettra-inline">
@@ -227,6 +234,7 @@ else
         _request.PostalCode = company.PostalCode ?? string.Empty;
         _request.City = company.City ?? string.Empty;
         _request.CountryCode = company.CountryCode;
+        _request.ActivityCode = company.ActivityCode ?? _request.ActivityCode;
         _saved = false;
     }
 
@@ -257,31 +265,7 @@ else
     private void Apply(CompanyProfileResponse profile)
     {
         _version = profile.Version;
-        _request = new SaveCompanyProfileRequest
-        {
-            Name = profile.Name,
-            LegalForm = profile.LegalForm,
-            ShareCapital = profile.ShareCapital,
-            Siren = profile.Siren,
-            Siret = profile.Siret,
-            Rcs = profile.Rcs,
-            VatNumber = profile.VatNumber,
-            AddressLine1 = profile.AddressLine1,
-            AddressLine2 = profile.AddressLine2,
-            PostalCode = profile.PostalCode,
-            City = profile.City,
-            CountryCode = profile.CountryCode,
-            VatFranchise = profile.VatFranchise,
-            VatOnDebits = profile.VatOnDebits,
-            VatDeclarationRegime = profile.VatDeclarationRegime,
-            PaymentDays = profile.PaymentDays,
-            PaymentTerms = profile.PaymentTerms,
-            LatePenaltyRate = profile.LatePenaltyRate,
-            EarlyPaymentDiscount = profile.EarlyPaymentDiscount,
-            Iban = profile.Iban,
-            Bic = profile.Bic,
-            AccountHolderName = profile.AccountHolderName,
-        };
+        _request = SaveCompanyProfileRequest.From(profile);
         _holderMatch = profile.HolderNameMatch;
     }
 }

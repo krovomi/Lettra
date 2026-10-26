@@ -11,6 +11,9 @@ public interface IPilotageGateway
 {
     Task<OperationResult<DossierPilotageResponse>> GetDossierAsync(CancellationToken cancellationToken);
 
+    /// <summary>Le dossier ouvert comparé aux dossiers du cabinet du même secteur (médianes seulement).</summary>
+    Task<OperationResult<PeerComparisonResponse>> GetPeersAsync(CancellationToken cancellationToken);
+
     Task<OperationResult<CabinetPilotageResponse>> GetCabinetAsync(CancellationToken cancellationToken);
 
     Task<OperationResult<AdministrationPilotageResponse>> GetAdministrationAsync(CancellationToken cancellationToken);

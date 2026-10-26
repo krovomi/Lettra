@@ -88,6 +88,7 @@
                 @Kpi("pilotage-customers", "Pilotage.Kpi.Customers", d.ActiveCustomers.ToString("N0", Culture), IndicatorLevelDto.Ok, "Pilotage.Kpi.Customers.Help")
                 @Kpi("pilotage-top", "Pilotage.Kpi.TopCustomer", PilotageDisplay.Percent(d.TopCustomerShareRatio, Culture), PilotageDisplay.Concentration(d.TopCustomerShareRatio), "Pilotage.Kpi.TopCustomer.Help")
             </ul>
+            <PilotageComment Id="pilotage-comment-clients" Text="@PilotageCommentary.Clients(d, L, Culture)" />
         </section>
 
         <section aria-labelledby="pilotage-sales-title">
@@ -98,12 +99,15 @@
                 @Kpi("pilotage-pending", "Pilotage.Kpi.Pending", d.QuotesPending.ToString("N0", Culture), IndicatorLevelDto.Ok, "Pilotage.Kpi.Pending.Help")
                 @Kpi("pilotage-expiring", "Pilotage.Kpi.Expiring", d.QuotesExpiringSoon.ToString("N0", Culture), d.QuotesExpiringSoon > 0 ? IndicatorLevelDto.Warning : IndicatorLevelDto.Ok, "Pilotage.Kpi.Expiring.Help")
             </ul>
+            <PilotageComment Id="pilotage-comment-sales" Text="@PilotageCommentary.Sales(d, L, Culture)" />
         </section>
 
         <div class="lt-pilotage-charts">
-            @MonthlyChart("pilotage-chart-index", "Pilotage.Chart.Index", "Pilotage.Chart.Index.Unit", d.Months, m => m.RevenueIndex ?? 0, m => m.RevenueIndex is double i ? i.ToString("N0", Culture) : "—")
-            @MonthlyChart("pilotage-chart-invoices", "Pilotage.Chart.Invoices", "Pilotage.Chart.Invoices.Unit", d.Months, m => m.InvoicesIssued, m => m.InvoicesIssued.ToString("N0", Culture))
+            @MonthlyChart("pilotage-chart-index", "Pilotage.Chart.Index", "Pilotage.Chart.Index.Unit", d.Months, m => m.RevenueIndex ?? 0, m => m.RevenueIndex is double i ? i.ToString("N0", Culture) : "—", PilotageCommentary.Activity(d.Months, L, Culture))
+            @MonthlyChart("pilotage-chart-invoices", "Pilotage.Chart.Invoices", "Pilotage.Chart.Invoices.Unit", d.Months, m => m.InvoicesIssued, m => m.InvoicesIssued.ToString("N0", Culture), PilotageCommentary.Invoices(d.Months, L, Culture))
         </div>
+
+        @PeersPanel
 
         <section class="lt-panel" aria-labelledby="pilotage-todo-title" id="pilotage-todo">
             <div class="lt-panel-head">
@@ -128,6 +132,66 @@
                         </li>
                     }
                 </ul>
+            }
+        </section>
+    };
+
+    /// <summary>La comparaison aux dossiers du même secteur ; absente si le serveur ne l'a pas rendue (droit, poste).</summary>
+    private RenderFragment PeersPanel => __builder =>
+    {
+        if (_peers is not { } peers)
+        {
+            return;
+        }
+
+        <section class="lt-panel" aria-labelledby="pilotage-peers-title" id="pilotage-peers">
+            <div class="lt-panel-head">
+                <h2 id="pilotage-peers-title">@L["Pilotage.Peers.Title"]</h2>
+                @if (peers.Status == PeerComparisonStatusDto.Available)
+                {
+                    <span class="lettra-hint" id="pilotage-peers-subtitle">@string.Format(Culture, L["Pilotage.Peers.Subtitle"], peers.Sector, peers.ActivityCode, peers.Peers)</span>
+                }
+            </div>
+            @switch (peers.Status)
+            {
+                case PeerComparisonStatusDto.NoSector:
+                    <p class="lettra-muted" id="pilotage-peers-status">@L["Pilotage.Peers.Status.NoSector"]</p>
+                    <a class="lettra-button is-secondary is-small" id="pilotage-peers-naf" href="settings/company"><Icon Name="arrow-right" Size="16" /> @L["Pilotage.Peers.Status.NoSector.Link"]</a>
+                    break;
+                case PeerComparisonStatusDto.TooFewPeers:
+                    <p class="lettra-muted" id="pilotage-peers-status">@string.Format(Culture, L[$"Pilotage.Peers.Status.TooFewPeers.{(peers.Peers switch { 0 => "None", 1 => "One", _ => "Many" })}"], peers.Peers, peers.Sector)</p>
+                    break;
+                case PeerComparisonStatusDto.Available:
+                    <div class="lt-list-scroll">
+                        <table class="lettra-table lt-cards lt-pilotage-peers" id="pilotage-peers-table">
+                            <caption class="lettra-visually-hidden">@L["Pilotage.Peers.Title"]</caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col">@L["Pilotage.Peers.Metric"]</th>
+                                    <th scope="col" class="lg-num">@L["Pilotage.Peers.Own"]</th>
+                                    <th scope="col" class="lg-num">@L["Pilotage.Peers.Median"]</th>
+                                    <th scope="col">@L["Pilotage.Peers.Position"]</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (PeerMetricComparisonDto metric in peers.Metrics)
+                                {
+                                    <tr @key="metric.Metric" id="@($"pilotage-peers-{metric.Metric.ToString().ToLowerInvariant()}")">
+                                        <th scope="row">@L[$"Pilotage.Peers.Metric.{metric.Metric}"]</th>
+                                        <td class="lg-num" data-label="@L["Pilotage.Peers.Own"]">@PeerValue(metric.Metric, metric.Value)</td>
+                                        <td class="lg-num" data-label="@L["Pilotage.Peers.Median"]">@PeerValue(metric.Metric, metric.Median)</td>
+                                        <td data-label="@L["Pilotage.Peers.Position"]"><span class="lt-indicator" data-level="@PeerLevel(metric.Position)">@L[$"Pilotage.Peers.Position.{metric.Position?.ToString() ?? "None"}"]</span></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <PilotageComment Id="pilotage-comment-peers" Text="@PilotageCommentary.Peers(peers, L, Culture)" />
+                    <p class="lettra-hint">@L["Pilotage.Peers.Rule"]</p>
+                    break;
+                default:
+                    <p class="lettra-muted" id="pilotage-peers-status">@L["Pilotage.Peers.Status.NoCollection"]</p>
+                    break;
             }
         </section>
     };
@@ -162,6 +226,7 @@
                 @Kpi("pilotage-dossiers-late", "Pilotage.Dossiers.Late", all.Count(r => PilotageDisplay.Overdue(r.OverdueReceivablesRatio) >= IndicatorLevelDto.Warning).ToString("N0", Culture),
                      all.Any(r => PilotageDisplay.Overdue(r.OverdueReceivablesRatio) == IndicatorLevelDto.Critical) ? IndicatorLevelDto.Critical : IndicatorLevelDto.Ok, "Pilotage.Dossiers.Late.Help")
             </ul>
+            <PilotageComment Id="pilotage-comment-cabinet" Text="@PilotageCommentary.Cabinet(all, L, Culture)" />
         </section>
 
         <section class="lt-panel" aria-labelledby="pilotage-dossiers-title">
@@ -290,7 +355,7 @@
         </li>
     };
 
-    private RenderFragment MonthlyChart(string id, string title, string unit, IReadOnlyList<MonthlyActivityDto> months, Func<MonthlyActivityDto, double> value, Func<MonthlyActivityDto, string> text) => __builder =>
+    private RenderFragment MonthlyChart(string id, string title, string unit, IReadOnlyList<MonthlyActivityDto> months, Func<MonthlyActivityDto, double> value, Func<MonthlyActivityDto, string> text, string comment) => __builder =>
     {
         double max = months.Count == 0 ? 0 : months.Max(value);
         <section class="lt-panel" aria-labelledby="@(id)-title">
@@ -317,6 +382,7 @@
                     }
                 </tbody>
             </table>
+            <PilotageComment Id="@($"{id}-comment")" Text="@comment" />
         </section>
     };
 }

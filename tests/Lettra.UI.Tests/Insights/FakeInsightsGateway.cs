@@ -64,6 +64,15 @@ internal sealed class FakeInsightsGateway : IInsightsGateway
         return Answer(Explanations.GetValueOrDefault(figure));
     }
 
+    public Dictionary<Guid, CallSheetResponse> CallSheets { get; } = [];
+
+    public EInvoicingReadinessResponse? Readiness { get; set; }
+
+    public Task<OperationResult<EInvoicingReadinessResponse>> GetEInvoicingReadinessAsync(CancellationToken cancellationToken) => Answer(Readiness);
+
+    public Task<OperationResult<CallSheetResponse>> GetCallSheetAsync(Guid customerId, CancellationToken cancellationToken) =>
+        Answer(CallSheets.GetValueOrDefault(customerId));
+
     public Func<WhatIfRequest, WhatIfResponse?> WhatIf { get; set; } = _ => null;
 
     public List<WhatIfRequest> Scenarios { get; } = [];

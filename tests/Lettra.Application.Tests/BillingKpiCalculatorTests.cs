@@ -32,7 +32,7 @@ public sealed class BillingKpiCalculatorTests
         Value(samples, KpiMetrics.ActiveCustomers).Should().Be(0);
         Value(samples, KpiMetrics.QuotesPending).Should().Be(0);
         samples.Select(s => s.Metric).Should().NotContain(
-            [KpiMetrics.RevenueIndex, KpiMetrics.RevenueTrend, KpiMetrics.Collection, KpiMetrics.TopCustomerShare, KpiMetrics.QuoteConversion]);
+            [KpiMetrics.RevenueIndex, KpiMetrics.RevenueTrend, KpiMetrics.Collection, KpiMetrics.CreditNotes, KpiMetrics.TopCustomerShare, KpiMetrics.QuoteConversion]);
     }
 
     [Fact]
@@ -84,6 +84,20 @@ public sealed class BillingKpiCalculatorTests
         Value(samples, KpiMetrics.DaysSalesOutstanding).Should().Be(42.6);
         // Encaissé 1 200 € sur 1 200 + 600 + (600 − 120) = 2 280 € dus.
         Value(samples, KpiMetrics.Collection).Should().Be(0.5263);
+    }
+
+    [Fact]
+    public void Le_taux_d_avoirs_rapporte_les_avoirs_de_l_annee_aux_ventes_de_l_annee()
+    {
+        IReadOnlyList<KpiSample> samples = Compute(
+        [
+            Invoice(new DateOnly(2026, 3, 1), 1_000m),
+            Invoice(new DateOnly(2026, 5, 1), 600m, kind: InvoiceKind.DownPayment),
+            Invoice(new DateOnly(2026, 6, 1), 200m, kind: InvoiceKind.CreditNote),
+            Invoice(new DateOnly(2025, 6, 1), 900m, kind: InvoiceKind.CreditNote), // hors des 12 mois
+        ]);
+
+        Value(samples, KpiMetrics.CreditNotes).Should().Be(0.125, "240 € TTC d'avoirs pour 1 920 € TTC de factures et d'acomptes");
     }
 
     [Fact]

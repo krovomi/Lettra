@@ -34,9 +34,15 @@ public static class DossierIndicatorKeys
     /// </summary>
     public const string SupplierIbanToVerify = "fournisseurs.iban-a-verifier";
 
+    /// <summary>
+    /// Contrôles de préparation à la facture électronique pas encore satisfaits (identité de l'entreprise, SIREN des
+    /// clients et fournisseurs, factures transmises) ; l'urgence suit le score du dossier. Aucun nom ni montant.
+    /// </summary>
+    public const string EInvoicingReadiness = "facture-electronique.preparation";
+
     /// <summary>Ordre des colonnes du tableau (les clés inconnues suivent, par ordre alphabétique).</summary>
     public static IReadOnlyList<string> Known { get; } =
-        [OverdueInvoices, PlatformRejections, VatToDeclare, BankUnreconciled, SupplierIbanToVerify, OpenAlerts, ReviewPending];
+        [OverdueInvoices, PlatformRejections, EInvoicingReadiness, VatToDeclare, BankUnreconciled, SupplierIbanToVerify, OpenAlerts, ReviewPending];
 }
 
 /// <summary>Urgence d'un indicateur : décide de la couleur et de l'ordre des dossiers.</summary>

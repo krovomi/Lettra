@@ -49,8 +49,12 @@ public static class PilotageDisplay
     /// </summary>
     public static string Reference(Guid dossierId) => dossierId.ToString("N")[^8..];
 
+    /// <summary>Un délai en jours, avec l'abréviation de la langue de l'interface : « 38 j », « 38 d ».</summary>
     public static string Days(double? days, CultureInfo culture) =>
-        days is double value ? string.Create(culture, $"{Math.Round(value, MidpointRounding.AwayFromZero):N0} j") : "—";
+        days is double value ? string.Create(culture, $"{Math.Round(value, MidpointRounding.AwayFromZero):N0} {DayUnit(culture)}") : "—";
+
+    /// <summary>« j » en français, « d » ailleurs.</summary>
+    private static string DayUnit(CultureInfo culture) => culture?.TwoLetterISOLanguageName == "fr" ? "j" : "d";
 
     public static string Percent(double? ratio, CultureInfo culture) =>
         ratio is double value ? value.ToString("P0", culture) : "—";
@@ -86,7 +90,7 @@ public static class PilotageDisplay
             { TotalMinutes: < 1 } => string.Create(culture, $"{span.TotalSeconds:N0} s"),
             { TotalHours: < 1 } => string.Create(culture, $"{Math.Floor(span.TotalMinutes):N0} min"),
             { TotalDays: < 2 } => string.Create(culture, $"{Math.Floor(span.TotalHours):N0} h"),
-            _ => string.Create(culture, $"{Math.Floor(span.TotalDays):N0} j"),
+            _ => string.Create(culture, $"{Math.Floor(span.TotalDays):N0} {DayUnit(culture)}"),
         };
     }
 

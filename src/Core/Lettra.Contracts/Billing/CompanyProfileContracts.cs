@@ -106,6 +106,42 @@ public sealed record SaveCompanyProfileRequest
     /// </summary>
     [StringLength(70, ErrorMessage = ErrorCodes.Validation.TooLong)]
     public string? AccountHolderName { get; set; }
+
+    /// <summary>Code NAF (APE) de l'activité principale (« 47.24Z ») : il sert à se comparer aux dossiers du même secteur.</summary>
+    [StringLength(8, ErrorMessage = ErrorCodes.Validation.Invalid)]
+    public string? ActivityCode { get; set; }
+
+    /// <summary>La fiche enregistrée, prête à être modifiée puis renvoyée.</summary>
+    public static SaveCompanyProfileRequest From(CompanyProfileResponse profile)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+        return new SaveCompanyProfileRequest
+        {
+            Name = profile.Name,
+            LegalForm = profile.LegalForm,
+            ShareCapital = profile.ShareCapital,
+            Siren = profile.Siren,
+            Siret = profile.Siret,
+            Rcs = profile.Rcs,
+            VatNumber = profile.VatNumber,
+            AddressLine1 = profile.AddressLine1,
+            AddressLine2 = profile.AddressLine2,
+            PostalCode = profile.PostalCode,
+            City = profile.City,
+            CountryCode = profile.CountryCode,
+            VatFranchise = profile.VatFranchise,
+            VatOnDebits = profile.VatOnDebits,
+            VatDeclarationRegime = profile.VatDeclarationRegime,
+            PaymentDays = profile.PaymentDays,
+            PaymentTerms = profile.PaymentTerms,
+            LatePenaltyRate = profile.LatePenaltyRate,
+            EarlyPaymentDiscount = profile.EarlyPaymentDiscount,
+            Iban = profile.Iban,
+            Bic = profile.Bic,
+            AccountHolderName = profile.AccountHolderName,
+            ActivityCode = profile.ActivityCode,
+        };
+    }
 }
 
 /// <summary>Fiche entreprise telle qu'affichée ; <c>null</c> côté API tant qu'elle n'a pas été remplie.</summary>
@@ -134,4 +170,5 @@ public sealed record CompanyProfileResponse(
     DateTimeOffset UpdatedAt,
     VatDeclarationRegimeDto? VatDeclarationRegime = null,
     string? AccountHolderName = null,
-    PayeeMatchDto? HolderNameMatch = null);
+    PayeeMatchDto? HolderNameMatch = null,
+    string? ActivityCode = null);

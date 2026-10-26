@@ -76,7 +76,7 @@ public sealed class McpApiTests(LettraApiFactory factory) : IClassFixture<Lettra
         notified.Should().Be(HttpStatusCode.Accepted);
         list!["result"]!["tools"]!.AsArray().Select(t => t!["name"]!.GetValue<string>()).Should().BeEquivalentTo(
             "meteo_des_paiements", "factures_en_retard", "chiffre_d_affaires_du_mois", "dossier_a_un_instant", "simuler_et_si",
-            "calculer", "lire_reference", "lister_references");
+            "fiche_d_appel", "calculer", "lire_reference", "lister_references");
 
         string month = LegalCalendar.DateOf(DateTimeOffset.UtcNow).ToString("yyyy-MM", System.Globalization.CultureInfo.InvariantCulture);
         string[] answers =
@@ -87,6 +87,10 @@ public sealed class McpApiTests(LettraApiFactory factory) : IClassFixture<Lettra
             await CallAsync(client, session!, "dossier_a_un_instant", $$"""{"instant":"{{DateTimeOffset.UtcNow:O}}"}"""),
             await CallAsync(client, session!, "simuler_et_si", """{"extraDelayDays":15,"vat":"Quarterly"}"""),
         ];
+        string customer = JsonNode.Parse(answers[0])!["Customers"]![0]!["CustomerId"]!.GetValue<string>();
+        string callSheet = await CallAsync(client, session!, "fiche_d_appel", $$"""{"client":"{{customer}}"}""");
+        answers = [.. answers, callSheet];
+        callSheet.Should().Contain("[CLIENT_");
 
         string revenue = answers[2];
         revenue.Should().Contain("[CLIENT_", "la facture validée du mois porte son client, pseudonymisé");
@@ -114,6 +118,7 @@ public sealed class McpApiTests(LettraApiFactory factory) : IClassFixture<Lettra
             ("dossier_a_un_instant", """{"instant":"hier"}"""),
             ("simuler_et_si", """{"invoice":{"amountExclTax":100,"vatRatePercent":20,"issueDate":"demain","paymentTermDays":30}}"""),
             ("simuler_et_si", """{"extraDelayDays":500}"""),
+            ("fiche_d_appel", """{"client":"Boulangerie"}"""),
         })
         {
             (HttpStatusCode status, JsonNode? body, _) = await PostAsync(

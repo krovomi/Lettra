@@ -1,4 +1,5 @@
 using Lettra.Application.Abstractions.Identity;
+using Lettra.Application.Abstractions.Kpi;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Features.Dossiers;
@@ -150,7 +151,7 @@ public static partial class LettraDemoData
 
         if (!alreadySeeded)
         {
-            reports.Add(await LoadAsync(services, clock, dossier, DemoBusiness.Services, options, today, cancellationToken).ConfigureAwait(false));
+            reports.Add(await LoadAsync(services, clock, dossier, DemoCompanies.For(DemoBusiness.Services), options, today, cancellationToken).ConfigureAwait(false));
         }
 
         // Les autres dossiers du cabinet (vue cabinet) : créés une seule fois, y compris dans une démonstration déjà
@@ -159,14 +160,15 @@ public static partial class LettraDemoData
         IReadOnlyList<DossierSummary> existing = cabinet is OrganisationId known
             ? await services.GetRequiredService<IDossierDirectory>().ListAsync(known, cancellationToken).ConfigureAwait(false)
             : [];
-        foreach (DemoBusiness business in new[] { DemoBusiness.Building, DemoBusiness.Trading }.Take(Math.Clamp(options.AdditionalDossiers, 0, 2)))
+
+        foreach (DemoCompany company in AdditionalCompanies(services, options))
         {
             if (cabinet is not OrganisationId organisation)
             {
                 break;
             }
 
-            string name = DemoCompanies.For(business).Name;
+            string name = company.Name;
             if (existing.Any(d => string.Equals(d.Name, name, StringComparison.Ordinal)))
             {
                 continue;
@@ -178,12 +180,20 @@ public static partial class LettraDemoData
             {
                 // Le serveur de démonstration peut ne pas donner le droit de créer des dossiers : le dossier ouvert suffit.
                 notes.Add($"Dossier « {name} » non créé : {created.Errors[0].Code}.");
-                LogDossierNotCreated(logger, business, created.Errors[0].Code);
+                LogDossierNotCreated(logger, company.Business, created.Errors[0].Code);
                 break;
             }
 
             session.CurrentDossierId = created.Value.Id;
-            reports.Add(await LoadAsync(services, clock, created.Value.Id, business, options, today, cancellationToken).ConfigureAwait(false));
+            reports.Add(await LoadAsync(services, clock, created.Value.Id, company, options, today, cancellationToken).ConfigureAwait(false));
+        }
+
+        // Les dossiers chargés par une version précédente reçoivent le code NAF qu'elle ne posait pas.
+        foreach (DossierSummary seeded in existing)
+        {
+            session.CurrentDossierId = seeded.Id;
+            clock.Set(TimeProvider.System.GetUtcNow());
+            await new DemoDossierLoader(services, clock).CompleteProfileAsync(DemoCompanies.ActivityCodesBySiren, cancellationToken).ConfigureAwait(false);
         }
 
         // Créer un dossier sur le poste l'ouvre : on rouvre celui de l'utilisateur.
@@ -239,10 +249,24 @@ public static partial class LettraDemoData
         return services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
     }
 
-    private static async Task<DemoDossierReport> LoadAsync(
-        ServiceProvider services, DemoClock clock, Guid dossier, DemoBusiness business, DemoDataOptions options, DateOnly today, CancellationToken cancellationToken)
+    /// <summary>
+    /// Bâtiment puis négoce ; et, pour un cabinet complet là où les indicateurs sont collectés (serveur), les dossiers
+    /// pairs du dossier principal, sans lesquels la comparaison au secteur n'aurait rien à montrer.
+    /// </summary>
+    private static IEnumerable<DemoCompany> AdditionalCompanies(ServiceProvider services, DemoDataOptions options)
     {
-        DemoScenario scenario = DemoScenarioGenerator.Generate(business, options.RandomSeed, today, Math.Clamp(options.Months, 2, 36));
+        int additional = Math.Clamp(options.AdditionalDossiers, 0, 2);
+        IEnumerable<DemoCompany> businesses = new[] { DemoBusiness.Building, DemoBusiness.Trading }.Take(additional).Select(DemoCompanies.For);
+        bool collected = services.GetServices<IKpiSnapshotProvider>().Any();
+        return additional == 2 && collected
+            ? businesses.Concat(DemoCompanies.Peers.Take(Math.Clamp(options.PeerDossiers, 0, DemoCompanies.Peers.Count)))
+            : businesses;
+    }
+
+    private static async Task<DemoDossierReport> LoadAsync(
+        ServiceProvider services, DemoClock clock, Guid dossier, DemoCompany company, DemoDataOptions options, DateOnly today, CancellationToken cancellationToken)
+    {
+        DemoScenario scenario = DemoScenarioGenerator.Generate(company, options.RandomSeed, today, Math.Clamp(options.Months, 2, 36));
         return await new DemoDossierLoader(services, clock).LoadAsync(dossier, scenario, cancellationToken).ConfigureAwait(false);
     }
 

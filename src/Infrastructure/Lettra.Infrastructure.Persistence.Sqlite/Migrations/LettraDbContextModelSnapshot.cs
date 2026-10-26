@@ -410,6 +410,10 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                         .HasMaxLength(70)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ActivityCode")
+                        .HasMaxLength(6)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Bic")
                         .HasMaxLength(11)
                         .HasColumnType("TEXT");

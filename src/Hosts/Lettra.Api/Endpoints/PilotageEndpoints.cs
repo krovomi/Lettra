@@ -41,6 +41,12 @@ internal static class PilotageEndpoints
             .WithTags("Pilotage")
             .WithName("GetDossierPilotage")
             .Produces<DossierPilotageResponse>();
+
+        api.MapGet("/pilotage/peers", GetPeersAsync)
+            .RequirePermission(Permission.DossierLire)
+            .WithTags("Pilotage")
+            .WithName("GetPeerComparison")
+            .Produces<PeerComparisonResponse>();
         return api;
     }
 
@@ -49,6 +55,13 @@ internal static class PilotageEndpoints
         Result<DossierPilotageResponse> pilotage = await queries
             .QueryAsync(new GetDossierPilotageQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false);
         return Ok(pilotage);
+    }
+
+    private static async Task<IResult> GetPeersAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken)
+    {
+        Result<PeerComparisonResponse> peers = await queries
+            .QueryAsync(new GetPeerComparisonQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false);
+        return Ok(peers);
     }
 
     private static async Task<IResult> GetCabinetAsync(IQueryDispatcher queries, CancellationToken cancellationToken)

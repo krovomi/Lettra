@@ -62,6 +62,18 @@ internal sealed class HttpInsightsGateway(HttpClient http) : IInsightsGateway
             ContractsJsonContext.Default.FigureExplanationResponse,
             cancellationToken);
 
+    public Task<OperationResult<CallSheetResponse>> GetCallSheetAsync(Guid customerId, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.GetAsync(HttpCalls.Relative($"api/v1/insights/call-sheet/{customerId}"), ct),
+            ContractsJsonContext.Default.CallSheetResponse,
+            cancellationToken);
+
+    public Task<OperationResult<EInvoicingReadinessResponse>> GetEInvoicingReadinessAsync(CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.GetAsync(HttpCalls.Relative($"api/v1/insights/e-invoicing-readiness"), ct),
+            ContractsJsonContext.Default.EInvoicingReadinessResponse,
+            cancellationToken);
+
     public Task<OperationResult<WhatIfResponse>> SimulateWhatIfAsync(WhatIfRequest scenario, CancellationToken cancellationToken) =>
         HttpCalls.SendAsync(
             ct => http.PostAsJsonAsync(HttpCalls.Relative($"api/v1/insights/what-if"), scenario, ContractsJsonContext.Default.WhatIfRequest, ct),

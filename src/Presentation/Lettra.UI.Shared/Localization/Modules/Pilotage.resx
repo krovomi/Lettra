@@ -82,4 +82,88 @@
   <data name="Pilotage.Reference" xml:space="preserve"><value>Réf. {0}</value></data>
   <data name="Pilotage.Reference.Help" xml:space="preserve"><value>Référence du dossier dans les tableaux Grafana, qui n'affichent aucun nom.</value></data>
   <data name="Pilotage.Footnote" xml:space="preserve"><value>Ratios, délais et indices seulement : aucun montant ni nom de client. Vous ne voyez que les dossiers que vos droits ouvrent.</value></data>
+  <data name="Pilotage.Comment.Copy" xml:space="preserve"><value>Copier</value></data>
+  <data name="Pilotage.Comment.Copy.Title" xml:space="preserve"><value>Copier ce commentaire pour un rapport au client</value></data>
+  <data name="Pilotage.Comment.Copied" xml:space="preserve"><value>Commentaire copié.</value></data>
+  <data name="Pilotage.Comment.CopyFailed" xml:space="preserve"><value>Copie refusée par le navigateur : sélectionnez le texte pour le copier.</value></data>
+  <data name="Pilotage.Comment.Empty" xml:space="preserve"><value>Pas encore assez de pièces pour commenter ces chiffres.</value></data>
+  <data name="Pilotage.Comment.Dso.Ok" xml:space="preserve"><value>Le délai moyen de paiement des clients est de {0} : c'est un bon délai.</value></data>
+  <data name="Pilotage.Comment.Dso.Warning" xml:space="preserve"><value>Le délai moyen de paiement des clients est de {0} : à surveiller, il dépasse 45 jours.</value></data>
+  <data name="Pilotage.Comment.Dso.Critical" xml:space="preserve"><value>Le délai moyen de paiement des clients est de {0} : c'est trop long, il dépasse 60 jours.</value></data>
+  <data name="Pilotage.Comment.Overdue.None" xml:space="preserve"><value>Aucune créance n'est en retard.</value></data>
+  <data name="Pilotage.Comment.Overdue.Ok" xml:space="preserve"><value>{0} de ce qui reste dû est en retard.</value></data>
+  <data name="Pilotage.Comment.Overdue.Warning" xml:space="preserve"><value>{0} de ce qui reste dû est en retard : les relances méritent une attention.</value></data>
+  <data name="Pilotage.Comment.Overdue.Critical" xml:space="preserve"><value>{0} de ce qui reste dû est en retard : il faut relancer en priorité.</value></data>
+  <data name="Pilotage.Comment.Collection.Ok" xml:space="preserve"><value>{0} de ce qui a été facturé sur 12 mois est encaissé.</value></data>
+  <data name="Pilotage.Comment.Collection.Warning" xml:space="preserve"><value>Seulement {0} de ce qui a été facturé sur 12 mois est encaissé.</value></data>
+  <data name="Pilotage.Comment.Collection.Critical" xml:space="preserve"><value>Seulement {0} de ce qui a été facturé sur 12 mois est encaissé : la trésorerie en souffre.</value></data>
+  <data name="Pilotage.Comment.TopCustomer.Ok" xml:space="preserve"><value>Le premier client pèse {0} du chiffre d'affaires, parmi {1} clients actifs : pas de dépendance.</value></data>
+  <data name="Pilotage.Comment.TopCustomer.Warning" xml:space="preserve"><value>Le premier client pèse {0} du chiffre d'affaires, parmi {1} clients actifs : une dépendance à surveiller.</value></data>
+  <data name="Pilotage.Comment.TopCustomer.Critical" xml:space="preserve"><value>Le premier client pèse {0} du chiffre d'affaires, parmi {1} clients actifs : une forte dépendance.</value></data>
+  <data name="Pilotage.Comment.Trend.Up" xml:space="preserve"><value>Le chiffre d'affaires des trois derniers mois est en hausse de {0} sur les trois précédents.</value></data>
+  <data name="Pilotage.Comment.Trend.Down" xml:space="preserve"><value>Le chiffre d'affaires des trois derniers mois est en baisse de {0} sur les trois précédents.</value></data>
+  <data name="Pilotage.Comment.Trend.Stable" xml:space="preserve"><value>Le chiffre d'affaires des trois derniers mois est stable par rapport aux trois précédents.</value></data>
+  <data name="Pilotage.Comment.Conversion" xml:space="preserve"><value>{0} des devis tranchés ont été acceptés.</value></data>
+  <data name="Pilotage.Comment.Pending.None" xml:space="preserve"><value>Aucun devis n'attend de réponse.</value></data>
+  <data name="Pilotage.Comment.Pending.One" xml:space="preserve"><value>Un devis attend une réponse.</value></data>
+  <data name="Pilotage.Comment.Pending.Many" xml:space="preserve"><value>{0} devis attendent une réponse.</value></data>
+  <data name="Pilotage.Comment.Pending.Expiring.One" xml:space="preserve"><value>Un devis attend une réponse et expire bientôt.</value></data>
+  <data name="Pilotage.Comment.Pending.Expiring.Many" xml:space="preserve"><value>{0} devis attendent une réponse ; à relancer avant expiration : {1}.</value></data>
+  <data name="Pilotage.Comment.Activity.None" xml:space="preserve"><value>Aucune vente sur les douze derniers mois.</value></data>
+  <data name="Pilotage.Comment.Activity.Above" xml:space="preserve"><value>En {0}, l'activité est à l'indice {1} : {2} au-dessus du mois moyen de l'année.</value></data>
+  <data name="Pilotage.Comment.Activity.Below" xml:space="preserve"><value>En {0}, l'activité est à l'indice {1} : {2} en dessous du mois moyen de l'année.</value></data>
+  <data name="Pilotage.Comment.Activity.Average" xml:space="preserve"><value>En {0}, l'activité est à l'indice {1}, dans la moyenne de l'année.</value></data>
+  <data name="Pilotage.Comment.Activity.Best" xml:space="preserve"><value>Le meilleur mois de l'année est {0} (indice {1}).</value></data>
+  <data name="Pilotage.Comment.Activity.BestIsLast" xml:space="preserve"><value>C'est le meilleur mois de l'année.</value></data>
+  <data name="Pilotage.Comment.Invoices.None" xml:space="preserve"><value>Aucune facture émise sur les douze derniers mois.</value></data>
+  <data name="Pilotage.Comment.Invoices.One" xml:space="preserve"><value>{0} facture émise en {1}, contre {2} en {3}.</value></data>
+  <data name="Pilotage.Comment.Invoices.Many" xml:space="preserve"><value>{0} factures émises en {1}, contre {2} en {3}.</value></data>
+  <data name="Pilotage.Comment.Invoices.Total" xml:space="preserve"><value>{0} au total sur les douze derniers mois.</value></data>
+  <data name="Pilotage.Comment.Cabinet.Count.One" xml:space="preserve"><value>Un dossier suivi.</value></data>
+  <data name="Pilotage.Comment.Cabinet.Count.Many" xml:space="preserve"><value>{0} dossiers suivis.</value></data>
+  <data name="Pilotage.Comment.Cabinet.AllGood" xml:space="preserve"><value>Aucun n'appelle d'attention : retards, délais et activité sont dans la norme.</value></data>
+  <data name="Pilotage.Comment.Cabinet.Late.One" xml:space="preserve"><value>Un dossier a plus de 20 % de créances en retard.</value></data>
+  <data name="Pilotage.Comment.Cabinet.Late.Many" xml:space="preserve"><value>{0} dossiers ont plus de 20 % de créances en retard.</value></data>
+  <data name="Pilotage.Comment.Cabinet.Slow.One" xml:space="preserve"><value>Un dossier a un délai de paiement de plus de 45 jours.</value></data>
+  <data name="Pilotage.Comment.Cabinet.Slow.Many" xml:space="preserve"><value>{0} dossiers ont un délai de paiement de plus de 45 jours.</value></data>
+  <data name="Pilotage.Comment.Cabinet.Falling.One" xml:space="preserve"><value>Un dossier voit son chiffre d'affaires baisser de plus de 10 %.</value></data>
+  <data name="Pilotage.Comment.Cabinet.Falling.Many" xml:space="preserve"><value>{0} dossiers voient leur chiffre d'affaires baisser de plus de 10 %.</value></data>
+  <data name="Pilotage.Comment.Days" xml:space="preserve"><value>{0:N0} jours</value></data>
+  <data name="Pilotage.Peers.Title" xml:space="preserve"><value>Comparé aux dossiers du même secteur</value></data>
+  <data name="Pilotage.Peers.Subtitle" xml:space="preserve"><value>Division NAF {0} (code {1}) · {2} dossiers du cabinet · médianes de la dernière collecte</value></data>
+  <data name="Pilotage.Peers.Status.NoSector" xml:space="preserve"><value>Renseignez le code NAF de l'entreprise pour comparer ce dossier aux autres dossiers du cabinet du même secteur.</value></data>
+  <data name="Pilotage.Peers.Status.NoSector.Link" xml:space="preserve"><value>Renseigner le code NAF</value></data>
+  <data name="Pilotage.Peers.Status.NoCollection" xml:space="preserve"><value>La comparaison se fait sur le serveur du cabinet : elle n'est pas disponible sur ce poste.</value></data>
+  <data name="Pilotage.Peers.Metric" xml:space="preserve"><value>Indicateur</value></data>
+  <data name="Pilotage.Peers.Own" xml:space="preserve"><value>Ce dossier</value></data>
+  <data name="Pilotage.Peers.Median" xml:space="preserve"><value>Médiane des pairs</value></data>
+  <data name="Pilotage.Peers.Position" xml:space="preserve"><value>Position</value></data>
+  <data name="Pilotage.Peers.Position.Better" xml:space="preserve"><value>Mieux</value></data>
+  <data name="Pilotage.Peers.Position.Similar" xml:space="preserve"><value>Comparable</value></data>
+  <data name="Pilotage.Peers.Position.Worse" xml:space="preserve"><value>Moins bien</value></data>
+  <data name="Pilotage.Peers.Position.None" xml:space="preserve"><value>Pas de valeur</value></data>
+  <data name="Pilotage.Peers.Metric.DaysSalesOutstanding" xml:space="preserve"><value>Délai moyen de paiement</value></data>
+  <data name="Pilotage.Peers.Metric.OverdueReceivables" xml:space="preserve"><value>Créances en retard</value></data>
+  <data name="Pilotage.Peers.Metric.Collection" xml:space="preserve"><value>Taux d'encaissement</value></data>
+  <data name="Pilotage.Peers.Metric.RevenueTrend" xml:space="preserve"><value>Évolution du chiffre d'affaires</value></data>
+  <data name="Pilotage.Peers.Metric.QuoteConversion" xml:space="preserve"><value>Devis acceptés</value></data>
+  <data name="Pilotage.Peers.Metric.TopCustomerShare" xml:space="preserve"><value>Poids du premier client</value></data>
+  <data name="Pilotage.Peers.Name.DaysSalesOutstanding" xml:space="preserve"><value>délai de paiement</value></data>
+  <data name="Pilotage.Peers.Name.OverdueReceivables" xml:space="preserve"><value>créances en retard</value></data>
+  <data name="Pilotage.Peers.Name.Collection" xml:space="preserve"><value>encaissement</value></data>
+  <data name="Pilotage.Peers.Name.RevenueTrend" xml:space="preserve"><value>évolution du chiffre d'affaires</value></data>
+  <data name="Pilotage.Peers.Name.QuoteConversion" xml:space="preserve"><value>devis acceptés</value></data>
+  <data name="Pilotage.Peers.Name.TopCustomerShare" xml:space="preserve"><value>poids du premier client</value></data>
+  <data name="Pilotage.Peers.Rule" xml:space="preserve"><value>Les pairs sont les autres dossiers du cabinet de la même division NAF. Seules des médianes d'au moins 5 dossiers sont montrées : aucun dossier, aucun nom, aucun montant. Comparable : à 3 jours ou 3 points près.</value></data>
+  <data name="Pilotage.Comment.Peers.Intro" xml:space="preserve"><value>Comparé à {0} dossiers du cabinet de la division NAF {1}.</value></data>
+  <data name="Pilotage.Comment.Peers.Better" xml:space="preserve"><value>Mieux que la médiane : {0}.</value></data>
+  <data name="Pilotage.Comment.Peers.Worse" xml:space="preserve"><value>Moins bien que la médiane : {0}.</value></data>
+  <data name="Pilotage.Comment.Peers.Similar" xml:space="preserve"><value>Proche de la médiane : {0}.</value></data>
+  <data name="Pilotage.Comment.Peers.AllSimilar" xml:space="preserve"><value>Tous les indicateurs sont proches de la médiane du secteur.</value></data>
+  <data name="Pilotage.Comment.Peers.And" xml:space="preserve"><value> et </value></data>
+  <data name="Pilotage.Peers.Status.TooFewPeers.None" xml:space="preserve"><value>Aucun autre dossier du cabinet n'est de la division NAF {1}. Il en faut au moins 5 pour qu'aucune médiane ne laisse deviner un dossier.</value></data>
+  <data name="Pilotage.Peers.Status.TooFewPeers.One" xml:space="preserve"><value>Un seul autre dossier du cabinet est de la division NAF {1}. Il en faut au moins 5 pour qu'aucune médiane ne laisse deviner un dossier.</value></data>
+  <data name="Pilotage.Peers.Status.TooFewPeers.Many" xml:space="preserve"><value>Seuls {0} autres dossiers du cabinet sont de la division NAF {1}. Il en faut au moins 5 pour qu'aucune médiane ne laisse deviner un dossier.</value></data>
+  <data name="Pilotage.Peers.Metric.CreditNotes" xml:space="preserve"><value>Taux d'avoirs</value></data>
+  <data name="Pilotage.Peers.Name.CreditNotes" xml:space="preserve"><value>taux d'avoirs</value></data>
 </root>

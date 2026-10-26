@@ -21,11 +21,12 @@ internal sealed class DemoScenarioGenerator
     private readonly List<DateOnly> _businessDays;
     private readonly DateTimeOffset _limit;
 
-    private DemoScenarioGenerator(DemoBusiness business, int seed, DateOnly today, int months)
+    private DemoScenarioGenerator(DemoCompany company, int seed, DateOnly today, int months)
     {
-        // Pas HashCode.Combine : sa graine change à chaque processus, le jeu ne serait plus reproductible.
-        _random = new Random(unchecked((seed * 397) + (int)business));
-        _company = DemoCompanies.For(business);
+        // Pas HashCode.Combine : sa graine change à chaque processus, le jeu ne serait plus reproductible. Une variante
+        // (dossier pair) a son propre tirage ; les trois métiers gardent celui d'avant.
+        _random = new Random(unchecked((seed * 397) + (int)company.Business + (company.Variant * 7_919)));
+        _company = company;
         _today = today;
         DateOnly first = today.AddMonths(-months);
         _businessDays = [.. Enumerable.Range(0, today.DayNumber - first.DayNumber)
@@ -35,10 +36,15 @@ internal sealed class DemoScenarioGenerator
     }
 
     /// <summary>Le scénario d'un dossier du métier <paramref name="business"/>, sur <paramref name="months"/> mois avant <paramref name="today"/>.</summary>
-    public static DemoScenario Generate(DemoBusiness business, int seed, DateOnly today, int months = 12)
+    public static DemoScenario Generate(DemoBusiness business, int seed, DateOnly today, int months = 12) =>
+        Generate(DemoCompanies.For(business), seed, today, months);
+
+    /// <summary>Le scénario d'une entreprise donnée : un des trois métiers ou un dossier pair (<see cref="DemoCompanies.Peers"/>).</summary>
+    public static DemoScenario Generate(DemoCompany company, int seed, DateOnly today, int months = 12)
     {
+        ArgumentNullException.ThrowIfNull(company);
         ArgumentOutOfRangeException.ThrowIfLessThan(months, 2);
-        return new DemoScenarioGenerator(business, seed, today, months).Build();
+        return new DemoScenarioGenerator(company, seed, today, months).Build();
     }
 
     private DemoScenario Build()
@@ -85,6 +91,7 @@ internal sealed class DemoScenarioGenerator
             EarlyPaymentDiscount = "Pas d'escompte pour paiement anticipé",
             Iban = FrenchIdentifiers.Iban((int)_company.Business, 10_000 + _company.SirenOrdinal, 1_000_000L * _company.SirenOrdinal),
             Bic = "DEMOFRPPXXX",
+            ActivityCode = _company.ActivityCode,
         };
     }
 

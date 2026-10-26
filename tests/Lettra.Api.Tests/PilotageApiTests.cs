@@ -1,5 +1,7 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Pilotage;
 using Lettra.Contracts.Serialization;
@@ -15,6 +17,8 @@ public sealed class PilotageApiTests
     private static readonly Uri Dossier = new("/api/v1/pilotage", UriKind.Relative);
     private static readonly Uri Cabinet = new("/api/v1/dossiers/pilotage", UriKind.Relative);
     private static readonly Uri Administration = new("/api/v1/dossiers/pilotage/administration", UriKind.Relative);
+    private static readonly Uri Peers = new("/api/v1/pilotage/peers", UriKind.Relative);
+    private static readonly Uri Company = new("/api/v1/company-profile", UriKind.Relative);
 
     [Fact]
     public async Task Le_dossier_ouvert_se_lit_avec_le_droit_de_lecture_et_pas_depuis_le_portail()
@@ -74,6 +78,31 @@ public sealed class PilotageApiTests
 
         (await api.ClientFor(LettraApiFactory.SuspenduId).GetFromJsonAsync(Administration, ContractsJsonContext.Default.AdministrationPilotageResponse))!
             .Dossiers.Should().BeEmpty("un compte suspendu ne voit plus aucun dossier");
+    }
+
+    [Fact]
+    public async Task La_comparaison_aux_pairs_demande_le_code_naf_puis_cinq_dossiers_du_meme_secteur()
+    {
+        await using LettraApiFactory api = new();
+        HttpClient reader = InDossier(api, LettraApiFactory.CollaborateurId);
+
+        (await reader.GetFromJsonAsync(Peers, ContractsJsonContext.Default.PeerComparisonResponse))!.Status
+            .Should().Be(PeerComparisonStatusDto.NoSector);
+
+        HttpClient manager = InDossier(api, LettraApiFactory.ManagerId);
+        SaveCompanyProfileRequest request = GatewayHarness.CompanyProfile();
+        request.ActivityCode = "6202a";
+        using HttpRequestMessage save = new(HttpMethod.Put, Company) { Content = JsonContent.Create(request, ContractsJsonContext.Default.SaveCompanyProfileRequest) };
+        save.Headers.IfMatch.Add(EntityTagHeaderValue.Any);
+        using HttpResponseMessage saved = await manager.SendAsync(save);
+        saved.IsSuccessStatusCode.Should().BeTrue(await saved.Content.ReadAsStringAsync());
+        (await saved.Content.ReadFromJsonAsync(ContractsJsonContext.Default.CompanyProfileResponse))!.ActivityCode.Should().Be("62.02A");
+
+        PeerComparisonResponse alone = (await reader.GetFromJsonAsync(Peers, ContractsJsonContext.Default.PeerComparisonResponse))!;
+        alone.Should().BeEquivalentTo(new { Status = PeerComparisonStatusDto.TooFewPeers, ActivityCode = "62.02A", Sector = "62", Peers = 0, Metrics = Array.Empty<PeerMetricComparisonDto>() });
+
+        using HttpResponseMessage portal = await InDossier(api, LettraApiFactory.PortailId).GetAsync(Peers);
+        portal.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
     private static HttpClient InDossier(LettraApiFactory api, Guid user)
