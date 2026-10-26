@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.Attestations" xml:space="preserve"><value>Due diligence certificates</value></data>
+  <data name="Attestations.Title" xml:space="preserve"><value>Suppliers' due diligence certificates</value></data>
+  <data name="Attestations.Subtitle" xml:space="preserve"><value>For every contract of at least €5,000 excluding VAT, the URSSAF certificate received at signature and then every six months. Without it, the company is liable for the social contributions and wages of a subcontractor caught using undeclared work.</value></data>
+  <data name="Attestations.Stats" xml:space="preserve"><value>Certificate status</value></data>
+  <data name="Attestations.Stat.Blocking" xml:space="preserve"><value>To obtain before paying</value></data>
+  <data name="Attestations.Stat.Blocking.Hint" xml:space="preserve"><value>Missing, expired or not verified</value></data>
+  <data name="Attestations.Stat.Soon" xml:space="preserve"><value>Expiring soon</value></data>
+  <data name="Attestations.Stat.Soon.Hint" xml:space="preserve"><value>Within thirty days: ask for the next one</value></data>
+  <data name="Attestations.Stat.Valid" xml:space="preserve"><value>Valid</value></data>
+  <data name="Attestations.Stat.NotRequired" xml:space="preserve"><value>Not required</value></data>
+  <data name="Attestations.Stat.NotRequired.Hint" xml:space="preserve"><value>Contract under €5,000 excl. VAT or supplier not tracked</value></data>
+  <data name="Attestations.Form" xml:space="preserve"><value>Certificate for {0}</value></data>
+  <data name="Attestations.Form.Contract" xml:space="preserve"><value>Contract</value></data>
+  <data name="Attestations.Amount" xml:space="preserve"><value>Contract amount excl. VAT</value></data>
+  <data name="Attestations.Amount.Hint" xml:space="preserve"><value>The amount of the current contract, or of the services planned over the year. From €5,000 excl. VAT, the certificate is required.</value></data>
+  <data name="Attestations.Form.Attestation" xml:space="preserve"><value>Certificate received</value></data>
+  <data name="Attestations.IssuedOn" xml:space="preserve"><value>Certificate date</value></data>
+  <data name="Attestations.IssuedOnShort" xml:space="preserve"><value>dated {0}</value></data>
+  <data name="Attestations.Code" xml:space="preserve"><value>Security code</value></data>
+  <data name="Attestations.VerifiedOn" xml:space="preserve"><value>Code verified on</value></data>
+  <data name="Attestations.Verify.Hint" xml:space="preserve"><value>Check the security code on the URSSAF website ("Verify a certificate"), then record the date. A certificate is valid for six months.</value></data>
+  <data name="Attestations.ValidUntil" xml:space="preserve"><value>Valid until</value></data>
+  <data name="Attestations.NotSaved" xml:space="preserve"><value>Nothing was saved: fix the highlighted fields.</value></data>
+  <data name="Attestations.Saved" xml:space="preserve"><value>{0}: {1}.</value></data>
+  <data name="Attestations.List" xml:space="preserve"><value>Suppliers</value></data>
+  <data name="Attestations.Supplier" xml:space="preserve"><value>Supplier</value></data>
+  <data name="Attestations.Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Attestations.AllStatuses" xml:space="preserve"><value>All</value></data>
+  <data name="Attestations.Filter.ToHandle" xml:space="preserve"><value>To obtain before paying</value></data>
+  <data name="Attestations.Status.NotRequired" xml:space="preserve"><value>Not required</value></data>
+  <data name="Attestations.Status.Missing" xml:space="preserve"><value>Missing</value></data>
+  <data name="Attestations.Status.Expired" xml:space="preserve"><value>Expired</value></data>
+  <data name="Attestations.Status.NotVerified" xml:space="preserve"><value>Code to verify</value></data>
+  <data name="Attestations.Status.ExpiringSoon" xml:space="preserve"><value>Expiring soon</value></data>
+  <data name="Attestations.Status.Valid" xml:space="preserve"><value>Valid</value></data>
+  <data name="Attestations.Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Attestations.Track" xml:space="preserve"><value>Track</value></data>
+  <data name="Attestations.Edit" xml:space="preserve"><value>Update</value></data>
+  <data name="Attestations.Edit.Label" xml:space="preserve"><value>Certificate for {0}</value></data>
+  <data name="Attestations.Empty" xml:space="preserve"><value>No supplier</value></data>
+  <data name="Attestations.Empty.Text" xml:space="preserve"><value>The file's suppliers will appear here.</value></data>
+  <data name="Payees.AttestationDue" xml:space="preserve"><value>Due diligence certificate needed</value></data>
+  <data name="Error.Attestation.SupplierNotFound" xml:space="preserve"><value>This supplier no longer exists or is archived.</value></data>
+  <data name="Error.Attestation.AmountInvalid" xml:space="preserve"><value>The contract amount is positive, to the cent.</value></data>
+  <data name="Error.Attestation.DateInFuture" xml:space="preserve"><value>A certificate or verification date cannot be in the future.</value></data>
+  <data name="Error.Attestation.CodeInvalid" xml:space="preserve"><value>The security code has 8 to 20 letters and digits.</value></data>
+  <data name="Error.Attestation.VerificationNeedsCode" xml:space="preserve"><value>To record a verification, enter the certificate date and its code.</value></data>
+  <data name="Error.Attestation.VerifiedBeforeIssued" xml:space="preserve"><value>The verification cannot come before the certificate date.</value></data>
+</root>

@@ -9,6 +9,7 @@ using Lettra.Contracts.Suppliers;
 using Lettra.Domain.Common;
 using Lettra.Domain.Parties;
 using Lettra.Domain.SharedKernel;
+using Lettra.Domain.Vigilance;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.Application.Tests;
@@ -155,6 +156,56 @@ public sealed class PayeeCheckUseCaseTests : IAsyncLifetime
         row.MaskedIban.Should().Be("FR76 •••• 0189");
         row.ToReview.Should().BeTrue();
     }
+
+    [Fact]
+    public async Task Un_fournisseur_sans_attestation_de_vigilance_valable_passe_a_controler_apres_un_iban_change()
+    {
+        SupplierId changed = await CreateAsync("Location de salles");
+        _store.PendingIbanChanges.Add(changed);
+        await Commands.SendAsync(new VerifySupplierPayeeCommand(Dossier, changed), default);
+        SupplierId subcontractor = await CreateAsync("Maçonnerie Roux");
+        await Commands.SendAsync(new VerifySupplierPayeeCommand(Dossier, subcontractor), default);
+        SupplierId small = await CreateAsync("Papeterie Durand");
+        await Commands.SendAsync(new VerifySupplierPayeeCommand(Dossier, small), default);
+        _bank.Answer = new PayeeVerificationResult(PayeeMatch.CloseMatch, "Minoterie Dupuy");
+        SupplierId close = await CreateAsync("Minoterie Dupuis");
+        await Commands.SendAsync(new VerifySupplierPayeeCommand(Dossier, close), default);
+
+        (await SaveAttestationAsync(subcontractor, new SubcontractorAttestation.Draft(18_000m, null, null, null))).IsSuccess.Should().BeTrue();
+        (await SaveAttestationAsync(small, new SubcontractorAttestation.Draft(1_200m, null, null, null))).IsSuccess.Should().BeTrue();
+
+        (await ListAsync()).Select(r => r.SupplierId).Should().Equal(changed.Value, subcontractor.Value, close.Value);
+        (await ListAsync())[1].AttestationDue.Should().BeTrue();
+        (await ListAsync(onlyToReview: false)).Single(r => r.SupplierId == small.Value).AttestationDue.Should().BeFalse("sous le seuil");
+
+        long version = (await Queries.QueryAsync(new ListAttestationsQuery(Dossier), default)).Value.Rows.Single(r => r.SupplierId == subcontractor.Value).Version!.Value;
+        DateOnly issued = new(2026, 10, 1);
+        (await SaveAttestationAsync(subcontractor, new SubcontractorAttestation.Draft(18_000m, issued, "AB12CD34EF56", issued), version + 1))
+            .Errors.Should().ContainSingle().Which.Code.Should().Be(ConcurrencyErrors.VersionMismatchCode);
+        (await SaveAttestationAsync(subcontractor, new SubcontractorAttestation.Draft(18_000m, issued, "AB12CD34EF56", issued), version)).IsSuccess.Should().BeTrue();
+        (await ListAsync()).Select(r => r.SupplierId).Should().Equal(changed.Value, close.Value);
+    }
+
+    [Fact]
+    public async Task L_attestation_d_un_fournisseur_inconnu_supprime_ou_sans_droit_est_refusee()
+    {
+        SubcontractorAttestation.Draft draft = new(18_000m, null, null, null);
+        SupplierId deleted = await CreateAsync("Ancien sous-traitant");
+        await Commands.SendAsync(new DeleteSupplierCommand(Dossier, deleted, null), default);
+
+        (await SaveAttestationAsync(SupplierId.New(), draft)).Errors.Should().ContainSingle().Which.Code.Should().Be(AttestationErrors.SupplierNotFoundCode);
+        (await SaveAttestationAsync(deleted, draft)).Errors.Should().ContainSingle().Which.Code.Should().Be(AttestationErrors.SupplierNotFoundCode);
+        (await SaveAttestationAsync(await CreateAsync("Maçonnerie Roux"), draft with { ContractAmountExclTax = -1m }))
+            .Errors.Should().ContainSingle().Which.Code.Should().Be(AttestationErrors.AmountInvalidCode);
+
+        _permissions.Granted.Remove(Permission.TiersModifier);
+        (await SaveAttestationAsync(await CreateAsync("Charpente Petit"), draft)).Errors.Should().ContainSingle().Which.Code.Should().Be(SecurityErrors.ForbiddenCode);
+        _permissions.Granted.Remove(Permission.TiersConsulter);
+        (await Queries.QueryAsync(new ListAttestationsQuery(Dossier), default)).Errors.Should().ContainSingle().Which.Code.Should().Be(SecurityErrors.ForbiddenCode);
+    }
+
+    private Task<Result> SaveAttestationAsync(SupplierId supplier, SubcontractorAttestation.Draft draft, long? version = null) =>
+        Commands.SendAsync(new SaveAttestationCommand(Dossier, supplier, draft, version), default);
 
     [Fact]
     public async Task La_recherche_ignore_accents_et_casse_et_le_tri_par_nom_s_inverse()

@@ -232,6 +232,31 @@ internal sealed class InMemoryVigilanceStore : Lettra.Application.Abstractions.C
     }
 }
 
+/// <summary>Attestations de vigilance en mémoire ; les fournisseurs viennent de <see cref="Suppliers"/> et des attestations gardées.</summary>
+internal sealed class InMemoryAttestationStore : Lettra.Application.Abstractions.Persistence.IAttestationStore
+{
+    private readonly ConcurrentDictionary<SupplierId, Lettra.Domain.Vigilance.SubcontractorAttestation> _attestations = new();
+
+    public List<(SupplierId Id, string Name)> Suppliers { get; } = [];
+
+    public Task<Lettra.Domain.Vigilance.SubcontractorAttestation?> FindAsync(SupplierId supplier, CancellationToken cancellationToken) =>
+        Task.FromResult(_attestations.GetValueOrDefault(supplier));
+
+    public Task AddAsync(Lettra.Domain.Vigilance.SubcontractorAttestation attestation, CancellationToken cancellationToken)
+    {
+        _attestations[attestation.Id] = attestation;
+        return Task.CompletedTask;
+    }
+
+    public Task<IReadOnlyList<Lettra.Application.Abstractions.Persistence.SupplierAttestationEntry>> ListAsync(CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<Lettra.Application.Abstractions.Persistence.SupplierAttestationEntry>>(
+            [
+                .. Suppliers.Select(s => new Lettra.Application.Abstractions.Persistence.SupplierAttestationEntry(s.Id, s.Name, _attestations.GetValueOrDefault(s.Id))),
+                .. _attestations.Where(a => Suppliers.All(s => s.Id != a.Key))
+                    .Select(a => new Lettra.Application.Abstractions.Persistence.SupplierAttestationEntry(a.Key, a.Key.Value.ToString(), a.Value)),
+            ]);
+}
+
 /// <summary>Tableau de bord d'un dossier vide : aucune pièce.</summary>
 internal sealed class NoBillingKpis : Lettra.Application.Features.Kpi.IBillingKpiReader
 {
@@ -250,6 +275,7 @@ internal static class CabinetFakesRegistration
         services.AddSingleton<Lettra.Application.Abstractions.Cabinet.IDossierReviewStore>(stores);
         services.AddSingleton<Lettra.Application.Abstractions.Cabinet.IMissionStore>(new InMemoryMissionStore());
         services.AddSingleton<Lettra.Application.Abstractions.Cabinet.IVigilanceStore>(new InMemoryVigilanceStore());
+        services.AddSingleton<Lettra.Application.Abstractions.Persistence.IAttestationStore>(new InMemoryAttestationStore());
         services.AddSingleton<Lettra.Application.Features.Kpi.IBillingKpiReader>(new NoBillingKpis());
         return services.AddRecurringFakes();
     }

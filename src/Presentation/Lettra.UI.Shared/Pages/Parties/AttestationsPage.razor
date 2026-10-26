@@ -1,0 +1,340 @@
+@page "/attestations"
+@using Lettra.Contracts.Vigilance
+@using Lettra.UI.Shared.Components.Explorer
+@inject IAttestationsGateway Attestations
+@inject ToastService Toasts
+@inject TimeProvider Clock
+@inject IStringLocalizer<SharedResource> L
+@* Attestations de vigilance des fournisseurs : pour chaque contrat d'au moins 5 000 € HT, l'attestation URSSAF reçue à la
+   signature puis tous les six mois, et la vérification de son code sur le site de l'URSSAF. Un fournisseur dont
+   l'attestation manque, a expiré ou n'est pas vérifiée est signalé avant tout paiement. *@
+
+<PageTitle>@L["Attestations.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Attestations.Title"]</h1>
+        <p class="lettra-muted">@L["Attestations.Subtitle"]</p>
+    </div>
+</div>
+
+<GeneralErrors Errors="_errors" />
+
+@if (_view is not { } view)
+{
+    <ListSkeleton Columns="6" />
+}
+else
+{
+    <section class="lt-banking-stats" id="attestations-stats" aria-label="@L["Attestations.Stats"]">
+        <div class="@($"lt-banking-stat {(Blocking(view) > 0 ? "is-pending" : "is-proposed")}")">
+            <span>@L["Attestations.Stat.Blocking"]</span>
+            <strong id="attestations-blocking">@Blocking(view)</strong>
+            <small class="lettra-muted">@L["Attestations.Stat.Blocking.Hint"]</small>
+        </div>
+        <div class="lt-banking-stat">
+            <span>@L["Attestations.Stat.Soon"]</span>
+            <strong id="attestations-soon">@Count(view, AttestationStatusDto.ExpiringSoon)</strong>
+            <small class="lettra-muted">@L["Attestations.Stat.Soon.Hint"]</small>
+        </div>
+        <div class="lt-banking-stat">
+            <span>@L["Attestations.Stat.Valid"]</span>
+            <strong id="attestations-valid">@Count(view, AttestationStatusDto.Valid)</strong>
+        </div>
+        <div class="lt-banking-stat">
+            <span>@L["Attestations.Stat.NotRequired"]</span>
+            <strong id="attestations-not-required">@Count(view, AttestationStatusDto.NotRequired)</strong>
+            <small class="lettra-muted">@L["Attestations.Stat.NotRequired.Hint"]</small>
+        </div>
+    </section>
+
+    @if (_editing is { } editing)
+    {
+        <section class="lettra-card lt-mission-panel" aria-labelledby="attestation-form-title">
+            <div class="lt-panel-head">
+                <h2 id="attestation-form-title">@string.Format(Culture, L["Attestations.Form"], editing.SupplierName)</h2>
+            </div>
+            <form class="lettra-form-grid" id="attestation-form" @onsubmit="SaveAsync" @onsubmit:preventDefault="true">
+                <fieldset>
+                    <legend>@L["Attestations.Form.Contract"]</legend>
+                    <div class="lettra-field">
+                        <label for="attestation-amount">@L["Attestations.Amount"]</label>
+                        <input id="attestation-amount" type="number" inputmode="decimal" step="0.01" min="0" @bind="_model.ContractAmountExclTax" required />
+                        <FieldErrors Field="ContractAmountExclTax" ServerErrors="_fieldErrors" />
+                    </div>
+                    <p class="lettra-hint lettra-field-wide">@L["Attestations.Amount.Hint"]</p>
+                </fieldset>
+                <fieldset>
+                    <legend>@L["Attestations.Form.Attestation"]</legend>
+                    <div class="lettra-field">
+                        <label for="attestation-issued">@L["Attestations.IssuedOn"]</label>
+                        <DateField Id="attestation-issued" Value="_model.IssuedOn" Max="Today" ValueChanged="d => _model.IssuedOn = d" />
+                        <FieldErrors Field="IssuedOn" ServerErrors="_fieldErrors" />
+                    </div>
+                    <div class="lettra-field">
+                        <label for="attestation-code">@L["Attestations.Code"]</label>
+                        <input id="attestation-code" maxlength="30" autocomplete="off" spellcheck="false" @bind="_model.SecurityCode" />
+                        <FieldErrors Field="SecurityCode" ServerErrors="_fieldErrors" />
+                    </div>
+                    <div class="lettra-field">
+                        <label for="attestation-verified">@L["Attestations.VerifiedOn"]</label>
+                        <DateField Id="attestation-verified" Value="_model.VerifiedOn" Max="Today" ValueChanged="d => _model.VerifiedOn = d" />
+                        <FieldErrors Field="VerifiedOn" ServerErrors="_fieldErrors" />
+                    </div>
+                    <p class="lettra-hint lettra-field-wide"><Icon Name="info" Size="16" /> @L["Attestations.Verify.Hint"]</p>
+                </fieldset>
+                <div class="lt-form-actions">
+                    <button type="submit" class="lettra-button" id="attestation-save" disabled="@_busy">@L["Billing.Command.Save"]</button>
+                    <button type="button" class="lettra-button is-ghost" id="attestation-cancel" @onclick="() => _editing = null">@L["Explorer.Cancel"]</button>
+                    @if (_fieldErrors.Any(e => e.Target is not null))
+                    {
+                        <p class="validation-message" id="attestation-not-saved" role="alert">@L["Attestations.NotSaved"]</p>
+                    }
+                </div>
+            </form>
+        </section>
+    }
+
+    <section class="lettra-card lt-mission-panel" aria-labelledby="attestations-list-title">
+        <div class="lt-panel-head">
+            <h2 id="attestations-list-title">@L["Attestations.List"]</h2>
+        </div>
+        @if (view.Rows.Count == 0)
+        {
+            <EmptyState Id="attestations-empty" IconName="truck" Title="@L["Attestations.Empty"]" Text="@L["Attestations.Empty.Text"]" />
+        }
+        else
+        {
+            <ListFilterBar Id="attestations-filters" ActiveCount="ActiveFilters" OnReset="ResetFilters">
+                <ChildContent>
+                    <div class="lt-filter">
+                        <label for="attestations-search">@L["Lists.Search"]</label>
+                        <input id="attestations-search" type="search" @bind="_search" @bind:event="oninput" autocomplete="off" />
+                    </div>
+                    <div class="lt-filter">
+                        <label for="attestations-filter-status">@L["Attestations.Status"]</label>
+                        <select id="attestations-filter-status" @bind="_status">
+                            <option value="">@L["Attestations.AllStatuses"]</option>
+                            <option value="@ToHandle">@L["Attestations.Filter.ToHandle"]</option>
+                            @foreach (AttestationStatusDto status in Enum.GetValues<AttestationStatusDto>())
+                            {
+                                <option value="@status">@L[$"Attestations.Status.{status}"]</option>
+                            }
+                        </select>
+                    </div>
+                    <SortSelect Id="attestations-sort" Options="SortOptions" State="_sort" OnSort="StateHasChanged" />
+                </ChildContent>
+            </ListFilterBar>
+            @if (Shown.Count == 0)
+            {
+                <EmptyState Id="attestations-filtered-empty" IconName="search" Title="@L["Lists.Empty.FilteredTitle"]" Text="@L["Lists.Empty.Filtered"]" />
+            }
+            else
+            {
+                <div class="lt-list-scroll">
+                    <table class="lettra-table lt-cards" id="attestations-table">
+                        <thead>
+                            <tr>
+                                <SortHeader Option="SortOptions[0]" State="_sort" OnSort="StateHasChanged" Id="attestations-sort-supplier" />
+                                <SortHeader Option="SortOptions[1]" State="_sort" OnSort="StateHasChanged" Id="attestations-sort-amount" Class="lg-num" />
+                                <SortHeader Option="SortOptions[2]" State="_sort" OnSort="StateHasChanged" Id="attestations-sort-until" />
+                                <th scope="col">@L["Attestations.VerifiedOn"]</th>
+                                <SortHeader Option="SortOptions[3]" State="_sort" OnSort="StateHasChanged" Id="attestations-sort-status" />
+                                <th scope="col"><span class="lettra-visually-hidden">@L["Attestations.Actions"]</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (SupplierAttestationRow row in Shown)
+                            {
+                                <tr @key="row.SupplierId" id="@($"attestation-{row.SupplierId}")">
+                                    <td><a href="@($"suppliers/{row.SupplierId}")">@row.SupplierName</a></td>
+                                    <td data-label="@L["Attestations.Amount"]" class="lg-num">@(row.ContractAmountExclTax is { } amount ? ExplorerText.Money(amount) : "—")</td>
+                                    <td data-label="@L["Attestations.ValidUntil"]">
+                                        @if (row.ValidUntil is { } until)
+                                        {
+                                            <span>@DateText.Format(until, Culture)</span>
+                                            <small class="lettra-muted lt-mission-note">@string.Format(Culture, L["Attestations.IssuedOnShort"], DateText.Format(row.IssuedOn!.Value, Culture))</small>
+                                        }
+                                        else
+                                        {
+                                            <span class="lettra-muted">—</span>
+                                        }
+                                    </td>
+                                    <td data-label="@L["Attestations.VerifiedOn"]">@(row.VerifiedOn is { } verified ? DateText.Format(verified, Culture) : "—")</td>
+                                    <td data-label="@L["Attestations.Status"]"><span class="@($"lettra-status {StatusClass(row.Status)}")">@L[$"Attestations.Status.{row.Status}"]</span></td>
+                                    <td class="lt-banking-line-actions">
+                                        <button type="button" class="lettra-button is-small is-secondary" id="@($"attestation-edit-{row.SupplierId}")" disabled="@_busy"
+                                                aria-label="@string.Format(Culture, L["Attestations.Edit.Label"], row.SupplierName)" @onclick="() => Edit(row)">
+                                            @L[row.Version is null ? "Attestations.Track" : "Attestations.Edit"]
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        }
+    </section>
+}
+
+@code {
+    /// <summary>Valeur du filtre « à traiter avant de payer » (attestation manquante, périmée ou non vérifiée).</summary>
+    private const string ToHandle = "to-handle";
+
+    private SupplierAttestationsResponse? _view;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private IReadOnlyList<ErrorDetail> _fieldErrors = [];
+    private bool _busy;
+    private SupplierAttestationRow? _editing;
+    private SaveAttestationRequest _model = new();
+    private string? _search;
+    private string _status = string.Empty;
+
+    // Ce qui bloque un paiement d'abord (l'ordre du serveur).
+    private readonly SortState<AttestationColumn> _sort = new(AttestationColumn.Status, SortDirectionDto.Ascending);
+
+    private enum AttestationColumn
+    {
+        Supplier,
+        Amount,
+        ValidUntil,
+        Status,
+    }
+
+    private IReadOnlyList<SortOption<AttestationColumn>> SortOptions =>
+    [
+        new(AttestationColumn.Supplier, L["Attestations.Supplier"]),
+        new(AttestationColumn.Amount, L["Attestations.Amount"], SortDirectionDto.Descending),
+        new(AttestationColumn.ValidUntil, L["Attestations.ValidUntil"]),
+        new(AttestationColumn.Status, L["Attestations.Status"]),
+    ];
+
+    private static readonly Dictionary<AttestationColumn, Func<SupplierAttestationRow, object?>> SortKeys = new()
+    {
+        [AttestationColumn.Supplier] = r => r.SupplierName,
+        [AttestationColumn.Amount] = r => r.ContractAmountExclTax,
+        [AttestationColumn.ValidUntil] = r => r.ValidUntil,
+        [AttestationColumn.Status] = r => Urgency(r.Status),
+    };
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private DateOnly Today => Clock.LocalToday();
+
+    private IReadOnlyList<SupplierAttestationRow> Shown => ListSorting.Sort(
+        (_view?.Rows ?? [])
+            .Where(r => string.IsNullOrWhiteSpace(_search) || ListSorting.Matches(r.SupplierName, _search))
+            .Where(r => _status.Length == 0 || (_status == ToHandle ? BlocksPayment(r.Status) : r.Status.ToString() == _status)),
+        _sort,
+        SortKeys);
+
+    private int ActiveFilters => (string.IsNullOrWhiteSpace(_search) ? 0 : 1) + (_status.Length == 0 ? 0 : 1);
+
+    protected override async Task OnInitializedAsync()
+    {
+        OperationResult<SupplierAttestationsResponse> result = await Attestations.ListAsync(CancellationToken.None);
+        _errors = result.Errors;
+        _view = result.Value ?? new SupplierAttestationsResponse([]);
+    }
+
+    private void Edit(SupplierAttestationRow row)
+    {
+        _editing = row;
+        _model = new SaveAttestationRequest
+        {
+            // Sans zéro inutile (« 18000.0 » relu de la base devient « 18000 » dans le champ).
+            ContractAmountExclTax = decimal.Parse((row.ContractAmountExclTax ?? 0m).ToString("0.##", CultureInfo.InvariantCulture), CultureInfo.InvariantCulture),
+            IssuedOn = row.IssuedOn,
+            SecurityCode = row.SecurityCode,
+            VerifiedOn = row.VerifiedOn,
+        };
+        _fieldErrors = [];
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_editing is not { } editing)
+        {
+            return;
+        }
+
+        // Les oublis prévisibles sont signalés ici, sans aller-retour (le serveur les vérifie aussi).
+        _fieldErrors = Check();
+        if (_fieldErrors.Count > 0)
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            OperationResult<SupplierAttestationsResponse> saved = await Attestations.SaveAsync(editing.SupplierId, _model, editing.Version, CancellationToken.None);
+            if (saved is { IsSuccess: true, Value: { } view })
+            {
+                _view = view;
+                _editing = null;
+                _errors = [];
+                SupplierAttestationRow? row = view.Rows.FirstOrDefault(r => r.SupplierId == editing.SupplierId);
+                Toasts.Show(ToastKind.Success, string.Format(Culture, L["Attestations.Saved"], editing.SupplierName,
+                    L[$"Attestations.Status.{row?.Status ?? AttestationStatusDto.NotRequired}"]));
+            }
+            else
+            {
+                _fieldErrors = saved.Errors;
+                _errors = [.. saved.Errors.Where(e => e.Target is null)];
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private List<ErrorDetail> Check()
+    {
+        List<ErrorDetail> errors = [];
+        if (_model.ContractAmountExclTax < 0m)
+        {
+            errors.Add(new ErrorDetail(ErrorCodes.Attestation.AmountInvalid, "ContractAmountExclTax"));
+        }
+
+        if (_model.VerifiedOn is not null && (_model.IssuedOn is null || string.IsNullOrWhiteSpace(_model.SecurityCode)))
+        {
+            errors.Add(new ErrorDetail(ErrorCodes.Attestation.VerificationNeedsCode, "VerifiedOn"));
+        }
+        else if (_model.VerifiedOn < _model.IssuedOn)
+        {
+            errors.Add(new ErrorDetail(ErrorCodes.Attestation.VerifiedBeforeIssued, "VerifiedOn"));
+        }
+
+        return errors;
+    }
+
+    private void ResetFilters() => (_search, _status) = (null, string.Empty);
+
+    private static int Count(SupplierAttestationsResponse view, AttestationStatusDto status) => view.Rows.Count(r => r.Status == status);
+
+    private static int Blocking(SupplierAttestationsResponse view) => view.Rows.Count(r => BlocksPayment(r.Status));
+
+    private static bool BlocksPayment(AttestationStatusDto status) =>
+        status is AttestationStatusDto.Missing or AttestationStatusDto.Expired or AttestationStatusDto.NotVerified;
+
+    private static int Urgency(AttestationStatusDto status) => status switch
+    {
+        AttestationStatusDto.Expired => 0,
+        AttestationStatusDto.Missing => 1,
+        AttestationStatusDto.NotVerified => 2,
+        AttestationStatusDto.ExpiringSoon => 3,
+        AttestationStatusDto.Valid => 4,
+        _ => 5,
+    };
+
+    private static string StatusClass(AttestationStatusDto status) => status switch
+    {
+        AttestationStatusDto.Valid => "is-issued",
+        AttestationStatusDto.ExpiringSoon => "is-validated",
+        AttestationStatusDto.NotRequired => "is-draft",
+        _ => "is-refused",
+    };
+}

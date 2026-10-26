@@ -114,5 +114,7 @@
   <data name="Cabinet.Indicator.fournisseurs.iban-a-verifier.Due" xml:space="preserve"><value>depuis le {0}</value></data>
   <data name="Cabinet.Indicator.lcb-ft.fiche" xml:space="preserve"><value>Anti-blanchiment</value></data>
   <data name="Cabinet.Indicator.lcb-ft.fiche.Due" xml:space="preserve"><value>revue le {0}</value></data>
+  <data name="Cabinet.Indicator.fournisseurs.attestations-vigilance" xml:space="preserve"><value>Attestations URSSAF</value></data>
+  <data name="Cabinet.Indicator.fournisseurs.attestations-vigilance.Due" xml:space="preserve"><value>fin le {0}</value></data>
   <data name="Cabinet.Indicator.facture-electronique.preparation" xml:space="preserve"><value>E-facture</value></data>
 </root>

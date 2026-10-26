@@ -25,7 +25,8 @@ public sealed record PayeeCheckResponse(PayeeMatchDto Result, DateTimeOffset Che
 
 /// <summary>
 /// Un fournisseur payable par virement, avec ses contrôles avant paiement : nom du titulaire comparé au nom du fournisseur,
-/// dernière vérification du bénéficiaire, changement d'IBAN en attente. <c>ToReview</c> : au moins un contrôle n'est pas vert.
+/// dernière vérification du bénéficiaire, changement d'IBAN en attente, attestation de vigilance exigée mais absente, périmée
+/// ou non vérifiée (<c>AttestationDue</c>). <c>ToReview</c> : au moins un contrôle n'est pas vert.
 /// </summary>
 public sealed record PayeeCheckRowResponse(
     Guid SupplierId,
@@ -35,4 +36,5 @@ public sealed record PayeeCheckRowResponse(
     PayeeMatchDto? HolderNameMatch,
     PayeeCheckResponse? Check,
     bool IbanChangePending,
-    bool ToReview);
+    bool ToReview,
+    bool AttestationDue = false);

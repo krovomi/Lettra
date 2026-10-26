@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.Attestations" xml:space="preserve"><value>Attestations de vigilance</value></data>
+  <data name="Attestations.Title" xml:space="preserve"><value>Attestations de vigilance des fournisseurs</value></data>
+  <data name="Attestations.Subtitle" xml:space="preserve"><value>Pour chaque contrat d'au moins 5 000 € HT, l'attestation URSSAF reçue à la signature puis tous les six mois. Sans elle, l'entreprise répond des cotisations et salaires d'un sous-traitant qui travaillerait au noir.</value></data>
+  <data name="Attestations.Stats" xml:space="preserve"><value>Où en sont les attestations</value></data>
+  <data name="Attestations.Stat.Blocking" xml:space="preserve"><value>À obtenir avant de payer</value></data>
+  <data name="Attestations.Stat.Blocking.Hint" xml:space="preserve"><value>Manquante, expirée ou non vérifiée</value></data>
+  <data name="Attestations.Stat.Soon" xml:space="preserve"><value>Expirent bientôt</value></data>
+  <data name="Attestations.Stat.Soon.Hint" xml:space="preserve"><value>Dans les trente jours : demandez la suivante</value></data>
+  <data name="Attestations.Stat.Valid" xml:space="preserve"><value>Valables</value></data>
+  <data name="Attestations.Stat.NotRequired" xml:space="preserve"><value>Non exigées</value></data>
+  <data name="Attestations.Stat.NotRequired.Hint" xml:space="preserve"><value>Contrat de moins de 5 000 € HT ou fournisseur non suivi</value></data>
+  <data name="Attestations.Form" xml:space="preserve"><value>Attestation de {0}</value></data>
+  <data name="Attestations.Form.Contract" xml:space="preserve"><value>Contrat</value></data>
+  <data name="Attestations.Amount" xml:space="preserve"><value>Montant du contrat HT</value></data>
+  <data name="Attestations.Amount.Hint" xml:space="preserve"><value>Le montant du contrat en cours, ou des prestations prévues sur l'année. À partir de 5 000 € HT, l'attestation est exigée.</value></data>
+  <data name="Attestations.Form.Attestation" xml:space="preserve"><value>Attestation reçue</value></data>
+  <data name="Attestations.IssuedOn" xml:space="preserve"><value>Date de l'attestation</value></data>
+  <data name="Attestations.IssuedOnShort" xml:space="preserve"><value>du {0}</value></data>
+  <data name="Attestations.Code" xml:space="preserve"><value>Code de sécurité</value></data>
+  <data name="Attestations.VerifiedOn" xml:space="preserve"><value>Code vérifié le</value></data>
+  <data name="Attestations.Verify.Hint" xml:space="preserve"><value>Vérifiez le code de sécurité sur le site de l'URSSAF (rubrique « Vérifier une attestation »), puis notez la date. Une attestation vaut six mois.</value></data>
+  <data name="Attestations.ValidUntil" xml:space="preserve"><value>Valable jusqu'au</value></data>
+  <data name="Attestations.NotSaved" xml:space="preserve"><value>Rien n'est enregistré : corrigez les champs signalés.</value></data>
+  <data name="Attestations.Saved" xml:space="preserve"><value>{0} : {1}.</value></data>
+  <data name="Attestations.List" xml:space="preserve"><value>Fournisseurs</value></data>
+  <data name="Attestations.Supplier" xml:space="preserve"><value>Fournisseur</value></data>
+  <data name="Attestations.Status" xml:space="preserve"><value>État</value></data>
+  <data name="Attestations.AllStatuses" xml:space="preserve"><value>Tous</value></data>
+  <data name="Attestations.Filter.ToHandle" xml:space="preserve"><value>À obtenir avant de payer</value></data>
+  <data name="Attestations.Status.NotRequired" xml:space="preserve"><value>Non exigée</value></data>
+  <data name="Attestations.Status.Missing" xml:space="preserve"><value>Manquante</value></data>
+  <data name="Attestations.Status.Expired" xml:space="preserve"><value>Expirée</value></data>
+  <data name="Attestations.Status.NotVerified" xml:space="preserve"><value>Code à vérifier</value></data>
+  <data name="Attestations.Status.ExpiringSoon" xml:space="preserve"><value>Expire bientôt</value></data>
+  <data name="Attestations.Status.Valid" xml:space="preserve"><value>Valable</value></data>
+  <data name="Attestations.Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Attestations.Track" xml:space="preserve"><value>Suivre</value></data>
+  <data name="Attestations.Edit" xml:space="preserve"><value>Mettre à jour</value></data>
+  <data name="Attestations.Edit.Label" xml:space="preserve"><value>Attestation de {0}</value></data>
+  <data name="Attestations.Empty" xml:space="preserve"><value>Aucun fournisseur</value></data>
+  <data name="Attestations.Empty.Text" xml:space="preserve"><value>Les fournisseurs du dossier apparaîtront ici.</value></data>
+  <data name="Payees.AttestationDue" xml:space="preserve"><value>Attestation de vigilance à obtenir</value></data>
+  <data name="Error.Attestation.SupplierNotFound" xml:space="preserve"><value>Ce fournisseur n'existe plus ou est archivé.</value></data>
+  <data name="Error.Attestation.AmountInvalid" xml:space="preserve"><value>Le montant du contrat est positif, au centime près.</value></data>
+  <data name="Error.Attestation.DateInFuture" xml:space="preserve"><value>Une date d'attestation ou de vérification ne peut pas être dans le futur.</value></data>
+  <data name="Error.Attestation.CodeInvalid" xml:space="preserve"><value>Le code de sécurité compte de 8 à 20 lettres et chiffres.</value></data>
+  <data name="Error.Attestation.VerificationNeedsCode" xml:space="preserve"><value>Pour noter une vérification, saisissez la date de l'attestation et son code.</value></data>
+  <data name="Error.Attestation.VerifiedBeforeIssued" xml:space="preserve"><value>La vérification ne peut pas précéder la date de l'attestation.</value></data>
+</root>
