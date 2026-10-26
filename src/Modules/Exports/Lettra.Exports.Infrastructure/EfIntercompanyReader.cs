@@ -1,4 +1,3 @@
-using Lettra.Application.Abstractions.Cabinet;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Domain.Banking;
 using Lettra.Domain.Billing;

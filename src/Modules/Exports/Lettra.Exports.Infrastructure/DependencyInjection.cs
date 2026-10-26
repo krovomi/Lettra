@@ -1,4 +1,3 @@
-using Lettra.Application.Abstractions.Cabinet;
 using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Exports.Application;

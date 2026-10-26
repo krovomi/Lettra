@@ -1,8 +1,7 @@
-using Lettra.Application.Abstractions.Cabinet;
-using Lettra.Application.Features.Cabinet;
 using Lettra.Contracts.Insights;
+using Lettra.Exports.Application.Insights;
 
-namespace Lettra.Application.Tests;
+namespace Lettra.Exports.Tests.Insights;
 
 /// <summary>Le rapprochement intra-groupe : couples, virements reconnus par numéro puis par montant, écarts.</summary>
 public sealed class IntercompanyReconciliationTests

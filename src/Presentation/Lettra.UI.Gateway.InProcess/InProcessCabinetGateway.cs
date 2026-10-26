@@ -1,3 +1,4 @@
+using Lettra.Exports.Application.Insights;
 using Lettra.Application.Features.Cabinet;
 using Lettra.Application.Features.Dossiers;
 using Lettra.Contracts.Cabinet;

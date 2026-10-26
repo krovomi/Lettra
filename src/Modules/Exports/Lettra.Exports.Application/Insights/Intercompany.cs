@@ -1,4 +1,3 @@
-using Lettra.Application.Abstractions.Cabinet;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Features.Dossiers;
@@ -7,7 +6,7 @@ using Lettra.Contracts.Insights;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
 
-namespace Lettra.Application.Features.Cabinet;
+namespace Lettra.Exports.Application.Insights;
 
 /// <summary>Les comptes entre les sociétés d'un même groupe, parmi les dossiers que l'utilisateur peut lire.</summary>
 public sealed record GetIntercompanyQuery : IQuery<Result<IntercompanyResponse>>, IFilterByPermission

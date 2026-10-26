@@ -1,10 +1,12 @@
+using System.Globalization;
+using System.Text;
+using System.Xml.Linq;
 using Lettra.Contracts.Banking;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
 using Lettra.Contracts.Suppliers;
-using Lettra.Exports.Application.Banking;
 using Lettra.UI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -105,16 +107,16 @@ internal sealed class DemoGroupLoader(IServiceProvider services, DemoSession ses
             },
             cancellationToken).ConfigureAwait(false), "fournisseur du groupe");
         string payee = sold.Name.ToUpperInvariant();
-        DemoBankEntry[] transfers =
+        (decimal Amount, string Label)[] transfers =
         [
-            new(today, -issued[0].Totals.TotalInclTax, $"VIR SEPA {payee} FACTURE {issued[0].Number}", sold.Name, sellerIban),
-            new(today, -issued[2].Totals.TotalInclTax, $"VIR SEPA {payee} PRESTATIONS", sold.Name, sellerIban),
+            (issued[0].Totals.TotalInclTax, $"VIR SEPA {payee} FACTURE {issued[0].Number}"),
+            (issued[2].Totals.TotalInclTax, $"VIR SEPA {payee} PRESTATIONS"),
         ];
         DemoDossierLoader.Ok(await _banking.ImportStatementAsync(
             new ImportBankStatementRequest
             {
                 FileName = $"releve-groupe-{today:yyyy-MM-dd}.xml",
-                ContentBase64 = Convert.ToBase64String(DemoBankStatement.Statement(buyerIban, $"GROUPE-{today:yyyyMMdd}", transfers, today)),
+                ContentBase64 = Convert.ToBase64String(Transfers(buyerIban, sold.Name, sellerIban, transfers, today)),
             },
             cancellationToken).ConfigureAwait(false), "relevé du groupe");
     }
@@ -123,5 +125,36 @@ internal sealed class DemoGroupLoader(IServiceProvider services, DemoSession ses
     {
         session.CurrentDossierId = dossier;
         return (await _settings.GetCompanyProfileAsync(cancellationToken).ConfigureAwait(false)).Value;
+    }
+
+    private static readonly XNamespace Camt = "urn:iso:std:iso:20022:tech:xsd:camt.053.001.08";
+
+    /// <summary>Un relevé CAMT.053 du compte de l'acheteur : des virements du jour vers l'IBAN du vendeur.</summary>
+    private static byte[] Transfers(string account, string payee, string payeeIban, (decimal Amount, string Label)[] transfers, DateOnly today)
+    {
+        string day = today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        XElement statement = new(
+            Camt + "Stmt",
+            new XElement(Camt + "Id", $"GROUPE-{today:yyyyMMdd}"),
+            new XElement(Camt + "CreDtTm", day + "T07:00:00"),
+            new XElement(Camt + "Acct", new XElement(Camt + "Id", new XElement(Camt + "IBAN", account)), new XElement(Camt + "Ccy", "EUR")),
+            transfers.Select((t, i) => new XElement(
+                Camt + "Ntry",
+                new XElement(Camt + "Amt", new XAttribute("Ccy", "EUR"), t.Amount.ToString("0.00", CultureInfo.InvariantCulture)),
+                new XElement(Camt + "CdtDbtInd", "DBIT"),
+                new XElement(Camt + "Sts", new XElement(Camt + "Cd", "BOOK")),
+                new XElement(Camt + "BookgDt", new XElement(Camt + "Dt", day)),
+                new XElement(Camt + "AcctSvcrRef", $"GROUPE{today:yyyyMMdd}{i + 1:D4}"),
+                new XElement(Camt + "NtryDtls", new XElement(Camt + "TxDtls",
+                    new XElement(Camt + "RltdPties",
+                        new XElement(Camt + "Cdtr", new XElement(Camt + "Pty", new XElement(Camt + "Nm", payee))),
+                        new XElement(Camt + "CdtrAcct", new XElement(Camt + "Id", new XElement(Camt + "IBAN", payeeIban)))),
+                    new XElement(Camt + "RmtInf", new XElement(Camt + "Ustrd", t.Label)))))));
+        XDocument document = new(
+            new XDeclaration("1.0", "UTF-8", null),
+            new XElement(Camt + "Document", new XElement(Camt + "BkToCstmrStmt",
+                new XElement(Camt + "GrpHdr", new XElement(Camt + "MsgId", $"LETTRA-GROUPE-{today:yyyyMMdd}"), new XElement(Camt + "CreDtTm", day + "T07:00:00")),
+                statement)));
+        return Encoding.UTF8.GetBytes(document.Declaration + document.ToString(SaveOptions.DisableFormatting));
     }
 }

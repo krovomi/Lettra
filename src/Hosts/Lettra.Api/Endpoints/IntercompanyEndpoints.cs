@@ -1,7 +1,7 @@
 using Lettra.Api.Security;
+using Lettra.Exports.Application.Insights;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Messaging;
-using Lettra.Application.Features.Cabinet;
 using Lettra.Contracts.Insights;
 using Lettra.Domain.Common;
 using static Lettra.Api.Infrastructure.HttpResults;

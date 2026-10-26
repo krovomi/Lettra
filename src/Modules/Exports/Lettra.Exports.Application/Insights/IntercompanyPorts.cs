@@ -1,6 +1,6 @@
 using Lettra.Domain.SharedKernel;
 
-namespace Lettra.Application.Abstractions.Cabinet;
+namespace Lettra.Exports.Application.Insights;
 
 /// <summary>Ce que la fiche entreprise d'un dossier dit de la société : son SIREN et l'IBAN où elle se fait payer.</summary>
 public sealed record GroupCompanyIdentity(string? Siren, string? Iban);
