@@ -223,6 +223,7 @@ public sealed partial class PilotagePage
         Contracts.Cabinet.DossierIndicatorKeys.ReviewPending => "review",
         Contracts.Cabinet.DossierIndicatorKeys.ClientDueDiligence => "vigilance",
         Contracts.Cabinet.DossierIndicatorKeys.SupplierAttestations => "attestations",
+        Contracts.Cabinet.DossierIndicatorKeys.FeeReturn => "tax/fees",
         _ => "cabinet",
     };
 

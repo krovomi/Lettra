@@ -38,7 +38,8 @@ public sealed class TaxDeclarations(
     ITaxDocumentReader documents,
     ISalesJournalReader journal,
     IFiscalStore store,
-    IVatOnReceiptsSource receipts)
+    IVatOnReceiptsSource receipts,
+    IFeeReturnStore fees)
 {
     /// <summary>Les réglages enregistrés, ou ceux par défaut.</summary>
     public async Task<FiscalSettings> SettingsAsync(CancellationToken cancellationToken) =>
@@ -198,7 +199,8 @@ public sealed class TaxDeclarations(
             }
         }
 
-        return new FiscalCalendarInput(settings, profile.VatDeclarationRegime, profile.VatFranchise, today, desMonths, vatByYearEnd, []);
+        bool feeBeneficiaries = await fees.AnyBeneficiaryAsync(cancellationToken).ConfigureAwait(false);
+        return new FiscalCalendarInput(settings, profile.VatDeclarationRegime, profile.VatFranchise, today, desMonths, vatByYearEnd, [], feeBeneficiaries);
     }
 
     private async Task<(IReadOnlyList<VatOperation> Operations, IReadOnlyList<TaxDocument> Pieces)> OperationsAsync(

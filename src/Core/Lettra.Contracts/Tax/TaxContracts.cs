@@ -139,6 +139,9 @@ public enum FiscalObligationDto
 
     /// <summary>Liasse fiscale de l'exercice.</summary>
     TaxReturn = 8,
+
+    /// <summary>Déclaration des honoraires (DAS 2) de l'exercice, avec la déclaration de résultats.</summary>
+    FeeReturnDas2 = 9,
 }
 
 /// <summary>Où en est une échéance : à venir, dans les 7 jours, dépassée sans dépôt marqué, déposée, ou sans objet.</summary>
