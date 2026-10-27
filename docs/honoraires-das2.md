@@ -1,6 +1,6 @@
 # Honoraires à déclarer (DAS 2)
 
-Une entreprise qui verse à un même bénéficiaire plus de 1 200 € TTC dans l'exercice en honoraires, vacations, commissions, courtages, ristournes, droits d'auteur ou d'inventeur doit les déclarer à l'administration fiscale (Code général des impôts, art. 240 ; formulaire 2460-2-SD, dit DAS 2, ou fichier TD-DAS2). La déclaration se dépose avec la déclaration de résultats : le deuxième jour ouvré après le 1er mai pour un exercice clos au 31 décembre, trois mois après la clôture sinon. À défaut, l'amende est de 50 % des sommes non déclarées (art. 1736). Cet écran prépare cette déclaration pour le dossier du client.
+Une entreprise qui verse à un même bénéficiaire plus de 2 400 € dans l'exercice en honoraires, vacations, commissions, courtages, ristournes, droits d'auteur ou d'inventeur doit les déclarer à l'administration fiscale (Code général des impôts, art. 240 ; formulaire 2460-2-SD, dit DAS 2, ou fichier TD-DAS2). La déclaration se dépose avec la déclaration de résultats : le deuxième jour ouvré après le 1er mai pour un exercice clos au 31 décembre, trois mois après la clôture sinon. À défaut, l'amende est de 50 % des sommes non déclarées (art. 1736). Cet écran prépare cette déclaration pour le dossier du client.
 
 **Où** : menu Comptabilité › Déclarations, onglet « Honoraires (DAS 2) » (`/tax/fees`), dans le dossier du client. L'écran s'ouvre sur le dernier exercice clos ; les flèches passent d'un exercice à l'autre.
 
@@ -16,7 +16,7 @@ Une entreprise qui verse à un même bénéficiaire plus de 1 200 € TTC dans l
 
 - Les virements des relevés bancaires importés dont l'IBAN du destinataire est celui de la fiche fournisseur, pendant l'exercice ; Lettra compare des empreintes d'IBAN, comme le contrôle avant paiement.
 - Plus les sommes notées hors relevés pour cet exercice.
-- Le bénéficiaire est « à déclarer » au-delà de 1 200 € TTC, « sous le seuil » sinon.
+- Le bénéficiaire est « à déclarer » au-delà de 2 400 €, « sous le seuil » sinon. Le seuil est de 2 400 € par an et par bénéficiaire ([BOFiP](https://bofip.impots.gouv.fr/bofip/14327-PGP.html/ACTU-2024-00154)) ; le prototype applique encore l'ancien seuil de 1 200 € (voir plus bas).
 - L'écran indique jusqu'à quelle date les relevés sont importés : les virements plus récents ne sont pas encore comptés.
 - Un bénéficiaire français sans SIRET est signalé : la déclaration le demande.
 - Les modifications concurrentes sont refusées (version lue, en-tête `If-Match`).
@@ -29,7 +29,7 @@ L'écran se trie par bénéficiaire, nature ou total, et se filtre par nom et pa
 
 **Droits** : aucune permission nouvelle. Lire l'écran : la permission de consulter le dossier. Suivre un bénéficiaire, noter une somme, marquer déposée : la permission de travailler sur la comptabilité (celle de l'export FEC). Le client (espace client) n'y a pas accès.
 
-**Ce qui n'est pas fait** : la production du fichier TD-DAS2 et son dépôt (Lettra prépare, le cabinet déclare) ; la distinction des frais remboursés et des avantages en nature ; la retenue à la source sur les bénéficiaires étrangers ; la lecture des paiements par carte ou des factures fournisseurs (seuls les virements des relevés et les sommes notées comptent).
+**Ce qui n'est pas fait** : le seuil de 2 400 € (le prototype compare encore à 1 200 €, si bien qu'un bénéficiaire payé entre 1 200 € et 2 400 € apparaît « à déclarer » à tort) ; la production du fichier TD-DAS2 et son dépôt (Lettra prépare, le cabinet déclare) ; la distinction des frais remboursés et des avantages en nature ; la retenue à la source sur les bénéficiaires étrangers ; la lecture des paiements par carte ou des factures fournisseurs (seuls les virements des relevés et les sommes notées comptent).
 
 ## Données personnelles
 
