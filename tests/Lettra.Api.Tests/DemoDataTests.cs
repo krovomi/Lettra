@@ -68,6 +68,7 @@ public sealed class DemoDataTests : IDisposable
         Siret.Create(scenario.Profile.Siret).IsSuccess.Should().BeTrue();
         VatNumber.Create(scenario.Profile.VatNumber).IsSuccess.Should().BeTrue();
         Iban.Create(scenario.Profile.Iban).IsSuccess.Should().BeTrue();
+        scenario.Profile.Size.Should().NotBe(CompanySizeDto.Unknown, "la fiche donne la date d'émission de la réforme");
         foreach (DemoCustomer customer in scenario.Customers.Where(c => c.Request.Kind == CustomerKindDto.Company))
         {
             customer.Request.Siren.Should().StartWith("9", "plage de démonstration");

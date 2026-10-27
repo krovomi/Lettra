@@ -15,6 +15,18 @@ internal static class UblWriter
     private static readonly XNamespace Cac = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2";
     private static readonly XNamespace Cbc = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2";
 
+    /// <summary>Période facturée (BT-73, BT-74) et, avec l'option sur les débits, le code d'exigibilité de la TVA (BT-8).</summary>
+    private static XElement? Period(EInvoice invoice)
+    {
+        bool period = invoice.PeriodStart is not null && invoice.PeriodEnd is not null;
+        return !period && !invoice.VatOnDebits
+            ? null
+            : new XElement(Cac + "InvoicePeriod",
+                period ? new XElement(Cbc + "StartDate", EInvoice.IsoDate(invoice.PeriodStart!.Value)) : null,
+                period ? new XElement(Cbc + "EndDate", EInvoice.IsoDate(invoice.PeriodEnd!.Value)) : null,
+                invoice.VatOnDebits ? new XElement(Cbc + "DescriptionCode", EInvoice.VatOnDebitsUbl) : null);
+    }
+
     public static byte[] Write(EInvoice invoice)
     {
         ArgumentNullException.ThrowIfNull(invoice);
@@ -26,6 +38,7 @@ internal static class UblWriter
                 new XAttribute(XNamespace.Xmlns + "cac", Cac),
                 new XAttribute(XNamespace.Xmlns + "cbc", Cbc),
                 new XElement(Cbc + "CustomizationID", EInvoice.Specification),
+                new XElement(Cbc + "ProfileID", invoice.BusinessProcess),
                 new XElement(Cbc + "ID", invoice.Number),
                 new XElement(Cbc + "IssueDate", EInvoice.IsoDate(invoice.IssueDate)),
                 !credit && invoice.DueDate is { } due ? new XElement(Cbc + "DueDate", EInvoice.IsoDate(due)) : null,
@@ -33,11 +46,7 @@ internal static class UblWriter
                 // En UBL, le code sujet précède le texte : « #PMT#… » (convention EN 16931 reprise par la XP Z12-012).
                 invoice.Notes.Select(n => new XElement(Cbc + "Note", n.SubjectCode is { } code ? $"#{code}#{n.Content}" : n.Content)),
                 new XElement(Cbc + "DocumentCurrencyCode", invoice.Currency),
-                invoice.PeriodStart is { } periodStart && invoice.PeriodEnd is { } periodEnd
-                    ? new XElement(Cac + "InvoicePeriod",
-                        new XElement(Cbc + "StartDate", EInvoice.IsoDate(periodStart)),
-                        new XElement(Cbc + "EndDate", EInvoice.IsoDate(periodEnd)))
-                    : null,
+                Period(invoice),
                 invoice.PurchaseOrderReference is { } order ? new XElement(Cac + "OrderReference", new XElement(Cbc + "ID", order)) : null,
                 invoice.PrecedingInvoiceNumber is { } preceding
                     ? new XElement(Cac + "BillingReference", new XElement(Cac + "InvoiceDocumentReference",

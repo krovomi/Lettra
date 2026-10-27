@@ -130,6 +130,15 @@ internal static class EInvoiceScenarios
                 VatRegime = VatRegimeDto.Export,
                 Lines = [Line("Guide « TVA »", 25, 19.99m, "FR-5.5", CatalogItemKindDto.Good)],
             }), dossier));
+
+            // Option pour la TVA d'après les débits (BT-8) : le code d'exigibilité part dans le CII et dans l'UBL.
+            (await commands.SendAsync(new SaveCompanyProfileCommand(dossier, Cabinet with { VatOnDebits = true }, null), default)).IsSuccess.Should().BeTrue();
+            pieces.Add(("option-debits", await ValidatedAsync(commands, dossier, new SaveInvoiceRequest
+            {
+                CustomerId = durand,
+                Subject = "Accompagnement mensuel",
+                Lines = [Line("Conseil", 2, 100m, "FR-20", CatalogItemKindDto.Service)],
+            }), dossier));
         }
 
         await using (AsyncServiceScope scope = await harness.OpenAsync(franchise))

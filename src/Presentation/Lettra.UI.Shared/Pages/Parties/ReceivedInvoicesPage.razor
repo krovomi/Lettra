@@ -1,0 +1,485 @@
+@page "/received-invoices"
+@using Lettra.Contracts.Exports
+@inject IReceivedInvoicesGateway Reception
+@inject IFileDownloader Files
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+@* Factures fournisseurs reçues par la plateforme agréée (réception obligatoire pour toutes les entreprises au
+   1er septembre 2026) : on les relève, on les lit, et on répond au fournisseur par la plateforme (prise en charge,
+   approuvée, en litige, refusée, paiement transmis). L'encart du haut dit où l'entreprise reçoit (annuaire). *@
+
+<PageTitle>@L["Reception.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Reception.Title"]</h1>
+        <p class="lettra-muted">@L["Reception.Subtitle"]</p>
+    </div>
+    <div class="lt-page-actions">
+        <button type="button" class="lettra-button" id="reception-fetch" disabled="@(_busy || _view is not { PlatformConfigured: true, CompanySiren: not null })" @onclick="FetchAsync">
+            <Icon Name="refresh-cw" Size="18" /> @L["Reception.Fetch"]
+        </button>
+        <a class="lettra-button is-secondary" href="suppliers" id="reception-to-suppliers"><Icon Name="truck" Size="18" /> @L["Suppliers.Title"]</a>
+    </div>
+</div>
+
+<GeneralErrors Errors="_errors" IncludeFieldErrors="true" />
+
+@if (_view is { } view)
+{
+    <section class="lettra-card lt-reception-setup" id="reception-setup" aria-labelledby="reception-setup-title">
+        <h2 id="reception-setup-title">@L["Reception.Setup"]</h2>
+        @if (!view.PlatformConfigured)
+        {
+            <p class="lettra-banner is-warning" id="reception-no-platform" role="status"><Icon Name="triangle-alert" Size="18" /> @L["Reception.NoPlatform"]</p>
+        }
+        else if (view.CompanySiren is null)
+        {
+            <p class="lettra-banner is-warning" id="reception-no-siren" role="status">
+                <Icon Name="triangle-alert" Size="18" /> @L["Reception.NoSiren"] <a href="settings/company">@L["Nav.Company"]</a>
+            </p>
+        }
+        else if (view.Directory is { } entry)
+        {
+            <p id="reception-directory">
+                <Icon Name="badge-check" Size="18" />
+                @string.Format(Culture, L["Reception.Directory.Own"], entry.ElectronicAddress, entry.PlatformName, DateText.Format(entry.Since, Culture))
+            </p>
+        }
+        else
+        {
+            <p class="lettra-banner is-warning" id="reception-directory-missing" role="status"><Icon Name="triangle-alert" Size="18" /> @L["Reception.Directory.OwnMissing"]</p>
+        }
+
+        <p class="lettra-muted" id="reception-dates">@string.Format(Culture, L["Reception.Dates"], DateText.Format(view.ReceivingFrom, Culture), DateText.Format(view.IssuingFrom, Culture))</p>
+    </section>
+
+    <div class="lt-banking-stats" id="reception-stats">
+        <div class="lt-banking-stat is-pending"><span>@L["Reception.Stat.ToHandle"]</span><strong id="reception-to-handle">@view.Invoices.Count(IsToHandle)</strong></div>
+        <div class="lt-banking-stat is-proposed"><span>@L["Reception.Stat.Disputed"]</span><strong id="reception-disputed">@view.Invoices.Count(i => i.Status == PlatformStatusDto.Disputed)</strong></div>
+        <div class="lt-banking-stat"><span>@L["Reception.Stat.Approved"]</span><strong id="reception-approved">@view.Invoices.Count(i => i.Status == PlatformStatusDto.Approved)</strong></div>
+        <div class="lt-banking-stat"><span>@L["Reception.Stat.ToPay"]</span><strong id="reception-to-pay">@ExplorerText.Money(view.Invoices.Where(i => i.Status == PlatformStatusDto.Approved).Sum(Signed))</strong></div>
+    </div>
+}
+
+<section class="lettra-card" aria-labelledby="reception-list-title">
+    <div class="lt-banking-section-head">
+        <h2 id="reception-list-title">@L["Reception.List"]</h2>
+    </div>
+
+    @if (_view is not null && _view.Invoices.Count > 0)
+    {
+        <ListFilterBar Id="reception-filters" ActiveCount="ActiveFilters" OnReset="ResetFilters">
+            <ChildContent>
+                <div class="lt-filter">
+                    <label for="reception-search">@L["Lists.Search"]</label>
+                    <input id="reception-search" type="search" @bind="_search" @bind:event="oninput" autocomplete="off" />
+                </div>
+                <div class="lt-filter">
+                    <label for="reception-status">@L["Reception.Filter.Status"]</label>
+                    <select id="reception-status" @bind="_status">
+                        <option value="@All">@L["Reception.Filter.All"]</option>
+                        <option value="@ToHandle">@L["Reception.Filter.ToHandle"]</option>
+                        @foreach (PlatformStatusDto status in Statuses)
+                        {
+                            <option value="@status">@L[$"Platform.Status.{status}"]</option>
+                        }
+                    </select>
+                </div>
+            </ChildContent>
+            <More>
+                <DateRangeFilter Id="reception-dates-filter" Label="@L["Billing.Column.Date"]" @bind-From="_from" @bind-To="_to" />
+                <SortSelect Id="reception-sort" Options="SortOptions" State="_sort" OnSort="StateHasChanged" />
+            </More>
+        </ListFilterBar>
+    }
+
+    @if (_view is null)
+    {
+        <ListSkeleton Columns="6" />
+    }
+    else if (_view.Invoices.Count == 0)
+    {
+        <EmptyState Id="reception-empty" IconName="inbox" Title="@L["Reception.Empty"]" Text="@L["Reception.Empty.Text"]" />
+    }
+    else if (Shown.Count == 0)
+    {
+        <EmptyState Id="reception-filtered-empty" IconName="search" Title="@L["Lists.Empty.FilteredTitle"]" Text="@L["Lists.Empty.Filtered"]">
+            <button type="button" class="lettra-button is-secondary" id="reception-empty-reset" @onclick="ResetFilters">@L["Lists.Filters.Reset"]</button>
+        </EmptyState>
+    }
+    else
+    {
+        <div class="lt-list-scroll">
+            <table class="lettra-table lt-cards" id="reception-invoices">
+                <thead>
+                    <tr>
+                        <SortHeader Option="SortOptions[0]" State="_sort" OnSort="StateHasChanged" Id="reception-sort-supplier" />
+                        <SortHeader Option="SortOptions[1]" State="_sort" OnSort="StateHasChanged" Id="reception-sort-number" />
+                        <SortHeader Option="SortOptions[2]" State="_sort" OnSort="StateHasChanged" Id="reception-sort-date" />
+                        <SortHeader Option="SortOptions[3]" State="_sort" OnSort="StateHasChanged" Id="reception-sort-due" />
+                        <SortHeader Option="SortOptions[4]" State="_sort" OnSort="StateHasChanged" Id="reception-sort-total" Class="lg-num" />
+                        <SortHeader Option="SortOptions[5]" State="_sort" OnSort="StateHasChanged" Id="reception-sort-status" />
+                        <th scope="col"><span class="lettra-visually-hidden">@L["Bank.Actions"]</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (ReceivedInvoiceSummary invoice in Shown)
+                    {
+                        <tr @key="invoice.Id" id="@($"received-{invoice.Id}")" class="@(_open?.Summary.Id == invoice.Id ? "is-selected" : null)">
+                            <td>
+                                <strong>@invoice.SupplierName</strong>
+                                @if (invoice.SupplierId is null)
+                                {
+                                    <br /><small class="lettra-muted">@L["Reception.SupplierUnknown"]</small>
+                                }
+                            </td>
+                            <td data-label="@L["Reception.Column.Number"]">
+                                @invoice.Number
+                                @if (invoice.Kind != ReceivedInvoiceKindDto.Invoice)
+                                {
+                                    <small class="lettra-muted"> · @L[$"Reception.Kind.{invoice.Kind}"]</small>
+                                }
+                            </td>
+                            <td data-label="@L["Billing.Column.Date"]">@DateText.Format(invoice.IssueDate, Culture)</td>
+                            <td data-label="@L["Reception.Column.Due"]">@DateText.Format(invoice.DueDate, Culture)</td>
+                            <td data-label="@L["Reception.Column.Total"]" class="lg-num lt-banking-money">@ExplorerText.Money(Signed(invoice))</td>
+                            <td data-label="@L["Reception.Filter.Status"]"><span class="@($"lettra-status {StatusClass(invoice.Status)}")">@L[$"Platform.Status.{invoice.Status}"]</span></td>
+                            <td class="lt-banking-line-actions">
+                                <button type="button" class="lettra-button is-small is-secondary" id="@($"received-open-{invoice.Id}")" disabled="@_busy"
+                                        aria-expanded="@(_open?.Summary.Id == invoice.Id ? "true" : "false")" aria-controls="reception-detail" @onclick="() => OpenAsync(invoice.Id)">
+                                    <Icon Name="eye" Size="16" /> @L["Reception.Open"]
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+@if (_open is { } detail)
+{
+    ReceivedInvoiceSummary summary = detail.Summary;
+    <section class="lettra-card lt-reception-detail" id="reception-detail" aria-labelledby="reception-detail-title" tabindex="-1">
+        <div class="lt-banking-section-head">
+            <h2 id="reception-detail-title">@string.Format(Culture, L["Reception.Detail.Title"], L[$"Reception.Kind.{summary.Kind}"], summary.Number, summary.SupplierName)</h2>
+            <div class="lt-page-actions">
+                <button type="button" class="lettra-button is-small is-secondary" id="reception-download" disabled="@_busy" @onclick="DownloadAsync">
+                    <Icon Name="download" Size="16" /> @L["Reception.Download"]
+                </button>
+                <button type="button" class="lettra-button is-small is-ghost" id="reception-close" @onclick="Close">@L["Reception.Close"]</button>
+            </div>
+        </div>
+
+        <dl class="lettra-platform-facts" id="reception-facts">
+            <dt>@L["Reception.Fact.Supplier"]</dt><dd>@summary.SupplierName@(summary.SupplierSiren is { } siren ? $" · SIREN {siren}" : null)@(detail.SupplierVatNumber is { } vat ? $" · {vat}" : null)</dd>
+            <dt>@L["Billing.Column.Date"]</dt><dd>@DateText.Format(summary.IssueDate, Culture)</dd>
+            <dt>@L["Reception.Column.Due"]</dt><dd>@(summary.DueDate is { } due ? DateText.Format(due, Culture) : L["Reception.NoDue"])</dd>
+            <dt>@L["Reception.Fact.Process"]</dt><dd>@(detail.BusinessProcess is { } process ? $"{process} · {ProcessText(process)}" : "—")</dd>
+            <dt>@L["Reception.Fact.Totals"]</dt><dd>@string.Format(Culture, L["Reception.Totals"], ExplorerText.Money(summary.TotalExclTax), ExplorerText.Money(summary.TotalVat), ExplorerText.Money(summary.TotalInclTax))</dd>
+            <dt>@L["Platform.Name"]</dt><dd>@detail.Platform · @summary.Reference · @detail.FileName</dd>
+        </dl>
+
+        @if (detail.Lines.Count > 0)
+        {
+            <h3 id="reception-lines-title">@L["Reception.Lines"]</h3>
+            <div class="lt-list-scroll">
+                <table class="lettra-table lt-cards" id="reception-lines" aria-labelledby="reception-lines-title">
+                    <thead>
+                        <tr>
+                            <th scope="col">@L["Reception.Line.Name"]</th>
+                            <th scope="col" class="lg-num">@L["Reception.Line.Quantity"]</th>
+                            <th scope="col" class="lg-num">@L["Reception.Line.Price"]</th>
+                            <th scope="col" class="lg-num">@L["Reception.Line.Vat"]</th>
+                            <th scope="col" class="lg-num">@L["Reception.Line.Amount"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (ReceivedInvoiceLineResponse line in detail.Lines)
+                        {
+                            <tr>
+                                <td>@line.Name</td>
+                                <td data-label="@L["Reception.Line.Quantity"]" class="lg-num">@line.Quantity.ToString("0.####", Culture)</td>
+                                <td data-label="@L["Reception.Line.Price"]" class="lg-num">@ExplorerText.Money(line.NetPrice)</td>
+                                <td data-label="@L["Reception.Line.Vat"]" class="lg-num">@(line.VatRate is { } rate ? $"{rate.ToString("0.##", Culture)} %" : line.VatCategory)</td>
+                                <td data-label="@L["Reception.Line.Amount"]" class="lg-num">@ExplorerText.Money(line.NetAmount)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        @foreach (string note in detail.Notes)
+        {
+            <p class="lettra-muted">@note</p>
+        }
+
+        <h3>@L["Platform.History"]</h3>
+        <table id="reception-history" class="lettra-table lt-cards">
+            <thead>
+                <tr>
+                    <th scope="col">@L["Platform.History.At"]</th>
+                    <th scope="col">@L["Platform.History.Status"]</th>
+                    <th scope="col">@L["Platform.History.Detail"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (PlatformStatusEventResponse step in detail.History)
+                {
+                    <tr>
+                        <td>@step.At.ToLocalTime().ToString("g", Culture)</td>
+                        <td data-label="@L["Platform.History.Status"]">@L[$"Platform.Status.{step.Status}"]</td>
+                        <td data-label="@L["Platform.History.Detail"]">@(step.Amount is { } paid ? ExplorerText.Money(paid) : step.Reason)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @if (detail.AvailableResponses.Count > 0)
+        {
+            <form class="lt-receipts-request" id="reception-respond" @onsubmit="RespondAsync" @onsubmit:preventDefault="true">
+                <h3>@L["Reception.Respond.Title"]</h3>
+                <div class="lt-field">
+                    <label for="reception-response">@L["Reception.Respond.Status"]</label>
+                    <select id="reception-response" @bind="_response">
+                        @foreach (PlatformStatusDto status in detail.AvailableResponses)
+                        {
+                            <option value="@status">@L[$"Reception.Respond.{status}"]</option>
+                        }
+                    </select>
+                </div>
+                @if (_response is PlatformStatusDto.Disputed or PlatformStatusDto.Refused)
+                {
+                    <div class="lt-field">
+                        <label for="reception-reason">@L["Reception.Respond.Reason"]</label>
+                        <textarea id="reception-reason" rows="3" maxlength="500" required placeholder="@L["Reception.Respond.ReasonPlaceholder"]" @bind="_reason"></textarea>
+                    </div>
+                }
+                @if (_response == PlatformStatusDto.PaymentSent)
+                {
+                    <div class="lt-field">
+                        <label for="reception-amount">@L["Reception.Respond.Amount"]</label>
+                        <input id="reception-amount" inputmode="decimal" class="lg-num" @bind="_amount" />
+                    </div>
+                }
+                @if (_response == PlatformStatusDto.Refused)
+                {
+                    <p class="lettra-hint" id="reception-refuse-final">@L["Reception.Respond.RefusedFinal"]</p>
+                }
+                <div class="lt-receipts-request-actions">
+                    <button type="submit" class="lettra-button" id="reception-respond-send" disabled="@_busy"><Icon Name="send" Size="18" /> @L["Reception.Respond.Send"]</button>
+                </div>
+            </form>
+        }
+    </section>
+}
+
+@code {
+    private const string All = "all";
+    private const string ToHandle = "to-handle";
+
+    private ReceivedInvoicesResponse? _view;
+    private ReceivedInvoiceResponse? _open;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private bool _busy;
+    private string? _search;
+    private string _status = All;
+    private DateOnly? _from;
+    private DateOnly? _to;
+    private PlatformStatusDto _response;
+    private string? _reason;
+    private string? _amount;
+
+    // Les plus récentes d'abord.
+    private readonly SortState<ReceivedColumn> _sort = new(ReceivedColumn.Date, SortDirectionDto.Descending);
+
+    private enum ReceivedColumn
+    {
+        Supplier,
+        Number,
+        Date,
+        Due,
+        Total,
+        Status,
+    }
+
+    private static readonly PlatformStatusDto[] Statuses =
+        [PlatformStatusDto.MadeAvailable, PlatformStatusDto.InProgress, PlatformStatusDto.Approved, PlatformStatusDto.Disputed, PlatformStatusDto.Refused, PlatformStatusDto.PaymentSent];
+
+    private IReadOnlyList<SortOption<ReceivedColumn>> SortOptions =>
+    [
+        new(ReceivedColumn.Supplier, L["Reception.Column.Supplier"]),
+        new(ReceivedColumn.Number, L["Reception.Column.Number"]),
+        new(ReceivedColumn.Date, L["Billing.Column.Date"], SortDirectionDto.Descending),
+        new(ReceivedColumn.Due, L["Reception.Column.Due"]),
+        new(ReceivedColumn.Total, L["Reception.Column.Total"], SortDirectionDto.Descending),
+        new(ReceivedColumn.Status, L["Reception.Filter.Status"]),
+    ];
+
+    private static readonly Dictionary<ReceivedColumn, Func<ReceivedInvoiceSummary, object?>> SortKeys = new()
+    {
+        [ReceivedColumn.Supplier] = i => i.SupplierName,
+        [ReceivedColumn.Number] = i => i.Number,
+        [ReceivedColumn.Date] = i => i.IssueDate,
+        [ReceivedColumn.Due] = i => i.DueDate,
+        [ReceivedColumn.Total] = i => Signed(i),
+        [ReceivedColumn.Status] = i => (int)i.Status,
+    };
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private IEnumerable<ReceivedInvoiceSummary> Filtered => (_view?.Invoices ?? [])
+        .Where(i => string.IsNullOrWhiteSpace(_search) || ListSorting.Matches(i.SupplierName, _search) || ListSorting.Matches(i.Number, _search))
+        .Where(i => _status switch
+        {
+            All => true,
+            ToHandle => IsToHandle(i),
+            _ => Enum.TryParse(_status, out PlatformStatusDto status) && i.Status == status,
+        })
+        .Where(i => (_from is null || i.IssueDate >= _from) && (_to is null || i.IssueDate <= _to));
+
+    private IReadOnlyList<ReceivedInvoiceSummary> Shown => ListSorting.Sort(Filtered, _sort, SortKeys);
+
+    private int ActiveFilters => (string.IsNullOrWhiteSpace(_search) ? 0 : 1) + (_status == All ? 0 : 1) + (_from is null ? 0 : 1) + (_to is null ? 0 : 1);
+
+    /// <summary>Une facture qui attend encore la décision de l'acheteur.</summary>
+    private static bool IsToHandle(ReceivedInvoiceSummary invoice) => invoice.Status is PlatformStatusDto.MadeAvailable or PlatformStatusDto.InProgress;
+
+    /// <summary>Un avoir se lit en négatif : il diminue ce qui est dû au fournisseur.</summary>
+    private static decimal Signed(ReceivedInvoiceSummary invoice) =>
+        invoice.Kind == ReceivedInvoiceKindDto.CreditNote ? -invoice.TotalInclTax : invoice.TotalInclTax;
+
+    private static string StatusClass(PlatformStatusDto status) => status switch
+    {
+        PlatformStatusDto.MadeAvailable or PlatformStatusDto.InProgress => "is-draft",
+        PlatformStatusDto.Disputed or PlatformStatusDto.Refused => "is-refused",
+        _ => "is-issued",
+    };
+
+    private string ProcessText(string process) => process.Length == 2
+        ? string.Format(Culture, L["Reception.Process"], L[$"Reception.Process.{process[0]}"], L[$"Reception.Process.Step{process[1]}"])
+        : process;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        OperationResult<ReceivedInvoicesResponse> result = await Reception.GetAsync(CancellationToken.None);
+        _errors = result.Errors;
+        _view = result.Value ?? new ReceivedInvoicesResponse(false, null, null, default, default, []);
+    }
+
+    private void ResetFilters() => (_search, _status, _from, _to) = (null, All, null, null);
+
+    private Task FetchAsync() => RunAsync(async () =>
+    {
+        OperationResult<FetchReceivedInvoicesResponse> result = await Reception.FetchAsync(CancellationToken.None);
+        if (result is { IsSuccess: true, Value: { } fetched })
+        {
+            Toasts.Show(
+                fetched.Received > 0 ? ToastKind.Success : ToastKind.Info,
+                fetched.Received > 0 ? string.Format(Culture, L["Reception.Fetched"], fetched.Received) : L["Reception.Fetched.None"]);
+            if (fetched.Unreadable > 0)
+            {
+                Toasts.Show(ToastKind.Warning, string.Format(Culture, L["Reception.Fetched.Unreadable"], fetched.Unreadable));
+            }
+        }
+
+        return result.Errors;
+    });
+
+    private async Task OpenAsync(Guid id)
+    {
+        if (_open?.Summary.Id == id)
+        {
+            Close();
+            return;
+        }
+
+        OperationResult<ReceivedInvoiceResponse> result = await Reception.GetInvoiceAsync(id, CancellationToken.None);
+        _errors = result.Errors;
+        Show(result.Value);
+    }
+
+    private void Show(ReceivedInvoiceResponse? detail)
+    {
+        _open = detail;
+        _reason = null;
+        if (detail is not null)
+        {
+            _response = detail.AvailableResponses.Contains(PlatformStatusDto.Approved) ? PlatformStatusDto.Approved : detail.AvailableResponses.FirstOrDefault();
+            _amount = GridNumber.FormatAmount(detail.Summary.TotalInclTax, Culture);
+        }
+    }
+
+    private void Close() => _open = null;
+
+    private Task RespondAsync() => RunAsync(async () =>
+    {
+        if (_open is not { } detail)
+        {
+            return [];
+        }
+
+        decimal? amount = null;
+        if (_response == PlatformStatusDto.PaymentSent)
+        {
+            if (!GridNumber.TryParse(_amount, Culture, out decimal parsed))
+            {
+                return [new ErrorDetail(ErrorCodes.Reception.PaymentAmountInvalid)];
+            }
+
+            amount = parsed;
+        }
+
+        PlatformStatusDto sent = _response;
+        OperationResult<ReceivedInvoiceResponse> result = await Reception.RespondAsync(
+            detail.Summary.Id, new RespondToReceivedInvoiceRequest { Status = sent, Reason = _reason, Amount = amount }, CancellationToken.None);
+        if (result is { IsSuccess: true, Value: { } updated })
+        {
+            Toasts.Show(ToastKind.Success, string.Format(Culture, L["Reception.Responded"], L[$"Platform.Status.{sent}"], updated.Summary.Number));
+            Show(updated);
+        }
+
+        return result.Errors;
+    });
+
+    private async Task DownloadAsync()
+    {
+        if (_open is not { } detail)
+        {
+            return;
+        }
+
+        OperationResult<ReceiptDocument> file = await Reception.DownloadAsync(detail.Summary.Id, CancellationToken.None);
+        if (file is { IsSuccess: true, Value: { } document })
+        {
+            await Files.DownloadAsync(document.FileName, document.ContentType, document.Content, CancellationToken.None);
+        }
+        else
+        {
+            _errors = file.Errors;
+        }
+    }
+
+    private async Task RunAsync(Func<Task<IReadOnlyList<ErrorDetail>>> action)
+    {
+        _busy = true;
+        try
+        {
+            IReadOnlyList<ErrorDetail> errors = await action();
+            await LoadAsync();
+            if (errors.Count > 0)
+            {
+                _errors = errors;
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

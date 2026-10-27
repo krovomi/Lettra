@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.ReceivedInvoices" xml:space="preserve"><value>Received invoices</value></data>
+  <data name="Reception.Title" xml:space="preserve"><value>Received invoices</value></data>
+  <data name="Reception.Subtitle" xml:space="preserve"><value>Your suppliers' invoices arrive through your accredited platform. Fetch them, check them and answer the supplier: approved, disputed, refused or payment sent.</value></data>
+  <data name="Reception.Fetch" xml:space="preserve"><value>Fetch invoices</value></data>
+  <data name="Reception.Setup" xml:space="preserve"><value>Your receiving setup</value></data>
+  <data name="Reception.NoPlatform" xml:space="preserve"><value>No accredited platform is configured for this firm: supplier invoices cannot be received.</value></data>
+  <data name="Reception.NoSiren" xml:space="preserve"><value>Enter the company's SIREN: it is the address its invoices are sent to.</value></data>
+  <data name="Reception.Directory.Own" xml:space="preserve"><value>Listed in the e-invoicing directory: address {0}, platform {1}, since {2}.</value></data>
+  <data name="Reception.Directory.OwnMissing" xml:space="preserve"><value>The company is not listed in the e-invoicing directory: its suppliers cannot send it e-invoices.</value></data>
+  <data name="Reception.Dates" xml:space="preserve"><value>Receiving e-invoices is mandatory from {0}; issuing, e-reporting and the new mandatory mentions from {1} (company category in the company profile).</value></data>
+  <data name="Reception.Stat.ToHandle" xml:space="preserve"><value>To handle</value></data>
+  <data name="Reception.Stat.Disputed" xml:space="preserve"><value>Disputed</value></data>
+  <data name="Reception.Stat.Approved" xml:space="preserve"><value>Approved</value></data>
+  <data name="Reception.Stat.ToPay" xml:space="preserve"><value>Approved, to pay</value></data>
+  <data name="Reception.List" xml:space="preserve"><value>Supplier invoices</value></data>
+  <data name="Reception.Filter.Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Reception.Filter.All" xml:space="preserve"><value>All</value></data>
+  <data name="Reception.Filter.ToHandle" xml:space="preserve"><value>To handle</value></data>
+  <data name="Reception.Empty" xml:space="preserve"><value>No invoice received</value></data>
+  <data name="Reception.Empty.Text" xml:space="preserve"><value>“Fetch invoices” asks your accredited platform.</value></data>
+  <data name="Reception.Column.Supplier" xml:space="preserve"><value>Supplier</value></data>
+  <data name="Reception.Column.Number" xml:space="preserve"><value>Number</value></data>
+  <data name="Reception.Column.Due" xml:space="preserve"><value>Due date</value></data>
+  <data name="Reception.Column.Total" xml:space="preserve"><value>Total incl. VAT</value></data>
+  <data name="Reception.SupplierUnknown" xml:space="preserve"><value>Not in your suppliers yet</value></data>
+  <data name="Reception.Kind.Invoice" xml:space="preserve"><value>Invoice</value></data>
+  <data name="Reception.Kind.DownPayment" xml:space="preserve"><value>Down payment invoice</value></data>
+  <data name="Reception.Kind.CreditNote" xml:space="preserve"><value>Credit note</value></data>
+  <data name="Reception.Open" xml:space="preserve"><value>Open</value></data>
+  <data name="Reception.Detail.Title" xml:space="preserve"><value>{0} {1} from {2}</value></data>
+  <data name="Reception.Download" xml:space="preserve"><value>Download the file</value></data>
+  <data name="Reception.Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Reception.Fact.Supplier" xml:space="preserve"><value>Supplier</value></data>
+  <data name="Reception.NoDue" xml:space="preserve"><value>Not given</value></data>
+  <data name="Reception.Fact.Process" xml:space="preserve"><value>Billing framework</value></data>
+  <data name="Reception.Fact.Totals" xml:space="preserve"><value>Amounts</value></data>
+  <data name="Reception.Totals" xml:space="preserve"><value>{0} excl. VAT, {1} VAT, {2} incl. VAT</value></data>
+  <data name="Reception.Lines" xml:space="preserve"><value>Invoice lines</value></data>
+  <data name="Reception.Line.Name" xml:space="preserve"><value>Description</value></data>
+  <data name="Reception.Line.Quantity" xml:space="preserve"><value>Quantity</value></data>
+  <data name="Reception.Line.Price" xml:space="preserve"><value>Unit price excl. VAT</value></data>
+  <data name="Reception.Line.Vat" xml:space="preserve"><value>VAT</value></data>
+  <data name="Reception.Line.Amount" xml:space="preserve"><value>Amount excl. VAT</value></data>
+  <data name="Reception.Process" xml:space="preserve"><value>{0}, {1}</value></data>
+  <data name="Reception.Process.B" xml:space="preserve"><value>supply of goods</value></data>
+  <data name="Reception.Process.S" xml:space="preserve"><value>supply of services</value></data>
+  <data name="Reception.Process.M" xml:space="preserve"><value>mixed supply</value></data>
+  <data name="Reception.Process.Step1" xml:space="preserve"><value>invoice filing</value></data>
+  <data name="Reception.Process.Step2" xml:space="preserve"><value>invoice already paid</value></data>
+  <data name="Reception.Process.Step4" xml:space="preserve"><value>final invoice after down payment</value></data>
+  <data name="Reception.Respond.Title" xml:space="preserve"><value>Answer the supplier</value></data>
+  <data name="Reception.Respond.Status" xml:space="preserve"><value>Answer</value></data>
+  <data name="Reception.Respond.InProgress" xml:space="preserve"><value>In progress (I am checking it)</value></data>
+  <data name="Reception.Respond.Approved" xml:space="preserve"><value>Approved</value></data>
+  <data name="Reception.Respond.Disputed" xml:space="preserve"><value>Disputed</value></data>
+  <data name="Reception.Respond.Refused" xml:space="preserve"><value>Refused</value></data>
+  <data name="Reception.Respond.PaymentSent" xml:space="preserve"><value>Payment sent</value></data>
+  <data name="Reception.Respond.Reason" xml:space="preserve"><value>Reason, read by the supplier</value></data>
+  <data name="Reception.Respond.ReasonPlaceholder" xml:space="preserve"><value>For example: quantity delivered lower than quantity invoiced</value></data>
+  <data name="Reception.Respond.Amount" xml:space="preserve"><value>Amount paid</value></data>
+  <data name="Reception.Respond.RefusedFinal" xml:space="preserve"><value>A refusal is final: the supplier will have to issue a new invoice.</value></data>
+  <data name="Reception.Respond.Send" xml:space="preserve"><value>Send the answer</value></data>
+  <data name="Reception.Fetched" xml:space="preserve"><value>{0} invoice(s) received.</value></data>
+  <data name="Reception.Fetched.None" xml:space="preserve"><value>No new invoice.</value></data>
+  <data name="Reception.Fetched.Unreadable" xml:space="preserve"><value>{0} file(s) could not be read: they stay at the platform.</value></data>
+  <data name="Reception.Responded" xml:space="preserve"><value>Answer “{0}” sent for invoice {1}.</value></data>
+  <data name="Reception.Directory.Customer" xml:space="preserve"><value>Customer listed in the directory: the invoice will go to address {0}, platform {1}.</value></data>
+  <data name="Reception.Directory.CustomerMissing" xml:space="preserve"><value>This customer is not listed in the e-invoicing directory: the platform will reject the invoice. Check their SIREN.</value></data>
+  <data name="Error.Reception.NotFound" xml:space="preserve"><value>This received invoice does not exist.</value></data>
+  <data name="Error.Reception.CompanySirenMissing" xml:space="preserve"><value>Enter the company's SIREN (company profile) to receive its invoices.</value></data>
+  <data name="Error.Reception.ResponseNotAllowed" xml:space="preserve"><value>This answer is no longer possible for this invoice.</value></data>
+  <data name="Error.Reception.ReasonRequired" xml:space="preserve"><value>A dispute or a refusal needs a reason.</value></data>
+  <data name="Error.Reception.ReasonTooLong" xml:space="preserve"><value>The reason is longer than 500 characters.</value></data>
+  <data name="Error.Reception.PaymentAmountInvalid" xml:space="preserve"><value>Enter the amount paid.</value></data>
+  <data name="Error.Reception.SirenInvalid" xml:space="preserve"><value>A SIREN has 9 digits.</value></data>
+</root>

@@ -4,6 +4,7 @@ using System.Xml.Linq;
 using Lettra.Contracts.Exports;
 using Lettra.Domain.Common;
 using Lettra.Exports.Application.EInvoicing.Platform;
+using Lettra.Exports.Application.EInvoicing.Reception;
 using Lettra.Exports.Domain.Platform;
 
 namespace Lettra.Exports.Infrastructure;
@@ -13,10 +14,16 @@ namespace Lettra.Exports.Infrastructure;
 /// les tests, en attendant la PA partenaire (5.5). Elle fait les contrôles d'une vraie plateforme qui ne demandent pas
 /// de réseau : syntaxe annoncée, numéro du fichier, doublon, destinataire présent à l'annuaire. Une facture déposée
 /// passe Émise, Reçue puis Mise à disposition à la première lecture de ses statuts ; les réponses de l'acheteur se
-/// simulent par <see cref="SimulateBuyerStatus"/>. Données fictives seulement : rien ne sort du processus.
+/// simulent par <see cref="SimulateBuyerStatus"/>. Côté acheteur, elle met à disposition de chaque SIREN quatre factures
+/// fournisseurs fictives (<see cref="SimulatedSupplierInvoices"/>) et enregistre ses réponses. Elle tient aussi
+/// l'annuaire : tout SIREN valide y figure, à son adresse 0225, sauf ceux retirés par <see cref="Unregister"/>.
+/// Données fictives seulement : rien ne sort du processus.
 /// </summary>
-public sealed class SimulatedAccreditedPlatform(TimeProvider clock) : IAccreditedPlatformClient
+public sealed class SimulatedAccreditedPlatform(TimeProvider clock) : IAccreditedPlatformClient, IEInvoicingDirectory
 {
+    /// <summary>Date d'inscription des entreprises à l'annuaire simulé.</summary>
+    public static readonly DateOnly DirectorySince = new(2026, 6, 1);
+
     public const string PlatformName = "PA simulée";
 
     private static readonly XNamespace Rsm = "urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100";
@@ -34,6 +41,11 @@ public sealed class SimulatedAccreditedPlatform(TimeProvider clock) : IAccredite
     // Envois déjà traités, par clé d'idempotence : un envoi repris rend la réponse du premier.
     private readonly Dictionary<string, PlatformReceipt> _receiptsByKey = [];
     private readonly Dictionary<string, PlatformStatusEvent> _paymentsByKey = [];
+
+    // Factures fournisseurs mises à disposition, par acheteur, et l'historique de chacune par référence.
+    private readonly Dictionary<string, List<PlatformIncomingInvoice>> _incoming = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, List<PlatformStatusEvent>> _incomingHistory = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, PlatformStatusEvent> _responsesByKey = [];
     private int _sequence;
 
     public string Name => PlatformName;
@@ -162,6 +174,107 @@ public sealed class SimulatedAccreditedPlatform(TimeProvider clock) : IAccredite
 
             return Task.FromResult<Result<PlatformStatusEvent>>(collected);
         }
+    }
+
+    public Task<Result<DirectoryEntry?>> LookupAsync(string siren, CancellationToken cancellationToken)
+    {
+        if (IsUnavailable)
+        {
+            return Task.FromResult<Result<DirectoryEntry?>>(PlatformErrors.Unavailable);
+        }
+
+        lock (_lock)
+        {
+            DirectoryEntry? entry = IsSiren(siren) && !_unregistered.Contains(siren)
+                ? new DirectoryEntry(siren, $"{EInvoiceDirectoryScheme}:{siren}", PlatformName, DirectorySince)
+                : null;
+            return Task.FromResult<Result<DirectoryEntry?>>(entry);
+        }
+    }
+
+    public Task<Result<IReadOnlyList<PlatformIncomingInvoice>>> ListIncomingInvoicesAsync(string buyerSiren, CancellationToken cancellationToken)
+    {
+        if (IsUnavailable)
+        {
+            return Task.FromResult<Result<IReadOnlyList<PlatformIncomingInvoice>>>(PlatformErrors.Unavailable);
+        }
+
+        lock (_lock)
+        {
+            return Task.FromResult<Result<IReadOnlyList<PlatformIncomingInvoice>>>(IncomingOf(buyerSiren).ToList());
+        }
+    }
+
+    public Task<Result<PlatformStatusEvent>> RespondToIncomingInvoiceAsync(PlatformBuyerResponse response, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(response);
+        if (IsUnavailable)
+        {
+            return Task.FromResult<Result<PlatformStatusEvent>>(PlatformErrors.Unavailable);
+        }
+
+        lock (_lock)
+        {
+            if (response.IdempotencyKey is string key && _responsesByKey.TryGetValue(key, out PlatformStatusEvent? known))
+            {
+                return Task.FromResult<Result<PlatformStatusEvent>>(known);
+            }
+
+            // Après un redémarrage, les factures de l'acheteur se reconstituent : leurs références sont stables.
+            if (!IncomingOf(response.BuyerSiren).Any(i => i.Reference == response.Reference)
+                || !_incomingHistory.TryGetValue(response.Reference, out List<PlatformStatusEvent>? history))
+            {
+                return Task.FromResult<Result<PlatformStatusEvent>>(PlatformErrors.ReferenceUnknown);
+            }
+
+            PlatformStatusEvent added = new(response.Status, Now(), response.Reason, response.Amount);
+            history.Add(added);
+            if (response.IdempotencyKey is string sent)
+            {
+                _responsesByKey[sent] = added;
+            }
+
+            return Task.FromResult<Result<PlatformStatusEvent>>(added);
+        }
+    }
+
+    /// <summary>Met une facture de plus à disposition de cet acheteur (tests : fichier illisible, doublon, autre SIREN).</summary>
+    public void DeliverIncoming(string buyerSiren, PlatformIncomingInvoice invoice)
+    {
+        ArgumentNullException.ThrowIfNull(invoice);
+        lock (_lock)
+        {
+            IncomingOf(buyerSiren).Add(invoice);
+            _incomingHistory.TryAdd(invoice.Reference, [new PlatformStatusEvent(PlatformStatus.MadeAvailable, invoice.MadeAvailableAt)]);
+        }
+    }
+
+    /// <summary>Les réponses de l'acheteur reçues pour cette facture, dans l'ordre.</summary>
+    public IReadOnlyList<PlatformStatusEvent> IncomingHistory(string reference)
+    {
+        lock (_lock)
+        {
+            return _incomingHistory.TryGetValue(reference, out List<PlatformStatusEvent>? history) ? history.ToList() : [];
+        }
+    }
+
+    private const string EInvoiceDirectoryScheme = "0225";
+
+    private List<PlatformIncomingInvoice> IncomingOf(string buyerSiren)
+    {
+        if (!_incoming.TryGetValue(buyerSiren, out List<PlatformIncomingInvoice>? invoices))
+        {
+            invoices = IsSiren(buyerSiren) && !_unregistered.Contains(buyerSiren)
+                ? [.. SimulatedSupplierInvoices.For(buyerSiren, $"Entreprise {buyerSiren}", clock.GetUtcNow())]
+                : [];
+            _incoming[buyerSiren] = invoices;
+            foreach (PlatformIncomingInvoice invoice in invoices)
+            {
+                _incomingHistory.TryAdd(invoice.Reference, [new PlatformStatusEvent(PlatformStatus.MadeAvailable, invoice.MadeAvailableAt)]);
+            }
+        }
+
+        return invoices;
     }
 
     /// <summary>Une réponse de l'acheteur (prise en charge, approbation, litige, refus, paiement transmis…).</summary>

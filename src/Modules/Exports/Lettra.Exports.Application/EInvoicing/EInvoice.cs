@@ -1,5 +1,6 @@
 using System.Globalization;
 using Lettra.Calculations;
+using Lettra.Calculations.Compliance;
 using Lettra.Contracts.Billing;
 using Lettra.Domain.Billing;
 using Lettra.Domain.SharedKernel;
@@ -56,12 +57,29 @@ internal sealed record EInvoice
     public const string LatePenaltiesNote = "PMD";
     public const string EarlyPaymentDiscountNote = "AAB";
 
+    /// <summary>BT-8, TVA exigible à la date de la facture : UNTDID 2475 en CII, UNTDID 2005 en UBL.</summary>
+    public const string VatOnDebitsCii = "5";
+    public const string VatOnDebitsUbl = "3";
+
     private const string LatePenaltiesPrefix = "Pénalités de retard";
     private const string RecoveryIndemnityPrefix = "Indemnité forfaitaire";
     private const string VatOnDebitsPrefix = "Option pour le paiement de la TVA";
     private const string CreditedInvoicePrefix = "Avoir sur la facture";
 
     public required string TypeCode { get; init; }
+
+    /// <summary>
+    /// Cadre de facturation (BT-23, norme XP Z12-012) : B pour des biens, S pour des services, M pour une opération mixte,
+    /// suivi de 1 (dépôt d'une facture) ou 4 (facture définitive après acompte). Il porte la catégorie d'opération, mention
+    /// obligatoire de la réforme, dans le XML.
+    /// </summary>
+    public required string BusinessProcess { get; init; }
+
+    /// <summary>
+    /// Option pour le paiement de la TVA d'après les débits : la TVA est exigible à la date de la facture (BT-8, code 5 en
+    /// CII, 3 en UBL). Sans l'option, BT-8 est absent.
+    /// </summary>
+    public bool VatOnDebits { get; init; }
 
     public required bool IsCreditNote { get; init; }
 
@@ -151,6 +169,8 @@ internal sealed record EInvoice
                 InvoiceKindDto.CreditNote => "381",
                 _ => "380",
             },
+            BusinessProcess = BusinessProcessOf(invoice),
+            VatOnDebits = invoice.LegalMentions.Any(LegalMentionTexts.IsVatOnDebits),
             IsCreditNote = credit,
             Number = invoice.Number,
             IssueDate = invoice.IssueDate.Value,
@@ -235,6 +255,24 @@ internal sealed record EInvoice
             LatePenaltiesNote));
         notes.Add(new EInvoiceNote(discount ?? "Pas d'escompte pour paiement anticipé", EarlyPaymentDiscountNote));
         return notes;
+    }
+
+    /// <summary>
+    /// B1, S1 ou M1 selon la catégorie d'opération ; B4, S4 ou M4 pour la facture finale d'un devis qui déduit ses
+    /// acomptes (lignes en déduction).
+    /// </summary>
+    internal static string BusinessProcessOf(InvoiceResponse invoice)
+    {
+        char category = invoice.OperationCategory switch
+        {
+            OperationCategoryDto.Goods => 'B',
+            OperationCategoryDto.Mixed => 'M',
+            _ => 'S',
+        };
+        bool afterDownPayment = invoice.Kind == InvoiceKindDto.Invoice
+            && invoice.QuoteId is not null
+            && invoice.Lines.Any(l => l.Quantity < 0m || l.UnitPriceExclTax < 0m);
+        return string.Create(CultureInfo.InvariantCulture, $"{category}{(afterDownPayment ? 4 : 1)}");
     }
 
     private static EInvoiceParty Party(PartySnapshotResponse party) => new(

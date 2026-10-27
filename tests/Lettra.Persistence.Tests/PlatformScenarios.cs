@@ -387,6 +387,12 @@ internal sealed class LosingPlatform(SimulatedAccreditedPlatform inner) : IAccre
     public Task<Result<PlatformStatusEvent>> ReportPaymentAsync(PlatformPaymentReport payment, CancellationToken cancellationToken) =>
         LoseAsync(inner.ReportPaymentAsync(payment, cancellationToken));
 
+    public Task<Result<IReadOnlyList<PlatformIncomingInvoice>>> ListIncomingInvoicesAsync(string buyerSiren, CancellationToken cancellationToken) =>
+        inner.ListIncomingInvoicesAsync(buyerSiren, cancellationToken);
+
+    public Task<Result<PlatformStatusEvent>> RespondToIncomingInvoiceAsync(PlatformBuyerResponse response, CancellationToken cancellationToken) =>
+        LoseAsync(inner.RespondToIncomingInvoiceAsync(response, cancellationToken));
+
     private async Task<T> LoseAsync<T>(Task<T> call)
     {
         T result = await call.ConfigureAwait(false);

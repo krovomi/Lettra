@@ -154,8 +154,8 @@ public sealed class ExportApiTests(LettraApiFactory factory) : IClassFixture<Let
 
         HttpResponseMessage response = await manager.GetAsync(Api($"/api/v1/invoices/{Guid.CreateVersion7()}/platform-transmission"));
 
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
-        (await response.Content.ReadAsStringAsync()).Should().Contain(ErrorCodes.Platform.NotTransmitted);
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent, "ce n'est pas une erreur : pas de 4xx dans la console du navigateur");
+        (await response.Content.ReadAsStringAsync()).Should().BeEmpty();
     }
 
     [Fact]

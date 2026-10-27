@@ -47,6 +47,7 @@ public static class NavItems
         new("e-invoicing-readiness", "Nav.EInvoicingReadiness", "badge-check", "Nav.Group.Sales"),
         new("customers", "Nav.Customers", "users", "Nav.Group.Parties", InTabBar: true),
         new("suppliers", "Nav.Suppliers", "truck", "Nav.Group.Parties"),
+        new("received-invoices", "Nav.ReceivedInvoices", "inbox", "Nav.Group.Parties"),
         new("iban-changes", "Nav.IbanChanges", "shield-alert", "Nav.Group.Parties"),
         new("attestations", "Nav.Attestations", "file-check", "Nav.Group.Parties"),
         new("catalog", "Nav.Catalog", "package", "Nav.Group.Parties"),

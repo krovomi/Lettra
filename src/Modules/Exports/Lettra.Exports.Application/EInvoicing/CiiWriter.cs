@@ -28,6 +28,7 @@ internal static class CiiWriter
                 new XAttribute(XNamespace.Xmlns + "ram", Ram),
                 new XAttribute(XNamespace.Xmlns + "udt", Udt),
                 new XElement(Rsm + "ExchangedDocumentContext",
+                    new XElement(Ram + "BusinessProcessSpecifiedDocumentContextParameter", new XElement(Ram + "ID", invoice.BusinessProcess)),
                     new XElement(Ram + "GuidelineSpecifiedDocumentContextParameter", new XElement(Ram + "ID", EInvoice.Specification))),
                 new XElement(Rsm + "ExchangedDocument",
                     new XElement(Ram + "ID", invoice.Number),
@@ -154,6 +155,7 @@ internal static class CiiWriter
                 new XElement(Ram + "BasisAmount", EInvoice.Amount(v.Basis)),
                 new XElement(Ram + "CategoryCode", v.Category),
                 VatCategoryCodes.IsTaxed(v.Category) ? null : Optional(Ram + "ExemptionReasonCode", v.ExemptionCode),
+                invoice.VatOnDebits && VatCategoryCodes.IsTaxed(v.Category) ? new XElement(Ram + "DueDateTypeCode", EInvoice.VatOnDebitsCii) : null,
                 Rate(v.Category, v.Rate))),
             invoice.PeriodStart is { } periodStart && invoice.PeriodEnd is { } periodEnd
                 ? new XElement(Ram + "BillingSpecifiedPeriod",

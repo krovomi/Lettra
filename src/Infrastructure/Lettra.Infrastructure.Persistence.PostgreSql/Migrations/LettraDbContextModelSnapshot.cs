@@ -467,6 +467,9 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .HasMaxLength(14)
                         .HasColumnType("character varying(14)");
 
+                    b.Property<int>("Size")
+                        .HasColumnType("integer");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -2285,6 +2288,129 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.ToTable("PlatformTransmissions", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.EInvoicing.ReceivedInvoiceRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("BusinessProcess")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("BuyerSiren")
+                        .IsRequired()
+                        .HasMaxLength(9)
+                        .HasColumnType("character varying(9)");
+
+                    b.Property<byte[]>("Content")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<DateOnly?>("DueDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("Format")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly>("IssueDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<long>("ReceivedAtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid?>("SupplierId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SupplierName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("SupplierSiren")
+                        .HasMaxLength(9)
+                        .HasColumnType("character varying(9)");
+
+                    b.Property<string>("SupplierVatNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<decimal>("TotalExclTax")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<decimal>("TotalInclTax")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<decimal>("TotalVat")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReceivedAtMs");
+
+                    b.HasIndex("Reference")
+                        .IsUnique();
+
+                    b.ToTable("ReceivedInvoices", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.EInvoicing.ReceivedInvoiceStatusRecord", b =>
+                {
+                    b.Property<Guid>("ReceivedInvoiceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("Amount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<long>("AtMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ReceivedInvoiceId", "Sequence");
+
+                    b.ToTable("ReceivedInvoiceStatusEvents", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Integrity.IntegrityChainHead", b =>
                 {
                     b.Property<int>("Id")
@@ -3321,6 +3447,15 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.EInvoicing.ReceivedInvoiceStatusRecord", b =>
+                {
+                    b.HasOne("Lettra.Infrastructure.Persistence.EInvoicing.ReceivedInvoiceRecord", null)
+                        .WithMany("Events")
+                        .HasForeignKey("ReceivedInvoiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Banking.BankJournalRecord", b =>
                 {
                     b.Navigation("Lines");
@@ -3332,6 +3467,11 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.EInvoicing.PlatformTransmissionRecord", b =>
+                {
+                    b.Navigation("Events");
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.EInvoicing.ReceivedInvoiceRecord", b =>
                 {
                     b.Navigation("Events");
                 });

@@ -152,6 +152,8 @@ internal sealed class CompanyProfileConfiguration : IEntityTypeConfiguration<Com
         builder.Property(p => p.AccountHolderName).HasMaxLength(Domain.Parties.Supplier.MaxAccountHolderLength);
         builder.Property(p => p.ActivityCode).HasMaxLength(NafCode.Length);
         builder.Ignore(p => p.PayeeName);
+        builder.Ignore(p => p.ReformMentionsFrom);
+        builder.Property(p => p.Size).HasConversion<int>();
         builder.Property(p => p.VatDeclarationRegime).HasConversion<int?>();
         builder.IsVersioned();
         builder.ComplexProperty(p => p.Address, address =>

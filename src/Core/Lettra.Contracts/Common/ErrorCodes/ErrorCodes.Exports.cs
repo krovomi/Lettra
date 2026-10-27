@@ -56,6 +56,18 @@ public static partial class ErrorCodes
         public const string Queued = "Platform.Queued";
     }
 
+    /// <summary>Réception des factures fournisseurs et annuaire de la facturation électronique.</summary>
+    public static class Reception
+    {
+        public const string NotFound = "Reception.NotFound";
+        public const string CompanySirenMissing = "Reception.CompanySirenMissing";
+        public const string ResponseNotAllowed = "Reception.ResponseNotAllowed";
+        public const string ReasonRequired = "Reception.ReasonRequired";
+        public const string ReasonTooLong = "Reception.ReasonTooLong";
+        public const string PaymentAmountInvalid = "Reception.PaymentAmountInvalid";
+        public const string SirenInvalid = "Reception.SirenInvalid";
+    }
+
     /// <summary>Consultation de la comptabilité (journal des ventes, balance, grand livre).</summary>
     public static class Accounting
     {

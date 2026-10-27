@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.ReceivedInvoices" xml:space="preserve"><value>Factures reçues</value></data>
+  <data name="Reception.Title" xml:space="preserve"><value>Factures reçues</value></data>
+  <data name="Reception.Subtitle" xml:space="preserve"><value>Les factures de vos fournisseurs arrivent par votre plateforme agréée. Relevez-les, vérifiez-les et répondez au fournisseur : approuvée, en litige, refusée ou paiement transmis.</value></data>
+  <data name="Reception.Fetch" xml:space="preserve"><value>Relever les factures</value></data>
+  <data name="Reception.Setup" xml:space="preserve"><value>Votre réception</value></data>
+  <data name="Reception.NoPlatform" xml:space="preserve"><value>Aucune plateforme agréée n'est configurée pour ce cabinet : les factures fournisseurs ne peuvent pas être reçues.</value></data>
+  <data name="Reception.NoSiren" xml:space="preserve"><value>Renseignez le SIREN de l'entreprise : c'est l'adresse à laquelle ses factures arrivent.</value></data>
+  <data name="Reception.Directory.Own" xml:space="preserve"><value>Inscrite à l'annuaire de la facturation électronique : adresse {0}, plateforme {1}, depuis le {2}.</value></data>
+  <data name="Reception.Directory.OwnMissing" xml:space="preserve"><value>L'entreprise ne figure pas à l'annuaire de la facturation électronique : ses fournisseurs ne peuvent pas lui adresser de facture électronique.</value></data>
+  <data name="Reception.Dates" xml:space="preserve"><value>Réception des factures électroniques obligatoire à partir du {0} ; émission, e-reporting et nouvelles mentions à partir du {1} (catégorie de la fiche entreprise).</value></data>
+  <data name="Reception.Stat.ToHandle" xml:space="preserve"><value>À traiter</value></data>
+  <data name="Reception.Stat.Disputed" xml:space="preserve"><value>En litige</value></data>
+  <data name="Reception.Stat.Approved" xml:space="preserve"><value>Approuvées</value></data>
+  <data name="Reception.Stat.ToPay" xml:space="preserve"><value>Approuvé, à payer</value></data>
+  <data name="Reception.List" xml:space="preserve"><value>Factures fournisseurs</value></data>
+  <data name="Reception.Filter.Status" xml:space="preserve"><value>Statut</value></data>
+  <data name="Reception.Filter.All" xml:space="preserve"><value>Toutes</value></data>
+  <data name="Reception.Filter.ToHandle" xml:space="preserve"><value>À traiter</value></data>
+  <data name="Reception.Empty" xml:space="preserve"><value>Aucune facture reçue</value></data>
+  <data name="Reception.Empty.Text" xml:space="preserve"><value>« Relever les factures » interroge votre plateforme agréée.</value></data>
+  <data name="Reception.Column.Supplier" xml:space="preserve"><value>Fournisseur</value></data>
+  <data name="Reception.Column.Number" xml:space="preserve"><value>Numéro</value></data>
+  <data name="Reception.Column.Due" xml:space="preserve"><value>Échéance</value></data>
+  <data name="Reception.Column.Total" xml:space="preserve"><value>Total TTC</value></data>
+  <data name="Reception.SupplierUnknown" xml:space="preserve"><value>Pas encore dans vos fournisseurs</value></data>
+  <data name="Reception.Kind.Invoice" xml:space="preserve"><value>Facture</value></data>
+  <data name="Reception.Kind.DownPayment" xml:space="preserve"><value>Facture d'acompte</value></data>
+  <data name="Reception.Kind.CreditNote" xml:space="preserve"><value>Avoir</value></data>
+  <data name="Reception.Open" xml:space="preserve"><value>Ouvrir</value></data>
+  <data name="Reception.Detail.Title" xml:space="preserve"><value>{0} {1} de {2}</value></data>
+  <data name="Reception.Download" xml:space="preserve"><value>Télécharger le fichier</value></data>
+  <data name="Reception.Close" xml:space="preserve"><value>Fermer</value></data>
+  <data name="Reception.Fact.Supplier" xml:space="preserve"><value>Fournisseur</value></data>
+  <data name="Reception.NoDue" xml:space="preserve"><value>Non indiquée</value></data>
+  <data name="Reception.Fact.Process" xml:space="preserve"><value>Cadre de facturation</value></data>
+  <data name="Reception.Fact.Totals" xml:space="preserve"><value>Montants</value></data>
+  <data name="Reception.Totals" xml:space="preserve"><value>{0} HT, {1} de TVA, {2} TTC</value></data>
+  <data name="Reception.Lines" xml:space="preserve"><value>Lignes de la facture</value></data>
+  <data name="Reception.Line.Name" xml:space="preserve"><value>Désignation</value></data>
+  <data name="Reception.Line.Quantity" xml:space="preserve"><value>Quantité</value></data>
+  <data name="Reception.Line.Price" xml:space="preserve"><value>Prix unitaire HT</value></data>
+  <data name="Reception.Line.Vat" xml:space="preserve"><value>TVA</value></data>
+  <data name="Reception.Line.Amount" xml:space="preserve"><value>Montant HT</value></data>
+  <data name="Reception.Process" xml:space="preserve"><value>{0}, {1}</value></data>
+  <data name="Reception.Process.B" xml:space="preserve"><value>livraison de biens</value></data>
+  <data name="Reception.Process.S" xml:space="preserve"><value>prestation de services</value></data>
+  <data name="Reception.Process.M" xml:space="preserve"><value>opération mixte</value></data>
+  <data name="Reception.Process.Step1" xml:space="preserve"><value>dépôt d'une facture</value></data>
+  <data name="Reception.Process.Step2" xml:space="preserve"><value>facture déjà payée</value></data>
+  <data name="Reception.Process.Step4" xml:space="preserve"><value>facture définitive après acompte</value></data>
+  <data name="Reception.Respond.Title" xml:space="preserve"><value>Répondre au fournisseur</value></data>
+  <data name="Reception.Respond.Status" xml:space="preserve"><value>Réponse</value></data>
+  <data name="Reception.Respond.InProgress" xml:space="preserve"><value>Prise en charge (je la vérifie)</value></data>
+  <data name="Reception.Respond.Approved" xml:space="preserve"><value>Approuvée</value></data>
+  <data name="Reception.Respond.Disputed" xml:space="preserve"><value>En litige</value></data>
+  <data name="Reception.Respond.Refused" xml:space="preserve"><value>Refusée</value></data>
+  <data name="Reception.Respond.PaymentSent" xml:space="preserve"><value>Paiement transmis</value></data>
+  <data name="Reception.Respond.Reason" xml:space="preserve"><value>Motif, lu par le fournisseur</value></data>
+  <data name="Reception.Respond.ReasonPlaceholder" xml:space="preserve"><value>Par exemple : quantité livrée inférieure à la quantité facturée</value></data>
+  <data name="Reception.Respond.Amount" xml:space="preserve"><value>Montant payé</value></data>
+  <data name="Reception.Respond.RefusedFinal" xml:space="preserve"><value>Un refus est définitif : le fournisseur devra émettre une nouvelle facture.</value></data>
+  <data name="Reception.Respond.Send" xml:space="preserve"><value>Envoyer la réponse</value></data>
+  <data name="Reception.Fetched" xml:space="preserve"><value>{0} facture(s) reçue(s).</value></data>
+  <data name="Reception.Fetched.None" xml:space="preserve"><value>Aucune nouvelle facture.</value></data>
+  <data name="Reception.Fetched.Unreadable" xml:space="preserve"><value>{0} fichier(s) n'ont pas pu être lus : ils restent à la plateforme.</value></data>
+  <data name="Reception.Responded" xml:space="preserve"><value>Réponse « {0} » envoyée pour la facture {1}.</value></data>
+  <data name="Reception.Directory.Customer" xml:space="preserve"><value>Client inscrit à l'annuaire : la facture partira à l'adresse {0}, plateforme {1}.</value></data>
+  <data name="Reception.Directory.CustomerMissing" xml:space="preserve"><value>Ce client ne figure pas à l'annuaire de la facturation électronique : la plateforme rejettera la facture. Vérifiez son SIREN.</value></data>
+  <data name="Error.Reception.NotFound" xml:space="preserve"><value>Cette facture reçue n'existe pas.</value></data>
+  <data name="Error.Reception.CompanySirenMissing" xml:space="preserve"><value>Renseignez le SIREN de l'entreprise (fiche entreprise) pour recevoir ses factures.</value></data>
+  <data name="Error.Reception.ResponseNotAllowed" xml:space="preserve"><value>Cette réponse n'est plus possible pour cette facture.</value></data>
+  <data name="Error.Reception.ReasonRequired" xml:space="preserve"><value>Un litige ou un refus doit être motivé.</value></data>
+  <data name="Error.Reception.ReasonTooLong" xml:space="preserve"><value>Le motif dépasse 500 caractères.</value></data>
+  <data name="Error.Reception.PaymentAmountInvalid" xml:space="preserve"><value>Saisissez le montant payé.</value></data>
+  <data name="Error.Reception.SirenInvalid" xml:space="preserve"><value>Un SIREN compte 9 chiffres.</value></data>
+</root>

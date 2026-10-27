@@ -184,8 +184,10 @@ internal sealed class CheckInvoiceHandler(IInvoiceRepository invoices, ICompanyP
             return InvoiceErrors.NotFound;
         }
 
-        SellerTerms? terms = invoice.IsDraft ? await BillingLoads.SellerTermsAsync(profiles, cancellationToken).ConfigureAwait(false) : null;
-        return ComplianceChecker.Check(invoice.ToComplianceDocument(terms), LegalCalendar.Today(clock)).ToResponse();
+        // Une pièce validée garde ses mentions figées ; seule la date des mentions de la réforme vient de la fiche.
+        SellerTerms? current = await BillingLoads.SellerTermsAsync(profiles, cancellationToken).ConfigureAwait(false);
+        SellerTerms? terms = invoice.IsDraft ? current : null;
+        return ComplianceChecker.Check(invoice.ToComplianceDocument(terms, current?.ReformMentionsFrom), LegalCalendar.Today(clock)).ToResponse();
     }
 }
 

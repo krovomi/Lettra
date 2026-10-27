@@ -23,6 +23,29 @@ public enum VatDeclarationRegimeDto
 }
 
 /// <summary>
+/// Catégorie de l'entreprise (grande entreprise, ETI, PME, micro-entreprise) : elle fixe la date à laquelle l'entreprise
+/// émet ses factures électroniques, fait son e-reporting et porte les nouvelles mentions (1er septembre 2026 ou 2027).
+/// </summary>
+[JsonConverter(typeof(JsonStringEnumConverter<CompanySizeDto>))]
+public enum CompanySizeDto
+{
+    /// <summary>Non renseignée : la première échéance s'applique.</summary>
+    Unknown = 0,
+
+    /// <summary>Grande entreprise.</summary>
+    Large = 1,
+
+    /// <summary>Entreprise de taille intermédiaire (ETI).</summary>
+    Intermediate = 2,
+
+    /// <summary>Petite ou moyenne entreprise (PME).</summary>
+    SmallOrMedium = 3,
+
+    /// <summary>Micro-entreprise.</summary>
+    Micro = 4,
+}
+
+/// <summary>
 /// Fiche de l'entreprise du dossier : l'émetteur des devis et factures. Ses mentions sont copiées sur chaque
 /// pièce à la validation ; la modifier ne change jamais une pièce validée.
 /// </summary>
@@ -111,6 +134,9 @@ public sealed record SaveCompanyProfileRequest
     [StringLength(8, ErrorMessage = ErrorCodes.Validation.Invalid)]
     public string? ActivityCode { get; set; }
 
+    /// <summary>Catégorie de l'entreprise : elle fixe ses dates de la réforme de la facturation électronique.</summary>
+    public CompanySizeDto Size { get; set; }
+
     /// <summary>La fiche enregistrée, prête à être modifiée puis renvoyée.</summary>
     public static SaveCompanyProfileRequest From(CompanyProfileResponse profile)
     {
@@ -140,6 +166,7 @@ public sealed record SaveCompanyProfileRequest
             Bic = profile.Bic,
             AccountHolderName = profile.AccountHolderName,
             ActivityCode = profile.ActivityCode,
+            Size = profile.Size,
         };
     }
 }
@@ -171,4 +198,7 @@ public sealed record CompanyProfileResponse(
     VatDeclarationRegimeDto? VatDeclarationRegime = null,
     string? AccountHolderName = null,
     PayeeMatchDto? HolderNameMatch = null,
-    string? ActivityCode = null);
+    string? ActivityCode = null,
+    CompanySizeDto Size = CompanySizeDto.Unknown,
+    DateOnly? EInvoicingIssuingFrom = null,
+    DateOnly? EInvoicingReceivingFrom = null);

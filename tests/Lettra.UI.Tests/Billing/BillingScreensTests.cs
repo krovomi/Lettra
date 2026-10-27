@@ -15,6 +15,7 @@ using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Pages.Billing;
 using Lettra.UI.Shared.Services;
 using Lettra.UI.Tests.Cabinet;
+using Lettra.UI.Tests.Exports;
 using Lettra.UI.Tests.Portal;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,6 +29,7 @@ public sealed class InvoiceEditorTests : BunitContext
     private readonly FakeBillingSettingsGateway _settings = new();
     private readonly FakeFileDownloader _files = new();
     private readonly FakePlatformTransmissionGateway _platform;
+    private readonly FakeReceivedInvoicesGateway _reception = new();
 
     private static readonly DocumentLineRequest Conseil = new() { Designation = "Conseil", UnitCode = "HUR", Quantity = 2m, UnitPriceExclTax = 100m };
 
@@ -40,6 +42,7 @@ public sealed class InvoiceEditorTests : BunitContext
         Services.AddCabinetFakes();
         Services.AddSingleton<IInvoicesGateway>(_invoices);
         Services.AddSingleton<IPlatformTransmissionGateway>(_platform);
+        Services.AddSingleton<IReceivedInvoicesGateway>(_reception);
         Services.AddSingleton<IBillingSettingsGateway>(_settings);
         Services.AddSingleton<ICatalogGateway>(new FakeCatalogGateway());
         Services.AddSingleton<ICustomersGateway>(new FakeCustomersGateway());
@@ -207,6 +210,8 @@ public sealed class InvoiceEditorTests : BunitContext
         InvoiceResponse facture = _invoices.Add(InvoiceKindDto.Invoice, InvoiceStatusDto.Validated, "FAC-2026-0042", Conseil);
         IRenderedComponent<InvoiceEditor> page = Ouvrir(facture.Id);
         page.WaitForAssertion(() => page.Find("#platform-none").TextContent.Should().Be("Pas encore transmise à la plateforme agréée."));
+        page.WaitForAssertion(() => page.Find("#platform-directory").TextContent.Should().Contain("0225:732829320"));
+        page.FindAll("#platform-directory-missing").Should().BeEmpty();
 
         page.Find("#platform-format").Change(EInvoiceFormatDto.Ubl.ToString());
         page.Find("#platform-transmit").Click();
@@ -219,6 +224,29 @@ public sealed class InvoiceEditorTests : BunitContext
         page.Find("#platform-refresh").Click();
         page.WaitForAssertion(() => page.FindAll("#platform-history tbody tr").Should().HaveCount(3));
         page.Find("#platform-status").TextContent.Should().Contain("Mise à disposition (203)");
+    }
+
+    [Fact]
+    public void Un_client_absent_de_l_annuaire_est_signale_avant_la_transmission()
+    {
+        _reception.Registered.Clear();
+        InvoiceResponse facture = _invoices.Add(InvoiceKindDto.Invoice, InvoiceStatusDto.Validated, "FAC-2026-0042", Conseil);
+        IRenderedComponent<InvoiceEditor> page = Ouvrir(facture.Id);
+
+        page.WaitForAssertion(() => page.Find("#platform-directory-missing").TextContent.Should().StartWith("Ce client ne figure pas à l'annuaire"));
+        page.FindAll("#platform-transmit").Should().ContainSingle("l'avertissement n'empêche pas l'envoi");
+        _reception.Lookups.Should().Equal("732829320");
+    }
+
+    [Fact]
+    public void Sans_plateforme_l_annuaire_n_est_pas_mentionne()
+    {
+        _reception.PlatformConfigured = false;
+        InvoiceResponse facture = _invoices.Add(InvoiceKindDto.Invoice, InvoiceStatusDto.Validated, "FAC-2026-0042", Conseil);
+        IRenderedComponent<InvoiceEditor> page = Ouvrir(facture.Id);
+
+        page.WaitForAssertion(() => page.Find("#platform-transmit"));
+        page.FindAll("#platform-directory, #platform-directory-missing").Should().BeEmpty();
     }
 
     [Fact]

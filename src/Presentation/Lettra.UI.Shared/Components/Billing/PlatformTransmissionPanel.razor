@@ -1,6 +1,7 @@
 @* Plateforme agréée (étape 5.3) : transmission d'une pièce validée, statuts du cycle de vie (XP Z12-012) et
    encaissements, partiels ou non, jusqu'au TTC. Sans plateforme configurée, l'écran le dit au lieu de proposer l'envoi. *@
 @inject IPlatformTransmissionGateway Transmissions
+@inject IReceivedInvoicesGateway Reception
 @inject ToastService Toasts
 @inject IStringLocalizer<SharedResource> L
 @inject TimeProvider Clock
@@ -79,6 +80,18 @@
 
         @if (_transmission is null || _transmission.Status == PlatformStatusDto.Rejected)
         {
+            @if (_directory is { Consulted: true } directory)
+            {
+                @if (directory.Entry is { } entry)
+                {
+                    <p id="platform-directory" class="lettra-hint">@string.Format(Culture, L["Reception.Directory.Customer"], entry.ElectronicAddress, entry.PlatformName)</p>
+                }
+                else
+                {
+                    <p id="platform-directory-missing" class="lettra-banner is-warning" role="status">@L["Reception.Directory.CustomerMissing"]</p>
+                }
+            }
+
             <div class="lettra-inline">
                 <label for="platform-format">@L["Platform.Format"]</label>
                 <select id="platform-format" @bind="_format">
@@ -100,6 +113,7 @@
     [Parameter] public EventCallback OnInvoiceChanged { get; set; }
 
     private PlatformTransmissionResponse? _transmission;
+    private DirectoryLookupResponse? _directory;
     private IReadOnlyList<ErrorDetail> _errors = [];
     private Guid? _loadedFor;
     private bool _loading = true;
@@ -128,10 +142,31 @@
         if (loaded.Errors.Any(e => e.Code == ErrorCodes.Platform.NotTransmitted))
         {
             Show(null);
+        }
+        else
+        {
+            Apply(loaded);
+        }
+
+        await LookupDirectoryAsync();
+    }
+
+    /// <summary>
+    /// Avant l'envoi d'une facture électronique (client professionnel français) : le client figure-t-il à l'annuaire ?
+    /// Sinon la plateforme rejettera la facture.
+    /// </summary>
+    private async Task LookupDirectoryAsync()
+    {
+        _directory = null;
+        if (_transmission is { Status: not PlatformStatusDto.Rejected }
+            || Invoice.Customer.Siren is not { Length: 9 } siren
+            || !string.Equals(Invoice.Customer.CountryCode, "FR", StringComparison.OrdinalIgnoreCase))
+        {
             return;
         }
 
-        Apply(loaded);
+        OperationResult<DirectoryLookupResponse> found = await Reception.LookupDirectoryAsync(siren, CancellationToken.None);
+        _directory = found.Value;
     }
 
     private Task TransmitAsync() => RunAsync(() => Transmissions.TransmitAsync(Invoice.Id, new TransmitInvoiceRequest { Format = _format }, CancellationToken.None), invoiceChanged: true,

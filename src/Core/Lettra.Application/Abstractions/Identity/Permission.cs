@@ -97,6 +97,11 @@ public enum Permission
 
     /// <summary>Remplir la fiche, fixer le niveau de risque, la revoir.</summary>
     [PermissionCategory(PermissionKind.DossierData)] VigilanceGerer = 121,
+
+    // 130-139 : factures fournisseurs reçues par la plateforme agréée (réforme de la facturation électronique).
+
+    /// <summary>Relever les factures reçues et y répondre (prise en charge, approuvée, litige, refus, paiement transmis).</summary>
+    [PermissionCategory(PermissionKind.DossierData)] FacturesRecuesTraiter = 130,
 }
 
 /// <summary>Ce qu'une permission ouvre.</summary>

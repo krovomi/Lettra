@@ -41,7 +41,10 @@ public enum MentionSince
     /// <summary>Mention exigée de longue date (« existant » dans le référentiel).</summary>
     Longstanding = 1,
 
-    /// <summary>Mention de la réforme de la facturation électronique, exigée à partir du 1er septembre 2026.</summary>
+    /// <summary>
+    /// Mention de la réforme de la facturation électronique, exigée au 1er septembre 2026 des grandes entreprises et des
+    /// ETI, au 1er septembre 2027 des PME et des micro-entreprises (<see cref="EInvoicingCalendar"/>).
+    /// </summary>
     Reform2026 = 2,
 }
 
@@ -60,8 +63,11 @@ public static class MandatoryMentions
 {
     public const string ReferenceVersion = "2026-04-15";
 
-    /// <summary>Entrée en vigueur des mentions de la réforme (référentiel : « depuis 2026-09-01 »).</summary>
-    public static readonly DateOnly Reform2026 = new(2026, 9, 1);
+    /// <summary>
+    /// Première entrée en vigueur des mentions de la réforme (référentiel : « depuis 2026-09-01 ») ; celle d'une PME ou
+    /// d'une micro-entreprise est la seconde échéance (<see cref="EInvoicingCalendar.IssuingFrom"/>).
+    /// </summary>
+    public static readonly DateOnly Reform2026 = EInvoicingCalendar.FirstWave;
 
     public static IReadOnlyList<MandatoryMention> All { get; } =
     [

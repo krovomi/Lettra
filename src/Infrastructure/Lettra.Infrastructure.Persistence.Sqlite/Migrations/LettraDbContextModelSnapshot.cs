@@ -462,6 +462,9 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                         .HasMaxLength(14)
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("Size")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("TEXT");
 
@@ -2278,6 +2281,129 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.ToTable("PlatformTransmissions", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.EInvoicing.ReceivedInvoiceRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BusinessProcess")
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BuyerSiren")
+                        .IsRequired()
+                        .HasMaxLength(9)
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("Content")
+                        .IsRequired()
+                        .HasColumnType("BLOB");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("DueDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Format")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly>("IssueDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("ReceivedAtMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("SupplierId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SupplierName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SupplierSiren")
+                        .HasMaxLength(9)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SupplierVatNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TotalExclTax")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TotalInclTax")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TotalVat")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReceivedAtMs");
+
+                    b.HasIndex("Reference")
+                        .IsUnique();
+
+                    b.ToTable("ReceivedInvoices", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.EInvoicing.ReceivedInvoiceStatusRecord", b =>
+                {
+                    b.Property<Guid>("ReceivedInvoiceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal?>("Amount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("AtMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("ReceivedInvoiceId", "Sequence");
+
+                    b.ToTable("ReceivedInvoiceStatusEvents", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Integrity.IntegrityChainHead", b =>
                 {
                     b.Property<int>("Id")
@@ -3308,6 +3434,15 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.EInvoicing.ReceivedInvoiceStatusRecord", b =>
+                {
+                    b.HasOne("Lettra.Infrastructure.Persistence.EInvoicing.ReceivedInvoiceRecord", null)
+                        .WithMany("Events")
+                        .HasForeignKey("ReceivedInvoiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Banking.BankJournalRecord", b =>
                 {
                     b.Navigation("Lines");
@@ -3319,6 +3454,11 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                 });
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.EInvoicing.PlatformTransmissionRecord", b =>
+                {
+                    b.Navigation("Events");
+                });
+
+            modelBuilder.Entity("Lettra.Infrastructure.Persistence.EInvoicing.ReceivedInvoiceRecord", b =>
                 {
                     b.Navigation("Events");
                 });
