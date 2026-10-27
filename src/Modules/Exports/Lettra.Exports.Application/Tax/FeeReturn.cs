@@ -59,7 +59,7 @@ public sealed record RemoveFeeBeneficiaryCommand(DossierId Dossier, SupplierId S
 /// <summary>
 /// La déclaration des honoraires (DAS 2) d'un exercice : pour chaque bénéficiaire suivi, les virements des relevés vers
 /// son IBAN (reconnus par l'empreinte, les IBAN des relevés ne sont jamais gardés en clair) et les sommes notées hors
-/// relevés ; au-delà de 1 200 € TTC, il se déclare. L'échéance vient du calendrier fiscal.
+/// relevés ; au-delà du seuil de l'exercice (2 400 € TTC depuis 2024), il se déclare. L'échéance vient du calendrier fiscal.
 /// </summary>
 public sealed class FeeReturns(IFeeReturnStore store, IIbanFingerprints fingerprints, TaxDeclarations tax)
 {
@@ -113,10 +113,10 @@ public sealed class FeeReturns(IFeeReturnStore store, IIbanFingerprints fingerpr
             start,
             end,
             deadline,
-            FeeBeneficiary.DeclarationThreshold,
+            FeeBeneficiary.ThresholdFor(end),
             [
                 .. payees.Where(p => p.Beneficiary is not null)
-                    .Select(p => Row(p, paidByBank(p), start))
+                    .Select(p => Row(p, paidByBank(p), start, end))
                     .OrderByDescending(r => r.Total)
                     .ThenBy(r => r.Name, StringComparer.CurrentCultureIgnoreCase),
             ],
@@ -128,7 +128,7 @@ public sealed class FeeReturns(IFeeReturnStore store, IIbanFingerprints fingerpr
             bankLinesUntil);
     }
 
-    public static FeeBeneficiaryRow Row(FeePayee payee, decimal paidByBank, DateOnly fiscalYearStart)
+    public static FeeBeneficiaryRow Row(FeePayee payee, decimal paidByBank, DateOnly fiscalYearStart, DateOnly fiscalYearEnd)
     {
         ArgumentNullException.ThrowIfNull(payee);
         FeeBeneficiary beneficiary = payee.Beneficiary ?? throw new ArgumentException("Bénéficiaire non suivi.", nameof(payee));
@@ -144,7 +144,7 @@ public sealed class FeeReturns(IFeeReturnStore store, IIbanFingerprints fingerpr
             paidByBank,
             outside,
             total,
-            FeeBeneficiary.MustBeDeclared(total),
+            FeeBeneficiary.MustBeDeclared(total, fiscalYearEnd),
             payee.Siret is null && string.Equals(payee.Country, "FR", StringComparison.Ordinal),
             payee.Iban is not null,
             beneficiary.Version);

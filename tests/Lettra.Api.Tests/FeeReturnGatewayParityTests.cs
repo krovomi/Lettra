@@ -13,7 +13,7 @@ namespace Lettra.Api.Tests;
 
 /// <summary>
 /// Déclaration des honoraires (DAS 2) par la même interface, en HTTP et en direct : les virements des relevés vers l'IBAN
-/// du bénéficiaire et les sommes notées à la main s'additionnent, le seuil de 1 200 € décide, l'échéance entre au
+/// du bénéficiaire et les sommes notées à la main s'additionnent, le seuil de 2 400 € décide, l'échéance entre au
 /// calendrier fiscal et se marque déposée.
 /// </summary>
 public sealed class FeeReturnGatewayParityTests(LettraApiFactory factory) : IClassFixture<LettraApiFactory>, IDisposable
@@ -87,8 +87,8 @@ public sealed class FeeReturnGatewayParityTests(LettraApiFactory factory) : ICla
         DateOnly start = before.FiscalYearStart;
         OperationResult<FeeReturnResponse> tracked = await fees.SaveAsync(lawyer.Id, Fees(start), null, default);
         FeeBeneficiaryRow below = tracked.Value!.Rows.Single(r => r.SupplierId == lawyer.Id);
-        OperationResult<FeeReturnResponse> stale = await fees.SaveAsync(lawyer.Id, Fees(start, 400m), below.Version + 1, default);
-        OperationResult<FeeReturnResponse> outside = await fees.SaveAsync(lawyer.Id, Fees(start, 400m), below.Version, default);
+        OperationResult<FeeReturnResponse> stale = await fees.SaveAsync(lawyer.Id, Fees(start, 1_600m), below.Version + 1, default);
+        OperationResult<FeeReturnResponse> outside = await fees.SaveAsync(lawyer.Id, Fees(start, 1_600m), below.Version, default);
         FeeBeneficiaryRow above = outside.Value!.Rows.Single(r => r.SupplierId == lawyer.Id);
 
         before.Candidates.Should().Contain(c => c.SupplierId == lawyer.Id);
@@ -98,7 +98,7 @@ public sealed class FeeReturnGatewayParityTests(LettraApiFactory factory) : ICla
         (below.PaidByBank, below.PaidOutside, below.Total, below.ToDeclare, below.SiretMissing, below.HasIban).Should().Be((900m, 0m, 900m, false, false, true));
         below.Profession.Should().Be("Avocat");
         stale.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Concurrency.VersionMismatch);
-        (above.PaidOutside, above.Total, above.ToDeclare).Should().Be((400m, 1_300m, true), "au-delà de 1 200 € TTC");
+        (above.PaidOutside, above.Total, above.ToDeclare).Should().Be((1_600m, 2_500m, true), "au-delà de 2 400 € TTC");
         FiscalDeadlineResponse deadline = outside.Value.Deadline!;
         deadline.Obligation.Should().Be(FiscalObligationDto.FeeReturnDas2);
         deadline.PeriodStart.Should().Be(start);
@@ -133,7 +133,7 @@ public sealed class FeeReturnGatewayParityTests(LettraApiFactory factory) : ICla
         OperationResult<FeeReturnResponse> amount = await fees.SaveAsync(noSiret.Id, Fees(start, -1m), null, default);
         OperationResult<FeeReturnResponse> year = await fees.SaveAsync(noSiret.Id, Fees(start) with { FiscalYearStart = start.AddDays(1) }, null, default);
         OperationResult<FeeReturnResponse> notTracked = await fees.RemoveAsync(noSiret.Id, start, 1, default);
-        OperationResult<FeeReturnResponse> saved = await fees.SaveAsync(noSiret.Id, Fees(start, 1_500m), null, default);
+        OperationResult<FeeReturnResponse> saved = await fees.SaveAsync(noSiret.Id, Fees(start, 2_500m), null, default);
 
         unknown.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Fee.SupplierNotFound);
         profession.Errors.Should().ContainSingle().Which.Should().Match<ErrorDetail>(e => e.Code == ErrorCodes.Fee.ProfessionRequired && e.Target == "Profession");

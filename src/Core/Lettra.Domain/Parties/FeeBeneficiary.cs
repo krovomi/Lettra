@@ -50,13 +50,16 @@ public sealed class FeePaidOutside
 /// <summary>
 /// Un fournisseur dont les versements entrent dans la déclaration des honoraires (DAS 2) : honoraires, commissions,
 /// courtages, ristournes, droits d'auteur ou d'inventeur versés à un tiers non salarié. Ils se déclarent quand ils
-/// dépassent 1 200 € TTC par an et par bénéficiaire (art. 240 du CGI), avec la déclaration de résultats. Les versements
+/// dépassent 2 400 € TTC par an et par bénéficiaire (art. 240 du CGI ; 1 200 € avant les sommes versées en 2024), avec la déclaration de résultats. Les versements
 /// se lisent sur les relevés bancaires ; ceux faits autrement se notent ici, par exercice.
 /// </summary>
 public sealed class FeeBeneficiary : AggregateRoot<SupplierId>, IVersioned
 {
-    /// <summary>Au-delà de ce total TTC versé dans l'année, le bénéficiaire se déclare (art. 240 du CGI).</summary>
-    public const decimal DeclarationThreshold = 1_200m;
+    /// <summary>Au-delà de ce total TTC versé dans l'année, le bénéficiaire se déclare (art. 240 du CGI ; BOI-BIC-DECLA-30-70-20).</summary>
+    public const decimal DeclarationThreshold = 2_400m;
+
+    /// <summary>Le seuil des exercices clos avant 2024, avant son relèvement à 2 400 €.</summary>
+    public const decimal DeclarationThresholdBefore2024 = 1_200m;
 
     public const int MaxProfessionLength = 60;
     public const decimal MaxAmount = 100_000_000m;
@@ -81,8 +84,12 @@ public sealed class FeeBeneficiary : AggregateRoot<SupplierId>, IVersioned
 
     public long Version { get; private set; }
 
-    /// <summary>Le total versé dépasse le seuil : le bénéficiaire figure sur la déclaration.</summary>
-    public static bool MustBeDeclared(decimal totalPaid) => totalPaid > DeclarationThreshold;
+    /// <summary>Le seuil de l'exercice : 2 400 € à partir des sommes versées en 2024, 1 200 € pour les exercices clos avant.</summary>
+    public static decimal ThresholdFor(DateOnly fiscalYearEnd) =>
+        fiscalYearEnd.Year >= 2024 ? DeclarationThreshold : DeclarationThresholdBefore2024;
+
+    /// <summary>Le total versé dans l'exercice dépasse son seuil : le bénéficiaire figure sur la déclaration.</summary>
+    public static bool MustBeDeclared(decimal totalPaid, DateOnly fiscalYearEnd) => totalPaid > ThresholdFor(fiscalYearEnd);
 
     public static Result<FeeBeneficiary> Create(SupplierId supplier, Draft draft, DateTimeOffset now)
     {
