@@ -43,6 +43,7 @@ internal sealed class ImportOfflineInvoiceHandler(
     IInvoiceRepository invoices,
     IQuoteRepository quotes,
     ICustomerRepository customers,
+    ICompanyProfileRepository profiles,
     IDeviceSeriesRegistry deviceSeries,
     ISegregationOfDuties duties,
     IIntegrityJournal journal,
@@ -99,7 +100,8 @@ internal sealed class ImportOfflineInvoiceHandler(
         }
 
         Invoice invoice = replicated.Value;
-        ComplianceReport report = ComplianceChecker.Check(invoice.ToComplianceDocument(null), invoice.IssueDate!.Value);
+        CompanyProfile? profile = await profiles.FindAsync(cancellationToken).ConfigureAwait(false);
+        ComplianceReport report = ComplianceChecker.Check(invoice.ToComplianceDocument(null, profile?.ReformMentionsFrom), invoice.IssueDate!.Value);
         // Une pièce débloquée a été remise au client telle quelle : elle se corrige par un avoir, pas en la refusant.
         if (report.BlocksValidation && !released)
         {

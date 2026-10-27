@@ -4,6 +4,7 @@ using Lettra.Exports.Application;
 using Lettra.Exports.Application.AuditKit;
 using Lettra.Exports.Application.Banking;
 using Lettra.Exports.Application.EInvoicing.Platform;
+using Lettra.Exports.Application.EInvoicing.Reception;
 using Lettra.Exports.Application.Insights;
 using Lettra.Exports.Application.Portal;
 using Lettra.Exports.Application.Reminders;
@@ -29,6 +30,7 @@ public static class DependencyInjection
     {
         services.AddScoped<ISalesJournalReader, EfSalesJournalReader>();
         services.AddScoped<IPlatformTransmissionStore, EfPlatformTransmissionStore>();
+        services.AddScoped<IReceivedInvoiceStore, EfReceivedInvoiceStore>();
         services.AddScoped<IPlatformHistoryReader, EfPlatformHistoryReader>();
         services.AddScoped<IReceivablesReader, EfReceivablesReader>();
         services.AddScoped<IPaymentRepository, EfPaymentRepository>();
@@ -126,8 +128,10 @@ public static class DependencyInjection
     {
         services.TryAddSingleton(TimeProvider.System);
         services.RemoveAll<IAccreditedPlatformClient>();
+        services.RemoveAll<IEInvoicingDirectory>();
         services.TryAddSingleton<SimulatedAccreditedPlatform>();
         services.AddSingleton<IAccreditedPlatformClient>(sp => sp.GetRequiredService<SimulatedAccreditedPlatform>());
+        services.AddSingleton<IEInvoicingDirectory>(sp => sp.GetRequiredService<SimulatedAccreditedPlatform>());
         return services;
     }
 

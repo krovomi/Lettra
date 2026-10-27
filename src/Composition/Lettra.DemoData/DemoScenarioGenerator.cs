@@ -92,6 +92,14 @@ internal sealed class DemoScenarioGenerator
             Iban = FrenchIdentifiers.Iban((int)_company.Business, 10_000 + _company.SirenOrdinal, 1_000_000L * _company.SirenOrdinal),
             Bic = "DEMOFRPPXXX",
             ActivityCode = _company.ActivityCode,
+            // Catégorie d'entreprise (réforme de la facturation électronique) : le négoce émet dès la première vague,
+            // l'artisan et le conseil, plus petits, à la seconde.
+            Size = _company.Business switch
+            {
+                DemoBusiness.Trading => CompanySizeDto.Intermediate,
+                DemoBusiness.Building => CompanySizeDto.Micro,
+                _ => CompanySizeDto.SmallOrMedium,
+            },
         };
     }
 

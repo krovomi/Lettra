@@ -1,3 +1,4 @@
+using Lettra.Calculations.Compliance;
 using Lettra.Domain.Common;
 using Lettra.Domain.Parties;
 using Lettra.Domain.SharedKernel;
@@ -87,6 +88,15 @@ public sealed class CompanyProfile : AggregateRoot<Guid>, IVersioned
     /// </summary>
     public string? ActivityCode { get; private set; }
 
+    /// <summary>
+    /// Catégorie de l'entreprise (grande entreprise, ETI, PME, micro-entreprise) : elle fixe la date à laquelle elle émet
+    /// ses factures électroniques et porte les nouvelles mentions. Non renseignée, la première échéance s'applique.
+    /// </summary>
+    public CompanySize Size { get; private set; }
+
+    /// <summary>Date à laquelle les mentions de la réforme sont exigées sur les pièces de l'entreprise.</summary>
+    public DateOnly ReformMentionsFrom => EInvoicingCalendar.IssuingFrom(Size);
+
     /// <summary>Nom présenté avec l'IBAN sur les factures, le QR code de paiement et la facture électronique.</summary>
     public string PayeeName => AccountHolderName ?? Name;
 
@@ -118,7 +128,8 @@ public sealed class CompanyProfile : AggregateRoot<Guid>, IVersioned
         string? Bic,
         VatDeclarationRegime? VatDeclarationRegime = null,
         string? AccountHolderName = null,
-        string? ActivityCode = null);
+        string? ActivityCode = null,
+        CompanySize Size = CompanySize.Unknown);
 
     public static Result<CompanyProfile> Create(Draft draft, DateTimeOffset now)
     {
@@ -134,7 +145,7 @@ public sealed class CompanyProfile : AggregateRoot<Guid>, IVersioned
         new PartySnapshot(
             Name, Address.Line1, Address.Line2, Address.PostalCode, Address.City, Address.Country.Value,
             Siren?.Value, Siret?.Value, VatNumber?.Value, LegalForm, ShareCapital, Rcs, IsBusiness: true),
-        VatFranchise, VatOnDebits, PaymentDays, PaymentTerms, LatePenaltyRate, EarlyPaymentDiscount);
+        VatFranchise, VatOnDebits, PaymentDays, PaymentTerms, LatePenaltyRate, EarlyPaymentDiscount, ReformMentionsFrom);
 
     private Result Apply(Draft draft, DateTimeOffset now)
     {
@@ -164,6 +175,11 @@ public sealed class CompanyProfile : AggregateRoot<Guid>, IVersioned
         if (draft.VatDeclarationRegime is { } regime && !Enum.IsDefined(regime))
         {
             errors.Add(CompanyProfileErrors.Invalid(nameof(VatDeclarationRegime)));
+        }
+
+        if (!Enum.IsDefined(draft.Size))
+        {
+            errors.Add(CompanyProfileErrors.Invalid(nameof(Size)));
         }
 
         if (draft.ShareCapital is < 0m || draft.LatePenaltyRate is < 0m or > 100m)
@@ -207,6 +223,7 @@ public sealed class CompanyProfile : AggregateRoot<Guid>, IVersioned
         Bic = bic;
         AccountHolderName = holder;
         ActivityCode = activity;
+        Size = draft.Size;
         UpdatedAt = now;
         Version++;
         return Result.Success();

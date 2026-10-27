@@ -32,7 +32,10 @@ public sealed record InvoiceHeader(
     string? Subject,
     string? Notes);
 
-/// <summary>Conditions de l'émetteur copiées sur la pièce à la validation (fiche entreprise).</summary>
+/// <summary>
+/// Conditions de l'émetteur copiées sur la pièce à la validation (fiche entreprise). <paramref name="ReformMentionsFrom"/> :
+/// date à laquelle les mentions de la réforme lui sont exigées (selon sa catégorie d'entreprise).
+/// </summary>
 public sealed record SellerTerms(
     PartySnapshot Seller,
     bool VatFranchise,
@@ -40,7 +43,8 @@ public sealed record SellerTerms(
     int PaymentDays,
     string? PaymentTerms,
     decimal? LatePenaltyRate,
-    string? EarlyPaymentDiscount);
+    string? EarlyPaymentDiscount,
+    DateOnly? ReformMentionsFrom = null);
 
 /// <summary>
 /// Une pièce validée hors ligne sur un poste, telle qu'elle a été figée et remise au client (ADR-0007). Le serveur la
@@ -636,8 +640,11 @@ public sealed class Invoice : BillingDocument<InvoiceId>
     public IEnumerable<RevenueLine> RevenueLines =>
         Lines.Select(l => new RevenueLine(l.Nature, l.TotalExclTax, l.VatRatePercent, l.VatCategory));
 
-    /// <summary>Vue de la pièce pour le contrôle des mentions obligatoires.</summary>
-    public ComplianceDocument ToComplianceDocument(SellerTerms? terms)
+    /// <summary>
+    /// Vue de la pièce pour le contrôle des mentions obligatoires. <paramref name="reformMentionsFrom"/> : la date des
+    /// mentions de la réforme pour l'émetteur, quand <paramref name="terms"/> ne la donne pas (pièce validée).
+    /// </summary>
+    public ComplianceDocument ToComplianceDocument(SellerTerms? terms, DateOnly? reformMentionsFrom = null)
     {
         PartySnapshot? seller = Seller ?? terms?.Seller;
         bool franchise = VatRegime == VatRegime.Franchise;
@@ -665,7 +672,8 @@ public sealed class Invoice : BillingDocument<InvoiceId>
             IsDraft ? terms?.EarlyPaymentDiscount : EarlyPaymentDiscount,
             [.. Lines.Select(l => new ComplianceLine(l.Designation, l.Quantity, l.UnitPriceExclTax, l.VatCategory))],
             mentions,
-            CreditedInvoiceNumber);
+            CreditedInvoiceNumber,
+            reformMentionsFrom ?? terms?.ReformMentionsFrom);
     }
 
     internal static ComplianceParty ToParty(PartySnapshot party) => new(

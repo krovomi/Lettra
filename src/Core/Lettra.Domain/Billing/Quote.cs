@@ -243,7 +243,8 @@ public sealed class Quote : BillingDocument<QuoteId>
             null,
             null,
             [.. Lines.Select(l => new ComplianceLine(l.Designation, l.Quantity, l.UnitPriceExclTax, l.VatCategory))],
-            mentions);
+            mentions,
+            ReformMentionsFrom: terms?.ReformMentionsFrom);
     }
 
     private Result Apply(QuoteDraft draft)

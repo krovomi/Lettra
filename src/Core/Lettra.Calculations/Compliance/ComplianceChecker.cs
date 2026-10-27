@@ -40,7 +40,9 @@ public sealed record ComplianceLine(string? Designation, decimal? Quantity, deci
 /// <summary>
 /// Ce que le contrôle lit d'une pièce. <paramref name="IsDraft"/> : le numéro et la date d'émission seront attribués
 /// à la validation, leur absence n'est pas un manque. <paramref name="LegalMentions"/> : les textes imprimés en pied
-/// (mentions de TVA, indemnité de 40 €, option sur les débits).
+/// (mentions de TVA, indemnité de 40 €, option sur les débits). <paramref name="ReformMentionsFrom"/> : date à laquelle
+/// les mentions de la réforme deviennent exigées pour l'émetteur (<see cref="EInvoicingCalendar.IssuingFrom"/>) ; à
+/// défaut, la première échéance.
 /// </summary>
 public sealed record ComplianceDocument(
     CompliancePieceKind Kind,
@@ -60,7 +62,8 @@ public sealed record ComplianceDocument(
     string? EarlyPaymentDiscount,
     IReadOnlyList<ComplianceLine> Lines,
     IReadOnlyList<string> LegalMentions,
-    string? OriginalInvoiceNumber = null);
+    string? OriginalInvoiceNumber = null,
+    DateOnly? ReformMentionsFrom = null);
 
 /// <summary>Un constat : le code de la mention, sa gravité, sa base légale, la ligne concernée (à partir de 1).</summary>
 public sealed record ComplianceFinding(string Code, ComplianceSeverity Severity, string? LegalBasis, int? Line = null);
@@ -105,7 +108,7 @@ public static class ComplianceChecker
     {
         ArgumentNullException.ThrowIfNull(document);
         List<ComplianceFinding> findings = [];
-        bool reformActive = today >= MandatoryMentions.Reform2026;
+        bool reformActive = today >= (document.ReformMentionsFrom ?? MandatoryMentions.Reform2026);
         CheckSeller(findings, document);
         CheckCustomer(findings, document, reformActive);
         CheckPiece(findings, document, reformActive);

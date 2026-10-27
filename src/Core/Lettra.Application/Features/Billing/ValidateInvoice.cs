@@ -119,7 +119,7 @@ internal sealed class ValidateInvoiceHandler(
             return Result<bool>.Failure(result.Errors);
         }
 
-        ComplianceReport report = ComplianceChecker.Check(invoice.ToComplianceDocument(null), today);
+        ComplianceReport report = ComplianceChecker.Check(invoice.ToComplianceDocument(null, profile.ReformMentionsFrom), today);
         if (report.BlocksValidation)
         {
             return Result<bool>.Failure(InvoiceValidationEffects.Blocked(report).Errors);

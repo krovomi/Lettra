@@ -261,6 +261,13 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Reception_des_factures_fournisseurs_par_la_plateforme_simulee()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator(), simulatedPlatform: true);
+        await ReceptionScenarios.ReceptionAsync(harness, DatabaseProvider.Sqlite, Database("pa-reception"));
+    }
+
+    [Fact]
     public async Task Envois_a_la_plateforme_par_l_outbox_sans_doublon()
     {
         ManualClock clock = new(OutboxScenarios.Start);
@@ -277,6 +284,13 @@ public sealed class SqliteTests : IDisposable
     {
         await using TenantHarness harness = new(new SqliteConfigurator());
         await PlatformScenarios.NotConfiguredAsync(harness, DatabaseProvider.Sqlite, Database("pa-aucune"));
+    }
+
+    [Fact]
+    public async Task Sans_plateforme_agreee_configuree_aucune_facture_ne_se_recoit()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        await ReceptionScenarios.NotConfiguredAsync(harness, DatabaseProvider.Sqlite, Database("pa-reception-aucune"));
     }
 
     [Fact]
@@ -708,6 +722,14 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     }
 
     [SkippableFact]
+    public async Task Reception_des_factures_fournisseurs_par_la_plateforme_simulee()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new PostgreSqlConfigurator(), simulatedPlatform: true);
+        await ReceptionScenarios.ReceptionAsync(harness, DatabaseProvider.PostgreSql, Database("pa-reception"));
+    }
+
+    [SkippableFact]
     public async Task Kit_controle_fiscal_d_une_periode()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
@@ -1113,6 +1135,14 @@ public sealed class SqlServerTests : IAsyncLifetime
         Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new SqlServerConfigurator(), simulatedPlatform: true);
         await PlatformScenarios.TransmissionAsync(harness, DatabaseProvider.SqlServer, Database("pa"));
+    }
+
+    [SkippableFact]
+    public async Task Reception_des_factures_fournisseurs_par_la_plateforme_simulee()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        await using TenantHarness harness = new(new SqlServerConfigurator(), simulatedPlatform: true);
+        await ReceptionScenarios.ReceptionAsync(harness, DatabaseProvider.SqlServer, Database("pa-reception"));
     }
 
     [SkippableFact]

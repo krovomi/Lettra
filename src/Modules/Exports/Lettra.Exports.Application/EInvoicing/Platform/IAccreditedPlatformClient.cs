@@ -59,6 +59,26 @@ public sealed record PlatformPaymentReport(
     decimal Amount,
     string? IdempotencyKey = null);
 
+/// <summary>
+/// Une facture fournisseur mise à disposition de l'acheteur par sa plateforme : le fichier reçu (CII ou UBL) et sa
+/// référence, qui l'identifie dans les réponses.
+/// </summary>
+public sealed record PlatformIncomingInvoice(
+    string Reference,
+    EInvoiceFormatDto Format,
+    string FileName,
+    ReadOnlyMemory<byte> Content,
+    DateTimeOffset MadeAvailableAt);
+
+/// <summary>La réponse de l'acheteur à une facture reçue (prise en charge, approuvée, en litige, refusée, paiement transmis).</summary>
+public sealed record PlatformBuyerResponse(
+    string BuyerSiren,
+    string Reference,
+    PlatformStatus Status,
+    string? Reason,
+    decimal? Amount,
+    string? IdempotencyKey = null);
+
 /// <summary>Accusé de dépôt : la référence attribuée par la plateforme et le premier statut (Déposée ou Rejetée).</summary>
 public sealed record PlatformReceipt(string Reference, PlatformStatusEvent Status);
 
@@ -87,6 +107,12 @@ public interface IAccreditedPlatformClient
 
     /// <summary>Déclare un encaissement ; la plateforme l'ajoute à l'historique (statut Encaissée).</summary>
     Task<Result<PlatformStatusEvent>> ReportPaymentAsync(PlatformPaymentReport payment, CancellationToken cancellationToken);
+
+    /// <summary>Les factures mises à disposition de cet acheteur, toutes, dans l'ordre de leur arrivée.</summary>
+    Task<Result<IReadOnlyList<PlatformIncomingInvoice>>> ListIncomingInvoicesAsync(string buyerSiren, CancellationToken cancellationToken);
+
+    /// <summary>Transmet la réponse de l'acheteur au fournisseur ; la plateforme rend le statut enregistré.</summary>
+    Task<Result<PlatformStatusEvent>> RespondToIncomingInvoiceAsync(PlatformBuyerResponse response, CancellationToken cancellationToken);
 }
 
 public static class PlatformErrors
@@ -126,5 +152,11 @@ internal sealed class UnconfiguredPlatformClient : IAccreditedPlatformClient
         Task.FromResult<Result<IReadOnlyList<PlatformStatusEvent>>>(PlatformErrors.NotConfigured);
 
     public Task<Result<PlatformStatusEvent>> ReportPaymentAsync(PlatformPaymentReport payment, CancellationToken cancellationToken) =>
+        Task.FromResult<Result<PlatformStatusEvent>>(PlatformErrors.NotConfigured);
+
+    public Task<Result<IReadOnlyList<PlatformIncomingInvoice>>> ListIncomingInvoicesAsync(string buyerSiren, CancellationToken cancellationToken) =>
+        Task.FromResult<Result<IReadOnlyList<PlatformIncomingInvoice>>>(PlatformErrors.NotConfigured);
+
+    public Task<Result<PlatformStatusEvent>> RespondToIncomingInvoiceAsync(PlatformBuyerResponse response, CancellationToken cancellationToken) =>
         Task.FromResult<Result<PlatformStatusEvent>>(PlatformErrors.NotConfigured);
 }

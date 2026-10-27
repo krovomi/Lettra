@@ -33,6 +33,9 @@ public static class RoleTemplates
 
         // Il lit la fiche anti-blanchiment du client ; qui valide les factures la remplit et fixe le risque.
         Permission.VigilanceConsulter,
+
+        // Il relève les factures fournisseurs reçues par la plateforme et y répond (litige, refus, paiement transmis).
+        Permission.FacturesRecuesTraiter,
     ];
 
     public static FrozenDictionary<string, RoleDefinition> All { get; } = new RoleDefinition[]

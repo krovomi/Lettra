@@ -187,7 +187,7 @@ public sealed class NavMenuTests : BunitContext
         coque.Find("#nav-filter").Input("factur");
 
         IElement[] resultats = [.. coque.FindAll(".lt-sidebar .lt-nav-results .lt-nav-link")];
-        Libelles(resultats).Take(2).Should().Equal("Factures", "Factures récurrentes");
+        Libelles(resultats).Take(2).Should().Equal("Factures", "Factures reçues");
         resultats[0].QuerySelector(".lt-nav-hint")!.TextContent.Should().Be("Ventes");
         coque.Find(".lt-sidebar [role=status]").TextContent.Should().StartWith(resultats.Length.ToString(CultureInfo.InvariantCulture));
     }
@@ -267,7 +267,7 @@ public sealed class NavMenuTests : BunitContext
         coque.Find("#tab-more").Click();
 
         coque.Find("#more-filter").Input("fac");
-        Libelles(coque.FindAll("#more-sheet .lt-nav-results .lt-nav-link")).Should().StartWith(["Factures", "Factures récurrentes"], "la recherche couvre aussi les onglets du bas");
+        Libelles(coque.FindAll("#more-sheet .lt-nav-results .lt-nav-link")).Should().StartWith(["Factures", "Factures reçues"], "la recherche couvre aussi les onglets du bas");
         coque.Find("#more-filter").KeyDown("Escape");
         coque.FindAll("#more-sheet .lt-nav-section").Select(s => s.GetAttribute("data-group"))
             .Should().Equal("Nav.Group.Sales", "Nav.Group.Parties", "Nav.Group.Accounting", "Nav.Group.Settings");

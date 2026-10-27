@@ -1,3 +1,4 @@
+using Lettra.Calculations.Compliance;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Pricing;
@@ -75,7 +76,8 @@ public static class BillingMapper
             request.Bic,
             (VatDeclarationRegime?)(int?)request.VatDeclarationRegime,
             request.AccountHolderName,
-            request.ActivityCode);
+            request.ActivityCode,
+            (CompanySize)(int)request.Size);
     }
 
     public static IReadOnlyList<PriceListEntryDraft> ToDrafts(this IEnumerable<PriceListEntryRequest>? entries) =>
@@ -235,7 +237,10 @@ public static class BillingMapper
             (VatDeclarationRegimeDto?)(int?)profile.VatDeclarationRegime,
             profile.AccountHolderName,
             profile.AccountHolderName is { } holder ? (PayeeMatchDto)PayeeNames.Compare(profile.Name, holder) : null,
-            profile.ActivityCode);
+            profile.ActivityCode,
+            (CompanySizeDto)(int)profile.Size,
+            profile.ReformMentionsFrom,
+            EInvoicingCalendar.ReceivingFrom);
     }
 
     public static ComplianceReportResponse ToResponse(this Calculations.Compliance.ComplianceReport report)

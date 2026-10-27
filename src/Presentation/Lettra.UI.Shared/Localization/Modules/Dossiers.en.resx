@@ -44,4 +44,11 @@
   <data name="Company.Holder.CloseMatch" xml:space="preserve"><value>Close to the company name</value></data>
   <data name="Company.Field.ActivityCode" xml:space="preserve"><value>NAF (APE) code</value></data>
   <data name="Company.Field.ActivityCode.Hint" xml:space="preserve"><value>The main activity, for example 47.24Z. It groups the dossier with those of the same sector for the peer comparison.</value></data>
+  <data name="Company.Field.Size" xml:space="preserve"><value>Company category</value></data>
+  <data name="Company.Size.Unknown" xml:space="preserve"><value>Not set (first deadline)</value></data>
+  <data name="Company.Size.Large" xml:space="preserve"><value>Large enterprise</value></data>
+  <data name="Company.Size.Intermediate" xml:space="preserve"><value>Mid-sized enterprise (ETI)</value></data>
+  <data name="Company.Size.SmallOrMedium" xml:space="preserve"><value>SME</value></data>
+  <data name="Company.Size.Micro" xml:space="preserve"><value>Micro-enterprise</value></data>
+  <data name="Company.Size.Hint" xml:space="preserve"><value>E-invoicing: receiving from {0}; issuing, e-reporting and new mandatory mentions from {1}.</value></data>
 </root>

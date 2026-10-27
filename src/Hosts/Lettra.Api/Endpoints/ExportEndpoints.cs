@@ -33,6 +33,9 @@ internal static class ExportEndpoints
         api.MapReminders();
         api.MapPortalLinks();
 
+        // La réception des factures fournisseurs passe par la même plateforme agréée que la transmission.
+        api.MapReception();
+
         // La météo des paiements lit les mêmes pièces et les mêmes encaissements.
         api.MapInsights();
 

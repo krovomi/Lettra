@@ -72,6 +72,18 @@ else
                 <FieldErrors Field="@nameof(SaveCompanyProfileRequest.ActivityCode)" ServerErrors="_errors" />
             </div>
 
+            <div class="lettra-field">
+                <label for="company-size">@L["Company.Field.Size"]</label>
+                <InputSelect id="company-size" @bind-Value="_request.Size" aria-describedby="company-size-hint">
+                    @foreach (CompanySizeDto size in Enum.GetValues<CompanySizeDto>())
+                    {
+                        <option value="@size">@L[$"Company.Size.{size}"]</option>
+                    }
+                </InputSelect>
+                <p class="lettra-hint" id="company-size-hint">@SizeHint</p>
+                <FieldErrors Field="@nameof(SaveCompanyProfileRequest.Size)" ServerErrors="_errors" />
+            </div>
+
             <div class="lettra-field lettra-field-wide">
                 <label for="company-vat">@L["Customers.Field.VatNumber"]</label>
                 <div class="lettra-inline">
@@ -202,6 +214,13 @@ else
     private bool _loaded;
     private bool _busy;
     private bool _saved;
+
+    /// <summary>Les deux dates de la réforme pour la catégorie choisie, dans la langue de l'écran.</summary>
+    private string SizeHint => string.Format(
+        CultureInfo.CurrentCulture,
+        L["Company.Size.Hint"],
+        DateText.Format(Lettra.Calculations.Compliance.EInvoicingCalendar.ReceivingFrom, CultureInfo.CurrentCulture),
+        DateText.Format(Lettra.Calculations.Compliance.EInvoicingCalendar.IssuingFrom((Lettra.Calculations.Compliance.CompanySize)(int)_request.Size), CultureInfo.CurrentCulture));
 
     protected override async Task OnInitializedAsync()
     {
