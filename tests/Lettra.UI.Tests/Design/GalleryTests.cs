@@ -64,6 +64,7 @@ public sealed class GalleryTests : BunitContext
         Services.AddSingleton<IDirectoryGateway>(new FakeDirectoryGateway());
         Services.AddSingleton<IBillingSettingsGateway>(new FakeBillingSettingsGateway());
         Services.AddSingleton<IPlatformTransmissionGateway>(new FakePlatformTransmissionGateway(_invoices));
+        Services.AddSingleton<IReceivedInvoicesGateway>(new Exports.FakeReceivedInvoicesGateway());
         Services.AddSingleton<IReceivablesGateway>(new FakeReceivablesGateway(new ReceivablesSummaryResponse(
             new DateOnly(2026, 10, 16), 4, 18_960m,
             [
