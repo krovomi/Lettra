@@ -682,8 +682,9 @@ Menu **Déclarations** (groupe Comptabilité). Lettra prépare, le cabinet dépo
    fichier CSV.
    Onglet **Honoraires (DAS 2)** : les honoraires, commissions, courtages, ristournes et droits d'auteur versés à des
    fournisseurs suivis. Lettra additionne les virements des relevés bancaires vers l'IBAN de chaque bénéficiaire et
-   les sommes notées à la main (versées hors relevés), compare le total de l'exercice au seuil légal de 2 400 € par bénéficiaire et place
-   l'échéance au calendrier fiscal, où elle se marque déposée. La Vue cabinet signale l'échéance proche ou dépassée.
+   les sommes notées à la main (versées hors relevés), compare le total de l'exercice au seuil de 2 400 € TTC (1 200 €
+   pour les exercices clos avant 2024) et place l'échéance au calendrier fiscal, où elle se marque déposée. La Vue
+   cabinet signale l'échéance proche ou dépassée.
    *(Vérifié : démo Docker, navigateur sur ordinateur et téléphone.)* Détails :
    [docs/honoraires-das2.md](docs/honoraires-das2.md).
 4. Onglet **Calendrier fiscal** : les échéances de l'année (CA3 ou CA12 et acomptes, DES, DAS 2, CFE, IS, liasse), proches, en

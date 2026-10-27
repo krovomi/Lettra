@@ -1,6 +1,6 @@
 # Honoraires à déclarer (DAS 2)
 
-Une entreprise qui verse à un même bénéficiaire plus de 2 400 € dans l'exercice en honoraires, vacations, commissions, courtages, ristournes, droits d'auteur ou d'inventeur doit les déclarer à l'administration fiscale (Code général des impôts, art. 240 ; formulaire 2460-2-SD, dit DAS 2, ou fichier TD-DAS2). La déclaration se dépose avec la déclaration de résultats : le deuxième jour ouvré après le 1er mai pour un exercice clos au 31 décembre, trois mois après la clôture sinon. À défaut, l'amende est de 50 % des sommes non déclarées (art. 1736). Cet écran prépare cette déclaration pour le dossier du client.
+Une entreprise qui verse à un même bénéficiaire plus de 2 400 € TTC dans l'année en honoraires, vacations, commissions, courtages, ristournes, droits d'auteur ou d'inventeur doit les déclarer à l'administration fiscale (Code général des impôts, art. 240 ; formulaire 2460-2-SD, dit DAS 2, ou fichier TD-DAS2). Ce seuil, de 1 200 € auparavant, vaut 2 400 € depuis les sommes versées en 2024 (BOI-BIC-DECLA-30-70-20) ; les sommes se déclarent pour leur montant TTC. La déclaration se dépose avec la déclaration de résultats : le deuxième jour ouvré après le 1er mai pour un exercice clos au 31 décembre, trois mois après la clôture sinon. À défaut, l'amende est de 50 % des sommes non déclarées (art. 1736). Cet écran prépare cette déclaration pour le dossier du client.
 
 **Où** : menu Comptabilité › Déclarations, onglet « Honoraires (DAS 2) » (`/tax/fees`), dans le dossier du client. L'écran s'ouvre sur le dernier exercice clos ; les flèches passent d'un exercice à l'autre.
 
@@ -16,7 +16,7 @@ Une entreprise qui verse à un même bénéficiaire plus de 2 400 € dans l'exe
 
 - Les virements des relevés bancaires importés dont l'IBAN du destinataire est celui de la fiche fournisseur, pendant l'exercice ; Lettra compare des empreintes d'IBAN, comme le contrôle avant paiement.
 - Plus les sommes notées hors relevés pour cet exercice.
-- Le bénéficiaire est « à déclarer » au-delà de 2 400 €, « sous le seuil » sinon. Le seuil est de 2 400 € par an et par bénéficiaire ([BOFiP](https://bofip.impots.gouv.fr/bofip/14327-PGP.html/ACTU-2024-00154)) ; le prototype applique encore l'ancien seuil de 1 200 € (voir plus bas).
+- Le bénéficiaire est « à déclarer » au-delà de 2 400 € TTC, « sous le seuil » sinon. Pour un exercice clos avant 2024, l'écran applique l'ancien seuil de 1 200 €.
 - L'écran indique jusqu'à quelle date les relevés sont importés : les virements plus récents ne sont pas encore comptés.
 - Un bénéficiaire français sans SIRET est signalé : la déclaration le demande.
 - Les modifications concurrentes sont refusées (version lue, en-tête `If-Match`).
