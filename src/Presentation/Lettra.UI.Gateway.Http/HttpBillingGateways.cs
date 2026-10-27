@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Json;
 using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
@@ -124,10 +125,13 @@ internal sealed class HttpInvoicesGateway(HttpClient http) : IInvoicesGateway
 
 internal sealed class HttpPlatformTransmissionGateway(HttpClient http) : IPlatformTransmissionGateway
 {
+    /// <summary>204 : la pièce n'a jamais été transmise, rendu comme en direct par <c>Platform.NotTransmitted</c>.</summary>
     public Task<OperationResult<PlatformTransmissionResponse>> GetAsync(Guid invoiceId, CancellationToken cancellationToken) =>
         HttpCalls.SendAsync(
             ct => http.GetAsync(HttpCalls.Relative($"api/v1/invoices/{invoiceId}/platform-transmission"), ct),
-            ContractsJsonContext.Default.PlatformTransmissionResponse,
+            (response, ct) => response.StatusCode == HttpStatusCode.NoContent
+                ? Task.FromResult(OperationResult<PlatformTransmissionResponse>.Failure(ErrorCodes.Platform.NotTransmitted))
+                : response.ToOperationResultAsync(ContractsJsonContext.Default.PlatformTransmissionResponse, ct),
             cancellationToken);
 
     public Task<OperationResult<PlatformTransmissionResponse>> TransmitAsync(Guid invoiceId, TransmitInvoiceRequest request, CancellationToken cancellationToken) =>

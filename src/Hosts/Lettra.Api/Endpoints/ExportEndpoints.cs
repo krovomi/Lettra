@@ -3,6 +3,7 @@ using Lettra.Api.Security;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Tenancy;
+using Lettra.Contracts.Common;
 using Lettra.Contracts.Exports;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Common;
@@ -89,11 +90,12 @@ internal static class ExportEndpoints
 
         RouteGroupBuilder platform = api.MapGroup("/invoices/{id:guid}/platform-transmission").WithTags("Exports");
 
+        // Une pièce jamais transmise n'est pas une erreur (l'écran propose la transmission) : 204, sans corps.
         platform.MapGet("/", GetPlatformTransmissionAsync)
             .RequirePermission(Permission.DossierLire)
             .WithName("GetPlatformTransmission")
             .Produces<PlatformTransmissionResponse>()
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .Produces(StatusCodes.Status204NoContent);
 
         // Synchrone : la plateforme accuse le dépôt (Déposée ou Rejetée) dans la réponse ; la pièce déposée est émise.
         platform.MapPost("/", TransmitInvoiceAsync)
@@ -168,8 +170,13 @@ internal static class ExportEndpoints
             : file.Errors.ToProblem();
     }
 
-    private static async Task<IResult> GetPlatformTransmissionAsync(Guid id, ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken) =>
-        Ok(await queries.QueryAsync(new GetPlatformTransmissionQuery(tenant.Current.DossierId, new InvoiceId(id)), cancellationToken).ConfigureAwait(false));
+    private static async Task<IResult> GetPlatformTransmissionAsync(Guid id, ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken)
+    {
+        Result<PlatformTransmissionResponse> transmission = await queries
+            .QueryAsync(new GetPlatformTransmissionQuery(tenant.Current.DossierId, new InvoiceId(id)), cancellationToken)
+            .ConfigureAwait(false);
+        return transmission.Errors.Any(e => e.Code == ErrorCodes.Platform.NotTransmitted) ? TypedResults.NoContent() : Ok(transmission);
+    }
 
     private static async Task<IResult> TransmitInvoiceAsync(
         Guid id, TransmitInvoiceRequest? request, ITenantContext tenant, ICommandDispatcher commands, CancellationToken cancellationToken) =>
