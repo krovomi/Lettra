@@ -70,6 +70,13 @@ Clé `fournisseurs.attestations-vigilance` : les fournisseurs à ne pas payer en
 manque ou si son code n'est pas vérifié ; à défaut, information pour celles qui expirent dans les trente jours, avec
 l'échéance la plus proche. Ni nom ni montant.
 
+## La colonne « Honoraires DAS 2 »
+
+Clé `honoraires.das2` : les bénéficiaires à déclarer du dernier exercice clos (voir
+[Honoraires à déclarer](honoraires-das2.md)), avec l'échéance (« avant le … »). Information tant que l'échéance est
+loin, à traiter à trente jours ou moins, critique une fois dépassée. Rien une fois la déclaration marquée déposée, ni
+pour une échéance antérieure au début du suivi. Ni nom ni montant.
+
 ## Les droits
 
 - La vue cabinet ne montre que les dossiers que l'utilisateur peut ouvrir (`DossierLire`), comme `GET /api/v1/dossiers`.

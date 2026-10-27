@@ -6,7 +6,7 @@ Le code C# (.NET 10) suit la Clean Architecture et les principes SOLID, KISS et 
 plutôt que simplement déclarés : tests d'architecture (dépendances vers le domaine, domaine sans framework, ports
 déclarés par l'application et implémentés par l'infrastructure, passerelles HTTP et en processus au même résultat),
 zéro avertissement, 21 règles de style de l'IDE en erreur de build, couverture minimale imposée en CI. Les fonctions
-récentes (lectures du cabinet, lettre de mission, anti-blanchiment, attestations de vigilance, banque connectée,
+récentes (lectures du cabinet, lettre de mission, anti-blanchiment, attestations de vigilance, DAS 2, banque connectée,
 espace client, assistant IA du poste, comptes intra-groupe) suivent les mêmes règles : cas d'usage de l'application,
 services extérieurs derrière des ports avec des adaptateurs simulés, outils de l'assistant en lecture seule. Le résumé
 est dans le [README](../README.md#principes-de-conception), le détail, les mesures et ce qui reste ouvert dans
@@ -17,9 +17,9 @@ est dans le [README](../README.md#principes-de-conception), le détail, les mesu
 - [Accompagnement, aide à la saisie et voix dans l'interface](aide-a-la-saisie.md)
 - [Annuaire SIRENE](annuaire.md)
 - [Anti-blanchiment : connaissance du client](anti-blanchiment.md)
-- [Attestations de vigilance des sous-traitants](attestations-vigilance.md)
 - [Assistant IA : points ouverts et point fermé](assistant-ia.md)
 - [Lettra dans l'assistant IA du poste (MCP)](assistant-du-poste.md)
+- [Attestations de vigilance des sous-traitants](attestations-vigilance.md)
 - [Banque connectée](banque-connectee.md)
 - [Changement d'IBAN d'un fournisseur, nom et IBAN vérifiés](iban-fournisseurs.md)
 - [Dates et nombres dans la langue de l'écran](dates-et-langue.md)
@@ -30,6 +30,7 @@ est dans le [README](../README.md#principes-de-conception), le détail, les mesu
 - [Encaissements, rapprochement bancaire et lettrage](encaissements.md)
 - [Espace client : paiement en ligne et devis signé](espace-client.md)
 - [Factures récurrentes](factures-recurrentes.md)
+- [Honoraires à déclarer (DAS 2)](honoraires-das2.md)
 - [Indicateurs de pilotage dans Grafana](indicateurs-grafana.md)
 - [Kit contrôle fiscal](kit-controle-fiscal.md)
 - [Lettre de mission et honoraires](lettre-de-mission.md)
