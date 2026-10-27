@@ -29,6 +29,7 @@ est dans le [README](../README.md#principes-de-conception), le détail, les mesu
 - [En bref : les chiffres du mois du dirigeant](en-bref.md)
 - [Encaissements, rapprochement bancaire et lettrage](encaissements.md)
 - [Espace client : paiement en ligne et devis signé](espace-client.md)
+- [Facture électronique : la réforme (émission, réception, annuaire)](facture-electronique.md)
 - [Factures récurrentes](factures-recurrentes.md)
 - [Honoraires à déclarer (DAS 2)](honoraires-das2.md)
 - [Indicateurs de pilotage dans Grafana](indicateurs-grafana.md)
