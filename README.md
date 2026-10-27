@@ -40,9 +40,9 @@ vérifié à chaque modification, en local comme en CI, et non simplement décla
     paiements, remonter le temps, « Pourquoi ce chiffre ? », « Et si ? ») sont des cas d'usage de la couche
     application du module Exports, calculés en C# sans IA et sans rien écrire ;
   - la lettre de mission a son domaine (mission, temps passé), ses cas d'usage et ses dépôts derrière des ports,
-    comme une facture ; la fiche anti-blanchiment aussi, avec ses règles (risque, bénéficiaires effectifs, rythme
-    des revues) dans le domaine ; la comparaison aux pairs est un cas d'usage de l'application qui ne lit que la collecte des
-    indicateurs ;
+    comme une facture ; la fiche anti-blanchiment, les attestations de vigilance et le suivi des honoraires (DAS 2)
+    suivent le même modèle, leurs règles (risque et rythme des revues, validité de six mois, seuil de la DAS 2) dans le
+    domaine ; la comparaison aux pairs est un cas d'usage de l'application qui ne lit que la collecte des indicateurs ;
   - les services extérieurs pas encore choisis (banque connectée, paiement en ligne, plateforme agréée, vérification
     du nom et de l'IBAN) sont des ports de l'application ; l'infrastructure fournit pour l'instant des adaptateurs
     simulés, qu'un adaptateur réel remplacera sans toucher aux cas d'usage ;
@@ -680,7 +680,14 @@ Menu **Déclarations** (groupe Comptabilité). Lettra prépare, le cabinet dépo
    TVA des services à la date de chaque encaissement pour les factures validées à partir de cette version.
 3. Onglet **DES** : la déclaration européenne de services du mois (clients de l'Union en autoliquidation) et son
    fichier CSV.
-4. Onglet **Calendrier fiscal** : les échéances de l'année (CA3 ou CA12 et acomptes, DES, CFE, IS, liasse), proches, en
+   Onglet **Honoraires (DAS 2)** : les honoraires, commissions, courtages, ristournes et droits d'auteur versés à des
+   fournisseurs suivis. Lettra additionne les virements des relevés bancaires vers l'IBAN de chaque bénéficiaire et
+   les sommes notées à la main (versées hors relevés), compare le total de l'exercice au seuil de 2 400 € TTC (1 200 €
+   pour les exercices clos avant 2024) et place l'échéance au calendrier fiscal, où elle se marque déposée. La Vue
+   cabinet signale l'échéance proche ou dépassée.
+   *(Vérifié : démo Docker, navigateur sur ordinateur et téléphone.)* Détails :
+   [docs/honoraires-das2.md](docs/honoraires-das2.md).
+4. Onglet **Calendrier fiscal** : les échéances de l'année (CA3 ou CA12 et acomptes, DES, DAS 2, CFE, IS, liasse), proches, en
    retard ou déposées. Les échéances proches et dépassées arrivent aussi dans **Alertes** (passe toutes les 12 heures,
    par le Worker ou, dans la démo sans Worker, par l'API).
 5. Onglet **Réglages fiscaux** : date de clôture, CA3 mensuelle ou trimestrielle, jour limite de la TVA (du 15 au 24), IS et
@@ -1127,6 +1134,8 @@ Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou 
 | Lettre de mission signée et forfait facturé | Non : la lettre se télécharge en PDF et se signe hors de Lettra ; la facture du forfait reste à créer (facture récurrente). |
 | Anti-blanchiment : pièces, registres et Tracfin | Non : Lettra note quelles pièces ont été reçues sans les stocker, ne consulte ni le registre des bénéficiaires effectifs, ni les listes de gel des avoirs ou des personnes politiquement exposées, ne fait pas la déclaration de soupçon et n'efface pas la fiche cinq ans après la fin de la relation. |
 | Attestations de vigilance : dépôt et vérification | Non : Lettra note la date et le code de l'attestation sans la stocker, ne vérifie pas le code auprès de l'URSSAF, ne suit ni l'attestation de régularité fiscale ni la liste des salariés étrangers, et signale sans bloquer un virement (il ne paie pas les fournisseurs). |
+| DAS 2 : seuil | Le prototype compare encore les sommes à l'ancien seuil de 1 200 € au lieu de 2 400 € : un bénéficiaire entre les deux est dit « à déclarer » à tort. |
+| DAS 2 : fichier et dépôt | Non : Lettra prépare la liste des bénéficiaires sans produire le fichier TD-DAS2 ni le déposer ; il ne distingue ni frais remboursés ni avantages en nature, ne traite pas la retenue à la source des bénéficiaires étrangers et ne lit ni les paiements par carte ni les factures fournisseurs. |
 | Factures reçues | Pas encore enregistrées : les comptes intra-groupe comparent ce que le vendeur a facturé à la fiche fournisseur et à la banque de l'acheteur, pas facture contre facture. |
 | Assistant IA du poste avec Claude Desktop ou VS Code | Non vérifié : la connexion a été vérifiée avec le client MCP officiel (SDK TypeScript) dans la démo. |
 | Applications signées | Non : avertissement de Windows au premier lancement, APK Android installé à la main, application macOS arrêtée par le Trousseau, pas de version pour iPhone réel. |
