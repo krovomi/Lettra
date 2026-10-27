@@ -6,7 +6,7 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="Fees.Tab" xml:space="preserve"><value>Honoraires (DAS 2)</value></data>
   <data name="Fees.Title" xml:space="preserve"><value>Honoraires à déclarer (DAS 2)</value></data>
-  <data name="Fees.Subtitle" xml:space="preserve"><value>Les honoraires, commissions, courtages et droits d'auteur versés à un même bénéficiaire au-delà de 1 200 € TTC dans l'année se déclarent avec la déclaration de résultats. Lettra lit les virements des relevés vers l'IBAN de chaque bénéficiaire suivi.</value></data>
+  <data name="Fees.Subtitle" xml:space="preserve"><value>Les honoraires, commissions, courtages et droits d'auteur versés à un même bénéficiaire au-delà de 2 400 € TTC dans l'année (1 200 € avant 2024) se déclarent avec la déclaration de résultats. Lettra lit les virements des relevés vers l'IBAN de chaque bénéficiaire suivi.</value></data>
   <data name="Fees.Due" xml:space="preserve"><value>À déposer au plus tard le {0}</value></data>
   <data name="Fees.Due.None" xml:space="preserve"><value>Suivez un bénéficiaire pour voir l'échéance de cet exercice.</value></data>
   <data name="Fees.Stats" xml:space="preserve"><value>La déclaration de l'exercice</value></data>
