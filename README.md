@@ -432,7 +432,7 @@ Le jeu ne s'ajoute jamais à un dossier qui a déjà des devis ou des factures. 
 voir « Repartir de zéro » dans [En cas de problème](#en-cas-de-problème).
 
 **La navigation.** **Accueil**, **En bref**, **Vue cabinet** et **Comptes intra-groupe**, puis **Ventes** (**Devis**, **Factures**, **Avoirs**, **Factures
-récurrentes**), **Tiers** (**Clients**, **Fournisseurs**, **IBAN à vérifier**,
+récurrentes**), **Tiers** (**Clients**, **Fournisseurs**, **Factures reçues**, **IBAN à vérifier**,
 **Attestations de vigilance**, **Catalogue**), **Comptabilité** (**Encaissements**,
 **Rapprochement bancaire**, **Relances**, **Journal et balance**, **FEC**, **Déclarations**, **Revue du dossier**, **Lettre de mission**, **Anti-blanchiment**) et
 **Pilotage** (**Tableaux de bord**, **Alertes**, **Entreprise**, **Mes préférences**, **Équipe et accès** pour qui
@@ -476,9 +476,16 @@ données de démonstration, la fiche est déjà remplie (« Atelier Numérique C
 | Adresse, Code postal, Ville | 12 rue des Exemples, 75010, Paris |
 | Taux des pénalités de retard (%) | 10 |
 | Escompte pour paiement anticipé | Pas d'escompte pour paiement anticipé |
+| Catégorie d'entreprise | PME |
 
 Cliquez sur **Enregistrer** : « Fiche entreprise enregistrée. » N'utilisez pas le bouton « Vérifier (VIES) » : il
 interroge le service européen, qui ne connaît pas ces numéros fictifs.
+
+La **catégorie d'entreprise** donne les dates de la réforme de la facture électronique, affichées sous le champ :
+réception le 1er septembre 2026 pour tous ; émission, e-reporting et nouvelles mentions le 1er septembre 2026 pour
+une grande entreprise ou une ETI, le 1er septembre 2027 pour une PME ou une micro-entreprise. Avant sa date, une
+mention de la réforme absente donne un avertissement ; ensuite, elle bloque la validation. Les trois dossiers de
+démonstration ont chacun leur catégorie. Détails : [docs/facture-electronique.md](docs/facture-electronique.md).
 
 Le champ **Rechercher l'entreprise (annuaire SIRENE)** remplit le nom, le SIREN, le SIRET, le numéro de TVA et
 l'adresse du siège ; la forme juridique, le capital, le greffe et les conditions de paiement restent à saisir. Rien
@@ -615,7 +622,9 @@ au serveur commun non vérifiées, mêmes écrans côté cabinet.)* Détails : [
 
 ### 5. La transmission à la plateforme agréée (simulée)
 
-Sous la facture validée, le panneau **Plateforme agréée** :
+Sous la facture validée, le panneau **Plateforme agréée**. Pour un client professionnel français, il dit d'abord si
+le client figure à l'**annuaire de la facturation électronique** et à quelle adresse la facture partira (« Client
+inscrit à l'annuaire… »), ou prévient qu'il n'y est pas : la plateforme rejetterait la facture.
 
 1. Format **Factur-X (CII)**, puis **Transmettre à la plateforme**. La facture passe « Émise » et la plateforme
    l'indique « Déposée ».
@@ -625,6 +634,10 @@ Sous la facture validée, le panneau **Plateforme agréée** :
 
 La plateforme simulée garde ses statuts en mémoire : après un redémarrage de Lettra, la facture reste émise et
 transmise, mais l'historique des statuts repart de zéro.
+
+Le Factur-X et l'UBL portent aussi le **cadre de facturation** (S1 pour des services, B1 pour des biens, M1 si
+mixte ; B4, S4, M4 pour la facture définitive d'un devis qui déduit ses acomptes) et, si l'entreprise a opté pour
+les débits, le code d'exigibilité de la TVA. Détails : [docs/facture-electronique.md](docs/facture-electronique.md).
 
 #### Prêt pour l'e-facture
 
@@ -642,6 +655,28 @@ Route : `GET /api/v1/insights/e-invoicing-readiness`.
 |---|---|
 | Navigateur, ordinateur (1440 px), tablette (900 px), téléphone (390 px), français et anglais | Oui, démo Docker |
 | Vue cabinet de 1366 à 1600 px (tableau), en dessous (cartes) | Oui, démo Docker |
+| Application MAUI (Windows, macOS, Android, iOS) | Non vérifié |
+
+#### Factures reçues
+
+Menu **Tiers > Factures reçues** (Ctrl+K « factures reçues »). La plateforme simulée met à disposition de chaque
+dossier quatre factures fictives de trois fournisseurs.
+
+1. **Relever les factures** : « 4 facture(s) reçue(s). » Un second relevé répond « Aucune nouvelle facture. »
+2. **Ouvrir** la facture PM-2026-0412 de Papeterie Moreau SARL : lignes, TVA, notes, historique, **Télécharger le
+   fichier**.
+3. Réponse **Approuvée**, **Envoyer la réponse** : « Réponse « Approuvée » envoyée pour la facture PM-2026-0412. »
+   Puis **Paiement transmis**, montant proposé (le TTC), **Envoyer la réponse**.
+4. Sur TL-26-1187 (Transports Lefèvre) : **En litige** ou **Refusée** demandent un motif ; un refus est définitif.
+
+En haut de l'écran : l'inscription du dossier à l'annuaire et les deux dates de la réforme pour sa catégorie.
+Droits : « Lire le dossier » pour voir, « Traiter les factures reçues » pour relever et répondre. Routes :
+`/api/v1/e-invoicing/received…` et `/api/v1/e-invoicing/directory/{siren}` (détail dans
+[docs/facture-electronique.md](docs/facture-electronique.md)).
+
+| Où | Vérifié |
+|---|---|
+| Navigateur, ordinateur (1440 px), tablette (900 px), téléphone (390 px), français et anglais | Oui, démo Docker |
 | Application MAUI (Windows, macOS, Android, iOS) | Non vérifié |
 
 ### 6. Un avoir
@@ -1120,7 +1155,7 @@ Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou 
 | Fonction | État |
 |---|---|
 | Assistant IA | Les écrans existent : le panneau « Assistant IA » (bouton en haut) et le lien « Pourquoi ? » de la checklist de conformité. Ils restent masqués tant que l'IA est désactivée, ce qui est le réglage par défaut (section `Lettra:Ai`) et celui de la démo. L'assistant propose et explique ; il ne valide ni n'émet jamais rien. Le brouillon de devis à partir d'un texte libre est fermé tant que Lettra ne sait pas repérer les noms propres dans le texte ([docs/assistant-ia.md](docs/assistant-ia.md)). |
-| Vraie plateforme agréée | En attente d'un partenaire ; la démo utilise la plateforme simulée. |
+| Vraie plateforme agréée | En attente d'un partenaire ; la démo utilise la plateforme simulée, pour l'émission, la réception et l'annuaire. |
 | Vrais prestataires de paiement, de signature et de banque | L'espace client, la banque connectée et la vérification du bénéficiaire passent par des prestataires simulés, derrière des ports : aucun prestataire réel n'est choisi. La signature est une signature électronique simple ; les paiements en cours sont gardés en mémoire, sans webhook. |
 | Serveur du cabinet en production | La démonstration navigateur tourne sur un poste avec Docker ; un vrai serveur du cabinet ou une cellule SaaS demande Keycloak, des certificats et une infrastructure (voir plus bas). |
 | Poste relié à un serveur, synchronisation | Prête dans l'application (fichier `lettra.json`), mais demande un serveur Lettra et Keycloak. Sur un poste isolé, la page Synchronisation indique « Ce poste ne synchronise pas ». |
@@ -1135,7 +1170,7 @@ Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou 
 | Anti-blanchiment : pièces, registres et Tracfin | Non : Lettra note quelles pièces ont été reçues sans les stocker, ne consulte ni le registre des bénéficiaires effectifs, ni les listes de gel des avoirs ou des personnes politiquement exposées, ne fait pas la déclaration de soupçon et n'efface pas la fiche cinq ans après la fin de la relation. |
 | Attestations de vigilance : dépôt et vérification | Non : Lettra note la date et le code de l'attestation sans la stocker, ne vérifie pas le code auprès de l'URSSAF, ne suit ni l'attestation de régularité fiscale ni la liste des salariés étrangers, et signale sans bloquer un virement (il ne paie pas les fournisseurs). |
 | DAS 2 : fichier et dépôt | Non : Lettra prépare la liste des bénéficiaires sans produire le fichier TD-DAS2 ni le déposer ; il ne distingue ni frais remboursés ni avantages en nature, ne traite pas la retenue à la source des bénéficiaires étrangers et ne lit ni les paiements par carte ni les factures fournisseurs. |
-| Factures reçues | Pas encore enregistrées : les comptes intra-groupe comparent ce que le vendeur a facturé à la fiche fournisseur et à la banque de l'acheteur, pas facture contre facture. |
+| Factures reçues | Reçues de la plateforme simulée, lues et répondues, mais ni comptabilisées (journal des achats), ni rapprochées d'une commande ou d'un paiement, ni chaînées dans le journal d'intégrité. Les comptes intra-groupe comparent toujours ce que le vendeur a facturé à la fiche fournisseur et à la banque de l'acheteur, pas facture contre facture. L'e-reporting des achats à l'étranger n'est pas fait. |
 | Assistant IA du poste avec Claude Desktop ou VS Code | Non vérifié : la connexion a été vérifiée avec le client MCP officiel (SDK TypeScript) dans la démo. |
 | Applications signées | Non : avertissement de Windows au premier lancement, APK Android installé à la main, application macOS arrêtée par le Trousseau, pas de version pour iPhone réel. |
 
@@ -1275,7 +1310,7 @@ src/
                    Speech (dictée et commandes vocales)
   Infrastructure/  Persistence (EF Core) et un projet de migrations par provider, Catalog, Identity.Local, Identity.Oidc,
                    External (SIRENE, VIES, e-mail), Observability, Speech (serveur whisper.cpp), Speech.OnDevice (Whisper.net)
-  Modules/         Supervision (alertes), Exports (FEC, Factur-X, UBL, CII, plateforme agréée), Sync (Client, Server)
+  Modules/         Supervision (alertes), Exports (FEC, Factur-X, UBL, CII, plateforme agréée, réception des factures, annuaire), Sync (Client, Server)
   Composition/     Bootstrap : AddLettra(), la composition selon le mode ; DemoData (jeu de démonstration « Cabinet Démo »)
   Presentation/    UI.Abstractions (ports), UI.Shared (toute l'UI Blazor), UI.Gateway.Http, UI.Gateway.InProcess, Printing (PDF)
   Hosts/           Api (Minimal APIs, BFF, sert le WASM), Web (WASM), App.Maui (Blazor Hybrid), Worker (migrations, escalade, intégrité,
