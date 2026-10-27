@@ -37,11 +37,16 @@ public sealed class FeeBeneficiaryTests
     }
 
     [Fact]
-    public void Le_seuil_est_depasse_au_dela_de_1200_euros()
+    public void Le_seuil_est_depasse_au_dela_de_2400_euros_depuis_2024_et_de_1200_euros_avant()
     {
-        FeeBeneficiary.MustBeDeclared(1_200m).Should().BeFalse();
-        FeeBeneficiary.MustBeDeclared(1_200.01m).Should().BeTrue();
-        FeeBeneficiary.DeclarationThreshold.Should().Be(1_200m);
+        DateOnly closed2024 = new(2024, 12, 31);
+        DateOnly closed2023 = new(2023, 12, 31);
+        FeeBeneficiary.MustBeDeclared(2_400m, closed2024).Should().BeFalse();
+        FeeBeneficiary.MustBeDeclared(2_400.01m, closed2024).Should().BeTrue();
+        FeeBeneficiary.ThresholdFor(closed2024).Should().Be(2_400m);
+        FeeBeneficiary.MustBeDeclared(1_200m, closed2023).Should().BeFalse();
+        FeeBeneficiary.MustBeDeclared(1_200.01m, closed2023).Should().BeTrue();
+        FeeBeneficiary.ThresholdFor(closed2023).Should().Be(1_200m);
     }
 
     [Fact]

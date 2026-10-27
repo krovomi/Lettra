@@ -12,7 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.UI.Tests.Tax;
 
-/// <summary>« Honoraires (DAS 2) » : les bénéficiaires suivis, le seuil de 1 200 €, la saisie, l'échéance à marquer déposée.</summary>
+/// <summary>« Honoraires (DAS 2) » : les bénéficiaires suivis, le seuil de 2 400 €, la saisie, l'échéance à marquer déposée.</summary>
 [Collection("culture")]
 public sealed class FeeReturnPageTests : BunitContext
 {
@@ -41,11 +41,11 @@ public sealed class FeeReturnPageTests : BunitContext
         [.. page.FindAll("#fees-table tbody tr td:first-child a").Select(a => a.TextContent.Trim())];
 
     [Fact]
-    public void Les_beneficiaires_au_dela_de_1200_euros_sont_a_declarer_avec_l_echeance_de_l_exercice()
+    public void Les_beneficiaires_au_dela_de_2400_euros_sont_a_declarer_avec_l_echeance_de_l_exercice()
     {
-        _fees.Add("Cabinet Durand", bank: 1_000m, outside: 300m);
+        _fees.Add("Cabinet Durand", bank: 2_200m, outside: 300m);
         Guid roux = _fees.Add("Atelier Roux", bank: 800m, siret: null, nature: FeeNatureDto.Commissions);
-        _fees.Add("Expert Martin", bank: 2_500m, siret: null);
+        _fees.Add("Expert Martin", bank: 3_500m, siret: null);
         _fees.Add("Papeterie", tracked: false);
 
         IRenderedComponent<FeeReturnPage> page = Open();
@@ -86,7 +86,7 @@ public sealed class FeeReturnPageTests : BunitContext
     public void Suivre_un_fournisseur_puis_noter_ce_qui_a_ete_paye_hors_releves()
     {
         Guid papeterie = _fees.Add("Papeterie", tracked: false);
-        Guid lawyer = _fees.Add("Cabinet Durand", bank: 1_000m, tracked: false);
+        Guid lawyer = _fees.Add("Cabinet Durand", bank: 2_200m, tracked: false);
         IRenderedComponent<FeeReturnPage> page = Open();
         page.FindAll("#fees-empty").Should().ContainSingle();
         page.Find("#fees-deadline").TextContent.Should().Contain("Suivez un bénéficiaire");
@@ -103,7 +103,7 @@ public sealed class FeeReturnPageTests : BunitContext
         (id, version).Should().Be((lawyer, null));
         request.Should().Be(new SaveFeeBeneficiaryRequest { Nature = FeeNatureDto.Fees, Profession = "Avocat", FiscalYearStart = FakeFeeReturnGateway.Start, PaidOutside = 250.5m });
         this.ToastText().Should().Be("Cabinet Durand : à déclarer.");
-        page.Find($"#fee-{lawyer}").TextContent.Replace('\u202f', ' ').Replace('\u00a0', ' ').Should().Contain("1 250,50 €");
+        page.Find($"#fee-{lawyer}").TextContent.Replace('\u202f', ' ').Replace('\u00a0', ' ').Should().Contain("2 450,50 €");
 
         page.Find($"#fee-edit-{lawyer}").Click();
         page.Find("#fee-form-title").TextContent.Should().Be("Honoraires de Cabinet Durand");
@@ -172,7 +172,7 @@ public sealed class FeeReturnPageTests : BunitContext
         this.ToastText().Should().NotBeEmpty();
 
         LettraCultures.Apply(CultureInfo.GetCultureInfo("en-GB"));
-        _fees.Add("Durand Law", bank: 1_500m);
+        _fees.Add("Durand Law", bank: 2_500m);
         IRenderedComponent<FeeReturnPage> english = Render<FeeReturnPage>();
         english.WaitForState(() => english.FindAll("#fees-table").Count > 0);
         english.Find("h1").TextContent.Should().Be("Fees to declare (DAS 2)");

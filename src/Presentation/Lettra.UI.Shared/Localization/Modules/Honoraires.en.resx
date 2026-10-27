@@ -6,7 +6,7 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="Fees.Tab" xml:space="preserve"><value>Fees (DAS 2)</value></data>
   <data name="Fees.Title" xml:space="preserve"><value>Fees to declare (DAS 2)</value></data>
-  <data name="Fees.Subtitle" xml:space="preserve"><value>Fees, commissions, brokerage and royalties paid to the same payee above €1,200 incl. VAT in the year are declared with the annual tax return. Lettra reads the bank transfers to each tracked payee's IBAN.</value></data>
+  <data name="Fees.Subtitle" xml:space="preserve"><value>Fees, commissions, brokerage and royalties paid to the same payee above €2,400 incl. VAT in the year (€1,200 before 2024) are declared with the annual tax return. Lettra reads the bank transfers to each tracked payee's IBAN.</value></data>
   <data name="Fees.Due" xml:space="preserve"><value>To file by {0}</value></data>
   <data name="Fees.Due.None" xml:space="preserve"><value>Track a payee to see this year's deadline.</value></data>
   <data name="Fees.Stats" xml:space="preserve"><value>This year's return</value></data>

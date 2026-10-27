@@ -18,7 +18,7 @@ public enum FeeNatureDto
 /// <summary>
 /// Un bénéficiaire suivi et ce qu'il a reçu pendant l'exercice : <paramref name="PaidByBank"/> lu sur les relevés
 /// (virements vers son IBAN), <paramref name="PaidOutside"/> noté à la main. <paramref name="ToDeclare"/> : le total
-/// dépasse 1 200 € TTC. <paramref name="SiretMissing"/> : bénéficiaire établi en France sans SIRET, que la déclaration demande.
+/// dépasse le seuil de l'exercice (<c>Threshold</c> de la réponse). <paramref name="SiretMissing"/> : bénéficiaire établi en France sans SIRET, que la déclaration demande.
 /// </summary>
 public sealed record FeeBeneficiaryRow(
     Guid SupplierId,

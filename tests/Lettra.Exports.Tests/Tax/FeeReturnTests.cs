@@ -36,17 +36,19 @@ public sealed class FeeReturnTests
         FeePayee architect = Payee("Atelier Roux", siret: null);
         FeePayee foreign = Payee("Studio Bruxelles", siret: null, country: "BE", iban: null);
         FeePayee untracked = Payee("Papeterie", tracked: false);
-        Dictionary<FeePayee, decimal> bank = new() { [lawyer] = 1_000m, [architect] = 1_200m };
+        Dictionary<FeePayee, decimal> bank = new() { [lawyer] = 2_200m, [architect] = 2_400m };
 
         FeeReturnResponse view = FeeReturns.Build(Start, End, null, [untracked, foreign, architect, lawyer], p => bank.GetValueOrDefault(p), new DateOnly(2026, 2, 27));
 
         view.Rows.Select(r => r.Name).Should().Equal("Cabinet Durand", "Atelier Roux", "Studio Bruxelles");
-        view.Rows[0].Should().Match<FeeBeneficiaryRow>(r => r.PaidByBank == 1_000m && r.PaidOutside == 300m && r.Total == 1_300m && r.ToDeclare && !r.SiretMissing && r.HasIban);
-        view.Rows[1].Should().Match<FeeBeneficiaryRow>(r => r.Total == 1_200m && !r.ToDeclare && r.SiretMissing && r.Nature == FeeNatureDto.Fees && r.Profession == "Avocat");
+        view.Rows[0].Should().Match<FeeBeneficiaryRow>(r => r.PaidByBank == 2_200m && r.PaidOutside == 300m && r.Total == 2_500m && r.ToDeclare && !r.SiretMissing && r.HasIban);
+        view.Rows[1].Should().Match<FeeBeneficiaryRow>(r => r.Total == 2_400m && !r.ToDeclare && r.SiretMissing && r.Nature == FeeNatureDto.Fees && r.Profession == "Avocat");
         view.Rows[2].Should().Match<FeeBeneficiaryRow>(r => !r.SiretMissing && !r.HasIban, "établi hors de France, sans SIRET");
         view.Candidates.Should().ContainSingle().Which.Should().Be(new FeeReturnCandidate(untracked.Id.Value, "Papeterie"));
-        (view.Threshold, view.BankLinesUntil, view.FiscalYearStart, view.FiscalYearEnd).Should().Be((1_200m, new DateOnly(2026, 2, 27), Start, End));
-        FluentActions.Invoking(() => FeeReturns.Row(untracked, 0m, Start)).Should().Throw<ArgumentException>();
+        (view.Threshold, view.BankLinesUntil, view.FiscalYearStart, view.FiscalYearEnd).Should().Be((2_400m, new DateOnly(2026, 2, 27), Start, End));
+        FeeReturns.Build(new DateOnly(2023, 1, 1), new DateOnly(2023, 12, 31), null, [architect], p => bank.GetValueOrDefault(p), null)
+            .Should().Match<FeeReturnResponse>(v => v.Threshold == 1_200m && v.Rows[0].ToDeclare, "avant 2024, le seuil était de 1 200 €");
+        FluentActions.Invoking(() => FeeReturns.Row(untracked, 0m, Start, End)).Should().Throw<ArgumentException>();
         FluentActions.Invoking(() => FeeReturns.Build(Start, End, null, null!, _ => 0m, null)).Should().Throw<ArgumentNullException>();
         FluentActions.Invoking(() => FeeReturns.Build(Start, End, null, [], null!, null)).Should().Throw<ArgumentNullException>();
     }
@@ -54,7 +56,7 @@ public sealed class FeeReturnTests
     [Fact]
     public void La_vue_cabinet_annonce_la_das2_puis_l_exige_a_trente_jours_et_la_signale_en_retard()
     {
-        FeePayee lawyer = Payee("Cabinet Durand", outside: 2_000m);
+        FeePayee lawyer = Payee("Cabinet Durand", outside: 3_000m);
         DateOnly due = new(2026, 5, 5);
         static FeeReturnResponse View(FiscalDeadlineResponse? deadline, params FeePayee[] payees) => FeeReturns.Build(Start, End, deadline, payees, _ => 0m, null);
 

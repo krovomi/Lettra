@@ -65,9 +65,9 @@ internal sealed class FakeFeeReturnGateway : IFeeReturnGateway
             Start,
             new DateOnly(2025, 12, 31),
             deadline,
-            1_200m,
+            2_400m,
             [.. tracked.Select(p => new FeeBeneficiaryRow(p.Id, p.Name, p.Siret, "2 chemin du Moulin, 45000 Orléans", p.Nature, p.Profession, p.Bank, p.Outside,
-                p.Bank + p.Outside, p.Bank + p.Outside > 1_200m, p.Siret is null, true, p.Version)).OrderByDescending(r => r.Total)],
+                p.Bank + p.Outside, p.Bank + p.Outside > 2_400m, p.Siret is null, true, p.Version)).OrderByDescending(r => r.Total)],
             [.. _payees.Where(p => !p.Tracked).Select(p => new FeeReturnCandidate(p.Id, p.Name))],
             new DateOnly(2026, 2, 27))));
     }

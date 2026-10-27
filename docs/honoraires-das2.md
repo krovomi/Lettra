@@ -29,7 +29,7 @@ L'écran se trie par bénéficiaire, nature ou total, et se filtre par nom et pa
 
 **Droits** : aucune permission nouvelle. Lire l'écran : la permission de consulter le dossier. Suivre un bénéficiaire, noter une somme, marquer déposée : la permission de travailler sur la comptabilité (celle de l'export FEC). Le client (espace client) n'y a pas accès.
 
-**Ce qui n'est pas fait** : le seuil de 2 400 € (le prototype compare encore à 1 200 €, si bien qu'un bénéficiaire payé entre 1 200 € et 2 400 € apparaît « à déclarer » à tort) ; la production du fichier TD-DAS2 et son dépôt (Lettra prépare, le cabinet déclare) ; la distinction des frais remboursés et des avantages en nature ; la retenue à la source sur les bénéficiaires étrangers ; la lecture des paiements par carte ou des factures fournisseurs (seuls les virements des relevés et les sommes notées comptent).
+**Ce qui n'est pas fait** : la production du fichier TD-DAS2 et son dépôt (Lettra prépare, le cabinet déclare) ; la distinction des frais remboursés et des avantages en nature ; la retenue à la source sur les bénéficiaires étrangers ; la lecture des paiements par carte ou des factures fournisseurs (seuls les virements des relevés et les sommes notées comptent).
 
 ## Données personnelles
 
