@@ -1523,6 +1523,31 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.HasAnnotation("Lettra:SearchKeySource", "Name");
                 });
 
+            modelBuilder.Entity("Lettra.Domain.Parties.FeeBeneficiary", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Nature")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Profession")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FeeBeneficiaries", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Domain.Parties.IbanChange", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3146,6 +3171,37 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.Navigation("Lines");
 
                     b.Navigation("Occurrences");
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Parties.FeeBeneficiary", b =>
+                {
+                    b.HasOne("Lettra.Domain.Parties.Supplier", null)
+                        .WithOne()
+                        .HasForeignKey("Lettra.Domain.Parties.FeeBeneficiary", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsMany("Lettra.Domain.Parties.FeePaidOutside", "PaidOutside", b1 =>
+                        {
+                            b1.Property<Guid>("FeeBeneficiaryId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<DateOnly>("FiscalYearStart")
+                                .HasColumnType("date");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("decimal(18,2)");
+
+                            b1.HasKey("FeeBeneficiaryId", "FiscalYearStart");
+
+                            b1.ToTable("FeePaidOutside", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("FeeBeneficiaryId");
+                        });
+
+                    b.Navigation("PaidOutside");
                 });
 
             modelBuilder.Entity("Lettra.Domain.Pricing.PriceList", b =>

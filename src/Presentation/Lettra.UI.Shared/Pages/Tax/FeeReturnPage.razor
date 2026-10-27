@@ -1,0 +1,442 @@
+@page "/tax/fees"
+@inject IFeeReturnGateway Fees
+@inject ITaxGateway Tax
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+@* Déclaration des honoraires (DAS 2) : les fournisseurs suivis (avocat, architecte, agent commercial…), ce qu'ils ont
+   reçu pendant l'exercice (virements des relevés vers leur IBAN, plus ce qui a été versé autrement) et ceux qui dépassent
+   1 200 € TTC, à déclarer avec la déclaration de résultats. L'échéance se marque « déposée » comme au calendrier fiscal. *@
+
+<PageTitle>@L["Fees.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Fees.Title"]</h1>
+        <p class="lettra-muted">@L["Fees.Subtitle"]</p>
+    </div>
+</div>
+
+<TaxTabs />
+<GeneralErrors Errors="_errors" />
+
+@if (_view is not { } view)
+{
+    @if (_errors.Count == 0)
+    {
+        <ListSkeleton Columns="6" />
+    }
+}
+else
+{
+    <section class="lt-panel lt-tax-head" aria-labelledby="fees-period">
+        <div class="lt-tax-nav">
+            <a class="lettra-button is-ghost" href="@Href(view.FiscalYearStart.AddDays(-1))" id="fees-previous" aria-label="@L["Tax.Period.Previous"]"><Icon Name="chevrons-left" Size="18" /></a>
+            <div class="lt-tax-period">
+                <h2 id="fees-period">@TaxText.Period(L, view.FiscalYearStart, view.FiscalYearEnd)</h2>
+                @if (view.Deadline is { } deadline)
+                {
+                    <p class="lettra-muted" id="fees-deadline">
+                        @string.Format(Culture, L["Fees.Due"], TaxText.Day(deadline.DueDate))
+                        <span class="lt-tax-state" data-state="@deadline.State">@L[$"Tax.State.{deadline.State}"]</span>
+                    </p>
+                }
+                else
+                {
+                    <p class="lettra-muted" id="fees-deadline">@L["Fees.Due.None"]</p>
+                }
+            </div>
+            <a class="lettra-button is-ghost" href="@Href(view.FiscalYearEnd.AddDays(1))" id="fees-next" aria-label="@L["Tax.Period.Next"]"><Icon Name="chevrons-right" Size="18" /></a>
+        </div>
+        @if (view.Deadline is { State: not FiscalDeadlineStateDto.Exempt } due)
+        {
+            bool filed = due.State == FiscalDeadlineStateDto.Filed;
+            <div class="lt-form-actions">
+                <button type="button" class="lettra-button @(filed ? "is-secondary" : null)" id="fees-mark" disabled="@_busy" @onclick="() => MarkAsync(due, !filed)">
+                    @(filed ? L["Tax.Filed.Undo"] : L["Tax.Filed.Mark"])
+                </button>
+            </div>
+        }
+    </section>
+
+    <section class="lt-banking-stats" id="fees-stats" aria-label="@L["Fees.Stats"]">
+        <div class="@($"lt-banking-stat {(ToDeclare(view).Count > 0 ? "is-pending" : "is-proposed")}")">
+            <span>@L["Fees.Stat.ToDeclare"]</span>
+            <strong id="fees-to-declare">@ToDeclare(view).Count</strong>
+            <small class="lettra-muted">@string.Format(Culture, L["Fees.Stat.ToDeclare.Hint"], ExplorerText.Money(view.Threshold))</small>
+        </div>
+        <div class="lt-banking-stat">
+            <span>@L["Fees.Stat.Amount"]</span>
+            <strong id="fees-amount">@ExplorerText.Money(ToDeclare(view).Sum(r => r.Total))</strong>
+        </div>
+        <div class="lt-banking-stat">
+            <span>@L["Fees.Stat.Below"]</span>
+            <strong id="fees-below">@view.Rows.Count(r => !r.ToDeclare)</strong>
+        </div>
+        <div class="lt-banking-stat">
+            <span>@L["Fees.Stat.Bank"]</span>
+            <strong id="fees-bank-until">@(view.BankLinesUntil is { } until ? DateText.Format(until, Culture) : "—")</strong>
+            <small class="lettra-muted">@L["Fees.Stat.Bank.Hint"]</small>
+        </div>
+    </section>
+
+    @if (ToDeclare(view).Any(r => r.SiretMissing))
+    {
+        <p class="lettra-banner is-warning" id="fees-siret-missing">
+            <Icon Name="info" Size="18" /> @L["Fees.SiretMissing.Banner"]
+        </p>
+    }
+
+    @if (_editing)
+    {
+        <section class="lettra-card lt-mission-panel" aria-labelledby="fee-form-title">
+            <div class="lt-panel-head">
+                <h2 id="fee-form-title">@(_editedRow is { } edited ? string.Format(Culture, L["Fees.Form.Edit"], edited.Name) : L["Fees.Form.Add"])</h2>
+            </div>
+            <form class="lettra-form-grid" id="fee-form" @onsubmit="SaveAsync" @onsubmit:preventDefault="true">
+                @if (_editedRow is null)
+                {
+                    <div class="lettra-field">
+                        <label for="fee-supplier">@L["Fees.Supplier"]</label>
+                        <select id="fee-supplier" @bind="_supplierId" required>
+                            <option value="">@L["Fees.Supplier.Choose"]</option>
+                            @foreach (FeeReturnCandidate candidate in view.Candidates)
+                            {
+                                <option value="@candidate.SupplierId">@candidate.Name</option>
+                            }
+                        </select>
+                        <FieldErrors Field="SupplierId" ServerErrors="_fieldErrors" />
+                    </div>
+                }
+                <div class="lettra-field">
+                    <label for="fee-nature">@L["Fees.Nature"]</label>
+                    <select id="fee-nature" @bind="_model.Nature">
+                        @foreach (FeeNatureDto nature in Enum.GetValues<FeeNatureDto>())
+                        {
+                            <option value="@nature">@L[$"Fees.Nature.{nature}"]</option>
+                        }
+                    </select>
+                    <FieldErrors Field="Nature" ServerErrors="_fieldErrors" />
+                </div>
+                <div class="lettra-field">
+                    <label for="fee-profession">@L["Fees.Profession"]</label>
+                    <input id="fee-profession" maxlength="60" autocomplete="off" @bind="_model.Profession" placeholder="@L["Fees.Profession.Placeholder"]" />
+                    <FieldErrors Field="Profession" ServerErrors="_fieldErrors" />
+                </div>
+                <div class="lettra-field">
+                    <label for="fee-outside">@string.Format(Culture, L["Fees.PaidOutside.Label"], TaxText.Period(L, view.FiscalYearStart, view.FiscalYearEnd))</label>
+                    <input id="fee-outside" type="number" inputmode="decimal" step="0.01" min="0" @bind="_model.PaidOutside" />
+                    <FieldErrors Field="PaidOutside" ServerErrors="_fieldErrors" />
+                </div>
+                <p class="lettra-hint lettra-field-wide"><Icon Name="info" Size="16" /> @L["Fees.PaidOutside.Hint"]</p>
+                <div class="lt-form-actions">
+                    <button type="submit" class="lettra-button" id="fee-save" disabled="@_busy">@L["Billing.Command.Save"]</button>
+                    <button type="button" class="lettra-button is-ghost" id="fee-cancel" @onclick="CloseForm">@L["Explorer.Cancel"]</button>
+                    @if (_fieldErrors.Any(e => e.Target is not null))
+                    {
+                        <p class="validation-message" id="fee-not-saved" role="alert">@L["Fees.NotSaved"]</p>
+                    }
+                </div>
+            </form>
+        </section>
+    }
+
+    <section class="lettra-card lt-mission-panel" aria-labelledby="fees-list-title">
+        <div class="lt-panel-head">
+            <h2 id="fees-list-title">@L["Fees.List"]</h2>
+            @if (!_editing)
+            {
+                <button type="button" class="lettra-button is-secondary" id="fees-add" disabled="@(_busy || view.Candidates.Count == 0)" @onclick="Add">
+                    <Icon Name="plus" Size="18" /> @L["Fees.Add"]
+                </button>
+            }
+        </div>
+        @if (view.Rows.Count == 0)
+        {
+            <EmptyState Id="fees-empty" IconName="file-text" Title="@L["Fees.Empty"]" Text="@L["Fees.Empty.Text"]" />
+        }
+        else
+        {
+            <ListFilterBar Id="fees-filters" ActiveCount="ActiveFilters" OnReset="ResetFilters">
+                <ChildContent>
+                    <div class="lt-filter">
+                        <label for="fees-search">@L["Lists.Search"]</label>
+                        <input id="fees-search" type="search" @bind="_search" @bind:event="oninput" autocomplete="off" />
+                    </div>
+                    <div class="lt-filter">
+                        <label for="fees-filter-state">@L["Fees.State"]</label>
+                        <select id="fees-filter-state" @bind="_state">
+                            <option value="">@L["Fees.AllStates"]</option>
+                            <option value="@StateToDeclare">@L["Fees.State.ToDeclare"]</option>
+                            <option value="@StateBelow">@L["Fees.State.Below"]</option>
+                            <option value="@StateSiret">@L["Fees.State.SiretMissing"]</option>
+                        </select>
+                    </div>
+                    <SortSelect Id="fees-sort" Options="SortOptions" State="_sort" OnSort="StateHasChanged" />
+                </ChildContent>
+            </ListFilterBar>
+            @if (Shown.Count == 0)
+            {
+                <EmptyState Id="fees-filtered-empty" IconName="search" Title="@L["Lists.Empty.FilteredTitle"]" Text="@L["Lists.Empty.Filtered"]" />
+            }
+            else
+            {
+                <div class="lt-list-scroll">
+                    <table class="lettra-table lt-cards" id="fees-table">
+                        <thead>
+                            <tr>
+                                <SortHeader Option="SortOptions[0]" State="_sort" OnSort="StateHasChanged" Id="fees-sort-name" />
+                                <SortHeader Option="SortOptions[1]" State="_sort" OnSort="StateHasChanged" Id="fees-sort-nature" />
+                                <th scope="col" class="lg-num">@L["Fees.PaidByBank"]</th>
+                                <th scope="col" class="lg-num">@L["Fees.PaidOutside"]</th>
+                                <SortHeader Option="SortOptions[2]" State="_sort" OnSort="StateHasChanged" Id="fees-sort-total" Class="lg-num" />
+                                <th scope="col">@L["Fees.State"]</th>
+                                <th scope="col"><span class="lettra-visually-hidden">@L["Fees.Actions"]</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (FeeBeneficiaryRow row in Shown)
+                            {
+                                <tr @key="row.SupplierId" id="@($"fee-{row.SupplierId}")">
+                                    <td>
+                                        <div>
+                                            <a href="@($"suppliers/{row.SupplierId}")">@row.Name</a>
+                                            <small class="lettra-muted lt-mission-note">@(row.Siret is { } siret ? $"SIRET {siret}" : null) @row.Address</small>
+                                            @if (row.SiretMissing)
+                                            {
+                                                <span class="lettra-status is-refused" id="@($"fee-siret-{row.SupplierId}")">@L["Fees.State.SiretMissing"]</span>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td data-label="@L["Fees.Nature"]"><div>@L[$"Fees.Nature.{row.Nature}"]<small class="lettra-muted lt-mission-note">@row.Profession</small></div></td>
+                                    <td data-label="@L["Fees.PaidByBank"]" class="lg-num">
+                                        @(row.HasIban ? ExplorerText.Money(row.PaidByBank) : L["Fees.NoIban"])
+                                    </td>
+                                    <td data-label="@L["Fees.PaidOutside"]" class="lg-num">@ExplorerText.Money(row.PaidOutside)</td>
+                                    <td data-label="@L["Fees.Total"]" class="lg-num"><strong>@ExplorerText.Money(row.Total)</strong></td>
+                                    <td data-label="@L["Fees.State"]">
+                                        <span class="@($"lettra-status {(row.ToDeclare ? "is-validated" : "is-draft")}")">@L[row.ToDeclare ? "Fees.State.ToDeclare" : "Fees.State.Below"]</span>
+                                    </td>
+                                    <td class="lt-banking-line-actions">
+                                        <button type="button" class="lettra-button is-small is-secondary" id="@($"fee-edit-{row.SupplierId}")" disabled="@_busy"
+                                                aria-label="@string.Format(Culture, L["Fees.Edit.Label"], row.Name)" @onclick="() => Edit(row)">@L["Fees.Edit"]</button>
+                                        <RowDelete Label="@string.Format(Culture, L["Fees.Remove.Label"], row.Name)" Question="@L["Fees.Remove.Question"]"
+                                                   ActionText="@L["Fees.Remove"]" IconName="x" OnDelete="() => RemoveAsync(row)" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        }
+    </section>
+
+    <p class="lettra-hint" id="fees-disclaimer">@L["Fees.Disclaimer"]</p>
+}
+
+@code {
+    private const string StateToDeclare = "to-declare";
+    private const string StateBelow = "below";
+    private const string StateSiret = "siret-missing";
+
+    private FeeReturnResponse? _view;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private IReadOnlyList<ErrorDetail> _fieldErrors = [];
+    private bool _busy;
+    private bool _editing;
+    private FeeBeneficiaryRow? _editedRow;
+    private string _supplierId = string.Empty;
+    private SaveFeeBeneficiaryRequest _model = new();
+    private string? _search;
+    private string _state = string.Empty;
+
+    // Du plus payé au moins payé (l'ordre du serveur).
+    private readonly SortState<FeeColumn> _sort = new(FeeColumn.Total, SortDirectionDto.Descending);
+
+    private enum FeeColumn
+    {
+        Name,
+        Nature,
+        Total,
+    }
+
+    private IReadOnlyList<SortOption<FeeColumn>> SortOptions =>
+    [
+        new(FeeColumn.Name, L["Fees.Beneficiary"]),
+        new(FeeColumn.Nature, L["Fees.Nature"]),
+        new(FeeColumn.Total, L["Fees.Total"], SortDirectionDto.Descending),
+    ];
+
+    private Dictionary<FeeColumn, Func<FeeBeneficiaryRow, object?>> SortKeys => new()
+    {
+        [FeeColumn.Name] = r => r.Name,
+        [FeeColumn.Nature] = r => L[$"Fees.Nature.{r.Nature}"].Value,
+        [FeeColumn.Total] = r => r.Total,
+    };
+
+    [SupplyParameterFromQuery(Name = "date")] public string? RequestedDate { get; set; }
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private DateOnly? Date => DateOnly.TryParseExact(RequestedDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly date) ? date : null;
+
+    private IReadOnlyList<FeeBeneficiaryRow> Shown => ListSorting.Sort(
+        (_view?.Rows ?? [])
+            .Where(r => string.IsNullOrWhiteSpace(_search) || ListSorting.Matches(r.Name, _search) || ListSorting.Matches(r.Profession, _search))
+            .Where(r => _state switch
+            {
+                StateToDeclare => r.ToDeclare,
+                StateBelow => !r.ToDeclare,
+                StateSiret => r.SiretMissing,
+                _ => true,
+            }),
+        _sort,
+        SortKeys);
+
+    private int ActiveFilters => (string.IsNullOrWhiteSpace(_search) ? 0 : 1) + (_state.Length == 0 ? 0 : 1);
+
+    protected override Task OnParametersSetAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        OperationResult<FeeReturnResponse> result = await Fees.GetAsync(Date, CancellationToken.None);
+        _errors = result.Errors;
+        _view = result.Value;
+        CloseForm();
+    }
+
+    private static string Href(DateOnly date) => $"tax/fees?date={DateText.ToIso(date)}";
+
+    private static List<FeeBeneficiaryRow> ToDeclare(FeeReturnResponse view) => [.. view.Rows.Where(r => r.ToDeclare)];
+
+    private void Add()
+    {
+        _editing = true;
+        _editedRow = null;
+        _supplierId = string.Empty;
+        _model = new SaveFeeBeneficiaryRequest { FiscalYearStart = _view!.FiscalYearStart };
+        _fieldErrors = [];
+    }
+
+    private void Edit(FeeBeneficiaryRow row)
+    {
+        _editing = true;
+        _editedRow = row;
+        _supplierId = row.SupplierId.ToString();
+        _model = new SaveFeeBeneficiaryRequest
+        {
+            Nature = row.Nature,
+            Profession = row.Profession,
+            FiscalYearStart = _view!.FiscalYearStart,
+
+            // Sans zéro inutile (« 300.0 » relu de la base devient « 300 » dans le champ).
+            PaidOutside = decimal.Parse(row.PaidOutside.ToString("0.##", CultureInfo.InvariantCulture), CultureInfo.InvariantCulture),
+        };
+        _fieldErrors = [];
+    }
+
+    private void CloseForm()
+    {
+        _editing = false;
+        _editedRow = null;
+        _fieldErrors = [];
+    }
+
+    private async Task SaveAsync()
+    {
+        // Les oublis prévisibles sont signalés ici, sans aller-retour (le serveur les vérifie aussi).
+        _fieldErrors = Check();
+        if (_fieldErrors.Count > 0 || !Guid.TryParse(_supplierId, out Guid supplierId))
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            OperationResult<FeeReturnResponse> saved = await Fees.SaveAsync(supplierId, _model, _editedRow?.Version, CancellationToken.None);
+            if (saved is { IsSuccess: true, Value: { } view })
+            {
+                FeeBeneficiaryRow? row = view.Rows.FirstOrDefault(r => r.SupplierId == supplierId);
+                _view = view;
+                _errors = [];
+                CloseForm();
+                Toasts.Show(ToastKind.Success, string.Format(Culture, L[row?.ToDeclare == true ? "Fees.Saved.ToDeclare" : "Fees.Saved.Below"], row?.Name));
+            }
+            else
+            {
+                _fieldErrors = saved.Errors;
+                _errors = [.. saved.Errors.Where(e => e.Target is null)];
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private List<ErrorDetail> Check()
+    {
+        List<ErrorDetail> errors = [];
+        if (!Guid.TryParse(_supplierId, out _))
+        {
+            errors.Add(new ErrorDetail(ErrorCodes.Fee.SupplierNotFound, "SupplierId"));
+        }
+
+        if (string.IsNullOrWhiteSpace(_model.Profession))
+        {
+            errors.Add(new ErrorDetail(ErrorCodes.Fee.ProfessionRequired, "Profession"));
+        }
+
+        if (_model.PaidOutside < 0m)
+        {
+            errors.Add(new ErrorDetail(ErrorCodes.Fee.AmountInvalid, "PaidOutside"));
+        }
+
+        return errors;
+    }
+
+    private async Task RemoveAsync(FeeBeneficiaryRow row)
+    {
+        _busy = true;
+        try
+        {
+            OperationResult<FeeReturnResponse> removed = await Fees.RemoveAsync(row.SupplierId, _view!.FiscalYearStart, row.Version, CancellationToken.None);
+            _errors = removed.Errors;
+            if (removed is { IsSuccess: true, Value: { } view })
+            {
+                _view = view;
+                Toasts.Show(ToastKind.Success, string.Format(Culture, L["Fees.Removed"], row.Name));
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task MarkAsync(FiscalDeadlineResponse deadline, bool filed)
+    {
+        _busy = true;
+        try
+        {
+            OperationResult<FiscalDeadlineResponse> marked = await Tax.MarkFilingAsync(
+                new MarkFiscalFilingRequest(deadline.Obligation, deadline.PeriodStart, filed), CancellationToken.None);
+            if (marked.IsSuccess)
+            {
+                Toasts.Show(ToastKind.Success, L[filed ? "Tax.Toast.Filed" : "Tax.Toast.Unfiled"].Value);
+                await LoadAsync();
+            }
+            else
+            {
+                _errors = marked.Errors;
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void ResetFilters() => (_search, _state) = (null, string.Empty);
+}
