@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -37,6 +38,26 @@ public sealed partial class PseudonymizationSession
     public string Pseudonymize(string text)
     {
         if (string.IsNullOrEmpty(text))
+        {
+            return text;
+        }
+
+        // Un identifiant technique (GUID) reste tel quel : ses chiffres ne sont ni un SIREN ni un téléphone, et l'outil
+        // qui le reçoit en retour doit le relire.
+        StringBuilder result = new(text.Length);
+        int start = 0;
+        foreach (Match guid in GuidPattern().Matches(text))
+        {
+            result.Append(PseudonymizeFreeText(text[start..guid.Index])).Append(guid.Value);
+            start = guid.Index + guid.Length;
+        }
+
+        return result.Append(PseudonymizeFreeText(text[start..])).ToString();
+    }
+
+    private string PseudonymizeFreeText(string text)
+    {
+        if (text.Length == 0)
         {
             return text;
         }
@@ -190,6 +211,9 @@ public sealed partial class PseudonymizationSession
 
     [GeneratedRegex(@"\s+", RegexOptions.CultureInvariant)]
     private static partial Regex WhitespaceRun();
+
+    [GeneratedRegex(@"(?<![0-9A-Za-z-])[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}(?![0-9A-Za-z-])", RegexOptions.CultureInvariant)]
+    private static partial Regex GuidPattern();
 
     [GeneratedRegex(@"[\s,]+(SAS|SASU|SARL|EURL|SA|SCI|SNC|SCP|SELARL|GmbH|Ltd|LLC|Inc|AG|BV)\.?$", Options)]
     private static partial Regex LegalFormSuffix();

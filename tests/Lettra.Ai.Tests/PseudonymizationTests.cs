@@ -40,6 +40,17 @@ public sealed class PseudonymizationTests
         text.Should().Contain("123456789,00 €").And.Contain("15/09/2026").And.Contain("20 %").And.Contain("2 400,00 EUR");
     }
 
+    [Theory]
+    [InlineData("3f2b8c1a-9d4e-4f60-a7b2-c123456789de")]
+    [InlineData("3f2b8c1a-0612-3456-78ab-cdef01234567")]
+    [InlineData("3f2b8c1a-9d4e-4f60-a7b2-987654321abc")]
+    public void Garde_intact_un_identifiant_technique_meme_s_il_contient_un_siren_ou_un_telephone(string id)
+    {
+        string text = Session().Pseudonymize($$"""{"CustomerId":"{{id}}","Siren":"123 456 789"}""");
+
+        text.Should().Contain(id).And.NotContain("123 456 789").And.Contain("[SIREN_");
+    }
+
     [Fact]
     public void Retablit_les_valeurs_dans_le_texte_et_dans_les_parametres_d_outil()
     {
