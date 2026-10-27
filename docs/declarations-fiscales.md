@@ -8,6 +8,7 @@ qui a été imprimé.
 |---|---|
 | **TVA** (`/tax/vat`) | Brouillon de la CA3 (réel normal, mini-réel) ou de la CA12 (réel simplifié) de la période, partie ventes. Chaque case s'ouvre sur les factures, acomptes et avoirs qui la composent ; chaque pièce ouvre sa fiche. |
 | **DES** (`/tax/des`) | Déclaration européenne de services du mois : une ligne par numéro de TVA client de l'Union, montant HT arrondi à l'euro, fichier CSV à déposer soi-même. |
+| **Honoraires (DAS 2)** (`/tax/fees`) | Honoraires, commissions et droits d'auteur versés aux fournisseurs suivis, comparés au seuil de 1 200 € TTC par bénéficiaire et par exercice ([honoraires-das2.md](honoraires-das2.md)). |
 | **Contrôle fiscal** (`/tax/audit-kit`) | Kit contrôle fiscal : l'archive horodatée d'une période, prête à remettre au vérificateur ([kit-controle-fiscal.md](kit-controle-fiscal.md)). |
 | **Calendrier fiscal** (`/tax/calendar`) | Les échéances de l'année calculées à partir du régime et des réglages ; chacune se marque « déposée ». |
 | **Réglages fiscaux** (`/tax/settings`) | Date de clôture, CA3 mensuelle ou trimestrielle, jour limite de la TVA (du 15 au 24), IS, CFE. |
@@ -69,6 +70,7 @@ services classés en K, à un client établi dans un autre État membre. Le mois
 | CA12 | 2e jour ouvré après le 1er mai (exercice civil), 3 mois après la clôture sinon |
 | Acomptes de CA12 | jour limite du 7e et du 12e mois de l'exercice |
 | DES | 10e jour ouvrable du mois qui suit, pour un mois qui a des prestations intracommunautaires |
+| DAS 2 | comme la déclaration de résultats : 2e jour ouvré après le 1er mai (exercice civil), 3 mois après la clôture sinon ; dès qu'un bénéficiaire est suivi |
 | CFE | 15 décembre |
 | IS | acomptes le 15 du 3e, 6e, 9e et 12e mois de l'exercice ; solde le 15 mai (exercice civil) ou le 15 du 4e mois après la clôture ; liasse comme la CA12 |
 
