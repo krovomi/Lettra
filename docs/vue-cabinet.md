@@ -57,6 +57,19 @@ Clé `facture-electronique.preparation` : le nombre de contrôles de préparatio
 dans le [README](../README.md)). Niveau selon le score du dossier : à jour à 100, information de 80 à 99, attention
 de 50 à 79, critique sous 50. Aucun nom ni montant.
 
+## La colonne « Anti-blanchiment »
+
+Clé `lcb-ft.fiche` : la fiche de connaissance du client (voir [Anti-blanchiment](anti-blanchiment.md)). À traiter
+quand la fiche est à faire ou incomplète ; critique quand la revue est passée pour un risque élevé, à traiter pour un
+autre risque ; information quand la revue tombe dans les trente jours, avec sa date. Ni nom ni niveau de risque.
+
+## La colonne « Attestations URSSAF »
+
+Clé `fournisseurs.attestations-vigilance` : les fournisseurs à ne pas payer en l'état (voir
+[Attestations de vigilance](attestations-vigilance.md)). Critique si une attestation a expiré, à traiter si elle
+manque ou si son code n'est pas vérifié ; à défaut, information pour celles qui expirent dans les trente jours, avec
+l'échéance la plus proche. Ni nom ni montant.
+
 ## Les droits
 
 - La vue cabinet ne montre que les dossiers que l'utilisateur peut ouvrir (`DossierLire`), comme `GET /api/v1/dossiers`.
