@@ -95,9 +95,15 @@ jobs:
           adb logcat -c
           status=0
           node android.mjs "$(cat "$SORTIE/client.txt")" || status=$?
-          adb logcat -d > "$SORTIE/android/logcat.txt" || true
+          # Un émulateur tombé laisse adb attendre l'appareil sans fin (jusqu'au délai du job) : chaque appel est borné.
+          timeout 60 adb logcat -d > "$SORTIE/android/logcat.txt" || true
           if [ "$status" != 0 ]; then
-            grep -E 'AndroidRuntime|monodroid|mono-rt|DOTNET|fr\.lettra|Lettra|ActivityTaskManager: (START|Displayed)|com\.android\.chrome|cr_' "$SORTIE/android/logcat.txt" | grep -v SandboxedProcessService | tail -n 150 || true
+            # L'appareil est-il encore là ? Sinon, la mémoire de la machine (OOM) est la première piste.
+            echo "adb : $(timeout 10 adb get-state 2>&1 || echo 'appareil perdu')"
+            pgrep -a -f 'qemu-system|emulator' | cut -c1-160 || echo "processus de l'émulateur : aucun"
+            free -m
+            sudo dmesg | grep -iE 'out of memory|oom-kill|killed process' | tail -n 20 || true
+            grep -E 'AndroidRuntime|monodroid|mono-rt|DOTNET|fr\.lettra|Lettra|ActivityTaskManager: (START|Displayed)|com\.android\.chrome|cr_' "$SORTIE/android/logcat.txt" | grep -vE 'SandboxedProcessService|CronetUrlRequestContext' | tail -n 150 || true
             exit "$status"
           fi
           node appareil.mjs voir "$(cat "$SORTIE/client-appareil.txt")"
