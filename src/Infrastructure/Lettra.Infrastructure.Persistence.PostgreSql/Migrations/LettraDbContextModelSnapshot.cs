@@ -2039,6 +2039,52 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.ToTable("SubcontractorAttestations", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Domain.Vigilance.ThirdPartyCheck", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CheckedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CheckedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Freeze")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FreezeMatch")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Notice")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("NoticeLabel")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateOnly?>("NoticeOn")
+                        .HasColumnType("date");
+
+                    b.Property<int?>("OwnersFound")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Urssaf")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ThirdPartyChecks", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Ai.AiJournalRecord", b =>
                 {
                     b.Property<long>("Id")
@@ -2870,6 +2916,39 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .HasForeignKey("LineId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.OwnsOne("Lettra.Domain.Banking.ReceiptFigures", "Figures", b1 =>
+                        {
+                            b1.Property<Guid>("BankLineReceiptId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("AmountInclTax")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("FiguresAmountInclTax");
+
+                            b1.Property<DateOnly>("Date")
+                                .HasColumnType("date")
+                                .HasColumnName("FiguresDate");
+
+                            b1.Property<bool>("ReadOnDevice")
+                                .HasColumnType("boolean")
+                                .HasColumnName("FiguresReadOnDevice");
+
+                            b1.Property<decimal>("VatAmount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("FiguresVatAmount");
+
+                            b1.HasKey("BankLineReceiptId");
+
+                            b1.ToTable("BankLineReceipts");
+
+                            b1.WithOwner()
+                                .HasForeignKey("BankLineReceiptId");
+                        });
+
+                    b.Navigation("Figures");
                 });
 
             modelBuilder.Entity("Lettra.Domain.Banking.Lettering", b =>

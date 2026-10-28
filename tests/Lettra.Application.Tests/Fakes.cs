@@ -257,6 +257,29 @@ internal sealed class InMemoryAttestationStore : Lettra.Application.Abstractions
             ]);
 }
 
+/// <summary>Vérifications des tiers en mémoire ; les tiers listés viennent de <see cref="Parties"/>.</summary>
+internal sealed class InMemoryThirdPartyCheckStore : Lettra.Application.Abstractions.Persistence.IThirdPartyCheckStore
+{
+    private readonly ConcurrentDictionary<Guid, Lettra.Domain.Vigilance.ThirdPartyCheck> _checks = new();
+
+    public List<(Lettra.Domain.Vigilance.ThirdPartyKind Kind, Guid Id, string Name, Lettra.Domain.SharedKernel.Siren? Siren)> Parties { get; } = [];
+
+    public IReadOnlyCollection<Lettra.Domain.Vigilance.ThirdPartyCheck> Checks => [.. _checks.Values];
+
+    public Task<Lettra.Domain.Vigilance.ThirdPartyCheck?> FindAsync(Guid partyId, CancellationToken cancellationToken) =>
+        Task.FromResult(_checks.GetValueOrDefault(partyId));
+
+    public Task AddAsync(Lettra.Domain.Vigilance.ThirdPartyCheck check, CancellationToken cancellationToken)
+    {
+        _checks[check.Id] = check;
+        return Task.CompletedTask;
+    }
+
+    public Task<IReadOnlyList<Lettra.Application.Abstractions.Persistence.ThirdPartyEntry>> ListAsync(CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<Lettra.Application.Abstractions.Persistence.ThirdPartyEntry>>(
+            [.. Parties.Select(p => new Lettra.Application.Abstractions.Persistence.ThirdPartyEntry(p.Kind, p.Id, p.Name, p.Siren, _checks.GetValueOrDefault(p.Id)))]);
+}
+
 /// <summary>Tableau de bord d'un dossier vide : aucune pièce.</summary>
 internal sealed class NoBillingKpis : Lettra.Application.Features.Kpi.IBillingKpiReader
 {
@@ -276,6 +299,7 @@ internal static class CabinetFakesRegistration
         services.AddSingleton<Lettra.Application.Abstractions.Cabinet.IMissionStore>(new InMemoryMissionStore());
         services.AddSingleton<Lettra.Application.Abstractions.Cabinet.IVigilanceStore>(new InMemoryVigilanceStore());
         services.AddSingleton<Lettra.Application.Abstractions.Persistence.IAttestationStore>(new InMemoryAttestationStore());
+        services.AddSingleton<Lettra.Application.Abstractions.Persistence.IThirdPartyCheckStore>(new InMemoryThirdPartyCheckStore());
         services.AddSingleton<Lettra.Application.Features.Kpi.IBillingKpiReader>(new NoBillingKpis());
         return services.AddRecurringFakes();
     }

@@ -86,4 +86,10 @@
   <data name="Error.Vigilance.FactorsInvalid" xml:space="preserve"><value>Facteur de risque inconnu.</value></data>
   <data name="Error.Vigilance.JustificationRequired" xml:space="preserve"><value>Justifiez un niveau de risque faible ou élevé.</value></data>
   <data name="Error.Vigilance.JustificationTooLong" xml:space="preserve"><value>La justification tient en 1 000 caractères au plus.</value></data>
+  <data name="Vigilance.Owners.FromRegister" xml:space="preserve"><value>Reprendre du registre</value></data>
+  <data name="Vigilance.Owners.FromRegister.Hint" xml:space="preserve"><value>Lit les bénéficiaires effectifs déclarés au registre national des entreprises (INPI) et les compare au registre des gels des avoirs. Relisez, complétez puis enregistrez : rien n'est enregistré sans vous.</value></data>
+  <data name="Vigilance.Owners.FromRegister.Done" xml:space="preserve"><value>{0} bénéficiaire(s) repris du registre. Relisez puis enregistrez la fiche.</value></data>
+  <data name="Vigilance.Owners.FromRegister.Empty" xml:space="preserve"><value>Aucun bénéficiaire effectif n'est déclaré au registre pour le SIREN {0}.</value></data>
+  <data name="Vigilance.Owners.FromRegister.NoSiren" xml:space="preserve"><value>La fiche de l'entreprise n'a pas de SIREN : renseignez-le pour interroger le registre.</value></data>
+  <data name="Vigilance.Owners.FreezeAlert" xml:space="preserve"><value>Un nom ressemble à une personne inscrite au registre des gels des avoirs : {0}. Vérifiez qu'il ne s'agit pas d'un homonyme avant toute opération, notez votre analyse et, en cas de doute, ne poursuivez pas la relation.</value></data>
 </root>

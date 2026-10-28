@@ -1,4 +1,5 @@
 using Lettra.Application.Features.Cabinet;
+using Lettra.Application.Features.Parties;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Vigilance;
 using Lettra.UI.Abstractions;
@@ -17,4 +18,7 @@ internal sealed class InProcessVigilanceGateway(IServiceScopeFactory scopes) : I
             scopes,
             (sp, dossier, ct) => InProcessScope.WriteThenReadAsync(sp, new SaveVigilanceCommand(dossier, request.ToDraft(), expectedVersion), new GetVigilanceQuery(dossier), ct),
             cancellationToken);
+
+    public Task<OperationResult<RegisteredOwnersResponse>> LookupOwnersAsync(CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new LookupRegisteredOwnersQuery(dossier), ct), cancellationToken);
 }

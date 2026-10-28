@@ -43,6 +43,14 @@ public static class DependencyInjection
         // Vérification du bénéficiaire : impossible tant que l'infrastructure ne branche pas de banque (même simulée).
         services.TryAddSingleton<Abstractions.External.IPayeeVerification, Abstractions.External.NoPayeeVerification>();
 
+        // Registres officiels (bénéficiaires effectifs, gel des avoirs, BODACC, URSSAF) : injoignables tant que
+        // l'infrastructure n'en branche pas (même simulés).
+        services.TryAddSingleton<Abstractions.External.NoOfficialRegisters>();
+        services.TryAddSingleton<Abstractions.External.IBeneficialOwnerRegister>(sp => sp.GetRequiredService<Abstractions.External.NoOfficialRegisters>());
+        services.TryAddSingleton<Abstractions.External.IAssetFreezeRegister>(sp => sp.GetRequiredService<Abstractions.External.NoOfficialRegisters>());
+        services.TryAddSingleton<Abstractions.External.ILegalNoticeFeed>(sp => sp.GetRequiredService<Abstractions.External.NoOfficialRegisters>());
+        services.TryAddSingleton<Abstractions.External.IUrssafAttestationCheck>(sp => sp.GetRequiredService<Abstractions.External.NoOfficialRegisters>());
+
         services.AddScoped<ICommandDispatcher, CommandDispatcher>();
         services.AddScoped<IQueryDispatcher, QueryDispatcher>();
 
@@ -55,6 +63,7 @@ public static class DependencyInjection
         services.TryAddScoped<ISyncDeviceRegistry, NoSyncDeviceRegistry>();
         services.AddScoped<DossierIntegrityService>();
         services.AddScoped<Features.Parties.IbanChangeDecisions>();
+        services.AddScoped<Features.Parties.ThirdPartyRegisters>();
 
         // Vue cabinet : les dossiers accessibles, partagés par le sélecteur et le tableau de supervision.
         services.AddScoped<Features.Dossiers.AccessibleDossiers>();

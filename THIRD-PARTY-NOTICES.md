@@ -122,6 +122,17 @@ produite par la CI en donne la liste exacte pour chaque version.
 - Les modèles ggml (convertis des poids Whisper d'OpenAI, licence MIT) ne sont pas dans le dépôt : le poste ou le
   conteneur les télécharge depuis le dépôt public de whisper.cpp et vérifie leur empreinte avant de les charger.
 
+## Tesseract (lecture des pièces sur l'appareil)
+
+- `src/Presentation/Lettra.UI.Shared/wwwroot/ocr/` : `tesseract.min.js` et `worker.min.js` du paquet npm `tesseract.js`
+  7.0.0 (licence Apache-2.0, https://github.com/naptha/tesseract.js), `tesseract-core-simd-lstm.wasm.js` du paquet
+  `tesseract.js-core` 7.0.0 (Tesseract compilé en WebAssembly, licence Apache-2.0,
+  https://github.com/naptha/tesseract.js-core) et `fra.traineddata.bin`, le modèle français de Tesseract (tessdata, licence
+  Apache-2.0, https://github.com/tesseract-ocr/tessdata) tiré du paquet `@tesseract.js-data/fra` 1.0.0 (licence MIT).
+  `worker.min.js` est modifié par Lettra (correctif d'une ligne pour remettre le modèle en octets). Origine, correctif,
+  empreintes et mise à jour : `wwwroot/ocr/LISEZMOI.md`. Tout tourne sur l'appareil : rien n'est téléchargé
+  ailleurs que chez Lettra.
+
 ## Codes postaux et communes (aide à la saisie)
 
 - `src/Presentation/Lettra.UI.Shared/wwwroot/data/codes-postaux.txt` est tiré du paquet npm `codes-postaux` 4.1.2

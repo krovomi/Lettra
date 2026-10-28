@@ -11,5 +11,6 @@ public static partial class ErrorCodes
         public const string CodeInvalid = "Attestation.CodeInvalid";
         public const string VerificationNeedsCode = "Attestation.VerificationNeedsCode";
         public const string VerifiedBeforeIssued = "Attestation.VerifiedBeforeIssued";
+        public const string SirenMissing = "Attestation.SirenMissing";
     }
 }

@@ -30,6 +30,9 @@ public static class ReceiptErrors
     public const string EmailInvalidCode = "Receipt.EmailInvalid";
     public const string NoteTooLongCode = "Receipt.NoteTooLong";
     public const string NotFoundCode = "Receipt.NotFound";
+    public const string AmountInvalidCode = "Receipt.AmountInvalid";
+    public const string VatInvalidCode = "Receipt.VatInvalid";
+    public const string DateInvalidCode = "Receipt.DateInvalid";
 
     /// <summary>Seule une opération débitrice (une dépense) appelle une pièce justificative.</summary>
     public static Error LineNotDebit => Error.Validation(LineNotDebitCode, "BankLineId");
@@ -51,6 +54,15 @@ public static class ReceiptErrors
     public static Error NoteTooLong => Error.Validation(NoteTooLongCode, "Note");
 
     public static Error NotFound => Error.NotFound(NotFoundCode);
+
+    /// <summary>Le montant TTC confirmé est positif, au centime près.</summary>
+    public static Error AmountInvalid => Error.Validation(AmountInvalidCode, "Figures.AmountInclTax");
+
+    /// <summary>La TVA confirmée est positive ou nulle, au centime près, et ne dépasse pas le montant TTC.</summary>
+    public static Error VatInvalid => Error.Validation(VatInvalidCode, "Figures.VatAmount");
+
+    /// <summary>La date de la pièce n'est ni dans le futur ni avant l'an 2000.</summary>
+    public static Error DateInvalid => Error.Validation(DateInvalidCode, "Figures.Date");
 }
 
 /// <summary>
@@ -86,6 +98,9 @@ public sealed class BankLineReceipt : Entity<Guid>
 
     public DateTimeOffset AddedAt { get; private set; }
 
+    /// <summary>Montant, date et TVA confirmés par celui qui dépose la pièce ; vides s'il ne les a pas donnés.</summary>
+    public ReceiptFigures? Figures { get; private set; }
+
     public static Result<BankLineReceipt> Create(Guid id, Guid lineId, string? fileName, byte[]? content, Guid userId, DateTimeOffset now)
     {
         if (content is null || content.Length == 0)
@@ -119,6 +134,42 @@ public sealed class BankLineReceipt : Entity<Guid>
             AddedBy = userId,
             AddedAt = now,
         };
+    }
+
+    /// <summary>Note le montant, la date et la TVA confirmés par celui qui dépose la pièce.</summary>
+    public void Confirm(ReceiptFigures figures) => Figures = figures ?? throw new ArgumentNullException(nameof(figures));
+}
+
+/// <summary>
+/// Ce que dit la pièce, confirmé par l'utilisateur : montant TTC, date et TVA. <paramref name="ReadOnDevice"/> : les
+/// valeurs ont été proposées par la lecture de la photo sur l'appareil (aucune image ni aucun texte lu ne quitte
+/// l'appareil pour cela), puis relues et confirmées.
+/// </summary>
+public sealed record ReceiptFigures(decimal AmountInclTax, DateOnly Date, decimal VatAmount, bool ReadOnDevice)
+{
+    public const decimal MaxAmount = 100_000_000m;
+
+    public static readonly DateOnly MinDate = new(2000, 1, 1);
+
+    public static Result<ReceiptFigures> Create(decimal amountInclTax, DateOnly date, decimal vatAmount, bool readOnDevice, DateOnly today)
+    {
+        List<Error> errors = [];
+        if (amountInclTax is <= 0m or > MaxAmount || decimal.Round(amountInclTax, 2) != amountInclTax)
+        {
+            errors.Add(ReceiptErrors.AmountInvalid);
+        }
+
+        if (vatAmount < 0m || vatAmount > amountInclTax || decimal.Round(vatAmount, 2) != vatAmount)
+        {
+            errors.Add(ReceiptErrors.VatInvalid);
+        }
+
+        if (date > today || date < MinDate)
+        {
+            errors.Add(ReceiptErrors.DateInvalid);
+        }
+
+        return errors.Count > 0 ? Result<ReceiptFigures>.Failure(errors) : new ReceiptFigures(amountInclTax, date, vatAmount, readOnDevice);
     }
 }
 

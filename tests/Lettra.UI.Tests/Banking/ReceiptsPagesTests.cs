@@ -1,11 +1,13 @@
 using System.Globalization;
 using Bunit;
+using Lettra.Calculations.Receipts;
 using Lettra.Contracts.Banking;
 using Lettra.Contracts.Common;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
 using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Pages.Banking;
+using Lettra.UI.Shared.Receipts;
 using Lettra.UI.Shared.Services;
 using Lettra.UI.Tests.Billing;
 using Lettra.UI.Tests.Security;
@@ -20,6 +22,7 @@ public sealed class ReceiptsPagesTests : BunitContext
 {
     private readonly FakeReceiptsGateway _receipts = new();
     private readonly FakeFileDownloader _files = new();
+    private readonly FakeReceiptReader _reader = new();
     private readonly ReceiptLineResponse _loyer = FakeReceiptsGateway.Line(17, 950m, "VIR LOYER SCI DU PORT", "SCI du Port");
     private readonly ReceiptLineResponse _energie = FakeReceiptsGateway.Line(9, 84.60m, "PRLV SEPA ENERGIE");
     private readonly ReceiptLineResponse _frais = FakeReceiptsGateway.Line(3, 8.50m, "FRAIS TENUE DE COMPTE", status: ReceiptStatusDto.NotNeeded);
@@ -27,6 +30,7 @@ public sealed class ReceiptsPagesTests : BunitContext
     public ReceiptsPagesTests()
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
+        Services.AddSingleton<IReceiptReader>(_reader);
         Services.AddLettraUi();
         Services.AddSingleton<IReceiptsGateway>(_receipts);
         Services.AddSingleton<IFileDownloader>(_files);
@@ -122,12 +126,25 @@ public sealed class ReceiptsPagesTests : BunitContext
         IRenderedComponent<ReceiptsPage> page = Open<ReceiptsPage>();
 
         page.FindComponents<InputFile>()[0].UploadFiles(InputFileContent.CreateFromBinary([0xFF, 0xD8, 0xFF, 0xE0], "loyer.jpg", contentType: "image/jpeg"));
+        string id = $"receipt-upload-{_loyer.LineId}";
+        page.WaitForElement($"#{id}-confirm-form");
+        _receipts.Uploads.Should().BeEmpty("rien ne part avant la confirmation");
+        page.Find($"#{id}-amount").GetAttribute("value").Should().Be("950");
+        page.Find($"#{id}-date").GetAttribute("value").Should().Be("17/10/2026");
+        page.Find($"#{id}-vat").GetAttribute("value").Should().Be("158.33");
+        page.FindAll($"#{id}-amount-differs").Should().BeEmpty();
+        page.Find($"#{id}-confirm-form").Submit();
+
         page.WaitForAssertion(() => _receipts.Uploads.Should().ContainSingle());
         _receipts.Uploads[0].LineId.Should().Be(_loyer.LineId);
+        _receipts.Figures.Should().ContainSingle().Which.Should().BeEquivalentTo(
+            new ReceiptFiguresDto { AmountInclTax = 950m, Date = new DateOnly(2026, 10, 17), VatAmount = 158.33m, ReadOnDevice = true });
         this.ToastText().Should().Be("Pièce déposée, merci.");
+        page.FindAll($"#{id}-confirm").Should().BeEmpty();
 
         page.Find("#receipts-status").Change("Received");
         page.Find($"#receipt-{_loyer.LineId}").TextContent.Should().Contain("loyer.jpg");
+        page.Find($"#receipt-figures-{_loyer.LineId}").TextContent.Should().Contain("950,00").And.Contain("17/10/2026").And.NotContain("écart");
         page.Find($"#receipt-download-{_loyer.LineId}").Click();
         _files.Files.Should().ContainSingle().Which.FileName.Should().Be("loyer.jpg");
     }
@@ -156,6 +173,8 @@ public sealed class ReceiptsPagesTests : BunitContext
         page.FindAll("#to-provide-list > li").Should().ContainSingle();
 
         page.FindComponent<InputFile>().UploadFiles(InputFileContent.CreateFromBinary([0xFF, 0xD8, 0xFF], "photo.jpg", contentType: "image/jpeg"));
+        string id = $"to-provide-upload-{_loyer.LineId}";
+        page.WaitForElement($"#{id}-confirm-form").Submit();
         page.WaitForAssertion(() => page.FindAll("#to-provide-list > li").Should().BeEmpty());
         page.Find("#to-provide-count").TextContent.Should().Contain("1 pièce(s)");
     }
@@ -177,6 +196,71 @@ public sealed class ReceiptsPagesTests : BunitContext
         page.FindComponent<InputFile>().UploadFiles(InputFileContent.CreateFromBinary(new byte[(5 * 1024 * 1024) + 1], "lourd.jpg", contentType: "image/jpeg"));
 
         _receipts.Uploads.Should().BeEmpty();
+        _reader.Read.Should().BeEmpty("un fichier refusé n'est pas lu");
+        this.Toasts()[^1].Kind.Should().Be(ToastKind.Error);
+    }
+
+    [Fact]
+    public void Rien_de_lu_l_utilisateur_saisit_et_les_oublis_sont_signales_sans_envoi()
+    {
+        _reader.Outcome = new ReceiptReadOutcome(ReceiptReadStatus.Unreadable, ReceiptReading.Empty);
+        IRenderedComponent<ReceiptsPage> page = Open<ReceiptsPage>();
+        string id = $"receipt-upload-{_energie.LineId}";
+
+        page.FindComponents<InputFile>()[1].UploadFiles(InputFileContent.CreateFromBinary([0x25, 0x50, 0x44, 0x46], "facture.pdf", contentType: "application/pdf"));
+        page.WaitForElement($"#{id}-confirm-form");
+        page.Find($"#{id}-read-status").TextContent.Should().Contain("PDF");
+        page.Find($"#{id}-amount").GetAttribute("value").Should().BeNullOrEmpty();
+        page.Find($"#{id}-confirm-form").Submit();
+
+        _receipts.Uploads.Should().BeEmpty();
+        page.Find($"#{id}-confirm").TextContent.Should().Contain("montant").And.Contain("date");
+
+        page.Find($"#{id}-amount").Change("84.6");
+        page.Find($"#{id}-date").Change("09/10/2026");
+        page.Find($"#{id}-vat").Change("90");
+        page.Find($"#{id}-confirm-form").Submit();
+        _receipts.Uploads.Should().BeEmpty("la TVA dépasse le montant");
+
+        page.Find($"#{id}-vat").Change("14.1");
+        page.Find($"#{id}-confirm-form").Submit();
+        page.WaitForAssertion(() => _receipts.Figures.Should().ContainSingle().Which!.ReadOnDevice.Should().BeFalse("rien n'a été lu : tout a été saisi"));
+    }
+
+    [Fact]
+    public void Un_montant_lu_different_du_releve_est_signale_et_le_serveur_peut_refuser_une_valeur()
+    {
+        _reader.Outcome = new ReceiptReadOutcome(ReceiptReadStatus.Read, new ReceiptReading(12m, new DateOnly(2026, 10, 3), 2m, 20m, VatComputed: true));
+        IRenderedComponent<ReceiptsPage> page = Open<ReceiptsPage>();
+        string id = $"receipt-upload-{_loyer.LineId}";
+
+        page.FindComponents<InputFile>()[0].UploadFiles(InputFileContent.CreateFromBinary([0xFF, 0xD8, 0xFF], "ticket.jpg", contentType: "image/jpeg"));
+        page.WaitForElement($"#{id}-confirm-form");
+        page.Find($"#{id}-amount-differs").TextContent.Should().Contain("950,00");
+        page.Find($"#{id}-vat-computed").TextContent.Should().Contain("20 %");
+
+        _receipts.NextUploadErrors = [new ErrorDetail(ErrorCodes.Receipt.DateInvalid, "Figures.Date")];
+        page.Find($"#{id}-confirm-form").Submit();
+        page.WaitForAssertion(() => page.Find($"#{id}-confirm").TextContent.Should().Contain("date"));
+        _receipts.Uploads.Should().BeEmpty();
+
+        page.Find($"#{id}-confirm-cancel").Click();
+        page.FindAll($"#{id}-confirm").Should().BeEmpty();
+        _receipts.Uploads.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Un_refus_du_serveur_ferme_la_confirmation_et_s_affiche()
+    {
+        IRenderedComponent<ReceiptsPage> page = Open<ReceiptsPage>();
+        string id = $"receipt-upload-{_loyer.LineId}";
+
+        page.FindComponents<InputFile>()[0].UploadFiles(InputFileContent.CreateFromBinary([0xFF, 0xD8, 0xFF], "ticket.jpg", contentType: "image/jpeg"));
+        page.WaitForElement($"#{id}-confirm-form");
+        _receipts.NextUploadErrors = [new ErrorDetail(ErrorCodes.Receipt.FileTypeInvalid)];
+        page.Find($"#{id}-confirm-form").Submit();
+
+        page.WaitForAssertion(() => page.FindAll($"#{id}-confirm").Should().BeEmpty());
         this.Toasts()[^1].Kind.Should().Be(ToastKind.Error);
     }
 }

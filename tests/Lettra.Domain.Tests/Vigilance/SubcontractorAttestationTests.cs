@@ -93,4 +93,22 @@ public sealed class SubcontractorAttestationTests
         attestation.StatusOn(Today).Should().Be(AttestationStatus.NotRequired);
         FluentActions.Invoking(() => attestation.Update(null!, Today, later)).Should().Throw<ArgumentNullException>();
     }
+
+    [Fact]
+    public void Un_code_reconnu_par_l_urssaf_note_la_verification_du_jour()
+    {
+        DateOnly today = new(2026, 10, 28);
+        DateTimeOffset now = new(2026, 10, 28, 9, 0, 0, TimeSpan.Zero);
+        SubcontractorAttestation withCode = SubcontractorAttestation.Create(
+            SupplierId.New(), new SubcontractorAttestation.Draft(12_000m, new DateOnly(2026, 10, 1), "AB12CD34EF56", null), today, now).Value;
+        SubcontractorAttestation withoutCode = SubcontractorAttestation.Create(
+            SupplierId.New(), new SubcontractorAttestation.Draft(12_000m, null, null, null), today, now).Value;
+
+        withCode.MarkVerified(today, now.AddHours(1)).IsSuccess.Should().BeTrue();
+        withCode.VerifiedOn.Should().Be(today);
+        withCode.StatusOn(today).Should().Be(AttestationStatus.Valid);
+        withoutCode.MarkVerified(today, now).Errors.Should().ContainSingle().Which.Should().Be(AttestationErrors.VerificationNeedsCode);
+        withoutCode.VerifiedOn.Should().BeNull();
+        AttestationErrors.SirenMissing.Code.Should().Be(AttestationErrors.SirenMissingCode);
+    }
 }

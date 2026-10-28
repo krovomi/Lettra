@@ -13,4 +13,10 @@ public interface IAttestationsGateway
 
     /// <summary>Suit le fournisseur (<paramref name="expectedVersion"/> vide) ou met à jour son suivi à partir de la version lue.</summary>
     Task<OperationResult<SupplierAttestationsResponse>> SaveAsync(Guid supplierId, SaveAttestationRequest request, long? expectedVersion, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Fait vérifier le code de l'attestation par l'URSSAF ; reconnu, la vérification est notée. Refus possibles :
+    /// <c>Attestation.VerificationNeedsCode</c>, <c>Attestation.SirenMissing</c>, <c>Directory.Unavailable</c>.
+    /// </summary>
+    Task<OperationResult<AttestationVerificationResponse>> VerifyAsync(Guid supplierId, CancellationToken cancellationToken);
 }

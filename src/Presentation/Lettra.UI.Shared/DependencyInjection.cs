@@ -62,6 +62,8 @@ public static class DependencyInjection
         services.AddScoped<PostalCodes>();
         services.AddScoped<ICommandPaletteProvider, TemplatePaletteProvider>();
         services.AddScoped<VoiceInput>();
+        // Lecture des pièces sur l'appareil (Tesseract en WebAssembly) : un test la remplace en l'enregistrant avant.
+        services.TryAddScoped<Receipts.IReceiptReader, Receipts.OnDeviceReceiptReader>();
         services.AddScoped<VoiceCommands>();
         services.AddScoped<ICommandPaletteProvider, VoicePaletteProvider>();
         // Vague 6 : sélecteur de dossier, vue cabinet et revue de dossier.

@@ -155,6 +155,16 @@
                                 @if (line.Receipt is { } receipt)
                                 {
                                     <small class="lettra-muted lt-receipts-when">@receipt.FileName</small>
+                                    @if (receipt.Figures is { } figures)
+                                    {
+                                        <small class="@($"lt-receipt-figures {(figures.AmountInclTax != line.Amount ? "is-different" : "lettra-muted")}")" id="@($"receipt-figures-{line.LineId}")">
+                                            @string.Format(Culture, L["Receipts.Figures"], ExplorerText.Money(figures.AmountInclTax), DateText.Format(figures.Date, Culture), ExplorerText.Money(figures.VatAmount))
+                                            @if (figures.AmountInclTax != line.Amount)
+                                            {
+                                                <span> · @L["Receipts.Figures.Differs"]</span>
+                                            }
+                                        </small>
+                                    }
                                 }
                             </td>
                             <td class="lt-banking-line-actions">
@@ -166,7 +176,7 @@
                                 }
                                 @if (line.Status != ReceiptStatusDto.NotNeeded)
                                 {
-                                    <ReceiptUpload Id="@($"receipt-upload-{line.LineId}")" LineId="line.LineId" Replace="@(line.Receipt is not null)" Class="is-small is-secondary" OnUploaded="Replaced" />
+                                    <ReceiptUpload Id="@($"receipt-upload-{line.LineId}")" LineId="line.LineId" ExpectedAmount="line.Amount" Replace="@(line.Receipt is not null)" Class="is-small is-secondary" OnUploaded="Replaced" />
                                 }
                                 @if (line.Status is ReceiptStatusDto.Missing or ReceiptStatusDto.Requested)
                                 {

@@ -1,0 +1,343 @@
+@page "/third-party-checks"
+@using Lettra.Contracts.Vigilance
+@inject IThirdPartyChecksGateway Checks
+@inject ToastService Toasts
+@inject TimeProvider Clock
+@inject IStringLocalizer<SharedResource> L
+@* Vérifier les tiers : pour chaque client et fournisseur, les registres officiels interrogés à la source (bénéficiaires
+   effectifs, gel des avoirs, BODACC, code de l'attestation URSSAF). Ce qui demande un examen remonte en tête ; une
+   vérification sans alerte se refait au bout de six mois. Dans le prototype, les registres sont simulés. *@
+
+<PageTitle>@L["Checks.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Checks.Title"]</h1>
+        <p class="lettra-muted">@L["Checks.Subtitle"]</p>
+    </div>
+    @if (_view is { } header && ToDo(header) > 0)
+    {
+        <div class="lt-page-actions">
+            <button type="button" class="lettra-button" id="checks-check-all" disabled="@_busy" @onclick="CheckAllAsync">
+                <Icon Name="user-search" Size="18" /> @string.Format(Culture, L["Checks.CheckAll"], ToDo(header))
+            </button>
+        </div>
+    }
+</div>
+
+<p class="lettra-banner" id="checks-simulated"><Icon Name="info" Size="18" /> @L["Checks.Simulated"]</p>
+
+<GeneralErrors Errors="_errors" />
+
+@if (_view is not { } view)
+{
+    <ListSkeleton Columns="7" />
+}
+else
+{
+    <section class="lt-banking-stats" id="checks-stats" aria-label="@L["Checks.Stats"]">
+        <div class="@($"lt-banking-stat {(Count(view, ThirdPartyCheckStatusDto.ToReview) > 0 ? "is-pending" : "is-proposed")}")">
+            <span>@L["Checks.Stat.ToReview"]</span>
+            <strong id="checks-to-review">@Count(view, ThirdPartyCheckStatusDto.ToReview)</strong>
+            <small class="lettra-muted">@L["Checks.Stat.ToReview.Hint"]</small>
+        </div>
+        <div class="lt-banking-stat">
+            <span>@L["Checks.Stat.ToDo"]</span>
+            <strong id="checks-to-do">@ToDo(view)</strong>
+            <small class="lettra-muted">@L["Checks.Stat.ToDo.Hint"]</small>
+        </div>
+        <div class="lt-banking-stat">
+            <span>@L["Checks.Stat.Clear"]</span>
+            <strong id="checks-clear">@Count(view, ThirdPartyCheckStatusDto.Clear)</strong>
+        </div>
+    </section>
+
+    @if (_progress is { } progress)
+    {
+        <p class="lettra-banner" role="status" id="checks-progress">
+            <span class="lt-receipt-spinner" aria-hidden="true"></span> @string.Format(Culture, L["Checks.CheckAll.Progress"], progress.Done + 1, progress.Total)
+        </p>
+    }
+
+    @if (Count(view, ThirdPartyCheckStatusDto.ToReview) > 0)
+    {
+        <p class="lettra-banner is-warning" id="checks-review-hint"><Icon Name="triangle-alert" Size="18" /> @L["Checks.Review.Hint"]</p>
+    }
+
+    <section class="lettra-card lt-mission-panel" aria-labelledby="checks-list-title">
+        <div class="lt-panel-head">
+            <h2 id="checks-list-title">@L["Checks.List"]</h2>
+        </div>
+        @if (view.Rows.Count == 0)
+        {
+            <EmptyState Id="checks-empty" IconName="users" Title="@L["Checks.Empty"]" Text="@L["Checks.Empty.Text"]" />
+        }
+        else
+        {
+            <ListFilterBar Id="checks-filters" ActiveCount="ActiveFilters" OnReset="ResetFilters">
+                <ChildContent>
+                    <div class="lt-filter">
+                        <label for="checks-search">@L["Lists.Search"]</label>
+                        <input id="checks-search" type="search" @bind="_search" @bind:event="oninput" autocomplete="off" />
+                    </div>
+                    <div class="lt-filter">
+                        <label for="checks-filter-kind">@L["Checks.Kind"]</label>
+                        <select id="checks-filter-kind" @bind="_kind">
+                            <option value="">@L["Checks.Kind.All"]</option>
+                            @foreach (ThirdPartyKindDto kind in Enum.GetValues<ThirdPartyKindDto>())
+                            {
+                                <option value="@kind">@L[$"Checks.Kind.{kind}"]</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="lt-filter">
+                        <label for="checks-filter-status">@L["Checks.Status"]</label>
+                        <select id="checks-filter-status" @bind="_status">
+                            <option value="">@L["Checks.AllStatuses"]</option>
+                            <option value="@ToHandle">@L["Checks.Filter.ToHandle"]</option>
+                            @foreach (ThirdPartyCheckStatusDto status in Enum.GetValues<ThirdPartyCheckStatusDto>())
+                            {
+                                <option value="@status">@L[$"Checks.Status.{status}"]</option>
+                            }
+                        </select>
+                    </div>
+                    <SortSelect Id="checks-sort" Options="SortOptions" State="_sort" OnSort="StateHasChanged" />
+                </ChildContent>
+            </ListFilterBar>
+            @if (Shown.Count == 0)
+            {
+                <EmptyState Id="checks-filtered-empty" IconName="search" Title="@L["Lists.Empty.FilteredTitle"]" Text="@L["Lists.Empty.Filtered"]" />
+            }
+            else
+            {
+                <div class="lt-list-scroll">
+                    <table class="lettra-table lt-cards" id="checks-table">
+                        <thead>
+                            <tr>
+                                <SortHeader Option="SortOptions[0]" State="_sort" OnSort="StateHasChanged" Id="checks-sort-party" />
+                                <th scope="col">@L["Checks.Owners"]</th>
+                                <th scope="col">@L["Checks.Freeze"]</th>
+                                <th scope="col">@L["Checks.Notice"]</th>
+                                <th scope="col">@L["Checks.Urssaf"]</th>
+                                <SortHeader Option="SortOptions[1]" State="_sort" OnSort="StateHasChanged" Id="checks-sort-checked" />
+                                <SortHeader Option="SortOptions[2]" State="_sort" OnSort="StateHasChanged" Id="checks-sort-status" />
+                                <th scope="col"><span class="lettra-visually-hidden">@L["Checks.Actions"]</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (ThirdPartyCheckRow row in Shown)
+                            {
+                                <tr @key="row.PartyId" id="@($"check-{row.PartyId}")">
+                                    <td>
+                                        <a href="@Href(row)">@row.Name</a>
+                                        <small class="lettra-muted lt-mission-note">@L[$"Checks.Kind.{row.Kind}"]@(row.Siren is { } siren ? $" · {siren}" : string.Empty)</small>
+                                    </td>
+                                    <td data-label="@L["Checks.Owners"]">@OwnersText(row)</td>
+                                    <td data-label="@L["Checks.Freeze"]" class="@(row.Freeze == FreezeScreeningDto.PossibleMatch ? "lt-checks-alert" : null)">@FreezeText(row)</td>
+                                    <td data-label="@L["Checks.Notice"]" class="@(row.Notice is null ? null : "lt-checks-warning")">
+                                        @NoticeText(row)
+                                        @if (row.NoticeLabel is { } label)
+                                        {
+                                            <small class="lettra-muted lt-mission-note">@label</small>
+                                        }
+                                    </td>
+                                    <td data-label="@L["Checks.Urssaf"]" class="@(row.Urssaf == UrssafAnswerDto.NotRecognized ? "lt-checks-alert" : null)">@UrssafText(row)</td>
+                                    <td data-label="@L["Checks.CheckedAt"]">@(row.CheckedAt is { } at ? DateText.Format(DateOnly.FromDateTime(at.ToLocalTime().DateTime), Culture) : "—")</td>
+                                    <td data-label="@L["Checks.Status"]"><span class="@($"lettra-status {StatusClass(row.Status)}")">@L[$"Checks.Status.{row.Status}"]</span></td>
+                                    <td class="lt-banking-line-actions">
+                                        <button type="button" class="lettra-button is-small is-secondary" id="@($"check-run-{row.PartyId}")" disabled="@_busy"
+                                                aria-label="@string.Format(Culture, L["Checks.Check.Label"], row.Name)" @onclick="() => CheckOneAsync(row)">
+                                            @L[row.CheckedAt is null ? "Checks.Check" : "Checks.Recheck"]
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        }
+    </section>
+}
+
+@code {
+    /// <summary>Valeur du filtre « à traiter » : à examiner, jamais vérifié ou à refaire.</summary>
+    private const string ToHandle = "to-handle";
+
+    private ThirdPartyChecksResponse? _view;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private bool _busy;
+    private (int Done, int Total)? _progress;
+    private string? _search;
+    private string _kind = string.Empty;
+    private string _status = string.Empty;
+
+    // Ce qui demande un examen d'abord (l'ordre du serveur).
+    private readonly SortState<CheckColumn> _sort = new(CheckColumn.Status, SortDirectionDto.Ascending);
+
+    private enum CheckColumn
+    {
+        Party,
+        CheckedAt,
+        Status,
+    }
+
+    private IReadOnlyList<SortOption<CheckColumn>> SortOptions =>
+    [
+        new(CheckColumn.Party, L["Checks.Party"]),
+        new(CheckColumn.CheckedAt, L["Checks.CheckedAt"], SortDirectionDto.Descending),
+        new(CheckColumn.Status, L["Checks.Status"]),
+    ];
+
+    private static readonly Dictionary<CheckColumn, Func<ThirdPartyCheckRow, object?>> SortKeys = new()
+    {
+        [CheckColumn.Party] = r => r.Name,
+        [CheckColumn.CheckedAt] = r => r.CheckedAt,
+        [CheckColumn.Status] = r => Urgency(r.Status),
+    };
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private IReadOnlyList<ThirdPartyCheckRow> Shown => ListSorting.Sort(
+        (_view?.Rows ?? [])
+            .Where(r => string.IsNullOrWhiteSpace(_search) || ListSorting.Matches(r.Name, _search) || ListSorting.Matches(r.Siren, _search))
+            .Where(r => _kind.Length == 0 || r.Kind.ToString() == _kind)
+            .Where(r => _status.Length == 0 || (_status == ToHandle ? r.Status != ThirdPartyCheckStatusDto.Clear : r.Status.ToString() == _status)),
+        _sort,
+        SortKeys);
+
+    private int ActiveFilters => (string.IsNullOrWhiteSpace(_search) ? 0 : 1) + (_kind.Length == 0 ? 0 : 1) + (_status.Length == 0 ? 0 : 1);
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        OperationResult<ThirdPartyChecksResponse> result = await Checks.ListAsync(CancellationToken.None);
+        _errors = result.Errors;
+        _view = result.Value ?? new ThirdPartyChecksResponse([]);
+    }
+
+    private async Task CheckOneAsync(ThirdPartyCheckRow row)
+    {
+        _busy = true;
+        try
+        {
+            OperationResult<ThirdPartyCheckRow> result = await Checks.CheckAsync(row.Kind, row.PartyId, CancellationToken.None);
+            if (result is { IsSuccess: true, Value: { } checkedRow })
+            {
+                Replace(checkedRow);
+                Toasts.Show(checkedRow.Status == ThirdPartyCheckStatusDto.ToReview ? ToastKind.Warning : ToastKind.Success,
+                    string.Format(Culture, L["Checks.Checked"], checkedRow.Name, L[$"Checks.Status.{checkedRow.Status}"]));
+            }
+            else
+            {
+                Toasts.Show(ToastKind.Error, ErrorText(result.Errors));
+                if (result.Errors.Any(e => e.Code == ErrorCodes.ThirdPartyCheck.PartyNotFound))
+                {
+                    await LoadAsync();
+                }
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    /// <summary>Vérifie l'un après l'autre les tiers jamais vérifiés ou à refaire ; s'arrête au premier refus.</summary>
+    private async Task CheckAllAsync()
+    {
+        if (_view is not { } view)
+        {
+            return;
+        }
+
+        List<ThirdPartyCheckRow> toDo = [.. view.Rows.Where(r => IsToDo(r.Status))];
+        _busy = true;
+        int reviews = 0;
+        try
+        {
+            for (int i = 0; i < toDo.Count; i++)
+            {
+                _progress = (i, toDo.Count);
+                StateHasChanged();
+                OperationResult<ThirdPartyCheckRow> result = await Checks.CheckAsync(toDo[i].Kind, toDo[i].PartyId, CancellationToken.None);
+                if (result is not { IsSuccess: true, Value: { } checkedRow })
+                {
+                    Toasts.Show(ToastKind.Error, string.Format(Culture, L["Checks.CheckAll.Stopped"], i, ErrorText(result.Errors)));
+                    return;
+                }
+
+                Replace(checkedRow);
+                reviews += checkedRow.Status == ThirdPartyCheckStatusDto.ToReview ? 1 : 0;
+            }
+
+            Toasts.Show(reviews > 0 ? ToastKind.Warning : ToastKind.Success, string.Format(Culture, L["Checks.CheckAll.Done"], toDo.Count, reviews));
+        }
+        finally
+        {
+            (_busy, _progress) = (false, null);
+        }
+    }
+
+    private void Replace(ThirdPartyCheckRow checkedRow) =>
+        _view = new ThirdPartyChecksResponse([.. (_view?.Rows ?? []).Select(r => r.PartyId == checkedRow.PartyId ? checkedRow : r)]);
+
+    private string ErrorText(IReadOnlyList<ErrorDetail> errors) =>
+        string.Join(" ", errors.Select(e => L.Error(e.Code)).Distinct(StringComparer.Ordinal));
+
+    private void ResetFilters() => (_search, _kind, _status) = (null, string.Empty, string.Empty);
+
+    private static string Href(ThirdPartyCheckRow row) =>
+        row.Kind == ThirdPartyKindDto.Customer ? $"customers/{row.PartyId}" : $"suppliers/{row.PartyId}";
+
+    private string OwnersText(ThirdPartyCheckRow row) =>
+        row.CheckedAt is null ? "—"
+        : row.Siren is null ? L["Checks.Owners.NoSiren"]
+        : row.OwnersFound is > 0 and var count ? string.Format(Culture, L["Checks.Owners.Count"], count)
+        : L["Checks.Owners.None"];
+
+    private string FreezeText(ThirdPartyCheckRow row) => row.Freeze switch
+    {
+        FreezeScreeningDto.PossibleMatch => string.Format(Culture, L["Checks.Freeze.PossibleMatch"], row.FreezeMatch),
+        FreezeScreeningDto.Clear => L["Checks.Freeze.Clear"],
+        _ => "—",
+    };
+
+    private string NoticeText(ThirdPartyCheckRow row) => row switch
+    {
+        { CheckedAt: null } => "—",
+        { Notice: { } notice, NoticeOn: { } on } => string.Format(Culture, L[$"Checks.Notice.{notice}"], DateText.Format(on, Culture)),
+        _ => L["Checks.Notice.None"],
+    };
+
+    private string UrssafText(ThirdPartyCheckRow row) => row switch
+    {
+        { CheckedAt: null } or { Kind: ThirdPartyKindDto.Customer } => "—",
+        { Urssaf: { } answer } => L[$"Checks.Urssaf.{answer}"],
+        _ => L["Checks.Urssaf.None"],
+    };
+
+    private static int Count(ThirdPartyChecksResponse view, ThirdPartyCheckStatusDto status) => view.Rows.Count(r => r.Status == status);
+
+    private static int ToDo(ThirdPartyChecksResponse view) => view.Rows.Count(r => IsToDo(r.Status));
+
+    private static bool IsToDo(ThirdPartyCheckStatusDto status) =>
+        status is ThirdPartyCheckStatusDto.NeverChecked or ThirdPartyCheckStatusDto.Outdated;
+
+    private static int Urgency(ThirdPartyCheckStatusDto status) => status switch
+    {
+        ThirdPartyCheckStatusDto.ToReview => 0,
+        ThirdPartyCheckStatusDto.NeverChecked => 1,
+        ThirdPartyCheckStatusDto.Outdated => 2,
+        _ => 3,
+    };
+
+    private static string StatusClass(ThirdPartyCheckStatusDto status) => status switch
+    {
+        ThirdPartyCheckStatusDto.Clear => "is-issued",
+        ThirdPartyCheckStatusDto.Outdated => "is-validated",
+        ThirdPartyCheckStatusDto.NeverChecked => "is-draft",
+        _ => "is-refused",
+    };
+}

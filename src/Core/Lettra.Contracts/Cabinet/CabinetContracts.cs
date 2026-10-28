@@ -58,9 +58,16 @@ public static class DossierIndicatorKeys
     /// </summary>
     public const string FeeReturn = "honoraires.das2";
 
+    /// <summary>
+    /// Clients et fournisseurs dont la dernière vérification auprès des registres demande un examen (gel des avoirs possible,
+    /// procédure collective, radiation, code URSSAF inconnu) ; critique dès qu'un nom ressemble à une personne gelée. Ni nom
+    /// ni motif.
+    /// </summary>
+    public const string ThirdPartiesToReview = "tiers.a-examiner";
+
     /// <summary>Ordre des colonnes du tableau (les clés inconnues suivent, par ordre alphabétique).</summary>
     public static IReadOnlyList<string> Known { get; } =
-        [OverdueInvoices, PlatformRejections, EInvoicingReadiness, VatToDeclare, FeeReturn, BankUnreconciled, SupplierIbanToVerify, SupplierAttestations, ClientDueDiligence, OpenAlerts, ReviewPending];
+        [OverdueInvoices, PlatformRejections, EInvoicingReadiness, VatToDeclare, FeeReturn, BankUnreconciled, SupplierIbanToVerify, SupplierAttestations, ThirdPartiesToReview, ClientDueDiligence, OpenAlerts, ReviewPending];
 }
 
 /// <summary>Urgence d'un indicateur : décide de la couleur et de l'ordre des dossiers.</summary>

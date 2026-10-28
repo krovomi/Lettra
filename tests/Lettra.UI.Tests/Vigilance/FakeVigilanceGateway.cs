@@ -37,6 +37,16 @@ internal sealed class FakeVigilanceGateway : IVigilanceGateway
             Status = null;
         });
 
+    /// <summary>Ce que le registre répond ; vide : la fiche de l'entreprise n'a pas de SIREN.</summary>
+    public RegisteredOwnersResponse Registered { get; set; } = new("552100554", [], null);
+
+    public IReadOnlyList<ErrorDetail>? NextLookupErrors { get; set; }
+
+    public Task<OperationResult<RegisteredOwnersResponse>> LookupOwnersAsync(CancellationToken cancellationToken) =>
+        Task.FromResult(NextLookupErrors is { } errors
+            ? OperationResult<RegisteredOwnersResponse>.Failure(errors)
+            : OperationResult<RegisteredOwnersResponse>.Success(Registered));
+
     private Task<OperationResult<VigilanceOverviewResponse>> Answer(Action change)
     {
         if (NextErrors is { } errors)

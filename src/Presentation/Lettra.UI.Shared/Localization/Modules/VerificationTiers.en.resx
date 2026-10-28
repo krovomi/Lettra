@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.ThirdPartyChecks" xml:space="preserve"><value>Check third parties</value></data>
+  <data name="Checks.Title" xml:space="preserve"><value>Check third parties</value></data>
+  <data name="Checks.Subtitle" xml:space="preserve"><value>Each customer and supplier checked at the source: beneficial owners, asset freezes, BODACC notices and, for a supplier, the code of its URSSAF certificate.</value></data>
+  <data name="Checks.Simulated" xml:space="preserve"><value>In this prototype the registers are simulated: answers are fictitious and no data leaves Lettra. Asset-freeze screening always runs inside Lettra, on the published list.</value></data>
+  <data name="Checks.Stats" xml:space="preserve"><value>Where the checks stand</value></data>
+  <data name="Checks.Stat.ToReview" xml:space="preserve"><value>To review</value></data>
+  <data name="Checks.Stat.ToReview.Hint" xml:space="preserve"><value>Possible freeze, insolvency proceedings, striking off or unknown URSSAF code</value></data>
+  <data name="Checks.Stat.ToDo" xml:space="preserve"><value>To check</value></data>
+  <data name="Checks.Stat.ToDo.Hint" xml:space="preserve"><value>Never checked, or checked more than six months ago</value></data>
+  <data name="Checks.Stat.Clear" xml:space="preserve"><value>Nothing to report</value></data>
+  <data name="Checks.CheckAll" xml:space="preserve"><value>Check the {0} third parties to check</value></data>
+  <data name="Checks.CheckAll.Progress" xml:space="preserve"><value>Checking {0} of {1}…</value></data>
+  <data name="Checks.CheckAll.Done" xml:space="preserve"><value>{0} third parties checked, {1} to review.</value></data>
+  <data name="Checks.CheckAll.Stopped" xml:space="preserve"><value>Checking stopped after {0} third parties: {1}</value></data>
+  <data name="Checks.Check" xml:space="preserve"><value>Check</value></data>
+  <data name="Checks.Recheck" xml:space="preserve"><value>Check again</value></data>
+  <data name="Checks.Check.Label" xml:space="preserve"><value>Check {0} against the registers</value></data>
+  <data name="Checks.Checked" xml:space="preserve"><value>{0} checked: {1}.</value></data>
+  <data name="Checks.List" xml:space="preserve"><value>Customers and suppliers</value></data>
+  <data name="Checks.Empty" xml:space="preserve"><value>No customers or suppliers</value></data>
+  <data name="Checks.Empty.Text" xml:space="preserve"><value>The file's third parties will show here as soon as a customer or supplier is created.</value></data>
+  <data name="Checks.Party" xml:space="preserve"><value>Third party</value></data>
+  <data name="Checks.Kind" xml:space="preserve"><value>Type</value></data>
+  <data name="Checks.Kind.All" xml:space="preserve"><value>Customers and suppliers</value></data>
+  <data name="Checks.Kind.Customer" xml:space="preserve"><value>Customer</value></data>
+  <data name="Checks.Kind.Supplier" xml:space="preserve"><value>Supplier</value></data>
+  <data name="Checks.Owners" xml:space="preserve"><value>Beneficial owners</value></data>
+  <data name="Checks.Owners.Count" xml:space="preserve"><value>{0} registered</value></data>
+  <data name="Checks.Owners.None" xml:space="preserve"><value>None registered</value></data>
+  <data name="Checks.Owners.NoSiren" xml:space="preserve"><value>No SIREN</value></data>
+  <data name="Checks.Freeze" xml:space="preserve"><value>Asset freezes</value></data>
+  <data name="Checks.Freeze.Clear" xml:space="preserve"><value>No similar name</value></data>
+  <data name="Checks.Freeze.PossibleMatch" xml:space="preserve"><value>Looks like “{0}”</value></data>
+  <data name="Checks.Notice" xml:space="preserve"><value>BODACC</value></data>
+  <data name="Checks.Notice.None" xml:space="preserve"><value>No notice</value></data>
+  <data name="Checks.Notice.CollectiveProceeding" xml:space="preserve"><value>Insolvency proceedings, published {0}</value></data>
+  <data name="Checks.Notice.StruckOff" xml:space="preserve"><value>Struck off, published {0}</value></data>
+  <data name="Checks.Urssaf" xml:space="preserve"><value>URSSAF certificate</value></data>
+  <data name="Checks.Urssaf.Recognized" xml:space="preserve"><value>Code recognised</value></data>
+  <data name="Checks.Urssaf.NotRecognized" xml:space="preserve"><value>Code not recognised</value></data>
+  <data name="Checks.Urssaf.None" xml:space="preserve"><value>Nothing to check</value></data>
+  <data name="Checks.CheckedAt" xml:space="preserve"><value>Checked on</value></data>
+  <data name="Checks.Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Checks.AllStatuses" xml:space="preserve"><value>All statuses</value></data>
+  <data name="Checks.Filter.ToHandle" xml:space="preserve"><value>To handle (to review or to check)</value></data>
+  <data name="Checks.Status.NeverChecked" xml:space="preserve"><value>Never checked</value></data>
+  <data name="Checks.Status.ToReview" xml:space="preserve"><value>To review</value></data>
+  <data name="Checks.Status.Outdated" xml:space="preserve"><value>To redo</value></data>
+  <data name="Checks.Status.Clear" xml:space="preserve"><value>Nothing to report</value></data>
+  <data name="Checks.Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Checks.Review.Hint" xml:space="preserve"><value>A resemblance is not a certainty: compare the date of birth or address on the register before concluding, and record your analysis in the anti-money-laundering file. Never tip off the third party about a suspicion.</value></data>
+  <data name="Error.ThirdPartyCheck.PartyNotFound" xml:space="preserve"><value>This customer or supplier no longer exists: reload the list.</value></data>
+</root>

@@ -211,6 +211,14 @@ internal sealed class BankLineReceiptConfiguration : IEntityTypeConfiguration<Ba
         builder.Property(r => r.FileName).HasMaxLength(BankLineReceipt.MaxFileNameLength).IsRequired();
         builder.Property(r => r.ContentType).HasMaxLength(100).IsRequired();
         builder.Property(r => r.Content).IsRequired();
+        // Montant, date et TVA confirmés au dépôt : des colonnes de la même table, toutes vides sans confirmation.
+        builder.OwnsOne(r => r.Figures, figures =>
+        {
+            figures.Property(f => f.AmountInclTax).HasColumnName("FiguresAmountInclTax").HasPrecision(18, 2);
+            figures.Property(f => f.Date).HasColumnName("FiguresDate");
+            figures.Property(f => f.VatAmount).HasColumnName("FiguresVatAmount").HasPrecision(18, 2);
+            figures.Property(f => f.ReadOnDevice).HasColumnName("FiguresReadOnDevice");
+        });
         builder.HasIndex(r => r.LineId).IsUnique();
         builder.HasOne<BankStatementLine>().WithMany().HasForeignKey(r => r.LineId).OnDelete(DeleteBehavior.Cascade);
     }

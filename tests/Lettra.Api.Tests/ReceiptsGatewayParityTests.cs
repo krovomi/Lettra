@@ -44,7 +44,14 @@ public sealed class ReceiptsGatewayParityTests(LettraApiFactory factory) : IClas
             new RequestReceiptsRequest { LineIds = [fee.LineId], Email = "compta@martin.example", Note = "Pour la clôture" }, default);
         ReceiptsResponse toProvide = (await receipts.GetRequestedAsync(default)).Value!;
         OperationResult<ReceiptLineResponse> uploaded = await receipts.UploadAsync(
-            fee.LineId, new UploadReceiptRequest { FileName = "ticket.png", ContentBase64 = Convert.ToBase64String(Png) }, default);
+            fee.LineId,
+            new UploadReceiptRequest
+            {
+                FileName = "ticket.png",
+                ContentBase64 = Convert.ToBase64String(Png),
+                Figures = new ReceiptFiguresDto { AmountInclTax = 8.50m, Date = Today, VatAmount = 1.42m, ReadOnDevice = true },
+            },
+            default);
         OperationResult<ReceiptDocument> downloaded = await receipts.DownloadAsync(fee.LineId, default);
         ReceiptsResponse after = (await receipts.GetReceiptsAsync(default)).Value!;
         OperationResult<RequestReceiptsResponse> again = await receipts.RequestAsync(
@@ -59,6 +66,9 @@ public sealed class ReceiptsGatewayParityTests(LettraApiFactory factory) : IClas
         toProvide.Lines.Should().ContainSingle().Which.RequestedTo.Should().Be("compta@martin.example");
         uploaded.Value!.Status.Should().Be(ReceiptStatusDto.Received);
         uploaded.Value.Receipt!.ContentType.Should().Be("image/png");
+        ReceiptFiguresDto confirmed = new() { AmountInclTax = 8.50m, Date = Today, VatAmount = 1.42m, ReadOnDevice = true };
+        uploaded.Value.Receipt.Figures.Should().BeEquivalentTo(confirmed, "montant, date et TVA confirmés partent avec la pièce");
+        after.Lines.Single().Receipt!.Figures.Should().BeEquivalentTo(confirmed);
         downloaded.Value!.Content.Should().Equal(Png);
         downloaded.Value.FileName.Should().Be("ticket.png");
         after.ReceivedCount.Should().Be(1);
@@ -103,6 +113,15 @@ public sealed class ReceiptsGatewayParityTests(LettraApiFactory factory) : IClas
         OperationResult<ReceiptLineResponse> notAPicture = await receipts.UploadAsync(
             fee, new UploadReceiptRequest { FileName = "virus.exe", ContentBase64 = Convert.ToBase64String("MZ pas une photo"u8.ToArray()) }, default);
         OperationResult<ReceiptLineResponse> empty = await receipts.UploadAsync(fee, new UploadReceiptRequest { FileName = "vide.png" }, default);
+        OperationResult<ReceiptLineResponse> badFigures = await receipts.UploadAsync(
+            fee,
+            new UploadReceiptRequest
+            {
+                FileName = "ticket.png",
+                ContentBase64 = Convert.ToBase64String(Png),
+                Figures = new ReceiptFiguresDto { AmountInclTax = 8.50m, Date = Today.AddDays(1), VatAmount = 9m },
+            },
+            default);
         OperationResult<ReceiptDocument> nothing = await receipts.DownloadAsync(fee, default);
         OperationResult<ReceiptLineResponse> unknownLine = await receipts.SetNotNeededAsync(Guid.CreateVersion7(), notNeeded: true, default);
 
@@ -112,6 +131,8 @@ public sealed class ReceiptsGatewayParityTests(LettraApiFactory factory) : IClas
         onCredit.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Receipt.LineNotDebit);
         notAPicture.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Receipt.FileTypeInvalid);
         empty.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Receipt.FileRequired);
+        badFigures.Errors.Select(e => (e.Code, e.Target)).Should().BeEquivalentTo(
+            [(ErrorCodes.Receipt.DateInvalid, "Figures.Date"), (ErrorCodes.Receipt.VatInvalid, "Figures.VatAmount")]);
         nothing.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Receipt.NotFound);
         unknownLine.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.BankStatement.LineNotFound);
     }

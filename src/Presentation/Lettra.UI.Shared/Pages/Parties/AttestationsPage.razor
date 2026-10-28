@@ -167,6 +167,13 @@ else
                                                 aria-label="@string.Format(Culture, L["Attestations.Edit.Label"], row.SupplierName)" @onclick="() => Edit(row)">
                                             @L[row.Version is null ? "Attestations.Track" : "Attestations.Edit"]
                                         </button>
+                                        @if (row.IssuedOn is not null && !string.IsNullOrWhiteSpace(row.SecurityCode))
+                                        {
+                                            <button type="button" class="lettra-button is-small is-ghost" id="@($"attestation-verify-{row.SupplierId}")" disabled="@_busy"
+                                                    aria-label="@string.Format(Culture, L["Attestations.VerifyCode.Label"], row.SupplierName)" @onclick="() => VerifyAsync(row)">
+                                                <Icon Name="shield-check" Size="16" /> @L["Attestations.VerifyCode"]
+                                            </button>
+                                        }
                                     </td>
                                 </tr>
                             }
@@ -283,6 +290,32 @@ else
             {
                 _fieldErrors = saved.Errors;
                 _errors = [.. saved.Errors.Where(e => e.Target is null)];
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    /// <summary>Fait vérifier le code par l'URSSAF ; un code reconnu note la vérification, un code inconnu est signalé.</summary>
+    private async Task VerifyAsync(SupplierAttestationRow row)
+    {
+        _busy = true;
+        try
+        {
+            OperationResult<AttestationVerificationResponse> result = await Attestations.VerifyAsync(row.SupplierId, CancellationToken.None);
+            if (result is { IsSuccess: true, Value: { } verification })
+            {
+                _view = verification.Attestations;
+                _errors = [];
+                bool recognized = verification.Answer == UrssafAnswerDto.Recognized;
+                Toasts.Show(recognized ? ToastKind.Success : ToastKind.Error,
+                    string.Format(Culture, L[recognized ? "Attestations.VerifyCode.Recognized" : "Attestations.VerifyCode.NotRecognized"], row.SupplierName));
+            }
+            else
+            {
+                Toasts.Show(ToastKind.Error, string.Join(" ", result.Errors.Select(e => L.Error(e.Code)).Distinct(StringComparer.Ordinal)));
             }
         }
         finally

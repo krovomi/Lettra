@@ -15,4 +15,8 @@ internal sealed class HttpVigilanceGateway(HttpClient http) : IVigilanceGateway
         VersionedCalls.SendAsync(
             http, HttpMethod.Put, HttpCalls.Relative($"api/v1/vigilance"), expectedVersion,
             JsonContent.Create(request, ContractsJsonContext.Default.SaveDueDiligenceRequest), ContractsJsonContext.Default.VigilanceOverviewResponse, cancellationToken);
+
+    public Task<OperationResult<RegisteredOwnersResponse>> LookupOwnersAsync(CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.GetAsync(HttpCalls.Relative($"api/v1/vigilance/registered-owners"), ct), ContractsJsonContext.Default.RegisteredOwnersResponse, cancellationToken);
 }

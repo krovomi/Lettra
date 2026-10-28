@@ -52,4 +52,9 @@
   <data name="Error.Attestation.CodeInvalid" xml:space="preserve"><value>The security code has 8 to 20 letters and digits.</value></data>
   <data name="Error.Attestation.VerificationNeedsCode" xml:space="preserve"><value>To record a verification, enter the certificate date and its code.</value></data>
   <data name="Error.Attestation.VerifiedBeforeIssued" xml:space="preserve"><value>The verification cannot come before the certificate date.</value></data>
+  <data name="Attestations.VerifyCode" xml:space="preserve"><value>Check the code</value></data>
+  <data name="Attestations.VerifyCode.Label" xml:space="preserve"><value>Check the certificate code of {0} with URSSAF</value></data>
+  <data name="Attestations.VerifyCode.Recognized" xml:space="preserve"><value>Code recognised by URSSAF: check recorded for {0}.</value></data>
+  <data name="Attestations.VerifyCode.NotRecognized" xml:space="preserve"><value>URSSAF does not recognise this code for {0}: ask for a new certificate and do not pay as things stand.</value></data>
+  <data name="Error.Attestation.SirenMissing" xml:space="preserve"><value>This supplier has no SIREN: URSSAF cannot check the code. Complete its record.</value></data>
 </root>

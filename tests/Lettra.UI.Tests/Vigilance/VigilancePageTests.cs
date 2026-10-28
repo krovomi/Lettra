@@ -160,4 +160,52 @@ public sealed class VigilancePageTests : BunitContext
         page.WaitForAssertion(() => this.Toasts().Should().ContainSingle().Which.Kind.Should().Be(ToastKind.Error));
         _vigilance.Saves.Should().BeEmpty();
     }
+
+    [Fact]
+    public void Les_beneficiaires_se_reprennent_du_registre_puis_s_enregistrent()
+    {
+        _vigilance.Registered = new RegisteredOwnersResponse("552100554",
+        [
+            new RegisteredOwnerDto("Claire Martin", OwnershipKindDto.Capital, 60m, false),
+            new RegisteredOwnerDto("Viktor Fictivenko", OwnershipKindDto.Capital, 40m, true),
+        ], null);
+        IRenderedComponent<VigilancePage> page = Open();
+
+        page.Find("#vigilance-owners-from-register").Click();
+
+        page.Find("#owner-name-0").GetAttribute("value").Should().Be("Claire Martin");
+        page.Find("#owner-name-1").GetAttribute("value").Should().Be("Viktor Fictivenko");
+        page.Find("#owner-share-1").GetAttribute("value").Should().Be("40");
+        page.Find("#vigilance-evidence-BeneficialOwnersRegister").HasAttribute("checked").Should().BeTrue();
+        page.Find("#vigilance-freeze-alert").TextContent.Should().Contain("Viktor Fictivenko");
+        this.ToastText().Should().Be("2 bénéficiaire(s) repris du registre. Relisez puis enregistrez la fiche.");
+        _vigilance.Saves.Should().BeEmpty("rien n'est enregistré sans l'utilisateur");
+
+        page.Find("#vigilance-evidence-CompanyRegistration").Change(true);
+        page.Find("#vigilance-form").Submit();
+        page.WaitForAssertion(() => _vigilance.Saves.Should().ContainSingle());
+        _vigilance.Saves[0].Request.Owners.Select(o => o.Name).Should().Equal("Claire Martin", "Viktor Fictivenko");
+        _vigilance.Saves[0].Request.Evidence.Should().Contain(IdentityEvidenceDto.BeneficialOwnersRegister);
+    }
+
+    [Fact]
+    public void Sans_siren_sans_inscrit_ou_registre_injoignable_la_fiche_reste_telle_quelle()
+    {
+        IRenderedComponent<VigilancePage> page = Open();
+        page.Find("#owner-name-0").Change("Jeanne Martin");
+
+        _vigilance.Registered = new RegisteredOwnersResponse(null, [], null);
+        page.Find("#vigilance-owners-from-register").Click();
+        this.ToastText().Should().Contain("pas de SIREN");
+
+        _vigilance.Registered = new RegisteredOwnersResponse("552100554", [], "Groupe Chimère Export");
+        page.Find("#vigilance-owners-from-register").Click();
+        this.ToastText().Should().Contain("Aucun bénéficiaire effectif").And.Contain("552100554");
+        page.Find("#vigilance-freeze-alert").TextContent.Should().Contain("Groupe Chimère Export");
+
+        _vigilance.NextLookupErrors = [new ErrorDetail(ErrorCodes.Directory.Unavailable)];
+        page.Find("#vigilance-owners-from-register").Click();
+        this.Toasts()[^1].Kind.Should().Be(ToastKind.Error);
+        page.Find("#owner-name-0").GetAttribute("value").Should().Be("Jeanne Martin");
+    }
 }

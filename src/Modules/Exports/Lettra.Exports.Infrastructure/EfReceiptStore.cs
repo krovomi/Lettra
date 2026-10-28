@@ -25,7 +25,13 @@ internal sealed class EfReceiptStore(TenantDbSession session) : IReceiptStore
                     l.Id, l.BookingDate, -l.Amount, l.Label, l.CounterpartyName, (ReceiptStatusDto)(int)l.ReceiptStatus,
                     l.ReceiptRequestedAt, l.ReceiptRequestedTo, l.ReceiptRequests, null, l.Version),
                 Receipt = db.Set<BankLineReceipt>().Where(r => r.LineId == l.Id)
-                    .Select(r => new ReceiptFileResponse(r.Id, r.FileName, r.ContentType, r.Size, r.AddedAt))
+                    .Select(r => new ReceiptFileResponse(r.Id, r.FileName, r.ContentType, r.Size, r.AddedAt, r.Figures == null ? null : new ReceiptFiguresDto
+                    {
+                        AmountInclTax = r.Figures.AmountInclTax,
+                        Date = r.Figures.Date,
+                        VatAmount = r.Figures.VatAmount,
+                        ReadOnDevice = r.Figures.ReadOnDevice,
+                    }))
                     .FirstOrDefault(),
             })
             .ToListAsync(cancellationToken).ConfigureAwait(false);

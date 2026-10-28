@@ -20,6 +20,12 @@ internal sealed class FakeReceiptsGateway : IReceiptsGateway
 
     public string? NextError { get; set; }
 
+    /// <summary>Le prochain dépôt est refusé avec ces erreurs (une valeur confirmée hors des bornes, par exemple).</summary>
+    public IReadOnlyList<ErrorDetail>? NextUploadErrors { get; set; }
+
+    /// <summary>Montant, date et TVA confirmés à chaque dépôt.</summary>
+    public List<ReceiptFiguresDto?> Figures { get; } = [];
+
     public static ReceiptLineResponse Line(int day, decimal amount, string label, string? name = null, ReceiptStatusDto status = ReceiptStatusDto.Missing) =>
         new(Guid.CreateVersion7(), new DateOnly(2026, 10, day), amount, label, name, status, null, null, 0, null, 1);
 
@@ -54,9 +60,16 @@ internal sealed class FakeReceiptsGateway : IReceiptsGateway
             return Task.FromResult(failure);
         }
 
+        if (NextUploadErrors is { } errors)
+        {
+            NextUploadErrors = null;
+            return Task.FromResult(OperationResult<ReceiptLineResponse>.Failure(errors));
+        }
+
         byte[] content = Convert.FromBase64String(request.ContentBase64);
         Uploads.Add((lineId, request.FileName, content));
-        ReceiptFileResponse file = new(Guid.CreateVersion7(), request.FileName, "image/jpeg", content.Length, DateTimeOffset.UnixEpoch);
+        Figures.Add(request.Figures);
+        ReceiptFileResponse file = new(Guid.CreateVersion7(), request.FileName, "image/jpeg", content.Length, DateTimeOffset.UnixEpoch, request.Figures);
         return Task.FromResult(OperationResult<ReceiptLineResponse>.Success(Change([lineId], l => l with { Status = ReceiptStatusDto.Received, Receipt = file })));
     }
 

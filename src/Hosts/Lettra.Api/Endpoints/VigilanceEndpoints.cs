@@ -4,6 +4,7 @@ using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Features.Cabinet;
+using Lettra.Application.Features.Parties;
 using Lettra.Contracts.Vigilance;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
@@ -29,11 +30,20 @@ internal static class VigilanceEndpoints
             .Produces<VigilanceOverviewResponse>()
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .RequireIfMatch();
+
+        group.MapGet("/registered-owners", LookupOwnersAsync)
+            .RequirePermission(Permission.VigilanceGerer)
+            .WithName("LookupRegisteredOwners")
+            .Produces<RegisteredOwnersResponse>()
+            .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
         return group;
     }
 
     private static async Task<IResult> GetAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken) =>
         Ok(await queries.QueryAsync(new GetVigilanceQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false));
+
+    private static async Task<IResult> LookupOwnersAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken) =>
+        Ok(await queries.QueryAsync(new LookupRegisteredOwnersQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false));
 
     private static async Task<IResult> SaveAsync(
         SaveDueDiligenceRequest request, HttpContext http, ITenantContext tenant, ICommandDispatcher commands, IQueryDispatcher queries, CancellationToken cancellationToken)
