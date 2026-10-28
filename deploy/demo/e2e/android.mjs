@@ -120,9 +120,19 @@ async function step(page, what, action) {
     try { return await action(); } catch (error) {
         await shot(`echec-${what}`);
         log(error.message.split('\n').slice(0, 12).join('\n'));
+        // Page fermée : l'application a-t-elle été tuée, ou l'émulateur entier est-il tombé ?
+        log(`appareil : ${deviceState()} ; application : ${await appProcess()}`);
         await dumpPage(page);
         throw new Error(`${what} : ${error.message.split('\n')[0]}`);
     }
+}
+function deviceState() {
+    try { return execFileSync('adb', ['get-state'], { timeout: 10_000 }).toString().trim(); }
+    catch { return 'perdu'; }
+}
+async function appProcess() {
+    const pid = await Promise.race([device.shell(`pidof ${app}`).then(b => b.toString().trim()).catch(() => ''), sleep(10_000).then(() => '')]);
+    return pid ? `en cours (pid ${pid})` : 'arrêtée';
 }
 async function start() {
     await device.shell(`am start -W -n ${app}/.MainActivity`);
