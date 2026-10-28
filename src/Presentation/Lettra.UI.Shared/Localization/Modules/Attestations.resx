@@ -52,4 +52,9 @@
   <data name="Error.Attestation.CodeInvalid" xml:space="preserve"><value>Le code de sécurité compte de 8 à 20 lettres et chiffres.</value></data>
   <data name="Error.Attestation.VerificationNeedsCode" xml:space="preserve"><value>Pour noter une vérification, saisissez la date de l'attestation et son code.</value></data>
   <data name="Error.Attestation.VerifiedBeforeIssued" xml:space="preserve"><value>La vérification ne peut pas précéder la date de l'attestation.</value></data>
+  <data name="Attestations.VerifyCode" xml:space="preserve"><value>Vérifier le code</value></data>
+  <data name="Attestations.VerifyCode.Label" xml:space="preserve"><value>Vérifier auprès de l'URSSAF le code de l'attestation de {0}</value></data>
+  <data name="Attestations.VerifyCode.Recognized" xml:space="preserve"><value>Code reconnu par l'URSSAF : vérification notée pour {0}.</value></data>
+  <data name="Attestations.VerifyCode.NotRecognized" xml:space="preserve"><value>L'URSSAF ne reconnaît pas ce code pour {0} : demandez une nouvelle attestation et ne payez pas en l'état.</value></data>
+  <data name="Error.Attestation.SirenMissing" xml:space="preserve"><value>Ce fournisseur n'a pas de SIREN : l'URSSAF ne peut pas vérifier le code. Complétez sa fiche.</value></data>
 </root>

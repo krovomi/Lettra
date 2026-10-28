@@ -119,4 +119,5 @@
   <data name="Cabinet.Indicator.honoraires.das2" xml:space="preserve"><value>Honoraires DAS 2</value></data>
   <data name="Cabinet.Indicator.honoraires.das2.Due" xml:space="preserve"><value>avant le {0}</value></data>
   <data name="Cabinet.Indicator.facture-electronique.preparation" xml:space="preserve"><value>E-facture</value></data>
+  <data name="Cabinet.Indicator.tiers.a-examiner" xml:space="preserve"><value>Tiers à examiner</value></data>
 </root>

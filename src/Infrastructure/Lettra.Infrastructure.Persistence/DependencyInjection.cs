@@ -61,12 +61,14 @@ public static class DependencyInjection
         services.AddScoped<IMissionStore, EfMissionStore>();
         services.AddScoped<IVigilanceStore, EfVigilanceStore>();
         services.AddScoped<IAttestationStore, Repositories.EfAttestationStore>();
+        services.AddScoped<IThirdPartyCheckStore, Repositories.EfThirdPartyCheckStore>();
         services.AddScoped<IDossierIndicatorSource, OverdueInvoicesIndicatorSource>();
         services.AddScoped<IDossierIndicatorSource, PlatformRejectionsIndicatorSource>();
         services.AddScoped<IDossierIndicatorSource, ReviewPendingIndicatorSource>();
         services.AddScoped<IDossierIndicatorSource, Repositories.IbanChangesIndicatorSource>();
         services.AddScoped<IDossierIndicatorSource, ClientDueDiligenceIndicatorSource>();
         services.AddScoped<IDossierIndicatorSource, Repositories.SupplierAttestationsIndicatorSource>();
+        services.AddScoped<IDossierIndicatorSource, Repositories.ThirdPartiesToReviewIndicatorSource>();
         services.TryAddSingleton<IDossierIndicatorStore, InMemoryDossierIndicatorStore>();
         services.AddSingleton<IDossierIndicatorRefresher, DossierIndicatorRefresher>();
 

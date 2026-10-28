@@ -108,4 +108,27 @@ public sealed class ReceiptTests
         BankLineReceipt.Create(Guid.CreateVersion7(), line, "  ", Pdf, User, Now).Value.FileName.Should().Be("justificatif.pdf");
         BankLineReceipt.Create(Guid.CreateVersion7(), line, new string('a', 300) + ".png", Png, User, Now).Value.FileName.Should().HaveLength(BankLineReceipt.MaxFileNameLength);
     }
+
+    [Fact]
+    public void Montant_date_et_TVA_confirmes_sont_bornes_et_gardes_avec_la_piece()
+    {
+        DateOnly today = new(2026, 10, 26);
+        ReceiptFigures figures = ReceiptFigures.Create(84.90m, new DateOnly(2026, 10, 15), 14.15m, readOnDevice: true, today).Value;
+        BankLineReceipt receipt = BankLineReceipt.Create(Guid.CreateVersion7(), Guid.CreateVersion7(), "ticket.jpg", Jpeg, User, Now).Value;
+
+        receipt.Figures.Should().BeNull();
+        receipt.Confirm(figures);
+        receipt.Figures.Should().Be(new ReceiptFigures(84.90m, new DateOnly(2026, 10, 15), 14.15m, true));
+
+        ReceiptFigures.Create(0m, today, 0m, false, today).Errors.Should().ContainSingle().Which.Should().Be(ReceiptErrors.AmountInvalid);
+        ReceiptFigures.Create(10.001m, today, 0m, false, today).Errors.Should().ContainSingle().Which.Should().Be(ReceiptErrors.AmountInvalid);
+        ReceiptFigures.Create(ReceiptFigures.MaxAmount + 1m, today, 0m, false, today).Errors.Should().ContainSingle().Which.Should().Be(ReceiptErrors.AmountInvalid);
+        ReceiptFigures.Create(10m, today, 10.01m, false, today).Errors.Should().ContainSingle().Which.Should().Be(ReceiptErrors.VatInvalid);
+        ReceiptFigures.Create(10m, today, -1m, false, today).Errors.Should().ContainSingle().Which.Should().Be(ReceiptErrors.VatInvalid);
+        ReceiptFigures.Create(10m, today, 1.005m, false, today).Errors.Should().ContainSingle().Which.Should().Be(ReceiptErrors.VatInvalid);
+        ReceiptFigures.Create(10m, today.AddDays(1), 0m, false, today).Errors.Should().ContainSingle().Which.Should().Be(ReceiptErrors.DateInvalid);
+        ReceiptFigures.Create(10m, new DateOnly(1999, 12, 31), 0m, false, today).Errors.Should().ContainSingle().Which.Should().Be(ReceiptErrors.DateInvalid);
+        ReceiptFigures.Create(10m, ReceiptFigures.MinDate, 0m, false, today).IsSuccess.Should().BeTrue("une TVA nulle est permise");
+        ReceiptErrors.AmountInvalid.Target.Should().Be("Figures.AmountInclTax");
+    }
 }

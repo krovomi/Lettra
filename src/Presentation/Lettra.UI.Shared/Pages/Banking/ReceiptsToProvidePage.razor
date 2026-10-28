@@ -42,7 +42,7 @@ else
                         <span class="lt-banking-money">@ExplorerText.Money(line.Amount)</span>
                     </div>
                     <p class="lettra-muted">@DateText.Format(line.Date, Culture) · @line.Label</p>
-                    <ReceiptUpload Id="@($"to-provide-upload-{line.LineId}")" LineId="line.LineId" Class="is-block" OnUploaded="LoadAsync" />
+                    <ReceiptUpload Id="@($"to-provide-upload-{line.LineId}")" LineId="line.LineId" ExpectedAmount="line.Amount" Class="is-block" OnUploaded="LoadAsync" />
                 </li>
             }
         </ul>

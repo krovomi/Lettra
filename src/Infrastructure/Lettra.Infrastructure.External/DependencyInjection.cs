@@ -2,6 +2,7 @@ using Lettra.Application.Abstractions.External;
 using Lettra.Application.Abstractions.Mail;
 using Lettra.Infrastructure.External.Mail;
 using Lettra.Infrastructure.External.Payees;
+using Lettra.Infrastructure.External.Registers;
 using Lettra.Infrastructure.External.Sirene;
 using Lettra.Infrastructure.External.Vies;
 using Microsoft.Extensions.Configuration;
@@ -16,7 +17,7 @@ namespace Lettra.Infrastructure.External;
 public static class DependencyInjection
 {
     /// <summary>
-    /// Services externes (SIRENE, VIES, envoi d'e-mails, vérification du bénéficiaire simulée), dans tous les modes. Hors ligne, les appels échouent vite et
+    /// Services externes (SIRENE, VIES, envoi d'e-mails, vérification du bénéficiaire et registres officiels simulés), dans tous les modes. Hors ligne, les appels échouent vite et
     /// renvoient <c>Directory.Unavailable</c> ; <c>Lettra:External:Enabled=false</c> coupe les annuaires. L'envoi
     /// d'e-mails a son propre réglage (<see cref="EmailOptions"/>), coupé par défaut.
     /// </summary>
@@ -30,6 +31,13 @@ public static class DependencyInjection
 
         // Vérification du bénéficiaire : banque simulée, sans réseau, tant qu'aucun prestataire n'est sous contrat.
         services.Replace(ServiceDescriptor.Singleton<IPayeeVerification, SimulatedPayeeVerification>());
+
+        // Registres officiels : simulés, sans réseau, tant que les accès réels (INPI, DG Trésor, BODACC, URSSAF) ne sont pas ouverts.
+        services.TryAddSingleton<SimulatedOfficialRegisters>();
+        services.Replace(ServiceDescriptor.Singleton<IBeneficialOwnerRegister>(sp => sp.GetRequiredService<SimulatedOfficialRegisters>()));
+        services.Replace(ServiceDescriptor.Singleton<IAssetFreezeRegister>(sp => sp.GetRequiredService<SimulatedOfficialRegisters>()));
+        services.Replace(ServiceDescriptor.Singleton<ILegalNoticeFeed>(sp => sp.GetRequiredService<SimulatedOfficialRegisters>()));
+        services.Replace(ServiceDescriptor.Singleton<IUrssafAttestationCheck>(sp => sp.GetRequiredService<SimulatedOfficialRegisters>()));
 
         ExternalServicesOptions settings = section.Get<ExternalServicesOptions>() ?? new ExternalServicesOptions();
         if (!settings.Enabled)

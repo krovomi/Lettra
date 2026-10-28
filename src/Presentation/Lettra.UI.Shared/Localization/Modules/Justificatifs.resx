@@ -57,4 +57,23 @@
   <data name="Error.Receipt.EmailInvalid" xml:space="preserve"><value>L'adresse e-mail n'est pas valide.</value></data>
   <data name="Error.Receipt.NoteTooLong" xml:space="preserve"><value>Le message dépasse 500 caractères.</value></data>
   <data name="Error.Receipt.NotFound" xml:space="preserve"><value>Aucune pièce n'est déposée pour cette dépense.</value></data>
+  <data name="Receipts.Confirm.Title" xml:space="preserve"><value>Vérifier ce que dit la pièce</value></data>
+  <data name="Receipts.Confirm.Reading" xml:space="preserve"><value>Lecture de la photo sur votre appareil…</value></data>
+  <data name="Receipts.Confirm.Read" xml:space="preserve"><value>Lu sur votre appareil. Vérifiez chaque valeur et corrigez-la si besoin.</value></data>
+  <data name="Receipts.Confirm.NothingRead" xml:space="preserve"><value>Rien n'a pu être lu sur cette photo. Saisissez le montant, la date et la TVA de la pièce.</value></data>
+  <data name="Receipts.Confirm.Unsupported" xml:space="preserve"><value>Cet appareil ne sait pas lire les photos. Saisissez le montant, la date et la TVA de la pièce.</value></data>
+  <data name="Receipts.Confirm.Unreadable" xml:space="preserve"><value>Ce fichier ne se lit pas ici (PDF ou photo HEIC). Saisissez le montant, la date et la TVA de la pièce.</value></data>
+  <data name="Receipts.Confirm.Failed" xml:space="preserve"><value>La lecture n'a pas abouti. Saisissez le montant, la date et la TVA de la pièce.</value></data>
+  <data name="Receipts.Confirm.Amount" xml:space="preserve"><value>Montant TTC (€)</value></data>
+  <data name="Receipts.Confirm.Date" xml:space="preserve"><value>Date de la pièce</value></data>
+  <data name="Receipts.Confirm.Vat" xml:space="preserve"><value>TVA (€)</value></data>
+  <data name="Receipts.Confirm.VatComputed" xml:space="preserve"><value>Calculée à partir du seul taux lu ({0} %) : vérifiez-la sur la pièce.</value></data>
+  <data name="Receipts.Confirm.AmountDiffers" xml:space="preserve"><value>Le relevé indique {0} pour cette dépense : vérifiez le montant.</value></data>
+  <data name="Receipts.Confirm.Privacy" xml:space="preserve"><value>La photo est lue sur cet appareil. Seuls le fichier et les trois valeurs que vous confirmez sont envoyés.</value></data>
+  <data name="Receipts.Confirm.Send" xml:space="preserve"><value>Confirmer et déposer</value></data>
+  <data name="Receipts.Figures" xml:space="preserve"><value>Pièce : {0} TTC le {1}, TVA {2}</value></data>
+  <data name="Receipts.Figures.Differs" xml:space="preserve"><value>écart avec le relevé</value></data>
+  <data name="Error.Receipt.AmountInvalid" xml:space="preserve"><value>Saisissez le montant TTC de la pièce, positif et au centime près.</value></data>
+  <data name="Error.Receipt.VatInvalid" xml:space="preserve"><value>Saisissez la TVA de la pièce (0 s'il n'y en a pas) : elle ne dépasse pas le montant TTC.</value></data>
+  <data name="Error.Receipt.DateInvalid" xml:space="preserve"><value>Saisissez la date de la pièce : elle ne peut pas être dans le futur.</value></data>
 </root>

@@ -1,0 +1,37 @@
+/* Lire une pièce : fenêtre de confirmation au-dessus de la liste (feuille du bas sur téléphone). */
+.lt-receipt-confirm-backdrop { position: fixed; inset: 0; margin: 0; z-index: 70; background: var(--color-backdrop); }
+.lt-receipt-confirm {
+    position: fixed; z-index: 71; left: 50%; top: 10vh; transform: translateX(-50%); margin: 0;
+    width: min(560px, calc(100vw - 32px)); max-height: 80vh; overflow: auto;
+    padding: var(--space-5); border-radius: var(--radius-lg); border: 1px solid var(--color-border);
+    background: var(--color-surface); color: var(--color-fg); box-shadow: var(--shadow-lg);
+    white-space: normal; text-align: left; animation: lt-pop var(--motion-base) var(--ease-out);
+}
+.lt-receipt-confirm h2 { margin: 0 0 var(--space-2); font-size: 1.15rem; }
+.lt-receipt-confirm-file { display: flex; align-items: center; gap: var(--space-1); margin: 0 0 var(--space-3); overflow-wrap: anywhere; }
+.lt-receipt-confirm .lettra-form-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.lt-receipt-confirm .lt-form-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.lt-receipt-spinner {
+    width: 16px; height: 16px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent;
+    display: inline-block; animation: lt-receipt-spin 0.8s linear infinite;
+}
+@keyframes lt-receipt-spin { to { transform: rotate(360deg); } }
+.lt-receipt-figures { display: block; margin-top: var(--space-1); }
+.lt-receipt-figures.is-different { color: var(--color-warning-fg); font-weight: 600; }
+
+@media (max-width: 640px) {
+    .lt-receipt-confirm {
+        top: auto; bottom: 0; left: 0; transform: none; width: 100%; max-height: 92vh;
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: var(--space-4);
+        animation: lt-rise var(--motion-base) var(--ease-out);
+    }
+    .lt-receipt-confirm .lt-form-actions .lettra-button { flex: 1 1 auto; }
+}
+
+/* Vérifier les tiers : un résultat qui demande un examen ressort en couleur (gel, code inconnu en rouge ; annonce en orange). */
+.lt-checks-alert { color: var(--color-danger-fg); font-weight: 600; }
+.lt-checks-warning { color: var(--color-warning-fg); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+    .lt-receipt-confirm, .lt-receipt-spinner { animation: none; }
+}

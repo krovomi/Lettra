@@ -15,4 +15,9 @@ internal sealed class HttpAttestationsGateway(HttpClient http) : IAttestationsGa
         VersionedCalls.SendAsync(
             http, HttpMethod.Put, HttpCalls.Relative($"api/v1/attestations/{supplierId}"), expectedVersion,
             JsonContent.Create(request, ContractsJsonContext.Default.SaveAttestationRequest), ContractsJsonContext.Default.SupplierAttestationsResponse, cancellationToken);
+
+    public Task<OperationResult<AttestationVerificationResponse>> VerifyAsync(Guid supplierId, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.PostAsync(HttpCalls.Relative($"api/v1/attestations/{supplierId}/verification"), null, ct),
+            ContractsJsonContext.Default.AttestationVerificationResponse, cancellationToken);
 }

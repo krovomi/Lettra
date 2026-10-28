@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.ThirdPartyChecks" xml:space="preserve"><value>Vérifier les tiers</value></data>
+  <data name="Checks.Title" xml:space="preserve"><value>Vérifier les tiers</value></data>
+  <data name="Checks.Subtitle" xml:space="preserve"><value>Chaque client et fournisseur interrogé à la source : bénéficiaires effectifs, gel des avoirs, annonces du BODACC et, pour un fournisseur, code de son attestation URSSAF.</value></data>
+  <data name="Checks.Simulated" xml:space="preserve"><value>Dans ce prototype, les registres sont simulés : les réponses sont fictives, aucune donnée ne quitte Lettra. Le criblage du gel des avoirs se fait toujours dans Lettra, sur la liste publiée.</value></data>
+  <data name="Checks.Stats" xml:space="preserve"><value>Où en sont les vérifications</value></data>
+  <data name="Checks.Stat.ToReview" xml:space="preserve"><value>À examiner</value></data>
+  <data name="Checks.Stat.ToReview.Hint" xml:space="preserve"><value>Gel possible, procédure collective, radiation ou code URSSAF inconnu</value></data>
+  <data name="Checks.Stat.ToDo" xml:space="preserve"><value>À vérifier</value></data>
+  <data name="Checks.Stat.ToDo.Hint" xml:space="preserve"><value>Jamais vérifiés, ou vérifiés il y a plus de six mois</value></data>
+  <data name="Checks.Stat.Clear" xml:space="preserve"><value>Rien à signaler</value></data>
+  <data name="Checks.CheckAll" xml:space="preserve"><value>Vérifier les {0} tiers à vérifier</value></data>
+  <data name="Checks.CheckAll.Progress" xml:space="preserve"><value>Vérification {0} sur {1}…</value></data>
+  <data name="Checks.CheckAll.Done" xml:space="preserve"><value>{0} tiers vérifiés, dont {1} à examiner.</value></data>
+  <data name="Checks.CheckAll.Stopped" xml:space="preserve"><value>Vérification arrêtée après {0} tiers : {1}</value></data>
+  <data name="Checks.Check" xml:space="preserve"><value>Vérifier</value></data>
+  <data name="Checks.Recheck" xml:space="preserve"><value>Revérifier</value></data>
+  <data name="Checks.Check.Label" xml:space="preserve"><value>Vérifier {0} auprès des registres</value></data>
+  <data name="Checks.Checked" xml:space="preserve"><value>{0} vérifié : {1}.</value></data>
+  <data name="Checks.List" xml:space="preserve"><value>Clients et fournisseurs</value></data>
+  <data name="Checks.Empty" xml:space="preserve"><value>Aucun client ni fournisseur</value></data>
+  <data name="Checks.Empty.Text" xml:space="preserve"><value>Les tiers du dossier apparaîtront ici dès qu'un client ou un fournisseur sera créé.</value></data>
+  <data name="Checks.Party" xml:space="preserve"><value>Tiers</value></data>
+  <data name="Checks.Kind" xml:space="preserve"><value>Nature</value></data>
+  <data name="Checks.Kind.All" xml:space="preserve"><value>Clients et fournisseurs</value></data>
+  <data name="Checks.Kind.Customer" xml:space="preserve"><value>Client</value></data>
+  <data name="Checks.Kind.Supplier" xml:space="preserve"><value>Fournisseur</value></data>
+  <data name="Checks.Owners" xml:space="preserve"><value>Bénéficiaires effectifs</value></data>
+  <data name="Checks.Owners.Count" xml:space="preserve"><value>{0} inscrit(s)</value></data>
+  <data name="Checks.Owners.None" xml:space="preserve"><value>Aucun inscrit</value></data>
+  <data name="Checks.Owners.NoSiren" xml:space="preserve"><value>Pas de SIREN</value></data>
+  <data name="Checks.Freeze" xml:space="preserve"><value>Gel des avoirs</value></data>
+  <data name="Checks.Freeze.Clear" xml:space="preserve"><value>Aucun nom ressemblant</value></data>
+  <data name="Checks.Freeze.PossibleMatch" xml:space="preserve"><value>Ressemble à « {0} »</value></data>
+  <data name="Checks.Notice" xml:space="preserve"><value>BODACC</value></data>
+  <data name="Checks.Notice.None" xml:space="preserve"><value>Aucune annonce</value></data>
+  <data name="Checks.Notice.CollectiveProceeding" xml:space="preserve"><value>Procédure collective, publiée le {0}</value></data>
+  <data name="Checks.Notice.StruckOff" xml:space="preserve"><value>Radiation, publiée le {0}</value></data>
+  <data name="Checks.Urssaf" xml:space="preserve"><value>Attestation URSSAF</value></data>
+  <data name="Checks.Urssaf.Recognized" xml:space="preserve"><value>Code reconnu</value></data>
+  <data name="Checks.Urssaf.NotRecognized" xml:space="preserve"><value>Code non reconnu</value></data>
+  <data name="Checks.Urssaf.None" xml:space="preserve"><value>Rien à vérifier</value></data>
+  <data name="Checks.CheckedAt" xml:space="preserve"><value>Vérifié le</value></data>
+  <data name="Checks.Status" xml:space="preserve"><value>État</value></data>
+  <data name="Checks.AllStatuses" xml:space="preserve"><value>Tous les états</value></data>
+  <data name="Checks.Filter.ToHandle" xml:space="preserve"><value>À traiter (à examiner ou à vérifier)</value></data>
+  <data name="Checks.Status.NeverChecked" xml:space="preserve"><value>Jamais vérifié</value></data>
+  <data name="Checks.Status.ToReview" xml:space="preserve"><value>À examiner</value></data>
+  <data name="Checks.Status.Outdated" xml:space="preserve"><value>À refaire</value></data>
+  <data name="Checks.Status.Clear" xml:space="preserve"><value>Rien à signaler</value></data>
+  <data name="Checks.Actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Checks.Review.Hint" xml:space="preserve"><value>Une ressemblance n'est pas une certitude : comparez la date de naissance ou l'adresse sur le registre avant de conclure, et notez votre analyse dans la fiche anti-blanchiment. Ne prévenez jamais le tiers d'un soupçon.</value></data>
+  <data name="Error.ThirdPartyCheck.PartyNotFound" xml:space="preserve"><value>Ce client ou ce fournisseur n'existe plus : rechargez la liste.</value></data>
+</root>

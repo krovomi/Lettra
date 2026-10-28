@@ -6,6 +6,7 @@ using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
 using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Pages.Parties;
+using Lettra.UI.Shared.Services;
 using Lettra.UI.Tests.Security;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -158,5 +159,29 @@ public sealed class AttestationsPageTests : BunitContext
 
         page.FindAll("#attestations-empty").Should().ContainSingle();
         this.ToastText().Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public void Le_code_d_une_attestation_se_fait_verifier_par_l_urssaf()
+    {
+        SupplierAttestationRow dallage = _attestations.Add("Dallage Petit", 7_500m, new DateOnly(2026, 10, 1));
+        SupplierAttestationRow brun = _attestations.Add("Atelier Brun");
+        IRenderedComponent<AttestationsPage> page = Open();
+
+        page.FindAll($"#attestation-verify-{brun.SupplierId}").Should().BeEmpty("sans code, rien à vérifier");
+        page.Find($"#attestation-verify-{dallage.SupplierId}").Click();
+
+        _attestations.Verifications.Should().Equal(dallage.SupplierId);
+        this.ToastText().Should().Be("Code reconnu par l'URSSAF : vérification notée pour Dallage Petit.");
+        page.Find($"#attestation-{dallage.SupplierId}").TextContent.Should().Contain("26/10/2026").And.Contain("Valable");
+
+        _attestations.Urssaf = UrssafAnswerDto.NotRecognized;
+        page.Find($"#attestation-verify-{dallage.SupplierId}").Click();
+        this.Toasts()[^1].Kind.Should().Be(ToastKind.Error);
+        this.ToastText().Should().Contain("ne reconnaît pas ce code");
+
+        _attestations.NextErrors = [new ErrorDetail(ErrorCodes.Attestation.SirenMissing)];
+        page.Find($"#attestation-verify-{dallage.SupplierId}").Click();
+        this.ToastText().Should().Contain("SIREN");
     }
 }

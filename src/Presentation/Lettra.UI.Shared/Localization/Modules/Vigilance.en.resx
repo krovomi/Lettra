@@ -86,4 +86,10 @@
   <data name="Error.Vigilance.FactorsInvalid" xml:space="preserve"><value>Unknown risk factor.</value></data>
   <data name="Error.Vigilance.JustificationRequired" xml:space="preserve"><value>Give the reason for a low or high risk level.</value></data>
   <data name="Error.Vigilance.JustificationTooLong" xml:space="preserve"><value>The reason fits in 1,000 characters at most.</value></data>
+  <data name="Vigilance.Owners.FromRegister" xml:space="preserve"><value>Take from the register</value></data>
+  <data name="Vigilance.Owners.FromRegister.Hint" xml:space="preserve"><value>Reads the beneficial owners declared in the national business register (INPI) and compares them with the asset-freeze register. Review, complete and save: nothing is saved without you.</value></data>
+  <data name="Vigilance.Owners.FromRegister.Done" xml:space="preserve"><value>{0} beneficial owner(s) taken from the register. Review, then save the file.</value></data>
+  <data name="Vigilance.Owners.FromRegister.Empty" xml:space="preserve"><value>No beneficial owner is declared in the register for SIREN {0}.</value></data>
+  <data name="Vigilance.Owners.FromRegister.NoSiren" xml:space="preserve"><value>The company profile has no SIREN: fill it in to query the register.</value></data>
+  <data name="Vigilance.Owners.FreezeAlert" xml:space="preserve"><value>A name looks like a person listed in the asset-freeze register: {0}. Check it is not a namesake before any transaction, record your analysis and, if in doubt, do not continue the relationship.</value></data>
 </root>

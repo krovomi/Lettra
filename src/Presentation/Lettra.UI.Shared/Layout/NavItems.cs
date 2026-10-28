@@ -50,6 +50,7 @@ public static class NavItems
         new("received-invoices", "Nav.ReceivedInvoices", "inbox", "Nav.Group.Parties"),
         new("iban-changes", "Nav.IbanChanges", "shield-alert", "Nav.Group.Parties"),
         new("attestations", "Nav.Attestations", "file-check", "Nav.Group.Parties"),
+        new("third-party-checks", "Nav.ThirdPartyChecks", "user-search", "Nav.Group.Parties"),
         new("catalog", "Nav.Catalog", "package", "Nav.Group.Parties"),
         new("payments", "Nav.Payments", "hand-coins", "Nav.Group.Accounting"),
         new("bank", "Nav.Bank", "landmark", "Nav.Group.Accounting"),

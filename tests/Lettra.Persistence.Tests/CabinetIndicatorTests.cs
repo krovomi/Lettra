@@ -447,6 +447,62 @@ public sealed class CabinetIndicatorTests : IDisposable
             new(name, null, null, null, null, null, "Rue Neuve 1", null, "1000", "Bruxelles", "BE");
     }
 
+    [Fact]
+    public async Task Les_verifications_des_tiers_se_relisent_et_alimentent_la_vue_cabinet_sans_les_tiers_supprimes()
+    {
+        await using TenantHarness harness = new(new SqliteConfigurator());
+        DossierId dossier = harness.AddDossier(DatabaseProvider.Sqlite, Database("tiers"));
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        CustomerId durand;
+        SupplierId roux;
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            ICommandDispatcher commands = scope.ServiceProvider.GetRequiredService<ICommandDispatcher>();
+            durand = (await commands.SendAsync(new CreateCustomerCommand(dossier, Durand), default)).Value;
+            roux = (await commands.SendAsync(new CreateSupplierCommand(dossier, new("Maçonnerie Roux", null, null, null, null, null, "Rue Neuve 1", null, "1000", "Bruxelles", "BE")), default)).Value;
+            (await Source<ThirdPartiesToReviewIndicatorSource>(scope).ComputeAsync(LegalCalendar.DateOf(now), default)).Should().BeEmpty("aucun tiers vérifié");
+            IThirdPartyCheckStore store = scope.ServiceProvider.GetRequiredService<IThirdPartyCheckStore>();
+            await store.AddAsync(ThirdPartyCheck.Create(durand.Value, ThirdPartyKind.Customer,
+                new ThirdPartyFindings(2, FreezeScreening.Clear, null, LegalNoticeKind.CollectiveProceeding, new DateOnly(2026, 9, 15), "Redressement judiciaire", null), Guid.Empty, now), default);
+            await store.AddAsync(ThirdPartyCheck.Create(roux.Value, ThirdPartyKind.Supplier,
+                new ThirdPartyFindings(null, FreezeScreening.PossibleMatch, "Boris Inventov", null, null, null, UrssafAnswer.Recognized), Guid.Empty, now), default);
+            await (await scope.ServiceProvider.GetRequiredService<TenantDbSession>().GetAsync(default)).SaveChangesAsync();
+        }
+
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            IReadOnlyList<ThirdPartyEntry> entries = await scope.ServiceProvider.GetRequiredService<IThirdPartyCheckStore>().ListAsync(default);
+            entries.Select(e => (e.Kind, e.Name, e.Siren?.Value)).Should().BeEquivalentTo(
+                [(ThirdPartyKind.Customer, "Atelier Durand", "732829320"), (ThirdPartyKind.Supplier, "Maçonnerie Roux", null)]);
+            ThirdPartyCheck customer = entries.Single(e => e.Kind == ThirdPartyKind.Customer).Check!;
+            customer.Should().BeEquivalentTo(new
+            {
+                OwnersFound = (int?)2,
+                Notice = (LegalNoticeKind?)LegalNoticeKind.CollectiveProceeding,
+                NoticeOn = (DateOnly?)new DateOnly(2026, 9, 15),
+                NoticeLabel = "Redressement judiciaire",
+                Freeze = FreezeScreening.Clear,
+                Version = 1L,
+            });
+            entries.Single(e => e.Kind == ThirdPartyKind.Supplier).Check!.FreezeMatch.Should().Be("Boris Inventov");
+            (await Source<ThirdPartiesToReviewIndicatorSource>(scope).ComputeAsync(LegalCalendar.DateOf(now), default)).Should().Equal(
+                new DossierIndicator(DossierIndicatorKeys.ThirdPartiesToReview, 2, IndicatorLevel.Critical));
+
+            ThirdPartyCheck tracked = (await scope.ServiceProvider.GetRequiredService<IThirdPartyCheckStore>().FindAsync(durand.Value, default))!;
+            tracked.Record(new ThirdPartyFindings(2, FreezeScreening.Clear, null, null, null, null, null), Guid.Empty, now);
+            await (await scope.ServiceProvider.GetRequiredService<TenantDbSession>().GetAsync(default)).SaveChangesAsync();
+            (await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>().SendAsync(new DeleteSupplierCommand(dossier, roux, null), default))
+                .IsSuccess.Should().BeTrue();
+        }
+
+        await using (AsyncServiceScope scope = await harness.OpenAsync(dossier))
+        {
+            IReadOnlyList<ThirdPartyEntry> entries = await scope.ServiceProvider.GetRequiredService<IThirdPartyCheckStore>().ListAsync(default);
+            entries.Should().ContainSingle("le fournisseur supprimé sort de la liste").Which.Check!.Version.Should().Be(2);
+            (await Source<ThirdPartiesToReviewIndicatorSource>(scope).ComputeAsync(LegalCalendar.DateOf(now), default)).Should().BeEmpty();
+        }
+    }
+
     public void Dispose()
     {
         Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();

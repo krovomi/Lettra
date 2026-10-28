@@ -57,4 +57,23 @@
   <data name="Error.Receipt.EmailInvalid" xml:space="preserve"><value>The e-mail address is not valid.</value></data>
   <data name="Error.Receipt.NoteTooLong" xml:space="preserve"><value>The message exceeds 500 characters.</value></data>
   <data name="Error.Receipt.NotFound" xml:space="preserve"><value>No receipt has been uploaded for this expense.</value></data>
+  <data name="Receipts.Confirm.Title" xml:space="preserve"><value>Check what the receipt says</value></data>
+  <data name="Receipts.Confirm.Reading" xml:space="preserve"><value>Reading the photo on your device…</value></data>
+  <data name="Receipts.Confirm.Read" xml:space="preserve"><value>Read on your device. Check each value and correct it if needed.</value></data>
+  <data name="Receipts.Confirm.NothingRead" xml:space="preserve"><value>Nothing could be read on this photo. Enter the receipt's amount, date and VAT.</value></data>
+  <data name="Receipts.Confirm.Unsupported" xml:space="preserve"><value>This device cannot read photos. Enter the receipt's amount, date and VAT.</value></data>
+  <data name="Receipts.Confirm.Unreadable" xml:space="preserve"><value>This file cannot be read here (PDF or HEIC photo). Enter the receipt's amount, date and VAT.</value></data>
+  <data name="Receipts.Confirm.Failed" xml:space="preserve"><value>Reading did not work. Enter the receipt's amount, date and VAT.</value></data>
+  <data name="Receipts.Confirm.Amount" xml:space="preserve"><value>Amount incl. VAT (€)</value></data>
+  <data name="Receipts.Confirm.Date" xml:space="preserve"><value>Receipt date</value></data>
+  <data name="Receipts.Confirm.Vat" xml:space="preserve"><value>VAT (€)</value></data>
+  <data name="Receipts.Confirm.VatComputed" xml:space="preserve"><value>Computed from the only rate read ({0} %): check it on the receipt.</value></data>
+  <data name="Receipts.Confirm.AmountDiffers" xml:space="preserve"><value>The bank statement shows {0} for this expense: check the amount.</value></data>
+  <data name="Receipts.Confirm.Privacy" xml:space="preserve"><value>The photo is read on this device. Only the file and the three values you confirm are sent.</value></data>
+  <data name="Receipts.Confirm.Send" xml:space="preserve"><value>Confirm and upload</value></data>
+  <data name="Receipts.Figures" xml:space="preserve"><value>Receipt: {0} incl. VAT on {1}, VAT {2}</value></data>
+  <data name="Receipts.Figures.Differs" xml:space="preserve"><value>differs from the statement</value></data>
+  <data name="Error.Receipt.AmountInvalid" xml:space="preserve"><value>Enter the receipt's amount incl. VAT, positive and to the cent.</value></data>
+  <data name="Error.Receipt.VatInvalid" xml:space="preserve"><value>Enter the receipt's VAT (0 if none): it cannot exceed the amount incl. VAT.</value></data>
+  <data name="Error.Receipt.DateInvalid" xml:space="preserve"><value>Enter the receipt's date: it cannot be in the future.</value></data>
 </root>

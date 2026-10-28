@@ -32,6 +32,28 @@ internal sealed class FakeAttestationsGateway(DateOnly today) : IAttestationsGat
             Rows[index] = Row(supplierId, Rows[index].SupplierName, request.ContractAmountExclTax + 0.0m, request.IssuedOn, code, request.VerifiedOn, (expectedVersion ?? 0) + 1);
         });
 
+    /// <summary>La réponse de l'URSSAF : reconnu par défaut ; reconnu, la vérification est notée au jour.</summary>
+    public UrssafAnswerDto Urssaf { get; set; } = UrssafAnswerDto.Recognized;
+
+    public List<Guid> Verifications { get; } = [];
+
+    public async Task<OperationResult<AttestationVerificationResponse>> VerifyAsync(Guid supplierId, CancellationToken cancellationToken)
+    {
+        OperationResult<SupplierAttestationsResponse> list = await Answer(() =>
+        {
+            Verifications.Add(supplierId);
+            int index = Rows.FindIndex(r => r.SupplierId == supplierId);
+            if (Urssaf == UrssafAnswerDto.Recognized)
+            {
+                SupplierAttestationRow row = Rows[index];
+                Rows[index] = Row(supplierId, row.SupplierName, row.ContractAmountExclTax, row.IssuedOn, row.SecurityCode, today, row.Version + 1);
+            }
+        });
+        return list is { IsSuccess: true, Value: { } rows }
+            ? OperationResult<AttestationVerificationResponse>.Success(new AttestationVerificationResponse(Urssaf, rows))
+            : OperationResult<AttestationVerificationResponse>.Failure(list.Errors);
+    }
+
     private SupplierAttestationRow Row(Guid id, string name, decimal? amount, DateOnly? issued, string? code, DateOnly? verified, long? version)
     {
         DateOnly? until = issued?.AddMonths(6).AddDays(-1);

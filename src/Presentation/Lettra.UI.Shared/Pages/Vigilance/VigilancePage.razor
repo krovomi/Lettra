@@ -92,6 +92,18 @@ else
                 <fieldset>
                     <legend>@L["Vigilance.Form.Owners"]</legend>
                     <p class="lettra-hint lettra-field-wide">@L["Vigilance.Owners.Hint"]</p>
+                    <div class="lettra-field-wide">
+                        <button type="button" class="lettra-button is-secondary is-small" id="vigilance-owners-from-register" disabled="@_busy" @onclick="LookupOwnersAsync">
+                            <Icon Name="user-search" Size="16" /> @L["Vigilance.Owners.FromRegister"]
+                        </button>
+                        <small class="lettra-hint">@L["Vigilance.Owners.FromRegister.Hint"]</small>
+                    </div>
+                    @if (_freezeMatch is { } freezeMatch)
+                    {
+                        <p class="lettra-banner is-warning lettra-field-wide" role="alert" id="vigilance-freeze-alert">
+                            <Icon Name="triangle-alert" Size="18" /> @string.Format(Culture, L["Vigilance.Owners.FreezeAlert"], freezeMatch)
+                        </p>
+                    }
                     <ol class="lt-vigilance-owners lettra-field-wide" id="vigilance-owners">
                         @for (int index = 0; index < _owners.Count; index++)
                         {
@@ -238,6 +250,7 @@ else
     private List<BeneficialOwnerDto> _owners = [];
     private HashSet<IdentityEvidenceDto> _evidence = [];
     private HashSet<RiskFactorDto> _factors = [];
+    private string? _freezeMatch;
 
     private static CultureInfo Culture => CultureInfo.CurrentCulture;
 
@@ -299,6 +312,49 @@ else
         else
         {
             set.Remove(value);
+        }
+    }
+
+    /// <summary>
+    /// Remplace les bénéficiaires du formulaire par ceux du registre et coche la pièce « registre des bénéficiaires
+    /// effectifs ». Rien n'est enregistré : l'utilisateur relit puis enregistre. Un nom proche du registre des gels est signalé.
+    /// </summary>
+    private async Task LookupOwnersAsync()
+    {
+        _busy = true;
+        try
+        {
+            OperationResult<RegisteredOwnersResponse> result = await Vigilance.LookupOwnersAsync(CancellationToken.None);
+            if (result is not { IsSuccess: true, Value: { } register })
+            {
+                Toasts.Show(ToastKind.Error, string.Join(" ", result.Errors.Select(e => L.Error(e.Code)).Distinct(StringComparer.Ordinal)));
+                return;
+            }
+
+            if (register.Siren is not { } siren)
+            {
+                Toasts.Show(ToastKind.Warning, L["Vigilance.Owners.FromRegister.NoSiren"]);
+                return;
+            }
+
+            if (register.Owners.Count == 0)
+            {
+                Toasts.Show(ToastKind.Info, string.Format(Culture, L["Vigilance.Owners.FromRegister.Empty"], siren));
+            }
+            else
+            {
+                _owners = [.. register.Owners.Select(o => new BeneficialOwnerDto { Name = o.Name, Kind = o.Kind, SharePercent = o.SharePercent })];
+                _evidence.Add(IdentityEvidenceDto.BeneficialOwnersRegister);
+                Toasts.Show(ToastKind.Success, string.Format(Culture, L["Vigilance.Owners.FromRegister.Done"], register.Owners.Count));
+            }
+
+            IEnumerable<string> matches = register.Owners.Where(o => o.FreezeMatch).Select(o => o.Name);
+            List<string> names = [.. register.CompanyFreezeMatch is { } company ? matches.Prepend(company) : matches];
+            _freezeMatch = names.Count == 0 ? null : string.Join(", ", names);
+        }
+        finally
+        {
+            _busy = false;
         }
     }
 

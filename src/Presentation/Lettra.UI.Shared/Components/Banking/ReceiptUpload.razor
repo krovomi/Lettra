@@ -1,21 +1,88 @@
 @* Dépôt d'une pièce justificative : sur téléphone, le sélecteur propose l'appareil photo ; ailleurs, un fichier.
-   Photo (JPEG, PNG, WebP, HEIC) ou PDF, 5 Mo au plus ; le serveur vérifie le type d'après le contenu. Partagé par
-   l'écran du cabinet et l'écran « Pièces à fournir » du client. *@
+   Photo (JPEG, PNG, WebP, HEIC) ou PDF, 5 Mo au plus ; le serveur vérifie le type d'après le contenu. Avant l'envoi, la
+   photo est lue sur l'appareil (IReceiptReader) et l'utilisateur confirme montant TTC, date et TVA : seuls le fichier
+   et ces trois valeurs partent. Partagé par l'écran du cabinet et l'écran « Pièces à fournir » du client. *@
+@using Lettra.Calculations.Receipts
 @using Lettra.Contracts.Banking
+@using Lettra.UI.Shared.Components.Explorer
+@using Lettra.UI.Shared.Receipts
 @inject IReceiptsGateway Receipts
+@inject IReceiptReader Reader
 @inject ToastService Toasts
+@inject TimeProvider Clock
 @inject IStringLocalizer<SharedResource> L
 
 <label class="@($"lettra-button {Class}")" for="@Id" aria-disabled="@(_busy ? "true" : null)">
     <Icon Name="camera" Size="18" /> @(Replace ? L["Receipts.Replace"] : L["Receipts.Upload"])
 </label>
-<InputFile id="@Id" class="lettra-visually-hidden" accept="image/*,application/pdf" disabled="@_busy" OnChange="UploadAsync" />
+<InputFile id="@Id" class="lettra-visually-hidden" accept="image/*,application/pdf" disabled="@_busy" OnChange="ChooseAsync" />
+
+@if (_pending is { } pending)
+{
+    <div class="lt-receipt-confirm-backdrop" @onclick="Cancel"></div>
+    <section class="lt-receipt-confirm" role="dialog" aria-modal="true" aria-labelledby="@($"{Id}-confirm-title")" id="@($"{Id}-confirm")">
+        <h2 id="@($"{Id}-confirm-title")">@L["Receipts.Confirm.Title"]</h2>
+        <p class="lettra-muted lt-receipt-confirm-file"><Icon Name="paperclip" Size="16" /> @pending.FileName</p>
+        @if (_reading)
+        {
+            <p class="lettra-banner" role="status" id="@($"{Id}-reading")"><span class="lt-receipt-spinner" aria-hidden="true"></span> @L["Receipts.Confirm.Reading"]</p>
+        }
+        else
+        {
+            <p class="@($"lettra-banner {(_outcome == ReceiptReadStatus.Read && !_proposal.IsEmpty ? string.Empty : "is-warning")}")" role="status" id="@($"{Id}-read-status")">
+                <Icon Name="@(_outcome == ReceiptReadStatus.Read && !_proposal.IsEmpty ? "scan-text" : "info")" Size="18" /> @StatusText
+            </p>
+        }
+        <form class="lettra-form-grid" id="@($"{Id}-confirm-form")" @onsubmit="ConfirmAsync" @onsubmit:preventDefault="true">
+            <div class="lettra-field">
+                <label for="@($"{Id}-amount")">@L["Receipts.Confirm.Amount"]</label>
+                <input id="@($"{Id}-amount")" type="number" inputmode="decimal" step="0.01" min="0.01" @bind="_amount" disabled="@_reading" required />
+                <FieldErrors Field="Figures.AmountInclTax" ServerErrors="_fieldErrors" />
+            </div>
+            <div class="lettra-field">
+                <label for="@($"{Id}-date")">@L["Receipts.Confirm.Date"]</label>
+                <DateField Id="@($"{Id}-date")" Value="_date" Max="Clock.LocalToday()" Disabled="_reading" ValueChanged="d => _date = d" />
+                <FieldErrors Field="Figures.Date" ServerErrors="_fieldErrors" />
+            </div>
+            <div class="lettra-field">
+                <label for="@($"{Id}-vat")">@L["Receipts.Confirm.Vat"]</label>
+                <input id="@($"{Id}-vat")" type="number" inputmode="decimal" step="0.01" min="0" @bind="_vat" disabled="@_reading" required />
+                <FieldErrors Field="Figures.VatAmount" ServerErrors="_fieldErrors" />
+                @if (_proposal.VatComputed && _vat == _proposal.VatAmount)
+                {
+                    <small class="lettra-hint" id="@($"{Id}-vat-computed")">@string.Format(Culture, L["Receipts.Confirm.VatComputed"], _proposal.VatRate?.ToString("0.##", Culture))</small>
+                }
+            </div>
+            @if (ExpectedAmount is { } expected && _amount is { } amount && amount != expected && !_reading)
+            {
+                <p class="lettra-banner is-warning lettra-field-wide" role="status" id="@($"{Id}-amount-differs")">
+                    <Icon Name="triangle-alert" Size="18" /> @string.Format(Culture, L["Receipts.Confirm.AmountDiffers"], ExplorerText.Money(expected))
+                </p>
+            }
+            <p class="lettra-hint lettra-field-wide"><Icon Name="shield-check" Size="16" /> @L["Receipts.Confirm.Privacy"]</p>
+            <div class="lt-form-actions lettra-field-wide">
+                <button type="submit" class="lettra-button" id="@($"{Id}-confirm-send")" disabled="@(_busy || _reading)">
+                    <Icon Name="check" Size="18" /> @L["Receipts.Confirm.Send"]
+                </button>
+                <button type="button" class="lettra-button is-ghost" id="@($"{Id}-confirm-cancel")" disabled="@_busy" @onclick="Cancel">@L["Explorer.Cancel"]</button>
+            </div>
+        </form>
+    </section>
+}
 
 @code {
     /// <summary>La limite du serveur (5 Mo) : un fichier plus lourd est refusé avant l'envoi.</summary>
     public const long MaxFileSize = 5 * 1024 * 1024;
 
     private bool _busy;
+    private bool _reading;
+    private PendingFile? _pending;
+    private ReceiptReadStatus _outcome;
+    private ReceiptReading _proposal = ReceiptReading.Empty;
+    private decimal? _amount;
+    private DateOnly? _date;
+    private decimal? _vat;
+    private IReadOnlyList<ErrorDetail> _fieldErrors = [];
 
     [Parameter, EditorRequired] public string Id { get; set; } = string.Empty;
 
@@ -24,11 +91,25 @@
     /// <summary>Une pièce est déjà déposée : le bouton dit « Remplacer ».</summary>
     [Parameter] public bool Replace { get; set; }
 
+    /// <summary>Le montant de la dépense sur le relevé : un montant lu différent est signalé avant l'envoi.</summary>
+    [Parameter] public decimal? ExpectedAmount { get; set; }
+
     [Parameter] public string Class { get; set; } = "is-small";
 
     [Parameter] public EventCallback<ReceiptLineResponse> OnUploaded { get; set; }
 
-    private async Task UploadAsync(InputFileChangeEventArgs e)
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private string StatusText => _outcome switch
+    {
+        ReceiptReadStatus.Read when !_proposal.IsEmpty => L["Receipts.Confirm.Read"],
+        ReceiptReadStatus.Read => L["Receipts.Confirm.NothingRead"],
+        ReceiptReadStatus.Unsupported => L["Receipts.Confirm.Unsupported"],
+        ReceiptReadStatus.Unreadable => L["Receipts.Confirm.Unreadable"],
+        _ => L["Receipts.Confirm.Failed"],
+    };
+
+    private async Task ChooseAsync(InputFileChangeEventArgs e)
     {
         IBrowserFile file = e.File;
         if (file.Size > MaxFileSize)
@@ -37,24 +118,65 @@
             return;
         }
 
+        using MemoryStream content = new();
+        await using (Stream stream = file.OpenReadStream(MaxFileSize))
+        {
+            await stream.CopyToAsync(content);
+        }
+
+        _pending = new PendingFile(file.Name, file.ContentType, content.ToArray());
+        (_amount, _date, _vat, _fieldErrors, _proposal) = (null, null, null, [], ReceiptReading.Empty);
+        _reading = true;
+        StateHasChanged();
+        ReceiptReadOutcome outcome = await Reader.ReadAsync(_pending.Content, _pending.ContentType, CancellationToken.None);
+        if (_pending is null)
+        {
+            return;
+        }
+
+        (_outcome, _proposal) = (outcome.Status, outcome.Reading);
+        (_amount, _date, _vat) = (outcome.Reading.AmountInclTax, outcome.Reading.Date, outcome.Reading.VatAmount);
+        _reading = false;
+    }
+
+    private async Task ConfirmAsync()
+    {
+        if (_pending is not { } pending)
+        {
+            return;
+        }
+
+        _fieldErrors = Check();
+        if (_fieldErrors.Count > 0)
+        {
+            return;
+        }
+
         _busy = true;
         try
         {
-            using MemoryStream content = new();
-            await using (Stream stream = file.OpenReadStream(MaxFileSize))
+            ReceiptFiguresDto figures = new()
             {
-                await stream.CopyToAsync(content);
-            }
-
+                AmountInclTax = _amount!.Value,
+                Date = _date!.Value,
+                VatAmount = _vat!.Value,
+                ReadOnDevice = _outcome == ReceiptReadStatus.Read && !_proposal.IsEmpty,
+            };
             OperationResult<ReceiptLineResponse> result = await Receipts.UploadAsync(
-                LineId, new UploadReceiptRequest { FileName = file.Name, ContentBase64 = Convert.ToBase64String(content.ToArray()) }, CancellationToken.None);
+                LineId, new UploadReceiptRequest { FileName = pending.FileName, ContentBase64 = Convert.ToBase64String(pending.Content), Figures = figures }, CancellationToken.None);
             if (result is { IsSuccess: true, Value: { } line })
             {
+                _pending = null;
                 Toasts.Show(ToastKind.Success, L["Receipts.Uploaded"]);
                 await OnUploaded.InvokeAsync(line);
             }
+            else if (result.Errors.Any(err => err.Target?.StartsWith("Figures", StringComparison.Ordinal) == true))
+            {
+                _fieldErrors = result.Errors;
+            }
             else
             {
+                _pending = null;
                 Toasts.Show(ToastKind.Error, string.Join(" ", result.Errors.Select(err => L.Error(err.Code)).Distinct(StringComparer.Ordinal)));
             }
         }
@@ -63,4 +185,36 @@
             _busy = false;
         }
     }
+
+    /// <summary>Les oublis prévisibles, signalés sans aller-retour (le serveur les vérifie aussi).</summary>
+    private List<ErrorDetail> Check()
+    {
+        List<ErrorDetail> errors = [];
+        if (_amount is not > 0m)
+        {
+            errors.Add(new ErrorDetail(ErrorCodes.Receipt.AmountInvalid, "Figures.AmountInclTax"));
+        }
+
+        if (_date is not { } date || date > Clock.LocalToday())
+        {
+            errors.Add(new ErrorDetail(ErrorCodes.Receipt.DateInvalid, "Figures.Date"));
+        }
+
+        if (_vat is not >= 0m || _vat > _amount)
+        {
+            errors.Add(new ErrorDetail(ErrorCodes.Receipt.VatInvalid, "Figures.VatAmount"));
+        }
+
+        return errors;
+    }
+
+    private void Cancel()
+    {
+        if (!_busy)
+        {
+            (_pending, _reading) = (null, false);
+        }
+    }
+
+    private sealed record PendingFile(string FileName, string ContentType, byte[] Content);
 }

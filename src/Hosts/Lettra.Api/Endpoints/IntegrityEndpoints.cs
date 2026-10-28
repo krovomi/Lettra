@@ -56,6 +56,7 @@ internal static class IntegrityEndpoints
         api.MapMission();
         api.MapVigilance();
         api.MapAttestations();
+        api.MapThirdPartyChecks();
 
         // Tableau de bord du dossier ouvert (docs/tableaux-de-bord.md).
         api.MapDossierPilotage();

@@ -14,5 +14,8 @@ public static partial class ErrorCodes
         public const string EmailInvalid = "Receipt.EmailInvalid";
         public const string NoteTooLong = "Receipt.NoteTooLong";
         public const string NotFound = "Receipt.NotFound";
+        public const string AmountInvalid = "Receipt.AmountInvalid";
+        public const string VatInvalid = "Receipt.VatInvalid";
+        public const string DateInvalid = "Receipt.DateInvalid";
     }
 }

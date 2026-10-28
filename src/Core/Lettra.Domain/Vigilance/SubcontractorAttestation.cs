@@ -98,6 +98,19 @@ public sealed class SubcontractorAttestation : AggregateRoot<SupplierId>, IVersi
         return Result.Success();
     }
 
+    /// <summary>L'URSSAF a reconnu le code de sécurité : la vérification est notée à la date du jour.</summary>
+    public Result MarkVerified(DateOnly today, DateTimeOffset now)
+    {
+        if (IssuedOn is null || SecurityCode is null)
+        {
+            return AttestationErrors.VerificationNeedsCode;
+        }
+
+        VerifiedOn = today;
+        UpdatedAt = now;
+        return Result.Success();
+    }
+
     public AttestationStatus StatusOn(DateOnly today)
     {
         if (!IsRequired)
@@ -166,6 +179,7 @@ public static class AttestationErrors
     public const string CodeInvalidCode = "Attestation.CodeInvalid";
     public const string VerificationNeedsCodeCode = "Attestation.VerificationNeedsCode";
     public const string VerifiedBeforeIssuedCode = "Attestation.VerifiedBeforeIssued";
+    public const string SirenMissingCode = "Attestation.SirenMissing";
 
     public static Error SupplierNotFound => Error.NotFound(SupplierNotFoundCode);
 
@@ -178,4 +192,7 @@ public static class AttestationErrors
     public static Error VerificationNeedsCode => Error.Validation(VerificationNeedsCodeCode, "VerifiedOn");
 
     public static Error VerifiedBeforeIssued => Error.Validation(VerifiedBeforeIssuedCode, "VerifiedOn");
+
+    /// <summary>L'URSSAF vérifie un code avec le SIREN du fournisseur : sans SIREN, rien à demander.</summary>
+    public static Error SirenMissing => Error.Validation(SirenMissingCode);
 }

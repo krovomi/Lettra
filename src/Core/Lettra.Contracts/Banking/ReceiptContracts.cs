@@ -15,8 +15,23 @@ public enum ReceiptStatusDto
     NotNeeded = 3,
 }
 
-/// <summary>La pièce déposée : nom, type, taille, date de dépôt.</summary>
-public sealed record ReceiptFileResponse(Guid Id, string FileName, string ContentType, int Size, DateTimeOffset AddedAt);
+/// <summary>
+/// Montant TTC, date et TVA d'une pièce, confirmés par celui qui la dépose. <c>ReadOnDevice</c> : proposés par la lecture
+/// de la photo sur l'appareil, puis relus.
+/// </summary>
+public sealed record ReceiptFiguresDto
+{
+    public decimal AmountInclTax { get; set; }
+
+    public DateOnly Date { get; set; }
+
+    public decimal VatAmount { get; set; }
+
+    public bool ReadOnDevice { get; set; }
+}
+
+/// <summary>La pièce déposée : nom, type, taille, date de dépôt, et ce qu'elle dit si celui qui l'a déposée l'a confirmé.</summary>
+public sealed record ReceiptFileResponse(Guid Id, string FileName, string ContentType, int Size, DateTimeOffset AddedAt, ReceiptFiguresDto? Figures = null);
 
 /// <summary>Une dépense du relevé et son justificatif.</summary>
 public sealed record ReceiptLineResponse(
@@ -68,11 +83,17 @@ public sealed record SetReceiptNotNeededRequest
     public bool NotNeeded { get; set; } = true;
 }
 
-/// <summary>Dépôt d'une pièce : une photo (JPEG, PNG, WebP, HEIC) ou un PDF, en base 64, 5 Mo au plus.</summary>
+/// <summary>
+/// Dépôt d'une pièce : une photo (JPEG, PNG, WebP, HEIC) ou un PDF, en base 64, 5 Mo au plus, avec le montant, la date
+/// et la TVA confirmés.
+/// </summary>
 public sealed record UploadReceiptRequest
 {
     [StringLength(200, ErrorMessage = ErrorCodes.Receipt.FileRequired)]
     public string FileName { get; set; } = string.Empty;
 
     public string ContentBase64 { get; set; } = string.Empty;
+
+    /// <summary>Montant, date et TVA confirmés ; facultatifs (un dépôt sans eux reste possible par l'API).</summary>
+    public ReceiptFiguresDto? Figures { get; set; }
 }

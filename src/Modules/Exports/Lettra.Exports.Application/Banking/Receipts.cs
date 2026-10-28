@@ -97,8 +97,16 @@ internal static class ReceiptViews
         line.ReceiptRequestedAt,
         line.ReceiptRequestedTo,
         line.ReceiptRequests,
-        receipt is null ? null : new ReceiptFileResponse(receipt.Id, receipt.FileName, receipt.ContentType, receipt.Size, receipt.AddedAt),
+        receipt is null ? null : new ReceiptFileResponse(receipt.Id, receipt.FileName, receipt.ContentType, receipt.Size, receipt.AddedAt, ToDto(receipt.Figures)),
         line.Version);
+
+    public static ReceiptFiguresDto? ToDto(ReceiptFigures? figures) => figures is null ? null : new ReceiptFiguresDto
+    {
+        AmountInclTax = figures.AmountInclTax,
+        Date = figures.Date,
+        VatAmount = figures.VatAmount,
+        ReadOnDevice = figures.ReadOnDevice,
+    };
 }
 
 internal sealed class GetReceiptsHandler(IReceiptStore store, IEmailSender email) : IQueryHandler<GetReceiptsQuery, Result<ReceiptsResponse>>
@@ -204,6 +212,17 @@ internal sealed class UploadReceiptHandler(IBankStatementRepository statements, 
         if (receipt.IsFailure)
         {
             return Result<ReceiptLineResponse>.Failure(receipt.Errors);
+        }
+
+        if (command.Request?.Figures is { } given)
+        {
+            Result<ReceiptFigures> figures = ReceiptFigures.Create(given.AmountInclTax, given.Date, given.VatAmount, given.ReadOnDevice, LegalCalendar.DateOf(now));
+            if (figures.IsFailure)
+            {
+                return Result<ReceiptLineResponse>.Failure(figures.Errors);
+            }
+
+            receipt.Value.Confirm(figures.Value);
         }
 
         Result received = line.ReceiptReceived(user.UserId, now);
