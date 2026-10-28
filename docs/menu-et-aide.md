@@ -13,7 +13,8 @@ macOS, Android, iOS).
 - **Hors sections**, en tête : Accueil, En bref, Vue cabinet, Comptes intra-groupe (flèches gauche-droite) et Démo
   commentée.
 - **Sections repliables** : un clic sur le titre d'une section (Ventes, Tiers, Comptabilité, Pilotage) la replie ou la
-  déplie ; son chevron tourne. Une section repliée qui contient l'écran affiché porte un point bleu.
+  déplie ; son chevron tourne. « Vérifier les tiers » est dans la section Tiers et se trouve aussi par ses mots-clés
+  (bénéficiaires effectifs, RBE, gel des avoirs, BODACC, URSSAF, LCB-FT…). Une section repliée qui contient l'écran affiché porte un point bleu.
 - **Favoris** : l'étoile, au survol d'un écran (toujours visible au doigt), l'épingle dans la section **Favoris**, sous
   Accueil et Vue cabinet. Une seconde touche le retire.
 - **Recherche « Aller à… »** en haut du menu : quelques lettres suffisent, sans accents ni majuscules, et les mots

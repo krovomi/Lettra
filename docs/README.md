@@ -47,6 +47,7 @@ est dans le [README](../README.md#principes-de-conception), le détail, les mesu
 - [Supprimer une ligne d'un tableau](suppression-des-lignes.md)
 - [Tableaux de bord dans Lettra](tableaux-de-bord.md)
 - [Trier et filtrer les listes](tris-et-filtres.md)
+- [Vérifier les tiers](verifier-les-tiers.md)
 - [Vue cabinet : tous les dossiers d'un coup d'œil](vue-cabinet.md)
 
 Système de design : [design/systeme-de-design.md](design/systeme-de-design.md) et [design/pages-de-consultation.md](design/pages-de-consultation.md).

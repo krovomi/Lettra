@@ -39,7 +39,7 @@ L'écran montre d'abord les fournisseurs à ne pas payer en l'état (expirée, m
 
 **Droits** : aucune permission nouvelle. Lire l'écran : la permission de consulter les tiers. Enregistrer : celle de modifier les tiers. Le client (espace client) n'y a pas accès.
 
-**Ce qui n'est pas fait** : le dépôt de l'attestation elle-même (Lettra note sa date et son code) ; la vérification automatique du code auprès de l'URSSAF ; l'attestation de régularité fiscale et la liste des salariés étrangers, demandées dans certains cas ; le blocage effectif d'un virement (Lettra ne paie pas les fournisseurs, il signale).
+**Ce qui n'est pas fait** : le dépôt de l'attestation elle-même (Lettra note sa date et son code)  ; l'attestation de régularité fiscale et la liste des salariés étrangers, demandées dans certains cas ; le blocage effectif d'un virement (Lettra ne paie pas les fournisseurs, il signale). « Vérifier le code » interroge l'URSSAF (simulée dans ce prototype, voir [Vérifier les tiers](verifier-les-tiers.md)).
 
 ## API
 

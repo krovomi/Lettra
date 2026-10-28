@@ -39,7 +39,7 @@ La prochaine revue tombe un an après la dernière pour un risque élevé, deux 
 
 **Droits** : deux nouvelles permissions. Lire la fiche : manager, collaborateur étendu et collaborateur. La remplir ou la revoir : manager et collaborateur étendu. Ni l'auditeur ni le client (espace client) n'y ont accès : la fiche reste au cabinet (interdiction de divulgation, art. L561-18). Les modifications concurrentes sont refusées (version lue).
 
-**Ce qui n'est pas fait** : le dépôt des pièces elles-mêmes (Lettra note lesquelles ont été reçues) ; la consultation automatique du registre des bénéficiaires effectifs, des listes de gel des avoirs ou des personnes politiquement exposées ; la déclaration de soupçon à Tracfin ; l'effacement automatique cinq ans après la fin de la relation.
+**Ce qui n'est pas fait** : le dépôt des pièces elles-mêmes (Lettra note lesquelles ont été reçues) ; la consultation automatique de la liste des personnes politiquement exposées ; la déclaration de soupçon à Tracfin ; l'effacement automatique cinq ans après la fin de la relation. « Reprendre du registre » remplit les bénéficiaires effectifs depuis le registre et les crible sur le registre des gels (simulés dans ce prototype, voir [Vérifier les tiers](verifier-les-tiers.md)).
 
 ## Données personnelles
 
