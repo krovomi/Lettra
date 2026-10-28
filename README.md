@@ -44,7 +44,7 @@ vérifié à chaque modification, en local comme en CI, et non simplement décla
     suivent le même modèle, leurs règles (risque et rythme des revues, validité de six mois, seuil de la DAS 2) dans le
     domaine ; la comparaison aux pairs est un cas d'usage de l'application qui ne lit que la collecte des indicateurs ;
   - les services extérieurs pas encore choisis (banque connectée, paiement en ligne, plateforme agréée, vérification
-    du nom et de l'IBAN) sont des ports de l'application ; l'infrastructure fournit pour l'instant des adaptateurs
+    du nom et de l'IBAN, registres officiels des tiers) sont des ports de l'application ; l'infrastructure fournit pour l'instant des adaptateurs
     simulés, qu'un adaptateur réel remplacera sans toucher aux cas d'usage ;
   - l'assistant IA du poste (MCP) est un adaptateur de protocole de la couche IA : ses outils appellent les cas
     d'usage des écrans, en lecture seule (`ToolRegistryTests`, `AiGuardrailTests`) ; sa connexion OAuth vit dans
@@ -433,7 +433,7 @@ voir « Repartir de zéro » dans [En cas de problème](#en-cas-de-problème).
 
 **La navigation.** **Accueil**, **En bref**, **Vue cabinet** et **Comptes intra-groupe**, puis **Ventes** (**Devis**, **Factures**, **Avoirs**, **Factures
 récurrentes**), **Tiers** (**Clients**, **Fournisseurs**, **Factures reçues**, **IBAN à vérifier**,
-**Attestations de vigilance**, **Catalogue**), **Comptabilité** (**Encaissements**,
+**Attestations de vigilance**, **Vérifier les tiers**, **Catalogue**), **Comptabilité** (**Encaissements**,
 **Rapprochement bancaire**, **Relances**, **Journal et balance**, **FEC**, **Déclarations**, **Revue du dossier**, **Lettre de mission**, **Anti-blanchiment**) et
 **Pilotage** (**Tableaux de bord**, **Alertes**, **Entreprise**, **Mes préférences**, **Équipe et accès** pour qui
 administre le cabinet, **Serveur du cabinet**). Sur un
@@ -534,6 +534,15 @@ code de sécurité et la date de sa vérification sur le site de l'URSSAF. L'éc
 pas payer en l'état (attestation manquante, expirée ou non vérifiée), puis celles qui expirent dans les trente jours.
 Le contrôle avant paiement (« Nom et IBAN ») et la Vue cabinet les signalent aussi. *(Vérifié : démo Docker,
 navigateur sur ordinateur et téléphone.)* Détails : [docs/attestations-vigilance.md](docs/attestations-vigilance.md).
+
+**Vérifier les tiers.** Menu **Tiers > Vérifier les tiers**. Chaque client et fournisseur passé aux registres
+officiels en un clic, ou tous ceux à vérifier d'un coup : bénéficiaires effectifs (registre national des entreprises),
+gel des avoirs (criblage du tiers, de ses bénéficiaires et du titulaire de son compte sur la liste de la DG Trésor),
+annonces du BODACC (procédure collective, radiation) et, pour un fournisseur, code de son attestation URSSAF. Ce qui
+demande un examen remonte en tête et dans la Vue cabinet ; une vérification sans alerte se refait au bout de six mois.
+La fiche anti-blanchiment reprend ses bénéficiaires du registre, et l'écran des attestations fait vérifier le code par
+l'URSSAF. Dans ce prototype, les registres sont simulés (réponses fictives, aucun appel extérieur). *(Vérifié : démo
+Docker, navigateur sur ordinateur et téléphone.)* Détails : [docs/verifier-les-tiers.md](docs/verifier-les-tiers.md).
 
 ### 3. Un devis
 
@@ -830,6 +839,12 @@ plus ; le type se lit dans le contenu du fichier, jamais dans son nom. Dans la d
 contient trois dépenses (électricité, fournitures, loyer) et des frais bancaires, et l'e-mail arrive dans MailPit. *(Vérifié : démo Docker,
 navigateur sur ordinateur et téléphone, e-mail reçu dans MailPit ; non vérifié dans les applications installées.)*
 Détails : [docs/pieces-justificatives.md](docs/pieces-justificatives.md).
+
+**Lire les pièces.** Avant le dépôt, la photo d'un ticket ou d'une facture est lue sur l'appareil (reconnaissance de
+texte locale, modèle français livré avec Lettra) ; Lettra propose le montant TTC, la date et la TVA, l'utilisateur les
+confirme ou les corrige, et seuls le fichier et ces trois valeurs partent. Un montant différent de celui du relevé est
+signalé. *(Vérifié : démo Docker, navigateur sur ordinateur et téléphone.)* Détails :
+[docs/pieces-justificatives.md](docs/pieces-justificatives.md).
 
 ### 10. Factures récurrentes
 
@@ -1167,8 +1182,9 @@ Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou 
 | Tableaux de pilotage dans le Grafana d'une cellule | Dans la démo, Prometheus lit les indicateurs sur l'API (`/internal/kpi/metrics`). Les charts Helm ne posent pas encore ce jeton ni cette lecture : dans une cellule déployée, « Pilotage du cabinet », « Pilotage d'un dossier » et « Administration » restent vides dans Grafana. La page **Tableaux de bord** de Lettra, elle, fonctionne partout. |
 | Notifications sur le téléphone | Non : « En bref » se consulte ; aucune notification n'arrive quand une grosse facture est payée ou passe en retard. |
 | Lettre de mission signée et forfait facturé | Non : la lettre se télécharge en PDF et se signe hors de Lettra ; la facture du forfait reste à créer (facture récurrente). |
-| Anti-blanchiment : pièces, registres et Tracfin | Non : Lettra note quelles pièces ont été reçues sans les stocker, ne consulte ni le registre des bénéficiaires effectifs, ni les listes de gel des avoirs ou des personnes politiquement exposées, ne fait pas la déclaration de soupçon et n'efface pas la fiche cinq ans après la fin de la relation. |
-| Attestations de vigilance : dépôt et vérification | Non : Lettra note la date et le code de l'attestation sans la stocker, ne vérifie pas le code auprès de l'URSSAF, ne suit ni l'attestation de régularité fiscale ni la liste des salariés étrangers, et signale sans bloquer un virement (il ne paie pas les fournisseurs). |
+| Anti-blanchiment : pièces, registres et Tracfin | Lettra note quelles pièces ont été reçues sans les stocker. Les registres des bénéficiaires effectifs et des gels sont simulés (réponses fictives) ; la liste des personnes politiquement exposées n'est pas consultée. Pas de déclaration de soupçon, ni d'effacement de la fiche cinq ans après la fin de la relation. |
+| Attestations de vigilance : dépôt et vérification | Lettra note la date et le code de l'attestation sans la stocker ; « Vérifier le code » interroge une URSSAF simulée. Ni l'attestation de régularité fiscale ni la liste des salariés étrangers ne sont suivies, et Lettra signale sans bloquer un virement (il ne paie pas les fournisseurs). |
+| Vérifier les tiers : vrais registres | Non : INPI, DG Trésor, BODACC et URSSAF sont simulés ; pas de nouvelle vérification automatique la nuit ni d'abonnement aux annonces du BODACC. |
 | DAS 2 : fichier et dépôt | Non : Lettra prépare la liste des bénéficiaires sans produire le fichier TD-DAS2 ni le déposer ; il ne distingue ni frais remboursés ni avantages en nature, ne traite pas la retenue à la source des bénéficiaires étrangers et ne lit ni les paiements par carte ni les factures fournisseurs. |
 | Factures reçues | Reçues de la plateforme simulée, lues et répondues, mais ni comptabilisées (journal des achats), ni rapprochées d'une commande ou d'un paiement, ni chaînées dans le journal d'intégrité. Les comptes intra-groupe comparent toujours ce que le vendeur a facturé à la fiche fournisseur et à la banque de l'acheteur, pas facture contre facture. L'e-reporting des achats à l'étranger n'est pas fait. |
 | Assistant IA du poste avec Claude Desktop ou VS Code | Non vérifié : la connexion a été vérifiée avec le client MCP officiel (SDK TypeScript) dans la démo. |

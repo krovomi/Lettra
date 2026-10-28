@@ -70,6 +70,12 @@ Clé `fournisseurs.attestations-vigilance` : les fournisseurs à ne pas payer en
 manque ou si son code n'est pas vérifié ; à défaut, information pour celles qui expirent dans les trente jours, avec
 l'échéance la plus proche. Ni nom ni montant.
 
+## La colonne « Tiers à examiner »
+
+Clé `tiers.a-examiner` : les clients et fournisseurs dont la dernière vérification aux registres demande un examen
+(voir [Vérifier les tiers](verifier-les-tiers.md)). Critique dès qu'un nom ressemble à une personne gelée, à traiter
+sinon (procédure collective, radiation, code URSSAF non reconnu). Ni nom ni motif.
+
 ## La colonne « Honoraires DAS 2 »
 
 Clé `honoraires.das2` : les bénéficiaires à déclarer du dernier exercice clos (voir
