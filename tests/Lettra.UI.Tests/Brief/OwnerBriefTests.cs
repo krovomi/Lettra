@@ -107,6 +107,18 @@ public sealed class OwnerBriefTests : BunitContext
         Text(page, "#brief-bank .lt-kpi-note").Should().Contain("1 200,00").And.Contain("84,60");
         page.Find("#brief-overdue").ClassList.Should().Contain("is-alert");
         _banking.PaymentQueries.Single().From.Should().Be(new DateOnly(2026, 9, 26));
+        page.FindAll("#brief-thresholds").Should().BeEmpty("aucun seuil proche");
+    }
+
+    [Fact]
+    public void Les_seuils_proches_ont_leur_carte_avant_ce_qui_merite_un_coup_d_oeil()
+    {
+        _tax.Thresholds = ThresholdsPageTests.Sample();
+
+        IRenderedComponent<OwnerBriefPage> page = Open();
+
+        page.WaitForAssertion(() => page.FindAll("#brief-thresholds-list > li").Should().HaveCount(2));
+        page.Find("#brief-thresholds").NextElementSibling!.Id.Should().Be("brief-watch");
     }
 
     [Fact]
