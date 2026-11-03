@@ -126,9 +126,7 @@ jobs:
           # Écran de téléphone courant (1080×2340), pas le 320×640 par défaut.
           profile: pixel_5
           disable-animations: true
-          # Sans Vulkan dans l'invité : Chrome et la WebView passent par Vulkan sur SwiftShader, et l'émulateur entier
-          # tombait (appareil perdu, mémoire de la machine libre) en affichant la liste des clients après la connexion.
-          emulator-options: -no-window -gpu swiftshader_indirect -feature -Vulkan -noaudio -no-boot-anim -no-snapshot
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
           script: bash "$RUNNER_TEMP/serveur-commun-android.sh"
 
       - name: Journaux de la démo
