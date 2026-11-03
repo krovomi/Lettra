@@ -379,6 +379,9 @@ jobs:
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Un secret trouvé est listé dans le résumé du job et fait échouer le job : pas d'artefact de rapport en plus
+          # (le dépôt d'artefact échouerait quand le quota de stockage est plein, même sans fuite).
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: false
 
   sbom:
     name: SBOM (CycloneDX)
