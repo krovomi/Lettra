@@ -147,6 +147,10 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<SaveFeeBeneficiaryCommand, Result>>(sp => sp.GetRequiredService<FeeReturnHandlers>());
         services.AddScoped<ICommandHandler<RemoveFeeBeneficiaryCommand, Result>>(sp => sp.GetRequiredService<FeeReturnHandlers>());
         services.AddScoped<IDossierIndicatorSource, FeeReturnIndicatorSource>();
+        // Seuils qui approchent : franchise et régime de TVA, catégorie, attestation de vigilance, DAS 2 (catalogue daté).
+        services.AddScoped<ThresholdWatch>();
+        services.AddScoped<IQueryHandler<GetThresholdsQuery, Result<ThresholdsResponse>>, GetThresholdsHandler>();
+        services.AddScoped<IDossierIndicatorSource, ThresholdIndicatorSource>();
 
         // Kit contrôle fiscal (vague 7) : FEC, attestation d'intégrité, piste d'audit fiable, XML et transmissions.
         services.AddScoped<AuditKitIntegrity>();

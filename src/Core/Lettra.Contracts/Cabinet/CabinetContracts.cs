@@ -66,6 +66,12 @@ public static class DossierIndicatorKeys
     public const string ThirdPartiesToReview = "tiers.a-examiner";
 
     /// <summary>
+    /// Seuils réglementaires franchis ou dont le franchissement est prévu dans les trois mois (franchise ou régime de TVA,
+    /// catégorie, attestation de vigilance, DAS 2) ; échéance = le franchissement le plus proche. Ni nom ni montant.
+    /// </summary>
+    public const string Thresholds = "seuils.proches";
+
+    /// <summary>
     /// Radar de prévention des difficultés : compteur = signaux allumés, urgence = niveau d'attention (à surveiller,
     /// à appeler), échéance = la plus proche des signaux. Ni montant, ni nom, ni quel signal : le détail se calcule dans
     /// le dossier. Réservé à qui a <c>PreventionConsulter</c> sur le dossier (voir <see cref="Restricted"/>).
@@ -74,7 +80,7 @@ public static class DossierIndicatorKeys
 
     /// <summary>Ordre des colonnes du tableau (les clés inconnues suivent, par ordre alphabétique).</summary>
     public static IReadOnlyList<string> Known { get; } =
-        [OverdueInvoices, PlatformRejections, EInvoicingReadiness, VatToDeclare, FeeReturn, BankUnreconciled, SupplierIbanToVerify, SupplierAttestations, ThirdPartiesToReview, ClientDueDiligence, Prevention, OpenAlerts, ReviewPending];
+        [OverdueInvoices, PlatformRejections, EInvoicingReadiness, VatToDeclare, FeeReturn, Thresholds, BankUnreconciled, SupplierIbanToVerify, SupplierAttestations, ThirdPartiesToReview, ClientDueDiligence, Prevention, OpenAlerts, ReviewPending];
 
     /// <summary>
     /// Les clés qu'un utilisateur ne voit que s'il a la permission de lecture propre à leur module sur le dossier : la vue

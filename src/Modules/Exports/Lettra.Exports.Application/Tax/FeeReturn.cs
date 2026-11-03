@@ -14,6 +14,12 @@ namespace Lettra.Exports.Application.Tax;
 /// <summary>Un fournisseur du dossier tel que la déclaration des honoraires le lit, avec son suivi s'il en a un.</summary>
 public sealed record FeePayee(SupplierId Id, string Name, string? Siret, string Address, string Country, string? Iban, FeeBeneficiary? Beneficiary);
 
+/// <summary>Un virement sortant d'un relevé, reconnu par l'empreinte de l'IBAN du destinataire : sa date et son montant (positif).</summary>
+public sealed record IbanDebit(string IbanHash, DateOnly Date, decimal Amount);
+
+/// <summary>Les sommes versées à un bénéficiaire suivi : les virements des relevés, datés, et les sommes notées hors relevés pour l'exercice.</summary>
+public sealed record FeePayments(FeePayee Payee, IReadOnlyList<IbanDebit> Debits, decimal PaidOutside);
+
 /// <summary>Bénéficiaires suivis pour la déclaration des honoraires, fournisseurs du dossier et virements des relevés.</summary>
 public interface IFeeReturnStore
 {
@@ -29,8 +35,8 @@ public interface IFeeReturnStore
     /// <summary>Au moins un bénéficiaire suivi : le calendrier fiscal montre alors la DAS 2.</summary>
     Task<bool> AnyBeneficiaryAsync(CancellationToken cancellationToken);
 
-    /// <summary>Les virements sortants des relevés du <paramref name="from"/> au <paramref name="to"/>, additionnés par empreinte d'IBAN (montants positifs).</summary>
-    Task<IReadOnlyDictionary<string, decimal>> DebitsByIbanAsync(IReadOnlyCollection<string> ibanHashes, DateOnly from, DateOnly to, CancellationToken cancellationToken);
+    /// <summary>Les virements sortants des relevés du <paramref name="from"/> au <paramref name="to"/> vers ces empreintes d'IBAN, datés (montants positifs).</summary>
+    Task<IReadOnlyList<IbanDebit>> DebitsAsync(IReadOnlyCollection<string> ibanHashes, DateOnly from, DateOnly to, CancellationToken cancellationToken);
 
     /// <summary>La date de la dernière opération des relevés importés, ou <c>null</c> sans relevé.</summary>
     Task<DateOnly?> LastBankLineAsync(CancellationToken cancellationToken);
@@ -69,27 +75,34 @@ public sealed class FeeReturns(IFeeReturnStore store, IIbanFingerprints fingerpr
         (DateOnly start, DateOnly end) = date is { } d ? settings.FiscalYearOf(d) : LastClosed(settings, today);
         IReadOnlyList<FeePayee> payees = await store.ListPayeesAsync(cancellationToken).ConfigureAwait(false);
         List<FeePayee> tracked = [.. payees.Where(p => p.Beneficiary is not null)];
-
-        Dictionary<SupplierId, string> hashes = [];
-        foreach (FeePayee payee in tracked)
-        {
-            if (await fingerprints.FingerprintAsync(payee.Iban, cancellationToken).ConfigureAwait(false) is { } hash)
-            {
-                hashes[payee.Id] = hash;
-            }
-        }
-
-        IReadOnlyDictionary<string, decimal> debits = hashes.Count == 0
-            ? new Dictionary<string, decimal>()
-            : await store.DebitsByIbanAsync([.. hashes.Values.Distinct(StringComparer.Ordinal)], start, end, cancellationToken).ConfigureAwait(false);
+        (Dictionary<SupplierId, string> hashes, IReadOnlyList<IbanDebit> debits) = await DebitsAsync(tracked, start, end, cancellationToken).ConfigureAwait(false);
+        Dictionary<string, decimal> paid = debits.GroupBy(d => d.IbanHash, StringComparer.Ordinal).ToDictionary(g => g.Key, g => g.Sum(d => d.Amount), StringComparer.Ordinal);
         FiscalDeadlineResponse? deadline = tracked.Count == 0 ? null : await DeadlineAsync(start, end, today, cancellationToken).ConfigureAwait(false);
         return Build(
             start,
             end,
             deadline,
             payees,
-            p => hashes.TryGetValue(p.Id, out string? hash) ? debits.GetValueOrDefault(hash) : 0m,
+            p => hashes.TryGetValue(p.Id, out string? hash) ? paid.GetValueOrDefault(hash) : 0m,
             await store.LastBankLineAsync(cancellationToken).ConfigureAwait(false));
+    }
+
+    /// <summary>
+    /// Les sommes versées à chaque bénéficiaire suivi : virements des relevés datés du <paramref name="from"/> au
+    /// <paramref name="to"/>, et sommes notées hors relevés pour l'exercice qui commence le <paramref name="fiscalYearStart"/>.
+    /// Les seuils qui approchent s'en servent pour projeter le total de l'exercice.
+    /// </summary>
+    public async Task<IReadOnlyList<FeePayments>> PaymentsAsync(DateOnly from, DateOnly to, DateOnly fiscalYearStart, CancellationToken cancellationToken)
+    {
+        List<FeePayee> tracked = [.. (await store.ListPayeesAsync(cancellationToken).ConfigureAwait(false)).Where(p => p.Beneficiary is not null)];
+        (Dictionary<SupplierId, string> hashes, IReadOnlyList<IbanDebit> debits) = await DebitsAsync(tracked, from, to, cancellationToken).ConfigureAwait(false);
+        return
+        [
+            .. tracked.Select(p => new FeePayments(
+                p,
+                hashes.TryGetValue(p.Id, out string? hash) ? [.. debits.Where(d => string.Equals(d.IbanHash, hash, StringComparison.Ordinal))] : [],
+                p.Beneficiary!.PaidOutsideFor(fiscalYearStart))),
+        ];
     }
 
     /// <summary>L'exercice demandé n'en est un que si son premier jour suit une clôture.</summary>
@@ -168,6 +181,25 @@ public sealed class FeeReturns(IFeeReturnStore store, IIbanFingerprints fingerpr
             : deadline.DueDate.DayNumber - today.DayNumber <= 30 ? IndicatorLevel.Warning
             : IndicatorLevel.Info;
         return new DossierIndicator(DossierIndicatorKeys.FeeReturn, toDeclare, level, deadline.DueDate);
+    }
+
+    /// <summary>Les empreintes d'IBAN des bénéficiaires suivis, et les virements des relevés vers elles sur la période.</summary>
+    private async Task<(Dictionary<SupplierId, string> Hashes, IReadOnlyList<IbanDebit> Debits)> DebitsAsync(
+        IReadOnlyList<FeePayee> tracked, DateOnly from, DateOnly to, CancellationToken cancellationToken)
+    {
+        Dictionary<SupplierId, string> hashes = [];
+        foreach (FeePayee payee in tracked)
+        {
+            if (await fingerprints.FingerprintAsync(payee.Iban, cancellationToken).ConfigureAwait(false) is { } hash)
+            {
+                hashes[payee.Id] = hash;
+            }
+        }
+
+        IReadOnlyList<IbanDebit> debits = hashes.Count == 0
+            ? []
+            : await store.DebitsAsync([.. hashes.Values.Distinct(StringComparer.Ordinal)], from, to, cancellationToken).ConfigureAwait(false);
+        return (hashes, debits);
     }
 
     private async Task<FiscalDeadlineResponse?> DeadlineAsync(DateOnly start, DateOnly end, DateOnly today, CancellationToken cancellationToken)

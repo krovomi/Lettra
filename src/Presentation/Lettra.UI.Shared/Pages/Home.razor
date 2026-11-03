@@ -1,4 +1,5 @@
 @page "/"
+@using Lettra.UI.Shared.Components.Tax
 @inject IBillingDashboardGateway Dashboard
 @inject IInvoicesGateway Invoices
 @inject IQuotesGateway Quotes
@@ -10,7 +11,8 @@
 
 @* Tableau de bord d'accueil (vague 5, lanes B et E) : chiffre d'affaires HT du mois et des six derniers mois, devis en
    attente de réponse (calculés par le serveur), brouillons à finaliser, pièces récentes (lues dans les listes), factures
-   en retard et transmissions à la plateforme (point des créances lu côté serveur). Un dossier vide propose d'y charger les données
+   en retard et transmissions à la plateforme (point des créances lu côté serveur), seuils qui approchent (franchis ou
+   prévus dans les trois mois). Un dossier vide propose d'y charger les données
    de démonstration quand l'hôte le permet. *@
 
 <PageTitle>@L["Home.Title"] · Lettra</PageTitle>
@@ -120,6 +122,8 @@ else
             <span class="lt-kpi-note">@L["Home.Kpi.DraftsNote"]</span>
         </a>
     </section>
+
+    <ThresholdsCard Id="home-thresholds" />
 
     <div class="lt-dashboard-grid">
         <div>

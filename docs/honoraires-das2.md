@@ -31,6 +31,9 @@ L'écran se trie par bénéficiaire, nature ou total, et se filtre par nom et pa
 
 **Ce qui n'est pas fait** : la production du fichier TD-DAS2 et son dépôt (Lettra prépare, le cabinet déclare) ; la distinction des frais remboursés et des avantages en nature ; la retenue à la source sur les bénéficiaires étrangers ; la lecture des paiements par carte ou des factures fournisseurs (seuls les virements des relevés et les sommes notées comptent).
 
+L'onglet « Seuils » des Déclarations prévient avant que le seuil soit atteint, au rythme des 90 derniers jours (voir
+[Seuils à surveiller](seuils.md)).
+
 ## Données personnelles
 
 La DAS 2 vise souvent des personnes physiques (professions libérales, auteurs) : le suivi note une profession et des

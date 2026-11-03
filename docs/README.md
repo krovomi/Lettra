@@ -44,6 +44,7 @@ est dans le [README](../README.md#principes-de-conception), le détail, les mesu
 - [Révision avant clôture](revision-avant-cloture.md)
 - [Se faire payer plus vite](se-faire-payer.md)
 - [Serveur commun : les mêmes données sur tous les appareils](serveur-commun.md)
+- [Seuils à surveiller (franchise et régime de TVA, catégorie, vigilance, DAS 2)](seuils.md)
 - [Supprimer une ligne d'un tableau](suppression-des-lignes.md)
 - [Tableaux de bord dans Lettra](tableaux-de-bord.md)
 - [Trier et filtrer les listes](tris-et-filtres.md)

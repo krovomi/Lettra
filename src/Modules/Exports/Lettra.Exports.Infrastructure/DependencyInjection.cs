@@ -47,6 +47,7 @@ public static class DependencyInjection
         services.AddScoped<IPaymentDelaysReader, EfPaymentDelaysReader>();
         services.AddScoped<IFiscalStore, EfFiscalStore>();
         services.AddScoped<IFeeReturnStore, EfFeeReturnStore>();
+        services.AddScoped<ISupplierPurchasesReader, EfSupplierPurchasesReader>();
         services.AddScoped<IVatOnReceiptsSource, EfVatOnReceiptsSource>();
         services.AddScoped<IReminderSettingsRepository, EfReminderSettingsRepository>();
         services.AddScoped<IPaymentReminderRepository, EfPaymentReminderRepository>();

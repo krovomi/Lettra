@@ -9,6 +9,7 @@ qui a été imprimé.
 | **TVA** (`/tax/vat`) | Brouillon de la CA3 (réel normal, mini-réel) ou de la CA12 (réel simplifié) de la période, partie ventes. Chaque case s'ouvre sur les factures, acomptes et avoirs qui la composent ; chaque pièce ouvre sa fiche. |
 | **DES** (`/tax/des`) | Déclaration européenne de services du mois : une ligne par numéro de TVA client de l'Union, montant HT arrondi à l'euro, fichier CSV à déposer soi-même. |
 | **Honoraires (DAS 2)** (`/tax/fees`) | Honoraires, commissions et droits d'auteur versés aux fournisseurs suivis, comparés au seuil de 2 400 € TTC (1 200 € pour les exercices clos avant 2024) par bénéficiaire et par exercice ([honoraires-das2.md](honoraires-das2.md)). |
+| **Seuils** (`/tax/thresholds`) | Les seuils qui changent les règles du dossier (franchise et régime de TVA, déclaration trimestrielle, catégorie, vigilance, DAS 2) : cumul, projection au rythme des 90 derniers jours, date de franchissement et ce qui change ([seuils.md](seuils.md)). |
 | **Contrôle fiscal** (`/tax/audit-kit`) | Kit contrôle fiscal : l'archive horodatée d'une période, prête à remettre au vérificateur ([kit-controle-fiscal.md](kit-controle-fiscal.md)). |
 | **Calendrier fiscal** (`/tax/calendar`) | Les échéances de l'année calculées à partir du régime et des réglages ; chacune se marque « déposée ». |
 | **Réglages fiscaux** (`/tax/settings`) | Date de clôture, CA3 mensuelle ou trimestrielle, jour limite de la TVA (du 15 au 24), IS, CFE. |
