@@ -67,6 +67,9 @@ jobs:
       - name: Démo (localhost)
         run: |
           $COMPOSE build
+          # Cache de build Docker inutile une fois les images faites : sa place revient à l'émulateur.
+          docker builder prune -af > /dev/null
+          df -h /
           $COMPOSE up -d --wait
           timeout 180 bash -c 'until curl -sf http://localhost:8080/health; do sleep 2; done'
       - uses: actions/setup-node@v5
@@ -126,6 +129,9 @@ jobs:
           # Écran de téléphone courant (1080×2340), pas le 320×640 par défaut.
           profile: pixel_5
           disable-animations: true
+          # Partition de données de 4 Go au lieu de 6 : l'émulateur refusait de démarrer faute de place
+          # (« Not enough space to create userdata partition »), la démo et l'APK occupant déjà le disque.
+          disk-size: 4096M
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
           script: bash "$RUNNER_TEMP/serveur-commun-android.sh"
 
