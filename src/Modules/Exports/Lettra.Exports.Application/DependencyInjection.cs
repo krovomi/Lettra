@@ -161,6 +161,7 @@ public static class DependencyInjection
         services.AddScoped<IDecisionRule, ReminderDecisionRule>();
         services.AddScoped<IDecisionActionHandler, SendReminderDecisionAction>();
         services.AddScoped<IDecisionRule, FiscalDeadlineDecisionRule>();
+        services.AddScoped<IDecisionRule, ThresholdDecisionRule>();
 
         // Espace client : liens envoyés au client, paiement en ligne et signature des devis. Fermé tant que l'hôte n'en
         // donne pas le compte de service (ICustomerPortalSettings).

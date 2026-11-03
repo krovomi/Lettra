@@ -47,7 +47,7 @@
   <data name="Decisions.Sort.Impact" xml:space="preserve"><value>Montant en jeu</value></data>
   <data name="Decisions.Sort.Title" xml:space="preserve"><value>Intitulé</value></data>
   <data name="Decisions.Empty" xml:space="preserve"><value>Rien à décider pour l'instant</value></data>
-  <data name="Decisions.Empty.Text" xml:space="preserve"><value>Lettra surveille les relances, les échéances fiscales, les IBAN et les attestations des fournisseurs, et la fiche anti-blanchiment. Une décision apparaît ici dès qu'il y a quelque chose à faire.</value></data>
+  <data name="Decisions.Empty.Text" xml:space="preserve"><value>Lettra surveille les relances, les échéances fiscales, les seuils réglementaires, les IBAN et les attestations des fournisseurs, et la fiche anti-blanchiment. Une décision apparaît ici dès qu'il y a quelque chose à faire.</value></data>
   <data name="Decisions.Due" xml:space="preserve"><value>avant le {0}</value></data>
   <data name="Decisions.DueLate" xml:space="preserve"><value>dépassée depuis le {0}</value></data>
   <data name="Decisions.DueToday" xml:space="preserve"><value>à faire aujourd'hui</value></data>
@@ -82,6 +82,15 @@
   <data name="Decision.fiscal.echeance.Title" xml:space="preserve"><value>{obligation} à déposer avant le {dueOn}</value></data>
   <data name="Decision.fiscal.echeance.Reason" xml:space="preserve"><value>Période close le {periodEnd}. Une fois déposée, marquez-la déposée dans le calendrier fiscal : la décision se règle d'elle-même.</value></data>
   <data name="Decision.fiscal.echeance.Rule" xml:space="preserve"><value>Échéances fiscales : une déclaration en retard ou due dans les sept jours, pas encore marquée déposée.</value></data>
+  <data name="Decision.seuil.proche.Title" xml:space="preserve"><value>{what} ({state})</value></data>
+  <data name="Decision.seuil.proche.Reason" xml:space="preserve"><value>{change} Cumul : {toDateAmount} {basis} pour un seuil de {thresholdAmount} ; à ce rythme, {projectedAmount} à la fin de la période.</value></data>
+  <data name="Decision.seuil.proche.Rule" xml:space="preserve"><value>Seuils : un seuil réglementaire (franchise ou régime de TVA, déclaration trimestrielle, catégorie, attestation de vigilance, DAS 2) est franchi, ou le sera dans les trois mois au rythme des derniers mois.</value></data>
+  <data name="Decision.seuil.proche.State.Crossed" xml:space="preserve"><value>franchi le {on}</value></data>
+  <data name="Decision.seuil.proche.State.Projected" xml:space="preserve"><value>franchissement prévu vers le {on}</value></data>
+  <data name="Decision.seuil.proche.State.Near" xml:space="preserve"><value>à surveiller</value></data>
+  <data name="Decision.seuil.proche.State.Far" xml:space="preserve"><value>loin du seuil</value></data>
+  <data name="Decision.seuil.proche.What.SubcontractorVigilance" xml:space="preserve"><value>Attestation de vigilance de {party}</value></data>
+  <data name="Decision.seuil.proche.What.FeeReturn" xml:space="preserve"><value>Honoraires versés à {party}</value></data>
   <data name="Decision.iban.a-verifier.Title" xml:space="preserve"><value>Vérifier le nouvel IBAN de {supplier}</value></data>
   <data name="Decision.iban.a-verifier.Reason" xml:space="preserve"><value>Changé le {changedOn}. Confirmez-le par un autre canal que la demande (le numéro habituel du fournisseur) avant tout paiement : c'est la parade à la fraude au faux fournisseur.</value></data>
   <data name="Decision.iban.a-verifier.Rule" xml:space="preserve"><value>IBAN à vérifier : l'IBAN d'un fournisseur a changé et n'a pas été confirmé.</value></data>

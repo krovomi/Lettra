@@ -10,8 +10,9 @@ namespace Lettra.UI.Shared.Pages.Decisions;
 /// <summary>
 /// Les phrases d'une décision, dans la langue de l'écran : <c>Decision.&lt;Kind&gt;.Title</c> et <c>.Reason</c>, dont les
 /// emplacements nommés (<c>{customer}</c>) prennent les faits envoyés par la règle. Une valeur qui commence par <c>@</c>
-/// est une clé de libellé, une date <c>aaaa-mm-jj</c> s'écrit dans la langue de l'écran, un fait dont le nom finit par
-/// <c>Amount</c> est un montant en euros. Aucune phrase n'est écrite par une IA.
+/// est une clé de libellé (dont les emplacements nommés prennent les mêmes faits), une date <c>aaaa-mm-jj</c> s'écrit
+/// dans la langue de l'écran, un fait dont le nom finit par <c>Amount</c> est un montant en euros. Aucune phrase n'est
+/// écrite par une IA.
 /// </summary>
 public static partial class DecisionText
 {
@@ -40,11 +41,27 @@ public static partial class DecisionText
         return label.ResourceNotFound ? localizer["Decisions.Accept"] : label.Value;
     }
 
-    public static string Fill(IStringLocalizer localizer, string template, IReadOnlyDictionary<string, string> facts, CultureInfo culture)
+    /// <summary>
+    /// Remplit les emplacements nommés de <paramref name="template"/>. Un libellé (<c>@clé</c>) peut lui-même avoir des
+    /// emplacements nommés, remplis par les mêmes faits (un seul niveau : « Attestation de vigilance de {party} »).
+    /// </summary>
+    public static string Fill(IStringLocalizer localizer, string template, IReadOnlyDictionary<string, string> facts, CultureInfo culture) =>
+        Fill(localizer, template, facts, culture, nested: true);
+
+    private static string Fill(IStringLocalizer localizer, string template, IReadOnlyDictionary<string, string> facts, CultureInfo culture, bool nested)
     {
         ArgumentNullException.ThrowIfNull(template);
         ArgumentNullException.ThrowIfNull(facts);
-        return Placeholder().Replace(template, m => facts.TryGetValue(m.Groups[1].Value, out string? value) ? Value(localizer, m.Groups[1].Value, value, culture) : m.Value);
+        return Placeholder().Replace(template, m =>
+        {
+            if (!facts.TryGetValue(m.Groups[1].Value, out string? value))
+            {
+                return m.Value;
+            }
+
+            string text = Value(localizer, m.Groups[1].Value, value, culture);
+            return nested && value.StartsWith(LabelPrefix, StringComparison.Ordinal) ? Fill(localizer, text, facts, culture, nested: false) : text;
+        });
     }
 
     public static string Value(IStringLocalizer localizer, string name, string value, CultureInfo culture)

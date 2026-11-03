@@ -47,7 +47,7 @@
   <data name="Decisions.Sort.Impact" xml:space="preserve"><value>Amount at stake</value></data>
   <data name="Decisions.Sort.Title" xml:space="preserve"><value>Title</value></data>
   <data name="Decisions.Empty" xml:space="preserve"><value>Nothing to decide right now</value></data>
-  <data name="Decisions.Empty.Text" xml:space="preserve"><value>Lettra watches payment reminders, tax deadlines, supplier IBANs and vigilance certificates, and the anti-money-laundering file. A decision shows up here as soon as something needs doing.</value></data>
+  <data name="Decisions.Empty.Text" xml:space="preserve"><value>Lettra watches payment reminders, tax deadlines, regulatory thresholds, supplier IBANs and vigilance certificates, and the anti-money-laundering file. A decision shows up here as soon as something needs doing.</value></data>
   <data name="Decisions.Due" xml:space="preserve"><value>before {0}</value></data>
   <data name="Decisions.DueLate" xml:space="preserve"><value>overdue since {0}</value></data>
   <data name="Decisions.DueToday" xml:space="preserve"><value>due today</value></data>
@@ -82,6 +82,15 @@
   <data name="Decision.fiscal.echeance.Title" xml:space="preserve"><value>{obligation} to file before {dueOn}</value></data>
   <data name="Decision.fiscal.echeance.Reason" xml:space="preserve"><value>Period ended on {periodEnd}. Once filed, mark it filed in the tax calendar: the decision settles by itself.</value></data>
   <data name="Decision.fiscal.echeance.Rule" xml:space="preserve"><value>Tax deadlines: a return that is overdue or due within seven days and not yet marked filed.</value></data>
+  <data name="Decision.seuil.proche.Title" xml:space="preserve"><value>{what} ({state})</value></data>
+  <data name="Decision.seuil.proche.Reason" xml:space="preserve"><value>{change} So far: {toDateAmount} {basis} against a threshold of {thresholdAmount}; at this pace, {projectedAmount} by the end of the period.</value></data>
+  <data name="Decision.seuil.proche.Rule" xml:space="preserve"><value>Thresholds: a regulatory threshold (VAT exemption or regime, quarterly VAT return, company category, vigilance certificate, DAS 2) is crossed, or will be within three months at the recent pace.</value></data>
+  <data name="Decision.seuil.proche.State.Crossed" xml:space="preserve"><value>crossed on {on}</value></data>
+  <data name="Decision.seuil.proche.State.Projected" xml:space="preserve"><value>expected to be crossed around {on}</value></data>
+  <data name="Decision.seuil.proche.State.Near" xml:space="preserve"><value>to watch</value></data>
+  <data name="Decision.seuil.proche.State.Far" xml:space="preserve"><value>far from the threshold</value></data>
+  <data name="Decision.seuil.proche.What.SubcontractorVigilance" xml:space="preserve"><value>Vigilance certificate for {party}</value></data>
+  <data name="Decision.seuil.proche.What.FeeReturn" xml:space="preserve"><value>Fees paid to {party}</value></data>
   <data name="Decision.iban.a-verifier.Title" xml:space="preserve"><value>Check the new IBAN of {supplier}</value></data>
   <data name="Decision.iban.a-verifier.Reason" xml:space="preserve"><value>Changed on {changedOn}. Confirm it through another channel than the request (the supplier's usual phone number) before any payment: that is the defence against supplier fraud.</value></data>
   <data name="Decision.iban.a-verifier.Rule" xml:space="preserve"><value>IBAN to check: a supplier's IBAN changed and has not been confirmed.</value></data>

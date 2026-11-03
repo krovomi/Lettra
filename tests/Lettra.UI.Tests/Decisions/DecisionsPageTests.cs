@@ -81,7 +81,7 @@ public sealed class DecisionsPageTests : BunitContext
         page.Find($"#decision-accept-{reminder.Id}").TextContent.Trim().Should().Be("Envoyer la relance");
         page.FindAll("[id^='decision-accept-']").Should().ContainSingle("seule la relance a une action préparée");
         page.Find($"#decision-open-{reminder.Id}").GetAttribute("href").Should().Be("somewhere");
-        page.FindAll("#decisions-rules li").Should().HaveCount(5);
+        page.FindAll("#decisions-rules li").Should().HaveCount(6);
 
         page.Find("#decisions-filter-status").Change("all");
         Titles(page).Should().HaveCount(5);
@@ -101,6 +101,32 @@ public sealed class DecisionsPageTests : BunitContext
         Titles(page)[0].Should().Be("Relancer Durand SARL pour la facture F-1", "seule la relance a un montant en jeu");
         page.Find("#decisions-sort").Change("DueOn:Ascending");
         Titles(page)[0].Should().Be("Relancer Durand SARL pour la facture F-1", "elle est due aujourd'hui");
+    }
+
+    [Fact]
+    public void Un_libelle_peut_porter_les_faits_de_la_decision()
+    {
+        _decisions.Add(
+            "seuil.proche",
+            new()
+            {
+                ["what"] = "@Decision.seuil.proche.What.SubcontractorVigilance",
+                ["party"] = "Plâtrerie Dupuis",
+                ["state"] = "@Decision.seuil.proche.State.Crossed",
+                ["on"] = "2026-09-01",
+                ["change"] = "@Thresholds.Change.vigilance.sous-traitant",
+                ["basis"] = "@Thresholds.Basis.ExclTax",
+                ["thresholdAmount"] = "5000.00",
+                ["toDateAmount"] = "6200.00",
+                ["projectedAmount"] = "8100.00",
+            },
+            DecisionUrgencyDto.High);
+
+        IRenderedComponent<DecisionsPage> page = Open();
+
+        Titles(page).Should().Equal("Attestation de vigilance de Plâtrerie Dupuis (franchi le 01/09/2026)");
+        page.Find(".lt-decision-reason").TextContent.Should().StartWith("Dès ce montant, demandez à ce fournisseur son attestation")
+            .And.Contain("Cumul : 6").And.Contain("HT pour un seuil de 5").And.EndWith("à la fin de la période.");
     }
 
     [Fact]

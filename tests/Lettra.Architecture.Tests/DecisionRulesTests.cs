@@ -22,7 +22,7 @@ public sealed class DecisionRulesTests
     public void Les_regles_de_decision_lisent_sans_mediateur_ni_IA()
     {
         Type[] rules = [.. Implementations<IDecisionRule>()];
-        rules.Select(t => t.Name).Should().Contain(["ReminderDecisionRule", "FiscalDeadlineDecisionRule", "IbanChangeDecisionRule"]);
+        rules.Select(t => t.Name).Should().Contain(["ReminderDecisionRule", "FiscalDeadlineDecisionRule", "ThresholdDecisionRule", "IbanChangeDecisionRule"]);
 
         foreach (Assembly assembly in rules.Select(t => t.Assembly).Distinct())
         {
