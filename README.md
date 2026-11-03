@@ -88,8 +88,9 @@ reproduction automatique. « **Non vérifié** » signifie que la méthode est d
 Les applications natives se téléchargent depuis la CI. Sur GitHub, ouvrez l'onglet
 [Actions](https://github.com/krovomi/Lettra/actions/workflows/ci.yml?query=branch%3Amain+is%3Asuccess), cliquez sur
 l'exécution **CI** la plus récente de la branche `main` (coche verte ; pas « Déploiement »), puis, tout en bas de sa
-page, dans la section **Artifacts**, sur l'artefact voulu. Il faut être connecté à GitHub. Les artefacts restent
-disponibles 90 jours.
+page, dans la section **Artifacts**, sur l'artefact voulu. Il faut être connecté à GitHub. L'application Windows et
+l'APK restent disponibles 90 jours ; les autres artefacts (applications iOS et macOS, captures, rapports de tests)
+7 jours, pour ne pas remplir le quota de stockage du dépôt. Passé ce délai, relancer la CI de `main` les reconstruit.
 
 | Artefact | Contenu |
 |---|---|
@@ -1197,6 +1198,7 @@ Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou 
 | Symptôme | Que faire |
 |---|---|
 | Navigateur : la page ne répond pas | Au premier démarrage, le remplissage du dossier de démonstration prend une trentaine de secondes après `up --wait` : attendre, puis recharger ; `docker compose -f deploy/demo/compose.yaml ps` doit montrer `keycloak`, `mailpit` et `api` « healthy » (`whisper`, sans contrôle de santé, est simplement « Up »). |
+| Navigateur : « Le service de connexion du cabinet ne répond pas » ; application installée : « Ce serveur Lettra répond, mais son service de connexion ne répond pas » | Keycloak est arrêté ou démarre encore (Docker Desktop relancé, conteneur arrêté à la main, démo démarrée par le bouton ▶ de Docker Desktop). `docker compose -f deploy/demo/compose.yaml ps -a` montre `keycloak` absent ou « Exited » : relancez la démo avec la commande habituelle `docker compose -f deploy/demo/compose.yaml up -d --wait` (ajoutez `-f deploy/demo/compose.observabilite.yaml` si vous utilisez Grafana ; zip hors ligne : « Lancer Lettra »), qui attend que Keycloak soit prêt. Si la commande échoue sur `keycloak`, `docker compose -f deploy/demo/compose.yaml logs keycloak` en donne la raison ; un port 8081 déjà pris se change par `LETTRA_DEMO_KEYCLOAK_PORT` dans `deploy/demo/.env`. Vos saisies ne sont pas touchées. |
 | Navigateur : pas de micro dans les champs | Ouvrez le micro de la barre du haut, son panneau dit pourquoi. « La dictée se prépare » : le modèle Whisper se télécharge, attendez. Message « https:// ou http://localhost » : changez d'adresse. |
 | Navigateur : la voix répond « indisponible » (503) | Le conteneur `whisper` télécharge encore son modèle (142 Mio) ou n'a pas accès à Internet : `docker compose -f deploy/demo/compose.yaml logs whisper` montre le téléchargement (et, sans Internet, un nouvel essai toutes les 30 secondes) ; le serveur est prêt quand la commande de vérification de [Dictée et commandes vocales](#dictée-et-commandes-vocales) affiche `200`. Le reste de Lettra fonctionne pendant ce temps. |
 | Navigateur : erreur « Uncaught (in promise) TypeError: Failed to fetch at fromShell » dans la console | C'est l'ancien service worker : fermer tous les onglets de Lettra puis rouvrir (ou DevTools → **Application** → **Service workers** → **Unregister**). La console doit rester vide d'erreurs sur tous les écrans, en ligne comme hors ligne ([détails](deploy/demo/README.md#installer-lapplication-pwa)). |
@@ -1405,7 +1407,8 @@ de code, qui échoue sous 88 % des lignes ou 78 % des branches (rapport par asse
 commande locale : [docs/qualite-du-code.md](docs/qualite-du-code.md) ; chaque test en échec devient une annotation du job,
 avec son message), conformité Factur-X, applications MAUI construites et lancées (Windows ; Android sur émulateur ; simulateur iOS ; macOS, non
 bloquant tant qu'il n'est pas signé) avec leurs artefacts, captures du design et audit d'accessibilité (Playwright,
-axe-core), gitleaks, SBOM CycloneDX, CodeQL (dépôt public), avis de tiers, images signées (cosign) sur `main`. La
+axe-core), gitleaks, SBOM CycloneDX, CodeQL (dépôt public), avis de tiers, images signées (cosign) sur `main`. Les
+artefacts des workflows sont gardés 7 jours (quota de stockage du dépôt), sauf l'application Windows et l'APK (90 jours). La
 charge de travail MAUI est épinglée (`MAUI_WORKLOAD_VERSION`, 10.0.401) : un jeu plus récent publié sur nuget.org ne
 casse pas la CI du jour au lendemain. Le SDK .NET de la CI l'est aussi (`DOTNET_SDK_VERSION`, 10.0.402), parce que
 le SDK 10.0.403 annoncé par Microsoft ne se télécharge pas ; `global.json` reste ouvert aux SDK 10.0 récents des postes.

@@ -99,19 +99,22 @@ internal static class PlatformScenarios
             Succeeded(await commands.SendAsync(new RefreshPlatformStatusCommand(dossier, approved), default)).History.Should().HaveCount(5);
 
             // Encaissements : partiel, puis le solde ; au-delà du TTC, avant la pièce ou après le solde, rien ne part.
-            decimal total = (await scope.ServiceProvider.GetRequiredService<IQueryDispatcher>().QueryAsync(new GetInvoiceQuery(dossier, approved), default)).Value.Totals.TotalInclTax;
-            PlatformTransmissionResponse partial = Succeeded(await commands.SendAsync(new ReportPaymentCommand(dossier, approved, new DateOnly(2026, 11, 2), 100m), default));
+            // Dates comptées depuis l'émission de la pièce (le jour même) : un encaissement ne peut pas la précéder.
+            InvoiceResponse invoice = (await scope.ServiceProvider.GetRequiredService<IQueryDispatcher>().QueryAsync(new GetInvoiceQuery(dossier, approved), default)).Value;
+            decimal total = invoice.Totals.TotalInclTax;
+            DateOnly issued = invoice.IssueDate!.Value;
+            PlatformTransmissionResponse partial = Succeeded(await commands.SendAsync(new ReportPaymentCommand(dossier, approved, issued, 100m), default));
             partial.Status.Should().Be(PlatformStatusDto.Collected);
             partial.IsFinal.Should().BeFalse();
             partial.CollectedAmount.Should().Be(100m);
-            Codes(await commands.SendAsync(new ReportPaymentCommand(dossier, approved, new DateOnly(2026, 11, 3), total), default))
+            Codes(await commands.SendAsync(new ReportPaymentCommand(dossier, approved, issued.AddDays(1), total), default))
                 .Should().Equal(ErrorCodes.Platform.PaymentAmountInvalid);
             Codes(await commands.SendAsync(new ReportPaymentCommand(dossier, approved, new DateOnly(2000, 1, 1), 1m), default))
                 .Should().Equal(ErrorCodes.Platform.PaymentDateInvalid);
-            PlatformTransmissionResponse paid = Succeeded(await commands.SendAsync(new ReportPaymentCommand(dossier, approved, new DateOnly(2026, 11, 14), total - 100m), default));
+            PlatformTransmissionResponse paid = Succeeded(await commands.SendAsync(new ReportPaymentCommand(dossier, approved, issued.AddDays(12), total - 100m), default));
             paid.IsFinal.Should().BeTrue();
             paid.CollectedAmount.Should().Be(total);
-            Codes(await commands.SendAsync(new ReportPaymentCommand(dossier, approved, new DateOnly(2026, 11, 15), 1m), default))
+            Codes(await commands.SendAsync(new ReportPaymentCommand(dossier, approved, issued.AddDays(13), 1m), default))
                 .Should().Equal(ErrorCodes.Platform.AlreadyFinal);
         }
 

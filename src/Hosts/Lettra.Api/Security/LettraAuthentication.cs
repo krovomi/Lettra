@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Diagnostics;
+using Lettra.Contracts.Identity;
 using Lettra.Infrastructure.Identity.Oidc;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -118,7 +119,7 @@ public static class LettraAuthentication
                     // sans rien de l'utilisateur.
                     CountSignIn(LettraTelemetry.Outcomes.Failure);
                     context.HandleResponse();
-                    context.Response.Redirect("/session?erreur=connexion");
+                    context.Response.Redirect(SessionPageErrors.PathFor(SessionPageErrors.SignInFailed));
                     return Task.CompletedTask;
                 };
             });

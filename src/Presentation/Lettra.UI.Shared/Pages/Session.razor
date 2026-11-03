@@ -22,7 +22,7 @@
         @* Navigateur : la connexion (SSO du cabinet, MFA) se fait chez Keycloak, par le BFF. *@
         @if (Erreur is not null)
         {
-            <p class="validation-message" role="alert">@L["Session.SignInFailed"]</p>
+            <p class="validation-message" role="alert">@L[Erreur == SessionPageErrors.SignInUnavailable ? "Session.SignInUnavailable" : "Session.SignInFailed"]</p>
         }
         <p>@L["Session.SignInIntro"]</p>
         <a class="lettra-button" href="@signIn" data-sign-in>@L["Session.SignIn"]</a>
@@ -70,7 +70,7 @@
 <SharedServerLink />
 
 @code {
-    [SupplyParameterFromQuery(Name = "erreur")] public string? Erreur { get; set; }
+    [SupplyParameterFromQuery(Name = SessionPageErrors.QueryName)] public string? Erreur { get; set; }
 
     private SessionResponse? _session;
     private CreateLocalAccountRequest _create = new();

@@ -36,6 +36,7 @@
   <data name="Error.SharedServer.AddressInvalid" xml:space="preserve"><value>Saisissez l'adresse du serveur, par exemple https://192.168.1.20:8443.</value></data>
   <data name="Error.SharedServer.HttpsRequired" xml:space="preserve"><value>Cette adresse doit commencer par https:// : sinon votre connexion passerait en clair sur le réseau. Seul localhost est accepté en http.</value></data>
   <data name="Error.SharedServer.Unreachable" xml:space="preserve"><value>Aucun serveur ne répond à cette adresse. Vérifiez l'adresse, que l'appareil est sur le même réseau et que le serveur est démarré.</value></data>
+  <data name="Error.SharedServer.SignInUnavailable" xml:space="preserve"><value>Ce serveur Lettra répond, mais son service de connexion ne répond pas pour l'instant. Réessayez dans une minute ; si cela dure, prévenez l'administrateur du cabinet.</value></data>
   <data name="Error.SharedServer.CertificateUntrusted" xml:space="preserve"><value>Le serveur répond, mais cet appareil ne fait pas confiance à son certificat. Installez d'abord le certificat de la démonstration (voir le guide d'installation).</value></data>
   <data name="Error.SharedServer.NotLettra" xml:space="preserve"><value>Un serveur répond à cette adresse, mais ce n'est pas un serveur Lettra.</value></data>
   <data name="Error.SharedServer.NoDossier" xml:space="preserve"><value>Votre compte n'a accès à aucun dossier sur ce serveur. Demandez à l'administrateur du cabinet de vous en ouvrir un.</value></data>

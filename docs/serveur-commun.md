@@ -23,7 +23,11 @@ Règles de sécurité appliquées :
 
 - https obligatoire, sauf pour `localhost` et `127.0.0.1` (démo sur le même poste ou par câble USB) ;
 - changer de serveur efface les jetons de connexion : ils ne partent jamais vers un autre serveur ;
-- un certificat non reconnu est refusé avec un message clair (installer l'autorité de certification du cabinet).
+- un certificat non reconnu est refusé avec un message clair (installer l'autorité de certification du cabinet) ;
+- un serveur Lettra qui répond mais dont le service de connexion (Keycloak) ne répond pas est signalé à part
+  (« Ce serveur Lettra répond, mais son service de connexion ne répond pas pour l'instant »), pour ne pas faire
+  chercher une erreur d'adresse ou de réseau. Dans le navigateur, « Se connecter » revient alors sur la page de
+  connexion de Lettra, qui le dit, sans erreur brute ; le détail reste au journal de l'API.
 
 ## Ce qu'il faut savoir
 

@@ -81,6 +81,7 @@ jobs:
             deploy/local/.run/*.log
             deploy/local/.run/astreinte/*.jsonl
           include-hidden-files: true
+          retention-days: 7
 
   # Keycloak dans la cellule : cluster kind jetable, opérateur CloudNativePG, chart lettra-cell (Keycloak, sa base,
   # l'API construite ici). Découverte du realm, /health et connexion BFF de l'API, boucle locale du client MAUI, MFA.
@@ -108,6 +109,7 @@ jobs:
           path: deploy/tests/kind/.run/
           include-hidden-files: true
           if-no-files-found: warn
+          retention-days: 7
 
   # La démonstration de deploy/demo, de bout en bout dans Chromium : Keycloak + API + PWA, connexion avec
   # enrôlement TOTP, écran et création de client, manifeste et service worker ; puis le profil HTTPS du réseau local.
@@ -272,6 +274,7 @@ jobs:
           name: demo-navigateur
           path: deploy/demo/e2e/sortie/
           if-no-files-found: warn
+          retention-days: 7
 
       - name: Arrêt
         if: always()
@@ -372,6 +375,7 @@ jobs:
           name: demo-charge-k6
           path: deploy/tests/k6/sortie/
           if-no-files-found: warn
+          retention-days: 7
 
       - name: Arrêt
         if: always()
@@ -456,6 +460,7 @@ jobs:
           name: demo-grafana
           path: deploy/tests/grafana/sortie/
           if-no-files-found: warn
+          retention-days: 7
 
       - name: Arrêt
         if: always()
@@ -512,6 +517,7 @@ jobs:
           name: demo-zap
           path: deploy/tests/zap/sortie/
           if-no-files-found: warn
+          retention-days: 7
 
       - name: Arrêt
         if: always()

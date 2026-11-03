@@ -39,6 +39,9 @@ jobs:
       - name: Build et publication
         id: push
         uses: docker/build-push-action@v6
+        env:
+          # Enregistrement de build déposé comme artefact : 7 jours (quota de stockage du dépôt).
+          DOCKER_BUILD_RECORD_RETENTION_DAYS: 7
         with:
           context: .
           push: true

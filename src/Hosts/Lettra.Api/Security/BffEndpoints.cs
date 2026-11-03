@@ -12,7 +12,7 @@ namespace Lettra.Api.Security;
 /// Backend for frontend du navigateur (annexe F §2) : connexion OIDC côté serveur, session par cookie
 /// <c>HttpOnly</c>, <c>Secure</c>, <c>SameSite=Strict</c>. Aucun jeton ne descend dans le navigateur.
 /// </summary>
-public static class BffEndpoints
+public static partial class BffEndpoints
 {
     internal const string SignOutTokenKey = "lettra.signout";
     internal const string ReauthenticationKey = "lettra.reauthentification";
@@ -25,7 +25,7 @@ public static class BffEndpoints
 
         // Navigation pleine page : Keycloak (SSO du cabinet, MFA), puis retour sur une adresse locale seulement.
         // Nouvelle authentification : prompt=login, Keycloak redemande mot de passe et second facteur.
-        bff.MapGet("/login", (string? returnUrl, bool? reauthentification) =>
+        bff.MapGet("/login", async Task (HttpContext context, string? returnUrl, bool? reauthentification) =>
         {
             AuthenticationProperties properties = new() { RedirectUri = LocalOnly(returnUrl) };
             if (reauthentification == true)
@@ -34,7 +34,17 @@ public static class BffEndpoints
                 properties.SetParameter(OpenIdConnectParameterNames.Prompt, "login");
             }
 
-            return Results.Challenge(properties, [LettraAuthSchemes.Oidc]);
+            try
+            {
+                await context.ChallengeAsync(LettraAuthSchemes.Oidc, properties).ConfigureAwait(false);
+            }
+            catch (Exception exception) when (IsUnreachable(exception) && !context.Response.HasStarted)
+            {
+                // Keycloak arrêté, encore en démarrage ou injoignable (découverte du realm, requête d'autorisation poussée) :
+                // la page de session le dit, au lieu d'une erreur 500 brute dans le navigateur. Le détail reste au journal.
+                LogSignInUnavailable(context.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(BffEndpoints)), exception);
+                context.Response.Redirect(SessionPageErrors.PathFor(SessionPageErrors.SignInUnavailable));
+            }
         });
 
         bff.MapGet("/user", async Task<IResult> (HttpContext context) =>
@@ -93,6 +103,26 @@ public static class BffEndpoints
 
     internal static string ReauthenticationPath(string? returnUrl) =>
         $"/bff/login?returnUrl={Uri.EscapeDataString(LocalOnly(returnUrl))}&reauthentification=true";
+
+    /// <summary>
+    /// Le service de connexion ne répond pas : erreur réseau ou délai dépassé, directement ou à l'origine de l'échec de
+    /// la découverte OpenID (<c>IDX20803</c>, qui l'enveloppe). Une autre erreur reste une erreur inattendue.
+    /// </summary>
+    internal static bool IsUnreachable(Exception exception)
+    {
+        for (Exception? cause = exception; cause is not null; cause = cause.InnerException)
+        {
+            if (cause is HttpRequestException or IOException or TimeoutException)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    [LoggerMessage(EventId = 2102, Level = LogLevel.Warning, Message = "Connexion impossible pour l'instant : le service de connexion (Keycloak) ne répond pas")]
+    private static partial void LogSignInUnavailable(ILogger logger, Exception exception);
 
     /// <summary>Seulement un chemin local (<c>/…</c>, ni <c>//</c> ni <c>/\</c>) : pas de redirection ouverte.</summary>
     internal static string LocalOnly(string? returnUrl) =>
