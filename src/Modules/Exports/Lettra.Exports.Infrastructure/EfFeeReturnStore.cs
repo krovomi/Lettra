@@ -56,21 +56,21 @@ internal sealed class EfFeeReturnStore(TenantDbSession session) : IFeeReturnStor
         return await db.Set<FeeBeneficiary>().AsNoTracking().AnyAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<IReadOnlyDictionary<string, decimal>> DebitsByIbanAsync(
+    public async Task<IReadOnlyList<IbanDebit>> DebitsAsync(
         IReadOnlyCollection<string> ibanHashes, DateOnly from, DateOnly to, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(ibanHashes);
         LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
         string[] hashes = [.. ibanHashes];
+
+        // Les montants se lisent ligne par ligne : SQLite ne fait pas la somme des décimaux, l'appelant additionne.
         var debits = await db.Set<BankStatementLine>()
             .AsNoTracking()
             .Where(l => l.BookingDate >= from && l.BookingDate <= to && l.Amount < 0m && l.CounterpartyIbanHash != null && hashes.Contains(l.CounterpartyIbanHash))
-            .Select(l => new { Hash = l.CounterpartyIbanHash!, l.Amount })
+            .Select(l => new { Hash = l.CounterpartyIbanHash!, l.BookingDate, l.Amount })
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
-
-        // Additionné en mémoire : SQLite ne fait pas la somme des décimaux.
-        return debits.GroupBy(d => d.Hash, StringComparer.Ordinal).ToDictionary(g => g.Key, g => -g.Sum(d => d.Amount), StringComparer.Ordinal);
+        return [.. debits.Select(d => new IbanDebit(d.Hash, d.BookingDate, -d.Amount))];
     }
 
     public async Task<DateOnly?> LastBankLineAsync(CancellationToken cancellationToken)

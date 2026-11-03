@@ -14,7 +14,7 @@ namespace Lettra.Api.Endpoints;
 
 /// <summary>
 /// Déclarations fiscales du dossier (module Exports) : brouillon de CA3 ou de CA12 (partie ventes), DES du mois et son
-/// fichier, calendrier fiscal et ses réglages. Des brouillons : rien n'est déposé auprès de l'administration.
+/// fichier, calendrier fiscal et ses réglages, seuils qui approchent. Des brouillons : rien n'est déposé auprès de l'administration.
 /// </summary>
 internal static class TaxEndpoints
 {
@@ -99,6 +99,12 @@ internal static class TaxEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .RequireIfMatch();
 
+        // Seuils qui approchent : franchise et régime de TVA, catégorie, vigilance, DAS 2, projetés à la fin de l'année.
+        group.MapGet("/thresholds", GetThresholdsAsync)
+            .RequirePermission(Permission.DossierLire)
+            .WithName("GetThresholds")
+            .Produces<ThresholdsResponse>();
+
         return group;
     }
 
@@ -161,6 +167,9 @@ internal static class TaxEndpoints
             ? await ConcurrencyResults.WriteFailureAsync(written.Errors, Read, VersionOf).ConfigureAwait(false)
             : Versioned(await Read().ConfigureAwait(false), VersionOf);
     }
+
+    private static async Task<IResult> GetThresholdsAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken) =>
+        Ok(await queries.QueryAsync(new GetThresholdsQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false));
 
     private static async Task<IResult> GetSettingsAsync(ITenantContext tenant, IQueryDispatcher queries, CancellationToken cancellationToken) =>
         Ok(await queries.QueryAsync(new GetFiscalSettingsQuery(tenant.Current.DossierId), cancellationToken).ConfigureAwait(false));

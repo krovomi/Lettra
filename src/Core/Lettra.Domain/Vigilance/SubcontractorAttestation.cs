@@ -1,3 +1,4 @@
+using Lettra.Calculations.Thresholds;
 using Lettra.Domain.Common;
 using Lettra.Domain.Parties;
 
@@ -32,8 +33,8 @@ public enum AttestationStatus
 /// </summary>
 public sealed class SubcontractorAttestation : AggregateRoot<SupplierId>, IVersioned
 {
-    /// <summary>Seuil du contrat à partir duquel l'attestation est exigée (art. R8222-1).</summary>
-    public const decimal Threshold = 5_000m;
+    /// <summary>Seuil du contrat à partir duquel l'attestation est exigée (art. R8222-1), lu au catalogue des seuils.</summary>
+    public static readonly decimal Threshold = ThresholdCatalog.AmountOn(ThresholdCodes.Vigilance, DateOnly.MaxValue);
 
     public const decimal MaxContractAmount = 100_000_000m;
 

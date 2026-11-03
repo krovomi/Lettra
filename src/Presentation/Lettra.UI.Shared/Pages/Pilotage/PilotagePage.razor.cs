@@ -226,6 +226,7 @@ public sealed partial class PilotagePage
         Contracts.Cabinet.DossierIndicatorKeys.DecisionsPending => "decisions",
         Contracts.Cabinet.DossierIndicatorKeys.ThirdPartiesToReview => "third-party-checks",
         Contracts.Cabinet.DossierIndicatorKeys.FeeReturn => "tax/fees",
+        Contracts.Cabinet.DossierIndicatorKeys.Thresholds => "tax/thresholds",
         _ => "cabinet",
     };
 
