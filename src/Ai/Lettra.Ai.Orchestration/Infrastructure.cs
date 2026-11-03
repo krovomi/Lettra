@@ -65,9 +65,12 @@ internal sealed class CabinetAiUsagePolicy(IOptionsMonitor<AiOptions> options, I
     }
 }
 
-/// <summary>Moteurs disponibles sur ce déploiement : chaque adapter s'enregistre sous la clé de son <see cref="AiEngineKind"/>.</summary>
-internal sealed class KeyedAiEngineFactory(IServiceProvider services) : IAiEngineFactory
+/// <summary>
+/// Moteurs disponibles sur ce déploiement : chaque adapter s'enregistre sous la clé de son <see cref="AiEngineKind"/>.
+/// Le moteur rendu passe par le disjoncteur de son type (<see cref="AiEngineCircuits"/>).
+/// </summary>
+internal sealed class KeyedAiEngineFactory(IServiceProvider services, AiEngineCircuits circuits) : IAiEngineFactory
 {
     public IAiEngine? Resolve(AiEngineKind kind) =>
-        kind == AiEngineKind.None ? null : services.GetKeyedService<IAiEngine>(kind);
+        kind != AiEngineKind.None && services.GetKeyedService<IAiEngine>(kind) is { } engine ? circuits.Guard(kind, engine) : null;
 }

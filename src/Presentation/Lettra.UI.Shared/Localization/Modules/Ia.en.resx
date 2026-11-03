@@ -46,7 +46,7 @@
   <data name="Assistant.Source" xml:space="preserve"><value>Source read: {0}</value></data>
   <data name="Assistant.Draft.quote" xml:space="preserve"><value>Draft quote created, for you to review and validate:</value></data>
   <data name="Assistant.OpenDraft" xml:space="preserve"><value>Open the draft</value></data>
-  <data name="Assistant.Suggestion" xml:space="preserve"><value>AI suggestion, to be checked</value></data>
+  <data name="Assistant.Suggestion" xml:space="preserve"><value>Text written by AI, to be checked</value></data>
   <data name="Assistant.Completed" xml:space="preserve"><value>Engine: {0} · knowledge pack {1}</value></data>
   <data name="Assistant.Why" xml:space="preserve"><value>Why?</value></data>
   <data name="Assistant.WhyQuestion" xml:space="preserve"><value>Why this checklist finding: "{0}" (code {1})? What needs fixing?</value></data>
@@ -58,4 +58,87 @@
   <data name="Assistant.Tool.chercher_article" xml:space="preserve"><value>catalogue search</value></data>
   <data name="Assistant.Tool.creer_brouillon_devis" xml:space="preserve"><value>creating the draft quote</value></data>
   <data name="Assistant.Tool.controler_document_ouvert" xml:space="preserve"><value>compliance check of the document</value></data>
+  <data name="Error.Ai.EngineFailed" xml:space="preserve"><value>The AI engine is not responding (time-out, connection lost or unreadable reply), so the answer stops here. The steps already shown remain valid; try again in a moment or carry on without the assistant.</value></data>
+  <data name="Error.Ai.EnginePaused" xml:space="preserve"><value>The AI engine failed several times in a row: Lettra stops calling it for a few minutes, then tries again on its own. Everything else works.</value></data>
+  <data name="Assistant.SuggestionTooltip" xml:space="preserve"><value>Written by AI ({0}). Check it before you use it.</value></data>
+  <data name="Assistant.EngineResponding" xml:space="preserve"><value>AI available</value></data>
+  <data name="Assistant.EnginePaused" xml:space="preserve"><value>AI paused: the engine is not responding</value></data>
+  <data name="Assistant.EngineTooltip" xml:space="preserve"><value>AI engine: {0}</value></data>
+  <data name="Assistant.Guide" xml:space="preserve"><value>Using AI well</value></data>
+  <data name="AiGuide.Title" xml:space="preserve"><value>Using Lettra's AI well</value></data>
+  <data name="AiGuide.Subtitle" xml:space="preserve"><value>What the AI does, what it never does, how to recognise it, turn it off and read its log.</value></data>
+  <data name="AiGuide.State.Off" xml:space="preserve"><value>AI is off</value></data>
+  <data name="AiGuide.State.Off.Text" xml:space="preserve"><value>Lettra works fully without it: rules, calculations, checks and help stay the same. A firm administrator can turn it on and give you the right to use it.</value></data>
+  <data name="AiGuide.State.On" xml:space="preserve"><value>AI is on in this dossier</value></data>
+  <data name="AiGuide.State.On.Text" xml:space="preserve"><value>It suggests, you decide. Every text it writes is flagged, and every request is recorded in the log below.</value></data>
+  <data name="AiGuide.State.Paused" xml:space="preserve"><value>The AI engine is not responding</value></data>
+  <data name="AiGuide.State.Paused.Text" xml:space="preserve"><value>After repeated failures, Lettra stops calling it for a few minutes, then tries again on its own. Meanwhile the assistant answers “engine paused” and everything else works.</value></data>
+  <data name="AiGuide.State.Engine" xml:space="preserve"><value>Engine</value></data>
+  <data name="AiGuide.State.Features" xml:space="preserve"><value>Features turned on</value></data>
+  <data name="AiGuide.Does.Title" xml:space="preserve"><value>What the AI does</value></data>
+  <data name="AiGuide.Does.1" xml:space="preserve"><value>It explains why a compliance check blocks a document (the “Why?” button on the checklist).</value></data>
+  <data name="AiGuide.Does.2" xml:space="preserve"><value>It helps you understand what stops an e-invoice from being sent.</value></data>
+  <data name="AiGuide.Does.3" xml:space="preserve"><value>It answers VAT and regulatory questions, citing the reference sheets and official sites it read.</value></data>
+  <data name="AiGuide.Does.4" xml:space="preserve"><value>For any amount it uses Lettra's calculations; an amount that does not come from them is flagged.</value></data>
+  <data name="AiGuide.Never.Title" xml:space="preserve"><value>What it never does</value></data>
+  <data name="AiGuide.Never.1" xml:space="preserve"><value>Approve, issue or send a document: you always do that yourself.</value></data>
+  <data name="AiGuide.Never.2" xml:space="preserve"><value>Decide instead of the rules: compliance, VAT and amounts are calculated by Lettra, not by the AI.</value></data>
+  <data name="AiGuide.Never.3" xml:space="preserve"><value>See the dossier's names: customers, suppliers and identifiers are replaced by tokens before anything is sent to the engine.</value></data>
+  <data name="AiGuide.Never.4" xml:space="preserve"><value>Score a person's creditworthiness, or assess, assign or monitor staff work.</value></data>
+  <data name="AiGuide.Mark.Title" xml:space="preserve"><value>Recognising AI text</value></data>
+  <data name="AiGuide.Mark.1" xml:space="preserve"><value>Every text written by the AI carries the label “Text written by AI, to be checked”.</value></data>
+  <data name="AiGuide.Mark.2" xml:space="preserve"><value>Hover over the label to see which engine wrote it; the log records it too.</value></data>
+  <data name="AiGuide.Mark.3" xml:space="preserve"><value>Lettra's steps, rules and calculations are shown separately, without that label: they do not come from the AI.</value></data>
+  <data name="AiGuide.Mark.4" xml:space="preserve"><value>The answer also carries a machine-readable mark (AI-generated content) for software that reuses it.</value></data>
+  <data name="AiGuide.Off.Title" xml:space="preserve"><value>Turning it off or on</value></data>
+  <data name="AiGuide.Off.1" xml:space="preserve"><value>AI is off by default, including in the demo.</value></data>
+  <data name="AiGuide.Off.2" xml:space="preserve"><value>A firm administrator turns it on, picks the engine (Claude hosted in Europe, or a model installed at the firm) and turns features on one by one.</value></data>
+  <data name="AiGuide.Off.3" xml:space="preserve"><value>They can exclude a dossier, or turn AI off for the whole firm: the rest of Lettra keeps working.</value></data>
+  <data name="AiGuide.Off.4" xml:space="preserve"><value>On a standalone computer, these settings are in the configuration file.</value></data>
+  <data name="AiGuide.Failure.Title" xml:space="preserve"><value>When the engine does not respond</value></data>
+  <data name="AiGuide.Failure.1" xml:space="preserve"><value>If the engine is slow, drops the connection or sends an unreadable reply, the answer ends on “engine unavailable”; the steps already shown remain valid.</value></data>
+  <data name="AiGuide.Failure.2" xml:space="preserve"><value>After several failures, Lettra stops calling it for a few minutes: the panel shows “AI paused”, then Lettra tries again on its own.</value></data>
+  <data name="AiGuide.Failure.3" xml:space="preserve"><value>Every failure is recorded in the log. Lettra also counts these fallbacks, with no name or dossier, so the team running it can see when an engine stops responding.</value></data>
+  <data name="AiGuide.Registry.Title" xml:space="preserve"><value>Where Lettra uses AI</value></data>
+  <data name="AiGuide.Registry.Intro" xml:space="preserve"><value>The register of AI uses: what it is for, its risk level under the European AI regulation (AI Act) and its status in this dossier.</value></data>
+  <data name="AiGuide.Usage.explain.Name" xml:space="preserve"><value>“Why?” on the compliance checklist</value></data>
+  <data name="AiGuide.Usage.explain.Role" xml:space="preserve"><value>Explains a finding already made by a Lettra rule.</value></data>
+  <data name="AiGuide.Usage.einvoicing.Name" xml:space="preserve"><value>E-invoicing diagnosis</value></data>
+  <data name="AiGuide.Usage.einvoicing.Role" xml:space="preserve"><value>Explains what stops an e-invoice from going to the platform.</value></data>
+  <data name="AiGuide.Usage.regulatory.Name" xml:space="preserve"><value>VAT and regulatory questions</value></data>
+  <data name="AiGuide.Usage.regulatory.Role" xml:space="preserve"><value>Answers citing its sources; amounts come from Lettra's calculations.</value></data>
+  <data name="AiGuide.Usage.draft.Name" xml:space="preserve"><value>Quote draft from free text</value></data>
+  <data name="AiGuide.Usage.draft.Role" xml:space="preserve"><value>Prepares a draft that you review and approve yourself.</value></data>
+  <data name="AiGuide.Usage.external.Name" xml:space="preserve"><value>Desktop AI assistant (MCP)</value></data>
+  <data name="AiGuide.Usage.external.Role" xml:space="preserve"><value>Your computer's AI reads Lettra read-only, with names masked; turning it on needs the DPO's approval.</value></data>
+  <data name="AiGuide.Usage.speech.Name" xml:space="preserve"><value>Dictation and voice commands</value></data>
+  <data name="AiGuide.Usage.speech.Role" xml:space="preserve"><value>Transcribes your voice on the device or the firm's server; a command is shown before it runs.</value></data>
+  <data name="AiGuide.Risk.Limited" xml:space="preserve"><value>Limited risk: text flagged as AI-written</value></data>
+  <data name="AiGuide.Risk.Minimal" xml:space="preserve"><value>Minimal risk</value></data>
+  <data name="AiGuide.Usage.Status.Open" xml:space="preserve"><value>On in this dossier</value></data>
+  <data name="AiGuide.Usage.Status.Closed" xml:space="preserve"><value>Not turned on</value></data>
+  <data name="AiGuide.Usage.Status.Blocked" xml:space="preserve"><value>Closed until Lettra can mask typed names</value></data>
+  <data name="AiGuide.Usage.Status.External" xml:space="preserve"><value>Turned on or not by the firm, with the DPO's approval</value></data>
+  <data name="AiGuide.Usage.Status.Speech" xml:space="preserve"><value>Depends on the dictation setting</value></data>
+  <data name="AiGuide.Law" xml:space="preserve"><value>Lettra's uses are minimal or limited risk under the European AI regulation. Lettra flags AI-written text (Article 50), and this page helps everyone use it well (Article 4).</value></data>
+  <data name="AiGuide.Journal.Title" xml:space="preserve"><value>Reading the AI log</value></data>
+  <data name="AiGuide.Journal.Intro" xml:space="preserve"><value>Every request, engine call, tool used, answer and failure is recorded with its date and engine. Names stay masked by tokens such as [CLIENT_1]. The log belongs to the dossier.</value></data>
+  <data name="AiGuide.Journal.NoAccess" xml:space="preserve"><value>The log can be read with access to the AI assistant, which a firm administrator grants.</value></data>
+  <data name="AiGuide.Journal.Empty" xml:space="preserve"><value>The log is empty</value></data>
+  <data name="AiGuide.Journal.EmptyText" xml:space="preserve"><value>Nothing has been asked of the AI in this dossier yet.</value></data>
+  <data name="AiGuide.Journal.At" xml:space="preserve"><value>Date</value></data>
+  <data name="AiGuide.Journal.Kind" xml:space="preserve"><value>Event</value></data>
+  <data name="AiGuide.Journal.Detail" xml:space="preserve"><value>Detail</value></data>
+  <data name="AiGuide.Journal.Engine" xml:space="preserve"><value>Engine</value></data>
+  <data name="AiGuide.Journal.AllKinds" xml:space="preserve"><value>All events</value></data>
+  <data name="AiGuide.Journal.Count" xml:space="preserve"><value>{0} entry(ies) shown out of the {1} most recent</value></data>
+  <data name="AiGuide.Journal.Kind.Request" xml:space="preserve"><value>Request</value></data>
+  <data name="AiGuide.Journal.Kind.EngineCall" xml:space="preserve"><value>Engine call</value></data>
+  <data name="AiGuide.Journal.Kind.ToolCall" xml:space="preserve"><value>Tool used</value></data>
+  <data name="AiGuide.Journal.Kind.ToolRejected" xml:space="preserve"><value>Tool refused</value></data>
+  <data name="AiGuide.Journal.Kind.Draft" xml:space="preserve"><value>Draft created</value></data>
+  <data name="AiGuide.Journal.Kind.Answer" xml:space="preserve"><value>Answer</value></data>
+  <data name="AiGuide.Journal.Kind.Refused" xml:space="preserve"><value>Engine refusal</value></data>
+  <data name="AiGuide.Journal.Kind.Unavailable" xml:space="preserve"><value>Unavailable</value></data>
+  <data name="AiGuide.Journal.Kind.EngineFailed" xml:space="preserve"><value>Engine failure</value></data>
 </root>

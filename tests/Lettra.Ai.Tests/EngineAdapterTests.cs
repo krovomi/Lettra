@@ -129,6 +129,57 @@ public sealed class EngineAdapterTests
     }
 
     [Fact]
+    public async Task Une_reponse_du_modele_local_qui_n_a_pas_la_forme_attendue_est_illisible()
+    {
+        using HttpClient http = new(new RecordingHandler(_ => RecordingHandler.Json("""{ "erreur": "modèle en cours de chargement" }""")));
+        LocalModelEngine engine = new(http, new LocalModelOptions { Endpoint = new Uri("http://modele.local/v1/chat/completions") });
+
+        Func<Task> complete = () => engine.CompleteAsync(Request(), CancellationToken.None);
+
+        (await complete.Should().ThrowAsync<AiEngineException>()).Which.Failure.Should().Be(AiEngineFailure.Unreadable);
+    }
+
+    [Fact]
+    public async Task Une_reponse_de_Claude_illisible_est_nommee_comme_telle()
+    {
+        (ClaudeEngine engine, _) = Claude("""{ "id": "msg_03", "type": "message", "content": "pas une liste" }""");
+
+        Func<Task> complete = () => engine.CompleteAsync(Request(), CancellationToken.None);
+
+        (await complete.Should().ThrowAsync<AiEngineException>()).Which.Failure.Should().Be(AiEngineFailure.Unreadable);
+    }
+
+    [Theory]
+    [InlineData(null, 30)]
+    [InlineData("00:02:00", 120)]
+    public void Le_delai_du_moteur_local_se_regle(string? timeout, int seconds)
+    {
+        Dictionary<string, string?> settings = new() { ["Lettra:Ai:Local:Endpoint"] = "http://modele.local/v1/chat/completions" };
+        if (timeout is not null)
+        {
+            settings["Lettra:Ai:Local:Timeout"] = timeout;
+        }
+
+        IConfiguration configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
+        ServiceCollection services = new();
+        services.AddLocalAiEngine(configuration);
+        using ServiceProvider provider = services.BuildServiceProvider();
+
+        using HttpClient client = provider.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(LocalModelEngine));
+
+        client.Timeout.Should().Be(TimeSpan.FromSeconds(seconds));
+    }
+
+    [Fact]
+    public void Un_delai_nul_empeche_le_moteur_local_de_demarrer() =>
+        FluentActions.Invoking(() => new ServiceCollection().AddLocalAiEngine(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Lettra:Ai:Local:Endpoint"] = "http://modele.local/v1/chat/completions",
+            ["Lettra:Ai:Local:Timeout"] = "-00:00:01",
+        }).Build()))
+            .Should().Throw<InvalidOperationException>().WithMessage("*Timeout doit être positif*");
+
+    [Fact]
     public void Le_moteur_local_n_existe_que_si_son_point_d_acces_est_configure()
     {
         static IAiEngine? Resolve(Dictionary<string, string?> settings)

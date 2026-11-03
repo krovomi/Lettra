@@ -60,7 +60,7 @@ public static class HelpCatalog
         new("voice", ["quotes/*", "invoices/*"]),
         new("appearance", [""]),
         new("data", ["", "settings/company"]),
-        new("assistant", []),
+        new("assistant", ["ai"], "ai", "Nav.Ai"),
     ];
 
     public static HelpEntry? Find(string id) => All.FirstOrDefault(e => e.Id == id);

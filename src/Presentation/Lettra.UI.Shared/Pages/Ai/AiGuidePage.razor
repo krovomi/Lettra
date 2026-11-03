@@ -1,0 +1,272 @@
+@page "/ai"
+@using Lettra.Contracts.Assistant
+@implements IDisposable
+@inject AssistantPanelState State
+@inject IStringLocalizer<SharedResource> L
+
+@* « Bien utiliser l'IA de Lettra » : ce que fait l'IA, ce qu'elle ne fait jamais, comment la reconnaître, la couper, ce
+   qui se passe quand le moteur ne répond pas, le registre des usages et le journal IA du dossier (règlement européen
+   sur l'IA : transparence, article 50 ; maîtrise de l'IA, article 4). La page marche sans IA : elle lit seulement le
+   statut de l'assistant, et le journal si la personne a le droit d'utiliser l'assistant. *@
+
+<PageTitle>@L["AiGuide.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["AiGuide.Title"]</h1>
+        <p>@L["AiGuide.Subtitle"]</p>
+    </div>
+    @if (State.IsAvailable)
+    {
+        <button type="button" id="ai-guide-open" class="lettra-button" @onclick="OpenAssistant"><Icon Name="sparkles" /> @L["Assistant.Open"]</button>
+    }
+</div>
+
+<section id="ai-state" class="lt-panel lt-ai-state" data-state="@Mode" aria-labelledby="ai-state-title" role="status">
+    <span class="lt-ai-state-icon" aria-hidden="true"><Icon Name="@ModeIcon" Size="24" /></span>
+    <div>
+        <h2 id="ai-state-title">@L["AiGuide.State." + Mode]</h2>
+        <p>@L["AiGuide.State." + Mode + ".Text"]</p>
+        @if (State.IsAvailable)
+        {
+            <dl class="lt-facts">
+                @if (State.Engine is { } engine)
+                {
+                    <dt>@L["AiGuide.State.Engine"]</dt>
+                    <dd id="ai-state-engine">@engine</dd>
+                }
+                <dt>@L["AiGuide.State.Features"]</dt>
+                <dd id="ai-state-features">@string.Join(", ", State.Features.Select(f => L["Assistant.Feature." + f].Value))</dd>
+            </dl>
+        }
+    </div>
+</section>
+
+<div class="lt-ai-guide">
+    @Card("does", "circle-check", "AiGuide.Does", 4)
+    @Card("never", "shield-check", "AiGuide.Never", 4)
+    @Card("mark", "sparkles", "AiGuide.Mark", 4)
+    @Card("off", "sliders-horizontal", "AiGuide.Off", 4)
+    @Card("failure", "circle-pause", "AiGuide.Failure", 3)
+</div>
+
+<section id="ai-registry" class="lt-panel" aria-labelledby="ai-registry-title">
+    <div class="lt-panel-head">
+        <h2 id="ai-registry-title"><Icon Name="list-checks" /> @L["AiGuide.Registry.Title"]</h2>
+    </div>
+    <p class="lettra-muted">@L["AiGuide.Registry.Intro"]</p>
+    <ul class="lt-ai-usages">
+        @foreach (AiUsage usage in AiUsages.All)
+        {
+            string status = usage.StatusKey(State.Features);
+            <li data-usage="@usage.Id" data-status="@status[(status.LastIndexOf('.') + 1)..].ToLowerInvariant()">
+                <strong>@L[usage.NameKey]</strong>
+                <span>@L[usage.RoleKey]</span>
+                <span class="lt-ai-usage-tags">
+                    <span class="lt-ai-tag">@L[usage.RiskKey]</span>
+                    <span class="lt-ai-tag is-status">@L[status]</span>
+                </span>
+            </li>
+        }
+    </ul>
+    <p class="lettra-muted lt-ai-law">@L["AiGuide.Law"]</p>
+</section>
+
+<section id="ai-journal" class="lt-panel" aria-labelledby="ai-journal-title">
+    <div class="lt-panel-head">
+        <h2 id="ai-journal-title"><Icon Name="history" /> @L["AiGuide.Journal.Title"]</h2>
+    </div>
+    <p class="lettra-muted">@L["AiGuide.Journal.Intro"]</p>
+    @if (!State.CanReadJournal)
+    {
+        <p id="ai-journal-no-access" class="lettra-muted">@L["AiGuide.Journal.NoAccess"]</p>
+    }
+    else if (_journal is null)
+    {
+        <GeneralErrors Errors="_errors" />
+        @if (_errors.Count == 0)
+        {
+            <div aria-busy="true" aria-label="@L["Loading"]"><span class="lt-skeleton" style="height: 2.5rem; width: 100%"></span></div>
+        }
+    }
+    else if (_journal.Count == 0)
+    {
+        <EmptyState Id="ai-journal-empty" IconName="history" Title="@L["AiGuide.Journal.Empty"]" Text="@L["AiGuide.Journal.EmptyText"]" />
+    }
+    else
+    {
+        <ListFilterBar Id="ai-journal-filters" ActiveCount="ActiveFilters" OnReset="ResetFilters">
+            <ChildContent>
+                <div class="lt-filter">
+                    <label for="ai-journal-search">@L["Lists.Search"]</label>
+                    <input id="ai-journal-search" type="search" @bind="_search" @bind:event="oninput" autocomplete="off" />
+                </div>
+            </ChildContent>
+            <More>
+                <div class="lt-filter">
+                    <label for="ai-journal-kind">@L["AiGuide.Journal.Kind"]</label>
+                    <select id="ai-journal-kind" @bind="_kindFilter">
+                        <option value="">@L["AiGuide.Journal.AllKinds"]</option>
+                        @foreach (string kind in _journal.Select(e => e.Kind).Distinct().Order(StringComparer.Ordinal))
+                        {
+                            <option value="@kind">@KindLabel(kind)</option>
+                        }
+                    </select>
+                </div>
+                <SortSelect Id="ai-journal-sort" Options="SortOptions" State="_sort" OnSort="StateHasChanged" />
+            </More>
+        </ListFilterBar>
+        @if (VisibleEntries.Count == 0)
+        {
+            <EmptyState Id="ai-journal-filtered-empty" IconName="search" Title="@L["Lists.Empty.FilteredTitle"]" Text="@L["Lists.Empty.Filtered"]">
+                <button type="button" class="lettra-button is-secondary" id="ai-journal-empty-reset" @onclick="ResetFilters">@L["Lists.Filters.Reset"]</button>
+            </EmptyState>
+        }
+        else
+        {
+            <div class="lt-list-scroll">
+                <table class="lettra-table lt-cards" id="ai-journal-table">
+                    <thead>
+                        <tr>
+                            <SortHeader Option="Column(JournalColumn.At)" State="_sort" OnSort="StateHasChanged" Id="ai-journal-sort-at" />
+                            <SortHeader Option="Column(JournalColumn.Kind)" State="_sort" OnSort="StateHasChanged" Id="ai-journal-sort-kind" />
+                            <SortHeader Option="Column(JournalColumn.Detail)" State="_sort" OnSort="StateHasChanged" Id="ai-journal-sort-detail" />
+                            <SortHeader Option="Column(JournalColumn.Engine)" State="_sort" OnSort="StateHasChanged" Id="ai-journal-sort-engine" />
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (AssistantJournalEntry entry in VisibleEntries)
+                        {
+                            <tr data-kind="@entry.Kind">
+                                <td><time datetime="@entry.At.ToString("O", CultureInfo.InvariantCulture)">@When(entry.At)</time></td>
+                                <td data-label="@L["AiGuide.Journal.Kind"]"><span class="lt-ai-kind" data-kind="@entry.Kind">@KindLabel(entry.Kind)</span></td>
+                                <td data-label="@L["AiGuide.Journal.Detail"]" class="lt-ai-detail">@entry.Detail</td>
+                                <td data-label="@L["AiGuide.Journal.Engine"]">@(entry.Engine ?? "—")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <p class="lettra-muted" id="ai-journal-count">@string.Format(CultureInfo.CurrentCulture, L["AiGuide.Journal.Count"], VisibleEntries.Count, _journal.Count)</p>
+        }
+    }
+</section>
+
+@code {
+    /// <summary>Entrées lues : les plus récentes du dossier, filtrées et triées à l'écran.</summary>
+    internal const int JournalLimit = 200;
+
+    private IReadOnlyList<AssistantJournalEntry>? _journal;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private bool _journalRequested;
+    private string? _search;
+    private string? _kindFilter;
+    private readonly SortState<JournalColumn> _sort = new(JournalColumn.At, SortDirectionDto.Descending);
+
+    private enum JournalColumn
+    {
+        At,
+        Kind,
+        Detail,
+        Engine,
+    }
+
+    /// <summary>État affiché : éteinte (aucune fonction offerte), active, ou en pause après des échecs répétés.</summary>
+    private string Mode => !State.IsAvailable ? "Off" : State.EngineResponding ? "On" : "Paused";
+
+    private string ModeIcon => Mode switch
+    {
+        "On" => "circle-check",
+        "Paused" => "triangle-alert",
+        _ => "info",
+    };
+
+    private IReadOnlyList<SortOption<JournalColumn>> SortOptions =>
+    [
+        new(JournalColumn.At, L["AiGuide.Journal.At"], SortDirectionDto.Descending),
+        new(JournalColumn.Kind, L["AiGuide.Journal.Kind"]),
+        new(JournalColumn.Detail, L["AiGuide.Journal.Detail"]),
+        new(JournalColumn.Engine, L["AiGuide.Journal.Engine"]),
+    ];
+
+    private SortOption<JournalColumn> Column(JournalColumn column) => SortOptions.First(o => o.Column == column);
+
+    private int ActiveFilters => new object?[] { string.IsNullOrWhiteSpace(_search) ? null : _search, _kindFilter }.Count(f => f is not null);
+
+    private void ResetFilters() => (_search, _kindFilter) = (null, null);
+
+    private IReadOnlyList<AssistantJournalEntry> VisibleEntries
+    {
+        get
+        {
+            IEnumerable<AssistantJournalEntry> entries = _journal ?? [];
+            if (!string.IsNullOrWhiteSpace(_search))
+            {
+                entries = entries.Where(e => ListSorting.Matches(e.Detail, _search) || ListSorting.Matches(KindLabel(e.Kind), _search) || ListSorting.Matches(e.Engine, _search));
+            }
+
+            if (!string.IsNullOrEmpty(_kindFilter))
+            {
+                entries = entries.Where(e => e.Kind == _kindFilter);
+            }
+
+            return ListSorting.Sort(entries, _sort, new Dictionary<JournalColumn, Func<AssistantJournalEntry, object?>>
+            {
+                [JournalColumn.At] = e => e.At,
+                [JournalColumn.Kind] = e => KindLabel(e.Kind),
+                [JournalColumn.Detail] = e => e.Detail,
+                [JournalColumn.Engine] = e => e.Engine,
+            });
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        State.Changed += OnStateChanged;
+        await State.LoadAsync();
+        await LoadJournalAsync();
+    }
+
+    /// <summary>Le journal se lit une fois, dès que le statut dit que la personne a le droit d'utiliser l'assistant.</summary>
+    private async Task LoadJournalAsync()
+    {
+        if (_journalRequested || !State.CanReadJournal || State.Gateway is not { } gateway)
+        {
+            return;
+        }
+
+        _journalRequested = true;
+        OperationResult<IReadOnlyList<AssistantJournalEntry>> result = await gateway.GetJournalAsync(JournalLimit, CancellationToken.None);
+        _journal = result.IsSuccess ? result.Value ?? [] : null;
+        _errors = result.Errors;
+    }
+
+    private void OnStateChanged(object? sender, EventArgs e) => _ = InvokeAsync(async () =>
+    {
+        await LoadJournalAsync();
+        StateHasChanged();
+    });
+
+    private void OpenAssistant() => State.Open(State.Offers(AssistantFeature.RegulatoryQuestions) ? AssistantFeature.RegulatoryQuestions : State.Features[0]);
+
+    private string KindLabel(string kind)
+    {
+        LocalizedString label = L["AiGuide.Journal.Kind." + kind];
+        return label.ResourceNotFound ? kind : label.Value;
+    }
+
+    private static string When(DateTimeOffset at) => at.ToLocalTime().ToString("g", CultureInfo.CurrentCulture);
+
+    private RenderFragment Card(string id, string icon, string prefix, int count) =>
+        @<section class="lt-panel lt-ai-card" id="ai-guide-@id" aria-labelledby="ai-guide-@id-title">
+            <h2 id="ai-guide-@id-title"><Icon Name="@icon" /> @L[prefix + ".Title"]</h2>
+            <ul>
+                @for (int i = 1; i <= count; i++)
+                {
+                    <li>@L[string.Create(CultureInfo.InvariantCulture, $"{prefix}.{i}")]</li>
+                }
+            </ul>
+        </section>;
+
+    public void Dispose() => State.Changed -= OnStateChanged;
+}
