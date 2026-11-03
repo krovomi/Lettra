@@ -13,7 +13,7 @@ using Lettra.Exports.Application.Reminders;
 namespace Lettra.Exports.Tests.Reminders;
 
 /// <summary>Les relances sur des ports en mémoire : chaque règle du service et des cas d'usage, sans base.</summary>
-public sealed class PaymentReminderServiceTests
+public sealed partial class PaymentReminderServiceTests
 {
     // 19 octobre 2026, 10 h à Paris.
     private static readonly DateTimeOffset Now = new(2026, 10, 19, 8, 0, 0, TimeSpan.Zero);

@@ -65,6 +65,14 @@ public static class DependencyInjection
         services.AddScoped<Features.Parties.IbanChangeDecisions>();
         services.AddScoped<Features.Parties.ThirdPartyRegisters>();
 
+        // Décisions à prendre : l'actualisation, l'indicateur de la vue cabinet (qui l'appelle à la passe quotidienne) et
+        // les règles du cœur ; les modules ajoutent les leurs et leurs actions (docs/decisions-a-prendre.md).
+        services.AddScoped<Features.Decisions.DecisionRefresher>();
+        services.AddScoped<Abstractions.Cabinet.IDossierIndicatorSource, Features.Decisions.DecisionsIndicatorSource>();
+        services.AddScoped<Abstractions.Decisions.IDecisionRule, Features.Decisions.IbanChangeDecisionRule>();
+        services.AddScoped<Abstractions.Decisions.IDecisionRule, Features.Decisions.AttestationDecisionRule>();
+        services.AddScoped<Abstractions.Decisions.IDecisionRule, Features.Decisions.DueDiligenceDecisionRule>();
+
         // Vue cabinet : les dossiers accessibles, partagés par le sélecteur et le tableau de supervision.
         services.AddScoped<Features.Dossiers.AccessibleDossiers>();
         services.AddScoped<Features.Cabinet.CabinetPeopleReader>();

@@ -82,6 +82,7 @@ public static class DependencyInjection
         services.AddSingleton<IMissionGateway, InProcessMissionGateway>();
         services.AddSingleton<IVigilanceGateway, InProcessVigilanceGateway>();
         services.AddSingleton<IAttestationsGateway, InProcessAttestationsGateway>();
+        services.AddSingleton<IDecisionsGateway, InProcessDecisionsGateway>();
         services.AddSingleton<IThirdPartyChecksGateway, InProcessThirdPartyChecksGateway>();
         services.AddSingleton<IRemindersGateway, InProcessRemindersGateway>();
         services.AddSingleton<IInsightsGateway, InProcessInsightsGateway>();

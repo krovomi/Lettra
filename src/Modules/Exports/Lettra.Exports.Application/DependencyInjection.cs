@@ -1,5 +1,6 @@
 using Lettra.Application.Abstractions.Ai;
 using Lettra.Application.Abstractions.Cabinet;
+using Lettra.Application.Abstractions.Decisions;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Outbox;
 using Lettra.Contracts.Accounting;
@@ -151,6 +152,11 @@ public static class DependencyInjection
         services.AddScoped<IQueryHandler<ListPaymentRemindersQuery, Result<PagedResponse<PaymentReminderResponse>>>, ListPaymentRemindersHandler>();
         services.AddScoped<IQueryHandler<GetReminderSettingsQuery, Result<ReminderSettingsResponse>>, GetReminderSettingsHandler>();
         services.AddScoped<ICommandHandler<UpdateReminderSettingsCommand, Result<ReminderSettingsResponse>>, UpdateReminderSettingsHandler>();
+
+        // Décisions à prendre (docs/decisions-a-prendre.md) : les relances dues, et leur envoi en un clic ; les échéances fiscales.
+        services.AddScoped<IDecisionRule, ReminderDecisionRule>();
+        services.AddScoped<IDecisionActionHandler, SendReminderDecisionAction>();
+        services.AddScoped<IDecisionRule, FiscalDeadlineDecisionRule>();
 
         // Espace client : liens envoyés au client, paiement en ligne et signature des devis. Fermé tant que l'hôte n'en
         // donne pas le compte de service (ICustomerPortalSettings).

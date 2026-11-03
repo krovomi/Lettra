@@ -58,6 +58,9 @@ internal static class IntegrityEndpoints
         api.MapAttestations();
         api.MapThirdPartyChecks();
 
+        // Décisions à prendre du dossier ouvert et son cadran d'autonomie (docs/decisions-a-prendre.md).
+        api.MapDecisions();
+
         // Tableau de bord du dossier ouvert (docs/tableaux-de-bord.md).
         api.MapDossierPilotage();
         return group;

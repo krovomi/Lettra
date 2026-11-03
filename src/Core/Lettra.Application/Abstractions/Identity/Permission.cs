@@ -102,6 +102,15 @@ public enum Permission
 
     /// <summary>Relever les factures reçues et y répondre (prise en charge, approuvée, litige, refus, paiement transmis).</summary>
     [PermissionCategory(PermissionKind.DossierData)] FacturesRecuesTraiter = 130,
+
+    // 150-159 : décisions à prendre. Chaque décision exige aussi la permission de sa règle : on ne voit que ce sur quoi
+    // on peut agir, et l'action acceptée passe par sa commande, qui vérifie la sienne.
+
+    /// <summary>Voir les décisions à prendre du dossier, les accepter, les remettre à plus tard, les ignorer, les actualiser.</summary>
+    [PermissionCategory(PermissionKind.DossierData)] DecisionsTraiter = 150,
+
+    /// <summary>Régler le cadran d'autonomie du dossier (montrer seulement, ou préparer l'action).</summary>
+    [PermissionCategory(PermissionKind.DossierData)] DecisionsRegler = 151,
 }
 
 /// <summary>Ce qu'une permission ouvre.</summary>
