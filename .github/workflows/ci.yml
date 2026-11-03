@@ -16,6 +16,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  # Artefacts gardés 7 jours (quota de stockage du dépôt), sauf l'application Windows et l'APK : de même pour
+  # l'enregistrement de build que docker/build-push-action dépose à chaque image.
+  DOCKER_BUILD_RECORD_RETENTION_DAYS: 7
   # SDK .NET épinglé : le SDK 10.0.403 (runtime 10.0.14) est annoncé par Microsoft mais ses fichiers ne se
   # téléchargent pas (HTTP 409), et sans version chaque job prend le dernier SDK. global.json reste ouvert
   # (10.0.100 et suivants) pour les postes de développement. À relever quand le SDK suivant s'installe.
@@ -87,6 +90,7 @@ jobs:
         with:
           name: test-results
           path: TestResults/**/*.trx
+          retention-days: 7
 
       - name: Avis de tiers (notice MIT de Paperasse)
         run: build/check-third-party-notices.sh
@@ -125,7 +129,7 @@ jobs:
         with:
           name: galerie-design
           path: artifacts/galerie
-          retention-days: 30
+          retention-days: 7
 
   maui-windows:
     name: Build MAUI (Windows)
@@ -172,7 +176,7 @@ jobs:
         with:
           name: lettra-mesure-grille-windows
           path: artifacts/mesure-grille
-          retention-days: 30
+          retention-days: 7
 
   maui-android:
     name: MAUI Android (APK et émulateur)
@@ -252,7 +256,7 @@ jobs:
         with:
           name: lettra-android-capture
           path: artifacts/android-run
-          retention-days: 30
+          retention-days: 7
 
   maui-apple:
     name: MAUI iOS (simulateur) et macOS (Mac Catalyst)
@@ -307,7 +311,7 @@ jobs:
         with:
           name: lettra-ios-simulator
           path: artifacts/lettra-ios-simulator
-          retention-days: 90
+          retention-days: 7
       # Apple Silicon seulement (la version universelle, avec Intel, double un build déjà long).
       - name: Build macOS (Mac Catalyst)
         run: dotnet build src/Hosts/Lettra.App.Maui/Lettra.App.Maui.csproj -c Release -f net10.0-maccatalyst -r maccatalyst-arm64
@@ -351,7 +355,7 @@ jobs:
         with:
           name: lettra-macos
           path: artifacts/lettra-macos
-          retention-days: 90
+          retention-days: 7
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -359,7 +363,7 @@ jobs:
           path: |
             artifacts/ios-run
             artifacts/macos-run
-          retention-days: 30
+          retention-days: 7
 
   secrets:
     name: Détection de secrets
@@ -387,6 +391,7 @@ jobs:
           format: cyclonedx-json
           output-file: lettra.cdx.json
           upload-artifact: true
+          upload-artifact-retention: 7
 
   codeql:
     name: Analyse statique de sécurité (CodeQL)

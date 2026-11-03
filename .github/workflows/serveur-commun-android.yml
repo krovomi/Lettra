@@ -128,4 +128,4 @@ jobs:
         with:
           name: serveur-commun-android
           path: deploy/demo/e2e/sortie/android
-          retention-days: 30
+          retention-days: 7
