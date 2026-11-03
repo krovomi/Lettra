@@ -732,6 +732,15 @@ Menu **Déclarations** (groupe Comptabilité). Lettra prépare, le cabinet dépo
    cabinet signale l'échéance proche ou dépassée.
    *(Vérifié : démo Docker, navigateur sur ordinateur et téléphone.)* Détails :
    [docs/honoraires-das2.md](docs/honoraires-das2.md).
+   Onglet **Seuils** (« Seuils à surveiller ») : les seuils réglementaires qui changent les règles du dossier
+   (franchise en base de TVA, seuil majoré du régime simplifié de TVA, déclaration de TVA trimestrielle à partir de
+   2027, catégorie de l'entreprise, attestation de vigilance d'un sous-traitant, honoraires d'un bénéficiaire pour la
+   DAS 2). Pour chacun, le cumul de la période, sa projection au rythme des 90 derniers jours jusqu'à la fin de la
+   période, la date de franchissement constatée ou prévue et ce qui change alors, avec sa source officielle. Calcul en
+   règles écrites, sans IA. Une carte « Seuils à surveiller » apparaît sur l'accueil et dans « En bref » quand un seuil
+   est franchi ou le sera dans les trois mois ; la vue cabinet compte les seuils proches. *(Vérifié : démo Docker,
+   navigateur aux largeurs ordinateur, tablette et téléphone ; applications MAUI non vérifiées.)* Détails :
+   [docs/seuils.md](docs/seuils.md).
 4. Onglet **Calendrier fiscal** : les échéances de l'année (CA3 ou CA12 et acomptes, DES, DAS 2, CFE, IS, liasse), proches, en
    retard ou déposées. Les échéances proches et dépassées arrivent aussi dans **Alertes** (passe toutes les 12 heures,
    par le Worker ou, dans la démo sans Worker, par l'API).

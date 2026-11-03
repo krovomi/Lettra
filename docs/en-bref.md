@@ -15,6 +15,10 @@ rassemble les chiffres que Lettra calcule déjà pour d'autres écrans, sans rè
 | Mouvements bancaires du mois | Le relevé importé : entrées moins sorties depuis le 1er du mois, opérations ignorées comprises |
 | Factures en retard | Le point des créances de l'accueil |
 
+**Seuils à surveiller** : une carte de plus, entre les chiffres du mois et « À surveiller », quand un seuil est franchi
+ou le sera dans les trois mois (voir [Seuils à surveiller](seuils.md)) ; la même carte apparaît sur l'accueil. Elle se
+tait si la lecture est refusée.
+
 ## À surveiller
 
 Les encaissements des 30 derniers jours à partir d'un seuil (500, 1 000, 5 000 ou 10 000 €, 1 000 € par défaut), les
@@ -27,8 +31,8 @@ message d'erreur ; une panne du serveur s'affiche une fois.
 
 ## Architecture
 
-L'écran vit dans la couche d'interface et ne lit que cinq passerelles existantes (accueil, encaissements,
-rapprochement bancaire, déclaration de TVA, point des créances). Pas de nouvelle route d'API, pas de nouveau cas
+L'écran vit dans la couche d'interface et lit cinq passerelles existantes (accueil, encaissements, rapprochement
+bancaire, déclaration de TVA, point des créances), et la carte des seuils lit la sienne. Pas de nouvelle route d'API, pas de nouveau cas
 d'usage côté serveur, pas de migration.
 
 ## Limites
