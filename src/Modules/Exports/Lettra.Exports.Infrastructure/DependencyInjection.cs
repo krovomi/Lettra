@@ -6,6 +6,7 @@ using Lettra.Exports.Application.Banking;
 using Lettra.Exports.Application.EInvoicing.Platform;
 using Lettra.Exports.Application.EInvoicing.Reception;
 using Lettra.Exports.Application.Insights;
+using Lettra.Exports.Application.Insights.Prevention;
 using Lettra.Exports.Application.Portal;
 using Lettra.Exports.Application.Reminders;
 using Lettra.Exports.Application.Tax;
@@ -54,6 +55,8 @@ public static class DependencyInjection
         services.AddScoped<IPaymentHistoryReader, EfPaymentHistoryReader>();
         services.AddScoped<IIssuedInvoiceReader, EfIssuedInvoiceReader>();
         services.AddScoped<IEInvoicingReadinessReader, EfEInvoicingReadinessReader>();
+        services.AddScoped<IPreventionSettingsStore, EfPreventionSettingsStore>();
+        services.AddScoped<IPreventionPayablesReader, EfPreventionPayablesReader>();
         services.AddScoped<IIntercompanyReader, EfIntercompanyReader>();
         AddPortalProviders(services, configuration);
         AddBankAggregator(services, configuration);

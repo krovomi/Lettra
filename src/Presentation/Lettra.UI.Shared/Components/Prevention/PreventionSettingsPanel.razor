@@ -1,0 +1,156 @@
+@inject IPreventionGateway Gateway
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+
+@* Les seuils du radar pour ce dossier (droit « régler le radar ») : le solde bancaire du jour qui sert de départ à la
+   trésorerie, l'horizon, chaque seuil et les signaux suivis. Les bornes sont celles du serveur, qui revérifie tout. *@
+
+<div class="lt-prevention-settings" id="prevention-settings-form">
+    <p class="lettra-muted">@L["Prevention.Settings.Hint"]</p>
+
+    <fieldset class="lt-prevention-fieldset">
+        <legend>@L["Prevention.Settings.Cash"]</legend>
+        <div class="lt-prevention-fields">
+            <label class="la-field">
+                <span>@L["Prevention.Settings.CashBalance"]</span>
+                <input id="prevention-cash" type="number" inputmode="decimal" step="0.01" @bind="_model.CashBalance" @ref="_cash" />
+                <FieldErrors Field="@nameof(UpdatePreventionSettingsRequest.CashBalance)" ServerErrors="_errors" />
+            </label>
+            <div class="la-field">
+                <label for="prevention-cash-on">@L["Prevention.Settings.CashBalanceOn"]</label>
+                <DateField Id="prevention-cash-on" @bind-Value="_model.CashBalanceOn" Max="Today" />
+                <FieldErrors Field="@nameof(UpdatePreventionSettingsRequest.CashBalanceOn)" ServerErrors="_errors" />
+            </div>
+            <label class="la-field">
+                <span>@L["Prevention.Settings.Horizon"]</span>
+                <input id="prevention-horizon" type="number" inputmode="numeric" min="@PreventionSettingsLimits.MinHorizonWeeks" max="@PreventionSettingsLimits.MaxHorizonWeeks" @bind="_model.TreasuryHorizonWeeks" />
+                <FieldErrors Field="@nameof(UpdatePreventionSettingsRequest.TreasuryHorizonWeeks)" ServerErrors="_errors" />
+            </label>
+        </div>
+        <p class="lettra-hint">@string.Format(Culture, L["Prevention.Settings.Cash.Hint"], PreventionSettingsLimits.CashBalanceMaxAgeDays)</p>
+    </fieldset>
+
+    <fieldset class="lt-prevention-fieldset">
+        <legend>@L["Prevention.Settings.Thresholds"]</legend>
+        <div class="lt-prevention-fields">
+            <label class="la-field">
+                <span>@L["Prevention.Settings.PaymentDelayRise"]</span>
+                <input id="prevention-delay-rise" type="number" inputmode="numeric" min="@PreventionSettingsLimits.MinPaymentDelayRiseDays" max="@PreventionSettingsLimits.MaxPaymentDelayRiseDays" @bind="_model.PaymentDelayRiseDays" />
+                <FieldErrors Field="@nameof(UpdatePreventionSettingsRequest.PaymentDelayRiseDays)" ServerErrors="_errors" />
+            </label>
+            <label class="la-field">
+                <span>@L["Prevention.Settings.PeerGap"]</span>
+                <input id="prevention-peer-gap" type="number" inputmode="numeric" min="@PreventionSettingsLimits.MinPeerGapPoints" max="@PreventionSettingsLimits.MaxPeerGapPoints" @bind="_model.PeerGapPoints" />
+                <FieldErrors Field="@nameof(UpdatePreventionSettingsRequest.PeerGapPoints)" ServerErrors="_errors" />
+            </label>
+            <label class="la-field">
+                <span>@L["Prevention.Settings.TopCustomer"]</span>
+                <input id="prevention-top-customer" type="number" inputmode="numeric" min="@PreventionSettingsLimits.MinTopCustomerSharePercent" max="@PreventionSettingsLimits.MaxTopCustomerSharePercent" @bind="_model.TopCustomerSharePercent" />
+                <FieldErrors Field="@nameof(UpdatePreventionSettingsRequest.TopCustomerSharePercent)" ServerErrors="_errors" />
+            </label>
+            <label class="la-field">
+                <span>@L["Prevention.Settings.BilledCollected"]</span>
+                <input id="prevention-billed-collected" type="number" inputmode="numeric" min="@PreventionSettingsLimits.MinBilledCollectedGapPercent" max="@PreventionSettingsLimits.MaxBilledCollectedGapPercent" @bind="_model.BilledCollectedGapPercent" />
+                <FieldErrors Field="@nameof(UpdatePreventionSettingsRequest.BilledCollectedGapPercent)" ServerErrors="_errors" />
+            </label>
+            <label class="la-field">
+                <span>@L["Prevention.Settings.CallSignals"]</span>
+                <input id="prevention-call-signals" type="number" inputmode="numeric" min="@PreventionSettingsLimits.MinCallSignalCount" max="@PreventionSettingsLimits.MaxCallSignalCount" @bind="_model.CallSignalCount" />
+                <FieldErrors Field="@nameof(UpdatePreventionSettingsRequest.CallSignalCount)" ServerErrors="_errors" />
+            </label>
+        </div>
+    </fieldset>
+
+    <fieldset class="lt-prevention-fieldset">
+        <legend>@L["Prevention.Settings.Followed"]</legend>
+        <div class="lt-prevention-checks">
+            @foreach (PreventionSignalDto signal in PreventionText.Signals)
+            {
+                <label class="lt-chip" @key="signal">
+                    <input type="checkbox" id="@($"prevention-follow-{signal.ToString().ToLowerInvariant()}")" checked="@(!_model.Disabled.Contains(signal))" @onchange="e => Follow(signal, e.Value is true)" />
+                    @PreventionText.Title(L, signal)
+                </label>
+            }
+        </div>
+    </fieldset>
+
+    <div class="la-actions">
+        <button type="button" class="lettra-button" id="prevention-settings-save" disabled="@_busy" aria-busy="@(_busy ? "true" : "false")" @onclick="SaveAsync">
+            <Icon Name="check" Size="18" /> @L["Prevention.Settings.Save"]
+        </button>
+        <button type="button" class="lettra-button is-ghost" id="prevention-settings-defaults" disabled="@_busy" @onclick="Defaults">@L["Prevention.Settings.Defaults"]</button>
+    </div>
+</div>
+
+@code {
+    private UpdatePreventionSettingsRequest _model = new();
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private bool _busy;
+    private PreventionSettingsResponse? _shown;
+    private ElementReference _cash;
+
+    /// <summary>Les seuils lus avec le radar.</summary>
+    [Parameter, EditorRequired] public PreventionSettingsResponse Settings { get; set; } = null!;
+
+    /// <summary>Le jour du calcul : un solde ne peut pas être daté du lendemain.</summary>
+    [Parameter, EditorRequired] public DateOnly Today { get; set; }
+
+    /// <summary>Après l'enregistrement : la page recalcule le radar avec les nouveaux seuils.</summary>
+    [Parameter] public EventCallback<PreventionSettingsResponse> OnSaved { get; set; }
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(_shown, Settings))
+        {
+            _shown = Settings;
+            _model = UpdatePreventionSettingsRequest.From(Settings);
+            // Le solde se saisit le plus souvent le jour même : la date est proposée, modifiable.
+            _model.CashBalanceOn ??= Today;
+            _errors = [];
+        }
+    }
+
+    /// <summary>Place le curseur sur le solde bancaire (depuis un signal de trésorerie non évalué).</summary>
+    public ValueTask FocusAsync() => _cash.FocusAsync();
+
+    private void Follow(PreventionSignalDto signal, bool followed)
+    {
+        _model.Disabled.Remove(signal);
+        if (!followed)
+        {
+            _model.Disabled.Add(signal);
+        }
+    }
+
+    /// <summary>Les seuils proposés par Lettra ; le solde saisi et la version restent.</summary>
+    private void Defaults()
+    {
+        _model = new UpdatePreventionSettingsRequest { CashBalance = _model.CashBalance, CashBalanceOn = _model.CashBalanceOn, Version = _model.Version };
+        _errors = [];
+    }
+
+    private async Task SaveAsync()
+    {
+        _busy = true;
+        try
+        {
+            OperationResult<PreventionSettingsResponse> saved = await Gateway.UpdateSettingsAsync(_model, CancellationToken.None);
+            if (saved is { IsSuccess: true, Value: { } settings })
+            {
+                _errors = [];
+                Toasts.Show(ToastKind.Success, L["Prevention.Settings.Saved"]);
+                await OnSaved.InvokeAsync(settings);
+                return;
+            }
+
+            _errors = saved.Errors;
+            Toasts.Show(ToastKind.Error, L.Error(saved.Errors[0].Code));
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

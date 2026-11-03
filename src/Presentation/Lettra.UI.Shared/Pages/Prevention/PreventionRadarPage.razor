@@ -1,0 +1,309 @@
+@page "/cabinet/prevention"
+@implements IDisposable
+@inject ICabinetGateway Gateway
+@inject CurrentDossier Dossiers
+@inject NavigationManager Navigation
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+@inject TimeProvider Clock
+
+@* Radar de prévention des difficultés, vu du cabinet : une ligne par dossier dont l'utilisateur peut lire le radar, les
+   plus préoccupants d'abord. La page lit le registre des indicateurs de la vue cabinet (niveau et nombre de signaux
+   allumés, rien d'autre) sans ouvrir les dossiers ; le détail des signaux se lit dans le dossier. Grand écran : tableau ;
+   tablette et téléphone : une carte par dossier. *@
+
+<PageTitle>@L["Prevention.Radar.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Prevention.Radar.Title"]</h1>
+        <p>@L["Prevention.Radar.Subtitle"]</p>
+    </div>
+    <div class="lt-page-actions">
+        <a class="lettra-button is-ghost" href="cabinet" id="prevention-radar-cabinet"><Icon Name="layers" Size="18" /> @L["Prevention.Radar.Cabinet"]</a>
+        <button type="button" id="prevention-radar-refresh" class="lettra-button is-secondary" disabled="@_refreshing" @onclick="RefreshAsync">
+            <Icon Name="refresh-cw" Size="18" /> @L[_refreshing ? "Cabinet.Refreshing" : "Cabinet.Refresh"]
+        </button>
+    </div>
+</div>
+
+<GeneralErrors Errors="_errors" />
+
+@if (_overview is null)
+{
+    <ListSkeleton Rows="4" Columns="4" />
+}
+else if (AllRows.Count == 0)
+{
+    <EmptyState Id="prevention-radar-empty" IconName="radar" Title="@L["Prevention.Radar.Empty"]" Text="@L["Prevention.Radar.EmptyText"]" />
+}
+else
+{
+    <section aria-labelledby="prevention-radar-kpis-title">
+        <h2 id="prevention-radar-kpis-title" class="lettra-visually-hidden">@L["Prevention.Radar.Kpis"]</h2>
+        <ul class="lt-kpis lt-prevention-kpis">
+            @foreach (PreventionLevelDto level in new[] { PreventionLevelDto.Call, PreventionLevelDto.Watch, PreventionLevelDto.Calm })
+            {
+                int count = AllRows.Count(r => r.Level == level);
+                <li class="lt-kpi lt-prevention-kpi" data-tone="@level" id="@($"prevention-radar-kpi-{level.ToString().ToLowerInvariant()}")">
+                    <span class="lt-kpi-head">@PreventionText.Level(L, level)<span class="lt-kpi-icon"><Icon Name="@LevelIcon(level)" /></span></span>
+                    <span class="lt-kpi-value">@count.ToString("N0", Culture)</span>
+                    <span class="lt-kpi-note">@L["Prevention.Radar.Kpi." + level]</span>
+                </li>
+            }
+        </ul>
+    </section>
+
+    <section aria-labelledby="prevention-radar-list-title" class="lt-panel lt-prevention-panel">
+        <div class="lt-panel-head">
+            <h2 id="prevention-radar-list-title">@L["Prevention.Radar.List"] <span class="lt-cabinet-count">@Rows.Count</span></h2>
+        </div>
+        <ListFilterBar Id="prevention-radar-filters" ActiveCount="ActiveFilters" OnReset="ResetFilters">
+            <ChildContent>
+                <div class="lt-filter">
+                    <label for="prevention-radar-search">@L["Cabinet.Search"]</label>
+                    <input id="prevention-radar-search" type="search" autocomplete="off" @bind="_query" @bind:event="oninput" />
+                </div>
+            </ChildContent>
+            <More>
+                <div class="lt-filter">
+                    <label for="prevention-radar-level">@L["Prevention.Field.Level"]</label>
+                    <select id="prevention-radar-level" @bind="_level">
+                        <option value="">@L["Prevention.Radar.AllLevels"]</option>
+                        @foreach (PreventionLevelDto level in Enum.GetValues<PreventionLevelDto>().Reverse())
+                        {
+                            <option value="@level">@PreventionText.Level(L, level)</option>
+                        }
+                    </select>
+                </div>
+                <SortSelect Id="prevention-radar-sort" Options="SortOptions" State="_sort" OnSort="StateHasChanged" DefaultLabel="@L["Lists.Sort.Urgency"]" />
+            </More>
+        </ListFilterBar>
+
+        @if (Rows.Count == 0)
+        {
+            <EmptyState Id="prevention-radar-filtered-empty" IconName="search" Title="@L["Lists.Empty.FilteredTitle"]" Text="@L["Lists.Empty.Filtered"]">
+                <button type="button" class="lettra-button is-secondary" id="prevention-radar-empty-reset" @onclick="ResetFilters">@L["Lists.Filters.Reset"]</button>
+            </EmptyState>
+        }
+        else
+        {
+            <div class="lt-list-scroll">
+                <table class="lettra-table lt-cards lt-prevention-table">
+                    <caption class="lettra-visually-hidden">@L["Prevention.Radar.Caption"]</caption>
+                    <thead>
+                        <tr>
+                            <SortHeader Option="Column(RadarColumn.Dossier)" State="_sort" OnSort="StateHasChanged" Id="prevention-radar-sort-dossier" />
+                            <SortHeader Option="Column(RadarColumn.Level)" State="_sort" OnSort="StateHasChanged" Id="prevention-radar-sort-level" />
+                            <SortHeader Option="Column(RadarColumn.Signals)" State="_sort" OnSort="StateHasChanged" Id="prevention-radar-sort-signals" Class="lg-num" />
+                            <SortHeader Option="Column(RadarColumn.DueOn)" State="_sort" OnSort="StateHasChanged" Id="prevention-radar-sort-due" />
+                            <th scope="col"><span class="lettra-visually-hidden">@L["Cabinet.Field.Actions"]</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (RadarRow row in Rows)
+                        {
+                            <tr @key="row.Dossier.DossierId" data-tone="@row.Level" aria-current="@(row.Dossier.DossierId == Dossiers.Id ? "true" : null)">
+                                <td>
+                                    <span class="lt-cabinet-name">
+                                        <span class="lt-cabinet-avatar" aria-hidden="true">@ExplorerText.Initials(row.Dossier.Name)</span>
+                                        <span class="lt-cabinet-label">
+                                            <span class="lt-cabinet-dossier">@row.Dossier.Name</span>
+                                            <span class="lt-cabinet-when">@ComputedLine(row.Dossier.ComputedAt)</span>
+                                        </span>
+                                    </span>
+                                </td>
+                                <td data-label="@L["Prevention.Field.Level"]"><span class="lt-prevention-badge" data-tone="@row.Level">@PreventionText.Level(L, row.Level)</span></td>
+                                <td class="lg-num" data-label="@L["Prevention.Field.Signals"]">@row.Signals.ToString("N0", Culture)</td>
+                                <td data-label="@L["Prevention.Field.DueOn"]">@(row.DueOn is DateOnly due ? due.ToString("d", Culture) : "—")</td>
+                                <td class="lt-col-actions">
+                                    @if (Dossiers.CanSwitch || row.Dossier.DossierId == Dossiers.Id)
+                                    {
+                                        <button type="button" class="lettra-button is-secondary is-small" @onclick="() => OpenAsync(row.Dossier)">
+                                            <Icon Name="radar" Size="16" /> @L["Prevention.Radar.Open"]
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+    <p class="lettra-hint">@L["Prevention.Radar.Footnote"]</p>
+}
+
+@code {
+    private CabinetOverviewResponse? _overview;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private bool _refreshing;
+    private string? _query;
+    private PreventionLevelDto? _level;
+    private readonly CancellationTokenSource _disposed = new();
+    private readonly SortState<RadarColumn> _sort = new(RadarColumn.Default);
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private enum RadarColumn
+    {
+        Default,
+        Dossier,
+        Level,
+        Signals,
+        DueOn,
+    }
+
+    /// <summary>Une ligne : le dossier et ce que la vue cabinet garde du radar (niveau, signaux allumés, échéance).</summary>
+    private sealed record RadarRow(DossierOverviewRow Dossier, PreventionLevelDto Level, int Signals, DateOnly? DueOn);
+
+    /// <summary>Les dossiers dont le radar est calculé et lisible par l'utilisateur, les plus préoccupants d'abord.</summary>
+    private IReadOnlyList<RadarRow> AllRows =>
+    [
+        .. (_overview?.Dossiers ?? [])
+            .Select(d => (Dossier: d, Indicator: d.Indicators.FirstOrDefault(i => i.Key == DossierIndicatorKeys.Prevention)))
+            .Where(x => x.Indicator is not null)
+            .Select(x => new RadarRow(x.Dossier, LevelOf(x.Indicator!.Level), x.Indicator.Count, x.Indicator.Count > 0 ? x.Indicator.DueOn : null))
+            .OrderByDescending(r => r.Level)
+            .ThenByDescending(r => r.Signals)
+            .ThenBy(r => r.Dossier.Name, StringComparer.CurrentCultureIgnoreCase),
+    ];
+
+    private IReadOnlyList<SortOption<RadarColumn>> SortOptions =>
+    [
+        new(RadarColumn.Dossier, L["Cabinet.Field.Dossier"]),
+        new(RadarColumn.Level, L["Prevention.Field.Level"], SortDirectionDto.Descending),
+        new(RadarColumn.Signals, L["Prevention.Field.Signals"], SortDirectionDto.Descending),
+        new(RadarColumn.DueOn, L["Prevention.Field.DueOn"]),
+    ];
+
+    private SortOption<RadarColumn> Column(RadarColumn column) => SortOptions.First(o => o.Column == column);
+
+    private IReadOnlyList<RadarRow> Rows
+    {
+        get
+        {
+            IEnumerable<RadarRow> rows = AllRows
+                .Where(r => _level is null || r.Level == _level)
+                .Where(r => string.IsNullOrWhiteSpace(_query) || ListSorting.Matches(r.Dossier.Name, _query));
+            return ListSorting.Sort(rows, _sort, new Dictionary<RadarColumn, Func<RadarRow, object?>>
+            {
+                [RadarColumn.Dossier] = r => r.Dossier.Name,
+                [RadarColumn.Level] = r => r.Level,
+                [RadarColumn.Signals] = r => r.Signals,
+                [RadarColumn.DueOn] = r => r.DueOn,
+            });
+        }
+    }
+
+    private int ActiveFilters => (string.IsNullOrWhiteSpace(_query) ? 0 : 1) + (_level is null ? 0 : 1);
+
+    private void ResetFilters() => (_query, _level) = (null, null);
+
+    /// <summary>Au-delà, le calcul automatique attendrait trop longtemps : « Actualiser » reste à portée de main.</summary>
+    private const int AutoRefreshLimit = 30;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await LoadAsync();
+
+            // Un tableau calculé avant le radar (ou jamais calculé) n'en a pas la colonne : il est calculé une fois, sans bruit.
+            if (_errors.Count == 0 && _overview is { Dossiers.Count: > 0 and <= AutoRefreshLimit } && AllRows.Count == 0)
+            {
+                await RefreshAsync(announce: false);
+            }
+        }
+        catch (OperationCanceledException) when (_disposed.IsCancellationRequested)
+        {
+            // Écran quitté pendant la lecture.
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        OperationResult<CabinetOverviewResponse> loaded = await Gateway.GetOverviewAsync(_disposed.Token);
+        _errors = loaded.IsSuccess ? [] : loaded.Errors;
+        _overview = loaded.IsSuccess ? loaded.Value : _overview ?? new CabinetOverviewResponse([]);
+    }
+
+    private Task RefreshAsync() => RefreshAsync(announce: true);
+
+    private async Task RefreshAsync(bool announce)
+    {
+        _refreshing = true;
+        try
+        {
+            OperationResult<CabinetOverviewRefreshResponse> refreshed = await Gateway.RefreshOverviewAsync(null, _disposed.Token);
+            if (!refreshed.IsSuccess)
+            {
+                if (announce)
+                {
+                    Toasts.Show(ToastKind.Error, L.Error(refreshed.Errors[0].Code));
+                }
+
+                return;
+            }
+
+            await LoadAsync();
+            if (announce)
+            {
+                Toasts.Show(ToastKind.Success, L["Prevention.Radar.Refreshed"]);
+            }
+        }
+        catch (OperationCanceledException) when (_disposed.IsCancellationRequested)
+        {
+            // Écran quitté pendant le calcul.
+        }
+        finally
+        {
+            _refreshing = false;
+        }
+    }
+
+    private async Task OpenAsync(DossierOverviewRow row)
+    {
+        if (row.DossierId != Dossiers.Id)
+        {
+            if (!await Dossiers.SwitchAsync(row.DossierId))
+            {
+                return;
+            }
+
+            Toasts.Show(ToastKind.Success, string.Format(Culture, L["Cabinet.Picker.Opened"], row.Name));
+        }
+
+        Navigation.NavigateTo("prevention");
+    }
+
+    private static PreventionLevelDto LevelOf(IndicatorLevelDto level) => level switch
+    {
+        IndicatorLevelDto.Critical => PreventionLevelDto.Call,
+        IndicatorLevelDto.Warning => PreventionLevelDto.Watch,
+        _ => PreventionLevelDto.Calm,
+    };
+
+    private static string LevelIcon(PreventionLevelDto level) => level switch
+    {
+        PreventionLevelDto.Call => "phone",
+        PreventionLevelDto.Watch => "triangle-alert",
+        _ => "circle-check",
+    };
+
+    private string ComputedLine(DateTimeOffset? at)
+    {
+        if (at is not DateTimeOffset value)
+        {
+            return L["Cabinet.NeverComputed"];
+        }
+
+        DateTimeOffset local = value.ToLocalTime();
+        string when = DateOnly.FromDateTime(local.Date) == Clock.LocalToday()
+            ? string.Format(Culture, L["Cabinet.TodayAt"], local.ToString("t", Culture))
+            : local.ToString("g", Culture);
+        return string.Format(Culture, L["Cabinet.ComputedLine"], when);
+    }
+
+    public void Dispose() => _disposed.Cancel();
+}

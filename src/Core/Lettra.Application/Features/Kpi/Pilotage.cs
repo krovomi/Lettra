@@ -46,6 +46,8 @@ internal sealed class DossierPilotageHandler(
     IDossierIndicatorStore indicators,
     ITenantContext tenant,
     IDossierDirectory directory,
+    ICurrentUser user,
+    IPermissionService permissions,
     TimeProvider clock) : IQueryHandler<GetDossierPilotageQuery, Result<DossierPilotageResponse>>
 {
     public async Task<Result<DossierPilotageResponse>> HandleAsync(GetDossierPilotageQuery query, CancellationToken cancellationToken)
@@ -60,7 +62,10 @@ internal sealed class DossierPilotageHandler(
 
         IReadOnlyList<StoredDossierIndicators> read = await indicators.ReadAsync([query.Dossier], cancellationToken).ConfigureAwait(false);
         StoredDossierIndicators? stored = read.Count > 0 ? read[0] : null;
-        DossierOverviewRow toDo = CabinetOverviewMapper.ToRow(new DossierSummary(query.Dossier.Value, name), stored);
+        IReadOnlySet<Permission> granted = await permissions
+            .GetEffectiveAsync(user.UserId, AuthorizationScope.ForDossier(query.Dossier), cancellationToken).ConfigureAwait(false);
+        DossierOverviewRow toDo = CabinetOverviewMapper.ToRow(
+            new DossierSummary(query.Dossier.Value, name), stored, granted.Contains(Permission.PreventionConsulter));
         return new DossierPilotageResponse(now, PilotageMapper.ToDossier(query.Dossier.Value, name, samples), toDo.ComputedAt, toDo.Indicators);
     }
 }

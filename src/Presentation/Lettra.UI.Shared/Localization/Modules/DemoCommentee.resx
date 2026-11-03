@@ -164,6 +164,8 @@
   <data name="Demo.cabinet.Summary" xml:space="preserve"><value>La vue de l'expert-comptable sur tous ses dossiers.</value></data>
   <data name="Demo.cabinet.overview.Title" xml:space="preserve"><value>La vue cabinet</value></data>
   <data name="Demo.cabinet.overview.Text" xml:space="preserve"><value>Changeons de point de vue : voici l'écran de l'expert-comptable. Tous les dossiers suivis par le cabinet y sont réunis, avec ce qui demande de l'attention : factures en retard, TVA à déclarer, banque à rapprocher.</value></data>
+  <data name="Demo.cabinet.prevention.Title" xml:space="preserve"><value>Le radar de prévention</value></data>
+  <data name="Demo.cabinet.prevention.Text" xml:space="preserve"><value>Le cabinet repère aussi les entreprises qui pourraient bientôt manquer d'argent : trésorerie qui passe sous zéro, clients qui paient de plus en plus tard, TVA plus lourde que les encaissements. Chaque dossier reçoit un niveau (calme, à surveiller, à appeler) calculé par des règles simples, sans intelligence artificielle. C'est une aide pour décider d'appeler le dirigeant : le radar ne décide rien et n'est jamais montré au client.</value></data>
   <data name="Demo.cabinet.pilotage.Title" xml:space="preserve"><value>Les tableaux de bord</value></data>
   <data name="Demo.cabinet.pilotage.Text" xml:space="preserve"><value>Des indicateurs simples pour piloter, par exemple le délai moyen de paiement des clients ou la part des devis acceptés. Chacun ne voit que les dossiers auxquels il a droit.</value></data>
   <data name="Demo.end.Title" xml:space="preserve"><value>Et maintenant ?</value></data>

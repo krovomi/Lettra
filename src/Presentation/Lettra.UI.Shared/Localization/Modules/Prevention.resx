@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <!-- Radar de prévention des difficultés : liste du cabinet, écran du dossier, carte de l'accueil, seuils, courrier. -->
+  <data name="Nav.Prevention" xml:space="preserve"><value>Radar de prévention</value></data>
+  <data name="Nav.Prevention.Keywords" xml:space="preserve"><value>prévention difficultés alerte précoce entreprises fragiles appeler client trésorerie procédure collective</value></data>
+  <data name="Cabinet.Indicator.prevention.radar" xml:space="preserve"><value>Radar de prévention</value></data>
+  <data name="Cabinet.Indicator.prevention.radar.Due" xml:space="preserve"><value>au plus tôt le {0}</value></data>
+  <data name="Prevention.Level.Calm" xml:space="preserve"><value>Calme</value></data>
+  <data name="Prevention.Level.Watch" xml:space="preserve"><value>À surveiller</value></data>
+  <data name="Prevention.Level.Call" xml:space="preserve"><value>À appeler</value></data>
+  <data name="Prevention.State.Clear" xml:space="preserve"><value>Rien à signaler</value></data>
+  <data name="Prevention.State.Watch" xml:space="preserve"><value>À surveiller</value></data>
+  <data name="Prevention.State.Call" xml:space="preserve"><value>À traiter vite</value></data>
+  <data name="Prevention.State.NotEvaluated" xml:space="preserve"><value>Non évalué</value></data>
+  <data name="Prevention.State.Disabled" xml:space="preserve"><value>Désactivé</value></data>
+  <data name="Prevention.Signal.Treasury" xml:space="preserve"><value>Trésorerie des prochaines semaines</value></data>
+  <data name="Prevention.Signal.PaymentDelay" xml:space="preserve"><value>Délais de paiement des clients</value></data>
+  <data name="Prevention.Signal.PeerGap" xml:space="preserve"><value>Chiffre d'affaires face au secteur</value></data>
+  <data name="Prevention.Signal.VatBeyondCollections" xml:space="preserve"><value>TVA à payer et encaissements</value></data>
+  <data name="Prevention.Signal.TopCustomer" xml:space="preserve"><value>Dépendance au premier client</value></data>
+  <data name="Prevention.Signal.CustomersInProceedings" xml:space="preserve"><value>Clients en procédure collective</value></data>
+  <data name="Prevention.Signal.BilledCollectedGap" xml:space="preserve"><value>Facturé et encaissé</value></data>
+  <data name="Prevention.Signal.Treasury.Active" xml:space="preserve"><value>Le solde prévu passe sous zéro la semaine du {0} et descend jusqu'à {1} (solde de départ {2} au {3}, sur {4} semaines).</value></data>
+  <data name="Prevention.Signal.Treasury.Clear" xml:space="preserve"><value>Le solde prévu reste positif sur {4} semaines ; au plus bas {1} (solde de départ {2} au {3}).</value></data>
+  <data name="Prevention.Signal.PaymentDelay.Active" xml:space="preserve"><value>Le délai moyen de paiement des clients s'allonge depuis trois mois, de {0} à {1} (+{2}, seuil {3}). Environ {4} de trésorerie en plus restent chez les clients.</value></data>
+  <data name="Prevention.Signal.PaymentDelay.Clear" xml:space="preserve"><value>Le délai moyen de paiement des clients est passé de {0} à {1} en trois mois (seuil de hausse {3}).</value></data>
+  <data name="Prevention.Signal.PeerGap.Active" xml:space="preserve"><value>Le chiffre d'affaires évolue de {0} sur un an, contre {1} pour la médiane de {3} dossiers du même secteur : {2} points d'écart (seuil {4}).</value></data>
+  <data name="Prevention.Signal.PeerGap.Clear" xml:space="preserve"><value>Le chiffre d'affaires évolue de {0} sur un an, contre {1} pour la médiane de {3} dossiers du même secteur (seuil d'écart {4} points).</value></data>
+  <data name="Prevention.Signal.VatBeyondCollections.Active" xml:space="preserve"><value>{0}, période du {4} au {5} : {2} à payer le {1}, alors que les encaissements attendus d'ici là ne font que {3}.</value></data>
+  <data name="Prevention.Signal.VatBeyondCollections.Clear" xml:space="preserve"><value>{0}, période du {4} au {5} : {2} à payer le {1}, couverts par {3} d'encaissements attendus d'ici là.</value></data>
+  <data name="Prevention.Signal.TopCustomer.Active" xml:space="preserve"><value>{0} pèse {1} du chiffre d'affaires des douze derniers mois ({3} sur {4}, seuil {2}).</value></data>
+  <data name="Prevention.Signal.TopCustomer.Clear" xml:space="preserve"><value>Le premier client, {0}, pèse {1} du chiffre d'affaires des douze derniers mois (seuil {2}).</value></data>
+  <data name="Prevention.Signal.CustomersInProceedings.Active" xml:space="preserve"><value>Clients en procédure collective selon le BODACC : {0}, pour {1} encore dû ({2} clients vérifiés sur {3}).</value></data>
+  <data name="Prevention.Signal.CustomersInProceedings.Clear" xml:space="preserve"><value>Aucun client en procédure collective selon le BODACC ({2} clients vérifiés sur {3}).</value></data>
+  <data name="Prevention.Signal.BilledCollectedGap.Active" xml:space="preserve"><value>Sur les {4} derniers mois : {0} facturés, {1} encaissés, soit {2} d'écart ({3} du facturé, seuil {5}) ; l'écart grandit chaque mois.</value></data>
+  <data name="Prevention.Signal.BilledCollectedGap.Clear" xml:space="preserve"><value>Sur les {4} derniers mois : {0} facturés, {1} encaissés ({3} d'écart, seuil {5}).</value></data>
+  <data name="Prevention.Disabled" xml:space="preserve"><value>Ce signal est désactivé dans les seuils du dossier.</value></data>
+  <data name="Prevention.Unavailable.None" xml:space="preserve"><value>Ce signal n'a pas pu être évalué.</value></data>
+  <data name="Prevention.Unavailable.NoCashBalance" xml:space="preserve"><value>Saisissez le solde bancaire du jour dans les seuils du dossier pour prévoir la trésorerie des prochaines semaines.</value></data>
+  <data name="Prevention.Unavailable.CashBalanceOutdated" xml:space="preserve"><value>Le solde bancaire saisi date du {0}, il y a plus de 45 jours : saisissez un solde récent.</value></data>
+  <data name="Prevention.Unavailable.NotEnoughHistory" xml:space="preserve"><value>Pas assez de factures sur les derniers mois pour suivre une tendance.</value></data>
+  <data name="Prevention.Unavailable.NoSector" xml:space="preserve"><value>Code APE absent de la fiche entreprise : pas de comparaison au secteur.</value></data>
+  <data name="Prevention.Unavailable.NoCollection" xml:space="preserve"><value>La comparaison au secteur se fait sur le serveur du cabinet : elle n'est pas disponible sur ce poste.</value></data>
+  <data name="Prevention.Unavailable.TooFewPeers" xml:space="preserve"><value>Moins de 5 dossiers du même secteur : pas de comparaison, pour ne rien laisser deviner d'un autre dossier.</value></data>
+  <data name="Prevention.Unavailable.NoTrend" xml:space="preserve"><value>Pas d'évolution du chiffre d'affaires sur un an à comparer.</value></data>
+  <data name="Prevention.Unavailable.NoCompanyProfile" xml:space="preserve"><value>Fiche entreprise à compléter : le régime de TVA est inconnu.</value></data>
+  <data name="Prevention.Unavailable.NoVatRegime" xml:space="preserve"><value>Régime de déclaration de TVA absent de la fiche entreprise.</value></data>
+  <data name="Prevention.Unavailable.VatFranchise" xml:space="preserve"><value>Entreprise en franchise de TVA : aucune TVA à payer.</value></data>
+  <data name="Prevention.Unavailable.NoVatDeadline" xml:space="preserve"><value>Pas d'échéance de TVA au montant connu dans les 45 prochains jours.</value></data>
+  <data name="Prevention.Unavailable.NoRevenue" xml:space="preserve"><value>Pas de chiffre d'affaires sur les douze derniers mois.</value></data>
+  <data name="Prevention.Unavailable.NoCustomerChecked" xml:space="preserve"><value>Aucun client vérifié auprès des registres ({0} clients) : lancez la vérification des tiers pour suivre les procédures collectives.</value></data>
+  <data name="Prevention.Impact.Treasury" xml:space="preserve"><value>Manque au plus bas</value></data>
+  <data name="Prevention.Impact.PaymentDelay" xml:space="preserve"><value>Trésorerie retenue en plus</value></data>
+  <data name="Prevention.Impact.PeerGap" xml:space="preserve"><value>Effet chiffré</value></data>
+  <data name="Prevention.Impact.VatBeyondCollections" xml:space="preserve"><value>Manque pour payer la TVA</value></data>
+  <data name="Prevention.Impact.TopCustomer" xml:space="preserve"><value>Chiffre d'affaires en jeu</value></data>
+  <data name="Prevention.Impact.CustomersInProceedings" xml:space="preserve"><value>Créances exposées</value></data>
+  <data name="Prevention.Impact.BilledCollectedGap" xml:space="preserve"><value>Écart facturé, encaissé</value></data>
+  <data name="Prevention.DueOn" xml:space="preserve"><value>le {0}</value></data>
+  <data name="Prevention.DueOn.Treasury" xml:space="preserve"><value>sous zéro à partir du {0}</value></data>
+  <data name="Prevention.DueOn.VatBeyondCollections" xml:space="preserve"><value>à payer le {0}</value></data>
+  <data name="Prevention.DueOn.CustomersInProceedings" xml:space="preserve"><value>déclarer la créance avant le {0}</value></data>
+  <data name="Prevention.Days" xml:space="preserve"><value>{0} j</value></data>
+  <data name="Prevention.Action.Settings" xml:space="preserve"><value>Réactiver dans les seuils</value></data>
+  <data name="Prevention.Action.CashBalance" xml:space="preserve"><value>Saisir le solde bancaire</value></data>
+  <data name="Prevention.Action.Company" xml:space="preserve"><value>Compléter la fiche entreprise</value></data>
+  <data name="Prevention.Action.CheckCustomers" xml:space="preserve"><value>Vérifier les clients</value></data>
+  <data name="Prevention.Action.Customer" xml:space="preserve"><value>Ouvrir la fiche du client</value></data>
+  <data name="Prevention.Action.Weather" xml:space="preserve"><value>Voir la météo des paiements</value></data>
+  <data name="Prevention.Action.Tax" xml:space="preserve"><value>Voir les déclarations</value></data>
+  <data name="Prevention.Action.WhatIf" xml:space="preserve"><value>Essayer un scénario</value></data>
+  <data name="Prevention.Title" xml:space="preserve"><value>Radar de prévention</value></data>
+  <data name="Prevention.Subtitle" xml:space="preserve"><value>Les signaux qui annoncent des difficultés pour cette entreprise, calculés sur ses pièces. Réservé au cabinet.</value></data>
+  <data name="Prevention.AllDossiers" xml:space="preserve"><value>Tous les dossiers</value></data>
+  <data name="Prevention.ComputedOn" xml:space="preserve"><value>Calculé le {0}, sans IA.</value></data>
+  <data name="Prevention.Summary.None" xml:space="preserve"><value>Aucun signal allumé.</value></data>
+  <data name="Prevention.Summary.One" xml:space="preserve"><value>Un signal allumé : à suivre au prochain point avec le dirigeant.</value></data>
+  <data name="Prevention.Summary.Many" xml:space="preserve"><value>Signaux allumés : {0}. Un échange avec le dirigeant est conseillé.</value></data>
+  <data name="Prevention.Summary.NotEvaluated" xml:space="preserve"><value>Non évalués faute de données : {0}.</value></data>
+  <data name="Prevention.Guardrail" xml:space="preserve"><value>Ce niveau reste au cabinet : il n'est jamais montré au client ni à l'auditeur. Il aide à décider d'un appel, il ne décide rien.</value></data>
+  <data name="Prevention.Field.Level" xml:space="preserve"><value>Niveau</value></data>
+  <data name="Prevention.Field.Signals" xml:space="preserve"><value>Signaux allumés</value></data>
+  <data name="Prevention.Field.DueOn" xml:space="preserve"><value>Échéance</value></data>
+  <data name="Prevention.Weeks.Title" xml:space="preserve"><value>Semaine par semaine</value></data>
+  <data name="Prevention.Weeks.Week" xml:space="preserve"><value>Semaine du</value></data>
+  <data name="Prevention.Weeks.In" xml:space="preserve"><value>Entrées</value></data>
+  <data name="Prevention.Weeks.Out" xml:space="preserve"><value>Sorties</value></data>
+  <data name="Prevention.Weeks.Balance" xml:space="preserve"><value>Solde prévu</value></data>
+  <data name="Prevention.Months.Title" xml:space="preserve"><value>Mois observés</value></data>
+  <data name="Prevention.Months.Month" xml:space="preserve"><value>Mois</value></data>
+  <data name="Prevention.Months.Delay" xml:space="preserve"><value>Délai moyen de paiement</value></data>
+  <data name="Prevention.Months.Billed" xml:space="preserve"><value>Facturé</value></data>
+  <data name="Prevention.Months.Collected" xml:space="preserve"><value>Encaissé</value></data>
+  <data name="Prevention.Party.Since" xml:space="preserve"><value>publié le {0}</value></data>
+  <data name="Prevention.Settings" xml:space="preserve"><value>Seuils du dossier</value></data>
+  <data name="Prevention.Settings.Hint" xml:space="preserve"><value>Réglez le radar pour cette entreprise : un seuil plus bas allume un signal plus tôt.</value></data>
+  <data name="Prevention.Settings.Cash" xml:space="preserve"><value>Trésorerie</value></data>
+  <data name="Prevention.Settings.CashBalance" xml:space="preserve"><value>Solde bancaire (€)</value></data>
+  <data name="Prevention.Settings.CashBalanceOn" xml:space="preserve"><value>Solde au</value></data>
+  <data name="Prevention.Settings.Horizon" xml:space="preserve"><value>Horizon (semaines)</value></data>
+  <data name="Prevention.Settings.Cash.Hint" xml:space="preserve"><value>Le solde de tous les comptes de l'entreprise, relevé il y a moins de {0} jours. Sans lui, la trésorerie n'est pas prévue.</value></data>
+  <data name="Prevention.Settings.Thresholds" xml:space="preserve"><value>Seuils</value></data>
+  <data name="Prevention.Settings.PaymentDelayRise" xml:space="preserve"><value>Hausse du délai de paiement en trois mois (jours)</value></data>
+  <data name="Prevention.Settings.PeerGap" xml:space="preserve"><value>Retard sur la médiane du secteur (points)</value></data>
+  <data name="Prevention.Settings.TopCustomer" xml:space="preserve"><value>Part du premier client (%)</value></data>
+  <data name="Prevention.Settings.BilledCollected" xml:space="preserve"><value>Écart facturé, encaissé (% du facturé)</value></data>
+  <data name="Prevention.Settings.CallSignals" xml:space="preserve"><value>Signaux allumés pour « à appeler »</value></data>
+  <data name="Prevention.Settings.Followed" xml:space="preserve"><value>Signaux suivis</value></data>
+  <data name="Prevention.Settings.Save" xml:space="preserve"><value>Enregistrer les seuils</value></data>
+  <data name="Prevention.Settings.Defaults" xml:space="preserve"><value>Seuils proposés</value></data>
+  <data name="Prevention.Settings.Saved" xml:space="preserve"><value>Seuils enregistrés : le radar est recalculé.</value></data>
+  <data name="Prevention.Settings.ReadOnly" xml:space="preserve"><value>Seuls les responsables du dossier règlent ces seuils.</value></data>
+  <data name="Prevention.Settings.Summary" xml:space="preserve"><value>{0} · horizon {1} semaines · « à appeler » dès {2} signaux</value></data>
+  <data name="Prevention.Settings.Summary.Cash" xml:space="preserve"><value>solde {0} au {1}</value></data>
+  <data name="Prevention.Settings.Summary.NoCash" xml:space="preserve"><value>solde bancaire non saisi</value></data>
+  <data name="Prevention.Letter" xml:space="preserve"><value>Proposer un rendez-vous</value></data>
+  <data name="Prevention.Letter.Summary" xml:space="preserve"><value>Courrier type, relu avant l'envoi</value></data>
+  <data name="Prevention.Letter.Hint" xml:space="preserve"><value>Un courrier qui propose au dirigeant de faire le point sur les prochains mois. Il cite les sujets en termes neutres, sans niveau ni chiffre ; vous le relisez avant l'envoi.</value></data>
+  <data name="Prevention.Letter.Language" xml:space="preserve"><value>Langue du courrier</value></data>
+  <data name="Prevention.Letter.Language.French" xml:space="preserve"><value>Français</value></data>
+  <data name="Prevention.Letter.Language.English" xml:space="preserve"><value>Anglais</value></data>
+  <data name="Prevention.Letter.Prepare" xml:space="preserve"><value>Préparer le courrier</value></data>
+  <data name="Prevention.Letter.NoEmail" xml:space="preserve"><value>L'envoi d'e-mails n'est pas configuré : téléchargez le courrier en PDF ou copiez son texte.</value></data>
+  <data name="Prevention.Letter.To" xml:space="preserve"><value>E-mail du dirigeant</value></data>
+  <data name="Prevention.Letter.Subject" xml:space="preserve"><value>Objet</value></data>
+  <data name="Prevention.Letter.Body" xml:space="preserve"><value>Texte</value></data>
+  <data name="Prevention.Letter.Review" xml:space="preserve"><value>Relisez et adaptez le texte : il part tel quel.</value></data>
+  <data name="Prevention.Letter.Send" xml:space="preserve"><value>Envoyer par e-mail</value></data>
+  <data name="Prevention.Letter.Pdf" xml:space="preserve"><value>Télécharger en PDF</value></data>
+  <data name="Prevention.Letter.Copy" xml:space="preserve"><value>Copier le texte</value></data>
+  <data name="Prevention.Letter.Reset" xml:space="preserve"><value>Repartir du modèle</value></data>
+  <data name="Prevention.Letter.Sent" xml:space="preserve"><value>Courrier envoyé à {0}.</value></data>
+  <data name="Prevention.Letter.Downloaded" xml:space="preserve"><value>Courrier téléchargé en PDF.</value></data>
+  <data name="Prevention.Letter.Copied" xml:space="preserve"><value>Texte copié.</value></data>
+  <data name="Prevention.Letter.CopyFailed" xml:space="preserve"><value>Copie refusée par le navigateur : sélectionnez le texte à la main.</value></data>
+  <data name="Prevention.Rules" xml:space="preserve"><value>Comment le radar calcule</value></data>
+  <data name="Prevention.Rule.Level" xml:space="preserve"><value>Calme sans signal allumé ; à surveiller dès un signal ; à appeler dès qu'un signal est à traiter vite ou que {0} signaux sont allumés.</value></data>
+  <data name="Prevention.Rule.Deterministic" xml:space="preserve"><value>Des règles écrites et testées, sans IA : chaque signal donne sa raison et ses chiffres, recalculés à chaque ouverture et chaque nuit pour la vue cabinet.</value></data>
+  <data name="Prevention.Rule.Cabinet" xml:space="preserve"><value>Réservé au cabinet : ni le client, ni l'auditeur, ni les tableaux de bord du cabinet ne voient ce niveau. La vue cabinet n'en garde que le niveau et le nombre de signaux.</value></data>
+  <data name="Prevention.Rule.Decision" xml:space="preserve"><value>Aucune décision automatique : le radar propose un appel ou un rendez-vous, le collaborateur décide.</value></data>
+  <data name="Prevention.Rule.Peers" xml:space="preserve"><value>La comparaison au secteur se fait sur au moins 5 dossiers du même code APE, sans jamais montrer un autre dossier.</value></data>
+  <data name="Prevention.Rule.Registry" xml:space="preserve"><value>Les procédures collectives viennent de la vérification des tiers (annonces du BODACC) ; dans la démonstration, ce registre est simulé.</value></data>
+  <data name="Prevention.Radar.Title" xml:space="preserve"><value>Radar de prévention</value></data>
+  <data name="Prevention.Radar.Subtitle" xml:space="preserve"><value>Les entreprises dont les signaux annoncent des difficultés, les plus préoccupantes d'abord. Réservé au cabinet.</value></data>
+  <data name="Prevention.Radar.Cabinet" xml:space="preserve"><value>Vue cabinet</value></data>
+  <data name="Prevention.Radar.Kpis" xml:space="preserve"><value>Dossiers par niveau</value></data>
+  <data name="Prevention.Radar.Kpi.Call" xml:space="preserve"><value>un appel au dirigeant est conseillé</value></data>
+  <data name="Prevention.Radar.Kpi.Watch" xml:space="preserve"><value>à suivre au prochain point</value></data>
+  <data name="Prevention.Radar.Kpi.Calm" xml:space="preserve"><value>aucun signal allumé</value></data>
+  <data name="Prevention.Radar.List" xml:space="preserve"><value>Dossiers</value></data>
+  <data name="Prevention.Radar.Caption" xml:space="preserve"><value>Radar de prévention par dossier : niveau, signaux allumés, échéance la plus proche</value></data>
+  <data name="Prevention.Radar.AllLevels" xml:space="preserve"><value>Tous les niveaux</value></data>
+  <data name="Prevention.Radar.Open" xml:space="preserve"><value>Voir les signaux</value></data>
+  <data name="Prevention.Radar.Empty" xml:space="preserve"><value>Aucun radar à afficher</value></data>
+  <data name="Prevention.Radar.EmptyText" xml:space="preserve"><value>Le radar n'a pas encore été calculé, ou vous n'avez le droit de le lire dans aucun dossier. « Actualiser » le calcule maintenant.</value></data>
+  <data name="Prevention.Radar.Footnote" xml:space="preserve"><value>Calculé chaque nuit avec la vue cabinet, ou à « Actualiser ». Un dossier n'apparaît que si vous pouvez lire son radar.</value></data>
+  <data name="Prevention.Radar.Refreshed" xml:space="preserve"><value>Radar recalculé.</value></data>
+  <data name="Prevention.Card.Title" xml:space="preserve"><value>Signaux de prévention</value></data>
+  <data name="Prevention.Card.Open" xml:space="preserve"><value>Voir le radar</value></data>
+  <data name="Prevention.Card.DueOn" xml:space="preserve"><value>échéance la plus proche : {0}</value></data>
+  <data name="Prevention.Card.None" xml:space="preserve"><value>Aucun signal allumé.</value></data>
+  <data name="Error.Prevention.HorizonInvalid" xml:space="preserve"><value>L'horizon va de 2 à 26 semaines.</value></data>
+  <data name="Error.Prevention.CashBalanceInvalid" xml:space="preserve"><value>Solde bancaire hors des bornes permises.</value></data>
+  <data name="Error.Prevention.CashBalanceDateInvalid" xml:space="preserve"><value>Le solde demande une date, au plus tard aujourd'hui.</value></data>
+  <data name="Error.Prevention.ThresholdInvalid" xml:space="preserve"><value>Valeur hors des bornes permises.</value></data>
+  <data name="Error.Prevention.SignalUnknown" xml:space="preserve"><value>Signal inconnu.</value></data>
+  <data name="Error.Prevention.RecipientRequired" xml:space="preserve"><value>Saisissez l'e-mail du destinataire.</value></data>
+  <data name="Error.Prevention.SubjectRequired" xml:space="preserve"><value>Saisissez l'objet du courrier.</value></data>
+  <data name="Error.Prevention.SubjectTooLong" xml:space="preserve"><value>L'objet tient sur une ligne de 200 caractères au plus.</value></data>
+  <data name="Error.Prevention.BodyRequired" xml:space="preserve"><value>Saisissez le texte du courrier.</value></data>
+  <data name="Error.Prevention.BodyTooLong" xml:space="preserve"><value>Le texte dépasse 8 000 caractères.</value></data>
+</root>

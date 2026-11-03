@@ -1798,6 +1798,56 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.ToTable("QuoteSignatures", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Domain.Prevention.PreventionSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("BilledCollectedGapPercent")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CallSignalCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal?>("CashBalance")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("CashBalanceOn")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DisabledSignals")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PaymentDelayRiseDays")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PeerGapPoints")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TopCustomerSharePercent")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TreasuryHorizonWeeks")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PreventionSettings", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Domain.Pricing.PriceList", b =>
                 {
                     b.Property<Guid>("Id")

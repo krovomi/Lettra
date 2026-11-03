@@ -201,6 +201,15 @@ public static partial class LettraDemoData
         await new DemoGroupLoader(services, session)
             .LoadAsync([dossier, .. existing.Select(d => d.Id), .. reports.Select(r => r.DossierId)], today, cancellationToken).ConfigureAwait(false);
 
+        // Le solde bancaire du radar de prévention, une seule fois par dossier (démonstrations anciennes comprises) : le
+        // dossier principal a une trésorerie juste, les autres sont confortables.
+        foreach (Guid seeded in new[] { dossier }.Concat(existing.Select(d => d.Id)).Concat(reports.Select(r => r.DossierId)).Distinct())
+        {
+            session.CurrentDossierId = seeded;
+            clock.Set(TimeProvider.System.GetUtcNow());
+            await new DemoPreventionLoader(services).SetCashBalanceAsync(tight: seeded == dossier, cancellationToken).ConfigureAwait(false);
+        }
+
         // Créer un dossier sur le poste l'ouvre : on rouvre celui de l'utilisateur.
         if (registry is not null && active is Guid opened && registry.ActiveDossierId != opened)
         {

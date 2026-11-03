@@ -22,6 +22,11 @@
     <div class="lt-page-actions">
         @* Les mêmes dossiers en graphiques et en tendances : l'onglet « Mes dossiers » des tableaux de bord. *@
         <a class="lettra-button is-ghost" href="pilotage?vue=dossiers" id="cabinet-dashboards"><Icon Name="chart-column" Size="18" /> @L["Cabinet.Dashboards"]</a>
+        @* Le radar de prévention, quand l'utilisateur peut le lire dans au moins un dossier. *@
+        @if (Columns.Contains(DossierIndicatorKeys.Prevention))
+        {
+            <a class="lettra-button is-ghost" href="cabinet/prevention" id="cabinet-prevention"><Icon Name="radar" Size="18" /> @L["Prevention.Radar.Title"]</a>
+        }
         <button type="button" id="cabinet-refresh" class="lettra-button is-secondary" disabled="@_refreshing" @onclick="RefreshAsync">
             <Icon Name="refresh-cw" Size="18" /> @L[_refreshing ? "Cabinet.Refreshing" : "Cabinet.Refresh"]
         </button>
@@ -330,6 +335,7 @@ else
         DossierIndicatorKeys.BankUnreconciled => "hand-coins",
         DossierIndicatorKeys.SupplierIbanToVerify => "shield-alert",
         DossierIndicatorKeys.ClientDueDiligence => "user-check",
+        DossierIndicatorKeys.Prevention => "radar",
         DossierIndicatorKeys.SupplierAttestations => "file-check",
         DossierIndicatorKeys.ThirdPartiesToReview => "user-search",
         DossierIndicatorKeys.FeeReturn => "hand-coins",

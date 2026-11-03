@@ -1,0 +1,161 @@
+@page "/prevention"
+@implements IDisposable
+@inject IPreventionGateway Gateway
+@inject IStringLocalizer<SharedResource> L
+
+@* Radar de prévention du dossier ouvert, réservé au cabinet : le niveau d'attention (calme, à surveiller, à appeler),
+   chaque signal avec sa raison et ses chiffres, les seuils du dossier et le courrier type de proposition de rendez-vous.
+   Tout est calculé par des règles écrites en C#, sans IA ; le radar aide à décider d'un appel, il ne décide rien. *@
+
+<PageTitle>@L["Prevention.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Prevention.Title"]</h1>
+        <p class="lettra-muted">@L["Prevention.Subtitle"]</p>
+    </div>
+    <div class="lt-page-actions">
+        <a class="lettra-button is-ghost" href="cabinet/prevention" id="prevention-all"><Icon Name="radar" Size="18" /> @L["Prevention.AllDossiers"]</a>
+    </div>
+</div>
+
+<GeneralErrors Errors="_errors" />
+
+@if (_radar is not { } radar)
+{
+    @if (_errors.Count == 0)
+    {
+        <ExplorerSkeleton Rows="6" />
+    }
+}
+else
+{
+    <section class="lettra-card lt-prevention-head" id="prevention-head" data-tone="@radar.Level" aria-labelledby="prevention-level">
+        <span class="lt-prevention-level-icon" aria-hidden="true"><Icon Name="@LevelIcon(radar.Level)" Size="28" /></span>
+        <div>
+            <h2 id="prevention-level">@PreventionText.Level(L, radar.Level)</h2>
+            <p id="prevention-summary">@Summary(radar)</p>
+            <p class="lettra-hint">@string.Format(Culture, L["Prevention.ComputedOn"], PreventionText.LongDate(radar.Today, Culture))</p>
+        </div>
+    </section>
+    <p class="lt-prevention-note" id="prevention-guardrail"><Icon Name="shield-check" Size="16" /> @L["Prevention.Guardrail"]</p>
+
+    <ol class="lt-prevention-signals" id="prevention-signals">
+        @foreach (PreventionSignalResponse signal in Ordered(radar))
+        {
+            <PreventionSignalCard @key="signal.Signal" Signal="signal" OnAdjust="@(radar.CanAdjust ? EventCallback.Factory.Create(this, AdjustAsync) : default)" />
+        }
+    </ol>
+
+    <Collapsible @ref="_settingsBlock" Id="prevention-settings" Title="@L["Prevention.Settings"]" InitiallyOpen="@(radar.CanAdjust && radar.Settings.CashBalance is null)" Summary="@SettingsSummary(radar.Settings)">
+        @if (radar.CanAdjust)
+        {
+            <PreventionSettingsPanel @ref="_settingsPanel" Settings="radar.Settings" Today="radar.Today" OnSaved="ReloadAsync" />
+        }
+        else
+        {
+            <p class="lettra-muted" id="prevention-settings-readonly">@L["Prevention.Settings.ReadOnly"]</p>
+            <p>@SettingsSummary(radar.Settings)</p>
+        }
+    </Collapsible>
+
+    <Collapsible Id="prevention-letter-block" Title="@L["Prevention.Letter"]" InitiallyOpen="@(radar.Level == PreventionLevelDto.Call)" Summary="@L["Prevention.Letter.Summary"]">
+        <PreventionLetterPanel Today="radar.Today" />
+    </Collapsible>
+
+    <Collapsible Id="prevention-rules" Title="@L["Prevention.Rules"]" InitiallyOpen="false">
+        <ul>
+            <li>@string.Format(Culture, L["Prevention.Rule.Level"], radar.Settings.CallSignalCount)</li>
+            <li>@L["Prevention.Rule.Deterministic"]</li>
+            <li>@L["Prevention.Rule.Cabinet"]</li>
+            <li>@L["Prevention.Rule.Decision"]</li>
+            <li>@L["Prevention.Rule.Peers"]</li>
+            <li>@L["Prevention.Rule.Registry"]</li>
+        </ul>
+    </Collapsible>
+}
+
+@code {
+    private PreventionRadarResponse? _radar;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private Collapsible? _settingsBlock;
+    private PreventionSettingsPanel? _settingsPanel;
+    private readonly CancellationTokenSource _disposed = new();
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await LoadAsync();
+        }
+        catch (OperationCanceledException) when (_disposed.IsCancellationRequested)
+        {
+            // Écran quitté pendant le calcul.
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        OperationResult<PreventionRadarResponse> result = await Gateway.GetRadarAsync(_disposed.Token);
+        (_radar, _errors) = (result.Value ?? _radar, result.Errors);
+    }
+
+    /// <summary>Après un nouveau réglage : le radar est recalculé avec les seuils enregistrés.</summary>
+    private Task ReloadAsync(PreventionSettingsResponse settings) => LoadAsync();
+
+    private async Task AdjustAsync()
+    {
+        if (_settingsBlock is null)
+        {
+            return;
+        }
+
+        await _settingsBlock.ExpandAsync();
+        if (_settingsPanel is not null)
+        {
+            await _settingsPanel.FocusAsync();
+        }
+    }
+
+    /// <summary>Les signaux allumés d'abord (les plus graves en tête), puis les calmes, les non évalués, les désactivés.</summary>
+    private static IEnumerable<PreventionSignalResponse> Ordered(PreventionRadarResponse radar) =>
+        radar.Signals.OrderBy(s => s.State switch
+        {
+            PreventionSignalStateDto.Call => 0,
+            PreventionSignalStateDto.Watch => 1,
+            PreventionSignalStateDto.Clear => 2,
+            PreventionSignalStateDto.NotEvaluated => 3,
+            _ => 4,
+        });
+
+    private string Summary(PreventionRadarResponse radar)
+    {
+        int notEvaluated = radar.Signals.Count(s => s.State == PreventionSignalStateDto.NotEvaluated);
+        string active = radar.ActiveSignals switch
+        {
+            0 => L["Prevention.Summary.None"],
+            1 => L["Prevention.Summary.One"],
+            int n => string.Format(Culture, L["Prevention.Summary.Many"], n),
+        };
+        return notEvaluated == 0 ? active : active + " " + string.Format(Culture, L["Prevention.Summary.NotEvaluated"], notEvaluated);
+    }
+
+    private string SettingsSummary(PreventionSettingsResponse settings)
+    {
+        string cash = settings is { CashBalance: decimal balance, CashBalanceOn: DateOnly on }
+            ? string.Format(Culture, L["Prevention.Settings.Summary.Cash"], PreventionText.Money(balance), on.ToString("d", Culture))
+            : L["Prevention.Settings.Summary.NoCash"];
+        return string.Format(Culture, L["Prevention.Settings.Summary"], cash, settings.TreasuryHorizonWeeks, settings.CallSignalCount);
+    }
+
+    private static string LevelIcon(PreventionLevelDto level) => level switch
+    {
+        PreventionLevelDto.Call => "phone",
+        PreventionLevelDto.Watch => "triangle-alert",
+        _ => "circle-check",
+    };
+
+    public void Dispose() => _disposed.Cancel();
+}

@@ -40,10 +40,13 @@ internal sealed class CabinetOverviewHandlers(AccessibleDossiers accessible, IDo
             .ReadAsync([.. dossiers.Select(d => new DossierId(d.Id))], cancellationToken).ConfigureAwait(false);
         Dictionary<Guid, StoredDossierIndicators> byDossier = stored.ToDictionary(s => s.Dossier.Value);
 
+        // Le radar de prévention ne se montre qu'à qui peut le lire dans le dossier (ni l'auditeur, ni le client).
+        HashSet<Guid> prevention = [.. (await accessible.ListAsync(Permission.PreventionConsulter, cancellationToken).ConfigureAwait(false)).Select(d => d.Id)];
+
         DossierOverviewRow[] rows =
         [
             .. dossiers
-                .Select(d => CabinetOverviewMapper.ToRow(d, byDossier.GetValueOrDefault(d.Id)))
+                .Select(d => CabinetOverviewMapper.ToRow(d, byDossier.GetValueOrDefault(d.Id), prevention.Contains(d.Id)))
                 .OrderByDescending(r => r.Level)
                 .ThenBy(r => r.Name, StringComparer.CurrentCultureIgnoreCase),
         ];
@@ -67,11 +70,16 @@ internal sealed class CabinetOverviewHandlers(AccessibleDossiers accessible, IDo
 
 internal static class CabinetOverviewMapper
 {
-    public static DossierOverviewRow ToRow(DossierSummary dossier, StoredDossierIndicators? stored)
+    /// <summary>
+    /// Une ligne de la vue cabinet. Sans <paramref name="restrictedVisible"/>, les clés réservées
+    /// (<see cref="DossierIndicatorKeys.Restricted"/>) sont retirées et ne comptent pas dans l'urgence du dossier.
+    /// </summary>
+    public static DossierOverviewRow ToRow(DossierSummary dossier, StoredDossierIndicators? stored, bool restrictedVisible)
     {
         DossierIndicatorDto[] indicators =
         [
             .. (stored?.Indicators ?? [])
+                .Where(i => restrictedVisible || !DossierIndicatorKeys.Restricted.Contains(i.Key))
                 .Select(i => new DossierIndicatorDto(i.Key, i.Count, (IndicatorLevelDto)i.Level, i.DueOn))
                 .OrderBy(i => Order(i.Key))
                 .ThenBy(i => i.Key, StringComparer.Ordinal),

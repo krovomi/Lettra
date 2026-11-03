@@ -1,0 +1,154 @@
+@inject IStringLocalizer<SharedResource> L
+
+@* Un signal du radar : son état, la phrase qui dit pourquoi avec ses chiffres, l'effet chiffré et l'échéance s'il est
+   allumé, puis le détail (semaines de trésorerie, mois observés, clients concernés) et le lien pour agir. *@
+
+<li class="lettra-card lt-prevention-signal" data-tone="@PreventionText.Tone(Signal.State)" id="@($"prevention-signal-{Slug}")">
+    <div class="lt-prevention-signal-head">
+        <span class="lt-prevention-signal-icon" aria-hidden="true"><Icon Name="@PreventionText.Icon(Signal.Signal)" Size="20" /></span>
+        <h3>@PreventionText.Title(L, Signal.Signal)</h3>
+        <span class="lt-prevention-badge" data-tone="@PreventionText.Tone(Signal.State)">@PreventionText.State(L, Signal.State)</span>
+    </div>
+    <p class="lt-prevention-sentence">@PreventionText.Sentence(L, Signal, Culture)</p>
+
+    @if (Signal.IsActive && (Signal.Impact is not null || Signal.DueOn is not null))
+    {
+        <dl class="lt-prevention-facts">
+            @if (Signal.Impact is decimal impact)
+            {
+                <div><dt>@PreventionText.Impact(L, Signal.Signal)</dt><dd>@PreventionText.Money(impact)</dd></div>
+            }
+            @if (Signal.DueOn is DateOnly due)
+            {
+                <div><dt>@L["Prevention.Field.DueOn"]</dt><dd>@PreventionText.DueOn(L, Signal.Signal, due, Culture)</dd></div>
+            }
+        </dl>
+    }
+
+    @if (Signal.Weeks.Count > 0)
+    {
+        <details class="lt-prevention-details">
+            <summary>@L["Prevention.Weeks.Title"]</summary>
+            <div class="lt-list-scroll">
+                <table class="lettra-table lt-prevention-mini">
+                    <caption class="lettra-visually-hidden">@L["Prevention.Weeks.Title"]</caption>
+                    <thead><tr><th scope="col">@L["Prevention.Weeks.Week"]</th><th scope="col" class="lg-num">@L["Prevention.Weeks.In"]</th><th scope="col" class="lg-num">@L["Prevention.Weeks.Out"]</th><th scope="col" class="lg-num">@L["Prevention.Weeks.Balance"]</th></tr></thead>
+                    <tbody>
+                        @foreach (PreventionWeekDto week in Signal.Weeks)
+                        {
+                            <tr @key="week.Start" class="@(week.Balance < 0m ? "is-negative" : null)">
+                                <th scope="row">@week.Start.ToString("d", Culture)</th>
+                                <td class="lg-num">@PreventionText.Money(week.Inflows)</td>
+                                <td class="lg-num">@PreventionText.Money(week.Outflows)</td>
+                                <td class="lg-num">@PreventionText.Money(week.Balance)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </details>
+    }
+
+    @if (Signal.Months.Count > 0)
+    {
+        bool delays = Signal.Months.Any(m => m.DaysSalesOutstanding is not null);
+        <details class="lt-prevention-details">
+            <summary>@L["Prevention.Months.Title"]</summary>
+            <div class="lt-list-scroll">
+                <table class="lettra-table lt-prevention-mini">
+                    <caption class="lettra-visually-hidden">@L["Prevention.Months.Title"]</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">@L["Prevention.Months.Month"]</th>
+                            @if (delays)
+                            {
+                                <th scope="col" class="lg-num">@L["Prevention.Months.Delay"]</th>
+                            }
+                            else
+                            {
+                                <th scope="col" class="lg-num">@L["Prevention.Months.Billed"]</th>
+                                <th scope="col" class="lg-num">@L["Prevention.Months.Collected"]</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (PreventionMonthDto month in Signal.Months)
+                        {
+                            <tr @key="month.Month">
+                                <th scope="row">@month.Month.ToString("MMMM yyyy", Culture)</th>
+                                @if (delays)
+                                {
+                                    <td class="lg-num">@PreventionText.Days(L, month.DaysSalesOutstanding ?? 0m, Culture)</td>
+                                }
+                                else
+                                {
+                                    <td class="lg-num">@PreventionText.Money(month.Billed ?? 0m)</td>
+                                    <td class="lg-num">@PreventionText.Money(month.Collected ?? 0m)</td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </details>
+    }
+
+    @if (Signal.Parties.Count > 0 && Signal.Signal == PreventionSignalDto.CustomersInProceedings)
+    {
+        <ul class="lt-prevention-parties">
+            @foreach (PreventionPartyDto party in Signal.Parties)
+            {
+                <li @key="party.Id">
+                    <a href="@($"customers/{party.Id}")">@party.Name</a>
+                    <span>@PreventionText.Money(party.Amount)</span>
+                    @if (party.Since is DateOnly since)
+                    {
+                        <span class="lettra-hint">@string.Format(Culture, L["Prevention.Party.Since"], since.ToString("d", Culture))</span>
+                    }
+                </li>
+            }
+        </ul>
+    }
+
+    @if (Action is { } action)
+    {
+        @if (action.Href is null)
+        {
+            @if (OnAdjust.HasDelegate)
+            {
+                <button type="button" class="lettra-button is-secondary is-small lt-prevention-action" id="@($"prevention-action-{Slug}")" @onclick="OnAdjust">
+                    <Icon Name="sliders-horizontal" Size="16" /> @L[action.Label]
+                </button>
+            }
+        }
+        else
+        {
+            <a class="lettra-button is-secondary is-small lt-prevention-action" href="@action.Href" id="@($"prevention-action-{Slug}")"><Icon Name="arrow-right" Size="16" /> @L[action.Label]</a>
+        }
+    }
+</li>
+
+@code {
+    [Parameter, EditorRequired] public PreventionSignalResponse Signal { get; set; } = null!;
+
+    /// <summary>Ouvre les seuils du dossier (solde à saisir, signal réactivé) ; absent sans le droit de les régler.</summary>
+    [Parameter] public EventCallback OnAdjust { get; set; }
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private string Slug => Signal.Signal.ToString().ToLowerInvariant();
+
+    /// <summary>Où agir : la fiche du client, celle de l'entreprise, la vérification des tiers ou les seuils du dossier (sans adresse).</summary>
+    private (string? Href, string Label)? Action => (Signal.Signal, Signal.State, Signal.Unavailable) switch
+    {
+        (_, PreventionSignalStateDto.Disabled, _) => (null, "Prevention.Action.Settings"),
+        (_, _, PreventionUnavailableDto.NoCashBalance or PreventionUnavailableDto.CashBalanceOutdated) => (null, "Prevention.Action.CashBalance"),
+        (_, _, PreventionUnavailableDto.NoSector or PreventionUnavailableDto.NoCompanyProfile or PreventionUnavailableDto.NoVatRegime) => ("settings/company", "Prevention.Action.Company"),
+        (_, _, PreventionUnavailableDto.NoCustomerChecked) => ("third-party-checks", "Prevention.Action.CheckCustomers"),
+        (PreventionSignalDto.TopCustomer, PreventionSignalStateDto.Watch or PreventionSignalStateDto.Call, _) when Signal.Parties.Count > 0 => ($"customers/{Signal.Parties[0].Id}", "Prevention.Action.Customer"),
+        (PreventionSignalDto.PaymentDelay or PreventionSignalDto.BilledCollectedGap, PreventionSignalStateDto.Watch or PreventionSignalStateDto.Call, _) => ("payment-weather", "Prevention.Action.Weather"),
+        (PreventionSignalDto.VatBeyondCollections, PreventionSignalStateDto.Watch or PreventionSignalStateDto.Call, _) => ("tax", "Prevention.Action.Tax"),
+        (PreventionSignalDto.Treasury, PreventionSignalStateDto.Watch or PreventionSignalStateDto.Call, _) => ("what-if", "Prevention.Action.WhatIf"),
+        _ => null,
+    };
+}

@@ -19,7 +19,7 @@ namespace Lettra.Api.Endpoints;
 /// preuve d'authenticité des factures (signée par la clé du dossier, vérifiable hors ligne) et le dossier tel qu'il
 /// était à un instant passé (rejoué depuis le journal inaltérable) ; enfin « Pourquoi ce chiffre ? », la chaîne d'un
 /// chiffre de l'accueil jusqu'aux pièces qui le composent, et le simulateur « et si ? » qui essaie un scénario sur la
-/// trésorerie attendue.
+/// trésorerie attendue. Le radar de prévention des difficultés (réservé au cabinet) a ses routes sous <c>/prevention</c>.
 /// </summary>
 internal static class InsightEndpoints
 {
@@ -103,6 +103,7 @@ internal static class InsightEndpoints
             .Produces<WhatIfResponse>()
             .ProducesProblem(StatusCodes.Status400BadRequest);
 
+        insights.MapPrevention();
         return insights;
     }
 

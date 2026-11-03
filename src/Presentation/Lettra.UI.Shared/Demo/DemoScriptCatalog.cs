@@ -108,6 +108,7 @@ public static class DemoScriptCatalog
         new("cabinet", "layers",
         [
             new("overview", "#cabinet-list-title", Go("cabinet"), Wait("#cabinet-list-title")),
+            new("prevention", ".lt-prevention-kpis, #prevention-radar-empty", Go("cabinet/prevention"), Wait(".lt-prevention-kpis, #prevention-radar-empty")),
             new("pilotage", "#pilotage-dso", Go("pilotage"), Wait("#pilotage-dso")),
         ]),
         new("end", "circle-check",

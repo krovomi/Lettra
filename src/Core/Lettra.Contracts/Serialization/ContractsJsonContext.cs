@@ -242,6 +242,12 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(CallSheetResponse))]
 [JsonSerializable(typeof(IntercompanyResponse))]
 [JsonSerializable(typeof(EInvoicingReadinessResponse))]
+[JsonSerializable(typeof(PreventionRadarResponse))]
+[JsonSerializable(typeof(PreventionSummaryResponse))]
+[JsonSerializable(typeof(PreventionSettingsResponse))]
+[JsonSerializable(typeof(UpdatePreventionSettingsRequest))]
+[JsonSerializable(typeof(PreventionLetterResponse))]
+[JsonSerializable(typeof(SendPreventionLetterRequest))]
 [JsonSerializable(typeof(WhatIfRequest))]
 [JsonSerializable(typeof(WhatIfResponse))]
 public sealed partial class ContractsJsonContext : JsonSerializerContext;

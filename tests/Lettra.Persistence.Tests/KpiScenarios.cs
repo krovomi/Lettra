@@ -7,6 +7,7 @@ using Lettra.Application.Features.Billing;
 using Lettra.Application.Features.Customers;
 using Lettra.Application.Features.Kpi;
 using Lettra.Contracts.Billing;
+using Lettra.Contracts.Cabinet;
 using Lettra.Contracts.Catalog;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Common;
@@ -116,6 +117,11 @@ internal static class KpiScenarios
         DossierId first = (await services.GetRequiredService<IDossierProvisioner>().CreateAsync(CatalogHarness.Organisation, "Boulangerie \"Le Fournil\"", default)).Value;
         DossierId second = (await services.GetRequiredService<IDossierProvisioner>().CreateAsync(CatalogHarness.Organisation, "Atelier Martin", default)).Value;
         (await services.GetRequiredService<IDossierIndicatorRefresher>().RefreshAsync([first], default)).Refreshed.Should().Be(1);
+        // Le radar de prévention, rangé avec les autres compteurs, ne doit jamais sortir vers Prometheus.
+        IDossierIndicatorStore store = services.GetRequiredService<IDossierIndicatorStore>();
+        StoredDossierIndicators computed = (await store.ReadAsync([first], default)).Single();
+        await store.ReplaceAsync(
+            first, [.. computed.Indicators, new DossierIndicator(DossierIndicatorKeys.Prevention, 3, IndicatorLevel.Critical, new DateOnly(2026, 12, 1))], computed.ComputedAt, default);
 
         KpiSnapshotCollector collector = services.GetRequiredService<KpiSnapshotCollector>();
         KpiSnapshot snapshot = await collector.GetAsync(default);
@@ -127,6 +133,7 @@ internal static class KpiScenarios
         snapshot.Samples.Single(s => s.Metric == KpiMetrics.Dossiers && s.Label!.Value == "active").Value.Should().Be(2);
         snapshot.Samples.Single(s => s.Metric == KpiMetrics.Accounts && s.Label!.Value == "active").Value.Should().BeGreaterThanOrEqualTo(1);
         snapshot.Samples.Where(s => s.Metric == KpiMetrics.CabinetIndicatorCount).Should().NotBeEmpty().And.OnlyContain(s => s.Dossier == first);
+        snapshot.Samples.Should().NotContain(s => s.Label != null && s.Label.Value == DossierIndicatorKeys.Prevention);
         snapshot.Samples.Single(s => s.Metric == KpiMetrics.CabinetIndicatorAge).Dossier.Should().Be(first);
         snapshot.Samples.Single(s => s.Metric == KpiMetrics.CollectionFailures).Value.Should().Be(0);
 

@@ -81,6 +81,8 @@ public sealed class PilotageTests
             stores,
             new FakeTenantContext { Descriptor = new TenantDescriptor(Dossier, Cabinet, DatabaseProvider.Sqlite, "config:test") },
             new NamedDossiers(new DossierSummary(Dossier.Value, "Atelier Durand")),
+            new FakeUser(),
+            new FakePermissions(),
             new FixedClock(Now));
 
         DossierPilotageResponse response = (await handler.HandleAsync(new GetDossierPilotageQuery(Dossier), default)).Value;
@@ -91,6 +93,36 @@ public sealed class PilotageTests
         response.Dossier.Months.Should().HaveCount(12).And.Contain(m => m.Month == "2026-10" && m.InvoicesIssued == 1);
         response.ToDoComputedAt.Should().Be(Now.AddHours(-8));
         response.ToDo.Should().ContainSingle(i => i.Key == DossierIndicatorKeys.OverdueInvoices && i.Count == 2);
+    }
+
+    [Fact]
+    public async Task Le_radar_de_prevention_reste_hors_de_la_liste_sans_le_droit_de_le_lire()
+    {
+        InMemoryCabinetStores stores = new();
+        await stores.ReplaceAsync(
+            Dossier,
+            [
+                new DossierIndicator(DossierIndicatorKeys.OverdueInvoices, 2, IndicatorLevel.Warning),
+                new DossierIndicator(DossierIndicatorKeys.Prevention, 3, IndicatorLevel.Critical),
+            ],
+            Now.AddHours(-8),
+            default);
+        FakePermissions auditor = new();
+        auditor.Granted.Remove(Permission.PreventionConsulter);
+        DossierPilotageHandler Handler(FakePermissions permissions) => new(
+            new FixedBilling(new BillingKpiFacts([], [])),
+            stores,
+            new FakeTenantContext { Descriptor = new TenantDescriptor(Dossier, Cabinet, DatabaseProvider.Sqlite, "config:test") },
+            new NamedDossiers(new DossierSummary(Dossier.Value, "Atelier Durand")),
+            new FakeUser(),
+            permissions,
+            new FixedClock(Now));
+
+        DossierPilotageResponse hidden = (await Handler(auditor).HandleAsync(new GetDossierPilotageQuery(Dossier), default)).Value;
+        DossierPilotageResponse shown = (await Handler(new FakePermissions()).HandleAsync(new GetDossierPilotageQuery(Dossier), default)).Value;
+
+        hidden.ToDo.Select(i => i.Key).Should().Equal(DossierIndicatorKeys.OverdueInvoices);
+        shown.ToDo.Select(i => i.Key).Should().Contain(DossierIndicatorKeys.Prevention);
     }
 
     [Fact]
