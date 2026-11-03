@@ -323,7 +323,7 @@ public sealed class AvantLeRetardServiceTests
             (PaymentPreventionSignals.MissedInstallmentKind, late.InvoiceId.Value, 600m, new DateOnly(2026, 10, 15), "/reminders"),
             (PaymentPreventionSignals.PlanToReviewKind, plan.Id, 1200m, new DateOnly(2026, 10, 15), "/reminders"));
         signals[0].Facts.Should().Equal(new Dictionary<string, string> { ["numero"] = "F-10", ["client"] = "Durand SARL", ["echeance"] = "2026-10-22" });
-        signals[1].Facts["echeance"].Should().Be("1");
+        signals[1].Facts["rang"].Should().Be("1");
         signals[2].Facts.Should().Equal(new Dictionary<string, string> { ["numero"] = "F-20", ["client"] = "Nom de F-20", ["echeances"] = "2" });
 
         plan.Acknowledge(Guid.Empty, Now);

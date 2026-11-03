@@ -89,7 +89,7 @@ public static class PaymentPreventionSignals
         {
             ["numero"] = invoice.Number,
             ["client"] = customer,
-            ["echeance"] = installment.ToString(CultureInfo.InvariantCulture),
+            ["rang"] = installment.ToString(CultureInfo.InvariantCulture),
         },
         RemindersLink);
 
