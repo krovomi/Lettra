@@ -132,7 +132,20 @@ public sealed class PreventionRulesTests
         tresorerie.State.Should().Be(PreventionSignalStateDto.Clear);
         tresorerie.Weeks[0].Outflows.Should().Be(400m, "la facture fournisseur échue non payée sort la semaine en cours");
         tresorerie.Weeks[1].Should().Be(new PreventionWeekDto(Lundi.AddDays(7), 4500m, 5000m, 100m));
+        tresorerie.Figures[1].Number.Should().Be(100m, "le point le plus bas, solde de départ compris");
         tresorerie.Impact.Should().BeNull();
+    }
+
+    [Fact]
+    public void Des_encaissements_des_la_premiere_semaine_laissent_le_solde_de_depart_comme_point_bas()
+    {
+        PreventionInput entree = Entree(Seuils(solde: 1000m), factures: [Due(Aujourdhui, 2000m)]);
+
+        PreventionSignalResponse tresorerie = Signal(entree, PreventionSignalDto.Treasury);
+
+        tresorerie.State.Should().Be(PreventionSignalStateDto.Clear);
+        tresorerie.Weeks.Should().OnlyContain(w => w.Balance == 3000m);
+        tresorerie.Figures[1].Number.Should().Be(1000m);
     }
 
     [Fact]

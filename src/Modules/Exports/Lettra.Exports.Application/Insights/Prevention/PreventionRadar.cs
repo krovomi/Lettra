@@ -204,7 +204,9 @@ public static class PreventionRules
         PreventionFigureDto[] figures =
         [
             Date("week", shown.Start < today ? today : shown.Start),
-            Amount("lowestBalance", lowest.Balance),
+            // Au plus bas sur la période, aujourd'hui compris : des encaissements dès la première semaine ne font pas
+            // passer un solde de départ modeste pour un point bas plus haut que lui.
+            Amount("lowestBalance", Math.Min(start, lowest.Balance)),
             Amount("cashBalance", start),
             Date("cashBalanceOn", on),
             Count("horizonWeeks", horizon),

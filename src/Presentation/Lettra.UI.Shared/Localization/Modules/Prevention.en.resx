@@ -27,7 +27,7 @@
   <data name="Prevention.Signal.Treasury.Active" xml:space="preserve"><value>The forecast balance goes below zero in the week of {0} and falls to {1} (starting balance {2} on {3}, over {4} weeks).</value></data>
   <data name="Prevention.Signal.Treasury.Clear" xml:space="preserve"><value>The forecast balance stays positive over {4} weeks; lowest point {1} (starting balance {2} on {3}).</value></data>
   <data name="Prevention.Signal.PaymentDelay.Active" xml:space="preserve"><value>Customers have been paying more slowly for three months, from {0} to {1} (+{2}, threshold {3}). About {4} more cash is held by customers.</value></data>
-  <data name="Prevention.Signal.PaymentDelay.Clear" xml:space="preserve"><value>Customers' average payment time went from {0} to {1} over three months (rise threshold {3}).</value></data>
+  <data name="Prevention.Signal.PaymentDelay.Clear" xml:space="preserve"><value>Customers' average payment time went from {0} to {1} over three months. The signal turns on when it gets longer every month, by at least {3} in all.</value></data>
   <data name="Prevention.Signal.PeerGap.Active" xml:space="preserve"><value>Revenue changed by {0} over a year, against {1} for the median of {3} dossiers in the same sector: a {2}-point gap (threshold {4}).</value></data>
   <data name="Prevention.Signal.PeerGap.Clear" xml:space="preserve"><value>Revenue changed by {0} over a year, against {1} for the median of {3} dossiers in the same sector (gap threshold {4} points).</value></data>
   <data name="Prevention.Signal.VatBeyondCollections.Active" xml:space="preserve"><value>{0}, period {4} to {5}: {2} to pay on {1}, while payments expected by then only amount to {3}.</value></data>
@@ -37,7 +37,7 @@
   <data name="Prevention.Signal.CustomersInProceedings.Active" xml:space="preserve"><value>Customers in insolvency proceedings according to the BODACC: {0}, with {1} still owed ({2} of {3} customers checked).</value></data>
   <data name="Prevention.Signal.CustomersInProceedings.Clear" xml:space="preserve"><value>No customer in insolvency proceedings according to the BODACC ({2} of {3} customers checked).</value></data>
   <data name="Prevention.Signal.BilledCollectedGap.Active" xml:space="preserve"><value>Over the last {4} months: {0} billed, {1} collected, a {2} gap ({3} of billing, threshold {5}); the gap grows every month.</value></data>
-  <data name="Prevention.Signal.BilledCollectedGap.Clear" xml:space="preserve"><value>Over the last {4} months: {0} billed, {1} collected ({3} gap, threshold {5}).</value></data>
+  <data name="Prevention.Signal.BilledCollectedGap.Clear" xml:space="preserve"><value>Over the last {4} months: {0} billed, {1} collected ({3} gap). The signal turns on when the gap grows every month and exceeds {5} of billing.</value></data>
   <data name="Prevention.Disabled" xml:space="preserve"><value>This signal is turned off in the dossier's thresholds.</value></data>
   <data name="Prevention.Unavailable.None" xml:space="preserve"><value>This signal could not be evaluated.</value></data>
   <data name="Prevention.Unavailable.NoCashBalance" xml:space="preserve"><value>Enter today's bank balance in the dossier's thresholds to forecast cash over the coming weeks.</value></data>

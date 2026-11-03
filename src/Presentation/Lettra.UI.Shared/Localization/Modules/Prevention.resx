@@ -27,7 +27,7 @@
   <data name="Prevention.Signal.Treasury.Active" xml:space="preserve"><value>Le solde prévu passe sous zéro la semaine du {0} et descend jusqu'à {1} (solde de départ {2} au {3}, sur {4} semaines).</value></data>
   <data name="Prevention.Signal.Treasury.Clear" xml:space="preserve"><value>Le solde prévu reste positif sur {4} semaines ; au plus bas {1} (solde de départ {2} au {3}).</value></data>
   <data name="Prevention.Signal.PaymentDelay.Active" xml:space="preserve"><value>Le délai moyen de paiement des clients s'allonge depuis trois mois, de {0} à {1} (+{2}, seuil {3}). Environ {4} de trésorerie en plus restent chez les clients.</value></data>
-  <data name="Prevention.Signal.PaymentDelay.Clear" xml:space="preserve"><value>Le délai moyen de paiement des clients est passé de {0} à {1} en trois mois (seuil de hausse {3}).</value></data>
+  <data name="Prevention.Signal.PaymentDelay.Clear" xml:space="preserve"><value>Le délai moyen de paiement des clients est passé de {0} à {1} en trois mois. Le signal s'allume s'il s'allonge chaque mois, d'au moins {3} en tout.</value></data>
   <data name="Prevention.Signal.PeerGap.Active" xml:space="preserve"><value>Le chiffre d'affaires évolue de {0} sur un an, contre {1} pour la médiane de {3} dossiers du même secteur : {2} points d'écart (seuil {4}).</value></data>
   <data name="Prevention.Signal.PeerGap.Clear" xml:space="preserve"><value>Le chiffre d'affaires évolue de {0} sur un an, contre {1} pour la médiane de {3} dossiers du même secteur (seuil d'écart {4} points).</value></data>
   <data name="Prevention.Signal.VatBeyondCollections.Active" xml:space="preserve"><value>{0}, période du {4} au {5} : {2} à payer le {1}, alors que les encaissements attendus d'ici là ne font que {3}.</value></data>
@@ -37,7 +37,7 @@
   <data name="Prevention.Signal.CustomersInProceedings.Active" xml:space="preserve"><value>Clients en procédure collective selon le BODACC : {0}, pour {1} encore dû ({2} clients vérifiés sur {3}).</value></data>
   <data name="Prevention.Signal.CustomersInProceedings.Clear" xml:space="preserve"><value>Aucun client en procédure collective selon le BODACC ({2} clients vérifiés sur {3}).</value></data>
   <data name="Prevention.Signal.BilledCollectedGap.Active" xml:space="preserve"><value>Sur les {4} derniers mois : {0} facturés, {1} encaissés, soit {2} d'écart ({3} du facturé, seuil {5}) ; l'écart grandit chaque mois.</value></data>
-  <data name="Prevention.Signal.BilledCollectedGap.Clear" xml:space="preserve"><value>Sur les {4} derniers mois : {0} facturés, {1} encaissés ({3} d'écart, seuil {5}).</value></data>
+  <data name="Prevention.Signal.BilledCollectedGap.Clear" xml:space="preserve"><value>Sur les {4} derniers mois : {0} facturés, {1} encaissés ({3} d'écart). Le signal s'allume si l'écart grandit chaque mois et dépasse {5} du facturé.</value></data>
   <data name="Prevention.Disabled" xml:space="preserve"><value>Ce signal est désactivé dans les seuils du dossier.</value></data>
   <data name="Prevention.Unavailable.None" xml:space="preserve"><value>Ce signal n'a pas pu être évalué.</value></data>
   <data name="Prevention.Unavailable.NoCashBalance" xml:space="preserve"><value>Saisissez le solde bancaire du jour dans les seuils du dossier pour prévoir la trésorerie des prochaines semaines.</value></data>
