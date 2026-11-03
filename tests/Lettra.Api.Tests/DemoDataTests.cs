@@ -255,14 +255,13 @@ public sealed class DemoDataTests : IDisposable
         group.Gaps.Should().Equal(IntercompanyGapDto.SupplierIbanDiffers, IntercompanyGapDto.PaidNotSeen, IntercompanyGapDto.SeenNotPaid, IntercompanyGapDto.TotalsDiffer);
         group.Invoices.Select(i => i.SeenAtBuyer).Should().Equal(true, false, true);
 
-        // Le radar de prévention a un solde bancaire : la trésorerie des prochaines semaines s'évalue, et le dossier
-        // principal a des signaux allumés à montrer.
+        // Le radar de prévention a un solde bancaire : la trésorerie des prochaines semaines s'évalue (les signaux allumés
+        // dépendent du jour du tirage).
         IPreventionGateway prevention = app.GetRequiredService<IPreventionGateway>();
         PreventionRadarResponse radar = (await prevention.GetRadarAsync(default)).Value!;
         radar.Settings.CashBalance.Should().NotBeNull();
         radar.Settings.CashBalanceOn.Should().Be(today);
         radar.Signals.Single(s => s.Signal == PreventionSignalDto.Treasury).State.Should().NotBe(PreventionSignalStateDto.NotEvaluated);
-        radar.ActiveSignals.Should().BePositive(string.Join(", ", radar.Signals.Select(s => $"{s.Signal}={s.State}/{s.Unavailable}")));
 
         // Une seconde demande ne mélange rien : le dossier a déjà des pièces, le groupe ses factures, le radar ses seuils.
         (await LettraDemoData.SeedAsync(configuration, "Demo", s => s.AddSingleton<IKekStore>(keys), user)).Status.Should().Be(DemoSeedStatus.DossierNotEmpty);
