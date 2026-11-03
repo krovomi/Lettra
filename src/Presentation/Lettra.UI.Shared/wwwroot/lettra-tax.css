@@ -112,3 +112,13 @@
     .lt-delays-scroll { display: none; }
     .lt-delays-cards { display: grid; }
 }
+
+/* ---------- Onglets des déclarations ---------- */
+/* Neuf onglets : sans icônes jusqu'aux très grands écrans, et sur deux lignes s'il le faut, pour que « Réglages fiscaux »
+   reste visible sans défilement caché (le téléphone garde la rangée qui défile, comme les autres onglets). */
+@media (min-width: 768px) {
+    .lt-subnav.lt-tax-tabs { flex-wrap: wrap; overflow-x: visible; }
+}
+@media (min-width: 768px) and (max-width: 1599px) {
+    .lt-tax-tabs .lt-subnav-link svg { display: none; }
+}

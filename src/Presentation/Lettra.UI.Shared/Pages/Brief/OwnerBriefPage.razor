@@ -2,6 +2,7 @@
 @using Lettra.Contracts.Banking
 @using Lettra.Contracts.Tax
 @using Lettra.UI.Shared.Components.Explorer
+@using Lettra.UI.Shared.Components.Tax
 @using Lettra.UI.Shared.Brief
 @inject IBillingDashboardGateway Dashboard
 @inject IBankingGateway Banking
@@ -10,7 +11,8 @@
 @inject TimeProvider Clock
 @inject IStringLocalizer<SharedResource> L
 @* « En bref » : l'écran du dirigeant sur son téléphone. Chiffre d'affaires, encaissements, TVA à payer et mouvements
-   bancaires du mois, puis ce qui mérite un coup d'œil : les gros encaissements récents et les factures en retard.
+   bancaires du mois, les seuils qui approchent (franchis ou prévus dans les trois mois), puis ce qui mérite un coup
+   d'œil : les gros encaissements récents et les factures en retard.
    Chaque carte reprend un chiffre que Lettra calcule déjà pour un autre écran ; une carte dont la lecture est
    refusée (droits) ne s'affiche pas, les autres restent. *@
 
@@ -90,6 +92,8 @@ else
             </a>
         }
     </section>
+
+    <ThresholdsCard Id="brief-thresholds" />
 
     <section class="lt-panel" aria-labelledby="brief-watch-title" id="brief-watch">
         <div class="lt-panel-head">

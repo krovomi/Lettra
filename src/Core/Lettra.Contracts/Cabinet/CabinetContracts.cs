@@ -65,9 +65,15 @@ public static class DossierIndicatorKeys
     /// </summary>
     public const string ThirdPartiesToReview = "tiers.a-examiner";
 
+    /// <summary>
+    /// Seuils réglementaires franchis ou dont le franchissement est prévu dans les trois mois (franchise ou régime de TVA,
+    /// catégorie, attestation de vigilance, DAS 2) ; échéance = le franchissement le plus proche. Ni nom ni montant.
+    /// </summary>
+    public const string Thresholds = "seuils.proches";
+
     /// <summary>Ordre des colonnes du tableau (les clés inconnues suivent, par ordre alphabétique).</summary>
     public static IReadOnlyList<string> Known { get; } =
-        [OverdueInvoices, PlatformRejections, EInvoicingReadiness, VatToDeclare, FeeReturn, BankUnreconciled, SupplierIbanToVerify, SupplierAttestations, ThirdPartiesToReview, ClientDueDiligence, OpenAlerts, ReviewPending];
+        [OverdueInvoices, PlatformRejections, EInvoicingReadiness, VatToDeclare, FeeReturn, Thresholds, BankUnreconciled, SupplierIbanToVerify, SupplierAttestations, ThirdPartiesToReview, ClientDueDiligence, OpenAlerts, ReviewPending];
 }
 
 /// <summary>Urgence d'un indicateur : décide de la couleur et de l'ordre des dossiers.</summary>
