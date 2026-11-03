@@ -5,6 +5,7 @@ using Lettra.Contracts.Billing;
 using Lettra.Contracts.Portal;
 using Lettra.Domain.SharedKernel;
 using Lettra.Exports.Application.Portal;
+using Lettra.Exports.Application.Reminders;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -139,6 +140,50 @@ public sealed class CustomerPortalPagesTests
         }
     }
 
+    private static readonly IReadOnlyList<PortalPlanOption> PlanOptions =
+    [
+        new(2, [new(1, new DateOnly(2026, 11, 10), 60m, false), new(2, new DateOnly(2026, 12, 10), 60m, false)]),
+        new(3, [new(1, new DateOnly(2026, 11, 5), 40m, false), new(2, new DateOnly(2026, 11, 25), 40m, false), new(3, new DateOnly(2026, 12, 15), 40m, false)]),
+    ];
+
+    [Fact]
+    public void Une_facture_qu_on_peut_etaler_propose_l_echeancier_avec_engagement()
+    {
+        PortalInvoice invoice = new(InvoiceId, "FAC-000007", InvoiceKindDto.Invoice, new DateOnly(2026, 9, 1), new DateOnly(2026, 10, 1), 120m, 120m, true, null, PlanOptions);
+
+        string html = Render(View(invoices: [invoice]));
+
+        html.Should().Contain($"action=\"/espace-client/jeton/factures/{InvoiceId}/echeancier\"").And.Contain($"id=\"plan-form-{InvoiceId}\"")
+            .And.Contain("Payer en plusieurs fois").And.Contain("En 2 fois").And.Contain("En 3 fois").And.Contain("Échéance 3 : 40,00").And.Contain("15 décembre 2026")
+            .And.Contain("name=\"installments\" value=\"2\"").And.Contain("name=\"consent\" value=\"true\" required")
+            .And.Contain("Cabinet &lt;script&gt;alert(1)&lt;/script&gt; vous permet d&#x27;étaler cette facture");
+        html.Should().Contain($"id=\"plan-submit-{InvoiceId}\"");
+    }
+
+    [Fact]
+    public void Un_echeancier_en_cours_montre_ses_echeances_et_qui_l_a_demande()
+    {
+        PortalPaymentPlan plan = new("Jeanne <Durand>", Expires, [new(1, new DateOnly(2026, 11, 10), 60m, true), new(2, new DateOnly(2026, 12, 10), 60m, false)]);
+        PortalInvoice invoice = new(InvoiceId, "FAC-000007", InvoiceKindDto.Invoice, new DateOnly(2026, 9, 1), new DateOnly(2026, 10, 1), 120m, 60m, true, plan, []);
+
+        string fr = Render(View(invoices: [invoice]));
+        string en = Render(View(invoices: [invoice]), "en-US");
+
+        fr.Should().Contain($"id=\"plan-{InvoiceId}\"").And.Contain("Votre échéancier").And.Contain("Réglée").And.Contain("Jeanne &lt;Durand&gt;")
+            .And.NotContain("/echeancier\"");
+        en.Should().Contain("Your payment plan").And.Contain("Instalment 2: €60.00, on 10 December 2026").And.Contain("Paid");
+    }
+
+    [Fact]
+    public void L_echeancier_enregistre_est_annonce_et_ses_refus_ont_leur_texte()
+    {
+        string html = Render(View(), banner: new PortalBanner("Banner.PlanCreated", "FAC-000007", false));
+
+        html.Should().Contain("Échéancier enregistré pour la facture FAC-000007");
+        string[] refusals = ["Disabled", "NotProfessional", "NothingDue", "Disputed", "AlreadyPlanned", "BelowMinimum", "NoRoom", "InstallmentsInvalid", "RequesterInvalid", "ConsentRequired"];
+        PortalTexts.Keys.Should().Contain(refusals.Select(c => "Error.PaymentPlans." + c));
+    }
+
     [Fact]
     public void La_page_est_en_anglais_pour_un_client_anglophone()
     {
@@ -259,6 +304,16 @@ public sealed class CustomerPortalPagesTests
         using ServiceProvider provider = Services(new() { ["Lettra:CustomerPortal:ServiceAccountId"] = account, ["Lettra:CustomerPortal:PermitsPerMinute"] = permits });
 
         FluentActions.Invoking(() => provider.GetRequiredService<IOptions<CustomerPortalOptions>>().Value).Should().Throw<OptionsValidationException>();
+    }
+
+    [Fact]
+    public void L_hote_de_l_api_dessine_le_qr_code_de_virement_joint_aux_rappels()
+    {
+        using ServiceProvider provider = Services([]);
+        IPaymentQrCodeImage qr = provider.GetRequiredService<IPaymentQrCodeImage>();
+
+        qr.Png("Conseil Lettra", "FR7630006000011234567890189", "AGRIFRPP", 120m, "FAC-000007")!.Take(4).Should().Equal(0x89, (byte)'P', (byte)'N', (byte)'G');
+        qr.Png("Conseil Lettra", null, null, 120m, "FAC-000007").Should().BeNull("sans IBAN, pas de virement prérempli");
     }
 
     [Fact]

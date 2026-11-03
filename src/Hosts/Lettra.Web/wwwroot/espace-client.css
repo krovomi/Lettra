@@ -147,6 +147,19 @@ tfoot th { text-align: right; }
 .ec-signed { margin: 0.75rem 0 0; padding: 0.6rem 0.75rem; border-radius: 0.5rem; background: var(--ec-success-bg); color: var(--ec-success); }
 .ec-signed small { color: inherit; opacity: 0.85; overflow-wrap: anywhere; }
 
+/* Échéancier : celui en cours (liste), ou le choix parmi ceux que l'entreprise permet. */
+.ec-plan { margin-top: 0.75rem; }
+.ec-plan h4 { margin: 0.75rem 0 0.25rem; font-size: 1rem; }
+.ec-plan-lines { margin: 0 0 0.5rem; padding-left: 1.25rem; }
+.ec-plan-lines li { margin: 0.25rem 0; }
+.ec-plan form { margin-top: 0.75rem; }
+.ec-plan-options { display: grid; gap: 0.5rem; margin: 0; padding: 0; border: 0; }
+.ec-plan-options legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.ec-plan-option { display: flex; gap: 0.6rem; align-items: flex-start; padding: 0.6rem 0.75rem; border: 1px solid var(--ec-border); border-radius: 0.5rem; cursor: pointer; }
+.ec-plan-option:has(input:checked) { border-color: var(--ec-accent); }
+.ec-plan-option input { width: 1.25rem; height: 1.25rem; margin-top: 0.15rem; flex: none; }
+.ec-button-secondary { background: var(--ec-surface); color: var(--ec-accent); border: 2px solid var(--ec-accent); }
+
 .ec-banner { margin: 1.25rem 0 0; padding: 0.75rem 1rem; border-radius: var(--ec-radius); font-weight: 600; }
 .ec-banner.is-success { background: var(--ec-success-bg); color: var(--ec-success); }
 .ec-banner.is-error { background: var(--ec-error-bg); color: var(--ec-error); }

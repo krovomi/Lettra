@@ -12,7 +12,7 @@ public static partial class ErrorCodes
         public const string SendFailed = "Email.SendFailed";
     }
 
-    public static class Reminders
+    public static partial class Reminders
     {
         /// <summary>Les délais des niveaux de relance doivent croître (J+3 &lt; J+15 &lt; J+30 &lt; J+45), entre 1 et 365 jours.</summary>
         public const string DelaysInvalid = "Reminders.DelaysInvalid";

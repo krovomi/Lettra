@@ -90,6 +90,7 @@ internal sealed class OpenPortalHandler(
     IQuoteRepository quotes,
     IQuoteSignatureRepository signatures,
     IOnlinePaymentProvider payments,
+    PortalPaymentPlans plans,
     IUnitOfWork unitOfWork,
     TimeProvider clock) : ICommandHandler<OpenPortalCommand, Result<PortalView>>
 {
@@ -113,13 +114,15 @@ internal sealed class OpenPortalHandler(
         DateOnly today = LegalCalendar.Today(clock);
         IReadOnlyList<ReceivableDocument> documents = await receivables.ListAsync(link.CustomerId, cancellationToken).ConfigureAwait(false);
         List<ReceivableDocument> billed = [.. documents.Where(d => d.Kind != InvoiceKind.CreditNote)];
+        IReadOnlyDictionary<InvoiceId, PortalPlanOffer> offers = await plans.OffersAsync(customer, billed, today, cancellationToken).ConfigureAwait(false);
         List<PortalInvoice> invoices =
         [
             .. billed.Where(d => d.Outstanding > 0m).OrderBy(d => d.DueDate ?? d.IssueDate).ThenBy(d => d.Number, StringComparer.Ordinal)
                 .Concat(billed.Where(d => d.Outstanding <= 0m).OrderByDescending(d => d.IssueDate).ThenByDescending(d => d.Number, StringComparer.Ordinal)
                     .Take(OpenPortalCommand.MaxPaidInvoices))
                 .Select(d => new PortalInvoice(d.InvoiceId.Value, d.Number, (InvoiceKindDto)(int)d.Kind, d.IssueDate, d.DueDate, d.TotalInclTax,
-                    Math.Max(0m, d.Outstanding), d.Outstanding > 0m && d.DueDate is DateOnly due && due < today)),
+                    Math.Max(0m, d.Outstanding), d.Outstanding > 0m && d.DueDate is DateOnly due && due < today,
+                    offers.GetValueOrDefault(d.InvoiceId)?.Plan, offers.GetValueOrDefault(d.InvoiceId)?.Options)),
         ];
 
         List<PortalQuote> portalQuotes = await QuotesAsync(link, today, cancellationToken).ConfigureAwait(false);

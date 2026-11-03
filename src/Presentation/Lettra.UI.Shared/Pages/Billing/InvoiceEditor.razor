@@ -204,6 +204,11 @@ else
                 </section>
             }
 
+            @if (_invoice is { Status: not InvoiceStatusDto.Draft, Kind: not InvoiceKindDto.CreditNote, Number: not null } planned)
+            {
+                <PaymentPlanPanel InvoiceId="planned.Id" />
+            }
+
             @if (_invoice is { Status: not InvoiceStatusDto.Draft, Number: not null } transmitted)
             {
                 <PlatformTransmissionPanel Invoice="transmitted" OnInvoiceChanged="ReloadAsync" />
