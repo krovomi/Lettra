@@ -1,0 +1,280 @@
+@page "/order-book"
+@using Lettra.UI.Shared.Components.Explorer
+@inject IQuoteFollowUpsGateway FollowUps
+@inject IStringLocalizer<SharedResource> L
+@* Carnet de commandes pondéré : le chiffre d'affaires à venir des devis en attente, chaque devis pesant la moyenne de
+   trois taux d'acceptation passés (son client, sa tranche de montant, son ancienneté). Statistique simple et
+   explicable, sans IA ; chaque devis montre le détail de son calcul. *@
+
+<PageTitle>@L["OrderBook.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["OrderBook.Title"]</h1>
+        <p class="lettra-muted">@string.Format(Culture, L["OrderBook.Subtitle"], _book?.HistoryMonths ?? 24)</p>
+    </div>
+</div>
+
+<QuotesTabs Current="QuotesTab.OrderBook" DueCount="_dueCount" />
+
+<GeneralErrors Errors="_errors" />
+
+@if (_book is not { } book)
+{
+    <ListSkeleton Columns="6" />
+}
+else
+{
+    <div class="lt-banking-stats" id="order-book-stats">
+        <div class="lt-banking-stat is-amount"><span>@L["OrderBook.Stat.Open"]</span><strong id="order-book-open">@ExplorerText.Money(book.OpenExclTax)</strong></div>
+        <div class="lt-banking-stat is-proposed is-amount"><span>@L["OrderBook.Stat.Weighted"]</span><strong id="order-book-weighted">@ExplorerText.Money(book.WeightedExclTax)</strong></div>
+        <div class="lt-banking-stat is-amount"><span>@L["OrderBook.Stat.WeightedInclTax"]</span><strong id="order-book-weighted-incl">@ExplorerText.Money(book.WeightedInclTax)</strong></div>
+        <div class="lt-banking-stat">
+            <span>@L["OrderBook.Stat.Rate"]</span>
+            <strong id="order-book-rate">@Percent(book.GlobalRate)</strong>
+            <small class="lettra-muted">@string.Format(Culture, L["OrderBook.Rate.Detail"], book.Accepted, book.Closed)</small>
+        </div>
+    </div>
+
+    @if (!book.HasEnoughHistory)
+    {
+        <p class="la-callout lt-order-book-callout" id="order-book-not-enough">
+            <Icon Name="info" Size="16" /> @string.Format(Culture, L["OrderBook.NotEnough"], book.MinimumSample, book.HistoryFrom.ToString("d", Culture))
+        </p>
+    }
+
+    <Collapsible Id="order-book-rule" Title="@L["OrderBook.Rule.Title"]" InitiallyOpen="false" Summary="@L["OrderBook.Rule.Summary"]">
+        <p>@string.Format(Culture, L["OrderBook.Rule.Text"], book.MinimumSample, book.HistoryFrom.ToString("d", Culture))</p>
+        <p class="lettra-muted">@L["OrderBook.Rule.Closed"]</p>
+        <div class="lt-order-book-rates">
+            <div>
+                <h3>@L["OrderBook.ByAmount"]</h3>
+                <table class="lettra-table" id="order-book-by-amount">
+                    <thead><tr><th scope="col">@L["OrderBook.Band"]</th><th scope="col" class="lg-num">@L["OrderBook.Accepted"]</th><th scope="col" class="lg-num">@L["OrderBook.Rate"]</th></tr></thead>
+                    <tbody>
+                        @foreach (AmountBandRateDto band in book.ByAmount)
+                        {
+                            <tr><td>@L[$"QuoteAmountBand.{band.Band}"]</td><td class="lg-num">@string.Format(Culture, L["OrderBook.OutOf"], band.Accepted, band.Closed)</td><td class="lg-num">@RateText(band.Rate)</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <h3>@L["OrderBook.ByAge"]</h3>
+                <table class="lettra-table" id="order-book-by-age">
+                    <thead><tr><th scope="col">@L["OrderBook.Band"]</th><th scope="col" class="lg-num">@L["OrderBook.Accepted"]</th><th scope="col" class="lg-num">@L["OrderBook.Rate"]</th></tr></thead>
+                    <tbody>
+                        @foreach (AgeBandRateDto band in book.ByAge)
+                        {
+                            <tr><td>@L[$"QuoteAgeBand.{band.Band}"]</td><td class="lg-num">@string.Format(Culture, L["OrderBook.OutOf"], band.Accepted, band.Closed)</td><td class="lg-num">@RateText(band.Rate)</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <p class="lettra-hint" id="order-book-notice"><Icon Name="shield-check" Size="16" /> @L["OrderBook.Notice"]</p>
+    </Collapsible>
+
+    <section class="lettra-card" aria-labelledby="order-book-list-title">
+        <h2 id="order-book-list-title">@L["OrderBook.List"]</h2>
+        @if (book.Quotes.Count == 0)
+        {
+            <EmptyState Id="order-book-empty" IconName="file-text" Title="@L["OrderBook.Empty"]" Text="@L["OrderBook.Empty.Text"]" />
+        }
+        else
+        {
+            <ListFilterBar Id="order-book-filters" ActiveCount="ActiveFilters" OnReset="ResetFilters">
+                <ChildContent>
+                    <div class="lt-filter">
+                        <label for="order-book-search">@L["OrderBook.Search"]</label>
+                        <input id="order-book-search" type="search" @bind="_search" @bind:event="oninput" @bind:after="() => _page = 1" autocomplete="off" />
+                    </div>
+                </ChildContent>
+                <More>
+                    <div class="lt-filter">
+                        <label for="order-book-filter-amount">@L["OrderBook.Filter.Amount"]</label>
+                        <select id="order-book-filter-amount" @bind="_amount" @bind:after="() => _page = 1">
+                            <option value="">@L["OrderBook.All"]</option>
+                            @foreach (QuoteAmountBandDto band in Enum.GetValues<QuoteAmountBandDto>())
+                            {
+                                <option value="@band">@L[$"QuoteAmountBand.{band}"]</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="lt-filter">
+                        <label for="order-book-filter-age">@L["OrderBook.Filter.Age"]</label>
+                        <select id="order-book-filter-age" @bind="_age" @bind:after="() => _page = 1">
+                            <option value="">@L["OrderBook.All"]</option>
+                            @foreach (QuoteAgeBandDto band in Enum.GetValues<QuoteAgeBandDto>())
+                            {
+                                <option value="@band">@L[$"QuoteAgeBand.{band}"]</option>
+                            }
+                        </select>
+                    </div>
+                    <SortSelect Id="order-book-sort" Options="_sortOptions" State="_sort" OnSort="() => _page = 1" />
+                </More>
+            </ListFilterBar>
+            <p class="lettra-muted" id="order-book-count">@string.Format(Culture, L["OrderBook.Count"], Filtered.Count, book.Quotes.Count)</p>
+            @if (Filtered.Count == 0)
+            {
+                <p class="lettra-muted" id="order-book-nomatch">@L["OrderBook.NoMatch"]</p>
+            }
+            else
+            {
+                <div class="lt-list-scroll">
+                    <table class="lettra-table lettra-documents lt-cards" id="order-book-table">
+                        <thead>
+                            <tr>
+                                <SortHeader Option="Column(BookSort.Number)" State="_sort" OnSort="() => _page = 1" Id="order-book-sort-number" />
+                                <SortHeader Option="Column(BookSort.Customer)" State="_sort" OnSort="() => _page = 1" Id="order-book-sort-customer" />
+                                <SortHeader Option="Column(BookSort.Age)" State="_sort" OnSort="() => _page = 1" Id="order-book-sort-age" />
+                                <SortHeader Option="Column(BookSort.Amount)" State="_sort" OnSort="() => _page = 1" Id="order-book-sort-amount" Class="lg-num" />
+                                <SortHeader Option="Column(BookSort.Probability)" State="_sort" OnSort="() => _page = 1" Id="order-book-sort-probability" Class="lg-num" />
+                                <SortHeader Option="Column(BookSort.Weighted)" State="_sort" OnSort="() => _page = 1" Id="order-book-sort-weighted" Class="lg-num" />
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (OrderBookQuoteResponse quote in Filtered.Skip((_page - 1) * PageSize).Take(PageSize))
+                            {
+                                <tr @key="quote.QuoteId">
+                                    <td><a href="@($"quotes/{quote.QuoteId}")">@quote.Number</a></td>
+                                    <td data-label="@L["Billing.Column.Customer"]">@quote.CustomerName</td>
+                                    <td data-label="@L["OrderBook.Age"]">
+                                        <span class="lt-reminders-cell">
+                                            <span>@string.Format(Culture, L["OrderBook.AgeDays"], quote.AgeDays)</span>
+                                            <small class="lettra-muted">@string.Format(Culture, L["OrderBook.ValidUntil"], quote.ValidUntil.ToString("d", Culture))</small>
+                                        </span>
+                                    </td>
+                                    <td data-label="@L["Totals.ExclTax"]" class="lg-num">@ExplorerText.Money(quote.TotalExclTax)</td>
+                                    <td data-label="@L["OrderBook.Probability"]" class="lg-num">
+                                        <details class="lt-order-book-why" id="@($"order-book-why-{quote.Number}")">
+                                            <summary>@Percent(quote.Probability) <span class="lettra-visually-hidden">@L["OrderBook.Why"]</span><Icon Name="circle-help" Size="14" /></summary>
+                                            <ul>
+                                                <li>@Why("OrderBook.Why.Customer", quote.CustomerName, quote.Customer)</li>
+                                                <li>@Why("OrderBook.Why.Amount", L[$"QuoteAmountBand.{quote.AmountBand}"], quote.Amount)</li>
+                                                <li>@Why("OrderBook.Why.Age", L[$"QuoteAgeBand.{quote.AgeBand}"], quote.Age)</li>
+                                            </ul>
+                                            <p>@string.Format(Culture, L["OrderBook.Why.Result"], Percent(quote.Probability), ExplorerText.Money(quote.WeightedExclTax), ExplorerText.Money(quote.TotalExclTax))</p>
+                                        </details>
+                                    </td>
+                                    <td data-label="@L["OrderBook.Weighted"]" class="lg-num"><strong>@ExplorerText.Money(quote.WeightedExclTax)</strong></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                @if (Filtered.Count > PageSize)
+                {
+                    <nav class="lt-pager" aria-label="@L["Accounting.Pages"]" id="order-book-pager">
+                        <button type="button" class="lettra-button is-secondary" disabled="@(_page <= 1)" @onclick="() => _page--">@L["Accounting.Previous"]</button>
+                        <span>@string.Format(Culture, L["Accounting.PageOf"], _page, PageCount)</span>
+                        <button type="button" class="lettra-button is-secondary" disabled="@(_page >= PageCount)" @onclick="() => _page++">@L["Accounting.Next"]</button>
+                    </nav>
+                }
+            }
+        }
+    </section>
+}
+
+@code {
+    private const int PageSize = 25;
+
+    private OrderBookResponse? _book;
+    private int? _dueCount;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private string? _search;
+    private QuoteAmountBandDto? _amount;
+    private QuoteAgeBandDto? _age;
+    private readonly SortState<BookSort> _sort = new(BookSort.Weighted, SortDirectionDto.Descending);
+    private IReadOnlyList<SortOption<BookSort>> _sortOptions = [];
+    private int _page = 1;
+
+    private static readonly Dictionary<BookSort, Func<OrderBookQuoteResponse, object?>> Keys = new()
+    {
+        [BookSort.Weighted] = q => q.WeightedExclTax,
+        [BookSort.Probability] = q => q.Probability,
+        [BookSort.Amount] = q => q.TotalExclTax,
+        [BookSort.Age] = q => q.AgeDays,
+        [BookSort.Number] = q => q.Number,
+        [BookSort.Customer] = q => q.CustomerName,
+    };
+
+    /// <summary>Tris de la liste, chargée en entier (les devis en attente d'un dossier).</summary>
+    private enum BookSort
+    {
+        Weighted,
+        Probability,
+        Amount,
+        Age,
+        Number,
+        Customer,
+    }
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private int ActiveFilters => (string.IsNullOrWhiteSpace(_search) ? 0 : 1) + (_amount is null ? 0 : 1) + (_age is null ? 0 : 1);
+
+    private int PageCount => Math.Max(1, (int)Math.Ceiling(Filtered.Count / (double)PageSize));
+
+    private IReadOnlyList<OrderBookQuoteResponse> Filtered
+    {
+        get
+        {
+            IEnumerable<OrderBookQuoteResponse> rows = _book?.Quotes ?? [];
+            if (_amount is { } amount)
+            {
+                rows = rows.Where(q => q.AmountBand == amount);
+            }
+
+            if (_age is { } age)
+            {
+                rows = rows.Where(q => q.AgeBand == age);
+            }
+
+            if (!string.IsNullOrWhiteSpace(_search))
+            {
+                string search = _search.Trim();
+                CompareInfo compare = CultureInfo.InvariantCulture.CompareInfo;
+                const CompareOptions options = CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace;
+                rows = rows.Where(q => compare.IndexOf(q.Number, search, options) >= 0 || compare.IndexOf(q.CustomerName, search, options) >= 0);
+            }
+
+            return ListSorting.Sort(rows, _sort, Keys);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _sortOptions =
+        [
+            new(BookSort.Weighted, L["OrderBook.Weighted"], SortDirectionDto.Descending),
+            new(BookSort.Probability, L["OrderBook.Probability"], SortDirectionDto.Descending),
+            new(BookSort.Amount, L["Totals.ExclTax"], SortDirectionDto.Descending),
+            new(BookSort.Age, L["OrderBook.Age"]),
+            new(BookSort.Number, L["Billing.Column.Number"]),
+            new(BookSort.Customer, L["Billing.Column.Customer"]),
+        ];
+        Task<OperationResult<OrderBookResponse>> book = FollowUps.GetOrderBookAsync(CancellationToken.None);
+        Task<OperationResult<QuoteFollowUpOverviewResponse>> overview = FollowUps.GetOverviewAsync(CancellationToken.None);
+        await Task.WhenAll(book, overview);
+        OperationResult<OrderBookResponse> read = await book;
+        _errors = read.Errors;
+        _book = read.Value ?? Empty();
+        _dueCount = (await overview).Value?.DueCount;
+    }
+
+    /// <summary>Un carnet vide quand la lecture est refusée (droits, réseau) : l'erreur s'affiche au-dessus.</summary>
+    private static OrderBookResponse Empty() => new(default, default, 24, 3, 0, 0, 0.5m, false, 0m, 0m, 0m, [], [], []);
+
+    private SortOption<BookSort> Column(BookSort column) => _sortOptions.First(o => o.Column == column);
+
+    private void ResetFilters() => (_search, _amount, _age, _page) = (null, null, null, 1);
+
+    private static string Percent(decimal rate) => rate.ToString("P0", Culture);
+
+    private string RateText(decimal? rate) => rate is { } value ? Percent(value) : L["OrderBook.NoRate"];
+
+    private string Why(string key, string criterion, CriterionRateDto rate) =>
+        string.Format(Culture, L[key], criterion, Percent(rate.Rate), rate.Accepted, rate.Closed)
+        + (rate.UsesGlobalRate ? " " + L["OrderBook.Why.Global"] : string.Empty);
+}

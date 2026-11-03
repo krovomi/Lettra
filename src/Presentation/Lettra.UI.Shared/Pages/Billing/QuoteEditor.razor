@@ -10,6 +10,7 @@
 @inject Optional<EntryPreferences> OptionalEntry
 @inject Optional<ICustomersGateway> OptionalCustomers
 @inject Optional<IPriceListsGateway> OptionalPrices
+@inject Optional<IQuoteFollowUpsGateway> OptionalFollowUps
 @inject TimeProvider Clock
 @inject IDocumentPdfRenderer Pdf
 @inject IFileDownloader Files
@@ -87,6 +88,11 @@ else
                     <RememberDefault Value="@_request.Notes" Field="RememberedField.QuoteNotes" Disabled="IsReadOnly" DescribedBy="notes" />
                 </div>
             </Collapsible>
+
+            @if (OptionalFollowUps.Value is not null && _quote is { Status: not QuoteStatusDto.Draft } sent)
+            {
+                <QuoteFollowUpHistory @key="sent.Id" QuoteId="sent.Id" Id="quote-follow-up-history" />
+            }
         </div>
 
         <aside class="lettra-document-side">
@@ -103,6 +109,12 @@ else
                 {
                     <button type="button" id="accept" class="lettra-button" @onclick="() => SetOutcomeAsync(true)">@L["Quote.Command.Accept"]</button>
                     <button type="button" class="lettra-button is-secondary" @onclick="() => SetOutcomeAsync(false)">@L["Quote.Command.Refuse"]</button>
+                    @if (OptionalFollowUps.Value is not null && !_quote.IsExpired)
+                    {
+                        <a id="quote-follow-up" class="lettra-button is-secondary" href="@($"quote-follow-ups?quote={_quote.Id}")">
+                            <Icon Name="send" Size="18" /> @L["Quote.Command.FollowUp"]
+                        </a>
+                    }
                 }
                 @if (_quote?.Status == QuoteStatusDto.Accepted)
                 {

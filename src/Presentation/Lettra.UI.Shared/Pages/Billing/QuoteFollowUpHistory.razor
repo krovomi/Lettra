@@ -1,0 +1,200 @@
+@using Lettra.UI.Shared.Components.Explorer
+@inject IQuoteFollowUpsGateway FollowUps
+@inject IStringLocalizer<SharedResource> L
+@* L'historique des relances de devis : recherche, filtres, tri et pages servis par le dossier. Sur la fiche d'un devis,
+   il se limite à ce devis et ne s'affiche que si le devis a déjà été relancé. *@
+
+@if (QuoteId is not null && _history is not { TotalCount: > 0 })
+{
+    return;
+}
+
+<section class="lettra-card" aria-labelledby="@($"{Id}-title")" id="@Id">
+    <h2 id="@($"{Id}-title")">@L["QuoteFollowUps.History"]</h2>
+    @if (QuoteId is null)
+    {
+        <ListFilterBar Id="@($"{Id}-filters")" ActiveCount="ActiveFilters" OnReset="ResetFiltersAsync">
+            <ChildContent>
+                <div class="lt-filter">
+                    <label for="@($"{Id}-search")">@L["QuoteFollowUps.History.Search"]</label>
+                    <input id="@($"{Id}-search")" type="search" @bind="_search" @bind:after="ReloadFirstPageAsync" autocomplete="off" />
+                </div>
+            </ChildContent>
+            <More>
+                <div class="lt-filter">
+                    <label for="@($"{Id}-channel")">@L["Reminders.History.Channel"]</label>
+                    <select id="@($"{Id}-channel")" @bind="_channel" @bind:after="ReloadFirstPageAsync">
+                        <option value="">@L["Reminders.History.All"]</option>
+                        @foreach (QuoteFollowUpChannelDto channel in Enum.GetValues<QuoteFollowUpChannelDto>())
+                        {
+                            <option value="@channel">@L[$"QuoteFollowUpChannel.{channel}"]</option>
+                        }
+                    </select>
+                </div>
+                <div class="lt-filter">
+                    <label for="@($"{Id}-outcome")">@L["Reminders.History.Outcome"]</label>
+                    <select id="@($"{Id}-outcome")" @bind="_outcome" @bind:after="ReloadFirstPageAsync">
+                        <option value="">@L["Reminders.History.All"]</option>
+                        @foreach (QuoteFollowUpOutcomeDto outcome in Enum.GetValues<QuoteFollowUpOutcomeDto>())
+                        {
+                            <option value="@outcome">@L[$"QuoteFollowUpOutcome.{outcome}"]</option>
+                        }
+                    </select>
+                </div>
+                <DateRangeFilter Id="@($"{Id}-dates")" Label="@L["Reminders.History.Period"]" @bind-From="_from" @bind-To="_to" OnChange="ReloadFirstPageAsync" />
+                <SortSelect Id="@($"{Id}-sort")" Options="_sortOptions" State="_sort" OnSort="ReloadFirstPageAsync" />
+            </More>
+        </ListFilterBar>
+    }
+
+    @if (_history is null)
+    {
+        <ListSkeleton Columns="6" />
+    }
+    else if (_history.Items.Count == 0)
+    {
+        <EmptyState Id="@($"{Id}-empty")" IconName="send" Title="@L["QuoteFollowUps.History.Empty"]" Text="@L["QuoteFollowUps.History.Empty.Text"]" />
+    }
+    else
+    {
+        <div class="lt-list-scroll">
+            <table class="lettra-table lettra-documents lt-cards" id="@($"{Id}-table")">
+                <thead>
+                    <tr>
+                        <SortHeader Option="Column(QuoteFollowUpSortDto.Date)" State="_sort" OnSort="ReloadFirstPageAsync" Id="@($"{Id}-sort-date")" />
+                        @if (QuoteId is null)
+                        {
+                            <SortHeader Option="Column(QuoteFollowUpSortDto.Quote)" State="_sort" OnSort="ReloadFirstPageAsync" Id="@($"{Id}-sort-quote")" />
+                            <SortHeader Option="Column(QuoteFollowUpSortDto.Customer)" State="_sort" OnSort="ReloadFirstPageAsync" Id="@($"{Id}-sort-customer")" />
+                            <SortHeader Option="Column(QuoteFollowUpSortDto.Amount)" State="_sort" OnSort="ReloadFirstPageAsync" Id="@($"{Id}-sort-amount")" Class="lg-num" />
+                        }
+                        <th scope="col">@L["Reminders.History.Channel"]</th>
+                        <th scope="col">@L["Reminders.History.Outcome"]</th>
+                        <th scope="col">@L["Reminders.Preview.Subject"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (QuoteFollowUpResponse followUp in _history.Items)
+                    {
+                        <tr @key="followUp.Id">
+                            <td>@followUp.OccurredAt.ToLocalTime().ToString("g", Culture)</td>
+                            @if (QuoteId is null)
+                            {
+                                <td data-label="@L["Billing.Column.Number"]"><a href="@($"quotes/{followUp.QuoteId}")">@followUp.QuoteNumber</a></td>
+                                <td data-label="@L["Billing.Column.Customer"]">@followUp.CustomerName</td>
+                                <td data-label="@L["Totals.ExclTax"]" class="lg-num">@ExplorerText.Money(followUp.AmountExclTax)</td>
+                            }
+                            <td data-label="@L["Reminders.History.Channel"]">@L[$"QuoteFollowUpChannel.{followUp.Channel}"]</td>
+                            <td data-label="@L["Reminders.History.Outcome"]">
+                                <span class="lettra-status @(followUp.Outcome == QuoteFollowUpOutcomeDto.Sent ? "is-issued" : "is-refused")">@L[$"QuoteFollowUpOutcome.{followUp.Outcome}"]</span>
+                                @if (followUp.ErrorCode is { } code)
+                                {
+                                    <small class="lettra-muted">@L.Error(code)</small>
+                                }
+                            </td>
+                            <td data-label="@L["Reminders.Preview.Subject"]">
+                                <details class="lt-reminders-sent">
+                                    <summary>@followUp.Subject</summary>
+                                    @if (followUp.Recipient is { } to)
+                                    {
+                                        <p class="lettra-muted">@string.Format(Culture, L["Reminders.History.SentTo"], to)</p>
+                                    }
+                                    <pre class="lt-reminders-body">@followUp.Body</pre>
+                                </details>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (_history.TotalCount > _history.PageSize)
+        {
+            <nav class="lt-pager" aria-label="@L["Accounting.Pages"]" id="@($"{Id}-pager")">
+                <button type="button" class="lettra-button is-secondary" disabled="@(_page <= 1)" @onclick="() => GoToAsync(_page - 1)">@L["Accounting.Previous"]</button>
+                <span>@string.Format(Culture, L["Accounting.PageOf"], _page, PageCount)</span>
+                <button type="button" class="lettra-button is-secondary" disabled="@(_page >= PageCount)" @onclick="() => GoToAsync(_page + 1)">@L["Accounting.Next"]</button>
+            </nav>
+        }
+    }
+</section>
+
+@code {
+    private const int PageSize = 25;
+
+    private PagedResponse<QuoteFollowUpResponse>? _history;
+    private string? _search;
+    private QuoteFollowUpChannelDto? _channel;
+    private QuoteFollowUpOutcomeDto? _outcome;
+    private DateOnly? _from;
+    private DateOnly? _to;
+    private readonly SortState<QuoteFollowUpSortDto> _sort = new(QuoteFollowUpSortDto.Date, SortDirectionDto.Descending);
+    private IReadOnlyList<SortOption<QuoteFollowUpSortDto>> _sortOptions = [];
+    private int _page = 1;
+
+    /// <summary>Le devis dont on montre les relances ; absent, l'historique de tout le dossier, avec ses filtres.</summary>
+    [Parameter]
+    public Guid? QuoteId { get; set; }
+
+    /// <summary>Le préfixe des identifiants de la section, pour qu'elle tienne sur deux écrans.</summary>
+    [Parameter]
+    public string Id { get; set; } = "quote-follow-ups-history";
+
+    /// <summary>Les erreurs de la dernière lecture (vide si elle a réussi), que la page affiche avec les siennes.</summary>
+    [Parameter]
+    public EventCallback<IReadOnlyList<ErrorDetail>> OnErrors { get; set; }
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private int ActiveFilters =>
+        new object?[] { string.IsNullOrWhiteSpace(_search) ? null : _search, _channel, _outcome, _from, _to }.Count(f => f is not null);
+
+    private int PageCount => _history is null ? 1 : Math.Max(1, (int)Math.Ceiling(_history.TotalCount / (double)_history.PageSize));
+
+    protected override async Task OnInitializedAsync()
+    {
+        _sortOptions =
+        [
+            new(QuoteFollowUpSortDto.Date, L["Billing.Column.Date"], SortDirectionDto.Descending),
+            new(QuoteFollowUpSortDto.Quote, L["Billing.Column.Number"]),
+            new(QuoteFollowUpSortDto.Customer, L["Billing.Column.Customer"]),
+            new(QuoteFollowUpSortDto.Amount, L["Totals.ExclTax"], SortDirectionDto.Descending),
+        ];
+        await LoadAsync();
+    }
+
+    /// <summary>Relit la première page, après une relance envoyée ou notée par la page.</summary>
+    public async Task ReloadAsync()
+    {
+        await ReloadFirstPageAsync();
+        StateHasChanged();
+    }
+
+    private async Task LoadAsync()
+    {
+        OperationResult<PagedResponse<QuoteFollowUpResponse>> result = await FollowUps.ListHistoryAsync(
+            new QuoteFollowUpHistoryQuery(QuoteId, _channel, _outcome, _from, _to, _search, _sort.Column, _sort.Descending, _page, PageSize),
+            CancellationToken.None);
+        _history = result.Value ?? new PagedResponse<QuoteFollowUpResponse>([], 1, PageSize, 0);
+        await OnErrors.InvokeAsync(result.Errors);
+    }
+
+    private Task ReloadFirstPageAsync()
+    {
+        _page = 1;
+        return LoadAsync();
+    }
+
+    private SortOption<QuoteFollowUpSortDto> Column(QuoteFollowUpSortDto column) => _sortOptions.First(o => o.Column == column);
+
+    private Task ResetFiltersAsync()
+    {
+        (_search, _channel, _outcome, _from, _to) = (null, null, null, null, null);
+        return ReloadFirstPageAsync();
+    }
+
+    private async Task GoToAsync(int page)
+    {
+        _page = page;
+        await LoadAsync();
+    }
+}

@@ -40,6 +40,8 @@ public static class NavItems
         new("intercompany", "Nav.Intercompany", "arrow-left-right", null),
         new("demo", "Nav.Demo", "circle-play", null),
         new("quotes", "Nav.Quotes", "file-text", "Nav.Group.Sales", InTabBar: true),
+        new("quote-follow-ups", "Nav.QuoteFollowUps", "send", "Nav.Group.Sales"),
+        new("order-book", "Nav.OrderBook", "trending-up", "Nav.Group.Sales"),
         new("invoices", "Nav.Invoices", "receipt", "Nav.Group.Sales", InTabBar: true),
         new("credit-notes", "Nav.CreditNotes", "file-minus", "Nav.Group.Sales"),
         new("recurring-invoices", "Nav.RecurringInvoices", "repeat", "Nav.Group.Sales"),

@@ -5,13 +5,14 @@
 @inject IStringLocalizer<SharedResource> L
 @inject Optional<IDemoDataGateway> OptionalDemo
 @inject Optional<IReceivablesGateway> OptionalReceivables
+@inject Optional<IQuoteFollowUpsGateway> OptionalFollowUps
 @inject ToastService Toasts
 @inject TimeProvider Clock
 
 @* Tableau de bord d'accueil (vague 5, lanes B et E) : chiffre d'affaires HT du mois et des six derniers mois, devis en
    attente de réponse (calculés par le serveur), brouillons à finaliser, pièces récentes (lues dans les listes), factures
-   en retard et transmissions à la plateforme (point des créances lu côté serveur). Un dossier vide propose d'y charger les données
-   de démonstration quand l'hôte le permet. *@
+   en retard et transmissions à la plateforme (point des créances lu côté serveur), carnet de commandes pondéré et devis à
+   relancer. Un dossier vide propose d'y charger les données de démonstration quand l'hôte le permet. *@
 
 <PageTitle>@L["Home.Title"] · Lettra</PageTitle>
 
@@ -149,6 +150,28 @@ else
             </table>
         </section>
 
+        @if (_orderBook is { } book)
+        {
+            <section class="lt-panel" aria-labelledby="home-order-book-title" id="home-order-book">
+                <div class="lt-panel-head">
+                    <h2 id="home-order-book-title">@L["Home.OrderBook.Title"]</h2>
+                    <a href="order-book" id="home-order-book-link">@L["Home.OrderBook.Details"]</a>
+                </div>
+                <dl class="lt-stats">
+                    <div class="lt-stat is-good" data-stat="weighted"><dt><Icon Name="trending-up" Size="16" /> @L["Home.OrderBook.Weighted"]</dt><dd id="home-order-book-weighted">@Money(book.WeightedExclTax)</dd></div>
+                    <div class="lt-stat" data-stat="open"><dt><Icon Name="clock" Size="16" /> @L["Home.OrderBook.Open"]</dt><dd>@Money(book.OpenExclTax)</dd></div>
+                    @if (_dueFollowUps is { } toFollowUp)
+                    {
+                        <div class="lt-stat @(toFollowUp > 0 ? "is-alert" : null)" data-stat="to-follow-up">
+                            <dt><Icon Name="send" Size="16" /> @L["Home.OrderBook.ToFollowUp"]</dt>
+                            <dd><a href="quote-follow-ups" id="home-quote-follow-ups">@toFollowUp.ToString("N0", Culture)</a></dd>
+                        </div>
+                    }
+                </dl>
+                <p class="lettra-hint" id="home-order-book-reason">@OrderBookReason(book)</p>
+            </section>
+        }
+
         @if (_receivables is { } receivables)
         {
             <section class="lt-panel" aria-labelledby="home-overdue-title" id="home-overdue">
@@ -260,6 +283,8 @@ else
     private int _drafts;
     private IReadOnlyList<ErrorDetail> _errors = [];
     private ReceivablesSummaryResponse? _receivables;
+    private OrderBookResponse? _orderBook;
+    private int? _dueFollowUps;
     private bool _demoAvailable;
     private bool _demoBusy;
 
@@ -284,6 +309,9 @@ else
         // Le point des créances est facultatif : sans lui (hôte ancien, refus), la carte des factures du mois reste.
         Task<OperationResult<ReceivablesSummaryResponse>>? receivables =
             OptionalReceivables.Value?.GetSummaryAsync(CancellationToken.None);
+        // Le carnet de commandes et les devis à relancer sont facultatifs de la même façon.
+        Task<OperationResult<OrderBookResponse>>? orderBook = OptionalFollowUps.Value?.GetOrderBookAsync(CancellationToken.None);
+        Task<OperationResult<QuoteFollowUpOverviewResponse>>? followUps = OptionalFollowUps.Value?.GetOverviewAsync(CancellationToken.None);
         Task<OperationResult<BillingDashboardResponse>> dashboard = Dashboard.GetAsync(CancellationToken.None);
         // Les pièces récentes sont celles de la période du graphique ; une pièce n'a sa date d'émission qu'une fois
         // validée, si bien que borner la date écarte les brouillons.
@@ -305,6 +333,8 @@ else
         // Un refus (droits, réseau) est le même pour chaque lecture : affiché une fois.
         _errors = [.. figures.Errors.Concat((await invoices).Errors).Concat((await quotes).Errors).Select(e => e with { Target = null }).DistinctBy(e => e.Code)];
         _receivables = receivables is null ? null : (await receivables).Value;
+        _orderBook = orderBook is null ? null : (await orderBook).Value;
+        _dueFollowUps = followUps is null ? null : (await followUps).Value?.DueCount;
     }
 
     private async Task LoadDemoAsync()
@@ -351,6 +381,13 @@ else
 
     private bool IsEmpty(DashboardFigures figures) =>
         _errors.Count == 0 && _drafts == 0 && figures.RecentInvoices.Count == 0 && figures.RecentQuotes.Count == 0;
+
+    /// <summary>D'où vient le montant pondéré : le taux global et sa base, ou l'historique encore trop court.</summary>
+    private string OrderBookReason(OrderBookResponse book) => book.Quotes.Count == 0
+        ? L["Home.OrderBook.NoQuote"]
+        : book.HasEnoughHistory
+            ? string.Format(Culture, L["Home.OrderBook.Reason"], book.Quotes.Count, book.GlobalRate.ToString("P0", Culture), book.Accepted, book.Closed, book.HistoryMonths)
+            : string.Format(Culture, L["Home.OrderBook.ReasonNoHistory"], book.Quotes.Count);
 
     private string Money(decimal value) => string.Format(Culture, L["Home.Money"], value.ToString("N0", Culture));
 
