@@ -83,6 +83,13 @@ Clé `honoraires.das2` : les bénéficiaires à déclarer du dernier exercice cl
 loin, à traiter à trente jours ou moins, critique une fois dépassée. Rien une fois la déclaration marquée déposée, ni
 pour une échéance antérieure au début du suivi. Ni nom ni montant.
 
+## La colonne « Seuils proches »
+
+Clé `seuils.proches` : les seuils franchis ou dont le franchissement est prévu dans les trois mois (voir
+[Seuils à surveiller](seuils.md)), avec la date la plus proche (« dès le … »). Critique quand un seuil de TVA à effet
+immédiat (franchise majorée, régime simplifié, déclaration trimestrielle majorée) est déjà franchi, à traiter sinon.
+Ni nom ni montant.
+
 ## Les droits
 
 - La vue cabinet ne montre que les dossiers que l'utilisateur peut ouvrir (`DossierLire`), comme `GET /api/v1/dossiers`.

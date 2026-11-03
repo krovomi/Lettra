@@ -169,6 +169,8 @@ internal sealed class FakeTaxGateway : ITaxGateway
 
     public VatDeclarationRegimeDto? Regime { get; set; } = VatDeclarationRegimeDto.RealNormal;
 
+    public bool VatFranchise { get; set; }
+
     public FiscalSettingsResponse Settings { get; private set; } = new(12, 31, VatPeriodicityDto.Monthly, 15, true, true, null, 0);
 
     private DateTimeOffset? _vatFiled;
@@ -253,7 +255,7 @@ internal sealed class FakeTaxGateway : ITaxGateway
     {
         CalendarQueries.Add((from, to));
         FiscalDeadlineStateDto desState = Marks.Any(m => m.Obligation == FiscalObligationDto.Des && m.Filed) ? FiscalDeadlineStateDto.Filed : FiscalDeadlineStateDto.DueSoon;
-        FiscalCalendarResponse calendar = new(from, to, new DateOnly(2026, 10, 9), Regime, false, Settings,
+        FiscalCalendarResponse calendar = new(from, to, new DateOnly(2026, 10, 9), Regime, VatFranchise, Settings,
         [
             new(FiscalObligationDto.VatReturnCa3, new(2026, 9, 1), new(2026, 9, 30), new(2026, 10, 15), FiscalDeadlineStateDto.DueSoon, null, "VatDeadlineDay"),
             new(FiscalObligationDto.Des, new(2026, 9, 1), new(2026, 9, 30), new(2026, 10, 12), desState, null, "Des"),

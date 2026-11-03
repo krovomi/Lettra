@@ -147,6 +147,22 @@ public sealed class OwnerBriefTests : BunitContext
         page.Find("#brief-overdue").ClassList.Should().NotContain("is-alert");
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void En_franchise_ou_sans_regime_de_tva_la_carte_tva_n_est_pas_demandee(bool franchise)
+    {
+        _tax.VatFranchise = franchise;
+        _tax.Regime = franchise ? VatDeclarationRegimeDto.RealSimplified : null;
+
+        IRenderedComponent<OwnerBriefPage> page = Open(new ReceivablesSummaryResponse(Today, 0, 0m, [], 0, 0, 0, 0));
+
+        page.FindAll("#brief-vat").Should().BeEmpty();
+        _tax.VatDates.Should().BeEmpty("le serveur refuserait le brouillon : aucun appel, aucune erreur");
+        this.Toasts().Should().BeEmpty();
+        page.Find("#brief-collected").Should().NotBeNull();
+    }
+
     [Fact]
     public void Une_lecture_refusee_masque_sa_carte_et_seule_une_panne_s_affiche()
     {
