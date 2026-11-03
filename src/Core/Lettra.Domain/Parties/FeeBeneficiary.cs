@@ -1,3 +1,4 @@
+using Lettra.Calculations.Thresholds;
 using Lettra.Domain.Common;
 
 namespace Lettra.Domain.Parties;
@@ -55,12 +56,6 @@ public sealed class FeePaidOutside
 /// </summary>
 public sealed class FeeBeneficiary : AggregateRoot<SupplierId>, IVersioned
 {
-    /// <summary>Au-delà de ce total TTC versé dans l'année, le bénéficiaire se déclare (art. 240 du CGI ; BOI-BIC-DECLA-30-70-20).</summary>
-    public const decimal DeclarationThreshold = 2_400m;
-
-    /// <summary>Le seuil des exercices clos avant 2024, avant son relèvement à 2 400 €.</summary>
-    public const decimal DeclarationThresholdBefore2024 = 1_200m;
-
     public const int MaxProfessionLength = 60;
     public const decimal MaxAmount = 100_000_000m;
 
@@ -84,9 +79,11 @@ public sealed class FeeBeneficiary : AggregateRoot<SupplierId>, IVersioned
 
     public long Version { get; private set; }
 
-    /// <summary>Le seuil de l'exercice : 2 400 € à partir des sommes versées en 2024, 1 200 € pour les exercices clos avant.</summary>
-    public static decimal ThresholdFor(DateOnly fiscalYearEnd) =>
-        fiscalYearEnd.Year >= 2024 ? DeclarationThreshold : DeclarationThresholdBefore2024;
+    /// <summary>
+    /// Le seuil de l'exercice, lu au catalogue des seuils à sa date de clôture (art. 240 du CGI ; BOI-BIC-DECLA-30-70-20) :
+    /// 2 400 € TTC à partir des sommes versées en 2024, 1 200 € pour les exercices clos avant.
+    /// </summary>
+    public static decimal ThresholdFor(DateOnly fiscalYearEnd) => ThresholdCatalog.AmountOn(ThresholdCodes.FeeReturn, fiscalYearEnd);
 
     /// <summary>Le total versé dans l'exercice dépasse son seuil : le bénéficiaire figure sur la déclaration.</summary>
     public static bool MustBeDeclared(decimal totalPaid, DateOnly fiscalYearEnd) => totalPaid > ThresholdFor(fiscalYearEnd);

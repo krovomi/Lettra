@@ -8,7 +8,7 @@ public sealed record DesDocument(string FileName, byte[] Content);
 
 /// <summary>
 /// Déclarations fiscales du dossier : brouillon de TVA (CA3 ou CA12 selon le régime de la fiche entreprise), DES,
-/// calendrier fiscal et ses réglages. Lecture avec <c>DossierLire</c> ; fichier de DES, réglages et dépôts marqués
+/// calendrier fiscal et ses réglages, seuils qui approchent. Lecture avec <c>DossierLire</c> ; fichier de DES, réglages et dépôts marqués
 /// avec <c>FecExporter</c>. Refus possibles : <c>Tax.ProfileMissing</c>, <c>Tax.VatFranchise</c>,
 /// <c>Tax.RegimeMissing</c>, <c>Tax.PeriodInvalid</c>, <c>Tax.FiscalYearEndInvalid</c>, <c>Tax.DeadlineDayInvalid</c>,
 /// <c>Tax.DeadlineUnknown</c>, <c>Concurrency.VersionMismatch</c>.
@@ -35,4 +35,7 @@ public interface ITaxGateway
     Task<OperationResult<FiscalSettingsResponse>> GetSettingsAsync(CancellationToken cancellationToken);
 
     Task<OperationResult<FiscalSettingsResponse>> UpdateSettingsAsync(UpdateFiscalSettingsRequest request, CancellationToken cancellationToken);
+
+    /// <summary>Les seuils qui approchent (franchise et régime de TVA, catégorie, vigilance, DAS 2), le plus urgent d'abord.</summary>
+    Task<OperationResult<ThresholdsResponse>> GetThresholdsAsync(CancellationToken cancellationToken);
 }

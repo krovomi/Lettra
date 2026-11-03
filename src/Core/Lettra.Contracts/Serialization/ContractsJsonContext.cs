@@ -205,6 +205,7 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(ThirdPartyCheckRow))]
 [JsonSerializable(typeof(RegisteredOwnersResponse))]
 [JsonSerializable(typeof(FeeReturnResponse))]
+[JsonSerializable(typeof(ThresholdsResponse))]
 [JsonSerializable(typeof(SaveFeeBeneficiaryRequest))]
 [JsonSerializable(typeof(ReceiptsResponse))]
 [JsonSerializable(typeof(RequestReceiptsRequest))]

@@ -41,4 +41,7 @@ internal sealed class InProcessTaxGateway(IServiceScopeFactory scopes) : ITaxGat
 
     public Task<OperationResult<FiscalSettingsResponse>> UpdateSettingsAsync(UpdateFiscalSettingsRequest request, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.SendAsync(sp, new UpdateFiscalSettingsCommand(dossier, request), ct), cancellationToken);
+
+    public Task<OperationResult<ThresholdsResponse>> GetThresholdsAsync(CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetThresholdsQuery(dossier), ct), cancellationToken);
 }
