@@ -199,6 +199,16 @@ jobs:
           java-version: 17
       - name: Charge de travail MAUI Android
         run: dotnet workload install maui-android --version ${{ env.MAUI_WORKLOAD_VERSION }}
+      - name: Place sur le disque
+        # La charge de travail MAUI, l'APK et l'image système de l'émulateur dépassent la place libre de la machine
+        # (« No space left on device » en installant l'image) : outils préinstallés dont ce job ne se sert pas, comme
+        # dans le test Android à deux appareils.
+        run: |
+          df -h /
+          sudo rm -rf /opt/ghc /usr/local/.ghcup /usr/share/swift /usr/local/share/boost /usr/local/share/powershell \
+            /usr/local/lib/heroku /opt/hostedtoolcache/CodeQL /opt/hostedtoolcache/go /opt/hostedtoolcache/PyPy
+          docker system prune -af --volumes > /dev/null
+          df -h /
       # APK signé avec la clé de démonstration versionnée (pas de magasin d'applications) : la même à chaque
       # construction, pour qu'« adb install -r » d'une nouvelle version garde les données du téléphone.
       - name: Build de l'APK
