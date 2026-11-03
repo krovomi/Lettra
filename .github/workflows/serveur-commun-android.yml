@@ -114,7 +114,9 @@ jobs:
             echo "adb : $(timeout 10 adb get-state 2>&1 || echo 'appareil perdu')"
             pgrep -a -f 'qemu-system|emulator' | cut -c1-160 || echo "processus de l'émulateur : aucun"
             free -m
-            sudo dmesg | grep -iE 'out of memory|oom-kill|killed process' | tail -n 20 || true
+            sudo dmesg | grep -iE 'out of memory|oom-kill|killed process|segfault|qemu' | tail -n 20 || true
+            # Un émulateur qui plante laisse un rapport (minidump) : on liste ceux trouvés.
+            find /tmp ~/.android -name '*.dmp' -newer "$SORTIE/client.txt" 2>/dev/null | head -n 10 || true
             grep -E 'AndroidRuntime|monodroid|mono-rt|DOTNET|fr\.lettra|Lettra|ActivityTaskManager: (START|Displayed)|com\.android\.chrome|cr_' "$SORTIE/android/logcat.txt" | grep -vE 'SandboxedProcessService|CronetUrlRequestContext' | tail -n 150 || true
             exit "$status"
           fi
@@ -132,6 +134,10 @@ jobs:
           # Partition de données de 4 Go au lieu de 6 : l'émulateur refusait de démarrer faute de place
           # (« Not enough space to create userdata partition »), la démo et l'APK occupant déjà le disque.
           disk-size: 4096M
+          # Émulateur 37.2.12 figé : avec 37.2.13, l'émulateur lui-même disparaissait juste après la connexion,
+          # en ouvrant la liste des clients, sans message ni manque de mémoire. À relever quand une version plus
+          # récente passe ce test.
+          emulator-build: 16428233
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
           script: bash "$RUNNER_TEMP/serveur-commun-android.sh"
 
