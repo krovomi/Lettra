@@ -107,4 +107,18 @@ public sealed class SessionPageTests : BunitContext
         page.Find("a[data-sign-in]").GetAttribute("href").Should().Be("bff/login?returnUrl=%2F");
         page.FindAll("input[type=password]").Should().BeEmpty("le navigateur ne voit jamais de mot de passe ni de jeton");
     }
+
+    [Theory]
+    [InlineData(SessionPageErrors.SignInUnavailable, "Le service de connexion du cabinet ne répond pas pour l'instant.")]
+    [InlineData(SessionPageErrors.SignInFailed, "La connexion n'a pas abouti. Réessayez.")]
+    public void Une_connexion_qui_n_aboutit_pas_dit_pourquoi_et_se_relance(string reason, string message)
+    {
+        Services.AddSingleton<ISessionGateway>(new FakeSessionGateway(new SessionResponse(false, SessionModeDto.Oidc, null, false), "bff/login?returnUrl=%2F"));
+        Services.GetRequiredService<NavigationManager>().NavigateTo(SessionPageErrors.PathFor(reason));
+
+        IRenderedComponent<Session> page = Render<Session>();
+
+        page.Find("[role=alert]").TextContent.Should().StartWith(message);
+        page.Find("a[data-sign-in]").GetAttribute("href").Should().Be("bff/login?returnUrl=%2F");
+    }
 }

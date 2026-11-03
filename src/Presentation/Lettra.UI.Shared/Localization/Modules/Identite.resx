@@ -25,6 +25,7 @@
   <data name="Session.SignInIntro" xml:space="preserve"><value>Connectez-vous avec le compte de votre cabinet. Un second facteur vous sera demandé.</value></data>
   <data name="Session.SignIn" xml:space="preserve"><value>Se connecter</value></data>
   <data name="Session.SignInFailed" xml:space="preserve"><value>La connexion n'a pas abouti. Réessayez.</value></data>
+  <data name="Session.SignInUnavailable" xml:space="preserve"><value>Le service de connexion du cabinet ne répond pas pour l'instant. Réessayez dans une minute ; si cela dure, prévenez l'administrateur du cabinet.</value></data>
   <data name="Session.Create.Title" xml:space="preserve"><value>Créer le compte de ce poste</value></data>
   <data name="Session.Create.Intro" xml:space="preserve"><value>Ce poste fonctionne sans serveur. Choisissez une phrase secrète d'au moins 12 caractères : elle protège vos dossiers et ne peut pas être récupérée.</value></data>
   <data name="Session.Create.Submit" xml:space="preserve"><value>Créer le compte</value></data>

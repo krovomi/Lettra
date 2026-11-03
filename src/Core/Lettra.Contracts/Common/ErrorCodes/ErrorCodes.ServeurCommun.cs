@@ -17,6 +17,12 @@ public static partial class ErrorCodes
         /// <summary>Aucun serveur ne répond à cette adresse.</summary>
         public const string Unreachable = "SharedServer.Unreachable";
 
+        /// <summary>
+        /// Le serveur Lettra répond, mais pas son service de connexion (Keycloak arrêté ou encore en démarrage) : l'appareil
+        /// ne pourrait pas s'y connecter.
+        /// </summary>
+        public const string SignInUnavailable = "SharedServer.SignInUnavailable";
+
         /// <summary>Le serveur répond, mais son certificat n'est pas approuvé par l'appareil (certificat de démonstration non installé).</summary>
         public const string CertificateUntrusted = "SharedServer.CertificateUntrusted";
 

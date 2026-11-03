@@ -109,8 +109,8 @@ public sealed class SharedServerProbe(HttpClient http)
                 .ConfigureAwait(false);
             if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
             {
-                // Serveur Lettra dont le service de connexion (Keycloak) ne répond pas encore.
-                return OperationResult<SharedServerSettings>.Failure(ErrorCodes.SharedServer.Unreachable);
+                // Serveur Lettra dont le service de connexion (Keycloak) ne répond pas : dit à part, le serveur, lui, répond.
+                return OperationResult<SharedServerSettings>.Failure(ErrorCodes.SharedServer.SignInUnavailable);
             }
 
             ServerDiscoveryResponse? discovery = response.IsSuccessStatusCode
