@@ -60,4 +60,10 @@ internal sealed class HttpTaxGateway(HttpClient http) : ITaxGateway
             ct => http.PutAsJsonAsync(HttpCalls.Relative($"api/v1/tax/settings"), request, ContractsJsonContext.Default.UpdateFiscalSettingsRequest, ct),
             ContractsJsonContext.Default.FiscalSettingsResponse,
             cancellationToken);
+
+    public Task<OperationResult<ThresholdsResponse>> GetThresholdsAsync(CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.GetAsync(HttpCalls.Relative($"api/v1/tax/thresholds"), ct),
+            ContractsJsonContext.Default.ThresholdsResponse,
+            cancellationToken);
 }

@@ -1,0 +1,199 @@
+@page "/tax/thresholds"
+@inject ITaxGateway Tax
+@inject IStringLocalizer<SharedResource> L
+@* Les seuils qui approchent : franchise et régime de TVA, déclaration trimestrielle, catégorie de l'entreprise, attestation
+   de vigilance des sous-traitants et honoraires à déclarer. Pour chacun, le cumul de la période, sa projection au rythme
+   des 90 derniers jours, la date de franchissement constatée ou prévue et ce qui change alors. Tout est calculé par le
+   serveur, sans IA ; l'écran trie, filtre et met en forme. *@
+
+<PageTitle>@L["Thresholds.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Thresholds.Title"]</h1>
+        <p class="lettra-muted">@L["Thresholds.Subtitle"]</p>
+    </div>
+</div>
+
+<TaxTabs />
+<GeneralErrors Errors="_errors" />
+
+@if (_view is not { } view)
+{
+    @if (_errors.Count == 0)
+    {
+        <ListSkeleton Columns="4" />
+    }
+}
+else
+{
+    <p class="lettra-hint" id="thresholds-method"><Icon Name="info" Size="16" /> @string.Format(Culture, L["Thresholds.Method"], view.RateDays, view.SoonMonths)</p>
+
+    <section class="lt-banking-stats" id="thresholds-stats" aria-label="@L["Thresholds.Stats"]">
+        @foreach (ThresholdStatusDto status in StatsOrder)
+        {
+            int count = view.Rows.Count(r => r.Status == status);
+            <div class="@($"lt-banking-stat lt-threshold-stat {(count > 0 ? ThresholdText.StateClass(status) : null)}")" id="@($"thresholds-stat-{status.ToString().ToLowerInvariant()}")">
+                <span>@L[$"Thresholds.Stat.{status}"]</span>
+                <strong>@count</strong>
+                <small class="lettra-muted">@L[$"Thresholds.Stat.{status}.Hint"]</small>
+            </div>
+        }
+    </section>
+
+    @if (view.ProfileMissing)
+    {
+        <p class="lettra-banner is-warning" id="thresholds-profile-missing">
+            <Icon Name="info" Size="18" /> @L["Thresholds.ProfileMissing"]
+            <a href="settings/company" id="thresholds-profile-link">@L["Thresholds.ProfileMissing.Action"]</a>
+        </p>
+    }
+
+    <section class="lettra-card lt-mission-panel" aria-labelledby="thresholds-list-title">
+        <div class="lt-panel-head">
+            <h2 id="thresholds-list-title">@L["Thresholds.List"]</h2>
+        </div>
+        @if (view.Rows.Count == 0)
+        {
+            <EmptyState Id="thresholds-empty" IconName="gauge" Title="@L["Thresholds.Empty"]" Text="@L["Thresholds.Empty.Text"]" />
+        }
+        else
+        {
+            <ListFilterBar Id="thresholds-filters" ActiveCount="ActiveFilters" OnReset="ResetFilters">
+                <ChildContent>
+                    <div class="lt-filter">
+                        <label for="thresholds-search">@L["Lists.Search"]</label>
+                        <input id="thresholds-search" type="search" @bind="_search" @bind:event="oninput" autocomplete="off" />
+                    </div>
+                </ChildContent>
+                <More>
+                    <div class="lt-filter">
+                        <label for="thresholds-filter-family">@L["Thresholds.Filter.Family"]</label>
+                        <select id="thresholds-filter-family" @bind="_family">
+                            <option value="">@L["Thresholds.Filter.AllFamilies"]</option>
+                            @foreach (ThresholdFamilyDto family in view.Rows.Select(r => r.Family).Distinct().Order())
+                            {
+                                <option value="@family">@L[$"Thresholds.Family.{family}"]</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="lt-filter">
+                        <label for="thresholds-filter-status">@L["Thresholds.Filter.Status"]</label>
+                        <select id="thresholds-filter-status" @bind="_status">
+                            <option value="">@L["Thresholds.Filter.AllStatuses"]</option>
+                            @foreach (ThresholdStatusDto status in StatsOrder)
+                            {
+                                <option value="@status">@L[$"Thresholds.Status.{status}"]</option>
+                            }
+                        </select>
+                    </div>
+                    <SortSelect Id="thresholds-sort" Options="SortOptions" State="_sort" OnSort="StateHasChanged" DefaultLabel="@L["Lists.Sort.Urgency"]" PhoneOnly="false" />
+                </More>
+            </ListFilterBar>
+            @if (Shown.Count == 0)
+            {
+                <EmptyState Id="thresholds-filtered-empty" IconName="search" Title="@L["Lists.Empty.FilteredTitle"]" Text="@L["Lists.Empty.Filtered"]" />
+            }
+            else
+            {
+                <ul class="lt-thresholds" id="thresholds-list">
+                    @foreach (ThresholdWatchResponse row in Shown)
+                    {
+                        int done = ThresholdText.Percent(row.ToDate, row.Threshold);
+                        int projected = ThresholdText.Percent(row.Projected, row.Threshold);
+                        <li @key="ThresholdText.Key(row)" class="@($"lt-threshold {ThresholdText.StateClass(row.Status)}")" id="@ThresholdText.ElementId(row)">
+                            <div class="lt-threshold-head">
+                                <span class="lt-threshold-icon" aria-hidden="true"><Icon Name="@ThresholdText.Icon(row.Family)" Size="18" /></span>
+                                <div class="lt-threshold-title">
+                                    <h3>@ThresholdText.Label(L, row)</h3>
+                                    <span class="lettra-muted">@L[$"Thresholds.Family.{row.Family}"] · @ThresholdText.Period(L, row)</span>
+                                </div>
+                                <span class="@($"lt-threshold-pill {ThresholdText.StateClass(row.Status)}")">@ThresholdText.Status(L, row)</span>
+                            </div>
+                            <div class="lt-threshold-bar" role="img" aria-label="@string.Format(Culture, L["Thresholds.Progress.Label"], done, projected)">
+                                <span class="lt-threshold-projected" style="@($"--projected: {projected}%")"></span>
+                                <span class="lt-threshold-done" style="@($"--done: {done}%")"></span>
+                            </div>
+                            <p class="lt-threshold-amounts">
+                                <strong>@ThresholdText.Amounts(L, row)</strong>
+                                <span class="lettra-muted">
+                                    @string.Format(Culture, L["Thresholds.Projection"], TaxText.Euros(row.Projected))@(row.Excess > 0m ? $", {string.Format(Culture, L["Thresholds.Excess"], TaxText.Euros(row.Excess))}" : null)
+                                </span>
+                            </p>
+                            <p class="lt-threshold-change">@ThresholdText.Change(L, row)</p>
+                            @if (ThresholdText.Effective(L, row) is { } effective)
+                            {
+                                <p class="lt-threshold-effective"><Icon Name="calendar-clock" Size="16" /> <strong>@effective</strong></p>
+                            }
+                            <div class="lt-threshold-foot">
+                                <small class="lettra-muted">@string.Format(Culture, L["Thresholds.Source"], row.Source)</small>
+                                <a class="lettra-button is-small is-secondary" href="@ThresholdText.Href(row.Family)">@L[$"Thresholds.Open.{row.Family}"]</a>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+        }
+    </section>
+
+    <p class="lettra-hint" id="thresholds-disclaimer">@L["Thresholds.Disclaimer"]</p>
+}
+
+@code {
+    private static readonly ThresholdStatusDto[] StatsOrder =
+        [ThresholdStatusDto.Crossed, ThresholdStatusDto.Projected, ThresholdStatusDto.Near, ThresholdStatusDto.Far];
+
+    private ThresholdsResponse? _view;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private string? _search;
+    private string _family = string.Empty;
+    private string _status = string.Empty;
+
+    // Le plus urgent d'abord : l'ordre du serveur (franchi, prévu, à surveiller, loin ; puis la date), sans clé de tri.
+    private readonly SortState<ThresholdColumn> _sort = new(ThresholdColumn.Urgency);
+
+    private enum ThresholdColumn
+    {
+        Urgency,
+        Progress,
+        Date,
+        Name,
+    }
+
+    private IReadOnlyList<SortOption<ThresholdColumn>> SortOptions =>
+    [
+        new(ThresholdColumn.Progress, L["Thresholds.Sort.Progress"], SortDirectionDto.Descending),
+        new(ThresholdColumn.Date, L["Thresholds.Sort.Date"]),
+        new(ThresholdColumn.Name, L["Thresholds.Sort.Name"]),
+    ];
+
+    private Dictionary<ThresholdColumn, Func<ThresholdWatchResponse, object?>> SortKeys => new()
+    {
+        [ThresholdColumn.Progress] = r => r.Threshold <= 0m ? 0m : r.Projected / r.Threshold,
+        [ThresholdColumn.Date] = r => r.CrossedOn ?? r.ExpectedOn,
+        [ThresholdColumn.Name] = r => ThresholdText.Label(L, r),
+    };
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private IReadOnlyList<ThresholdWatchResponse> Shown => ListSorting.Sort(
+        (_view?.Rows ?? [])
+            .Where(r => string.IsNullOrWhiteSpace(_search)
+                || ListSorting.Matches(ThresholdText.Label(L, r), _search)
+                || ListSorting.Matches(L[$"Thresholds.Family.{r.Family}"], _search))
+            .Where(r => _family.Length == 0 || string.Equals(r.Family.ToString(), _family, StringComparison.Ordinal))
+            .Where(r => _status.Length == 0 || string.Equals(r.Status.ToString(), _status, StringComparison.Ordinal)),
+        _sort,
+        SortKeys);
+
+    private int ActiveFilters => (string.IsNullOrWhiteSpace(_search) ? 0 : 1) + (_family.Length == 0 ? 0 : 1) + (_status.Length == 0 ? 0 : 1);
+
+    protected override async Task OnInitializedAsync()
+    {
+        OperationResult<ThresholdsResponse> result = await Tax.GetThresholdsAsync(CancellationToken.None);
+        _errors = result.Errors;
+        _view = result.Value;
+    }
+
+    private void ResetFilters() => (_search, _family, _status) = (null, string.Empty, string.Empty);
+}

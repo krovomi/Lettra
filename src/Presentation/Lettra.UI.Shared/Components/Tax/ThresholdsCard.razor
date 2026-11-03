@@ -1,0 +1,55 @@
+@inject Optional<ITaxGateway> OptionalTax
+@inject IStringLocalizer<SharedResource> L
+@* « Seuils à surveiller » sur l'accueil et dans « En bref » : n'apparaît que si un seuil est franchi ou le sera dans les
+   trois mois. Les trois plus urgents, puis le lien vers l'onglet « Seuils ». Silencieuse si la lecture échoue (droits,
+   réseau, hôte sans déclarations) : les autres cartes de l'écran restent. *@
+
+@if (_soon.Count > 0)
+{
+    <section class="lt-panel lt-thresholds-card" aria-labelledby="@($"{Id}-title")" id="@Id">
+        <div class="lt-panel-head">
+            <h2 id="@($"{Id}-title")"><Icon Name="gauge" Size="20" /> @L["Thresholds.Card.Title"]</h2>
+            <a href="tax/thresholds" id="@($"{Id}-all")">@L["Thresholds.Card.All"]</a>
+        </div>
+        <ul class="lt-list" id="@($"{Id}-list")">
+            @foreach (ThresholdWatchResponse row in _soon.Take(Shown))
+            {
+                <li @key="ThresholdText.Key(row)" class="@ThresholdText.StateClass(row.Status)">
+                    <a href="tax/thresholds" id="@($"{Id}-{ThresholdText.ElementId(row)}")">
+                        <span class="lt-list-title"><Icon Name="@ThresholdText.Icon(row.Family)" Size="16" /> @ThresholdText.Label(L, row)</span>
+                        <span class="lt-list-meta">@ThresholdText.Status(L, row)@(ThresholdText.Effective(L, row) is { } effective ? $" · {effective}" : null)</span>
+                        <span class="lt-list-amount">
+                            @string.Format(CultureInfo.CurrentCulture, L["Thresholds.Percent"], ThresholdText.Percent(row.Projected, row.Threshold))
+                            <span class="@($"lt-threshold-pill {ThresholdText.StateClass(row.Status)}")">@L[$"Thresholds.Status.{row.Status}"]</span>
+                        </span>
+                    </a>
+                </li>
+            }
+        </ul>
+        @if (_soon.Count > Shown)
+        {
+            <p class="lettra-muted lt-thresholds-more" id="@($"{Id}-count")">@string.Format(CultureInfo.CurrentCulture, L["Thresholds.Card.Count"], _soon.Count)</p>
+        }
+    </section>
+}
+
+@code {
+    /// <summary>Le nombre de seuils montrés sur la carte ; les autres sont dans l'onglet.</summary>
+    public const int Shown = 3;
+
+    private IReadOnlyList<ThresholdWatchResponse> _soon = [];
+
+    /// <summary>L'identifiant de la carte, distinct sur l'accueil et dans « En bref ».</summary>
+    [Parameter] public string Id { get; set; } = "thresholds-card";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (OptionalTax.Value is not { } tax)
+        {
+            return;
+        }
+
+        OperationResult<ThresholdsResponse> result = await tax.GetThresholdsAsync(CancellationToken.None);
+        _soon = [.. (result.Value?.Rows ?? []).Where(r => r.Soon)];
+    }
+}

@@ -118,6 +118,8 @@
   <data name="Cabinet.Indicator.fournisseurs.attestations-vigilance.Due" xml:space="preserve"><value>ends {0}</value></data>
   <data name="Cabinet.Indicator.honoraires.das2" xml:space="preserve"><value>DAS 2 fees</value></data>
   <data name="Cabinet.Indicator.honoraires.das2.Due" xml:space="preserve"><value>by {0}</value></data>
+  <data name="Cabinet.Indicator.seuils.proches" xml:space="preserve"><value>Thresholds near</value></data>
+  <data name="Cabinet.Indicator.seuils.proches.Due" xml:space="preserve"><value>from {0}</value></data>
   <data name="Cabinet.Indicator.facture-electronique.preparation" xml:space="preserve"><value>E-invoicing</value></data>
   <data name="Cabinet.Indicator.tiers.a-examiner" xml:space="preserve"><value>Third parties to review</value></data>
 </root>

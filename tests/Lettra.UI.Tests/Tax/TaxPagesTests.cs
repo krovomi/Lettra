@@ -235,6 +235,19 @@ internal sealed class FakeTaxGateway : ITaxGateway
         ],
         [new(Guid.Parse("0199a000-0000-7000-8000-000000000107"), "FAC-000107", "Cave Leroy", closing.AddDays(-100), closing.AddDays(-10), closing.AddDays(-40), 30)]);
 
+    /// <summary>Les seuils rendus par le serveur ; <c>null</c> pour un refus. Aucun seuil par défaut : pas de carte sur l'accueil.</summary>
+    public ThresholdsResponse? Thresholds { get; set; } = new(new DateOnly(2026, 10, 9), 90, 3, false, []);
+
+    public int ThresholdReads { get; private set; }
+
+    public Task<OperationResult<ThresholdsResponse>> GetThresholdsAsync(CancellationToken cancellationToken)
+    {
+        ThresholdReads++;
+        return Task.FromResult(Thresholds is { } thresholds
+            ? OperationResult<ThresholdsResponse>.Success(thresholds)
+            : OperationResult<ThresholdsResponse>.Failure(ErrorCodes.Security.Forbidden));
+    }
+
     public Task<OperationResult<DesDocument>> ExportDesAsync(int year, int month, CancellationToken cancellationToken) =>
         Task.FromResult(OperationResult<DesDocument>.Success(new DesDocument($"DES-{year:D4}-{month:D2}.csv", Encoding.UTF8.GetBytes("ligne;numero_tva_client;montant_eur;periode\r\n"))));
 

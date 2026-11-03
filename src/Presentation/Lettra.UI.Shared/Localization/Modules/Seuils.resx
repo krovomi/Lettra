@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Thresholds.Tab" xml:space="preserve"><value>Seuils</value></data>
+  <data name="Thresholds.Title" xml:space="preserve"><value>Seuils à surveiller</value></data>
+  <data name="Thresholds.Subtitle" xml:space="preserve"><value>Les seuils qui changent les règles du dossier : franchise et régime de TVA, catégorie de l'entreprise, attestation de vigilance des sous-traitants, honoraires à déclarer. Lettra dit où en est chacun, s'il sera franchi avant la fin de la période et ce qui change alors.</value></data>
+  <data name="Thresholds.Method" xml:space="preserve"><value>Projection : le cumul de la période, prolongé jusqu'au dernier jour au rythme des {0} derniers jours. Un seuil est « proche » s'il est franchi ou s'il le sera dans les {1} mois.</value></data>
+  <data name="Thresholds.Stats" xml:space="preserve"><value>Où en sont les seuils</value></data>
+  <data name="Thresholds.Stat.Crossed" xml:space="preserve"><value>Franchis</value></data>
+  <data name="Thresholds.Stat.Crossed.Hint" xml:space="preserve"><value>Les règles changent ou ont changé</value></data>
+  <data name="Thresholds.Stat.Projected" xml:space="preserve"><value>Franchissement prévu</value></data>
+  <data name="Thresholds.Stat.Projected.Hint" xml:space="preserve"><value>Au rythme actuel, avant la fin de la période</value></data>
+  <data name="Thresholds.Stat.Near" xml:space="preserve"><value>À surveiller</value></data>
+  <data name="Thresholds.Stat.Near.Hint" xml:space="preserve"><value>Projection à plus de 80 % du seuil</value></data>
+  <data name="Thresholds.Stat.Far" xml:space="preserve"><value>Loin du seuil</value></data>
+  <data name="Thresholds.Stat.Far.Hint" xml:space="preserve"><value>Rien à faire pour l'instant</value></data>
+  <data name="Thresholds.ProfileMissing" xml:space="preserve"><value>Sans fiche entreprise, Lettra ne lit ni les seuils de TVA ni la catégorie de l'entreprise : seuls les fournisseurs et les bénéficiaires d'honoraires sont suivis.</value></data>
+  <data name="Thresholds.ProfileMissing.Action" xml:space="preserve"><value>Compléter la fiche entreprise</value></data>
+  <data name="Thresholds.Empty" xml:space="preserve"><value>Aucun seuil à suivre</value></data>
+  <data name="Thresholds.Empty.Text" xml:space="preserve"><value>Les seuils de TVA et de catégorie se lisent à partir de la fiche entreprise ; les fournisseurs et les bénéficiaires d'honoraires n'apparaissent qu'à l'approche de leur seuil.</value></data>
+  <data name="Thresholds.List" xml:space="preserve"><value>Les seuils du dossier</value></data>
+  <data name="Thresholds.Filter.Family" xml:space="preserve"><value>Sujet</value></data>
+  <data name="Thresholds.Filter.AllFamilies" xml:space="preserve"><value>Tous les sujets</value></data>
+  <data name="Thresholds.Filter.Status" xml:space="preserve"><value>État</value></data>
+  <data name="Thresholds.Filter.AllStatuses" xml:space="preserve"><value>Tous les états</value></data>
+  <data name="Thresholds.Sort.Progress" xml:space="preserve"><value>Part du seuil</value></data>
+  <data name="Thresholds.Sort.Date" xml:space="preserve"><value>Date de franchissement</value></data>
+  <data name="Thresholds.Sort.Name" xml:space="preserve"><value>Seuil</value></data>
+  <data name="Thresholds.Family.VatFranchise" xml:space="preserve"><value>Franchise en base de TVA</value></data>
+  <data name="Thresholds.Family.VatSimplifiedRegime" xml:space="preserve"><value>Régime simplifié de TVA</value></data>
+  <data name="Thresholds.Family.VatQuarterlyReturn" xml:space="preserve"><value>TVA trimestrielle</value></data>
+  <data name="Thresholds.Family.CompanySize" xml:space="preserve"><value>Catégorie de l'entreprise</value></data>
+  <data name="Thresholds.Family.SubcontractorVigilance" xml:space="preserve"><value>Attestation de vigilance</value></data>
+  <data name="Thresholds.Family.FeeReturn" xml:space="preserve"><value>Honoraires (DAS 2)</value></data>
+  <data name="Thresholds.Status.Far" xml:space="preserve"><value>Loin du seuil</value></data>
+  <data name="Thresholds.Status.Near" xml:space="preserve"><value>À surveiller</value></data>
+  <data name="Thresholds.Status.Projected" xml:space="preserve"><value>Franchissement prévu</value></data>
+  <data name="Thresholds.Status.Crossed" xml:space="preserve"><value>Franchi</value></data>
+  <data name="Thresholds.Status.CrossedOn" xml:space="preserve"><value>Franchi le {0}</value></data>
+  <data name="Thresholds.Status.ExpectedOn" xml:space="preserve"><value>Prévu vers le {0}</value></data>
+  <data name="Thresholds.Code.tva.franchise.ventes.base" xml:space="preserve"><value>Franchise de TVA, ventes : seuil de base</value></data>
+  <data name="Thresholds.Code.tva.franchise.ventes.majore" xml:space="preserve"><value>Franchise de TVA, ventes : seuil majoré</value></data>
+  <data name="Thresholds.Code.tva.franchise.services.base" xml:space="preserve"><value>Franchise de TVA, services : seuil de base</value></data>
+  <data name="Thresholds.Code.tva.franchise.services.majore" xml:space="preserve"><value>Franchise de TVA, services : seuil majoré</value></data>
+  <data name="Thresholds.Code.tva.regime-simplifie.ventes.majore" xml:space="preserve"><value>Régime simplifié, ventes : seuil majoré</value></data>
+  <data name="Thresholds.Code.tva.regime-simplifie.services.majore" xml:space="preserve"><value>Régime simplifié, services : seuil majoré</value></data>
+  <data name="Thresholds.Code.tva.trimestrielle.base" xml:space="preserve"><value>TVA trimestrielle : seuil de base</value></data>
+  <data name="Thresholds.Code.tva.trimestrielle.majore" xml:space="preserve"><value>TVA trimestrielle : seuil majoré</value></data>
+  <data name="Thresholds.Code.taille.micro" xml:space="preserve"><value>Micro-entreprise : limite de chiffre d'affaires</value></data>
+  <data name="Thresholds.Code.taille.pme" xml:space="preserve"><value>PME : limite de chiffre d'affaires</value></data>
+  <data name="Thresholds.Code.taille.eti" xml:space="preserve"><value>ETI : limite de chiffre d'affaires</value></data>
+  <data name="Thresholds.Code.vigilance.sous-traitant" xml:space="preserve"><value>Attestation de vigilance : {0}</value></data>
+  <data name="Thresholds.Code.das2.beneficiaire" xml:space="preserve"><value>Honoraires versés à {0}</value></data>
+  <data name="Thresholds.Change.tva.franchise.ventes.base" xml:space="preserve"><value>Au-delà du seuil de base sur l'année, la franchise s'arrête au 1er janvier suivant : les factures portent alors la TVA et les déclarations commencent.</value></data>
+  <data name="Thresholds.Change.tva.franchise.ventes.majore" xml:space="preserve"><value>Au-delà du seuil majoré, la franchise s'arrête dès la facture qui le dépasse : cette facture et les suivantes portent la TVA. Prévenez le cabinet.</value></data>
+  <data name="Thresholds.Change.tva.franchise.services.base" xml:space="preserve"><value>Au-delà du seuil de base sur l'année, la franchise s'arrête au 1er janvier suivant : les factures portent alors la TVA et les déclarations commencent.</value></data>
+  <data name="Thresholds.Change.tva.franchise.services.majore" xml:space="preserve"><value>Au-delà du seuil majoré, la franchise s'arrête dès la facture qui le dépasse : cette facture et les suivantes portent la TVA. Prévenez le cabinet.</value></data>
+  <data name="Thresholds.Change.tva.regime-simplifie.ventes.majore" xml:space="preserve"><value>Au-delà du seuil majoré, le régime réel normal s'applique depuis le début de l'année : déclarations de TVA mensuelles (CA3) au lieu de la déclaration annuelle. Prévenez le cabinet.</value></data>
+  <data name="Thresholds.Change.tva.regime-simplifie.services.majore" xml:space="preserve"><value>Au-delà du seuil majoré, le régime réel normal s'applique depuis le début de l'année : déclarations de TVA mensuelles (CA3) au lieu de la déclaration annuelle. Prévenez le cabinet.</value></data>
+  <data name="Thresholds.Change.tva.trimestrielle.base" xml:space="preserve"><value>Au-delà du seuil sur l'année, les déclarations de TVA deviennent mensuelles à partir du 1er janvier suivant.</value></data>
+  <data name="Thresholds.Change.tva.trimestrielle.majore" xml:space="preserve"><value>Au-delà du seuil majoré, les déclarations de TVA deviennent mensuelles dès le mois du dépassement.</value></data>
+  <data name="Thresholds.Change.taille.micro" xml:space="preserve"><value>Au-delà de ce chiffre d'affaires, l'entreprise peut changer de catégorie : l'effectif et le total du bilan comptent aussi. À vérifier avec le cabinet, la catégorie fixe notamment le calendrier de la facture électronique.</value></data>
+  <data name="Thresholds.Change.taille.pme" xml:space="preserve"><value>Au-delà de ce chiffre d'affaires, l'entreprise peut changer de catégorie : l'effectif et le total du bilan comptent aussi. À vérifier avec le cabinet, la catégorie fixe notamment le calendrier de la facture électronique.</value></data>
+  <data name="Thresholds.Change.taille.eti" xml:space="preserve"><value>Au-delà de ce chiffre d'affaires, l'entreprise peut changer de catégorie : l'effectif et le total du bilan comptent aussi. À vérifier avec le cabinet, la catégorie fixe notamment le calendrier de la facture électronique.</value></data>
+  <data name="Thresholds.Change.vigilance.sous-traitant" xml:space="preserve"><value>Dès ce montant, demandez à ce fournisseur son attestation de vigilance URSSAF, puis tous les six mois tant que la prestation dure : sans elle, le dossier peut être tenu solidairement de ses cotisations.</value></data>
+  <data name="Thresholds.Change.das2.beneficiaire" xml:space="preserve"><value>Au-delà du seuil, les sommes versées à ce bénéficiaire pendant l'exercice se déclarent avec la déclaration de résultats (DAS 2).</value></data>
+  <data name="Thresholds.Effective" xml:space="preserve"><value>Les règles changent le {0}.</value></data>
+  <data name="Thresholds.Amounts" xml:space="preserve"><value>{0} sur {1} {2}</value></data>
+  <data name="Thresholds.Basis.ExclTax" xml:space="preserve"><value>HT</value></data>
+  <data name="Thresholds.Basis.InclTax" xml:space="preserve"><value>TTC</value></data>
+  <data name="Thresholds.Projection" xml:space="preserve"><value>Projection à la fin de la période : {0}</value></data>
+  <data name="Thresholds.Excess" xml:space="preserve"><value>soit {0} au-dessus du seuil</value></data>
+  <data name="Thresholds.Period.Year" xml:space="preserve"><value>Année {0}</value></data>
+  <data name="Thresholds.Source" xml:space="preserve"><value>Source : {0}</value></data>
+  <data name="Thresholds.Progress.Label" xml:space="preserve"><value>{0} % du seuil atteint, {1} % en projection</value></data>
+  <data name="Thresholds.Open.VatFranchise" xml:space="preserve"><value>Voir la fiche entreprise</value></data>
+  <data name="Thresholds.Open.VatSimplifiedRegime" xml:space="preserve"><value>Voir la fiche entreprise</value></data>
+  <data name="Thresholds.Open.VatQuarterlyReturn" xml:space="preserve"><value>Voir les réglages fiscaux</value></data>
+  <data name="Thresholds.Open.CompanySize" xml:space="preserve"><value>Voir la fiche entreprise</value></data>
+  <data name="Thresholds.Open.SubcontractorVigilance" xml:space="preserve"><value>Voir les attestations</value></data>
+  <data name="Thresholds.Open.FeeReturn" xml:space="preserve"><value>Voir les honoraires</value></data>
+  <data name="Thresholds.Disclaimer" xml:space="preserve"><value>Une alerte pour anticiper, calculée sans IA à partir des factures validées : le chiffre d'affaires compté est celui facturé hors taxes (hors débours et acomptes), sans les acquisitions. Le cabinet confirme toute conséquence fiscale avant d'agir.</value></data>
+  <data name="Thresholds.Percent" xml:space="preserve"><value>{0} %</value></data>
+  <data name="Thresholds.Card.Title" xml:space="preserve"><value>Seuils à surveiller</value></data>
+  <data name="Thresholds.Card.All" xml:space="preserve"><value>Voir les seuils</value></data>
+  <data name="Thresholds.Card.Count" xml:space="preserve"><value>Seuils proches : {0}</value></data>
+</root>
