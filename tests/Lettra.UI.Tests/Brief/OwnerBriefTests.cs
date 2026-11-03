@@ -107,6 +107,18 @@ public sealed class OwnerBriefTests : BunitContext
         Text(page, "#brief-bank .lt-kpi-note").Should().Contain("1 200,00").And.Contain("84,60");
         page.Find("#brief-overdue").ClassList.Should().Contain("is-alert");
         _banking.PaymentQueries.Single().From.Should().Be(new DateOnly(2026, 9, 26));
+        page.FindAll("#brief-thresholds").Should().BeEmpty("aucun seuil proche");
+    }
+
+    [Fact]
+    public void Les_seuils_proches_ont_leur_carte_avant_ce_qui_merite_un_coup_d_oeil()
+    {
+        _tax.Thresholds = ThresholdsPageTests.Sample();
+
+        IRenderedComponent<OwnerBriefPage> page = Open();
+
+        page.WaitForAssertion(() => page.FindAll("#brief-thresholds-list > li").Should().HaveCount(2));
+        page.Find("#brief-thresholds").NextElementSibling!.Id.Should().Be("brief-watch");
     }
 
     [Fact]
@@ -133,6 +145,22 @@ public sealed class OwnerBriefTests : BunitContext
         Text(page, "#brief-watch-none").Should().Contain("Rien à signaler");
         page.FindAll("#brief-bank").Should().BeEmpty("aucun relevé importé");
         page.Find("#brief-overdue").ClassList.Should().NotContain("is-alert");
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void En_franchise_ou_sans_regime_de_tva_la_carte_tva_n_est_pas_demandee(bool franchise)
+    {
+        _tax.VatFranchise = franchise;
+        _tax.Regime = franchise ? VatDeclarationRegimeDto.RealSimplified : null;
+
+        IRenderedComponent<OwnerBriefPage> page = Open(new ReceivablesSummaryResponse(Today, 0, 0m, [], 0, 0, 0, 0));
+
+        page.FindAll("#brief-vat").Should().BeEmpty();
+        _tax.VatDates.Should().BeEmpty("le serveur refuserait le brouillon : aucun appel, aucune erreur");
+        this.Toasts().Should().BeEmpty();
+        page.Find("#brief-collected").Should().NotBeNull();
     }
 
     [Fact]

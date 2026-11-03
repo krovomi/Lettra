@@ -2,6 +2,7 @@
 @using Lettra.Contracts.Banking
 @using Lettra.Contracts.Tax
 @using Lettra.UI.Shared.Components.Explorer
+@using Lettra.UI.Shared.Components.Tax
 @using Lettra.UI.Shared.Brief
 @inject IBillingDashboardGateway Dashboard
 @inject IBankingGateway Banking
@@ -10,7 +11,8 @@
 @inject TimeProvider Clock
 @inject IStringLocalizer<SharedResource> L
 @* « En bref » : l'écran du dirigeant sur son téléphone. Chiffre d'affaires, encaissements, TVA à payer et mouvements
-   bancaires du mois, puis ce qui mérite un coup d'œil : les gros encaissements récents et les factures en retard.
+   bancaires du mois, les seuils qui approchent (franchis ou prévus dans les trois mois), puis ce qui mérite un coup
+   d'œil : les gros encaissements récents et les factures en retard.
    Chaque carte reprend un chiffre que Lettra calcule déjà pour un autre écran ; une carte dont la lecture est
    refusée (droits) ne s'affiche pas, les autres restent. *@
 
@@ -91,6 +93,8 @@ else
         }
     </section>
 
+    <ThresholdsCard Id="brief-thresholds" />
+
     <section class="lt-panel" aria-labelledby="brief-watch-title" id="brief-watch">
         <div class="lt-panel-head">
             <h2 id="brief-watch-title">@L["Brief.Watch"]</h2>
@@ -163,22 +167,34 @@ else
         Task<OperationResult<BillingDashboardResponse>> dashboard = Dashboard.GetAsync(CancellationToken.None);
         Task<OperationResult<PagedResponse<PaymentSummary>>> payments = Banking.ListPaymentsAsync(
             new PaymentListQuery(From: OwnerBrief.PaymentsFrom(Today), To: Today, PageSize: OwnerBrief.PaymentsPageSize), CancellationToken.None);
-        Task<OperationResult<VatReturnResponse>> vat = Tax.GetVatReturnAsync(Today, CancellationToken.None);
+        Task<OperationResult<VatReturnResponse>?> vat = VatAsync();
         Task<OperationResult<ReconciliationResponse>> bank = Banking.GetReconciliationAsync(CancellationToken.None);
         await Task.WhenAll(dashboard, payments, vat, bank);
 
         _revenue = (await dashboard).Value is { } figures ? new DashboardFigures(figures, [], []) : null;
         _payments = (await payments).Value;
-        _vat = (await vat).Value;
+        _vat = (await vat)?.Value;
         _bank = (await bank).Value is { } statement && statement.Lines.Count > 0 ? OwnerBrief.Flows(statement.Lines, MonthStart, Today) : null;
         _receivables = receivables is null ? null : (await receivables).Value;
         // Un refus de droits masque seulement sa carte ; une panne (réseau) est la même pour chaque lecture : affichée une fois.
-        _errors = [.. new IReadOnlyList<ErrorDetail>[] { (await dashboard).Errors, (await payments).Errors, (await vat).Errors, (await bank).Errors }
+        _errors = [.. new IReadOnlyList<ErrorDetail>[] { (await dashboard).Errors, (await payments).Errors, (await vat)?.Errors ?? [], (await bank).Errors }
             .SelectMany(e => e)
             .Where(e => e.Code != ErrorCodes.Security.Forbidden)
             .Select(e => e with { Target = null })
             .DistinctBy(e => e.Code)];
         _loaded = true;
+    }
+
+    /// <summary>
+    /// La TVA du mois, sauf en franchise ou sans régime de TVA : le dossier n'a alors rien à déclarer, et le brouillon
+    /// que le serveur refuserait n'est pas demandé (aucune erreur dans la console pour un refus attendu).
+    /// </summary>
+    private async Task<OperationResult<VatReturnResponse>?> VatAsync()
+    {
+        OperationResult<FiscalCalendarResponse> regime = await Tax.GetCalendarAsync(Today, Today, CancellationToken.None);
+        return regime is { IsSuccess: true, Value: { } known } && (known.VatFranchise || known.Regime is null)
+            ? null
+            : await Tax.GetVatReturnAsync(Today, CancellationToken.None);
     }
 
     private string Signed(decimal value) => (value > 0m ? "+" : string.Empty) + ExplorerText.Money(value);

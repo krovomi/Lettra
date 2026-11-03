@@ -169,6 +169,8 @@ internal sealed class FakeTaxGateway : ITaxGateway
 
     public VatDeclarationRegimeDto? Regime { get; set; } = VatDeclarationRegimeDto.RealNormal;
 
+    public bool VatFranchise { get; set; }
+
     public FiscalSettingsResponse Settings { get; private set; } = new(12, 31, VatPeriodicityDto.Monthly, 15, true, true, null, 0);
 
     private DateTimeOffset? _vatFiled;
@@ -233,6 +235,19 @@ internal sealed class FakeTaxGateway : ITaxGateway
         ],
         [new(Guid.Parse("0199a000-0000-7000-8000-000000000107"), "FAC-000107", "Cave Leroy", closing.AddDays(-100), closing.AddDays(-10), closing.AddDays(-40), 30)]);
 
+    /// <summary>Les seuils rendus par le serveur ; <c>null</c> pour un refus. Aucun seuil par défaut : pas de carte sur l'accueil.</summary>
+    public ThresholdsResponse? Thresholds { get; set; } = new(new DateOnly(2026, 10, 9), 90, 3, false, []);
+
+    public int ThresholdReads { get; private set; }
+
+    public Task<OperationResult<ThresholdsResponse>> GetThresholdsAsync(CancellationToken cancellationToken)
+    {
+        ThresholdReads++;
+        return Task.FromResult(Thresholds is { } thresholds
+            ? OperationResult<ThresholdsResponse>.Success(thresholds)
+            : OperationResult<ThresholdsResponse>.Failure(ErrorCodes.Security.Forbidden));
+    }
+
     public Task<OperationResult<DesDocument>> ExportDesAsync(int year, int month, CancellationToken cancellationToken) =>
         Task.FromResult(OperationResult<DesDocument>.Success(new DesDocument($"DES-{year:D4}-{month:D2}.csv", Encoding.UTF8.GetBytes("ligne;numero_tva_client;montant_eur;periode\r\n"))));
 
@@ -240,7 +255,7 @@ internal sealed class FakeTaxGateway : ITaxGateway
     {
         CalendarQueries.Add((from, to));
         FiscalDeadlineStateDto desState = Marks.Any(m => m.Obligation == FiscalObligationDto.Des && m.Filed) ? FiscalDeadlineStateDto.Filed : FiscalDeadlineStateDto.DueSoon;
-        FiscalCalendarResponse calendar = new(from, to, new DateOnly(2026, 10, 9), Regime, false, Settings,
+        FiscalCalendarResponse calendar = new(from, to, new DateOnly(2026, 10, 9), Regime, VatFranchise, Settings,
         [
             new(FiscalObligationDto.VatReturnCa3, new(2026, 9, 1), new(2026, 9, 30), new(2026, 10, 15), FiscalDeadlineStateDto.DueSoon, null, "VatDeadlineDay"),
             new(FiscalObligationDto.Des, new(2026, 9, 1), new(2026, 9, 30), new(2026, 10, 12), desState, null, "Des"),

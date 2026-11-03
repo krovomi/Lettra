@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Thresholds.Tab" xml:space="preserve"><value>Thresholds</value></data>
+  <data name="Thresholds.Title" xml:space="preserve"><value>Thresholds to watch</value></data>
+  <data name="Thresholds.Subtitle" xml:space="preserve"><value>The thresholds that change the rules for this company: VAT exemption and VAT scheme, company size category, subcontractor vigilance certificate, fees to report. Lettra shows where each one stands, whether it will be crossed before the end of the period and what changes then.</value></data>
+  <data name="Thresholds.Method" xml:space="preserve"><value>Projection: the period's running total, extended to its last day at the pace of the last {0} days. A threshold is "near" when it is crossed or will be within {1} months.</value></data>
+  <data name="Thresholds.Stats" xml:space="preserve"><value>Where the thresholds stand</value></data>
+  <data name="Thresholds.Stat.Crossed" xml:space="preserve"><value>Crossed</value></data>
+  <data name="Thresholds.Stat.Crossed.Hint" xml:space="preserve"><value>The rules change or have changed</value></data>
+  <data name="Thresholds.Stat.Projected" xml:space="preserve"><value>Crossing expected</value></data>
+  <data name="Thresholds.Stat.Projected.Hint" xml:space="preserve"><value>At the current pace, before the end of the period</value></data>
+  <data name="Thresholds.Stat.Near" xml:space="preserve"><value>To watch</value></data>
+  <data name="Thresholds.Stat.Near.Hint" xml:space="preserve"><value>Projection above 80% of the threshold</value></data>
+  <data name="Thresholds.Stat.Far" xml:space="preserve"><value>Far from the threshold</value></data>
+  <data name="Thresholds.Stat.Far.Hint" xml:space="preserve"><value>Nothing to do for now</value></data>
+  <data name="Thresholds.ProfileMissing" xml:space="preserve"><value>Without a company profile, Lettra cannot read the VAT thresholds or the company size category: only suppliers and fee beneficiaries are watched.</value></data>
+  <data name="Thresholds.ProfileMissing.Action" xml:space="preserve"><value>Complete the company profile</value></data>
+  <data name="Thresholds.Empty" xml:space="preserve"><value>No threshold to watch</value></data>
+  <data name="Thresholds.Empty.Text" xml:space="preserve"><value>VAT and size thresholds are read from the company profile; suppliers and fee beneficiaries only appear when they get close to their threshold.</value></data>
+  <data name="Thresholds.List" xml:space="preserve"><value>This company's thresholds</value></data>
+  <data name="Thresholds.Filter.Family" xml:space="preserve"><value>Topic</value></data>
+  <data name="Thresholds.Filter.AllFamilies" xml:space="preserve"><value>All topics</value></data>
+  <data name="Thresholds.Filter.Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Thresholds.Filter.AllStatuses" xml:space="preserve"><value>All statuses</value></data>
+  <data name="Thresholds.Sort.Progress" xml:space="preserve"><value>Share of the threshold</value></data>
+  <data name="Thresholds.Sort.Date" xml:space="preserve"><value>Crossing date</value></data>
+  <data name="Thresholds.Sort.Name" xml:space="preserve"><value>Threshold</value></data>
+  <data name="Thresholds.Family.VatFranchise" xml:space="preserve"><value>VAT exemption (franchise en base)</value></data>
+  <data name="Thresholds.Family.VatSimplifiedRegime" xml:space="preserve"><value>Simplified VAT scheme</value></data>
+  <data name="Thresholds.Family.VatQuarterlyReturn" xml:space="preserve"><value>Quarterly VAT returns</value></data>
+  <data name="Thresholds.Family.CompanySize" xml:space="preserve"><value>Company size category</value></data>
+  <data name="Thresholds.Family.SubcontractorVigilance" xml:space="preserve"><value>Vigilance certificate</value></data>
+  <data name="Thresholds.Family.FeeReturn" xml:space="preserve"><value>Fees (DAS 2)</value></data>
+  <data name="Thresholds.Status.Far" xml:space="preserve"><value>Far from the threshold</value></data>
+  <data name="Thresholds.Status.Near" xml:space="preserve"><value>To watch</value></data>
+  <data name="Thresholds.Status.Projected" xml:space="preserve"><value>Crossing expected</value></data>
+  <data name="Thresholds.Status.Crossed" xml:space="preserve"><value>Crossed</value></data>
+  <data name="Thresholds.Status.CrossedOn" xml:space="preserve"><value>Crossed on {0}</value></data>
+  <data name="Thresholds.Status.ExpectedOn" xml:space="preserve"><value>Expected around {0}</value></data>
+  <data name="Thresholds.Code.tva.franchise.ventes.base" xml:space="preserve"><value>VAT exemption, sales of goods: base threshold</value></data>
+  <data name="Thresholds.Code.tva.franchise.ventes.majore" xml:space="preserve"><value>VAT exemption, sales of goods: upper threshold</value></data>
+  <data name="Thresholds.Code.tva.franchise.services.base" xml:space="preserve"><value>VAT exemption, services: base threshold</value></data>
+  <data name="Thresholds.Code.tva.franchise.services.majore" xml:space="preserve"><value>VAT exemption, services: upper threshold</value></data>
+  <data name="Thresholds.Code.tva.regime-simplifie.ventes.majore" xml:space="preserve"><value>Simplified scheme, sales of goods: upper threshold</value></data>
+  <data name="Thresholds.Code.tva.regime-simplifie.services.majore" xml:space="preserve"><value>Simplified scheme, services: upper threshold</value></data>
+  <data name="Thresholds.Code.tva.trimestrielle.base" xml:space="preserve"><value>Quarterly VAT returns: base threshold</value></data>
+  <data name="Thresholds.Code.tva.trimestrielle.majore" xml:space="preserve"><value>Quarterly VAT returns: upper threshold</value></data>
+  <data name="Thresholds.Code.taille.micro" xml:space="preserve"><value>Micro-enterprise: turnover limit</value></data>
+  <data name="Thresholds.Code.taille.pme" xml:space="preserve"><value>SME: turnover limit</value></data>
+  <data name="Thresholds.Code.taille.eti" xml:space="preserve"><value>Mid-sized company: turnover limit</value></data>
+  <data name="Thresholds.Code.vigilance.sous-traitant" xml:space="preserve"><value>Vigilance certificate: {0}</value></data>
+  <data name="Thresholds.Code.das2.beneficiaire" xml:space="preserve"><value>Fees paid to {0}</value></data>
+  <data name="Thresholds.Change.tva.franchise.ventes.base" xml:space="preserve"><value>Above the base threshold over the year, the exemption ends on the following 1 January: invoices then carry VAT and VAT returns start.</value></data>
+  <data name="Thresholds.Change.tva.franchise.ventes.majore" xml:space="preserve"><value>Above the upper threshold, the exemption ends with the invoice that crosses it: that invoice and the following ones carry VAT. Tell the accounting firm.</value></data>
+  <data name="Thresholds.Change.tva.franchise.services.base" xml:space="preserve"><value>Above the base threshold over the year, the exemption ends on the following 1 January: invoices then carry VAT and VAT returns start.</value></data>
+  <data name="Thresholds.Change.tva.franchise.services.majore" xml:space="preserve"><value>Above the upper threshold, the exemption ends with the invoice that crosses it: that invoice and the following ones carry VAT. Tell the accounting firm.</value></data>
+  <data name="Thresholds.Change.tva.regime-simplifie.ventes.majore" xml:space="preserve"><value>Above the upper threshold, the standard scheme applies from the start of the year: monthly VAT returns (CA3) instead of the annual return. Tell the accounting firm.</value></data>
+  <data name="Thresholds.Change.tva.regime-simplifie.services.majore" xml:space="preserve"><value>Above the upper threshold, the standard scheme applies from the start of the year: monthly VAT returns (CA3) instead of the annual return. Tell the accounting firm.</value></data>
+  <data name="Thresholds.Change.tva.trimestrielle.base" xml:space="preserve"><value>Above the threshold over the year, VAT returns become monthly from the following 1 January.</value></data>
+  <data name="Thresholds.Change.tva.trimestrielle.majore" xml:space="preserve"><value>Above the upper threshold, VAT returns become monthly from the month it is crossed.</value></data>
+  <data name="Thresholds.Change.taille.micro" xml:space="preserve"><value>Above this turnover, the company may change category: headcount and balance sheet total count too. Check with the accounting firm; the category notably sets the e-invoicing timetable.</value></data>
+  <data name="Thresholds.Change.taille.pme" xml:space="preserve"><value>Above this turnover, the company may change category: headcount and balance sheet total count too. Check with the accounting firm; the category notably sets the e-invoicing timetable.</value></data>
+  <data name="Thresholds.Change.taille.eti" xml:space="preserve"><value>Above this turnover, the company may change category: headcount and balance sheet total count too. Check with the accounting firm; the category notably sets the e-invoicing timetable.</value></data>
+  <data name="Thresholds.Change.vigilance.sous-traitant" xml:space="preserve"><value>From this amount, ask this supplier for its URSSAF vigilance certificate, then every six months while the work lasts: without it, the company can be held jointly liable for its social contributions.</value></data>
+  <data name="Thresholds.Change.das2.beneficiaire" xml:space="preserve"><value>Above the threshold, the amounts paid to this beneficiary during the financial year are reported with the tax return (DAS 2).</value></data>
+  <data name="Thresholds.Effective" xml:space="preserve"><value>The rules change on {0}.</value></data>
+  <data name="Thresholds.Amounts" xml:space="preserve"><value>{0} of {1} {2}</value></data>
+  <data name="Thresholds.Basis.ExclTax" xml:space="preserve"><value>excl. VAT</value></data>
+  <data name="Thresholds.Basis.InclTax" xml:space="preserve"><value>incl. VAT</value></data>
+  <data name="Thresholds.Projection" xml:space="preserve"><value>Projection at the end of the period: {0}</value></data>
+  <data name="Thresholds.Excess" xml:space="preserve"><value>{0} above the threshold</value></data>
+  <data name="Thresholds.Period.Year" xml:space="preserve"><value>Year {0}</value></data>
+  <data name="Thresholds.Source" xml:space="preserve"><value>Source: {0}</value></data>
+  <data name="Thresholds.Progress.Label" xml:space="preserve"><value>{0}% of the threshold reached, {1}% projected</value></data>
+  <data name="Thresholds.Open.VatFranchise" xml:space="preserve"><value>Open the company profile</value></data>
+  <data name="Thresholds.Open.VatSimplifiedRegime" xml:space="preserve"><value>Open the company profile</value></data>
+  <data name="Thresholds.Open.VatQuarterlyReturn" xml:space="preserve"><value>Open the tax settings</value></data>
+  <data name="Thresholds.Open.CompanySize" xml:space="preserve"><value>Open the company profile</value></data>
+  <data name="Thresholds.Open.SubcontractorVigilance" xml:space="preserve"><value>Open the certificates</value></data>
+  <data name="Thresholds.Open.FeeReturn" xml:space="preserve"><value>Open the fees</value></data>
+  <data name="Thresholds.Disclaimer" xml:space="preserve"><value>An early warning, computed without AI from validated invoices: the turnover counted is the amount invoiced excluding VAT (without disbursements and down payments), without acquisitions. The accounting firm confirms any tax consequence before you act.</value></data>
+  <data name="Thresholds.Percent" xml:space="preserve"><value>{0}%</value></data>
+  <data name="Thresholds.Card.Title" xml:space="preserve"><value>Thresholds to watch</value></data>
+  <data name="Thresholds.Card.All" xml:space="preserve"><value>See the thresholds</value></data>
+  <data name="Thresholds.Card.Count" xml:space="preserve"><value>Near thresholds: {0}</value></data>
+</root>
