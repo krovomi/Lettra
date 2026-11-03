@@ -72,6 +72,8 @@ public sealed class AiGuidePageTests : BunitContext
         Status(page, "einvoicing").Should().Be("Non ouvert");
         Status(page, "external").Should().Be("Ouvert ou non par le cabinet, avec l'accord du DPO");
         Status(page, "speech").Should().Be("Selon le réglage de la dictée");
+        Status(page, "receipts").Should().Be("Sur l'appareil, rien n'est envoyé");
+        page.Find("li[data-usage='receipts']").GetAttribute("data-status").Should().Be("device");
         page.Find("li[data-usage='speech']").TextContent.Should().Contain("Risque minimal");
         page.Find("li[data-usage='explain']").TextContent.Should().Contain("Risque limité");
 

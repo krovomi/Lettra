@@ -7,7 +7,7 @@ namespace Lettra.UI.Shared.Pages.Ai;
 /// <c>Localization/Modules/Ia[.en].resx</c> sous <c>AiGuide.Usage.&lt;Id&gt;.Name</c> et <c>.Role</c>.
 /// </summary>
 /// <param name="Id">Identifiant stable (clés de ressources, attribut <c>data-usage</c>).</param>
-/// <param name="Feature">Fonction de l'assistant qui porte cet usage ; aucune pour la dictée, réglée à part.</param>
+/// <param name="Feature">Fonction de l'assistant qui porte cet usage ; aucune pour un modèle qui tourne sur l'appareil ou le serveur du cabinet (dictée, lecture des pièces).</param>
 /// <param name="MinimalRisk">Risque minimal au sens du règlement européen sur l'IA ; sinon risque limité (obligation de transparence).</param>
 public sealed record AiUsage(string Id, AssistantFeature? Feature, bool MinimalRisk = false)
 {
@@ -18,21 +18,29 @@ public sealed record AiUsage(string Id, AssistantFeature? Feature, bool MinimalR
     public string RiskKey => MinimalRisk ? "AiGuide.Risk.Minimal" : "AiGuide.Risk.Limited";
 
     /// <summary>
-    /// État de l'usage dans le dossier ouvert, d'après les fonctions que le serveur offre. Le brouillon de devis non offert
-    /// est fermé par Lettra tant que le repérage des noms propres manque ; l'assistant du poste et la dictée se règlent
-    /// ailleurs que dans le panneau.
+    /// État de l'usage dans le dossier ouvert, d'après les fonctions que le serveur offre : <c>open</c>, <c>closed</c>,
+    /// <c>blocked</c> (le brouillon de devis, fermé par Lettra tant que le repérage des noms propres manque),
+    /// <c>external</c> (l'assistant du poste, réglé par le cabinet) ou <c>device</c> (un modèle de l'appareil, sans
+    /// fonction de l'assistant).
     /// </summary>
-    public string StatusKey(IReadOnlyCollection<AssistantFeature> offered)
+    public string Status(IReadOnlyCollection<AssistantFeature> offered)
     {
         ArgumentNullException.ThrowIfNull(offered);
         return Feature switch
         {
-            null => "AiGuide.Usage.Status.Speech",
-            AssistantFeature.ExternalAssistant => "AiGuide.Usage.Status.External",
-            { } feature when offered.Contains(feature) => "AiGuide.Usage.Status.Open",
-            AssistantFeature.DraftFromText => "AiGuide.Usage.Status.Blocked",
-            _ => "AiGuide.Usage.Status.Closed",
+            null => "device",
+            AssistantFeature.ExternalAssistant => "external",
+            { } feature when offered.Contains(feature) => "open",
+            AssistantFeature.DraftFromText => "blocked",
+            _ => "closed",
         };
+    }
+
+    /// <summary>Texte de l'état : commun aux fonctions de l'assistant, propre à l'usage pour un modèle de l'appareil.</summary>
+    public string StatusKey(IReadOnlyCollection<AssistantFeature> offered)
+    {
+        string status = Status(offered);
+        return status == "device" ? $"AiGuide.Usage.{Id}.Status" : $"AiGuide.Usage.Status.{status}";
     }
 }
 
@@ -50,5 +58,6 @@ public static class AiUsages
         new("draft", AssistantFeature.DraftFromText),
         new("external", AssistantFeature.ExternalAssistant),
         new("speech", Feature: null, MinimalRisk: true),
+        new("receipts", Feature: null, MinimalRisk: true),
     ];
 }

@@ -58,13 +58,12 @@
     <ul class="lt-ai-usages">
         @foreach (AiUsage usage in AiUsages.All)
         {
-            string status = usage.StatusKey(State.Features);
-            <li data-usage="@usage.Id" data-status="@status[(status.LastIndexOf('.') + 1)..].ToLowerInvariant()">
+            <li data-usage="@usage.Id" data-status="@usage.Status(State.Features)">
                 <strong>@L[usage.NameKey]</strong>
                 <span>@L[usage.RoleKey]</span>
                 <span class="lt-ai-usage-tags">
                     <span class="lt-ai-tag">@L[usage.RiskKey]</span>
-                    <span class="lt-ai-tag is-status">@L[status]</span>
+                    <span class="lt-ai-tag is-status">@L[usage.StatusKey(State.Features)]</span>
                 </span>
             </li>
         }

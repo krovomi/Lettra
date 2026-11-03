@@ -115,11 +115,11 @@
   <data name="AiGuide.Usage.speech.Role" xml:space="preserve"><value>Transcrit votre voix sur l'appareil ou le serveur du cabinet ; une commande s'affiche avant d'être exécutée.</value></data>
   <data name="AiGuide.Risk.Limited" xml:space="preserve"><value>Risque limité : texte signalé comme venant de l'IA</value></data>
   <data name="AiGuide.Risk.Minimal" xml:space="preserve"><value>Risque minimal</value></data>
-  <data name="AiGuide.Usage.Status.Open" xml:space="preserve"><value>Ouvert dans ce dossier</value></data>
-  <data name="AiGuide.Usage.Status.Closed" xml:space="preserve"><value>Non ouvert</value></data>
-  <data name="AiGuide.Usage.Status.Blocked" xml:space="preserve"><value>Fermé tant que Lettra ne sait pas masquer les noms tapés</value></data>
-  <data name="AiGuide.Usage.Status.External" xml:space="preserve"><value>Ouvert ou non par le cabinet, avec l'accord du DPO</value></data>
-  <data name="AiGuide.Usage.Status.Speech" xml:space="preserve"><value>Selon le réglage de la dictée</value></data>
+  <data name="AiGuide.Usage.Status.open" xml:space="preserve"><value>Ouvert dans ce dossier</value></data>
+  <data name="AiGuide.Usage.Status.closed" xml:space="preserve"><value>Non ouvert</value></data>
+  <data name="AiGuide.Usage.Status.blocked" xml:space="preserve"><value>Fermé tant que Lettra ne sait pas masquer les noms tapés</value></data>
+  <data name="AiGuide.Usage.Status.external" xml:space="preserve"><value>Ouvert ou non par le cabinet, avec l'accord du DPO</value></data>
+  <data name="AiGuide.Usage.speech.Status" xml:space="preserve"><value>Selon le réglage de la dictée</value></data>
   <data name="AiGuide.Law" xml:space="preserve"><value>Les usages de Lettra sont à risque minimal ou limité au sens du règlement européen sur l'IA. Lettra signale les textes rédigés par l'IA (article 50), et cette page aide chacun à bien s'en servir (article 4).</value></data>
   <data name="AiGuide.Journal.Title" xml:space="preserve"><value>Lire le journal de l'IA</value></data>
   <data name="AiGuide.Journal.Intro" xml:space="preserve"><value>Chaque demande, appel au moteur, outil utilisé, réponse et panne est noté avec sa date et le moteur. Les noms y restent masqués par des jetons comme [CLIENT_1]. Le journal appartient au dossier.</value></data>
@@ -141,4 +141,7 @@
   <data name="AiGuide.Journal.Kind.Refused" xml:space="preserve"><value>Refus du moteur</value></data>
   <data name="AiGuide.Journal.Kind.Unavailable" xml:space="preserve"><value>Indisponible</value></data>
   <data name="AiGuide.Journal.Kind.EngineFailed" xml:space="preserve"><value>Panne du moteur</value></data>
+  <data name="AiGuide.Usage.receipts.Name" xml:space="preserve"><value>Lecture des pièces justificatives</value></data>
+  <data name="AiGuide.Usage.receipts.Role" xml:space="preserve"><value>Lit le montant, la date et la TVA d'une photo de pièce, sur l'appareil ; vous confirmez ou corrigez avant l'envoi.</value></data>
+  <data name="AiGuide.Usage.receipts.Status" xml:space="preserve"><value>Sur l'appareil, rien n'est envoyé</value></data>
 </root>

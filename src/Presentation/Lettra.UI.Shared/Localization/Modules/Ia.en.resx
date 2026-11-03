@@ -115,11 +115,11 @@
   <data name="AiGuide.Usage.speech.Role" xml:space="preserve"><value>Transcribes your voice on the device or the firm's server; a command is shown before it runs.</value></data>
   <data name="AiGuide.Risk.Limited" xml:space="preserve"><value>Limited risk: text flagged as AI-written</value></data>
   <data name="AiGuide.Risk.Minimal" xml:space="preserve"><value>Minimal risk</value></data>
-  <data name="AiGuide.Usage.Status.Open" xml:space="preserve"><value>On in this dossier</value></data>
-  <data name="AiGuide.Usage.Status.Closed" xml:space="preserve"><value>Not turned on</value></data>
-  <data name="AiGuide.Usage.Status.Blocked" xml:space="preserve"><value>Closed until Lettra can mask typed names</value></data>
-  <data name="AiGuide.Usage.Status.External" xml:space="preserve"><value>Turned on or not by the firm, with the DPO's approval</value></data>
-  <data name="AiGuide.Usage.Status.Speech" xml:space="preserve"><value>Depends on the dictation setting</value></data>
+  <data name="AiGuide.Usage.Status.open" xml:space="preserve"><value>On in this dossier</value></data>
+  <data name="AiGuide.Usage.Status.closed" xml:space="preserve"><value>Not turned on</value></data>
+  <data name="AiGuide.Usage.Status.blocked" xml:space="preserve"><value>Closed until Lettra can mask typed names</value></data>
+  <data name="AiGuide.Usage.Status.external" xml:space="preserve"><value>Turned on or not by the firm, with the DPO's approval</value></data>
+  <data name="AiGuide.Usage.speech.Status" xml:space="preserve"><value>Depends on the dictation setting</value></data>
   <data name="AiGuide.Law" xml:space="preserve"><value>Lettra's uses are minimal or limited risk under the European AI regulation. Lettra flags AI-written text (Article 50), and this page helps everyone use it well (Article 4).</value></data>
   <data name="AiGuide.Journal.Title" xml:space="preserve"><value>Reading the AI log</value></data>
   <data name="AiGuide.Journal.Intro" xml:space="preserve"><value>Every request, engine call, tool used, answer and failure is recorded with its date and engine. Names stay masked by tokens such as [CLIENT_1]. The log belongs to the dossier.</value></data>
@@ -141,4 +141,7 @@
   <data name="AiGuide.Journal.Kind.Refused" xml:space="preserve"><value>Engine refusal</value></data>
   <data name="AiGuide.Journal.Kind.Unavailable" xml:space="preserve"><value>Unavailable</value></data>
   <data name="AiGuide.Journal.Kind.EngineFailed" xml:space="preserve"><value>Engine failure</value></data>
+  <data name="AiGuide.Usage.receipts.Name" xml:space="preserve"><value>Reading receipts</value></data>
+  <data name="AiGuide.Usage.receipts.Role" xml:space="preserve"><value>Reads the amount, date and VAT from a photo of a receipt, on the device; you confirm or correct them before sending.</value></data>
+  <data name="AiGuide.Usage.receipts.Status" xml:space="preserve"><value>On the device, nothing is sent</value></data>
 </root>
