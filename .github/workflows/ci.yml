@@ -368,6 +368,10 @@ jobs:
   secrets:
     name: Détection de secrets
     runs-on: ubuntu-latest
+    # Sur une PR, gitleaks lit la liste de ses commits : sans lecture des PR, GitHub répond 403.
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@v5
         with:
