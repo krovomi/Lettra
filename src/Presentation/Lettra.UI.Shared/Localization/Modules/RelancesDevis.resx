@@ -13,15 +13,18 @@
   <data name="QuoteTabs.FollowUps" xml:space="preserve"><value>À relancer</value></data>
   <data name="QuoteTabs.OrderBook" xml:space="preserve"><value>Carnet de commandes</value></data>
   <data name="QuoteTabs.DueCount" xml:space="preserve"><value>{0} devis à relancer</value></data>
+  <data name="QuoteTabs.DueCount.One" xml:space="preserve"><value>1 devis à relancer</value></data>
   <data name="Quote.Command.FollowUp" xml:space="preserve"><value>Relancer</value></data>
   <data name="QuoteFollowUps.Title" xml:space="preserve"><value>Devis à relancer</value></data>
   <data name="QuoteFollowUps.Subtitle" xml:space="preserve"><value>Les devis envoyés restés sans réponse dont la validité se termine dans les {0} prochains jours. Relisez la relance proposée, puis envoyez-la ou notez-la : rien ne part sans vous.</value></data>
+  <data name="QuoteFollowUps.Subtitle.One" xml:space="preserve"><value>Les devis envoyés restés sans réponse dont la validité se termine d'ici demain. Relisez la relance proposée, puis envoyez-la ou notez-la : rien ne part sans vous.</value></data>
   <data name="QuoteFollowUps.NoEmail" xml:space="preserve"><value>Cette installation n'envoie pas d'e-mails. Relancez vos clients vous-même (téléphone, courrier, votre messagerie) puis notez chaque relance ici.</value></data>
   <data name="QuoteFollowUps.Stat.Due" xml:space="preserve"><value>Devis à relancer</value></data>
   <data name="QuoteFollowUps.Stat.DueAmount" xml:space="preserve"><value>Montant à relancer (HT)</value></data>
   <data name="QuoteFollowUps.Stat.Likely" xml:space="preserve"><value>Dont probable (HT)</value></data>
   <data name="QuoteFollowUps.Stat.Window" xml:space="preserve"><value>Fenêtre de relance</value></data>
   <data name="QuoteFollowUps.Days" xml:space="preserve"><value>{0} jours</value></data>
+  <data name="QuoteFollowUps.Days.One" xml:space="preserve"><value>1 jour</value></data>
   <data name="QuoteFollowUps.Preview.Title" xml:space="preserve"><value>Relance du devis {0} pour {1}</value></data>
   <data name="QuoteFollowUps.Preview.Body" xml:space="preserve"><value>Message</value></data>
   <data name="QuoteFollowUps.MarkManual" xml:space="preserve"><value>Noter comme relancé</value></data>
@@ -29,19 +32,25 @@
   <data name="QuoteFollowUps.List" xml:space="preserve"><value>Devis en attente de réponse</value></data>
   <data name="QuoteFollowUps.Empty" xml:space="preserve"><value>Aucun devis en attente de réponse</value></data>
   <data name="QuoteFollowUps.Empty.Text" xml:space="preserve"><value>Les devis validés sans réponse apparaîtront ici ; ceux dont la validité se termine dans les {0} jours sont à relancer.</value></data>
+  <data name="QuoteFollowUps.Empty.Text.One" xml:space="preserve"><value>Les devis validés sans réponse apparaîtront ici ; ceux dont la validité se termine d'ici demain sont à relancer.</value></data>
   <data name="QuoteFollowUps.Search" xml:space="preserve"><value>Rechercher un devis, un client ou une adresse</value></data>
   <data name="QuoteFollowUps.DueOnly" xml:space="preserve"><value>À relancer seulement</value></data>
   <data name="QuoteFollowUps.WithEmail" xml:space="preserve"><value>Avec une adresse e-mail</value></data>
   <data name="QuoteFollowUps.Count" xml:space="preserve"><value>{0} devis sur {1}</value></data>
   <data name="QuoteFollowUps.NoMatch" xml:space="preserve"><value>Aucun devis ne correspond à ces filtres.</value></data>
+  <data name="QuoteFollowUps.NothingDue" xml:space="preserve"><value>Aucun devis à relancer pour l'instant. Ceux déjà relancés restent visibles en décochant « À relancer seulement ».</value></data>
   <data name="QuoteFollowUps.Last" xml:space="preserve"><value>Dernière relance</value></data>
   <data name="QuoteFollowUps.WithoutAnswer" xml:space="preserve"><value>sans réponse depuis {0} jours</value></data>
+  <data name="QuoteFollowUps.SentToday" xml:space="preserve"><value>envoyé aujourd'hui</value></data>
+  <data name="QuoteFollowUps.WithoutAnswer.One" xml:space="preserve"><value>sans réponse depuis 1 jour</value></data>
   <data name="QuoteFollowUps.Probability.Hint" xml:space="preserve"><value>Chance d'acceptation estimée d'après vos devis passés : voir le carnet de commandes.</value></data>
   <data name="QuoteFollowUps.Times" xml:space="preserve"><value>{0} fois</value></data>
+  <data name="QuoteFollowUps.Times.One" xml:space="preserve"><value>1 fois</value></data>
   <data name="QuoteFollowUps.Open" xml:space="preserve"><value>Relancer</value></data>
   <data name="QuoteFollowUps.OpenAgain" xml:space="preserve"><value>Préparer une relance</value></data>
   <data name="QuoteFollowUps.Settings" xml:space="preserve"><value>Fenêtre de relance</value></data>
   <data name="QuoteFollowUps.Settings.Summary" xml:space="preserve"><value>{0} jours avant la fin de validité</value></data>
+  <data name="QuoteFollowUps.Settings.Summary.One" xml:space="preserve"><value>1 jour avant la fin de validité</value></data>
   <data name="QuoteFollowUps.Settings.Hint" xml:space="preserve"><value>Un devis sans réponse est à relancer quand sa fin de validité tombe dans cette fenêtre, jusqu'à ce qu'une relance soit envoyée ou notée. De 1 à 30 jours ; 5 par défaut.</value></data>
   <data name="QuoteFollowUps.Settings.Window" xml:space="preserve"><value>Relancer à partir de</value></data>
   <data name="QuoteFollowUps.Settings.Unit" xml:space="preserve"><value>jours avant la fin</value></data>
@@ -52,6 +61,7 @@
   <data name="QuoteFollowUps.Toast.Sent" xml:space="preserve"><value>Relance du devis {0} envoyée à {1}.</value></data>
   <data name="QuoteFollowUps.Toast.Noted" xml:space="preserve"><value>Relance du devis {0} notée.</value></data>
   <data name="QuoteFollowUps.Toast.SettingsSaved" xml:space="preserve"><value>Fenêtre de relance enregistrée : {0} jours.</value></data>
+  <data name="QuoteFollowUps.Toast.SettingsSaved.One" xml:space="preserve"><value>Fenêtre de relance enregistrée : 1 jour.</value></data>
   <data name="QuoteFollowUps.History" xml:space="preserve"><value>Historique des relances de devis</value></data>
   <data name="QuoteFollowUps.History.Empty" xml:space="preserve"><value>Aucune relance de devis pour l'instant</value></data>
   <data name="QuoteFollowUps.History.Empty.Text" xml:space="preserve"><value>Chaque relance envoyée ou notée s'ajoute ici, avec son texte.</value></data>
@@ -74,7 +84,7 @@
   <data name="OrderBook.Stat.Weighted" xml:space="preserve"><value>Carnet pondéré (HT)</value></data>
   <data name="OrderBook.Stat.WeightedInclTax" xml:space="preserve"><value>Carnet pondéré (TTC)</value></data>
   <data name="OrderBook.Stat.Rate" xml:space="preserve"><value>Taux d'acceptation</value></data>
-  <data name="OrderBook.Rate.Detail" xml:space="preserve"><value>{0} acceptés sur {1} devis conclus</value></data>
+  <data name="OrderBook.Rate.Detail" xml:space="preserve"><value>devis conclus acceptés : {0} sur {1}</value></data>
   <data name="OrderBook.NotEnough" xml:space="preserve"><value>Historique encore court : moins de {0} devis conclus depuis le {1}. En attendant, chaque devis compte pour une chance sur deux.</value></data>
   <data name="OrderBook.Rule.Title" xml:space="preserve"><value>Comment ce montant est calculé</value></data>
   <data name="OrderBook.Rule.Summary" xml:space="preserve"><value>La moyenne de trois taux d'acceptation passés, devis par devis</value></data>
@@ -99,13 +109,15 @@
   <data name="OrderBook.NoMatch" xml:space="preserve"><value>Aucun devis ne correspond à ces filtres.</value></data>
   <data name="OrderBook.Age" xml:space="preserve"><value>Ancienneté</value></data>
   <data name="OrderBook.AgeDays" xml:space="preserve"><value>{0} jours</value></data>
+  <data name="OrderBook.AgeToday" xml:space="preserve"><value>aujourd'hui</value></data>
+  <data name="OrderBook.AgeDays.One" xml:space="preserve"><value>1 jour</value></data>
   <data name="OrderBook.ValidUntil" xml:space="preserve"><value>valable jusqu'au {0}</value></data>
   <data name="OrderBook.Probability" xml:space="preserve"><value>Chance d'acceptation</value></data>
   <data name="OrderBook.Weighted" xml:space="preserve"><value>Pondéré HT</value></data>
   <data name="OrderBook.Why" xml:space="preserve"><value>Pourquoi ce taux ?</value></data>
-  <data name="OrderBook.Why.Customer" xml:space="preserve"><value>Client {0} : {1}, {2} acceptés sur {3}</value></data>
-  <data name="OrderBook.Why.Amount" xml:space="preserve"><value>Montant, {0} : {1}, {2} acceptés sur {3}</value></data>
-  <data name="OrderBook.Why.Age" xml:space="preserve"><value>Ancienneté, {0} : {1}, {2} acceptés sur {3}</value></data>
+  <data name="OrderBook.Why.Customer" xml:space="preserve"><value>Client {0} : {1}, acceptés : {2} sur {3}</value></data>
+  <data name="OrderBook.Why.Amount" xml:space="preserve"><value>Montant, {0} : {1}, acceptés : {2} sur {3}</value></data>
+  <data name="OrderBook.Why.Age" xml:space="preserve"><value>Ancienneté, {0} : {1}, acceptés : {2} sur {3}</value></data>
   <data name="OrderBook.Why.Global" xml:space="preserve"><value>(trop peu de devis : taux global)</value></data>
   <data name="OrderBook.Why.Result" xml:space="preserve"><value>Moyenne : {0}, soit {1} sur {2} HT.</value></data>
   <data name="Home.OrderBook.Title" xml:space="preserve"><value>Carnet de commandes</value></data>
@@ -114,7 +126,9 @@
   <data name="Home.OrderBook.Open" xml:space="preserve"><value>En attente HT</value></data>
   <data name="Home.OrderBook.ToFollowUp" xml:space="preserve"><value>À relancer</value></data>
   <data name="Home.OrderBook.Reason" xml:space="preserve"><value>{0} devis en attente, pondérés par vos taux passés : {1} des devis conclus ont été acceptés ({2} sur {3}, {4} derniers mois).</value></data>
+  <data name="Home.OrderBook.Reason.One" xml:space="preserve"><value>1 devis en attente, pondéré par vos taux passés : {1} des devis conclus ont été acceptés ({2} sur {3}, {4} derniers mois).</value></data>
   <data name="Home.OrderBook.ReasonNoHistory" xml:space="preserve"><value>{0} devis en attente ; historique encore court, chaque devis compte pour une chance sur deux.</value></data>
+  <data name="Home.OrderBook.ReasonNoHistory.One" xml:space="preserve"><value>1 devis en attente ; historique encore court, il compte pour une chance sur deux.</value></data>
   <data name="Home.OrderBook.NoQuote" xml:space="preserve"><value>Aucun devis en attente de réponse.</value></data>
   <data name="Error.QuoteFollowUps.WindowInvalid" xml:space="preserve"><value>La fenêtre de relance va de 1 à 30 jours.</value></data>
   <data name="Error.QuoteFollowUps.QuoteNotPending" xml:space="preserve"><value>Ce devis n'attend plus de réponse (accepté, refusé ou arrivé à la fin de sa validité).</value></data>

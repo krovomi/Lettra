@@ -9,7 +9,7 @@
             <Icon Name="@icon" Size="18" /> @L[$"QuoteTabs.{tab}"]
             @if (tab == QuotesTab.FollowUps && DueCount is > 0)
             {
-                <span class="lt-quotes-tab-count" aria-label="@string.Format(CultureInfo.CurrentCulture, L["QuoteTabs.DueCount"], DueCount)">@DueCount</span>
+                <span class="lt-quotes-tab-count" aria-label="@string.Format(CultureInfo.CurrentCulture, L[DueCount == 1 ? "QuoteTabs.DueCount.One" : "QuoteTabs.DueCount"], DueCount)">@DueCount</span>
             }
         </a>
     }

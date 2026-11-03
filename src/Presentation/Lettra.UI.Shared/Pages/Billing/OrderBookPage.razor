@@ -141,7 +141,7 @@ else
                                     <td data-label="@L["Billing.Column.Customer"]">@quote.CustomerName</td>
                                     <td data-label="@L["OrderBook.Age"]">
                                         <span class="lt-reminders-cell">
-                                            <span>@string.Format(Culture, L["OrderBook.AgeDays"], quote.AgeDays)</span>
+                                            <span>@AgeText(quote.AgeDays)</span>
                                             <small class="lettra-muted">@string.Format(Culture, L["OrderBook.ValidUntil"], quote.ValidUntil.ToString("d", Culture))</small>
                                         </span>
                                     </td>
@@ -269,6 +269,13 @@ else
     private SortOption<BookSort> Column(BookSort column) => _sortOptions.First(o => o.Column == column);
 
     private void ResetFilters() => (_search, _amount, _age, _page) = (null, null, null, 1);
+
+    private string AgeText(int days) => days switch
+    {
+        <= 0 => L["OrderBook.AgeToday"],
+        1 => L["OrderBook.AgeDays.One"],
+        _ => string.Format(Culture, L["OrderBook.AgeDays"], days),
+    };
 
     private static string Percent(decimal rate) => rate.ToString("P0", Culture);
 

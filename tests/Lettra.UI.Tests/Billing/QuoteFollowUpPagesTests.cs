@@ -219,6 +219,43 @@ public sealed class QuoteFollowUpPagesTests : BunitContext
     }
 
     [Fact]
+    public void Quand_tout_est_relance_l_ecran_dit_qu_il_n_y_a_rien_a_relancer()
+    {
+        _gateway.Quotes.Add(FakeQuoteFollowUpsGateway.Quote("DEV-0007", "Dupont SARL", "compta@dupont.fr", 3, due: false));
+
+        IRenderedComponent<QuoteFollowUpPage> page = Open();
+
+        page.Find("#quote-follow-ups-nomatch").TextContent.Should().StartWith("Aucun devis à relancer pour l'instant.");
+        page.Find("#quote-follow-ups-due-only").Change(false);
+        page.FindAll("#quote-follow-ups-table tbody tr").Should().ContainSingle();
+        page.Find("#quote-follow-ups-search").Input("zzz");
+        page.Find("#quote-follow-ups-nomatch").TextContent.Should().Be("Aucun devis ne correspond à ces filtres.");
+    }
+
+    [Fact]
+    public void Un_jour_ou_une_fois_s_ecrivent_au_singulier()
+    {
+        QuoteToFollowUpResponse once = FakeQuoteFollowUpsGateway.Quote("DEV-0007", "Dupont SARL", "compta@dupont.fr", 1) with { DaysWithoutAnswer = 1, FollowUpCount = 1, LastChannel = QuoteFollowUpChannelDto.Email };
+        QuoteToFollowUpResponse today = FakeQuoteFollowUpsGateway.Quote("DEV-0008", "Marie Durand", null, 1, due: false) with { DaysWithoutAnswer = 0 };
+        _gateway.Quotes.AddRange([once, today]);
+        _gateway.Book = Book(true,
+            FakeQuoteFollowUpsGateway.BookQuote("DEV-0003", "Dupont SARL", 4_000m, 0.55m, age: 0),
+            FakeQuoteFollowUpsGateway.BookQuote("DEV-0004", "Marie Durand", 500m, 0.5m, age: 1));
+
+        IRenderedComponent<QuoteFollowUpPage> page = Open();
+        page.Find("#quote-follow-ups-due-only").Change(false);
+        page.Markup.Should().Contain("sans réponse depuis 1 jour<").And.Contain("envoyé aujourd'hui").And.Contain("1 fois");
+        page.Find("#quote-follow-ups-window").Change("1");
+        page.Find("#quote-follow-ups-settings-save").Click();
+        page.WaitForAssertion(() => this.ToastText().Should().Be("Fenêtre de relance enregistrée : 1 jour."));
+        page.Markup.Should().Contain("se termine d'ici demain").And.Contain("1 jour avant la fin de validité");
+
+        IRenderedComponent<OrderBookPage> book = OpenBook();
+        book.Markup.Should().Contain("aujourd'hui").And.Contain("1 jour<");
+        book.Find(".lt-quotes-tab-count").GetAttribute("aria-label").Should().Be("1 devis à relancer");
+    }
+
+    [Fact]
     public void L_historique_se_filtre_se_trie_et_se_pagine_sur_le_serveur()
     {
         for (int i = 0; i < 30; i++)

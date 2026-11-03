@@ -223,14 +223,14 @@ public sealed class ShellTests : BunitContext
         IRenderedComponent<Home> accueil = Render<Home>();
 
         accueil.WaitForAssertion(() => accueil.Find("#home-order-book-weighted").TextContent.Should().Be("2\u00A0400 €"));
-        accueil.Find("#home-order-book-reason").TextContent.Should().Be("1 devis en attente, pondérés par vos taux passés : 60 % des devis conclus ont été acceptés (6 sur 10, 24 derniers mois).");
+        accueil.Find("#home-order-book-reason").TextContent.Should().Be("1 devis en attente, pondéré par vos taux passés : 60 % des devis conclus ont été acceptés (6 sur 10, 24 derniers mois).");
         accueil.Find("#home-quote-follow-ups").TextContent.Should().Be("1");
         accueil.Find("#home-order-book [data-stat=to-follow-up]").ClassList.Should().Contain("is-alert");
         accueil.Find("#home-order-book-link").GetAttribute("href").Should().Be("order-book");
 
         followUps.Book = followUps.Book with { HasEnoughHistory = false };
         IRenderedComponent<Home> court = Render<Home>();
-        court.WaitForAssertion(() => court.Find("#home-order-book-reason").TextContent.Should().Contain("chaque devis compte pour une chance sur deux"));
+        court.WaitForAssertion(() => court.Find("#home-order-book-reason").TextContent.Should().Be("1 devis en attente ; historique encore court, il compte pour une chance sur deux."));
 
         followUps.Book = followUps.Book with { Quotes = [] };
         IRenderedComponent<Home> vide = Render<Home>();

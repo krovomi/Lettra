@@ -13,15 +13,18 @@
   <data name="QuoteTabs.FollowUps" xml:space="preserve"><value>To follow up</value></data>
   <data name="QuoteTabs.OrderBook" xml:space="preserve"><value>Order book</value></data>
   <data name="QuoteTabs.DueCount" xml:space="preserve"><value>{0} quotes to follow up</value></data>
+  <data name="QuoteTabs.DueCount.One" xml:space="preserve"><value>1 quote to follow up</value></data>
   <data name="Quote.Command.FollowUp" xml:space="preserve"><value>Follow up</value></data>
   <data name="QuoteFollowUps.Title" xml:space="preserve"><value>Quotes to follow up</value></data>
   <data name="QuoteFollowUps.Subtitle" xml:space="preserve"><value>Quotes sent without an answer whose validity ends within the next {0} days. Read the suggested follow-up, then send it or log it: nothing goes out without you.</value></data>
+  <data name="QuoteFollowUps.Subtitle.One" xml:space="preserve"><value>Quotes sent without an answer whose validity ends by tomorrow. Read the suggested follow-up, then send it or log it: nothing goes out without you.</value></data>
   <data name="QuoteFollowUps.NoEmail" xml:space="preserve"><value>This installation does not send emails. Follow up with your customers yourself (phone, letter, your own mailbox), then log each follow-up here.</value></data>
   <data name="QuoteFollowUps.Stat.Due" xml:space="preserve"><value>Quotes to follow up</value></data>
   <data name="QuoteFollowUps.Stat.DueAmount" xml:space="preserve"><value>Amount to follow up (excl. VAT)</value></data>
   <data name="QuoteFollowUps.Stat.Likely" xml:space="preserve"><value>Of which likely (excl. VAT)</value></data>
   <data name="QuoteFollowUps.Stat.Window" xml:space="preserve"><value>Follow-up window</value></data>
   <data name="QuoteFollowUps.Days" xml:space="preserve"><value>{0} days</value></data>
+  <data name="QuoteFollowUps.Days.One" xml:space="preserve"><value>1 day</value></data>
   <data name="QuoteFollowUps.Preview.Title" xml:space="preserve"><value>Follow-up of quote {0} for {1}</value></data>
   <data name="QuoteFollowUps.Preview.Body" xml:space="preserve"><value>Message</value></data>
   <data name="QuoteFollowUps.MarkManual" xml:space="preserve"><value>Log as followed up</value></data>
@@ -29,19 +32,25 @@
   <data name="QuoteFollowUps.List" xml:space="preserve"><value>Quotes awaiting an answer</value></data>
   <data name="QuoteFollowUps.Empty" xml:space="preserve"><value>No quote awaiting an answer</value></data>
   <data name="QuoteFollowUps.Empty.Text" xml:space="preserve"><value>Validated quotes without an answer will show here; those whose validity ends within {0} days are to follow up.</value></data>
+  <data name="QuoteFollowUps.Empty.Text.One" xml:space="preserve"><value>Validated quotes without an answer will show here; those whose validity ends by tomorrow are to follow up.</value></data>
   <data name="QuoteFollowUps.Search" xml:space="preserve"><value>Search a quote, a customer or an address</value></data>
   <data name="QuoteFollowUps.DueOnly" xml:space="preserve"><value>To follow up only</value></data>
   <data name="QuoteFollowUps.WithEmail" xml:space="preserve"><value>With an email address</value></data>
   <data name="QuoteFollowUps.Count" xml:space="preserve"><value>{0} of {1} quotes</value></data>
   <data name="QuoteFollowUps.NoMatch" xml:space="preserve"><value>No quote matches these filters.</value></data>
+  <data name="QuoteFollowUps.NothingDue" xml:space="preserve"><value>No quote to follow up for now. Those already followed up show when you untick “To follow up only”.</value></data>
   <data name="QuoteFollowUps.Last" xml:space="preserve"><value>Last follow-up</value></data>
   <data name="QuoteFollowUps.WithoutAnswer" xml:space="preserve"><value>no answer for {0} days</value></data>
+  <data name="QuoteFollowUps.SentToday" xml:space="preserve"><value>sent today</value></data>
+  <data name="QuoteFollowUps.WithoutAnswer.One" xml:space="preserve"><value>no answer for 1 day</value></data>
   <data name="QuoteFollowUps.Probability.Hint" xml:space="preserve"><value>Acceptance chance estimated from your past quotes: see the order book.</value></data>
   <data name="QuoteFollowUps.Times" xml:space="preserve"><value>{0} times</value></data>
+  <data name="QuoteFollowUps.Times.One" xml:space="preserve"><value>once</value></data>
   <data name="QuoteFollowUps.Open" xml:space="preserve"><value>Follow up</value></data>
   <data name="QuoteFollowUps.OpenAgain" xml:space="preserve"><value>Prepare a follow-up</value></data>
   <data name="QuoteFollowUps.Settings" xml:space="preserve"><value>Follow-up window</value></data>
   <data name="QuoteFollowUps.Settings.Summary" xml:space="preserve"><value>{0} days before the end of validity</value></data>
+  <data name="QuoteFollowUps.Settings.Summary.One" xml:space="preserve"><value>1 day before the end of validity</value></data>
   <data name="QuoteFollowUps.Settings.Hint" xml:space="preserve"><value>A quote without an answer is to follow up when its end of validity falls within this window, until a follow-up is sent or logged. From 1 to 30 days; 5 by default.</value></data>
   <data name="QuoteFollowUps.Settings.Window" xml:space="preserve"><value>Follow up from</value></data>
   <data name="QuoteFollowUps.Settings.Unit" xml:space="preserve"><value>days before the end</value></data>
@@ -52,6 +61,7 @@
   <data name="QuoteFollowUps.Toast.Sent" xml:space="preserve"><value>Follow-up of quote {0} sent to {1}.</value></data>
   <data name="QuoteFollowUps.Toast.Noted" xml:space="preserve"><value>Follow-up of quote {0} logged.</value></data>
   <data name="QuoteFollowUps.Toast.SettingsSaved" xml:space="preserve"><value>Follow-up window saved: {0} days.</value></data>
+  <data name="QuoteFollowUps.Toast.SettingsSaved.One" xml:space="preserve"><value>Follow-up window saved: 1 day.</value></data>
   <data name="QuoteFollowUps.History" xml:space="preserve"><value>Quote follow-up history</value></data>
   <data name="QuoteFollowUps.History.Empty" xml:space="preserve"><value>No quote follow-up yet</value></data>
   <data name="QuoteFollowUps.History.Empty.Text" xml:space="preserve"><value>Each follow-up sent or logged is added here, with its text.</value></data>
@@ -99,6 +109,8 @@
   <data name="OrderBook.NoMatch" xml:space="preserve"><value>No quote matches these filters.</value></data>
   <data name="OrderBook.Age" xml:space="preserve"><value>Age</value></data>
   <data name="OrderBook.AgeDays" xml:space="preserve"><value>{0} days</value></data>
+  <data name="OrderBook.AgeToday" xml:space="preserve"><value>today</value></data>
+  <data name="OrderBook.AgeDays.One" xml:space="preserve"><value>1 day</value></data>
   <data name="OrderBook.ValidUntil" xml:space="preserve"><value>valid until {0}</value></data>
   <data name="OrderBook.Probability" xml:space="preserve"><value>Acceptance chance</value></data>
   <data name="OrderBook.Weighted" xml:space="preserve"><value>Weighted excl. VAT</value></data>
@@ -114,7 +126,9 @@
   <data name="Home.OrderBook.Open" xml:space="preserve"><value>Pending excl. VAT</value></data>
   <data name="Home.OrderBook.ToFollowUp" xml:space="preserve"><value>To follow up</value></data>
   <data name="Home.OrderBook.Reason" xml:space="preserve"><value>{0} pending quotes, weighted by your past rates: {1} of closed quotes were accepted ({2} of {3}, last {4} months).</value></data>
+  <data name="Home.OrderBook.Reason.One" xml:space="preserve"><value>1 pending quote, weighted by your past rates: {1} of closed quotes were accepted ({2} of {3}, last {4} months).</value></data>
   <data name="Home.OrderBook.ReasonNoHistory" xml:space="preserve"><value>{0} pending quotes; history still short, each quote counts as a one-in-two chance.</value></data>
+  <data name="Home.OrderBook.ReasonNoHistory.One" xml:space="preserve"><value>1 pending quote; history still short, it counts as a one-in-two chance.</value></data>
   <data name="Home.OrderBook.NoQuote" xml:space="preserve"><value>No quote awaiting an answer.</value></data>
   <data name="Error.QuoteFollowUps.WindowInvalid" xml:space="preserve"><value>The follow-up window is 1 to 30 days.</value></data>
   <data name="Error.QuoteFollowUps.QuoteNotPending" xml:space="preserve"><value>This quote no longer awaits an answer (accepted, refused or past its validity).</value></data>

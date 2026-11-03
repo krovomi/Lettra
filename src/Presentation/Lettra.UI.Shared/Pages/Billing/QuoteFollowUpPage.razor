@@ -12,7 +12,7 @@
 <div class="lt-page-header">
     <div>
         <h1 tabindex="-1">@L["QuoteFollowUps.Title"]</h1>
-        <p class="lettra-muted">@string.Format(Culture, L["QuoteFollowUps.Subtitle"], WindowDays)</p>
+        <p class="lettra-muted">@string.Format(Culture, Counted("QuoteFollowUps.Subtitle", WindowDays), WindowDays)</p>
     </div>
 </div>
 
@@ -29,7 +29,7 @@
     <div class="lt-banking-stat is-pending"><span>@L["QuoteFollowUps.Stat.Due"]</span><strong id="quote-follow-ups-due">@(_overview?.DueCount ?? 0)</strong></div>
     <div class="lt-banking-stat is-amount"><span>@L["QuoteFollowUps.Stat.DueAmount"]</span><strong id="quote-follow-ups-due-amount">@ExplorerText.Money(_overview?.DueExclTax ?? 0m)</strong></div>
     <div class="lt-banking-stat is-proposed is-amount"><span>@L["QuoteFollowUps.Stat.Likely"]</span><strong id="quote-follow-ups-likely">@ExplorerText.Money(DueRows.Sum(r => r.WeightedExclTax))</strong></div>
-    <div class="lt-banking-stat"><span>@L["QuoteFollowUps.Stat.Window"]</span><strong>@string.Format(Culture, L["QuoteFollowUps.Days"], WindowDays)</strong></div>
+    <div class="lt-banking-stat"><span>@L["QuoteFollowUps.Stat.Window"]</span><strong>@string.Format(Culture, Counted("QuoteFollowUps.Days", WindowDays), WindowDays)</strong></div>
 </div>
 
 @if (_preview is { } preview)
@@ -78,7 +78,7 @@
     else if (_overview.Quotes.Count == 0)
     {
         <EmptyState Id="quote-follow-ups-empty" IconName="circle-check" Title="@L["QuoteFollowUps.Empty"]"
-                    Text="@string.Format(Culture, L["QuoteFollowUps.Empty.Text"], WindowDays)" />
+                    Text="@string.Format(Culture, Counted("QuoteFollowUps.Empty.Text", WindowDays), WindowDays)" />
     }
     else
     {
@@ -104,7 +104,7 @@
         <p class="lettra-muted" id="quote-follow-ups-count">@string.Format(Culture, L["QuoteFollowUps.Count"], Filtered.Count, _overview.Quotes.Count)</p>
         @if (Filtered.Count == 0)
         {
-            <p class="lettra-muted" id="quote-follow-ups-nomatch">@L["QuoteFollowUps.NoMatch"]</p>
+            <p class="lettra-muted" id="quote-follow-ups-nomatch">@L[_dueOnly && _overview.DueCount == 0 ? "QuoteFollowUps.NothingDue" : "QuoteFollowUps.NoMatch"]</p>
         }
         else
         {
@@ -136,14 +136,10 @@
                                     <span class="lt-reminders-cell">
                                         <span>@quote.ValidUntil.ToString("d", Culture)</span>
                                         <small class="@(quote.DaysLeft <= 1 ? "lt-late" : "lettra-muted")">@DaysLeftText(quote.DaysLeft)</small>
+                                        <small class="lettra-muted">@WithoutAnswerText(quote.DaysWithoutAnswer)</small>
                                     </span>
                                 </td>
-                                <td data-label="@L["Totals.ExclTax"]" class="lg-num">
-                                    <span class="lt-reminders-cell">
-                                        <span>@ExplorerText.Money(quote.TotalExclTax)</span>
-                                        <small class="lettra-muted">@string.Format(Culture, L["QuoteFollowUps.WithoutAnswer"], quote.DaysWithoutAnswer)</small>
-                                    </span>
-                                </td>
+                                <td data-label="@L["Totals.ExclTax"]" class="lg-num">@ExplorerText.Money(quote.TotalExclTax)</td>
                                 <td data-label="@L["OrderBook.Probability"]" class="lg-num">
                                     <a href="order-book" title="@L["QuoteFollowUps.Probability.Hint"]">@Percent(quote.Probability)</a>
                                 </td>
@@ -152,7 +148,7 @@
                                     {
                                         <span class="lt-reminders-cell">
                                             <span>@last.ToLocalTime().ToString("d", Culture)</span>
-                                            <small class="lettra-muted">@L[$"QuoteFollowUpChannel.{quote.LastChannel}"] · @string.Format(Culture, L["QuoteFollowUps.Times"], quote.FollowUpCount)</small>
+                                            <small class="lettra-muted">@L[$"QuoteFollowUpChannel.{quote.LastChannel}"] · @string.Format(Culture, Counted("QuoteFollowUps.Times", quote.FollowUpCount), quote.FollowUpCount)</small>
                                         </span>
                                     }
                                     else
@@ -184,7 +180,7 @@
 </section>
 
 <Collapsible Id="quote-follow-ups-settings" Title="@L["QuoteFollowUps.Settings"]" InitiallyOpen="false"
-             Summary="@string.Format(Culture, L["QuoteFollowUps.Settings.Summary"], WindowDays)">
+             Summary="@string.Format(Culture, Counted("QuoteFollowUps.Settings.Summary", WindowDays), WindowDays)">
     <p class="lettra-muted">@L["QuoteFollowUps.Settings.Hint"]</p>
     <div class="lt-reminders-delays">
         <label class="la-field">
@@ -330,6 +326,13 @@
         _ => string.Format(Culture, L["QuoteFollowUps.EndsIn"], days),
     };
 
+    private string WithoutAnswerText(int days) => days <= 0
+        ? L["QuoteFollowUps.SentToday"]
+        : string.Format(Culture, Counted("QuoteFollowUps.WithoutAnswer", days), days);
+
+    /// <summary>Le texte au singulier (clé <c>.One</c>) pour un seul jour ou une seule fois.</summary>
+    private string Counted(string key, int count) => L[count == 1 ? $"{key}.One" : key];
+
     private static string Percent(decimal probability) => probability.ToString("P0", Culture);
 
     private async Task OpenPreviewAsync(Guid quoteId)
@@ -384,7 +387,7 @@
         _busy = false;
         if (saved.IsSuccess)
         {
-            Toasts.Show(ToastKind.Success, string.Format(Culture, L["QuoteFollowUps.Toast.SettingsSaved"], _window));
+            Toasts.Show(ToastKind.Success, string.Format(Culture, Counted("QuoteFollowUps.Toast.SettingsSaved", _window), _window));
             await LoadOverviewAsync();
         }
         else

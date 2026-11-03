@@ -386,8 +386,8 @@ else
     private string OrderBookReason(OrderBookResponse book) => book.Quotes.Count == 0
         ? L["Home.OrderBook.NoQuote"]
         : book.HasEnoughHistory
-            ? string.Format(Culture, L["Home.OrderBook.Reason"], book.Quotes.Count, book.GlobalRate.ToString("P0", Culture), book.Accepted, book.Closed, book.HistoryMonths)
-            : string.Format(Culture, L["Home.OrderBook.ReasonNoHistory"], book.Quotes.Count);
+            ? string.Format(Culture, L[book.Quotes.Count == 1 ? "Home.OrderBook.Reason.One" : "Home.OrderBook.Reason"], book.Quotes.Count, book.GlobalRate.ToString("P0", Culture), book.Accepted, book.Closed, book.HistoryMonths)
+            : string.Format(Culture, L[book.Quotes.Count == 1 ? "Home.OrderBook.ReasonNoHistory.One" : "Home.OrderBook.ReasonNoHistory"], book.Quotes.Count);
 
     private string Money(decimal value) => string.Format(Culture, L["Home.Money"], value.ToString("N0", Culture));
 

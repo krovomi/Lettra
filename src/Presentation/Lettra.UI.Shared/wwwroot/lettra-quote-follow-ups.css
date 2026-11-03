@@ -26,11 +26,22 @@
 .lt-order-book-why summary { cursor: pointer; min-height: var(--hit); display: inline-flex; align-items: center; justify-content: flex-end; gap: var(--space-1); font-variant-numeric: tabular-nums; }
 .lt-order-book-why ul { margin: var(--space-2) 0; padding-left: var(--space-4); text-align: left; font-size: var(--text-sm); color: var(--color-fg-muted); }
 .lt-order-book-why p { margin: 0; text-align: left; font-size: var(--text-sm); }
-.lt-order-book-why[open] { min-width: min(100%, 22rem); }
+.lt-order-book-why[open] { width: min(18rem, 70vw); margin-left: auto; }
+
+/* Les en-têtes longs (« Chance d'acceptation ») et le détail « Pourquoi ce taux ? » passent à la ligne plutôt que
+   d'élargir le tableau ; les montants restent sur une ligne. */
+:is(#quote-follow-ups-table, #order-book-table) th.lg-num { white-space: normal; }
+#order-book-table td.lg-num :is(ul, p) { white-space: normal; }
+/* Sous la fin de validité, « se termine dans… » et « sans réponse depuis… » passent à la ligne sur tablette : le bouton
+   « Relancer » reste visible sans faire défiler le tableau. */
+:is(#quote-follow-ups-table, #order-book-table) td:not(.lg-num) .lt-reminders-cell small { white-space: normal; }
+
+/* Le réglage de la fenêtre : « jours avant la fin » reste sur une ligne à côté du champ. */
+#quote-follow-ups-settings .lt-reminders-days > span { white-space: nowrap; }
 
 @media (min-width: 768px) {
     .lt-order-book-rates { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    #quote-follow-ups-table td .lt-banking-label { min-width: 18ch; }
+    #quote-follow-ups-table td .lt-banking-label { min-width: 14ch; }
     #quote-follow-ups-history .lt-reminders-sent, #quote-follow-up-history .lt-reminders-sent { min-width: 24ch; }
 }
 
