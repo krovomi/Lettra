@@ -88,8 +88,9 @@ reproduction automatique. « **Non vérifié** » signifie que la méthode est d
 Les applications natives se téléchargent depuis la CI. Sur GitHub, ouvrez l'onglet
 [Actions](https://github.com/krovomi/Lettra/actions/workflows/ci.yml?query=branch%3Amain+is%3Asuccess), cliquez sur
 l'exécution **CI** la plus récente de la branche `main` (coche verte ; pas « Déploiement »), puis, tout en bas de sa
-page, dans la section **Artifacts**, sur l'artefact voulu. Il faut être connecté à GitHub. Les artefacts restent
-disponibles 90 jours.
+page, dans la section **Artifacts**, sur l'artefact voulu. Il faut être connecté à GitHub. L'application Windows et
+l'APK restent disponibles 90 jours ; les autres artefacts (applications iOS et macOS, captures, rapports de tests)
+7 jours, pour ne pas remplir le quota de stockage du dépôt. Passé ce délai, relancer la CI de `main` les reconstruit.
 
 | Artefact | Contenu |
 |---|---|
@@ -1405,7 +1406,8 @@ de code, qui échoue sous 88 % des lignes ou 78 % des branches (rapport par asse
 commande locale : [docs/qualite-du-code.md](docs/qualite-du-code.md) ; chaque test en échec devient une annotation du job,
 avec son message), conformité Factur-X, applications MAUI construites et lancées (Windows ; Android sur émulateur ; simulateur iOS ; macOS, non
 bloquant tant qu'il n'est pas signé) avec leurs artefacts, captures du design et audit d'accessibilité (Playwright,
-axe-core), gitleaks, SBOM CycloneDX, CodeQL (dépôt public), avis de tiers, images signées (cosign) sur `main`. La
+axe-core), gitleaks, SBOM CycloneDX, CodeQL (dépôt public), avis de tiers, images signées (cosign) sur `main`. Les
+artefacts des workflows sont gardés 7 jours (quota de stockage du dépôt), sauf l'application Windows et l'APK (90 jours). La
 charge de travail MAUI est épinglée (`MAUI_WORKLOAD_VERSION`, 10.0.401) : un jeu plus récent publié sur nuget.org ne
 casse pas la CI du jour au lendemain. Le SDK .NET de la CI l'est aussi (`DOTNET_SDK_VERSION`, 10.0.402), parce que
 le SDK 10.0.403 annoncé par Microsoft ne se télécharge pas ; `global.json` reste ouvert aux SDK 10.0 récents des postes.

@@ -52,6 +52,15 @@ jobs:
         # Même jeu de charges de travail épinglé que ci.yml (MAUI_WORKLOAD_VERSION) : le jeu 10.0.402.1 ne s'installe pas
         # (manifeste iOS absent de nuget.org).
         run: dotnet workload install maui-android --version 10.0.401
+      - name: Place sur le disque
+        # La charge de travail MAUI, l'APK, les images de la démo et l'émulateur dépassent la place libre de la machine
+        # (« no space left on device » en extrayant l'image Keycloak) : outils préinstallés dont ce job ne se sert pas.
+        run: |
+          df -h /
+          sudo rm -rf /opt/ghc /usr/local/.ghcup /usr/share/swift /usr/local/share/boost /usr/local/share/powershell \
+            /usr/local/lib/heroku /opt/hostedtoolcache/CodeQL /opt/hostedtoolcache/go /opt/hostedtoolcache/PyPy
+          docker system prune -af --volumes > /dev/null
+          df -h /
       - name: Build de l'APK de démonstration
         run: dotnet publish src/Hosts/Lettra.App.Maui/Lettra.App.Maui.csproj -c Release -f net10.0-android -p:AndroidPackageFormat=apk -p:AndroidSdkDirectory=$ANDROID_HOME -o artifacts/lettra-android
 
@@ -117,7 +126,9 @@ jobs:
           # Écran de téléphone courant (1080×2340), pas le 320×640 par défaut.
           profile: pixel_5
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          # Sans Vulkan dans l'invité : Chrome et la WebView passent par Vulkan sur SwiftShader, et l'émulateur entier
+          # tombait (appareil perdu, mémoire de la machine libre) en affichant la liste des clients après la connexion.
+          emulator-options: -no-window -gpu swiftshader_indirect -feature -Vulkan -noaudio -no-boot-anim -no-snapshot
           script: bash "$RUNNER_TEMP/serveur-commun-android.sh"
 
       - name: Journaux de la démo
@@ -128,4 +139,4 @@ jobs:
         with:
           name: serveur-commun-android
           path: deploy/demo/e2e/sortie/android
-          retention-days: 30
+          retention-days: 7
