@@ -28,6 +28,25 @@ public enum SessionModeDto
 public sealed record SessionResponse(
     bool IsAuthenticated, SessionModeDto Mode, string? DisplayName, bool LocalAccountExists, string? SignOutUrl = null, string? DeviceStorageKey = null);
 
+/// <summary>
+/// Navigateur : une connexion qui n'aboutit pas revient sur la page de session, qui dit pourquoi. La connexion est une
+/// navigation pleine page : une réponse d'erreur JSON s'y afficherait telle quelle.
+/// </summary>
+public static class SessionPageErrors
+{
+    /// <summary>Paramètre de la page de session qui porte la raison.</summary>
+    public const string QueryName = "erreur";
+
+    /// <summary>Retour de Keycloak refusé (second facteur absent, état invalide, erreur du fournisseur).</summary>
+    public const string SignInFailed = "connexion";
+
+    /// <summary>Le service de connexion (Keycloak) ne répond pas : arrêté, en cours de démarrage ou injoignable.</summary>
+    public const string SignInUnavailable = "indisponible";
+
+    /// <summary>L'adresse locale de la page de session qui donne cette raison.</summary>
+    public static string PathFor(string reason) => $"/session?{QueryName}={Uri.EscapeDataString(reason)}";
+}
+
 /// <summary>Création du compte local du poste, au premier lancement. Propriétés modifiables pour <c>EditForm</c>.</summary>
 public sealed record CreateLocalAccountRequest : IValidatableObject
 {
