@@ -61,6 +61,13 @@ jobs:
             /usr/local/lib/heroku /opt/hostedtoolcache/CodeQL /opt/hostedtoolcache/go /opt/hostedtoolcache/PyPy
           docker system prune -af --volumes > /dev/null
           df -h /
+      - name: Pas d'arrêt de l'émulateur sous pression mémoire
+        # systemd-oomd tue sans message tout un groupe de processus dès que la mémoire est sous pression : l'émulateur
+        # (qemu) disparaissait juste après la connexion, sans trace dans le noyau ni manque de mémoire après coup.
+        run: |
+          systemctl is-active systemd-oomd || true
+          sudo systemctl stop systemd-oomd systemd-oomd.socket 2>/dev/null || true
+          systemctl is-active systemd-oomd || true
       - name: Build de l'APK de démonstration
         run: dotnet publish src/Hosts/Lettra.App.Maui/Lettra.App.Maui.csproj -c Release -f net10.0-android -p:AndroidPackageFormat=apk -p:AndroidSdkDirectory=$ANDROID_HOME -o artifacts/lettra-android
 
@@ -115,6 +122,7 @@ jobs:
             pgrep -a -f 'qemu-system|emulator' | cut -c1-160 || echo "processus de l'émulateur : aucun"
             free -m
             sudo dmesg | grep -iE 'out of memory|oom-kill|killed process|segfault|qemu' | tail -n 20 || true
+            sudo journalctl --no-pager -q -u systemd-oomd | tail -n 20 || true
             # Un émulateur qui plante laisse un rapport (minidump) : on liste ceux trouvés.
             find /tmp ~/.android -name '*.dmp' -newer "$SORTIE/client.txt" 2>/dev/null | head -n 10 || true
             grep -E 'AndroidRuntime|monodroid|mono-rt|DOTNET|fr\.lettra|Lettra|ActivityTaskManager: (START|Displayed)|com\.android\.chrome|cr_' "$SORTIE/android/logcat.txt" | grep -vE 'SandboxedProcessService|CronetUrlRequestContext' | tail -n 150 || true
