@@ -25,6 +25,7 @@
   <data name="Session.SignInIntro" xml:space="preserve"><value>Sign in with your firm account. You will be asked for a second factor.</value></data>
   <data name="Session.SignIn" xml:space="preserve"><value>Sign in</value></data>
   <data name="Session.SignInFailed" xml:space="preserve"><value>Sign-in did not complete. Please try again.</value></data>
+  <data name="Session.SignInUnavailable" xml:space="preserve"><value>Your firm's sign-in service is not responding right now. Try again in a minute; if it persists, contact your firm's administrator.</value></data>
   <data name="Session.Create.Title" xml:space="preserve"><value>Create this computer's account</value></data>
   <data name="Session.Create.Intro" xml:space="preserve"><value>This computer works without a server. Choose a passphrase of at least 12 characters: it protects your files and cannot be recovered.</value></data>
   <data name="Session.Create.Submit" xml:space="preserve"><value>Create account</value></data>

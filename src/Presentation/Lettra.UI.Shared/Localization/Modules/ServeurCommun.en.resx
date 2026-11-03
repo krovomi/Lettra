@@ -36,6 +36,7 @@
   <data name="Error.SharedServer.AddressInvalid" xml:space="preserve"><value>Enter the server address, for example https://192.168.1.20:8443.</value></data>
   <data name="Error.SharedServer.HttpsRequired" xml:space="preserve"><value>This address must start with https://, otherwise your sign-in would travel unencrypted on the network. Only localhost is accepted over http.</value></data>
   <data name="Error.SharedServer.Unreachable" xml:space="preserve"><value>No server answers at this address. Check the address, that the device is on the same network and that the server is running.</value></data>
+  <data name="Error.SharedServer.SignInUnavailable" xml:space="preserve"><value>This Lettra server answers, but its sign-in service is not responding right now. Try again in a minute; if it persists, contact your firm's administrator.</value></data>
   <data name="Error.SharedServer.CertificateUntrusted" xml:space="preserve"><value>The server answers, but this device does not trust its certificate. Install the demo certificate first (see the installation guide).</value></data>
   <data name="Error.SharedServer.NotLettra" xml:space="preserve"><value>A server answers at this address, but it is not a Lettra server.</value></data>
   <data name="Error.SharedServer.NoDossier" xml:space="preserve"><value>Your account has no access to any dossier on this server. Ask the firm administrator to open one for you.</value></data>
