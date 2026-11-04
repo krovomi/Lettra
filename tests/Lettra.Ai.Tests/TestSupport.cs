@@ -190,13 +190,14 @@ internal sealed class AssistantHarness : IAsyncDisposable
         string question,
         string? imported = null,
         IReadOnlySet<Permission>? permissions = null,
-        Guid? openDocumentId = null)
+        Guid? openDocumentId = null,
+        CancellationToken cancellationToken = default)
     {
         AssistantRequest request = new(
             Organisation, Dossier, UserId, permissions ?? AllPermissions, feature, question, OpenDocumentId: openDocumentId, ImportedContent: imported);
         await using AsyncServiceScope scope = _services.CreateAsyncScope();
         List<AssistantEvent> events = [];
-        await foreach (AssistantEvent e in scope.ServiceProvider.GetRequiredService<IAccountingAssistant>().AskAsync(request, CancellationToken.None))
+        await foreach (AssistantEvent e in scope.ServiceProvider.GetRequiredService<IAccountingAssistant>().AskAsync(request, cancellationToken))
         {
             events.Add(e);
         }

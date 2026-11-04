@@ -4,14 +4,19 @@ using Lettra.Contracts.Common;
 
 namespace Lettra.Contracts.Reminders;
 
-/// <summary>Niveau du scénario de relance : rappel amical, relance, dernière relance, mise en demeure.</summary>
+/// <summary>
+/// Niveau de relance : rappel avant échéance, puis l'escalade (rappel amical, relance, dernière relance, mise en demeure),
+/// et la relance d'une échéance d'échéancier manquée.
+/// </summary>
 [JsonConverter(typeof(JsonStringEnumConverter<ReminderLevelDto>))]
 public enum ReminderLevelDto
 {
+    BeforeDue = 0,
     Friendly = 1,
     Reminder = 2,
     Final = 3,
     FormalNotice = 4,
+    MissedInstallment = 5,
 }
 
 /// <summary>Envoyée par Lettra (e-mail) ou par le cabinet lui-même puis notée (courrier, téléphone…).</summary>
@@ -51,9 +56,20 @@ public enum ReminderSortDto
 /// <summary>
 /// Scénario de relance du dossier. <paramref name="Delays"/> : jours de retard qui déclenchent chaque niveau, dans
 /// l'ordre (J+3, J+15, J+30, J+45 par défaut). <paramref name="EmailConfigured"/> : un serveur d'envoi est branché sur
-/// cette installation ; sinon les relances se notent à la main.
+/// cette installation ; sinon les relances se notent à la main. <paramref name="Prevention"/> : le rappel avant échéance
+/// et les bornes de l'échéancier en libre-service.
 /// </summary>
-public sealed record ReminderSettingsResponse(bool AutoSend, IReadOnlyList<int> Delays, int MinimumGapDays, bool EmailConfigured, long Version);
+public sealed record ReminderSettingsResponse(
+    bool AutoSend, IReadOnlyList<int> Delays, int MinimumGapDays, bool EmailConfigured, long Version, ReminderPreventionDto Prevention);
+
+/// <summary>
+/// Avant le retard : le rappel avant échéance (<paramref name="BeforeDueDays"/> jours avant, aux clients dont la météo
+/// des paiements annonce pluie ou orage) et l'échéancier en libre-service de l'espace client (clients professionnels,
+/// de 2 à <paramref name="PaymentPlanMaxInstallments"/> échéances, pour un reste dû d'au moins
+/// <paramref name="PaymentPlanMinimumAmount"/> TTC).
+/// </summary>
+public sealed record ReminderPreventionDto(
+    bool BeforeDueEnabled, int BeforeDueDays, bool PaymentPlansEnabled, int PaymentPlanMaxInstallments, decimal PaymentPlanMinimumAmount);
 
 public sealed record UpdateReminderSettingsRequest
 {
@@ -64,12 +80,17 @@ public sealed record UpdateReminderSettingsRequest
 
     [Range(1, 90, ErrorMessage = ErrorCodes.Reminders.GapInvalid)]
     public int MinimumGapDays { get; set; } = 7;
+
+    /// <summary>Le rappel avant échéance et l'échéancier ; absent, ils ne changent pas.</summary>
+    public ReminderPreventionDto? Prevention { get; set; }
 }
 
 /// <summary>
 /// Une facture échue et non soldée, vue par les relances. <paramref name="NextLevel"/> est le niveau suivant (nul après la
 /// mise en demeure) ; <paramref name="DueToday"/> dit si le scénario l'envoie aujourd'hui. Les pénalités sont
-/// proposées, jamais facturées d'office.
+/// proposées, jamais facturées d'office. Une facture sous échéancier n'est échue que si une échéance est manquée :
+/// <paramref name="DueDate"/> est alors la date de cette échéance (<paramref name="Installment"/>), et
+/// <paramref name="Outstanding"/> ce qui lui manque.
 /// </summary>
 public sealed record ReminderInvoiceResponse(
     Guid InvoiceId,
@@ -87,10 +108,21 @@ public sealed record ReminderInvoiceResponse(
     ReminderLevelDto? NextLevel,
     bool DueToday,
     decimal PenaltyInterest,
-    decimal RecoveryIndemnity);
+    decimal RecoveryIndemnity,
+    Guid? PaymentPlanId = null,
+    int? Installment = null);
 
-/// <summary>L'écran Relances : les factures échues, le scénario, et le nombre de relances dues aujourd'hui.</summary>
-public sealed record ReminderOverviewResponse(IReadOnlyList<ReminderInvoiceResponse> Invoices, ReminderSettingsResponse Settings, int DueToday);
+/// <summary>
+/// L'écran Relances : les factures échues, le scénario, le nombre de relances dues aujourd'hui (rappels avant échéance
+/// compris), les rappels avant échéance, les échéanciers et les clients opposés au ciblage.
+/// </summary>
+public sealed record ReminderOverviewResponse(
+    IReadOnlyList<ReminderInvoiceResponse> Invoices,
+    ReminderSettingsResponse Settings,
+    int DueToday,
+    IReadOnlyList<UpcomingReminderResponse> Upcoming,
+    IReadOnlyList<PaymentPlanResponse> Plans,
+    IReadOnlyList<TargetingObjectionResponse> Objections);
 
 /// <summary>Le texte de la prochaine relance d'une facture, dans la langue du client, à relire avant l'envoi.</summary>
 public sealed record ReminderPreviewResponse(Guid InvoiceId, ReminderLevelDto Level, string Language, string? Recipient, string Subject, string Body);

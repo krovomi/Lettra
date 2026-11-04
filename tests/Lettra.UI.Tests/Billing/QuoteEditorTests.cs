@@ -366,6 +366,32 @@ public sealed class QuoteEditorTests : BunitContext
     }
 
     [Fact]
+    public void Un_devis_en_attente_se_relance_et_garde_l_historique_de_ses_relances()
+    {
+        QuoteResponse devis = _quotes.Add(QuoteStatusDto.Validated, "DEV-2026-0007", Conseil);
+        FakeQuoteFollowUpsGateway followUps = new();
+        followUps.History.Add(FakeQuoteFollowUpsGateway.Sent("DEV-2026-0007", "Dupont SARL") with { QuoteId = devis.Id });
+        Services.AddSingleton<IQuoteFollowUpsGateway>(followUps);
+
+        IRenderedComponent<QuoteEditor> page = Ouvrir(devis.Id);
+
+        page.Find("#quote-follow-up").GetAttribute("href").Should().Be($"quote-follow-ups?quote={devis.Id}");
+        page.WaitForAssertion(() => page.FindAll("#quote-follow-up-history-table tbody tr").Should().ContainSingle());
+        followUps.HistoryQueries.Should().ContainSingle().Which.QuoteId.Should().Be(devis.Id);
+    }
+
+    [Fact]
+    public void Sans_service_de_relance_la_fiche_du_devis_ne_propose_pas_de_relancer()
+    {
+        QuoteResponse devis = _quotes.Add(QuoteStatusDto.Validated, "DEV-2026-0007", Conseil);
+
+        IRenderedComponent<QuoteEditor> page = Ouvrir(devis.Id);
+
+        page.FindAll("#quote-follow-up").Should().BeEmpty();
+        page.FindAll("#quote-follow-up-history").Should().BeEmpty();
+    }
+
+    [Fact]
     public void Un_devis_accepte_propose_la_facture_finale_et_l_acompte()
     {
         QuoteResponse devis = _quotes.Add(QuoteStatusDto.Accepted, "DEV-2026-0007", Conseil);

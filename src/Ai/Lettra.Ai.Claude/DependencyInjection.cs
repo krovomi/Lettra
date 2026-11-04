@@ -61,6 +61,12 @@ public sealed class ClaudeEngineOptions
     /// <summary>Effort de raisonnement ; « medium » est le défaut de ce modèle, rendu explicite ici.</summary>
     public Effort Effort { get; set; } = Effort.Medium;
 
+    /// <summary>
+    /// Délai d'un appel au fournisseur, raisonnement compris : passé ce délai (une seule nouvelle tentative), la réponse se
+    /// termine sans IA. L'utilisateur attend devant l'écran ; il peut aussi arrêter la réponse lui-même.
+    /// </summary>
+    public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(90);
+
     /// <summary>Identifiant du modèle tel que le fournisseur l'attend.</summary>
     public string ProviderModel => Provider == ClaudeProvider.Bedrock && !Model.Contains('.', StringComparison.Ordinal) ? "anthropic." + Model : Model;
 }
@@ -73,8 +79,8 @@ internal sealed record ProviderCredentials(
 
 public static class DependencyInjection
 {
-    /// <summary>Délai d'un tour du moteur : une réponse longue avec raisonnement peut prendre plusieurs minutes.</summary>
-    private static readonly TimeSpan RequestTimeout = TimeSpan.FromMinutes(10);
+    /// <summary>Une seule nouvelle tentative (surcharge, quota), comme pour l'annuaire : l'utilisateur attend devant l'écran.</summary>
+    internal const int MaxRetries = 1;
 
     /// <summary>
     /// Enregistre le moteur Claude, seulement si un fournisseur est configuré sur ce déploiement. Échec fermé : une région
@@ -97,11 +103,16 @@ public static class DependencyInjection
         }
 
         // Le moteur vit autant que l'application : le client HTTP aussi, et ses connexions sont renouvelées pour suivre le DNS.
-        services.AddHttpClient(nameof(ClaudeEngine), client => client.Timeout = RequestTimeout)
+        services.AddHttpClient(nameof(ClaudeEngine), client => client.Timeout = options.Timeout)
             .UseSocketsHttpHandler((handler, _) => handler.PooledConnectionLifetime = TimeSpan.FromMinutes(2))
             .SetHandlerLifetime(Timeout.InfiniteTimeSpan);
         services.AddKeyedSingleton<IAiEngine>(AiEngineKind.ClaudeEu, (sp, _) => new ClaudeEngine(
-            CreateClient(options, new ClientOptions { HttpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(ClaudeEngine)) }),
+            CreateClient(options, new ClientOptions
+            {
+                HttpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(ClaudeEngine)),
+                Timeout = options.Timeout,
+                MaxRetries = MaxRetries,
+            }),
             options));
         return services;
     }
@@ -149,6 +160,7 @@ public static class DependencyInjection
             ClaudeProvider.None when !string.IsNullOrWhiteSpace(options.ApiKey) =>
                 $"une clé d'API sans fournisseur. {ClaudeEngineOptions.SectionName}:Provider doit désigner un fournisseur en région UE " +
                 "(Bedrock, Vertex) : l'API directe d'Anthropic n'offre pas de résidence des données dans l'UE.",
+            _ when options.Timeout <= TimeSpan.Zero => $"{ClaudeEngineOptions.SectionName}:Timeout doit être positif.",
             ClaudeProvider.None => null,
             ClaudeProvider.Bedrock when !IsEuBedrockRegion(options.Region) =>
                 $"la région Bedrock « {options.Region} » n'est pas une région UE (eu-west-3, eu-central-1…).",

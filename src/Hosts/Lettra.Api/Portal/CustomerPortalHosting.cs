@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Threading.RateLimiting;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Messaging;
@@ -7,8 +8,10 @@ using Lettra.Domain.Common;
 using Lettra.Domain.Portal;
 using Lettra.Domain.SharedKernel;
 using Lettra.Exports.Application.Portal;
+using Lettra.Exports.Application.Reminders;
 using Lettra.Exports.Infrastructure;
 using Lettra.Infrastructure.Persistence.Integrity;
+using Lettra.Printing.Payments;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
@@ -44,6 +47,13 @@ internal sealed class PortalCurrentUser(PortalActor actor, ICurrentUser host) : 
     public bool IsAuthenticated => actor.UserId != Guid.Empty || host.IsAuthenticated;
 
     public Guid UserId => actor.UserId != Guid.Empty ? actor.UserId : host.UserId;
+}
+
+/// <summary>Le QR code de virement (norme EPC) en image PNG, ou rien si l'IBAN manque ou n'est pas valide.</summary>
+internal sealed class EpcPaymentQrCodeImage : IPaymentQrCodeImage
+{
+    public byte[]? Png(string beneficiary, string? iban, string? bic, decimal amount, string remittance) =>
+        EpcPaymentCode.Payload(beneficiary, iban, bic, amount, remittance) is { } payload ? QrImages.Png(QrCode.Encode(payload), scale: 6) : null;
 }
 
 /// <summary>L'espace client est ouvert quand un compte de service lui est déclaré.</summary>
@@ -127,6 +137,9 @@ public static class CustomerPortalHosting
             });
         }));
 
+        // Le QR code de virement joint au rappel avant échéance et à la relance d'échéance manquée : l'hôte sait le dessiner.
+        services.Replace(ServiceDescriptor.Singleton<IPaymentQrCodeImage, EpcPaymentQrCodeImage>());
+
         // Ouvert ou fermé selon les réglages lus au démarrage (pas à l'enregistrement : un hôte peut encore les compléter).
         services.Replace(ServiceDescriptor.Singleton<ICustomerPortalSettings, ConfiguredCustomerPortal>());
         ServiceDescriptor host = services.LastOrDefault(d => d.ServiceType == typeof(ICurrentUser) && !d.IsKeyedService)
@@ -145,6 +158,7 @@ public static class CustomerPortalHosting
         portal.MapGet("/", ShowAsync);
         portal.MapPost("/devis/{quoteId:guid}/signer", SignAsync);
         portal.MapPost("/factures/{invoiceId:guid}/payer", PayAsync);
+        portal.MapPost("/factures/{invoiceId:guid}/echeancier", RequestPlanAsync);
         portal.MapGet("/paiement/{checkoutId}", ReturnFromPaymentAsync);
 
         RouteGroupBuilder checkout = app.MapGroup("/paiement-simule/{checkoutId}").RequireRateLimiting(RateLimitPolicy).ExcludeFromDescription();
@@ -154,7 +168,7 @@ public static class CustomerPortalHosting
     }
 
     private static async Task<IResult> ShowAsync(string token, HttpContext context, PortalRunner runner, CancellationToken ct,
-        string? paye = null, string? signe = null, string? acompte = null, string? attente = null, string? erreur = null)
+        string? paye = null, string? signe = null, string? acompte = null, string? attente = null, string? erreur = null, string? echeancier = null)
     {
         Result<PortalView> view = await runner.RunAsync(token, (dossier, hash, commands, c) =>
             commands.SendAsync(new OpenPortalCommand(dossier, hash), c), ct).ConfigureAwait(false);
@@ -170,7 +184,7 @@ public static class CustomerPortalHosting
             (_, { } number, _, _) => new PortalBanner(acompte is null ? "Banner.Signed" : "Banner.SignedWithDownPayment", number, false),
             (_, _, { } number, _) => new PortalBanner("Banner.PaymentPending", number, false),
             (_, _, _, { } code) when PortalTexts.Keys.Contains("Error." + code) => new PortalBanner("Error." + code, null, true),
-            _ => null,
+            _ => echeancier is null ? null : new PortalBanner("Banner.PlanCreated", echeancier, false),
         };
         return Html(context, PortalPages.Portal(view.Value, texts, BasePath(token), banner));
     }
@@ -210,6 +224,25 @@ public static class CustomerPortalHosting
         return started.IsFailure
             ? Back(token, $"?erreur={Uri.EscapeDataString(started.Errors[0].Code)}#invoice-{invoiceId}")
             : TypedResults.Redirect(started.Value.RedirectUrl);
+    }
+
+    private static async Task<IResult> RequestPlanAsync(string token, Guid invoiceId, HttpContext context, PortalRunner runner, CancellationToken ct)
+    {
+        if (!SameOrigin(context))
+        {
+            return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+        }
+
+        IFormCollection form = await context.Request.ReadFormAsync(ct).ConfigureAwait(false);
+        RequestPaymentPlanRequest request = new(
+            int.TryParse(form["installments"].ToString(), NumberStyles.None, CultureInfo.InvariantCulture, out int count) ? count : 0,
+            form["requester"].ToString(),
+            form["consent"].ToString() == "true");
+        Result<PaymentPlanRequestResult> created = await runner.RunAsync(token, (dossier, hash, commands, c) =>
+            commands.SendAsync(new RequestPaymentPlanOnPortalCommand(dossier, hash, invoiceId, request), c), ct).ConfigureAwait(false);
+        return created.IsFailure
+            ? Back(token, $"?erreur={Uri.EscapeDataString(created.Errors[0].Code)}#invoice-{invoiceId}")
+            : Back(token, $"?echeancier={Uri.EscapeDataString(created.Value.InvoiceNumber)}#invoice-{invoiceId}");
     }
 
     private static async Task<IResult> ReturnFromPaymentAsync(string token, string checkoutId, HttpContext context, PortalRunner runner, CancellationToken ct)

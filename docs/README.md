@@ -41,6 +41,7 @@ est dans le [README](../README.md#principes-de-conception), le détail, les mesu
 - [Préférences de l'utilisateur](preferences-utilisateur.md)
 - [Qualité du code et couverture des tests](qualite-du-code.md)
 - [Relances des factures échues et envoi d'e-mails](relances-et-e-mails.md)
+- [Avant le retard : rappel avant échéance et échéancier en libre-service](avant-le-retard.md)
 - [Révision avant clôture](revision-avant-cloture.md)
 - [Se faire payer plus vite](se-faire-payer.md)
 - [Serveur commun : les mêmes données sur tous les appareils](serveur-commun.md)

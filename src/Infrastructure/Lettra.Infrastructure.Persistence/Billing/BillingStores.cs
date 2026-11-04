@@ -503,6 +503,9 @@ internal static class BillingRegistration
         services.AddScoped<IBillingTransaction, BillingTransaction>();
         services.AddScoped<IRecurringInvoiceRepository, RecurringInvoiceRepository>();
         services.AddScoped<IRecurringInvoiceReadStore, RecurringInvoiceReadStore>();
+        services.AddScoped<IQuotePipelineReader, EfQuotePipelineReader>();
+        services.AddScoped<IQuoteFollowUpRepository, EfQuoteFollowUpRepository>();
+        services.AddScoped<IQuoteFollowUpSettingsRepository, EfQuoteFollowUpSettingsRepository>();
         return services;
     }
 }

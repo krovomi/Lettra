@@ -72,8 +72,22 @@ public abstract record AssistantEvent;
 /// <summary>L'assistant ne peut pas répondre (désactivé, dossier exclu, pas de moteur), avec le code de la raison.</summary>
 public sealed record AssistantUnavailableEvent(string Code) : AssistantEvent;
 
-/// <summary>Texte proposé par l'IA, affiché comme une suggestion.</summary>
-public sealed record AssistantTextEvent(string Text) : AssistantEvent;
+/// <summary>
+/// Texte rédigé par l'IA, affiché comme une suggestion avec la mention « Texte rédigé par l'IA » (transparence, article
+/// 50 de l'AI Act). La marque lisible par machine est dans l'événement lui-même : <see cref="DigitalSourceType"/>, le
+/// terme de l'IPTC pour un contenu produit par un modèle, et le moteur qui l'a rédigé.
+/// </summary>
+public sealed record AssistantTextEvent(string Text, string? Engine = null) : AssistantEvent
+{
+    /// <summary>Terme du vocabulaire « Digital Source Type » de l'IPTC pour un contenu produit par un modèle entraîné.</summary>
+    public const string TrainedAlgorithmicMedia = "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia";
+
+    /// <summary>Toujours vrai : seul le texte rédigé par un moteur passe par cet événement.</summary>
+    public bool AiGenerated { get; init; } = true;
+
+    /// <summary>Origine du contenu, lisible par machine : <see cref="TrainedAlgorithmicMedia"/>.</summary>
+    public string DigitalSourceType { get; init; } = TrainedAlgorithmicMedia;
+}
 
 /// <summary>Résultat d'une règle déterministe C#, affiché comme certain.</summary>
 public sealed record AssistantRuleResultEvent(string Tool, string Content) : AssistantEvent;
@@ -102,8 +116,10 @@ public sealed record AssistantCompletedEvent(
 /// <summary>
 /// Ce que l'assistant peut faire pour l'utilisateur dans le dossier ouvert : vide quand l'IA est désactivée (réglage par
 /// défaut), le dossier exclu, le moteur absent ou la permission manquante. L'UI n'affiche le panneau que s'il y a une fonction.
+/// <c>EngineResponding</c> est faux quand le moteur a échoué plusieurs fois de suite et que Lettra a cessé de l'appeler
+/// quelques minutes (« IA disponible » à l'écran) ; vrai par défaut, pour un serveur qui ne le dit pas encore.
 /// </summary>
-public sealed record AssistantStatusResponse(IReadOnlyList<AssistantFeature> Features, string? Engine);
+public sealed record AssistantStatusResponse(IReadOnlyList<AssistantFeature> Features, string? Engine, bool EngineResponding = true);
 
 /// <summary>Entrée du journal IA du dossier (annexe F §10).</summary>
 public sealed record AssistantJournalEntry(

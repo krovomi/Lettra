@@ -1,0 +1,20 @@
+# Alertes de l'IA (annexe F §10). Un moteur d'IA qui ne répond plus ne casse rien : l'assistant se termine sur « moteur
+# indisponible » et Lettra cesse d'appeler le moteur quelques minutes (disjoncteur). La règle prévient l'équipe qui
+# exploite la cellule, au centre d'alertes, sans réveiller personne (S3). Métrique agrégée : le type de moteur seulement
+# (claude_eu, local), jamais un dossier, une personne ni un texte. Sans IA (réglage par défaut), la série n'existe pas.
+groups:
+  - name: lettra-ia
+    rules:
+      # lettra.ai.engine.available passe à 0 quand le disjoncteur s'ouvre et revient à 1 au premier essai réussi. La
+      # règle attend que tous les réplicas de l'API qui ont appelé ce moteur l'aient mis en pause depuis cinq minutes.
+      - alert: LettraMoteurIaNeRepondPlus
+        expr: max by (lettra_ai_engine) (lettra_ai_engine_available) == 0
+        for: 5m
+        labels:
+          severity: S3
+          category: availability
+          scope: cell
+          cell: "{{ $externalLabels.cell }}"
+        annotations:
+          title: Un moteur d'IA ne répond plus, l'assistant répond sans IA
+          runbook_url: https://github.com/krovomi/Lettra/blob/main/docs/assistant-ia.md

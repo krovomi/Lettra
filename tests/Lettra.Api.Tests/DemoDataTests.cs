@@ -13,6 +13,7 @@ using Lettra.Contracts.Exports;
 using Lettra.Contracts.Insights;
 using Lettra.Contracts.Integrity;
 using Lettra.Contracts.Pricing;
+using Lettra.Contracts.Reminders;
 using Lettra.DemoData;
 using Lettra.Domain.SharedKernel;
 using Lettra.Infrastructure.Persistence.Security;
@@ -237,9 +238,19 @@ public sealed class DemoDataTests : IDisposable
         group.Gaps.Should().Equal(IntercompanyGapDto.SupplierIbanDiffers, IntercompanyGapDto.PaidNotSeen, IntercompanyGapDto.SeenNotPaid, IntercompanyGapDto.TotalsDiffer);
         group.Invoices.Select(i => i.SeenAtBuyer).Should().Equal(true, false, true);
 
-        // Une seconde demande ne mélange rien : le dossier a déjà des pièces, le groupe ses factures.
+        // L'échéancier en libre-service de l'espace client est proposé, avec les bornes par défaut.
+        IRemindersGateway reminders = app.GetRequiredService<IRemindersGateway>();
+        ReminderSettingsResponse offered = (await reminders.GetOverviewAsync(default)).Value!.Settings;
+        offered.Prevention.Should().Be(new ReminderPreventionDto(true, 3, true, 3, 300m));
+        (await reminders.UpdateSettingsAsync(
+            new UpdateReminderSettingsRequest { Delays = offered.Delays, MinimumGapDays = offered.MinimumGapDays, Prevention = offered.Prevention with { PaymentPlansEnabled = false } },
+            default)).IsSuccess.Should().BeTrue();
+
+        // Une seconde demande ne mélange rien : le dossier a déjà des pièces, le groupe ses factures, le scénario de
+        // relance réglé à la main reste comme il est.
         (await LettraDemoData.SeedAsync(configuration, "Demo", s => s.AddSingleton<IKekStore>(keys), user)).Status.Should().Be(DemoSeedStatus.DossierNotEmpty);
         (await cabinet.GetIntercompanyAsync(default)).Value!.Pairs.Should().ContainSingle().Which.Invoices.Should().HaveCount(3);
+        (await reminders.GetOverviewAsync(default)).Value!.Settings.Prevention.PaymentPlansEnabled.Should().BeFalse();
     }
 
     [Fact]

@@ -889,6 +889,9 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
+                    b.Property<DateOnly?>("RespondedOn")
+                        .HasColumnType("date");
+
                     b.Property<string>("SeriesCode")
                         .IsRequired()
                         .HasMaxLength(16)
@@ -1018,6 +1021,101 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .IsUnique();
 
                     b.ToTable("Quotes", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Billing.QuoteFollowUp", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("AmountExclTax")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(8000)
+                        .HasColumnType("character varying(8000)");
+
+                    b.Property<int>("Channel")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ErrorCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("OccurredOn")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Outcome")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("QuoteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("QuoteNumber")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Recipient")
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("ValidUntil")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("OccurredOn");
+
+                    b.HasIndex("QuoteId", "OccurredOn");
+
+                    b.ToTable("QuoteFollowUps", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Billing.QuoteFollowUpSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("WindowDays")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("QuoteFollowUpSettings", (string)null);
                 });
 
             modelBuilder.Entity("Lettra.Domain.Billing.RecurringInvoice", b =>
@@ -1931,6 +2029,68 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.ToTable("PriceLists", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Domain.Reminders.PaymentPlan", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("AcknowledgedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("AcknowledgedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CancelledBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("InvoiceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("InvoiceNumber")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid?>("PortalLinkId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("RequestedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RequestedBy")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Total")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RequestedAt");
+
+                    b.HasIndex("InvoiceId", "Status");
+
+                    b.ToTable("PaymentPlans", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Domain.Reminders.PaymentReminder", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1953,6 +2113,9 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.Property<string>("ErrorCode")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<int?>("Installment")
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("InvoiceId")
                         .HasColumnType("uuid");
@@ -2009,12 +2172,40 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.ToTable("PaymentReminders", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Domain.Reminders.PaymentTargetingObjection", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("RecordedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("RecordedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId")
+                        .IsUnique();
+
+                    b.ToTable("PaymentTargetingObjections", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Domain.Reminders.ReminderSettings", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
                     b.Property<bool>("AutoSend")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("BeforeDueDays")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("BeforeDueEnabled")
                         .HasColumnType("boolean");
 
                     b.Property<int>("FinalDays")
@@ -2028,6 +2219,16 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
 
                     b.Property<int>("MinimumGapDays")
                         .HasColumnType("integer");
+
+                    b.Property<int>("PaymentPlanMaxInstallments")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("PaymentPlanMinimumAmount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<bool>("PaymentPlansEnabled")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("ReminderDays")
                         .HasColumnType("integer");
@@ -3561,6 +3762,34 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                     b.Navigation("Customers");
 
                     b.Navigation("Entries");
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Reminders.PaymentPlan", b =>
+                {
+                    b.OwnsMany("Lettra.Domain.Reminders.PaymentPlanInstallment", "Installments", b1 =>
+                        {
+                            b1.Property<Guid>("PaymentPlanId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<int>("Number")
+                                .HasColumnType("integer");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("numeric(18,4)");
+
+                            b1.Property<DateOnly>("DueDate")
+                                .HasColumnType("date");
+
+                            b1.HasKey("PaymentPlanId", "Number");
+
+                            b1.ToTable("PaymentPlanInstallments", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("PaymentPlanId");
+                        });
+
+                    b.Navigation("Installments");
                 });
 
             modelBuilder.Entity("Lettra.Domain.Vigilance.ClientDueDiligence", b =>

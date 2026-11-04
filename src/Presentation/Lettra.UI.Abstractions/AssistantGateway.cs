@@ -17,4 +17,10 @@ public interface IAssistantGateway
     /// comme un unique <see cref="AssistantUnavailableEvent"/> portant le code de la raison.
     /// </summary>
     IAsyncEnumerable<AssistantEvent> AskAsync(AskAssistantRequest request, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Journal IA du dossier ouvert, du plus récent au plus ancien : chaque demande, appel au moteur, outil, réponse et
+    /// panne, avec la date, la personne et le moteur. Les noms y sont masqués.
+    /// </summary>
+    Task<OperationResult<IReadOnlyList<AssistantJournalEntry>>> GetJournalAsync(int limit, CancellationToken cancellationToken);
 }

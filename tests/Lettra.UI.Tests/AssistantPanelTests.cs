@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Runtime.CompilerServices;
 using Bunit;
 using Bunit.Rendering;
 using Lettra.Contracts.Assistant;
@@ -95,7 +94,7 @@ public sealed class AssistantPanelTests : BunitContext
         request.OpenDocumentId.Should().Be(DocumentId);
         request.Question.Should().Contain("Compliance.DueDateMissing");
         screen.Find(".is-step").TextContent.Should().Be("Étape : contrôle de conformité de la pièce");
-        screen.Find(".is-suggestion .lettra-assistant-label").TextContent.Should().Be("Suggestion de l'IA, à vérifier");
+        screen.Find(".is-suggestion .lettra-assistant-label").TextContent.Trim().Should().Be("Texte rédigé par l'IA, à vérifier");
         screen.Find(".is-completed").TextContent.Should().Contain("local:mistral-small");
         screen.FindAll("button").Select(b => b.TextContent).Should().NotContain(t => t.Contains("Valider") || t.Contains("Émettre"));
     }
@@ -172,26 +171,67 @@ public sealed class AssistantPanelTests : BunitContext
             .Should().Be("L'assistant IA est désactivé pour ce cabinet. L'administrateur du cabinet peut l'activer."));
     }
 
-    private sealed class FakeAssistantGateway : IAssistantGateway
+    [Fact]
+    public void Le_texte_de_l_IA_est_signale_a_l_ecran_et_pour_les_machines_avec_son_moteur()
     {
-        public AssistantStatusResponse Status { get; set; } = new(
-            [AssistantFeature.DraftFromText, AssistantFeature.ExplainCompliance, AssistantFeature.RegulatoryQuestions], "local:mistral-small");
+        Services.AddSingleton<IAssistantGateway>(_gateway);
+        _gateway.Answer =
+        [
+            new AssistantTextEvent("Le taux normal est de 20 %.", "claude:claude-sonnet"),
+            new AssistantCompletedEvent("claude:claude-sonnet", 1, null, null, "f2e15c4"),
+        ];
+        IRenderedComponent<ContainerFragment> screen = RenderScreen();
+        screen.Find(".lettra-why").Click();
 
-        public IReadOnlyList<AssistantEvent> Answer { get; set; } = [];
+        AngleSharp.Dom.IElement text = screen.WaitForElement(".is-suggestion");
+        text.GetAttribute("data-ai-generated").Should().Be("true");
+        text.GetAttribute("data-digital-source-type").Should().Be(AssistantTextEvent.TrainedAlgorithmicMedia);
+        text.GetAttribute("data-ai-engine").Should().Be("claude:claude-sonnet");
+        text.QuerySelector(".lettra-assistant-label")!.GetAttribute("title")
+            .Should().Be("Rédigé par l'IA (claude:claude-sonnet). Vérifiez-le avant de vous en servir.");
+        screen.Find("#assistant-engine").GetAttribute("title").Should().Be("Moteur d'IA : local:mistral-small");
+        screen.Find("#assistant-guide").GetAttribute("href").Should().Be("ai");
+    }
 
-        public List<AskAssistantRequest> Requests { get; } = [];
+    [Fact]
+    public void Un_moteur_en_panne_passe_le_panneau_en_pause_puis_une_reponse_le_retablit()
+    {
+        Services.AddSingleton<IAssistantGateway>(_gateway);
+        _gateway.Answer = [new AssistantToolUsedEvent("calculer", AssistantToolRisk.ReadOnly, true), new AssistantUnavailableEvent(ErrorCodes.Ai.EngineFailed)];
+        IRenderedComponent<ContainerFragment> screen = RenderScreen();
+        AssistantPanelState state = Services.GetRequiredService<AssistantPanelState>();
+        screen.Find(".lettra-why").Click();
 
-        public Task<OperationResult<AssistantStatusResponse>> GetStatusAsync(CancellationToken cancellationToken) =>
-            Task.FromResult(OperationResult<AssistantStatusResponse>.Success(Status));
+        screen.WaitForAssertion(() => screen.Find("#assistant-engine").GetAttribute("data-responding").Should().Be("false"));
+        screen.Find("#assistant-engine").TextContent.Trim().Should().Be("IA en pause : le moteur ne répond pas");
+        screen.Find(".lettra-assistant-events .is-error").TextContent.Should().StartWith("Le moteur d'IA ne répond pas");
+        screen.FindAll(".lettra-assistant-events li").Should().HaveCount(2, because: "l'étape déjà faite reste affichée");
+        state.EngineResponding.Should().BeFalse();
 
-        public async IAsyncEnumerable<AssistantEvent> AskAsync(AskAssistantRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
-        {
-            Requests.Add(request);
-            foreach (AssistantEvent item in Answer)
-            {
-                await Task.Yield();
-                yield return item;
-            }
-        }
+        _gateway.Answer = [new AssistantTextEvent("Réponse."), new AssistantCompletedEvent("local:mistral-small", 1, null, null, "f2e15c4")];
+        screen.InvokeAsync(() => screen.Find("#assistant-question").Input("TVA ?"));
+        screen.InvokeAsync(() => screen.Find("form").Submit());
+
+        screen.WaitForAssertion(() => screen.Find("#assistant-engine").TextContent.Trim().Should().Be("IA disponible"));
+        state.EngineResponding.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Un_moteur_deja_en_pause_au_chargement_est_annonce_et_une_autre_erreur_ne_change_rien()
+    {
+        Services.AddSingleton<IAssistantGateway>(_gateway);
+        _gateway.Status = new AssistantStatusResponse([AssistantFeature.RegulatoryQuestions], "local:mistral-small", EngineResponding: false);
+        _gateway.Answer = [new AssistantUnavailableEvent(ErrorCodes.Ai.Disabled)];
+        IRenderedComponent<ContainerFragment> screen = RenderScreen();
+        AssistantPanelState state = Services.GetRequiredService<AssistantPanelState>();
+        screen.WaitForAssertion(() => state.IsAvailable.Should().BeTrue());
+        state.Open(AssistantFeature.RegulatoryQuestions);
+
+        screen.WaitForElement("#assistant-engine").GetAttribute("data-responding").Should().Be("false");
+        screen.Find("#assistant-question").Input("TVA ?");
+        screen.Find("form").Submit();
+        screen.WaitForElement(".lettra-assistant-events .is-error");
+
+        state.EngineResponding.Should().BeFalse(because: "un refus du cabinet ne dit rien du moteur");
     }
 }

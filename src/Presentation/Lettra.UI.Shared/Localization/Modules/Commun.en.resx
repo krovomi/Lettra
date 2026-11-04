@@ -69,4 +69,5 @@
     <value>The version of the document that was read was not sent (If-Match header missing).</value>
   </data>
   <data name="Nav.IbanChanges" xml:space="preserve"><value>IBANs to check</value></data>
+  <data name="Nav.Ai" xml:space="preserve"><value>Using AI well</value></data>
 </root>

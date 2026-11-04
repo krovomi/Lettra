@@ -20,6 +20,9 @@ internal sealed class InProcessAssistantGateway(IServiceScopeFactory scopes) : I
     public Task<OperationResult<AssistantStatusResponse>> GetStatusAsync(CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetAssistantStatusQuery(dossier), ct), cancellationToken);
 
+    public Task<OperationResult<IReadOnlyList<AssistantJournalEntry>>> GetJournalAsync(int limit, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetAssistantJournalQuery(dossier, limit), ct), cancellationToken);
+
     public async IAsyncEnumerable<AssistantEvent> AskAsync(AskAssistantRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);

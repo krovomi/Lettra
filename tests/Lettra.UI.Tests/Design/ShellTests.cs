@@ -59,7 +59,7 @@ public sealed class ShellTests : BunitContext
         IRenderedComponent<MainLayout> coque = Coque();
 
         Libelles(coque.FindAll(".lt-sidebar .lt-nav-link")).Should().Equal(
-            "Accueil", "En bref", "Décisions à prendre", "Vue cabinet", "Comptes intra-groupe", "Démo commentée", "Devis", "Factures", "Avoirs", "Factures récurrentes", "Vérifier une facture", "Prêt pour l'e-facture", "Clients", "Fournisseurs", "Factures reçues", "IBAN à vérifier", "Attestations de vigilance", "Vérifier les tiers", "Catalogue", "Encaissements", "Rapprochement bancaire", "Pièces justificatives", "Relances", "Météo des paiements", "Fiche d'appel", "Journal et balance", "FEC", "Déclarations", "Revue du dossier", "Lettre de mission", "Anti-blanchiment", "Remonter le temps", "Pourquoi ce chiffre ?", "Et si… ?", "Tableaux de bord", "Alertes", "Entreprise", "Mes préférences", "Serveur du cabinet");
+            "Accueil", "En bref", "Décisions à prendre", "Vue cabinet", "Comptes intra-groupe", "Démo commentée", "Devis", "Devis à relancer", "Carnet de commandes", "Factures", "Avoirs", "Factures récurrentes", "Vérifier une facture", "Prêt pour l'e-facture", "Clients", "Fournisseurs", "Factures reçues", "IBAN à vérifier", "Attestations de vigilance", "Vérifier les tiers", "Catalogue", "Encaissements", "Rapprochement bancaire", "Pièces justificatives", "Relances", "Météo des paiements", "Fiche d'appel", "Journal et balance", "FEC", "Déclarations", "Revue du dossier", "Lettre de mission", "Anti-blanchiment", "Remonter le temps", "Pourquoi ce chiffre ?", "Et si… ?", "Tableaux de bord", "Alertes", "Bien utiliser l'IA", "Entreprise", "Mes préférences", "Serveur du cabinet");
         coque.FindAll(".lt-sidebar .lt-nav-group").Select(g => g.TextContent).Should().Equal("Ventes", "Tiers", "Comptabilité", "Pilotage");
         Libelles(coque.FindAll(".lt-tabbar .lt-tab")).Should().Equal("Accueil", "Devis", "Factures", "Clients", "Plus");
         coque.Find(".lt-skip").GetAttribute("href").Should().Be("#main");
@@ -76,7 +76,7 @@ public sealed class ShellTests : BunitContext
         coque.Find("#tab-more").GetAttribute("aria-expanded").Should().Be("true");
         IElement feuille = coque.Find("#more-sheet");
         feuille.GetAttribute("role").Should().Be("dialog");
-        Libelles(feuille.QuerySelectorAll(".lt-nav-link")).Should().Equal("En bref", "Décisions à prendre", "Vue cabinet", "Comptes intra-groupe", "Démo commentée", "Avoirs", "Factures récurrentes", "Vérifier une facture", "Prêt pour l'e-facture", "Fournisseurs", "Factures reçues", "IBAN à vérifier", "Attestations de vigilance", "Vérifier les tiers", "Catalogue", "Encaissements", "Rapprochement bancaire", "Pièces justificatives", "Relances", "Météo des paiements", "Fiche d'appel", "Journal et balance", "FEC", "Déclarations", "Revue du dossier", "Lettre de mission", "Anti-blanchiment", "Remonter le temps", "Pourquoi ce chiffre ?", "Et si… ?", "Tableaux de bord", "Alertes", "Entreprise", "Mes préférences", "Serveur du cabinet");
+        Libelles(feuille.QuerySelectorAll(".lt-nav-link")).Should().Equal("En bref", "Décisions à prendre", "Vue cabinet", "Comptes intra-groupe", "Démo commentée", "Devis à relancer", "Carnet de commandes", "Avoirs", "Factures récurrentes", "Vérifier une facture", "Prêt pour l'e-facture", "Fournisseurs", "Factures reçues", "IBAN à vérifier", "Attestations de vigilance", "Vérifier les tiers", "Catalogue", "Encaissements", "Rapprochement bancaire", "Pièces justificatives", "Relances", "Météo des paiements", "Fiche d'appel", "Journal et balance", "FEC", "Déclarations", "Revue du dossier", "Lettre de mission", "Anti-blanchiment", "Remonter le temps", "Pourquoi ce chiffre ?", "Et si… ?", "Tableaux de bord", "Alertes", "Bien utiliser l'IA", "Entreprise", "Mes préférences", "Serveur du cabinet");
         feuille.QuerySelectorAll("input[type=radio][name^=lettra-theme]").Should().HaveCount(5);
 
         feuille.KeyDown("Escape");
@@ -205,6 +205,36 @@ public sealed class ShellTests : BunitContext
         accueil.Find("#home-overdue .lt-list-meta").TextContent.Should().Be("FAC-2026-0007 · échue depuis 45 j");
         accueil.FindAll("#home-transmissions dd").Select(d => d.TextContent).Should().Equal("2", "5", "1", "7");
         accueil.Find("#home-transmissions [data-stat=needs-attention]").ClassList.Should().Contain("is-alert");
+    }
+
+    [Fact]
+    public void L_accueil_montre_le_carnet_de_commandes_pondere_et_les_devis_a_relancer()
+    {
+        _quotes.Add(QuoteStatusDto.Validated, "DEV-2026-0007", Conseil, Conseil);
+        FakeQuoteFollowUpsGateway followUps = new()
+        {
+            Book = new OrderBookResponse(
+                new DateOnly(2026, 10, 16), new DateOnly(2024, 10, 16), 24, 3, 6, 10, 0.6m, true, 4_000m, 2_400m, 2_880m, [], [],
+                [FakeQuoteFollowUpsGateway.BookQuote("DEV-2026-0007", "Dupont SARL", 4_000m, 0.6m)]),
+        };
+        followUps.Quotes.Add(FakeQuoteFollowUpsGateway.Quote("DEV-2026-0007", "Dupont SARL", "compta@dupont.fr", 3));
+        Services.AddSingleton<IQuoteFollowUpsGateway>(followUps);
+
+        IRenderedComponent<Home> accueil = Render<Home>();
+
+        accueil.WaitForAssertion(() => accueil.Find("#home-order-book-weighted").TextContent.Should().Be("2\u00A0400 €"));
+        accueil.Find("#home-order-book-reason").TextContent.Should().Be("1 devis en attente, pondéré par vos taux passés : 60 % des devis conclus ont été acceptés (6 sur 10, 24 derniers mois).");
+        accueil.Find("#home-quote-follow-ups").TextContent.Should().Be("1");
+        accueil.Find("#home-order-book [data-stat=to-follow-up]").ClassList.Should().Contain("is-alert");
+        accueil.Find("#home-order-book-link").GetAttribute("href").Should().Be("order-book");
+
+        followUps.Book = followUps.Book with { HasEnoughHistory = false };
+        IRenderedComponent<Home> court = Render<Home>();
+        court.WaitForAssertion(() => court.Find("#home-order-book-reason").TextContent.Should().Be("1 devis en attente ; historique encore court, il compte pour une chance sur deux."));
+
+        followUps.Book = followUps.Book with { Quotes = [] };
+        IRenderedComponent<Home> vide = Render<Home>();
+        vide.WaitForAssertion(() => vide.Find("#home-order-book-reason").TextContent.Should().Be("Aucun devis en attente de réponse."));
     }
 
     [Fact]

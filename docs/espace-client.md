@@ -6,11 +6,15 @@
 
 1. Le cabinet crée un lien : depuis la fiche client (espace complet), une facture due (« Paiement en ligne ») ou un
    devis validé (« Signature en ligne », avec un acompte facultatif de 20, 30, 40 ou 50 %). Il le copie et l'envoie
-   lui-même à son client : Lettra n'envoie pas d'e-mail.
+   lui-même à son client : Lettra n'envoie pas d'e-mail pour ce lien. Seuls le rappel avant échéance et la relance
+   d'échéance manquée en portent un, créé à l'envoi ([avant-le-retard.md](avant-le-retard.md)).
 2. Le client ouvre l'espace : ses factures dues avec le QR code de virement, ses devis, ses factures réglées.
 3. Il paie par carte (page du prestataire) ou par virement (QR code).
 4. Il signe un devis : le devis passe « Accepté » et, si le lien le demande, la facture d'acompte est créée, validée et
    aussitôt payable en ligne.
+5. Une facture qu'un client professionnel peut étaler montre **Payer en plusieurs fois** : il choisit 2 ou 3
+   échéances dans les bornes de l'entreprise, donne son nom, s'engage, et l'échéancier est accordé tout de suite
+   ([avant-le-retard.md](avant-le-retard.md)).
 
 ## Lien
 
