@@ -1,10 +1,8 @@
 using System.Globalization;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using AngleSharp.Dom;
 using Bunit;
 using Lettra.Contracts.Assistant;
-using Lettra.Contracts.Common;
 using Lettra.Contracts.Identity;
 using Lettra.UI.Abstractions;
 using Lettra.UI.Shared;
@@ -190,7 +188,7 @@ public sealed class HelpPanelTests : BunitContext
     [Fact]
     public async Task Avec_l_assistant_active_la_question_lui_est_passee()
     {
-        FakeAssistantGateway gateway = new();
+        FakeAssistantGateway gateway = new() { Status = new([AssistantFeature.RegulatoryQuestions], "local:mistral-small") };
         Services.AddSingleton<IAssistantGateway>(gateway);
         IRenderedComponent<MainLayout> coque = Coque();
         AssistantPanelState assistant = Services.GetRequiredService<AssistantPanelState>();
@@ -204,7 +202,7 @@ public sealed class HelpPanelTests : BunitContext
         coque.FindAll("#help-panel").Should().BeEmpty();
         assistant.IsOpen.Should().BeTrue();
         assistant.Feature.Should().Be(AssistantFeature.RegulatoryQuestions);
-        coque.WaitForAssertion(() => gateway.Questions.Should().Equal("zorglub"));
+        coque.WaitForAssertion(() => gateway.Requests.Select(r => r.Question).Should().Equal("zorglub"));
     }
 
     // ---------- palette Ctrl+K ----------
@@ -255,20 +253,5 @@ public sealed class HelpPanelTests : BunitContext
         ];
 
         HelpCatalog.All.Where(e => e.LinkHref is not null).Should().OnlyContain(e => routes.Contains(e.LinkHref!) && e.LinkLabelKey != null);
-    }
-
-    private sealed class FakeAssistantGateway : IAssistantGateway
-    {
-        public List<string?> Questions { get; } = [];
-
-        public Task<OperationResult<AssistantStatusResponse>> GetStatusAsync(CancellationToken cancellationToken) =>
-            Task.FromResult(OperationResult<AssistantStatusResponse>.Success(new AssistantStatusResponse([AssistantFeature.RegulatoryQuestions], "local:mistral-small")));
-
-        public async IAsyncEnumerable<AssistantEvent> AskAsync(AskAssistantRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
-        {
-            Questions.Add(request.Question);
-            await Task.Yield();
-            yield break;
-        }
     }
 }

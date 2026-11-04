@@ -1,0 +1,47 @@
+/* IA : indicateur « IA disponible » du panneau assistant et page « Bien utiliser l'IA de Lettra ». Uniquement des
+   jetons de lettra-tokens.css, ce qui fait marcher les quatre thèmes. */
+
+/* ---------- panneau assistant ---------- */
+.lt-ai-availability { display: inline-flex; align-items: center; gap: var(--space-2); justify-self: start; margin: 0; padding: var(--space-1) var(--space-2); border-radius: var(--radius-full); font-size: var(--text-xs); font-weight: var(--weight-medium); background: var(--color-success-bg); color: var(--color-success-fg); }
+.lt-ai-availability[data-responding="false"] { background: var(--color-warning-bg); color: var(--color-warning-fg); }
+.lt-ai-dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--color-success); flex: none; }
+.lt-ai-availability[data-responding="false"] .lt-ai-dot { background: var(--color-warning); }
+
+/* ---------- page « Bien utiliser l'IA de Lettra » ---------- */
+.lt-ai-state { display: flex; align-items: flex-start; gap: var(--space-3); border-left: 4px solid var(--color-border-strong); }
+.lt-ai-state h2 { margin: 0 0 var(--space-1); font-size: var(--text-lg); }
+.lt-ai-state p { margin: 0 0 var(--space-2); }
+.lt-ai-state .lt-facts { margin: 0; }
+.lt-ai-state-icon { flex: none; display: inline-grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: 50%; background: var(--color-neutral-bg); color: var(--color-neutral-fg); }
+.lt-ai-state[data-state="On"] { border-left-color: var(--color-success); }
+.lt-ai-state[data-state="On"] .lt-ai-state-icon { background: var(--color-success-bg); color: var(--color-success-fg); }
+.lt-ai-state[data-state="Paused"] { border-left-color: var(--color-warning); }
+.lt-ai-state[data-state="Paused"] .lt-ai-state-icon { background: var(--color-warning-bg); color: var(--color-warning-fg); }
+
+.lt-ai-guide { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: var(--space-4); margin-bottom: var(--space-4); }
+.lt-ai-guide .lt-ai-card { margin-bottom: 0; }
+.lt-ai-card h2 { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-2); font-size: var(--text-base); }
+.lt-ai-card ul { margin: 0; padding-left: var(--space-4); display: grid; gap: var(--space-2); }
+#ai-guide-never h2 { color: var(--color-success-fg); }
+#ai-guide-mark h2 { color: var(--color-primary-soft-fg); }
+
+#ai-registry-title, #ai-journal-title { display: flex; align-items: center; gap: var(--space-2); }
+.lt-ai-usages { list-style: none; margin: var(--space-3) 0; padding: 0; display: grid; gap: var(--space-2); }
+.lt-ai-usages li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 1.3fr); align-items: center; gap: var(--space-1) var(--space-3); padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.lt-ai-usage-tags { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.lt-ai-tag { display: inline-block; padding: 0.125rem var(--space-2); border-radius: var(--radius-sm); font-size: var(--text-xs); background: var(--color-neutral-bg); color: var(--color-neutral-fg); }
+.lt-ai-usages li[data-status="open"] .is-status { background: var(--color-success-bg); color: var(--color-success-fg); }
+.lt-ai-usages li[data-status="blocked"] .is-status { background: var(--color-warning-bg); color: var(--color-warning-fg); }
+.lt-ai-law { margin-bottom: 0; font-size: var(--text-sm); }
+
+.lt-ai-kind { font-weight: var(--weight-medium); }
+.lt-ai-kind[data-kind="EngineFailed"], .lt-ai-kind[data-kind="ToolRejected"], .lt-ai-kind[data-kind="Refused"] { color: var(--color-danger-fg); }
+.lt-ai-detail { overflow-wrap: anywhere; }
+
+@media (max-width: 1023px) {
+    .lt-ai-usages li { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 639px) {
+    .lt-ai-state { flex-direction: column; }
+}

@@ -129,6 +129,7 @@ internal sealed class GetAssistantStatusHandler(
     ITenantContext tenant,
     IAiUsagePolicy policy,
     IAiEngineFactory engines,
+    IAiEngineHealth health,
     INamedEntityDetection namedEntities)
     : IQueryHandler<GetAssistantStatusQuery, Result<AssistantStatusResponse>>
 {
@@ -142,7 +143,9 @@ internal sealed class GetAssistantStatusHandler(
             : [.. Enum.GetValues<AssistantFeature>()
                 .Where(f => f != AssistantFeature.ExternalAssistant) // pas dans le panneau : il se branche dans l'IA du poste
                 .Where(f => AiErrors.CheckPolicy(settings, f, query.Dossier, namedEntities) is null)];
-        return new AssistantStatusResponse(features, features.Length == 0 ? null : engine?.Name);
+        return features.Length == 0
+            ? new AssistantStatusResponse(features, null)
+            : new AssistantStatusResponse(features, engine?.Name, health.IsResponding(settings.Engine));
     }
 }
 

@@ -71,3 +71,47 @@ public sealed record EngineTurn(IReadOnlyList<EnginePart> Parts, EngineStopReaso
 
     public string Text => string.Concat(Parts.OfType<TextPart>().Select(p => p.Text));
 }
+
+/// <summary>Pourquoi un moteur n'a pas rendu de tour exploitable. La réponse se termine alors sans IA.</summary>
+public enum AiEngineFailure
+{
+    /// <summary>Délai dépassé.</summary>
+    Timeout = 1,
+
+    /// <summary>Moteur injoignable : réseau, erreur du service, quota atteint, identifiants refusés.</summary>
+    Unreachable = 2,
+
+    /// <summary>Réponse reçue mais illisible.</summary>
+    Unreadable = 3,
+
+    /// <summary>Le moteur a échoué plusieurs fois de suite : Lettra cesse de l'appeler quelques minutes (disjoncteur ouvert).</summary>
+    Paused = 4,
+}
+
+/// <summary>
+/// Un moteur n'a pas rendu de tour exploitable. Les adapters s'en servent quand ils savent nommer la raison (réponse
+/// illisible) ; l'orchestrateur classe lui-même les autres erreurs.
+/// </summary>
+public sealed class AiEngineException(AiEngineFailure failure, string message, Exception? innerException = null)
+    : Exception(message, innerException)
+{
+    public AiEngineFailure Failure { get; } = failure;
+}
+
+/// <summary>
+/// État des moteurs vu par l'orchestrateur : un moteur qui vient d'échouer plusieurs fois n'est plus appelé pendant
+/// quelques minutes. Sans couche IA, aucun moteur n'est surveillé et tous sont réputés répondre.
+/// </summary>
+public interface IAiEngineHealth
+{
+    /// <summary>Aucune surveillance : la valeur par défaut, sans couche IA.</summary>
+    public static IAiEngineHealth None { get; } = new UnmonitoredAiEngineHealth();
+
+    /// <summary>Faux si Lettra a cessé d'appeler ce moteur après des échecs répétés ; vrai sinon, même s'il n'a jamais été appelé.</summary>
+    bool IsResponding(AiEngineKind kind);
+}
+
+internal sealed class UnmonitoredAiEngineHealth : IAiEngineHealth
+{
+    public bool IsResponding(AiEngineKind kind) => true;
+}

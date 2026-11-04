@@ -97,6 +97,7 @@ public sealed class OtherHttpGatewaysUnreachableTests
             (await services.GetRequiredService<IPilotageGateway>().GetDossierAsync(default)).Errors,
             (await services.GetRequiredService<IPilotageGateway>().GetPeersAsync(default)).Errors,
             (await services.GetRequiredService<IAssistantGateway>().GetStatusAsync(default)).Errors,
+            (await services.GetRequiredService<IAssistantGateway>().GetJournalAsync(50, default)).Errors,
             (await services.GetRequiredService<IAdministrationGateway>().DeleteTeamAsync(id, id, default)).Errors,
             (await invoices.GetEInvoiceAsync(id, EInvoiceFormatDto.Ubl, default)).Errors,
             (await customers.GetAsync(id, default)).Errors,

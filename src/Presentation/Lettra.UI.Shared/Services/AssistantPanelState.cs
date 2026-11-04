@@ -22,6 +22,15 @@ public sealed class AssistantPanelState(Optional<IAssistantGateway> gateway)
 
     public bool IsAvailable => Features.Count > 0;
 
+    /// <summary>
+    /// « IA disponible » : faux quand le moteur vient d'échouer (réponse terminée sans IA) ou que Lettra a cessé de
+    /// l'appeler quelques minutes après des échecs répétés ; vrai dès qu'il répond de nouveau.
+    /// </summary>
+    public bool EngineResponding { get; private set; } = true;
+
+    /// <summary>Le serveur a répondu au statut : l'utilisateur a le droit d'utiliser l'IA, et donc de lire son journal.</summary>
+    public bool CanReadJournal { get; private set; }
+
     public bool IsOpen { get; private set; }
 
     public AssistantFeature Feature { get; private set; } = AssistantFeature.RegulatoryQuestions;
@@ -79,6 +88,16 @@ public sealed class AssistantPanelState(Optional<IAssistantGateway> gateway)
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>Note ce que la dernière réponse a appris du moteur : il a répondu, ou il a échoué.</summary>
+    public void ReportEngine(bool responding)
+    {
+        if (EngineResponding != responding)
+        {
+            EngineResponding = responding;
+            Changed?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
     /// <summary>Rend la question en attente une seule fois.</summary>
     internal string? TakePendingQuestion()
     {
@@ -96,6 +115,8 @@ public sealed class AssistantPanelState(Optional<IAssistantGateway> gateway)
         // Un refus (pas de droit IaUtiliser, pas de dossier, serveur injoignable) vaut « pas d'assistant ».
         Features = status.IsSuccess && status.Value is { } value ? value.Features : [];
         Engine = status.IsSuccess ? status.Value?.Engine : null;
+        EngineResponding = status.Value?.EngineResponding ?? true;
+        CanReadJournal = status.IsSuccess;
         Changed?.Invoke(this, EventArgs.Empty);
     }
 }

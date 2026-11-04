@@ -10,6 +10,12 @@ public static partial class ErrorCodes
         public const string FeatureBlocked = "Ai.FeatureBlocked";
         public const string DossierExcluded = "Ai.DossierExcluded";
         public const string EngineUnavailable = "Ai.EngineUnavailable";
+
+        /// <summary>Le moteur a échoué au milieu de la réponse (délai, réseau, réponse illisible) : elle s'arrête là.</summary>
+        public const string EngineFailed = "Ai.EngineFailed";
+
+        /// <summary>Le moteur a échoué plusieurs fois de suite : Lettra cesse de l'appeler quelques minutes.</summary>
+        public const string EnginePaused = "Ai.EnginePaused";
         public const string Refused = "Ai.Refused";
         public const string ToolRoundsExceeded = "Ai.ToolRoundsExceeded";
         public const string Truncated = "Ai.Truncated";
