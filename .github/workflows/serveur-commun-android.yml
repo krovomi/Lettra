@@ -142,7 +142,7 @@ jobs:
           # en ouvrant la liste des clients, sans message ni manque de mémoire. À relever quand une version plus
           # récente passe ce test.
           emulator-build: 16428233
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -show-kernel
+          emulator-options: -no-window -gpu guest -noaudio -no-boot-anim -no-snapshot -show-kernel
           script: bash "$RUNNER_TEMP/serveur-commun-android.sh"
 
       - name: Journaux de la démo
