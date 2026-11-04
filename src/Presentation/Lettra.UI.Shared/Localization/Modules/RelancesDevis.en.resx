@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.QuoteFollowUps" xml:space="preserve"><value>Quotes to follow up</value></data>
+  <data name="Nav.QuoteFollowUps.Keywords" xml:space="preserve"><value>follow up quote no answer expiry validity chase</value></data>
+  <data name="Nav.OrderBook" xml:space="preserve"><value>Order book</value></data>
+  <data name="Nav.OrderBook.Keywords" xml:space="preserve"><value>weighted forecast upcoming revenue acceptance rate pending quotes pipeline</value></data>
+  <data name="QuoteTabs.Label" xml:space="preserve"><value>Quote screens</value></data>
+  <data name="QuoteTabs.All" xml:space="preserve"><value>All quotes</value></data>
+  <data name="QuoteTabs.FollowUps" xml:space="preserve"><value>To follow up</value></data>
+  <data name="QuoteTabs.OrderBook" xml:space="preserve"><value>Order book</value></data>
+  <data name="QuoteTabs.DueCount" xml:space="preserve"><value>{0} quotes to follow up</value></data>
+  <data name="QuoteTabs.DueCount.One" xml:space="preserve"><value>1 quote to follow up</value></data>
+  <data name="Quote.Command.FollowUp" xml:space="preserve"><value>Follow up</value></data>
+  <data name="QuoteFollowUps.Title" xml:space="preserve"><value>Quotes to follow up</value></data>
+  <data name="QuoteFollowUps.Subtitle" xml:space="preserve"><value>Quotes sent without an answer whose validity ends within the next {0} days. Read the suggested follow-up, then send it or log it: nothing goes out without you.</value></data>
+  <data name="QuoteFollowUps.Subtitle.One" xml:space="preserve"><value>Quotes sent without an answer whose validity ends by tomorrow. Read the suggested follow-up, then send it or log it: nothing goes out without you.</value></data>
+  <data name="QuoteFollowUps.NoEmail" xml:space="preserve"><value>This installation does not send emails. Follow up with your customers yourself (phone, letter, your own mailbox), then log each follow-up here.</value></data>
+  <data name="QuoteFollowUps.Stat.Due" xml:space="preserve"><value>Quotes to follow up</value></data>
+  <data name="QuoteFollowUps.Stat.DueAmount" xml:space="preserve"><value>Amount to follow up (excl. VAT)</value></data>
+  <data name="QuoteFollowUps.Stat.Likely" xml:space="preserve"><value>Of which likely (excl. VAT)</value></data>
+  <data name="QuoteFollowUps.Stat.Window" xml:space="preserve"><value>Follow-up window</value></data>
+  <data name="QuoteFollowUps.Days" xml:space="preserve"><value>{0} days</value></data>
+  <data name="QuoteFollowUps.Days.One" xml:space="preserve"><value>1 day</value></data>
+  <data name="QuoteFollowUps.Preview.Title" xml:space="preserve"><value>Follow-up of quote {0} for {1}</value></data>
+  <data name="QuoteFollowUps.Preview.Body" xml:space="preserve"><value>Message</value></data>
+  <data name="QuoteFollowUps.MarkManual" xml:space="preserve"><value>Log as followed up</value></data>
+  <data name="QuoteFollowUps.Manual.Hint" xml:space="preserve"><value>“Log as followed up” keeps track of a follow-up made by phone, letter or your own mailbox: copy the text above if needed.</value></data>
+  <data name="QuoteFollowUps.List" xml:space="preserve"><value>Quotes awaiting an answer</value></data>
+  <data name="QuoteFollowUps.Empty" xml:space="preserve"><value>No quote awaiting an answer</value></data>
+  <data name="QuoteFollowUps.Empty.Text" xml:space="preserve"><value>Validated quotes without an answer will show here; those whose validity ends within {0} days are to follow up.</value></data>
+  <data name="QuoteFollowUps.Empty.Text.One" xml:space="preserve"><value>Validated quotes without an answer will show here; those whose validity ends by tomorrow are to follow up.</value></data>
+  <data name="QuoteFollowUps.Search" xml:space="preserve"><value>Search a quote, a customer or an address</value></data>
+  <data name="QuoteFollowUps.DueOnly" xml:space="preserve"><value>To follow up only</value></data>
+  <data name="QuoteFollowUps.WithEmail" xml:space="preserve"><value>With an email address</value></data>
+  <data name="QuoteFollowUps.Count" xml:space="preserve"><value>{0} of {1} quotes</value></data>
+  <data name="QuoteFollowUps.NoMatch" xml:space="preserve"><value>No quote matches these filters.</value></data>
+  <data name="QuoteFollowUps.NothingDue" xml:space="preserve"><value>No quote to follow up for now. Those already followed up show when you untick “To follow up only”.</value></data>
+  <data name="QuoteFollowUps.Last" xml:space="preserve"><value>Last follow-up</value></data>
+  <data name="QuoteFollowUps.WithoutAnswer" xml:space="preserve"><value>no answer for {0} days</value></data>
+  <data name="QuoteFollowUps.SentToday" xml:space="preserve"><value>sent today</value></data>
+  <data name="QuoteFollowUps.WithoutAnswer.One" xml:space="preserve"><value>no answer for 1 day</value></data>
+  <data name="QuoteFollowUps.Probability.Hint" xml:space="preserve"><value>Acceptance chance estimated from your past quotes: see the order book.</value></data>
+  <data name="QuoteFollowUps.Times" xml:space="preserve"><value>{0} times</value></data>
+  <data name="QuoteFollowUps.Times.One" xml:space="preserve"><value>once</value></data>
+  <data name="QuoteFollowUps.Open" xml:space="preserve"><value>Follow up</value></data>
+  <data name="QuoteFollowUps.OpenAgain" xml:space="preserve"><value>Prepare a follow-up</value></data>
+  <data name="QuoteFollowUps.Settings" xml:space="preserve"><value>Follow-up window</value></data>
+  <data name="QuoteFollowUps.Settings.Summary" xml:space="preserve"><value>{0} days before the end of validity</value></data>
+  <data name="QuoteFollowUps.Settings.Summary.One" xml:space="preserve"><value>1 day before the end of validity</value></data>
+  <data name="QuoteFollowUps.Settings.Hint" xml:space="preserve"><value>A quote without an answer is to follow up when its end of validity falls within this window, until a follow-up is sent or logged. From 1 to 30 days; 5 by default.</value></data>
+  <data name="QuoteFollowUps.Settings.Window" xml:space="preserve"><value>Follow up from</value></data>
+  <data name="QuoteFollowUps.Settings.Unit" xml:space="preserve"><value>days before the end</value></data>
+  <data name="QuoteFollowUps.Settings.Save" xml:space="preserve"><value>Save the window</value></data>
+  <data name="QuoteFollowUps.EndsToday" xml:space="preserve"><value>ends today</value></data>
+  <data name="QuoteFollowUps.EndsTomorrow" xml:space="preserve"><value>ends tomorrow</value></data>
+  <data name="QuoteFollowUps.EndsIn" xml:space="preserve"><value>ends in {0} days</value></data>
+  <data name="QuoteFollowUps.Toast.Sent" xml:space="preserve"><value>Follow-up of quote {0} sent to {1}.</value></data>
+  <data name="QuoteFollowUps.Toast.Noted" xml:space="preserve"><value>Follow-up of quote {0} logged.</value></data>
+  <data name="QuoteFollowUps.Toast.SettingsSaved" xml:space="preserve"><value>Follow-up window saved: {0} days.</value></data>
+  <data name="QuoteFollowUps.Toast.SettingsSaved.One" xml:space="preserve"><value>Follow-up window saved: 1 day.</value></data>
+  <data name="QuoteFollowUps.History" xml:space="preserve"><value>Quote follow-up history</value></data>
+  <data name="QuoteFollowUps.History.Empty" xml:space="preserve"><value>No quote follow-up yet</value></data>
+  <data name="QuoteFollowUps.History.Empty.Text" xml:space="preserve"><value>Each follow-up sent or logged is added here, with its text.</value></data>
+  <data name="QuoteFollowUps.History.Search" xml:space="preserve"><value>Search a quote, a customer or a subject</value></data>
+  <data name="QuoteFollowUpChannel.Email" xml:space="preserve"><value>Email</value></data>
+  <data name="QuoteFollowUpChannel.Manual" xml:space="preserve"><value>By hand</value></data>
+  <data name="QuoteFollowUpOutcome.Sent" xml:space="preserve"><value>Done</value></data>
+  <data name="QuoteFollowUpOutcome.Failed" xml:space="preserve"><value>Failed</value></data>
+  <data name="QuoteAmountBand.Small" xml:space="preserve"><value>Under €1,000</value></data>
+  <data name="QuoteAmountBand.Medium" xml:space="preserve"><value>€1,000 to €5,000</value></data>
+  <data name="QuoteAmountBand.Large" xml:space="preserve"><value>€5,000 to €20,000</value></data>
+  <data name="QuoteAmountBand.VeryLarge" xml:space="preserve"><value>€20,000 and more</value></data>
+  <data name="QuoteAgeBand.FirstWeek" xml:space="preserve"><value>7 days or less</value></data>
+  <data name="QuoteAgeBand.SecondWeek" xml:space="preserve"><value>8 to 15 days</value></data>
+  <data name="QuoteAgeBand.SameMonth" xml:space="preserve"><value>16 to 30 days</value></data>
+  <data name="QuoteAgeBand.Older" xml:space="preserve"><value>More than 30 days</value></data>
+  <data name="OrderBook.Title" xml:space="preserve"><value>Order book</value></data>
+  <data name="OrderBook.Subtitle" xml:space="preserve"><value>Upcoming revenue from your pending quotes, weighted by your acceptance rates over the last {0} months. A simple, explained estimate, without AI.</value></data>
+  <data name="OrderBook.Stat.Open" xml:space="preserve"><value>Pending quotes (excl. VAT)</value></data>
+  <data name="OrderBook.Stat.Weighted" xml:space="preserve"><value>Weighted order book (excl. VAT)</value></data>
+  <data name="OrderBook.Stat.WeightedInclTax" xml:space="preserve"><value>Weighted order book (incl. VAT)</value></data>
+  <data name="OrderBook.Stat.Rate" xml:space="preserve"><value>Acceptance rate</value></data>
+  <data name="OrderBook.Rate.Detail" xml:space="preserve"><value>{0} accepted out of {1} closed quotes</value></data>
+  <data name="OrderBook.NotEnough" xml:space="preserve"><value>History still short: fewer than {0} closed quotes since {1}. Meanwhile, each quote counts as a one-in-two chance.</value></data>
+  <data name="OrderBook.Rule.Title" xml:space="preserve"><value>How this amount is calculated</value></data>
+  <data name="OrderBook.Rule.Summary" xml:space="preserve"><value>The average of three past acceptance rates, quote by quote</value></data>
+  <data name="OrderBook.Rule.Text" xml:space="preserve"><value>For each pending quote, Lettra averages three past acceptance rates: the customer's, that of quotes in the same amount band, and that of quotes left unanswered as long. The weighted amount is the quote amount multiplied by this average. A rate based on fewer than {0} closed quotes is replaced by the overall rate. Quotes from {1} to today are taken into account.</value></data>
+  <data name="OrderBook.Rule.Closed" xml:space="preserve"><value>A quote is closed when it is accepted (or invoiced), refused, or reaches the end of its validity without an answer.</value></data>
+  <data name="OrderBook.ByAmount" xml:space="preserve"><value>By amount band (excl. VAT)</value></data>
+  <data name="OrderBook.ByAge" xml:space="preserve"><value>By time without an answer</value></data>
+  <data name="OrderBook.Band" xml:space="preserve"><value>Band</value></data>
+  <data name="OrderBook.Accepted" xml:space="preserve"><value>Accepted</value></data>
+  <data name="OrderBook.OutOf" xml:space="preserve"><value>{0} of {1}</value></data>
+  <data name="OrderBook.Rate" xml:space="preserve"><value>Rate</value></data>
+  <data name="OrderBook.NoRate" xml:space="preserve"><value>no quote</value></data>
+  <data name="OrderBook.Notice" xml:space="preserve"><value>The per-customer rate is computed from your own quotes, in this file only. It is neither shown to the customer nor shared, and only serves this estimate.</value></data>
+  <data name="OrderBook.List" xml:space="preserve"><value>Pending quotes</value></data>
+  <data name="OrderBook.Empty" xml:space="preserve"><value>No pending quote</value></data>
+  <data name="OrderBook.Empty.Text" xml:space="preserve"><value>Validated quotes still valid will show here with their chance of being accepted.</value></data>
+  <data name="OrderBook.Search" xml:space="preserve"><value>Search a quote or a customer</value></data>
+  <data name="OrderBook.Filter.Amount" xml:space="preserve"><value>Amount band</value></data>
+  <data name="OrderBook.Filter.Age" xml:space="preserve"><value>Age</value></data>
+  <data name="OrderBook.All" xml:space="preserve"><value>All</value></data>
+  <data name="OrderBook.Count" xml:space="preserve"><value>{0} of {1} quotes</value></data>
+  <data name="OrderBook.NoMatch" xml:space="preserve"><value>No quote matches these filters.</value></data>
+  <data name="OrderBook.Age" xml:space="preserve"><value>Age</value></data>
+  <data name="OrderBook.AgeDays" xml:space="preserve"><value>{0} days</value></data>
+  <data name="OrderBook.AgeToday" xml:space="preserve"><value>today</value></data>
+  <data name="OrderBook.AgeDays.One" xml:space="preserve"><value>1 day</value></data>
+  <data name="OrderBook.ValidUntil" xml:space="preserve"><value>valid until {0}</value></data>
+  <data name="OrderBook.Probability" xml:space="preserve"><value>Acceptance chance</value></data>
+  <data name="OrderBook.Weighted" xml:space="preserve"><value>Weighted excl. VAT</value></data>
+  <data name="OrderBook.Why" xml:space="preserve"><value>Why this rate?</value></data>
+  <data name="OrderBook.Why.Customer" xml:space="preserve"><value>Customer {0}: {1}, {2} accepted out of {3}</value></data>
+  <data name="OrderBook.Why.Amount" xml:space="preserve"><value>Amount, {0}: {1}, {2} accepted out of {3}</value></data>
+  <data name="OrderBook.Why.Age" xml:space="preserve"><value>Age, {0}: {1}, {2} accepted out of {3}</value></data>
+  <data name="OrderBook.Why.Global" xml:space="preserve"><value>(too few quotes: overall rate)</value></data>
+  <data name="OrderBook.Why.Result" xml:space="preserve"><value>Average: {0}, that is {1} out of {2} excl. VAT.</value></data>
+  <data name="Home.OrderBook.Title" xml:space="preserve"><value>Order book</value></data>
+  <data name="Home.OrderBook.Details" xml:space="preserve"><value>Details</value></data>
+  <data name="Home.OrderBook.Weighted" xml:space="preserve"><value>Weighted excl. VAT</value></data>
+  <data name="Home.OrderBook.Open" xml:space="preserve"><value>Pending excl. VAT</value></data>
+  <data name="Home.OrderBook.ToFollowUp" xml:space="preserve"><value>To follow up</value></data>
+  <data name="Home.OrderBook.Reason" xml:space="preserve"><value>{0} pending quotes, weighted by your past rates: {1} of closed quotes were accepted ({2} of {3}, last {4} months).</value></data>
+  <data name="Home.OrderBook.Reason.One" xml:space="preserve"><value>1 pending quote, weighted by your past rates: {1} of closed quotes were accepted ({2} of {3}, last {4} months).</value></data>
+  <data name="Home.OrderBook.ReasonNoHistory" xml:space="preserve"><value>{0} pending quotes; history still short, each quote counts as a one-in-two chance.</value></data>
+  <data name="Home.OrderBook.ReasonNoHistory.One" xml:space="preserve"><value>1 pending quote; history still short, it counts as a one-in-two chance.</value></data>
+  <data name="Home.OrderBook.NoQuote" xml:space="preserve"><value>No quote awaiting an answer.</value></data>
+  <data name="Error.QuoteFollowUps.WindowInvalid" xml:space="preserve"><value>The follow-up window is 1 to 30 days.</value></data>
+  <data name="Error.QuoteFollowUps.QuoteNotPending" xml:space="preserve"><value>This quote no longer awaits an answer (accepted, refused or past its validity).</value></data>
+  <data name="Error.QuoteFollowUps.CustomerEmailMissing" xml:space="preserve"><value>This customer has no email address: follow up another way, then log the follow-up.</value></data>
+  <data name="Error.QuoteFollowUps.CompanyProfileMissing" xml:space="preserve"><value>Fill in the company profile first: the follow-up is signed with its name.</value></data>
+  <data name="Error.QuoteFollowUps.MessageInvalid" xml:space="preserve"><value>The subject (300 characters at most) and the message (8,000 at most) are required.</value></data>
+</root>

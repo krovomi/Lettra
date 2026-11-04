@@ -111,6 +111,12 @@ public static class DemoScriptCatalog
             new("prevention", ".lt-prevention-kpis, #prevention-radar-empty", Go("cabinet/prevention"), Wait(".lt-prevention-kpis, #prevention-radar-empty")),
             new("pilotage", "#pilotage-dso", Go("pilotage"), Wait("#pilotage-dso")),
         ]),
+        new("ai", "sparkles",
+        [
+            new("guide", "#ai-state", Go("ai"), Wait("#ai-state")),
+            new("never", "#ai-guide-never"),
+            new("registry", "#ai-registry"),
+        ]),
         new("end", "circle-check",
         [
             new("done", null, Go(""), Wait("#kpi-revenue, #home-empty")),

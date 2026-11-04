@@ -217,6 +217,11 @@ internal static class BillingFakesRegistration
         services.AddSingleton<IIntegrityJournal>(billing);
         services.AddSingleton<IBillingTransaction>(billing);
         services.AddSingleton<IBillingReferenceChecker, FakeBillingReferenceChecker>();
+        InMemoryQuoteFollowUps followUps = new(billing);
+        services.AddSingleton(followUps);
+        services.AddSingleton<IQuotePipelineReader>(followUps);
+        services.AddSingleton<IQuoteFollowUpRepository>(followUps);
+        services.AddSingleton<IQuoteFollowUpSettingsRepository>(followUps);
         return services;
     }
 }

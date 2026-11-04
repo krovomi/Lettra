@@ -1,0 +1,210 @@
+@inject IStringLocalizer<SharedResource> L
+@* Les échéanciers demandés par les clients dans leur espace client : ceux en cours, et ceux des trois derniers mois.
+   « Vu » lève l'alerte du dossier ; « Arrêter » rend la facture à ses relances habituelles (décision humaine). *@
+
+<section class="lettra-card" id="reminders-plans" aria-labelledby="reminders-plans-title">
+    <div class="lt-banking-section-head">
+        <h2 id="reminders-plans-title"><Icon Name="handshake" Size="20" /> @L["Prevention.Plans.Title"]</h2>
+        @if (Waiting > 0)
+        {
+            <span class="lettra-status is-draft" id="reminders-plans-waiting">@string.Format(Culture, L["Prevention.Plans.Waiting"], Waiting)</span>
+        }
+    </div>
+    <p class="lettra-muted">@L[Settings.Prevention.PaymentPlansEnabled ? "Prevention.Plans.Hint" : "Prevention.Plans.Off"]</p>
+    @if (Items.Count == 0)
+    {
+        <EmptyState Id="reminders-plans-empty" IconName="handshake" Title="@L["Prevention.Plans.Empty"]" Text="@L["Prevention.Plans.Empty.Text"]" />
+    }
+    else
+    {
+        <ListFilterBar Id="reminders-plans-filters" ActiveCount="ActiveFilters" OnReset="Reset">
+            <ChildContent>
+                <div class="lt-filter">
+                    <label for="reminders-plans-search">@L["Reminders.Invoices.Search"]</label>
+                    <input id="reminders-plans-search" type="search" @bind="_search" @bind:event="oninput" autocomplete="off" />
+                </div>
+            </ChildContent>
+            <More>
+                <div class="lt-filter">
+                    <label for="reminders-plans-status">@L["Prevention.Plans.Status"]</label>
+                    <select id="reminders-plans-status" @bind="_status">
+                        <option value="">@L["Reminders.History.All"]</option>
+                        @foreach (PaymentPlanStatusDto status in Enum.GetValues<PaymentPlanStatusDto>())
+                        {
+                            <option value="@status">@L[$"PlanStatus.{status}"]</option>
+                        }
+                    </select>
+                </div>
+                <label class="lt-banking-check">
+                    <input type="checkbox" id="reminders-plans-waiting-only" @bind="_waitingOnly" />
+                    <span>@L["Prevention.Plans.WaitingOnly"]</span>
+                </label>
+                <SortSelect Id="reminders-plans-sort" Options="_sortOptions" State="_sort" OnSort="StateHasChanged" />
+            </More>
+        </ListFilterBar>
+        <p class="lettra-muted" id="reminders-plans-count">@string.Format(Culture, L["Prevention.Plans.Count"], Filtered.Count, Items.Count)</p>
+        @if (Filtered.Count == 0)
+        {
+            <p class="lettra-muted" id="reminders-plans-nomatch">@L["Reminders.Invoices.NoMatch"]</p>
+        }
+        else
+        {
+            <div class="lt-list-scroll">
+                <table class="lettra-table lettra-documents lt-cards" id="reminders-plans-table">
+                    <thead>
+                        <tr>
+                            <SortHeader Option="Column(PlanSort.Number)" State="_sort" OnSort="StateHasChanged" Id="reminders-plans-sort-number" />
+                            <SortHeader Option="Column(PlanSort.Customer)" State="_sort" OnSort="StateHasChanged" Id="reminders-plans-sort-customer" />
+                            <SortHeader Option="Column(PlanSort.Status)" State="_sort" OnSort="StateHasChanged" Id="reminders-plans-sort-status" />
+                            <th scope="col">@L["Prevention.Plans.Installments"]</th>
+                            <SortHeader Option="Column(PlanSort.Total)" State="_sort" OnSort="StateHasChanged" Id="reminders-plans-sort-total" Class="lg-num" />
+                            <SortHeader Option="Column(PlanSort.RequestedAt)" State="_sort" OnSort="StateHasChanged" Id="reminders-plans-sort-requested" />
+                            <th scope="col"><span class="lettra-visually-hidden">@L["Reminders.Actions"]</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (PaymentPlanResponse plan in Filtered)
+                        {
+                            <tr @key="plan.Id" class="@(plan.Acknowledged ? null : "is-due")">
+                                <td><a href="@($"invoices/{plan.InvoiceId}")">@plan.InvoiceNumber</a></td>
+                                <td data-label="@L["Billing.Column.Customer"]">@plan.CustomerName</td>
+                                <td data-label="@L["Prevention.Plans.Status"]">
+                                    <span class="lettra-status @PaymentPlanBadges.StatusClass(plan.Status)">@L[$"PlanStatus.{plan.Status}"]</span>
+                                    @if (!plan.Acknowledged)
+                                    {
+                                        <span class="lettra-status is-draft">@L["Prevention.Plans.New"]</span>
+                                    }
+                                </td>
+                                <td data-label="@L["Prevention.Plans.Installments"]">
+                                    <ol class="lt-plan-lines">
+                                        @foreach (PaymentPlanInstallmentResponse line in plan.Installments)
+                                        {
+                                            <li class="@(line.Paid ? "is-paid" : line.Missed ? "is-missed" : null)">
+                                                @line.DueDate.ToString("d", Culture) · @ExplorerText.Money(line.Amount)
+                                                @if (line.Paid)
+                                                {
+                                                    <span class="lettra-muted"> · @L["Prevention.Plans.Paid"]</span>
+                                                }
+                                                else if (line.Missed)
+                                                {
+                                                    <span class="lt-plan-missed"> · @L["Prevention.Plans.Missed"]</span>
+                                                }
+                                            </li>
+                                        }
+                                    </ol>
+                                </td>
+                                <td data-label="@L["Prevention.Plans.Total"]" class="lg-num">
+                                    <span class="lt-reminders-cell">
+                                        <span>@ExplorerText.Money(plan.Total)</span>
+                                        <small class="lettra-muted">@string.Format(Culture, L["Prevention.Plans.Left"], ExplorerText.Money(plan.Outstanding))</small>
+                                    </span>
+                                </td>
+                                <td data-label="@L["Prevention.Plans.RequestedAt"]">
+                                    <span class="lt-reminders-cell">
+                                        <span>@plan.RequestedAt.ToLocalTime().ToString("d", Culture)</span>
+                                        <small class="lettra-muted">@plan.RequestedBy</small>
+                                    </span>
+                                </td>
+                                <td class="lt-banking-line-actions">
+                                    <PaymentPlanActions Plan="plan" Busy="Busy" IdPrefix="@($"reminders-plan-{plan.InvoiceNumber}")"
+                                                        OnAcknowledge="OnAcknowledge" OnCancel="OnCancel" />
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<PaymentPlanResponse> Items { get; set; } = [];
+
+    [Parameter, EditorRequired] public ReminderSettingsResponse Settings { get; set; } = default!;
+
+    [Parameter] public bool Busy { get; set; }
+
+    [Parameter] public EventCallback<PaymentPlanResponse> OnAcknowledge { get; set; }
+
+    [Parameter] public EventCallback<PaymentPlanResponse> OnCancel { get; set; }
+
+    private string? _search;
+    private PaymentPlanStatusDto? _status;
+    private bool _waitingOnly;
+    private readonly SortState<PlanSort> _sort = new(PlanSort.RequestedAt, SortDirectionDto.Descending);
+    private IReadOnlyList<SortOption<PlanSort>> _sortOptions = [];
+
+    private static readonly Dictionary<PlanSort, Func<PaymentPlanResponse, object?>> Keys = new()
+    {
+        [PlanSort.Number] = p => p.InvoiceNumber,
+        [PlanSort.Customer] = p => p.CustomerName,
+        [PlanSort.Status] = p => (int)p.Status,
+        [PlanSort.Total] = p => p.Total,
+        [PlanSort.RequestedAt] = p => p.RequestedAt,
+    };
+
+    /// <summary>Tris des échéanciers (quelques-uns par dossier, chargés en entier).</summary>
+    private enum PlanSort
+    {
+        RequestedAt,
+        Status,
+        Total,
+        Customer,
+        Number,
+    }
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private int Waiting => Items.Count(p => !p.Acknowledged);
+
+    private int ActiveFilters => (string.IsNullOrWhiteSpace(_search) ? 0 : 1) + (_status is null ? 0 : 1) + (_waitingOnly ? 1 : 0);
+
+    private IReadOnlyList<PaymentPlanResponse> Filtered
+    {
+        get
+        {
+            IEnumerable<PaymentPlanResponse> rows = Items;
+            if (_waitingOnly)
+            {
+                rows = rows.Where(p => !p.Acknowledged);
+            }
+
+            if (_status is PaymentPlanStatusDto status)
+            {
+                rows = rows.Where(p => p.Status == status);
+            }
+
+            if (!string.IsNullOrWhiteSpace(_search))
+            {
+                string search = _search.Trim();
+                CompareInfo compare = CultureInfo.InvariantCulture.CompareInfo;
+                const CompareOptions options = CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace;
+                rows = rows.Where(p => compare.IndexOf(p.InvoiceNumber, search, options) >= 0
+                    || compare.IndexOf(p.CustomerName, search, options) >= 0
+                    || compare.IndexOf(p.RequestedBy, search, options) >= 0);
+            }
+
+            return ListSorting.Sort(rows, _sort, Keys);
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        _sortOptions =
+        [
+            new(PlanSort.Number, L["Billing.Column.Number"]),
+            new(PlanSort.Customer, L["Billing.Column.Customer"]),
+            new(PlanSort.Status, L["Prevention.Plans.Status"]),
+            new(PlanSort.Total, L["Prevention.Plans.Total"], SortDirectionDto.Descending),
+            new(PlanSort.RequestedAt, L["Prevention.Plans.RequestedAt"], SortDirectionDto.Descending),
+        ];
+    }
+
+    private SortOption<PlanSort> Column(PlanSort column) => _sortOptions.First(o => o.Column == column);
+
+    private void Reset()
+    {
+        (_search, _status, _waitingOnly) = (null, null, false);
+    }
+}

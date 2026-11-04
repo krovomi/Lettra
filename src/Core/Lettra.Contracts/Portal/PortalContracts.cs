@@ -63,7 +63,11 @@ public sealed record PortalView(
     bool CanPayOnline,
     DateTimeOffset LinkExpiresAt);
 
-/// <summary>Une facture (ou un acompte) validée du client, avec ce qu'il reste à payer.</summary>
+/// <summary>
+/// Une facture (ou un acompte) validée du client, avec ce qu'il reste à payer. <paramref name="Plan"/> : son échéancier
+/// en cours ; <paramref name="PlanOptions"/> : les échéanciers que le client peut demander (vide pour un particulier, ou
+/// hors des bornes de l'entreprise).
+/// </summary>
 public sealed record PortalInvoice(
     Guid Id,
     string Number,
@@ -72,7 +76,24 @@ public sealed record PortalInvoice(
     DateOnly? DueDate,
     decimal TotalInclTax,
     decimal Outstanding,
-    bool IsOverdue);
+    bool IsOverdue,
+    PortalPaymentPlan? Plan = null,
+    IReadOnlyList<PortalPlanOption>? PlanOptions = null);
+
+/// <summary>Une échéance telle que le client la lit.</summary>
+public sealed record PortalPlanInstallment(int Number, DateOnly DueDate, decimal Amount, bool Paid);
+
+/// <summary>Un échéancier possible : le nombre d'échéances et leur calendrier.</summary>
+public sealed record PortalPlanOption(int Installments, IReadOnlyList<PortalPlanInstallment> Schedule);
+
+/// <summary>L'échéancier en cours d'une facture, avec la personne qui l'a demandé.</summary>
+public sealed record PortalPaymentPlan(string RequestedBy, DateTimeOffset RequestedAt, IReadOnlyList<PortalPlanInstallment> Installments);
+
+/// <summary>Demande d'échéancier : le nombre d'échéances choisi, le nom de la personne et son accord explicite.</summary>
+public sealed record RequestPaymentPlanRequest(int Installments, string RequesterName, bool Consent);
+
+/// <summary>L'échéancier créé.</summary>
+public sealed record PaymentPlanRequestResult(string InvoiceNumber, IReadOnlyList<PortalPlanInstallment> Installments);
 
 /// <summary>Une ligne de devis, telle que le client la lit.</summary>
 public sealed record PortalQuoteLine(string Designation, decimal Quantity, string? Unit, decimal UnitPriceExclTax, decimal TotalExclTax);

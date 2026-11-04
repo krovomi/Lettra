@@ -22,6 +22,11 @@ public static class DependencyInjection
         services.Replace(ServiceDescriptor.Scoped<IAccountingAssistant, AccountingAssistant>());
         services.Replace(ServiceDescriptor.Singleton<IAiEngineFactory, KeyedAiEngineFactory>());
 
+        // Un disjoncteur par type de moteur : après des échecs répétés, Lettra cesse de l'appeler quelques minutes.
+        services.AddOptions<AiResilienceOptions>().Bind(configuration.GetSection(AiResilienceOptions.SectionName));
+        services.TryAddSingleton<AiEngineCircuits>();
+        services.Replace(ServiceDescriptor.Singleton<IAiEngineHealth>(sp => sp.GetRequiredService<AiEngineCircuits>()));
+
         // Par requête : le client HTTP de la consultation web vient de la fabrique à chaque fois (rotation DNS).
         services.AddScoped(sp => new ToolRegistry(sp.GetServices<IAiTool>()));
 

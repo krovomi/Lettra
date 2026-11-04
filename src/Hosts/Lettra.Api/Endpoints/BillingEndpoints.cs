@@ -46,6 +46,7 @@ internal static class BillingEndpoints
             .Produces<CompanyProfileResponse>().ProducesProblem(StatusCodes.Status400BadRequest).RequireIfMatch();
 
         MapQuotes(api.MapGroup("/quotes").WithTags("Quotes"));
+        api.MapGroup("/quotes").WithTags("QuoteFollowUps").MapQuoteFollowUps();
         MapInvoices(api.MapGroup("/invoices").WithTags("Invoices"));
         MapPriceLists(api.MapGroup("/price-lists").WithTags("PriceLists"));
         api.MapRecurringInvoices();

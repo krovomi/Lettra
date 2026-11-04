@@ -2,9 +2,16 @@ using Lettra.Domain.Common;
 
 namespace Lettra.Domain.Reminders;
 
-/// <summary>Niveaux du scénario de relance, du plus doux au plus ferme (valeurs identiques à <c>ReminderLevelDto</c>).</summary>
+/// <summary>
+/// Niveaux du scénario de relance, du plus doux au plus ferme (valeurs identiques à <c>ReminderLevelDto</c>). Les
+/// niveaux de 1 à 4 se suivent (l'escalade) ; le rappel avant échéance et la relance d'une échéance d'échéancier manquée
+/// sont à part : ils ne font pas monter le ton.
+/// </summary>
 public enum ReminderLevel
 {
+    /// <summary>Rappel amical avant l'échéance, aux clients dont la météo des paiements annonce pluie ou orage.</summary>
+    BeforeDue = 0,
+
     /// <summary>Rappel amical, quelques jours après l'échéance.</summary>
     Friendly = 1,
 
@@ -16,6 +23,60 @@ public enum ReminderLevel
 
     /// <summary>Mise en demeure de payer.</summary>
     FormalNotice = 4,
+
+    /// <summary>Relance d'une échéance d'échéancier manquée : une seule par échéance.</summary>
+    MissedInstallment = 5,
+}
+
+/// <summary>Les niveaux de l'escalade, dans l'ordre.</summary>
+public static class ReminderLevels
+{
+    public static IReadOnlyList<ReminderLevel> Escalation { get; } =
+        [ReminderLevel.Friendly, ReminderLevel.Reminder, ReminderLevel.Final, ReminderLevel.FormalNotice];
+
+    /// <summary>Vrai pour les quatre niveaux qui se suivent, du rappel amical à la mise en demeure.</summary>
+    public static bool IsEscalation(this ReminderLevel level) => level is >= ReminderLevel.Friendly and <= ReminderLevel.FormalNotice;
+}
+
+/// <summary>
+/// Le rappel avant échéance et les bornes de l'échéancier en libre-service (« Avant le retard »). Mêmes bornes pour tous
+/// les clients professionnels du dossier : jamais un accord selon une note.
+/// </summary>
+/// <param name="BeforeDueEnabled">Proposer le rappel avant échéance aux clients ciblés (pluie ou orage).</param>
+/// <param name="BeforeDueDays">Combien de jours avant l'échéance (3 par défaut).</param>
+/// <param name="PaymentPlansEnabled">L'espace client propose l'échéancier aux clients professionnels.</param>
+/// <param name="PaymentPlanMaxInstallments">Échéances au plus (2 ou 3).</param>
+/// <param name="PaymentPlanMinimumAmount">Reste dû TTC minimal d'une facture pour l'étaler.</param>
+public sealed record ReminderPrevention(
+    bool BeforeDueEnabled,
+    int BeforeDueDays,
+    bool PaymentPlansEnabled,
+    int PaymentPlanMaxInstallments,
+    decimal PaymentPlanMinimumAmount)
+{
+    public const int DefaultBeforeDueDays = 3;
+
+    public const int MaxBeforeDueDays = 30;
+
+    public const decimal DefaultPaymentPlanMinimumAmount = 300m;
+
+    public const decimal MaxPaymentPlanMinimumAmount = 1_000_000m;
+
+    /// <summary>Rappel avant échéance proposé à J−3 ; échéancier coupé tant que l'entreprise ne l'a pas ouvert.</summary>
+    public static ReminderPrevention Default { get; } =
+        new(true, DefaultBeforeDueDays, false, PaymentPlanRules.MaxInstallments, DefaultPaymentPlanMinimumAmount);
+
+    public Result Validate()
+    {
+        if (BeforeDueDays is < 1 or > MaxBeforeDueDays)
+        {
+            return ReminderErrors.BeforeDueDaysInvalid;
+        }
+
+        bool installmentsValid = PaymentPlanMaxInstallments is >= PaymentPlanRules.MinInstallments and <= PaymentPlanRules.MaxInstallments;
+        bool amountValid = PaymentPlanMinimumAmount is >= 0m and <= MaxPaymentPlanMinimumAmount && decimal.Round(PaymentPlanMinimumAmount, 2) == PaymentPlanMinimumAmount;
+        return installmentsValid && amountValid ? Result.Success() : ReminderErrors.PaymentPlanBoundsInvalid;
+    }
 }
 
 /// <summary>
@@ -55,6 +116,22 @@ public sealed class ReminderSettings : Entity<Guid>, IVersioned
     /// <summary>Jours au moins entre deux relances d'une même facture (une facture très en retard monte d'un niveau à la fois).</summary>
     public int MinimumGapDays { get; private set; }
 
+    /// <summary>Rappel avant échéance proposé (et envoyé par la passe quotidienne si l'envoi automatique est activé).</summary>
+    public bool BeforeDueEnabled { get; private set; }
+
+    public int BeforeDueDays { get; private set; }
+
+    /// <summary>L'espace client propose l'échéancier en libre-service aux clients professionnels.</summary>
+    public bool PaymentPlansEnabled { get; private set; }
+
+    public int PaymentPlanMaxInstallments { get; private set; }
+
+    public decimal PaymentPlanMinimumAmount { get; private set; }
+
+    /// <summary>Le rappel avant échéance et les bornes de l'échéancier, d'un bloc.</summary>
+    public ReminderPrevention Prevention =>
+        new(BeforeDueEnabled, BeforeDueDays, PaymentPlansEnabled, PaymentPlanMaxInstallments, PaymentPlanMinimumAmount);
+
     public long Version { get; private set; }
 
     public DateTimeOffset UpdatedAt { get; private set; }
@@ -69,10 +146,15 @@ public sealed class ReminderSettings : Entity<Guid>, IVersioned
         FinalDays = DefaultDelays[2],
         FormalNoticeDays = DefaultDelays[3],
         MinimumGapDays = DefaultMinimumGapDays,
+        BeforeDueEnabled = ReminderPrevention.Default.BeforeDueEnabled,
+        BeforeDueDays = ReminderPrevention.Default.BeforeDueDays,
+        PaymentPlansEnabled = ReminderPrevention.Default.PaymentPlansEnabled,
+        PaymentPlanMaxInstallments = ReminderPrevention.Default.PaymentPlanMaxInstallments,
+        PaymentPlanMinimumAmount = ReminderPrevention.Default.PaymentPlanMinimumAmount,
         Version = 0,
     };
 
-    /// <summary>Le nombre de jours de retard à partir duquel <paramref name="level"/> est dû.</summary>
+    /// <summary>Le nombre de jours de retard à partir duquel <paramref name="level"/> (un niveau de l'escalade) est dû.</summary>
     public int DelayOf(ReminderLevel level) => level switch
     {
         ReminderLevel.Friendly => FriendlyDays,
@@ -82,9 +164,11 @@ public sealed class ReminderSettings : Entity<Guid>, IVersioned
         _ => throw new ArgumentOutOfRangeException(nameof(level), level, null),
     };
 
-    public Result Update(bool autoSend, IReadOnlyList<int> delays, int minimumGapDays, Guid userId, DateTimeOffset now)
+    /// <summary>Le scénario d'escalade, l'envoi automatique, le rappel avant échéance et les bornes de l'échéancier.</summary>
+    public Result Update(bool autoSend, IReadOnlyList<int> delays, int minimumGapDays, ReminderPrevention prevention, Guid userId, DateTimeOffset now)
     {
         ArgumentNullException.ThrowIfNull(delays);
+        ArgumentNullException.ThrowIfNull(prevention);
         if (delays.Count != 4 || delays[0] < 1 || delays[^1] > MaxDelayDays || delays.Zip(delays.Skip(1)).Any(p => p.First >= p.Second))
         {
             return ReminderErrors.DelaysInvalid;
@@ -95,9 +179,18 @@ public sealed class ReminderSettings : Entity<Guid>, IVersioned
             return ReminderErrors.GapInvalid;
         }
 
+        Result valid = prevention.Validate();
+        if (valid.IsFailure)
+        {
+            return valid;
+        }
+
         AutoSend = autoSend;
         (FriendlyDays, ReminderDays, FinalDays, FormalNoticeDays) = (delays[0], delays[1], delays[2], delays[3]);
         MinimumGapDays = minimumGapDays;
+        (BeforeDueEnabled, BeforeDueDays) = (prevention.BeforeDueEnabled, prevention.BeforeDueDays);
+        (PaymentPlansEnabled, PaymentPlanMaxInstallments, PaymentPlanMinimumAmount) =
+            (prevention.PaymentPlansEnabled, prevention.PaymentPlanMaxInstallments, prevention.PaymentPlanMinimumAmount);
         UpdatedBy = userId;
         UpdatedAt = now;
         Version++;
@@ -114,6 +207,8 @@ public static class ReminderErrors
     public const string CustomerEmailMissingCode = "Reminders.CustomerEmailMissing";
     public const string NoLevelLeftCode = "Reminders.NoLevelLeft";
     public const string CompanyProfileMissingCode = "Reminders.CompanyProfileMissing";
+    public const string BeforeDueDaysInvalidCode = "Reminders.BeforeDueDaysInvalid";
+    public const string PaymentPlanBoundsInvalidCode = "Reminders.PaymentPlanBoundsInvalid";
 
     public static Error DelaysInvalid => Error.Validation(DelaysInvalidCode, "Delays");
 
@@ -126,4 +221,8 @@ public static class ReminderErrors
     public static Error NoLevelLeft => new(NoLevelLeftCode, ErrorKind.Conflict);
 
     public static Error CompanyProfileMissing => new(CompanyProfileMissingCode, ErrorKind.Conflict);
+
+    public static Error BeforeDueDaysInvalid => Error.Validation(BeforeDueDaysInvalidCode, "BeforeDueDays");
+
+    public static Error PaymentPlanBoundsInvalid => Error.Validation(PaymentPlanBoundsInvalidCode, "PaymentPlanMinimumAmount");
 }

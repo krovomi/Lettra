@@ -198,8 +198,15 @@ public static partial class LettraDemoData
 
         // Les comptes intra-groupe : le prestataire facture le négoce, une seule fois (démonstrations anciennes comprises).
         clock.Set(TimeProvider.System.GetUtcNow());
-        await new DemoGroupLoader(services, session)
-            .LoadAsync([dossier, .. existing.Select(d => d.Id), .. reports.Select(r => r.DossierId)], today, cancellationToken).ConfigureAwait(false);
+        Guid[] demoDossiers = [.. new[] { dossier }.Concat(existing.Select(d => d.Id)).Concat(reports.Select(r => r.DossierId)).Distinct()];
+        await new DemoGroupLoader(services, session).LoadAsync(demoDossiers, today, cancellationToken).ConfigureAwait(false);
+
+        // L'échéancier en libre-service de l'espace client, proposé une fois dans chaque dossier de la démonstration.
+        foreach (Guid demo in demoDossiers)
+        {
+            session.CurrentDossierId = demo;
+            await new DemoDossierLoader(services, clock).OfferPaymentPlansAsync(cancellationToken).ConfigureAwait(false);
+        }
 
         // Le solde bancaire du radar de prévention, une seule fois par dossier (démonstrations anciennes comprises) : le
         // dossier principal a une trésorerie juste, les autres sont confortables.

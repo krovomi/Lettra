@@ -172,4 +172,12 @@
   <data name="Demo.end.Summary" xml:space="preserve"><value>Recap and ideas to explore on your own.</value></data>
   <data name="Demo.end.done.Title" xml:space="preserve"><value>You have seen it all!</value></data>
   <data name="Demo.end.done.Text" xml:space="preserve"><value>Customer, quote, e-invoice, payment, bank, reminders, accounting, VAT and firm overview: that is the full life of a sale. Everything the demo created stays in the dossier. The "?" button at the top answers your questions, and Ctrl+K finds any screen.</value></data>
+  <data name="Demo.ai.Title" xml:space="preserve"><value>AI, in its proper place</value></data>
+  <data name="Demo.ai.Summary" xml:space="preserve"><value>What Lettra's AI does, what it never does, and how to turn it off.</value></data>
+  <data name="Demo.ai.guide.Title" xml:space="preserve"><value>AI is off by default</value></data>
+  <data name="Demo.ai.guide.Text" xml:space="preserve"><value>Everything you have just seen happened without AI: rules, calculations and checks are written into Lettra. The AI assistant is off by default; a firm administrator can turn it on and choose which features to open.</value></data>
+  <data name="Demo.ai.never.Title" xml:space="preserve"><value>What it never does</value></data>
+  <data name="Demo.ai.never.Text" xml:space="preserve"><value>The AI explains and suggests, you decide: it never approves, issues or sends a document, and never sees the dossier's names, which are replaced by tokens before anything is sent.</value></data>
+  <data name="Demo.ai.registry.Title" xml:space="preserve"><value>The register of AI uses</value></data>
+  <data name="Demo.ai.registry.Text" xml:space="preserve"><value>Each AI use is listed with its risk level under the European AI regulation and its status in this dossier. Further down, the log records every request, engine call and failure.</value></data>
 </root>

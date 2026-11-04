@@ -884,6 +884,9 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("TEXT");
 
+                    b.Property<DateOnly?>("RespondedOn")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("SeriesCode")
                         .IsRequired()
                         .HasMaxLength(16)
@@ -1013,6 +1016,101 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                         .IsUnique();
 
                     b.ToTable("Quotes", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Billing.QuoteFollowUp", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("AmountExclTax")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(8000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Channel")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ErrorCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("OccurredOn")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Outcome")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("QuoteId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("QuoteNumber")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Recipient")
+                        .HasMaxLength(320)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("ValidUntil")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("OccurredOn");
+
+                    b.HasIndex("QuoteId", "OccurredOn");
+
+                    b.ToTable("QuoteFollowUps", (string)null);
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Billing.QuoteFollowUpSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("WindowDays")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("QuoteFollowUpSettings", (string)null);
                 });
 
             modelBuilder.Entity("Lettra.Domain.Billing.RecurringInvoice", b =>
@@ -1870,6 +1968,68 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.ToTable("PriceLists", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Domain.Reminders.PaymentPlan", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("AcknowledgedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("AcknowledgedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("CancelledAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CancelledBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("InvoiceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("InvoiceNumber")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("PortalLinkId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("RequestedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RequestedBy")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Total")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RequestedAt");
+
+                    b.HasIndex("InvoiceId", "Status");
+
+                    b.ToTable("PaymentPlans", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Domain.Reminders.PaymentReminder", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1892,6 +2052,9 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.Property<string>("ErrorCode")
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
+
+                    b.Property<int?>("Installment")
+                        .HasColumnType("INTEGER");
 
                     b.Property<Guid>("InvoiceId")
                         .HasColumnType("TEXT");
@@ -1948,12 +2111,40 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.ToTable("PaymentReminders", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Domain.Reminders.PaymentTargetingObjection", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("RecordedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("RecordedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId")
+                        .IsUnique();
+
+                    b.ToTable("PaymentTargetingObjections", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Domain.Reminders.ReminderSettings", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("AutoSend")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BeforeDueDays")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("BeforeDueEnabled")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("FinalDays")
@@ -1966,6 +2157,16 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("MinimumGapDays")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PaymentPlanMaxInstallments")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("PaymentPlanMinimumAmount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("PaymentPlansEnabled")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("ReminderDays")
@@ -3492,6 +3693,34 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                     b.Navigation("Customers");
 
                     b.Navigation("Entries");
+                });
+
+            modelBuilder.Entity("Lettra.Domain.Reminders.PaymentPlan", b =>
+                {
+                    b.OwnsMany("Lettra.Domain.Reminders.PaymentPlanInstallment", "Installments", b1 =>
+                        {
+                            b1.Property<Guid>("PaymentPlanId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<int>("Number")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 4)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<DateOnly>("DueDate")
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("PaymentPlanId", "Number");
+
+                            b1.ToTable("PaymentPlanInstallments", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("PaymentPlanId");
+                        });
+
+                    b.Navigation("Installments");
                 });
 
             modelBuilder.Entity("Lettra.Domain.Vigilance.ClientDueDiligence", b =>

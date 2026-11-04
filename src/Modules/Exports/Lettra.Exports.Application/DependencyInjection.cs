@@ -166,6 +166,21 @@ public static class DependencyInjection
         services.AddScoped<IQueryHandler<GetReminderSettingsQuery, Result<ReminderSettingsResponse>>, GetReminderSettingsHandler>();
         services.AddScoped<ICommandHandler<UpdateReminderSettingsCommand, Result<ReminderSettingsResponse>>, UpdateReminderSettingsHandler>();
 
+        // Avant le retard : rappel avant échéance aux clients ciblés (météo des paiements, droit d'opposition), échéancier
+        // en libre-service dans les bornes de l'entreprise, signaux pour « Décisions à prendre ». Le QR code de virement
+        // joint aux e-mails vient de l'hôte qui sait le dessiner ; sans lui, rien n'est joint.
+        services.TryAddSingleton<IPaymentQrCodeImage, NoPaymentQrCodeImage>();
+        services.AddScoped<ReminderTargeting>();
+        services.AddScoped<ReminderPaymentAids>();
+        services.AddScoped<PaymentPlanAlerts>();
+        services.AddScoped<PaymentPlanDecisions>();
+        services.AddScoped<PortalPaymentPlans>();
+        services.AddScoped<IQueryHandler<GetInvoicePaymentPlanQuery, Result<InvoicePaymentPlanResponse>>, GetInvoicePaymentPlanHandler>();
+        services.AddScoped<ICommandHandler<AcknowledgePaymentPlanCommand, Result<PaymentPlanResponse>>, AcknowledgePaymentPlanHandler>();
+        services.AddScoped<ICommandHandler<CancelPaymentPlanCommand, Result<PaymentPlanResponse>>, CancelPaymentPlanHandler>();
+        services.AddScoped<ICommandHandler<SetTargetingObjectionCommand, Result>, SetTargetingObjectionHandler>();
+        services.AddScoped<IQueryHandler<GetPaymentPreventionSignalsQuery, Result<IReadOnlyList<PaymentPreventionSignal>>>, GetPaymentPreventionSignalsHandler>();
+
         // Espace client : liens envoyés au client, paiement en ligne et signature des devis. Fermé tant que l'hôte n'en
         // donne pas le compte de service (ICustomerPortalSettings).
         services.TryAddSingleton<ICustomerPortalSettings, ClosedCustomerPortal>();
@@ -177,6 +192,7 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<SignQuoteOnPortalCommand, Result<SignQuoteResult>>, SignQuoteOnPortalHandler>();
         services.AddScoped<ICommandHandler<StartOnlinePaymentCommand, Result<OnlineCheckoutResponse>>, StartOnlinePaymentHandler>();
         services.AddScoped<ICommandHandler<CompleteOnlinePaymentCommand, Result<OnlinePaymentResult>>, CompleteOnlinePaymentHandler>();
+        services.AddScoped<ICommandHandler<RequestPaymentPlanOnPortalCommand, Result<PaymentPlanRequestResult>>, RequestPaymentPlanOnPortalHandler>();
 
         // Envois à la plateforme par l'outbox du serveur (étape 5.4).
         services.AddScoped<IOutboxHandler, PlatformDepositHandler>();

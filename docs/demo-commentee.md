@@ -43,7 +43,8 @@ apparaît (HT, TTC, TVA, SIREN, devis, avoir, lettrage, rapprochement, échéanc
 | 11. La TVA et les impôts | Ouvre la déclaration de TVA puis le calendrier fiscal | TVA collectée moins déductible, contrôles avant déclaration, échéances |
 | 12. Le FEC | Ouvre l'export FEC | Le fichier remis en cas de contrôle fiscal |
 | 13. Le cabinet comptable | Ouvre la vue cabinet puis les tableaux de bord | La vue de l'expert-comptable sur tous ses dossiers, les indicateurs |
-| 14. Et maintenant ? | Revient à l'accueil | Récapitulatif, aide « ? » et Ctrl+K |
+| 14. L'IA, à sa juste place | Ouvre la page « Bien utiliser l'IA de Lettra » | L'IA éteinte par défaut, ce qu'elle ne fait jamais, le registre des usages de l'IA |
+| 15. Et maintenant ? | Revient à l'accueil | Récapitulatif, aide « ? » et Ctrl+K |
 
 ## La bulle
 

@@ -1,0 +1,204 @@
+@using Lettra.Contracts.Insights
+@using Lettra.UI.Shared.Pages.Insights
+@inject IStringLocalizer<SharedResource> L
+@* Avant le retard : les rappels avant échéance des clients dont la météo des paiements annonce pluie ou orage, au jour
+   prévu (avancé au meilleur jour du client s'il en a un). Le rappel s'ouvre comme une relance : texte relu, puis envoi.
+   « Ne pas cibler ce client » note son opposition au ciblage selon son comportement de paiement. *@
+
+<section class="lettra-card" id="reminders-upcoming" aria-labelledby="reminders-upcoming-title">
+    <div class="lt-banking-section-head">
+        <h2 id="reminders-upcoming-title"><Icon Name="calendar-clock" Size="20" /> @L["Prevention.Upcoming.Title"]</h2>
+    </div>
+    <p class="lettra-muted">@string.Format(Culture, L["Prevention.Upcoming.Hint"], Settings.Prevention.BeforeDueDays)</p>
+    @if (!Settings.Prevention.BeforeDueEnabled)
+    {
+        <p class="lettra-muted" id="reminders-upcoming-off">@L["Prevention.Upcoming.Off"]</p>
+    }
+    else if (Items.Count == 0)
+    {
+        <EmptyState Id="reminders-upcoming-empty" IconName="sun" Title="@L["Prevention.Upcoming.Empty"]" Text="@L["Prevention.Upcoming.Empty.Text"]" />
+    }
+    else
+    {
+        <ListFilterBar Id="reminders-upcoming-filters" ActiveCount="ActiveFilters" OnReset="Reset">
+            <ChildContent>
+                <div class="lt-filter">
+                    <label for="reminders-upcoming-search">@L["Reminders.Invoices.Search"]</label>
+                    <input id="reminders-upcoming-search" type="search" @bind="_search" @bind:event="oninput" autocomplete="off" />
+                </div>
+            </ChildContent>
+            <More>
+                <div class="lt-filter">
+                    <label for="reminders-upcoming-weather">@L["Prevention.Upcoming.Weather"]</label>
+                    <select id="reminders-upcoming-weather" @bind="_weather">
+                        <option value="">@L["Reminders.History.All"]</option>
+                        <option value="@PaymentWeatherDto.Rainy">@L["Weather.Kind.Rainy"]</option>
+                        <option value="@PaymentWeatherDto.Stormy">@L["Weather.Kind.Stormy"]</option>
+                    </select>
+                </div>
+                <label class="lt-banking-check">
+                    <input type="checkbox" id="reminders-upcoming-due" @bind="_dueOnly" />
+                    <span>@L["Reminders.Invoices.DueOnly"]</span>
+                </label>
+                <SortSelect Id="reminders-upcoming-sort" Options="_sortOptions" State="_sort" OnSort="StateHasChanged" />
+            </More>
+        </ListFilterBar>
+        <p class="lettra-muted" id="reminders-upcoming-count">@string.Format(Culture, L["Reminders.Invoices.Count"], Filtered.Count, Items.Count)</p>
+        @if (Filtered.Count == 0)
+        {
+            <p class="lettra-muted" id="reminders-upcoming-nomatch">@L["Reminders.Invoices.NoMatch"]</p>
+        }
+        else
+        {
+            <div class="lt-list-scroll">
+                <table class="lettra-table lettra-documents lt-cards" id="reminders-upcoming-table">
+                    <thead>
+                        <tr>
+                            <SortHeader Option="Column(UpcomingSort.Number)" State="_sort" OnSort="StateHasChanged" Id="reminders-upcoming-sort-number" />
+                            <SortHeader Option="Column(UpcomingSort.Customer)" State="_sort" OnSort="StateHasChanged" Id="reminders-upcoming-sort-customer" />
+                            <SortHeader Option="Column(UpcomingSort.DueDate)" State="_sort" OnSort="StateHasChanged" Id="reminders-upcoming-sort-due" />
+                            <SortHeader Option="Column(UpcomingSort.PlannedOn)" State="_sort" OnSort="StateHasChanged" Id="reminders-upcoming-sort-planned" />
+                            <SortHeader Option="Column(UpcomingSort.Outstanding)" State="_sort" OnSort="StateHasChanged" Id="reminders-upcoming-sort-outstanding" Class="lg-num" />
+                            <th scope="col"><span class="lettra-visually-hidden">@L["Reminders.Actions"]</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (UpcomingReminderResponse row in Filtered)
+                        {
+                            <tr @key="row.InvoiceId" class="@(row.DueToday ? "is-due" : null)">
+                                <td><a href="@($"invoices/{row.InvoiceId}")">@row.Number</a></td>
+                                <td data-label="@L["Billing.Column.Customer"]">
+                                    <span class="lt-banking-label">
+                                        <span>@row.CustomerName</span>
+                                        <small class="lt-prevention-weather">
+                                            <Icon Name="@WeatherText.Icon(row.Weather)" Size="14" /> @L[$"Weather.Kind.{row.Weather}"]
+                                            @if (row.BestDay is DayOfWeek best)
+                                            {
+                                                <span class="lettra-muted"> · @string.Format(Culture, L["Prevention.Upcoming.BestDay"], Culture.DateTimeFormat.GetDayName(best))</span>
+                                            }
+                                        </small>
+                                    </span>
+                                </td>
+                                <td data-label="@L["Reminders.DueDate"]">@row.DueDate.ToString("d", Culture)</td>
+                                <td data-label="@L["Prevention.Upcoming.Planned"]">
+                                    @if (row.SentAt is DateTimeOffset sent)
+                                    {
+                                        <span class="lettra-status is-validated">@string.Format(Culture, L["Prevention.Upcoming.SentOn"], sent.ToLocalTime().ToString("d", Culture))</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@row.PlannedOn.ToString("d", Culture)</span>
+                                        @if (row.DueToday)
+                                        {
+                                            <span class="lettra-status is-draft">@L["Reminders.DueTodayBadge"]</span>
+                                        }
+                                    }
+                                </td>
+                                <td data-label="@L["Reminders.Outstanding"]" class="lg-num">@ExplorerText.Money(row.Outstanding)</td>
+                                <td class="lt-banking-line-actions">
+                                    @if (row.SentAt is null)
+                                    {
+                                        <button type="button" class="lettra-button is-secondary is-small" id="@($"reminders-upcoming-open-{row.Number}")" disabled="@Busy" @onclick="() => OnOpen.InvokeAsync(row)">
+                                            <Icon Name="eye" Size="16" /> @L["Reminders.Open"]
+                                        </button>
+                                    }
+                                    <button type="button" class="lettra-button is-ghost is-small" id="@($"reminders-upcoming-object-{row.Number}")" disabled="@Busy"
+                                            title="@L["Prevention.Objection.Hint"]" @onclick="() => OnObject.InvokeAsync(row)">
+                                        <Icon Name="user-x" Size="16" /> @L["Prevention.Objection.Add"]
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<UpcomingReminderResponse> Items { get; set; } = [];
+
+    [Parameter, EditorRequired] public ReminderSettingsResponse Settings { get; set; } = default!;
+
+    [Parameter] public bool Busy { get; set; }
+
+    [Parameter] public EventCallback<UpcomingReminderResponse> OnOpen { get; set; }
+
+    [Parameter] public EventCallback<UpcomingReminderResponse> OnObject { get; set; }
+
+    private string? _search;
+    private PaymentWeatherDto? _weather;
+    private bool _dueOnly;
+    private readonly SortState<UpcomingSort> _sort = new(UpcomingSort.PlannedOn, SortDirectionDto.Ascending);
+    private IReadOnlyList<SortOption<UpcomingSort>> _sortOptions = [];
+
+    private static readonly Dictionary<UpcomingSort, Func<UpcomingReminderResponse, object?>> Keys = new()
+    {
+        [UpcomingSort.Number] = u => u.Number,
+        [UpcomingSort.Customer] = u => u.CustomerName,
+        [UpcomingSort.DueDate] = u => u.DueDate,
+        [UpcomingSort.PlannedOn] = u => u.PlannedOn,
+        [UpcomingSort.Outstanding] = u => u.Outstanding,
+    };
+
+    /// <summary>Tris des rappels avant échéance (quelques dizaines au plus, chargés en entier).</summary>
+    private enum UpcomingSort
+    {
+        PlannedOn,
+        DueDate,
+        Outstanding,
+        Customer,
+        Number,
+    }
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private int ActiveFilters => (string.IsNullOrWhiteSpace(_search) ? 0 : 1) + (_weather is null ? 0 : 1) + (_dueOnly ? 1 : 0);
+
+    private IReadOnlyList<UpcomingReminderResponse> Filtered
+    {
+        get
+        {
+            IEnumerable<UpcomingReminderResponse> rows = Items;
+            if (_dueOnly)
+            {
+                rows = rows.Where(u => u.DueToday);
+            }
+
+            if (_weather is PaymentWeatherDto weather)
+            {
+                rows = rows.Where(u => u.Weather == weather);
+            }
+
+            if (!string.IsNullOrWhiteSpace(_search))
+            {
+                string search = _search.Trim();
+                CompareInfo compare = CultureInfo.InvariantCulture.CompareInfo;
+                const CompareOptions options = CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace;
+                rows = rows.Where(u => compare.IndexOf(u.Number, search, options) >= 0 || compare.IndexOf(u.CustomerName, search, options) >= 0);
+            }
+
+            return ListSorting.Sort(rows, _sort, Keys);
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        _sortOptions =
+        [
+            new(UpcomingSort.Number, L["Billing.Column.Number"]),
+            new(UpcomingSort.Customer, L["Billing.Column.Customer"]),
+            new(UpcomingSort.DueDate, L["Reminders.DueDate"]),
+            new(UpcomingSort.PlannedOn, L["Prevention.Upcoming.Planned"]),
+            new(UpcomingSort.Outstanding, L["Reminders.Outstanding"], SortDirectionDto.Descending),
+        ];
+    }
+
+    private SortOption<UpcomingSort> Column(UpcomingSort column) => _sortOptions.First(o => o.Column == column);
+
+    private void Reset()
+    {
+        (_search, _weather, _dueOnly) = (null, null, false);
+    }
+}

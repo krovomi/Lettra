@@ -49,6 +49,12 @@ public sealed class Quote : BillingDocument<QuoteId>
 
     public DateOnly? ValidUntil { get; private set; }
 
+    /// <summary>
+    /// Jour (Paris) de la dernière réponse du client, acceptation ou refus ; absent tant qu'il n'a pas répondu. Le carnet
+    /// de commandes en tire le délai de réponse des devis passés.
+    /// </summary>
+    public DateOnly? RespondedOn { get; private set; }
+
     /// <summary>Total TTC des factures d'acompte validées sur ce devis.</summary>
     public decimal DownPaymentsInclTax { get; private set; }
 
@@ -57,6 +63,9 @@ public sealed class Quote : BillingDocument<QuoteId>
     public override bool IsDraft => Status == QuoteStatus.Draft;
 
     public bool IsExpired(DateOnly today) => Status == QuoteStatus.Validated && ValidUntil is { } until && until < today;
+
+    /// <summary>Envoyé, sans réponse et encore valable : le seul état où une relance a un sens.</summary>
+    public bool IsPending(DateOnly today) => Status == QuoteStatus.Validated && !IsExpired(today);
 
     public static Result<Quote> Create(QuoteId id, QuoteDraft draft, Guid userId, DateTimeOffset now)
     {
@@ -133,6 +142,7 @@ public sealed class Quote : BillingDocument<QuoteId>
         }
 
         Status = accepted ? QuoteStatus.Accepted : QuoteStatus.Refused;
+        RespondedOn = LegalCalendar.DateOf(now);
         Touch(userId, now);
         Raise(new QuoteOutcomeRecorded(Id, accepted, userId, now));
         return Result.Success();

@@ -31,7 +31,8 @@ macOS, Android, iOS).
     [demo-commentee.md](demo-commentee.md)), « Chercher partout », les raccourcis utiles et « Revoir tous les
     tutoriels » ;
   - « Demander à l'assistant » seulement si le cabinet a activé l'assistant IA (désactivé par défaut) : la question lui
-    est passée telle quelle. L'aide marche entièrement sans lui.
+    est passée telle quelle. L'aide marche entièrement sans lui. La question « À quoi sert l'assistant IA ? » ouvre la
+    page « Bien utiliser l'IA de Lettra » (section Pilotage, `/ai`, [assistant-ia.md](assistant-ia.md)).
 - **Mémoire** : sections repliées et favoris sont rangés dans le compte et suivent l'utilisateur sur ses autres
   appareils ([preferences-utilisateur.md](preferences-utilisateur.md)). Sans compte (poste isolé, serveur plus ancien),
   ils restent sur l'appareil, **par utilisateur** (deux personnes sur le même poste ont chacune leur menu), dans le

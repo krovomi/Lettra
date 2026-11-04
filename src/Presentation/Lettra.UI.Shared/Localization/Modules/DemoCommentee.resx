@@ -172,4 +172,12 @@
   <data name="Demo.end.Summary" xml:space="preserve"><value>Récapitulatif et pistes pour explorer seul.</value></data>
   <data name="Demo.end.done.Title" xml:space="preserve"><value>Vous avez fait le tour !</value></data>
   <data name="Demo.end.done.Text" xml:space="preserve"><value>Client, devis, facture électronique, encaissement, banque, relances, comptabilité, TVA et vue cabinet : c'est le cycle complet d'une vente. Tout ce que la démo a créé reste dans le dossier. Le bouton « ? » en haut répond à vos questions, et Ctrl+K retrouve n'importe quel écran.</value></data>
+  <data name="Demo.ai.Title" xml:space="preserve"><value>L'IA, à sa juste place</value></data>
+  <data name="Demo.ai.Summary" xml:space="preserve"><value>Ce que l'IA de Lettra fait, ce qu'elle ne fait jamais, et comment la couper.</value></data>
+  <data name="Demo.ai.guide.Title" xml:space="preserve"><value>L'IA est éteinte par défaut</value></data>
+  <data name="Demo.ai.guide.Text" xml:space="preserve"><value>Tout ce que vous venez de voir s'est fait sans IA : les règles, les calculs et les contrôles sont écrits dans Lettra. L'assistant IA est éteint par défaut ; un administrateur du cabinet peut l'activer et choisir les fonctions qu'il ouvre.</value></data>
+  <data name="Demo.ai.never.Title" xml:space="preserve"><value>Ce qu'elle ne fait jamais</value></data>
+  <data name="Demo.ai.never.Text" xml:space="preserve"><value>L'IA explique et propose, vous décidez : elle ne valide, n'émet ni n'envoie aucun document, et ne voit jamais les noms du dossier, remplacés par des jetons avant tout envoi.</value></data>
+  <data name="Demo.ai.registry.Title" xml:space="preserve"><value>Le registre des usages de l'IA</value></data>
+  <data name="Demo.ai.registry.Text" xml:space="preserve"><value>Chaque usage de l'IA est listé avec son niveau de risque au sens du règlement européen sur l'IA et son état dans ce dossier. Plus bas, le journal note chaque demande, chaque appel au moteur et chaque panne.</value></data>
 </root>

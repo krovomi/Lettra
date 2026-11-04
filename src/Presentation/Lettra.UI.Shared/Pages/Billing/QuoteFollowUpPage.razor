@@ -1,0 +1,398 @@
+@page "/quote-follow-ups"
+@using Lettra.UI.Shared.Components.Explorer
+@inject IQuoteFollowUpsGateway FollowUps
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+@* Devis à relancer : les devis envoyés sans réponse dont la fin de validité approche (fenêtre réglable, 5 jours par
+   défaut), la relance proposée dans la langue du client, relue et modifiable avant l'envoi par e-mail, ou notée quand
+   elle est faite autrement, le réglage de la fenêtre et l'historique. Rien ne part sans un geste de l'utilisateur. *@
+
+<PageTitle>@L["QuoteFollowUps.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["QuoteFollowUps.Title"]</h1>
+        <p class="lettra-muted">@string.Format(Culture, Counted("QuoteFollowUps.Subtitle", WindowDays), WindowDays)</p>
+    </div>
+</div>
+
+<QuotesTabs Current="QuotesTab.FollowUps" DueCount="_overview?.DueCount" />
+
+<GeneralErrors Errors="AllErrors" IncludeFieldErrors="true" />
+
+@if (_overview is { Settings.EmailConfigured: false })
+{
+    <p class="la-callout lt-reminders-callout" id="quote-follow-ups-no-email"><Icon Name="info" Size="16" /> @L["QuoteFollowUps.NoEmail"]</p>
+}
+
+<div class="lt-banking-stats" id="quote-follow-ups-stats">
+    <div class="lt-banking-stat is-pending"><span>@L["QuoteFollowUps.Stat.Due"]</span><strong id="quote-follow-ups-due">@(_overview?.DueCount ?? 0)</strong></div>
+    <div class="lt-banking-stat is-amount"><span>@L["QuoteFollowUps.Stat.DueAmount"]</span><strong id="quote-follow-ups-due-amount">@ExplorerText.Money(_overview?.DueExclTax ?? 0m)</strong></div>
+    <div class="lt-banking-stat is-proposed is-amount"><span>@L["QuoteFollowUps.Stat.Likely"]</span><strong id="quote-follow-ups-likely">@ExplorerText.Money(DueRows.Sum(r => r.WeightedExclTax))</strong></div>
+    <div class="lt-banking-stat"><span>@L["QuoteFollowUps.Stat.Window"]</span><strong>@string.Format(Culture, Counted("QuoteFollowUps.Days", WindowDays), WindowDays)</strong></div>
+</div>
+
+@if (_preview is { } preview)
+{
+    <section class="lettra-card lt-reminders-preview" id="quote-follow-ups-preview" aria-labelledby="quote-follow-ups-preview-title">
+        <div class="lt-banking-section-head">
+            <h2 id="quote-follow-ups-preview-title">@string.Format(Culture, L["QuoteFollowUps.Preview.Title"], preview.QuoteNumber, preview.CustomerName)</h2>
+            <button type="button" class="lettra-button is-ghost is-small" aria-label="@L["Shell.Close"]" @onclick="ClosePreview"><Icon Name="x" Size="18" /></button>
+        </div>
+        <dl class="lt-banking-summary">
+            <div><dt>@L["Reminders.Preview.To"]</dt><dd id="quote-follow-ups-preview-to">@(preview.Recipient ?? L["Reminders.NoCustomerEmail"])</dd></div>
+            <div><dt>@L["Reminders.Preview.Language"]</dt><dd>@L[preview.Language.StartsWith("en", StringComparison.Ordinal) ? "Reminders.Language.En" : "Reminders.Language.Fr"]</dd></div>
+            <div><dt>@L["Quote.Field.ValidUntil"]</dt><dd>@DaysLeftText(preview.DaysLeft)</dd></div>
+        </dl>
+        <div class="lt-quote-follow-up-form">
+            <div class="lettra-field">
+                <label for="quote-follow-ups-subject">@L["Reminders.Preview.Subject"]</label>
+                <input id="quote-follow-ups-subject" type="text" maxlength="300" @bind="_subject" @bind:event="oninput" autocomplete="off" />
+            </div>
+            <div class="lettra-field">
+                <label for="quote-follow-ups-body">@L["QuoteFollowUps.Preview.Body"]</label>
+                <textarea id="quote-follow-ups-body" rows="12" maxlength="8000" spellcheck="true" @bind="_body" @bind:event="oninput"></textarea>
+            </div>
+        </div>
+        <div class="la-actions lt-banking-actions">
+            @if (preview.Recipient is not null && preview.EmailConfigured)
+            {
+                <button type="button" class="lettra-button" id="quote-follow-ups-send" disabled="@(_busy || !CanSend)" @onclick="() => SendAsync(QuoteFollowUpChannelDto.Email)">
+                    <Icon Name="send" Size="18" /> @L["Reminders.SendEmail"]
+                </button>
+            }
+            <button type="button" class="lettra-button is-secondary" id="quote-follow-ups-manual" disabled="@(_busy || !CanSend)" @onclick="() => SendAsync(QuoteFollowUpChannelDto.Manual)">
+                <Icon Name="check" Size="18" /> @L["QuoteFollowUps.MarkManual"]
+            </button>
+        </div>
+        <p class="lettra-hint">@L["QuoteFollowUps.Manual.Hint"]</p>
+    </section>
+}
+
+<section class="lettra-card" aria-labelledby="quote-follow-ups-list-title">
+    <h2 id="quote-follow-ups-list-title">@L["QuoteFollowUps.List"]</h2>
+    @if (_overview is null)
+    {
+        <ListSkeleton Columns="7" />
+    }
+    else if (_overview.Quotes.Count == 0)
+    {
+        <EmptyState Id="quote-follow-ups-empty" IconName="circle-check" Title="@L["QuoteFollowUps.Empty"]"
+                    Text="@string.Format(Culture, Counted("QuoteFollowUps.Empty.Text", WindowDays), WindowDays)" />
+    }
+    else
+    {
+        <ListFilterBar Id="quote-follow-ups-filters" ActiveCount="ActiveFilters" OnReset="ResetFilters">
+            <ChildContent>
+                <div class="lt-filter">
+                    <label for="quote-follow-ups-search">@L["QuoteFollowUps.Search"]</label>
+                    <input id="quote-follow-ups-search" type="search" @bind="_search" @bind:event="oninput" @bind:after="() => _page = 1" autocomplete="off" />
+                </div>
+            </ChildContent>
+            <More>
+                <label class="lt-banking-check">
+                    <input type="checkbox" id="quote-follow-ups-due-only" @bind="_dueOnly" @bind:after="() => _page = 1" />
+                    <span>@L["QuoteFollowUps.DueOnly"]</span>
+                </label>
+                <label class="lt-banking-check">
+                    <input type="checkbox" id="quote-follow-ups-with-email" @bind="_withEmail" @bind:after="() => _page = 1" />
+                    <span>@L["QuoteFollowUps.WithEmail"]</span>
+                </label>
+                <SortSelect Id="quote-follow-ups-sort" Options="_sortOptions" State="_sort" OnSort="() => _page = 1" />
+            </More>
+        </ListFilterBar>
+        <p class="lettra-muted" id="quote-follow-ups-count">@string.Format(Culture, L["QuoteFollowUps.Count"], Filtered.Count, _overview.Quotes.Count)</p>
+        @if (Filtered.Count == 0)
+        {
+            <p class="lettra-muted" id="quote-follow-ups-nomatch">@L[_dueOnly && _overview.DueCount == 0 ? "QuoteFollowUps.NothingDue" : "QuoteFollowUps.NoMatch"]</p>
+        }
+        else
+        {
+            <div class="lt-list-scroll">
+                <table class="lettra-table lettra-documents lt-cards" id="quote-follow-ups-table">
+                    <thead>
+                        <tr>
+                            <SortHeader Option="Column(FollowUpSort.Number)" State="_sort" OnSort="() => _page = 1" Id="quote-follow-ups-sort-number" />
+                            <SortHeader Option="Column(FollowUpSort.Customer)" State="_sort" OnSort="() => _page = 1" Id="quote-follow-ups-sort-customer" />
+                            <SortHeader Option="Column(FollowUpSort.DaysLeft)" State="_sort" OnSort="() => _page = 1" Id="quote-follow-ups-sort-days" />
+                            <SortHeader Option="Column(FollowUpSort.Amount)" State="_sort" OnSort="() => _page = 1" Id="quote-follow-ups-sort-amount" Class="lg-num" />
+                            <SortHeader Option="Column(FollowUpSort.Probability)" State="_sort" OnSort="() => _page = 1" Id="quote-follow-ups-sort-probability" Class="lg-num" />
+                            <th scope="col">@L["QuoteFollowUps.Last"]</th>
+                            <th scope="col"><span class="lettra-visually-hidden">@L["Reminders.Actions"]</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (QuoteToFollowUpResponse quote in Filtered.Skip((_page - 1) * PageSize).Take(PageSize))
+                        {
+                            <tr @key="quote.QuoteId" class="@(quote.Due ? "is-due" : null)">
+                                <td><a href="@($"quotes/{quote.QuoteId}")">@quote.Number</a></td>
+                                <td data-label="@L["Billing.Column.Customer"]">
+                                    <span class="lt-banking-label">
+                                        <span>@quote.CustomerName</span>
+                                        <small class="lettra-muted">@(quote.CustomerEmail ?? L["Reminders.NoCustomerEmail"])</small>
+                                    </span>
+                                </td>
+                                <td data-label="@L["Quote.Field.ValidUntil"]">
+                                    <span class="lt-reminders-cell">
+                                        <span>@quote.ValidUntil.ToString("d", Culture)</span>
+                                        <small class="@(quote.DaysLeft <= 1 ? "lt-late" : "lettra-muted")">@DaysLeftText(quote.DaysLeft)</small>
+                                        <small class="lettra-muted">@WithoutAnswerText(quote.DaysWithoutAnswer)</small>
+                                    </span>
+                                </td>
+                                <td data-label="@L["Totals.ExclTax"]" class="lg-num">@ExplorerText.Money(quote.TotalExclTax)</td>
+                                <td data-label="@L["OrderBook.Probability"]" class="lg-num">
+                                    <a href="order-book" title="@L["QuoteFollowUps.Probability.Hint"]">@Percent(quote.Probability)</a>
+                                </td>
+                                <td data-label="@L["QuoteFollowUps.Last"]">
+                                    @if (quote.LastFollowUpAt is { } last)
+                                    {
+                                        <span class="lt-reminders-cell">
+                                            <span>@last.ToLocalTime().ToString("d", Culture)</span>
+                                            <small class="lettra-muted">@L[$"QuoteFollowUpChannel.{quote.LastChannel}"] · @string.Format(Culture, Counted("QuoteFollowUps.Times", quote.FollowUpCount), quote.FollowUpCount)</small>
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="lettra-muted">@L["Reminders.None"]</span>
+                                    }
+                                </td>
+                                <td class="lt-banking-line-actions">
+                                    <button type="button" class="@(quote.Due ? "lettra-button is-small" : "lettra-button is-secondary is-small")" id="@($"quote-follow-ups-open-{quote.Number}")"
+                                            disabled="@_busy" @onclick="() => OpenPreviewAsync(quote.QuoteId)">
+                                        <Icon Name="send" Size="16" /> @L[quote.Due ? "QuoteFollowUps.Open" : "QuoteFollowUps.OpenAgain"]
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @if (Filtered.Count > PageSize)
+            {
+                <nav class="lt-pager" aria-label="@L["Accounting.Pages"]" id="quote-follow-ups-pager">
+                    <button type="button" class="lettra-button is-secondary" disabled="@(_page <= 1)" @onclick="() => _page--">@L["Accounting.Previous"]</button>
+                    <span>@string.Format(Culture, L["Accounting.PageOf"], _page, PageCount)</span>
+                    <button type="button" class="lettra-button is-secondary" disabled="@(_page >= PageCount)" @onclick="() => _page++">@L["Accounting.Next"]</button>
+                </nav>
+            }
+        }
+    }
+</section>
+
+<Collapsible Id="quote-follow-ups-settings" Title="@L["QuoteFollowUps.Settings"]" InitiallyOpen="false"
+             Summary="@string.Format(Culture, Counted("QuoteFollowUps.Settings.Summary", WindowDays), WindowDays)">
+    <p class="lettra-muted">@L["QuoteFollowUps.Settings.Hint"]</p>
+    <div class="lt-reminders-delays">
+        <label class="la-field">
+            <span>@L["QuoteFollowUps.Settings.Window"]</span>
+            <span class="lt-reminders-days">
+                <input id="quote-follow-ups-window" type="number" min="1" max="30" inputmode="numeric" @bind="_window" />
+                <span>@L["QuoteFollowUps.Settings.Unit"]</span>
+            </span>
+        </label>
+    </div>
+    <div class="la-actions">
+        <button type="button" class="lettra-button" id="quote-follow-ups-settings-save" disabled="@_busy" @onclick="SaveSettingsAsync">
+            <Icon Name="check" Size="18" /> @L["QuoteFollowUps.Settings.Save"]
+        </button>
+    </div>
+</Collapsible>
+
+<QuoteFollowUpHistory @ref="_history" OnErrors="e => _historyErrors = e" />
+
+@code {
+    private const int PageSize = 25;
+
+    private QuoteFollowUpOverviewResponse? _overview;
+    private QuoteFollowUpPreviewResponse? _preview;
+    private string _subject = string.Empty;
+    private string _body = string.Empty;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private IReadOnlyList<ErrorDetail> _historyErrors = [];
+    private bool _busy;
+    private int _window = 5;
+    private QuoteFollowUpHistory _history = default!;
+
+    private string? _search;
+    private bool _dueOnly = true;
+    private bool _withEmail;
+    private readonly SortState<FollowUpSort> _sort = new(FollowUpSort.DaysLeft, SortDirectionDto.Ascending);
+    private IReadOnlyList<SortOption<FollowUpSort>> _sortOptions = [];
+    private int _page = 1;
+
+    private static readonly Dictionary<FollowUpSort, Func<QuoteToFollowUpResponse, object?>> Keys = new()
+    {
+        [FollowUpSort.DaysLeft] = q => q.DaysLeft,
+        [FollowUpSort.Number] = q => q.Number,
+        [FollowUpSort.Customer] = q => q.CustomerName,
+        [FollowUpSort.Amount] = q => q.TotalExclTax,
+        [FollowUpSort.Probability] = q => q.Probability,
+    };
+
+    /// <summary>Le devis dont la relance s'ouvre d'emblée (bouton « Relancer » de la fiche du devis).</summary>
+    [SupplyParameterFromQuery(Name = "quote")]
+    public Guid? QuoteFromQuery { get; set; }
+
+    /// <summary>Tris de la liste, chargée en entier (un dossier a quelques devis qui approchent de leur fin).</summary>
+    private enum FollowUpSort
+    {
+        DaysLeft,
+        Number,
+        Customer,
+        Amount,
+        Probability,
+    }
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private int WindowDays => _overview?.Settings.WindowDays ?? 5;
+
+    private IReadOnlyList<ErrorDetail> AllErrors => [.. _errors, .. _historyErrors];
+
+    private IEnumerable<QuoteToFollowUpResponse> DueRows => _overview?.Quotes.Where(q => q.Due) ?? [];
+
+    private bool CanSend => !string.IsNullOrWhiteSpace(_subject) && !string.IsNullOrWhiteSpace(_body);
+
+    private int ActiveFilters => (string.IsNullOrWhiteSpace(_search) ? 0 : 1) + (_dueOnly ? 1 : 0) + (_withEmail ? 1 : 0);
+
+    private int PageCount => Math.Max(1, (int)Math.Ceiling(Filtered.Count / (double)PageSize));
+
+    private IReadOnlyList<QuoteToFollowUpResponse> Filtered
+    {
+        get
+        {
+            IEnumerable<QuoteToFollowUpResponse> rows = _overview?.Quotes ?? [];
+            if (_dueOnly)
+            {
+                rows = rows.Where(q => q.Due);
+            }
+
+            if (_withEmail)
+            {
+                rows = rows.Where(q => q.CustomerEmail is not null);
+            }
+
+            if (!string.IsNullOrWhiteSpace(_search))
+            {
+                string search = _search.Trim();
+                CompareInfo compare = CultureInfo.InvariantCulture.CompareInfo;
+                const CompareOptions options = CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace;
+                rows = rows.Where(q => compare.IndexOf(q.Number, search, options) >= 0
+                    || compare.IndexOf(q.CustomerName, search, options) >= 0
+                    || (q.CustomerEmail is string email && compare.IndexOf(email, search, options) >= 0));
+            }
+
+            return ListSorting.Sort(rows, _sort, Keys);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _sortOptions =
+        [
+            new(FollowUpSort.DaysLeft, L["Quote.Field.ValidUntil"]),
+            new(FollowUpSort.Number, L["Billing.Column.Number"]),
+            new(FollowUpSort.Customer, L["Billing.Column.Customer"]),
+            new(FollowUpSort.Amount, L["Totals.ExclTax"], SortDirectionDto.Descending),
+            new(FollowUpSort.Probability, L["OrderBook.Probability"], SortDirectionDto.Descending),
+        ];
+        await LoadOverviewAsync();
+        if (QuoteFromQuery is Guid quote)
+        {
+            await OpenPreviewAsync(quote);
+        }
+    }
+
+    private async Task LoadOverviewAsync()
+    {
+        OperationResult<QuoteFollowUpOverviewResponse> result = await FollowUps.GetOverviewAsync(CancellationToken.None);
+        _errors = result.Errors;
+        _overview = result.Value ?? new QuoteFollowUpOverviewResponse([], new QuoteFollowUpSettingsResponse(5, false, 0), 0, 0m);
+        _window = _overview.Settings.WindowDays;
+        if (_page > PageCount)
+        {
+            _page = PageCount;
+        }
+    }
+
+    private SortOption<FollowUpSort> Column(FollowUpSort column) => _sortOptions.First(o => o.Column == column);
+
+    private void ResetFilters() => (_search, _dueOnly, _withEmail, _page) = (null, false, false, 1);
+
+    private string DaysLeftText(int days) => days switch
+    {
+        <= 0 => L["QuoteFollowUps.EndsToday"],
+        1 => L["QuoteFollowUps.EndsTomorrow"],
+        _ => string.Format(Culture, L["QuoteFollowUps.EndsIn"], days),
+    };
+
+    private string WithoutAnswerText(int days) => days <= 0
+        ? L["QuoteFollowUps.SentToday"]
+        : string.Format(Culture, Counted("QuoteFollowUps.WithoutAnswer", days), days);
+
+    /// <summary>Le texte au singulier (clé <c>.One</c>) pour un seul jour ou une seule fois.</summary>
+    private string Counted(string key, int count) => L[count == 1 ? $"{key}.One" : key];
+
+    private static string Percent(decimal probability) => probability.ToString("P0", Culture);
+
+    private async Task OpenPreviewAsync(Guid quoteId)
+    {
+        _busy = true;
+        OperationResult<QuoteFollowUpPreviewResponse> preview = await FollowUps.GetPreviewAsync(quoteId, CancellationToken.None);
+        _busy = false;
+        if (!preview.IsSuccess || preview.Value is null)
+        {
+            Toasts.Show(ToastKind.Error, L.Error(preview.Errors[0].Code));
+            return;
+        }
+
+        _preview = preview.Value;
+        (_subject, _body) = (preview.Value.Subject, preview.Value.Body);
+    }
+
+    private void ClosePreview() => (_preview, _subject, _body) = (null, string.Empty, string.Empty);
+
+    private async Task SendAsync(QuoteFollowUpChannelDto channel)
+    {
+        if (_preview is not { } preview)
+        {
+            return;
+        }
+
+        _busy = true;
+        OperationResult<QuoteFollowUpResponse> sent = await FollowUps.SendAsync(
+            preview.QuoteId, new SendQuoteFollowUpRequest { Channel = channel, Subject = _subject, Body = _body }, CancellationToken.None);
+        _busy = false;
+        if (sent.IsSuccess && sent.Value is { } followUp)
+        {
+            Toasts.Show(ToastKind.Success, channel == QuoteFollowUpChannelDto.Email
+                ? string.Format(Culture, L["QuoteFollowUps.Toast.Sent"], followUp.QuoteNumber, followUp.Recipient)
+                : string.Format(Culture, L["QuoteFollowUps.Toast.Noted"], followUp.QuoteNumber));
+            ClosePreview();
+        }
+        else
+        {
+            Toasts.Show(ToastKind.Error, L.Error(sent.Errors[0].Code));
+        }
+
+        await LoadOverviewAsync();
+        await _history.ReloadAsync();
+    }
+
+    private async Task SaveSettingsAsync()
+    {
+        _busy = true;
+        OperationResult<QuoteFollowUpSettingsResponse> saved = await FollowUps.UpdateSettingsAsync(
+            new UpdateQuoteFollowUpSettingsRequest { WindowDays = _window }, CancellationToken.None);
+        _busy = false;
+        if (saved.IsSuccess)
+        {
+            Toasts.Show(ToastKind.Success, string.Format(Culture, Counted("QuoteFollowUps.Toast.SettingsSaved", _window), _window));
+            await LoadOverviewAsync();
+        }
+        else
+        {
+            Toasts.Show(ToastKind.Error, L.Error(saved.Errors[0].Code));
+        }
+    }
+}

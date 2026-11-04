@@ -56,6 +56,9 @@ public sealed class PaymentReminder : Entity<Guid>
 
     public ReminderLevel Level { get; private init; }
 
+    /// <summary>Numéro de l'échéance manquée, pour une relance d'échéancier (<see cref="ReminderLevel.MissedInstallment"/>).</summary>
+    public int? Installment { get; private init; }
+
     public ReminderChannel Channel { get; private init; }
 
     public ReminderOutcome Outcome { get; private init; }
@@ -105,6 +108,7 @@ public sealed class PaymentReminder : Entity<Guid>
             CustomerId = draft.CustomerId,
             InvoiceNumber = draft.InvoiceNumber,
             Level = draft.Level,
+            Installment = draft.Installment,
             Channel = channel,
             Outcome = errorCode is null ? ReminderOutcome.Sent : ReminderOutcome.Failed,
             ErrorCode = errorCode,
@@ -124,7 +128,11 @@ public sealed class PaymentReminder : Entity<Guid>
     private static string Truncate(string value, int max) => value.Length <= max ? value : value[..max];
 }
 
-/// <summary>Une relance prête à partir : la facture, le niveau, et le texte dans la langue du client.</summary>
+/// <summary>
+/// Une relance prête à partir : la facture, le niveau, et le texte dans la langue du client. <paramref name="Outstanding"/>
+/// est le montant réclamé (le reste dû, ou pour une échéance manquée ce qui manque à l'échéancier) ; pour un rappel avant
+/// échéance, <paramref name="DaysOverdue"/> vaut 0.
+/// </summary>
 public sealed record ReminderDraft(
     InvoiceId InvoiceId,
     CustomerId CustomerId,
@@ -134,4 +142,5 @@ public sealed record ReminderDraft(
     string Subject,
     string Body,
     decimal Outstanding,
-    int DaysOverdue);
+    int DaysOverdue,
+    int? Installment = null);
