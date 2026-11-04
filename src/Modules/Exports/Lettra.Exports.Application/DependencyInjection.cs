@@ -1,5 +1,6 @@
 using Lettra.Application.Abstractions.Ai;
 using Lettra.Application.Abstractions.Cabinet;
+using Lettra.Application.Abstractions.Decisions;
 using Lettra.Application.Abstractions.Messaging;
 using Lettra.Application.Abstractions.Outbox;
 using Lettra.Contracts.Accounting;
@@ -155,6 +156,12 @@ public static class DependencyInjection
         services.AddScoped<IQueryHandler<ListPaymentRemindersQuery, Result<PagedResponse<PaymentReminderResponse>>>, ListPaymentRemindersHandler>();
         services.AddScoped<IQueryHandler<GetReminderSettingsQuery, Result<ReminderSettingsResponse>>, GetReminderSettingsHandler>();
         services.AddScoped<ICommandHandler<UpdateReminderSettingsCommand, Result<ReminderSettingsResponse>>, UpdateReminderSettingsHandler>();
+
+        // Décisions à prendre (docs/decisions-a-prendre.md) : les relances dues, et leur envoi en un clic ; les échéances fiscales.
+        services.AddScoped<IDecisionRule, ReminderDecisionRule>();
+        services.AddScoped<IDecisionActionHandler, SendReminderDecisionAction>();
+        services.AddScoped<IDecisionRule, FiscalDeadlineDecisionRule>();
+        services.AddScoped<IDecisionRule, ThresholdDecisionRule>();
 
         // Avant le retard : rappel avant échéance aux clients ciblés (météo des paiements, droit d'opposition), échéancier
         // en libre-service dans les bornes de l'entreprise, signaux pour « Décisions à prendre ». Le QR code de virement

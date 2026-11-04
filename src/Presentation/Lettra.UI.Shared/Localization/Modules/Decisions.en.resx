@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.Decisions" xml:space="preserve"><value>Decisions to make</value></data>
+  <data name="Nav.Decisions.Keywords" xml:space="preserve"><value>decisions to make anticipate suggestions to do priorities urgent next actions reminders deadlines autonomy dial</value></data>
+  <data name="Decisions.Title" xml:space="preserve"><value>Decisions to make</value></data>
+  <data name="Decisions.Subtitle" xml:space="preserve"><value>What Lettra spotted in this file and suggests you decide, most urgent first. Fixed, verifiable rules: no AI decides.</value></data>
+  <data name="Decisions.RefreshedAt" xml:space="preserve"><value>Refreshed {0}</value></data>
+  <data name="Decisions.Refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="Decisions.Refreshing" xml:space="preserve"><value>Refreshing…</value></data>
+  <data name="Decisions.Stats" xml:space="preserve"><value>Decisions summary</value></data>
+  <data name="Decisions.Stat.Open" xml:space="preserve"><value>To decide</value></data>
+  <data name="Decisions.Stat.Urgent" xml:space="preserve"><value>Urgent</value></data>
+  <data name="Decisions.Stat.Urgent.Hint" xml:space="preserve"><value>urgent or critical</value></data>
+  <data name="Decisions.Stat.Snoozed" xml:space="preserve"><value>Later</value></data>
+  <data name="Decisions.Stat.Done" xml:space="preserve"><value>Handled</value></data>
+  <data name="Decisions.Stat.Done.Hint" xml:space="preserve"><value>in the last thirty days</value></data>
+  <data name="Decisions.Dial" xml:space="preserve"><value>Autonomy dial</value></data>
+  <data name="Decisions.Dial.Hint" xml:space="preserve"><value>How far Lettra goes on its own. Whatever the setting, nothing goes out without your click, and every action runs with your rights.</value></data>
+  <data name="Decisions.Dial.ReadOnly" xml:space="preserve"><value>Only a firm manager sets the dial for this file.</value></data>
+  <data name="Decisions.Dial.Saved" xml:space="preserve"><value>Dial set: {0}.</value></data>
+  <data name="Decisions.Level.Show" xml:space="preserve"><value>Show only</value></data>
+  <data name="Decisions.Level.Show.Hint" xml:space="preserve"><value>Lettra flags the decision; you handle it from the related screen.</value></data>
+  <data name="Decisions.Level.Prepare" xml:space="preserve"><value>Prepare the action</value></data>
+  <data name="Decisions.Level.Prepare.Hint" xml:space="preserve"><value>Lettra prepares the action (the reminder to send…): one click on the button does it. Recommended.</value></data>
+  <data name="Decisions.List" xml:space="preserve"><value>Decisions</value></data>
+  <data name="Decisions.Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Decisions.Filter.Open" xml:space="preserve"><value>To decide</value></data>
+  <data name="Decisions.Filter.Snoozed" xml:space="preserve"><value>Later</value></data>
+  <data name="Decisions.Filter.Closed" xml:space="preserve"><value>Handled</value></data>
+  <data name="Decisions.Filter.All" xml:space="preserve"><value>All</value></data>
+  <data name="Decisions.Audience" xml:space="preserve"><value>For whom</value></data>
+  <data name="Decisions.Audience.All" xml:space="preserve"><value>Everyone</value></data>
+  <data name="Decisions.Audience.Cabinet" xml:space="preserve"><value>Firm</value></data>
+  <data name="Decisions.Audience.Entreprise" xml:space="preserve"><value>Business</value></data>
+  <data name="Decisions.Audience.ClientFinal" xml:space="preserve"><value>Business's customer</value></data>
+  <data name="Decisions.Urgency" xml:space="preserve"><value>Urgency</value></data>
+  <data name="Decisions.Urgency.All" xml:space="preserve"><value>All</value></data>
+  <data name="Decisions.Urgency.Low" xml:space="preserve"><value>Low</value></data>
+  <data name="Decisions.Urgency.Normal" xml:space="preserve"><value>Normal</value></data>
+  <data name="Decisions.Urgency.High" xml:space="preserve"><value>Urgent</value></data>
+  <data name="Decisions.Urgency.Critical" xml:space="preserve"><value>Critical</value></data>
+  <data name="Decisions.Sort.DueOn" xml:space="preserve"><value>Due date</value></data>
+  <data name="Decisions.Sort.Impact" xml:space="preserve"><value>Amount at stake</value></data>
+  <data name="Decisions.Sort.Title" xml:space="preserve"><value>Title</value></data>
+  <data name="Decisions.Empty" xml:space="preserve"><value>Nothing to decide right now</value></data>
+  <data name="Decisions.Empty.Text" xml:space="preserve"><value>Lettra watches payment reminders, tax deadlines, regulatory thresholds, supplier IBANs and vigilance certificates, and the anti-money-laundering file. A decision shows up here as soon as something needs doing.</value></data>
+  <data name="Decisions.Due" xml:space="preserve"><value>before {0}</value></data>
+  <data name="Decisions.DueLate" xml:space="preserve"><value>overdue since {0}</value></data>
+  <data name="Decisions.DueToday" xml:space="preserve"><value>due today</value></data>
+  <data name="Decisions.Open" xml:space="preserve"><value>See details</value></data>
+  <data name="Decisions.Accept" xml:space="preserve"><value>Accept</value></data>
+  <data name="Decisions.Snooze" xml:space="preserve"><value>Later</value></data>
+  <data name="Decisions.Snooze.Label" xml:space="preserve"><value>Snooze</value></data>
+  <data name="Decisions.Snooze.Tomorrow" xml:space="preserve"><value>Tomorrow</value></data>
+  <data name="Decisions.Snooze.Week" xml:space="preserve"><value>In 7 days</value></data>
+  <data name="Decisions.Snooze.Month" xml:space="preserve"><value>In 30 days</value></data>
+  <data name="Decisions.Dismiss" xml:space="preserve"><value>Dismiss</value></data>
+  <data name="Decisions.Restore" xml:space="preserve"><value>Put back in the list</value></data>
+  <data name="Decisions.Undo" xml:space="preserve"><value>Undo</value></data>
+  <data name="Decisions.Accepted" xml:space="preserve"><value>Done: {0}.</value></data>
+  <data name="Decisions.Snoozed" xml:space="preserve"><value>Snoozed until {0}.</value></data>
+  <data name="Decisions.Dismissed" xml:space="preserve"><value>Decision dismissed: it won't be suggested again.</value></data>
+  <data name="Decisions.Restored" xml:space="preserve"><value>Decision put back in the list.</value></data>
+  <data name="Decisions.Changed" xml:space="preserve"><value>This decision changed in the meantime: the list is up to date, please read it again.</value></data>
+  <data name="Decisions.Status.Proposed" xml:space="preserve"><value>To decide</value></data>
+  <data name="Decisions.Status.Snoozed" xml:space="preserve"><value>Later</value></data>
+  <data name="Decisions.Status.SnoozedUntil" xml:space="preserve"><value>Back on {0}</value></data>
+  <data name="Decisions.Status.Accepted" xml:space="preserve"><value>Accepted</value></data>
+  <data name="Decisions.Status.Dismissed" xml:space="preserve"><value>Dismissed</value></data>
+  <data name="Decisions.Status.Resolved" xml:space="preserve"><value>Settled by itself</value></data>
+  <data name="Decisions.Rules" xml:space="preserve"><value>What Lettra watches</value></data>
+  <data name="Decisions.Rules.Intro" xml:space="preserve"><value>Each decision comes from a written, tested rule, not from an AI. It settles by itself as soon as the situation is dealt with.</value></data>
+  <data name="Decisions.Unknown" xml:space="preserve"><value>Decision “{0}”</value></data>
+  <data name="Decision.relance.due.Title" xml:space="preserve"><value>Send {customer} a reminder for invoice {invoice}</value></data>
+  <data name="Decision.relance.due.Reason" xml:space="preserve"><value>{level}: the invoice is {days} days overdue and the reminder plan sends it today.</value></data>
+  <data name="Decision.relance.due.Accept" xml:space="preserve"><value>Send the reminder</value></data>
+  <data name="Decision.relance.due.Rule" xml:space="preserve"><value>Reminders due: an overdue invoice reaches a step of the reminder plan (nothing is suggested when automatic sending is on).</value></data>
+  <data name="Decision.fiscal.echeance.Title" xml:space="preserve"><value>{obligation} to file before {dueOn}</value></data>
+  <data name="Decision.fiscal.echeance.Reason" xml:space="preserve"><value>Period ended on {periodEnd}. Once filed, mark it filed in the tax calendar: the decision settles by itself.</value></data>
+  <data name="Decision.fiscal.echeance.Rule" xml:space="preserve"><value>Tax deadlines: a return that is overdue or due within seven days and not yet marked filed.</value></data>
+  <data name="Decision.seuil.proche.Title" xml:space="preserve"><value>{what} ({state})</value></data>
+  <data name="Decision.seuil.proche.Reason" xml:space="preserve"><value>{change} So far: {toDateAmount} {basis} against a threshold of {thresholdAmount}; at this pace, {projectedAmount} by the end of the period.</value></data>
+  <data name="Decision.seuil.proche.Rule" xml:space="preserve"><value>Thresholds: a regulatory threshold (VAT exemption or regime, quarterly VAT return, company category, vigilance certificate, DAS 2) is crossed, or will be within three months at the recent pace.</value></data>
+  <data name="Decision.seuil.proche.State.Crossed" xml:space="preserve"><value>crossed on {on}</value></data>
+  <data name="Decision.seuil.proche.State.Projected" xml:space="preserve"><value>expected to be crossed around {on}</value></data>
+  <data name="Decision.seuil.proche.State.Near" xml:space="preserve"><value>to watch</value></data>
+  <data name="Decision.seuil.proche.State.Far" xml:space="preserve"><value>far from the threshold</value></data>
+  <data name="Decision.seuil.proche.What.SubcontractorVigilance" xml:space="preserve"><value>Vigilance certificate for {party}</value></data>
+  <data name="Decision.seuil.proche.What.FeeReturn" xml:space="preserve"><value>Fees paid to {party}</value></data>
+  <data name="Decision.iban.a-verifier.Title" xml:space="preserve"><value>Check the new IBAN of {supplier}</value></data>
+  <data name="Decision.iban.a-verifier.Reason" xml:space="preserve"><value>Changed on {changedOn}. Confirm it through another channel than the request (the supplier's usual phone number) before any payment: that is the defence against supplier fraud.</value></data>
+  <data name="Decision.iban.a-verifier.Rule" xml:space="preserve"><value>IBAN to check: a supplier's IBAN changed and has not been confirmed.</value></data>
+  <data name="Decision.attestation.a-renouveler.Title" xml:space="preserve"><value>Vigilance certificate {status}: {supplier}</value></data>
+  <data name="Decision.attestation.a-renouveler.Reason" xml:space="preserve"><value>Contract of {contractAmount} excl. VAT. Without a valid, checked URSSAF certificate, the file is jointly liable for the subcontractor's taxes and contributions in case of undeclared work.</value></data>
+  <data name="Decision.attestation.a-renouveler.Rule" xml:space="preserve"><value>Vigilance certificates: a supplier at €5,000 excl. VAT or more whose certificate is missing, expired, unchecked or expiring within thirty days.</value></data>
+  <data name="Decision.attestation.a-renouveler.Status.Missing" xml:space="preserve"><value>missing</value></data>
+  <data name="Decision.attestation.a-renouveler.Status.Expired" xml:space="preserve"><value>expired</value></data>
+  <data name="Decision.attestation.a-renouveler.Status.NotVerified" xml:space="preserve"><value>not checked</value></data>
+  <data name="Decision.attestation.a-renouveler.Status.ExpiringSoon" xml:space="preserve"><value>expiring soon</value></data>
+  <data name="Decision.lcb-ft.fiche.Title" xml:space="preserve"><value>Client anti-money-laundering file {status}</value></data>
+  <data name="Decision.lcb-ft.fiche.Reason" xml:space="preserve"><value>The firm knows its client and reviews the file at the pace set by its risk level (anti-money-laundering duties).</value></data>
+  <data name="Decision.lcb-ft.fiche.Rule" xml:space="preserve"><value>Anti-money laundering: the client file is missing, incomplete, due for review, or its review falls within thirty days (only for those who fill it in).</value></data>
+  <data name="Decision.lcb-ft.fiche.Status.Missing" xml:space="preserve"><value>to fill in</value></data>
+  <data name="Decision.lcb-ft.fiche.Status.Incomplete" xml:space="preserve"><value>to complete</value></data>
+  <data name="Decision.lcb-ft.fiche.Status.ReviewDue" xml:space="preserve"><value>to review</value></data>
+  <data name="Decision.lcb-ft.fiche.Status.UpToDate" xml:space="preserve"><value>to review soon</value></data>
+  <data name="Cabinet.Indicator.decisions.a-prendre" xml:space="preserve"><value>Decisions</value></data>
+  <data name="Cabinet.Indicator.decisions.a-prendre.Due" xml:space="preserve"><value>before {0}</value></data>
+  <data name="Error.Decision.NotFound" xml:space="preserve"><value>This decision no longer exists, or it is not meant for you.</value></data>
+  <data name="Error.Decision.NotOpen" xml:space="preserve"><value>This decision has already been handled.</value></data>
+  <data name="Error.Decision.NotRestorable" xml:space="preserve"><value>Only a dismissed or snoozed decision can be put back in the list.</value></data>
+  <data name="Error.Decision.SnoozeDateInvalid" xml:space="preserve"><value>Pick a day between tomorrow and one year from now.</value></data>
+  <data name="Error.Decision.NoAction" xml:space="preserve"><value>Nothing to do in one click here: open the details to handle this decision.</value></data>
+  <data name="Error.Decision.ActionUnavailable" xml:space="preserve"><value>This action is no longer available on this installation: open the details to handle the decision.</value></data>
+  <data name="Error.Decision.LevelInvalid" xml:space="preserve"><value>This dial setting does not exist.</value></data>
+  <data name="Error.Decision.ChoiceInvalid" xml:space="preserve"><value>This answer does not exist.</value></data>
+</root>
