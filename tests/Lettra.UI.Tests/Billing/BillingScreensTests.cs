@@ -5,6 +5,7 @@ using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
 using Lettra.Contracts.Exports;
+using Lettra.Contracts.Reminders;
 using Lettra.Contracts.Suppliers;
 using Lettra.Printing;
 using Lettra.UI.Abstractions;
@@ -17,6 +18,7 @@ using Lettra.UI.Shared.Services;
 using Lettra.UI.Tests.Cabinet;
 using Lettra.UI.Tests.Exports;
 using Lettra.UI.Tests.Portal;
+using Lettra.UI.Tests.Reminders;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -30,6 +32,7 @@ public sealed class InvoiceEditorTests : BunitContext
     private readonly FakeFileDownloader _files = new();
     private readonly FakePlatformTransmissionGateway _platform;
     private readonly FakeReceivedInvoicesGateway _reception = new();
+    private readonly FakeRemindersGateway _reminders = new();
 
     private static readonly DocumentLineRequest Conseil = new() { Designation = "Conseil", UnitCode = "HUR", Quantity = 2m, UnitPriceExclTax = 100m };
 
@@ -43,6 +46,7 @@ public sealed class InvoiceEditorTests : BunitContext
         Services.AddSingleton<IInvoicesGateway>(_invoices);
         Services.AddSingleton<IPlatformTransmissionGateway>(_platform);
         Services.AddSingleton<IReceivedInvoicesGateway>(_reception);
+        Services.AddSingleton<IRemindersGateway>(_reminders);
         Services.AddSingleton<IBillingSettingsGateway>(_settings);
         Services.AddSingleton<ICatalogGateway>(new FakeCatalogGateway());
         Services.AddSingleton<ICustomersGateway>(new FakeCustomersGateway());
@@ -270,6 +274,39 @@ public sealed class InvoiceEditorTests : BunitContext
         page.FindAll("#platform-payment").Should().BeEmpty();
         page.FindAll("#platform-refresh").Should().BeEmpty();
         _platform.Payments.Select(p => p.Amount).Should().Equal(100m, 140m);
+    }
+
+    [Fact]
+    public void L_echeancier_demande_par_le_client_se_suit_et_se_prend_en_compte_depuis_la_facture()
+    {
+        InvoiceResponse facture = _invoices.Add(InvoiceKindDto.Invoice, InvoiceStatusDto.Issued, "FAC-2026-0042", Conseil);
+        _reminders.Plans.Add(FakeRemindersGateway.Plan("FAC-2026-0042", "Dupont SARL", PaymentPlanStatusDto.Late) with { InvoiceId = facture.Id });
+        IRenderedComponent<InvoiceEditor> page = Ouvrir(facture.Id);
+        page.WaitForAssertion(() => page.FindAll("#invoice-plan").Should().ContainSingle());
+
+        page.Find("#invoice-plan-status").TextContent.Should().Be("Échéance manquée");
+        page.FindAll("#invoice-plan-lines li").Select(l => l.ClassName).Should().Equal("is-paid", "is-missed", "");
+        page.Find("#invoice-plan-lines").TextContent.Should().Contain("15/10/2026").And.Contain("réglée").And.Contain("manquée, il manque 400,00");
+        page.Find("#invoice-plan").TextContent.Should().Contain("Demandé par Jean Durand");
+
+        page.Find("#invoice-plan-ack").Click();
+
+        page.WaitForAssertion(() => this.ToastText().Should().Be("Échéancier de la facture FAC-2026-0042 pris en compte."));
+        page.WaitForAssertion(() => page.FindAll("#invoice-plan-ack").Should().BeEmpty());
+        page.Find("#invoice-plan-cancel").Click();
+        page.Find("#invoice-plan-cancel-confirm").Click();
+        page.WaitForAssertion(() => page.Find("#invoice-plan-status").TextContent.Should().Be("Arrêté"));
+    }
+
+    [Fact]
+    public void Une_facture_sans_echeancier_n_en_parle_pas()
+    {
+        InvoiceResponse facture = _invoices.Add(InvoiceKindDto.Invoice, InvoiceStatusDto.Issued, "FAC-2026-0042", Conseil);
+
+        IRenderedComponent<InvoiceEditor> page = Ouvrir(facture.Id);
+
+        page.WaitForAssertion(() => page.Markup.Should().Contain("FAC-2026-0042"));
+        page.FindAll("#invoice-plan").Should().BeEmpty();
     }
 
     [Fact]

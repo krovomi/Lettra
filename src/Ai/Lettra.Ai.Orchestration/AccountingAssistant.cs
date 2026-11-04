@@ -4,6 +4,7 @@ using System.Text;
 using Lettra.Ai.Privacy;
 using Lettra.Application.Abstractions.Ai;
 using Lettra.Application.Abstractions.Identity;
+using Lettra.Application.Diagnostics;
 using Lettra.Application.Features.Assistant;
 using Lettra.Contracts.Assistant;
 using Lettra.Contracts.Common;
@@ -18,7 +19,7 @@ namespace Lettra.Ai.Orchestration;
 /// par les mêmes contrôles : politique du cabinet, droits, minimisation, pseudonymisation, outils sans pouvoir,
 /// validation des entrées, journal, contrôle de la réponse. Le moteur ne fait que proposer.
 /// </summary>
-internal sealed class AccountingAssistant(
+internal sealed partial class AccountingAssistant(
     IAiUsagePolicy policy,
     INamedEntityDetection namedEntities,
     IAiEngineFactory engines,
@@ -106,7 +107,16 @@ internal sealed class AccountingAssistant(
         while (true)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            EngineTurn turn = await engine.CompleteAsync(prepared, cancellationToken).ConfigureAwait(false);
+            (EngineTurn? answered, AiEngineFailure failure) = await CompleteAsync(conversation, prepared, cancellationToken).ConfigureAwait(false);
+            if (answered is not { } turn)
+            {
+                // Repli : la réponse s'arrête là, les étapes déjà faites restent affichées, rien n'est inventé.
+                await AuditAsync(request, AiAuditKind.EngineFailed, EngineFailures.Describe(failure), engine.Name, cancellationToken).ConfigureAwait(false);
+                LettraTelemetry.Ai.CountFallback(AiEngineCircuits.MetricName(conversation.Settings.Engine), EngineFailures.MetricName(failure));
+                yield return new AssistantUnavailableEvent(failure == AiEngineFailure.Paused ? ErrorCodes.Ai.EnginePaused : ErrorCodes.Ai.EngineFailed);
+                yield break;
+            }
+
             usage = EngineUsage.Add(usage, turn.Usage);
             List<ToolCallPart> calls = [.. turn.ToolCalls];
             await AuditAsync(request, AiAuditKind.EngineCall, $"arrêt={turn.StopReason} appels={calls.Count}", engine.Name, cancellationToken).ConfigureAwait(false);
@@ -120,7 +130,7 @@ internal sealed class AccountingAssistant(
 
             if (calls.Count == 0 || turn.StopReason != EngineStopReason.ToolUse)
             {
-                foreach (AssistantEvent answer in FinalAnswer(turn, conversation.Privacy, conversation.TrustedSources))
+                foreach (AssistantEvent answer in FinalAnswer(turn, engine.Name, conversation.Privacy, conversation.TrustedSources))
                 {
                     yield return answer;
                 }
@@ -144,6 +154,29 @@ internal sealed class AccountingAssistant(
             }
         }
     }
+
+    /// <summary>
+    /// Un tour du moteur, ou la raison de son échec : délai, réseau, réponse illisible, disjoncteur ouvert. L'arrêt demandé
+    /// par l'utilisateur n'est pas une panne : il remonte tel quel.
+    /// </summary>
+    private async Task<(EngineTurn? Turn, AiEngineFailure Failure)> CompleteAsync(Conversation conversation, EngineRequest prepared, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return (await conversation.Engine.CompleteAsync(prepared, cancellationToken).ConfigureAwait(false), default);
+        }
+        catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            AiEngineFailure failure = EngineFailures.Classify(exception);
+
+            // Ni le message ni la pile : une erreur du fournisseur pourrait citer la demande.
+            LogEngineFailed(logger, conversation.Engine.Name, EngineFailures.MetricName(failure), exception.GetType().Name);
+            return (null, failure);
+        }
+    }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Moteur d'IA {Engine} en échec ({Reason}, {ExceptionType}) : réponse terminée sans IA.")]
+    private static partial void LogEngineFailed(ILogger logger, string engine, string reason, string exceptionType);
 
     /// <summary>Lance les outils demandés et rend leurs résultats au moteur, pseudonymisés, dans un seul message.</summary>
     private async IAsyncEnumerable<AssistantEvent> ToolRoundAsync(Conversation conversation, List<ToolCallPart> calls, [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -212,7 +245,7 @@ internal sealed class AccountingAssistant(
                 $"{AiSkillNames.Name(skill)} {skills.Info.FreshAsOf(skill).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}")
             : null;
 
-    private static IEnumerable<AssistantEvent> FinalAnswer(EngineTurn turn, PseudonymizationSession privacy, List<string> trustedSources)
+    private static IEnumerable<AssistantEvent> FinalAnswer(EngineTurn turn, string engine, PseudonymizationSession privacy, List<string> trustedSources)
     {
         if (turn.StopReason == EngineStopReason.MaxTokens)
         {
@@ -234,7 +267,8 @@ internal sealed class AccountingAssistant(
 
         if (!string.IsNullOrWhiteSpace(text))
         {
-            yield return new AssistantTextEvent(text);
+            // Texte rédigé par l'IA (article 50 de l'AI Act) : l'événement porte la marque lisible par machine et le moteur.
+            yield return new AssistantTextEvent(text, engine);
         }
     }
 

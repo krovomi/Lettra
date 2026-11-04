@@ -42,8 +42,8 @@ public interface IPaymentReminderRepository
 {
     Task AddAsync(PaymentReminder reminder, CancellationToken cancellationToken);
 
-    /// <summary>La dernière relance faite (partie ou notée, pas en échec) de chaque facture donnée.</summary>
-    Task<IReadOnlyDictionary<InvoiceId, PaymentReminder>> LastSentAsync(IReadOnlyCollection<InvoiceId> invoices, CancellationToken cancellationToken);
+    /// <summary>Ce que chaque facture donnée a déjà reçu (relances parties ou notées, pas en échec).</summary>
+    Task<IReadOnlyDictionary<InvoiceId, ReminderTrack>> TracksAsync(IReadOnlyCollection<InvoiceId> invoices, CancellationToken cancellationToken);
 
     Task<(IReadOnlyList<ReminderHistoryItem> Items, int Total)> ListAsync(ReminderHistoryFilter filter, CancellationToken cancellationToken);
 }
@@ -57,4 +57,56 @@ public interface IReminderContextReader
     Task<IReadOnlyDictionary<InvoiceId, decimal>> PenaltyRatesAsync(IReadOnlyCollection<InvoiceId> invoices, CancellationToken cancellationToken);
 
     Task<ReminderSender?> SenderAsync(CancellationToken cancellationToken);
+
+    /// <summary>Les factures données que l'acheteur conteste (litige déclaré sur la plateforme agréée).</summary>
+    Task<IReadOnlySet<InvoiceId>> DisputedAsync(IReadOnlyCollection<InvoiceId> invoices, CancellationToken cancellationToken);
+}
+
+/// <summary>Les échéanciers du dossier.</summary>
+public interface IPaymentPlanRepository
+{
+    Task AddAsync(PaymentPlan plan, CancellationToken cancellationToken);
+
+    Task<PaymentPlan?> FindAsync(Guid id, CancellationToken cancellationToken);
+
+    /// <summary>Les échéanciers en cours (pas arrêtés), au plus un par facture ; de tout le dossier sans <paramref name="invoices"/>.</summary>
+    Task<IReadOnlyDictionary<InvoiceId, PaymentPlan>> ActiveAsync(IReadOnlyCollection<InvoiceId>? invoices, CancellationToken cancellationToken);
+
+    /// <summary>Le dernier échéancier demandé pour une facture, arrêté ou non.</summary>
+    Task<PaymentPlan?> LatestForInvoiceAsync(InvoiceId invoice, CancellationToken cancellationToken);
+
+    /// <summary>Les échéanciers demandés depuis <paramref name="since"/>, et tous ceux encore en cours.</summary>
+    Task<IReadOnlyList<PaymentPlan>> ListAsync(DateTimeOffset since, CancellationToken cancellationToken);
+
+    /// <summary>Les échéanciers que l'entreprise n'a pas encore vus.</summary>
+    Task<int> CountUnacknowledgedAsync(CancellationToken cancellationToken);
+}
+
+/// <summary>Les oppositions des clients au ciblage selon leur comportement de paiement.</summary>
+public interface IPaymentTargetingObjectionRepository
+{
+    Task<IReadOnlyList<PaymentTargetingObjection>> ListAsync(CancellationToken cancellationToken);
+
+    Task<PaymentTargetingObjection?> FindAsync(CustomerId customer, CancellationToken cancellationToken);
+
+    Task AddAsync(PaymentTargetingObjection objection, CancellationToken cancellationToken);
+
+    /// <summary>Retire l'opposition (effacée à l'enregistrement suivant).</summary>
+    Task RemoveAsync(PaymentTargetingObjection objection, CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// Le QR code de virement (norme EPC) joint au rappel avant échéance et à la relance d'échéance manquée, en image PNG.
+/// Par défaut, aucun : le texte donne l'IBAN et la référence, et l'espace client montre le QR code.
+/// </summary>
+public interface IPaymentQrCodeImage
+{
+    /// <summary>L'image, ou <c>null</c> quand le virement ne peut pas être prérempli (IBAN absent ou invalide…).</summary>
+    byte[]? Png(string beneficiary, string? iban, string? bic, decimal amount, string remittance);
+}
+
+/// <summary>Sans générateur de QR code : rien n'est joint.</summary>
+internal sealed class NoPaymentQrCodeImage : IPaymentQrCodeImage
+{
+    public byte[]? Png(string beneficiary, string? iban, string? bic, decimal amount, string remittance) => null;
 }

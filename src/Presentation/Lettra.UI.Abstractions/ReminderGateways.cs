@@ -20,6 +20,8 @@ public sealed record ReminderHistoryQuery(
 /// <summary>
 /// Page Relances (vague 7). Lecture : <c>DossierLire</c> ; envoi et relance notée : <c>FactureEmettre</c> ; scénario et
 /// envoi automatique : <c>CatalogueGerer</c>. Les e-mails partent par le port e-mail du serveur (MailPit dans la démo).
+/// Avant le retard : l'échéancier d'une facture se lit avec <c>DossierLire</c>, se prend en compte ou s'arrête avec
+/// <c>FactureEmettre</c> ; l'opposition d'un client au ciblage se note avec <c>TiersModifier</c>.
 /// </summary>
 public interface IRemindersGateway
 {
@@ -34,4 +36,12 @@ public interface IRemindersGateway
     Task<OperationResult<PagedResponse<PaymentReminderResponse>>> ListHistoryAsync(ReminderHistoryQuery query, CancellationToken cancellationToken);
 
     Task<OperationResult<ReminderSettingsResponse>> UpdateSettingsAsync(UpdateReminderSettingsRequest request, CancellationToken cancellationToken);
+
+    Task<OperationResult<InvoicePaymentPlanResponse>> GetInvoicePlanAsync(Guid invoiceId, CancellationToken cancellationToken);
+
+    Task<OperationResult<PaymentPlanResponse>> AcknowledgePlanAsync(Guid planId, long version, CancellationToken cancellationToken);
+
+    Task<OperationResult<PaymentPlanResponse>> CancelPlanAsync(Guid planId, long version, CancellationToken cancellationToken);
+
+    Task<OperationResult<bool>> SetObjectionAsync(Guid customerId, bool objects, CancellationToken cancellationToken);
 }

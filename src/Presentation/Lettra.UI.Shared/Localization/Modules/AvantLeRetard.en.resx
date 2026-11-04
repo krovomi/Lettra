@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Prevention.Upcoming.Title" xml:space="preserve"><value>Reminders before the due date</value></data>
+  <data name="Prevention.Upcoming.Hint" xml:space="preserve"><value>A friendly reminder, {0} day(s) before the due date, to customers whose payment weather is rainy or stormy, with the link to their customer area and the bank transfer QR code. It goes out on the customer's best day when the weather gives one, and follows automatic sending.</value></data>
+  <data name="Prevention.Upcoming.Off" xml:space="preserve"><value>The reminder before the due date is off: turn it on in the reminder schedule below.</value></data>
+  <data name="Prevention.Upcoming.Empty" xml:space="preserve"><value>No reminder before the due date to plan</value></data>
+  <data name="Prevention.Upcoming.Empty.Text" xml:space="preserve"><value>No invoice of a customer with rainy or stormy weather falls due within two weeks.</value></data>
+  <data name="Prevention.Upcoming.Weather" xml:space="preserve"><value>Weather</value></data>
+  <data name="Prevention.Upcoming.BestDay" xml:space="preserve"><value>best day: {0}</value></data>
+  <data name="Prevention.Upcoming.Planned" xml:space="preserve"><value>Reminder planned on</value></data>
+  <data name="Prevention.Upcoming.SentOn" xml:space="preserve"><value>Sent on {0}</value></data>
+  <data name="Prevention.Objection.Hint" xml:space="preserve"><value>The customer objects to targeting based on how they pay: they will no longer get a reminder before the due date.</value></data>
+  <data name="Prevention.Objection.Add" xml:space="preserve"><value>Do not target this customer</value></data>
+  <data name="Prevention.Objection.Title" xml:space="preserve"><value>Customers who object to targeting</value></data>
+  <data name="Prevention.Objection.Text" xml:space="preserve"><value>Choosing who gets the reminder before the due date from the way they pay is profiling: every customer can object. They still get the reminders after the due date, which target no one.</value></data>
+  <data name="Prevention.Objection.None" xml:space="preserve"><value>No customer has objected to targeting.</value></data>
+  <data name="Prevention.Objection.Since" xml:space="preserve"><value>since {0}</value></data>
+  <data name="Prevention.Objection.Remove" xml:space="preserve"><value>Remove the objection</value></data>
+  <data name="Prevention.Plans.Title" xml:space="preserve"><value>Payment plans</value></data>
+  <data name="Prevention.Plans.Waiting" xml:space="preserve"><value>{0} to review</value></data>
+  <data name="Prevention.Plans.Hint" xml:space="preserve"><value>Requested by your business customers in their customer area, within the schedule's bounds: granted right away, the same for everyone. While a payment plan runs, the invoice gets one reminder per missed instalment only.</value></data>
+  <data name="Prevention.Plans.Off" xml:space="preserve"><value>Self-service payment plans are off: turn them on in the reminder schedule to offer them in the customer area.</value></data>
+  <data name="Prevention.Plans.Empty" xml:space="preserve"><value>No payment plan</value></data>
+  <data name="Prevention.Plans.Empty.Text" xml:space="preserve"><value>Payment plans requested in the customer area will show here.</value></data>
+  <data name="Prevention.Plans.Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Prevention.Plans.WaitingOnly" xml:space="preserve"><value>Only those to review</value></data>
+  <data name="Prevention.Plans.Count" xml:space="preserve"><value>{0} payment plan(s) out of {1}</value></data>
+  <data name="Prevention.Plans.Installments" xml:space="preserve"><value>Instalments</value></data>
+  <data name="Prevention.Plans.Paid" xml:space="preserve"><value>paid</value></data>
+  <data name="Prevention.Plans.Missed" xml:space="preserve"><value>missed</value></data>
+  <data name="Prevention.Plans.Total" xml:space="preserve"><value>Amount</value></data>
+  <data name="Prevention.Plans.Left" xml:space="preserve"><value>{0} left</value></data>
+  <data name="Prevention.Plans.RequestedAt" xml:space="preserve"><value>Requested on</value></data>
+  <data name="Prevention.Plans.New" xml:space="preserve"><value>New</value></data>
+  <data name="Prevention.Plans.Acknowledge" xml:space="preserve"><value>Seen</value></data>
+  <data name="Prevention.Plans.Cancel" xml:space="preserve"><value>Stop</value></data>
+  <data name="Prevention.Plans.Cancel.Confirm" xml:space="preserve"><value>Confirm stop</value></data>
+  <data name="Prevention.Plans.Cancel.Back" xml:space="preserve"><value>Keep</value></data>
+  <data name="Prevention.Plans.Cancel.Hint" xml:space="preserve"><value>End the payment plan: the invoice goes back to its usual reminders.</value></data>
+  <data name="PlanStatus.OnTrack" xml:space="preserve"><value>On track</value></data>
+  <data name="PlanStatus.Late" xml:space="preserve"><value>Instalment missed</value></data>
+  <data name="PlanStatus.Lapsed" xml:space="preserve"><value>Not kept</value></data>
+  <data name="PlanStatus.Completed" xml:space="preserve"><value>Paid off</value></data>
+  <data name="PlanStatus.Cancelled" xml:space="preserve"><value>Stopped</value></data>
+  <data name="Prevention.Plan.Title" xml:space="preserve"><value>Payment plan</value></data>
+  <data name="Prevention.Plan.Line" xml:space="preserve"><value>Instalment {0}: {1}, on {2}</value></data>
+  <data name="Prevention.Plan.MissedLeft" xml:space="preserve"><value>missed, {0} still due</value></data>
+  <data name="Prevention.Plan.RequestedBy" xml:space="preserve"><value>Requested by {0} on {1}, in the customer area.</value></data>
+  <data name="Prevention.Plan.Effect" xml:space="preserve"><value>While the payment plan runs, the usual reminders stop: one reminder per missed instalment only. If it is not kept, the invoice goes back to its schedule.</value></data>
+  <data name="Prevention.Toast.Acknowledged" xml:space="preserve"><value>Payment plan of invoice {0} acknowledged.</value></data>
+  <data name="Prevention.Toast.Cancelled" xml:space="preserve"><value>Payment plan of invoice {0} stopped: the invoice goes back to its reminders.</value></data>
+  <data name="Prevention.Toast.Objected" xml:space="preserve"><value>{0} will no longer get a reminder before the due date.</value></data>
+  <data name="Prevention.Toast.ObjectionRemoved" xml:space="preserve"><value>Objection of {0} removed.</value></data>
+  <data name="Prevention.Settings.Title" xml:space="preserve"><value>Before it is late</value></data>
+  <data name="Prevention.Settings.BeforeDue" xml:space="preserve"><value>Send a reminder before the due date to customers with rainy or stormy weather</value></data>
+  <data name="Prevention.Settings.BeforeDueDays" xml:space="preserve"><value>Days before the due date</value></data>
+  <data name="Prevention.Settings.BeforeDue.Hint" xml:space="preserve"><value>The reminder follows automatic sending: without it, it waits to be sent from the list of reminders before the due date.</value></data>
+  <data name="Prevention.Settings.Plans" xml:space="preserve"><value>Offer self-service payment plans in the customer area (business customers)</value></data>
+  <data name="Prevention.Settings.PlanMax" xml:space="preserve"><value>Instalments at most</value></data>
+  <data name="Prevention.Settings.PlanMin" xml:space="preserve"><value>Minimum amount due (€ incl. VAT)</value></data>
+  <data name="Prevention.Settings.Plans.Hint" xml:space="preserve"><value>The same bounds for every customer, never based on a score: 2 to 3 instalments, one week to one month apart, the last one before the legal payment ceiling (60 days after issue or 45 days end of month, whichever is later). A disputed invoice is not spread.</value></data>
+  <data name="ReminderLevel.BeforeDue" xml:space="preserve"><value>Reminder before the due date</value></data>
+  <data name="ReminderLevel.MissedInstallment" xml:space="preserve"><value>Missed instalment</value></data>
+  <data name="Alerts.Rule.echeancier-a-voir" xml:space="preserve"><value>Payment plan requested by a customer, to review</value></data>
+  <data name="Error.Reminders.BeforeDueDaysInvalid" xml:space="preserve"><value>The reminder before the due date goes out 1 to 30 days before the due date.</value></data>
+  <data name="Error.Reminders.PaymentPlanBoundsInvalid" xml:space="preserve"><value>A payment plan has 2 to 3 instalments, for a minimum amount due from €0 to €1,000,000.</value></data>
+  <data name="Error.PaymentPlans.Disabled" xml:space="preserve"><value>Self-service payment plans are not offered.</value></data>
+  <data name="Error.PaymentPlans.NotProfessional" xml:space="preserve"><value>Self-service payment plans are for business customers only.</value></data>
+  <data name="Error.PaymentPlans.NothingDue" xml:space="preserve"><value>This invoice is already paid.</value></data>
+  <data name="Error.PaymentPlans.Disputed" xml:space="preserve"><value>This invoice is disputed: no payment plan.</value></data>
+  <data name="Error.PaymentPlans.AlreadyPlanned" xml:space="preserve"><value>This invoice already has a running payment plan.</value></data>
+  <data name="Error.PaymentPlans.BelowMinimum" xml:space="preserve"><value>The amount due is below the minimum set for a payment plan.</value></data>
+  <data name="Error.PaymentPlans.NoRoom" xml:space="preserve"><value>The legal payment ceiling is too close to spread this invoice.</value></data>
+  <data name="Error.PaymentPlans.InstallmentsInvalid" xml:space="preserve"><value>The number of instalments is outside the set bounds.</value></data>
+  <data name="Error.PaymentPlans.RequesterInvalid" xml:space="preserve"><value>The name of the person requesting the payment plan must be 2 to 120 characters.</value></data>
+  <data name="Error.PaymentPlans.ConsentRequired" xml:space="preserve"><value>The person's agreement is required to create the payment plan.</value></data>
+  <data name="Error.PaymentPlans.NotFound" xml:space="preserve"><value>This payment plan no longer exists.</value></data>
+  <data name="Error.PaymentPlans.AlreadyCancelled" xml:space="preserve"><value>This payment plan is already stopped.</value></data>
+</root>

@@ -91,5 +91,68 @@ public sealed class AssistantGatewayParityTests(LettraApiFactory factory) : ICla
         status.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.Api.Unreachable);
     }
 
+    [Fact]
+    public async Task Par_http_un_flux_coupe_en_route_garde_les_etapes_recues_et_se_termine_sur_indisponible()
+    {
+        string first = JsonSerializer.Serialize<AssistantEvent>(new AssistantToolUsedEvent("calculer", AssistantToolRisk.ReadOnly, true), ContractsJsonContext.Default.AssistantEvent);
+        await using ServiceProvider cut = GatewayHarness.Answering(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StreamContent(new CutStream(Encoding.UTF8.GetBytes(first + "\n"))),
+        });
+        await using ServiceProvider garbled = GatewayHarness.Answering(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(first + "\n{pas du json\n", Encoding.UTF8, "application/x-ndjson"),
+        });
+
+        List<AssistantEvent> interrupted = await AskAsync(cut, Question);
+        List<AssistantEvent> unreadable = await AskAsync(garbled, Question);
+
+        foreach (List<AssistantEvent> events in new[] { interrupted, unreadable })
+        {
+            events.Should().HaveCount(2);
+            events[0].Should().BeOfType<AssistantToolUsedEvent>();
+            events[1].Should().Be(new AssistantUnavailableEvent(ErrorCodes.Api.Unreachable));
+        }
+    }
+
     public void Dispose() => _harness.Dispose();
+
+    /// <summary>Un flux qui rend ses premiers octets puis se coupe, comme une connexion perdue au milieu de la réponse.</summary>
+    private sealed class CutStream(byte[] head) : Stream
+    {
+        private int _position;
+
+        public override bool CanRead => true;
+
+        public override bool CanSeek => false;
+
+        public override bool CanWrite => false;
+
+        public override long Length => throw new NotSupportedException();
+
+        public override long Position { get => _position; set => throw new NotSupportedException(); }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            if (_position >= head.Length)
+            {
+                throw new IOException("connexion perdue");
+            }
+
+            int read = Math.Min(count, head.Length - _position);
+            Array.Copy(head, _position, buffer, offset, read);
+            _position += read;
+            return read;
+        }
+
+        public override void Flush()
+        {
+        }
+
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+        public override void SetLength(long value) => throw new NotSupportedException();
+
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+    }
 }

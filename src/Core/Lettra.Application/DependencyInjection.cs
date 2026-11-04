@@ -29,6 +29,7 @@ public static class DependencyInjection
         services.TryAddSingleton<IAiEngineFactory, NoAiEngineFactory>();
         services.TryAddSingleton<IAiSettingsStore, NoAiSettingsStore>();
         services.TryAddSingleton(INamedEntityDetection.None);
+        services.TryAddSingleton(IAiEngineHealth.None);
         services.TryAddScoped<IAccountingAssistant, UnavailableAccountingAssistant>();
         services.TryAddScoped<IMcpServer, NoMcpServer>();
 

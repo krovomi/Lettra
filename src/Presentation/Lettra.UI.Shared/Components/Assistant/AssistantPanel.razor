@@ -13,7 +13,12 @@
             <h2 id="assistant-title">@L["Assistant.Title"]</h2>
             <button type="button" class="lettra-link" id="assistant-close" @onclick="State.Close">@L["Assistant.Close"]</button>
         </header>
-        <p class="lettra-muted">@L["Assistant.Disclaimer"]</p>
+        <p id="assistant-engine" class="lt-ai-availability" data-responding="@(State.EngineResponding ? "true" : "false")" role="status"
+           title="@(State.Engine is null ? null : string.Format(CultureInfo.CurrentCulture, L["Assistant.EngineTooltip"], State.Engine))">
+            <span class="lt-ai-dot" aria-hidden="true"></span>
+            @L[State.EngineResponding ? "Assistant.EngineResponding" : "Assistant.EnginePaused"]
+        </p>
+        <p class="lettra-muted">@L["Assistant.Disclaimer"] <a id="assistant-guide" href="ai" @onclick="State.Close">@L["Assistant.Guide"]</a></p>
         @if (!State.Offers(AssistantFeature.DraftFromText))
         {
             <p class="lettra-muted" id="assistant-draft-blocked">@L["Assistant.DraftFromTextBlocked"]</p>
@@ -76,8 +81,11 @@
                         </li>
                         break;
                     case AssistantTextEvent text:
-                        <li class="is-suggestion">
-                            <span class="lettra-assistant-label">@L["Assistant.Suggestion"]</span>
+                        @* Article 50 de l'AI Act : la mention à l'écran, la marque lisible par machine sur l'élément, le moteur en info-bulle. *@
+                        <li class="is-suggestion" data-ai-generated="@(text.AiGenerated ? "true" : "false")" data-digital-source-type="@text.DigitalSourceType" data-ai-engine="@text.Engine">
+                            <span class="lettra-assistant-label" title="@AiTooltip(text)">
+                                <Icon Name="sparkles" Size="14" /> @L["Assistant.Suggestion"]
+                            </span>
                             <div class="lettra-assistant-text">@text.Text</div>
                         </li>
                         break;
@@ -145,6 +153,7 @@
             await foreach (AssistantEvent item in gateway.AskAsync(request, _cancel.Token))
             {
                 _events.Add(item);
+                ReportEngine(item);
                 StateHasChanged();
             }
         }
@@ -162,6 +171,23 @@
     }
 
     private void Stop() => _cancel?.Cancel();
+
+    /// <summary>« IA disponible » suit la dernière réponse : un moteur qui a répondu, ou qui vient d'échouer.</summary>
+    private void ReportEngine(AssistantEvent item)
+    {
+        switch (item)
+        {
+            case AssistantCompletedEvent:
+                State.ReportEngine(responding: true);
+                break;
+            case AssistantUnavailableEvent { Code: ErrorCodes.Ai.EngineFailed or ErrorCodes.Ai.EnginePaused }:
+                State.ReportEngine(responding: false);
+                break;
+        }
+    }
+
+    private string AiTooltip(AssistantTextEvent text) =>
+        string.Format(CultureInfo.CurrentCulture, L["Assistant.SuggestionTooltip"], text.Engine ?? State.Engine ?? "?");
 
     private void OpenDraft(AssistantDraftProposedEvent draft) =>
         Navigation.NavigateTo(draft.Kind == "quote" ? $"quotes/{draft.DraftId}" : $"invoices/{draft.DraftId}");

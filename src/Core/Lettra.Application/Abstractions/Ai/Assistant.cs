@@ -34,6 +34,9 @@ public enum AiAuditKind
     Answer = 6,
     Refused = 7,
     Unavailable = 8,
+
+    /// <summary>Le moteur a échoué au milieu d'une réponse (délai, réseau, réponse illisible, disjoncteur ouvert).</summary>
+    EngineFailed = 9,
 }
 
 /// <summary>

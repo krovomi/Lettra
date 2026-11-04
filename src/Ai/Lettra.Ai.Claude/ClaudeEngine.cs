@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Anthropic;
+using Anthropic.Exceptions;
 using Anthropic.Models.Messages;
 using Lettra.Application.Abstractions.Ai;
 
@@ -21,8 +22,16 @@ public sealed class ClaudeEngine(IAnthropicClient client, ClaudeEngineOptions op
     public async Task<EngineTurn> CompleteAsync(EngineRequest request, CancellationToken cancellationToken)
     {
         MessageCreateParams parameters = BuildParameters(request);
-        Message response = await client.Messages.Create(parameters, cancellationToken).ConfigureAwait(false);
-        return ToTurn(response);
+        try
+        {
+            Message response = await client.Messages.Create(parameters, cancellationToken).ConfigureAwait(false);
+            return ToTurn(response);
+        }
+        catch (AnthropicInvalidDataException exception)
+        {
+            // Réponse reçue mais illisible : l'orchestrateur termine la réponse sans IA.
+            throw new AiEngineException(AiEngineFailure.Unreadable, "Réponse de Claude illisible.", exception);
+        }
     }
 
     /// <summary>Construit la requête : partie stable du prompt en cache, partie variable ensuite, outils stricts.</summary>

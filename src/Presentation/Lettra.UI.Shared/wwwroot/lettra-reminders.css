@@ -39,3 +39,25 @@ td:not(.lg-num) > .lt-reminders-cell { align-items: flex-start; text-align: left
     #reminders-stats .is-amount strong { font-size: var(--text-2xl); }
     .lt-reminders-delays { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 }
+
+/* Avant le retard : rappels avant échéance, échéanciers, réglages et oppositions au ciblage. */
+#reminders-upcoming, #reminders-plans { margin-top: var(--space-4); }
+#reminders-upcoming h2, #reminders-plans h2 { display: flex; align-items: center; gap: var(--space-2); margin: 0; }
+#reminders-upcoming-table tr.is-due td:first-child, #reminders-plans-table tr.is-due td:first-child { box-shadow: inset 3px 0 0 var(--color-warning-fg); }
+.lt-prevention-weather { display: inline-flex; align-items: center; gap: var(--space-1); flex-wrap: wrap; color: var(--color-fg-muted); }
+.lt-plan-lines { margin: 0; padding-left: 1.25rem; font-variant-numeric: tabular-nums; }
+.lt-plan-lines li { margin: 0.1rem 0; white-space: nowrap; }
+.lt-plan-lines li.is-paid { color: var(--color-fg-muted); }
+.lt-plan-missed { color: var(--color-danger-fg); font-weight: 600; }
+.lt-plan-confirm { display: inline-flex; gap: var(--space-1); flex-wrap: wrap; }
+.lt-prevention-title { margin: var(--space-5) 0 var(--space-2); font-size: var(--text-md, 1rem); }
+.lt-prevention-objections { margin: var(--space-4) 0; padding-top: var(--space-3); border-top: 1px solid var(--color-border); }
+.lt-prevention-objections h3 { margin: 0 0 var(--space-1); font-size: var(--text-md, 1rem); }
+.lt-prevention-objection-list { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: grid; gap: var(--space-2); }
+.lt-prevention-objection-list li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; }
+#invoice-plan h2 { display: flex; align-items: center; gap: var(--space-2); }
+#invoice-plan .lt-plan-lines li { white-space: normal; }
+
+@media (max-width: 767px) {
+    .lt-plan-lines li { white-space: normal; }
+}

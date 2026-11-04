@@ -72,6 +72,7 @@ public static class NavItems
         new("what-if", "Nav.WhatIf", "flask-conical", "Nav.Group.Accounting"),
         new("pilotage", "Nav.Pilotage", "chart-column", "Nav.Group.Settings"),
         new("alerts", "Nav.Alerts", "bell", "Nav.Group.Settings"),
+        new("ai", "Nav.Ai", "sparkles", "Nav.Group.Settings"),
         new("settings/company", "Nav.Company", "building-2", "Nav.Group.Settings", Match: NavLinkMatch.All),
         new("settings/preferences", "Nav.Preferences", "sliders-horizontal", "Nav.Group.Settings"),
         new("admin", "Nav.Admin", "shield-check", "Nav.Group.Settings", Page: AccessAreaDto.Administration),

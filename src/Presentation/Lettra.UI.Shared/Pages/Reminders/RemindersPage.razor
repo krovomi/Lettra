@@ -3,7 +3,9 @@
 @inject ToastService Toasts
 @inject IStringLocalizer<SharedResource> L
 @* Relances (vague 7) : les factures échues non soldées et leur prochain niveau, l'aperçu du texte avant l'envoi, l'envoi
-   par e-mail ou la relance notée à la main, l'envoi des relances du jour, le scénario du dossier et l'historique. *@
+   par e-mail ou la relance notée à la main, l'envoi des relances du jour, le scénario du dossier et l'historique.
+   Avant le retard : les rappels avant échéance aux clients ciblés, les échéanciers demandés dans l'espace client, leurs
+   réglages et les clients opposés au ciblage. *@
 
 <PageTitle>@L["Reminders.Title"] · Lettra</PageTitle>
 
@@ -184,6 +186,12 @@
     }
 </section>
 
+@if (_overview is not null)
+{
+    <UpcomingReminders Items="_overview.Upcoming" Settings="_overview.Settings" Busy="_busy" OnOpen="OpenUpcomingAsync" OnObject="ObjectAsync" />
+    <PaymentPlansList Items="_overview.Plans" Settings="_overview.Settings" Busy="_busy" OnAcknowledge="AcknowledgePlanAsync" OnCancel="CancelPlanAsync" />
+}
+
 <Collapsible Id="reminders-settings" Title="@L["Reminders.Settings"]" InitiallyOpen="false" Summary="@SettingsSummary">
     <p class="lettra-muted">@L["Reminders.Settings.Hint"]</p>
     <div class="lt-reminders-delays">
@@ -208,6 +216,42 @@
         <span>@L["Reminders.Settings.Auto"]</span>
     </label>
     <p class="lettra-hint">@L["Reminders.Settings.Auto.Hint"]</p>
+
+    <h3 class="lt-prevention-title">@L["Prevention.Settings.Title"]</h3>
+    <label class="lt-banking-check">
+        <input type="checkbox" id="reminders-before-due" @bind="_beforeDue" />
+        <span>@L["Prevention.Settings.BeforeDue"]</span>
+    </label>
+    <div class="lt-reminders-delays">
+        <label class="la-field">
+            <span>@L["Prevention.Settings.BeforeDueDays"]</span>
+            <span class="lt-reminders-days">
+                <span aria-hidden="true">J−</span>
+                <input id="reminders-before-due-days" type="number" min="1" max="30" inputmode="numeric" disabled="@(!_beforeDue)" @bind="_beforeDueDays" />
+            </span>
+        </label>
+    </div>
+    <p class="lettra-hint">@L["Prevention.Settings.BeforeDue.Hint"]</p>
+    <label class="lt-banking-check">
+        <input type="checkbox" id="reminders-plans-enabled" @bind="_plansEnabled" />
+        <span>@L["Prevention.Settings.Plans"]</span>
+    </label>
+    <div class="lt-reminders-delays">
+        <label class="la-field">
+            <span>@L["Prevention.Settings.PlanMax"]</span>
+            <select id="reminders-plans-max" disabled="@(!_plansEnabled)" @bind="_planMax">
+                <option value="2">2</option>
+                <option value="3">3</option>
+            </select>
+        </label>
+        <label class="la-field">
+            <span>@L["Prevention.Settings.PlanMin"]</span>
+            <input id="reminders-plans-min" type="number" min="0" max="1000000" step="0.01" inputmode="decimal" disabled="@(!_plansEnabled)" @bind="_planMin" />
+        </label>
+    </div>
+    <p class="lettra-hint">@L["Prevention.Settings.Plans.Hint"]</p>
+    <TargetingObjections Items="_overview?.Objections ?? []" Busy="_busy" OnRemove="RemoveObjectionAsync" />
+
     <div class="la-actions">
         <button type="button" class="lettra-button" id="reminders-settings-save" disabled="@_busy" @onclick="SaveSettingsAsync"><Icon Name="check" Size="18" /> @L["Reminders.Settings.Save"]</button>
     </div>
@@ -219,7 +263,7 @@
     private const int PageSize = 25;
 
     private ReminderOverviewResponse? _overview;
-    private ReminderInvoiceResponse? _selected;
+    private (Guid InvoiceId, string Number)? _selected;
     private ReminderPreviewResponse? _preview;
     private IReadOnlyList<ErrorDetail> _errors = [];
     private IReadOnlyList<ErrorDetail> _historyErrors = [];
@@ -229,6 +273,11 @@
     private readonly int[] _delays = [3, 15, 30, 45];
     private int _gap = 7;
     private bool _autoSend;
+    private bool _beforeDue;
+    private int _beforeDueDays = 3;
+    private bool _plansEnabled;
+    private int _planMax = 3;
+    private decimal _planMin = 300m;
 
     private string? _invoiceSearch;
     private bool _dueOnly;
@@ -310,7 +359,8 @@
     {
         OperationResult<ReminderOverviewResponse> result = await Reminders.GetOverviewAsync(CancellationToken.None);
         _errors = result.Errors;
-        _overview = result.Value ?? new ReminderOverviewResponse([], new ReminderSettingsResponse(false, [3, 15, 30, 45], 7, false, 0), 0);
+        _overview = result.Value ?? new ReminderOverviewResponse(
+            [], new ReminderSettingsResponse(false, [3, 15, 30, 45], 7, false, 0, new ReminderPreventionDto(false, 3, false, 3, 300m)), 0, [], [], []);
         for (int i = 0; i < Math.Min(4, _overview.Settings.Delays.Count); i++)
         {
             _delays[i] = _overview.Settings.Delays[i];
@@ -318,6 +368,9 @@
 
         _gap = _overview.Settings.MinimumGapDays;
         _autoSend = _overview.Settings.AutoSend;
+        ReminderPreventionDto prevention = _overview.Settings.Prevention;
+        (_beforeDue, _beforeDueDays, _plansEnabled, _planMax, _planMin) =
+            (prevention.BeforeDueEnabled, prevention.BeforeDueDays, prevention.PaymentPlansEnabled, prevention.PaymentPlanMaxInstallments, prevention.PaymentPlanMinimumAmount);
     }
 
     private SortOption<InvoiceSort> InvoiceColumn(InvoiceSort column) => _invoiceSortOptions.First(o => o.Column == column);
@@ -327,10 +380,14 @@
         (_invoiceSearch, _dueOnly, _invoicePage) = (null, false, 1);
     }
 
-    private async Task OpenPreviewAsync(ReminderInvoiceResponse invoice)
+    private Task OpenPreviewAsync(ReminderInvoiceResponse invoice) => OpenPreviewAsync(invoice.InvoiceId, invoice.Number);
+
+    private Task OpenUpcomingAsync(UpcomingReminderResponse upcoming) => OpenPreviewAsync(upcoming.InvoiceId, upcoming.Number);
+
+    private async Task OpenPreviewAsync(Guid invoiceId, string number)
     {
         _busy = true;
-        OperationResult<ReminderPreviewResponse> preview = await Reminders.GetPreviewAsync(invoice.InvoiceId, CancellationToken.None);
+        OperationResult<ReminderPreviewResponse> preview = await Reminders.GetPreviewAsync(invoiceId, CancellationToken.None);
         _busy = false;
         if (!preview.IsSuccess)
         {
@@ -338,7 +395,7 @@
             return;
         }
 
-        _selected = invoice;
+        _selected = (invoiceId, number);
         _preview = preview.Value;
     }
 
@@ -395,7 +452,14 @@
     {
         _busy = true;
         OperationResult<ReminderSettingsResponse> saved = await Reminders.UpdateSettingsAsync(
-            new UpdateReminderSettingsRequest { AutoSend = _autoSend, Delays = [.. _delays], MinimumGapDays = _gap }, CancellationToken.None);
+            new UpdateReminderSettingsRequest
+            {
+                AutoSend = _autoSend,
+                Delays = [.. _delays],
+                MinimumGapDays = _gap,
+                Prevention = new ReminderPreventionDto(_beforeDue, _beforeDueDays, _plansEnabled, _planMax, _planMin),
+            },
+            CancellationToken.None);
         _busy = false;
         if (saved.IsSuccess)
         {
@@ -406,6 +470,37 @@
         {
             Toasts.Show(ToastKind.Error, L.Error(saved.Errors[0].Code));
         }
+    }
+
+    private Task AcknowledgePlanAsync(PaymentPlanResponse plan) =>
+        DecidePlanAsync(() => Reminders.AcknowledgePlanAsync(plan.Id, plan.Version, CancellationToken.None), "Prevention.Toast.Acknowledged", plan);
+
+    private Task CancelPlanAsync(PaymentPlanResponse plan) =>
+        DecidePlanAsync(() => Reminders.CancelPlanAsync(plan.Id, plan.Version, CancellationToken.None), "Prevention.Toast.Cancelled", plan);
+
+    private async Task DecidePlanAsync(Func<Task<OperationResult<PaymentPlanResponse>>> decide, string toast, PaymentPlanResponse plan)
+    {
+        _busy = true;
+        OperationResult<PaymentPlanResponse> result = await decide();
+        _busy = false;
+        Toasts.Show(result.IsSuccess ? ToastKind.Success : ToastKind.Error,
+            result.IsSuccess ? string.Format(Culture, L[toast], plan.InvoiceNumber) : L.Error(result.Errors[0].Code));
+        await LoadOverviewAsync();
+    }
+
+    private Task ObjectAsync(UpcomingReminderResponse upcoming) =>
+        SetObjectionAsync(upcoming.CustomerId, true, string.Format(Culture, L["Prevention.Toast.Objected"], upcoming.CustomerName));
+
+    private Task RemoveObjectionAsync(TargetingObjectionResponse objection) =>
+        SetObjectionAsync(objection.CustomerId, false, string.Format(Culture, L["Prevention.Toast.ObjectionRemoved"], objection.CustomerName));
+
+    private async Task SetObjectionAsync(Guid customerId, bool objects, string success)
+    {
+        _busy = true;
+        OperationResult<bool> result = await Reminders.SetObjectionAsync(customerId, objects, CancellationToken.None);
+        _busy = false;
+        Toasts.Show(result.IsSuccess ? ToastKind.Success : ToastKind.Error, result.IsSuccess ? success : L.Error(result.Errors[0].Code));
+        await LoadOverviewAsync();
     }
 
     private static int ParseInt(object? value) => int.TryParse(value?.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed) ? parsed : 0;
