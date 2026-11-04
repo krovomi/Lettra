@@ -1,0 +1,16 @@
+# Démonstration complète en une seule commande : la démonstration (compose.yaml) et la télémétrie dans Grafana
+# (compose.observabilite.yaml), fusionnées exactement comme avec deux options -f.
+#
+#   docker compose -f deploy/demo/compose.complet.yaml up -d --build --wait     puis http://localhost:8080/ et :3000/
+#   docker compose -f deploy/demo/compose.complet.yaml down                     arrêt (les données restent)
+#   docker compose -f deploy/demo/compose.complet.yaml down -v                  arrêt et remise à zéro (tout)
+#
+# Même projet (lettra-demo) et mêmes volumes que les commandes à deux -f : on passe de l'une à l'autre sans rien perdre.
+# compose.observabilite.yaml complète le service api de compose.yaml : une inclusion simple refuserait ce service en
+# double, d'où la liste ci-dessous, fusionnée dans l'ordre (le second fichier complète le premier).
+name: lettra-demo
+
+include:
+  - path:
+      - compose.yaml
+      - compose.observabilite.yaml

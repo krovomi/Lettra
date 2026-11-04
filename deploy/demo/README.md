@@ -199,6 +199,14 @@ ajouter `compose.observabilite.yaml` aux commandes de la démonstration :
 docker compose -f deploy/demo/compose.yaml -f deploy/demo/compose.observabilite.yaml up -d --build --wait
 ```
 
+Ou, plus court, `compose.complet.yaml`, qui inclut ces deux fichiers (même résultat, même projet, mêmes volumes) :
+
+```bash
+docker compose -f deploy/demo/compose.complet.yaml up -d --build --wait    # démarrer
+docker compose -f deploy/demo/compose.complet.yaml down                    # arrêter (les données restent)
+docker compose -f deploy/demo/compose.complet.yaml down -v                 # arrêter et tout effacer
+```
+
 Puis ouvrir **http://localhost:3000/** : Grafana s'ouvre sans connexion, en lecture seule, sur « Lettra · Activité ».
 Les six tableaux de bord sont dans le dossier **Lettra** (menu *Dashboards*), et le bandeau de chacun mène aux autres.
 

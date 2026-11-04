@@ -170,6 +170,8 @@ Loki, comme dans une cellule) :
 
 ```bash
 docker compose -f deploy/demo/compose.yaml -f deploy/demo/compose.observabilite.yaml up -d --build --wait
+# ou, en une seule option -f (même chose) :
+docker compose -f deploy/demo/compose.complet.yaml up -d --build --wait
 ```
 
 Puis **http://localhost:3000/**, sans connexion : six tableaux de bord dans le dossier « Lettra ». Trois pour piloter :

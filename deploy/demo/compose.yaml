@@ -10,6 +10,7 @@
 #
 # Données et secrets FICTIFS, réservés à la démonstration (.env) : ne jamais réutiliser en production.
 # Accès depuis un téléphone (HTTPS sur le réseau local) : compose.lan.yaml, voir README.md.
+# Avec la télémétrie dans Grafana, en une seule option -f : compose.complet.yaml (ce fichier + compose.observabilite.yaml).
 #
 # Voix (dictée et commandes) : le conteneur whisper (serveur whisper.cpp, local) télécharge son modèle (142 Mio) au
 # premier démarrage dans le volume whisper-modeles. L'API démarre sans l'attendre ; la transcription répond 503 tant
