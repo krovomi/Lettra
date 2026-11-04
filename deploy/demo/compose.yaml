@@ -207,7 +207,7 @@ services:
   # Boîte aux lettres de la démonstration : reçoit tout ce que Lettra envoie et ne relaie rien. Seule l'interface web
   # est publiée (http://localhost:8025) ; le port SMTP reste sur le réseau Docker.
   mailpit:
-    image: axllent/mailpit:v1.27
+    image: axllent/mailpit:v1.33
     restart: unless-stopped
     ports:
       - "127.0.0.1:${LETTRA_DEMO_MAILPIT_PORT:-8025}:8025"

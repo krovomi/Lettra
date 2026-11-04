@@ -20,3 +20,6 @@ deploy/tests/k6/sortie/
 deploy/tests/zap/sortie/
 deploy/tests/grafana/sortie/
 .session-k6/
+
+# WorkPilot AI local files
+.workpilot/.env
