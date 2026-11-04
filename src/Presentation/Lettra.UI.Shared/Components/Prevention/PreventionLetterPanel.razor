@@ -1,0 +1,163 @@
+@inject IPreventionGateway Gateway
+@inject ToastService Toasts
+@inject ILetterPdfRenderer Letters
+@inject IFileDownloader Files
+@inject IJSRuntime JS
+@inject IStringLocalizer<SharedResource> L
+
+@* Le courrier type « proposition de rendez-vous de prévention » : préparé par le serveur sans IA (sujets en termes
+   neutres, jamais le niveau d'attention ni un chiffre), relu et modifié ici, puis envoyé par e-mail, téléchargé en PDF
+   ou copié. Rien ne part sans un clic du collaborateur. *@
+
+<div class="lt-prevention-letter" id="prevention-letter">
+    @if (_letter is null)
+    {
+        <p class="lettra-muted">@L["Prevention.Letter.Hint"]</p>
+        <div class="la-actions">
+            <div class="lt-filter">
+                <label for="prevention-letter-language">@L["Prevention.Letter.Language"]</label>
+                <select id="prevention-letter-language" @bind="_language">
+                    <option value="fr-FR">@L["Prevention.Letter.Language.French"]</option>
+                    <option value="en-US">@L["Prevention.Letter.Language.English"]</option>
+                </select>
+            </div>
+            <button type="button" class="lettra-button" id="prevention-letter-prepare" disabled="@_busy" aria-busy="@(_busy ? "true" : "false")" @onclick="PrepareAsync">
+                <Icon Name="file-pen-line" Size="18" /> @L["Prevention.Letter.Prepare"]
+            </button>
+        </div>
+    }
+    else
+    {
+        @if (!_letter.CanSend)
+        {
+            <p class="lt-prevention-note" id="prevention-letter-no-email"><Icon Name="info" Size="16" /> @L["Prevention.Letter.NoEmail"]</p>
+        }
+        <div class="lt-prevention-letter-fields">
+            @if (_letter.CanSend)
+            {
+                <label class="la-field">
+                    <span>@L["Prevention.Letter.To"]</span>
+                    <input id="prevention-letter-to" type="email" autocomplete="off" inputmode="email" @bind="_model.To" />
+                    <FieldErrors Field="@nameof(SendPreventionLetterRequest.To)" ServerErrors="_errors" />
+                </label>
+            }
+            <label class="la-field">
+                <span>@L["Prevention.Letter.Subject"]</span>
+                <input id="prevention-letter-subject" maxlength="@SendPreventionLetterRequest.MaxSubjectLength" @bind="_model.Subject" />
+                <FieldErrors Field="@nameof(SendPreventionLetterRequest.Subject)" ServerErrors="_errors" />
+            </label>
+            <label class="la-field">
+                <span>@L["Prevention.Letter.Body"]</span>
+                <textarea id="prevention-letter-body" rows="14" maxlength="@SendPreventionLetterRequest.MaxBodyLength" @bind="_model.Body"></textarea>
+                <FieldErrors Field="@nameof(SendPreventionLetterRequest.Body)" ServerErrors="_errors" />
+            </label>
+        </div>
+        <p class="lettra-hint">@L["Prevention.Letter.Review"]</p>
+        <div class="la-actions">
+            @if (_letter.CanSend)
+            {
+                <button type="button" class="lettra-button" id="prevention-letter-send" disabled="@_busy" aria-busy="@(_busy ? "true" : "false")" @onclick="SendAsync">
+                    <Icon Name="send" Size="18" /> @L["Prevention.Letter.Send"]
+                </button>
+            }
+            <button type="button" class="lettra-button is-secondary" id="prevention-letter-pdf" disabled="@_busy" @onclick="DownloadAsync">
+                <Icon Name="download" Size="18" /> @L["Prevention.Letter.Pdf"]
+            </button>
+            <button type="button" class="lettra-button is-ghost" id="prevention-letter-copy" @onclick="CopyAsync">
+                <Icon Name="copy" Size="18" /> @L["Prevention.Letter.Copy"]
+            </button>
+            <button type="button" class="lettra-button is-ghost" id="prevention-letter-reset" disabled="@_busy" @onclick="PrepareAsync">
+                <Icon Name="undo-2" Size="18" /> @L["Prevention.Letter.Reset"]
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    private PreventionLetterResponse? _letter;
+    private SendPreventionLetterRequest _model = new();
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private string _language = "fr-FR";
+    private bool _busy;
+
+    /// <summary>Le jour du calcul du radar : la date du courrier en PDF.</summary>
+    [Parameter, EditorRequired] public DateOnly Today { get; set; }
+
+    private async Task PrepareAsync()
+    {
+        _busy = true;
+        try
+        {
+            OperationResult<PreventionLetterResponse> loaded = await Gateway.GetLetterAsync(_language, CancellationToken.None);
+            if (loaded is not { IsSuccess: true, Value: { } letter })
+            {
+                Toasts.Show(ToastKind.Error, L.Error(loaded.Errors[0].Code));
+                return;
+            }
+
+            _letter = letter;
+            _model = new SendPreventionLetterRequest { To = _model.To, Subject = letter.Subject, Body = letter.Body };
+            _errors = [];
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task SendAsync()
+    {
+        _busy = true;
+        try
+        {
+            OperationResult<bool> sent = await Gateway.SendLetterAsync(_model, CancellationToken.None);
+            if (sent.IsSuccess)
+            {
+                _errors = [];
+                Toasts.Show(ToastKind.Success, string.Format(CultureInfo.CurrentCulture, L["Prevention.Letter.Sent"], _model.To?.Trim()));
+                return;
+            }
+
+            _errors = sent.Errors;
+            Toasts.Show(ToastKind.Error, L.Error(sent.Errors[0].Code));
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task DownloadAsync()
+    {
+        if (_letter is null)
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            byte[] pdf = Letters.Render(PreventionLetterPdf.Compose(_letter.Language, _letter.Company, _model.Subject ?? string.Empty, _model.Body ?? string.Empty, Today));
+            await Files.DownloadAsync(PreventionLetterPdf.FileName(Today), "application/pdf", pdf, CancellationToken.None);
+            Toasts.Show(ToastKind.Success, L["Prevention.Letter.Downloaded"]);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task CopyAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", $"{_model.Subject}\n\n{_model.Body}");
+            Toasts.Show(ToastKind.Success, L["Prevention.Letter.Copied"]);
+        }
+        catch (JSException)
+        {
+            // Presse-papiers refusé (page non sécurisée, autorisation) : le texte reste sélectionnable dans le champ.
+            Toasts.Show(ToastKind.Warning, L["Prevention.Letter.CopyFailed"]);
+        }
+    }
+}

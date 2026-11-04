@@ -164,6 +164,8 @@
   <data name="Demo.cabinet.Summary" xml:space="preserve"><value>The accountant's view across all dossiers.</value></data>
   <data name="Demo.cabinet.overview.Title" xml:space="preserve"><value>The firm overview</value></data>
   <data name="Demo.cabinet.overview.Text" xml:space="preserve"><value>Let's switch viewpoint: this is the accountant's screen. All the dossiers the firm looks after are gathered here, with what needs attention: late invoices, VAT to file, bank to reconcile.</value></data>
+  <data name="Demo.cabinet.prevention.Title" xml:space="preserve"><value>The prevention radar</value></data>
+  <data name="Demo.cabinet.prevention.Text" xml:space="preserve"><value>The firm also spots businesses that could soon run short of cash: a balance that drops below zero, customers paying later and later, VAT heavier than the money coming in. Each dossier gets a level (calm, watch, call the client) worked out by simple rules, with no artificial intelligence. It helps decide whether to call the owner: the radar decides nothing and is never shown to the client.</value></data>
   <data name="Demo.cabinet.pilotage.Title" xml:space="preserve"><value>Dashboards</value></data>
   <data name="Demo.cabinet.pilotage.Text" xml:space="preserve"><value>Simple indicators to steer the business, such as how long customers take to pay on average or the share of quotes accepted. Everyone only sees the dossiers they are allowed to.</value></data>
   <data name="Demo.end.Title" xml:space="preserve"><value>What next?</value></data>

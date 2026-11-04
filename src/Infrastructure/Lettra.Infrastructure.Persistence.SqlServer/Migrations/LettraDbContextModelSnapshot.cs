@@ -2009,6 +2009,56 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                     b.ToTable("QuoteSignatures", (string)null);
                 });
 
+            modelBuilder.Entity("Lettra.Domain.Prevention.PreventionSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("BilledCollectedGapPercent")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CallSignalCount")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("CashBalance")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateOnly?>("CashBalanceOn")
+                        .HasColumnType("date");
+
+                    b.Property<string>("DisabledSignals")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<int>("PaymentDelayRiseDays")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PeerGapPoints")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TopCustomerSharePercent")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TreasuryHorizonWeeks")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PreventionSettings", (string)null);
+                });
+
             modelBuilder.Entity("Lettra.Domain.Pricing.PriceList", b =>
                 {
                     b.Property<Guid>("Id")

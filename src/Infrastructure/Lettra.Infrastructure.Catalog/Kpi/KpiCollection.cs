@@ -4,6 +4,7 @@ using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Kpi;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Features.Kpi;
+using Lettra.Contracts.Cabinet;
 using Lettra.Domain.SharedKernel;
 using Lettra.Infrastructure.Persistence.Catalog;
 using Lettra.Infrastructure.Persistence.Integrity;
@@ -216,7 +217,8 @@ internal sealed class CatalogKpiSource(IDbContextFactory<CatalogDbContext> catal
         foreach (StoredDossierIndicators stored in await indicators.ReadAsync(dossiers, cancellationToken).ConfigureAwait(false))
         {
             samples.Add(new KpiSample(KpiMetrics.CabinetIndicatorAge, Math.Max(0, (now - stored.ComputedAt).TotalSeconds), stored.Dossier));
-            foreach (DossierIndicator indicator in stored.Indicators)
+            // Les clés réservées (le radar de prévention) ne sortent jamais vers Prometheus et Grafana, qui n'ont pas de droits par dossier.
+            foreach (DossierIndicator indicator in stored.Indicators.Where(i => !DossierIndicatorKeys.Restricted.Contains(i.Key)))
             {
                 KpiLabel key = new(KpiMetrics.Labels.Key, indicator.Key);
                 samples.Add(new KpiSample(KpiMetrics.CabinetIndicatorCount, indicator.Count, stored.Dossier, key));

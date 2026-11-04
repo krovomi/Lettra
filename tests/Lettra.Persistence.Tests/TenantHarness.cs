@@ -2,6 +2,7 @@ using Lettra.Application;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Integrity;
 using Lettra.Application.Abstractions.Tenancy;
+using Lettra.Contracts.Dossiers;
 using Lettra.Domain.SharedKernel;
 using Lettra.Exports.Infrastructure;
 using Lettra.Infrastructure.Persistence;
@@ -51,7 +52,9 @@ internal sealed class TenantHarness : IAsyncDisposable
         }
 
         services.AddSingleton(configurator);
-        services.AddSingleton<ITenantCatalog>(new Catalog(_dossiers));
+        Catalog catalog = new(_dossiers);
+        services.AddSingleton<ITenantCatalog>(catalog);
+        services.AddSingleton<IDossierDirectory>(catalog);
         services.AddSingleton<ISecretStore>(new Secrets(_dossiers));
         services.AddSingleton<ICurrentUser, User>();
         services.AddSingleton<IPermissionService, AllPermissions>();
@@ -109,8 +112,13 @@ internal sealed class TenantHarness : IAsyncDisposable
         public DossierId? RequestedDossier { get; set; }
     }
 
-    private sealed class Catalog(Dictionary<DossierId, (TenantDescriptor Descriptor, string ConnectionString)> dossiers) : ITenantCatalog
+    /// <summary>Le registre des dossiers de test ; le radar de prévention y cherche les pairs du même cabinet.</summary>
+    private sealed class Catalog(Dictionary<DossierId, (TenantDescriptor Descriptor, string ConnectionString)> dossiers) : ITenantCatalog, IDossierDirectory
     {
+        public Task<IReadOnlyList<DossierSummary>> ListAsync(OrganisationId organisation, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<DossierSummary>>(
+                [.. dossiers.Values.Where(d => d.Descriptor.OrganisationId == organisation).Select(d => new DossierSummary(d.Descriptor.DossierId.Value, d.Descriptor.DossierId.ToString()))]);
+
         public ValueTask<TenantDescriptor?> FindAsync(DossierId dossierId, CancellationToken cancellationToken) =>
             ValueTask.FromResult(dossiers.TryGetValue(dossierId, out var entry) ? entry.Descriptor : null);
 

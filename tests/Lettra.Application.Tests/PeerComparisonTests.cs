@@ -128,13 +128,13 @@ public sealed class PeerComparisonTests
         new GetPeerComparisonQuery(Dossier).Permission.Should().Be(Permission.DossierLire);
     }
 
-    private static PeerComparisonHandler Handler(CompanyProfile profile, IKpiSnapshotProvider? snapshot, IReadOnlyList<DossierSummary> cabinet) => new(
+    private static PeerComparisonHandler Handler(CompanyProfile profile, IKpiSnapshotProvider? snapshot, IReadOnlyList<DossierSummary> cabinet) => new(new DossierPeerComparison(
         new Profiles(profile),
         new NoSales(),
         new FakeTenantContext { Descriptor = new TenantDescriptor(Dossier, Cabinet, DatabaseProvider.Sqlite, "config:test") },
         new Directory(cabinet),
         snapshot is null ? [] : [snapshot],
-        TimeProvider.System);
+        TimeProvider.System));
 
     private static KpiSample[] Peer(int division, double dso, double? overdue = null, double? collection = null, DossierId? id = null)
     {

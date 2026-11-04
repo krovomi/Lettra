@@ -33,20 +33,20 @@ public sealed class CompanyKpiSource(ICompanyProfileRepository profiles) : IDoss
 }
 
 /// <summary>
-/// Le secteur vient de la fiche entreprise du dossier, ses valeurs sont calculées à l'instant (comme son tableau de
-/// bord) ; les pairs sont lus dans la dernière collecte, parmi les dossiers du même cabinet.
+/// La comparaison du dossier ouvert à ses pairs, partagée par l'écran des tableaux de bord et le radar de prévention. Le
+/// secteur vient de la fiche entreprise du dossier, ses valeurs sont calculées à l'instant (comme son tableau de bord) ;
+/// les pairs sont lus dans la dernière collecte, parmi les dossiers du même cabinet.
 /// </summary>
-internal sealed class PeerComparisonHandler(
+public sealed class DossierPeerComparison(
     ICompanyProfileRepository profiles,
     IBillingKpiReader billing,
     ITenantContext tenant,
     IDossierDirectory directory,
     IEnumerable<IKpiSnapshotProvider> snapshots,
-    TimeProvider clock) : IQueryHandler<GetPeerComparisonQuery, Result<PeerComparisonResponse>>
+    TimeProvider clock)
 {
-    public async Task<Result<PeerComparisonResponse>> HandleAsync(GetPeerComparisonQuery query, CancellationToken cancellationToken)
+    public async Task<PeerComparisonResponse> CompareAsync(DossierId dossier, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(query);
         string? code = (await profiles.FindAsync(cancellationToken).ConfigureAwait(false))?.ActivityCode;
         if (code is null)
         {
@@ -62,8 +62,17 @@ internal sealed class PeerComparisonHandler(
         IReadOnlyList<DossierSummary> cabinet = await directory.ListAsync(tenant.Current.OrganisationId, cancellationToken).ConfigureAwait(false);
         BillingKpiFacts facts = await billing.ReadAsync(cancellationToken).ConfigureAwait(false);
         IReadOnlyList<KpiSample> own = BillingKpiCalculator.Compute(facts, LegalCalendar.DateOf(clock.GetUtcNow()));
-        HashSet<Guid> others = [.. cabinet.Select(d => d.Id).Where(id => id != query.Dossier.Value)];
+        HashSet<Guid> others = [.. cabinet.Select(d => d.Id).Where(id => id != dossier.Value)];
         return PeerBenchmark.Compare(code, own, snapshot.CollectedAt, snapshot.Samples.Where(s => s.Dossier is { } id && others.Contains(id.Value)));
+    }
+}
+
+internal sealed class PeerComparisonHandler(DossierPeerComparison comparison) : IQueryHandler<GetPeerComparisonQuery, Result<PeerComparisonResponse>>
+{
+    public async Task<Result<PeerComparisonResponse>> HandleAsync(GetPeerComparisonQuery query, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+        return await comparison.CompareAsync(query.Dossier, cancellationToken).ConfigureAwait(false);
     }
 }
 

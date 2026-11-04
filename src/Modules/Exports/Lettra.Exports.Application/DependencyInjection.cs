@@ -21,6 +21,7 @@ using Lettra.Exports.Application.EInvoicing.Platform;
 using Lettra.Exports.Application.EInvoicing.Reception;
 using Lettra.Exports.Application.Fec;
 using Lettra.Exports.Application.Insights;
+using Lettra.Exports.Application.Insights.Prevention;
 using Lettra.Exports.Application.Portal;
 using Lettra.Exports.Application.Reminders;
 using Lettra.Exports.Application.Tax;
@@ -67,6 +68,15 @@ public static class DependencyInjection
         services.AddScoped<IQueryHandler<SimulateWhatIfQuery, Result<WhatIfResponse>>, SimulateWhatIfHandler>();
         services.AddScoped<IQueryHandler<GetEInvoicingReadinessQuery, Result<EInvoicingReadinessResponse>>, GetEInvoicingReadinessHandler>();
         services.AddScoped<IDossierIndicatorSource, EInvoicingReadinessIndicatorSource>();
+
+        // Radar de prévention des difficultés (côté cabinet) : règles en C#, aucune IA.
+        services.AddScoped<PreventionRadarReader>();
+        services.AddScoped<IQueryHandler<GetPreventionRadarQuery, Result<PreventionRadarResponse>>, GetPreventionRadarHandler>();
+        services.AddScoped<IQueryHandler<GetPreventionSummaryQuery, Result<PreventionSummaryResponse>>, GetPreventionSummaryHandler>();
+        services.AddScoped<ICommandHandler<UpdatePreventionSettingsCommand, Result<PreventionSettingsResponse>>, UpdatePreventionSettingsHandler>();
+        services.AddScoped<IQueryHandler<GetPreventionLetterQuery, Result<PreventionLetterResponse>>, GetPreventionLetterHandler>();
+        services.AddScoped<ICommandHandler<SendPreventionLetterCommand, Result>, SendPreventionLetterHandler>();
+        services.AddScoped<IDossierIndicatorSource, PreventionIndicatorSource>();
 
         // Les mêmes éclairages pour l'assistant IA du poste (MCP), en lecture seule et avec les droits de l'utilisateur.
         services.AddScoped<IAiTool, PaymentWeatherTool>();

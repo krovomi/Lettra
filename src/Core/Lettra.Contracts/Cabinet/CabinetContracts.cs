@@ -77,9 +77,23 @@ public static class DossierIndicatorKeys
     /// </summary>
     public const string Thresholds = "seuils.proches";
 
+    /// <summary>
+    /// Radar de prévention des difficultés : compteur = signaux allumés, urgence = niveau d'attention (à surveiller,
+    /// à appeler), échéance = la plus proche des signaux. Ni montant, ni nom, ni quel signal : le détail se calcule dans
+    /// le dossier. Réservé à qui a <c>PreventionConsulter</c> sur le dossier (voir <see cref="Restricted"/>).
+    /// </summary>
+    public const string Prevention = "prevention.radar";
+
     /// <summary>Ordre des colonnes du tableau (les clés inconnues suivent, par ordre alphabétique).</summary>
     public static IReadOnlyList<string> Known { get; } =
-        [DecisionsPending, OverdueInvoices, PlatformRejections, EInvoicingReadiness, VatToDeclare, FeeReturn, Thresholds, BankUnreconciled, SupplierIbanToVerify, SupplierAttestations, ThirdPartiesToReview, ClientDueDiligence, OpenAlerts, ReviewPending];
+        [DecisionsPending, OverdueInvoices, PlatformRejections, EInvoicingReadiness, VatToDeclare, FeeReturn, Thresholds, BankUnreconciled, SupplierIbanToVerify, SupplierAttestations, ThirdPartiesToReview, ClientDueDiligence, Prevention, OpenAlerts, ReviewPending];
+
+    /// <summary>
+    /// Les clés qu'un utilisateur ne voit que s'il a la permission de lecture propre à leur module sur le dossier : la vue
+    /// cabinet et le « reste à faire » des tableaux de bord les retirent pour les autres, la collecte des indicateurs
+    /// (Grafana) ne les publie jamais.
+    /// </summary>
+    public static IReadOnlySet<string> Restricted { get; } = new HashSet<string>(StringComparer.Ordinal) { Prevention };
 }
 
 /// <summary>Urgence d'un indicateur : décide de la couleur et de l'ordre des dossiers.</summary>

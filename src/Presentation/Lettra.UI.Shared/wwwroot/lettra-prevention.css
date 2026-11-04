@@ -1,0 +1,71 @@
+/* Radar de prévention des difficultés : liste du cabinet, écran du dossier, carte de l'accueil. Téléphone d'abord ;
+   tablette dès 768px, bureau dès 1200px. Le ton (calme, à surveiller, à appeler, gris) vient de data-tone et donne les
+   couleurs par les jetons ; aucune couleur écrite en dur. */
+
+[data-tone] { --lt-tone-fg: var(--color-neutral-fg); --lt-tone-bg: var(--color-neutral-bg); --lt-tone-line: var(--color-border); }
+[data-tone="Calm"] { --lt-tone-fg: var(--color-success-fg); --lt-tone-bg: var(--color-success-bg); --lt-tone-line: var(--color-success); }
+[data-tone="Watch"] { --lt-tone-fg: var(--color-warning-fg); --lt-tone-bg: var(--color-warning-bg); --lt-tone-line: var(--color-warning); }
+[data-tone="Call"] { --lt-tone-fg: var(--color-danger-fg); --lt-tone-bg: var(--color-danger-bg); --lt-tone-line: var(--color-danger); }
+
+.lt-prevention-badge { display: inline-flex; align-items: center; gap: 0.35em; padding: 0 var(--space-2); border-radius: var(--radius-full); background: var(--lt-tone-bg); color: var(--lt-tone-fg); font-size: var(--text-xs); font-weight: var(--weight-bold); line-height: 1.6; white-space: nowrap; }
+.lt-prevention-badge::before { content: ""; width: 0.4rem; height: 0.4rem; border-radius: var(--radius-full); background: currentColor; }
+.lt-prevention-note { display: flex; align-items: flex-start; gap: var(--space-2); margin: 0 0 var(--space-4); color: var(--color-fg-muted); font-size: var(--text-sm); }
+.lt-prevention-note svg { flex: none; margin-top: 0.15em; }
+
+/* Liste du cabinet : un chiffre clé par niveau, puis le tableau (cartes sur téléphone, liseré du ton à gauche). */
+.lt-prevention-kpi .lt-kpi-icon { background: var(--lt-tone-bg); color: var(--lt-tone-fg); }
+.lt-prevention-panel .lt-list-filters .lt-filter:has(input[type=search]) { flex: 0 1 22rem; }
+.lt-prevention-table tbody tr { box-shadow: inset 3px 0 0 var(--lt-tone-line); }
+.lt-prevention-table .lt-cabinet-avatar { background: var(--lt-tone-bg); color: var(--lt-tone-fg); }
+.lt-prevention-table .lt-col-actions { white-space: nowrap; text-align: right; }
+
+/* Écran du dossier : le niveau en bandeau, puis une carte par signal. */
+.lt-prevention-head { display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-3); border-left: 4px solid var(--lt-tone-line); }
+.lt-prevention-head h2 { margin: 0 0 var(--space-1); color: var(--lt-tone-fg); }
+.lt-prevention-head p { margin: 0 0 var(--space-1); }
+.lt-prevention-level-icon { display: inline-grid; place-items: center; flex: none; width: 3.5rem; height: 3.5rem; border-radius: var(--radius-full); background: var(--lt-tone-bg); color: var(--lt-tone-fg); }
+.lt-prevention-signals { list-style: none; margin: 0 0 var(--space-4); padding: 0; display: grid; gap: var(--space-3); grid-template-columns: minmax(0, 1fr); }
+.lt-prevention-signal { margin: 0; display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; border-left: 4px solid var(--lt-tone-line); }
+.lt-prevention-signal[data-tone="Muted"] { border-left-color: var(--color-border); }
+.lt-prevention-signal-head { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.lt-prevention-signal-head h3 { flex: 1; min-width: 10rem; margin: 0; font-size: var(--text-base); }
+.lt-prevention-signal-icon { display: inline-grid; place-items: center; flex: none; width: 2.5rem; height: 2.5rem; border-radius: var(--radius-md); background: var(--lt-tone-bg); color: var(--lt-tone-fg); }
+.lt-prevention-sentence { margin: 0; overflow-wrap: anywhere; }
+.lt-prevention-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: var(--space-2) var(--space-3); margin: 0; }
+.lt-prevention-facts dt { color: var(--color-fg-muted); font-size: var(--text-sm); }
+.lt-prevention-facts dd { margin: 0; font-weight: var(--weight-bold); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.lt-prevention-details summary { cursor: pointer; min-height: var(--hit); display: flex; align-items: center; color: var(--color-primary); font-size: var(--text-sm); font-weight: var(--weight-medium); }
+.lt-prevention-mini { font-size: var(--text-sm); }
+.lt-prevention-mini th[scope="row"] { font-weight: var(--weight-regular); text-transform: none; letter-spacing: normal; white-space: nowrap; }
+.lt-prevention-mini tr.is-negative td:last-child { color: var(--color-danger-fg); font-weight: var(--weight-bold); }
+.lt-prevention-parties { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-1); font-size: var(--text-sm); }
+.lt-prevention-parties li { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-3); }
+.lt-prevention-parties li a { flex: 1; min-width: 8rem; overflow-wrap: anywhere; }
+.lt-prevention-action { align-self: flex-start; }
+
+/* Seuils et courrier : champs empilés sur téléphone, en grille dès qu'il y a la place. */
+.lt-prevention-settings, .lt-prevention-letter { display: grid; gap: var(--space-3); }
+.lt-prevention-fieldset { margin: 0; padding: 0; border: 0; display: grid; gap: var(--space-2); }
+.lt-prevention-fieldset legend { margin-bottom: var(--space-2); padding: 0; font-weight: var(--weight-bold); }
+.lt-prevention-fields { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); align-items: start; }
+.lt-prevention-checks { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.lt-prevention-checks .lt-chip { min-height: var(--hit); }
+.lt-prevention-letter-fields { display: grid; gap: var(--space-3); }
+.lt-prevention-letter textarea { width: 100%; min-height: 16rem; resize: vertical; font: inherit; line-height: 1.5; }
+.lt-prevention-letter .lt-filter select { min-height: var(--hit); }
+
+/* Carte de l'accueil. */
+.lt-prevention-card { border-left: 4px solid var(--lt-tone-line); margin-bottom: var(--space-5); }
+.lt-prevention-card h2 { display: inline-flex; align-items: center; gap: var(--space-2); }
+.lt-prevention-card-level { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); margin: 0 0 var(--space-2); }
+.lt-prevention-card-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.lt-prevention-card-list li { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-2); border-radius: var(--radius-md); background: var(--color-surface-2); font-size: var(--text-sm); }
+
+@media (min-width: 768px) {
+    .lt-prevention-signals { grid-template-columns: repeat(auto-fill, minmax(min(100%, 24rem), 1fr)); }
+}
+
+@media (max-width: 639.98px) {
+    .lt-prevention-head { flex-direction: column; align-items: flex-start; }
+    .lt-prevention-action, .lt-prevention-settings .la-actions .lettra-button, .lt-prevention-letter .la-actions .lettra-button { width: 100%; justify-content: center; }
+}

@@ -21,6 +21,7 @@
 @import url("lettra-quote-follow-ups.css");
 @import url("lettra-ia.css");
 @import url("lettra-thresholds.css");
+@import url("lettra-prevention.css");
 
 /* Alias historiques : les composants et la grille écrits avant les jetons les lisent encore. */
 :root {

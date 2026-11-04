@@ -130,6 +130,24 @@ public sealed class DemoDataTests : IDisposable
         DemoScenarioGenerator.Generate(DemoBusiness.Trading, 2026, Today).Profile.ActivityCode.Should().Be("46.39B");
     }
 
+    [Theory]
+    [InlineData(true, -9_000, 4_500)]
+    [InlineData(true, 2_000, 1_500)]
+    [InlineData(false, -9_040, 21_000)]
+    [InlineData(false, 2_000, 12_000)]
+    public void Le_solde_du_radar_est_juste_pour_le_dossier_principal_et_confortable_ailleurs(bool tight, int trough, int expected)
+    {
+        PreventionWeekDto[] flows =
+        [
+            new(Today, 1_000m, 0m, 1_000m),
+            new(Today.AddDays(7), 0m, 1_000m + Math.Max(0, -trough), Math.Min(trough, 0)),
+            new(Today.AddDays(14), Math.Max(trough, 0), 0m, Math.Max(trough, 0)),
+        ];
+
+        DemoPreventionLoader.CashBalance(flows, tight).Should().Be(expected);
+        DemoPreventionLoader.CashBalance([], tight).Should().Be(tight ? 1_500m : DemoPreventionLoader.ComfortMargin);
+    }
+
     [Fact]
     public async Task Le_jeu_se_charge_par_les_cas_d_usage_dans_les_trois_dossiers_du_poste()
     {
@@ -238,6 +256,14 @@ public sealed class DemoDataTests : IDisposable
         group.Gaps.Should().Equal(IntercompanyGapDto.SupplierIbanDiffers, IntercompanyGapDto.PaidNotSeen, IntercompanyGapDto.SeenNotPaid, IntercompanyGapDto.TotalsDiffer);
         group.Invoices.Select(i => i.SeenAtBuyer).Should().Equal(true, false, true);
 
+        // Le radar de prévention a un solde bancaire : la trésorerie des prochaines semaines s'évalue (les signaux allumés
+        // dépendent du jour du tirage).
+        IPreventionGateway prevention = app.GetRequiredService<IPreventionGateway>();
+        PreventionRadarResponse radar = (await prevention.GetRadarAsync(default)).Value!;
+        radar.Settings.CashBalance.Should().NotBeNull();
+        radar.Settings.CashBalanceOn.Should().Be(today);
+        radar.Signals.Single(s => s.Signal == PreventionSignalDto.Treasury).State.Should().NotBe(PreventionSignalStateDto.NotEvaluated);
+
         // L'échéancier en libre-service de l'espace client est proposé, avec les bornes par défaut.
         IRemindersGateway reminders = app.GetRequiredService<IRemindersGateway>();
         ReminderSettingsResponse offered = (await reminders.GetOverviewAsync(default)).Value!.Settings;
@@ -246,10 +272,11 @@ public sealed class DemoDataTests : IDisposable
             new UpdateReminderSettingsRequest { Delays = offered.Delays, MinimumGapDays = offered.MinimumGapDays, Prevention = offered.Prevention with { PaymentPlansEnabled = false } },
             default)).IsSuccess.Should().BeTrue();
 
-        // Une seconde demande ne mélange rien : le dossier a déjà des pièces, le groupe ses factures, le scénario de
-        // relance réglé à la main reste comme il est.
+        // Une seconde demande ne mélange rien : le dossier a déjà des pièces, le groupe ses factures, le radar ses seuils
+        // et le scénario de relance réglé à la main reste comme il est.
         (await LettraDemoData.SeedAsync(configuration, "Demo", s => s.AddSingleton<IKekStore>(keys), user)).Status.Should().Be(DemoSeedStatus.DossierNotEmpty);
         (await cabinet.GetIntercompanyAsync(default)).Value!.Pairs.Should().ContainSingle().Which.Invoices.Should().HaveCount(3);
+        (await prevention.GetRadarAsync(default)).Value!.Settings.Version.Should().Be(radar.Settings.Version, "un solde posé n'est jamais remplacé");
         (await reminders.GetOverviewAsync(default)).Value!.Settings.Prevention.PaymentPlansEnabled.Should().BeFalse();
     }
 

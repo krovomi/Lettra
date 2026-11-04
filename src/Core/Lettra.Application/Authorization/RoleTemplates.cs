@@ -37,6 +37,9 @@ public static class RoleTemplates
         // Il relève les factures fournisseurs reçues par la plateforme et y répond (litige, refus, paiement transmis).
         Permission.FacturesRecuesTraiter,
 
+        // Il voit le radar de prévention du client et lui propose un rendez-vous ; qui valide les factures en règle les seuils.
+        Permission.PreventionConsulter,
+
         // Il voit les décisions à prendre sur ce qu'il peut faire ; qui règle les dossiers en fixe le cadran d'autonomie.
         Permission.DecisionsTraiter,
     ];
@@ -51,9 +54,10 @@ public static class RoleTemplates
             Permission.CatalogueGerer, Permission.FactureValider, Permission.FactureEmettre, Permission.AvoirCreer, Permission.AvoirApprouver, Permission.FecExporter,
             Permission.DelegationsApprouver, Permission.AlertesTraiter,
             Permission.IntegriteVerifier, Permission.ClotureEffectuer, Permission.ArchivesExporter, Permission.IntegriteClesGerer, Permission.PostesGerer,
+            Permission.VigilanceGerer, Permission.PreventionRegler]), ScopeKind.Cabinet),
             Permission.VigilanceGerer, Permission.DecisionsRegler]), ScopeKind.Cabinet),
         new(AdministrateurGroupe, Set(Permission.GroupeGerer, Permission.DossierAdministrer), ScopeKind.Groupe),
-        new(CollaborateurEtendu, Set([.. Production, Permission.FactureValider, Permission.FactureEmettre, Permission.VigilanceGerer]), ScopeKind.Groupe),
+        new(CollaborateurEtendu, Set([.. Production, Permission.FactureValider, Permission.FactureEmettre, Permission.VigilanceGerer, Permission.PreventionRegler]), ScopeKind.Groupe),
         new(Collaborateur, Set(Production), ScopeKind.Groupe),
         new(Auditeur, Set(
             Permission.TiersConsulter, Permission.CatalogueConsulter, Permission.DossierLire, Permission.FecExporter,

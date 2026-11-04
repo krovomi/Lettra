@@ -1,0 +1,63 @@
+@implements IDisposable
+@inject Optional<IPreventionGateway> OptionalGateway
+@inject IStringLocalizer<SharedResource> L
+
+@* Carte « Signaux de prévention » de l'accueil du dossier, pour le cabinet seulement : le niveau d'attention, les
+   signaux allumés et l'échéance la plus proche, avec le lien vers le radar. Sans le droit de lire le radar (client,
+   auditeur), le serveur la rend cachée et rien ne s'affiche. *@
+
+@if (_summary is { Visible: true } summary)
+{
+    <section class="lt-panel lt-prevention-card" id="home-prevention" data-tone="@summary.Level" aria-labelledby="home-prevention-title">
+        <div class="lt-panel-head">
+            <h2 id="home-prevention-title"><Icon Name="radar" Size="18" /> @L["Prevention.Card.Title"]</h2>
+            <a href="prevention" id="home-prevention-open">@L["Prevention.Card.Open"]</a>
+        </div>
+        <p class="lt-prevention-card-level">
+            <span class="lt-prevention-badge" data-tone="@summary.Level">@PreventionText.Level(L, summary.Level)</span>
+            @if (summary.DueOn is DateOnly due)
+            {
+                <span class="lettra-hint">@string.Format(CultureInfo.CurrentCulture, L["Prevention.Card.DueOn"], due.ToString("d", CultureInfo.CurrentCulture))</span>
+            }
+        </p>
+        @if (summary.Active.Count == 0)
+        {
+            <p class="lt-panel-ok"><Icon Name="circle-check" Size="18" /> @L["Prevention.Card.None"]</p>
+        }
+        else
+        {
+            <ul class="lt-prevention-card-list">
+                @foreach (PreventionSignalDto signal in summary.Active)
+                {
+                    <li @key="signal"><Icon Name="@PreventionText.Icon(signal)" Size="16" /> @PreventionText.Title(L, signal)</li>
+                }
+            </ul>
+        }
+    </section>
+}
+
+@code {
+    private PreventionSummaryResponse? _summary;
+    private readonly CancellationTokenSource _disposed = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (OptionalGateway.Value is not { } gateway)
+        {
+            return;
+        }
+
+        try
+        {
+            // Un refus ou une coupure ne montre rien : la carte est un complément de l'accueil, pas un écran.
+            OperationResult<PreventionSummaryResponse> result = await gateway.GetSummaryAsync(_disposed.Token);
+            _summary = result.Value;
+        }
+        catch (OperationCanceledException) when (_disposed.IsCancellationRequested)
+        {
+            // Accueil quitté pendant la lecture.
+        }
+    }
+
+    public void Dispose() => _disposed.Cancel();
+}

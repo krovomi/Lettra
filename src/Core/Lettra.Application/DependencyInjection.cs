@@ -78,6 +78,9 @@ public static class DependencyInjection
         services.AddScoped<Features.Dossiers.AccessibleDossiers>();
         services.AddScoped<Features.Cabinet.CabinetPeopleReader>();
 
+        // Comparaison aux pairs : l'écran des tableaux de bord et le radar de prévention.
+        services.AddScoped<Features.Kpi.DossierPeerComparison>();
+
         // Hors du mode 1, les cas d'usage de session locale répondent « non pris en charge ».
         services.TryAddSingleton<ILocalAccounts, NoLocalAccounts>();
 

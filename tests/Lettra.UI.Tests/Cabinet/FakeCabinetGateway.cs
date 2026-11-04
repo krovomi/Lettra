@@ -27,6 +27,9 @@ internal sealed class FakeCabinetGateway : ICabinetGateway
 
     public int Refreshes { get; private set; }
 
+    /// <summary>Un tableau imposé (le radar de prévention en lit sa colonne) ; à défaut, les trois dossiers ci-dessous.</summary>
+    public CabinetOverviewResponse? Overview { get; set; }
+
     public List<(string Period, string Item, SetDossierReviewItemRequest Request)> Sets { get; } = [];
 
     public Task<OperationResult<IReadOnlyList<DossierSummary>>> ListDossiersAsync(CancellationToken cancellationToken) =>
@@ -34,6 +37,11 @@ internal sealed class FakeCabinetGateway : ICabinetGateway
 
     public Task<OperationResult<CabinetOverviewResponse>> GetOverviewAsync(CancellationToken cancellationToken)
     {
+        if (Overview is not null)
+        {
+            return Task.FromResult(OperationResult<CabinetOverviewResponse>.Success(Overview));
+        }
+
         DateTimeOffset? at = Computed ? new DateTimeOffset(2026, 10, 19, 2, 0, 0, TimeSpan.Zero) : null;
         IReadOnlyList<DossierIndicatorDto> None(params DossierIndicatorDto[] indicators) => Computed ? indicators : [];
         CabinetOverviewResponse response = new(
