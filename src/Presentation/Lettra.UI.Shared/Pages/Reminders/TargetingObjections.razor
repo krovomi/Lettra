@@ -1,0 +1,35 @@
+@inject IStringLocalizer<SharedResource> L
+@* Les clients opposés au ciblage selon leur comportement de paiement (droit d'opposition) : le rappel avant échéance ne
+   leur est plus proposé. Les relances après l'échéance, qui ne ciblent personne, ne changent pas. *@
+
+<div class="lt-prevention-objections" id="reminders-objections">
+    <h3>@L["Prevention.Objection.Title"]</h3>
+    <p class="lettra-hint">@L["Prevention.Objection.Text"]</p>
+    @if (Items.Count == 0)
+    {
+        <p class="lettra-muted" id="reminders-objections-empty">@L["Prevention.Objection.None"]</p>
+    }
+    else
+    {
+        <ul class="lt-prevention-objection-list">
+            @foreach (TargetingObjectionResponse objection in Items.OrderBy(o => o.CustomerName, StringComparer.CurrentCultureIgnoreCase))
+            {
+                <li @key="objection.CustomerId">
+                    <span>@objection.CustomerName <small class="lettra-muted">· @string.Format(CultureInfo.CurrentCulture, L["Prevention.Objection.Since"], objection.RecordedAt.ToLocalTime().ToString("d", CultureInfo.CurrentCulture))</small></span>
+                    <button type="button" class="lettra-button is-ghost is-small" id="@($"reminders-objection-remove-{objection.CustomerId}")" disabled="@Busy"
+                            @onclick="() => OnRemove.InvokeAsync(objection)">
+                        <Icon Name="user-check" Size="16" /> @L["Prevention.Objection.Remove"]
+                    </button>
+                </li>
+            }
+        </ul>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<TargetingObjectionResponse> Items { get; set; } = [];
+
+    [Parameter] public bool Busy { get; set; }
+
+    [Parameter] public EventCallback<TargetingObjectionResponse> OnRemove { get; set; }
+}

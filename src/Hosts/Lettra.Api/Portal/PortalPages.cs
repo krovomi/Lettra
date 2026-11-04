@@ -146,6 +146,7 @@ internal static class PortalPages
             }
 
             AppendTransfer(page, view, invoice, t);
+            AppendPlan(page, view, invoice, t, basePath);
             page.Append("</article>");
         }
 
@@ -173,6 +174,60 @@ internal static class PortalPages
         }
 
         page.Append("<div><dt>").Append(E(t["Reference"])).Append("</dt><dd class=\"ec-mono\">").Append(E(invoice.Number)).Append("</dd></div></dl></div></div></details>");
+    }
+
+    /// <summary>
+    /// L'échéancier de la facture : celui en cours, ou le formulaire pour en demander un parmi ceux que l'entreprise
+    /// permet (rien pour un particulier, ni hors de ses bornes).
+    /// </summary>
+    private static void AppendPlan(StringBuilder page, PortalView view, PortalInvoice invoice, PortalTexts t, string basePath)
+    {
+        if (invoice.Plan is { } plan)
+        {
+            page.Append("<div class=\"ec-plan\" id=\"plan-").Append(invoice.Id).Append("\"><h4>").Append(E(t["Plan.Current"])).Append("</h4><ol class=\"ec-plan-lines\">");
+            foreach (PortalPlanInstallment line in plan.Installments)
+            {
+                page.Append("<li>").Append(E(t.Format("Plan.Line", line.Number, t.Money(line.Amount), t.Date(line.DueDate))));
+                if (line.Paid)
+                {
+                    page.Append(" <span class=\"ec-badge is-done\">").Append(E(t["Plan.Paid"])).Append("</span>");
+                }
+
+                page.Append("</li>");
+            }
+
+            page.Append("</ol><p class=\"ec-note\">").Append(E(t.Format("Plan.RequestedBy", plan.RequestedBy, t.Date(plan.RequestedAt)))).Append("</p></div>");
+            return;
+        }
+
+        if (invoice.PlanOptions is not { Count: > 0 } options)
+        {
+            return;
+        }
+
+        string id = invoice.Id.ToString("N", CultureInfo.InvariantCulture);
+        page.Append("<details class=\"ec-plan\" id=\"plan-").Append(invoice.Id).Append("\"><summary>").Append(E(t["Plan.Title"])).Append("</summary>")
+            .Append("<form method=\"post\" action=\"").Append(E($"{basePath}/factures/{invoice.Id}/echeancier")).Append("\" class=\"ec-form\" id=\"plan-form-")
+            .Append(invoice.Id).Append("\"><p class=\"ec-note\">").Append(E(t.Format("Plan.Intro", view.CompanyName))).Append("</p><fieldset class=\"ec-plan-options\"><legend>")
+            .Append(E(t["Plan.Title"])).Append("</legend>");
+        for (int index = 0; index < options.Count; index++)
+        {
+            PortalPlanOption option = options[index];
+            page.Append("<label class=\"ec-plan-option\"><input type=\"radio\" name=\"installments\" value=\"").Append(option.Installments)
+                .Append("\" id=\"plan-").Append(id).Append('-').Append(option.Installments).Append('"').Append(index == 0 ? " checked" : "").Append(" required> <span><strong>")
+                .Append(E(t.Format("Plan.Option", option.Installments))).Append("</strong>");
+            foreach (PortalPlanInstallment line in option.Schedule)
+            {
+                page.Append("<br>").Append(E(t.Format("Plan.Line", line.Number, t.Money(line.Amount), t.Date(line.DueDate))));
+            }
+
+            page.Append("</span></label>");
+        }
+
+        page.Append("</fieldset>").Append(Field("requester", t["Plan.Requester"], "", "name", "text", id))
+            .Append("<label class=\"ec-check\"><input type=\"checkbox\" name=\"consent\" value=\"true\" required id=\"plan-consent-").Append(id).Append("\"> <span>")
+            .Append(E(t.Format("Plan.Consent", invoice.Number))).Append("</span></label><button type=\"submit\" class=\"ec-button ec-button-secondary\" id=\"plan-submit-")
+            .Append(invoice.Id).Append("\">").Append(E(t["Plan.Submit"])).Append("</button></form></details>");
     }
 
     private static void AppendQuotes(StringBuilder page, PortalView view, List<PortalQuote> quotes, PortalTexts t, string basePath)

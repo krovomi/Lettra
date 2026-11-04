@@ -1,0 +1,49 @@
+@using Lettra.Contracts.Reminders
+@inject IStringLocalizer<SharedResource> L
+@* Les décisions de l'entreprise sur un échéancier : le prendre en compte (« Vu »), ou y mettre fin après confirmation.
+   Rien d'automatique : l'arrêt est toujours une décision humaine. *@
+
+@if (!Plan.Acknowledged && Plan.Status != PaymentPlanStatusDto.Cancelled)
+{
+    <button type="button" class="lettra-button is-secondary is-small" id="@($"{IdPrefix}-ack")" disabled="@Busy" @onclick="() => OnAcknowledge.InvokeAsync(Plan)">
+        <Icon Name="check" Size="16" /> @L["Prevention.Plans.Acknowledge"]
+    </button>
+}
+@if (Plan.Status is not (PaymentPlanStatusDto.Cancelled or PaymentPlanStatusDto.Completed))
+{
+    @if (_confirming)
+    {
+        <span class="lt-plan-confirm" role="group" aria-label="@L["Prevention.Plans.Cancel"]">
+            <button type="button" class="lettra-button is-danger is-small" id="@($"{IdPrefix}-cancel-confirm")" disabled="@Busy" @onclick="ConfirmAsync">
+                @L["Prevention.Plans.Cancel.Confirm"]
+            </button>
+            <button type="button" class="lettra-button is-ghost is-small" id="@($"{IdPrefix}-cancel-back")" @onclick="() => _confirming = false">@L["Prevention.Plans.Cancel.Back"]</button>
+        </span>
+    }
+    else
+    {
+        <button type="button" class="lettra-button is-ghost is-small" id="@($"{IdPrefix}-cancel")" disabled="@Busy" title="@L["Prevention.Plans.Cancel.Hint"]" @onclick="() => _confirming = true">
+            <Icon Name="x" Size="16" /> @L["Prevention.Plans.Cancel"]
+        </button>
+    }
+}
+
+@code {
+    [Parameter, EditorRequired] public PaymentPlanResponse Plan { get; set; } = default!;
+
+    [Parameter] public bool Busy { get; set; }
+
+    [Parameter, EditorRequired] public string IdPrefix { get; set; } = "";
+
+    [Parameter] public EventCallback<PaymentPlanResponse> OnAcknowledge { get; set; }
+
+    [Parameter] public EventCallback<PaymentPlanResponse> OnCancel { get; set; }
+
+    private bool _confirming;
+
+    private async Task ConfirmAsync()
+    {
+        _confirming = false;
+        await OnCancel.InvokeAsync(Plan);
+    }
+}

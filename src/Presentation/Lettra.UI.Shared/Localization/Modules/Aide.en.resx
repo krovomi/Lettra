@@ -27,7 +27,7 @@
   <data name="Nav.Catalog.Keywords" xml:space="preserve"><value>items products services prices rates</value></data>
   <data name="Nav.Payments.Keywords" xml:space="preserve"><value>payment receipt transfer cheque matching</value></data>
   <data name="Nav.Bank.Keywords" xml:space="preserve"><value>bank statement reconcile import connected bank sync PSD2</value></data>
-  <data name="Nav.Reminders.Keywords" xml:space="preserve"><value>overdue unpaid dunning email due</value></data>
+  <data name="Nav.Reminders.Keywords" xml:space="preserve"><value>overdue unpaid dunning email due payment plan instalment reminder before due</value></data>
   <data name="Nav.Accounting.Keywords" xml:space="preserve"><value>entries journal trial balance ledger accounts review closing checks issues</value></data>
   <data name="Nav.Fec.Keywords" xml:space="preserve"><value>accounting entries file export tax audit bridge quadra sage cegid acd production software</value></data>
   <data name="Nav.Tax.Keywords" xml:space="preserve"><value>vat tax return ca3 calendar audit kit payment terms late management report closing fees das2 das 2 commissions royalties thresholds threshold exemption franchise simplified scheme quarterly micro sme size vigilance</value></data>

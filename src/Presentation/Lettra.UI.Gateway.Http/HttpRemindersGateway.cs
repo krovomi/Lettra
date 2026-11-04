@@ -75,4 +75,28 @@ internal sealed class HttpRemindersGateway(HttpClient http) : IRemindersGateway
             ct => http.PutAsJsonAsync("api/v1/reminders/settings", request, ContractsJsonContext.Default.UpdateReminderSettingsRequest, ct),
             ContractsJsonContext.Default.ReminderSettingsResponse,
             cancellationToken);
+
+    public Task<OperationResult<InvoicePaymentPlanResponse>> GetInvoicePlanAsync(Guid invoiceId, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.GetAsync(HttpCalls.Relative($"api/v1/reminders/invoices/{invoiceId}/plan"), ct),
+            ContractsJsonContext.Default.InvoicePaymentPlanResponse,
+            cancellationToken);
+
+    public Task<OperationResult<PaymentPlanResponse>> AcknowledgePlanAsync(Guid planId, long version, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.PostAsJsonAsync(HttpCalls.Relative($"api/v1/reminders/plans/{planId}/acknowledge"), new PaymentPlanDecisionRequest(version), ContractsJsonContext.Default.PaymentPlanDecisionRequest, ct),
+            ContractsJsonContext.Default.PaymentPlanResponse,
+            cancellationToken);
+
+    public Task<OperationResult<PaymentPlanResponse>> CancelPlanAsync(Guid planId, long version, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.PostAsJsonAsync(HttpCalls.Relative($"api/v1/reminders/plans/{planId}/cancel"), new PaymentPlanDecisionRequest(version), ContractsJsonContext.Default.PaymentPlanDecisionRequest, ct),
+            ContractsJsonContext.Default.PaymentPlanResponse,
+            cancellationToken);
+
+    public Task<OperationResult<bool>> SetObjectionAsync(Guid customerId, bool objects, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.PutAsJsonAsync(HttpCalls.Relative($"api/v1/reminders/objections/{customerId}"), new SetTargetingObjectionRequest(objects), ContractsJsonContext.Default.SetTargetingObjectionRequest, ct),
+            (response, ct) => response.IsSuccessStatusCode ? Task.FromResult(OperationResult<bool>.Success(true)) : response.FailureAsync<bool>(ct),
+            cancellationToken);
 }

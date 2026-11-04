@@ -1,0 +1,79 @@
+@using Lettra.Contracts.Reminders
+@using Lettra.UI.Shared.Components.Explorer
+@inject IRemindersGateway Reminders
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+@* L'échéancier de la facture demandé par le client dans son espace client : son état, ses échéances (réglées,
+   manquées), qui l'a demandé, et les décisions de l'entreprise. Rien ne s'affiche si la facture n'en a jamais eu. *@
+
+@if (_plan is { } plan)
+{
+    <section class="lettra-portal-card" id="invoice-plan" aria-labelledby="invoice-plan-title">
+        <h2 id="invoice-plan-title"><Icon Name="handshake" Size="20" /> @L["Prevention.Plan.Title"]</h2>
+        <p>
+            <span class="lettra-status @PaymentPlanBadges.StatusClass(plan.Status)" id="invoice-plan-status">@L[$"PlanStatus.{plan.Status}"]</span>
+            @if (!plan.Acknowledged)
+            {
+                <span class="lettra-status is-draft">@L["Prevention.Plans.New"]</span>
+            }
+        </p>
+        <ol class="lt-plan-lines" id="invoice-plan-lines">
+            @foreach (PaymentPlanInstallmentResponse line in plan.Installments)
+            {
+                <li class="@(line.Paid ? "is-paid" : line.Missed ? "is-missed" : null)">
+                    @string.Format(Culture, L["Prevention.Plan.Line"], line.Number, ExplorerText.Money(line.Amount), line.DueDate.ToString("d", Culture))
+                    @if (line.Paid)
+                    {
+                        <span class="lettra-muted"> · @L["Prevention.Plans.Paid"]</span>
+                    }
+                    else if (line.Missed)
+                    {
+                        <span class="lt-plan-missed"> · @string.Format(Culture, L["Prevention.Plan.MissedLeft"], ExplorerText.Money(line.Remaining))</span>
+                    }
+                </li>
+            }
+        </ol>
+        <p class="lettra-hint">@string.Format(Culture, L["Prevention.Plan.RequestedBy"], plan.RequestedBy, plan.RequestedAt.ToLocalTime().ToString("g", Culture))</p>
+        <p class="lettra-hint">@L["Prevention.Plan.Effect"]</p>
+        <div class="la-actions">
+            <PaymentPlanActions Plan="plan" Busy="_busy" IdPrefix="invoice-plan" OnAcknowledge="AcknowledgeAsync" OnCancel="CancelAsync" />
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter, EditorRequired] public Guid InvoiceId { get; set; }
+
+    private PaymentPlanResponse? _plan;
+    private bool _busy;
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        OperationResult<InvoicePaymentPlanResponse> loaded = await Reminders.GetInvoicePlanAsync(InvoiceId, CancellationToken.None);
+        _plan = loaded.Value?.Plan;
+    }
+
+    private Task AcknowledgeAsync(PaymentPlanResponse plan) =>
+        DecideAsync(() => Reminders.AcknowledgePlanAsync(plan.Id, plan.Version, CancellationToken.None), "Prevention.Toast.Acknowledged", plan);
+
+    private Task CancelAsync(PaymentPlanResponse plan) =>
+        DecideAsync(() => Reminders.CancelPlanAsync(plan.Id, plan.Version, CancellationToken.None), "Prevention.Toast.Cancelled", plan);
+
+    private async Task DecideAsync(Func<Task<OperationResult<PaymentPlanResponse>>> decide, string toast, PaymentPlanResponse plan)
+    {
+        _busy = true;
+        OperationResult<PaymentPlanResponse> result = await decide();
+        _busy = false;
+        if (result.IsSuccess && result.Value is { } updated)
+        {
+            _plan = updated;
+            Toasts.Show(ToastKind.Success, string.Format(Culture, L[toast], plan.InvoiceNumber));
+        }
+        else
+        {
+            Toasts.Show(ToastKind.Error, L.Error(result.Errors[0].Code));
+        }
+    }
+}

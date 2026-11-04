@@ -6,7 +6,10 @@ using Lettra.Domain.Reminders;
 
 namespace Lettra.Exports.Application.Reminders;
 
-/// <summary>Tout ce que le texte d'une relance cite.</summary>
+/// <summary>
+/// Tout ce que le texte d'une relance cite. Pour une échéance manquée, <paramref name="DueDate"/> est la date de
+/// l'échéance et <paramref name="Outstanding"/> ce qui manque à l'échéancier.
+/// </summary>
 public sealed record ReminderLetter(
     ReminderLevel Level,
     string Language,
@@ -18,12 +21,27 @@ public sealed record ReminderLetter(
     int DaysOverdue,
     decimal? PenaltyRatePercent,
     LatePenalty Penalty,
-    ReminderSender Sender);
+    ReminderSender Sender,
+    ReminderHelp? Help = null);
 
 /// <summary>
-/// Modèles des quatre niveaux de relance, en français et en anglais (la langue du client, #39 ; français par défaut).
-/// Le ton monte d'un niveau à l'autre ; les pénalités de retard et l'indemnité forfaitaire de 40 € ne sont citées
-/// qu'à la dernière relance et à la mise en demeure. Textes à faire relire par l'expert-comptable (jalon J2).
+/// Ce qu'ajoutent le rappel avant échéance et la relance d'échéance manquée : le lien de l'espace client (ou, dans
+/// l'aperçu, la mention qu'il sera créé à l'envoi), le QR code de virement joint, l'échéancier qu'un client
+/// professionnel peut demander, et le calendrier de l'échéancier en cours.
+/// </summary>
+public sealed record ReminderHelp(
+    Uri? PortalUrl,
+    bool PortalPlanned,
+    bool QrAttached,
+    bool CanRequestPlan,
+    int? Installment = null,
+    IReadOnlyList<PaymentPlanInstallmentState>? Schedule = null);
+
+/// <summary>
+/// Modèles des relances, en français et en anglais (la langue du client ; français par défaut). Le ton monte d'un
+/// niveau de l'escalade à l'autre ; les pénalités de retard et l'indemnité forfaitaire de 40 € ne sont citées qu'à la
+/// dernière relance et à la mise en demeure. Le rappel avant échéance et la relance d'échéance manquée gardent un ton
+/// amical et donnent les moyens de payer. Textes à faire relire par l'expert-comptable (jalon J2).
 /// </summary>
 public static class ReminderTemplates
 {
@@ -38,7 +56,110 @@ public static class ReminderTemplates
     public static (string Subject, string Body) Write(ReminderLetter letter)
     {
         ArgumentNullException.ThrowIfNull(letter);
-        return letter.Language == English ? WriteEnglish(letter) : WriteFrench(letter);
+        return (letter.Level, letter.Language == English) switch
+        {
+            (ReminderLevel.BeforeDue or ReminderLevel.MissedInstallment, false) => WriteFrenchHelp(letter),
+            (ReminderLevel.BeforeDue or ReminderLevel.MissedInstallment, true) => WriteEnglishHelp(letter),
+            (_, true) => WriteEnglish(letter),
+            _ => WriteFrench(letter),
+        };
+    }
+
+    private static (string Subject, string Body) WriteFrenchHelp(ReminderLetter l)
+    {
+        CultureInfo fr = CultureInfo.GetCultureInfo(French);
+        ReminderHelp help = l.Help ?? new ReminderHelp(null, false, false, false);
+        string amount = Money(l.Outstanding, fr);
+        string due = l.DueDate.ToString("d MMMM yyyy", fr);
+        string issued = l.IssueDate.ToString("d MMMM yyyy", fr);
+        StringBuilder body = new("Bonjour,\n\n");
+        string subject;
+        if (l.Level == ReminderLevel.BeforeDue)
+        {
+            subject = $"Votre facture {l.InvoiceNumber} arrive à échéance le {due}";
+            body.Append(fr, $"Petit rappel avant l'échéance : la facture {l.InvoiceNumber} du {issued}, d'un montant restant dû de {amount}, est à régler au plus tard le {due}.\n");
+        }
+        else
+        {
+            subject = $"Échéance {help.Installment} de votre échéancier : facture {l.InvoiceNumber}";
+            body.Append(fr, $"Sauf erreur de notre part, l'échéance {help.Installment} de l'échéancier de la facture {l.InvoiceNumber}, prévue le {due}, n'est pas encore réglée : il reste {amount} à payer pour être à jour.\n");
+            AppendSchedule(body, help, "Rappel du calendrier :", "échéance", "réglée", fr);
+        }
+
+        if (help.PortalUrl is not null || help.PortalPlanned)
+        {
+            string link = help.PortalUrl?.ToString() ?? "(lien créé à l'envoi, valable 30 jours)";
+            body.Append(fr, $"\nVotre espace client, pour payer en ligne ou retrouver vos factures : {link}\n");
+            if (help.CanRequestPlan)
+            {
+                body.Append("Si vous ne pouvez pas tout régler d'un coup, vous pouvez y demander un échéancier.\n");
+            }
+        }
+
+        AppendPayment(body, l.Sender, "Pour régler par virement :", fr, l.InvoiceNumber, "en indiquant la référence");
+        if (help.QrAttached && l.Sender.Iban is not null)
+        {
+            body.Append("Le QR code joint ouvre ce virement déjà rempli dans votre application bancaire.\n");
+        }
+
+        body.Append(fr, $"\nSi le paiement est déjà parti, merci de ne pas tenir compte de ce message.\n\nCordialement,\n{l.Sender.Name}\n");
+        return (subject, body.ToString());
+    }
+
+    private static (string Subject, string Body) WriteEnglishHelp(ReminderLetter l)
+    {
+        CultureInfo en = CultureInfo.GetCultureInfo("en-GB");
+        ReminderHelp help = l.Help ?? new ReminderHelp(null, false, false, false);
+        string amount = Money(l.Outstanding, en);
+        string due = l.DueDate.ToString("d MMMM yyyy", en);
+        string issued = l.IssueDate.ToString("d MMMM yyyy", en);
+        StringBuilder body = new("Hello,\n\n");
+        string subject;
+        if (l.Level == ReminderLevel.BeforeDue)
+        {
+            subject = $"Your invoice {l.InvoiceNumber} is due on {due}";
+            body.Append(en, $"A friendly reminder before the due date: invoice {l.InvoiceNumber} dated {issued}, with {amount} outstanding, is due on {due}.\n");
+        }
+        else
+        {
+            subject = $"Instalment {help.Installment} of your payment plan: invoice {l.InvoiceNumber}";
+            body.Append(en, $"Our records show that instalment {help.Installment} of the payment plan for invoice {l.InvoiceNumber}, due on {due}, has not been paid yet: {amount} is needed to be up to date.\n");
+            AppendSchedule(body, help, "Your payment plan:", "instalment", "paid", en);
+        }
+
+        if (help.PortalUrl is not null || help.PortalPlanned)
+        {
+            string link = help.PortalUrl?.ToString() ?? "(link created when sent, valid for 30 days)";
+            body.Append(en, $"\nYour customer area, to pay online or find your invoices: {link}\n");
+            if (help.CanRequestPlan)
+            {
+                body.Append("If you cannot pay it all at once, you can ask for a payment plan there.\n");
+            }
+        }
+
+        AppendPayment(body, l.Sender, "To pay by bank transfer:", en, l.InvoiceNumber, "quoting reference");
+        if (help.QrAttached && l.Sender.Iban is not null)
+        {
+            body.Append("The attached QR code opens this transfer, already filled in, in your banking app.\n");
+        }
+
+        body.Append(en, $"\nIf you have already paid, please disregard this message.\n\nKind regards,\n{l.Sender.Name}\n");
+        return (subject, body.ToString());
+    }
+
+    private static void AppendSchedule(StringBuilder body, ReminderHelp help, string intro, string label, string paid, CultureInfo culture)
+    {
+        if (help.Schedule is not { Count: > 0 } schedule)
+        {
+            return;
+        }
+
+        body.Append(culture, $"\n{intro}\n");
+        foreach (PaymentPlanInstallmentState state in schedule)
+        {
+            PaymentPlanInstallment i = state.Installment;
+            body.Append(culture, $"- {label} {i.Number}, {i.DueDate.ToString("d", culture)}, {Money(i.Amount, culture)}{(state.Paid ? $" ({paid})" : "")}\n");
+        }
     }
 
     private static (string Subject, string Body) WriteFrench(ReminderLetter l)
@@ -135,7 +256,8 @@ public static class ReminderTemplates
         return (subject, body.ToString());
     }
 
-    private static void AppendPayment(StringBuilder body, ReminderSender sender, string intro, CultureInfo culture)
+    private static void AppendPayment(
+        StringBuilder body, ReminderSender sender, string intro, CultureInfo culture, string? reference = null, string? referenceIntro = null)
     {
         if (sender.Iban is null)
         {
@@ -146,6 +268,11 @@ public static class ReminderTemplates
         if (sender.Bic is not null)
         {
             body.Append(culture, $", BIC {sender.Bic}");
+        }
+
+        if (reference is not null)
+        {
+            body.Append(culture, $", {referenceIntro} {reference}");
         }
 
         body.Append(".\n");

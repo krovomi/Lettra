@@ -51,6 +51,8 @@ public static class DependencyInjection
         services.AddScoped<IReminderSettingsRepository, EfReminderSettingsRepository>();
         services.AddScoped<IPaymentReminderRepository, EfPaymentReminderRepository>();
         services.AddScoped<IReminderContextReader, EfReminderContextReader>();
+        services.AddScoped<IPaymentPlanRepository, EfPaymentPlanRepository>();
+        services.AddScoped<IPaymentTargetingObjectionRepository, EfPaymentTargetingObjectionRepository>();
         services.AddScoped<IAuditTrailReader, EfAuditTrailReader>();
         services.AddScoped<IPaymentHistoryReader, EfPaymentHistoryReader>();
         services.AddScoped<IIssuedInvoiceReader, EfIssuedInvoiceReader>();

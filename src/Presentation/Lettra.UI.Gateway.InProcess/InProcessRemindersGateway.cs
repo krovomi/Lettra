@@ -30,4 +30,16 @@ internal sealed class InProcessRemindersGateway(IServiceScopeFactory scopes) : I
 
     public Task<OperationResult<ReminderSettingsResponse>> UpdateSettingsAsync(UpdateReminderSettingsRequest request, CancellationToken cancellationToken) =>
         InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.SendAsync(sp, new UpdateReminderSettingsCommand(dossier, request), ct), cancellationToken);
+
+    public Task<OperationResult<InvoicePaymentPlanResponse>> GetInvoicePlanAsync(Guid invoiceId, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.QueryAsync(sp, new GetInvoicePaymentPlanQuery(dossier, invoiceId), ct), cancellationToken);
+
+    public Task<OperationResult<PaymentPlanResponse>> AcknowledgePlanAsync(Guid planId, long version, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.SendAsync(sp, new AcknowledgePaymentPlanCommand(dossier, planId, new PaymentPlanDecisionRequest(version)), ct), cancellationToken);
+
+    public Task<OperationResult<PaymentPlanResponse>> CancelPlanAsync(Guid planId, long version, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.SendAsync(sp, new CancelPaymentPlanCommand(dossier, planId, new PaymentPlanDecisionRequest(version)), ct), cancellationToken);
+
+    public Task<OperationResult<bool>> SetObjectionAsync(Guid customerId, bool objects, CancellationToken cancellationToken) =>
+        InProcessScope.RunAsync(scopes, (sp, dossier, ct) => InProcessScope.SendAsync(sp, new SetTargetingObjectionCommand(dossier, customerId, new SetTargetingObjectionRequest(objects)), ct), cancellationToken);
 }
