@@ -117,10 +117,22 @@ jobs:
             grep -E 'AndroidRuntime|monodroid|mono-rt|DOTNET|fr\.lettra|Lettra|ActivityTaskManager: (START|Displayed)|com\.android\.chrome|cr_' "$SORTIE/android/logcat${NOUVEL_ESSAI:+-2}.txt" | grep -vE 'SandboxedProcessService|CronetUrlRequestContext' | tail -n 150 || true
             # L'émulateur de la CI se fige parfois peu après la connexion (le noyau de l'appareil n'écrit plus rien), puis
             # son processus s'arrête au bout d'une minute, sans message ni rapport de plantage, mémoire et disque
-            # suffisants. Ce n'est pas l'application : elle ne peut pas arrêter l'émulateur. Dans ce seul cas, un nouvel
-            # essai complet sur un émulateur neuf (données effacées) ; un échec avec l'appareil encore là échoue tout de suite.
-            if ! pgrep -f qemu-system > /dev/null && [ -z "${NOUVEL_ESSAI:-}" ]; then
-              echo "::warning::L'émulateur s'est arrêté pendant le test, sans message : nouvel essai sur un émulateur neuf."
+            # suffisants. Autre forme du même engorgement : un processus des services Google de l'appareil meurt et Android
+            # arrête l'application qui utilise ses polices (« depends on provider … in dying proc »). Ce n'est pas
+            # l'application : elle ne peut ni arrêter l'émulateur ni ces services. Dans ces deux seuls cas, un nouvel essai
+            # complet sur un émulateur neuf (données effacées) ; tout autre échec fait échouer le job tout de suite.
+            if [ -z "${NOUVEL_ESSAI:-}" ]; then
+              cause=''
+              if ! pgrep -f qemu-system > /dev/null; then
+                cause="L'émulateur s'est arrêté pendant le test, sans message"
+              elif grep -qE "Killing [0-9]+:fr\.lettra\.app/.* in dying proc com\.google\.android\.gms" "$SORTIE/android/logcat.txt"; then
+                cause="Android a arrêté l'application à cause d'un service Google de l'appareil en train de mourir"
+              fi
+            fi
+            if [ -n "${cause:-}" ]; then
+              echo "::warning::$cause : nouvel essai sur un émulateur neuf."
+              timeout 30 adb emu kill > /dev/null 2>&1 || true
+              timeout 30 bash -c 'while pgrep -f qemu-system > /dev/null; do sleep 2; done' || pkill -9 -f qemu-system || true
               cd - > /dev/null
               "$ANDROID_HOME/emulator/emulator" -port 5554 -avd test -no-window -gpu swiftshader_indirect -noaudio \
                 -no-boot-anim -no-snapshot -wipe-data > "$SORTIE/android/emulateur-2.log" 2>&1 &
