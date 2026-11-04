@@ -27,7 +27,7 @@
   <data name="Nav.Catalog.Keywords" xml:space="preserve"><value>items products services prices rates</value></data>
   <data name="Nav.Payments.Keywords" xml:space="preserve"><value>payment receipt transfer cheque matching</value></data>
   <data name="Nav.Bank.Keywords" xml:space="preserve"><value>bank statement reconcile import connected bank sync PSD2</value></data>
-  <data name="Nav.Reminders.Keywords" xml:space="preserve"><value>overdue unpaid dunning email due</value></data>
+  <data name="Nav.Reminders.Keywords" xml:space="preserve"><value>overdue unpaid dunning email due payment plan instalment reminder before due</value></data>
   <data name="Nav.Accounting.Keywords" xml:space="preserve"><value>entries journal trial balance ledger accounts review closing checks issues</value></data>
   <data name="Nav.Fec.Keywords" xml:space="preserve"><value>accounting entries file export tax audit bridge quadra sage cegid acd production software</value></data>
   <data name="Nav.Tax.Keywords" xml:space="preserve"><value>vat tax return ca3 calendar audit kit payment terms late management report closing fees das2 das 2 commissions royalties thresholds threshold exemption franchise simplified scheme quarterly micro sme size vigilance</value></data>
@@ -118,8 +118,8 @@
   <data name="Help.Faq.data.Answer" xml:space="preserve"><value>Yes. Lettra updates never touch your dossiers: invoices, customers and settings stay in place, on the server as in the installed app.</value></data>
   <data name="Help.Faq.data.Keywords" xml:space="preserve"><value>data lose update backup keep</value></data>
   <data name="Help.Faq.assistant.Question" xml:space="preserve"><value>What is the AI assistant for?</value></data>
-  <data name="Help.Faq.assistant.Answer" xml:space="preserve"><value>The assistant explains a rule or drafts a quote, which you review and validate yourself: it never validates or sends anything. It is off by default; a firm administrator can turn it on. This help works without it.</value></data>
-  <data name="Help.Faq.assistant.Keywords" xml:space="preserve"><value>ai artificial intelligence assistant claude question</value></data>
+  <data name="Help.Faq.assistant.Answer" xml:space="preserve"><value>The assistant explains a compliance rule or answers a VAT question; every text it writes carries the label “Text written by AI, to be checked”. It never approves or sends anything. It is off by default; a firm administrator can turn it on. This help works without it.</value></data>
+  <data name="Help.Faq.assistant.Keywords" xml:space="preserve"><value>ai artificial intelligence assistant claude question log turn off disable ai act</value></data>
   <data name="Nav.PaymentWeather.Keywords" xml:space="preserve"><value>weather forecast collection late payer cash delay</value></data>
   <data name="Help.Faq.weather.Question" xml:space="preserve"><value>When will my invoices be collected?</value></data>
   <data name="Help.Faq.weather.Answer" xml:space="preserve"><value>Payment weather gives each customer a weather report drawn from their past payments, and the likely payment date of each open invoice. The eight-week forecast helps plan cash.</value></data>
@@ -167,4 +167,5 @@
   <data name="Help.Faq.intercompany.Keywords" xml:space="preserve"><value>group subsidiary holding intercompany interco gap</value></data>
   <data name="Nav.ReceivedInvoices.Keywords" xml:space="preserve"><value>received invoices supplier invoices purchases receiving accredited platform directory dispute refusal e-invoice</value></data>
   <data name="Nav.ThirdPartyChecks.Keywords" xml:space="preserve"><value>check third parties register beneficial owners INPI asset freeze sanctions BODACC insolvency liquidation struck off URSSAF due diligence AML money laundering</value></data>
+  <data name="Nav.Ai.Keywords" xml:space="preserve"><value>artificial intelligence assistant ai log journal ai act transparency engine claude turn off disable pause</value></data>
 </root>

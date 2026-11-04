@@ -11,7 +11,7 @@
   <PropertyGroup Condition="'$(LettraIsPoc)' != 'true'">
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
-    <MicrosoftVersion>10.0.13</MicrosoftVersion>
+    <MicrosoftVersion>10.0.14</MicrosoftVersion>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(LettraIsPoc)' != 'true'" Label="Persistance">

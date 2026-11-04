@@ -6,6 +6,7 @@ using Lettra.Contracts.Billing;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Portal;
+using Lettra.Contracts.Reminders;
 using Lettra.Contracts.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -229,6 +230,59 @@ public sealed class CustomerPortalApiTests(LettraApiFactory factory) : IClassFix
         downPayment.Status.Should().Be(InvoiceStatusDto.Validated);
         downPayment.CreatedBy.Should().Be(ServiceAccountId, "l'acompte porte l'identité du compte de service");
     }
+
+    [Fact]
+    public async Task Le_client_demande_un_echeancier_et_l_entreprise_le_prend_en_compte_puis_l_arrete()
+    {
+        using WebApplicationFactory<Program> app = Portal();
+        using HttpClient manager = InDossier(app.CreateClient());
+        (Guid customer, Guid invoice, _) = await DocumentsAsync(manager);
+        using HttpResponseMessage settings = await manager.PutAsJsonAsync(Api("/api/v1/reminders/settings"), new UpdateReminderSettingsRequest
+        {
+            Delays = [3, 15, 30, 45],
+            MinimumGapDays = 7,
+            Prevention = new ReminderPreventionDto(true, 3, true, 3, 0m),
+        }, ContractsJsonContext.Default.UpdateReminderSettingsRequest);
+        settings.StatusCode.Should().Be(HttpStatusCode.OK, await settings.Content.ReadAsStringAsync());
+        PortalLinkResponse link = await LinkAsync(manager, new CreatePortalLinkRequest { CustomerId = customer });
+        using HttpClient visitor = Visitor(app);
+
+        (await visitor.GetStringAsync(Api("/" + link.Path))).Should().Contain($"id=\"plan-form-{invoice}\"").And.Contain("En 3 fois");
+        Location(await visitor.PostAsync(Api($"/{link.Path}/factures/{invoice}/echeancier"), Form(("installments", "2"), ("requester", "Jeanne Martin"))))
+            .Should().Contain("erreur=PaymentPlans.ConsentRequired");
+        string created = Location(await visitor.PostAsync(Api($"/{link.Path}/factures/{invoice}/echeancier"),
+            Form(("installments", "2"), ("requester", "Jeanne Martin"), ("consent", "true"))));
+        created.Should().Contain("echeancier=").And.EndWith($"#invoice-{invoice}");
+        (await visitor.GetStringAsync(Api(created))).Should().Contain("Échéancier enregistré pour la facture").And.Contain($"id=\"plan-{invoice}\"")
+            .And.Contain("Jeanne Martin").And.NotContain($"id=\"plan-form-{invoice}\"");
+
+        // Côté entreprise : l'échéancier de la facture, vu à la bonne version, l'opposition au ciblage, puis l'arrêt.
+        PaymentPlanResponse plan = (await manager.GetFromJsonAsync(Api($"/api/v1/reminders/invoices/{invoice}/plan"), ContractsJsonContext.Default.InvoicePaymentPlanResponse))!.Plan!;
+        (plan.RequestedBy, plan.Installments.Count, plan.Acknowledged, plan.Status).Should().Be(("Jeanne Martin", 2, false, PaymentPlanStatusDto.OnTrack));
+        (await Decide(manager, plan.Id, "acknowledge", plan.Version + 1)).StatusCode.Should().Be(HttpStatusCode.PreconditionFailed);
+        using HttpResponseMessage seen = await Decide(manager, plan.Id, "acknowledge", plan.Version);
+        seen.StatusCode.Should().Be(HttpStatusCode.OK, await seen.Content.ReadAsStringAsync());
+        PaymentPlanResponse acknowledged = (await seen.Content.ReadFromJsonAsync(ContractsJsonContext.Default.PaymentPlanResponse))!;
+        acknowledged.Acknowledged.Should().BeTrue();
+
+        (await Object(manager, customer, true)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await Object(manager, Guid.CreateVersion7(), true)).StatusCode.Should().Be(HttpStatusCode.NotFound);
+        ReminderOverviewResponse overview = (await manager.GetFromJsonAsync(Api("/api/v1/reminders"), ContractsJsonContext.Default.ReminderOverviewResponse))!;
+        overview.Objections.Should().ContainSingle(o => o.CustomerId == customer);
+        overview.Plans.Should().ContainSingle(p => p.Id == plan.Id);
+        (await Object(manager, customer, false)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        using HttpResponseMessage stopped = await Decide(manager, plan.Id, "cancel", acknowledged.Version);
+        (await stopped.Content.ReadFromJsonAsync(ContractsJsonContext.Default.PaymentPlanResponse))!.Status.Should().Be(PaymentPlanStatusDto.Cancelled);
+        (await Decide(manager, plan.Id, "cancel", acknowledged.Version + 1)).StatusCode.Should().Be(HttpStatusCode.Conflict);
+        (await Decide(manager, Guid.CreateVersion7(), "cancel", 0)).StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    private static Task<HttpResponseMessage> Decide(HttpClient manager, Guid plan, string decision, long version) =>
+        manager.PostAsJsonAsync(Api($"/api/v1/reminders/plans/{plan}/{decision}"), new PaymentPlanDecisionRequest(version), ContractsJsonContext.Default.PaymentPlanDecisionRequest);
+
+    private static Task<HttpResponseMessage> Object(HttpClient manager, Guid customer, bool objects) =>
+        manager.PutAsJsonAsync(Api($"/api/v1/reminders/objections/{customer}"), new SetTargetingObjectionRequest(objects), ContractsJsonContext.Default.SetTargetingObjectionRequest);
 
     [Fact]
     public async Task Un_jeton_faux_un_lien_revoque_et_un_paiement_inconnu_donnent_une_page_introuvable()

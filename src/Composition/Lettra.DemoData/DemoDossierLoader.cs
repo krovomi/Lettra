@@ -3,6 +3,7 @@ using Lettra.Contracts.Billing;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Exports;
 using Lettra.Contracts.Pricing;
+using Lettra.Contracts.Reminders;
 using Lettra.Domain.SharedKernel;
 using Lettra.UI.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,6 +43,7 @@ internal sealed class DemoDossierLoader(IServiceProvider services, DemoClock clo
     private readonly IInvoicesGateway _invoices = services.GetRequiredService<IInvoicesGateway>();
     private readonly IPlatformTransmissionGateway _platform = services.GetRequiredService<IPlatformTransmissionGateway>();
     private readonly IBillingSettingsGateway _settings = services.GetRequiredService<IBillingSettingsGateway>();
+    private readonly IRemindersGateway _reminders = services.GetRequiredService<IRemindersGateway>();
 
     private readonly List<Step> _steps = [];
     private Guid[] _items = [];
@@ -171,6 +173,28 @@ internal sealed class DemoDossierLoader(IServiceProvider services, DemoClock clo
         SaveCompanyProfileRequest completed = SaveCompanyProfileRequest.From(saved);
         completed.ActivityCode = code;
         Ok(await _settings.SaveCompanyProfileAsync(completed, saved.Version, cancellationToken).ConfigureAwait(false), "code NAF de la fiche entreprise");
+    }
+
+    /// <summary>
+    /// Propose l'échéancier en libre-service dans l'espace client du dossier, avec les bornes par défaut, une seule fois :
+    /// seulement si le scénario de relance n'a jamais été enregistré. Un scénario réglé à la main reste celui de l'utilisateur.
+    /// </summary>
+    public async Task OfferPaymentPlansAsync(CancellationToken cancellationToken)
+    {
+        ReminderSettingsResponse settings = Ok(await _reminders.GetOverviewAsync(cancellationToken).ConfigureAwait(false), "scénario de relance").Settings;
+        if (settings.Version > 0 || settings.Prevention.PaymentPlansEnabled)
+        {
+            return;
+        }
+
+        UpdateReminderSettingsRequest offered = new()
+        {
+            AutoSend = settings.AutoSend,
+            Delays = settings.Delays,
+            MinimumGapDays = settings.MinimumGapDays,
+            Prevention = settings.Prevention with { PaymentPlansEnabled = true },
+        };
+        Ok(await _reminders.UpdateSettingsAsync(offered, cancellationToken).ConfigureAwait(false), "échéancier en libre-service");
     }
 
     private async Task SaveProfileAsync(SaveCompanyProfileRequest profile, CancellationToken cancellationToken)

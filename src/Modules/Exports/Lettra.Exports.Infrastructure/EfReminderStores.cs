@@ -5,7 +5,9 @@ using Lettra.Domain.Parties;
 using Lettra.Domain.Reminders;
 using Lettra.Domain.SharedKernel;
 using Lettra.Exports.Application.Reminders;
+using Lettra.Exports.Domain.Platform;
 using Lettra.Infrastructure.Persistence;
+using Lettra.Infrastructure.Persistence.EInvoicing;
 using Lettra.Infrastructure.Persistence.Tenancy;
 using Microsoft.EntityFrameworkCore;
 
@@ -39,22 +41,22 @@ internal sealed class EfPaymentReminderRepository(TenantDbSession session) : IPa
         await db.Set<PaymentReminder>().AddAsync(reminder, cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<IReadOnlyDictionary<InvoiceId, PaymentReminder>> LastSentAsync(IReadOnlyCollection<InvoiceId> invoices, CancellationToken cancellationToken)
+    public async Task<IReadOnlyDictionary<InvoiceId, ReminderTrack>> TracksAsync(IReadOnlyCollection<InvoiceId> invoices, CancellationToken cancellationToken)
     {
         LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
-        Dictionary<InvoiceId, PaymentReminder> last = [];
+        Dictionary<InvoiceId, ReminderTrack> tracks = [];
         foreach (InvoiceId[] batch in invoices.Distinct().Chunk(BatchSize))
         {
             List<PaymentReminder> sent = await db.Set<PaymentReminder>().AsNoTracking()
                 .Where(r => batch.Contains(r.InvoiceId) && r.Outcome == ReminderOutcome.Sent)
                 .ToListAsync(cancellationToken).ConfigureAwait(false);
-            foreach (PaymentReminder reminder in sent.GroupBy(r => r.InvoiceId).Select(g => g.MaxBy(r => (r.Level, r.OccurredAt))!))
+            foreach (IGrouping<InvoiceId, PaymentReminder> invoice in sent.GroupBy(r => r.InvoiceId))
             {
-                last[reminder.InvoiceId] = reminder;
+                tracks[invoice.Key] = ReminderTrack.Of(invoice);
             }
         }
 
-        return last;
+        return tracks;
     }
 
     public async Task<(IReadOnlyList<ReminderHistoryItem> Items, int Total)> ListAsync(ReminderHistoryFilter filter, CancellationToken cancellationToken)
@@ -179,5 +181,111 @@ internal sealed class EfReminderContextReader(TenantDbSession session) : IRemind
         LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
         CompanyProfile? profile = await db.Set<CompanyProfile>().AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
         return profile is null ? null : new ReminderSender(profile.Name, profile.Iban?.Value, profile.Bic);
+    }
+
+    public async Task<IReadOnlySet<InvoiceId>> DisputedAsync(IReadOnlyCollection<InvoiceId> invoices, CancellationToken cancellationToken)
+    {
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        HashSet<InvoiceId> disputed = [];
+        foreach (Guid[] batch in invoices.Select(i => i.Value).Distinct().Chunk(BatchSize))
+        {
+            List<PlatformTransmissionRecord> records = await db.Set<PlatformTransmissionRecord>().AsNoTracking()
+                .Include(r => r.Events)
+                .Where(r => batch.Contains(r.InvoiceId))
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
+            disputed.UnionWith(records.GroupBy(r => r.InvoiceId)
+                .Where(g => EfPlatformTransmissionStore.ToTransmission(EfPlatformTransmissionStore.Latest(g)!).Status == PlatformStatus.Disputed)
+                .Select(g => new InvoiceId(g.Key)));
+        }
+
+        return disputed;
+    }
+}
+
+/// <summary>Échéanciers de la base du dossier, avec leurs échéances.</summary>
+internal sealed class EfPaymentPlanRepository(TenantDbSession session) : IPaymentPlanRepository
+{
+    private const int BatchSize = 500;
+
+    public async Task AddAsync(PaymentPlan plan, CancellationToken cancellationToken)
+    {
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        await db.Set<PaymentPlan>().AddAsync(plan, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<PaymentPlan?> FindAsync(Guid id, CancellationToken cancellationToken)
+    {
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        return await db.Set<PaymentPlan>().FirstOrDefaultAsync(p => p.Id == id, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<IReadOnlyDictionary<InvoiceId, PaymentPlan>> ActiveAsync(IReadOnlyCollection<InvoiceId>? invoices, CancellationToken cancellationToken)
+    {
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        IQueryable<PaymentPlan> active = db.Set<PaymentPlan>().AsNoTracking().Where(p => p.Status == PaymentPlanStatus.Active);
+        List<PaymentPlan> found = [];
+        if (invoices is null)
+        {
+            found.AddRange(await active.ToListAsync(cancellationToken).ConfigureAwait(false));
+        }
+        else
+        {
+            foreach (InvoiceId[] batch in invoices.Distinct().Chunk(BatchSize))
+            {
+                found.AddRange(await active.Where(p => batch.Contains(p.InvoiceId)).ToListAsync(cancellationToken).ConfigureAwait(false));
+            }
+        }
+
+        // Au plus un en cours par facture ; deux demandes simultanées gardent la première.
+        return found.GroupBy(p => p.InvoiceId).ToDictionary(g => g.Key, g => g.OrderBy(p => p.RequestedAt).First());
+    }
+
+    public async Task<PaymentPlan?> LatestForInvoiceAsync(InvoiceId invoice, CancellationToken cancellationToken)
+    {
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        List<PaymentPlan> plans = await db.Set<PaymentPlan>().AsNoTracking().Where(p => p.InvoiceId == invoice).ToListAsync(cancellationToken).ConfigureAwait(false);
+        return plans.OrderByDescending(p => p.Status == PaymentPlanStatus.Active).ThenByDescending(p => p.RequestedAt).FirstOrDefault();
+    }
+
+    public async Task<IReadOnlyList<PaymentPlan>> ListAsync(DateTimeOffset since, CancellationToken cancellationToken)
+    {
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        List<PaymentPlan> plans = await db.Set<PaymentPlan>().AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false);
+        return [.. plans.Where(p => p.Status == PaymentPlanStatus.Active || p.RequestedAt >= since)];
+    }
+
+    public async Task<int> CountUnacknowledgedAsync(CancellationToken cancellationToken)
+    {
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        return await db.Set<PaymentPlan>().CountAsync(p => p.Status == PaymentPlanStatus.Active && p.AcknowledgedAt == null, cancellationToken).ConfigureAwait(false);
+    }
+}
+
+/// <summary>Oppositions au ciblage selon le comportement de paiement.</summary>
+internal sealed class EfPaymentTargetingObjectionRepository(TenantDbSession session) : IPaymentTargetingObjectionRepository
+{
+    public async Task<IReadOnlyList<PaymentTargetingObjection>> ListAsync(CancellationToken cancellationToken)
+    {
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        return await db.Set<PaymentTargetingObjection>().AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<PaymentTargetingObjection?> FindAsync(CustomerId customer, CancellationToken cancellationToken)
+    {
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        return await db.Set<PaymentTargetingObjection>().FirstOrDefaultAsync(o => o.CustomerId == customer, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task AddAsync(PaymentTargetingObjection objection, CancellationToken cancellationToken)
+    {
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        await db.Set<PaymentTargetingObjection>().AddAsync(objection, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task RemoveAsync(PaymentTargetingObjection objection, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(objection);
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        db.Set<PaymentTargetingObjection>().Remove(objection);
     }
 }

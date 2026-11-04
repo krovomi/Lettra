@@ -87,6 +87,38 @@ public static class LettraTelemetry
     }
 
     /// <summary>
+    /// Moteurs d'IA vus par l'orchestrateur, tous dossiers confondus : « IA disponible » (1 quand le moteur répond, 0 quand
+    /// Lettra a cessé de l'appeler après des échecs répétés et ne l'a pas encore vu répondre) et replis (réponses terminées
+    /// sans IA parce que le moteur a échoué). Étiquettes : le type de moteur et la raison, jamais un dossier ni un texte.
+    /// Rien n'est publié pour un moteur tant que ce processus ne l'a pas demandé.
+    /// </summary>
+    public static class Ai
+    {
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, int> Engines = new(StringComparer.Ordinal);
+
+        /// <summary>1 si le moteur répond, 0 sinon, par type de moteur.</summary>
+        public static readonly ObservableGauge<int> Available = Meter.CreateObservableGauge(
+            "lettra.ai.engine.available",
+            () => Engines.Select(e => new Measurement<int>(e.Value, new KeyValuePair<string, object?>(Attributes.AiEngine, e.Key))),
+            unit: "{engine}",
+            description: "Moteur d'IA disponible (1) ou mis en pause après des échecs répétés (0).");
+
+        /// <summary>Réponses de l'assistant terminées sans IA, par moteur et par raison.</summary>
+        public static readonly Counter<long> Fallbacks =
+            Meter.CreateCounter<long>("lettra.ai.fallback.count", unit: "{fallback}", description: "Replis sans IA après un échec du moteur, par moteur et par raison.");
+
+        /// <summary>Note l'état d'un moteur (<paramref name="engine"/> : nom technique du type de moteur).</summary>
+        public static void ReportEngine(string engine, bool available) => Engines[engine] = available ? 1 : 0;
+
+        /// <summary>Compte un repli : la réponse s'est terminée sans IA.</summary>
+        public static void CountFallback(string engine, string reason) => Fallbacks.Add(1, new TagList
+        {
+            { Attributes.AiEngine, engine },
+            { Attributes.AiFallbackReason, reason },
+        });
+    }
+
+    /// <summary>
     /// Étiquettes que les métriques de Lettra peuvent porter. Toutes ont un petit nombre de valeurs connues d'avance
     /// (noms techniques, issues, codes) : jamais un identifiant de dossier ou de personne, un client ou un montant. Un
     /// test le vérifie sur un parcours complet (<c>DemoWalkthroughTests</c>).
@@ -105,6 +137,8 @@ public static class LettraTelemetry
         Attributes.OutboxResult,
         Attributes.SpeechEngine,
         Attributes.SpeechMode,
+        Attributes.AiEngine,
+        Attributes.AiFallbackReason,
     };
 
     /// <summary>Noms d'attributs autorisés. Tout nouvel attribut est revu : il ne doit jamais porter une donnée de dossier.</summary>
@@ -151,6 +185,12 @@ public static class LettraTelemetry
 
         /// <summary>Mode de la voix : <c>dictation</c> ou <c>command</c>.</summary>
         public const string SpeechMode = "lettra.speech.mode";
+
+        /// <summary>Type de moteur d'IA : <c>claude_eu</c> ou <c>local</c>.</summary>
+        public const string AiEngine = "lettra.ai.engine";
+
+        /// <summary>Raison d'un repli sans IA : <c>timeout</c>, <c>unreachable</c>, <c>unreadable</c> ou <c>paused</c>.</summary>
+        public const string AiFallbackReason = "lettra.ai.fallback.reason";
     }
 
     public static class Outcomes

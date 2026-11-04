@@ -69,4 +69,5 @@
     <value>La version du document lue n'a pas été envoyée (en-tête If-Match manquant).</value>
   </data>
   <data name="Nav.IbanChanges" xml:space="preserve"><value>IBAN à vérifier</value></data>
+  <data name="Nav.Ai" xml:space="preserve"><value>Bien utiliser l'IA</value></data>
 </root>

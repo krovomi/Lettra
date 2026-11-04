@@ -12,7 +12,8 @@ namespace Lettra.Api.Endpoints;
 
 /// <summary>
 /// Relances des factures échues (module Exports, vague 7) : vue d'ensemble, aperçu du texte, envoi par e-mail ou relance
-/// notée à la main, envoi des relances du jour, historique filtré et trié, scénario du dossier.
+/// notée à la main, envoi des relances du jour, historique filtré et trié, scénario du dossier ; avant le retard,
+/// l'échéancier d'une facture, sa prise en compte ou son arrêt, et l'opposition d'un client au ciblage.
 /// </summary>
 internal static class ReminderEndpoints
 {
@@ -65,6 +66,40 @@ internal static class ReminderEndpoints
             .WithName("UpdateReminderSettings")
             .Produces<ReminderSettingsResponse>()
             .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        // Avant le retard : l'échéancier d'une facture, les décisions de l'entreprise, l'opposition d'un client au ciblage.
+        reminders.MapGet("/invoices/{invoiceId:guid}/plan", (Guid invoiceId, ITenantContext tenant, IQueryDispatcher queries, CancellationToken ct) =>
+                QueryAsync(queries, new GetInvoicePaymentPlanQuery(tenant.Current.DossierId, invoiceId), ct))
+            .RequirePermission(Permission.DossierLire)
+            .WithName("GetInvoicePaymentPlan")
+            .Produces<InvoicePaymentPlanResponse>();
+
+        reminders.MapPost("/plans/{planId:guid}/acknowledge", (Guid planId, PaymentPlanDecisionRequest request, ITenantContext tenant, ICommandDispatcher commands, CancellationToken ct) =>
+                SendAsync(commands, new AcknowledgePaymentPlanCommand(tenant.Current.DossierId, planId, request), ct))
+            .RequirePermission(Permission.FactureEmettre)
+            .WithName("AcknowledgePaymentPlan")
+            .Produces<PaymentPlanResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status412PreconditionFailed);
+
+        reminders.MapPost("/plans/{planId:guid}/cancel", (Guid planId, PaymentPlanDecisionRequest request, ITenantContext tenant, ICommandDispatcher commands, CancellationToken ct) =>
+                SendAsync(commands, new CancelPaymentPlanCommand(tenant.Current.DossierId, planId, request), ct))
+            .RequirePermission(Permission.FactureEmettre)
+            .WithName("CancelPaymentPlan")
+            .Produces<PaymentPlanResponse>()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesProblem(StatusCodes.Status412PreconditionFailed);
+
+        reminders.MapPut("/objections/{customerId:guid}", async (Guid customerId, SetTargetingObjectionRequest request, ITenantContext tenant, ICommandDispatcher commands, CancellationToken ct) =>
+            {
+                Result result = await commands.SendAsync(new SetTargetingObjectionCommand(tenant.Current.DossierId, customerId, request), ct).ConfigureAwait(false);
+                return result.IsSuccess ? Results.NoContent() : result.Errors.ToProblem();
+            })
+            .RequirePermission(Permission.TiersModifier)
+            .WithName("SetTargetingObjection")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         return reminders;
     }

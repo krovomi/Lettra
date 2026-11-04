@@ -132,15 +132,23 @@ public sealed class ClaudeEuProviderTests
         provider.GetKeyedService<IAiEngine>(AiEngineKind.ClaudeEu).Should().BeOfType<ClaudeEngine>().Which.Name.Should().Be("claude:claude-opus-5-5");
     }
 
-    [Fact]
-    public void Le_moteur_Claude_prend_son_client_HTTP_a_la_fabrique_avec_un_delai()
+    [Theory]
+    [InlineData(null, 90)]
+    [InlineData("00:00:45", 45)]
+    public void Le_moteur_Claude_prend_son_client_HTTP_a_la_fabrique_avec_un_delai_reglable(string? timeout, int seconds)
     {
-        ServiceCollection services = new();
-        services.AddClaudeEngine(Configuration(new()
+        Dictionary<string, string?> settings = new()
         {
             ["Lettra:Ai:Claude:Provider"] = "Bedrock",
             ["Lettra:Ai:Claude:Region"] = "eu-west-3",
-        }));
+        };
+        if (timeout is not null)
+        {
+            settings["Lettra:Ai:Claude:Timeout"] = timeout;
+        }
+
+        ServiceCollection services = new();
+        services.AddClaudeEngine(Configuration(settings));
         using ServiceProvider provider = services.BuildServiceProvider();
 
         using HttpClient client = new();
@@ -149,9 +157,19 @@ public sealed class ClaudeEuProviderTests
             configure(client);
         }
 
-        client.Timeout.Should().Be(TimeSpan.FromMinutes(10));
+        client.Timeout.Should().Be(TimeSpan.FromSeconds(seconds));
         provider.GetKeyedService<IAiEngine>(AiEngineKind.ClaudeEu).Should().BeOfType<ClaudeEngine>();
     }
+
+    [Fact]
+    public void Un_delai_nul_empeche_le_moteur_Claude_de_demarrer() =>
+        FluentActions.Invoking(() => new ServiceCollection().AddClaudeEngine(Configuration(new()
+        {
+            ["Lettra:Ai:Claude:Provider"] = "Bedrock",
+            ["Lettra:Ai:Claude:Region"] = "eu-west-3",
+            ["Lettra:Ai:Claude:Timeout"] = "00:00:00",
+        })))
+            .Should().Throw<InvalidOperationException>().WithMessage("*Timeout doit être positif*");
 
     private static async Task<(EngineTurn Turn, HttpRequestMessage Request, JsonElement Body)> CallAsync(ClaudeEngineOptions options)
     {

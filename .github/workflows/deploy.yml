@@ -27,6 +27,9 @@ env:
   ALERTMANAGER_VERSION: 0.28.1
   KUBECONFORM_VERSION: 0.7.0
 
+# Les artefacts servent au diagnostic et au téléchargement : leur envoi ne fait pas échouer le job (continue-on-error),
+# pour qu'un quota de stockage plein ne rende pas la CI rouge quand les builds et les tests passent. L'échec de l'envoi
+# reste signalé sur l'exécution, et l'artefact manque.
 jobs:
   valider:
     name: IaC, règles et routage des alertes
@@ -75,6 +78,7 @@ jobs:
       - name: Journaux de l'essai
         if: always()
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: essai-panne
           path: |
@@ -104,6 +108,7 @@ jobs:
       - name: Journaux de l'essai
         if: always()
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: keycloak-kind
           path: deploy/tests/kind/.run/
@@ -270,6 +275,7 @@ jobs:
       - name: Captures, traces et journaux
         if: always()
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: demo-navigateur
           path: deploy/demo/e2e/sortie/
@@ -371,6 +377,7 @@ jobs:
       - name: Rapports k6 (résumé JSON et texte, tableau de bord HTML)
         if: always()
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: demo-charge-k6
           path: deploy/tests/k6/sortie/
@@ -456,6 +463,7 @@ jobs:
       - name: Bilan, rapports k6 et journaux
         if: always()
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: demo-grafana
           path: deploy/tests/grafana/sortie/
@@ -513,6 +521,7 @@ jobs:
       - name: Rapports ZAP (HTML, JSON, Markdown)
         if: always()
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: demo-zap
           path: deploy/tests/zap/sortie/

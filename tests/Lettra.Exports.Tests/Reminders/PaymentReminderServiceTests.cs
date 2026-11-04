@@ -1,6 +1,4 @@
-using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Mail;
-using Lettra.Application.Abstractions.Persistence;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Reminders;
 using Lettra.Domain.Billing;
@@ -20,7 +18,7 @@ public sealed class PaymentReminderServiceTests
 
     private static readonly DateOnly Today = new(2026, 10, 19);
 
-    private readonly Fakes _f = new(Now);
+    private readonly ReminderFakes _f = new(Now);
 
     private static readonly CustomerId Durand = new(Guid.NewGuid());
 
@@ -64,13 +62,13 @@ public sealed class PaymentReminderServiceTests
         overview.Invoices[0].Should().Match<ReminderInvoiceResponse>(i =>
             i.Language == "en-US" && i.CustomerEmail == "ap@berlin.de" && i.PenaltyInterest == 19.73m && i.RecoveryIndemnity == 40m);
         overview.DueToday.Should().Be(2);
-        overview.Settings.Should().BeEquivalentTo(new ReminderSettingsResponse(false, [3, 15, 30, 45], 7, true, 0));
+        overview.Settings.Should().BeEquivalentTo(new ReminderSettingsResponse(false, [3, 15, 30, 45], 7, true, 0, new ReminderPreventionDto(true, 3, false, 3, 300m)));
     }
 
     [Fact]
     public async Task Sans_facture_due_la_vue_est_vide_sans_rien_lire_d_autre()
     {
-        Add("F-1", Durand, 0);
+        Add("F-1", Durand, 10, paid: 1200m);
 
         ReminderOverviewResponse overview = await _f.Service.OverviewAsync(default);
 
@@ -256,8 +254,9 @@ public sealed class PaymentReminderServiceTests
         Result<ReminderSettingsResponse> second = await handler.HandleAsync(
             new UpdateReminderSettingsCommand(dossier, new UpdateReminderSettingsRequest { Delays = [3, 15, 30, 45] }), default);
 
-        first.Value.Should().BeEquivalentTo(new ReminderSettingsResponse(true, [5, 20, 40, 60], 10, true, 1));
-        second.Value.Should().BeEquivalentTo(new ReminderSettingsResponse(false, [3, 15, 30, 45], 7, true, 2));
+        ReminderPreventionDto unchanged = new(true, 3, false, 3, 300m);
+        first.Value.Should().BeEquivalentTo(new ReminderSettingsResponse(true, [5, 20, 40, 60], 10, true, 1, unchanged));
+        second.Value.Should().BeEquivalentTo(new ReminderSettingsResponse(false, [3, 15, 30, 45], 7, true, 2, unchanged));
         _f.Settings.Adds.Should().Be(1);
         _f.UnitOfWork.Saves.Should().Be(2);
         (await new GetReminderSettingsHandler(_f.Service).HandleAsync(new GetReminderSettingsQuery(dossier), default)).Value.Version.Should().Be(2);
@@ -272,154 +271,5 @@ public sealed class PaymentReminderServiceTests
 
         refused.Errors.Single().Code.Should().Be(ReminderErrors.DelaysInvalidCode);
         (_f.Settings.Adds, _f.UnitOfWork.Saves).Should().Be((0, 0));
-    }
-
-    private sealed class Fakes
-    {
-        public Fakes(DateTimeOffset now)
-        {
-            Clock = new FixedClock(now);
-            Service = new PaymentReminderService(Receivables, Context, Reminders, Settings, Email, UnitOfWork, Clock);
-        }
-
-        public FixedClock Clock { get; }
-
-        public FakeReceivables Receivables { get; } = new();
-
-        public FakeContext Context { get; } = new();
-
-        public FakeReminders Reminders { get; } = new();
-
-        public FakeSettings Settings { get; } = new();
-
-        public FakeEmail Email { get; } = new();
-
-        public FakeUnitOfWork UnitOfWork { get; } = new();
-
-        public FakeUser User { get; } = new();
-
-        public PaymentReminderService Service { get; }
-
-    }
-
-    private sealed class FixedClock(DateTimeOffset now) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => now;
-    }
-
-    private sealed class FakeReceivables : IReceivableDocumentReader
-    {
-        public List<ReceivableDocument> Documents { get; } = [];
-
-        public Task<IReadOnlyList<ReceivableDocument>> ListAsync(CustomerId? customer, CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<ReceivableDocument>>([.. Documents.Where(d => customer is null || d.CustomerId == customer)]);
-
-        public Task<IReadOnlyDictionary<InvoiceId, IReadOnlyDictionary<decimal, decimal>>> PendingVatAsync(IReadOnlyCollection<InvoiceId> invoices, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
-    }
-
-    private sealed class FakeContext : IReminderContextReader
-    {
-        public Dictionary<CustomerId, ReminderCustomer> Customers { get; } = [];
-
-        public Dictionary<InvoiceId, decimal> Rates { get; } = [];
-
-        public ReminderSender? Sender { get; set; } = new("Atelier Martin", "FR76 3000 6000 0112 3456 7890 189", null);
-
-        public int CustomerReads { get; private set; }
-
-        public Task<IReadOnlyDictionary<CustomerId, ReminderCustomer>> CustomersAsync(IReadOnlyCollection<CustomerId> customers, CancellationToken cancellationToken)
-        {
-            CustomerReads++;
-            return Task.FromResult<IReadOnlyDictionary<CustomerId, ReminderCustomer>>(Customers.Where(c => customers.Contains(c.Key)).ToDictionary());
-        }
-
-        public Task<IReadOnlyDictionary<InvoiceId, decimal>> PenaltyRatesAsync(IReadOnlyCollection<InvoiceId> invoices, CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyDictionary<InvoiceId, decimal>>(Rates);
-
-        public Task<ReminderSender?> SenderAsync(CancellationToken cancellationToken) => Task.FromResult(Sender);
-    }
-
-    private sealed class FakeReminders : IPaymentReminderRepository
-    {
-        public List<PaymentReminder> All { get; } = [];
-
-        public ReminderHistoryFilter? LastFilter { get; private set; }
-
-        public void Seed(ReceivableDocument document, ReminderLevel level, DateOnly on) => All.Add(PaymentReminder.Record(
-            new ReminderDraft(document.InvoiceId, document.CustomerId, document.Number, level, "fr-FR", "Objet", "Corps", document.Outstanding, 1),
-            ReminderChannel.Email, "x@y.fr", null, ReminderTrigger.User, Guid.Empty, new DateTimeOffset(on, TimeOnly.MinValue, TimeSpan.Zero), on));
-
-        public Task AddAsync(PaymentReminder reminder, CancellationToken cancellationToken)
-        {
-            All.Add(reminder);
-            return Task.CompletedTask;
-        }
-
-        public Task<IReadOnlyDictionary<InvoiceId, PaymentReminder>> LastSentAsync(IReadOnlyCollection<InvoiceId> invoices, CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyDictionary<InvoiceId, PaymentReminder>>(All
-                .Where(r => invoices.Contains(r.InvoiceId) && r.Outcome == ReminderOutcome.Sent)
-                .GroupBy(r => r.InvoiceId)
-                .ToDictionary(g => g.Key, g => g.MaxBy(r => r.Level)!));
-
-        public Task<(IReadOnlyList<ReminderHistoryItem> Items, int Total)> ListAsync(ReminderHistoryFilter filter, CancellationToken cancellationToken)
-        {
-            LastFilter = filter;
-            return Task.FromResult<(IReadOnlyList<ReminderHistoryItem>, int)>(([.. All.Select(r => new ReminderHistoryItem(r, "Durand SARL"))], All.Count));
-        }
-    }
-
-    private sealed class FakeSettings : IReminderSettingsRepository
-    {
-        private ReminderSettings? _stored;
-
-        public int Adds { get; private set; }
-
-        public Task<ReminderSettings?> FindAsync(CancellationToken cancellationToken) => Task.FromResult(_stored);
-
-        public Task AddAsync(ReminderSettings settings, CancellationToken cancellationToken)
-        {
-            _stored = settings;
-            Adds++;
-            return Task.CompletedTask;
-        }
-    }
-
-    private sealed class FakeEmail : IEmailSender
-    {
-        public bool IsConfigured { get; set; } = true;
-
-        public bool Fail { get; set; }
-
-        public List<EmailMessage> Sent { get; } = [];
-
-        public Task<Result> SendAsync(EmailMessage message, CancellationToken cancellationToken)
-        {
-            if (Fail)
-            {
-                return Task.FromResult(Result.Failure(EmailErrors.SendFailed));
-            }
-
-            Sent.Add(message);
-            return Task.FromResult(Result.Success());
-        }
-    }
-
-    private sealed class FakeUnitOfWork : IUnitOfWork
-    {
-        public int Saves { get; private set; }
-
-        public Task<int> SaveChangesAsync(CancellationToken cancellationToken)
-        {
-            Saves++;
-            return Task.FromResult(1);
-        }
-    }
-
-    private sealed class FakeUser : ICurrentUser
-    {
-        public bool IsAuthenticated => true;
-
-        public Guid UserId { get; } = Guid.NewGuid();
     }
 }

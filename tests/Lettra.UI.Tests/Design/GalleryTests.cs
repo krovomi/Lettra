@@ -20,6 +20,7 @@ using Lettra.UI.Tests.Billing;
 using Lettra.UI.Tests.Cabinet;
 using Lettra.UI.Tests.Consultation;
 using Lettra.UI.Tests.Portal;
+using Lettra.UI.Tests.Reminders;
 using Lettra.UI.Tests.Security;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -77,6 +78,7 @@ public sealed class GalleryTests : BunitContext
         Services.AddSingleton<IFileDownloader>(new FakeFileDownloader());
         Services.AddSingleton<IAlertsGateway>(_alerts);
         Services.AddSingleton<IPortalGateway>(new FakePortalGateway());
+        Services.AddSingleton<IRemindersGateway>(new FakeRemindersGateway());
         Services.AddSingleton<IBankConnectionsGateway>(new FakeBankConnectionsGateway());
         Services.AddSingleton<ISessionGateway>(new FakeSessionGateway(new SessionResponse(true, SessionModeDto.Local, "Claire Martin", true)));
         Services.AddSingleton<TimeProvider>(new ManualClock(new DateTimeOffset(2026, 10, 16, 12, 0, 0, TimeSpan.Zero)));

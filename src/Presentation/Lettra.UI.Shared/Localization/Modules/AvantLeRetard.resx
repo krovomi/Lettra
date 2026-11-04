@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Prevention.Upcoming.Title" xml:space="preserve"><value>Rappels avant échéance</value></data>
+  <data name="Prevention.Upcoming.Hint" xml:space="preserve"><value>Un rappel aimable, {0} jour(s) avant l'échéance, aux clients dont la météo des paiements annonce pluie ou orage, avec le lien de leur espace client et le QR code de virement. Il part au meilleur jour du client quand la météo en donne un, et suit l'envoi automatique.</value></data>
+  <data name="Prevention.Upcoming.Off" xml:space="preserve"><value>Le rappel avant échéance est coupé : activez-le dans le scénario de relance ci-dessous.</value></data>
+  <data name="Prevention.Upcoming.Empty" xml:space="preserve"><value>Aucun rappel avant échéance à prévoir</value></data>
+  <data name="Prevention.Upcoming.Empty.Text" xml:space="preserve"><value>Aucune facture d'un client à la météo pluvieuse ou orageuse n'arrive à échéance dans les deux semaines.</value></data>
+  <data name="Prevention.Upcoming.Weather" xml:space="preserve"><value>Météo</value></data>
+  <data name="Prevention.Upcoming.BestDay" xml:space="preserve"><value>meilleur jour : {0}</value></data>
+  <data name="Prevention.Upcoming.Planned" xml:space="preserve"><value>Rappel prévu le</value></data>
+  <data name="Prevention.Upcoming.SentOn" xml:space="preserve"><value>Parti le {0}</value></data>
+  <data name="Prevention.Objection.Hint" xml:space="preserve"><value>Le client s'oppose au ciblage selon son comportement de paiement : il ne recevra plus de rappel avant échéance.</value></data>
+  <data name="Prevention.Objection.Add" xml:space="preserve"><value>Ne pas cibler ce client</value></data>
+  <data name="Prevention.Objection.Title" xml:space="preserve"><value>Clients opposés au ciblage</value></data>
+  <data name="Prevention.Objection.Text" xml:space="preserve"><value>Choisir à qui envoyer le rappel avant échéance selon la façon dont il paie est un profilage : chaque client peut s'y opposer. Il reçoit toujours les relances après l'échéance, qui ne ciblent personne.</value></data>
+  <data name="Prevention.Objection.None" xml:space="preserve"><value>Aucun client ne s'est opposé au ciblage.</value></data>
+  <data name="Prevention.Objection.Since" xml:space="preserve"><value>depuis le {0}</value></data>
+  <data name="Prevention.Objection.Remove" xml:space="preserve"><value>Retirer l'opposition</value></data>
+  <data name="Prevention.Plans.Title" xml:space="preserve"><value>Échéanciers</value></data>
+  <data name="Prevention.Plans.Waiting" xml:space="preserve"><value>{0} à voir</value></data>
+  <data name="Prevention.Plans.Hint" xml:space="preserve"><value>Demandés par vos clients professionnels dans leur espace client, dans les bornes du scénario : accordés tout de suite, les mêmes pour tous. Tant qu'un échéancier court, la facture n'est relancée qu'une fois par échéance manquée.</value></data>
+  <data name="Prevention.Plans.Off" xml:space="preserve"><value>L'échéancier en libre-service est coupé : activez-le dans le scénario de relance pour le proposer dans l'espace client.</value></data>
+  <data name="Prevention.Plans.Empty" xml:space="preserve"><value>Aucun échéancier</value></data>
+  <data name="Prevention.Plans.Empty.Text" xml:space="preserve"><value>Les échéanciers demandés dans l'espace client apparaîtront ici.</value></data>
+  <data name="Prevention.Plans.Status" xml:space="preserve"><value>État</value></data>
+  <data name="Prevention.Plans.WaitingOnly" xml:space="preserve"><value>Seulement ceux à voir</value></data>
+  <data name="Prevention.Plans.Count" xml:space="preserve"><value>{0} échéancier(s) sur {1}</value></data>
+  <data name="Prevention.Plans.Installments" xml:space="preserve"><value>Échéances</value></data>
+  <data name="Prevention.Plans.Paid" xml:space="preserve"><value>réglée</value></data>
+  <data name="Prevention.Plans.Missed" xml:space="preserve"><value>manquée</value></data>
+  <data name="Prevention.Plans.Total" xml:space="preserve"><value>Montant</value></data>
+  <data name="Prevention.Plans.Left" xml:space="preserve"><value>reste {0}</value></data>
+  <data name="Prevention.Plans.RequestedAt" xml:space="preserve"><value>Demandé le</value></data>
+  <data name="Prevention.Plans.New" xml:space="preserve"><value>Nouveau</value></data>
+  <data name="Prevention.Plans.Acknowledge" xml:space="preserve"><value>Vu</value></data>
+  <data name="Prevention.Plans.Cancel" xml:space="preserve"><value>Arrêter</value></data>
+  <data name="Prevention.Plans.Cancel.Confirm" xml:space="preserve"><value>Confirmer l'arrêt</value></data>
+  <data name="Prevention.Plans.Cancel.Back" xml:space="preserve"><value>Garder</value></data>
+  <data name="Prevention.Plans.Cancel.Hint" xml:space="preserve"><value>Mettre fin à l'échéancier : la facture reprend ses relances habituelles.</value></data>
+  <data name="PlanStatus.OnTrack" xml:space="preserve"><value>À jour</value></data>
+  <data name="PlanStatus.Late" xml:space="preserve"><value>Échéance manquée</value></data>
+  <data name="PlanStatus.Lapsed" xml:space="preserve"><value>Non tenu</value></data>
+  <data name="PlanStatus.Completed" xml:space="preserve"><value>Soldé</value></data>
+  <data name="PlanStatus.Cancelled" xml:space="preserve"><value>Arrêté</value></data>
+  <data name="Prevention.Plan.Title" xml:space="preserve"><value>Échéancier</value></data>
+  <data name="Prevention.Plan.Line" xml:space="preserve"><value>Échéance {0} : {1}, le {2}</value></data>
+  <data name="Prevention.Plan.MissedLeft" xml:space="preserve"><value>manquée, il manque {0}</value></data>
+  <data name="Prevention.Plan.RequestedBy" xml:space="preserve"><value>Demandé par {0} le {1}, dans l'espace client.</value></data>
+  <data name="Prevention.Plan.Effect" xml:space="preserve"><value>Tant que l'échéancier court, les relances habituelles s'arrêtent : une seule relance par échéance manquée. S'il n'est pas tenu, la facture reprend son scénario.</value></data>
+  <data name="Prevention.Toast.Acknowledged" xml:space="preserve"><value>Échéancier de la facture {0} pris en compte.</value></data>
+  <data name="Prevention.Toast.Cancelled" xml:space="preserve"><value>Échéancier de la facture {0} arrêté : la facture reprend ses relances.</value></data>
+  <data name="Prevention.Toast.Objected" xml:space="preserve"><value>{0} ne recevra plus de rappel avant échéance.</value></data>
+  <data name="Prevention.Toast.ObjectionRemoved" xml:space="preserve"><value>Opposition de {0} retirée.</value></data>
+  <data name="Prevention.Settings.Title" xml:space="preserve"><value>Avant le retard</value></data>
+  <data name="Prevention.Settings.BeforeDue" xml:space="preserve"><value>Envoyer un rappel avant l'échéance aux clients à la météo pluvieuse ou orageuse</value></data>
+  <data name="Prevention.Settings.BeforeDueDays" xml:space="preserve"><value>Jours avant l'échéance</value></data>
+  <data name="Prevention.Settings.BeforeDue.Hint" xml:space="preserve"><value>Le rappel suit l'envoi automatique : sans lui, il reste à envoyer depuis la liste des rappels avant échéance.</value></data>
+  <data name="Prevention.Settings.Plans" xml:space="preserve"><value>Proposer l'échéancier en libre-service dans l'espace client (clients professionnels)</value></data>
+  <data name="Prevention.Settings.PlanMax" xml:space="preserve"><value>Échéances au plus</value></data>
+  <data name="Prevention.Settings.PlanMin" xml:space="preserve"><value>Reste dû minimum (€ TTC)</value></data>
+  <data name="Prevention.Settings.Plans.Hint" xml:space="preserve"><value>Les mêmes bornes pour tous les clients, jamais selon une note : de 2 à 3 échéances, espacées d'une semaine à un mois, la dernière avant le plafond légal des délais de paiement (60 jours après l'émission ou 45 jours fin de mois, la date la plus tardive). Une facture contestée n'est pas étalée.</value></data>
+  <data name="ReminderLevel.BeforeDue" xml:space="preserve"><value>Rappel avant échéance</value></data>
+  <data name="ReminderLevel.MissedInstallment" xml:space="preserve"><value>Échéance manquée</value></data>
+  <data name="Alerts.Rule.echeancier-a-voir" xml:space="preserve"><value>Échéancier demandé par un client, à prendre en compte</value></data>
+  <data name="Error.Reminders.BeforeDueDaysInvalid" xml:space="preserve"><value>Le rappel avant échéance part de 1 à 30 jours avant l'échéance.</value></data>
+  <data name="Error.Reminders.PaymentPlanBoundsInvalid" xml:space="preserve"><value>L'échéancier va de 2 à 3 échéances, pour un reste dû minimum de 0 à 1 000 000 €.</value></data>
+  <data name="Error.PaymentPlans.Disabled" xml:space="preserve"><value>L'échéancier en libre-service n'est pas proposé.</value></data>
+  <data name="Error.PaymentPlans.NotProfessional" xml:space="preserve"><value>L'échéancier en libre-service est réservé aux clients professionnels.</value></data>
+  <data name="Error.PaymentPlans.NothingDue" xml:space="preserve"><value>Cette facture est déjà réglée.</value></data>
+  <data name="Error.PaymentPlans.Disputed" xml:space="preserve"><value>Cette facture est contestée : pas d'échéancier.</value></data>
+  <data name="Error.PaymentPlans.AlreadyPlanned" xml:space="preserve"><value>Cette facture a déjà un échéancier en cours.</value></data>
+  <data name="Error.PaymentPlans.BelowMinimum" xml:space="preserve"><value>Le reste dû est sous le minimum fixé pour un échéancier.</value></data>
+  <data name="Error.PaymentPlans.NoRoom" xml:space="preserve"><value>Le plafond légal des délais de paiement est trop proche pour étaler cette facture.</value></data>
+  <data name="Error.PaymentPlans.InstallmentsInvalid" xml:space="preserve"><value>Le nombre d'échéances n'est pas dans les bornes fixées.</value></data>
+  <data name="Error.PaymentPlans.RequesterInvalid" xml:space="preserve"><value>Le nom de la personne qui demande l'échéancier va de 2 à 120 caractères.</value></data>
+  <data name="Error.PaymentPlans.ConsentRequired" xml:space="preserve"><value>L'accord de la personne est nécessaire pour créer l'échéancier.</value></data>
+  <data name="Error.PaymentPlans.NotFound" xml:space="preserve"><value>Cet échéancier n'existe plus.</value></data>
+  <data name="Error.PaymentPlans.AlreadyCancelled" xml:space="preserve"><value>Cet échéancier est déjà arrêté.</value></data>
+</root>
