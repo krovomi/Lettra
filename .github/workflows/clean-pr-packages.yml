@@ -1,0 +1,26 @@
+name: Nettoyage des images GHCR
+
+on:
+  pull_request:
+    types: [closed] # Se déclenche à la fermeture OU à la fusion (merge) d'une PR
+
+permissions:
+  packages: write # Requis pour supprimer des versions de paquets
+
+jobs:
+  delete-pr-image:
+    name: Supprimer l'image Docker de la PR
+    runs-on: ubuntu-latest
+    # S'exécute uniquement si la PR portait l'étiquette permettant de créer l'environnement
+    if: contains(github.event.pull_request.labels.*.name, 'env:pr')
+    
+    steps:
+      - name: Nettoyer les tags GHCR associés à la PR
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: 'lettra-api'
+          package-type: 'container'
+          # Cherche tous les tags commençant par "pr-<numéro>-"
+          min-versions-to-keep: 0
+          delete-only-pre-releases: false
+          ignore-versions: '^(?!pr-${{ github.event.pull_request.number }}-).*$' # Regex inversée : ne touche qu'aux tags de cette PR
