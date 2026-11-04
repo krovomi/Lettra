@@ -108,22 +108,29 @@ jobs:
           status=0
           node android.mjs "$(cat "$SORTIE/client.txt")" || status=$?
           # Un émulateur tombé laisse adb attendre l'appareil sans fin (jusqu'au délai du job) : chaque appel est borné.
-          timeout 60 adb logcat -d > "$SORTIE/android/logcat.txt" || true
+          timeout 60 adb logcat -d > "$SORTIE/android/logcat${NOUVEL_ESSAI:+-2}.txt" || true
           if [ "$status" != 0 ]; then
-            # L'appareil est-il encore là ? Sinon, la mémoire de la machine (OOM) est la première piste.
             echo "adb : $(timeout 10 adb get-state 2>&1 || echo 'appareil perdu')"
-            pgrep -a -f 'qemu-system|emulator' | cut -c1-160 || echo "processus de l'émulateur : aucun"
             free -m
             sudo dmesg | grep -iE 'out of memory|oom-kill|killed process|segfault|qemu' | tail -n 20 || true
-            # Journal du noyau de la machine (OOM, signaux) et rapports de plantage de l'émulateur, place disque.
-            sudo journalctl -k --no-pager -q --since '-15 min' | grep -iE 'oom|kill|qemu|segfault|out of memory' | tail -n 20 || true
-            ls -laR /tmp/android-runner 2>/dev/null | tail -n 30 || true
-            # netsimd (réseau simulé de l'émulateur) écrit encore au moment de l'arrêt : sa sortie d'erreur dit peut-être pourquoi.
-            tail -n 60 /tmp/android-runner/netsimd/netsim_stderr.log 2>/dev/null || true
             df -h / | tail -n 1
-            # Un émulateur qui plante laisse un rapport (minidump) : on liste ceux trouvés.
-            find /tmp ~/.android -name '*.dmp' -newer "$SORTIE/client.txt" 2>/dev/null | head -n 10 || true
-            grep -E 'AndroidRuntime|monodroid|mono-rt|DOTNET|fr\.lettra|Lettra|ActivityTaskManager: (START|Displayed)|com\.android\.chrome|cr_' "$SORTIE/android/logcat.txt" | grep -vE 'SandboxedProcessService|CronetUrlRequestContext' | tail -n 150 || true
+            grep -E 'AndroidRuntime|monodroid|mono-rt|DOTNET|fr\.lettra|Lettra|ActivityTaskManager: (START|Displayed)|com\.android\.chrome|cr_' "$SORTIE/android/logcat${NOUVEL_ESSAI:+-2}.txt" | grep -vE 'SandboxedProcessService|CronetUrlRequestContext' | tail -n 150 || true
+            # L'émulateur de la CI se fige parfois peu après la connexion (le noyau de l'appareil n'écrit plus rien), puis
+            # son processus s'arrête au bout d'une minute, sans message ni rapport de plantage, mémoire et disque
+            # suffisants. Ce n'est pas l'application : elle ne peut pas arrêter l'émulateur. Dans ce seul cas, un nouvel
+            # essai complet sur un émulateur neuf (données effacées) ; un échec avec l'appareil encore là échoue tout de suite.
+            if ! pgrep -f qemu-system > /dev/null && [ -z "${NOUVEL_ESSAI:-}" ]; then
+              echo "::warning::L'émulateur s'est arrêté pendant le test, sans message : nouvel essai sur un émulateur neuf."
+              cd - > /dev/null
+              "$ANDROID_HOME/emulator/emulator" -port 5554 -avd test -no-window -gpu swiftshader_indirect -noaudio \
+                -no-boot-anim -no-snapshot -wipe-data > "$SORTIE/android/emulateur-2.log" 2>&1 &
+              timeout 120 adb wait-for-device
+              timeout 600 bash -c 'until [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d "\r")" = 1 ]; do sleep 5; done'
+              for reglage in window_animation_scale transition_animation_scale animator_duration_scale; do
+                adb shell settings put global "$reglage" 0.0
+              done
+              NOUVEL_ESSAI=1 exec bash "$0"
+            fi
             exit "$status"
           fi
           node appareil.mjs voir "$(cat "$SORTIE/client-appareil.txt")"
@@ -144,7 +151,7 @@ jobs:
           # en ouvrant la liste des clients, sans message ni manque de mémoire. À relever quand une version plus
           # récente passe ce test.
           emulator-build: 16428233
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -show-kernel
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
           script: bash "$RUNNER_TEMP/serveur-commun-android.sh"
 
       - name: Journaux de la démo
