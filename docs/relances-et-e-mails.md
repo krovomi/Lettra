@@ -18,14 +18,17 @@ ce qui reste.
 
 ## Le scénario de relance
 
-Quatre niveaux se suivent, du plus doux au plus ferme :
+Quatre niveaux se suivent après l'échéance, du plus doux au plus ferme, entourés de deux messages propres à « Avant le
+retard » (le rappel avant l'échéance et la relance d'une échéance manquée sous échéancier) :
 
 | Niveau | Délai par défaut | Ce que dit le message |
 | --- | --- | --- |
+| Rappel avant échéance | J−3 | Petit rappel avant l'échéance, lien de l'espace client et QR code (clients à la météo pluvieuse ou orageuse, voir [avant-le-retard.md](avant-le-retard.md)) |
 | Rappel amical | J+3 | « Sauf erreur de notre part… peut-être un simple oubli » |
 | Relance | J+15 | La facture reste impayée, merci de la régler rapidement |
 | Dernière relance | J+30 | Sans règlement sous huit jours, une mise en demeure suivra. Pénalités citées. |
 | Mise en demeure | J+45 | Mise en demeure de payer sous huit jours. Pénalités citées. |
+| Échéance manquée | J+3 après l'échéance manquée | Seulement sous échéancier : l'échéance oubliée, le calendrier et ce qu'il manque ([avant-le-retard.md](avant-le-retard.md)) |
 
 Les délais comptent les jours depuis l'échéance. Ils se règlent par dossier (bloc **Scénario de relance** de l'écran,
 droit « gérer le catalogue ») : quatre nombres de 1 à 365, strictement croissants, et un **écart minimal** de 1 à 90
@@ -51,7 +54,7 @@ faire relire par un expert-comptable (jalon J2).
 Le message est écrit dans la langue du client : anglais si sa langue préférée commence par `en`, français sinon. Il
 reprend le numéro de la facture, sa date, son échéance, le retard, le reste dû et, si la fiche entreprise en a un,
 l'IBAN et le BIC pour le virement. Il est signé du nom de l'entreprise, qui est aussi le nom d'expéditeur affiché.
-C'est du texte simple, sans pièce jointe.
+C'est du texte simple ; seuls le rappel avant échéance et la relance d'échéance manquée joignent le QR code de virement.
 
 ## L'écran Relances
 
