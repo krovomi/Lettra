@@ -1,0 +1,58 @@
+/* Décisions à prendre : une carte par décision, l'urgence en liseré à gauche et en pastille ; le cadran d'autonomie en
+   deux choix côte à côte (empilés sur téléphone). Toutes les couleurs viennent des jetons, en clair comme en sombre. */
+
+.lt-decisions-refreshed { font-size: var(--text-sm); }
+
+.lt-decisions-dial { display: grid; gap: var(--space-3); margin-bottom: var(--space-4); }
+.lt-decisions-dial-head h2 { margin: 0 0 var(--space-1); font-size: var(--text-lg); }
+.lt-decisions-dial-head p { margin: 0; }
+.lt-decisions-levels { display: grid; grid-template-columns: 1fr; gap: var(--space-2); margin: 0; padding: 0; border: 0; }
+.lt-decisions-level {
+    display: flex; align-items: flex-start; gap: var(--space-2); min-height: var(--hit); padding: var(--space-3);
+    border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); cursor: pointer;
+}
+.lt-decisions-level input { margin-top: 0.2rem; accent-color: var(--color-primary); }
+.lt-decisions-level.is-current { border-color: var(--color-primary); background: var(--color-primary-soft); color: var(--color-primary-soft-fg); }
+.lt-decisions-level-text { display: grid; gap: var(--space-1); }
+.lt-decisions-levels:disabled .lt-decisions-level { cursor: default; opacity: 0.8; }
+
+.lt-decisions { list-style: none; margin: var(--space-3) 0 0; padding: 0; display: grid; gap: var(--space-3); }
+.lt-decision {
+    display: grid; gap: var(--space-2); padding: var(--space-4); border: 1px solid var(--color-border);
+    border-left: 4px solid var(--color-border-strong); border-radius: var(--radius-lg); background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+}
+.lt-decision[data-urgency="Critical"] { border-left-color: var(--color-danger); }
+.lt-decision[data-urgency="High"] { border-left-color: var(--color-warning); }
+.lt-decision[data-urgency="Normal"] { border-left-color: var(--color-primary); }
+.lt-decision:not([data-status="Proposed"]) { box-shadow: none; opacity: 0.85; }
+
+.lt-decision-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--color-fg-muted); }
+.lt-decision-urgency {
+    display: inline-flex; align-items: center; padding: 0 var(--space-2); border-radius: var(--radius-full);
+    background: var(--color-neutral-bg); color: var(--color-neutral-fg); font-weight: 600;
+}
+.lt-decision-urgency[data-urgency="Critical"] { background: var(--color-danger-bg); color: var(--color-danger-fg); }
+.lt-decision-urgency[data-urgency="High"] { background: var(--color-warning-bg); color: var(--color-warning-fg); }
+.lt-decision-urgency[data-urgency="Normal"] { background: var(--color-info-bg); color: var(--color-info-fg); }
+.lt-decision-due { display: inline-flex; align-items: center; gap: var(--space-1); }
+.lt-decision-due.is-late { color: var(--color-danger-fg); font-weight: 600; }
+.lt-decision-impact { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--color-fg); }
+
+.lt-decision-title { margin: 0; font-size: var(--text-base); line-height: 1.4; overflow-wrap: anywhere; }
+.lt-decision-reason { margin: 0; color: var(--color-fg-muted); font-size: var(--text-sm); overflow-wrap: anywhere; }
+.lt-decision-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.lt-decision-snooze { display: inline-flex; flex-wrap: wrap; gap: var(--space-1); padding: var(--space-1); border-radius: var(--radius-md); background: var(--color-neutral-bg); }
+
+.lt-decisions-rules { margin-top: var(--space-4); }
+.lt-decisions-rules summary { cursor: pointer; min-height: var(--hit); display: flex; align-items: center; color: var(--color-fg-muted); }
+.lt-decisions-rules ul { margin: var(--space-2) 0 0; padding-left: var(--space-5); display: grid; gap: var(--space-1); font-size: var(--text-sm); }
+
+@media (min-width: 768px) {
+    .lt-decisions-levels { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+    .lt-decision { padding: var(--space-3); }
+    .lt-decision-actions .lettra-button { flex: 1 1 auto; justify-content: center; }
+}

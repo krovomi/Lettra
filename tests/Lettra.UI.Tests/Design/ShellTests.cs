@@ -59,7 +59,8 @@ public sealed class ShellTests : BunitContext
         IRenderedComponent<MainLayout> coque = Coque();
 
         Libelles(coque.FindAll(".lt-sidebar .lt-nav-link")).Should().Equal(
-            "Accueil", "En bref", "Vue cabinet", "Radar de prévention", "Comptes intra-groupe", "Démo commentée", "Devis", "Devis à relancer", "Carnet de commandes", "Factures", "Avoirs", "Factures récurrentes", "Vérifier une facture", "Prêt pour l'e-facture", "Clients", "Fournisseurs", "Factures reçues", "IBAN à vérifier", "Attestations de vigilance", "Vérifier les tiers", "Catalogue", "Encaissements", "Rapprochement bancaire", "Pièces justificatives", "Relances", "Météo des paiements", "Fiche d'appel", "Journal et balance", "FEC", "Déclarations", "Revue du dossier", "Lettre de mission", "Anti-blanchiment", "Remonter le temps", "Pourquoi ce chiffre ?", "Et si… ?", "Tableaux de bord", "Alertes", "Bien utiliser l'IA", "Entreprise", "Mes préférences", "Serveur du cabinet");
+            "Accueil", "En bref", "Décisions à prendre", "Vue cabinet", "Radar de prévention", "Comptes intra-groupe", "Démo commentée", "Devis", "Devis à relancer", "Carnet de commandes", "Factures", "Avoirs", "Factures récurrentes", "Vérifier une facture", "Prêt pour l'e-facture", "Clients", "Fournisseurs", "Factures reçues", "IBAN à vérifier", "Attestations de vigilance", "Vérifier les tiers", "Catalogue", "Encaissements", "Rapprochement bancaire", "Pièces justificatives", "Relances", "Météo des paiements", "Fiche d'appel", "Journal et balance", "FEC", "Déclarations", "Revue du dossier", "Lettre de mission", "Anti-blanchiment", "Remonter le temps", "Pourquoi ce chiffre ?", "Et si… ?", "Tableaux de bord", "Alertes", "Bien utiliser l'IA", "Entreprise", "Mes préférences", "Serveur du cabinet");
+
         coque.FindAll(".lt-sidebar .lt-nav-group").Select(g => g.TextContent).Should().Equal("Ventes", "Tiers", "Comptabilité", "Pilotage");
         Libelles(coque.FindAll(".lt-tabbar .lt-tab")).Should().Equal("Accueil", "Devis", "Factures", "Clients", "Plus");
         coque.Find(".lt-skip").GetAttribute("href").Should().Be("#main");
@@ -69,16 +70,15 @@ public sealed class ShellTests : BunitContext
     public void La_feuille_plus_porte_le_reste_de_la_navigation_et_l_apparence_puis_se_ferme_avec_echap()
     {
         IRenderedComponent<MainLayout> coque = Coque();
+
         coque.FindAll("#more-sheet").Should().BeEmpty();
-
         coque.Find("#tab-more").Click();
-
         coque.Find("#tab-more").GetAttribute("aria-expanded").Should().Be("true");
+
         IElement feuille = coque.Find("#more-sheet");
         feuille.GetAttribute("role").Should().Be("dialog");
-        Libelles(feuille.QuerySelectorAll(".lt-nav-link")).Should().Equal("En bref", "Vue cabinet", "Radar de prévention", "Comptes intra-groupe", "Démo commentée", "Devis à relancer", "Carnet de commandes", "Avoirs", "Factures récurrentes", "Vérifier une facture", "Prêt pour l'e-facture", "Fournisseurs", "Factures reçues", "IBAN à vérifier", "Attestations de vigilance", "Vérifier les tiers", "Catalogue", "Encaissements", "Rapprochement bancaire", "Pièces justificatives", "Relances", "Météo des paiements", "Fiche d'appel", "Journal et balance", "FEC", "Déclarations", "Revue du dossier", "Lettre de mission", "Anti-blanchiment", "Remonter le temps", "Pourquoi ce chiffre ?", "Et si… ?", "Tableaux de bord", "Alertes", "Bien utiliser l'IA", "Entreprise", "Mes préférences", "Serveur du cabinet");
+        Libelles(feuille.QuerySelectorAll(".lt-nav-link")).Should().Equal("En bref", "Décisions à prendre", "Vue cabinet", "Radar de prévention", "Comptes intra-groupe", "Démo commentée", "Devis à relancer", "Carnet de commandes", "Avoirs", "Factures récurrentes", "Vérifier une facture", "Prêt pour l'e-facture", "Fournisseurs", "Factures reçues", "IBAN à vérifier", "Attestations de vigilance", "Vérifier les tiers", "Catalogue", "Encaissements", "Rapprochement bancaire", "Pièces justificatives", "Relances", "Météo des paiements", "Fiche d'appel", "Journal et balance", "FEC", "Déclarations", "Revue du dossier", "Lettre de mission", "Anti-blanchiment", "Remonter le temps", "Pourquoi ce chiffre ?", "Et si… ?", "Tableaux de bord", "Alertes", "Bien utiliser l'IA", "Entreprise", "Mes préférences", "Serveur du cabinet");
         feuille.QuerySelectorAll("input[type=radio][name^=lettra-theme]").Should().HaveCount(5);
-
         feuille.KeyDown("Escape");
         coque.FindAll("#more-sheet").Should().BeEmpty();
     }

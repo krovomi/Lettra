@@ -102,7 +102,6 @@ public enum Permission
 
     /// <summary>Relever les factures reçues et y répondre (prise en charge, approuvée, litige, refus, paiement transmis).</summary>
     [PermissionCategory(PermissionKind.DossierData)] FacturesRecuesTraiter = 130,
-
     // 140-149 : radar de prévention des difficultés. Le niveau d'attention concerne le client du cabinet (une entreprise
     // individuelle est une personne physique) : il reste dans le cabinet, ni l'auditeur ni le client ne le voient.
 
@@ -111,6 +110,15 @@ public enum Permission
 
     /// <summary>Régler les seuils du radar d'un dossier : solde de trésorerie connu, sensibilité, signaux coupés.</summary>
     [PermissionCategory(PermissionKind.DossierData)] PreventionRegler = 141,
+
+    // 150-159 : décisions à prendre. Chaque décision exige aussi la permission de sa règle : on ne voit que ce sur quoi
+    // on peut agir, et l'action acceptée passe par sa commande, qui vérifie la sienne.
+
+    /// <summary>Voir les décisions à prendre du dossier, les accepter, les remettre à plus tard, les ignorer, les actualiser.</summary>
+    [PermissionCategory(PermissionKind.DossierData)] DecisionsTraiter = 150,
+
+    /// <summary>Régler le cadran d'autonomie du dossier (montrer seulement, ou préparer l'action).</summary>
+    [PermissionCategory(PermissionKind.DossierData)] DecisionsRegler = 151,
 }
 
 /// <summary>Ce qu'une permission ouvre.</summary>

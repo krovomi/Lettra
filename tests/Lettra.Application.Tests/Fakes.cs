@@ -301,6 +301,7 @@ internal static class CabinetFakesRegistration
         services.AddSingleton<Lettra.Application.Abstractions.Persistence.IAttestationStore>(new InMemoryAttestationStore());
         services.AddSingleton<Lettra.Application.Abstractions.Persistence.IThirdPartyCheckStore>(new InMemoryThirdPartyCheckStore());
         services.AddSingleton<Lettra.Application.Features.Kpi.IBillingKpiReader>(new NoBillingKpis());
+        services.AddSingleton<Lettra.Application.Abstractions.Decisions.IDecisionStore>(new Decisions.InMemoryDecisionStore());
         return services.AddRecurringFakes();
     }
 }

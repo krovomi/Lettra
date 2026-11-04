@@ -66,6 +66,12 @@ public static class DossierIndicatorKeys
     public const string ThirdPartiesToReview = "tiers.a-examiner";
 
     /// <summary>
+    /// Décisions à prendre à décider (pas celles remises à plus tard) ; l'urgence suit la plus urgente, échéance = la
+    /// plus proche. Ni nom ni montant : le compteur seulement.
+    /// </summary>
+    public const string DecisionsPending = "decisions.a-prendre";
+
+    /// <summary>
     /// Seuils réglementaires franchis ou dont le franchissement est prévu dans les trois mois (franchise ou régime de TVA,
     /// catégorie, attestation de vigilance, DAS 2) ; échéance = le franchissement le plus proche. Ni nom ni montant.
     /// </summary>
@@ -80,7 +86,7 @@ public static class DossierIndicatorKeys
 
     /// <summary>Ordre des colonnes du tableau (les clés inconnues suivent, par ordre alphabétique).</summary>
     public static IReadOnlyList<string> Known { get; } =
-        [OverdueInvoices, PlatformRejections, EInvoicingReadiness, VatToDeclare, FeeReturn, Thresholds, BankUnreconciled, SupplierIbanToVerify, SupplierAttestations, ThirdPartiesToReview, ClientDueDiligence, Prevention, OpenAlerts, ReviewPending];
+        [DecisionsPending, OverdueInvoices, PlatformRejections, EInvoicingReadiness, VatToDeclare, FeeReturn, Thresholds, BankUnreconciled, SupplierIbanToVerify, SupplierAttestations, ThirdPartiesToReview, ClientDueDiligence, Prevention, OpenAlerts, ReviewPending];
 
     /// <summary>
     /// Les clés qu'un utilisateur ne voit que s'il a la permission de lecture propre à leur module sur le dossier : la vue

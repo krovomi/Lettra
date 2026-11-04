@@ -1,0 +1,474 @@
+@page "/decisions"
+@using Lettra.Contracts.Decisions
+@using Lettra.UI.Shared.Components.Explorer
+@inject IDecisionsGateway Decisions
+@inject ToastService Toasts
+@inject TimeProvider Clock
+@inject IStringLocalizer<SharedResource> L
+@* Décisions à prendre : ce que les règles de Lettra ont repéré dans le dossier (relance due, échéance fiscale, IBAN à
+   vérifier…), les plus urgentes d'abord, avec l'action préparée quand il y en a une. Accepter fait l'action avec les
+   droits de l'utilisateur ; « Plus tard » et « Ignorer » se défont. Les règles sont fixes et vérifiables : aucune IA ne
+   décide ni n'écrit ces phrases. Le cadran d'autonomie dit si Lettra prépare l'action ou montre seulement. *@
+
+<PageTitle>@L["Decisions.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["Decisions.Title"]</h1>
+        <p class="lettra-muted">@L["Decisions.Subtitle"]</p>
+    </div>
+    <div class="lt-page-actions">
+        @if (_view?.RefreshedAt is { } refreshed)
+        {
+            <span class="lettra-muted lt-decisions-refreshed" id="decisions-refreshed">@string.Format(Culture, L["Decisions.RefreshedAt"], RefreshedText(refreshed))</span>
+        }
+        <button type="button" class="lettra-button is-secondary" id="decisions-refresh" disabled="@(_refreshing || _view is null)" @onclick="RefreshAsync">
+            <Icon Name="refresh-cw" Size="18" /> @L[_refreshing ? "Decisions.Refreshing" : "Decisions.Refresh"]
+        </button>
+    </div>
+</div>
+
+<GeneralErrors Errors="_errors" />
+
+@if (_view is not { } view)
+{
+    <ListSkeleton Rows="4" Columns="2" />
+}
+else
+{
+    <section class="lt-banking-stats" id="decisions-stats" aria-label="@L["Decisions.Stats"]">
+        <div class="@($"lt-banking-stat {(Count(view, DecisionStatusDto.Proposed) > 0 ? "is-proposed" : null)}")">
+            <span>@L["Decisions.Stat.Open"]</span>
+            <strong id="decisions-open">@Count(view, DecisionStatusDto.Proposed)</strong>
+        </div>
+        <div class="@($"lt-banking-stat {(Urgent(view) > 0 ? "is-pending" : null)}")">
+            <span>@L["Decisions.Stat.Urgent"]</span>
+            <strong id="decisions-urgent">@Urgent(view)</strong>
+            <small class="lettra-muted">@L["Decisions.Stat.Urgent.Hint"]</small>
+        </div>
+        <div class="lt-banking-stat">
+            <span>@L["Decisions.Stat.Snoozed"]</span>
+            <strong id="decisions-snoozed">@Count(view, DecisionStatusDto.Snoozed)</strong>
+        </div>
+        <div class="lt-banking-stat">
+            <span>@L["Decisions.Stat.Done"]</span>
+            <strong id="decisions-done">@view.Rows.Count(r => IsClosed(r.Status))</strong>
+            <small class="lettra-muted">@L["Decisions.Stat.Done.Hint"]</small>
+        </div>
+    </section>
+
+    <section class="lettra-card lt-decisions-dial" aria-labelledby="decisions-dial-title">
+        <div class="lt-decisions-dial-head">
+            <h2 id="decisions-dial-title">@L["Decisions.Dial"]</h2>
+            <p class="lettra-hint">@L["Decisions.Dial.Hint"]</p>
+        </div>
+        <fieldset class="lt-decisions-levels" disabled="@(!view.CanConfigure || _savingPolicy)">
+            <legend class="lettra-visually-hidden">@L["Decisions.Dial"]</legend>
+            @foreach (AutonomyLevelDto level in Enum.GetValues<AutonomyLevelDto>())
+            {
+                <label class="@($"lt-decisions-level {(view.Level == level ? "is-current" : null)}")" for="@($"decisions-level-{level}")">
+                    <input type="radio" name="decisions-level" id="@($"decisions-level-{level}")" checked="@(view.Level == level)" @onchange="() => SetLevelAsync(level)" />
+                    <span class="lt-decisions-level-text">
+                        <strong>@L[$"Decisions.Level.{level}"]</strong>
+                        <small class="lettra-muted">@L[$"Decisions.Level.{level}.Hint"]</small>
+                    </span>
+                </label>
+            }
+        </fieldset>
+        @if (!view.CanConfigure)
+        {
+            <p class="lettra-hint" id="decisions-dial-readonly"><Icon Name="lock" Size="16" /> @L["Decisions.Dial.ReadOnly"]</p>
+        }
+    </section>
+
+    <section class="lt-panel" aria-labelledby="decisions-list-title">
+        <div class="lt-panel-head">
+            <h2 id="decisions-list-title">@L["Decisions.List"]</h2>
+        </div>
+        <ListFilterBar Id="decisions-filters" ActiveCount="ActiveFilters" OnReset="ResetFilters">
+            <ChildContent>
+                <div class="lt-filter">
+                    <label for="decisions-search">@L["Lists.Search"]</label>
+                    <input id="decisions-search" type="search" @bind="_search" @bind:event="oninput" @bind:after="FirstPage" autocomplete="off" />
+                </div>
+                <div class="lt-filter">
+                    <label for="decisions-filter-status">@L["Decisions.Status"]</label>
+                    <select id="decisions-filter-status" @bind="_status" @bind:after="FirstPage">
+                        <option value="@OpenFilter">@L["Decisions.Filter.Open"]</option>
+                        <option value="@SnoozedFilter">@L["Decisions.Filter.Snoozed"]</option>
+                        <option value="@ClosedFilter">@L["Decisions.Filter.Closed"]</option>
+                        <option value="@AllFilter">@L["Decisions.Filter.All"]</option>
+                    </select>
+                </div>
+            </ChildContent>
+            <More>
+                <div class="lt-filter">
+                    <label for="decisions-filter-audience">@L["Decisions.Audience"]</label>
+                    <select id="decisions-filter-audience" @bind="_audience" @bind:after="FirstPage">
+                        <option value="">@L["Decisions.Audience.All"]</option>
+                        @foreach (DecisionAudienceDto audience in Enum.GetValues<DecisionAudienceDto>())
+                        {
+                            <option value="@audience">@L[$"Decisions.Audience.{audience}"]</option>
+                        }
+                    </select>
+                </div>
+                <div class="lt-filter">
+                    <label for="decisions-filter-urgency">@L["Decisions.Urgency"]</label>
+                    <select id="decisions-filter-urgency" @bind="_urgency" @bind:after="FirstPage">
+                        <option value="">@L["Decisions.Urgency.All"]</option>
+                        @foreach (DecisionUrgencyDto urgency in Enum.GetValues<DecisionUrgencyDto>().Reverse())
+                        {
+                            <option value="@urgency">@L[$"Decisions.Urgency.{urgency}"]</option>
+                        }
+                    </select>
+                </div>
+                <SortSelect Id="decisions-sort" Options="SortOptions" State="_sort" OnSort="FirstPage" PhoneOnly="false" />
+            </More>
+        </ListFilterBar>
+
+        @{
+            IReadOnlyList<DecisionRow> shown = Shown;
+            int page = Math.Clamp(_page, 1, Math.Max(1, (shown.Count + PageSize - 1) / PageSize));
+        }
+        @if (view.Rows.Count == 0)
+        {
+            <EmptyState Id="decisions-empty" IconName="circle-check" Title="@L["Decisions.Empty"]" Text="@L["Decisions.Empty.Text"]" />
+        }
+        else if (shown.Count == 0)
+        {
+            <EmptyState Id="decisions-filtered-empty" IconName="search" Title="@L["Lists.Empty.FilteredTitle"]" Text="@L["Lists.Empty.Filtered"]" />
+        }
+        else
+        {
+            <ul class="lt-decisions" id="decisions-list">
+                @foreach (DecisionRow row in shown.Skip((page - 1) * PageSize).Take(PageSize))
+                {
+                    bool busy = _busy.Contains(row.Id);
+                    string? reason = DecisionText.Reason(L, row, Culture);
+                    <li class="lt-decision" id="@($"decision-{row.Id}")" data-urgency="@row.Urgency" data-status="@row.Status" @key="row.Id">
+                        <div class="lt-decision-meta">
+                            <span class="lt-decision-urgency" data-urgency="@row.Urgency">@L[$"Decisions.Urgency.{row.Urgency}"]</span>
+                            <span class="lt-decision-audience">@L[$"Decisions.Audience.{row.Audience}"]</span>
+                            @if (row.DueOn is { } due && !IsClosed(row.Status))
+                            {
+                                <span class="@($"lt-decision-due {(due < Today ? "is-late" : null)}")">
+                                    <Icon Name="calendar-clock" Size="14" /> @DueText(due)
+                                </span>
+                            }
+                            @if (row.Impact is { } impact)
+                            {
+                                <span class="lt-decision-impact">@ExplorerText.Money(impact)</span>
+                            }
+                        </div>
+                        <h3 class="lt-decision-title">@DecisionText.Title(L, row, Culture)</h3>
+                        @if (reason is not null)
+                        {
+                            <p class="lt-decision-reason">@reason</p>
+                        }
+                        @if (row.Status == DecisionStatusDto.Proposed)
+                        {
+                            <div class="lt-decision-actions">
+                                @if (row.CanAccept)
+                                {
+                                    <button type="button" class="lettra-button is-small" id="@($"decision-accept-{row.Id}")" disabled="@busy" @onclick="() => AcceptAsync(row)">
+                                        <Icon Name="send" Size="16" /> @DecisionText.AcceptLabel(L, row)
+                                    </button>
+                                }
+                                <a class="@($"lettra-button is-small {(row.CanAccept ? "is-ghost" : "is-secondary")}")" id="@($"decision-open-{row.Id}")" href="@row.Link">
+                                    @L["Decisions.Open"] <Icon Name="arrow-right" Size="16" />
+                                </a>
+                                @if (_snoozing == row.Id)
+                                {
+                                    <span class="lt-decision-snooze" role="group" aria-label="@L["Decisions.Snooze.Label"]">
+                                        @foreach ((string key, int days) in SnoozeChoices)
+                                        {
+                                            <button type="button" class="lettra-button is-small is-ghost" id="@($"decision-snooze-{row.Id}-{days}")" disabled="@busy"
+                                                    @onclick="() => SnoozeAsync(row, days)">@L[key]</button>
+                                        }
+                                        <button type="button" class="lettra-button is-small is-ghost" id="@($"decision-snooze-cancel-{row.Id}")" @onclick="() => _snoozing = null"
+                                                aria-label="@L["Explorer.Cancel"]"><Icon Name="x" Size="16" /></button>
+                                    </span>
+                                }
+                                else
+                                {
+                                    <button type="button" class="lettra-button is-small is-ghost" id="@($"decision-snooze-{row.Id}")" disabled="@busy" @onclick="() => _snoozing = row.Id">
+                                        <Icon Name="clock" Size="16" /> @L["Decisions.Snooze"]
+                                    </button>
+                                }
+                                <button type="button" class="lettra-button is-small is-ghost" id="@($"decision-dismiss-{row.Id}")" disabled="@busy" @onclick="() => DismissAsync(row)">
+                                    <Icon Name="x" Size="16" /> @L["Decisions.Dismiss"]
+                                </button>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="lt-decision-actions">
+                                <span class="@($"lettra-status {StatusClass(row.Status)}")">@StatusText(row)</span>
+                                @if (row.Status is DecisionStatusDto.Snoozed or DecisionStatusDto.Dismissed)
+                                {
+                                    <button type="button" class="lettra-button is-small is-ghost" id="@($"decision-restore-{row.Id}")" disabled="@busy" @onclick="() => RestoreAsync(row)">
+                                        <Icon Name="undo-2" Size="16" /> @L["Decisions.Restore"]
+                                    </button>
+                                }
+                            </div>
+                        }
+                    </li>
+                }
+            </ul>
+            <ListPager Id="decisions-pager" Page="page" Count="shown.Count" Size="PageSize" OnPage="p => _page = p" />
+        }
+
+        <details class="lt-decisions-rules" id="decisions-rules">
+            <summary>@L["Decisions.Rules"]</summary>
+            <p class="lettra-hint">@L["Decisions.Rules.Intro"]</p>
+            <ul>
+                @foreach (string kind in KnownKinds)
+                {
+                    <li>@L[$"Decision.{kind}.Rule"]</li>
+                }
+            </ul>
+        </details>
+    </section>
+}
+
+@code {
+    /// <summary>Des décisions actualisées il y a plus longtemps s'actualisent à l'ouverture de l'écran.</summary>
+    public static readonly TimeSpan StaleAfter = TimeSpan.FromHours(6);
+
+    private const string OpenFilter = "open";
+    private const string SnoozedFilter = "snoozed";
+    private const string ClosedFilter = "closed";
+    private const string AllFilter = "all";
+
+    /// <summary>Les règles livrées, dans l'ordre de l'aide « Ce que Lettra surveille ».</summary>
+    private static readonly string[] KnownKinds = ["relance.due", "fiscal.echeance", "seuil.proche", "iban.a-verifier", "attestation.a-renouveler", "lcb-ft.fiche"];
+
+    /// <summary>Vingt décisions par page : un dossier qui en a beaucoup reste lisible.</summary>
+    private const int PageSize = 20;
+
+    private static readonly (string Key, int Days)[] SnoozeChoices =
+        [("Decisions.Snooze.Tomorrow", 1), ("Decisions.Snooze.Week", 7), ("Decisions.Snooze.Month", 30)];
+
+    private DecisionsResponse? _view;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private readonly HashSet<Guid> _busy = [];
+    private bool _refreshing;
+    private bool _savingPolicy;
+    private Guid? _snoozing;
+    private string? _search;
+    private string _status = OpenFilter;
+    private string _audience = string.Empty;
+    private string _urgency = string.Empty;
+    private int _page = 1;
+
+    // Les plus urgentes d'abord (l'ordre du serveur).
+    private readonly SortState<DecisionColumn> _sort = new(DecisionColumn.Urgency, SortDirectionDto.Descending);
+
+    private enum DecisionColumn
+    {
+        Urgency,
+        DueOn,
+        Impact,
+        Title,
+    }
+
+    private IReadOnlyList<SortOption<DecisionColumn>> SortOptions =>
+    [
+        new(DecisionColumn.Urgency, L["Decisions.Urgency"], SortDirectionDto.Descending),
+        new(DecisionColumn.DueOn, L["Decisions.Sort.DueOn"]),
+        new(DecisionColumn.Impact, L["Decisions.Sort.Impact"], SortDirectionDto.Descending),
+        new(DecisionColumn.Title, L["Decisions.Sort.Title"]),
+    ];
+
+    private Dictionary<DecisionColumn, Func<DecisionRow, object?>> SortKeys => new()
+    {
+        [DecisionColumn.Urgency] = r => r.Urgency,
+        [DecisionColumn.DueOn] = r => r.DueOn,
+        [DecisionColumn.Impact] = r => r.Impact,
+        [DecisionColumn.Title] = r => DecisionText.Title(L, r, Culture),
+    };
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private DateOnly Today => Clock.LocalToday();
+
+    private IReadOnlyList<DecisionRow> Shown => ListSorting.Sort(
+        (_view?.Rows ?? [])
+            .Where(r => _status switch
+            {
+                OpenFilter => r.Status == DecisionStatusDto.Proposed,
+                SnoozedFilter => r.Status == DecisionStatusDto.Snoozed,
+                ClosedFilter => IsClosed(r.Status),
+                _ => true,
+            })
+            .Where(r => _audience.Length == 0 || r.Audience.ToString() == _audience)
+            .Where(r => _urgency.Length == 0 || r.Urgency.ToString() == _urgency)
+            .Where(r => string.IsNullOrWhiteSpace(_search)
+                || ListSorting.Matches(DecisionText.Title(L, r, Culture), _search)
+                || ListSorting.Matches(DecisionText.Reason(L, r, Culture), _search)),
+        _sort,
+        SortKeys);
+
+    private int ActiveFilters =>
+        (string.IsNullOrWhiteSpace(_search) ? 0 : 1) + (_status == OpenFilter ? 0 : 1) + (_audience.Length == 0 ? 0 : 1) + (_urgency.Length == 0 ? 0 : 1);
+
+    protected override async Task OnInitializedAsync()
+    {
+        OperationResult<DecisionsResponse> result = await Decisions.ListAsync(CancellationToken.None);
+        _errors = result.Errors;
+        _view = result.Value ?? (result.IsSuccess ? null : new DecisionsResponse([], AutonomyLevelDto.Prepare, null, null, false));
+        if (result is { IsSuccess: true, Value: { } view } && (view.RefreshedAt is not { } at || Clock.GetUtcNow() - at > StaleAfter))
+        {
+            await RefreshAsync();
+        }
+    }
+
+    private async Task RefreshAsync()
+    {
+        _refreshing = true;
+        try
+        {
+            OperationResult<DecisionsResponse> result = await Decisions.RefreshAsync(CancellationToken.None);
+            if (result is { IsSuccess: true, Value: { } view })
+            {
+                _view = view;
+                _errors = [];
+            }
+            else
+            {
+                Toasts.Show(ToastKind.Error, ErrorText(result.Errors));
+            }
+        }
+        finally
+        {
+            _refreshing = false;
+        }
+    }
+
+    private Task AcceptAsync(DecisionRow row) =>
+        AnswerAsync(row, new AnswerDecisionRequest { Choice = DecisionChoiceDto.Accept }, title => string.Format(Culture, L["Decisions.Accepted"], title), undo: false);
+
+    private Task SnoozeAsync(DecisionRow row, int days) =>
+        AnswerAsync(
+            row,
+            new AnswerDecisionRequest { Choice = DecisionChoiceDto.Snooze, SnoozeUntil = Today.AddDays(days) },
+            _ => string.Format(Culture, L["Decisions.Snoozed"], DateText.Format(Today.AddDays(days), Culture)),
+            undo: true);
+
+    private Task DismissAsync(DecisionRow row) =>
+        AnswerAsync(row, new AnswerDecisionRequest { Choice = DecisionChoiceDto.Dismiss }, _ => L["Decisions.Dismissed"], undo: true);
+
+    private Task RestoreAsync(DecisionRow row) =>
+        AnswerAsync(row, new AnswerDecisionRequest { Choice = DecisionChoiceDto.Restore }, _ => L["Decisions.Restored"], undo: false);
+
+    /// <summary>
+    /// Envoie la réponse puis montre la liste relue. « Plus tard » et « Ignorer » proposent « Annuler » dans le toast. Une
+    /// décision changée entre-temps (par un collègue, ou réglée d'elle-même) est relue et signalée.
+    /// </summary>
+    private async Task AnswerAsync(DecisionRow row, AnswerDecisionRequest request, Func<string, string> message, bool undo)
+    {
+        string title = DecisionText.Title(L, row, Culture);
+        _busy.Add(row.Id);
+        _snoozing = null;
+        try
+        {
+            OperationResult<DecisionsResponse> result = await Decisions.AnswerAsync(row.Id, request, row.Version, CancellationToken.None);
+            if (result is { IsSuccess: true, Value: { } view })
+            {
+                _view = view;
+                _errors = [];
+                ToastAction? action = undo && view.Rows.FirstOrDefault(r => r.Id == row.Id) is { } changed
+                    ? new ToastAction(L["Decisions.Undo"], () => RestoreQuietlyAsync(changed))
+                    : null;
+                Toasts.Show(ToastKind.Success, message(title), action);
+            }
+            else if (result.IsStale && result.Current is { } current)
+            {
+                _view = current;
+                Toasts.Show(ToastKind.Info, L["Decisions.Changed"]);
+            }
+            else
+            {
+                Toasts.Show(ToastKind.Error, ErrorText(result.Errors));
+            }
+        }
+        finally
+        {
+            _busy.Remove(row.Id);
+        }
+    }
+
+    private async Task RestoreQuietlyAsync(DecisionRow row)
+    {
+        OperationResult<DecisionsResponse> result = await Decisions.AnswerAsync(row.Id, new AnswerDecisionRequest { Choice = DecisionChoiceDto.Restore }, row.Version, CancellationToken.None);
+        if (result is { IsSuccess: true, Value: { } view })
+        {
+            _view = view;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task SetLevelAsync(AutonomyLevelDto level)
+    {
+        if (_view is not { } view || view.Level == level)
+        {
+            return;
+        }
+
+        _savingPolicy = true;
+        try
+        {
+            OperationResult<DecisionsResponse> result = await Decisions.SetPolicyAsync(new SetDecisionPolicyRequest { Level = level }, view.PolicyVersion, CancellationToken.None);
+            if (result is { IsSuccess: true, Value: { } saved })
+            {
+                _view = saved;
+                Toasts.Show(ToastKind.Success, string.Format(Culture, L["Decisions.Dial.Saved"], L[$"Decisions.Level.{level}"]));
+            }
+            else
+            {
+                _view = result.Current ?? view;
+                Toasts.Show(ToastKind.Error, ErrorText(result.Errors));
+            }
+        }
+        finally
+        {
+            _savingPolicy = false;
+        }
+    }
+
+    private string ErrorText(IReadOnlyList<ErrorDetail> errors) => string.Join(" ", errors.Select(e => L.Error(e.Code)).Distinct(StringComparer.Ordinal));
+
+    private void ResetFilters() => (_search, _status, _audience, _urgency, _page) = (null, OpenFilter, string.Empty, string.Empty, 1);
+
+    private void FirstPage() => _page = 1;
+
+    private string DueText(DateOnly due) => due == Today
+        ? L["Decisions.DueToday"]
+        : string.Format(Culture, L[due < Today ? "Decisions.DueLate" : "Decisions.Due"], DateText.Format(due, Culture));
+
+    private string RefreshedText(DateTimeOffset at)
+    {
+        DateTimeOffset local = at.ToLocalTime();
+        return DateOnly.FromDateTime(local.Date) == Today
+            ? string.Format(Culture, L["Cabinet.TodayAt"], local.ToString("t", Culture))
+            : local.ToString("g", Culture);
+    }
+
+    private string StatusText(DecisionRow row) => row.Status == DecisionStatusDto.Snoozed && row.SnoozedUntil is { } until
+        ? string.Format(Culture, L["Decisions.Status.SnoozedUntil"], DateText.Format(until, Culture))
+        : L[$"Decisions.Status.{row.Status}"];
+
+    private static int Count(DecisionsResponse view, DecisionStatusDto status) => view.Rows.Count(r => r.Status == status);
+
+    private static int Urgent(DecisionsResponse view) =>
+        view.Rows.Count(r => r.Status == DecisionStatusDto.Proposed && r.Urgency is DecisionUrgencyDto.High or DecisionUrgencyDto.Critical);
+
+    private static bool IsClosed(DecisionStatusDto status) => status is DecisionStatusDto.Accepted or DecisionStatusDto.Dismissed or DecisionStatusDto.Resolved;
+
+    private static string StatusClass(DecisionStatusDto status) => status switch
+    {
+        DecisionStatusDto.Accepted or DecisionStatusDto.Resolved => "is-issued",
+        DecisionStatusDto.Snoozed => "is-validated",
+        _ => "is-draft",
+    };
+}

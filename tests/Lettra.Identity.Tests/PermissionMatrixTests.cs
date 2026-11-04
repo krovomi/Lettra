@@ -24,17 +24,20 @@ public sealed class PermissionMatrixTests
             FactureEmettre, AvoirCreer, AvoirApprouver, FecExporter, IaUtiliser, DelegationsApprouver, AlertesLire, AlertesTraiter, PiecesDeposer,
             IntegriteVerifier, ClotureEffectuer, ArchivesExporter, IntegriteClesGerer, PostesGerer, VigilanceConsulter, VigilanceGerer, FacturesRecuesTraiter,
             PreventionConsulter, PreventionRegler,
+            DecisionsTraiter, DecisionsRegler,
         ],
         [RoleTemplates.AdministrateurGroupe] = [GroupeGerer, DossierAdministrer],
         [RoleTemplates.CollaborateurEtendu] =
         [
             TiersConsulter, TiersCreer, TiersModifier, DossierLire, CatalogueConsulter, DevisCreer, FactureSaisir, FactureValider, FactureEmettre,
             IaUtiliser, AlertesLire, PiecesDeposer, VigilanceConsulter, VigilanceGerer, FacturesRecuesTraiter, PreventionConsulter, PreventionRegler,
+            IaUtiliser, AlertesLire, PiecesDeposer, VigilanceConsulter, VigilanceGerer, FacturesRecuesTraiter, DecisionsTraiter,
         ],
         [RoleTemplates.Collaborateur] =
         [
             TiersConsulter, TiersCreer, TiersModifier, DossierLire, CatalogueConsulter, DevisCreer, FactureSaisir, IaUtiliser, AlertesLire, PiecesDeposer,
             VigilanceConsulter, FacturesRecuesTraiter, PreventionConsulter,
+            VigilanceConsulter, FacturesRecuesTraiter, DecisionsTraiter,
         ],
         [RoleTemplates.Auditeur] = [TiersConsulter, CatalogueConsulter, DossierLire, FecExporter, IntegriteVerifier, ArchivesExporter],
         [RoleTemplates.ClientPortail] = [PortailConsulter, DevisAccepter, PiecesDeposer],

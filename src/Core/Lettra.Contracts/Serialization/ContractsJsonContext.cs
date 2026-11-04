@@ -10,6 +10,7 @@ using Lettra.Contracts.Cabinet;
 using Lettra.Contracts.Catalog;
 using Lettra.Contracts.Common;
 using Lettra.Contracts.Customers;
+using Lettra.Contracts.Decisions;
 using Lettra.Contracts.Demo;
 using Lettra.Contracts.Directory;
 using Lettra.Contracts.Dossiers;
@@ -199,6 +200,9 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(DueDiligenceResponse))]
 [JsonSerializable(typeof(SaveDueDiligenceRequest))]
 [JsonSerializable(typeof(SupplierAttestationsResponse))]
+[JsonSerializable(typeof(DecisionsResponse))]
+[JsonSerializable(typeof(AnswerDecisionRequest))]
+[JsonSerializable(typeof(SetDecisionPolicyRequest))]
 [JsonSerializable(typeof(SaveAttestationRequest))]
 [JsonSerializable(typeof(AttestationVerificationResponse))]
 [JsonSerializable(typeof(ThirdPartyChecksResponse))]
