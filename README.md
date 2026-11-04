@@ -91,6 +91,9 @@ l'exécution **CI** la plus récente de la branche `main` (coche verte ; pas « 
 page, dans la section **Artifacts**, sur l'artefact voulu. Il faut être connecté à GitHub. L'application Windows et
 l'APK restent disponibles 90 jours ; les autres artefacts (applications iOS et macOS, captures, rapports de tests)
 7 jours, pour ne pas remplir le quota de stockage du dépôt. Passé ce délai, relancer la CI de `main` les reconstruit.
+Si le quota de stockage du dépôt est plein, l'envoi d'un artefact échoue sans faire échouer la CI : l'exécution reste
+verte, une annotation signale l'envoi manqué, et l'artefact n'apparaît pas dans la liste. Il faut alors libérer de la
+place (supprimer d'anciens artefacts) et relancer la CI de `main`.
 
 | Artefact | Contenu |
 |---|---|
@@ -890,6 +893,15 @@ envoi, relance notée, passe du jour, invitation et passe automatique vérifiés
 MailPit, à 1440 et 375 px. Non vérifié dans les applications installées.)* Détails :
 [docs/relances-et-e-mails.md](docs/relances-et-e-mails.md).
 
+#### Avant le retard : rappel avant échéance et échéancier
+
+Deux aides pour qu'une facture soit payée à l'heure plutôt que relancée après coup, réglées dans le bloc **Scénario de relance** de l'écran Relances (bloc « Avant le retard ») :
+
+- **Le rappel avant échéance** : un message aimable, 3 jours avant l'échéance (de 1 à 30, réglable), aux seuls clients dont la météo des paiements annonce pluie ou orage, envoyé le meilleur jour du client s'il en a un. Il porte le lien de l'espace client du client (valable 30 jours) et le QR code de virement en pièce jointe (si la fiche entreprise a un IBAN). La liste « Rappels avant échéance » de l'écran Relances montre ceux des deux semaines à venir ; ils partent avec l'envoi automatique quand il est coché, sinon un par un depuis la liste. Choisir à qui l'envoyer selon la façon dont il paie est un profilage : chaque client peut s'y opposer (bouton **Ne pas cibler ce client**), et il reçoit toujours les relances habituelles après l'échéance.
+- **L'échéancier en libre-service** (coupé par défaut, proposé dans la démo) : dans son espace client, un client professionnel peut étaler une facture en 2 ou 3 fois, sans frais, dans les mêmes bornes pour tous (3 échéances au plus, reste dû d'au moins 300 € TTC, facture non contestée, dernière échéance avant le plafond légal des délais de paiement). Il est accordé tout de suite, jamais selon une note. Lettra prévient l'entreprise (alerte « Échéancier demandé par un client, à prendre en compte » jusqu'à ce qu'elle clique **Vu**), arrête les relances habituelles de la facture tant que l'échéancier court, envoie une seule relance par échéance manquée et attend la facture à sa prochaine échéance dans la prévision des encaissements. L'échéancier se suit dans la liste « Échéanciers » de l'écran Relances et sur la facture ; **Arrêter** rend la facture à ses relances.
+
+Calcul en règles écrites, sans IA. Droits : « Lire le dossier » pour voir, « Émettre les factures » pour envoyer, prendre en compte ou arrêter un échéancier, « Modifier les tiers » pour l'opposition, « Gérer le catalogue » pour le réglage. *(Vérifié : tests automatiques sur SQLite, PostgreSQL et SQL Server, et démo Docker dans Chromium à 1440, 768 et 390 px, en français et en anglais, e-mails dans MailPit ; non vérifié dans les applications installées.)* Détails : [docs/avant-le-retard.md](docs/avant-le-retard.md).
+
 #### Météo des paiements
 
 Menu **Comptabilité > Météo des paiements** (ou Ctrl+K « météo »). Chaque client reçoit sa météo, tirée de son
@@ -990,6 +1002,13 @@ installées.)*
   aucune donnée de client. La chaîne de chaque dossier est clôturée et contrôlée une fois par jour, par le Worker ou,
   dans la démo sans Worker, par l'API (30 s après le démarrage) ; une alerte non prise en charge est escaladée selon sa
   gravité, par une passe qui tourne chaque minute.
+- **Bien utiliser l'IA de Lettra** (menu **Pilotage**, `/ai`) : l'état de l'IA dans le dossier (éteinte par défaut,
+  active avec son moteur, ou en pause), ce qu'elle fait et ne fait jamais, comment la reconnaître et la couper, ce qui
+  se passe quand le moteur ne répond pas, le registre des usages de l'IA (niveau de risque au sens du règlement
+  européen sur l'IA, état dans le dossier) et le journal IA du dossier avec tri et filtres. Français et anglais. Marche
+  sans IA. *(Vérifié : démo Docker dans Chromium à 1440, 768 et 390 px, français et anglais, aucune erreur dans la
+  console, IA éteinte. Non vérifié dans les applications installées.)* Détails :
+  [docs/assistant-ia.md](docs/assistant-ia.md).
 - **Verrouiller** (en haut) : ferme la session ; la phrase secrète la rouvre.
 - **Langue** : l'écran suit la langue de l'appareil ou du navigateur (français ou anglais). Chaque client et chaque PDF peuvent avoir la
   leur (« Langue des devis et factures imprimés », « Langue du PDF »). Dates et montants suivent la langue de l'écran :
@@ -1179,7 +1198,7 @@ Dans les écrans, la voix s'utilise par le bouton micro, le micro des champs ou 
 
 | Fonction | État |
 |---|---|
-| Assistant IA | Les écrans existent : le panneau « Assistant IA » (bouton en haut) et le lien « Pourquoi ? » de la checklist de conformité. Ils restent masqués tant que l'IA est désactivée, ce qui est le réglage par défaut (section `Lettra:Ai`) et celui de la démo. L'assistant propose et explique ; il ne valide ni n'émet jamais rien. Le brouillon de devis à partir d'un texte libre est fermé tant que Lettra ne sait pas repérer les noms propres dans le texte ([docs/assistant-ia.md](docs/assistant-ia.md)). |
+| Assistant IA | Les écrans existent : le panneau « Assistant IA » (bouton en haut) et le lien « Pourquoi ? » de la checklist de conformité. Ils restent masqués tant que l'IA est désactivée, ce qui est le réglage par défaut (section `Lettra:Ai`) et celui de la démo. L'assistant propose et explique ; il ne valide ni n'émet jamais rien. Le brouillon de devis à partir d'un texte libre est fermé tant que Lettra ne sait pas repérer les noms propres dans le texte ([docs/assistant-ia.md](docs/assistant-ia.md)). La page « Bien utiliser l'IA de Lettra » (menu Pilotage) marche sans IA : elle dit que l'IA est éteinte et montre le registre des usages et le journal. Le repli quand un moteur tombe est vérifié par les tests automatiques avec un moteur simulé ; il n'a pas été essayé avec un vrai moteur (aucun n'est branché dans la démo). |
 | Vraie plateforme agréée | En attente d'un partenaire ; la démo utilise la plateforme simulée, pour l'émission, la réception et l'annuaire. |
 | Vrais prestataires de paiement, de signature et de banque | L'espace client, la banque connectée et la vérification du bénéficiaire passent par des prestataires simulés, derrière des ports : aucun prestataire réel n'est choisi. La signature est une signature électronique simple ; les paiements en cours sont gardés en mémoire, sans webhook. |
 | Serveur du cabinet en production | La démonstration navigateur tourne sur un poste avec Docker ; un vrai serveur du cabinet ou une cellule SaaS demande Keycloak, des certificats et une infrastructure (voir plus bas). |
@@ -1417,7 +1436,9 @@ commande locale : [docs/qualite-du-code.md](docs/qualite-du-code.md) ; chaque te
 avec son message), conformité Factur-X, applications MAUI construites et lancées (Windows ; Android sur émulateur ; simulateur iOS ; macOS, non
 bloquant tant qu'il n'est pas signé) avec leurs artefacts, captures du design et audit d'accessibilité (Playwright,
 axe-core), gitleaks, SBOM CycloneDX, CodeQL (dépôt public), avis de tiers, images signées (cosign) sur `main`. Les
-artefacts des workflows sont gardés 7 jours (quota de stockage du dépôt), sauf l'application Windows et l'APK (90 jours). La
+artefacts des workflows sont gardés 7 jours (quota de stockage du dépôt), sauf l'application Windows et l'APK (90 jours). Leur
+envoi n'est pas bloquant : un quota plein ne rend pas la CI rouge quand les builds et les tests passent (l'artefact du
+corpus de la voix, repris par les jobs suivants, reste bloquant). La
 charge de travail MAUI est épinglée (`MAUI_WORKLOAD_VERSION`, 10.0.401) : un jeu plus récent publié sur nuget.org ne
 casse pas la CI du jour au lendemain. Le SDK .NET de la CI l'est aussi (`DOTNET_SDK_VERSION`, 10.0.402), parce que
 le SDK 10.0.403 annoncé par Microsoft ne se télécharge pas ; `global.json` reste ouvert aux SDK 10.0 récents des postes.
@@ -1436,6 +1457,18 @@ Désactivé par défaut. Il explique et rédige, ne valide ni n'émet rien, ne v
 passe toujours par l'orchestrateur du serveur. Le moteur « Claude UE » exige un point d'accès en région UE (Amazon
 Bedrock, Google Vertex AI) et refuse de démarrer sinon. Réglages : section `Lettra:Ai` ; la clé ne va jamais dans un
 fichier versionné (`Lettra__Ai__Claude__ApiKey`).
+
+Chaque texte rédigé par l'IA porte la mention « Texte rédigé par l'IA, à vérifier », son moteur en info-bulle, et une
+marque lisible par machine dans le flux de réponse (article 50 du règlement européen sur l'IA). Si le moteur tarde,
+coupe ou répond de façon illisible, même au milieu d'une réponse, la réponse se termine sur « moteur indisponible »,
+la panne est notée au journal IA, et après des échecs répétés Lettra cesse d'appeler le moteur deux minutes (le
+panneau affiche « IA en pause »). Réglages : `Lettra:Ai:Claude:Timeout` (90 s), `Lettra:Ai:Local:Timeout` (30 s),
+`Lettra:Ai:Resilience:MinimumThroughput` (3) et `Lettra:Ai:Resilience:BreakDuration` (2 min). Métriques agrégées
+`lettra.ai.engine.available` et `lettra.ai.fallback.count` ; alerte S3 « Un moteur d'IA ne répond plus » au centre
+d'alertes (règle `ia.rules.yml`, vérifiée avec ses pannes injectées par promtool dans la CI de `deploy/`, non essayée
+dans la démo avec Grafana). *(Repli, pause et mention vérifiés par les tests automatiques avec un moteur simulé qui
+tombe au milieu d'une réponse, tarde ou répond de façon illisible ; non vérifiés avec un vrai moteur Claude ou
+local.)* Détails : [docs/assistant-ia.md](docs/assistant-ia.md).
 
 ### Lettra dans l'assistant IA du poste (MCP)
 

@@ -60,7 +60,9 @@ fusionnés dans cet ordre :
 Les métriques partent en OTLP vers le récepteur de Prometheus plutôt que d'être exposées pour un scrape : les règles
 SLO comptent sur `job="lettra/lettra-api"` et sur la disparition de `target_info` quand l'API s'arrête
 (`LettraApiIndisponible`), que la poussée OTLP donne directement. Le collecteur expose ses propres métriques sur le
-port 8888 (ServiceMonitor), surveillées par `infra.rules.yml`.
+port 8888 (ServiceMonitor), surveillées par `infra.rules.yml`. `ia.rules.yml` prévient au centre d'alertes (S3,
+personne n'est appelé) quand un moteur d'IA est en pause sur tous les réplicas depuis cinq minutes
+(`LettraMoteurIaNeRepondPlus`, voir [docs/assistant-ia.md](../../../docs/assistant-ia.md)).
 
 ## Tableaux de bord
 

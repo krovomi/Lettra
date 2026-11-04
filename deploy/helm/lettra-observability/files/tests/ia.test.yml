@@ -1,0 +1,55 @@
+# Pannes injectées : un moteur d'IA en pause sur tous les réplicas plus de cinq minutes déclenche une alerte S3 (centre
+# d'alertes) ; une pause courte, un seul réplica en pause ou un autre moteur qui répond n'en déclenchent pas.
+rule_files:
+  - ../rules/ia.rules.yml
+evaluation_interval: 30s
+
+tests:
+  - name: Le moteur Claude ne répond plus sur les deux réplicas
+    interval: 1m
+    external_labels:
+      cell: mut-fr-01
+    input_series:
+      - series: 'lettra_ai_engine_available{job="lettra/lettra-api",instance="api-0",lettra_ai_engine="claude_eu"}'
+        values: '1 1 0x10'
+      - series: 'lettra_ai_engine_available{job="lettra/lettra-api",instance="api-1",lettra_ai_engine="claude_eu"}'
+        values: '1 1 0x10'
+      - series: 'lettra_ai_engine_available{job="lettra/lettra-api",instance="api-0",lettra_ai_engine="local"}'
+        values: '1x12'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: LettraMoteurIaNeRepondPlus
+        exp_alerts: []
+      - eval_time: 8m
+        alertname: LettraMoteurIaNeRepondPlus
+        exp_alerts:
+          - exp_labels: { severity: S3, category: availability, scope: cell, cell: mut-fr-01, lettra_ai_engine: claude_eu }
+            exp_annotations:
+              title: Un moteur d'IA ne répond plus, l'assistant répond sans IA
+              runbook_url: https://github.com/krovomi/Lettra/blob/main/docs/assistant-ia.md
+
+  - name: Un seul réplica en pause ne déclenche rien
+    interval: 1m
+    external_labels:
+      cell: mut-fr-01
+    input_series:
+      - series: 'lettra_ai_engine_available{job="lettra/lettra-api",instance="api-0",lettra_ai_engine="claude_eu"}'
+        values: '1 0x11'
+      - series: 'lettra_ai_engine_available{job="lettra/lettra-api",instance="api-1",lettra_ai_engine="claude_eu"}'
+        values: '1x12'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: LettraMoteurIaNeRepondPlus
+        exp_alerts: []
+
+  - name: Une pause courte du disjoncteur ne déclenche rien
+    interval: 1m
+    external_labels:
+      cell: mut-fr-01
+    input_series:
+      - series: 'lettra_ai_engine_available{job="lettra/lettra-api",instance="api-0",lettra_ai_engine="local"}'
+        values: '1 0 0 1 1 0 0 1 1 1 1 1'
+    alert_rule_test:
+      - eval_time: 11m
+        alertname: LettraMoteurIaNeRepondPlus
+        exp_alerts: []
