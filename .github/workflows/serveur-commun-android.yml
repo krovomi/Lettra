@@ -105,7 +105,7 @@ jobs:
           adb shell pm list packages | grep -iE 'chrome|browser|webview' || true
           adb install -r "$(ls ../../../artifacts/lettra-android/*-Signed.apk | head -n 1)"
           adb logcat -c
-          [ -z "${NOUVEL_ESSAI:-}" ] && { (sleep 150; pkill -9 -f qemu-system) & }
+          [ -z "${NOUVEL_ESSAI:-}" ] && { (sleep 100; pkill -9 -f qemu-system) & }
           status=0
           node android.mjs "$(cat "$SORTIE/client.txt")" || status=$?
           # Un émulateur tombé laisse adb attendre l'appareil sans fin (jusqu'au délai du job) : chaque appel est borné.
