@@ -118,8 +118,8 @@
   <data name="Help.Faq.data.Answer" xml:space="preserve"><value>Oui. Les mises à jour de Lettra ne touchent pas à vos dossiers : factures, clients et réglages restent en place, sur le serveur comme dans l'application installée.</value></data>
   <data name="Help.Faq.data.Keywords" xml:space="preserve"><value>données perdre mise à jour sauvegarde conserver</value></data>
   <data name="Help.Faq.assistant.Question" xml:space="preserve"><value>À quoi sert l'assistant IA ?</value></data>
-  <data name="Help.Faq.assistant.Answer" xml:space="preserve"><value>L'assistant explique une règle ou prépare un brouillon de devis, que vous relisez et validez vous-même : il ne valide ni n'envoie rien. Il est désactivé par défaut ; un administrateur du cabinet peut l'activer. Cette aide-ci fonctionne sans lui.</value></data>
-  <data name="Help.Faq.assistant.Keywords" xml:space="preserve"><value>ia intelligence artificielle assistant claude question</value></data>
+  <data name="Help.Faq.assistant.Answer" xml:space="preserve"><value>L'assistant explique une règle de conformité ou répond à une question de TVA ; chaque texte qu'il rédige porte la mention « Texte rédigé par l'IA, à vérifier ». Il ne valide ni n'envoie rien. Il est désactivé par défaut ; un administrateur du cabinet peut l'activer. Cette aide-ci fonctionne sans lui.</value></data>
+  <data name="Help.Faq.assistant.Keywords" xml:space="preserve"><value>ia intelligence artificielle assistant claude question journal couper désactiver ai act</value></data>
   <data name="Nav.PaymentWeather.Keywords" xml:space="preserve"><value>météo prévision encaissement retard payeur trésorerie délai</value></data>
   <data name="Help.Faq.weather.Question" xml:space="preserve"><value>Quand mes factures seront-elles encaissées ?</value></data>
   <data name="Help.Faq.weather.Answer" xml:space="preserve"><value>La météo des paiements donne à chaque client sa météo, tirée de ses paiements passés, et la date probable d'encaissement de chaque facture due. La prévision des huit prochaines semaines aide à prévoir la trésorerie.</value></data>
@@ -167,4 +167,5 @@
   <data name="Help.Faq.intercompany.Keywords" xml:space="preserve"><value>groupe filiale holding intra-groupe interco écart</value></data>
   <data name="Nav.ReceivedInvoices.Keywords" xml:space="preserve"><value>factures reçues factures fournisseurs achats réception plateforme agréée annuaire litige refus e-facture</value></data>
   <data name="Nav.ThirdPartyChecks.Keywords" xml:space="preserve"><value>vérifier tiers registre bénéficiaires effectifs RBE INPI gel des avoirs sanctions DG Trésor BODACC procédure collective redressement liquidation radiation URSSAF vigilance LCB-FT blanchiment</value></data>
+  <data name="Nav.Ai.Keywords" xml:space="preserve"><value>intelligence artificielle assistant ia journal ai act transparence moteur claude couper désactiver pause</value></data>
 </root>

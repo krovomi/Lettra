@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
@@ -15,6 +16,12 @@ internal sealed class HttpAssistantGateway(HttpClient http) : IAssistantGateway
         HttpCalls.SendAsync(
             ct => http.GetAsync(new Uri("api/v1/assistant/statut", UriKind.Relative), ct),
             ContractsJsonContext.Default.AssistantStatusResponse,
+            cancellationToken);
+
+    public Task<OperationResult<IReadOnlyList<AssistantJournalEntry>>> GetJournalAsync(int limit, CancellationToken cancellationToken) =>
+        HttpCalls.SendAsync(
+            ct => http.GetAsync(new Uri(string.Create(CultureInfo.InvariantCulture, $"api/v1/assistant/journal?limit={limit}"), UriKind.Relative), ct),
+            ContractsJsonContext.Default.IReadOnlyListAssistantJournalEntry,
             cancellationToken);
 
     public async IAsyncEnumerable<AssistantEvent> AskAsync(AskAssistantRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -51,19 +58,38 @@ internal sealed class HttpAssistantGateway(HttpClient http) : IAssistantGateway
 
             Stream body = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
             using StreamReader reader = new(body);
-            while (await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false) is { } line)
+            while (await ReadNextAsync(reader, cancellationToken).ConfigureAwait(false) is { } next)
             {
-                if (string.IsNullOrWhiteSpace(line))
+                yield return next;
+                if (next is AssistantUnavailableEvent)
                 {
-                    continue;
-                }
-
-                AssistantEvent? assistantEvent = JsonSerializer.Deserialize(line, ContractsJsonContext.Default.AssistantEvent);
-                if (assistantEvent is not null)
-                {
-                    yield return assistantEvent;
+                    yield break;
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// L'événement suivant, ou <c>null</c> à la fin du flux. Un flux coupé en route (serveur arrêté, réseau perdu) ou une
+    /// ligne illisible termine la réponse sur « serveur injoignable » : les étapes déjà reçues restent affichées.
+    /// </summary>
+    private static async Task<AssistantEvent?> ReadNextAsync(StreamReader reader, CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false) is { } line)
+            {
+                if (!string.IsNullOrWhiteSpace(line) && JsonSerializer.Deserialize(line, ContractsJsonContext.Default.AssistantEvent) is { } assistantEvent)
+                {
+                    return assistantEvent;
+                }
+            }
+
+            return null;
+        }
+        catch (Exception e) when (e is IOException or HttpRequestException or JsonException && !cancellationToken.IsCancellationRequested)
+        {
+            return new AssistantUnavailableEvent(ErrorCodes.Api.Unreachable);
         }
     }
 }

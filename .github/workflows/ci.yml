@@ -31,6 +31,9 @@ env:
   # jeu plus récent s'installe en entier (et, pour iOS, avec le Xcode qu'il exige, voir le job Apple).
   MAUI_WORKLOAD_VERSION: 10.0.401
 
+# Les artefacts servent au diagnostic et au téléchargement : leur envoi ne fait pas échouer le job (continue-on-error),
+# pour qu'un quota de stockage plein ne rende pas la CI rouge quand les builds et les tests passent. L'échec de l'envoi
+# reste signalé sur l'exécution, et l'artefact manque.
 jobs:
   build-test:
     name: Build et tests (Linux)
@@ -87,6 +90,7 @@ jobs:
       - name: Résultats de tests
         if: always()
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: test-results
           path: TestResults/**/*.trx
@@ -125,6 +129,7 @@ jobs:
         run: NODE_PATH=$PWD/deploy/demo/e2e/node_modules node build/design-captures.cjs artifacts/galerie "$RUNNER_TEMP/axe/node_modules/axe-core/axe.min.js"
 
       - uses: actions/upload-artifact@v4
+        continue-on-error: true
         if: always()
         with:
           name: galerie-design
@@ -165,6 +170,7 @@ jobs:
           "Dossiers locaux : $($dossiers.DirectoryName | Sort-Object -Unique)"
           Stop-Process $app
       - uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: lettra-windows
           path: artifacts/lettra-windows
@@ -173,6 +179,7 @@ jobs:
       - name: Version de mesure de la grille
         run: dotnet publish src/Hosts/Lettra.App.Maui/Lettra.App.Maui.csproj -c Release -f net10.0-windows10.0.19041.0 -p:LettraGridBenchmark=true -o artifacts/mesure-grille
       - uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: lettra-mesure-grille-windows
           path: artifacts/mesure-grille
@@ -192,6 +199,16 @@ jobs:
           java-version: 17
       - name: Charge de travail MAUI Android
         run: dotnet workload install maui-android --version ${{ env.MAUI_WORKLOAD_VERSION }}
+      - name: Place sur le disque
+        # La charge de travail MAUI, l'APK et l'image système de l'émulateur dépassent la place libre de la machine
+        # (« No space left on device » en installant l'image) : outils préinstallés dont ce job ne se sert pas, comme
+        # dans le test Android à deux appareils.
+        run: |
+          df -h /
+          sudo rm -rf /opt/ghc /usr/local/.ghcup /usr/share/swift /usr/local/share/boost /usr/local/share/powershell \
+            /usr/local/lib/heroku /opt/hostedtoolcache/CodeQL /opt/hostedtoolcache/go /opt/hostedtoolcache/PyPy
+          docker system prune -af --volumes > /dev/null
+          df -h /
       # APK signé avec la clé de démonstration versionnée (pas de magasin d'applications) : la même à chaque
       # construction, pour qu'« adb install -r » d'une nouvelle version garde les données du téléphone.
       - name: Build de l'APK
@@ -202,6 +219,7 @@ jobs:
           "$apksigner" verify --print-certs "$apk" | tee "$RUNNER_TEMP/certificat-apk.txt"
           grep -q "CN=Lettra demonstration" "$RUNNER_TEMP/certificat-apk.txt" || { echo "APK non signé avec la clé de démonstration"; exit 1; }
       - uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: lettra-android
           path: artifacts/lettra-android/*-Signed.apk
@@ -252,6 +270,7 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
           script: bash "$RUNNER_TEMP/lancement-android.sh"
       - uses: actions/upload-artifact@v4
+        continue-on-error: true
         if: always()
         with:
           name: lettra-android-capture
@@ -307,6 +326,7 @@ jobs:
           if [ -z "$dossiers" ]; then echo "Aucun dossier local créé sous $data."; find "$data" -maxdepth 3; tail -n 80 artifacts/ios-run/log.txt; exit 1; fi
           echo "Dossiers locaux : $dossiers"
       - uses: actions/upload-artifact@v4
+        continue-on-error: true
         if: always()
         with:
           name: lettra-ios-simulator
@@ -351,12 +371,14 @@ jobs:
           echo "Dossiers locaux : $dossiers"
           kill "$pid"
       - uses: actions/upload-artifact@v4
+        continue-on-error: true
         if: always()
         with:
           name: lettra-macos
           path: artifacts/lettra-macos
           retention-days: 7
       - uses: actions/upload-artifact@v4
+        continue-on-error: true
         if: always()
         with:
           name: lettra-apple-captures
@@ -397,8 +419,13 @@ jobs:
           path: .
           format: cyclonedx-json
           output-file: lettra.cdx.json
-          upload-artifact: true
-          upload-artifact-retention: 7
+          upload-artifact: false
+      - uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: sbom-cyclonedx
+          path: lettra.cdx.json
+          retention-days: 7
 
   codeql:
     name: Analyse statique de sécurité (CodeQL)

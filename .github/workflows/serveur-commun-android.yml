@@ -31,6 +31,9 @@ env:
   # (10.0.100 et suivants) pour les postes de développement. À relever quand le SDK suivant s'installe.
   DOTNET_SDK_VERSION: 10.0.402
 
+# Les artefacts servent au diagnostic et au téléchargement : leur envoi ne fait pas échouer le job (continue-on-error),
+# pour qu'un quota de stockage plein ne rende pas la CI rouge quand les builds et les tests passent. L'échec de l'envoi
+# reste signalé sur l'exécution, et l'artefact manque.
 jobs:
   android:
     name: Navigateur et application Android sur les mêmes données
@@ -145,6 +148,7 @@ jobs:
         if: always()
         run: $COMPOSE logs --no-color > "$SORTIE/compose.log" 2>&1 || true
       - uses: actions/upload-artifact@v4
+        continue-on-error: true
         if: always()
         with:
           name: serveur-commun-android
