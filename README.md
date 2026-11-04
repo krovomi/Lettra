@@ -1425,7 +1425,7 @@ le SDK 10.0.403 annoncé par Microsoft ne se télécharge pas ; `global.json` re
 alertes, l'essai de panne (API arrêtée, astreinte appelée en S1), Keycloak dans une cellule kind, puis la démo Docker :
 parcours navigateur (Keycloak, API, PWA), charge k6, télémétrie dans Grafana (chaque vérification en échec devient une
 annotation du job) et scan de sécurité ZAP. Autres workflows : `serveur-commun-android.yml` (navigateur et application
-Android sur les mêmes données, émulateur), `voix.yml` (Whisper réel sur Linux, Windows et macOS),
+Android sur les mêmes données, émulateur, rejoué une fois sur un émulateur neuf si l'émulateur s'arrête seul), `voix.yml` (Whisper réel sur Linux, Windows et macOS),
 `pr-environment.yml` (image d'une demande de modification étiquetée « env:pr », déployée par Argo CD dans la cellule de
 recette). Pendant la revue d'une modification, un nouvel envoi annule l'exécution en cours ; sur
 `main`, chaque fusion garde son exécution complète.
