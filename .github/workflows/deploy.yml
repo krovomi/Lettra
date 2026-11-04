@@ -129,6 +129,14 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Libérer de l'espace disque (Purger l'image Ubuntu du Runner)
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
       - name: Construction de l'image de l'API
         run: $COMPOSE build
 
@@ -174,6 +182,7 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
+
       - name: Serveur commun — appareil et navigateur sur les mêmes données
         working-directory: deploy/demo/e2e
         run: |
