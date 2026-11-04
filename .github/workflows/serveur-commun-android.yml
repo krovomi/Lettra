@@ -118,6 +118,8 @@ jobs:
             # Journal du noyau de la machine (OOM, signaux) et rapports de plantage de l'émulateur, place disque.
             sudo journalctl -k --no-pager -q --since '-15 min' | grep -iE 'oom|kill|qemu|segfault|out of memory' | tail -n 20 || true
             ls -laR /tmp/android-runner 2>/dev/null | tail -n 30 || true
+            # netsimd (réseau simulé de l'émulateur) écrit encore au moment de l'arrêt : sa sortie d'erreur dit peut-être pourquoi.
+            tail -n 60 /tmp/android-runner/netsimd/netsim_stderr.log 2>/dev/null || true
             df -h / | tail -n 1
             # Un émulateur qui plante laisse un rapport (minidump) : on liste ceux trouvés.
             find /tmp ~/.android -name '*.dmp' -newer "$SORTIE/client.txt" 2>/dev/null | head -n 10 || true
@@ -142,7 +144,7 @@ jobs:
           # en ouvrant la liste des clients, sans message ni manque de mémoire. À relever quand une version plus
           # récente passe ce test.
           emulator-build: 16428233
-          emulator-options: -no-window -gpu guest -noaudio -no-boot-anim -no-snapshot -show-kernel
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -show-kernel
           script: bash "$RUNNER_TEMP/serveur-commun-android.sh"
 
       - name: Journaux de la démo
