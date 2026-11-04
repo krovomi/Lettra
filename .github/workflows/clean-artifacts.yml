@@ -1,0 +1,39 @@
+name: Purge des Artefacts
+
+on:
+  workflow_dispatch: # Permet de lancer le nettoyage manuellement d'un simple clic
+  schedule:
+    - cron: '0 0 * * *' # S'exécute automatiquement toutes les nuits à minuit
+
+jobs:
+  clean-artifacts:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write # Requis pour avoir le droit de supprimer les artefacts
+    
+    steps:
+      - name: Supprimer tous les artefacts
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = "krovomi";
+            const repo = "Lettra";
+            
+            const opts = { owner, repo, per_page: 100 };
+            const response = await github.rest.actions.listArtifactsForRepo(opts);
+            
+            if (response.data.artifacts.length === 0) {
+              console.log("Aucun artefact à supprimer.");
+              return;
+            }
+            
+            console.log(`Trouvé ${response.data.artifacts.length} artefact(s). Suppression en cours...`);
+            
+            for (const artifact of response.data.artifacts) {
+              await github.rest.actions.deleteArtifact({
+                owner,
+                repo,
+                artifact_id: artifact.id,
+              });
+              console.log(`Artefact ${artifact.id} (${artifact.name}) supprimé.`);
+            }
