@@ -7,8 +7,8 @@ namespace Lettra.Supervision.Application;
 /// <summary>
 /// Les règles d'alerte de dossier : la chaîne anti-fraude compromise est une S1 de conformité, un trou de numérotation
 /// une S2 (annexe G §5 et §6) ; une échéance fiscale proche une S3, dépassée une S2 ; un IBAN de fournisseur à vérifier
-/// une S2 de sécurité (fraude au faux fournisseur). Le titre est celui de la règle, la
-/// portée des identifiants : aucune donnée du dossier ne quitte sa base.
+/// une S2 de sécurité (fraude au faux fournisseur) ; un échéancier demandé par un client et pas encore vu une S3
+/// fonctionnelle. Le titre est celui de la règle, la portée des identifiants : aucune donnée du dossier ne quitte sa base.
 /// </summary>
 public sealed class DossierAlertPublisher(AlertIngestion ingestion) : IDossierAlertPublisher
 {
@@ -17,6 +17,7 @@ public sealed class DossierAlertPublisher(AlertIngestion ingestion) : IDossierAl
     public const string FiscalSoonRuleId = "fiscal-echeance-proche";
     public const string FiscalOverdueRuleId = "fiscal-echeance-depassee";
     public const string SupplierIbanRuleId = "fournisseur-iban-a-verifier";
+    public const string PaymentPlanRuleId = "echeancier-a-voir";
 
     public async Task PublishAsync(DossierAlertSignal signal, CancellationToken cancellationToken)
     {
@@ -34,6 +35,7 @@ public sealed class DossierAlertPublisher(AlertIngestion ingestion) : IDossierAl
             DossierAlertRule.FiscalDeadlineSoon => (FiscalSoonRuleId, "Échéance fiscale d'un dossier dans les 7 jours", Severity.S3, AlertCategory.Compliance),
             DossierAlertRule.FiscalDeadlineOverdue => (FiscalOverdueRuleId, "Échéance fiscale d'un dossier dépassée", Severity.S2, AlertCategory.Compliance),
             DossierAlertRule.SupplierIbanToVerify => (SupplierIbanRuleId, "IBAN d'un fournisseur modifié, à vérifier avant tout paiement", Severity.S2, AlertCategory.Security),
+            DossierAlertRule.PaymentPlanToReview => (PaymentPlanRuleId, "Échéancier demandé par un client, à prendre en compte", Severity.S3, AlertCategory.Functional),
             _ => throw new ArgumentOutOfRangeException(nameof(signal), signal.Rule, null),
         };
 

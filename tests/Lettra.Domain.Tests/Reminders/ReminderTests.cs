@@ -15,7 +15,7 @@ public sealed class ReminderSettingsTests
         ReminderSettings settings = ReminderSettings.Default();
 
         settings.AutoSend.Should().BeFalse();
-        Enum.GetValues<ReminderLevel>().Select(settings.DelayOf).Should().Equal(3, 15, 30, 45);
+        ReminderLevels.Escalation.Select(settings.DelayOf).Should().Equal(3, 15, 30, 45);
         settings.MinimumGapDays.Should().Be(7);
         settings.Version.Should().Be(0);
     }
@@ -26,10 +26,10 @@ public sealed class ReminderSettingsTests
         ReminderSettings settings = ReminderSettings.Default();
         Guid user = Guid.NewGuid();
 
-        settings.Update(true, [5, 20, 40, 60], 10, user, Now).IsSuccess.Should().BeTrue();
+        settings.Update(true, [5, 20, 40, 60], 10, ReminderPrevention.Default, user, Now).IsSuccess.Should().BeTrue();
 
         settings.AutoSend.Should().BeTrue();
-        Enum.GetValues<ReminderLevel>().Select(settings.DelayOf).Should().Equal(5, 20, 40, 60);
+        ReminderLevels.Escalation.Select(settings.DelayOf).Should().Equal(5, 20, 40, 60);
         settings.MinimumGapDays.Should().Be(10);
         (settings.Version, settings.UpdatedBy, settings.UpdatedAt).Should().Be((1L, user, Now));
     }
@@ -44,7 +44,7 @@ public sealed class ReminderSettingsTests
     {
         ReminderSettings settings = ReminderSettings.Default();
 
-        settings.Update(false, delays, 7, Guid.NewGuid(), Now).Errors.Should().ContainSingle()
+        settings.Update(false, delays, 7, ReminderPrevention.Default, Guid.NewGuid(), Now).Errors.Should().ContainSingle()
             .Which.Code.Should().Be(ReminderErrors.DelaysInvalidCode);
         settings.Version.Should().Be(0);
     }
@@ -53,7 +53,7 @@ public sealed class ReminderSettingsTests
     [InlineData(0)]
     [InlineData(91)]
     public void Un_ecart_hors_de_1_a_90_jours_est_refuse(int gap) =>
-        ReminderSettings.Default().Update(false, [3, 15, 30, 45], gap, Guid.NewGuid(), Now).Errors.Should().ContainSingle()
+        ReminderSettings.Default().Update(false, [3, 15, 30, 45], gap, ReminderPrevention.Default, Guid.NewGuid(), Now).Errors.Should().ContainSingle()
             .Which.Code.Should().Be(ReminderErrors.GapInvalidCode);
 
     [Fact]

@@ -96,4 +96,92 @@ public sealed class ReminderTemplatesTests
 
         act.Should().Throw<ArgumentNullException>();
     }
+
+    private static ReminderLetter Help(ReminderLevel level, string language, ReminderHelp? help, ReminderSender? sender = null) =>
+        Letter(level, language, sender: sender) with { Help = help };
+
+    private static IReadOnlyList<PaymentPlanInstallmentState> Schedule() =>
+    [
+        new(new PaymentPlanInstallment(1, new DateOnly(2026, 9, 15), 600m), 600m, true, false, 0m),
+        new(new PaymentPlanInstallment(2, new DateOnly(2026, 10, 15), 634.56m), 1234.56m, false, true, 634.56m),
+    ];
+
+    [Fact]
+    public void Le_rappel_avant_echeance_donne_le_lien_l_echeancier_et_le_virement_en_francais()
+    {
+        (string subject, string body) = ReminderTemplates.Write(Help(
+            ReminderLevel.BeforeDue, ReminderTemplates.French, new ReminderHelp(new Uri("https://lettra.example/espace-client/abc"), true, true, true)));
+
+        subject.Should().Be("Votre facture F-2026-0042 arrive à échéance le 31 août 2026");
+        body.Should().StartWith("Bonjour,\n\nPetit rappel avant l'échéance : la facture F-2026-0042 du 1 août 2026")
+            .And.Contain("restant dû de 1\u202f234,56 €")
+            .And.Contain("Votre espace client, pour payer en ligne ou retrouver vos factures : https://lettra.example/espace-client/abc")
+            .And.Contain("vous pouvez y demander un échéancier")
+            .And.Contain("IBAN FR76 3000 6000 0112 3456 7890 189, BIC AGRIFRPP, en indiquant la référence F-2026-0042")
+            .And.Contain("Le QR code joint")
+            .And.EndWith("Cordialement,\nAtelier Martin\n");
+        body.Should().NotContain("L441-10", "un rappel avant l'échéance ne parle jamais de pénalités");
+    }
+
+    [Fact]
+    public void Dans_l_apercu_le_lien_est_annonce_et_rien_n_est_promis_sans_iban()
+    {
+        string body = ReminderTemplates.Write(Help(
+            ReminderLevel.BeforeDue, ReminderTemplates.French, new ReminderHelp(null, true, true, false), Sender with { Iban = null })).Body;
+
+        body.Should().Contain("(lien créé à l'envoi, valable 30 jours)").And.NotContain("échéancier").And.NotContain("QR code").And.NotContain("IBAN");
+    }
+
+    [Fact]
+    public void Sans_espace_client_ni_aide_le_rappel_reste_simple()
+    {
+        string body = ReminderTemplates.Write(Help(ReminderLevel.BeforeDue, ReminderTemplates.English, null)).Body;
+
+        body.Should().NotContain("customer area").And.NotContain("QR code").And.Contain("To pay by bank transfer: IBAN");
+    }
+
+    [Fact]
+    public void Le_rappel_avant_echeance_en_anglais()
+    {
+        (string subject, string body) = ReminderTemplates.Write(Help(
+            ReminderLevel.BeforeDue, ReminderTemplates.English, new ReminderHelp(null, true, true, true)));
+
+        subject.Should().Be("Your invoice F-2026-0042 is due on 31 August 2026");
+        body.Should().StartWith("Hello,\n\nA friendly reminder before the due date: invoice F-2026-0042 dated 1 August 2026, with €1,234.56 outstanding")
+            .And.Contain("(link created when sent, valid for 30 days)")
+            .And.Contain("you can ask for a payment plan there")
+            .And.Contain("quoting reference F-2026-0042")
+            .And.Contain("The attached QR code opens this transfer")
+            .And.EndWith("Kind regards,\nAtelier Martin\n");
+    }
+
+    [Fact]
+    public void La_relance_d_echeance_manquee_rappelle_le_calendrier_en_francais()
+    {
+        ReminderLetter letter = Help(ReminderLevel.MissedInstallment, ReminderTemplates.French, new ReminderHelp(null, false, false, false, 2, Schedule()));
+        (string subject, string body) = ReminderTemplates.Write(letter with { Outstanding = 634.56m });
+
+        subject.Should().Be("Échéance 2 de votre échéancier : facture F-2026-0042");
+        body.Should().Contain("l'échéance 2 de l'échéancier de la facture F-2026-0042, prévue le 31 août 2026, n'est pas encore réglée : il reste 634,56 €")
+            .And.Contain("Rappel du calendrier :\n- échéance 1, 15/09/2026, 600,00 € (réglée)\n- échéance 2, 15/10/2026, 634,56 €\n")
+            .And.NotContain("espace client").And.NotContain("QR code");
+    }
+
+    [Fact]
+    public void La_relance_d_echeance_manquee_en_anglais()
+    {
+        (string subject, string body) = ReminderTemplates.Write(Help(
+            ReminderLevel.MissedInstallment, ReminderTemplates.English, new ReminderHelp(new Uri("https://lettra.example/espace-client/abc"), true, true, false, 2, Schedule())));
+
+        subject.Should().Be("Instalment 2 of your payment plan: invoice F-2026-0042");
+        body.Should().Contain("instalment 2 of the payment plan for invoice F-2026-0042, due on 31 August 2026, has not been paid yet")
+            .And.Contain("Your payment plan:\n- instalment 1, 15/09/2026, €600.00 (paid)\n- instalment 2, 15/10/2026, €634.56\n")
+            .And.Contain("Your customer area, to pay online or find your invoices: https://lettra.example/espace-client/abc")
+            .And.NotContain("ask for a payment plan");
+    }
+
+    [Fact]
+    public void Une_relance_d_echeance_sans_aide_ni_calendrier_reste_lisible() =>
+        ReminderTemplates.Write(Help(ReminderLevel.MissedInstallment, ReminderTemplates.French, null)).Body
+            .Should().NotContain("Rappel du calendrier").And.Contain("n'est pas encore réglée");
 }

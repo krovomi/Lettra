@@ -20,6 +20,12 @@ public sealed class LocalModelOptions
     public string Model { get; set; } = "mistral-small";
 
     public int MaxTokens { get; set; } = 4_000;
+
+    /// <summary>
+    /// Délai d'un appel au modèle : passé ce délai, la réponse se termine sans IA. Trente secondes suffisent à un modèle
+    /// servi sur une carte graphique ; à allonger pour un modèle qui tourne sur le seul processeur.
+    /// </summary>
+    public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(30);
 }
 
 /// <summary>
@@ -37,7 +43,15 @@ public sealed class LocalModelEngine(HttpClient http, LocalModelOptions options)
             .ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
         JsonElement body = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken).ConfigureAwait(false);
-        return ToTurn(body);
+        try
+        {
+            return ToTurn(body);
+        }
+        catch (Exception exception) when (exception is KeyNotFoundException or InvalidOperationException or IndexOutOfRangeException)
+        {
+            // JSON valide, mais pas une réponse « chat completions » : rien à montrer, la réponse se termine sans IA.
+            throw new AiEngineException(AiEngineFailure.Unreadable, "Réponse du modèle local illisible.", exception);
+        }
     }
 
     public JsonObject BuildBody(EngineRequest request)
@@ -185,7 +199,12 @@ public static class DependencyInjection
             return services;
         }
 
-        services.AddHttpClient(nameof(LocalModelEngine), client => client.Timeout = TimeSpan.FromMinutes(2));
+        if (options.Timeout <= TimeSpan.Zero)
+        {
+            throw new InvalidOperationException($"{LocalModelOptions.SectionName}:Timeout doit être positif.");
+        }
+
+        services.AddHttpClient(nameof(LocalModelEngine), client => client.Timeout = options.Timeout);
         services.AddKeyedSingleton<IAiEngine>(AiEngineKind.Local, (sp, _) =>
             new LocalModelEngine(sp.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(LocalModelEngine)), options));
         return services;

@@ -113,6 +113,9 @@ public enum DossierAlertRule
 
     /// <summary>L'IBAN d'un fournisseur a changé et attend sa vérification par un autre canal : S2, sécurité.</summary>
     SupplierIbanToVerify = 5,
+
+    /// <summary>Un client a demandé un échéancier dans son espace client et l'entreprise ne l'a pas encore vu : S3, fonctionnel.</summary>
+    PaymentPlanToReview = 6,
 }
 
 /// <summary>
