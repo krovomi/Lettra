@@ -49,6 +49,7 @@ public sealed class GalleryTests : BunitContext
     private readonly FakeAccountingGateway _accounting = new();
     private readonly FakeCatalogGateway _catalog = new();
     private readonly FakeAlertsGateway _alerts = new();
+    private readonly FakeQuoteFollowUpsGateway _followUps = new();
 
     public GalleryTests()
     {
@@ -80,6 +81,7 @@ public sealed class GalleryTests : BunitContext
         Services.AddSingleton<IPortalGateway>(new FakePortalGateway());
         Services.AddSingleton<IRemindersGateway>(new FakeRemindersGateway());
         Services.AddSingleton<IBankConnectionsGateway>(new FakeBankConnectionsGateway());
+        Services.AddSingleton<IQuoteFollowUpsGateway>(_followUps);
         Services.AddSingleton<ISessionGateway>(new FakeSessionGateway(new SessionResponse(true, SessionModeDto.Local, "Claire Martin", true)));
         Services.AddSingleton<TimeProvider>(new ManualClock(new DateTimeOffset(2026, 10, 16, 12, 0, 0, TimeSpan.Zero)));
         LettraCultures.Apply(CultureInfo.GetCultureInfo("fr-FR"));
@@ -100,6 +102,8 @@ public sealed class GalleryTests : BunitContext
         Ecrire(dossier, "accueil-apparence", "", Page<Home>(), "#appearance-toggle");
         Ecrire(dossier, "accueil-plus", "", Page<Home>(), "#tab-more");
         Ecrire(dossier, "devis", "quotes", Page<QuoteList>());
+        Ecrire(dossier, "devis-a-relancer", "quote-follow-ups", Page<QuoteFollowUpPage>(), "#quote-follow-ups-open-DEV-2026-0031");
+        Ecrire(dossier, "carnet-de-commandes", "order-book", Page<OrderBookPage>());
         Ecrire(dossier, "factures", "invoices", Page<InvoiceList>());
         Ecrire(dossier, "facture", $"invoices/{facture}", b =>
         {
@@ -257,6 +261,29 @@ public sealed class GalleryTests : BunitContext
         }
     }
 
+    /// <summary>Les devis en attente de la galerie : trois à relancer, un déjà relancé, et le carnet pondéré qui les explique.</summary>
+    private void DevisARelancer()
+    {
+        _followUps.Quotes.Add(FakeQuoteFollowUpsGateway.Quote("DEV-2026-0031", "Studio Nord", "contact@studio-nord.example", 0, 2_400m, probability: 0.62m));
+        _followUps.Quotes.Add(FakeQuoteFollowUpsGateway.Quote("DEV-2026-0033", "Pharmacie du Port", null, 2, 3_600m, probability: 0.48m));
+        _followUps.Quotes.Add(FakeQuoteFollowUpsGateway.Quote("DEV-2026-0035", "Garage des Lilas", "compta@garage-lilas.example", 4, 4_800m, probability: 0.55m));
+        _followUps.Quotes.Add(FakeQuoteFollowUpsGateway.Quote("DEV-2026-0029", "Atelier Coste", "atelier@coste.example", 1, 1_200m, due: false, probability: 0.7m));
+        _followUps.History.Add(FakeQuoteFollowUpsGateway.Sent("DEV-2026-0029", "Atelier Coste"));
+        OrderBookQuoteResponse[] attente =
+        [
+            FakeQuoteFollowUpsGateway.BookQuote("DEV-2026-0035", "Garage des Lilas", 4_800m, 0.55m, age: 8),
+            FakeQuoteFollowUpsGateway.BookQuote("DEV-2026-0033", "Pharmacie du Port", 3_600m, 0.48m, age: 4, customerGlobal: true),
+            FakeQuoteFollowUpsGateway.BookQuote("DEV-2026-0031", "Studio Nord", 2_400m, 0.62m, age: 2),
+            FakeQuoteFollowUpsGateway.BookQuote("DEV-2026-0029", "Atelier Coste", 1_200m, 0.7m, age: 12),
+        ];
+        _followUps.Book = new OrderBookResponse(
+            new DateOnly(2026, 10, 16), new DateOnly(2024, 10, 16), 24, 3, 14, 23, 0.6087m, true,
+            attente.Sum(q => q.TotalExclTax), attente.Sum(q => q.WeightedExclTax), attente.Sum(q => q.WeightedInclTax),
+            [new(QuoteAmountBandDto.Small, 4, 6, 0.6667m), new(QuoteAmountBandDto.Medium, 8, 13, 0.6154m), new(QuoteAmountBandDto.Large, 2, 4, 0.5m), new(QuoteAmountBandDto.VeryLarge, 0, 0, null)],
+            [new(QuoteAgeBandDto.FirstWeek, 14, 23, 0.6087m), new(QuoteAgeBandDto.SecondWeek, 6, 12, 0.5m), new(QuoteAgeBandDto.SameMonth, 2, 7, 0.2857m), new(QuoteAgeBandDto.Older, 0, 2, 0m)],
+            attente);
+    }
+
     /// <summary>Six mois d'activité fictive ; rend l'identifiant d'une facture émise.</summary>
     private Guid Donnees()
     {
@@ -307,6 +334,7 @@ public sealed class GalleryTests : BunitContext
         }
 
         _quotes.Add(QuoteStatusDto.Draft, null, Ligne("Création de société", 1, 1500m));
+        DevisARelancer();
         _catalog.Add("TENUE", "Tenue comptable mensuelle", 450m);
         _catalog.Add("BILAN", "Bilan annuel et liasse fiscale", 1800m);
         _catalog.Add("CONSEIL", "Conseil (heure)", 120m);

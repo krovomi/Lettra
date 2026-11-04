@@ -438,6 +438,19 @@ public sealed class BillingListTests : BunitContext
         page.Find("tbody .lettra-status").TextContent.Should().Be("Expiré");
         page.Find("tbody a").GetAttribute("href").Should().Be($"quotes/{devis.Id}");
     }
+
+    [Fact]
+    public void La_liste_des_devis_montre_les_onglets_et_le_nombre_de_devis_a_relancer()
+    {
+        FakeQuoteFollowUpsGateway followUps = new();
+        followUps.Quotes.Add(FakeQuoteFollowUpsGateway.Quote("DEV-2026-0001", "Dupont SARL", "compta@dupont.fr", 2));
+        Services.AddSingleton<IQuoteFollowUpsGateway>(followUps);
+
+        IRenderedComponent<QuoteList> page = Render<QuoteList>();
+
+        page.WaitForAssertion(() => page.Find(".lt-quotes-tab-count").TextContent.Should().Be("1"));
+        page.Find("#quotes-tab-all").GetAttribute("aria-current").Should().Be("page");
+    }
 }
 
 [Collection("culture")]

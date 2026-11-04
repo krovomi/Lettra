@@ -1,0 +1,30 @@
+@inject IStringLocalizer<SharedResource> L
+@* Les onglets des devis : la liste, ceux à relancer (avec leur nombre s'il est connu) et le carnet de commandes. *@
+
+<nav class="lt-subnav lt-quotes-tabs" aria-label="@L["QuoteTabs.Label"]">
+    @foreach ((QuotesTab tab, string href, string icon) in Tabs)
+    {
+        <a class="@($"lt-subnav-link{(tab == Current ? " active" : string.Empty)}")" href="@href" id="@($"quotes-tab-{tab.ToString().ToLowerInvariant()}")"
+           aria-current="@(tab == Current ? "page" : null)">
+            <Icon Name="@icon" Size="18" /> @L[$"QuoteTabs.{tab}"]
+            @if (tab == QuotesTab.FollowUps && DueCount is > 0)
+            {
+                <span class="lt-quotes-tab-count" aria-label="@string.Format(CultureInfo.CurrentCulture, L[DueCount == 1 ? "QuoteTabs.DueCount.One" : "QuoteTabs.DueCount"], DueCount)">@DueCount</span>
+            }
+        </a>
+    }
+</nav>
+
+@code {
+    private static readonly (QuotesTab Tab, string Href, string Icon)[] Tabs =
+    [
+        (QuotesTab.All, "quotes", "file-text"),
+        (QuotesTab.FollowUps, "quote-follow-ups", "send"),
+        (QuotesTab.OrderBook, "order-book", "trending-up"),
+    ];
+
+    [Parameter, EditorRequired] public QuotesTab Current { get; set; }
+
+    /// <summary>Le nombre de devis à relancer, montré sur l'onglet ; absent tant qu'il n'est pas lu.</summary>
+    [Parameter] public int? DueCount { get; set; }
+}

@@ -95,6 +95,7 @@ public static class DependencyInjection
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ConcurrencyBehavior<,>));
 
         services.AddScoped<Features.Administration.InvitationMailer>();
+        services.AddScoped<Features.Billing.QuoteFollowUpService>();
         RegisterImplementations(services, typeof(ICommandHandler<,>));
         RegisterImplementations(services, typeof(IQueryHandler<,>));
         RegisterImplementations(services, typeof(IValidator<>));

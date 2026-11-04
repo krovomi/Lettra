@@ -2,11 +2,17 @@
 @inject IQuotesGateway Quotes
 @inject NavigationManager Navigation
 @inject ToastService Toasts
+@inject Optional<IQuoteFollowUpsGateway> OptionalFollowUps
 @inject IStringLocalizer<SharedResource> L
 
 <PageTitle>@L["Quotes.Title"] · Lettra</PageTitle>
 
 <h1 tabindex="-1">@L["Quotes.Title"]</h1>
+
+@if (OptionalFollowUps.Value is not null)
+{
+    <QuotesTabs Current="QuotesTab.All" DueCount="_dueFollowUps" />
+}
 
 <GlobalShortcuts Scope="_pageScope" />
 
@@ -104,6 +110,7 @@
 @code {
     private List<QuoteSummary> _items = [];
     private IReadOnlyList<ErrorDetail> _errors = [];
+    private int? _dueFollowUps;
     private string? _search;
     private QuoteStatusDto? _statusFilter;
     private DateOnly? _from;
@@ -149,7 +156,13 @@
         return LoadAsync();
     }
 
-    protected override Task OnInitializedAsync() => LoadAsync();
+    protected override async Task OnInitializedAsync()
+    {
+        // Le nombre de devis à relancer, montré sur l'onglet, est lu à côté de la liste.
+        Task<OperationResult<QuoteFollowUpOverviewResponse>>? followUps = OptionalFollowUps.Value?.GetOverviewAsync(CancellationToken.None);
+        await LoadAsync();
+        _dueFollowUps = followUps is null ? null : (await followUps).Value?.DueCount;
+    }
 
     /// <summary>Un brouillon seulement : un devis numéroté reste (série DEV continue), il se refuse ou expire.</summary>
     private async Task DeleteAsync(QuoteSummary quote)

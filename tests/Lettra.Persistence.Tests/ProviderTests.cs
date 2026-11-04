@@ -179,6 +179,15 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Devis_a_relancer_et_carnet_de_commandes()
+    {
+        ManualClock clock = new(ReminderScenarios.Start);
+        CapturedEmails emails = new();
+        await using TenantHarness harness = QuoteFollowUpScenarios.Harness(new SqliteConfigurator(), clock, emails);
+        await QuoteFollowUpScenarios.FollowUpsAsync(harness, clock, emails, DatabaseProvider.Sqlite, Database("relances-devis"));
+    }
+
+    [Fact]
     public async Task Avant_le_retard_echeancier_et_rappel_avant_echeance()
     {
         ManualClock clock = new(ReminderScenarios.Start);
@@ -670,6 +679,16 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     }
 
     [SkippableFact]
+    public async Task Devis_a_relancer_et_carnet_de_commandes()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        ManualClock clock = new(ReminderScenarios.Start);
+        CapturedEmails emails = new();
+        await using TenantHarness harness = QuoteFollowUpScenarios.Harness(new PostgreSqlConfigurator(), clock, emails);
+        await QuoteFollowUpScenarios.FollowUpsAsync(harness, clock, emails, DatabaseProvider.PostgreSql, Database("relances-devis"));
+    }
+
+    [SkippableFact]
     public async Task Avant_le_retard_echeancier_et_rappel_avant_echeance()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
@@ -1091,6 +1110,16 @@ public sealed class SqlServerTests : IAsyncLifetime
         CapturedEmails emails = new();
         await using TenantHarness harness = ReminderScenarios.Harness(new SqlServerConfigurator(), clock, emails);
         await ReminderScenarios.RemindersAsync(harness, clock, emails, DatabaseProvider.SqlServer, Database("relances"));
+    }
+
+    [SkippableFact]
+    public async Task Devis_a_relancer_et_carnet_de_commandes()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        ManualClock clock = new(ReminderScenarios.Start);
+        CapturedEmails emails = new();
+        await using TenantHarness harness = QuoteFollowUpScenarios.Harness(new SqlServerConfigurator(), clock, emails);
+        await QuoteFollowUpScenarios.FollowUpsAsync(harness, clock, emails, DatabaseProvider.SqlServer, Database("relances-devis"));
     }
 
     [SkippableFact]
