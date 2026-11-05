@@ -52,7 +52,7 @@ public sealed partial class PaymentReminderServiceTests
 
         IReadOnlyList<DecisionProposal> manual = await rule.ProposeAsync(Today, default);
         ReminderSettings settings = ReminderSettings.Default();
-        settings.Update(true, ReminderSettings.DefaultDelays, ReminderSettings.DefaultMinimumGapDays, Guid.Empty, Now);
+        settings.Update(true, ReminderSettings.DefaultDelays, ReminderSettings.DefaultMinimumGapDays, ReminderPrevention.Default, Guid.Empty, Now);
         await _f.Settings.AddAsync(settings, default);
         IReadOnlyList<DecisionProposal> automatic = await rule.ProposeAsync(Today, default);
 
