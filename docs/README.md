@@ -38,6 +38,7 @@ est dans le [README](../README.md#principes-de-conception), le détail, les mesu
 - [Menu réglable et aide](menu-et-aide.md)
 - [Passerelles vers les logiciels du cabinet](passerelles-logiciels-cabinet.md)
 - [Pièces justificatives des dépenses](pieces-justificatives.md)
+- [Plan de développement du mode 5 (cellule en ligne, SaaS)](plan-mode-5.md)
 - [Préférences de l'utilisateur](preferences-utilisateur.md)
 - [Qualité du code et couverture des tests](qualite-du-code.md)
 - [Relances des factures échues et envoi d'e-mails](relances-et-e-mails.md)
