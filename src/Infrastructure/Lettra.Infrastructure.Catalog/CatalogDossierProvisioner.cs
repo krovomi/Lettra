@@ -29,12 +29,19 @@ internal sealed partial class CatalogDossierProvisioner(
         CatalogDbContext db = await catalogFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
         await using (db.ConfigureAwait(false))
         {
-            string? cellId = await db.Organisations.Where(o => o.Id == organisation.Value).Select(o => o.CellId)
+            var owner = await db.Organisations.Where(o => o.Id == organisation.Value).Select(o => new { o.CellId, o.State })
                 .SingleOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-            if (cellId is null)
+            if (owner is null || owner.State == OrganisationState.Departed)
             {
                 return DossierErrors.OrganisationNotFound;
             }
+
+            if (owner.State == OrganisationState.Leaving)
+            {
+                return PlatformErrors.CabinetLeaving;
+            }
+
+            string cellId = owner.CellId;
 
             CatalogCluster? cluster = await PickClusterAsync(db, cellId, cancellationToken).ConfigureAwait(false);
             if (cluster is null)

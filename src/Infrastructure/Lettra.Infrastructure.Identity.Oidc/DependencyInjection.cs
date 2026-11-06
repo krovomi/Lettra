@@ -33,6 +33,14 @@ public static class DependencyInjection
         services.Replace(ServiceDescriptor.Scoped<IPermissionService>(sp => sp.GetRequiredService<CachingPermissionService>()));
         services.Replace(ServiceDescriptor.Scoped<IPermissionCacheInvalidator>(sp => sp.GetRequiredService<CachingPermissionService>()));
 
+        // Arrivée et départ des cabinets chez Keycloak (plan du mode 5, étape 2) : seulement avec un compte de service réglé.
+        services.AddOptions<IdentityProvisioningOptions>().Bind(configuration.GetSection(IdentityProvisioningOptions.SectionName));
+        if (!string.IsNullOrWhiteSpace(configuration[$"{IdentityProvisioningOptions.SectionName}:{nameof(IdentityProvisioningOptions.ClientId)}"]))
+        {
+            services.AddHttpClient(KeycloakIdentityProvisioning.HttpClientName);
+            services.Replace(ServiceDescriptor.Singleton<IIdentityProvisioning, KeycloakIdentityProvisioning>());
+        }
+
         // Hors requête HTTP (Worker, tâches de fond), personne n'est authentifié tant qu'un hôte ne dit pas qui agit.
         services.TryAddScoped<ICurrentUser, AnonymousUser>();
         return services;

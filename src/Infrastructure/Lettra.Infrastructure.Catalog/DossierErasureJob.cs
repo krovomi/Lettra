@@ -75,7 +75,6 @@ public static class DossierErasureJobRegistration
         services.TryAddSingleton(TimeProvider.System);
         services.AddOptions<DossierErasureJobOptions>().Bind(configuration.GetSection(DossierErasureJobOptions.SectionName))
             .ValidatePeriodicJob(DossierErasureJobOptions.SectionName);
-        services.TryAddSingleton<IDossierErasurePass>(sp => sp.GetRequiredService<CatalogDossierEraser>());
         services.AddHostedService<DossierErasureJob>();
         return services;
     }

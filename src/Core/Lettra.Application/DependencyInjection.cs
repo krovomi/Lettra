@@ -29,6 +29,8 @@ public static class DependencyInjection
         services.TryAddSingleton<IAiEngineFactory, NoAiEngineFactory>();
         services.TryAddSingleton<IAiSettingsStore, NoAiSettingsStore>();
         services.TryAddSingleton<Abstractions.Tenancy.IDossierEraser, Features.Dossiers.NoDossierEraser>();
+        services.TryAddSingleton<Abstractions.Tenancy.ICabinetLifecycle, Features.Platform.NoCabinetLifecycle>();
+        services.TryAddSingleton<IIdentityProvisioning, Features.Platform.NoIdentityProvisioning>();
         services.TryAddSingleton(INamedEntityDetection.None);
         services.TryAddSingleton(IAiEngineHealth.None);
         services.TryAddScoped<IAccountingAssistant, UnavailableAccountingAssistant>();

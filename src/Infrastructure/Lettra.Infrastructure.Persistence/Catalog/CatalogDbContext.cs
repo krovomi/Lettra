@@ -66,6 +66,8 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
             e.Property(x => x.Name).HasMaxLength(200);
             e.Property(x => x.CellId).HasMaxLength(64);
             e.Property(x => x.WrappedKek).HasMaxLength(CatalogOrganisation.MaxWrappedKekLength);
+            e.Property(x => x.State).HasConversion<int>();
+            e.HasIndex(x => new { x.State, x.DepartureDueAt });
         });
 
         modelBuilder.Entity<CatalogCluster>(e =>

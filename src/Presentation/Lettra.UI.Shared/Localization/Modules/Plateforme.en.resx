@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Error.CabinetLifecycle.NameRequired" xml:space="preserve"><value>Enter the firm's name.</value></data>
+  <data name="Error.CabinetLifecycle.NameTooLong" xml:space="preserve"><value>The firm's name is too long (200 characters at most).</value></data>
+  <data name="Error.CabinetLifecycle.Unavailable" xml:space="preserve"><value>This cell cannot onboard firms: its KMS or its Keycloak service account is not configured.</value></data>
+  <data name="Error.CabinetLifecycle.IdentityFailed" xml:space="preserve"><value>The identity provider did not respond as expected. Try again: every step already done is picked up.</value></data>
+  <data name="Error.CabinetLifecycle.NameTaken" xml:space="preserve"><value>Another firm already has this name. Choose a different name.</value></data>
+  <data name="Error.CabinetLifecycle.CellUnknown" xml:space="preserve"><value>Choose a cell of the platform.</value></data>
+  <data name="Error.CabinetLifecycle.CabinetDeclared" xml:space="preserve"><value>This firm is declared in the server configuration: its departure cannot be requested from Lettra.</value></data>
+  <data name="Error.CabinetLifecycle.DepartureNotCancellable" xml:space="preserve"><value>This firm's departure can no longer be cancelled: the due date has passed or no departure was requested.</value></data>
+  <data name="Error.CabinetLifecycle.CabinetLeaving" xml:space="preserve"><value>This firm is leaving Lettra: it can no longer create client files. Its client files stay open for export until the due date.</value></data>
+</root>

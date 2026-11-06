@@ -309,16 +309,33 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.CatalogMigrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<DateTime?>("DepartedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DepartureDueAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DepartureRequestedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("ManagedIdentity")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("State")
+                        .HasColumnType("int");
 
                     b.Property<string>("WrappedKek")
                         .HasMaxLength(512)
                         .HasColumnType("nvarchar(512)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("State", "DepartureDueAt");
 
                     b.ToTable("Organisations", "catalog");
                 });

@@ -41,6 +41,9 @@ public sealed class CatalogDatabaseOptions
     /// et sa base ne sont détruites qu'à la fin de ce délai (30 jours par défaut).
     /// </summary>
     public TimeSpan DossierErasureDelay { get; set; } = TimeSpan.FromDays(30);
+
+    /// <summary>Délai de rétractation du départ d'un cabinet : il travaille et exporte ses données jusqu'à son terme.</summary>
+    public TimeSpan CabinetDepartureDelay { get; set; } = TimeSpan.FromDays(30);
 }
 
 public sealed class OrganisationEntry

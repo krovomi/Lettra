@@ -183,7 +183,12 @@ internal sealed class TransitKekStore(
     public async Task DestroyAsync(OrganisationId organisation, CancellationToken cancellationToken)
     {
         _cache.Remove(organisation.Value);
-        await PostAsync($"keys/{KeyName(organisation)}/config", new TransitRequest { DeletionAllowed = true }, cancellationToken).ConfigureAwait(false);
+        // Clé déjà détruite (départ repris après une panne) : rien à faire.
+        if (await TryPostAsync($"keys/{KeyName(organisation)}/config", new TransitRequest { DeletionAllowed = true }, cancellationToken).ConfigureAwait(false) is null)
+        {
+            return;
+        }
+
         using HttpClient http = httpClients.CreateClient(HttpClientName);
         using HttpResponseMessage response = await http.SendAsync(Request(HttpMethod.Delete, $"keys/{KeyName(organisation)}", content: null), cancellationToken)
             .ConfigureAwait(false);

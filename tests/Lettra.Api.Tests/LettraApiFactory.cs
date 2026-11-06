@@ -31,6 +31,7 @@ public sealed class LettraApiFactory : WebApplicationFactory<Program>
     public static readonly Guid AutreCabinetAdminId = new("0199e3a0-0000-7000-8000-00000000e004");
     public static readonly Guid SuspenduId = new("0199e3a0-0000-7000-8000-00000000e005");
     public static readonly Guid AdministrateurCabinetId = new("0199e3a0-0000-7000-8000-00000000e006");
+    public static readonly Guid AdministrateurPlateformeId = new("0199e3a0-0000-7000-8000-00000000e007");
 
     private const string Issuer = "https://keycloak.test/realms/lettra";
     private static readonly SymmetricSecurityKey SigningKey = new(Encoding.UTF8.GetBytes("cle-de-test-lettra-uniquement-pour-les-tests-0123456789"));
@@ -112,6 +113,13 @@ public sealed class LettraApiFactory : WebApplicationFactory<Program>
         User(3, AutreCabinetAdminId, OtherCabinetId, "manager", "Cabinet", OtherCabinetId);
         User(4, SuspenduId, CabinetId, "manager", "Cabinet", CabinetId, state: "Suspended");
         User(5, AdministrateurCabinetId, CabinetId, "administrateur-cabinet", "Cabinet", CabinetId);
+
+        // Administrateur de la plateforme : un compte sans cabinet, avec le seul rôle de la plateforme.
+        s["Lettra:Authorization:Users:6:Id"] = AdministrateurPlateformeId.ToString();
+        s["Lettra:Authorization:Users:6:State"] = "Active";
+        s["Lettra:Authorization:Users:6:Assignments:0:Role"] = "administrateur-plateforme";
+        s["Lettra:Authorization:Users:6:Assignments:0:Scope"] = "Plateforme";
+        s["Lettra:Authorization:Users:6:Assignments:0:ScopeId"] = Guid.Empty.ToString();
         return s;
     }
 

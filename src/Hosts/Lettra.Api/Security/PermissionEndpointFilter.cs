@@ -81,6 +81,10 @@ public static class PermissionEndpointExtensions
     public static RouteHandlerBuilder RequireCabinetPermission(this RouteHandlerBuilder builder, Permission permission) =>
         builder.Require(permission, CabinetPermissionEndpointFilter.ScopeOf);
 
+    /// <summary>Exige <paramref name="permission"/> sur la plateforme (administration des cabinets), hors de tout cabinet.</summary>
+    public static RouteHandlerBuilder RequirePlatformPermission(this RouteHandlerBuilder builder, Permission permission) =>
+        builder.Require(permission, _ => AuthorizationScope.Plateforme);
+
     /// <summary>Exige <paramref name="permission"/> sur le groupe de la route avant d'appeler le cas d'usage.</summary>
     public static RouteHandlerBuilder RequireGroupPermission(this RouteHandlerBuilder builder, Permission permission) =>
         builder.Require(permission, GroupPermissionEndpointFilter.ScopeOf);

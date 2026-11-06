@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Error.CabinetLifecycle.NameRequired" xml:space="preserve"><value>Indiquez le nom du cabinet.</value></data>
+  <data name="Error.CabinetLifecycle.NameTooLong" xml:space="preserve"><value>Le nom du cabinet est trop long (200 caractères au plus).</value></data>
+  <data name="Error.CabinetLifecycle.Unavailable" xml:space="preserve"><value>Cette cellule ne peut pas inscrire de cabinet : son KMS ou son compte de service Keycloak n'est pas configuré.</value></data>
+  <data name="Error.CabinetLifecycle.IdentityFailed" xml:space="preserve"><value>Le fournisseur d'identité n'a pas répondu comme prévu. Réessayez : chaque étape déjà faite est retrouvée.</value></data>
+  <data name="Error.CabinetLifecycle.NameTaken" xml:space="preserve"><value>Un autre cabinet porte déjà ce nom. Choisissez un nom différent.</value></data>
+  <data name="Error.CabinetLifecycle.CellUnknown" xml:space="preserve"><value>Choisissez une cellule de la plateforme.</value></data>
+  <data name="Error.CabinetLifecycle.CabinetDeclared" xml:space="preserve"><value>Ce cabinet est déclaré dans la configuration du serveur : son départ ne se demande pas depuis Lettra.</value></data>
+  <data name="Error.CabinetLifecycle.DepartureNotCancellable" xml:space="preserve"><value>Le départ de ce cabinet ne peut plus être annulé : l'échéance est passée ou aucun départ n'est demandé.</value></data>
+  <data name="Error.CabinetLifecycle.CabinetLeaving" xml:space="preserve"><value>Ce cabinet quitte Lettra : il ne peut plus créer de dossier. Ses dossiers restent ouverts pour l'export jusqu'à l'échéance.</value></data>
+</root>

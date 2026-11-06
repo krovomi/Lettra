@@ -30,6 +30,12 @@ lettra-api:
     # gardée enveloppée dans le catalogue. Le Worker réenveloppe chaque jour après les rotations automatiques.
     Lettra__Kms__Provider: Transit
     Lettra__Kms__Transit__Address: http://openbao:8200/
+    # Arrivée et départ des cabinets par l'administrateur de la plateforme : le compte de service lettra-provisioning
+    # (rôles du client realm-management) crée l'organisation et le compte de l'administrateur du cabinet, puis les
+    # supprime au départ. Son secret, Lettra__Identity__Provisioning__ClientSecret, est posé par l'exploitation dans
+    # les secrets lettra-api et lettra-worker ; sans lui, la plateforme refuse d'inscrire un cabinet.
+    Lettra__Identity__Provisioning__Authority: http://keycloak:8080/realms/lettra
+    Lettra__Identity__Provisioning__ClientId: lettra-provisioning
 lettra-worker:
   enabled: true
   cell: local

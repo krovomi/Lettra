@@ -308,16 +308,33 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.CatalogMigrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("DepartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DepartureDueAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DepartureRequestedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("ManagedIdentity")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<int>("State")
+                        .HasColumnType("integer");
 
                     b.Property<string>("WrappedKek")
                         .HasMaxLength(512)
                         .HasColumnType("character varying(512)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("State", "DepartureDueAt");
 
                     b.ToTable("Organisations", "catalog");
                 });

@@ -21,6 +21,36 @@ public sealed class CatalogOrganisation
     public string? WrappedKek { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
+
+    public OrganisationState State { get; set; }
+
+    /// <summary>
+    /// Cabinet inscrit par la plateforme (organisation et comptes créés chez le fournisseur d'identité) : à son départ,
+    /// ses comptes et son organisation y sont supprimés. Un cabinet déclaré dans la configuration ne l'est pas.
+    /// </summary>
+    public bool ManagedIdentity { get; set; }
+
+    /// <summary>En UTC : fin du délai de rétractation d'un départ demandé (<see cref="OrganisationState.Leaving"/>).</summary>
+    public DateTime? DepartureDueAt { get; set; }
+
+    /// <summary>L'administrateur de la plateforme qui a demandé le départ (trace, pas de nom).</summary>
+    public Guid? DepartureRequestedBy { get; set; }
+
+    /// <summary>En UTC : départ effectif (dossiers effacés, clé détruite, comptes supprimés).</summary>
+    public DateTime? DepartedAt { get; set; }
+}
+
+/// <summary>Le cycle de vie d'un cabinet sur la plateforme.</summary>
+public enum OrganisationState
+{
+    /// <summary>Le cabinet travaille.</summary>
+    Active = 0,
+
+    /// <summary>Départ demandé : le cabinet travaille et exporte jusqu'à la fin du délai, sans nouveau dossier.</summary>
+    Leaving = 1,
+
+    /// <summary>Parti : seule la trace (identifiant, nom, dates) reste au catalogue.</summary>
+    Departed = 2,
 }
 
 /// <summary>

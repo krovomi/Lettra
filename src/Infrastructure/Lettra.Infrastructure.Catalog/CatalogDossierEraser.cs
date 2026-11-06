@@ -27,7 +27,7 @@ internal sealed partial class CatalogDossierEraser(
     CatalogDossierFieldKeys fieldKeys,
     IOptionsMonitor<CatalogOptions> options,
     TimeProvider clock,
-    ILogger<CatalogDossierEraser> logger) : IDossierEraser, IDossierErasurePass
+    ILogger<CatalogDossierEraser> logger) : IDossierEraser
 {
     public async Task<Result<DossierErasureResponse>> ScheduleAsync(
         OrganisationId organisation, DossierId dossier, Guid requestedBy, CancellationToken cancellationToken)

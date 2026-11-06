@@ -302,16 +302,33 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.CatalogMigrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("DepartedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DepartureDueAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DepartureRequestedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("ManagedIdentity")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("State")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("WrappedKek")
                         .HasMaxLength(512)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("State", "DepartureDueAt");
 
                     b.ToTable("Organisations", (string)null);
                 });
