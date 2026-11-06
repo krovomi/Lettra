@@ -332,7 +332,7 @@ effacer).
 
 La page **Vue cabinet** liste les dossiers que vous pouvez ouvrir, les plus urgents d'abord. Pour chacun, elle montre
 les factures en retard, les rejets de la plateforme, les alertes ouvertes, la revue du mois et le relevé bancaire non
-rapproché. La colonne relevé non rapproché devient à traiter après 15 jours et urgente après 30. Ces chiffres sont
+rapproché, et le nombre de **décisions** à prendre. La colonne relevé non rapproché devient à traiter après 15 jours et urgente après 30. Ces chiffres sont
 calculés une fois par jour (par le Worker, ou par l'API dans la démo, où le premier calcul a lieu 15 s après le
 démarrage), sur « Actualiser », ou à la première ouverture. Ce ne sont
 que des compteurs : aucun montant ni nom de client ne quitte le dossier. Le bouton « Tableaux de bord » en haut de la Vue cabinet ouvre
@@ -422,6 +422,15 @@ factures en retard. Chaque carte mène à l'écran détaillé et suit ses droits
 téléphone : l'écran se consulte. *(Vérifié : démo Docker, navigateur sur ordinateur et téléphone.)* Détails :
 [docs/en-bref.md](docs/en-bref.md).
 
+**Décisions à prendre** (menu, juste sous **En bref**) : ce que Lettra a repéré dans le dossier et propose de décider,
+les plus urgentes d'abord : relance due aujourd'hui, rappel avant échéance à envoyer, échéance d'échéancier manquée,
+échéancier demandé par un client à voir, échéance fiscale proche ou dépassée, seuil réglementaire franchi ou proche,
+nouvel IBAN de fournisseur à vérifier, attestation URSSAF à renouveler, fiche anti-blanchiment à faire ou à revoir.
+Quand c'est possible, l'action est préparée (« Envoyer la relance ») et un clic la fait, avec les droits de
+l'utilisateur. « Plus tard » et « Ignorer » se défont. Le cadran d'autonomie du dossier (réglé par un manager) dit si
+Lettra prépare l'action ou montre seulement ; rien ne part jamais sans clic. Des règles fixes, sans IA. *(Vérifié dans
+la démo Docker.)* Détails : [docs/decisions-a-prendre.md](docs/decisions-a-prendre.md).
+
 **Les données de démonstration.** Le dossier ouvert arrive avec un an d'activité d'une entreprise fictive,
 « Atelier Numérique Conseil » (SARL de conseil et services numériques, Lyon) : sa fiche entreprise, 30 à 50 clients
 (entreprises et particuliers), des fournisseurs, un catalogue de prestations et de matériel, des grilles tarifaires,
@@ -440,7 +449,7 @@ Le prestataire de services a opté pour la TVA sur les débits : ses factures et
 Le jeu ne s'ajoute jamais à un dossier qui a déjà des devis ou des factures. Pour repartir d'un dossier rempli à neuf,
 voir « Repartir de zéro » dans [En cas de problème](#en-cas-de-problème).
 
-**La navigation.** **Accueil**, **En bref**, **Vue cabinet** et **Comptes intra-groupe**, puis **Ventes** (**Devis**, **Devis à relancer**, **Carnet de commandes**, **Factures**, **Avoirs**, **Factures
+**La navigation.** **Accueil**, **En bref**, **Décisions à prendre**, **Vue cabinet**, **Radar de prévention** et **Comptes intra-groupe**, puis **Ventes** (**Devis**, **Devis à relancer**, **Carnet de commandes**, **Factures**, **Avoirs**, **Factures
 récurrentes**), **Tiers** (**Clients**, **Fournisseurs**, **Factures reçues**, **IBAN à vérifier**,
 **Attestations de vigilance**, **Vérifier les tiers**, **Catalogue**), **Comptabilité** (**Encaissements**,
 **Rapprochement bancaire**, **Relances**, **Journal et balance**, **FEC**, **Déclarations**, **Revue du dossier**, **Lettre de mission**, **Anti-blanchiment**) et

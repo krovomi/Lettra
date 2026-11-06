@@ -29,7 +29,7 @@ Choisir à qui envoyer le rappel selon la façon dont il paie est un **profilage
 
 ## Pour « Décisions à prendre »
 
-Une requête de l'application rend les signaux du jour, en lecture seule : un rappel avant échéance à envoyer aujourd'hui, un échéancier que l'entreprise n'a pas encore vu, une échéance manquée à relancer. Chacun a un type stable, la facture ou l'échéancier concernés, le montant en jeu, une date et un lien vers l'écran Relances. L'écran « Décisions à prendre » s'y branchera.
+Une requête de l'application rend les signaux du jour, en lecture seule : un rappel avant échéance à envoyer aujourd'hui, un échéancier que l'entreprise n'a pas encore vu, une échéance manquée à relancer. Chacun a un type stable, la facture ou l'échéancier concernés, le montant en jeu, une date et un lien vers l'écran Relances. Les rappels avant échéance du jour, les échéances manquées à relancer et les échéanciers à voir deviennent des décisions à prendre (`avant-le-retard.rappel`, `avant-le-retard.echeance-manquee` en urgente, `avant-le-retard.echeancier-a-voir`) ; avec l'envoi automatique, seul l'échéancier à voir reste à décider. Voir [Décisions à prendre](decisions-a-prendre.md).
 
 ## Droits
 
