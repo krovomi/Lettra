@@ -85,7 +85,10 @@ public sealed record WeightedQuote(
     decimal WeightedExclTax,
     decimal WeightedInclTax);
 
-/// <summary>Le carnet de commandes pondéré du jour et les taux qui l'expliquent.</summary>
+/// <summary>
+/// Le carnet de commandes pondéré du jour et les taux qui l'expliquent. <paramref name="Excluded"/> : les devis en
+/// attente des clients opposés au profilage, ni pondérés ni comptés dans les taux.
+/// </summary>
 public sealed record OrderBookEstimate(
     DateOnly HistoryFrom,
     AcceptanceCount Overall,
@@ -93,9 +96,12 @@ public sealed record OrderBookEstimate(
     bool HasEnoughHistory,
     IReadOnlyList<AmountBandRate> ByAmount,
     IReadOnlyList<AgeBandRate> ByAge,
-    IReadOnlyList<WeightedQuote> Quotes)
+    IReadOnlyList<WeightedQuote> Quotes,
+    IReadOnlyList<QuoteFact> Excluded)
 {
     public decimal OpenExclTax => Quotes.Sum(q => q.Quote.AmountExclTax);
+
+    public decimal ExcludedExclTax => Excluded.Sum(q => q.AmountExclTax);
 
     public decimal WeightedExclTax => Quotes.Sum(q => q.WeightedExclTax);
 
@@ -115,6 +121,8 @@ public sealed record OrderBookEstimate(
 /// </list>
 /// un critère qui repose sur moins de <see cref="MinimumSample"/> devis prend le taux global. La probabilité est la
 /// moyenne des trois. Sans assez d'historique, le taux global vaut une chance sur deux, et l'écran le dit.
+/// Un client opposé au profilage (RGPD, art. 21) est tenu entièrement à l'écart : ses devis passés ne comptent dans
+/// aucun taux, et ses devis en attente ne reçoivent pas de probabilité ; ils sont seulement comptés à part.
 /// </summary>
 public static class OrderBookCalculator
 {
@@ -163,10 +171,12 @@ public static class OrderBookCalculator
         return quote.Status == QuoteStatus.Validated && quote.ValidUntil is { } until && until >= today;
     }
 
-    public static OrderBookEstimate Estimate(IEnumerable<QuoteFact> quotes, DateOnly today)
+    public static OrderBookEstimate Estimate(IEnumerable<QuoteFact> quotes, DateOnly today, IReadOnlySet<CustomerId>? objecting = null)
     {
         ArgumentNullException.ThrowIfNull(quotes);
-        QuoteFact[] all = [.. quotes];
+        ILookup<bool, QuoteFact> byObjection = quotes.ToLookup(q => objecting?.Contains(q.CustomerId) == true);
+        QuoteFact[] all = [.. byObjection[false]];
+        QuoteFact[] excluded = [.. byObjection[true].Where(q => IsOpen(q, today)).OrderBy(q => q.Number, StringComparer.Ordinal)];
         DateOnly from = HistoryFrom(today);
         Closed[] history = [.. all.Where(q => q.IssueDate >= from && q.IssueDate <= today).Select(q => Close(q, today)).OfType<Closed>()];
 
@@ -195,7 +205,7 @@ public static class OrderBookCalculator
                 .OrderByDescending(w => w.WeightedExclTax)
                 .ThenBy(w => w.Quote.Number, StringComparer.Ordinal),
         ];
-        return new OrderBookEstimate(from, overall, global, enough, byAmount, byAge, open);
+        return new OrderBookEstimate(from, overall, global, enough, byAmount, byAge, open, excluded);
     }
 
     private static CriterionRate Criterion(AcceptanceCount observed, decimal global) =>

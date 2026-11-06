@@ -97,7 +97,11 @@
   <data name="OrderBook.OutOf" xml:space="preserve"><value>{0} of {1}</value></data>
   <data name="OrderBook.Rate" xml:space="preserve"><value>Rate</value></data>
   <data name="OrderBook.NoRate" xml:space="preserve"><value>no quote</value></data>
-  <data name="OrderBook.Notice" xml:space="preserve"><value>The per-customer rate is computed from your own quotes, in this file only. It is neither shown to the customer nor shared, and only serves this estimate.</value></data>
+  <data name="OrderBook.Notice" xml:space="preserve"><value>The per-customer rate is computed from your own quotes, in this file only. It is neither shown to the customer nor shared, and only serves this estimate. A customer can object to it: record the objection in Reminders, “Customers who object to targeting”; their quotes then leave the calculation.</value></data>
+  <data name="OrderBook.Excluded" xml:space="preserve"><value>{0} pending quotes, {1} excl. VAT, left out: their customers objected to profiling. They are not weighted and their past quotes count in no rate.</value></data>
+  <data name="OrderBook.Excluded.One" xml:space="preserve"><value>1 pending quote, {1} excl. VAT, left out: its customer objected to profiling. It is not weighted and this customer's past quotes count in no rate.</value></data>
+  <data name="QuoteFollowUps.Probability.Excluded" xml:space="preserve"><value>Left out</value></data>
+  <data name="QuoteFollowUps.Probability.Excluded.Hint" xml:space="preserve"><value>The customer objected to profiling: this quote is not weighted.</value></data>
   <data name="OrderBook.List" xml:space="preserve"><value>Pending quotes</value></data>
   <data name="OrderBook.Empty" xml:space="preserve"><value>No pending quote</value></data>
   <data name="OrderBook.Empty.Text" xml:space="preserve"><value>Validated quotes still valid will show here with their chance of being accepted.</value></data>

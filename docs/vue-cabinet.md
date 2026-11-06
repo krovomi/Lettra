@@ -90,6 +90,12 @@ Clé `seuils.proches` : les seuils franchis ou dont le franchissement est prévu
 immédiat (franchise majorée, régime simplifié, déclaration trimestrielle majorée) est déjà franchi, à traiter sinon.
 Ni nom ni montant.
 
+## La colonne « Décisions »
+
+Clé `decisions.a-prendre` : le nombre de décisions à prendre dans le dossier (pas celles remises à plus tard), au
+niveau de la plus urgente (critique, à traiter si elle est urgente, information sinon), avec l'échéance la plus proche.
+Ni nom ni montant. Voir [Décisions à prendre](decisions-a-prendre.md).
+
 ## Les droits
 
 - La vue cabinet ne montre que les dossiers que l'utilisateur peut ouvrir (`DossierLire`), comme `GET /api/v1/dossiers`.

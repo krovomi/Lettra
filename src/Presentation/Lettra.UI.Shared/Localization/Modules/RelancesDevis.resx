@@ -97,7 +97,11 @@
   <data name="OrderBook.OutOf" xml:space="preserve"><value>{0} sur {1}</value></data>
   <data name="OrderBook.Rate" xml:space="preserve"><value>Taux</value></data>
   <data name="OrderBook.NoRate" xml:space="preserve"><value>aucun devis</value></data>
-  <data name="OrderBook.Notice" xml:space="preserve"><value>Le taux par client est calculé sur vos propres devis, dans ce dossier seulement. Il n'est ni montré au client ni transmis, et ne sert qu'à cette estimation.</value></data>
+  <data name="OrderBook.Notice" xml:space="preserve"><value>Le taux par client est calculé sur vos propres devis, dans ce dossier seulement. Il n'est ni montré au client ni transmis, et ne sert qu'à cette estimation. Un client peut s'y opposer : notez son opposition dans Relances, « Clients opposés au ciblage » ; ses devis sortent alors du calcul.</value></data>
+  <data name="OrderBook.Excluded" xml:space="preserve"><value>{0} devis en attente, {1} HT, hors calcul : leurs clients se sont opposés au profilage. Ils ne sont pas pondérés et leurs devis passés ne comptent dans aucun taux.</value></data>
+  <data name="OrderBook.Excluded.One" xml:space="preserve"><value>1 devis en attente, {1} HT, hors calcul : son client s'est opposé au profilage. Il n'est pas pondéré et les devis passés de ce client ne comptent dans aucun taux.</value></data>
+  <data name="QuoteFollowUps.Probability.Excluded" xml:space="preserve"><value>Hors calcul</value></data>
+  <data name="QuoteFollowUps.Probability.Excluded.Hint" xml:space="preserve"><value>Le client s'est opposé au profilage : ce devis n'est pas pondéré.</value></data>
   <data name="OrderBook.List" xml:space="preserve"><value>Devis en attente</value></data>
   <data name="OrderBook.Empty" xml:space="preserve"><value>Aucun devis en attente</value></data>
   <data name="OrderBook.Empty.Text" xml:space="preserve"><value>Les devis validés et encore valables apparaîtront ici avec leur chance d'être acceptés.</value></data>

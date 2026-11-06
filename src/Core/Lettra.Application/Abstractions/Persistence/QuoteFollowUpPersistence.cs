@@ -17,6 +17,12 @@ public interface IQuotePipelineReader
     Task<IReadOnlyList<QuoteFact>> ListAsync(DateOnly from, CancellationToken cancellationToken);
 
     Task<IReadOnlyDictionary<CustomerId, QuoteCustomerContact>> ContactsAsync(IReadOnlyCollection<CustomerId> customers, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Les clients opposés au profilage (RGPD, art. 21), notés depuis les relances : le carnet de commandes les tient à
+    /// l'écart de ses taux et ne pondère pas leurs devis.
+    /// </summary>
+    Task<IReadOnlySet<CustomerId>> ObjectingCustomersAsync(CancellationToken cancellationToken);
 }
 
 /// <summary>Les relances faites (parties ou notées, pas en échec) d'un devis : combien, et la dernière.</summary>

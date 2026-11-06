@@ -53,7 +53,8 @@ public sealed record UpdateQuoteFollowUpSettingsRequest
 /// Un devis envoyé, sans réponse, dont la fin de validité approche : le constat (avec sa raison, son effet chiffré et
 /// son échéance) que l'écran montre et que « Décisions à prendre » pourra reprendre. <paramref name="Due"/> : à relancer
 /// (pas encore relancé depuis qu'il approche de sa fin). <paramref name="Probability"/> et
-/// <paramref name="WeightedExclTax"/> viennent du carnet de commandes pondéré.
+/// <paramref name="WeightedExclTax"/> viennent du carnet de commandes pondéré ; <c>null</c> quand le client s'est opposé
+/// au profilage (son devis n'y est pas pondéré).
 /// </summary>
 public sealed record QuoteToFollowUpResponse(
     Guid QuoteId,
@@ -68,8 +69,8 @@ public sealed record QuoteToFollowUpResponse(
     int DaysWithoutAnswer,
     decimal TotalExclTax,
     decimal TotalInclTax,
-    decimal Probability,
-    decimal WeightedExclTax,
+    decimal? Probability,
+    decimal? WeightedExclTax,
     bool Due,
     int FollowUpCount,
     DateTimeOffset? LastFollowUpAt,
