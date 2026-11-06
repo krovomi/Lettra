@@ -10,7 +10,7 @@ macOS, Android, iOS).
 
 - **Plus de barre horizontale** : seule la liste des écrans défile, en hauteur. Un libellé trop long se termine par
   « … » (le nom entier est dans l'info-bulle). L'aide et « Replier le menu » restent en bas, hors de la liste.
-- **Hors sections**, en tête : Accueil, En bref, Vue cabinet, Comptes intra-groupe (flèches gauche-droite) et Démo
+- **Hors sections**, en tête : Accueil, En bref, Décisions à prendre, Vue cabinet, Radar de prévention, Comptes intra-groupe (flèches gauche-droite) et Démo
   commentée.
 - **Sections repliables** : un clic sur le titre d'une section (Ventes, Tiers, Comptabilité, Pilotage) la replie ou la
   déplie ; son chevron tourne. « Vérifier les tiers » est dans la section Tiers et se trouve aussi par ses mots-clés

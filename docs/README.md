@@ -25,6 +25,7 @@ est dans le [README](../README.md#principes-de-conception), le détail, les mesu
 - [Changement d'IBAN d'un fournisseur, nom et IBAN vérifiés](iban-fournisseurs.md)
 - [Dates et nombres dans la langue de l'écran](dates-et-langue.md)
 - [Déclarations : TVA, DES et calendrier fiscal](declarations-fiscales.md)
+- [Décisions à prendre](decisions-a-prendre.md)
 - [Délais de paiement](delais-de-paiement.md)
 - [Devis à relancer et carnet de commandes](devis-a-relancer.md)
 - [Démo commentée](demo-commentee.md)
