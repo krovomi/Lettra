@@ -267,6 +267,16 @@ public sealed class DecisionUseCaseTests : IDisposable
     }
 
     [Fact]
+    public void La_vue_cabinet_ne_compte_pas_les_decisions_qui_revelent_le_niveau_d_attention()
+    {
+        Decision meeting = Decision.Propose(Outside(DecisionKinds.PreventionMeeting, "rendez-vous:2026-11"), 1, Now);
+        Decision iban = Decision.Propose(Outside("iban.a-verifier", "iban-1"), 1, Now);
+
+        DecisionView.Indicator([meeting], Today).Should().BeNull("le radar ne sort pas du dossier, même en compteur");
+        DecisionView.Indicator([meeting, iban], Today)!.Count.Should().Be(1);
+    }
+
+    [Fact]
     public void Les_faits_s_ecrivent_sans_culture()
     {
         DecisionFacts.Date(new DateOnly(2026, 11, 3)).Should().Be("2026-11-03");

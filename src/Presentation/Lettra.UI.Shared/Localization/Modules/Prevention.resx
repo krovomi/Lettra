@@ -173,4 +173,7 @@
   <data name="Error.Prevention.SubjectTooLong" xml:space="preserve"><value>L'objet tient sur une ligne de 200 caractères au plus.</value></data>
   <data name="Error.Prevention.BodyRequired" xml:space="preserve"><value>Saisissez le texte du courrier.</value></data>
   <data name="Error.Prevention.BodyTooLong" xml:space="preserve"><value>Le texte dépasse 8 000 caractères.</value></data>
+  <data name="Decision.prevention.rendez-vous.Title" xml:space="preserve"><value>Proposer un rendez-vous de prévention au dirigeant</value></data>
+  <data name="Decision.prevention.rendez-vous.Reason" xml:space="preserve"><value>Le radar de prévention classe le dossier « à appeler » : {count} signal(s) allumé(s), le plus grave étant « {first} ». Le radar montre le détail et prépare le courrier de rendez-vous, à relire avant de l'envoyer.</value></data>
+  <data name="Decision.prevention.rendez-vous.Rule" xml:space="preserve"><value>Radar de prévention : le dossier passe « à appeler » (un signal grave, ou plusieurs signaux à la fois). Rien n'est envoyé au client sans vous ; réservé à qui voit le radar.</value></data>
 </root>
