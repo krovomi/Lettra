@@ -24,7 +24,8 @@ internal sealed class GetOrderBookHandler(IQuotePipelineReader pipeline, TimePro
     {
         DateOnly today = LegalCalendar.Today(clock);
         IReadOnlyList<QuoteFact> facts = await pipeline.ListAsync(OrderBookCalculator.HistoryFrom(today), cancellationToken).ConfigureAwait(false);
-        return OrderBookCalculator.Estimate(facts, today).ToResponse(today);
+        IReadOnlySet<CustomerId> objecting = await pipeline.ObjectingCustomersAsync(cancellationToken).ConfigureAwait(false);
+        return OrderBookCalculator.Estimate(facts, today, objecting).ToResponse(today);
     }
 }
 
@@ -63,7 +64,9 @@ internal static class OrderBookMapping
                 w.Probability,
                 w.WeightedExclTax,
                 w.WeightedInclTax)),
-        ]);
+        ],
+        estimate.Excluded.Count,
+        estimate.ExcludedExclTax);
 
     private static CriterionRateDto ToDto(this CriterionRate rate) => new(rate.Observed.Accepted, rate.Observed.Closed, rate.Rate, rate.UsesGlobalRate);
 }

@@ -19,6 +19,9 @@ internal sealed class InMemoryQuoteFollowUps(InMemoryBilling billing) : IQuotePi
 
     public QuoteFollowUpSettings? Settings { get; private set; }
 
+    /// <summary>Les clients opposés au profilage, posés par le test.</summary>
+    public HashSet<CustomerId> Objecting { get; } = [];
+
     public Task<IReadOnlyList<QuoteFact>> ListAsync(DateOnly from, CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<QuoteFact>>(
         [
@@ -31,6 +34,9 @@ internal sealed class InMemoryQuoteFollowUps(InMemoryBilling billing) : IQuotePi
     public Task<IReadOnlyDictionary<CustomerId, QuoteCustomerContact>> ContactsAsync(IReadOnlyCollection<CustomerId> customers, CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyDictionary<CustomerId, QuoteCustomerContact>>(
             customers.Where(Contacts.ContainsKey).ToDictionary(c => c, c => Contacts[c]));
+
+    public Task<IReadOnlySet<CustomerId>> ObjectingCustomersAsync(CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlySet<CustomerId>>(Objecting);
 
     public Task AddAsync(QuoteFollowUp followUp, CancellationToken cancellationToken)
     {

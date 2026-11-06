@@ -79,6 +79,10 @@
   <data name="Decision.relance.due.Reason" xml:space="preserve"><value>{level} : la facture a {days} jours de retard et le scénario de relance l'envoie aujourd'hui.</value></data>
   <data name="Decision.relance.due.Accept" xml:space="preserve"><value>Envoyer la relance</value></data>
   <data name="Decision.relance.due.Rule" xml:space="preserve"><value>Relances dues : une facture échue atteint un palier du scénario de relance (rien n'est proposé quand l'envoi automatique est réglé).</value></data>
+  <data name="Decision.devis.a-relancer.Title" xml:space="preserve"><value>Relancer {customer} pour le devis {quote}</value></data>
+  <data name="Decision.devis.a-relancer.Reason" xml:space="preserve"><value>Envoyé, toujours sans réponse, il n'est plus valable après le {validUntil}. La relance proposée est écrite dans la langue du client ; pour la relire ou la modifier, ouvrez les devis à relancer.</value></data>
+  <data name="Decision.devis.a-relancer.Accept" xml:space="preserve"><value>Envoyer la relance</value></data>
+  <data name="Decision.devis.a-relancer.Rule" xml:space="preserve"><value>Devis à relancer : un devis envoyé, sans réponse, arrive dans la fenêtre de relance avant sa fin de validité et n'a pas encore été relancé.</value></data>
   <data name="Decision.fiscal.echeance.Title" xml:space="preserve"><value>{obligation} à déposer avant le {dueOn}</value></data>
   <data name="Decision.fiscal.echeance.Reason" xml:space="preserve"><value>Période close le {periodEnd}. Une fois déposée, marquez-la déposée dans le calendrier fiscal : la décision se règle d'elle-même.</value></data>
   <data name="Decision.fiscal.echeance.Rule" xml:space="preserve"><value>Échéances fiscales : une déclaration en retard ou due dans les sept jours, pas encore marquée déposée.</value></data>

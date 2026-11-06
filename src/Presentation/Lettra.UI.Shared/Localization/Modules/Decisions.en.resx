@@ -79,6 +79,10 @@
   <data name="Decision.relance.due.Reason" xml:space="preserve"><value>{level}: the invoice is {days} days overdue and the reminder plan sends it today.</value></data>
   <data name="Decision.relance.due.Accept" xml:space="preserve"><value>Send the reminder</value></data>
   <data name="Decision.relance.due.Rule" xml:space="preserve"><value>Reminders due: an overdue invoice reaches a step of the reminder plan (nothing is suggested when automatic sending is on).</value></data>
+  <data name="Decision.devis.a-relancer.Title" xml:space="preserve"><value>Follow up quote {quote} with {customer}</value></data>
+  <data name="Decision.devis.a-relancer.Reason" xml:space="preserve"><value>Sent and still unanswered, it is no longer valid after {validUntil}. The suggested follow-up is written in the customer's language; to read or change it, open the quotes to follow up.</value></data>
+  <data name="Decision.devis.a-relancer.Accept" xml:space="preserve"><value>Send the follow-up</value></data>
+  <data name="Decision.devis.a-relancer.Rule" xml:space="preserve"><value>Quotes to follow up: a sent, unanswered quote enters the follow-up window before it expires and has not been followed up yet.</value></data>
   <data name="Decision.fiscal.echeance.Title" xml:space="preserve"><value>{obligation} to file before {dueOn}</value></data>
   <data name="Decision.fiscal.echeance.Reason" xml:space="preserve"><value>Period ended on {periodEnd}. Once filed, mark it filed in the tax calendar: the decision settles by itself.</value></data>
   <data name="Decision.fiscal.echeance.Rule" xml:space="preserve"><value>Tax deadlines: a return that is overdue or due within seven days and not yet marked filed.</value></data>

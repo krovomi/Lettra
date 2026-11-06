@@ -62,7 +62,8 @@ public sealed record OrderBookQuoteResponse(
 /// d'acceptation des <paramref name="HistoryMonths"/> derniers mois, et ces taux. Calcul déterministe, sans IA ; un
 /// critère qui repose sur moins de <paramref name="MinimumSample"/> devis prend le taux global, et le taux global vaut
 /// une chance sur deux tant que l'historique est insuffisant (<paramref name="HasEnoughHistory"/> faux). Les montants
-/// TTC servent à la prévision de trésorerie.
+/// TTC servent à la prévision de trésorerie. <paramref name="ExcludedCount"/> et <paramref name="ExcludedExclTax"/> :
+/// les devis en attente des clients opposés au profilage, hors calcul (ni taux, ni pondération).
 /// </summary>
 public sealed record OrderBookResponse(
     DateOnly AsOf,
@@ -78,4 +79,6 @@ public sealed record OrderBookResponse(
     decimal WeightedInclTax,
     IReadOnlyList<AmountBandRateDto> ByAmount,
     IReadOnlyList<AgeBandRateDto> ByAge,
-    IReadOnlyList<OrderBookQuoteResponse> Quotes);
+    IReadOnlyList<OrderBookQuoteResponse> Quotes,
+    int ExcludedCount = 0,
+    decimal ExcludedExclTax = 0m);
