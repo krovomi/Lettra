@@ -155,6 +155,15 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.CatalogMigrations
                         .HasMaxLength(63)
                         .HasColumnType("character varying(63)");
 
+                    b.Property<DateTime?>("ErasedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ErasureDueAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ErasureRequestedBy")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("LastError")
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
@@ -202,6 +211,8 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.CatalogMigrations
 
                     b.HasIndex("ClusterId", "DatabaseName")
                         .IsUnique();
+
+                    b.HasIndex("State", "ErasureDueAt");
 
                     b.HasIndex("State", "SchemaVersion");
 

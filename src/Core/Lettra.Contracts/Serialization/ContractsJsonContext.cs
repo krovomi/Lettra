@@ -95,6 +95,8 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(CreateDossierRequest))]
 [JsonSerializable(typeof(DossierSummary))]
 [JsonSerializable(typeof(IReadOnlyList<DossierSummary>))]
+[JsonSerializable(typeof(DossierErasureResponse))]
+[JsonSerializable(typeof(IReadOnlyList<DossierErasureResponse>))]
 [JsonSerializable(typeof(CabinetOverviewResponse))]
 [JsonSerializable(typeof(CabinetOverviewRefreshResponse))]
 [JsonSerializable(typeof(DossierPilotageResponse))]

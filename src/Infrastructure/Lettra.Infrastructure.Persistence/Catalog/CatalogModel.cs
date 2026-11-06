@@ -52,6 +52,12 @@ public enum DossierState
 
     /// <summary>Effacé : DEK détruite, base supprimée ou illisible.</summary>
     Deleted = 3,
+
+    /// <summary>
+    /// Effacement demandé par le cabinet : le dossier est fermé à tous, mais le cabinet peut encore l'annuler jusqu'à
+    /// <see cref="CatalogDossier.ErasureDueAt"/>. Ensuite, le Worker détruit sa DEK puis supprime sa base.
+    /// </summary>
+    ErasureScheduled = 4,
 }
 
 /// <summary>Un dossier client du cabinet et l'emplacement de sa base. Aucune donnée métier du dossier ici.</summary>
@@ -97,6 +103,15 @@ public sealed class CatalogDossier
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }
+
+    /// <summary>En UTC : fin du délai de rétractation d'un effacement demandé (<see cref="DossierState.ErasureScheduled"/>).</summary>
+    public DateTime? ErasureDueAt { get; set; }
+
+    /// <summary>Qui a demandé l'effacement (identifiant du compte, aucune donnée du dossier).</summary>
+    public Guid? ErasureRequestedBy { get; set; }
+
+    /// <summary>En UTC : quand le dossier a été effacé (DEK détruite, base supprimée).</summary>
+    public DateTime? ErasedAt { get; set; }
 
     public TenantDescriptor ToDescriptor() =>
         new(new Domain.SharedKernel.DossierId(Id), new Domain.SharedKernel.OrganisationId(OrganisationId), Provider, ConnectionSecretRef, Schema);

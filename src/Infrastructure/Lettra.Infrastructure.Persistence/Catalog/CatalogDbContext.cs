@@ -94,6 +94,7 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
             e.HasIndex(x => x.OrganisationId);
             e.HasIndex(x => new { x.ClusterId, x.DatabaseName }).IsUnique();
             e.HasIndex(x => new { x.State, x.SchemaVersion });
+            e.HasIndex(x => new { x.State, x.ErasureDueAt });
             e.HasOne<CatalogOrganisation>().WithMany().HasForeignKey(x => x.OrganisationId);
             e.HasOne<CatalogCluster>().WithMany().HasForeignKey(x => x.ClusterId).IsRequired(false);
         });

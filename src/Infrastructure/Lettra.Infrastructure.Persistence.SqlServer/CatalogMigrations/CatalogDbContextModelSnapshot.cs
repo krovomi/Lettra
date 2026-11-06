@@ -155,6 +155,15 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.CatalogMigrations
                         .HasMaxLength(63)
                         .HasColumnType("nvarchar(63)");
 
+                    b.Property<DateTime?>("ErasedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ErasureDueAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ErasureRequestedBy")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("LastError")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
@@ -203,6 +212,8 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.CatalogMigrations
                     b.HasIndex("ClusterId", "DatabaseName")
                         .IsUnique()
                         .HasFilter("[ClusterId] IS NOT NULL AND [DatabaseName] IS NOT NULL");
+
+                    b.HasIndex("State", "ErasureDueAt");
 
                     b.HasIndex("State", "SchemaVersion");
 

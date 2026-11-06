@@ -149,6 +149,15 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.CatalogMigrations
                         .HasMaxLength(63)
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("ErasedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ErasureDueAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ErasureRequestedBy")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("LastError")
                         .HasMaxLength(2000)
                         .HasColumnType("TEXT");
@@ -196,6 +205,8 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.CatalogMigrations
 
                     b.HasIndex("ClusterId", "DatabaseName")
                         .IsUnique();
+
+                    b.HasIndex("State", "ErasureDueAt");
 
                     b.HasIndex("State", "SchemaVersion");
 

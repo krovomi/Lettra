@@ -14,3 +14,9 @@ public sealed record CreateDossierRequest
 }
 
 public sealed record DossierSummary(Guid Id, string Name);
+
+/// <summary>
+/// Un dossier dont le cabinet a demandé l'effacement : fermé à tous, il reste annulable jusqu'à
+/// <paramref name="ErasureDueAt"/>. Ensuite, sa clé est détruite et sa base supprimée, sans retour possible.
+/// </summary>
+public sealed record DossierErasureResponse(Guid Id, string Name, DateTimeOffset ErasureDueAt);

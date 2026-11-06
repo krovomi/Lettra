@@ -396,6 +396,30 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Effacement_d_un_dossier_demande_annulable_puis_effectif()
+    {
+        ManualClock clock = new(CatalogErasureScenarios.Start);
+        string directory = Path.Combine(_folder, "srv-effacement");
+        await using CatalogHarness harness = new(
+            s => s.AddSqliteProvider(),
+            b => SqliteConfigurator.ConfigureCatalog(b, Database("catalog-effacement")),
+            new Dictionary<string, string?> { ["Provider"] = "Sqlite", ["Directory"] = directory },
+            configure: CatalogErasureScenarios.Clock(clock));
+        await CatalogErasureScenarios.ScheduleCancelAndEraseAsync(harness, clock, name => Task.FromResult(File.Exists(Path.Combine(directory, name + ".db"))));
+    }
+
+    [Fact]
+    public async Task Une_base_declaree_ne_s_efface_pas_par_l_api()
+    {
+        await using CatalogHarness harness = new(
+            s => s.AddSqliteProvider(),
+            b => SqliteConfigurator.ConfigureCatalog(b, Database("catalog-declare")),
+            new Dictionary<string, string?> { ["Provider"] = "Sqlite", ["Directory"] = Path.Combine(_folder, "srv-declare") },
+            CatalogFieldKeyScenarios.Declared(DatabaseProvider.Sqlite));
+        await CatalogErasureScenarios.DeclaredDossierRefusedAsync(harness);
+    }
+
+    [Fact]
     public async Task Cle_des_dossiers_du_catalogue_pour_les_champs_sensibles()
     {
         await using CatalogHarness harness = new(
@@ -878,6 +902,27 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     }
 
     [SkippableFact]
+    public async Task Effacement_d_un_dossier_demande_annulable_puis_effectif()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        ManualClock clock = new(CatalogErasureScenarios.Start);
+        string server = new Npgsql.NpgsqlConnectionStringBuilder(_container!.GetConnectionString()) { Database = null }.ConnectionString;
+        await using CatalogHarness harness = new(
+            s => s.AddPostgreSqlProvider(),
+            b => PostgreSqlConfigurator.ConfigureCatalog(b, Database("catalog_effacement")),
+            new Dictionary<string, string?> { ["Provider"] = "PostgreSql", ["ConnectionString"] = server },
+            configure: CatalogErasureScenarios.Clock(clock));
+        await CatalogErasureScenarios.ScheduleCancelAndEraseAsync(harness, clock, async name =>
+        {
+            await using Npgsql.NpgsqlConnection connection = new(_container!.GetConnectionString());
+            await connection.OpenAsync();
+            await using Npgsql.NpgsqlCommand command = new("SELECT count(*) FROM pg_database WHERE datname = @name", connection);
+            command.Parameters.AddWithValue("name", name);
+            return (long)(await command.ExecuteScalarAsync())! == 1;
+        });
+    }
+
+    [SkippableFact]
     public async Task Cle_des_dossiers_du_catalogue_pour_les_champs_sensibles()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
@@ -1336,6 +1381,29 @@ public sealed class SqlServerTests : IAsyncLifetime
             b => SqlServerConfigurator.ConfigureCatalog(b, Database("catalog")),
             new Dictionary<string, string?> { ["Provider"] = "SqlServer", ["ConnectionString"] = server.ConnectionString });
         await CatalogScenarios.ProvisionAndMigrateAsync(harness, DatabaseProvider.SqlServer);
+    }
+
+    [SkippableFact]
+    public async Task Effacement_d_un_dossier_demande_annulable_puis_effectif()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        ManualClock clock = new(CatalogErasureScenarios.Start);
+        Microsoft.Data.SqlClient.SqlConnectionStringBuilder server = new(_container!.GetConnectionString());
+        server.Remove("Initial Catalog");
+        server.Remove("Database");
+        await using CatalogHarness harness = new(
+            s => s.AddSqlServerProvider(),
+            b => SqlServerConfigurator.ConfigureCatalog(b, Database("catalog_effacement")),
+            new Dictionary<string, string?> { ["Provider"] = "SqlServer", ["ConnectionString"] = server.ConnectionString },
+            configure: CatalogErasureScenarios.Clock(clock));
+        await CatalogErasureScenarios.ScheduleCancelAndEraseAsync(harness, clock, async name =>
+        {
+            await using Microsoft.Data.SqlClient.SqlConnection connection = new(_container!.GetConnectionString());
+            await connection.OpenAsync();
+            await using Microsoft.Data.SqlClient.SqlCommand command = new("SELECT count(*) FROM sys.databases WHERE name = @name", connection);
+            command.Parameters.AddWithValue("@name", name);
+            return (int)(await command.ExecuteScalarAsync())! == 1;
+        });
     }
 
     [SkippableFact]

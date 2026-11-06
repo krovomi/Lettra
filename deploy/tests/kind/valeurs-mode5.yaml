@@ -31,6 +31,8 @@ lettra-api:
     # Le script obtient un jeton par mot de passe (client d'essai lettra-essai) : Keycloak n'y prouve pas de second
     # facteur. Le flux navigateur, lui, l'exige toujours (vérifié par essai-keycloak.sh).
     Lettra__Identity__Oidc__RequireMfa: "false"
+    # Délai de rétractation d'un effacement de dossier : 15 s au lieu de 30 jours, pour que l'essai le voie aboutir.
+    Lettra__Catalog__DossierErasureDelay: "00:00:15"
     # Clés DataProtection (état OIDC du BFF) dans un volume : le système de fichiers de l'image est en lecture seule.
     HOME: /data
   extraVolumes:
@@ -52,6 +54,9 @@ lettra-worker:
     # Réenveloppement des KEK après une rotation de clé racine : toutes les 20 s au lieu d'une fois par jour.
     Lettra__Worker__KeyRewrap__InitialDelay: "00:00:05"
     Lettra__Worker__KeyRewrap__Interval: "00:00:20"
+    # Effacement des dossiers dont le délai de rétractation est passé : toutes les 10 s au lieu d'une fois par heure.
+    Lettra__DossierErasure__InitialDelay: "00:00:05"
+    Lettra__DossierErasure__Interval: "00:00:10"
   resources:
     requests: { cpu: 100m, memory: 256Mi }
     limits: { memory: 512Mi }

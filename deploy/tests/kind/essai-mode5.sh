@@ -14,7 +14,9 @@
 #      l'e-mail du client est chiffré dans la base du dossier ;
 #   5. une création de dossier interrompue (serveur de bases indisponible, Worker arrêté) est reprise par le Worker ;
 #   6. après une rotation de la clé racine du cabinet, le Worker réenveloppe sa KEK et tout reste lisible ;
-#   7. la clé racine détruite dans le KMS, les dossiers du cabinet ne s'ouvrent plus (effacement cryptographique).
+#   7. l'effacement d'un dossier demandé par le cabinet : fermé aussitôt, annulable, puis, le délai de rétractation passé,
+#      sa DEK détruite et sa base supprimée par le Worker ;
+#   8. la clé racine détruite dans le KMS, les dossiers du cabinet ne s'ouvrent plus (effacement cryptographique).
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/../../.." && pwd)
 CLUSTER=${KIND_CLUSTER:-lettra-mode5}
@@ -61,6 +63,8 @@ catalogue() { sql lettra "$1"; }
 bao() { kubectl -n "$NS" exec deploy/openbao -- env BAO_ADDR=http://127.0.0.1:8200 BAO_TOKEN="$kms_token" bao "$@"; }
 enveloppe() { catalogue "SELECT \"WrappedKek\" FROM catalog.\"Organisations\" WHERE \"Id\" = '$cabinet'"; }
 reenveloppee() { [[ $(enveloppe) == vault:v2:* ]]; }
+etat() { catalogue "SELECT \"State\" FROM catalog.\"Dossiers\" WHERE \"Id\" = '$1'"; }
+efface() { [[ $(etat "$1") == 3 ]]; }
 actif() { [[ $(catalogue "SELECT \"State\" FROM catalog.\"Dossiers\" WHERE \"Id\" = '$1'") == 1 ]]; }
 attendre() { # secondes, description, commande…
   local limite=$(( $(date +%s) + $1 )) description=$2; shift 2
@@ -267,7 +271,26 @@ redirection_api
 [[ $(appel GET "/api/v1/invoices/$facture" "" "$dossier" | jq -r '.number') == "$numero" ]] || echec "facture illisible après la rotation"
 echo "   enveloppe de la KEK à la version 2 ; facture $numero relue par une API neuve"
 
-step "7. Clé racine du cabinet détruite dans le KMS : ses dossiers ne s'ouvrent plus"
+step "7. Effacement d'un dossier par le cabinet : annulable, puis DEK détruite et base supprimée par le Worker"
+appel POST "/api/v1/cabinets/$cabinet/dossiers/$interrompu/effacement" >/dev/null
+attendu 202 "demande d'effacement"
+[[ $(etat "$interrompu") == 4 ]] || echec "dossier $interrompu pas en attente d'effacement : état $(etat "$interrompu")"
+appel GET /api/v1/customers "" "$interrompu" >/dev/null
+[[ $(statut) != 2* ]] || echec "dossier encore ouvert après la demande d'effacement"
+appel DELETE "/api/v1/cabinets/$cabinet/dossiers/$interrompu/effacement" >/dev/null
+attendu 200 "annulation de l'effacement"
+appel GET /api/v1/customers "" "$interrompu" >/dev/null
+attendu 200 "lecture du dossier rouvert"
+appel POST "/api/v1/cabinets/$cabinet/dossiers/$interrompu/effacement" >/dev/null
+attendu 202 "nouvelle demande d'effacement"
+attendre 120 "effacement du dossier $interrompu par le Worker" efface "$interrompu"
+[[ $(catalogue "SELECT coalesce(octet_length(\"WrappedDek\"), 0) FROM catalog.\"Dossiers\" WHERE \"Id\" = '$interrompu'") == 0 ]] \
+  || echec "DEK du dossier effacé encore présente"
+[[ $(sql postgres "SELECT count(*) FROM pg_database WHERE datname = 'd_${interrompu//-/}'") == 0 ]] || echec "base du dossier effacé encore présente"
+[[ $(sql postgres "SELECT count(*) FROM pg_database WHERE datname = '$base'") == 1 ]] || echec "base d'un autre dossier supprimée"
+echo "   dossier $interrompu effacé : DEK détruite, base supprimée ; le dossier $dossier reste intact"
+
+step "8. Clé racine du cabinet détruite dans le KMS : ses dossiers ne s'ouvrent plus"
 bao write "transit/keys/$cle_racine/config" deletion_allowed=true >/dev/null
 bao delete "transit/keys/$cle_racine" >/dev/null
 kill "${pids[-1]}" 2>/dev/null || true

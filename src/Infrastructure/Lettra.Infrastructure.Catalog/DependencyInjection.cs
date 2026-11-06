@@ -43,6 +43,9 @@ public static class DependencyInjection
         services.AddSingleton<IDossierDirectory>(sp => sp.GetRequiredService<CatalogTenantCatalog>());
         services.AddSingleton<CatalogDossierProvisioner>();
         services.AddSingleton<IDossierProvisioner>(sp => sp.GetRequiredService<CatalogDossierProvisioner>());
+        // Effacement des dossiers créés par le catalogue (remplace le « aucun » du poste enregistré par AddApplication).
+        services.AddSingleton<CatalogDossierEraser>();
+        services.Replace(ServiceDescriptor.Singleton<IDossierEraser>(sp => sp.GetRequiredService<CatalogDossierEraser>()));
         // Avant l'identité serveur, qui n'enregistre son registre lu en configuration qu'à défaut (TryAdd).
         services.AddSingleton<CatalogAuthorizationDirectory>();
         services.AddSingleton<IAuthorizationDirectory>(sp => sp.GetRequiredService<CatalogAuthorizationDirectory>());

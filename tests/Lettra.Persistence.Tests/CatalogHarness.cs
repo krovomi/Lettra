@@ -44,7 +44,8 @@ internal sealed class CatalogHarness : IAsyncDisposable
         Action<IServiceCollection> addProvider,
         Action<DbContextOptionsBuilder> configureCatalog,
         IDictionary<string, string?> cluster,
-        IDictionary<string, string?>? extra = null)
+        IDictionary<string, string?>? extra = null,
+        Action<IServiceCollection>? configure = null)
     {
         Dictionary<string, string?> settings = new()
         {
@@ -104,6 +105,7 @@ internal sealed class CatalogHarness : IAsyncDisposable
         services.AddSingleton<OfflineDirectories>();
         services.AddSingleton<ICompanyDirectory>(sp => sp.GetRequiredService<OfflineDirectories>());
         services.AddSingleton<IVatNumberChecker>(sp => sp.GetRequiredService<OfflineDirectories>());
+        configure?.Invoke(services);
         _root = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
     }
 
