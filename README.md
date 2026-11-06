@@ -332,7 +332,7 @@ effacer).
 
 La page **Vue cabinet** liste les dossiers que vous pouvez ouvrir, les plus urgents d'abord. Pour chacun, elle montre
 les factures en retard, les rejets de la plateforme, les alertes ouvertes, la revue du mois et le relevé bancaire non
-rapproché. La colonne relevé non rapproché devient à traiter après 15 jours et urgente après 30. Ces chiffres sont
+rapproché, et le nombre de **décisions** à prendre. La colonne relevé non rapproché devient à traiter après 15 jours et urgente après 30. Ces chiffres sont
 calculés une fois par jour (par le Worker, ou par l'API dans la démo, où le premier calcul a lieu 15 s après le
 démarrage), sur « Actualiser », ou à la première ouverture. Ce ne sont
 que des compteurs : aucun montant ni nom de client ne quitte le dossier. Le bouton « Tableaux de bord » en haut de la Vue cabinet ouvre
@@ -406,6 +406,9 @@ de Lettra ; copiez-les tels quels.
 attente, brouillons), le chiffre d'affaires des six derniers mois, les dernières factures et les derniers devis, et
 deux raccourcis : **Nouveau devis**, **Nouvelle facture**. Il montre aussi les factures en retard (les cinq plus
 anciennes, avec leur reste dû) et les transmissions à la plateforme (non transmises, en cours, à traiter, encaissées).
+Le panneau **Carnet de commandes** donne le montant pondéré HT des devis en attente, leur montant total, le nombre de
+devis à relancer (lien vers **Devis à relancer**) et la raison du calcul en une phrase (« 12 devis en attente, pondérés
+par vos taux passés : 58 % des devis conclus ont été acceptés… »).
 Les chiffres de l'accueil (chiffre d'affaires des six derniers mois, devis en attente) sont calculés par le serveur sur
 toutes les pièces validées du dossier (`GET /api/v1/billing/dashboard`).
 Sur un dossier vide, il propose à la place de compléter la fiche entreprise et d'ajouter un client, et le bouton
@@ -418,6 +421,15 @@ factures en retard. Puis « À surveiller » : les gros encaissements des 30 der
 factures en retard. Chaque carte mène à l'écran détaillé et suit ses droits. Pas encore de notification sur le
 téléphone : l'écran se consulte. *(Vérifié : démo Docker, navigateur sur ordinateur et téléphone.)* Détails :
 [docs/en-bref.md](docs/en-bref.md).
+
+**Décisions à prendre** (menu, juste sous **En bref**) : ce que Lettra a repéré dans le dossier et propose de décider,
+les plus urgentes d'abord : relance due aujourd'hui, rappel avant échéance à envoyer, échéance d'échéancier manquée,
+échéancier demandé par un client à voir, échéance fiscale proche ou dépassée, seuil réglementaire franchi ou proche,
+nouvel IBAN de fournisseur à vérifier, attestation URSSAF à renouveler, fiche anti-blanchiment à faire ou à revoir.
+Quand c'est possible, l'action est préparée (« Envoyer la relance ») et un clic la fait, avec les droits de
+l'utilisateur. « Plus tard » et « Ignorer » se défont. Le cadran d'autonomie du dossier (réglé par un manager) dit si
+Lettra prépare l'action ou montre seulement ; rien ne part jamais sans clic. Des règles fixes, sans IA. *(Vérifié dans
+la démo Docker.)* Détails : [docs/decisions-a-prendre.md](docs/decisions-a-prendre.md).
 
 **Les données de démonstration.** Le dossier ouvert arrive avec un an d'activité d'une entreprise fictive,
 « Atelier Numérique Conseil » (SARL de conseil et services numériques, Lyon) : sa fiche entreprise, 30 à 50 clients
@@ -437,11 +449,11 @@ Le prestataire de services a opté pour la TVA sur les débits : ses factures et
 Le jeu ne s'ajoute jamais à un dossier qui a déjà des devis ou des factures. Pour repartir d'un dossier rempli à neuf,
 voir « Repartir de zéro » dans [En cas de problème](#en-cas-de-problème).
 
-**La navigation.** **Accueil**, **En bref**, **Vue cabinet** et **Comptes intra-groupe**, puis **Ventes** (**Devis**, **Factures**, **Avoirs**, **Factures
+**La navigation.** **Accueil**, **En bref**, **Décisions à prendre**, **Vue cabinet**, **Radar de prévention** et **Comptes intra-groupe**, puis **Ventes** (**Devis**, **Devis à relancer**, **Carnet de commandes**, **Factures**, **Avoirs**, **Factures
 récurrentes**), **Tiers** (**Clients**, **Fournisseurs**, **Factures reçues**, **IBAN à vérifier**,
 **Attestations de vigilance**, **Vérifier les tiers**, **Catalogue**), **Comptabilité** (**Encaissements**,
 **Rapprochement bancaire**, **Relances**, **Journal et balance**, **FEC**, **Déclarations**, **Revue du dossier**, **Lettre de mission**, **Anti-blanchiment**) et
-**Pilotage** (**Tableaux de bord**, **Alertes**, **Entreprise**, **Mes préférences**, **Équipe et accès** pour qui
+**Pilotage** (**Tableaux de bord**, **Alertes**, **Bien utiliser l'IA**, **Entreprise**, **Mes préférences**, **Équipe et accès** pour qui
 administre le cabinet, **Serveur du cabinet**). Sur un
 ordinateur, le menu est à gauche et se replie en icônes ; sur une tablette, c'est une colonne d'icônes ; sur un
 téléphone, des onglets en bas (Accueil, Devis, Factures, Clients, **Plus** pour le reste). En haut, le champ
@@ -565,6 +577,19 @@ ont la même présentation.
 4. **Valider** (Ctrl+Entrée). Le bouton **PDF** (Ctrl+P) produit le devis à remettre au client.
 5. Le client accepte : **Accepté**, puis **Facturer**. Lettra crée la facture à partir du devis.
    (« Facture d'acompte » facture un pourcentage du devis.)
+6. Sans réponse à l'approche de la fin de validité, le devis apparaît dans **Devis à relancer** (et l'onglet du même
+   nom porte leur nombre). **Relancer** ouvre la relance déjà rédigée dans la langue du client ; on la relit, on la
+   modifie si besoin, puis **Envoyer la relance** (par e-mail) ou **Noter comme relancé** (relance faite au téléphone).
+   L'écran du devis montre son historique de relances. Dans la démo, l'e-mail arrive dans MailPit
+   (http://localhost:8025).
+
+**Devis à relancer et carnet de commandes** (menu **Ventes**) : les devis envoyés sans réponse dont la fin de validité
+approche (cinq jours par défaut, réglable par un manager), avec une relance déjà rédigée en français ou en anglais (la
+langue du client), relue puis envoyée par e-mail en un clic, ou notée si elle a été faite au téléphone ; l'historique
+des relances de chaque devis. Le **carnet de commandes pondéré** estime le chiffre d'affaires à venir : chaque devis en
+attente compte pour sa probabilité d'être accepté, la moyenne de trois taux d'acceptation passés (le client, la
+tranche de montant, l'ancienneté du devis), et l'écran dit pourquoi, devis par devis. Une statistique simple, sans IA.
+*(Vérifié dans la démo Docker.)* Détails : [docs/devis-a-relancer.md](docs/devis-a-relancer.md).
 
 ### 4. La facture
 
