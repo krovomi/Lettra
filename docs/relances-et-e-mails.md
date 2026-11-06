@@ -9,6 +9,9 @@ Lettra a une sortie e-mail et s'en sert pour deux choses :
 En démonstration, les messages ne partent que vers **MailPit**, une boîte de réception locale (http://localhost:8025).
 Rien ne sort de la machine.
 
+Les relances de **devis** (avant la fin de validité, pas de retard de paiement) ont leur écran : voir
+[Devis à relancer](devis-a-relancer.md).
+
 ## Quelles factures sont à relancer
 
 Une facture est **échue** quand son échéance est passée (date du jour à Paris), que ce n'est pas un avoir et qu'il en
