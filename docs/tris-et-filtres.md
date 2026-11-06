@@ -27,6 +27,9 @@ et dans l'application MAUI, sur tous les appareils.
 |---|---|---|---|
 | Factures, avoirs, factures d'acompte | Numéro, client, date, échéance, statut, total HT, total TTC | Recherche, nature, statut, date d'émission, montant TTC | Serveur |
 | Devis | Numéro, client, date, fin de validité, statut, total HT, total TTC | Recherche, statut, date d'émission, montant TTC | Serveur |
+| Devis à relancer | Numéro, client, jours restants (par défaut), total HT, probabilité | Recherche, « À relancer seulement », « Avec une adresse e-mail » | Écran |
+| Devis à relancer : historique | Date (par défaut), devis, client, total HT | Recherche, canal, résultat, période | Serveur |
+| Carnet de commandes | Numéro, client, ancienneté, total HT, probabilité, montant pondéré (par défaut) | Recherche, tranche de montant, ancienneté | Écran |
 | Factures récurrentes | Nom, client, prochaine facture, total HT | Recherche, statut (actif, en pause, à facturer) | Serveur |
 | Clients | Nom, ville | Recherche, nature (entreprise ou particulier) | Serveur |
 | Fournisseurs | Nom, ville | Recherche | Serveur |

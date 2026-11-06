@@ -79,6 +79,15 @@
   <data name="Decision.relance.due.Reason" xml:space="preserve"><value>{level}: the invoice is {days} days overdue and the reminder plan sends it today.</value></data>
   <data name="Decision.relance.due.Accept" xml:space="preserve"><value>Send the reminder</value></data>
   <data name="Decision.relance.due.Rule" xml:space="preserve"><value>Reminders due: an overdue invoice reaches a step of the reminder plan (nothing is suggested when automatic sending is on).</value></data>
+  <data name="Decision.avant-le-retard.rappel.Title" xml:space="preserve"><value>Remind {client} that invoice {numero} is coming due</value></data>
+  <data name="Decision.avant-le-retard.rappel.Reason" xml:space="preserve"><value>The invoice is due on {echeance}. A friendly reminder is planned today for this customer, whom the payment weather targets (they may object).</value></data>
+  <data name="Decision.avant-le-retard.rappel.Rule" xml:space="preserve"><value>Reminders before the due date: a customer targeted by the payment weather should get their friendly reminder today (nothing is suggested when automatic sending is on).</value></data>
+  <data name="Decision.avant-le-retard.echeance-manquee.Title" xml:space="preserve"><value>Instalment {rang} missed: {client}, invoice {numero}</value></data>
+  <data name="Decision.avant-le-retard.echeance-manquee.Reason" xml:space="preserve"><value>Instalment {rang} of the payment plan is unpaid. The missed-instalment reminder is due today; the invoice is reminded only once per missed instalment.</value></data>
+  <data name="Decision.avant-le-retard.echeance-manquee.Rule" xml:space="preserve"><value>Missed instalments: an instalment of a payment plan is unpaid and its reminder is due (nothing is suggested when automatic sending is on).</value></data>
+  <data name="Decision.avant-le-retard.echeancier-a-voir.Title" xml:space="preserve"><value>Review the payment plan requested by {client} (invoice {numero})</value></data>
+  <data name="Decision.avant-le-retard.echeancier-a-voir.Reason" xml:space="preserve"><value>{client} asked in their customer area to pay in {echeances} instalments, granted within the schedule's bounds. Mark it “Seen”, or stop it.</value></data>
+  <data name="Decision.avant-le-retard.echeancier-a-voir.Rule" xml:space="preserve"><value>Payment plans to review: a customer requested a payment plan the business has not seen yet.</value></data>
   <data name="Decision.fiscal.echeance.Title" xml:space="preserve"><value>{obligation} to file before {dueOn}</value></data>
   <data name="Decision.fiscal.echeance.Reason" xml:space="preserve"><value>Period ended on {periodEnd}. Once filed, mark it filed in the tax calendar: the decision settles by itself.</value></data>
   <data name="Decision.fiscal.echeance.Rule" xml:space="preserve"><value>Tax deadlines: a return that is overdue or due within seven days and not yet marked filed.</value></data>

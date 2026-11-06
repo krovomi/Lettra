@@ -17,7 +17,7 @@ namespace Lettra.Exports.Tests.Reminders;
 /// Avant le retard sur des ports en mémoire : le rappel avant échéance ciblé par la météo des paiements, l'échéancier
 /// qui remplace l'escalade, les signaux pour « Décisions à prendre » et les cas d'usage de l'écran.
 /// </summary>
-public sealed class AvantLeRetardServiceTests
+public sealed partial class AvantLeRetardServiceTests
 {
     // Lundi 19 octobre 2026, 10 h à Paris.
     private static readonly DateTimeOffset Now = new(2026, 10, 19, 8, 0, 0, TimeSpan.Zero);
