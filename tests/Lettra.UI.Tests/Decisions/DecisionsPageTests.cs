@@ -82,7 +82,7 @@ public sealed class DecisionsPageTests : BunitContext
         page.FindAll("[id^='decision-accept-']").Should().ContainSingle("seule la relance a une action préparée");
         page.Find($"#decision-open-{reminder.Id}").GetAttribute("href").Should().Be("somewhere");
         page.FindAll("#decisions-rules li").Should().HaveCount(9);
-
+        page.Find("#decisions-rules").TextContent.Should().Contain("Radar de prévention : le dossier passe « à appeler »");
         page.Find("#decisions-filter-status").Change("all");
         Titles(page).Should().HaveCount(5);
         page.Find("#decisions-list").TextContent.Should().Contain("Attestation de vigilance expirée : Plâtrerie").And.Contain("Revient le 26/10/2026").And.Contain("Ignorée");

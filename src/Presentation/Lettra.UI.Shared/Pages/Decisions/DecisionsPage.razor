@@ -241,10 +241,17 @@ else
     private const string AllFilter = "all";
 
     /// <summary>Les règles livrées, dans l'ordre de l'aide « Ce que Lettra surveille ».</summary>
-    private static readonly string[] KnownKinds =
-    [
-        "relance.due", "avant-le-retard.rappel", "avant-le-retard.echeance-manquee", "avant-le-retard.echeancier-a-voir", "fiscal.echeance",
-        "seuil.proche", "iban.a-verifier", "attestation.a-renouveler", "lcb-ft.fiche",
+    private static readonly string[] KnownKinds = [
+        "relance.due",
+        "avant-le-retard.rappel",
+        "avant-le-retard.echeance-manquee",
+        "avant-le-retard.echeancier-a-voir",
+        "fiscal.echeance",
+        "seuil.proche",
+        "iban.a-verifier",
+        "attestation.a-renouveler",
+        "lcb-ft.fiche",
+        Contracts.Decisions.DecisionKinds.PreventionMeeting
     ];
 
     /// <summary>Vingt décisions par page : un dossier qui en a beaucoup reste lisible.</summary>
