@@ -22,7 +22,7 @@ string output = Environment.GetEnvironmentVariable("SORTIE") ?? "sortie";
 string script = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "appareil.mjs");
 
 using HttpClient probeClient = new();
-OperationResult<SharedServerSettings> checkedServer = await new SharedServerProbe(probeClient).CheckAsync(typed, default);
+OperationResult<SharedServerSettings> checkedServer = await new SharedServerProbe(probeClient, TimeProvider.System).CheckAsync(typed, default);
 Require(checkedServer.IsSuccess, "vérification de l'adresse", checkedServer.Errors);
 SharedServerSettings server = checkedServer.Value!;
 Log($"adresse « {typed} » vérifiée : {server.Address}, connexion {server.Authority}, client {server.ClientId}");
