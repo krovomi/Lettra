@@ -1,7 +1,8 @@
 # Environnement éphémère d'une pull request (annexe E §4 et §7) : créé quand la PR porte l'étiquette env:pr,
 # détruit à sa fermeture. Données synthétiques seulement.
-# Tant que la base Catalog et le mode 5 ne sont pas livrés (chantier Persistance et tenancy), l'API tourne comme en
-# développement : mode 2, un dossier de démonstration SQLite dans un volume éphémère.
+# L'API y tourne comme en développement : mode 2, catalogue et dossier de démonstration SQLite dans un volume éphémère,
+# sans cluster PostgreSQL. Le mode 5 lui-même est essayé dans kind (deploy/tests/kind/essai-mode5.sh) ; passer les
+# environnements de PR en mode 5 attend la cellule de recette (docs/plan-mode-5.md, étape 4).
 environment: pr
 lettra-api:
   environment: pr
@@ -11,6 +12,7 @@ lettra-api:
   existingSecret: ""
   secretEnv:
     ConnectionStrings__Redis: { secret: "" }  # pas de Redis dans un environnement de PR
+    LETTRA_PG_A_PASSWORD: { secret: "" }  # ni de cluster PostgreSQL
   aspnetcoreEnvironment: Development
   autoscaling: { enabled: false }
   replicas: 1
@@ -22,6 +24,12 @@ lettra-api:
   settings:
     Lettra__DeploymentMode: LocalNetwork
     Lettra__Observability__ServiceName: lettra-api
+    # Réglages PostgreSQL des valeurs communes retirés : catalogue SQLite (valeur par défaut de l'API).
+    Lettra__Catalog__Provider: null
+    ConnectionStrings__Catalog: Data Source=/data/lettra-catalogue.db
+    Lettra__Clusters__pg-a__Provider: null
+    Lettra__Clusters__pg-a__ConnectionString: null
+    Lettra__Clusters__pg-a__AdminConnectionString: null
     ConnectionStrings__DossierDemo: Data Source=/data/lettra-dossier-demo.db
   extraVolumes:
     - name: data

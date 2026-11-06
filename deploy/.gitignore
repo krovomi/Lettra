@@ -5,3 +5,4 @@ helm/*/charts/
 local/.run/
 .terraform.lock.hcl
 tests/kind/.run/
+tests/kind/.run-mode5/

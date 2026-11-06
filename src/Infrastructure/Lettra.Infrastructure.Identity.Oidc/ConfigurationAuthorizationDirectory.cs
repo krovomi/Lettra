@@ -69,8 +69,9 @@ public sealed class AuthorizationDirectoryOptions
 }
 
 /// <summary>
-/// Registre des droits lu dans la configuration : serveur de cabinet de démonstration (mode 2) et tests, en
-/// attendant la base Catalog qui implémentera le même port. Le cabinet d'un dossier vient du catalogue des dossiers.
+/// Registre des droits lu dans la configuration, à défaut de base Catalog (tests de l'identité, hôtes sans catalogue).
+/// Avec un catalogue (modes 2, 3 et 5), c'est <c>CatalogAuthorizationDirectory</c> qui implémente ce port : la même section
+/// <c>Lettra:Authorization</c> y est importée au démarrage. Le cabinet d'un dossier vient du catalogue des dossiers.
 /// </summary>
 internal sealed class ConfigurationAuthorizationDirectory(
     IOptionsMonitor<AuthorizationDirectoryOptions> options,

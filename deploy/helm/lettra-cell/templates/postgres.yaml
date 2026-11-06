@@ -18,6 +18,15 @@ spec:
   instances: {{ $cluster.instances }}
   imageName: {{ $.Values.postgres.image }}
   primaryUpdateStrategy: unsupervised
+  # Rôle applicatif de Lettra (secret {{ $cluster.name }}-app, créé par l'opérateur) et sa base, qui porte le catalogue
+  # sur le cluster désigné par postgres.catalogCluster. Lettra crée lui-même une base par dossier (ADR-0009) : le rôle
+  # reçoit CREATEDB, et l'API comme le Worker passent par une connexion directe au cluster pour CREATE / DROP DATABASE.
+  bootstrap:
+    initdb:
+      database: {{ $.Values.postgres.database }}
+      owner: {{ $.Values.postgres.database }}
+      postInitSQL:
+        - ALTER ROLE {{ $.Values.postgres.database }} CREATEDB
   postgresql:
     parameters:
       # Budget des dossiers actifs servis par PgBouncer + connexions réservées.
@@ -33,7 +42,7 @@ spec:
     storageClass: {{ . }}
     {{- end }}
   monitoring:
-    enablePodMonitor: true
+    enablePodMonitor: {{ $.Values.postgres.monitoring }}
   affinity:
     topologyKey: topology.kubernetes.io/zone
   {{- if $.Values.postgres.backup.enabled }}
@@ -56,7 +65,8 @@ spec:
 apiVersion: postgresql.cnpg.io/v1
 kind: Pooler
 metadata:
-  name: {{ $cluster.name }}-rw
+  # Pas « {{ $cluster.name }}-rw » : ce nom est déjà celui du Service que l'opérateur crée pour le primaire du cluster.
+  name: {{ $cluster.name }}-pooler
   labels:
     {{- include "lettra-cell.labels" $ | nindent 4 }}
 spec:
@@ -65,7 +75,7 @@ spec:
   instances: {{ $.Values.postgres.pooler.instances }}
   type: rw
   monitoring:
-    enablePodMonitor: true
+    enablePodMonitor: {{ $.Values.postgres.monitoring }}
   pgbouncer:
     poolMode: transaction
     parameters:
