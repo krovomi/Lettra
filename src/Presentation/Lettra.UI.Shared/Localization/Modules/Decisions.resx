@@ -79,6 +79,15 @@
   <data name="Decision.relance.due.Reason" xml:space="preserve"><value>{level} : la facture a {days} jours de retard et le scénario de relance l'envoie aujourd'hui.</value></data>
   <data name="Decision.relance.due.Accept" xml:space="preserve"><value>Envoyer la relance</value></data>
   <data name="Decision.relance.due.Rule" xml:space="preserve"><value>Relances dues : une facture échue atteint un palier du scénario de relance (rien n'est proposé quand l'envoi automatique est réglé).</value></data>
+  <data name="Decision.avant-le-retard.rappel.Title" xml:space="preserve"><value>Rappeler à {client} l'échéance de la facture {numero}</value></data>
+  <data name="Decision.avant-le-retard.rappel.Reason" xml:space="preserve"><value>La facture arrive à échéance le {echeance}. Un rappel aimable est prévu aujourd'hui pour ce client, que la météo des paiements cible (il peut s'y opposer).</value></data>
+  <data name="Decision.avant-le-retard.rappel.Rule" xml:space="preserve"><value>Rappels avant échéance : un client ciblé par la météo des paiements doit recevoir aujourd'hui son rappel aimable (rien n'est proposé quand l'envoi automatique est réglé).</value></data>
+  <data name="Decision.avant-le-retard.echeance-manquee.Title" xml:space="preserve"><value>Échéance {rang} manquée : {client}, facture {numero}</value></data>
+  <data name="Decision.avant-le-retard.echeance-manquee.Reason" xml:space="preserve"><value>L'échéance {rang} de l'échéancier n'est pas réglée. La relance de l'échéance manquée est due aujourd'hui ; la facture n'est relancée qu'une fois par échéance manquée.</value></data>
+  <data name="Decision.avant-le-retard.echeance-manquee.Rule" xml:space="preserve"><value>Échéances manquées : une échéance d'un échéancier n'est pas réglée et sa relance est due (rien n'est proposé quand l'envoi automatique est réglé).</value></data>
+  <data name="Decision.avant-le-retard.echeancier-a-voir.Title" xml:space="preserve"><value>Voir l'échéancier demandé par {client} (facture {numero})</value></data>
+  <data name="Decision.avant-le-retard.echeancier-a-voir.Reason" xml:space="preserve"><value>{client} a demandé dans son espace client un paiement en {echeances} échéances, accordé dans les bornes du scénario. Marquez-le « Vu », ou arrêtez-le.</value></data>
+  <data name="Decision.avant-le-retard.echeancier-a-voir.Rule" xml:space="preserve"><value>Échéanciers à voir : un client a demandé un échéancier que l'entreprise n'a pas encore vu.</value></data>
   <data name="Decision.fiscal.echeance.Title" xml:space="preserve"><value>{obligation} à déposer avant le {dueOn}</value></data>
   <data name="Decision.fiscal.echeance.Reason" xml:space="preserve"><value>Période close le {periodEnd}. Une fois déposée, marquez-la déposée dans le calendrier fiscal : la décision se règle d'elle-même.</value></data>
   <data name="Decision.fiscal.echeance.Rule" xml:space="preserve"><value>Échéances fiscales : une déclaration en retard ou due dans les sept jours, pas encore marquée déposée.</value></data>
