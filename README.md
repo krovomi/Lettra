@@ -338,6 +338,17 @@ démarrage), sur « Actualiser », ou à la première ouverture. Ce ne sont
 que des compteurs : aucun montant ni nom de client ne quitte le dossier. Le bouton « Tableaux de bord » en haut de la Vue cabinet ouvre
 l'onglet « Mes dossiers » des tableaux de bord : les mêmes dossiers en graphiques.
 
+**Radar de prévention** (menu, sous Vue cabinet) : pour chaque dossier, un niveau d'attention (calme, à surveiller, à
+appeler) calculé à partir de sept signaux de difficulté : trésorerie prévue qui passe sous zéro, délais de paiement des
+clients qui s'allongent, chiffre d'affaires qui décroche face au secteur, TVA à payer plus lourde que les encaissements
+attendus, dépendance au premier client, clients en procédure collective, écart grandissant entre facturé et encaissé.
+Les seuils se règlent par dossier. Une liste des dossiers sous la vue cabinet, le détail des signaux dans le dossier
+(raison, effet chiffré, échéance), une carte « Signaux de prévention » à l'accueil du dossier, un courrier type de
+proposition de rendez-vous (e-mail ou PDF) et, quand le dossier est « à appeler », une décision de rendez-vous dans
+« Décisions à prendre ». Des règles fixes, sans IA ; le niveau reste dans le cabinet (jamais montré au client, ni
+publié vers Grafana) et ne décide rien. Vérifié dans la démo Docker (navigateur, ordinateur et téléphone). Détail :
+[docs/radar-de-prevention.md](docs/radar-de-prevention.md).
+
 **Revue du dossier** (menu Comptabilité) est une liste de contrôle par mois ou par trimestre. Chaque coche garde qui
 l'a posée et quand. Détails : [docs/vue-cabinet.md](docs/vue-cabinet.md).
 
@@ -588,7 +599,9 @@ approche (cinq jours par défaut, réglable par un manager), avec une relance d�
 langue du client), relue puis envoyée par e-mail en un clic, ou notée si elle a été faite au téléphone ; l'historique
 des relances de chaque devis. Le **carnet de commandes pondéré** estime le chiffre d'affaires à venir : chaque devis en
 attente compte pour sa probabilité d'être accepté, la moyenne de trois taux d'acceptation passés (le client, la
-tranche de montant, l'ancienneté du devis), et l'écran dit pourquoi, devis par devis. Une statistique simple, sans IA.
+tranche de montant, l'ancienneté du devis), et l'écran dit pourquoi, devis par devis. Un client opposé au profilage
+(noté dans Relances) sort entièrement du calcul. Chaque devis à relancer est aussi une décision dans **Décisions à
+prendre**, avec le bouton **Envoyer la relance**. Une statistique simple, sans IA.
 *(Vérifié dans la démo Docker.)* Détails : [docs/devis-a-relancer.md](docs/devis-a-relancer.md).
 
 ### 4. La facture

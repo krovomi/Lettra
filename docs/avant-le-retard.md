@@ -15,7 +15,7 @@ Les relances agissent après l'échéance, quand le retard est déjà là. « Av
 
 ## Le droit d'opposition au ciblage
 
-Choisir à qui envoyer le rappel selon la façon dont il paie est un **profilage** au sens du RGPD (art. 4, 4°). Le rappel n'a aucun effet juridique et ne refuse rien à personne : ce n'est pas une décision individuelle automatisée (art. 22). Le client peut néanmoins s'y opposer (art. 21) : il le dit à l'entreprise, qui clique **Ne pas cibler ce client** sur une ligne de la liste. Il ne reçoit plus de rappel avant échéance ; il reçoit toujours les relances après l'échéance, qui ne ciblent personne. Le bloc **Clients opposés au ciblage** les liste avec leur date ; **Retirer l'opposition** la lève. Droit : « Modifier les tiers ».
+Choisir à qui envoyer le rappel selon la façon dont il paie est un **profilage** au sens du RGPD (art. 4, 4°). Le rappel n'a aucun effet juridique et ne refuse rien à personne : ce n'est pas une décision individuelle automatisée (art. 22). Le client peut néanmoins s'y opposer (art. 21) : il le dit à l'entreprise, qui clique **Ne pas cibler ce client** sur une ligne de la liste. Il ne reçoit plus de rappel avant échéance ; ses devis sortent aussi du carnet de commandes pondéré (voir [Devis à relancer et carnet de commandes](devis-a-relancer.md)) ; il reçoit toujours les relances après l'échéance, qui ne ciblent personne. Le bloc **Clients opposés au ciblage** les liste avec leur date ; **Retirer l'opposition** la lève. Droit : « Modifier les tiers ».
 
 ## L'échéancier en libre-service
 
