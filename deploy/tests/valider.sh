@@ -37,6 +37,12 @@ done
 helm template pr lettra-cell -f lettra-cell/values-pr.yaml --set lettra-api.image.tag=ci | kubeconform_ -
 helm template c lettra-cell -f ../tests/kind/valeurs-ci.yaml | kubeconform_ -
 helm template c lettra-cell -f ../tests/kind/valeurs-mode5.yaml | kubeconform_ -
+kubeconform_ ../tests/kind/openbao-essai.yaml
+# Une cellule en mode 5 tient les clés des cabinets dans son KMS ; l'environnement de PR et l'essai en mode 2, non.
+grep -q 'name: Lettra__Kms__Provider, value: "Transit"' <<<"$(helm template c lettra-cell -f lettra-cell/values-taille-S.yaml --set lettra-api.image.tag=ci --set lettra-worker.image.tag=ci)" \
+  || { echo "cellule : clés des cabinets hors du KMS" >&2; exit 1; }
+! grep -q 'Lettra__Kms__' <<<"$(helm template pr lettra-cell -f lettra-cell/values-pr.yaml --set lettra-api.image.tag=ci)" \
+  || { echo "environnement de PR : réglages du KMS restés" >&2; exit 1; }
 
 step "Keycloak de la cellule (lettra-keycloak)"
 KC_REQUIS=(--set hostname=https://auth.example.test --set publicUrl=https://app.example.test)

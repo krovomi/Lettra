@@ -15,6 +15,7 @@ lettra-api:
   secretEnv:
     ConnectionStrings__Redis: { secret: "" }
     LETTRA_PG_A_PASSWORD: { secret: "" }
+    Lettra__Kms__Transit__Token: { secret: "" }  # ni de KMS : KEK déclarées dans la configuration
   aspnetcoreEnvironment: Production
   autoscaling: { enabled: false }
   replicas: 1
@@ -32,6 +33,8 @@ lettra-api:
     Lettra__Clusters__pg-a__Provider: null
     Lettra__Clusters__pg-a__ConnectionString: null
     Lettra__Clusters__pg-a__AdminConnectionString: null
+    Lettra__Kms__Provider: null
+    Lettra__Kms__Transit__Address: null
     ConnectionStrings__DossierDemo: Data Source=/data/lettra-dossier-demo.db
     # Clés DataProtection (état OIDC du BFF) dans le volume : le système de fichiers de l'image est en lecture seule.
     HOME: /data

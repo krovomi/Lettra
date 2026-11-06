@@ -16,7 +16,7 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.13");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.14");
 
             modelBuilder.Entity("Lettra.Domain.Banking.BankConnection", b =>
                 {
@@ -423,8 +423,9 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Iban")
-                        .HasMaxLength(34)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(190)
+                        .HasColumnType("TEXT")
+                        .HasAnnotation("Lettra:Sensitive", true);
 
                     b.Property<decimal?>("LatePenaltyRate")
                         .HasPrecision(18, 4)
@@ -1637,8 +1638,9 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Email")
-                        .HasMaxLength(254)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(1070)
+                        .HasColumnType("TEXT")
+                        .HasAnnotation("Lettra:Sensitive", true);
 
                     b.Property<bool>("IsArchived")
                         .HasColumnType("INTEGER");
@@ -1816,12 +1818,14 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Email")
-                        .HasMaxLength(254)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(1070)
+                        .HasColumnType("TEXT")
+                        .HasAnnotation("Lettra:Sensitive", true);
 
                     b.Property<string>("Iban")
-                        .HasMaxLength(34)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(190)
+                        .HasColumnType("TEXT")
+                        .HasAnnotation("Lettra:Sensitive", true);
 
                     b.Property<bool>("IsArchived")
                         .HasColumnType("INTEGER");

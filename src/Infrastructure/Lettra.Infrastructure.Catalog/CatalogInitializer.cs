@@ -1,5 +1,8 @@
+using System.Security.Cryptography;
 using Lettra.Application.Abstractions.Identity;
+using Lettra.Domain.SharedKernel;
 using Lettra.Infrastructure.Persistence.Catalog;
+using Lettra.Infrastructure.Persistence.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -15,7 +18,8 @@ public sealed class CatalogInitializer(
     IDbContextFactory<CatalogDbContext> factory,
     IOptions<CatalogOptions> options,
     TimeProvider clock,
-    IServiceScopeFactory scopes)
+    IServiceScopeFactory scopes,
+    IDossierKeyring keyring)
 {
     public async Task InitializeAsync(bool migrate, CancellationToken cancellationToken)
     {
@@ -47,6 +51,8 @@ public sealed class CatalogInitializer(
             }
         }
 
+        await GiveDeclaredDossiersAKeyAsync(declared, cancellationToken).ConfigureAwait(false);
+
         // Les droits déclarés ont pu changer : les permissions en cache (partagé entre instances) sont recalculées.
         AsyncServiceScope scope = scopes.CreateAsyncScope();
         await using (scope.ConfigureAwait(false))
@@ -59,6 +65,44 @@ public sealed class CatalogInitializer(
     }
 
     private const int MaxImportAttempts = 3;
+
+    /// <summary>
+    /// Une base déclarée (serveur de cabinet, démonstration) reçoit une DEK dès que la KEK de son cabinet est connue de
+    /// cette instance : ses champs sensibles sont alors chiffrés à chaque écriture, et ceux écrits avant restent lisibles.
+    /// Sans KEK (instance sans le coffre du cabinet), rien ne change. La première DEK enregistrée l'emporte : une instance
+    /// qui démarre en même temps n'en pose pas une seconde.
+    /// </summary>
+    private async Task GiveDeclaredDossiersAKeyAsync(CatalogOptions declared, CancellationToken cancellationToken)
+    {
+        byte[] none = [];
+        foreach (DossierEntry entry in declared.Dossiers)
+        {
+            CatalogDbContext db = await factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+            await using (db.ConfigureAwait(false))
+            {
+                bool missing = await db.Dossiers.AnyAsync(
+                    d => d.Id == entry.Id && d.ClusterId == null && d.WrappedDek == none, cancellationToken).ConfigureAwait(false);
+                if (!missing)
+                {
+                    continue;
+                }
+
+                byte[] wrapped;
+                try
+                {
+                    wrapped = await keyring.CreateWrappedDekAsync(new OrganisationId(entry.OrganisationId), new DossierId(entry.Id), cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                catch (CryptographicException)
+                {
+                    continue;
+                }
+
+                await db.Dossiers.Where(d => d.Id == entry.Id && d.WrappedDek == none)
+                    .ExecuteUpdateAsync(u => u.SetProperty(d => d.WrappedDek, wrapped), cancellationToken).ConfigureAwait(false);
+            }
+        }
+    }
 
     private static async Task ImportAsync(CatalogDbContext db, CatalogOptions declared, DateTimeOffset now, CancellationToken cancellationToken)
     {

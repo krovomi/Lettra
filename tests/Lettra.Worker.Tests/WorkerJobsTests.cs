@@ -16,11 +16,12 @@ public sealed class WorkerJobsTests
     }
 
     [Fact]
-    public void En_continu_le_worker_fait_la_migration_et_les_huit_passes()
+    public void En_continu_le_worker_fait_la_migration_et_les_neuf_passes()
     {
         List<ServiceDescriptor> jobs = HostedServices(runOnce: false);
 
-        jobs.Should().HaveCount(9);
+        jobs.Should().HaveCount(10);
+        jobs.Should().Contain(j => j.ImplementationType == typeof(CabinetKeyRewrapJob));
         jobs[0].ImplementationType.Should().Be<DossierMigrationJob>();
     }
 

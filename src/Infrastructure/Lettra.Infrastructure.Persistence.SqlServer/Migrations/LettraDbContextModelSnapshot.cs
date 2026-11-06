@@ -18,7 +18,7 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.13")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -428,8 +428,9 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Iban")
-                        .HasMaxLength(34)
-                        .HasColumnType("nvarchar(34)");
+                        .HasMaxLength(190)
+                        .HasColumnType("nvarchar(190)")
+                        .HasAnnotation("Lettra:Sensitive", true);
 
                     b.Property<decimal?>("LatePenaltyRate")
                         .HasPrecision(18, 4)
@@ -1644,8 +1645,9 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Email")
-                        .HasMaxLength(254)
-                        .HasColumnType("nvarchar(254)");
+                        .HasMaxLength(1070)
+                        .HasColumnType("nvarchar(1070)")
+                        .HasAnnotation("Lettra:Sensitive", true);
 
                     b.Property<bool>("IsArchived")
                         .HasColumnType("bit");
@@ -1823,12 +1825,14 @@ namespace Lettra.Infrastructure.Persistence.SqlServer.Migrations
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Email")
-                        .HasMaxLength(254)
-                        .HasColumnType("nvarchar(254)");
+                        .HasMaxLength(1070)
+                        .HasColumnType("nvarchar(1070)")
+                        .HasAnnotation("Lettra:Sensitive", true);
 
                     b.Property<string>("Iban")
-                        .HasMaxLength(34)
-                        .HasColumnType("nvarchar(34)");
+                        .HasMaxLength(190)
+                        .HasColumnType("nvarchar(190)")
+                        .HasAnnotation("Lettra:Sensitive", true);
 
                     b.Property<bool>("IsArchived")
                         .HasColumnType("bit");

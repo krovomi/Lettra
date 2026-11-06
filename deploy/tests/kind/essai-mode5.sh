@@ -3,13 +3,18 @@
 # .github/workflows/deploy.yml ; en local : même commande, avec docker, kind, kubectl, helm, curl, jq et openssl).
 # Rien n'est appliqué à un cloud, aucune donnée réelle : un cabinet et un utilisateur fictifs, tirés au hasard.
 #
-# Installe l'opérateur CloudNativePG puis le chart lettra-cell (valeurs-mode5.yaml) : Keycloak, l'API et le Worker, un
-# cluster PostgreSQL derrière PgBouncer. Puis vérifie, de bout en bout :
+# Installe l'opérateur CloudNativePG, un KMS OpenBao d'essai (openbao-essai.yaml) puis le chart lettra-cell
+# (valeurs-mode5.yaml) : Keycloak, l'API et le Worker, un cluster PostgreSQL derrière PgBouncer. Puis vérifie, de bout
+# en bout :
 #   1. le Worker migre le catalogue (l'API ne migre rien en mode 5) ;
 #   2. un cabinet et son administrateur existent dans Keycloak (organisation, compte) et dans le catalogue ;
-#   3. un dossier créé par l'API passe à « actif » et sa base d_… existe sur le cluster ;
+#   3. un dossier créé par l'API passe à « actif », sa base d_… existe sur le cluster, la KEK du cabinet est tirée par
+#      le KMS et gardée enveloppée dans le catalogue ;
 #   4. un client et une facture s'y créent, la facture se valide et se relit, y compris après redémarrage de l'API ;
-#   5. une création de dossier interrompue (serveur de bases indisponible, Worker arrêté) est reprise par le Worker.
+#      l'e-mail du client est chiffré dans la base du dossier ;
+#   5. une création de dossier interrompue (serveur de bases indisponible, Worker arrêté) est reprise par le Worker ;
+#   6. après une rotation de la clé racine du cabinet, le Worker réenveloppe sa KEK et tout reste lisible ;
+#   7. la clé racine détruite dans le KMS, les dossiers du cabinet ne s'ouvrent plus (effacement cryptographique).
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/../../.." && pwd)
 CLUSTER=${KIND_CLUSTER:-lettra-mode5}
@@ -35,6 +40,7 @@ diagnostic() {
   kubectl -n "$NS" logs deploy/lettra-api --tail=-1 > "$SORTIE/api.log" 2>&1
   kubectl -n "$NS" logs deploy/lettra-api --previous --tail=-1 > "$SORTIE/api-precedent.log" 2>&1
   kubectl -n "$NS" logs deploy/lettra-worker --tail=-1 > "$SORTIE/worker.log" 2>&1
+  kubectl -n "$NS" logs deploy/openbao --tail=300 > "$SORTIE/openbao.log" 2>&1
   kubectl -n cnpg-system logs deploy/cnpg-cloudnative-pg --tail=300 > "$SORTIE/cnpg.log" 2>&1
   catalogue 'SELECT "Id", "State", "LastError" FROM catalog."Dossiers"' > "$SORTIE/catalogue-dossiers.txt" 2>&1
   tail -n 40 "$SORTIE/api.log" "$SORTIE/worker.log" 2>/dev/null
@@ -51,6 +57,10 @@ trap fin EXIT
 # SQL sur le primaire du cluster pg-a, en superutilisateur local (socket du pod) : vérifications de l'essai seulement.
 sql() { kubectl -n "$NS" exec pg-a-1 -c postgres -- psql -v ON_ERROR_STOP=1 -U postgres -d "$1" -tAc "$2"; }
 catalogue() { sql lettra "$1"; }
+# KMS d'essai : commande bao dans son pod, avec le jeton racine tiré par l'essai.
+bao() { kubectl -n "$NS" exec deploy/openbao -- env BAO_ADDR=http://127.0.0.1:8200 BAO_TOKEN="$kms_token" bao "$@"; }
+enveloppe() { catalogue "SELECT \"WrappedKek\" FROM catalog.\"Organisations\" WHERE \"Id\" = '$cabinet'"; }
+reenveloppee() { [[ $(enveloppe) == vault:v2:* ]]; }
 actif() { [[ $(catalogue "SELECT \"State\" FROM catalog.\"Dossiers\" WHERE \"Id\" = '$1'") == 1 ]]; }
 attendre() { # secondes, description, commande…
   local limite=$(( $(date +%s) + $1 )) description=$2; shift 2
@@ -86,6 +96,14 @@ kubectl -n "$NS" create secret generic lettra-api --dry-run=client -o yaml \
   --from-literal=Lettra__Identity__Oidc__BffClientSecret="$bff_secret" | kubectl apply -f - >/dev/null
 kubectl -n "$NS" create secret generic lettra-worker --dry-run=client -o yaml \
   --from-literal=Lettra__Observability__ServiceName=lettra-worker | kubectl apply -f - >/dev/null
+kms_token=$(openssl rand -hex 24)
+kubectl -n "$NS" create secret generic lettra-kms --dry-run=client -o yaml \
+  --from-literal=token="$kms_token" | kubectl apply -f - >/dev/null
+
+step "KMS d'essai : OpenBao, moteur Transit"
+kubectl -n "$NS" apply -f "$ROOT/deploy/tests/kind/openbao-essai.yaml" >/dev/null
+kubectl -n "$NS" rollout status deploy/openbao --timeout=3m
+bao secrets enable transit >/dev/null
 
 step "Chart lettra-cell en mode 5 (Keycloak, PostgreSQL et PgBouncer, API, Worker)"
 helm dependency build "$ROOT/deploy/helm/lettra-cell" >/dev/null
@@ -134,14 +152,12 @@ kc -X POST "$KEYCLOAK/admin/realms/lettra/clients" -d "$(jq '.clients[] | select
      defaultClientScopes, protocolMappers: [.protocolMappers[] | del(.id)]}' "$ROOT/deploy/keycloak/realm-lettra.json")"
 echo "   cabinet = organisation $cabinet ; administrateur = $utilisateur"
 
-step "2. Cabinet fictif : déclaré au catalogue (KEK tirée au hasard), API redémarrée"
-kek=$(openssl rand -base64 32)
+step "2. Cabinet fictif : déclaré au catalogue (sa KEK sera tirée par le KMS), API redémarrée"
 kubectl -n "$NS" create secret generic lettra-api --dry-run=client -o yaml \
   --from-literal=Lettra__Identity__Oidc__BffClientSecret="$bff_secret" \
   --from-literal=Lettra__Organisations__0__Id="$cabinet" \
   --from-literal=Lettra__Organisations__0__Name="Cabinet mode 5 (fictif)" \
   --from-literal=Lettra__Organisations__0__CellId="$CELLULE" \
-  --from-literal=Lettra__Organisations__0__Kek="$kek" \
   --from-literal=Lettra__Authorization__Users__0__Id="$utilisateur" \
   --from-literal=Lettra__Authorization__Users__0__Cabinet="$cabinet" \
   --from-literal=Lettra__Authorization__Users__0__State=Active \
@@ -189,7 +205,8 @@ base="d_${dossier//-/}"
 [[ $(catalogue "SELECT octet_length(\"WrappedDek\") FROM catalog.\"Dossiers\" WHERE \"Id\" = '$dossier'") == 60 ]] \
   || echec "DEK du dossier absente ou mal enveloppée"
 appel GET /api/v1/dossiers | jq -e --arg d "$dossier" 'map(.id) | index($d)' >/dev/null || echec "dossier absent de la liste"
-echo "   dossier $dossier actif ; base $base (propriétaire lettra) ; DEK enveloppée (60 octets)"
+[[ $(enveloppe) == vault:v1:* ]] || echec "KEK du cabinet absente du catalogue ou pas enveloppée par le KMS : $(enveloppe)"
+echo "   dossier $dossier actif ; base $base (propriétaire lettra) ; DEK enveloppée (60 octets) ; KEK enveloppée par le KMS"
 
 step "4. Client et facture dans le dossier, validation, relecture"
 appel PUT /api/v1/company-profile '{"name":"Conseil fictif","legalForm":"SAS","shareCapital":10000,"siren":"552100554",
@@ -208,7 +225,11 @@ attendu 200 "validation de la facture"
 numero=$(appel GET "/api/v1/invoices/$facture" "" "$dossier" | jq -er '.number')
 attendu 200 "relecture de la facture"
 [[ $(sql "$base" "SELECT count(*) FROM \"DossierStamp\"") == 1 ]] || echec "estampille du dossier absente de sa base"
-echo "   client $client ; facture $facture validée, numéro $numero"
+courriel=$(sql "$base" "SELECT \"Email\" FROM \"Customers\" WHERE \"Id\" = '$client'")
+[[ $courriel == lettra:enc:v1:* && $courriel != *boulangerie* ]] || echec "e-mail du client en clair dans la base : $courriel"
+[[ $(appel GET "/api/v1/customers/$client" "" "$dossier" | jq -r .email) == compta@boulangerie.example ]] \
+  || echec "e-mail du client illisible par l'API"
+echo "   client $client (e-mail chiffré en base, lu en clair par l'API) ; facture $facture validée, numéro $numero"
 
 step "4. Données gardées après redémarrage de l'API"
 kill "${pids[-1]}" 2>/dev/null || true
@@ -234,5 +255,27 @@ attendre 120 "reprise du dossier $interrompu par le Worker" actif "$interrompu"
 appel GET /api/v1/customers "" "$interrompu" >/dev/null
 attendu 200 "lecture du dossier repris"
 echo "   dossier $interrompu repris par le Worker : actif, base créée et migrée"
+
+step "6. Rotation de la clé racine du cabinet dans le KMS, KEK réenveloppée par le Worker"
+cle_racine="lettra-cabinet-${cabinet//-/}"
+bao write -f "transit/keys/$cle_racine/rotate" >/dev/null
+attendre 120 "réenveloppement de la KEK par le Worker" reenveloppee
+kill "${pids[-1]}" 2>/dev/null || true
+kubectl -n "$NS" rollout restart deploy/lettra-api >/dev/null
+kubectl -n "$NS" rollout status deploy/lettra-api --timeout=4m
+redirection_api
+[[ $(appel GET "/api/v1/invoices/$facture" "" "$dossier" | jq -r '.number') == "$numero" ]] || echec "facture illisible après la rotation"
+echo "   enveloppe de la KEK à la version 2 ; facture $numero relue par une API neuve"
+
+step "7. Clé racine du cabinet détruite dans le KMS : ses dossiers ne s'ouvrent plus"
+bao write "transit/keys/$cle_racine/config" deletion_allowed=true >/dev/null
+bao delete "transit/keys/$cle_racine" >/dev/null
+kill "${pids[-1]}" 2>/dev/null || true
+kubectl -n "$NS" rollout restart deploy/lettra-api >/dev/null
+kubectl -n "$NS" rollout status deploy/lettra-api --timeout=4m
+redirection_api
+appel GET "/api/v1/customers/$client" "" "$dossier" >/dev/null
+[[ $(statut) != 2* ]] || echec "dossier encore lisible après la destruction de la clé du cabinet"
+echo "   dossier $dossier fermé : HTTP $(statut)"
 
 step "Cellule kind en mode 5 : vérifiée de bout en bout"

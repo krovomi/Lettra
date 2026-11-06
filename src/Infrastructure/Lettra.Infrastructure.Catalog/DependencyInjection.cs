@@ -32,7 +32,11 @@ public static class DependencyInjection
         services.AddSingleton<ISecretSource>(new ConfigurationSecretSource(configuration));
         services.AddSingleton<ISecretSource, ClusterSecretSource>();
         services.AddSingleton<ISecretSource, ClusterAdminSecretSource>();
-        services.AddSingleton<IKekStore, ConfigurationKekStore>();
+        services.AddCabinetKeys(configuration);
+
+        // Champs sensibles des dossiers chiffrés par leur DEK (remplace l'absence de clé du poste).
+        services.AddSingleton<CatalogDossierFieldKeys>();
+        services.Replace(ServiceDescriptor.Singleton<IDossierFieldKeys>(sp => sp.GetRequiredService<CatalogDossierFieldKeys>()));
 
         services.AddSingleton<CatalogTenantCatalog>();
         services.AddSingleton<ITenantCatalog>(sp => sp.GetRequiredService<CatalogTenantCatalog>());
@@ -59,6 +63,31 @@ public static class DependencyInjection
         services.AddKpiCollection(configuration);
         services.AddSingleton<CatalogInitializer>();
         services.AddSingleton<DossierMigrationOrchestrator>();
+        return services;
+    }
+
+    /// <summary>
+    /// KEK des cabinets : déclarées dans le coffre de la cellule (par défaut), ou tenues par le moteur Transit d'OpenBao
+    /// (<c>Lettra:Kms:Provider = Transit</c>), où la clé racine de chaque cabinet ne quitte jamais le KMS.
+    /// </summary>
+    private static IServiceCollection AddCabinetKeys(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOptions<KmsOptions>().Bind(configuration.GetSection(KmsOptions.SectionName))
+            .Validate(
+                o => o.Provider != KmsProvider.Transit || (o.Transit.Address is not null && !string.IsNullOrWhiteSpace(o.Transit.Token)),
+                $"{KmsOptions.SectionName}:Transit:Address et Token sont obligatoires avec le KMS Transit.")
+            .Validate(o => o.Transit.CacheLifetime > TimeSpan.Zero, $"{KmsOptions.SectionName}:Transit:CacheLifetime doit être strictement positif.")
+            .ValidateOnStart();
+        if (configuration.GetValue($"{KmsOptions.SectionName}:{nameof(KmsOptions.Provider)}", KmsProvider.Configuration) != KmsProvider.Transit)
+        {
+            services.AddSingleton<IKekStore, ConfigurationKekStore>();
+            return services;
+        }
+
+        services.AddHttpClient(TransitKekStore.HttpClientName);
+        services.AddSingleton<TransitKekStore>();
+        services.AddSingleton<IKekStore>(sp => sp.GetRequiredService<TransitKekStore>());
+        services.AddSingleton<ICabinetKeyVault>(sp => sp.GetRequiredService<TransitKekStore>());
         return services;
     }
 

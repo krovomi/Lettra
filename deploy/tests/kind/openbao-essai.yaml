@@ -1,0 +1,58 @@
+# CI SEULEMENT (deploy/tests/kind/essai-mode5.sh). KMS de la cellule d'essai : OpenBao en mode « dev » (stockage en
+# mémoire, descellé au démarrage, jeton racine tiré au hasard par le script dans le secret lettra-kms). Une vraie
+# cellule a un OpenBao en haute disponibilité, scellé par le KMS de l'hébergeur et joint par TLS (docs/plan-mode-5.md).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openbao
+  labels: { app.kubernetes.io/name: openbao, app.kubernetes.io/part-of: lettra }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app.kubernetes.io/name: openbao }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: openbao, app.kubernetes.io/part-of: lettra }
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 1000
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: openbao
+          image: openbao/openbao:2.4.1
+          command: ["bao", "server", "-dev", "-dev-listen-address=0.0.0.0:8200"]
+          env:
+            - { name: HOME, value: /tmp }
+            - { name: SKIP_SETCAP, value: "true" }
+            - name: BAO_DEV_ROOT_TOKEN_ID
+              valueFrom: { secretKeyRef: { name: lettra-kms, key: token } }
+          ports:
+            - { name: http, containerPort: 8200 }
+          readinessProbe:
+            httpGet: { path: /v1/sys/health, port: http }
+            periodSeconds: 2
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits: { memory: 256Mi }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: tmp
+          emptyDir: { sizeLimit: 64Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openbao
+  labels: { app.kubernetes.io/name: openbao, app.kubernetes.io/part-of: lettra }
+spec:
+  selector: { app.kubernetes.io/name: openbao }
+  ports:
+    - { name: http, port: 8200, targetPort: http }

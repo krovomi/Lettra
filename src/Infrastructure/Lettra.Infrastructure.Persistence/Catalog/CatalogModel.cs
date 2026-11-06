@@ -5,11 +5,20 @@ namespace Lettra.Infrastructure.Persistence.Catalog;
 /// <summary>Un cabinet. La cellule qui l'héberge est fixée à son arrivée (ADR-0009).</summary>
 public sealed class CatalogOrganisation
 {
+    public const int MaxWrappedKekLength = 512;
+
     public Guid Id { get; set; }
 
     public required string Name { get; set; }
 
     public required string CellId { get; set; }
+
+    /// <summary>
+    /// KEK du cabinet enveloppée par sa clé racine dans le KMS de la cellule (chiffré Transit <c>vault:vN:…</c>), quand
+    /// le KMS tient les clés ; <c>null</c> sinon (KEK déclarée dans le coffre de la cellule). Détruire la clé racine du
+    /// cabinet dans le KMS rend cette enveloppe, et donc tous ses dossiers, illisibles, sauvegardes comprises.
+    /// </summary>
+    public string? WrappedKek { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
 }

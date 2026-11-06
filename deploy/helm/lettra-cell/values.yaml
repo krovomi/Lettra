@@ -16,6 +16,8 @@ lettra-api:
   secretEnv: &bases-secrets
     # Mot de passe du rôle applicatif, créé par l'opérateur CloudNativePG ; repris dans les chaînes ci-dessous ($(…)).
     LETTRA_PG_A_PASSWORD: { secret: pg-a-app, key: password }
+    # Jeton du KMS de la cellule (moteur Transit d'OpenBao), posé par l'exploitation : jamais dans Git.
+    Lettra__Kms__Transit__Token: { secret: lettra-kms, key: token }
   settings: &bases-reglages
     Lettra__Catalog__Provider: PostgreSql
     # Catalogue : base initiale de pg-a, par PgBouncer.
@@ -24,6 +26,10 @@ lettra-api:
     Lettra__Clusters__pg-a__Provider: PostgreSql
     Lettra__Clusters__pg-a__ConnectionString: Host=pg-a-pooler;Username=lettra;Password=$(LETTRA_PG_A_PASSWORD);No Reset On Close=true
     Lettra__Clusters__pg-a__AdminConnectionString: Host=pg-a-rw;Username=lettra;Password=$(LETTRA_PG_A_PASSWORD)
+    # Clés des cabinets (ADR-0011) : une clé racine par cabinet dans le moteur Transit du KMS de la cellule, la KEK
+    # gardée enveloppée dans le catalogue. Le Worker réenveloppe chaque jour après les rotations automatiques.
+    Lettra__Kms__Provider: Transit
+    Lettra__Kms__Transit__Address: http://openbao:8200/
 lettra-worker:
   enabled: true
   cell: local

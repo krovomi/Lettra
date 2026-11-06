@@ -43,7 +43,8 @@ internal sealed class CatalogHarness : IAsyncDisposable
     public CatalogHarness(
         Action<IServiceCollection> addProvider,
         Action<DbContextOptionsBuilder> configureCatalog,
-        IDictionary<string, string?> cluster)
+        IDictionary<string, string?> cluster,
+        IDictionary<string, string?>? extra = null)
     {
         Dictionary<string, string?> settings = new()
         {
@@ -83,6 +84,11 @@ internal sealed class CatalogHarness : IAsyncDisposable
         foreach ((string key, string? value) in cluster)
         {
             settings[$"Lettra:Clusters:srv-a:{key}"] = value;
+        }
+
+        foreach ((string key, string? value) in extra ?? new Dictionary<string, string?>())
+        {
+            settings[key] = value;
         }
 
         IConfiguration configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();

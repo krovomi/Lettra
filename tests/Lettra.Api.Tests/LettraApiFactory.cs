@@ -37,6 +37,10 @@ public sealed class LettraApiFactory : WebApplicationFactory<Program>
 
     private readonly string _folder = Directory.CreateTempSubdirectory("lettra-api-").FullName;
 
+    // Une clé par fabrique, gardée par les hôtes dérivés (WithWebHostBuilder) : ils partagent le catalogue et les
+    // bases, dont les clés de dossier sont enveloppées par elle.
+    private readonly string _kek = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
+
     public ConcurrentQueue<string> Logs { get; } = new();
 
     /// <summary>Fichier SQLite du dossier de test : les tests d'altération y écrivent directement.</summary>
@@ -63,7 +67,7 @@ public sealed class LettraApiFactory : WebApplicationFactory<Program>
 
             // Création de dossiers : la clé du cabinet de démonstration et un serveur SQLite local.
             settings["Lettra:Organisations:0:Id"] = CabinetId.ToString();
-            settings["Lettra:Organisations:0:Kek"] = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
+            settings["Lettra:Organisations:0:Kek"] = _kek;
             settings["Lettra:Clusters:local:Provider"] = "Sqlite";
             settings["Lettra:Clusters:local:Directory"] = Path.Combine(_folder, "dossiers");
             foreach ((string key, string? value) in AuthorizationSettings())

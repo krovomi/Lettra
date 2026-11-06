@@ -13,6 +13,7 @@ lettra-api:
   secretEnv:
     ConnectionStrings__Redis: { secret: "" }  # pas de Redis dans un environnement de PR
     LETTRA_PG_A_PASSWORD: { secret: "" }  # ni de cluster PostgreSQL
+    Lettra__Kms__Transit__Token: { secret: "" }  # ni de KMS : KEK déclarées dans la configuration
   aspnetcoreEnvironment: Development
   autoscaling: { enabled: false }
   replicas: 1
@@ -30,6 +31,8 @@ lettra-api:
     Lettra__Clusters__pg-a__Provider: null
     Lettra__Clusters__pg-a__ConnectionString: null
     Lettra__Clusters__pg-a__AdminConnectionString: null
+    Lettra__Kms__Provider: null
+    Lettra__Kms__Transit__Address: null
     ConnectionStrings__DossierDemo: Data Source=/data/lettra-dossier-demo.db
   extraVolumes:
     - name: data
