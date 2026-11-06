@@ -172,6 +172,7 @@ public static class DependencyInjection
         services.AddScoped<IDecisionActionHandler, SendReminderDecisionAction>();
         services.AddScoped<IDecisionRule, FiscalDeadlineDecisionRule>();
         services.AddScoped<IDecisionRule, ThresholdDecisionRule>();
+        services.AddScoped<IDecisionRule, PreventionDecisionRule>();
 
         // Avant le retard : rappel avant échéance aux clients ciblés (météo des paiements, droit d'opposition), échéancier
         // en libre-service dans les bornes de l'entreprise, signaux pour « Décisions à prendre ». Le QR code de virement

@@ -102,3 +102,16 @@ public sealed record SetDecisionPolicyRequest
 {
     public AutonomyLevelDto Level { get; set; } = AutonomyLevelDto.Prepare;
 }
+
+/// <summary>Les types de décision que plusieurs couches doivent connaître.</summary>
+public static class DecisionKinds
+{
+    /// <summary>Le radar de prévention est « à appeler » : proposer un rendez-vous au dirigeant.</summary>
+    public const string PreventionMeeting = "prevention.rendez-vous";
+
+    /// <summary>
+    /// Les décisions qui révèlent le niveau d'attention d'un dossier : elles ne se voient que dans l'écran, pour qui a le
+    /// droit de leur règle, et le compteur de la vue cabinet (donc Grafana) ne les compte jamais.
+    /// </summary>
+    public static IReadOnlySet<string> CabinetOnly { get; } = new HashSet<string>(StringComparer.Ordinal) { PreventionMeeting };
+}

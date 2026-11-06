@@ -205,12 +205,13 @@ public static class DecisionView
 
     /// <summary>
     /// L'indicateur de la vue cabinet : les décisions à décider (pas celles remises à plus tard), au niveau de la plus
-    /// urgente, échéance = la plus proche. Le compteur seulement : ni nom ni montant.
+    /// urgente, échéance = la plus proche. Le compteur seulement : ni nom ni montant ; sans les décisions qui révèlent le
+    /// niveau d'attention du dossier (<see cref="DecisionKinds.CabinetOnly"/>).
     /// </summary>
     public static DossierIndicator? Indicator(IReadOnlyList<Decision> decisions, DateOnly today)
     {
         ArgumentNullException.ThrowIfNull(decisions);
-        List<Decision> pending = [.. decisions.Where(d => d.StatusOn(today) == DecisionStatus.Proposed)];
+        List<Decision> pending = [.. decisions.Where(d => d.StatusOn(today) == DecisionStatus.Proposed && !DecisionKinds.CabinetOnly.Contains(d.Kind))];
         if (pending.Count == 0)
         {
             return null;

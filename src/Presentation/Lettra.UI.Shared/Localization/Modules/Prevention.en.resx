@@ -173,4 +173,7 @@
   <data name="Error.Prevention.SubjectTooLong" xml:space="preserve"><value>The subject fits on one line of at most 200 characters.</value></data>
   <data name="Error.Prevention.BodyRequired" xml:space="preserve"><value>Enter the letter's text.</value></data>
   <data name="Error.Prevention.BodyTooLong" xml:space="preserve"><value>The text exceeds 8,000 characters.</value></data>
+  <data name="Decision.prevention.rendez-vous.Title" xml:space="preserve"><value>Offer the business owner a prevention meeting</value></data>
+  <data name="Decision.prevention.rendez-vous.Reason" xml:space="preserve"><value>The prevention radar rates this file "to call": {count} signal(s) on, the most serious being "{first}". The radar shows the detail and prepares the meeting letter, to review before sending.</value></data>
+  <data name="Decision.prevention.rendez-vous.Rule" xml:space="preserve"><value>Prevention radar: the file turns "to call" (one serious signal, or several signals at once). Nothing is sent to the client without you; only for those who can see the radar.</value></data>
 </root>
