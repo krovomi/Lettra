@@ -1,7 +1,11 @@
 using System.Net;
 using System.Net.Http.Json;
+using Lettra.Contracts.Administration;
+using Lettra.Contracts.Common;
 using Lettra.Contracts.Platform;
 using Lettra.Contracts.Serialization;
+using Lettra.UI.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.Api.Tests;
 
@@ -100,5 +104,30 @@ public sealed class PlatformApiTests(LettraApiFactory factory) : IClassFixture<L
         client.DefaultRequestHeaders.Add(Contracts.Common.LettraHeaders.Dossier, LettraApiFactory.DossierId.ToString());
 
         (await client.GetAsync(new Uri("/api/v1/customers", UriKind.Relative))).IsSuccessStatusCode.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task L_ecran_de_la_plateforme_passe_par_la_passerelle_HTTP_et_n_apparait_qu_a_son_administrateur()
+    {
+        using GatewayHarness harness = new(factory);
+        await using ServiceProvider platform = harness.HttpGateway(LettraApiFactory.DossierId, LettraApiFactory.AdministrateurPlateformeId);
+        IPlatformCabinetsGateway gateway = platform.GetRequiredService<IPlatformCabinetsGateway>();
+
+        OperationResult<PlatformOverviewResponse> overview = await gateway.GetOverviewAsync(CancellationToken.None);
+        overview.Value!.Cabinets.Should().Contain(c => c.Id == LettraApiFactory.CabinetId);
+        (await gateway.OnboardAsync(Request(), CancellationToken.None)).Errors.Should().ContainSingle()
+            .Which.Code.Should().Be(ErrorCodes.CabinetLifecycle.Unavailable);
+        (await gateway.ScheduleDepartureAsync(LettraApiFactory.CabinetId, CancellationToken.None)).Errors.Should().ContainSingle()
+            .Which.Code.Should().Be(ErrorCodes.CabinetLifecycle.CabinetDeclared);
+        (await gateway.CancelDepartureAsync(LettraApiFactory.CabinetId, CancellationToken.None)).Errors.Should().ContainSingle()
+            .Which.Code.Should().Be(ErrorCodes.CabinetLifecycle.DepartureNotCancellable);
+        (await gateway.RetryFailedDossiersAsync(CancellationToken.None)).Value!.Resumed.Should().Be(0);
+
+        IAdministrationGateway access = platform.GetRequiredService<IAdministrationGateway>();
+        MyAccessResponse mine = (await access.GetMyAccessAsync(null, CancellationToken.None)).Value!;
+        mine.AdministersPlatform.Should().BeTrue();
+        mine.CabinetId.Should().BeNull();
+        await using ServiceProvider manager = harness.HttpGateway(LettraApiFactory.DossierId);
+        (await manager.GetRequiredService<IAdministrationGateway>().GetMyAccessAsync(null, CancellationToken.None)).Value!.AdministersPlatform.Should().BeFalse();
     }
 }

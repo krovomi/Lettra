@@ -79,6 +79,7 @@ public static class NavItems
         new("settings/preferences", "Nav.Preferences", "sliders-horizontal", "Nav.Group.Settings"),
         new("admin", "Nav.Admin", "shield-check", "Nav.Group.Settings", Page: AccessAreaDto.Administration),
         new("session/serveur", "Nav.SharedServer", "server", "Nav.Group.Settings"),
+        new("platform", "Nav.Platform", "cloud", "Nav.Group.Settings", Page: AccessAreaDto.Platform),
     ];
 
     /// <summary>Les entrées par groupe, dans l'ordre de déclaration (le groupe sans titre en premier).</summary>

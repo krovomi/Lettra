@@ -34,16 +34,20 @@ internal sealed class GetMyAccessHandler(
     IAuthorizationDirectory directory,
     TimeProvider clock) : IQueryHandler<GetMyAccessQuery, Result<MyAccessResponse>>
 {
+    /// <summary>La plateforme n'appartient à aucun cabinet : seule une attribution à la portée Plateforme y vaut.</summary>
+    private static readonly ScopePath PlatformPath = new(AuthorizationScope.Plateforme, null, [AuthorizationScope.Plateforme]);
+
     public async Task<Result<MyAccessResponse>> HandleAsync(GetMyAccessQuery query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
         UserAuthorizationProfile? profile = await directory.FindUserAsync(user.UserId, cancellationToken).ConfigureAwait(false);
+        DateTimeOffset now = clock.GetUtcNow();
+        bool platform = PermissionResolver.Resolve(profile, PlatformPath, now).Contains(Permission.PlateformeAdministrer);
         if (profile is not { State: AccountState.Active, Cabinet: OrganisationId cabinet })
         {
-            return new MyAccessResponse(null, false, []);
+            return new MyAccessResponse(null, false, [], platform);
         }
 
-        DateTimeOffset now = clock.GetUtcNow();
         HashSet<Permission> granted = [.. await ResolveAsync(profile, AuthorizationScope.ForCabinet(cabinet), cabinet, now, cancellationToken).ConfigureAwait(false)];
         if (query.Dossier is DossierId dossier)
         {
@@ -63,7 +67,7 @@ internal sealed class GetMyAccessHandler(
         bool canAdminister = granted.Contains(Permission.UtilisateursGerer)
             || granted.Contains(Permission.GroupeGerer)
             || granted.Contains(Permission.CabinetAdministrer);
-        return new MyAccessResponse(cabinet.Value, canAdminister, AccessAreaPermissions.Describe(granted));
+        return new MyAccessResponse(cabinet.Value, canAdminister, AccessAreaPermissions.Describe(granted), platform);
     }
 
     private async Task<IReadOnlySet<Permission>> ResolveAsync(

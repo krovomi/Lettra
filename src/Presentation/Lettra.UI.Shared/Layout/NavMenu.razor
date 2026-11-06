@@ -163,6 +163,9 @@
         OperationResult<MyAccessResponse> access = await gateway.GetMyAccessAsync(null, CancellationToken.None);
         _access = access.IsSuccess ? access.Value : null;
         Refresh();
+        // Appelé aussi par l'événement de session, hors du cycle de rendu : sans ce rendu, les entrées réservées
+        // (« Équipe et accès », « Plateforme ») n'apparaissaient qu'au prochain clic.
+        StateHasChanged();
     }
 
     private void OnSessionChanged(object? sender, EventArgs e) => _ = InvokeAsync(LoadAccessAsync);
@@ -236,6 +239,7 @@
     {
         null => true,
         AccessAreaDto.Administration => _access?.CanAdminister == true,
+        AccessAreaDto.Platform => _access?.AdministersPlatform == true,
         { } page => _access?.LevelOf(page) > AccessLevelDto.None,
     };
 

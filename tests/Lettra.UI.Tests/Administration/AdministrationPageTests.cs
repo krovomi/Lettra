@@ -283,4 +283,17 @@ public sealed class AdministrationPageTests : BunitContext
         menu.FindAll("a[href='admin']").Should().HaveCount(canAdminister ? 1 : 0);
         menu.FindAll("a[href='quotes']").Should().ContainSingle("les autres entrées restent affichées : le serveur décide");
     }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void L_entree_Plateforme_n_apparait_qu_a_l_administrateur_de_la_plateforme(bool platformOnly)
+    {
+        _gateway.PlatformOnly = platformOnly;
+
+        IRenderedComponent<NavMenu> menu = Render<NavMenu>();
+
+        menu.FindAll("a[href='platform']").Should().HaveCount(platformOnly ? 1 : 0);
+        menu.FindAll("a[href='admin']").Should().HaveCount(platformOnly ? 0 : 1, "sans cabinet, pas d'« Équipe et accès »");
+    }
 }

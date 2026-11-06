@@ -13,4 +13,61 @@
   <data name="Error.CabinetLifecycle.CabinetDeclared" xml:space="preserve"><value>This firm is declared in the server configuration: its departure cannot be requested from Lettra.</value></data>
   <data name="Error.CabinetLifecycle.DepartureNotCancellable" xml:space="preserve"><value>This firm's departure can no longer be cancelled: the due date has passed or no departure was requested.</value></data>
   <data name="Error.CabinetLifecycle.CabinetLeaving" xml:space="preserve"><value>This firm is leaving Lettra: it can no longer create client files. Its client files stay open for export until the due date.</value></data>
+  <data name="Nav.Platform" xml:space="preserve"><value>Platform</value></data>
+  <data name="Nav.Platform.Keywords" xml:space="preserve"><value>platform firms onboard onboarding departure leave cell saas hosting</value></data>
+  <data name="PlatformCabinets.Title" xml:space="preserve"><value>Platform</value></data>
+  <data name="PlatformCabinets.Subtitle" xml:space="preserve"><value>The firms hosted by the platform: their onboarding, their departure and their client file creations. You never see their data.</value></data>
+  <data name="PlatformCabinets.Onboard" xml:space="preserve"><value>Onboard a firm</value></data>
+  <data name="PlatformCabinets.Retry" xml:space="preserve"><value>Retry failed creations ({0})</value></data>
+  <data name="PlatformCabinets.NoPlatform" xml:space="preserve"><value>No platform here</value></data>
+  <data name="PlatformCabinets.NoPlatform.Text" xml:space="preserve"><value>This screen is for the administrator of the online platform. On a desktop or a firm server, there is no firm to onboard.</value></data>
+  <data name="PlatformCabinets.CannotOnboard" xml:space="preserve"><value>This cell cannot onboard firms yet: its KMS or its Keycloak service account is not configured. Existing firms are still managed here.</value></data>
+  <data name="PlatformCabinets.Form.Title" xml:space="preserve"><value>Onboard a firm</value></data>
+  <data name="PlatformCabinets.Form.Name" xml:space="preserve"><value>Firm name</value></data>
+  <data name="PlatformCabinets.Form.NamePlaceholder" xml:space="preserve"><value>Martin &amp; Partners</value></data>
+  <data name="PlatformCabinets.Form.AdministratorName" xml:space="preserve"><value>Name of its administrator</value></data>
+  <data name="PlatformCabinets.Form.AdministratorEmail" xml:space="preserve"><value>E-mail of its administrator</value></data>
+  <data name="PlatformCabinets.Form.Cell" xml:space="preserve"><value>Hosting cell</value></data>
+  <data name="PlatformCabinets.Form.CellChoose" xml:space="preserve"><value>Choose a cell</value></data>
+  <data name="PlatformCabinets.Form.Hint" xml:space="preserve"><value>Lettra creates the firm, its encryption key and its administrator's account; the administrator receives an e-mail to choose a password and a second factor.</value></data>
+  <data name="PlatformCabinets.Form.Submit" xml:space="preserve"><value>Onboard</value></data>
+  <data name="PlatformCabinets.Form.Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="PlatformCabinets.Kpis" xml:space="preserve"><value>Platform figures</value></data>
+  <data name="PlatformCabinets.Kpi.Active" xml:space="preserve"><value>Active firms</value></data>
+  <data name="PlatformCabinets.Kpi.Leaving" xml:space="preserve"><value>Departures under way</value></data>
+  <data name="PlatformCabinets.Kpi.Dossiers" xml:space="preserve"><value>Active client files</value></data>
+  <data name="PlatformCabinets.Kpi.Failed" xml:space="preserve"><value>Failed creations</value></data>
+  <data name="PlatformCabinets.List" xml:space="preserve"><value>Firms of the platform</value></data>
+  <data name="PlatformCabinets.Search" xml:space="preserve"><value>Search a firm</value></data>
+  <data name="PlatformCabinets.State.All" xml:space="preserve"><value>All states</value></data>
+  <data name="PlatformCabinets.State.Active" xml:space="preserve"><value>Active</value></data>
+  <data name="PlatformCabinets.State.Leaving" xml:space="preserve"><value>Departure requested</value></data>
+  <data name="PlatformCabinets.State.Departed" xml:space="preserve"><value>Departed</value></data>
+  <data name="PlatformCabinets.Column.Name" xml:space="preserve"><value>Firm</value></data>
+  <data name="PlatformCabinets.Column.State" xml:space="preserve"><value>State</value></data>
+  <data name="PlatformCabinets.Column.Dossiers" xml:space="preserve"><value>Active client files</value></data>
+  <data name="PlatformCabinets.Column.Failed" xml:space="preserve"><value>Failed</value></data>
+  <data name="PlatformCabinets.Column.Created" xml:space="preserve"><value>Joined</value></data>
+  <data name="PlatformCabinets.Cell" xml:space="preserve"><value>cell {0}</value></data>
+  <data name="PlatformCabinets.Declared" xml:space="preserve"><value>Declared</value></data>
+  <data name="PlatformCabinets.Declared.Hint" xml:space="preserve"><value>Firm declared in the server configuration: its departure cannot be requested from Lettra.</value></data>
+  <data name="PlatformCabinets.DueAt" xml:space="preserve"><value>on {0}</value></data>
+  <data name="PlatformCabinets.DepartedAt" xml:space="preserve"><value>on {0}</value></data>
+  <data name="PlatformCabinets.ErasureScheduled" xml:space="preserve"><value>({0} to erase)</value></data>
+  <data name="PlatformCabinets.Empty" xml:space="preserve"><value>No firm yet</value></data>
+  <data name="PlatformCabinets.Empty.Text" xml:space="preserve"><value>Onboard the first firm: it can start working as soon as its administrator has chosen a password.</value></data>
+  <data name="PlatformCabinets.CancelDeparture" xml:space="preserve"><value>Cancel departure</value></data>
+  <data name="PlatformCabinets.Departure.Label" xml:space="preserve"><value>Request the departure of {0}</value></data>
+  <data name="PlatformCabinets.Departure.Question" xml:space="preserve"><value>Request the departure? Everything will be deleted in 30 days.</value></data>
+  <data name="PlatformCabinets.Departure.Confirm" xml:space="preserve"><value>Request departure</value></data>
+  <data name="PlatformCabinets.Toast.Onboarded" xml:space="preserve"><value>{0} is onboarded. {1} received the e-mail to choose a password.</value></data>
+  <data name="PlatformCabinets.Toast.OnboardedNoEmail" xml:space="preserve"><value>{0} is onboarded. The e-mail to {1} was not sent: send it again from Keycloak.</value></data>
+  <data name="PlatformCabinets.Toast.DepartureScheduled" xml:space="preserve"><value>Departure of {0} requested: everything will be deleted on {1}. The firm can export its data until then.</value></data>
+  <data name="PlatformCabinets.Toast.DepartureCancelled" xml:space="preserve"><value>Departure of {0} cancelled: nothing changed for the firm.</value></data>
+  <data name="PlatformCabinets.Toast.Retried" xml:space="preserve"><value>{0} client file creation(s) retried.</value></data>
+  <data name="PlatformCabinets.Toast.Failed" xml:space="preserve"><value>The action did not go through. Try again.</value></data>
+  <data name="PlatformCabinets.Rules" xml:space="preserve"><value>How it works</value></data>
+  <data name="PlatformCabinets.Rule.Onboard" xml:space="preserve"><value>Onboarding a firm creates its organisation in Keycloak, its root key in the KMS and its administrator's account. Trying again after an error picks up what is already done.</value></data>
+  <data name="PlatformCabinets.Rule.Departure" xml:space="preserve"><value>A departure can be cancelled for 30 days; the firm keeps working and exporting its data meanwhile. Then its databases, its key and its accounts are deleted.</value></data>
+  <data name="PlatformCabinets.Rule.Privacy" xml:space="preserve"><value>Only the firm's identifier, name and dates remain: the proof of its departure, without any data.</value></data>
 </root>

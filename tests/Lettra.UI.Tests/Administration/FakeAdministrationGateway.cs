@@ -89,10 +89,15 @@ internal sealed class FakeAdministrationGateway : IAdministrationGateway
 
     public int AccessReads { get; private set; }
 
+    /// <summary>L'utilisateur n'a pas de cabinet et administre la plateforme.</summary>
+    public bool PlatformOnly { get; set; }
+
     public Task<OperationResult<MyAccessResponse>> GetMyAccessAsync(Guid? dossierId, CancellationToken cancellationToken)
     {
         AccessReads++;
-        return Task.FromResult(OperationResult<MyAccessResponse>.Success(new MyAccessResponse(CabinetId, CanAdminister, CanAdminister ? Templates["manager"].Areas : [])));
+        return Task.FromResult(OperationResult<MyAccessResponse>.Success(PlatformOnly
+            ? new MyAccessResponse(null, false, [], AdministersPlatform: true)
+            : new MyAccessResponse(CabinetId, CanAdminister, CanAdminister ? Templates["manager"].Areas : [])));
     }
 
     public Task<OperationResult<AdministrationOverview>> GetOverviewAsync(Guid cabinetId, CancellationToken cancellationToken)
