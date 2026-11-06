@@ -2,7 +2,7 @@ name: Déploiement (validation)
 
 # Valide tout ce que deploy/ décrit, sans identifiant cloud : règles d'alerte et pannes injectées (promtool),
 # routage (amtool), collecteur, charts Helm de chaque taille contre les schémas Kubernetes et CRD, OpenTofu ;
-# puis Keycloak dans une cellule kind jetable.
+# puis Keycloak, et le mode 5 de bout en bout, dans des cellules kind jetables.
 on:
   pull_request:
   push:
@@ -112,6 +112,36 @@ jobs:
         with:
           name: keycloak-kind
           path: deploy/tests/kind/.run/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 7
+
+  # Le mode 5 lui-même : cellule HostedSaaS dans un cluster kind jetable (Keycloak, API, Worker, catalogue et bases des
+  # dossiers sur CloudNativePG derrière PgBouncer). Migration du catalogue par le Worker, cabinet fictif, dossier créé
+  # par l'API (base d_… sur le cluster), client et facture validée, reprise d'une création interrompue par le Worker.
+  mode5-kind:
+    name: Mode 5 dans une cellule (kind)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SORTIE: ${{ github.workspace }}/deploy/tests/kind/.run-mode5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.19.0
+      - uses: helm/kind-action@v1
+        with:
+          install_only: true
+      - name: Essai de la cellule en mode 5
+        run: deploy/tests/kind/essai-mode5.sh
+      - name: Journaux de l'essai
+        if: always()
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: mode5-kind
+          path: deploy/tests/kind/.run-mode5/
           include-hidden-files: true
           if-no-files-found: warn
           retention-days: 7

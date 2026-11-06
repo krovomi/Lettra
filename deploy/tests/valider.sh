@@ -36,6 +36,7 @@ for size in S M L XL; do
 done
 helm template pr lettra-cell -f lettra-cell/values-pr.yaml --set lettra-api.image.tag=ci | kubeconform_ -
 helm template c lettra-cell -f ../tests/kind/valeurs-ci.yaml | kubeconform_ -
+helm template c lettra-cell -f ../tests/kind/valeurs-mode5.yaml | kubeconform_ -
 
 step "Keycloak de la cellule (lettra-keycloak)"
 KC_REQUIS=(--set hostname=https://auth.example.test --set publicUrl=https://app.example.test)

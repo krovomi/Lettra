@@ -12,10 +12,24 @@ lettra-api:
   oidc:
     authority: http://keycloak:8080/realms/lettra
     requireHttpsMetadata: false
+  # Mode 5 : catalogue et bases des dossiers sur les clusters PostgreSQL de la cellule (postgres.clusters ci-dessous).
+  secretEnv: &bases-secrets
+    # Mot de passe du rôle applicatif, créé par l'opérateur CloudNativePG ; repris dans les chaînes ci-dessous ($(…)).
+    LETTRA_PG_A_PASSWORD: { secret: pg-a-app, key: password }
+  settings: &bases-reglages
+    Lettra__Catalog__Provider: PostgreSql
+    # Catalogue : base initiale de pg-a, par PgBouncer.
+    ConnectionStrings__Catalog: Host=pg-a-pooler;Database=lettra;Username=lettra;Password=$(LETTRA_PG_A_PASSWORD);No Reset On Close=true
+    # Bases des dossiers : connexion applicative par PgBouncer, CREATE / DROP DATABASE en direct sur le primaire.
+    Lettra__Clusters__pg-a__Provider: PostgreSql
+    Lettra__Clusters__pg-a__ConnectionString: Host=pg-a-pooler;Username=lettra;Password=$(LETTRA_PG_A_PASSWORD);No Reset On Close=true
+    Lettra__Clusters__pg-a__AdminConnectionString: Host=pg-a-rw;Username=lettra;Password=$(LETTRA_PG_A_PASSWORD)
 lettra-worker:
   enabled: true
   cell: local
   existingSecret: lettra-worker
+  secretEnv: *bases-secrets
+  settings: *bases-reglages
 
 # Keycloak de la cellule (chart lettra-keycloak) : realm lettra versionné, une organisation par cabinet, MFA
 # obligatoire, base PostgreSQL dédiée. Adresses publiques renseignées par cellule (deploy/cells/<cellule>/values.yaml).
@@ -36,6 +50,11 @@ postgres:
   # couple (base, utilisateur) et ne partage rien entre bases. Le budget de connexions serveur doit donc couvrir le
   # nombre de dossiers ACTIFS au même moment (pas le nombre de bases, ni d'utilisateurs).
   # 2 500 bases inactives coûtent < 1 % de CPU ; au-delà du budget, la latence décroche (5 s à 2 500 actifs pour 120).
+  # Rôle applicatif et base initiale de chaque cluster (secret <cluster>-app, créé par l'opérateur CloudNativePG). La
+  # base initiale de pg-a porte le catalogue et la supervision (réglages de lettra-api et lettra-worker ci-dessus).
+  database: lettra
+  # PodMonitor de chaque cluster et de son PgBouncer (Prometheus Operator de la cellule).
+  monitoring: true
   clusters:
     - name: pg-a
       instances: 2

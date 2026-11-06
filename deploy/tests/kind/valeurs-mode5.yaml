@@ -1,0 +1,79 @@
+# CI SEULEMENT (deploy/tests/kind/essai-mode5.sh, job « mode5-kind » de .github/workflows/deploy.yml).
+# Cellule en mode 5 (HostedSaaS) dans un cluster kind jetable : Keycloak, l'API et le Worker, catalogue et bases des
+# dossiers sur un cluster PostgreSQL CloudNativePG derrière PgBouncer, exactement comme les valeurs communes de
+# lettra-cell. Ce qui diffère d'une vraie cellule : une instance de chaque, adresses localhost, pas de Redis ni de
+# Prometheus Operator, Worker pressé (une passe toutes les 20 s) et second facteur non exigé (voir plus bas).
+# Aucun secret ici : le script tire au hasard ceux de lettra-keycloak, lettra-api et lettra-worker à chaque essai.
+cell: ci-kind
+environment: ci
+
+lettra-api:
+  cell: ci-kind
+  environment: ci
+  image:
+    repository: ghcr.io/krovomi/lettra-api
+    tag: ci-kind  # construite par le job puis chargée dans kind
+  secretEnv:
+    ConnectionStrings__Redis: { secret: "" }
+  aspnetcoreEnvironment: Production
+  autoscaling: { enabled: false }
+  replicas: 1
+  podDisruptionBudget: { enabled: false }
+  # L'essai appelle l'API par une redirection de port, hors de la passerelle de la cellule.
+  networkPolicy: { enabled: false }
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { memory: 768Mi }
+  settings:
+    Lettra__DeploymentMode: HostedSaaS
+    Lettra__Clusters__pg-a__CellId: ci-kind
+    # Le script obtient un jeton par mot de passe (client d'essai lettra-essai) : Keycloak n'y prouve pas de second
+    # facteur. Le flux navigateur, lui, l'exige toujours (vérifié par essai-keycloak.sh).
+    Lettra__Identity__Oidc__RequireMfa: "false"
+    # Clés DataProtection (état OIDC du BFF) dans un volume : le système de fichiers de l'image est en lecture seule.
+    HOME: /data
+  extraVolumes:
+    - name: data
+      emptyDir: { sizeLimit: 256Mi }
+  extraVolumeMounts:
+    - { name: data, mountPath: /data }
+
+lettra-worker:
+  cell: ci-kind
+  environment: ci
+  image:
+    repository: ghcr.io/krovomi/lettra-worker
+    tag: ci-kind
+  settings:
+    Lettra__Clusters__pg-a__CellId: ci-kind
+    # Une passe toutes les 20 s : migration du catalogue puis reprise des créations de dossiers interrompues.
+    Lettra__Worker__Interval: "00:00:20"
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { memory: 512Mi }
+
+lettra-keycloak:
+  cell: ci-kind
+  environment: ci
+  # Émetteur vu depuis le poste de la CI (redirection de port) ; l'API, elle, passe par le Service interne.
+  hostname: http://localhost:8080
+  publicUrl: http://localhost:8081
+  replicas: 1
+  resources:
+    requests: { cpu: 250m, memory: 768Mi }
+    limits: { memory: 1536Mi }
+  database:
+    cnpg:
+      instances: 1
+      storage: 1Gi
+      monitoring: false  # pas de Prometheus Operator dans kind
+
+postgres:
+  monitoring: false
+  clusters:
+    - { name: pg-a, instances: 1, storage: 2Gi, activeDossierBudget: 10 }
+  pooler:
+    instances: 1
+
+redis:
+  enabled: false

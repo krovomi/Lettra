@@ -45,8 +45,18 @@ spec:
               value: "service.instance.id=$(POD_NAME)"
             - name: POD_NAME
               valueFrom: { fieldRef: { fieldPath: metadata.name } }
+            # Secrets d'abord, repris par $(NOM) dans les réglages (même règle que lettra-api).
+            {{- range $key, $ref := .Values.secretEnv }}
+            {{- if $ref.secret }}
+            - name: {{ $key }}
+              valueFrom: { secretKeyRef: { name: {{ $ref.secret }}, key: {{ $ref.key }} } }
+            {{- end }}
+            {{- end }}
             {{- range $key, $value := .Values.settings }}
+            {{- /* Un réglage mis à null par des valeurs plus précises (environnement de PR, essai) est retiré. */}}
+            {{- if not (kindIs "invalid" $value) }}
             - { name: {{ $key }}, value: {{ $value | quote }} }
+            {{- end }}
             {{- end }}
           {{- with .Values.existingSecret }}
           envFrom:

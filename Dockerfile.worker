@@ -4,8 +4,10 @@ WORKDIR /src
 COPY . .
 RUN dotnet publish src/Hosts/Lettra.Worker/Lettra.Worker.csproj -c Release -o /app /p:CI=true
 
-# Image d'exécution minimale (chiseled, avec ICU pour les formats français) : sans shell, utilisateur non root.
-FROM mcr.microsoft.com/dotnet/runtime:10.0-noble-chiseled-extra AS runtime
+# Image d'exécution minimale (chiseled, avec ICU pour les formats français) : sans shell, utilisateur non root. Le
+# runtime ASP.NET Core, pas le seul runtime .NET : la composition commune (Lettra.Bootstrap) en dépend, et le Worker ne
+# démarre pas sans lui.
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra AS runtime
 WORKDIR /app
 COPY --from=build /app .
 USER $APP_UID

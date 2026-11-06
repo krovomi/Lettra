@@ -14,6 +14,7 @@ lettra-api:
   # oidc.authority : valeur commune de lettra-cell, http://keycloak:8080/realms/lettra (Keycloak de la cellule).
   secretEnv:
     ConnectionStrings__Redis: { secret: "" }
+    LETTRA_PG_A_PASSWORD: { secret: "" }
   aspnetcoreEnvironment: Production
   autoscaling: { enabled: false }
   replicas: 1
@@ -25,7 +26,12 @@ lettra-api:
   settings:
     Lettra__DeploymentMode: LocalNetwork
     Lettra__Observability__ServiceName: lettra-api
+    # Réglages PostgreSQL des valeurs communes retirés : catalogue SQLite.
+    Lettra__Catalog__Provider: null
     ConnectionStrings__Catalog: Data Source=/data/lettra-catalogue.db
+    Lettra__Clusters__pg-a__Provider: null
+    Lettra__Clusters__pg-a__ConnectionString: null
+    Lettra__Clusters__pg-a__AdminConnectionString: null
     ConnectionStrings__DossierDemo: Data Source=/data/lettra-dossier-demo.db
     # Clés DataProtection (état OIDC du BFF) dans le volume : le système de fichiers de l'image est en lecture seule.
     HOME: /data
