@@ -94,7 +94,15 @@ Ni nom ni montant.
 
 Clé `decisions.a-prendre` : le nombre de décisions à prendre dans le dossier (pas celles remises à plus tard), au
 niveau de la plus urgente (critique, à traiter si elle est urgente, information sinon), avec l'échéance la plus proche.
-Ni nom ni montant. Voir [Décisions à prendre](decisions-a-prendre.md).
+Ni nom ni montant. Les décisions qui révèlent le niveau d'attention d'un dossier (aujourd'hui, le rendez-vous de
+prévention proposé par le radar) ne sont pas comptées. Voir [Décisions à prendre](decisions-a-prendre.md).
+
+## La colonne « Radar de prévention »
+
+Clé `prevention.radar` : le nombre de signaux allumés, au niveau du radar (critique = à appeler, à traiter = à
+surveiller), avec l'échéance la plus proche. Montrée seulement à qui a « Voir le radar de prévention » sur le dossier ;
+jamais publiée vers Grafana. Un lien « Radar de prévention » en tête de la vue cabinet mène à la liste. Voir
+[Radar de prévention des difficultés](radar-de-prevention.md).
 
 ## Les droits
 
