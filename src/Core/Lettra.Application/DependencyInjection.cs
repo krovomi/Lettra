@@ -73,6 +73,8 @@ public static class DependencyInjection
         services.AddScoped<Abstractions.Decisions.IDecisionRule, Features.Decisions.IbanChangeDecisionRule>();
         services.AddScoped<Abstractions.Decisions.IDecisionRule, Features.Decisions.AttestationDecisionRule>();
         services.AddScoped<Abstractions.Decisions.IDecisionRule, Features.Decisions.DueDiligenceDecisionRule>();
+        services.AddScoped<Abstractions.Decisions.IDecisionRule, Features.Billing.QuoteFollowUpDecisionRule>();
+        services.AddScoped<Abstractions.Decisions.IDecisionActionHandler, Features.Billing.SendQuoteFollowUpDecisionAction>();
 
         // Vue cabinet : les dossiers accessibles, partagés par le sélecteur et le tableau de supervision.
         services.AddScoped<Features.Dossiers.AccessibleDossiers>();

@@ -13,10 +13,10 @@
   <data name="Prevention.Upcoming.BestDay" xml:space="preserve"><value>best day: {0}</value></data>
   <data name="Prevention.Upcoming.Planned" xml:space="preserve"><value>Reminder planned on</value></data>
   <data name="Prevention.Upcoming.SentOn" xml:space="preserve"><value>Sent on {0}</value></data>
-  <data name="Prevention.Objection.Hint" xml:space="preserve"><value>The customer objects to targeting based on how they pay: they will no longer get a reminder before the due date.</value></data>
+  <data name="Prevention.Objection.Hint" xml:space="preserve"><value>The customer objects to targeting based on how they pay: they will no longer get a reminder before the due date, and their quotes leave the weighted order book.</value></data>
   <data name="Prevention.Objection.Add" xml:space="preserve"><value>Do not target this customer</value></data>
   <data name="Prevention.Objection.Title" xml:space="preserve"><value>Customers who object to targeting</value></data>
-  <data name="Prevention.Objection.Text" xml:space="preserve"><value>Choosing who gets the reminder before the due date from the way they pay is profiling: every customer can object. They still get the reminders after the due date, which target no one.</value></data>
+  <data name="Prevention.Objection.Text" xml:space="preserve"><value>Choosing who gets the reminder before the due date from the way they pay is profiling: every customer can object. They still get the reminders after the due date, which target no one. The objection also applies to the weighted order book: their quotes no longer get a probability and their past quotes count in no rate.</value></data>
   <data name="Prevention.Objection.None" xml:space="preserve"><value>No customer has objected to targeting.</value></data>
   <data name="Prevention.Objection.Since" xml:space="preserve"><value>since {0}</value></data>
   <data name="Prevention.Objection.Remove" xml:space="preserve"><value>Remove the objection</value></data>

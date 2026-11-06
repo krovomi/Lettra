@@ -28,7 +28,7 @@
 <div class="lt-banking-stats" id="quote-follow-ups-stats">
     <div class="lt-banking-stat is-pending"><span>@L["QuoteFollowUps.Stat.Due"]</span><strong id="quote-follow-ups-due">@(_overview?.DueCount ?? 0)</strong></div>
     <div class="lt-banking-stat is-amount"><span>@L["QuoteFollowUps.Stat.DueAmount"]</span><strong id="quote-follow-ups-due-amount">@ExplorerText.Money(_overview?.DueExclTax ?? 0m)</strong></div>
-    <div class="lt-banking-stat is-proposed is-amount"><span>@L["QuoteFollowUps.Stat.Likely"]</span><strong id="quote-follow-ups-likely">@ExplorerText.Money(DueRows.Sum(r => r.WeightedExclTax))</strong></div>
+    <div class="lt-banking-stat is-proposed is-amount"><span>@L["QuoteFollowUps.Stat.Likely"]</span><strong id="quote-follow-ups-likely">@ExplorerText.Money(DueRows.Sum(r => r.WeightedExclTax ?? 0m))</strong></div>
     <div class="lt-banking-stat"><span>@L["QuoteFollowUps.Stat.Window"]</span><strong>@string.Format(Culture, Counted("QuoteFollowUps.Days", WindowDays), WindowDays)</strong></div>
 </div>
 
@@ -141,7 +141,14 @@
                                 </td>
                                 <td data-label="@L["Totals.ExclTax"]" class="lg-num">@ExplorerText.Money(quote.TotalExclTax)</td>
                                 <td data-label="@L["OrderBook.Probability"]" class="lg-num">
-                                    <a href="order-book" title="@L["QuoteFollowUps.Probability.Hint"]">@Percent(quote.Probability)</a>
+                                    @if (quote.Probability is { } probability)
+                                    {
+                                        <a href="order-book" title="@L["QuoteFollowUps.Probability.Hint"]">@Percent(probability)</a>
+                                    }
+                                    else
+                                    {
+                                        <span class="lettra-muted" title="@L["QuoteFollowUps.Probability.Excluded.Hint"]">@L["QuoteFollowUps.Probability.Excluded"]</span>
+                                    }
                                 </td>
                                 <td data-label="@L["QuoteFollowUps.Last"]">
                                     @if (quote.LastFollowUpAt is { } last)

@@ -1,3 +1,4 @@
+using Lettra.Application.Abstractions.Decisions;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Mail;
 using Lettra.Application.Abstractions.Messaging;
@@ -9,6 +10,7 @@ using Lettra.Contracts.Common;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Catalog;
 using Lettra.Domain.Common;
+using Lettra.Domain.Decisions;
 using Lettra.Domain.SharedKernel;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -374,6 +376,91 @@ public sealed class QuoteFollowUpTests : IAsyncLifetime
         });
         (book.OpenExclTax, book.WeightedExclTax, book.WeightedInclTax).Should().Be((2_000m, quote.WeightedExclTax, quote.WeightedInclTax));
     }
+
+    [Fact]
+    public async Task Un_client_oppose_au_profilage_sort_du_carnet_et_n_a_pas_de_probabilite()
+    {
+        Quote opposed = AddQuote("Boulangerie Martin", 26, 30, 1_500m);
+        Quote other = AddQuote("Garage Dupont", 27, 30, 1_000m);
+        Store.Objecting.Add(opposed.CustomerId);
+
+        OrderBookResponse book = (await Queries.QueryAsync(new GetOrderBookQuery(Dossier), default)).Value;
+        QuoteFollowUpOverviewResponse overview = (await OverviewAsync()).Value;
+
+        book.Quotes.Should().ContainSingle().Which.QuoteId.Should().Be(other.Id.Value);
+        (book.ExcludedCount, book.ExcludedExclTax, book.OpenExclTax).Should().Be((1, 1_500m, 1_000m));
+        QuoteToFollowUpResponse row = overview.Quotes.Single(q => q.QuoteId == opposed.Id.Value);
+        (row.Due, row.Probability, row.WeightedExclTax).Should().Be((true, null, null));
+        overview.Quotes.Single(q => q.QuoteId == other.Id.Value).Probability.Should().Be(0.5m);
+    }
+
+    private IDecisionRule FollowUpRule =>
+        _scope.ServiceProvider.GetServices<IDecisionRule>().Single(r => r.Kind == QuoteFollowUpDecisionRule.RuleKind);
+
+    private IDecisionActionHandler FollowUpAction =>
+        _scope.ServiceProvider.GetServices<IDecisionActionHandler>().Single(a => a.ActionKind == SendQuoteFollowUpDecisionAction.ActionKindName);
+
+    [Fact]
+    public async Task Un_devis_a_relancer_devient_une_decision_avec_l_envoi_prepare()
+    {
+        Quote lastDay = AddQuote("Boulangerie Martin", 29, 30, 1_500m);
+        Quote soon = AddQuote("Garage Dupont", 27, 30, 1_000m, email: null);
+        AddQuote("Hôtel du Lac", 5, 30);
+        Quote followedUp = AddQuote("Fleurs Petit", 27, 30);
+        (await SendAsync(followedUp, QuoteFollowUpChannelDto.Manual)).IsSuccess.Should().BeTrue();
+
+        IReadOnlyList<DecisionProposal> proposals = await FollowUpRule.ProposeAsync(Today, default);
+
+        FollowUpRule.Permission.Should().Be(Permission.DevisCreer);
+        proposals.Select(p => p.Subject).Should().Equal($"{lastDay.Id.Value}:{Today.AddDays(1):yyyy-MM-dd}", $"{soon.Id.Value}:{Today.AddDays(3):yyyy-MM-dd}");
+        DecisionProposal first = proposals[0];
+        (first.Kind, first.Audience, first.Urgency, first.Impact, first.DueOn, first.Link).Should().Be(
+            (QuoteFollowUpDecisionRule.RuleKind, DecisionAudience.Entreprise, DecisionUrgency.High, 1_500m, Today.AddDays(1), "quote-follow-ups"));
+        first.Facts.Should().BeEquivalentTo(new Dictionary<string, string>
+        {
+            ["quote"] = lastDay.Number!,
+            ["customer"] = "Boulangerie Martin",
+            ["validUntil"] = $"{Today.AddDays(1):yyyy-MM-dd}",
+        });
+        first.Action.Should().Be(new DecisionAction(SendQuoteFollowUpDecisionAction.ActionKindName, lastDay.Id.Value.ToString()));
+        (proposals[1].Urgency, proposals[1].Action).Should().Be((DecisionUrgency.Normal, null));
+    }
+
+    [Fact]
+    public async Task Sans_serveur_d_envoi_la_decision_mene_a_l_ecran()
+    {
+        AddQuote("Boulangerie Martin", 27, 30);
+        _email.IsConfigured = false;
+
+        (await FollowUpRule.ProposeAsync(Today, default)).Should().ContainSingle().Which.Action.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Accepter_la_decision_envoie_la_relance_proposee()
+    {
+        Quote quote = AddQuote("Boulangerie Martin", 27, 30);
+
+        Result sent = await FollowUpAction.ExecuteAsync(Dossier, quote.Id.Value.ToString(), default);
+
+        sent.IsSuccess.Should().BeTrue();
+        FollowUpAction.Reversible.Should().BeFalse();
+        _email.Sent.Should().ContainSingle().Which.To.Value.Should().Be("contact@client.fr");
+        Store.FollowUps.Should().ContainSingle().Which.Channel.Should().Be(QuoteFollowUpChannel.Email);
+        (await FollowUpRule.ProposeAsync(Today, default)).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task L_action_refuse_une_charge_illisible_et_remonte_le_refus_de_l_envoi()
+    {
+        Quote withoutEmail = AddQuote("Garage Dupont", 27, 30, email: null);
+
+        (await FollowUpAction.ExecuteAsync(Dossier, "pas-un-devis", default)).Errors.Single().Should().Be(DecisionErrors.ActionUnavailable);
+        (await FollowUpAction.ExecuteAsync(Dossier, withoutEmail.Id.Value.ToString(), default)).Errors.Single().Code.Should().Be(QuoteFollowUpErrors.CustomerEmailMissingCode);
+    }
+
+    [Fact]
+    public void La_regle_refuse_un_constat_absent() =>
+        FluentActions.Invoking(() => QuoteFollowUpDecisionRule.Proposals(null!)).Should().Throw<ArgumentNullException>();
 
     [Fact]
     public void Le_service_refuse_des_reglages_absents()

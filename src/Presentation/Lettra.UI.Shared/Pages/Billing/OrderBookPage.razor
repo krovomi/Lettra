@@ -36,6 +36,13 @@ else
         </div>
     </div>
 
+    @if (book.ExcludedCount > 0)
+    {
+        <p class="la-callout lt-order-book-callout" id="order-book-excluded">
+            <Icon Name="shield-check" Size="16" /> @string.Format(Culture, L[book.ExcludedCount == 1 ? "OrderBook.Excluded.One" : "OrderBook.Excluded"], book.ExcludedCount, ExplorerText.Money(book.ExcludedExclTax))
+        </p>
+    }
+
     @if (!book.HasEnoughHistory)
     {
         <p class="la-callout lt-order-book-callout" id="order-book-not-enough">
