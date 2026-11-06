@@ -105,6 +105,36 @@ public sealed class OrderBookCalculatorTests
     }
 
     [Fact]
+    public void Un_client_oppose_au_profilage_sort_des_taux_et_ses_devis_en_attente_ne_sont_pas_ponderes()
+    {
+        // Martin s'est opposé : ses trois acceptations ne comptent plus, Dupont reste seul (0 sur 3).
+        QuoteFact[] history =
+        [
+            Accepted(Martin), Accepted(Martin), Accepted(Martin),
+            Refused(Dupont), Refused(Dupont), Refused(Dupont),
+        ];
+        QuoteFact martinOpen = Fact(Martin, QuoteStatus.Validated, 2, 800m);
+        QuoteFact martinExpired = Fact(Martin, QuoteStatus.Validated, 50, 300m);
+        QuoteFact dupontOpen = Fact(Dupont, QuoteStatus.Validated, 2, 500m);
+
+        OrderBookEstimate book = OrderBookCalculator.Estimate([.. history, martinOpen, martinExpired, dupontOpen], Today, new HashSet<CustomerId> { Martin });
+
+        (book.Overall.Accepted, book.Overall.Closed, book.GlobalRate).Should().Be((0, 3, 0m));
+        book.Quotes.Should().ContainSingle().Which.Quote.Should().Be(dupontOpen);
+        book.Excluded.Should().Equal(martinOpen);
+        (book.OpenExclTax, book.ExcludedExclTax).Should().Be((500m, 800m));
+    }
+
+    [Fact]
+    public void Sans_opposition_rien_n_est_mis_a_part()
+    {
+        QuoteFact open = Fact(Martin, QuoteStatus.Validated, 2);
+
+        OrderBookCalculator.Estimate([open], Today, new HashSet<CustomerId>()).Excluded.Should().BeEmpty();
+        OrderBookCalculator.Estimate([open], Today).Excluded.Should().BeEmpty();
+    }
+
+    [Fact]
     public void L_anciennete_ne_compte_que_les_devis_restes_sans_reponse_aussi_longtemps()
     {
         // Trois devis acceptés en 2 jours, trois refusés au bout de 20 jours : un devis en attente depuis 18 jours ne se

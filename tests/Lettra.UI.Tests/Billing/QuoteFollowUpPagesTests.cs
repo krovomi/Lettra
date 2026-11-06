@@ -355,6 +355,35 @@ public sealed class QuoteFollowUpPagesTests : BunitContext
     }
 
     [Fact]
+    public void Les_devis_des_clients_opposes_au_profilage_sont_comptes_a_part()
+    {
+        _gateway.Book = Book(true, FakeQuoteFollowUpsGateway.BookQuote("DEV-0001", "Dupont SARL", 2_000m, 0.5m)) with { ExcludedCount = 2, ExcludedExclTax = 3_500m };
+        IRenderedComponent<OrderBookPage> page = OpenBook();
+        page.Find("#order-book-excluded").TextContent.Should().Contain("2 devis en attente").And.Contain("500,00").And.Contain("opposés au profilage");
+        page.Find("#order-book-notice").TextContent.Should().Contain("Clients opposés au ciblage");
+
+        _gateway.Book = Book(true, FakeQuoteFollowUpsGateway.BookQuote("DEV-0001", "Dupont SARL", 2_000m, 0.5m)) with { ExcludedCount = 1, ExcludedExclTax = 900m };
+        OpenBook().Find("#order-book-excluded").TextContent.Should().Contain("1 devis en attente").And.Contain("son client s'est opposé");
+
+        _gateway.Book = Book(true, FakeQuoteFollowUpsGateway.BookQuote("DEV-0001", "Dupont SARL", 2_000m, 0.5m));
+        OpenBook().FindAll("#order-book-excluded").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Un_devis_hors_calcul_n_affiche_pas_de_chance()
+    {
+        _gateway.Quotes.Add(FakeQuoteFollowUpsGateway.Quote("DEV-0007", "Dupont SARL", "compta@dupont.fr", 3) with { Probability = null, WeightedExclTax = null });
+        _gateway.Quotes.Add(FakeQuoteFollowUpsGateway.Quote("DEV-0008", "Marie Durand", "marie@durand.fr", 2, 1_000m));
+
+        IRenderedComponent<QuoteFollowUpPage> page = Open();
+
+        page.Markup.Should().Contain("Hors calcul").And.Contain("50 %");
+        page.Find("#quote-follow-ups-likely").TextContent.Should().Contain("500");
+        page.Find("#quote-follow-ups-sort-probability").Click();
+        page.FindAll("#quote-follow-ups-table tbody tr").Should().HaveCount(2);
+    }
+
+    [Fact]
     public void Un_carnet_vide_ou_refuse_le_dit()
     {
         _gateway.Book = Book(false);
