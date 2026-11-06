@@ -16,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http;
 using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using static Lettra.Api.Tests.SharedServerProbes;
 
 namespace Lettra.Api.Tests;
 
@@ -61,8 +62,7 @@ public sealed class SharedServerTests(LettraApiFactory factory) : IClassFixture<
     public async Task L_adresse_saisie_est_verifiee_aupres_du_serveur()
     {
         using WebApplicationFactory<Program> server = Server();
-        using HttpClient http = new(server.Server.CreateHandler());
-        SharedServerProbe probe = new(http);
+        SharedServerProbe probe = Probe(server.Server.CreateHandler());
 
         OperationResult<SharedServerSettings> checkedServer = await probe.CheckAsync("  https://lettra.cabinet.example/session?x=1  ", CancellationToken.None);
 
@@ -130,7 +130,7 @@ public sealed class SharedServerTests(LettraApiFactory factory) : IClassFixture<
     [InlineData("ftp://lettra.example")]
     public async Task Une_saisie_qui_n_est_pas_une_adresse_est_refusee(string typed)
     {
-        SharedServerProbe probe = new(new HttpClient(new Answers(_ => throw new InvalidOperationException("aucun appel attendu"))));
+        SharedServerProbe probe = Probe(new Answers(_ => throw new InvalidOperationException("aucun appel attendu")));
 
         OperationResult<SharedServerSettings> result = await probe.CheckAsync(typed, CancellationToken.None);
 
@@ -140,7 +140,7 @@ public sealed class SharedServerTests(LettraApiFactory factory) : IClassFixture<
     [Fact]
     public async Task Le_http_n_est_accepte_que_vers_cet_appareil()
     {
-        SharedServerProbe probe = new(new HttpClient(new Answers(_ => throw new InvalidOperationException("aucun appel attendu"))));
+        SharedServerProbe probe = Probe(new Answers(_ => throw new InvalidOperationException("aucun appel attendu")));
 
         OperationResult<SharedServerSettings> result = await probe.CheckAsync("http://192.168.1.20:8080", CancellationToken.None);
 
@@ -152,7 +152,7 @@ public sealed class SharedServerTests(LettraApiFactory factory) : IClassFixture<
     [Fact]
     public async Task Une_page_de_connexion_en_clair_sur_le_reseau_est_refusee()
     {
-        SharedServerProbe probe = new(new HttpClient(new Answers(_ => Discovery("http://192.168.1.20:8081/realms/lettra"))));
+        SharedServerProbe probe = Probe(new Answers(_ => Discovery("http://192.168.1.20:8081/realms/lettra")));
 
         OperationResult<SharedServerSettings> result = await probe.CheckAsync("https://192.168.1.20:8443", CancellationToken.None);
 
@@ -162,7 +162,7 @@ public sealed class SharedServerTests(LettraApiFactory factory) : IClassFixture<
     [Fact]
     public async Task Un_autre_serveur_qu_un_serveur_Lettra_est_signale()
     {
-        SharedServerProbe probe = new(new HttpClient(new Answers(_ => new HttpResponseMessage(HttpStatusCode.NotFound))));
+        SharedServerProbe probe = Probe(new Answers(_ => new HttpResponseMessage(HttpStatusCode.NotFound)));
 
         OperationResult<SharedServerSettings> result = await probe.CheckAsync("https://intranet.example", CancellationToken.None);
 
@@ -172,8 +172,8 @@ public sealed class SharedServerTests(LettraApiFactory factory) : IClassFixture<
     [Fact]
     public async Task Un_certificat_non_approuve_est_signale_a_part()
     {
-        SharedServerProbe probe = new(new HttpClient(new Answers(_ =>
-            throw new HttpRequestException(HttpRequestError.SecureConnectionError, "TLS", new AuthenticationException("certificat inconnu")))));
+        SharedServerProbe probe = Probe(new Answers(_ =>
+            throw new HttpRequestException(HttpRequestError.SecureConnectionError, "TLS", new AuthenticationException("certificat inconnu"))));
 
         OperationResult<SharedServerSettings> result = await probe.CheckAsync("https://192.168.1.20:8443", CancellationToken.None);
 
@@ -184,13 +184,13 @@ public sealed class SharedServerTests(LettraApiFactory factory) : IClassFixture<
     public async Task Sans_protocole_le_http_est_essaye_apres_le_https_pour_localhost()
     {
         List<Uri> asked = [];
-        SharedServerProbe probe = new(new HttpClient(new Answers(request =>
+        SharedServerProbe probe = Probe(new Answers(request =>
         {
             asked.Add(request.RequestUri!);
             return request.RequestUri!.Scheme == "https"
                 ? throw new HttpRequestException(HttpRequestError.SecureConnectionError, "port en clair")
                 : Discovery(PublicRealm);
-        })));
+        }));
 
         OperationResult<SharedServerSettings> result = await probe.CheckAsync("localhost:8080", CancellationToken.None);
 
@@ -201,7 +201,17 @@ public sealed class SharedServerTests(LettraApiFactory factory) : IClassFixture<
     [Fact]
     public async Task Aucun_serveur_a_cette_adresse()
     {
-        SharedServerProbe probe = new(new HttpClient(new Answers(_ => throw new HttpRequestException(HttpRequestError.ConnectionError, "refusé"))));
+        SharedServerProbe probe = Probe(new Answers(_ => throw new HttpRequestException(HttpRequestError.ConnectionError, "refusé")));
+
+        OperationResult<SharedServerSettings> result = await probe.CheckAsync("https://192.168.1.99:8443", CancellationToken.None);
+
+        result.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.SharedServer.Unreachable);
+    }
+
+    [Fact]
+    public async Task Un_serveur_qui_ne_repond_pas_dans_le_delai_est_juge_injoignable()
+    {
+        SharedServerProbe probe = Probe(new Silent(), ProbeClock.Expired);
 
         OperationResult<SharedServerSettings> result = await probe.CheckAsync("https://192.168.1.99:8443", CancellationToken.None);
 
@@ -253,6 +263,16 @@ public sealed class SharedServerTests(LettraApiFactory factory) : IClassFixture<
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
             Task.FromResult(answer(request));
+    }
+
+    /// <summary>Serveur qui accepte la connexion mais ne répond jamais.</summary>
+    private sealed class Silent : HttpMessageHandler
+    {
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+            throw new InvalidOperationException("Jamais atteint : la sonde abandonne avant.");
+        }
     }
 
     /// <summary>Le coffre a déjà des jetons : aucune page de connexion ne doit s'ouvrir.</summary>

@@ -10,6 +10,7 @@ public static class SharedServerDependencyInjection
     /// <summary>Vérification de l'adresse saisie sur l'écran « Serveur du cabinet » (sans connexion).</summary>
     public static IServiceCollection AddSharedServerProbe(this IServiceCollection services)
     {
+        services.TryAddSingleton(TimeProvider.System);
         services.AddHttpClient<SharedServerProbe>(client => client.Timeout = SharedServerProbe.Timeout + TimeSpan.FromSeconds(5));
         return services;
     }

@@ -21,8 +21,9 @@ public sealed record SharedServerSettings(Uri Address, Uri Authority, string Cli
 /// <summary>
 /// Vérifie l'adresse saisie par l'utilisateur, sans connexion : c'est bien un serveur Lettra, joignable, avec un
 /// certificat approuvé par l'appareil. Une adresse sans protocole est essayée en https, puis en http pour localhost.
+/// L'attente maximale se compte sur <paramref name="clock"/>, l'horloge du système en dehors des tests.
 /// </summary>
-public sealed class SharedServerProbe(HttpClient http)
+public sealed class SharedServerProbe(HttpClient http, TimeProvider clock)
 {
     /// <summary>Attente maximale d'une réponse : au-delà, l'adresse est jugée injoignable.</summary>
     public static readonly TimeSpan Timeout = TimeSpan.FromSeconds(10);
@@ -100,8 +101,8 @@ public sealed class SharedServerProbe(HttpClient http)
 
     private async Task<OperationResult<SharedServerSettings>> CheckOneAsync(Uri address, CancellationToken cancellationToken)
     {
-        using CancellationTokenSource timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        timeout.CancelAfter(Timeout);
+        using CancellationTokenSource budget = new(Timeout, clock);
+        using CancellationTokenSource timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, budget.Token);
         try
         {
             using HttpResponseMessage response = await http

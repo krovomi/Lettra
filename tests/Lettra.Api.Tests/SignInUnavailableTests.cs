@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using static Lettra.Api.Tests.SharedServerProbes;
 
 namespace Lettra.Api.Tests;
 
@@ -77,7 +78,7 @@ public sealed class SignInUnavailableTests(LettraApiFactory factory) : IClassFix
     {
         using WebApplicationFactory<Program> server = factory.WithWebHostBuilder(b => b.ConfigureTestServices(services =>
             services.PostConfigure<JwtBearerOptions>(LettraAuthSchemes.Bearer, o => o.ConfigurationManager = new UnreachableKeycloak())));
-        SharedServerProbe probe = new(new HttpClient(server.Server.CreateHandler()));
+        SharedServerProbe probe = Probe(server.Server.CreateHandler());
 
         OperationResult<SharedServerSettings> result = await probe.CheckAsync("http://localhost:8080", CancellationToken.None);
 
