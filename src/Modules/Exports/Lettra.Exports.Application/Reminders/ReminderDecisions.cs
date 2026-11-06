@@ -13,7 +13,8 @@ namespace Lettra.Exports.Application.Reminders;
 /// Une relance de facture est due aujourd'hui selon le scénario du dossier. L'action préparée l'envoie par e-mail quand
 /// le client a une adresse et qu'un serveur d'envoi est branché ; sinon la décision mène à l'écran des relances. Rien
 /// n'est proposé quand l'envoi automatique est réglé : la passe quotidienne s'en charge. Le sujet porte le niveau : la
-/// relance suivante est une nouvelle décision.
+/// relance suivante est une nouvelle décision. La relance d'une échéance manquée est une décision « Avant le retard »
+/// (<see cref="MissedInstallmentDecisionRule"/>) : elle n'est pas proposée deux fois.
 /// </summary>
 internal sealed class ReminderDecisionRule(PaymentReminderService reminders) : IDecisionRule
 {
@@ -33,7 +34,7 @@ internal sealed class ReminderDecisionRule(PaymentReminderService reminders) : I
             return [];
         }
 
-        return [.. overview.Invoices.Where(i => i is { DueToday: true, NextLevel: not null }).Select(i => new DecisionProposal(
+        return [.. overview.Invoices.Where(i => i is { DueToday: true, NextLevel: not null and not ReminderLevelDto.MissedInstallment }).Select(i => new DecisionProposal(
             RuleKind,
             $"{i.InvoiceId}:{i.NextLevel}",
             DecisionAudience.Entreprise,

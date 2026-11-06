@@ -167,9 +167,14 @@ public static class DependencyInjection
         services.AddScoped<IQueryHandler<GetReminderSettingsQuery, Result<ReminderSettingsResponse>>, GetReminderSettingsHandler>();
         services.AddScoped<ICommandHandler<UpdateReminderSettingsCommand, Result<ReminderSettingsResponse>>, UpdateReminderSettingsHandler>();
 
-        // Décisions à prendre (docs/decisions-a-prendre.md) : les relances dues, et leur envoi en un clic ; les échéances fiscales.
+        // Décisions à prendre (docs/decisions-a-prendre.md) : les relances dues, et leur envoi en un clic ; les signaux
+        // « Avant le retard » (lus une fois par actualisation) ; les échéances fiscales ; les seuils proches.
         services.AddScoped<IDecisionRule, ReminderDecisionRule>();
         services.AddScoped<IDecisionActionHandler, SendReminderDecisionAction>();
+        services.AddScoped<TodaysPaymentPreventionSignals>();
+        services.AddScoped<IDecisionRule, BeforeDueDecisionRule>();
+        services.AddScoped<IDecisionRule, PaymentPlanToReviewDecisionRule>();
+        services.AddScoped<IDecisionRule, MissedInstallmentDecisionRule>();
         services.AddScoped<IDecisionRule, FiscalDeadlineDecisionRule>();
         services.AddScoped<IDecisionRule, ThresholdDecisionRule>();
 
