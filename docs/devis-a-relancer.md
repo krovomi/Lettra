@@ -65,9 +65,22 @@ L'écran **Carnet de commandes** montre :
 
 Le même calcul est exposé par une requête de l'application (`GetOrderBookQuery`), que la future trésorerie reprendra telle quelle.
 
+**Clients opposés au profilage.** Un client qui s'oppose au profilage (RGPD, art. 21) est tenu entièrement à l'écart du carnet. Son opposition se note dans **Relances**, bloc « Clients opposés au ciblage » (la même opposition que pour le rappel avant échéance, voir [Avant le retard](avant-le-retard.md)). Ses devis passés ne comptent dans aucun taux (ni le sien, ni ceux des tranches, ni le taux global), et ses devis en attente ne reçoivent pas de probabilité. Ils ne sont pas dans le montant pondéré ; un encadré du carnet dit combien ils sont et leur montant HT, et dans **Devis à relancer** leur colonne « Chance » affiche « Hors calcul ». La relance de ces devis reste possible : elle ne repose sur aucun profil, seulement sur la date de fin de validité.
+
+## Dans « Décisions à prendre »
+
+Chaque devis à relancer devient une décision « Relancer *client* pour le devis *numéro* » dans **Décisions à prendre** (pour l'entreprise, droit « Créer des devis ») :
+
+- la raison : envoyé, toujours sans réponse, plus valable après sa fin de validité ; l'enjeu : son montant HT ; l'échéance : sa fin de validité ;
+- l'urgence : **haute** la veille et le jour de la fin, normale avant ;
+- le bouton **Envoyer la relance** envoie par e-mail la relance proposée, dans la langue du client, comme l'écran des devis à relancer, quand le client a une adresse et qu'un serveur d'envoi est branché ; sinon la décision mène à l'écran, où la relance se relit, se modifie ou se note à la main ;
+- une fois le devis relancé (depuis la décision ou l'écran), la décision se règle d'elle-même ; un devis prolongé puis de nouveau à relancer redevient une décision.
+
 ## Données et confidentialité
 
-- Le taux par client est un **profilage léger** : il est calculé sur les seuls devis du dossier, n'est montré qu'aux utilisateurs du dossier, n'est jamais montré au client ni transmis, et ne sert qu'à cette estimation. L'écran le dit sous la règle.
+- Le taux par client est un **profilage léger** : il est calculé sur les seuls devis du dossier, n'est montré qu'aux utilisateurs du dossier, n'est jamais montré au client ni transmis, et ne sert qu'à cette estimation. L'écran le dit sous la règle, avec la façon de s'y opposer.
+- **Droit d'opposition** (art. 21) : un client opposé (noté dans Relances, « Clients opposés au ciblage ») sort entièrement du calcul : ni ses devis passés ni ses devis en attente n'y entrent. Retirer l'opposition le fait revenir au calcul suivant.
+- La décision « devis à relancer » garde dans la base du dossier le numéro du devis, le nom du client et la fin de validité, comme les autres décisions ; rien ne sort du dossier.
 - Les relances sont gardées dans la base du dossier (table `QuoteFollowUps`), le réglage aussi (`QuoteFollowUpSettings`). Rien ne va dans la base Catalog, Grafana ni les journaux (ni nom, ni adresse, ni montant).
 - Le carnet n'est pas gardé : il est recalculé à chaque lecture.
 
@@ -96,8 +109,8 @@ Refus attendus, avec un message : devis introuvable, devis plus en attente (acce
 
 ## Architecture
 
-- Domaine (facturation) : `QuoteFollowUp` (une relance, jamais modifiée), `QuoteFollowUpSettings` (la fenêtre), `QuoteFollowUpPolicy` (la règle « à relancer »), `OrderBookCalculator` (la statistique, pure, sans dépendance).
-- Application : les ports `IQuotePipelineReader` (les devis et leurs clients, en lecture), `IQuoteFollowUpRepository`, `IQuoteFollowUpSettingsRepository` ; le service `QuoteFollowUpService` ; les modèles de texte FR et EN ; les cas d'usage : vue des devis à relancer, relance préparée, envoi, historique, réglage, carnet de commandes. L'envoi passe par le port `IEmailSender`.
+- Domaine (facturation) : `QuoteFollowUp` (une relance, jamais modifiée), `QuoteFollowUpSettings` (la fenêtre), `QuoteFollowUpPolicy` (la règle « à relancer »), `OrderBookCalculator` (la statistique, pure, sans dépendance ; elle écarte les clients opposés au profilage).
+- Application : les ports `IQuotePipelineReader` (les devis, leurs clients et les clients opposés au profilage, en lecture), `IQuoteFollowUpRepository`, `IQuoteFollowUpSettingsRepository` ; le service `QuoteFollowUpService` ; les modèles de texte FR et EN ; les cas d'usage : vue des devis à relancer, relance préparée, envoi, historique, réglage, carnet de commandes. L'envoi passe par le port `IEmailSender`. La règle de décision `QuoteFollowUpDecisionRule` (type `devis.a-relancer`) lit la vue des devis à relancer ; son action `SendQuoteFollowUpDecisionAction` envoie la commande d'envoi existante par le médiateur.
 - Infrastructure : les magasins EF Core et une migration par moteur.
 - Présentation : les écrans partagés (navigateur, PWA, MAUI), les passerelles HTTP et en processus.
 
@@ -105,5 +118,4 @@ Refus attendus, avec un message : devis introuvable, devis plus en attente (acce
 
 - Pas d'envoi automatique : chaque relance part d'un clic.
 - La liste ne propose qu'une relance par devis dans la fenêtre ; pour relancer encore (ou plus tôt), le bouton **Relancer** de l'écran du devis reste disponible tant que le devis est en attente.
-- Pas encore dans « Décisions à prendre » : la règle de décision « devis à relancer » s'y branchera par un adaptateur sur la vue des devis à relancer.
 - Le carnet ne tient compte ni de la saison ni de la date probable de signature : il dit combien, pas quand.

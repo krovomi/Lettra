@@ -1,6 +1,6 @@
 # Décisions à prendre
 
-Lettra calcule déjà beaucoup de signaux (factures en retard, échéances fiscales, seuils à surveiller, IBAN changés, attestations, fiche anti-blanchiment), chacun sur son écran. « Décisions à prendre » les rassemble en une liste de choses à décider, les plus urgentes d'abord, et prépare l'action quand il y en a une. Ce sont des **règles fixes**, écrites et testées : aucune IA ne décide, ne classe ni n'écrit ces phrases.
+Lettra calcule déjà beaucoup de signaux (factures en retard, échéances fiscales, seuils à surveiller, IBAN changés, attestations, fiche anti-blanchiment, devis sans réponse, radar de prévention), chacun sur son écran. « Décisions à prendre » les rassemble en une liste de choses à décider, les plus urgentes d'abord, et prépare l'action quand il y en a une. Ce sont des **règles fixes**, écrites et testées : aucune IA ne décide, ne classe ni n'écrit ces phrases.
 
 **Où** : menu, juste sous « En bref » (`/decisions`), et le compteur « Décisions » de la vue cabinet. Les mots « à faire », « priorités », « urgences », « anticiper » le trouvent aussi dans « Aller à… » et Ctrl+K.
 
@@ -17,8 +17,12 @@ Lettra calcule déjà beaucoup de signaux (factures en retard, échéances fisca
 | IBAN à vérifier (`iban.a-verifier`) | Le nouvel IBAN d'un fournisseur attend sa vérification | Critique si le pays de la banque a changé ; urgente sinon | Aucune : la vérification se fait par un autre canal | modifier les tiers |
 | Attestation à renouveler (`attestation.a-renouveler`) | L'attestation de vigilance URSSAF d'un fournisseur suivi manque, a expiré, n'est pas vérifiée, ou expire dans les trente jours | Critique si expirée ; urgente si manquante ou non vérifiée ; normale si elle expire bientôt | Aucune | modifier les tiers |
 | Fiche anti-blanchiment (`lcb-ft.fiche`) | La fiche du client est à faire, incomplète, à revoir, ou sa revue tombe dans les trente jours | Critique si la revue est passée pour un risque élevé ; urgente sinon ; normale à l'approche | Aucune | gérer la vigilance (la fiche est confidentielle ; la décision ne dit pas le niveau de risque) |
+| Devis à relancer (`devis.a-relancer`) | Un devis envoyé, sans réponse, arrive dans la fenêtre de relance avant sa fin de validité (cinq jours par défaut) et n'a pas encore été relancé. Réglée d'elle-même une fois le devis relancé, depuis la décision ou l'écran ; un devis prolongé puis de nouveau à relancer redevient une décision | Urgente la veille et le jour de la fin de validité ; normale avant | « Envoyer la relance » par e-mail, dans la langue du client, si le client a une adresse et qu'un serveur d'envoi est branché ; sinon la décision mène à « Devis à relancer » | créer des devis |
+| Rendez-vous de prévention (`prevention.rendez-vous`) | Le [radar de prévention](radar-de-prevention.md) classe le dossier « à appeler ». Une décision par mois : ignorée, elle revient le mois suivant si le dossier est toujours « à appeler » ; réglée d'elle-même quand il ne l'est plus | Urgente | Aucune : la décision mène au radar (le courrier se relit et s'envoie depuis le radar) | consulter le radar de prévention |
 
-Chaque décision a une clé : son type et son sujet (la facture et le niveau de relance, la facture ou l'échéancier et sa date d'échéance, l'obligation et sa période, le changement d'IBAN, le fournisseur et la fin de validité, la fiche et sa date de revue). Une même décision n'est proposée qu'une fois ; la relance suivante, la période suivante ou une attestation renouvelée sont de nouvelles décisions.
+Les décisions qui révèlent le niveau d'attention d'un dossier (aujourd'hui, celle du radar) ne sont jamais comptées dans le compteur de la vue cabinet ni publiées vers Grafana.
+
+Chaque décision a une clé : son type et son sujet (la facture et le niveau de relance, la facture ou l'échéancier et sa date d'échéance, l'obligation et sa période, le changement d'IBAN, le fournisseur et la fin de validité, la fiche et sa date de revue, le dossier et le mois). Une même décision n'est proposée qu'une fois ; la relance suivante, la période suivante ou une attestation renouvelée sont de nouvelles décisions.
 
 ## Répondre
 
@@ -48,7 +52,7 @@ Les règles tournent chaque jour pour chaque dossier, pendant le calcul des comp
 
 - **Traiter les décisions** (voir, accepter, remettre à plus tard, ignorer, actualiser) : collaborateur, collaborateur étendu, manager. Pas le client du portail ni l'auditeur.
 - **Régler le cadran** : manager.
-- En plus, chaque décision n'est montrée qu'à qui a le droit de sa règle (tableau ci-dessus) : un collaborateur voit les IBAN et les attestations, pas les relances à envoyer ; un collaborateur étendu voit aussi les relances et la fiche anti-blanchiment ; un manager voit tout, dont les échéances fiscales et les seuils.
+- En plus, chaque décision n'est montrée qu'à qui a le droit de sa règle (tableau ci-dessus) : un collaborateur voit les IBAN et les attestations, pas les relances à envoyer ; un collaborateur étendu voit aussi les relances et la fiche anti-blanchiment ; un manager voit tout, dont les échéances fiscales et les seuils. Les devis à relancer se voient avec « Créer des devis » (collaborateur, collaborateur étendu, manager). Le rendez-vous de prévention se voit avec « Voir le radar de prévention » (collaborateur, collaborateur étendu, manager).
 
 ## Données
 
@@ -62,7 +66,7 @@ Les décisions sont gardées dans la base du dossier (tables `Decisions` et `Dec
 
 - Domaine : l'agrégat `Decision` (clé type + sujet, état, faits, action préparée) et `DecisionPolicy` (le cadran).
 - Application : les ports `IDecisionRule` (une règle lit ses stores et propose, sans médiateur ni IA), `IDecisionActionHandler` (l'action envoie une commande existante par le médiateur), `IDecisionStore` ; l'actualisation `DecisionRefresher` ; les cas d'usage liste, actualiser, répondre, régler le cadran ; la source d'indicateur de la vue cabinet.
-- Les règles vivent avec leur module : relances, « Avant le retard », échéances fiscales et seuils dans Exports, IBAN, attestations et anti-blanchiment dans le cœur.
+- Les règles vivent avec leur module : relances, « Avant le retard », échéances fiscales, seuils et rendez-vous de prévention (à côté du radar) dans Exports ; IBAN, attestations, anti-blanchiment et devis à relancer (avec la facturation) dans le cœur.
 - API : `GET /api/v1/decisions`, `POST /api/v1/decisions/refresh`, `POST /api/v1/decisions/{id}/answer` et `PUT /api/v1/decisions/policy` (les deux dernières avec `If-Match`).
 - Tests d'architecture : les règles ne dépendent ni du médiateur ni des assemblages d'IA ; aucune action ne se dit réversible hors de la liste fermée.
 
@@ -75,4 +79,4 @@ Une classe `IDecisionRule` dans le module qui a les signaux (`services.AddScoped
 - Le niveau « Faire et prévenir » n'est pas réalisé.
 - Pas de notification hors de Lettra (e-mail, téléphone) : les décisions se consultent dans l'écran et la vue cabinet.
 - Au-delà de cinquante changements d'IBAN en attente, l'écran des changements d'IBAN prend le relais.
-- Une décision ignorée ne revient pas d'elle-même, même si la situation dure.
+- Une décision ignorée ne revient pas d'elle-même, même si la situation dure (sauf celles qui ont une période : un seuil revient à la période suivante, le rendez-vous de prévention le mois suivant).

@@ -68,6 +68,10 @@ nom de client ou une donnée personnelle. Les montants restent dans la base du d
 chiffre d'affaires est donc donné en indice (100 = mois moyen) et le poids du premier client en pourcentage, sans dire
 qui il est.
 
+**Les indicateurs réservés ne sont jamais publiés.** Les compteurs de la Vue cabinet qui révèlent le
+niveau d'attention d'un dossier (aujourd'hui le [radar de prévention](radar-de-prevention.md), et la décision de
+rendez-vous qu'il propose) restent dans Lettra : ils ne partent jamais vers Prometheus, quel que soit le réglage.
+
 **Aucun nom non plus.** Un dossier n'est désigné que par son identifiant (`dossier_id`) : ni son nom, ni celui du
 cabinet ne sont publiés, car le nom d'une entreprise individuelle est celui d'une personne (décision du DPO).
 Les tableaux affichent une **référence courte**, les 8 derniers caractères de l'identifiant (« Dossier 3f9a21bc »),
