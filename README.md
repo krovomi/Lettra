@@ -599,7 +599,9 @@ approche (cinq jours par défaut, réglable par un manager), avec une relance d�
 langue du client), relue puis envoyée par e-mail en un clic, ou notée si elle a été faite au téléphone ; l'historique
 des relances de chaque devis. Le **carnet de commandes pondéré** estime le chiffre d'affaires à venir : chaque devis en
 attente compte pour sa probabilité d'être accepté, la moyenne de trois taux d'acceptation passés (le client, la
-tranche de montant, l'ancienneté du devis), et l'écran dit pourquoi, devis par devis. Une statistique simple, sans IA.
+tranche de montant, l'ancienneté du devis), et l'écran dit pourquoi, devis par devis. Un client opposé au profilage
+(noté dans Relances) sort entièrement du calcul. Chaque devis à relancer est aussi une décision dans **Décisions à
+prendre**, avec le bouton **Envoyer la relance**. Une statistique simple, sans IA.
 *(Vérifié dans la démo Docker.)* Détails : [docs/devis-a-relancer.md](docs/devis-a-relancer.md).
 
 ### 4. La facture
