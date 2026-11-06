@@ -101,7 +101,8 @@ public sealed class QuoteFollowUpService(
         QuoteFollowUpSettings settings = await SettingsAsync(cancellationToken).ConfigureAwait(false);
         DateOnly today = Today;
         IReadOnlyList<QuoteFact> facts = await pipeline.ListAsync(OrderBookCalculator.HistoryFrom(today), cancellationToken).ConfigureAwait(false);
-        Dictionary<QuoteId, WeightedQuote> weighted = OrderBookCalculator.Estimate(facts, today).Quotes.ToDictionary(w => w.Quote.Id);
+        IReadOnlySet<CustomerId> objecting = await pipeline.ObjectingCustomersAsync(cancellationToken).ConfigureAwait(false);
+        Dictionary<QuoteId, WeightedQuote> weighted = OrderBookCalculator.Estimate(facts, today, objecting).Quotes.ToDictionary(w => w.Quote.Id);
         QuoteFact[] window =
         [
             .. facts.Where(q => q.Status == QuoteStatus.Validated && QuoteFollowUpPolicy.IsInWindow(q.ValidUntil, today, settings.WindowDays)),
@@ -134,8 +135,8 @@ public sealed class QuoteFollowUpService(
                         Math.Max(0, today.DayNumber - q.IssueDate.DayNumber),
                         q.AmountExclTax,
                         q.AmountInclTax,
-                        w?.Probability ?? 0m,
-                        w?.WeightedExclTax ?? 0m,
+                        w?.Probability,
+                        w?.WeightedExclTax,
                         QuoteFollowUpPolicy.IsDue(q.Status, q.ValidUntil, today, settings.WindowDays, done?.Last.OccurredOn),
                         done?.Count ?? 0,
                         done?.Last.OccurredAt,

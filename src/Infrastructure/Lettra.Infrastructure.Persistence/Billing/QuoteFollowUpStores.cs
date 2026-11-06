@@ -3,6 +3,7 @@ using Lettra.Application.Abstractions.Persistence;
 using Lettra.Contracts.Billing;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Parties;
+using Lettra.Domain.Reminders;
 using Lettra.Domain.SharedKernel;
 using Lettra.Infrastructure.Persistence.Tenancy;
 using Microsoft.EntityFrameworkCore;
@@ -52,6 +53,13 @@ internal sealed class EfQuotePipelineReader(TenantDbSession session) : IQuotePip
                 r.TotalExclTax,
                 r.TotalInclTax)),
         ];
+    }
+
+    public async Task<IReadOnlySet<CustomerId>> ObjectingCustomersAsync(CancellationToken cancellationToken)
+    {
+        LettraDbContext db = await session.GetAsync(cancellationToken).ConfigureAwait(false);
+        List<CustomerId> customers = await db.Set<PaymentTargetingObjection>().AsNoTracking().Select(o => o.CustomerId).ToListAsync(cancellationToken).ConfigureAwait(false);
+        return customers.ToHashSet();
     }
 
     public async Task<IReadOnlyDictionary<CustomerId, QuoteCustomerContact>> ContactsAsync(IReadOnlyCollection<CustomerId> customers, CancellationToken cancellationToken)

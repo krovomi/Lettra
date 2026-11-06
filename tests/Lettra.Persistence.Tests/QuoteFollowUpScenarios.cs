@@ -10,6 +10,7 @@ using Lettra.Contracts.Common;
 using Lettra.Domain.Billing;
 using Lettra.Domain.Common;
 using Lettra.Domain.Parties;
+using Lettra.Domain.Reminders;
 using Lettra.Domain.SharedKernel;
 using Lettra.Infrastructure.Persistence;
 using Lettra.Infrastructure.Persistence.Tenancy;
@@ -166,6 +167,17 @@ internal static class QuoteFollowUpScenarios
                     [new CustomerId(berlin)] = new("buchhaltung@berlin.example", "en-US"),
                     [new CustomerId(martin)] = new(null, null),
                 });
+
+            // Un client opposé au profilage (noté depuis les relances) sort du carnet : ni taux, ni pondération.
+            (await pipeline.ObjectingCustomersAsync(default)).Should().BeEmpty();
+            db.Set<PaymentTargetingObjection>().Add(PaymentTargetingObjection.Record(new CustomerId(durand), Guid.CreateVersion7(), clock.GetUtcNow()));
+            await db.SaveChangesAsync();
+            (await pipeline.ObjectingCustomersAsync(default)).Should().Equal(new CustomerId(durand));
+            OrderBookResponse withObjection = Ok(await queries.QueryAsync(new GetOrderBookQuery(dossier), default));
+            withObjection.Quotes.Select(q => q.QuoteId).Should().BeEquivalentTo([berlinOpen.Value, martinOpen.Value]);
+            withObjection.ExcludedCount.Should().Be(1);
+            Ok(await queries.QueryAsync(new GetQuoteFollowUpOverviewQuery(dossier), default))
+                .Quotes.Single(q => q.QuoteId == durandOpen.Value).Probability.Should().BeNull();
         }
     }
 
