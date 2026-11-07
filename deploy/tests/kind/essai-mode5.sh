@@ -10,8 +10,8 @@
 #   2. l'administrateur de la plateforme inscrit un cabinet par l'API, sans script : organisation et compte de son
 #      administrateur dans Keycloak (changement de mot de passe exigé), cabinet au catalogue, KEK tirée par le KMS,
 #      rôle administrateur-cabinet ; une seconde demande retrouve le même cabinet ;
-#   3. un dossier créé par l'API passe à « actif », sa base d_… existe sur le cluster, la KEK du cabinet est tirée par
-#      le KMS et gardée enveloppée dans le catalogue ;
+#   3. un dossier créé par l'API passe à « actif », sa base d_… existe sur le cluster, appartient au rôle du cabinet et
+#      refuse tout autre rôle ; la KEK du cabinet est tirée par le KMS et gardée enveloppée dans le catalogue ;
 #   4. un client et une facture s'y créent, la facture se valide et se relit, y compris après redémarrage de l'API ;
 #      l'e-mail du client est chiffré dans la base du dossier ;
 #   5. une création de dossier interrompue (serveur de bases indisponible, Worker arrêté) est reprise par le Worker ;
@@ -20,7 +20,7 @@
 #      sa DEK détruite et sa base supprimée par le Worker ;
 #   8. la clé racine détruite dans le KMS, les dossiers du cabinet ne s'ouvrent plus (effacement cryptographique) ;
 #   9. le départ du cabinet demandé par la plateforme : annulable, puis, le délai passé, ses bases supprimées, sa clé
-#      détruite, ses comptes supprimés de Keycloak et du registre ; seuls restent son identifiant, son nom et ses dates.
+#      détruite, son rôle PostgreSQL et ses comptes supprimés ; seuls restent son identifiant, son nom et ses dates.
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/../../.." && pwd)
 CLUSTER=${KIND_CLUSTER:-lettra-mode5}
@@ -253,13 +253,21 @@ attendu 201 "création du dossier"
 base="d_${dossier//-/}"
 [[ $(catalogue "SELECT \"State\" FROM catalog.\"Dossiers\" WHERE \"Id\" = '$dossier'") == 1 ]] || echec "dossier $dossier pas actif"
 [[ $(sql postgres "SELECT datname FROM pg_database WHERE datname = '$base'") == "$base" ]] || echec "base $base absente"
-[[ $(sql postgres "SELECT pg_get_userbyid(datdba) FROM pg_database WHERE datname = '$base'") == lettra ]] \
-  || echec "base $base : propriétaire inattendu"
+role_cabinet="c_${cabinet//-/}"
+[[ $(sql postgres "SELECT pg_get_userbyid(datdba) FROM pg_database WHERE datname = '$base'") == "$role_cabinet" ]] \
+  || echec "base $base : propriétaire inattendu ($(sql postgres "SELECT pg_get_userbyid(datdba) FROM pg_database WHERE datname = '$base'"))"
+[[ $(sql "$base" "SELECT count(*) FROM pg_tables WHERE schemaname = 'public' AND tableowner <> '$role_cabinet'") == 0 ]] \
+  || echec "base $base : tables d'un autre propriétaire que le rôle du cabinet"
+# Le rôle d'un autre cabinet (ici un rôle quelconque) n'a pas le droit de se connecter à la base.
+sql postgres "DROP ROLE IF EXISTS essai_autre_cabinet; CREATE ROLE essai_autre_cabinet LOGIN" >/dev/null
+[[ $(sql postgres "SELECT has_database_privilege('essai_autre_cabinet', '$base', 'CONNECT')") == f ]] \
+  || echec "base $base ouverte à un autre rôle que celui du cabinet"
+sql postgres "DROP ROLE essai_autre_cabinet" >/dev/null
 [[ $(catalogue "SELECT octet_length(\"WrappedDek\") FROM catalog.\"Dossiers\" WHERE \"Id\" = '$dossier'") == 60 ]] \
   || echec "DEK du dossier absente ou mal enveloppée"
 appel GET /api/v1/dossiers | jq -e --arg d "$dossier" 'map(.id) | index($d)' >/dev/null || echec "dossier absent de la liste"
 [[ $(enveloppe) == vault:v1:* ]] || echec "KEK du cabinet absente du catalogue ou pas enveloppée par le KMS : $(enveloppe)"
-echo "   dossier $dossier actif ; base $base (propriétaire lettra) ; DEK enveloppée (60 octets) ; KEK enveloppée par le KMS"
+echo "   dossier $dossier actif ; base $base (propriétaire $role_cabinet, fermée aux autres rôles) ; DEK enveloppée (60 octets) ; KEK enveloppée par le KMS"
 
 step "4. Client et facture dans le dossier, validation, relecture"
 appel PUT /api/v1/company-profile '{"name":"Conseil fictif","legalForm":"SAS","shareCapital":10000,"siren":"552100554",
@@ -367,6 +375,7 @@ for d in $(catalogue "SELECT replace(\"Id\"::text, '-', '') FROM catalog.\"Dossi
 done
 [[ $(catalogue "SELECT count(*) FROM catalog.\"Dossiers\" WHERE \"OrganisationId\" = '$cabinet' AND \"State\" <> 3") == 0 ]] \
   || echec "dossier du cabinet pas effacé"
+[[ $(sql postgres "SELECT count(*) FROM pg_roles WHERE rolname = '$role_cabinet'") == 0 ]] || echec "rôle $role_cabinet encore présent"
 [[ $(catalogue "SELECT count(*) FROM catalog.\"UserAccounts\" WHERE \"OrganisationId\" = '$cabinet'") == 0 ]] \
   || echec "comptes du cabinet encore au registre"
 [[ $(catalogue "SELECT coalesce(\"WrappedKek\", 'aucune') FROM catalog.\"Organisations\" WHERE \"Id\" = '$cabinet'") == aucune ]] \
@@ -376,7 +385,7 @@ done
   || echec "organisation Keycloak du cabinet encore présente"
 [[ $(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $(jeton_maitre)" "$admin_realm/users/$utilisateur") == 404 ]] \
   || echec "compte Keycloak de l'administrateur encore présent"
-echo "   cabinet $cabinet parti : bases supprimées, clé détruite, comptes supprimés ; reste : $(catalogue \
+echo "   cabinet $cabinet parti : bases et rôle supprimés, clé détruite, comptes supprimés ; reste : $(catalogue \
   "SELECT \"Name\" || ', parti le ' || \"DepartedAt\" FROM catalog.\"Organisations\" WHERE \"Id\" = '$cabinet'")"
 
 step "Cellule kind en mode 5 : vérifiée de bout en bout"

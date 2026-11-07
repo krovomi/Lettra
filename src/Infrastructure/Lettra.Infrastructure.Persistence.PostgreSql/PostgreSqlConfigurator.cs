@@ -117,10 +117,7 @@ public sealed class PostgreSqlDatabaseAdministrator : IDatabaseAdministrator
         return (builder.ConnectionString, database);
     }
 
-    private static string Quote(string identifier) =>
-        identifier.Length is > 0 and <= 63 && identifier.All(c => char.IsAsciiLetterOrDigit(c) || c == '_')
-            ? $"\"{identifier}\""
-            : throw new ArgumentException("Nom de base invalide.", nameof(identifier));
+    private static string Quote(string identifier) => PostgreSqlNames.Quote(identifier);
 }
 
 /// <summary>Utilisé uniquement par <c>dotnet ef migrations add</c>.</summary>

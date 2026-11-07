@@ -13,7 +13,8 @@ namespace Lettra.Infrastructure.Catalog;
 /// <summary>
 /// Crée la base d'un nouveau dossier (c'est l'application qui crée les bases, pas l'IaC : ADR-0009). Le dossier est
 /// d'abord inscrit « en création » avec sa DEK enveloppée, puis sa base est créée, migrée et estampillée. Chaque
-/// étape est idempotente : une création interrompue est reprise par le Worker (<see cref="ResumeAsync"/>).
+/// étape est idempotente : une création interrompue est reprise par le Worker (<see cref="ResumeAsync"/>). Sur un serveur
+/// qui active les rôles par cabinet, la base est donnée au rôle de son cabinet avant d'être migrée.
 /// </summary>
 internal sealed partial class CatalogDossierProvisioner(
     IDbContextFactory<CatalogDbContext> catalogFactory,
@@ -23,6 +24,7 @@ internal sealed partial class CatalogDossierProvisioner(
     CatalogDossierFieldKeys fieldKeys,
     IOptionsMonitor<CatalogOptions> options,
     TenantMigrator migrator,
+    CabinetDatabaseRoleKeeper cabinetRoles,
     TimeProvider clock,
     ILogger<CatalogDossierProvisioner> logger) : IDossierProvisioner
 {
@@ -82,7 +84,7 @@ internal sealed partial class CatalogDossierProvisioner(
                 Provider = cluster.Provider,
                 ClusterId = cluster.Id,
                 DatabaseName = database,
-                ConnectionSecretRef = ClusterSecretSource.AppRef(cluster.Id, database),
+                ConnectionSecretRef = cabinetRoles.ConnectionRefFor(cluster.Id, database, organisation.Value),
                 State = DossierState.Provisioning,
                 WrappedDek = await keyring.CreateWrappedDekAsync(organisation, id, cancellationToken).ConfigureAwait(false),
                 CreatedAt = now,
@@ -174,6 +176,8 @@ internal sealed partial class CatalogDossierProvisioner(
             string admin = await secrets.GetConnectionStringAsync(
                 ClusterSecretSource.AdminRef(dossier.ClusterId!, dossier.DatabaseName!), cancellationToken).ConfigureAwait(false);
             await administrator.CreateDatabaseAsync(admin, cancellationToken).ConfigureAwait(false);
+            // Avant les migrations : les tables naissent alors au rôle du cabinet, qui seul ouvre la base.
+            await cabinetRoles.AssignAsync(dossier, cancellationToken).ConfigureAwait(false);
             DossierMigrationResult result = await migrator.MigrateAsync(dossier.ToDescriptor(), stampIfMissing: true, cancellationToken).ConfigureAwait(false);
             await SetStateAsync(dossier.Id, DossierState.Active, result.To, error: null, CancellationToken.None).ConfigureAwait(false);
             return true;

@@ -60,6 +60,12 @@ internal sealed partial class DossierMigrationJob(
                 LogResumed(logger, resumed);
             }
 
+            int adopted = await services.AdoptCabinetDatabaseRolesAsync(cancellationToken).ConfigureAwait(false);
+            if (adopted > 0)
+            {
+                LogAdopted(logger, adopted);
+            }
+
             MigrationWaveReport canary = await orchestrator.RunWaveAsync(
                 new MigrationWaveOptions { Limit = settings.CanarySize, MaxParallelism = settings.MaxParallelism }, cancellationToken).ConfigureAwait(false);
             LogWave(logger, "canari", canary.Candidates, canary.Migrated, canary.Failed, canary.SkippedLeased, canary.Elapsed);
@@ -83,6 +89,9 @@ internal sealed partial class DossierMigrationJob(
 
     [LoggerMessage(Level = LogLevel.Information, Message = "{Count} créations de dossiers reprises")]
     private static partial void LogResumed(ILogger logger, int count);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "{Count} bases de dossiers passées au rôle de leur cabinet")]
+    private static partial void LogAdopted(ILogger logger, int count);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Vague {Wave} : {Candidates} bases en retard, {Migrated} migrées, {Failed} en échec, {Skipped} sous bail ailleurs, en {Elapsed}")]
     private static partial void LogWave(ILogger logger, string wave, int candidates, int migrated, int failed, int skipped, TimeSpan elapsed);

@@ -1,5 +1,7 @@
 using Lettra.Application.Abstractions.Tenancy;
+using Lettra.Domain.SharedKernel;
 using Lettra.Exports.Application.EInvoicing.Platform;
+using Lettra.Infrastructure.Catalog;
 using Lettra.Infrastructure.Persistence.PostgreSql;
 using Lettra.Infrastructure.Persistence.Sqlite;
 using Lettra.Infrastructure.Persistence.SqlServer;
@@ -1005,9 +1007,61 @@ public sealed class PostgreSqlTests : IAsyncLifetime
         await using CatalogHarness harness = new(
             s => s.AddPostgreSqlProvider(),
             b => PostgreSqlConfigurator.ConfigureCatalog(b, Database("catalog_depart")),
-            new Dictionary<string, string?> { ["Provider"] = "PostgreSql", ["ConnectionString"] = server },
+            new Dictionary<string, string?> { ["Provider"] = "PostgreSql", ["ConnectionString"] = server, ["CabinetRoles"] = "true" },
             configure: CatalogCabinetScenarios.Platform(clock, vault, identity));
-        await CatalogCabinetScenarios.OnboardThenLeaveAsync(harness, clock, vault, identity, DatabaseExistsAsync);
+        await CatalogCabinetScenarios.OnboardThenLeaveAsync(harness, clock, vault, identity, DatabaseExistsAsync, RoleExistsAsync);
+    }
+
+    [SkippableFact]
+    public async Task Un_role_par_cabinet_refuse_la_base_d_un_autre_cabinet_et_reprend_les_bases_d_avant()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        string server = new Npgsql.NpgsqlConnectionStringBuilder(_container!.GetConnectionString()) { Database = null }.ConnectionString;
+        Dictionary<string, string?> cabinets = new()
+        {
+            ["Lettra:Organisations:0:Kek"] = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)),
+            ["Lettra:Organisations:1:Id"] = CatalogHarness.OtherCabinet.ToString(),
+            ["Lettra:Organisations:1:Name"] = "Autre cabinet",
+            ["Lettra:Organisations:1:CellId"] = "cellule-test",
+            ["Lettra:Organisations:1:Kek"] = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)),
+        };
+
+        // Un dossier créé quand le serveur n'activait pas encore les rôles par cabinet.
+        DossierId legacy;
+        await using (CatalogHarness before = new(
+            s => s.AddPostgreSqlProvider(),
+            b => PostgreSqlConfigurator.ConfigureCatalog(b, Database("catalog_roles")),
+            new Dictionary<string, string?> { ["Provider"] = "PostgreSql", ["ConnectionString"] = server },
+            cabinets))
+        {
+            await before.Services.InitializeCatalogAsync(migrate: true, default);
+            legacy = (await before.Services.GetRequiredService<IDossierProvisioner>().CreateAsync(CatalogHarness.Organisation, "Dossier d'avant les rôles", default)).Value;
+        }
+
+        await using CatalogHarness harness = new(
+            s => s.AddPostgreSqlProvider(),
+            b => PostgreSqlConfigurator.ConfigureCatalog(b, Database("catalog_roles")),
+            new Dictionary<string, string?> { ["Provider"] = "PostgreSql", ["ConnectionString"] = server, ["CabinetRoles"] = "true" },
+            cabinets);
+        await CatalogCabinetRoleScenarios.IsolationAndAdoptionAsync(harness, legacy, VerifierAsync);
+    }
+
+    private async Task<string> VerifierAsync(string role)
+    {
+        await using Npgsql.NpgsqlConnection connection = new(_container!.GetConnectionString());
+        await connection.OpenAsync();
+        await using Npgsql.NpgsqlCommand command = new("SELECT rolpassword FROM pg_authid WHERE rolname = @name", connection);
+        command.Parameters.AddWithValue("name", role);
+        return (string)(await command.ExecuteScalarAsync())!;
+    }
+
+    private async Task<bool> RoleExistsAsync(Guid organisation)
+    {
+        await using Npgsql.NpgsqlConnection connection = new(_container!.GetConnectionString());
+        await connection.OpenAsync();
+        await using Npgsql.NpgsqlCommand command = new("SELECT count(*) FROM pg_roles WHERE rolname = @name", connection);
+        command.Parameters.AddWithValue("name", CabinetDatabaseRoles.RoleOf(organisation));
+        return (long)(await command.ExecuteScalarAsync())! == 1;
     }
 
     private async Task<bool> DatabaseExistsAsync(string name)

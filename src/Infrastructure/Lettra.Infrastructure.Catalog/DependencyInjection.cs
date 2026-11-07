@@ -30,6 +30,7 @@ public static class DependencyInjection
 
         // La configuration reçue est capturée : la composition ne suppose pas qu'IConfiguration soit dans le conteneur.
         services.AddSingleton<ISecretSource>(new ConfigurationSecretSource(configuration));
+        services.AddSingleton<CabinetDatabaseRoles>();
         services.AddSingleton<ISecretSource, ClusterSecretSource>();
         services.AddSingleton<ISecretSource, ClusterAdminSecretSource>();
         services.AddCabinetKeys(configuration);
@@ -41,6 +42,7 @@ public static class DependencyInjection
         services.AddSingleton<CatalogTenantCatalog>();
         services.AddSingleton<ITenantCatalog>(sp => sp.GetRequiredService<CatalogTenantCatalog>());
         services.AddSingleton<IDossierDirectory>(sp => sp.GetRequiredService<CatalogTenantCatalog>());
+        services.AddSingleton<CabinetDatabaseRoleKeeper>();
         services.AddSingleton<CatalogDossierProvisioner>();
         services.AddSingleton<IDossierProvisioner>(sp => sp.GetRequiredService<CatalogDossierProvisioner>());
         // Effacement des dossiers créés par le catalogue (remplace le « aucun » du poste enregistré par AddApplication).
@@ -104,6 +106,10 @@ public static class DependencyInjection
     /// <summary>Reprise des créations de dossiers interrompues (Worker).</summary>
     public static Task<int> ResumeDossierProvisioningAsync(this IServiceProvider services, CancellationToken cancellationToken) =>
         services.GetRequiredService<CatalogDossierProvisioner>().ResumeAsync(retryFailuresNow: false, cancellationToken);
+
+    /// <summary>Passage des bases d'avant les rôles par cabinet sur le rôle de leur cabinet (Worker).</summary>
+    public static Task<int> AdoptCabinetDatabaseRolesAsync(this IServiceProvider services, CancellationToken cancellationToken) =>
+        services.GetRequiredService<CabinetDatabaseRoleKeeper>().AdoptAsync(cancellationToken);
 
     /// <summary>Dossiers actifs de la cellule (passes système du Worker).</summary>
     public static Task<IReadOnlyList<TenantDescriptor>> ListActiveDossiersAsync(this IServiceProvider services, CancellationToken cancellationToken) =>

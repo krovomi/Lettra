@@ -82,6 +82,13 @@ public sealed class ClusterEntry
 
     /// <summary>SQLite : répertoire des fichiers de dossiers.</summary>
     public string? Directory { get; set; }
+
+    /// <summary>
+    /// PostgreSQL : chaque cabinet se connecte à ses bases par son propre rôle, et chaque base n'accepte que le rôle de son
+    /// cabinet (plan du mode 5, étape 3). Le rôle d'administration doit alors avoir CREATEROLE. Désactivé par défaut :
+    /// un serveur de cabinet garde son rôle unique.
+    /// </summary>
+    public bool CabinetRoles { get; set; }
 }
 
 /// <summary>Un dossier déclaré dans la configuration (section <c>Lettra:Dossiers</c>).</summary>

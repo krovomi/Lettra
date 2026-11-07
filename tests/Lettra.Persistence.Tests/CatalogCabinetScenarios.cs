@@ -35,7 +35,9 @@ internal static class CatalogCabinetScenarios
     /// <param name="vault">Le KMS d'essai, qui note les clés détruites.</param>
     /// <param name="identity">Le fournisseur d'identité d'essai, qui note les organisations supprimées.</param>
     /// <param name="databaseExists">Dit si la base d'un dossier (son nom sur le serveur) existe encore.</param>
-    public static async Task OnboardThenLeaveAsync(CatalogHarness harness, ManualClock clock, Vault vault, Identity identity, Func<string, Task<bool>> databaseExists)
+    /// <param name="roleExists">Sur un serveur qui active les rôles par cabinet : dit si le rôle du cabinet existe encore.</param>
+    public static async Task OnboardThenLeaveAsync(
+        CatalogHarness harness, ManualClock clock, Vault vault, Identity identity, Func<string, Task<bool>> databaseExists, Func<Guid, Task<bool>>? roleExists = null)
     {
         IServiceProvider services = harness.Services;
         await services.InitializeCatalogAsync(migrate: true, default);
@@ -63,6 +65,10 @@ internal static class CatalogCabinetScenarios
         DossierId dossier = (await provisioner.CreateAsync(cabinet, "Dossier du cabinet", default)).Value;
         string database = (await harness.DossierAsync(dossier)).DatabaseName!;
         (await databaseExists(database)).Should().BeTrue();
+        if (roleExists is not null)
+        {
+            (await roleExists(cabinet.Value)).Should().BeTrue("la base du dossier appartient au rôle du cabinet");
+        }
 
         // Un cabinet déclaré dans la configuration, ou inconnu, ne part pas par l'API.
         (await lifecycle.ScheduleDepartureAsync(CatalogHarness.Organisation, Guid.Empty, default)).Errors.Should().ContainSingle()
@@ -100,6 +106,10 @@ internal static class CatalogCabinetScenarios
         (await harness.DossierAsync(dossier)).State.Should().Be(DossierState.Deleted);
         vault.Destroyed.Should().Equal(cabinet);
         identity.Deleted.Should().Equal(cabinet);
+        if (roleExists is not null)
+        {
+            (await roleExists(cabinet.Value)).Should().BeFalse("le rôle d'un cabinet parti est supprimé");
+        }
         await using (CatalogDbContext db = await services.GetRequiredService<IDbContextFactory<CatalogDbContext>>().CreateDbContextAsync())
         {
             (await db.UserAccounts.AnyAsync(u => u.OrganisationId == cabinet.Value)).Should().BeFalse();
