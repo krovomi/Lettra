@@ -65,9 +65,11 @@ networkPolicy:
   enabled: true
   # Espaces de noms autorisés à joindre Keycloak : passerelle de la cellule (navigateurs, applications).
   ingressNamespaces: [lettra-passerelle]
-  # Pods du même espace de noms autorisés (l'API vérifie les jetons et sert le BFF).
+  # Pods du même espace de noms autorisés : l'API vérifie les jetons, sert le BFF et inscrit les cabinets ; le Worker
+  # supprime l'organisation et les comptes d'un cabinet à la fin de son départ (compte de service lettra-provisioning).
   ingressPods:
     - { app.kubernetes.io/name: lettra-api }
+    - { app.kubernetes.io/name: lettra-worker }
   # Supervision (métriques et santé sur le port de gestion).
   monitoringNamespaces: [lettra-observabilite]
 

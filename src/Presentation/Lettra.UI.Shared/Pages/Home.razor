@@ -1,4 +1,5 @@
 @page "/"
+@using Lettra.Contracts.Administration
 @using Lettra.UI.Shared.Components.Tax
 @inject IBillingDashboardGateway Dashboard
 @inject IInvoicesGateway Invoices
@@ -9,12 +10,15 @@
 @inject Optional<IQuoteFollowUpsGateway> OptionalFollowUps
 @inject ToastService Toasts
 @inject TimeProvider Clock
+@inject NavigationManager Navigation
+@inject Optional<IAdministrationGateway> OptionalAdministration
 
 @* Tableau de bord d'accueil (vague 5, lanes B et E) : chiffre d'affaires HT du mois et des six derniers mois, devis en
    attente de réponse (calculés par le serveur), brouillons à finaliser, pièces récentes (lues dans les listes), factures
    en retard et transmissions à la plateforme (point des créances lu côté serveur), seuils qui approchent (franchis ou
    prévus dans les trois mois), carnet de commandes pondéré et devis à relancer. Un dossier vide propose d'y charger les
-   données de démonstration quand l'hôte le permet. *@
+   données de démonstration quand l'hôte le permet. L'administrateur de la plateforme, sans cabinet, arrive
+   directement sur l'écran « Plateforme » : rien du tableau de bord n'est demandé au serveur pour lui. *@
 
 <PageTitle>@L["Home.Title"] · Lettra</PageTitle>
 
@@ -297,6 +301,31 @@ else
 
     // Horloge de l'hôte si elle est fournie (tests), sinon l'heure locale de l'appareil.
     private DateOnly Today => Clock.LocalToday();
+
+    // Accès lus une fois, au premier passage : les rendus suivants ne redemandent rien au serveur.
+    private bool _accessChecked;
+
+    /// <summary>
+    /// Avant le premier rendu : l'administrateur de la plateforme qui n'a pas de cabinet (donc aucun dossier) part vers
+    /// « Plateforme » ; aucun bloc du tableau de bord ne s'initialise, donc aucun appel ne vise un dossier qu'il n'ouvre pas.
+    /// </summary>
+    public override async Task SetParametersAsync(ParameterView parameters)
+    {
+        // Les paramètres se lisent avant toute attente : passé la première, ils ne sont plus valables.
+        parameters.SetParameterProperties(this);
+        if (!_accessChecked && OptionalAdministration.Value is { } administration)
+        {
+            _accessChecked = true;
+            OperationResult<MyAccessResponse> access = await administration.GetMyAccessAsync(null, CancellationToken.None);
+            if (access.Value is { AdministersPlatform: true, CabinetId: null })
+            {
+                Navigation.NavigateTo("platform", replace: true);
+                return;
+            }
+        }
+
+        await base.SetParametersAsync(ParameterView.Empty);
+    }
 
     protected override async Task OnInitializedAsync()
     {

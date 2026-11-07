@@ -65,6 +65,9 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
             e.Property(x => x.Id).ValueGeneratedNever();
             e.Property(x => x.Name).HasMaxLength(200);
             e.Property(x => x.CellId).HasMaxLength(64);
+            e.Property(x => x.WrappedKek).HasMaxLength(CatalogOrganisation.MaxWrappedKekLength);
+            e.Property(x => x.State).HasConversion<int>();
+            e.HasIndex(x => new { x.State, x.DepartureDueAt });
         });
 
         modelBuilder.Entity<CatalogCluster>(e =>
@@ -93,6 +96,7 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
             e.HasIndex(x => x.OrganisationId);
             e.HasIndex(x => new { x.ClusterId, x.DatabaseName }).IsUnique();
             e.HasIndex(x => new { x.State, x.SchemaVersion });
+            e.HasIndex(x => new { x.State, x.ErasureDueAt });
             e.HasOne<CatalogOrganisation>().WithMany().HasForeignKey(x => x.OrganisationId);
             e.HasOne<CatalogCluster>().WithMany().HasForeignKey(x => x.ClusterId).IsRequired(false);
         });

@@ -3,13 +3,24 @@
 # .github/workflows/deploy.yml ; en local : même commande, avec docker, kind, kubectl, helm, curl, jq et openssl).
 # Rien n'est appliqué à un cloud, aucune donnée réelle : un cabinet et un utilisateur fictifs, tirés au hasard.
 #
-# Installe l'opérateur CloudNativePG puis le chart lettra-cell (valeurs-mode5.yaml) : Keycloak, l'API et le Worker, un
-# cluster PostgreSQL derrière PgBouncer. Puis vérifie, de bout en bout :
+# Installe l'opérateur CloudNativePG, un KMS OpenBao d'essai (openbao-essai.yaml) puis le chart lettra-cell
+# (valeurs-mode5.yaml) : Keycloak, l'API et le Worker, un cluster PostgreSQL derrière PgBouncer. Puis vérifie, de bout
+# en bout :
 #   1. le Worker migre le catalogue (l'API ne migre rien en mode 5) ;
-#   2. un cabinet et son administrateur existent dans Keycloak (organisation, compte) et dans le catalogue ;
-#   3. un dossier créé par l'API passe à « actif » et sa base d_… existe sur le cluster ;
+#   2. l'administrateur de la plateforme inscrit un cabinet par l'API, sans script : organisation et compte de son
+#      administrateur dans Keycloak (changement de mot de passe exigé), cabinet au catalogue, KEK tirée par le KMS,
+#      rôle administrateur-cabinet ; une seconde demande retrouve le même cabinet ;
+#   3. un dossier créé par l'API passe à « actif », sa base d_… existe sur le cluster, la KEK du cabinet est tirée par
+#      le KMS et gardée enveloppée dans le catalogue ;
 #   4. un client et une facture s'y créent, la facture se valide et se relit, y compris après redémarrage de l'API ;
-#   5. une création de dossier interrompue (serveur de bases indisponible, Worker arrêté) est reprise par le Worker.
+#      l'e-mail du client est chiffré dans la base du dossier ;
+#   5. une création de dossier interrompue (serveur de bases indisponible, Worker arrêté) est reprise par le Worker ;
+#   6. après une rotation de la clé racine du cabinet, le Worker réenveloppe sa KEK et tout reste lisible ;
+#   7. l'effacement d'un dossier demandé par le cabinet : fermé aussitôt, annulable, puis, le délai de rétractation passé,
+#      sa DEK détruite et sa base supprimée par le Worker ;
+#   8. la clé racine détruite dans le KMS, les dossiers du cabinet ne s'ouvrent plus (effacement cryptographique) ;
+#   9. le départ du cabinet demandé par la plateforme : annulable, puis, le délai passé, ses bases supprimées, sa clé
+#      détruite, ses comptes supprimés de Keycloak et du registre ; seuls restent son identifiant, son nom et ses dates.
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/../../.." && pwd)
 CLUSTER=${KIND_CLUSTER:-lettra-mode5}
@@ -35,8 +46,16 @@ diagnostic() {
   kubectl -n "$NS" logs deploy/lettra-api --tail=-1 > "$SORTIE/api.log" 2>&1
   kubectl -n "$NS" logs deploy/lettra-api --previous --tail=-1 > "$SORTIE/api-precedent.log" 2>&1
   kubectl -n "$NS" logs deploy/lettra-worker --tail=-1 > "$SORTIE/worker.log" 2>&1
+  kubectl -n "$NS" logs deploy/openbao --tail=300 > "$SORTIE/openbao.log" 2>&1
   kubectl -n cnpg-system logs deploy/cnpg-cloudnative-pg --tail=300 > "$SORTIE/cnpg.log" 2>&1
-  catalogue 'SELECT "Id", "State", "LastError" FROM catalog."Dossiers"' > "$SORTIE/catalogue-dossiers.txt" 2>&1
+  catalogue 'SELECT "Id", "OrganisationId", "State", "ClusterId", "ErasureDueAt", "LastError" FROM catalog."Dossiers"' \
+    > "$SORTIE/catalogue-dossiers.txt" 2>&1
+  catalogue 'SELECT "Id", "State", "DepartureDueAt", "DepartedAt", now() FROM catalog."Organisations"' > "$SORTIE/catalogue-cabinets.txt" 2>&1
+  # Les artefacts ne sont pas toujours lisibles : l'état du catalogue et les passes d'effacement vont aussi dans le journal.
+  echo "--- catalogue : dossiers (id, cabinet, état, cluster, effacement dû, erreur), puis cabinets"
+  cat "$SORTIE/catalogue-dossiers.txt" "$SORTIE/catalogue-cabinets.txt"
+  echo "--- Worker : effacements et départs"
+  grep -E -A2 'DossierErasure|CatalogDossierEraser|CatalogCabinetLifecycle' "$SORTIE/worker.log" | grep -v '^ *at ' | tail -n 40
   tail -n 40 "$SORTIE/api.log" "$SORTIE/worker.log" 2>/dev/null
 }
 pids=()
@@ -51,6 +70,12 @@ trap fin EXIT
 # SQL sur le primaire du cluster pg-a, en superutilisateur local (socket du pod) : vérifications de l'essai seulement.
 sql() { kubectl -n "$NS" exec pg-a-1 -c postgres -- psql -v ON_ERROR_STOP=1 -U postgres -d "$1" -tAc "$2"; }
 catalogue() { sql lettra "$1"; }
+# KMS d'essai : commande bao dans son pod, avec le jeton racine tiré par l'essai.
+bao() { kubectl -n "$NS" exec deploy/openbao -- env BAO_ADDR=http://127.0.0.1:8200 BAO_TOKEN="$kms_token" bao "$@"; }
+enveloppe() { catalogue "SELECT \"WrappedKek\" FROM catalog.\"Organisations\" WHERE \"Id\" = '$cabinet'"; }
+reenveloppee() { [[ $(enveloppe) == vault:v2:* ]]; }
+etat() { catalogue "SELECT \"State\" FROM catalog.\"Dossiers\" WHERE \"Id\" = '$1'"; }
+efface() { [[ $(etat "$1") == 3 ]]; }
 actif() { [[ $(catalogue "SELECT \"State\" FROM catalog.\"Dossiers\" WHERE \"Id\" = '$1'") == 1 ]]; }
 attendre() { # secondes, description, commande…
   local limite=$(( $(date +%s) + $1 )) description=$2; shift 2
@@ -81,11 +106,23 @@ admin_password=$(openssl rand -hex 24)
 bff_secret=$(openssl rand -hex 32)
 kubectl -n "$NS" create secret generic lettra-keycloak --dry-run=client -o yaml \
   --from-literal=admin-password="$admin_password" --from-literal=bff-client-secret="$bff_secret" | kubectl apply -f - >/dev/null
-# Le cabinet n'est déclaré à l'API qu'une fois son organisation Keycloak créée (étape « cabinet » plus bas).
+# Secret du compte de service lettra-provisioning (installé dans Keycloak à l'étape 2), pour l'API et le Worker.
+provisioning_secret=$(openssl rand -hex 32)
+# L'administrateur de la plateforme n'est déclaré à l'API qu'une fois son compte Keycloak créé (étape 2 plus bas).
 kubectl -n "$NS" create secret generic lettra-api --dry-run=client -o yaml \
-  --from-literal=Lettra__Identity__Oidc__BffClientSecret="$bff_secret" | kubectl apply -f - >/dev/null
+  --from-literal=Lettra__Identity__Oidc__BffClientSecret="$bff_secret" \
+  --from-literal=Lettra__Identity__Provisioning__ClientSecret="$provisioning_secret" | kubectl apply -f - >/dev/null
 kubectl -n "$NS" create secret generic lettra-worker --dry-run=client -o yaml \
-  --from-literal=Lettra__Observability__ServiceName=lettra-worker | kubectl apply -f - >/dev/null
+  --from-literal=Lettra__Observability__ServiceName=lettra-worker \
+  --from-literal=Lettra__Identity__Provisioning__ClientSecret="$provisioning_secret" | kubectl apply -f - >/dev/null
+kms_token=$(openssl rand -hex 24)
+kubectl -n "$NS" create secret generic lettra-kms --dry-run=client -o yaml \
+  --from-literal=token="$kms_token" | kubectl apply -f - >/dev/null
+
+step "KMS d'essai : OpenBao, moteur Transit"
+kubectl -n "$NS" apply -f "$ROOT/deploy/tests/kind/openbao-essai.yaml" >/dev/null
+kubectl -n "$NS" rollout status deploy/openbao --timeout=3m
+bao secrets enable transit >/dev/null
 
 step "Chart lettra-cell en mode 5 (Keycloak, PostgreSQL et PgBouncer, API, Worker)"
 helm dependency build "$ROOT/deploy/helm/lettra-cell" >/dev/null
@@ -113,48 +150,46 @@ step "Redirections de port (Keycloak :8080, API :8081)"
 kubectl -n "$NS" port-forward svc/keycloak 8080:8080 > "$SORTIE/port-forward-keycloak.log" 2>&1 & pids+=($!)
 attendre 60 "Keycloak joignable" curl -sf -o /dev/null "$KEYCLOAK/realms/lettra"
 
-step "2. Cabinet fictif : organisation et administrateur dans Keycloak"
-jeton_admin=$(curl -fsS "$KEYCLOAK/realms/master/protocol/openid-connect/token" \
-  -d grant_type=password -d client_id=admin-cli -d username=lettra-amorcage --data-urlencode "password=$admin_password" | jq -er .access_token)
-kc() { curl -fsS -H "Authorization: Bearer $jeton_admin" -H 'Content-Type: application/json' "$@"; }
-cabinet=$(KEYCLOAK_URL=$KEYCLOAK KEYCLOAK_TOKEN=$jeton_admin \
-  "$ROOT/deploy/keycloak/ajouter-cabinet.sh" cabinet-mode5 "Cabinet mode 5 (fictif)" cabinet-mode5.example)
-mot_de_passe=$(openssl rand -hex 16)
-kc -X POST "$KEYCLOAK/admin/realms/lettra/users" -d "$(jq -n --arg p "$mot_de_passe" '{
-  username: "admin-mode5", email: "admin@cabinet-mode5.example", emailVerified: true, enabled: true,
-  firstName: "Camille", lastName: "Essai", requiredActions: [],
-  credentials: [{type: "password", value: $p, temporary: false}]}')"
-utilisateur=$(kc "$KEYCLOAK/admin/realms/lettra/users?username=admin-mode5&exact=true" | jq -er '.[0].id')
-# Le realm ajoute l'enrôlement TOTP à tout nouveau compte : retiré pour ce compte d'essai (jeton par mot de passe).
-kc -X PUT "$KEYCLOAK/admin/realms/lettra/users/$utilisateur" -d '{"requiredActions": []}'
-kc -X POST "$KEYCLOAK/admin/realms/lettra/organizations/$cabinet/members" -d "\"$utilisateur\""
+step "2. Installation de la cellule dans Keycloak : compte de service, administrateur de la plateforme"
+# Le jeton du realm master ne vit qu'une minute : un nouveau à chaque appel.
+jeton_maitre() {
+  curl -fsS "$KEYCLOAK/realms/master/protocol/openid-connect/token" \
+    -d grant_type=password -d client_id=admin-cli -d username=lettra-amorcage --data-urlencode "password=$admin_password" \
+    | jq -er .access_token
+}
+kc() { curl -fsS -H "Authorization: Bearer $(jeton_maitre)" -H 'Content-Type: application/json' "$@"; }
+admin_realm="$KEYCLOAK/admin/realms/lettra"
+# Compte de service de la plateforme : crée et supprime les organisations et les comptes des cabinets.
+kc -X POST "$admin_realm/clients" -d "$(jq -n --arg s "$provisioning_secret" '{clientId: "lettra-provisioning", enabled: true,
+  publicClient: false, serviceAccountsEnabled: true, standardFlowEnabled: false, directAccessGrantsEnabled: false, secret: $s}')"
+client_provisioning=$(kc "$admin_realm/clients?clientId=lettra-provisioning" | jq -er '.[0].id')
+compte_service=$(kc "$admin_realm/clients/$client_provisioning/service-account-user" | jq -er .id)
+gestion=$(kc "$admin_realm/clients?clientId=realm-management" | jq -er '.[0].id')
+kc -X POST "$admin_realm/users/$compte_service/role-mappings/clients/$gestion" -d "$(
+  for role in manage-users view-users query-users manage-realm view-realm; do kc "$admin_realm/clients/$gestion/roles/$role"; done | jq -sc .)"
 # Client d'essai : jeton par mot de passe, avec les mêmes claims que l'application (organisation, audience lettra-api).
-kc -X POST "$KEYCLOAK/admin/realms/lettra/clients" -d "$(jq '.clients[] | select(.clientId == "lettra-maui")
+kc -X POST "$admin_realm/clients" -d "$(jq '.clients[] | select(.clientId == "lettra-maui")
   | {clientId: "lettra-essai", publicClient: true, standardFlowEnabled: false, directAccessGrantsEnabled: true,
      defaultClientScopes, protocolMappers: [.protocolMappers[] | del(.id)]}' "$ROOT/deploy/keycloak/realm-lettra.json")"
-echo "   cabinet = organisation $cabinet ; administrateur = $utilisateur"
-
-step "2. Cabinet fictif : déclaré au catalogue (KEK tirée au hasard), API redémarrée"
-kek=$(openssl rand -base64 32)
+# L'administrateur de la plateforme : un compte sans cabinet. Le realm ajoute l'enrôlement TOTP à tout nouveau compte :
+# retiré pour ce compte d'essai (jeton par mot de passe).
+mdp_plateforme=$(openssl rand -hex 16)
+kc -X POST "$admin_realm/users" -d "$(jq -n --arg p "$mdp_plateforme" '{username: "plateforme", email: "plateforme@lettra.example",
+  emailVerified: true, enabled: true, firstName: "Dominique", lastName: "Plateforme",
+  credentials: [{type: "password", value: $p, temporary: false}]}')"
+plateforme=$(kc "$admin_realm/users?username=plateforme&exact=true" | jq -er '.[0].id')
+kc -X PUT "$admin_realm/users/$plateforme" -d '{"requiredActions": []}'
 kubectl -n "$NS" create secret generic lettra-api --dry-run=client -o yaml \
   --from-literal=Lettra__Identity__Oidc__BffClientSecret="$bff_secret" \
-  --from-literal=Lettra__Organisations__0__Id="$cabinet" \
-  --from-literal=Lettra__Organisations__0__Name="Cabinet mode 5 (fictif)" \
-  --from-literal=Lettra__Organisations__0__CellId="$CELLULE" \
-  --from-literal=Lettra__Organisations__0__Kek="$kek" \
-  --from-literal=Lettra__Authorization__Users__0__Id="$utilisateur" \
-  --from-literal=Lettra__Authorization__Users__0__Cabinet="$cabinet" \
+  --from-literal=Lettra__Identity__Provisioning__ClientSecret="$provisioning_secret" \
+  --from-literal=Lettra__Authorization__Users__0__Id="$plateforme" \
   --from-literal=Lettra__Authorization__Users__0__State=Active \
-  --from-literal=Lettra__Authorization__Users__0__Assignments__0__Role=administrateur-cabinet \
-  --from-literal=Lettra__Authorization__Users__0__Assignments__0__Scope=Cabinet \
-  --from-literal=Lettra__Authorization__Users__0__Assignments__0__ScopeId="$cabinet" \
-  --from-literal=Lettra__Authorization__Users__0__Assignments__1__Role=manager \
-  --from-literal=Lettra__Authorization__Users__0__Assignments__1__Scope=Cabinet \
-  --from-literal=Lettra__Authorization__Users__0__Assignments__1__ScopeId="$cabinet" | kubectl apply -f - >/dev/null
+  --from-literal=Lettra__Authorization__Users__0__Assignments__0__Role=administrateur-plateforme \
+  --from-literal=Lettra__Authorization__Users__0__Assignments__0__Scope=Plateforme \
+  --from-literal=Lettra__Authorization__Users__0__Assignments__0__ScopeId=00000000-0000-0000-0000-000000000000 \
+  | kubectl apply -f - >/dev/null
 kubectl -n "$NS" rollout restart deploy/lettra-api >/dev/null
 kubectl -n "$NS" rollout status deploy/lettra-api --timeout=4m
-[[ $(catalogue "SELECT \"CellId\" FROM catalog.\"Organisations\" WHERE \"Id\" = '$cabinet'") == "$CELLULE" ]] \
-  || echec "cabinet absent du catalogue"
 [[ $(catalogue "SELECT \"CellId\" FROM catalog.\"Clusters\" WHERE \"Id\" = 'pg-a'") == "$CELLULE" ]] \
   || echec "cluster pg-a absent du catalogue ou hors de la cellule"
 
@@ -163,9 +198,11 @@ redirection_api() {
   attendre 60 "API joignable" curl -sf -o /dev/null "$API/health"
 }
 redirection_api
+utilisateur_courant=plateforme
+mot_de_passe_courant=$mdp_plateforme
 jeton() {
   curl -fsS "$KEYCLOAK/realms/lettra/protocol/openid-connect/token" -d grant_type=password -d client_id=lettra-essai \
-    -d username=admin-mode5 --data-urlencode "password=$mot_de_passe" -d scope=openid | jq -er .access_token
+    -d "username=$utilisateur_courant" --data-urlencode "password=$mot_de_passe_courant" -d scope=openid | jq -er .access_token
 }
 # appel MÉTHODE CHEMIN [CORPS] [DOSSIER] -> corps de la réponse ; le code HTTP dans $SORTIE/statut.
 appel() {
@@ -178,6 +215,38 @@ appel() {
 statut() { cat "$SORTIE/statut"; }
 attendu() { [[ $(statut) == "$1" ]] || echec "$2 : HTTP $(statut), attendu $1 : $(head -c 600 "$SORTIE/reponse.json")"; }
 
+step "2. Arrivée d'un cabinet fictif par l'API de la plateforme, sans script"
+appel GET /api/v1/plateforme/cabinets | jq -e '.canOnboard == true' >/dev/null \
+  || echec "la plateforme ne peut pas inscrire de cabinet : $(head -c 600 "$SORTIE/reponse.json")"
+demande='{"name":"Cabinet mode 5 (fictif)","administratorName":"Camille Essai","administratorEmail":"admin@cabinet-mode5.example"}'
+arrivee=$(appel POST /api/v1/plateforme/cabinets "$demande")
+attendu 201 "arrivée du cabinet"
+cabinet=$(jq -er .cabinet.id <<<"$arrivee")
+utilisateur=$(jq -er .administratorId <<<"$arrivee")
+appel POST /api/v1/plateforme/cabinets "$demande" >/dev/null
+attendu 201 "arrivée redemandée"
+[[ $(jq -r .cabinet.id "$SORTIE/reponse.json") == "$cabinet" ]] || echec "arrivée redemandée : un autre cabinet"
+[[ $(kc "$admin_realm/organizations/$cabinet" | jq -r .name) == "Cabinet mode 5 (fictif)" ]] || echec "organisation Keycloak absente"
+kc "$admin_realm/organizations/$cabinet/members" | jq -e --arg u "$utilisateur" 'map(.id) | index($u)' >/dev/null \
+  || echec "administrateur du cabinet pas membre de son organisation"
+kc "$admin_realm/users/$utilisateur" | jq -e '.requiredActions | index("UPDATE_PASSWORD")' >/dev/null \
+  || echec "choix du mot de passe non exigé à la première connexion"
+[[ $(catalogue "SELECT \"CellId\" FROM catalog.\"Organisations\" WHERE \"Id\" = '$cabinet'") == "$CELLULE" ]] \
+  || echec "cabinet absent du catalogue"
+[[ $(enveloppe) == vault:v1:* ]] || echec "KEK du cabinet pas tirée par le KMS : $(enveloppe)"
+echo "   cabinet $cabinet inscrit : organisation, KEK, administrateur $utilisateur (invitation : $(jq -r .invitation <<<"$arrivee"))"
+# L'administrateur suit le lien de l'invitation et choisit son mot de passe (pas de second facteur pour l'essai), puis
+# se donne le rôle manager pour créer et ouvrir les dossiers.
+mot_de_passe=$(openssl rand -hex 16)
+kc -X PUT "$admin_realm/users/$utilisateur/reset-password" \
+  -d "$(jq -n --arg p "$mot_de_passe" '{type: "password", value: $p, temporary: false}')"
+kc -X PUT "$admin_realm/users/$utilisateur" -d '{"requiredActions": []}'
+utilisateur_courant=admin@cabinet-mode5.example
+mot_de_passe_courant=$mot_de_passe
+appel POST "/api/v1/cabinets/$cabinet/attributions" \
+  "{\"subjectKind\":\"User\",\"subjectId\":\"$utilisateur\",\"role\":\"manager\",\"scopeKind\":\"Cabinet\",\"scopeId\":\"$cabinet\"}" >/dev/null
+[[ $(statut) == 2* ]] || echec "rôle manager : HTTP $(statut) $(head -c 600 "$SORTIE/reponse.json")"
+
 step "3. Dossier créé par l'API : actif, base d_… sur le cluster"
 dossier=$(appel POST "/api/v1/cabinets/$cabinet/dossiers" '{"name":"Dossier mode 5 (fictif)"}' | jq -r '.id // empty')
 attendu 201 "création du dossier"
@@ -189,7 +258,8 @@ base="d_${dossier//-/}"
 [[ $(catalogue "SELECT octet_length(\"WrappedDek\") FROM catalog.\"Dossiers\" WHERE \"Id\" = '$dossier'") == 60 ]] \
   || echec "DEK du dossier absente ou mal enveloppée"
 appel GET /api/v1/dossiers | jq -e --arg d "$dossier" 'map(.id) | index($d)' >/dev/null || echec "dossier absent de la liste"
-echo "   dossier $dossier actif ; base $base (propriétaire lettra) ; DEK enveloppée (60 octets)"
+[[ $(enveloppe) == vault:v1:* ]] || echec "KEK du cabinet absente du catalogue ou pas enveloppée par le KMS : $(enveloppe)"
+echo "   dossier $dossier actif ; base $base (propriétaire lettra) ; DEK enveloppée (60 octets) ; KEK enveloppée par le KMS"
 
 step "4. Client et facture dans le dossier, validation, relecture"
 appel PUT /api/v1/company-profile '{"name":"Conseil fictif","legalForm":"SAS","shareCapital":10000,"siren":"552100554",
@@ -208,7 +278,11 @@ attendu 200 "validation de la facture"
 numero=$(appel GET "/api/v1/invoices/$facture" "" "$dossier" | jq -er '.number')
 attendu 200 "relecture de la facture"
 [[ $(sql "$base" "SELECT count(*) FROM \"DossierStamp\"") == 1 ]] || echec "estampille du dossier absente de sa base"
-echo "   client $client ; facture $facture validée, numéro $numero"
+courriel=$(sql "$base" "SELECT \"Email\" FROM \"Customers\" WHERE \"Id\" = '$client'")
+[[ $courriel == lettra:enc:v1:* && $courriel != *boulangerie* ]] || echec "e-mail du client en clair dans la base : $courriel"
+[[ $(appel GET "/api/v1/customers/$client" "" "$dossier" | jq -r .email) == compta@boulangerie.example ]] \
+  || echec "e-mail du client illisible par l'API"
+echo "   client $client (e-mail chiffré en base, lu en clair par l'API) ; facture $facture validée, numéro $numero"
 
 step "4. Données gardées après redémarrage de l'API"
 kill "${pids[-1]}" 2>/dev/null || true
@@ -234,5 +308,75 @@ attendre 120 "reprise du dossier $interrompu par le Worker" actif "$interrompu"
 appel GET /api/v1/customers "" "$interrompu" >/dev/null
 attendu 200 "lecture du dossier repris"
 echo "   dossier $interrompu repris par le Worker : actif, base créée et migrée"
+
+step "6. Rotation de la clé racine du cabinet dans le KMS, KEK réenveloppée par le Worker"
+cle_racine="lettra-cabinet-${cabinet//-/}"
+bao write -f "transit/keys/$cle_racine/rotate" >/dev/null
+attendre 120 "réenveloppement de la KEK par le Worker" reenveloppee
+kill "${pids[-1]}" 2>/dev/null || true
+kubectl -n "$NS" rollout restart deploy/lettra-api >/dev/null
+kubectl -n "$NS" rollout status deploy/lettra-api --timeout=4m
+redirection_api
+[[ $(appel GET "/api/v1/invoices/$facture" "" "$dossier" | jq -r '.number') == "$numero" ]] || echec "facture illisible après la rotation"
+echo "   enveloppe de la KEK à la version 2 ; facture $numero relue par une API neuve"
+
+step "7. Effacement d'un dossier par le cabinet : annulable, puis DEK détruite et base supprimée par le Worker"
+appel POST "/api/v1/cabinets/$cabinet/dossiers/$interrompu/effacement" >/dev/null
+attendu 202 "demande d'effacement"
+[[ $(etat "$interrompu") == 4 ]] || echec "dossier $interrompu pas en attente d'effacement : état $(etat "$interrompu")"
+appel GET /api/v1/customers "" "$interrompu" >/dev/null
+[[ $(statut) != 2* ]] || echec "dossier encore ouvert après la demande d'effacement"
+appel DELETE "/api/v1/cabinets/$cabinet/dossiers/$interrompu/effacement" >/dev/null
+attendu 200 "annulation de l'effacement"
+appel GET /api/v1/customers "" "$interrompu" >/dev/null
+attendu 200 "lecture du dossier rouvert"
+appel POST "/api/v1/cabinets/$cabinet/dossiers/$interrompu/effacement" >/dev/null
+attendu 202 "nouvelle demande d'effacement"
+attendre 120 "effacement du dossier $interrompu par le Worker" efface "$interrompu"
+[[ $(catalogue "SELECT coalesce(octet_length(\"WrappedDek\"), 0) FROM catalog.\"Dossiers\" WHERE \"Id\" = '$interrompu'") == 0 ]] \
+  || echec "DEK du dossier effacé encore présente"
+[[ $(sql postgres "SELECT count(*) FROM pg_database WHERE datname = 'd_${interrompu//-/}'") == 0 ]] || echec "base du dossier effacé encore présente"
+[[ $(sql postgres "SELECT count(*) FROM pg_database WHERE datname = '$base'") == 1 ]] || echec "base d'un autre dossier supprimée"
+echo "   dossier $interrompu effacé : DEK détruite, base supprimée ; le dossier $dossier reste intact"
+
+step "8. Clé racine du cabinet détruite dans le KMS : ses dossiers ne s'ouvrent plus"
+bao write "transit/keys/$cle_racine/config" deletion_allowed=true >/dev/null
+bao delete "transit/keys/$cle_racine" >/dev/null
+kill "${pids[-1]}" 2>/dev/null || true
+kubectl -n "$NS" rollout restart deploy/lettra-api >/dev/null
+kubectl -n "$NS" rollout status deploy/lettra-api --timeout=4m
+redirection_api
+appel GET "/api/v1/customers/$client" "" "$dossier" >/dev/null
+[[ $(statut) != 2* ]] || echec "dossier encore lisible après la destruction de la clé du cabinet"
+echo "   dossier $dossier fermé : HTTP $(statut)"
+
+step "9. Départ du cabinet demandé par la plateforme : annulable, puis rien ne reste (bases, clé, comptes)"
+utilisateur_courant=plateforme
+mot_de_passe_courant=$mdp_plateforme
+appel POST "/api/v1/plateforme/cabinets/$cabinet/depart" >/dev/null
+attendu 202 "demande de départ"
+[[ $(jq -r .state "$SORTIE/reponse.json") == Leaving ]] || echec "cabinet pas en partance"
+appel DELETE "/api/v1/plateforme/cabinets/$cabinet/depart" >/dev/null
+attendu 200 "annulation du départ"
+appel POST "/api/v1/plateforme/cabinets/$cabinet/depart" >/dev/null
+attendu 202 "nouvelle demande de départ"
+parti() { [[ $(catalogue "SELECT \"State\" FROM catalog.\"Organisations\" WHERE \"Id\" = '$cabinet'") == 2 ]]; }
+attendre 180 "départ du cabinet par le Worker" parti
+for d in $(catalogue "SELECT replace(\"Id\"::text, '-', '') FROM catalog.\"Dossiers\" WHERE \"OrganisationId\" = '$cabinet'"); do
+  [[ $(sql postgres "SELECT count(*) FROM pg_database WHERE datname = 'd_$d'") == 0 ]] || echec "base d_$d encore présente"
+done
+[[ $(catalogue "SELECT count(*) FROM catalog.\"Dossiers\" WHERE \"OrganisationId\" = '$cabinet' AND \"State\" <> 3") == 0 ]] \
+  || echec "dossier du cabinet pas effacé"
+[[ $(catalogue "SELECT count(*) FROM catalog.\"UserAccounts\" WHERE \"OrganisationId\" = '$cabinet'") == 0 ]] \
+  || echec "comptes du cabinet encore au registre"
+[[ $(catalogue "SELECT coalesce(\"WrappedKek\", 'aucune') FROM catalog.\"Organisations\" WHERE \"Id\" = '$cabinet'") == aucune ]] \
+  || echec "KEK du cabinet encore au catalogue"
+! bao read "transit/keys/$cle_racine" >/dev/null 2>&1 || echec "clé racine du cabinet encore dans le KMS"
+[[ $(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $(jeton_maitre)" "$admin_realm/organizations/$cabinet") == 404 ]] \
+  || echec "organisation Keycloak du cabinet encore présente"
+[[ $(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $(jeton_maitre)" "$admin_realm/users/$utilisateur") == 404 ]] \
+  || echec "compte Keycloak de l'administrateur encore présent"
+echo "   cabinet $cabinet parti : bases supprimées, clé détruite, comptes supprimés ; reste : $(catalogue \
+  "SELECT \"Name\" || ', parti le ' || \"DepartedAt\" FROM catalog.\"Organisations\" WHERE \"Id\" = '$cabinet'")"
 
 step "Cellule kind en mode 5 : vérifiée de bout en bout"

@@ -1,0 +1,371 @@
+@page "/platform"
+@using Lettra.Contracts.Administration
+@using Lettra.Contracts.Platform
+@inject Optional<IPlatformCabinetsGateway> OptionalGateway
+@inject ToastService Toasts
+@inject IStringLocalizer<SharedResource> L
+@* Administration de la plateforme (mode 5) : les cabinets de la cellule, leur arrivée et leur départ, la relance des
+   créations de dossiers en échec. L'administrateur de la plateforme ne voit que des compteurs, jamais les données
+   d'un cabinet. Liste chargée en entier (quelques dizaines de cabinets par cellule) : tri et filtres à l'écran. *@
+
+<PageTitle>@L["PlatformCabinets.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["PlatformCabinets.Title"]</h1>
+        <p class="lettra-muted">@L["PlatformCabinets.Subtitle"]</p>
+    </div>
+    @if (_overview is not null)
+    {
+        <div class="lt-page-actions">
+            @if (FailedCount > 0)
+            {
+                <button type="button" class="lettra-button is-secondary" id="platform-retry" disabled="@_busy" @onclick="RetryAsync">
+                    <Icon Name="refresh-cw" Size="18" /> @string.Format(Culture, L["PlatformCabinets.Retry"], FailedCount)
+                </button>
+            }
+            <button type="button" class="lettra-button" id="platform-onboard" disabled="@(!_overview.CanOnboard || _onboarding)" @onclick="StartOnboarding">
+                <Icon Name="plus" Size="18" /> @L["PlatformCabinets.Onboard"]
+            </button>
+        </div>
+    }
+</div>
+
+@if (OptionalGateway.Value is null)
+{
+    <EmptyState Id="platform-unavailable" IconName="cloud" Title="@L["PlatformCabinets.NoPlatform"]" Text="@L["PlatformCabinets.NoPlatform.Text"]" />
+}
+else
+{
+    <GeneralErrors Errors="_errors" />
+
+    @if (_overview is null)
+    {
+        @if (_errors.Count == 0)
+        {
+            <ListSkeleton Columns="6" />
+        }
+    }
+    else
+    {
+        @if (!_overview.CanOnboard)
+        {
+            <p class="lettra-hint la-callout" id="platform-cannot-onboard"><Icon Name="info" Size="16" /> @L["PlatformCabinets.CannotOnboard"]</p>
+        }
+
+        @if (_onboarding)
+        {
+            <section class="lettra-card" aria-labelledby="platform-form-title">
+                <h2 id="platform-form-title">@L["PlatformCabinets.Form.Title"]</h2>
+                <EditForm Model="_request" OnValidSubmit="OnboardAsync" class="la-form" id="platform-form">
+                    <DataAnnotationsValidator />
+                    <label class="la-field">
+                        <span>@L["PlatformCabinets.Form.Name"]</span>
+                        <InputText id="platform-name" @bind-Value="_request.Name" autocomplete="organization" placeholder="@L["PlatformCabinets.Form.NamePlaceholder"]" />
+                        <FieldErrors Field="@nameof(OnboardCabinetRequest.Name)" ServerErrors="_formErrors" />
+                    </label>
+                    <label class="la-field">
+                        <span>@L["PlatformCabinets.Form.AdministratorName"]</span>
+                        <InputText id="platform-admin-name" @bind-Value="_request.AdministratorName" autocomplete="name" />
+                        <FieldErrors Field="@nameof(OnboardCabinetRequest.AdministratorName)" ServerErrors="_formErrors" />
+                    </label>
+                    <label class="la-field">
+                        <span>@L["PlatformCabinets.Form.AdministratorEmail"]</span>
+                        <InputText id="platform-admin-email" type="email" inputmode="email" autocomplete="email" @bind-Value="_request.AdministratorEmail" />
+                        <FieldErrors Field="@nameof(OnboardCabinetRequest.AdministratorEmail)" ServerErrors="_formErrors" />
+                    </label>
+                    @if (_overview.Cells.Count > 1)
+                    {
+                        <label class="la-field">
+                            <span>@L["PlatformCabinets.Form.Cell"]</span>
+                            <InputSelect id="platform-cell" @bind-Value="_request.CellId">
+                                <option value="">@L["PlatformCabinets.Form.CellChoose"]</option>
+                                @foreach (string cell in _overview.Cells)
+                                {
+                                    <option value="@cell">@cell</option>
+                                }
+                            </InputSelect>
+                            <FieldErrors Field="@nameof(OnboardCabinetRequest.CellId)" ServerErrors="_formErrors" />
+                        </label>
+                    }
+                    <p class="lettra-hint la-callout"><Icon Name="mail" Size="16" /> @L["PlatformCabinets.Form.Hint"]</p>
+                    <GeneralErrors Errors="_formErrors" />
+                    <div class="la-actions">
+                        <button type="submit" class="lettra-button" id="platform-submit" disabled="@_busy"><Icon Name="check" Size="18" />@L["PlatformCabinets.Form.Submit"]</button>
+                        <button type="button" class="lettra-button is-ghost" id="platform-cancel" @onclick="CancelOnboarding">@L["PlatformCabinets.Form.Cancel"]</button>
+                    </div>
+                </EditForm>
+            </section>
+        }
+
+        <section class="lettra-card" aria-labelledby="platform-kpis-title">
+            <h2 id="platform-kpis-title" class="lettra-visually-hidden">@L["PlatformCabinets.Kpis"]</h2>
+            <div class="lt-banking-stats" id="platform-stats">
+                <div class="lt-banking-stat"><span>@L["PlatformCabinets.Kpi.Active"]</span><strong id="platform-active">@Count(PlatformCabinetStateDto.Active)</strong></div>
+                <div class="lt-banking-stat @(Count(PlatformCabinetStateDto.Leaving) > 0 ? "is-pending" : null)"><span>@L["PlatformCabinets.Kpi.Leaving"]</span><strong id="platform-leaving">@Count(PlatformCabinetStateDto.Leaving)</strong></div>
+                <div class="lt-banking-stat"><span>@L["PlatformCabinets.Kpi.Dossiers"]</span><strong id="platform-dossiers">@_overview.Cabinets.Sum(c => c.ActiveDossiers)</strong></div>
+                <div class="lt-banking-stat @(FailedCount > 0 ? "is-pending" : null)"><span>@L["PlatformCabinets.Kpi.Failed"]</span><strong id="platform-failed">@FailedCount</strong></div>
+            </div>
+        </section>
+
+        <section class="lettra-card" aria-labelledby="platform-list-title">
+            <h2 id="platform-list-title" class="lettra-visually-hidden">@L["PlatformCabinets.List"]</h2>
+            <ListFilterBar Id="platform-filters" ActiveCount="ActiveFilters" OnReset="ResetFilters">
+                <ChildContent>
+                    <div class="lt-filter">
+                        <label for="platform-search">@L["PlatformCabinets.Search"]</label>
+                        <input id="platform-search" type="search" autocomplete="off" @bind="_query" @bind:event="oninput" />
+                    </div>
+                </ChildContent>
+                <More>
+                    <div class="lt-filter">
+                        <label for="platform-state">@L["PlatformCabinets.Column.State"]</label>
+                        <select id="platform-state" @bind="_state">
+                            <option value="">@L["PlatformCabinets.State.All"]</option>
+                            @foreach (PlatformCabinetStateDto state in Enum.GetValues<PlatformCabinetStateDto>())
+                            {
+                                <option value="@state">@L[$"PlatformCabinets.State.{state}"]</option>
+                            }
+                        </select>
+                    </div>
+                    <SortSelect Id="platform-sort" Options="SortOptions" State="_sort" OnSort="StateHasChanged" />
+                </More>
+            </ListFilterBar>
+
+            @if (Cabinets.Count == 0)
+            {
+                <EmptyState Id="platform-empty" IconName="building-2"
+                            Title="@(ActiveFilters > 0 ? L["Lists.Empty.FilteredTitle"] : L["PlatformCabinets.Empty"])"
+                            Text="@(ActiveFilters > 0 ? L["Lists.Empty.Filtered"] : L["PlatformCabinets.Empty.Text"])">
+                    @if (ActiveFilters > 0)
+                    {
+                        <button type="button" class="lettra-button is-secondary" id="platform-empty-reset" @onclick="ResetFilters">@L["Lists.Filters.Reset"]</button>
+                    }
+                </EmptyState>
+            }
+            else
+            {
+                <div class="lt-list-scroll">
+                    <table class="lettra-table lt-cards" id="platform-cabinets">
+                        <thead>
+                            <tr>
+                                <SortHeader Option="SortOptions[0]" State="_sort" OnSort="StateHasChanged" Id="platform-sort-name" />
+                                <SortHeader Option="SortOptions[1]" State="_sort" OnSort="StateHasChanged" Id="platform-sort-state" />
+                                <SortHeader Option="SortOptions[2]" State="_sort" OnSort="StateHasChanged" Id="platform-sort-dossiers" Class="lg-num" />
+                                <th scope="col" class="lg-num">@L["PlatformCabinets.Column.Failed"]</th>
+                                <SortHeader Option="SortOptions[3]" State="_sort" OnSort="StateHasChanged" Id="platform-sort-created" />
+                                <th scope="col" class="lt-col-actions"><span class="lettra-visually-hidden">@L["Row.Actions"]</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (PlatformCabinetResponse cabinet in Cabinets)
+                            {
+                                <tr @key="cabinet.Id" id="@($"platform-cabinet-{cabinet.Id:N}")">
+                                    <td>
+                                        <strong>@cabinet.Name</strong>
+                                        <small class="lettra-muted"> · @string.Format(Culture, L["PlatformCabinets.Cell"], cabinet.CellId)</small>
+                                        @if (cabinet.Declared)
+                                        {
+                                            <span class="lettra-status" title="@L["PlatformCabinets.Declared.Hint"]"> @L["PlatformCabinets.Declared"]</span>
+                                        }
+                                    </td>
+                                    <td data-label="@L["PlatformCabinets.Column.State"]">
+                                        <span class="lettra-status @StatusClass(cabinet.State)">@L[$"PlatformCabinets.State.{cabinet.State}"]</span>
+                                        @if (cabinet.State == PlatformCabinetStateDto.Leaving && cabinet.DepartureDueAt is { } due)
+                                        {
+                                            <small class="lettra-muted"> @string.Format(Culture, L["PlatformCabinets.DueAt"], When(due))</small>
+                                        }
+                                        else if (cabinet.DepartedAt is { } departed)
+                                        {
+                                            <small class="lettra-muted"> @string.Format(Culture, L["PlatformCabinets.DepartedAt"], Day(departed))</small>
+                                        }
+                                    </td>
+                                    <td class="lg-num" data-label="@L["PlatformCabinets.Column.Dossiers"]">
+                                        @cabinet.ActiveDossiers
+                                        @if (cabinet.ErasureScheduled > 0)
+                                        {
+                                            <small class="lettra-muted"> @string.Format(Culture, L["PlatformCabinets.ErasureScheduled"], cabinet.ErasureScheduled)</small>
+                                        }
+                                    </td>
+                                    <td class="lg-num" data-label="@L["PlatformCabinets.Column.Failed"]" title="@FailedTitle(cabinet)">@cabinet.FailedDossiers.Count</td>
+                                    <td data-label="@L["PlatformCabinets.Column.Created"]">@Day(cabinet.CreatedAt)</td>
+                                    <td class="lt-col-actions">
+                                        @if (cabinet.State == PlatformCabinetStateDto.Leaving)
+                                        {
+                                            <button type="button" class="lettra-button is-ghost" id="@($"platform-cancel-{cabinet.Id:N}")" disabled="@_busy" @onclick="() => CancelDepartureAsync(cabinet)">
+                                                <Icon Name="undo-2" Size="18" /> @L["PlatformCabinets.CancelDeparture"]
+                                            </button>
+                                        }
+                                        else if (cabinet.State == PlatformCabinetStateDto.Active)
+                                        {
+                                            <RowDelete Label="@string.Format(Culture, L["PlatformCabinets.Departure.Label"], cabinet.Name)"
+                                                       IconName="log-out"
+                                                       Question="@L["PlatformCabinets.Departure.Question"]"
+                                                       ActionText="@L["PlatformCabinets.Departure.Confirm"]"
+                                                       BlockedReason="@(cabinet.Declared ? L["PlatformCabinets.Declared.Hint"].Value : null)"
+                                                       OnDelete="() => ScheduleDepartureAsync(cabinet)" />
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+
+        <Collapsible Id="platform-rules" Title="@L["PlatformCabinets.Rules"]" InitiallyOpen="false">
+            <ul>
+                <li>@L["PlatformCabinets.Rule.Onboard"]</li>
+                <li>@L["PlatformCabinets.Rule.Departure"]</li>
+                <li>@L["PlatformCabinets.Rule.Privacy"]</li>
+            </ul>
+        </Collapsible>
+    }
+}
+
+@code {
+    private const string NameColumn = "name";
+    private const string StateColumn = "state";
+    private const string DossiersColumn = "dossiers";
+    private const string CreatedColumn = "created";
+
+    private PlatformOverviewResponse? _overview;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private IReadOnlyList<ErrorDetail> _formErrors = [];
+    private OnboardCabinetRequest _request = new();
+    private bool _onboarding;
+    private bool _busy;
+    private string? _query;
+    private PlatformCabinetStateDto? _state;
+    private readonly SortState<string> _sort = new(NameColumn);
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private IPlatformCabinetsGateway Gateway => OptionalGateway.Value!;
+
+    private int FailedCount => _overview?.Cabinets.Sum(c => c.FailedDossiers.Count) ?? 0;
+
+    private int ActiveFilters => (string.IsNullOrWhiteSpace(_query) ? 0 : 1) + (_state is null ? 0 : 1);
+
+    private IReadOnlyList<SortOption<string>> SortOptions =>
+    [
+        new(NameColumn, L["PlatformCabinets.Column.Name"]),
+        new(StateColumn, L["PlatformCabinets.Column.State"]),
+        new(DossiersColumn, L["PlatformCabinets.Column.Dossiers"], SortDirectionDto.Descending),
+        new(CreatedColumn, L["PlatformCabinets.Column.Created"], SortDirectionDto.Descending),
+    ];
+
+    private IReadOnlyList<PlatformCabinetResponse> Cabinets
+    {
+        get
+        {
+            IEnumerable<PlatformCabinetResponse> cabinets = (_overview?.Cabinets ?? [])
+                .Where(c => _state is null || c.State == _state)
+                .Where(c => ListSorting.Matches(c.Name, _query) || ListSorting.Matches(c.CellId, _query));
+            Dictionary<string, Func<PlatformCabinetResponse, object?>> keys = new(StringComparer.Ordinal)
+            {
+                [NameColumn] = c => c.Name,
+                [StateColumn] = c => (int)c.State,
+                [DossiersColumn] = c => c.ActiveDossiers,
+                [CreatedColumn] = c => c.CreatedAt,
+            };
+            return ListSorting.Sort(cabinets, _sort, keys);
+        }
+    }
+
+    protected override Task OnInitializedAsync() => OptionalGateway.Value is null ? Task.CompletedTask : LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        OperationResult<PlatformOverviewResponse> result = await Gateway.GetOverviewAsync(CancellationToken.None);
+        (_overview, _errors) = (result.Value ?? _overview, result.Errors);
+    }
+
+    private void StartOnboarding() => (_onboarding, _request, _formErrors) = (true, new OnboardCabinetRequest(), []);
+
+    private void CancelOnboarding() => (_onboarding, _formErrors) = (false, []);
+
+    private async Task OnboardAsync()
+    {
+        _busy = true;
+        _formErrors = [];
+        OperationResult<OnboardCabinetResponse> onboarded = await Gateway.OnboardAsync(_request, CancellationToken.None);
+        _busy = false;
+        if (onboarded.Value is not { } created)
+        {
+            _formErrors = onboarded.Errors;
+            return;
+        }
+
+        _onboarding = false;
+        Toasts.Show(ToastKind.Success, string.Format(
+            Culture,
+            L[created.Invitation == InvitationEmailStatusDto.Sent ? "PlatformCabinets.Toast.Onboarded" : "PlatformCabinets.Toast.OnboardedNoEmail"],
+            created.Cabinet.Name,
+            _request.AdministratorEmail.Trim()));
+        await LoadAsync();
+    }
+
+    private async Task ScheduleDepartureAsync(PlatformCabinetResponse cabinet)
+    {
+        _busy = true;
+        OperationResult<PlatformCabinetResponse> scheduled = await Gateway.ScheduleDepartureAsync(cabinet.Id, CancellationToken.None);
+        _busy = false;
+        if (scheduled.Value is not { } leaving)
+        {
+            Toasts.Show(ToastKind.Error, Message(scheduled.Errors));
+            return;
+        }
+
+        Toasts.Show(
+            ToastKind.Success,
+            string.Format(Culture, L["PlatformCabinets.Toast.DepartureScheduled"], leaving.Name, leaving.DepartureDueAt is { } due ? When(due) : string.Empty),
+            new ToastAction(L["PlatformCabinets.CancelDeparture"], () => CancelDepartureAsync(leaving)));
+        await LoadAsync();
+    }
+
+    private async Task CancelDepartureAsync(PlatformCabinetResponse cabinet)
+    {
+        _busy = true;
+        OperationResult<PlatformCabinetResponse> cancelled = await Gateway.CancelDepartureAsync(cabinet.Id, CancellationToken.None);
+        _busy = false;
+        Toasts.Show(
+            cancelled.IsSuccess ? ToastKind.Success : ToastKind.Error,
+            cancelled.IsSuccess ? string.Format(Culture, L["PlatformCabinets.Toast.DepartureCancelled"], cabinet.Name) : Message(cancelled.Errors));
+        await LoadAsync();
+        StateHasChanged();
+    }
+
+    private async Task RetryAsync()
+    {
+        _busy = true;
+        OperationResult<DossierRetryResponse> retried = await Gateway.RetryFailedDossiersAsync(CancellationToken.None);
+        _busy = false;
+        Toasts.Show(
+            retried.IsSuccess ? ToastKind.Success : ToastKind.Error,
+            retried.Value is { } done ? string.Format(Culture, L["PlatformCabinets.Toast.Retried"], done.Resumed) : Message(retried.Errors));
+        await LoadAsync();
+    }
+
+    private void ResetFilters() => (_query, _state) = (null, null);
+
+    private int Count(PlatformCabinetStateDto state) => _overview?.Cabinets.Count(c => c.State == state) ?? 0;
+
+    private string Message(IReadOnlyList<ErrorDetail> errors) =>
+        errors.Count > 0 ? L.Error(errors[0].Code) : L["PlatformCabinets.Toast.Failed"];
+
+    private string? FailedTitle(PlatformCabinetResponse cabinet) =>
+        cabinet.FailedDossiers.Count == 0 ? null : string.Join(", ", cabinet.FailedDossiers.Select(d => d.Name));
+
+    private static string StatusClass(PlatformCabinetStateDto state) => state switch
+    {
+        PlatformCabinetStateDto.Active => "is-issued",
+        PlatformCabinetStateDto.Leaving => "is-draft",
+        _ => "is-expired",
+    };
+
+    private static string Day(DateTimeOffset at) => at.ToLocalTime().ToString("d", Culture);
+
+    private static string When(DateTimeOffset at) => at.ToLocalTime().ToString("g", Culture);
+}

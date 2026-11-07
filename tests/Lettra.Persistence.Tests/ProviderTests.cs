@@ -85,6 +85,22 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Champs_sensibles_chiffres_par_la_cle_du_dossier()
+    {
+        DossierFieldKeys keys = new();
+        await using TenantHarness harness = SensitiveFieldScenarios.Harness(new SqliteConfigurator(), keys);
+        await SensitiveFieldScenarios.EncryptedAtRestAsync(harness, keys, DatabaseProvider.Sqlite, Database("chiffre-a"), Database("chiffre-b"));
+    }
+
+    [Fact]
+    public async Task Champs_en_clair_d_avant_le_chiffrement_lisibles_et_dossier_ferme_sans_sa_cle()
+    {
+        DossierFieldKeys keys = new();
+        await using TenantHarness harness = SensitiveFieldScenarios.Harness(new SqliteConfigurator(), keys);
+        await SensitiveFieldScenarios.LegacyPlaintextAndDestroyedKeyAsync(harness, keys, DatabaseProvider.Sqlite, Database("chiffre-c"));
+    }
+
+    [Fact]
     public async Task Aller_retour_d_un_article_du_catalogue()
     {
         await using TenantHarness harness = new(new SqliteConfigurator());
@@ -380,6 +396,70 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Effacement_d_un_dossier_demande_annulable_puis_effectif()
+    {
+        ManualClock clock = new(CatalogErasureScenarios.Start);
+        string directory = Path.Combine(_folder, "srv-effacement");
+        await using CatalogHarness harness = new(
+            s => s.AddSqliteProvider(),
+            b => SqliteConfigurator.ConfigureCatalog(b, Database("catalog-effacement")),
+            new Dictionary<string, string?> { ["Provider"] = "Sqlite", ["Directory"] = directory },
+            configure: CatalogErasureScenarios.Clock(clock));
+        await CatalogErasureScenarios.ScheduleCancelAndEraseAsync(harness, clock, name => Task.FromResult(File.Exists(Path.Combine(directory, name + ".db"))));
+    }
+
+    [Fact]
+    public async Task Arrivee_puis_depart_d_un_cabinet_sans_rien_laisser()
+    {
+        ManualClock clock = new(CatalogCabinetScenarios.Start);
+        CatalogCabinetScenarios.Vault vault = new();
+        CatalogCabinetScenarios.Identity identity = new();
+        string directory = Path.Combine(_folder, "srv-depart");
+        await using CatalogHarness harness = new(
+            s => s.AddSqliteProvider(),
+            b => SqliteConfigurator.ConfigureCatalog(b, Database("catalog-depart")),
+            new Dictionary<string, string?> { ["Provider"] = "Sqlite", ["Directory"] = directory },
+            configure: CatalogCabinetScenarios.Platform(clock, vault, identity));
+        await CatalogCabinetScenarios.OnboardThenLeaveAsync(harness, clock, vault, identity, name => Task.FromResult(File.Exists(Path.Combine(directory, name + ".db"))));
+    }
+
+    [Fact]
+    public async Task Un_depart_attend_le_fournisseur_d_identite_et_le_KMS()
+    {
+        ManualClock clock = new(CatalogCabinetScenarios.Start);
+        CatalogCabinetScenarios.Vault vault = new();
+        CatalogCabinetScenarios.Identity identity = new();
+        await using CatalogHarness harness = new(
+            s => s.AddSqliteProvider(),
+            b => SqliteConfigurator.ConfigureCatalog(b, Database("catalog-depart-attente")),
+            new Dictionary<string, string?> { ["Provider"] = "Sqlite", ["Directory"] = Path.Combine(_folder, "srv-depart-attente") },
+            configure: CatalogCabinetScenarios.Platform(clock, vault, identity));
+        await CatalogCabinetScenarios.DepartureWaitsForIdentityAsync(harness, clock, vault, identity);
+    }
+
+    [Fact]
+    public async Task Une_base_declaree_ne_s_efface_pas_par_l_api()
+    {
+        await using CatalogHarness harness = new(
+            s => s.AddSqliteProvider(),
+            b => SqliteConfigurator.ConfigureCatalog(b, Database("catalog-declare")),
+            new Dictionary<string, string?> { ["Provider"] = "Sqlite", ["Directory"] = Path.Combine(_folder, "srv-declare") },
+            CatalogFieldKeyScenarios.Declared(DatabaseProvider.Sqlite));
+        await CatalogErasureScenarios.DeclaredDossierRefusedAsync(harness);
+    }
+
+    [Fact]
+    public async Task Cle_des_dossiers_du_catalogue_pour_les_champs_sensibles()
+    {
+        await using CatalogHarness harness = new(
+            s => s.AddSqliteProvider(),
+            b => SqliteConfigurator.ConfigureCatalog(b, Database("catalog-cles")),
+            new Dictionary<string, string?> { ["Provider"] = "Sqlite", ["Directory"] = Path.Combine(_folder, "srv-cles") },
+            CatalogFieldKeyScenarios.Declared(DatabaseProvider.Sqlite));
+        await CatalogFieldKeyScenarios.DossierKeysAsync(harness, DatabaseProvider.Sqlite);
+    }
+
+    [Fact]
     public async Task Registre_des_droits_dans_le_catalogue()
     {
         await using CatalogHarness harness = new(
@@ -569,6 +649,24 @@ public sealed class PostgreSqlTests : IAsyncLifetime
         Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new PostgreSqlConfigurator());
         await PartiesAndCatalogPersistenceScenarios.SupplierRoundTripAsync(harness, DatabaseProvider.PostgreSql, Database("f"));
+    }
+
+    [SkippableFact]
+    public async Task Champs_sensibles_chiffres_par_la_cle_du_dossier()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        DossierFieldKeys keys = new();
+        await using TenantHarness harness = SensitiveFieldScenarios.Harness(new PostgreSqlConfigurator(), keys);
+        await SensitiveFieldScenarios.EncryptedAtRestAsync(harness, keys, DatabaseProvider.PostgreSql, Database("chiffre-a"), Database("chiffre-b"));
+    }
+
+    [SkippableFact]
+    public async Task Champs_en_clair_d_avant_le_chiffrement_lisibles_et_dossier_ferme_sans_sa_cle()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        DossierFieldKeys keys = new();
+        await using TenantHarness harness = SensitiveFieldScenarios.Harness(new PostgreSqlConfigurator(), keys);
+        await SensitiveFieldScenarios.LegacyPlaintextAndDestroyedKeyAsync(harness, keys, DatabaseProvider.PostgreSql, Database("chiffre-c"));
     }
 
     [SkippableFact]
@@ -833,6 +931,58 @@ public sealed class PostgreSqlTests : IAsyncLifetime
     }
 
     [SkippableFact]
+    public async Task Effacement_d_un_dossier_demande_annulable_puis_effectif()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        ManualClock clock = new(CatalogErasureScenarios.Start);
+        string server = new Npgsql.NpgsqlConnectionStringBuilder(_container!.GetConnectionString()) { Database = null }.ConnectionString;
+        await using CatalogHarness harness = new(
+            s => s.AddPostgreSqlProvider(),
+            b => PostgreSqlConfigurator.ConfigureCatalog(b, Database("catalog_effacement")),
+            new Dictionary<string, string?> { ["Provider"] = "PostgreSql", ["ConnectionString"] = server },
+            configure: CatalogErasureScenarios.Clock(clock));
+        await CatalogErasureScenarios.ScheduleCancelAndEraseAsync(harness, clock, DatabaseExistsAsync);
+    }
+
+    [SkippableFact]
+    public async Task Arrivee_puis_depart_d_un_cabinet_sans_rien_laisser()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        ManualClock clock = new(CatalogCabinetScenarios.Start);
+        CatalogCabinetScenarios.Vault vault = new();
+        CatalogCabinetScenarios.Identity identity = new();
+        string server = new Npgsql.NpgsqlConnectionStringBuilder(_container!.GetConnectionString()) { Database = null }.ConnectionString;
+        await using CatalogHarness harness = new(
+            s => s.AddPostgreSqlProvider(),
+            b => PostgreSqlConfigurator.ConfigureCatalog(b, Database("catalog_depart")),
+            new Dictionary<string, string?> { ["Provider"] = "PostgreSql", ["ConnectionString"] = server },
+            configure: CatalogCabinetScenarios.Platform(clock, vault, identity));
+        await CatalogCabinetScenarios.OnboardThenLeaveAsync(harness, clock, vault, identity, DatabaseExistsAsync);
+    }
+
+    private async Task<bool> DatabaseExistsAsync(string name)
+    {
+        await using Npgsql.NpgsqlConnection connection = new(_container!.GetConnectionString());
+        await connection.OpenAsync();
+        await using Npgsql.NpgsqlCommand command = new("SELECT count(*) FROM pg_database WHERE datname = @name", connection);
+        command.Parameters.AddWithValue("name", name);
+        return (long)(await command.ExecuteScalarAsync())! == 1;
+    }
+
+    [SkippableFact]
+    public async Task Cle_des_dossiers_du_catalogue_pour_les_champs_sensibles()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        string server = new Npgsql.NpgsqlConnectionStringBuilder(_container!.GetConnectionString()) { Database = null }.ConnectionString;
+        await using CatalogHarness harness = new(
+            s => s.AddPostgreSqlProvider(),
+            b => PostgreSqlConfigurator.ConfigureCatalog(b, Database("catalog_cles")),
+            new Dictionary<string, string?> { ["Provider"] = "PostgreSql", ["ConnectionString"] = server },
+            CatalogFieldKeyScenarios.Declared(DatabaseProvider.PostgreSql));
+        await CatalogFieldKeyScenarios.DossierKeysAsync(harness, DatabaseProvider.PostgreSql);
+    }
+
+    [SkippableFact]
     public async Task Registre_des_droits_dans_le_catalogue()
     {
         Skip.IfNot(Docker.Available, "Docker absent");
@@ -1003,6 +1153,24 @@ public sealed class SqlServerTests : IAsyncLifetime
         Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new SqlServerConfigurator());
         await PartiesAndCatalogPersistenceScenarios.SupplierRoundTripAsync(harness, DatabaseProvider.SqlServer, Database("f"));
+    }
+
+    [SkippableFact]
+    public async Task Champs_sensibles_chiffres_par_la_cle_du_dossier()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        DossierFieldKeys keys = new();
+        await using TenantHarness harness = SensitiveFieldScenarios.Harness(new SqlServerConfigurator(), keys);
+        await SensitiveFieldScenarios.EncryptedAtRestAsync(harness, keys, DatabaseProvider.SqlServer, Database("chiffre-a"), Database("chiffre-b"));
+    }
+
+    [SkippableFact]
+    public async Task Champs_en_clair_d_avant_le_chiffrement_lisibles_et_dossier_ferme_sans_sa_cle()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        DossierFieldKeys keys = new();
+        await using TenantHarness harness = SensitiveFieldScenarios.Harness(new SqlServerConfigurator(), keys);
+        await SensitiveFieldScenarios.LegacyPlaintextAndDestroyedKeyAsync(harness, keys, DatabaseProvider.SqlServer, Database("chiffre-c"));
     }
 
     [SkippableFact]
@@ -1260,6 +1428,64 @@ public sealed class SqlServerTests : IAsyncLifetime
             b => SqlServerConfigurator.ConfigureCatalog(b, Database("catalog")),
             new Dictionary<string, string?> { ["Provider"] = "SqlServer", ["ConnectionString"] = server.ConnectionString });
         await CatalogScenarios.ProvisionAndMigrateAsync(harness, DatabaseProvider.SqlServer);
+    }
+
+    [SkippableFact]
+    public async Task Effacement_d_un_dossier_demande_annulable_puis_effectif()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        ManualClock clock = new(CatalogErasureScenarios.Start);
+        Microsoft.Data.SqlClient.SqlConnectionStringBuilder server = new(_container!.GetConnectionString());
+        server.Remove("Initial Catalog");
+        server.Remove("Database");
+        await using CatalogHarness harness = new(
+            s => s.AddSqlServerProvider(),
+            b => SqlServerConfigurator.ConfigureCatalog(b, Database("catalog_effacement")),
+            new Dictionary<string, string?> { ["Provider"] = "SqlServer", ["ConnectionString"] = server.ConnectionString },
+            configure: CatalogErasureScenarios.Clock(clock));
+        await CatalogErasureScenarios.ScheduleCancelAndEraseAsync(harness, clock, DatabaseExistsAsync);
+    }
+
+    [SkippableFact]
+    public async Task Arrivee_puis_depart_d_un_cabinet_sans_rien_laisser()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        ManualClock clock = new(CatalogCabinetScenarios.Start);
+        CatalogCabinetScenarios.Vault vault = new();
+        CatalogCabinetScenarios.Identity identity = new();
+        Microsoft.Data.SqlClient.SqlConnectionStringBuilder server = new(_container!.GetConnectionString());
+        server.Remove("Initial Catalog");
+        server.Remove("Database");
+        await using CatalogHarness harness = new(
+            s => s.AddSqlServerProvider(),
+            b => SqlServerConfigurator.ConfigureCatalog(b, Database("catalog_depart")),
+            new Dictionary<string, string?> { ["Provider"] = "SqlServer", ["ConnectionString"] = server.ConnectionString },
+            configure: CatalogCabinetScenarios.Platform(clock, vault, identity));
+        await CatalogCabinetScenarios.OnboardThenLeaveAsync(harness, clock, vault, identity, DatabaseExistsAsync);
+    }
+
+    private async Task<bool> DatabaseExistsAsync(string name)
+    {
+        await using Microsoft.Data.SqlClient.SqlConnection connection = new(_container!.GetConnectionString());
+        await connection.OpenAsync();
+        await using Microsoft.Data.SqlClient.SqlCommand command = new("SELECT count(*) FROM sys.databases WHERE name = @name", connection);
+        command.Parameters.AddWithValue("@name", name);
+        return (int)(await command.ExecuteScalarAsync())! == 1;
+    }
+
+    [SkippableFact]
+    public async Task Cle_des_dossiers_du_catalogue_pour_les_champs_sensibles()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        Microsoft.Data.SqlClient.SqlConnectionStringBuilder server = new(_container!.GetConnectionString());
+        server.Remove("Initial Catalog");
+        server.Remove("Database");
+        await using CatalogHarness harness = new(
+            s => s.AddSqlServerProvider(),
+            b => SqlServerConfigurator.ConfigureCatalog(b, Database("catalog_cles")),
+            new Dictionary<string, string?> { ["Provider"] = "SqlServer", ["ConnectionString"] = server.ConnectionString },
+            CatalogFieldKeyScenarios.Declared(DatabaseProvider.SqlServer));
+        await CatalogFieldKeyScenarios.DossierKeysAsync(harness, DatabaseProvider.SqlServer);
     }
 
     [SkippableFact]

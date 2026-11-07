@@ -15,7 +15,7 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.CatalogMigrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.13");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.14");
 
             modelBuilder.Entity("Lettra.Infrastructure.Persistence.Catalog.CatalogAiSettings", b =>
                 {
@@ -149,6 +149,15 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.CatalogMigrations
                         .HasMaxLength(63)
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("ErasedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ErasureDueAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ErasureRequestedBy")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("LastError")
                         .HasMaxLength(2000)
                         .HasColumnType("TEXT");
@@ -196,6 +205,8 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.CatalogMigrations
 
                     b.HasIndex("ClusterId", "DatabaseName")
                         .IsUnique();
+
+                    b.HasIndex("State", "ErasureDueAt");
 
                     b.HasIndex("State", "SchemaVersion");
 
@@ -291,12 +302,33 @@ namespace Lettra.Infrastructure.Persistence.Sqlite.CatalogMigrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("DepartedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DepartureDueAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("DepartureRequestedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("ManagedIdentity")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("State")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("WrappedKek")
+                        .HasMaxLength(512)
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("State", "DepartureDueAt");
 
                     b.ToTable("Organisations", (string)null);
                 });

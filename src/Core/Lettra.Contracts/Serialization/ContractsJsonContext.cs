@@ -20,6 +20,7 @@ using Lettra.Contracts.Insights;
 using Lettra.Contracts.Integrity;
 using Lettra.Contracts.Missions;
 using Lettra.Contracts.Pilotage;
+using Lettra.Contracts.Platform;
 using Lettra.Contracts.Policies;
 using Lettra.Contracts.Portal;
 using Lettra.Contracts.Preferences;
@@ -95,6 +96,13 @@ namespace Lettra.Contracts.Serialization;
 [JsonSerializable(typeof(CreateDossierRequest))]
 [JsonSerializable(typeof(DossierSummary))]
 [JsonSerializable(typeof(IReadOnlyList<DossierSummary>))]
+[JsonSerializable(typeof(DossierErasureResponse))]
+[JsonSerializable(typeof(IReadOnlyList<DossierErasureResponse>))]
+[JsonSerializable(typeof(OnboardCabinetRequest))]
+[JsonSerializable(typeof(OnboardCabinetResponse))]
+[JsonSerializable(typeof(PlatformOverviewResponse))]
+[JsonSerializable(typeof(PlatformCabinetResponse))]
+[JsonSerializable(typeof(DossierRetryResponse))]
 [JsonSerializable(typeof(CabinetOverviewResponse))]
 [JsonSerializable(typeof(CabinetOverviewRefreshResponse))]
 [JsonSerializable(typeof(DossierPilotageResponse))]

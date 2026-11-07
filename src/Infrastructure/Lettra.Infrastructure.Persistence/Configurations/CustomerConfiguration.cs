@@ -2,6 +2,7 @@ using Lettra.Domain.Parties;
 using Lettra.Domain.SharedKernel;
 using Lettra.Infrastructure.Persistence.Concurrency;
 using Lettra.Infrastructure.Persistence.Search;
+using Lettra.Infrastructure.Persistence.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -19,7 +20,7 @@ internal sealed class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.Property(c => c.Siren).HasConversion(v => v!.Value, v => Siren.Create(v).Value).HasMaxLength(9);
         builder.Property(c => c.Siret).HasConversion(v => v!.Value, v => Siret.Create(v).Value).HasMaxLength(14);
         builder.Property(c => c.VatNumber).HasConversion(v => v!.Value, v => VatNumber.Create(v).Value).HasMaxLength(15);
-        builder.Property(c => c.Email).HasConversion(v => v!.Value, v => Email.Create(v).Value).HasMaxLength(254);
+        builder.Property(c => c.Email).HasConversion(v => v!.Value, v => Email.Create(v).Value).IsSensitive(254);
         builder.Property(c => c.PreferredLanguage).HasMaxLength(10);
         builder.Property(c => c.CreatedAt).IsRequired();
 

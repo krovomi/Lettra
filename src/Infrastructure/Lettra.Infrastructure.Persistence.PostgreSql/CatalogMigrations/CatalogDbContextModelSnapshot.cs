@@ -18,7 +18,7 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.CatalogMigrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("catalog")
-                .HasAnnotation("ProductVersion", "10.0.13")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -155,6 +155,15 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.CatalogMigrations
                         .HasMaxLength(63)
                         .HasColumnType("character varying(63)");
 
+                    b.Property<DateTime?>("ErasedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ErasureDueAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ErasureRequestedBy")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("LastError")
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
@@ -202,6 +211,8 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.CatalogMigrations
 
                     b.HasIndex("ClusterId", "DatabaseName")
                         .IsUnique();
+
+                    b.HasIndex("State", "ErasureDueAt");
 
                     b.HasIndex("State", "SchemaVersion");
 
@@ -297,12 +308,33 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.CatalogMigrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("DepartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DepartureDueAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DepartureRequestedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("ManagedIdentity")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<int>("State")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("WrappedKek")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("State", "DepartureDueAt");
 
                     b.ToTable("Organisations", "catalog");
                 });

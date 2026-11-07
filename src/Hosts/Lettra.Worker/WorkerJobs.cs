@@ -2,6 +2,7 @@ using Lettra.Exports.Infrastructure;
 using Lettra.Infrastructure.Catalog;
 using Lettra.Infrastructure.Persistence.Billing;
 using Lettra.Infrastructure.Persistence.Cabinet;
+using Lettra.Infrastructure.Persistence.Hosting;
 using Lettra.Infrastructure.Persistence.Integrity;
 using Lettra.Infrastructure.Persistence.Outbox;
 using Lettra.Supervision.Infrastructure;
@@ -28,6 +29,10 @@ internal static class WorkerJobs
         }
 
         services.AddEscalationJob(configuration);
+        services.AddOptions<CabinetKeyRewrapJobOptions>().Bind(configuration.GetSection(CabinetKeyRewrapJobOptions.SectionName))
+            .ValidatePeriodicJob(CabinetKeyRewrapJobOptions.SectionName);
+        services.AddHostedService<CabinetKeyRewrapJob>();
+        services.AddDossierErasureJob(configuration);
         services.AddIntegrityCheckJob(configuration, (sp, token) => sp.ListActiveDossiersAsync(token));
         services.AddFecBulkExport(configuration, (sp, token) => sp.ListActiveDossiersAsync(token));
         services.AddOutboxDispatch(configuration, (sp, token) => sp.ListActiveDossiersAsync(token));

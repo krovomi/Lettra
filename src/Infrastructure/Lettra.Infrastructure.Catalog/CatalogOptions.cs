@@ -35,6 +35,15 @@ public sealed class CatalogDatabaseOptions
 
     /// <summary>Migrer le catalogue au démarrage de l'hôte. <c>false</c> en SaaS : c'est le Worker qui migre.</summary>
     public bool MigrateOnStartup { get; set; } = true;
+
+    /// <summary>
+    /// Délai de rétractation d'un effacement de dossier demandé par le cabinet : le dossier est fermé aussitôt, sa clé
+    /// et sa base ne sont détruites qu'à la fin de ce délai (30 jours par défaut).
+    /// </summary>
+    public TimeSpan DossierErasureDelay { get; set; } = TimeSpan.FromDays(30);
+
+    /// <summary>Délai de rétractation du départ d'un cabinet : il travaille et exporte ses données jusqu'à son terme.</summary>
+    public TimeSpan CabinetDepartureDelay { get; set; } = TimeSpan.FromDays(30);
 }
 
 public sealed class OrganisationEntry

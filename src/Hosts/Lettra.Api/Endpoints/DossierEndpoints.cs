@@ -24,6 +24,24 @@ internal static class DossierEndpoints
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status403Forbidden);
 
+        // Effacement d'un dossier (administrateur du cabinet) : fermé aussitôt, annulable pendant le délai de rétractation.
+        group.MapGet("/effacements", ListErasuresAsync)
+            .RequireCabinetPermission(Permission.CabinetAdministrer)
+            .WithName("ListDossierErasures")
+            .Produces<IReadOnlyList<DossierErasureResponse>>();
+        group.MapPost("/{dossierId:guid}/effacement", ScheduleErasureAsync)
+            .RequireCabinetPermission(Permission.CabinetAdministrer)
+            .WithName("ScheduleDossierErasure")
+            .Produces<DossierErasureResponse>(StatusCodes.Status202Accepted)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+        group.MapDelete("/{dossierId:guid}/effacement", CancelErasureAsync)
+            .RequireCabinetPermission(Permission.CabinetAdministrer)
+            .WithName("CancelDossierErasure")
+            .Produces<DossierSummary>()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
         return group;
     }
 
@@ -64,4 +82,19 @@ internal static class DossierEndpoints
             ? TypedResults.Created($"/api/v1/cabinets/{cabinetId}/dossiers/{created.Value.Id}", created.Value)
             : created.Errors.ToProblem();
     }
+
+    private static async Task<IResult> ListErasuresAsync(Guid cabinetId, IQueryDispatcher queries, CancellationToken cancellationToken) =>
+        Ok(await queries.QueryAsync(new ListScheduledDossierErasuresQuery(new OrganisationId(cabinetId)), cancellationToken).ConfigureAwait(false));
+
+    private static async Task<IResult> ScheduleErasureAsync(Guid cabinetId, Guid dossierId, ICommandDispatcher commands, CancellationToken cancellationToken)
+    {
+        Result<DossierErasureResponse> scheduled = await commands
+            .SendAsync(new ScheduleDossierErasureCommand(new OrganisationId(cabinetId), new DossierId(dossierId)), cancellationToken).ConfigureAwait(false);
+        return scheduled.IsSuccess
+            ? TypedResults.Accepted($"/api/v1/cabinets/{cabinetId}/dossiers/effacements", scheduled.Value)
+            : scheduled.Errors.ToProblem();
+    }
+
+    private static async Task<IResult> CancelErasureAsync(Guid cabinetId, Guid dossierId, ICommandDispatcher commands, CancellationToken cancellationToken) =>
+        Ok(await commands.SendAsync(new CancelDossierErasureCommand(new OrganisationId(cabinetId), new DossierId(dossierId)), cancellationToken).ConfigureAwait(false));
 }

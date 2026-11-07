@@ -1,9 +1,11 @@
 # CI SEULEMENT (deploy/tests/kind/essai-mode5.sh, job « mode5-kind » de .github/workflows/deploy.yml).
 # Cellule en mode 5 (HostedSaaS) dans un cluster kind jetable : Keycloak, l'API et le Worker, catalogue et bases des
-# dossiers sur un cluster PostgreSQL CloudNativePG derrière PgBouncer, exactement comme les valeurs communes de
-# lettra-cell. Ce qui diffère d'une vraie cellule : une instance de chaque, adresses localhost, pas de Redis ni de
-# Prometheus Operator, Worker pressé (une passe toutes les 20 s) et second facteur non exigé (voir plus bas).
-# Aucun secret ici : le script tire au hasard ceux de lettra-keycloak, lettra-api et lettra-worker à chaque essai.
+# dossiers sur un cluster PostgreSQL CloudNativePG derrière PgBouncer, clés des cabinets dans le moteur Transit
+# d'OpenBao, exactement comme les valeurs communes de lettra-cell. Ce qui diffère d'une vraie cellule : une instance de
+# chaque, OpenBao en mode « dev » (openbao-essai.yaml), adresses localhost, pas de Redis ni de Prometheus Operator,
+# Worker pressé (une passe toutes les 20 s) et second facteur non exigé (voir plus bas).
+# Aucun secret ici : le script tire au hasard ceux de lettra-keycloak, lettra-api, lettra-worker et lettra-kms (dont le
+# secret du compte de service lettra-provisioning, qu'il installe dans Keycloak).
 cell: ci-kind
 environment: ci
 
@@ -30,6 +32,10 @@ lettra-api:
     # Le script obtient un jeton par mot de passe (client d'essai lettra-essai) : Keycloak n'y prouve pas de second
     # facteur. Le flux navigateur, lui, l'exige toujours (vérifié par essai-keycloak.sh).
     Lettra__Identity__Oidc__RequireMfa: "false"
+    # Délai de rétractation d'un effacement de dossier : 15 s au lieu de 30 jours, pour que l'essai le voie aboutir.
+    Lettra__Catalog__DossierErasureDelay: "00:00:15"
+    # Délai avant le départ d'un cabinet : 15 s au lieu de 30 jours.
+    Lettra__Catalog__CabinetDepartureDelay: "00:00:15"
     # Clés DataProtection (état OIDC du BFF) dans un volume : le système de fichiers de l'image est en lecture seule.
     HOME: /data
   extraVolumes:
@@ -48,6 +54,12 @@ lettra-worker:
     Lettra__Clusters__pg-a__CellId: ci-kind
     # Une passe toutes les 20 s : migration du catalogue puis reprise des créations de dossiers interrompues.
     Lettra__Worker__Interval: "00:00:20"
+    # Réenveloppement des KEK après une rotation de clé racine : toutes les 20 s au lieu d'une fois par jour.
+    Lettra__Worker__KeyRewrap__InitialDelay: "00:00:05"
+    Lettra__Worker__KeyRewrap__Interval: "00:00:20"
+    # Effacement des dossiers dont le délai de rétractation est passé : toutes les 10 s au lieu d'une fois par heure.
+    Lettra__DossierErasure__InitialDelay: "00:00:05"
+    Lettra__DossierErasure__Interval: "00:00:10"
   resources:
     requests: { cpu: 100m, memory: 256Mi }
     limits: { memory: 512Mi }

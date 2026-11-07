@@ -5,13 +5,52 @@ namespace Lettra.Infrastructure.Persistence.Catalog;
 /// <summary>Un cabinet. La cellule qui l'héberge est fixée à son arrivée (ADR-0009).</summary>
 public sealed class CatalogOrganisation
 {
+    public const int MaxWrappedKekLength = 512;
+
     public Guid Id { get; set; }
 
     public required string Name { get; set; }
 
     public required string CellId { get; set; }
 
+    /// <summary>
+    /// KEK du cabinet enveloppée par sa clé racine dans le KMS de la cellule (chiffré Transit <c>vault:vN:…</c>), quand
+    /// le KMS tient les clés ; <c>null</c> sinon (KEK déclarée dans le coffre de la cellule). Détruire la clé racine du
+    /// cabinet dans le KMS rend cette enveloppe, et donc tous ses dossiers, illisibles, sauvegardes comprises.
+    /// </summary>
+    public string? WrappedKek { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
+
+    public OrganisationState State { get; set; }
+
+    /// <summary>
+    /// Cabinet inscrit par la plateforme (organisation et comptes créés chez le fournisseur d'identité) : à son départ,
+    /// ses comptes et son organisation y sont supprimés. Un cabinet déclaré dans la configuration ne l'est pas.
+    /// </summary>
+    public bool ManagedIdentity { get; set; }
+
+    /// <summary>En UTC : fin du délai de rétractation d'un départ demandé (<see cref="OrganisationState.Leaving"/>).</summary>
+    public DateTime? DepartureDueAt { get; set; }
+
+    /// <summary>L'administrateur de la plateforme qui a demandé le départ (trace, pas de nom).</summary>
+    public Guid? DepartureRequestedBy { get; set; }
+
+    /// <summary>En UTC : départ effectif (dossiers effacés, clé détruite, comptes supprimés).</summary>
+    public DateTime? DepartedAt { get; set; }
+}
+
+/// <summary>Le cycle de vie d'un cabinet sur la plateforme.</summary>
+public enum OrganisationState
+{
+    /// <summary>Le cabinet travaille.</summary>
+    Active = 0,
+
+    /// <summary>Départ demandé : le cabinet travaille et exporte jusqu'à la fin du délai, sans nouveau dossier.</summary>
+    Leaving = 1,
+
+    /// <summary>Parti : seule la trace (identifiant, nom, dates) reste au catalogue.</summary>
+    Departed = 2,
 }
 
 /// <summary>
@@ -43,6 +82,12 @@ public enum DossierState
 
     /// <summary>Effacé : DEK détruite, base supprimée ou illisible.</summary>
     Deleted = 3,
+
+    /// <summary>
+    /// Effacement demandé par le cabinet : le dossier est fermé à tous, mais le cabinet peut encore l'annuler jusqu'à
+    /// <see cref="CatalogDossier.ErasureDueAt"/>. Ensuite, le Worker détruit sa DEK puis supprime sa base.
+    /// </summary>
+    ErasureScheduled = 4,
 }
 
 /// <summary>Un dossier client du cabinet et l'emplacement de sa base. Aucune donnée métier du dossier ici.</summary>
@@ -88,6 +133,15 @@ public sealed class CatalogDossier
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }
+
+    /// <summary>En UTC : fin du délai de rétractation d'un effacement demandé (<see cref="DossierState.ErasureScheduled"/>).</summary>
+    public DateTime? ErasureDueAt { get; set; }
+
+    /// <summary>Qui a demandé l'effacement (identifiant du compte, aucune donnée du dossier).</summary>
+    public Guid? ErasureRequestedBy { get; set; }
+
+    /// <summary>En UTC : quand le dossier a été effacé (DEK détruite, base supprimée).</summary>
+    public DateTime? ErasedAt { get; set; }
 
     public TenantDescriptor ToDescriptor() =>
         new(new Domain.SharedKernel.DossierId(Id), new Domain.SharedKernel.OrganisationId(OrganisationId), Provider, ConnectionSecretRef, Schema);

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Error.CabinetLifecycle.NameRequired" xml:space="preserve"><value>Indiquez le nom du cabinet.</value></data>
+  <data name="Error.CabinetLifecycle.NameTooLong" xml:space="preserve"><value>Le nom du cabinet est trop long (200 caractères au plus).</value></data>
+  <data name="Error.CabinetLifecycle.Unavailable" xml:space="preserve"><value>Cette cellule ne peut pas inscrire de cabinet : son KMS ou son compte de service Keycloak n'est pas configuré.</value></data>
+  <data name="Error.CabinetLifecycle.IdentityFailed" xml:space="preserve"><value>Le fournisseur d'identité n'a pas répondu comme prévu. Réessayez : chaque étape déjà faite est retrouvée.</value></data>
+  <data name="Error.CabinetLifecycle.NameTaken" xml:space="preserve"><value>Un autre cabinet porte déjà ce nom. Choisissez un nom différent.</value></data>
+  <data name="Error.CabinetLifecycle.CellUnknown" xml:space="preserve"><value>Choisissez une cellule de la plateforme.</value></data>
+  <data name="Error.CabinetLifecycle.CabinetDeclared" xml:space="preserve"><value>Ce cabinet est déclaré dans la configuration du serveur : son départ ne se demande pas depuis Lettra.</value></data>
+  <data name="Error.CabinetLifecycle.DepartureNotCancellable" xml:space="preserve"><value>Le départ de ce cabinet ne peut plus être annulé : l'échéance est passée ou aucun départ n'est demandé.</value></data>
+  <data name="Error.CabinetLifecycle.CabinetLeaving" xml:space="preserve"><value>Ce cabinet quitte Lettra : il ne peut plus créer de dossier. Ses dossiers restent ouverts pour l'export jusqu'à l'échéance.</value></data>
+  <data name="Nav.Platform" xml:space="preserve"><value>Plateforme</value></data>
+  <data name="Nav.Platform.Keywords" xml:space="preserve"><value>plateforme cabinets inscrire arrivée départ cellule saas hébergement</value></data>
+  <data name="PlatformCabinets.Title" xml:space="preserve"><value>Plateforme</value></data>
+  <data name="PlatformCabinets.Subtitle" xml:space="preserve"><value>Les cabinets hébergés par la plateforme : leur arrivée, leur départ et leurs créations de dossiers. Vous ne voyez jamais leurs données.</value></data>
+  <data name="PlatformCabinets.Onboard" xml:space="preserve"><value>Inscrire un cabinet</value></data>
+  <data name="PlatformCabinets.Retry" xml:space="preserve"><value>Relancer les créations en échec ({0})</value></data>
+  <data name="PlatformCabinets.NoPlatform" xml:space="preserve"><value>Pas de plateforme ici</value></data>
+  <data name="PlatformCabinets.NoPlatform.Text" xml:space="preserve"><value>Cet écran sert à l'administrateur de la plateforme en ligne. Sur un poste ou un serveur de cabinet, il n'y a pas de cabinet à inscrire.</value></data>
+  <data name="PlatformCabinets.CannotOnboard" xml:space="preserve"><value>Cette cellule ne peut pas encore inscrire de cabinet : son KMS ou son compte de service Keycloak n'est pas configuré. Les cabinets existants restent gérés ici.</value></data>
+  <data name="PlatformCabinets.Form.Title" xml:space="preserve"><value>Inscrire un cabinet</value></data>
+  <data name="PlatformCabinets.Form.Name" xml:space="preserve"><value>Nom du cabinet</value></data>
+  <data name="PlatformCabinets.Form.NamePlaceholder" xml:space="preserve"><value>Cabinet Martin et associés</value></data>
+  <data name="PlatformCabinets.Form.AdministratorName" xml:space="preserve"><value>Nom de son administrateur</value></data>
+  <data name="PlatformCabinets.Form.AdministratorEmail" xml:space="preserve"><value>E-mail de son administrateur</value></data>
+  <data name="PlatformCabinets.Form.Cell" xml:space="preserve"><value>Cellule d'hébergement</value></data>
+  <data name="PlatformCabinets.Form.CellChoose" xml:space="preserve"><value>Choisir une cellule</value></data>
+  <data name="PlatformCabinets.Form.Hint" xml:space="preserve"><value>Lettra crée le cabinet, sa clé de chiffrement et le compte de son administrateur, qui reçoit un e-mail pour choisir son mot de passe et son second facteur.</value></data>
+  <data name="PlatformCabinets.Form.Submit" xml:space="preserve"><value>Inscrire</value></data>
+  <data name="PlatformCabinets.Form.Cancel" xml:space="preserve"><value>Annuler</value></data>
+  <data name="PlatformCabinets.Kpis" xml:space="preserve"><value>Chiffres de la plateforme</value></data>
+  <data name="PlatformCabinets.Kpi.Active" xml:space="preserve"><value>Cabinets actifs</value></data>
+  <data name="PlatformCabinets.Kpi.Leaving" xml:space="preserve"><value>Départs en cours</value></data>
+  <data name="PlatformCabinets.Kpi.Dossiers" xml:space="preserve"><value>Dossiers actifs</value></data>
+  <data name="PlatformCabinets.Kpi.Failed" xml:space="preserve"><value>Créations en échec</value></data>
+  <data name="PlatformCabinets.List" xml:space="preserve"><value>Cabinets de la plateforme</value></data>
+  <data name="PlatformCabinets.Search" xml:space="preserve"><value>Rechercher un cabinet</value></data>
+  <data name="PlatformCabinets.State.All" xml:space="preserve"><value>Tous les états</value></data>
+  <data name="PlatformCabinets.State.Active" xml:space="preserve"><value>Actif</value></data>
+  <data name="PlatformCabinets.State.Leaving" xml:space="preserve"><value>Départ demandé</value></data>
+  <data name="PlatformCabinets.State.Departed" xml:space="preserve"><value>Parti</value></data>
+  <data name="PlatformCabinets.Column.Name" xml:space="preserve"><value>Cabinet</value></data>
+  <data name="PlatformCabinets.Column.State" xml:space="preserve"><value>État</value></data>
+  <data name="PlatformCabinets.Column.Dossiers" xml:space="preserve"><value>Dossiers actifs</value></data>
+  <data name="PlatformCabinets.Column.Failed" xml:space="preserve"><value>En échec</value></data>
+  <data name="PlatformCabinets.Column.Created" xml:space="preserve"><value>Arrivée</value></data>
+  <data name="PlatformCabinets.Cell" xml:space="preserve"><value>cellule {0}</value></data>
+  <data name="PlatformCabinets.Declared" xml:space="preserve"><value>Déclaré</value></data>
+  <data name="PlatformCabinets.Declared.Hint" xml:space="preserve"><value>Cabinet déclaré dans la configuration du serveur : son départ ne se demande pas depuis Lettra.</value></data>
+  <data name="PlatformCabinets.DueAt" xml:space="preserve"><value>le {0}</value></data>
+  <data name="PlatformCabinets.DepartedAt" xml:space="preserve"><value>le {0}</value></data>
+  <data name="PlatformCabinets.ErasureScheduled" xml:space="preserve"><value>({0} à effacer)</value></data>
+  <data name="PlatformCabinets.Empty" xml:space="preserve"><value>Aucun cabinet pour l'instant</value></data>
+  <data name="PlatformCabinets.Empty.Text" xml:space="preserve"><value>Inscrivez le premier cabinet : il pourra travailler dès que son administrateur aura choisi son mot de passe.</value></data>
+  <data name="PlatformCabinets.CancelDeparture" xml:space="preserve"><value>Annuler le départ</value></data>
+  <data name="PlatformCabinets.Departure.Label" xml:space="preserve"><value>Demander le départ de {0}</value></data>
+  <data name="PlatformCabinets.Departure.Question" xml:space="preserve"><value>Demander le départ ? Tout sera supprimé dans 30 jours.</value></data>
+  <data name="PlatformCabinets.Departure.Confirm" xml:space="preserve"><value>Demander le départ</value></data>
+  <data name="PlatformCabinets.Toast.Onboarded" xml:space="preserve"><value>{0} est inscrit. {1} a reçu l'e-mail pour choisir son mot de passe.</value></data>
+  <data name="PlatformCabinets.Toast.OnboardedNoEmail" xml:space="preserve"><value>{0} est inscrit. L'e-mail pour {1} n'est pas parti : renvoyez-le depuis Keycloak.</value></data>
+  <data name="PlatformCabinets.Toast.DepartureScheduled" xml:space="preserve"><value>Départ de {0} demandé : tout sera supprimé le {1}. Le cabinet peut exporter ses données d'ici là.</value></data>
+  <data name="PlatformCabinets.Toast.DepartureCancelled" xml:space="preserve"><value>Départ de {0} annulé : rien n'a changé pour le cabinet.</value></data>
+  <data name="PlatformCabinets.Toast.Retried" xml:space="preserve"><value>{0} création(s) de dossier relancée(s).</value></data>
+  <data name="PlatformCabinets.Toast.Failed" xml:space="preserve"><value>L'action n'a pas abouti. Réessayez.</value></data>
+  <data name="PlatformCabinets.Rules" xml:space="preserve"><value>Comment ça marche</value></data>
+  <data name="PlatformCabinets.Rule.Onboard" xml:space="preserve"><value>Inscrire un cabinet crée son organisation dans Keycloak, sa clé racine dans le KMS et le compte de son administrateur. Recommencer après une erreur retrouve ce qui est déjà fait.</value></data>
+  <data name="PlatformCabinets.Rule.Departure" xml:space="preserve"><value>Un départ s'annule pendant 30 jours ; le cabinet travaille et exporte ses données pendant ce temps. Ensuite, ses bases, sa clé et ses comptes sont supprimés.</value></data>
+  <data name="PlatformCabinets.Rule.Privacy" xml:space="preserve"><value>Seuls restent l'identifiant, le nom et les dates du cabinet : la preuve de son départ, sans aucune donnée.</value></data>
+</root>

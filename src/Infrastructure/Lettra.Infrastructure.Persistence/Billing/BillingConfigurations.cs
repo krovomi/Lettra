@@ -2,6 +2,7 @@ using Lettra.Domain.Billing;
 using Lettra.Domain.Pricing;
 using Lettra.Domain.SharedKernel;
 using Lettra.Infrastructure.Persistence.Concurrency;
+using Lettra.Infrastructure.Persistence.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -147,7 +148,7 @@ internal sealed class CompanyProfileConfiguration : IEntityTypeConfiguration<Com
         builder.Property(p => p.VatNumber).HasConversion(v => v!.Value, v => VatNumber.Create(v).Value).HasMaxLength(15);
         builder.Property(p => p.PaymentTerms).HasMaxLength(500);
         builder.Property(p => p.EarlyPaymentDiscount).HasMaxLength(500);
-        builder.Property(p => p.Iban).HasConversion(v => v!.Value, v => Iban.Create(v).Value).HasMaxLength(34);
+        builder.Property(p => p.Iban).HasConversion(v => v!.Value, v => Iban.Create(v).Value).IsSensitive(34);
         builder.Property(p => p.Bic).HasMaxLength(11);
         builder.Property(p => p.AccountHolderName).HasMaxLength(Domain.Parties.Supplier.MaxAccountHolderLength);
         builder.Property(p => p.ActivityCode).HasMaxLength(NafCode.Length);

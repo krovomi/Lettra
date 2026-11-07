@@ -18,7 +18,7 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.13")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -428,8 +428,9 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .HasColumnType("character varying(500)");
 
                     b.Property<string>("Iban")
-                        .HasMaxLength(34)
-                        .HasColumnType("character varying(34)");
+                        .HasMaxLength(190)
+                        .HasColumnType("character varying(190)")
+                        .HasAnnotation("Lettra:Sensitive", true);
 
                     b.Property<decimal?>("LatePenaltyRate")
                         .HasPrecision(18, 4)
@@ -1642,8 +1643,9 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
-                        .HasMaxLength(254)
-                        .HasColumnType("character varying(254)");
+                        .HasMaxLength(1070)
+                        .HasColumnType("character varying(1070)")
+                        .HasAnnotation("Lettra:Sensitive", true);
 
                     b.Property<bool>("IsArchived")
                         .HasColumnType("boolean");
@@ -1821,12 +1823,14 @@ namespace Lettra.Infrastructure.Persistence.PostgreSql.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
-                        .HasMaxLength(254)
-                        .HasColumnType("character varying(254)");
+                        .HasMaxLength(1070)
+                        .HasColumnType("character varying(1070)")
+                        .HasAnnotation("Lettra:Sensitive", true);
 
                     b.Property<string>("Iban")
-                        .HasMaxLength(34)
-                        .HasColumnType("character varying(34)");
+                        .HasMaxLength(190)
+                        .HasColumnType("character varying(190)")
+                        .HasAnnotation("Lettra:Sensitive", true);
 
                     b.Property<bool>("IsArchived")
                         .HasColumnType("boolean");

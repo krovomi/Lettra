@@ -59,6 +59,7 @@ if (bool.TryParse(builder.Configuration[OutboxApiHosting.Key], out bool outboxIn
     builder.Services.AddEscalationJob(builder.Configuration);
     builder.Services.AddIntegrityCheckJob(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
     builder.Services.AddFecBulkExport(builder.Configuration, (services, token) => services.ListActiveDossiersAsync(token));
+    builder.Services.AddDossierErasureJob(builder.Configuration);
 }
 
 WebApplication app = builder.Build();
@@ -119,6 +120,12 @@ cabinet.MapCabinetRights();
 cabinet.MapCabinetAlerts();
 cabinet.MapAssistantSettings();
 cabinet.MapCabinetPolicies();
+
+// Administration de la plateforme (arrivée et départ des cabinets) : la permission porte sur la plateforme.
+app.MapGroup("/api/v1/plateforme")
+    .RequireAuthorization(LettraPolicies.User)
+    .AddEndpointFilter<CsrfEndpointFilter>()
+    .MapPlatform();
 
 // Membres et dossiers d'un groupe : la permission porte sur le groupe de la route.
 app.MapGroup($"/api/v1/groupes/{{{GroupPermissionEndpointFilter.RouteKey}:guid}}")

@@ -44,6 +44,12 @@ public enum AccessAreaDto
 
     /// <summary>Portail du client du cabinet.</summary>
     Portal = 11,
+
+    /// <summary>
+    /// Administration de la plateforme (mode 5) : arrivée et départ des cabinets. Hors des rôles d'un cabinet, donc absent
+    /// de <see cref="AccessAreas.All"/> ; ouvert par <see cref="MyAccessResponse.AdministersPlatform"/>.
+    /// </summary>
+    Platform = 12,
 }
 
 /// <summary>Niveau d'accès à un espace, du plus faible au plus fort ; chaque niveau comprend les précédents.</summary>
@@ -175,8 +181,16 @@ public sealed record AdministrationOverview(
 /// Ce que l'utilisateur courant peut voir : son cabinet, s'il peut ouvrir l'espace d'administration, et ses niveaux par
 /// espace sur le dossier ouvert (et le cabinet, pour les alertes et l'administration). Sert à n'afficher que les écrans permis.
 /// </summary>
-public sealed record MyAccessResponse(Guid? CabinetId, bool CanAdminister, IReadOnlyList<AreaAccess> Areas)
+/// <param name="CabinetId">Cabinet de l'utilisateur, s'il en a un.</param>
+/// <param name="CanAdminister">Il ouvre l'espace « Équipe et accès ».</param>
+/// <param name="Areas">Ses niveaux par espace.</param>
+/// <param name="AdministersPlatform">
+/// Il administre la plateforme (arrivée et départ des cabinets), avec ou sans cabinet à lui. Paramètre du constructeur,
+/// pas propriété « init » : le navigateur (WebAssembly élagué) ne relit pas une propriété « init » hors constructeur.
+/// </param>
+public sealed record MyAccessResponse(Guid? CabinetId, bool CanAdminister, IReadOnlyList<AreaAccess> Areas, bool AdministersPlatform = false)
 {
+
     public AccessLevelDto LevelOf(AccessAreaDto area) => Areas.FirstOrDefault(a => a.Area == area)?.Level ?? AccessLevelDto.None;
 }
 

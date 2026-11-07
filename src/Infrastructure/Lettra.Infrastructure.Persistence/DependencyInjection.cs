@@ -33,6 +33,8 @@ public static class DependencyInjection
         services.AddSingleton(options ?? new PersistenceOptions());
         services.AddSingleton<ISecretStore, SecretStoreRouter>();
         services.AddSingleton<IDossierDbContextFactory, DossierDbContextFactory>();
+        // Champs sensibles chiffrés par la DEK du dossier : seulement sur un serveur, où le catalogue remplace ce magasin.
+        services.TryAddSingleton<IDossierFieldKeys, NoDossierFieldKeys>();
         services.AddSingleton<TenantMigrator>();
         services.AddScoped<TenantContext>();
         services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());

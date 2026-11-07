@@ -1,6 +1,8 @@
 using System.Collections.Concurrent;
 using System.Collections.Frozen;
+using System.Security.Cryptography;
 using Lettra.Application.Abstractions.Tenancy;
+using Lettra.Infrastructure.Persistence.Security;
 using Lettra.Infrastructure.Persistence.Sync;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -35,7 +37,8 @@ internal sealed class DossierDbContextFactory(
     ISecretStore secrets,
     IEnumerable<IDbProviderConfigurator> configurators,
     ILoggerFactory loggerFactory,
-    IEnumerable<IDossierInterceptor> interceptors) : IDossierDbContextFactory
+    IEnumerable<IDossierInterceptor> interceptors,
+    IDossierFieldKeys fieldKeys) : IDossierDbContextFactory
 {
     private readonly FrozenDictionary<DatabaseProvider, IDbProviderConfigurator> _byProvider =
         configurators.ToFrozenDictionary(c => c.Provider);
@@ -54,6 +57,7 @@ internal sealed class DossierDbContextFactory(
             .UseLoggerFactory(loggerFactory);
         configurator.Configure(builder, connectionString, tenant);
         builder.AddInterceptors(_interceptors);
+        builder.AddInterceptors(new SensitiveFieldInterceptor(await FieldCipherAsync(tenant, cancellationToken).ConfigureAwait(false)));
         LettraDbContext context = new(builder.Options, tenant);
         if (!verifyStamp)
         {
@@ -69,6 +73,25 @@ internal sealed class DossierDbContextFactory(
         {
             await context.DisposeAsync().ConfigureAwait(false);
             throw;
+        }
+    }
+
+    /// <summary>Clés des champs sensibles du dossier, dérivées de sa DEK ; la copie de la DEK est effacée aussitôt.</summary>
+    private async ValueTask<SensitiveFieldCipher?> FieldCipherAsync(TenantDescriptor tenant, CancellationToken cancellationToken)
+    {
+        byte[]? dek = await fieldKeys.FindAsync(tenant, cancellationToken).ConfigureAwait(false);
+        if (dek is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            return new SensitiveFieldCipher(dek);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(dek);
         }
     }
 

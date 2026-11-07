@@ -43,7 +43,9 @@ internal sealed class CatalogHarness : IAsyncDisposable
     public CatalogHarness(
         Action<IServiceCollection> addProvider,
         Action<DbContextOptionsBuilder> configureCatalog,
-        IDictionary<string, string?> cluster)
+        IDictionary<string, string?> cluster,
+        IDictionary<string, string?>? extra = null,
+        Action<IServiceCollection>? configure = null)
     {
         Dictionary<string, string?> settings = new()
         {
@@ -85,6 +87,11 @@ internal sealed class CatalogHarness : IAsyncDisposable
             settings[$"Lettra:Clusters:srv-a:{key}"] = value;
         }
 
+        foreach ((string key, string? value) in extra ?? new Dictionary<string, string?>())
+        {
+            settings[key] = value;
+        }
+
         IConfiguration configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
         ServiceCollection services = new();
         services.AddLogging();
@@ -98,6 +105,7 @@ internal sealed class CatalogHarness : IAsyncDisposable
         services.AddSingleton<OfflineDirectories>();
         services.AddSingleton<ICompanyDirectory>(sp => sp.GetRequiredService<OfflineDirectories>());
         services.AddSingleton<IVatNumberChecker>(sp => sp.GetRequiredService<OfflineDirectories>());
+        configure?.Invoke(services);
         _root = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
     }
 
