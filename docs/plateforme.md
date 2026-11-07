@@ -64,10 +64,18 @@ Pendant le délai de départ, un cabinet ne peut plus créer de dossier (409 `Ca
 | `Lettra:Identity:Provisioning:ClientSecret` | (vide) | Son secret, dans le coffre de la cellule (secrets `lettra-api` et `lettra-worker`), jamais dans Git. |
 | `Lettra:Identity:Provisioning:Authority` | `Lettra:Identity:Oidc:Authority` | Adresse du realm vue du serveur, si elle diffère de celle des jetons. |
 | `Lettra:Identity:Provisioning:InvitationLifetime` | `7.00:00:00` | Durée de validité du lien d'invitation envoyé à l'administrateur du cabinet. |
+| `Lettra:Catalog:MaxDossiersPerCabinet` | `500` | Nombre de dossiers qu'un cabinet peut tenir dans la cellule (créés ou importés, effacements en attente compris, dossiers effacés exclus). Au-delà, « Nouveau dossier » et « Importer un dossier » répondent : « Le cabinet a atteint le nombre de dossiers prévu pour lui. Effacez un dossier qu'il ne suit plus, ou contactez le support pour en ouvrir davantage. » |
 | `Lettra:Catalog:CabinetDepartureDelay` | `30.00:00:00` | Délai entre la demande de départ d'un cabinet et la suppression de tout ce qui le concerne. |
 
 L'installation du compte de service dans Keycloak est décrite dans
 [deploy/keycloak/README.md](../deploy/keycloak/README.md#ajouter-un-cabinet).
+
+## Limites par cabinet
+
+Pour qu'un cabinet ne gêne pas les autres dans une cellule partagée : 500 dossiers au plus (réglage ci-dessus), débit
+de l'API borné (2 000 requêtes par minute par cabinet, 300 par utilisateur), taille des envois bornée route par route.
+Un cabinet ne voit jamais rien d'un autre : un test appelle chaque route de l'API au nom d'un autre cabinet et exige la
+même réponse que pour un identifiant inconnu.
 
 ## RGPD
 

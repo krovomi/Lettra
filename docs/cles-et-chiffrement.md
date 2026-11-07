@@ -68,7 +68,8 @@ appartient à qui l'a déclarée, et la demande est refusée avec un message cla
   dossier est une carte.
 - **Exporter** et **Importer un dossier** : un dossier part dans un paquet chiffré par une phrase secrète et arrive
   entier sur un autre hôte Lettra (voir [Réversibilité d'un dossier](reversibilite.md)).
-- **Nouveau dossier** : un nom suffit. Le dossier reçoit sa base et sa clé, s'ouvre aussitôt aux personnes qui ont
+- **Nouveau dossier** : un nom suffit (500 dossiers au plus par cabinet dans une cellule en ligne, voir
+  [Plateforme](plateforme.md#limites-par-cabinet)). Le dossier reçoit sa base et sa clé, s'ouvre aussitôt aux personnes qui ont
   accès à tout le cabinet, et apparaît dans le sélecteur de dossier. Le toaster propose « Ouvrir ».
 - **Effacer** : demandé dans la ligne, avec une confirmation courte (« Fermer ce dossier ? Il sera effacé dans
   30 jours, sauf annulation. »). Le dossier est fermé à tous aussitôt ; s'il était le dossier ouvert, un autre dossier

@@ -1441,7 +1441,8 @@ deploy/            démo Docker, Helm, OpenTofu, Argo CD, cellules, Keycloak, ob
 | Le parcours de ce README fonctionne | `DemoWalkthroughTests` |
 | Numérotation sans trou ni doublon sous concurrence | `Numerotation_continue_sous_concurrence` |
 | Chaque code d'erreur est traduit en FR et EN | `ErrorCodeAndResourceTests` |
-| Aucune donnée de dossier dans les journaux | `NoDossierDataInLogsTests` |
+| Aucune donnée de dossier dans les journaux (API et Worker) : parcours réel, et règle qui n'admet que des identifiants, nombres, dates et textes techniques dans chaque message | `NoDossierDataInLogsTests`, règle d'architecture des journaux |
+| Un cabinet ne voit rien d'un autre : chaque route, appelée au nom d'un autre cabinet, répond comme pour un identifiant inconnu ; chaque route déclare sur quoi porte sa permission | `TenantIsolationApiTests` |
 | Les hôtes (Api, Web, Worker) et le jeu de démonstration ne voient ni EF ni un fournisseur de base ; les endpoints passent par l'application | `HostRulesTests` |
 | Les couches Application des modules ne voient ni EF, ni ASP.NET, ni l'infrastructure | `ApplicationLayerRulesTests` |
 | Les noms écrits dans les empreintes d'intégrité scellées ne changent jamais | `SealedFingerprintTests` |
