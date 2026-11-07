@@ -13,7 +13,7 @@ de l'espace de noms `lettra` (Pod Security « restricted »).
 | `ConfigMap/keycloak-realm` | Le realm versionné, tel quel : `files/realm-lettra.json` est un lien vers `deploy/keycloak/realm-lettra.json`. |
 | `Cluster/keycloak-db` | Base PostgreSQL dédiée (CloudNativePG), hors du budget des dossiers ; sauvegarde quotidienne si `database.cnpg.backup.enabled`. |
 | `Service/keycloak` | `http` (8080) pour la passerelle et l'API, `management` (9000) pour la supervision. |
-| `NetworkPolicy/keycloak` | Entrées limitées à la passerelle, à l'API de la cellule, aux autres instances et à la supervision. |
+| `NetworkPolicy/keycloak` | Entrées limitées à la passerelle, à l'API et au Worker de la cellule (le Worker termine le départ d'un cabinet), aux autres instances et à la supervision. |
 | `PodDisruptionBudget/keycloak` | Dès deux instances. |
 
 ## Adresses

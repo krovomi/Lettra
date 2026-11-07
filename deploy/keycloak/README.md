@@ -79,6 +79,26 @@ Chaque jeton porte `amr` (niveau d'authentification), `organization` (cabinet) e
 
 ## Ajouter un cabinet
 
+**Cellule en ligne (mode 5) : par l'API.** L'administrateur de la plateforme inscrit le cabinet depuis l'écran
+« Plateforme » (ou `POST /api/v1/plateforme/cabinets`) : Lettra crée l'organisation, le compte de l'administrateur du
+cabinet et son invitation (voir [docs/plateforme.md](../../docs/plateforme.md)). Il faut pour cela un **compte de
+service** dans le realm `lettra` :
+
+- un client confidentiel `lettra-provisioning`, comptes de service activés, aucun flux navigateur ni mot de passe
+  direct, avec les rôles `manage-users`, `view-users`, `query-users`, `manage-realm` et `view-realm` du client
+  `realm-management` (sans `manage-realm` et `view-realm`, Keycloak refuse l'API des organisations) ;
+  `deploy/tests/kind/essai-mode5.sh` montre les appels exacts ;
+- son secret, tiré au hasard par OpenTofu (`deploy/opentofu/modules/cell-bootstrap`) comme celui du BFF, sous la clé
+  `Lettra__Identity__Provisioning__ClientSecret` dans les secrets `lettra-api` et `lettra-worker` ; les valeurs du
+  chart `lettra-cell` donnent déjà `ClientId` et `Authority` ;
+- la NetworkPolicy de Keycloak (chart `lettra-keycloak`) laisse passer l'API et le Worker, qui termine le départ d'un
+  cabinet en supprimant son organisation et ses comptes ; `deploy/tests/valider.sh` le vérifie.
+
+L'invitation par e-mail passe par le serveur d'e-mail du realm ; sans lui, le compte est créé quand même et la
+réponse dit « invitation non envoyée ».
+
+**Serveur du cabinet (modes 2 et 3) : à la main.**
+
 **Une organisation Keycloak par cabinet**, dans le realm `lettra` du Keycloak de la cellule. Les organisations ne sont
 jamais dans `realm-lettra.json` (le fichier est le même pour toutes les cellules) : elles vivent dans la base de Keycloak.
 
