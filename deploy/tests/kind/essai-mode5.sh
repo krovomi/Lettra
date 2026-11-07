@@ -13,7 +13,8 @@
 #   3. un dossier créé par l'API passe à « actif », sa base d_… existe sur le cluster, appartient au rôle du cabinet et
 #      refuse tout autre rôle ; la KEK du cabinet est tirée par le KMS et gardée enveloppée dans le catalogue ;
 #   4. un client et une facture s'y créent, la facture se valide et se relit, y compris après redémarrage de l'API ;
-#      l'e-mail du client est chiffré dans la base du dossier ;
+#      l'e-mail du client est chiffré dans la base du dossier ; un poste relié (mode 4) reçoit le dossier, ouvre sa série
+#      de factures et voit son intention appliquée une seule fois, même renvoyée ;
 #   5. une création de dossier interrompue (serveur de bases indisponible, Worker arrêté) est reprise par le Worker ;
 #   6. après une rotation de la clé racine du cabinet, le Worker réenveloppe sa KEK et tout reste lisible ;
 #   7. l'effacement d'un dossier demandé par le cabinet : fermé aussitôt, annulable, puis, le délai de rétractation passé,
@@ -299,6 +300,42 @@ kubectl -n "$NS" rollout status deploy/lettra-api --timeout=4m
 redirection_api
 [[ $(appel GET "/api/v1/invoices/$facture" "" "$dossier" | jq -r '.number') == "$numero" ]] || echec "facture perdue au redémarrage"
 echo "   facture $numero relue après redémarrage"
+
+step "4. Poste relié (mode 4) sur la cellule : réception, intention rejouée, série du poste"
+poste=$(cat /proc/sys/kernel/random/uuid)
+appel_poste() { # méthode, chemin, corps : comme appel, au nom du poste relié, sur le dossier
+  local args=(-sS -o "$SORTIE/reponse.json" -w '%{http_code}' -X "$1" "$API$2" -H "Authorization: Bearer $(jeton)"
+    -H "X-Dossier: $dossier" -H "X-Lettra-Device: $poste")
+  [[ -n "${3:-}" ]] && args+=(-H 'Content-Type: application/json' -d "$3")
+  curl "${args[@]}" > "$SORTIE/statut"
+  cat "$SORTIE/reponse.json"
+}
+recu=$(appel_poste GET /api/v1/sync/changes)
+attendu 200 "réception des changements par le poste"
+[[ $(jq -r --arg c "$client" '.customers[] | select(.id == $c) | .email' <<<"$recu") == compta@boulangerie.example ]] \
+  || echec "le poste ne reçoit pas le client en clair : $(head -c 400 <<<"$recu")"
+jq -e '.companyProfile.siren == "552100554"' <<<"$recu" >/dev/null || echec "fiche entreprise absente de la réception"
+jeton_synchro=$(jq -r .token <<<"$recu")
+appel_poste POST /api/v1/sync/device-series "{\"deviceId\":\"$poste\"}" | jq -e '.series[0].seriesCode == "FAC-P01"' >/dev/null \
+  || echec "série du poste : HTTP $(statut) $(head -c 400 "$SORTIE/reponse.json")"
+hors_ligne=$(cat /proc/sys/kernel/random/uuid)
+intention="{\"deviceId\":\"$poste\",\"intents\":[{\"\$type\":\"customer.create\",\"idempotencyKey\":\"$(cat /proc/sys/kernel/random/uuid)\",
+  \"entityId\":\"$hors_ligne\",\"recordedAt\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"data\":{\"kind\":\"Company\",\"name\":\"Client saisi hors ligne\",
+  \"siret\":\"73282932000074\",\"email\":\"hors-ligne@client.example\",\"addressLine1\":\"2 rue du Train\",\"postalCode\":\"69001\",
+  \"city\":\"Lyon\",\"countryCode\":\"FR\"}}]}"
+[[ $(appel_poste POST /api/v1/sync/intents "$intention" | jq -c '.results[0] | [.outcome, .serverVersion]') == '["Applied",1]' ]] \
+  || echec "intention du poste : $(head -c 600 "$SORTIE/reponse.json")"
+# Renvoi après une réponse perdue : le même résultat, rien de rejoué.
+[[ $(appel_poste POST /api/v1/sync/intents "$intention" | jq -c '.results[0] | [.outcome, .serverVersion]') == '["Applied",1]' ]] \
+  || echec "renvoi de l'intention : $(head -c 600 "$SORTIE/reponse.json")"
+[[ $(sql "$base" "SELECT count(*) FROM \"Customers\" WHERE \"Id\" = '$hors_ligne'") == 1 ]] || echec "client du poste absent ou créé deux fois"
+[[ $(sql "$base" "SELECT \"Email\" FROM \"Customers\" WHERE \"Id\" = '$hors_ligne'") == lettra:enc:v1:* ]] \
+  || echec "e-mail du client du poste en clair dans la base"
+appel_poste GET "/api/v1/sync/changes?token=$jeton_synchro" | jq -e --arg c "$hors_ligne" '[.customers[].id] | index($c)' >/dev/null \
+  || echec "réception suivante sans le client du poste"
+appel GET /api/v1/sync/devices "" "$dossier" | jq -e --arg p "$poste" 'map(.deviceId) | index($p)' >/dev/null \
+  || echec "poste absent du registre : $(head -c 400 "$SORTIE/reponse.json")"
+echo "   poste $poste : dossier reçu (e-mails en clair), série FAC-P01 ouverte, intention appliquée une seule fois, poste au registre"
 
 step "5. Création interrompue (serveur de bases indisponible, Worker arrêté), puis reprise par le Worker"
 kubectl -n "$NS" scale deploy/lettra-worker --replicas=0 >/dev/null
