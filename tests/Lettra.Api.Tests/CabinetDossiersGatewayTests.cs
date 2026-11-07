@@ -94,12 +94,52 @@ public sealed class CabinetDossiersGatewayTests(LettraApiFactory factory) : ICla
         (await gateway.ListAsync(cabinet, default)).Value!.Should().Contain(d => d.Id == created.Id);
     }
 
+    [Fact]
+    public async Task Dans_le_navigateur_le_paquet_part_du_champ_du_fichier_sans_passer_par_l_application()
+    {
+        ForwardingFileSender browser = new(factory.ClientFor(LettraApiFactory.AdministrateurCabinetId));
+        await using ServiceProvider services = _harness.HttpGateway(
+            LettraApiFactory.DossierId, LettraApiFactory.AdministrateurCabinetId, s => s.AddSingleton<IBrowserFileSender>(browser));
+        ICabinetDossiersGateway gateway = services.GetRequiredService<ICabinetDossiersGateway>();
+        Guid cabinet = LettraApiFactory.CabinetId;
+        DossierSummary created = (await gateway.CreateAsync(cabinet, new CreateDossierRequest { Name = "Dossier du navigateur" }, default)).Value!;
+        DossierPackageFile package = (await gateway.ExportAsync(cabinet, created.Id, new ExportDossierRequest { Passphrase = Passphrase }, default)).Value!;
+        await factory.Services.GetRequiredService<IDossierProvisioner>().DiscardAsync(new DossierId(created.Id), default);
+        browser.Inputs["champ-du-paquet"] = package.Content;
+        ChosenFile chosen = new("paquet.lettrapaquet", package.Content.Length, () => throw new InvalidOperationException("le fichier ne doit pas être lu par l'application"), "champ-du-paquet");
+
+        (await gateway.ImportAsync(cabinet, chosen, "une autre phrase secrète", default)).Errors.Should().ContainSingle()
+            .Which.Code.Should().Be(ErrorCodes.Tenancy.PackageUnreadable, "le refus du serveur se lit comme par HttpClient");
+        (await gateway.ImportAsync(cabinet, chosen, Passphrase, default)).Value.Should().Be(created);
+
+        browser.Sent.Should().AllSatisfy(sent => sent.Should().Be(
+            ($"http://localhost/api/v1/cabinets/{cabinet}/dossiers/import", DossierPackageRules.PackageField, DossierPackageRules.PassphraseField, "X-Lettra-Csrf")));
+    }
+
     private const string Passphrase = "cheval agrafe batterie correcte";
 
-    private static async Task<OperationResult<DossierSummary>> ImportAsync(ICabinetDossiersGateway gateway, Guid cabinet, DossierPackageFile package, string passphrase)
+    private static async Task<OperationResult<DossierSummary>> ImportAsync(ICabinetDossiersGateway gateway, Guid cabinet, DossierPackageFile package, string passphrase) =>
+        await gateway.ImportAsync(cabinet, new ChosenFile("paquet.lettrapaquet", package.Content.Length, () => new MemoryStream(package.Content)), passphrase, default);
+
+    /// <summary>Le navigateur simulé : le fichier du champ part en multipart vers l'API de test.</summary>
+    private sealed class ForwardingFileSender(HttpClient api) : IBrowserFileSender
     {
-        using MemoryStream content = new(package.Content);
-        return await gateway.ImportAsync(cabinet, content, passphrase, default);
+        public Dictionary<string, byte[]> Inputs { get; } = [];
+
+        public List<(string Url, string FileField, string Fields, string Headers)> Sent { get; } = [];
+
+        public async Task<HttpResponseMessage> PostAsync(
+            Uri url, string inputElementId, string fileField, IReadOnlyDictionary<string, string> fields, IReadOnlyDictionary<string, string> headers, CancellationToken cancellationToken)
+        {
+            Sent.Add((url.AbsoluteUri, fileField, string.Join(',', fields.Keys), string.Join(',', headers.Keys)));
+            using MultipartFormDataContent form = new() { { new ByteArrayContent(Inputs[inputElementId]), fileField, "paquet.lettrapaquet" } };
+            foreach ((string name, string value) in fields)
+            {
+                form.Add(new StringContent(value), name);
+            }
+
+            return await api.PostAsync(new Uri(url.PathAndQuery, UriKind.Relative), form, cancellationToken);
+        }
     }
 
     public void Dispose() => _harness.Dispose();

@@ -7,6 +7,8 @@ using Lettra.Contracts.Customers;
 using Lettra.Contracts.Dossiers;
 using Lettra.Contracts.Serialization;
 using Lettra.Domain.SharedKernel;
+using Microsoft.AspNetCore.Http.Metadata;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lettra.Api.Tests;
@@ -22,6 +24,17 @@ public sealed class DossierTransferApiTests(LettraApiFactory factory) : IClassFi
     private static Uri Export(Guid dossier) => new($"/api/v1/cabinets/{LettraApiFactory.CabinetId}/dossiers/{dossier}/export", UriKind.Relative);
 
     private static readonly Uri Import = new($"/api/v1/cabinets/{LettraApiFactory.CabinetId}/dossiers/import", UriKind.Relative);
+
+    [Fact]
+    public void L_import_admet_le_plus_gros_paquet_avec_l_enveloppe_du_formulaire()
+    {
+        RouteEndpoint import = factory.Services.GetRequiredService<EndpointDataSource>().Endpoints.OfType<RouteEndpoint>()
+            .Single(e => e.Metadata.GetMetadata<IEndpointNameMetadata>()?.EndpointName == "ImportDossier");
+
+        // Kestrel compte toute la requête : délimiteurs, en-têtes des champs et phrase secrète s'ajoutent au paquet.
+        import.Metadata.GetMetadata<IRequestSizeLimitMetadata>()!.MaxRequestBodySize.Should()
+            .Be(DossierPackageRules.MaxImportRequestLength).And.BeGreaterThan(DossierPackageRules.MaxPackageLength + DossierPackageRules.MaxPassphraseLength);
+    }
 
     [Fact]
     public async Task Un_dossier_exporte_revient_par_l_import_avec_ses_donnees()
