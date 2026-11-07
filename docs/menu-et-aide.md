@@ -13,7 +13,9 @@ macOS, Android, iOS).
 - **Hors sections**, en tête : Accueil, En bref, Décisions à prendre, Vue cabinet, Radar de prévention, Comptes intra-groupe (flèches gauche-droite) et Démo
   commentée.
 - **Sections repliables** : un clic sur le titre d'une section (Ventes, Tiers, Comptabilité, Pilotage) la replie ou la
-  déplie ; son chevron tourne. « Vérifier les tiers » est dans la section Tiers et se trouve aussi par ses mots-clés
+  déplie ; son chevron tourne. Dans Pilotage, « Plateforme » n'apparaît qu'à l'administrateur de la plateforme (mode 5,
+  [plateforme.md](plateforme.md)) ; un utilisateur sans dossier qui administre la plateforme arrive directement dessus.
+  « Vérifier les tiers » est dans la section Tiers et se trouve aussi par ses mots-clés
   (bénéficiaires effectifs, RBE, gel des avoirs, BODACC, URSSAF, LCB-FT…). Une section repliée qui contient l'écran affiché porte un point bleu.
 - **Favoris** : l'étoile, au survol d'un écran (toujours visible au doigt), l'épingle dans la section **Favoris**, sous
   Accueil et Vue cabinet. Une seconde touche le retire.
@@ -71,6 +73,9 @@ macOS, Android, iOS).
 
 **Ajouter un écran au menu** : une ligne dans `NavItems.All` (avec `Page:` si un droit doit le cacher), son libellé
 `Nav.*` et, si des mots courants le désignent, `Nav.*.Keywords` en français et en anglais.
+
+Le menu se redessine quand les accès de l'utilisateur arrivent après l'ouverture de session : une entrée réservée
+(« Administration », « Plateforme ») apparaît tout de suite, sans attendre la navigation suivante.
 
 **Ajouter une question à l'aide** : une ligne dans `HelpCatalog.All` (écrans où elle remonte, lien facultatif vers
 l'écran qui répond) et ses trois textes en français et en anglais. Un test vérifie que chaque texte existe dans les

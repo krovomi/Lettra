@@ -83,6 +83,7 @@ reproduction automatique. « **Non vérifié** » signifie que la méthode est d
 | iPhone ou iPad réel | Application native | **Pas encore possible** : il faut un Mac et un compte Apple Developer pour la signer. Utiliser le navigateur. |
 | Mac (macOS) | [Application macOS](#macos-mac-catalyst) | Construite, mais **s'arrête à la création du premier dossier** tant qu'elle n'est pas signée par Apple. Utiliser le navigateur. |
 | Linux, en application native | Pas de version native (.NET MAUI ne vise pas Linux) | Utiliser le navigateur. |
+| Une cellule en mode 5 (SaaS), pour les développeurs | Cluster Kubernetes jetable : `deploy/tests/kind/essai-mode5.sh` (docker, kind, kubectl, helm, curl, jq et openssl). Un cabinet et un utilisateur fictifs, tirés au hasard ; rien n'est appliqué à un cloud. Il crée un dossier par l'API, y valide une facture, vérifie la reprise d'une création interrompue, le chiffrement des champs sensibles, la rotation et la destruction de la clé du cabinet, l'effacement d'un dossier, l'arrivée et le départ d'un cabinet | **Vérifié** par la CI (job `mode5-kind`). Hors CI, joué sur un poste avec docker compose seulement, pas dans kind. |
 | Tous les appareils sur les mêmes données | [Serveur commun](#serveur-commun) : **Pilotage** > **Serveur du cabinet**, adresse `http://localhost:8080` (Android par câble : `adb reverse tcp:8080 tcp:8080` et `adb reverse tcp:8081 tcp:8081`) | Navigateur, harnais de l'application installée et émulateur Android **vérifiés** de bout en bout ; Windows, vrai téléphone Android et simulateur iOS **non vérifiés** ; iPhone et Mac : signature Apple nécessaire. |
 
 Les applications natives se téléchargent depuis la CI. Sur GitHub, ouvrez l'onglet
@@ -465,7 +466,7 @@ récurrentes**), **Tiers** (**Clients**, **Fournisseurs**, **Factures reçues**,
 **Attestations de vigilance**, **Vérifier les tiers**, **Catalogue**), **Comptabilité** (**Encaissements**,
 **Rapprochement bancaire**, **Relances**, **Journal et balance**, **FEC**, **Déclarations**, **Revue du dossier**, **Lettre de mission**, **Anti-blanchiment**) et
 **Pilotage** (**Tableaux de bord**, **Alertes**, **Bien utiliser l'IA**, **Entreprise**, **Mes préférences**, **Équipe et accès** pour qui
-administre le cabinet, **Serveur du cabinet**). Sur un
+administre le cabinet, **Serveur du cabinet**, **Plateforme** pour l'administrateur de la plateforme en mode 5). Sur un
 ordinateur, le menu est à gauche et se replie en icônes ; sur une tablette, c'est une colonne d'icônes ; sur un
 téléphone, des onglets en bas (Accueil, Devis, Factures, Clients, **Plus** pour le reste). En haut, le champ
 « Rechercher un écran, une pièce, un client… » ouvre la palette de commandes, aussi au clavier avec **Ctrl+K**
@@ -1289,7 +1290,7 @@ hors de l'application, et la base est migrée sur place au démarrage.
 
 | Où | Emplacement | Remettre à zéro exprès |
 |---|---|---|
-| Navigateur (Docker) | Volume `lettra-demo_lettra-donnees` (catalogue, dossier SQLite non chiffré dans la démo, clés de session) ; Keycloak (utilisateur, enrôlement TOTP) dans `lettra-demo_keycloak-donnees`. Le modèle de la voix (sans donnée de dossier) dans `lettra-demo_whisper-modeles`. `docker volume ls` les liste. | `docker compose -f deploy/demo/compose.yaml down -v` |
+| Navigateur (Docker) | Volume `lettra-demo_lettra-donnees` (catalogue, dossier SQLite, fichier non chiffré dans la démo mais IBAN et e-mails chiffrés par la clé du dossier, clés de session) ; Keycloak (utilisateur, enrôlement TOTP) dans `lettra-demo_keycloak-donnees`. Le modèle de la voix (sans donnée de dossier) dans `lettra-demo_whisper-modeles`. `docker volume ls` les liste. | `docker compose -f deploy/demo/compose.yaml down -v` |
 | Windows | `%LOCALAPPDATA%\Lettra\Lettra.App.Maui\Data` (à coller dans la barre d'adresse de l'Explorateur) : le compte du poste (`compte-local.json`) et, dans `dossiers`, une base chiffrée par dossier. La clé du cabinet est dans le coffre de Windows : copier ces fichiers sur un autre PC ne les rend pas lisibles. | Supprimer ce dossier, Lettra fermé |
 | Android | Dans l'application (`/data/user/0/fr.lettra.app/files`), sans sauvegarde Android. | Désinstaller, ou **Effacer les données** |
 | iOS, macOS | Dans le dossier de données de l'application, clé du cabinet dans le Trousseau. | Désinstaller l'application (macOS : supprimer aussi son dossier `fr.lettra.app` dans `~/Library`) |
@@ -1388,6 +1389,19 @@ En développement, l'API ouvre un dossier SQLite de démonstration et la platefo
 Le poste crée alors la réplique du dossier du serveur, envoie ses pièces au retour du réseau (en demandant
 « Maintenant / Plus tard / Détail » selon la préférence) et présente les conflits à trancher.
 
+**Clés et chiffrement (modes 2, 3 et 5).** Sur un serveur, Lettra chiffre lui-même les champs sensibles de chaque
+dossier (IBAN, adresses e-mail des clients et des fournisseurs) avec la clé du dossier. Dans la cellule en ligne, les
+clés des cabinets sont tenues par un KMS (moteur Transit d'OpenBao) : détruire la clé d'un cabinet rend tous ses
+dossiers illisibles, sauvegardes comprises. L'administrateur d'un cabinet peut demander l'effacement d'un dossier,
+annulable pendant 30 jours. Détails, routes et réglages (`Lettra:Kms`, `Lettra:DossierErasure`) :
+[docs/cles-et-chiffrement.md](docs/cles-et-chiffrement.md).
+
+**Plateforme (mode 5).** L'administrateur de la plateforme inscrit les cabinets et organise leur départ depuis l'écran
+**Plateforme** (menu Pilotage) ou l'API `/api/v1/plateforme`, sans script ni redémarrage, et ne voit jamais les
+données d'un cabinet. Au départ, annulable pendant 30 jours, tout ce qui concerne le cabinet est supprimé. Détails,
+routes et réglages (`Lettra:Identity:Provisioning`) : [docs/plateforme.md](docs/plateforme.md). L'avancement du mode 5
+est suivi dans [docs/plan-mode-5.md](docs/plan-mode-5.md).
+
 ### Structure
 
 ```
@@ -1483,7 +1497,9 @@ charge de travail MAUI est épinglée (`MAUI_WORKLOAD_VERSION`, 10.0.401) : un j
 casse pas la CI du jour au lendemain. Le SDK .NET de la CI l'est aussi (`DOTNET_SDK_VERSION`, 10.0.402), parce que
 le SDK 10.0.403 annoncé par Microsoft ne se télécharge pas ; `global.json` reste ouvert aux SDK 10.0 récents des postes.
 `.github/workflows/deploy.yml` valide l'IaC, les règles et le routage des
-alertes, l'essai de panne (API arrêtée, astreinte appelée en S1), Keycloak dans une cellule kind, puis la démo Docker :
+alertes, l'essai de panne (API arrêtée, astreinte appelée en S1), Keycloak dans une cellule kind, **une cellule complète
+en mode 5 dans kind** (Keycloak, API, Worker, catalogue et bases des dossiers sur PostgreSQL CloudNativePG derrière
+PgBouncer, clés des cabinets dans OpenBao : voir `deploy/tests/kind/essai-mode5.sh`), puis la démo Docker :
 parcours navigateur (Keycloak, API, PWA), charge k6, télémétrie dans Grafana (chaque vérification en échec devient une
 annotation du job) et scan de sécurité ZAP. Autres workflows : `serveur-commun-android.yml` (navigateur et application
 Android sur les mêmes données, émulateur, rejoué une fois sur un émulateur neuf si l'émulateur s'engorge), `voix.yml` (Whisper réel sur Linux, Windows et macOS),

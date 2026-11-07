@@ -166,6 +166,9 @@ Les noms viennent du projet Compose `lettra-demo` (`name:` de `compose.yaml`) : 
   Aucune suppression automatique. La remise à zéro du second facteur ci-dessus les supprime aussi.
 - Docker Desktop (« Clean / Purge data », nettoyage des volumes) et `docker volume prune -a` suppriment aussi les volumes
   d'une démo arrêtée. Pour libérer de la place, `docker builder prune` suffit (cache de construction de l'image).
+- **Ne pas changer `LETTRA_DEMO_KEK`** (`.env`) sur une démo déjà remplie : c'est la clé du cabinet. La changer rend
+  illisibles les IBAN et adresses e-mail déjà chiffrés par la clé de chaque dossier, et invérifiables les sceaux
+  anti-fraude. Voir [docs/cles-et-chiffrement.md](../../docs/cles-et-chiffrement.md).
 - **Sauvegarder** (démo arrêtée) :
   `docker run --rm -v lettra-demo_lettra-donnees:/donnees -v "${PWD}:/sauvegarde" busybox tar czf /sauvegarde/lettra-donnees.tgz -C /donnees .`
 

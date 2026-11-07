@@ -1,6 +1,6 @@
 # Plan de développement du mode 5 : la cellule en ligne (SaaS)
 
-> **Statut : proposition, à discuter.** Ce plan part de ce que le dépôt contient au 5 novembre 2026. Il ne remplace
+> **Statut : en cours.** Étapes 0, 1 et 2 faites (sauf les points marqués « reste ») ; étapes 3 à 6 à faire. Il ne remplace
 > pas les ADR (0002, 0008, 0009, 0011) ni les annexes E et F du blueprint : là où il les contredit, ce sont eux qui
 > font foi, et le point est à trancher en revue.
 
@@ -25,19 +25,16 @@ surtout **les assembler, chiffrer, exploiter et prouver**.
 | Registre Catalog : cabinets, clusters, dossiers, droits, règles, préférences | ✅ Codé, migrations sur 3 providers | `src/Infrastructure/Lettra.Infrastructure.Persistence/Catalog/` |
 | Création d'une base par dossier, reprise si interruption, choix du cluster le moins rempli | ✅ Codé | `src/Infrastructure/Lettra.Infrastructure.Catalog/CatalogDossierProvisioner.cs` |
 | Migration des bases de dossiers par le Worker (pas au démarrage de l'API) | ✅ Codé | `DossierMigrationOrchestrator.cs`, `src/Hosts/Lettra.Worker/` |
-| Hiérarchie de clés : KEK du cabinet → DEK du dossier (AES-256-GCM) | ⚠️ La DEK est **créée et enveloppée**, mais **jamais utilisée** côté serveur (seul le poste SQLite la déchiffre) | `Security/DossierKeyring.cs`, `Sqlite/Local/LocalDossiers.cs` |
-| KEK des cabinets | ⚠️ Lue dans la **configuration** (`Lettra:Organisations:n:Kek`), pas dans un KMS | `SecretSources.cs` (`ConfigurationKekStore`) |
+| Hiérarchie de clés : KEK du cabinet → DEK du dossier (AES-256-GCM) | ✅ La DEK chiffre les champs sensibles côté serveur (IBAN, e-mails) : voir [cles-et-chiffrement.md](cles-et-chiffrement.md) | `Security/DossierKeyring.cs`, `Sqlite/Local/LocalDossiers.cs` |
+| KEK des cabinets | ✅ Tenues par le moteur Transit d'OpenBao (`TransitKekStore`), enveloppées dans le catalogue, réenveloppées chaque jour par le Worker ; configuration hors cellule | `Lettra.Infrastructure.Catalog/TransitKekStore.cs`, `SecretSources.cs` (`ConfigurationKekStore`) |
 | Chart Helm de cellule (API, Worker, Keycloak, CloudNativePG, PgBouncer, Redis, tailles S à XL) | ✅ Écrit | `deploy/helm/lettra-cell/` |
 | Infrastructure OVHcloud (cluster Kubernetes, réseau, stockage S3) et amorçage Argo CD | ✅ Écrit, non appliqué | `deploy/opentofu/`, `deploy/argocd/` |
 | Cellule de recette en `HostedSaaS`, sauvegardes S3 | ⚠️ Décrite, **jamais déployée** | `deploy/cells/recette/values.yaml` |
-| Essai en CI dans kind | ⚠️ Teste **Keycloak et l'API en mode 2** (`LocalNetwork`, SQLite, Worker désactivé), **pas le mode 5** | `deploy/tests/kind/` |
-| Ajout d'un cabinet | ⚠️ Script manuel côté Keycloak, puis déclaration à la main dans la configuration | `deploy/keycloak/ajouter-cabinet.sh` |
+| Essai en CI dans kind | ✅ Le mode 5 est essayé de bout en bout (`essai-mode5.sh`, job `mode5-kind`) ; Keycloak seul en mode 2 reste essayé par `essai-keycloak.sh` | `deploy/tests/kind/` |
+| Arrivée et départ d'un cabinet | ✅ Par l'administrateur de la plateforme, écran « Plateforme » et API : voir [plateforme.md](plateforme.md). Le script reste pour les modes 2 et 3 | `Lettra.Infrastructure.Catalog/CatalogCabinetLifecycle.cs`, `deploy/keycloak/ajouter-cabinet.sh` |
 | Observabilité (Prometheus, Loki, Tempo, Grafana, alertes) | ✅ Écrite, vérifiée sur la démo | `deploy/helm/lettra-observability/`, `deploy/cells/_commun/` |
-| Suppression d'un dossier ou d'un cabinet | ❌ L'état `Deleted` existe, aucun code ne le pose | `Catalog/CatalogModel.cs` |
+| Suppression d'un dossier ou d'un cabinet | ✅ Effacement d'un dossier (délai de rétractation, clé détruite, base supprimée) et départ d'un cabinet ; reste l'écran d'effacement côté cabinet | `Lettra.Infrastructure.Catalog/CatalogDossierEraser.cs` |
 | Inscription, abonnement, facturation du service | ❌ Absents | — |
-
-Trois commentaires disent encore que le Catalog n'est pas livré (`deploy/helm/lettra-cell/values-pr.yaml`,
-`ConfigurationAuthorizationDirectory.cs`). Ils sont à corriger dès l'étape 0.
 
 ---
 
@@ -62,8 +59,9 @@ l'étape 0 faite.
 
 ### Étape 0 : faire tourner le mode 5 en CI (fondation)
 
+**Fait.**
+
 **Objectif** : un essai automatique qui lance une vraie cellule en mode 5 et la vérifie de bout en bout.
-Aujourd'hui, aucun test ne lance le mode 5.
 
 - Ajouter `deploy/tests/kind/valeurs-mode5.yaml` : `Lettra__DeploymentMode: HostedSaaS`, Catalog sur PostgreSQL
   (CloudNativePG), Worker activé, un cluster `pg-a` derrière PgBouncer, KEK de test tirée au hasard par le script.
@@ -79,6 +77,9 @@ Aujourd'hui, aucun test ne lance le mode 5.
 **Fini quand** : le job `mode5-kind` passe sur `main`.
 
 ### Étape 1 : chiffrer les données au repos
+
+**Fait** (champs sensibles, KMS, rotation ; volumes chiffrés : avec l'hébergeur). Option C retenue, KMS : OpenBao
+Transit. Voir [cles-et-chiffrement.md](cles-et-chiffrement.md).
 
 **Objectif** : la case orange « chiffrement par Lettra : non réalisé » passe au vert côté serveur.
 
@@ -104,6 +105,12 @@ avec une clé propre à chaque base. Trois options :
 sensibles, et qu'effacer la DEK rend le dossier illisible, sauvegardes comprises.
 
 ### Étape 2 : arrivée et départ d'un cabinet (cycle de vie)
+
+**Fait côté serveur et écran de la plateforme** : arrivée et départ d'un cabinet (API, Keycloak, catalogue, KMS,
+Worker, écran « Plateforme »), effacement d'un dossier (demande, rétractation de 30 jours, clé détruite puis base
+supprimée, trace dans le catalogue sans donnée). L'essai `mode5-kind` inscrit le cabinet par l'API, efface un dossier
+et finit par le départ du cabinet. **Reste** : l'écran d'effacement côté cabinet, l'export complet au départ, la
+réversibilité vers les modes 2 et 3. Voir [plateforme.md](plateforme.md).
 
 **Objectif** : plus aucune étape manuelle pour ouvrir ou fermer un cabinet.
 
@@ -246,9 +253,9 @@ Le mode 5 est livré quand **tous** ces points sont vrais, et chacun est prouvé
 
 ## 8. Questions ouvertes
 
-1. Quelle option de chiffrement : A, B ou C (étape 1) ?
+1. Quelle option de chiffrement : A, B ou C (étape 1) ? **Tranché : C.**
 2. Quel KMS : OVHcloud KMS, Vault hébergé par Lettra, ou des clés apportées par le cabinet lui-même (BYOK) pour les
-   plus exigeants ?
+   plus exigeants ? **Tranché : OpenBao Transit, une clé racine par cabinet.**
 3. Une cellule partagée par plusieurs cabinets, ou une cellule dédiée pour les gros cabinets (tailles L et XL) ?
 4. Quelle certification viser (SecNumCloud, ISO 27001…) ?
 5. Quel modèle d'abonnement : par cabinet, par dossier actif ou par utilisateur ?
