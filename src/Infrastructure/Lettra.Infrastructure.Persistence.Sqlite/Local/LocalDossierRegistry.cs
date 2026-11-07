@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Domain.SharedKernel;
+using Microsoft.Data.Sqlite;
 
 namespace Lettra.Infrastructure.Persistence.Sqlite.Local;
 
@@ -117,6 +118,28 @@ public sealed class LocalDossierRegistry : IOpenedLocalDossier, IDisposable
         if (await FindAsync(dossierId, cancellationToken).ConfigureAwait(false) is { } manifest)
         {
             await SaveAsync(manifest with { WrappedDek = [] }, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// Retire un dossier du poste (import qui n'a pas abouti) : manifeste et base supprimés. S'il était ouvert, le premier
+    /// dossier restant le devient.
+    /// </summary>
+    public async Task RemoveAsync(Guid dossierId, CancellationToken cancellationToken)
+    {
+        SqliteConnection.ClearAllPools();
+        foreach (string file in new[] { ManifestPath(dossierId), DatabasePath(dossierId), DatabasePath(dossierId) + "-wal", DatabasePath(dossierId) + "-shm" })
+        {
+            File.Delete(file);
+        }
+
+        if (_active == dossierId)
+        {
+            IReadOnlyList<LocalDossierManifest> remaining = await ListAsync(cancellationToken).ConfigureAwait(false);
+            if (remaining.Count > 0)
+            {
+                await SetActiveAsync(new DossierId(remaining[0].DossierId), cancellationToken).ConfigureAwait(false);
+            }
         }
     }
 

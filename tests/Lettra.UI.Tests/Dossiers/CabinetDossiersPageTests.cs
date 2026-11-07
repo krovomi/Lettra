@@ -8,7 +8,9 @@ using Lettra.UI.Shared;
 using Lettra.UI.Shared.Cabinet;
 using Lettra.UI.Shared.Localization;
 using Lettra.UI.Shared.Pages.Dossiers;
+using Lettra.UI.Shared.Services;
 using Lettra.UI.Tests.Administration;
+using Lettra.UI.Tests.Billing;
 using Lettra.UI.Tests.Cabinet;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,8 +19,8 @@ namespace Lettra.UI.Tests.Dossiers;
 
 /// <summary>
 /// L'écran « Dossiers du cabinet » : compteurs, liste triée et filtrée à l'écran, création d'un dossier, effacement
-/// confirmé dans la ligne puis annulé depuis le toaster, en français et en anglais ; et l'écran refusé à qui
-/// n'administre pas le cabinet.
+/// confirmé dans la ligne puis annulé depuis le toaster, export d'un dossier dans un paquet chiffré et import d'un
+/// paquet, en français et en anglais ; et l'écran refusé à qui n'administre pas le cabinet.
 /// </summary>
 [Collection("culture")]
 public sealed class CabinetDossiersPageTests : BunitContext
@@ -27,6 +29,7 @@ public sealed class CabinetDossiersPageTests : BunitContext
     private readonly FakeCabinetDossiersGateway _gateway;
     private readonly FakeAdministrationGateway _administration = new();
     private readonly SwitchableDossierSelection _selection = new(FakeCabinetGateway.Boulangerie);
+    private readonly FakeFileDownloader _files = new();
 
     public CabinetDossiersPageTests()
     {
@@ -37,6 +40,7 @@ public sealed class CabinetDossiersPageTests : BunitContext
         Services.AddSingleton<IDossierSelection>(_selection);
         Services.AddSingleton<IAdministrationGateway>(_administration);
         Services.AddSingleton<ICabinetDossiersGateway>(_gateway);
+        Services.AddSingleton<IFileDownloader>(_files);
         LettraCultures.Apply(CultureInfo.GetCultureInfo("fr-FR"));
     }
 
@@ -46,6 +50,8 @@ public sealed class CabinetDossiersPageTests : BunitContext
         page.WaitForAssertion(() => page.FindAll("#dossiers-list tbody tr").Should().HaveCount(rows));
         return page;
     }
+
+    private const string Passphrase = "cheval agrafe batterie correcte";
 
     private static string Row(Guid id) => $"#dossiers-row-{id:N}";
 
@@ -174,6 +180,94 @@ public sealed class CabinetDossiersPageTests : BunitContext
     }
 
     [Fact]
+    public void Exporter_demande_la_phrase_secrete_deux_fois_puis_remet_le_paquet()
+    {
+        IRenderedComponent<CabinetDossiersPage> page = RenderPage();
+
+        page.Find($"#dossiers-export-{FakeCabinetGateway.Garage:N}").Click();
+        page.Find("#dossiers-export-title").TextContent.Should().Be("Exporter « Garage du Centre »");
+
+        // Trop courte : refusée avant tout appel.
+        page.Find("#dossiers-export-passphrase").Change("trop court");
+        page.Find("#dossiers-export-confirmation").Input("trop court");
+        page.Find("#dossiers-export-form").Submit();
+        page.Markup.Should().Contain("au moins 12 caractères");
+        _gateway.Exports.Should().BeEmpty();
+
+        // Retapée autrement : refusée, une faute de frappe rendrait le paquet illisible.
+        page.Find("#dossiers-export-passphrase").Change(Passphrase);
+        page.Find("#dossiers-export-confirmation").Input(Passphrase + "!");
+        page.Find("#dossiers-export-form").Submit();
+        page.Markup.Should().Contain("Les deux phrases ne sont pas identiques.");
+        _gateway.Exports.Should().BeEmpty();
+
+        page.Find("#dossiers-export-confirmation").Input(Passphrase);
+        page.Find("#dossiers-export-form").Submit();
+
+        page.WaitForAssertion(() => _files.Files.Should().ContainSingle());
+        _files.Files[0].FileName.Should().Be("Garage-du-Centre-20261107.lettrapaquet");
+        _files.Files[0].Content.Should().Equal(FakeCabinetDossiersGateway.PackageBytes);
+        _gateway.Exports.Should().Equal((FakeCabinetGateway.Garage, Passphrase));
+        this.ToastText().Should().Be("Dossier « Garage du Centre » exporté dans le fichier Garage-du-Centre-20261107.lettrapaquet. Gardez la phrase secrète à part du fichier.");
+        page.FindAll("#dossiers-export-form").Should().BeEmpty();
+
+        // Rouvert, l'encart ne garde pas la phrase.
+        page.Find($"#dossiers-export-{FakeCabinetGateway.Garage:N}").Click();
+        page.Find("#dossiers-export-passphrase").GetAttribute("value").Should().BeNullOrEmpty();
+    }
+
+    [Fact]
+    public void Un_dossier_ferme_ne_s_exporte_pas_depuis_sa_ligne() =>
+        RenderPage().FindAll($"#dossiers-export-{FakeCabinetDossiersGateway.Ancien:N}").Should().BeEmpty();
+
+    [Fact]
+    public async Task Importer_un_paquet_cree_le_dossier_et_l_ouvre_depuis_le_toaster()
+    {
+        IRenderedComponent<CabinetDossiersPage> page = RenderPage();
+        CurrentDossier current = Services.GetRequiredService<CurrentDossier>();
+
+        page.Find("#dossiers-import").Click();
+        page.Find("#dossiers-import-form").Submit();
+        page.Find("#dossiers-import-problem").TextContent.Should().Be("Choisissez le fichier du paquet.");
+
+        page.FindComponent<Microsoft.AspNetCore.Components.Forms.InputFile>()
+            .UploadFiles(InputFileContent.CreateFromBinary(FakeCabinetDossiersGateway.PackageBytes, "dossier.lettrapaquet"));
+        page.Find("#dossiers-import-passphrase").Input(Passphrase);
+        page.Find("#dossiers-import-form").Submit();
+
+        page.WaitForAssertion(() => page.FindAll("#dossiers-list tbody tr").Should().HaveCount(5));
+        _gateway.Imports.Should().ContainSingle();
+        _gateway.Imports[0].Package.Should().Equal(FakeCabinetDossiersGateway.PackageBytes, "le paquet arrive tel quel");
+        _gateway.Imports[0].Passphrase.Should().Be(Passphrase);
+        this.ToastText().Should().Be("Dossier « Dossier rapatrié » importé.");
+        page.FindAll("#dossiers-import-form").Should().BeEmpty();
+        current.Dossiers.Should().Contain(d => d.Name == "Dossier rapatrié");
+
+        await page.InvokeAsync(() => this.Toasts()[^1].Action!.Run());
+        current.Id.Should().Be(FakeCabinetDossiersGateway.Imported);
+    }
+
+    [Fact]
+    public void Un_paquet_illisible_ou_deja_present_est_dit_sous_le_formulaire()
+    {
+        IRenderedComponent<CabinetDossiersPage> page = RenderPage();
+        _gateway.ImportErrors = [new ErrorDetail(ErrorCodes.Tenancy.PackageUnreadable, "Package")];
+
+        page.Find("#dossiers-import").Click();
+        page.FindComponent<Microsoft.AspNetCore.Components.Forms.InputFile>()
+            .UploadFiles(InputFileContent.CreateFromBinary([1, 2, 3], "dossier.lettrapaquet"));
+        page.Find("#dossiers-import-passphrase").Input("une autre phrase secrète");
+        page.Find("#dossiers-import-form").Submit();
+
+        page.WaitForAssertion(() => page.Find("#dossiers-import-form").TextContent.Should().Contain("la phrase secrète est incorrecte"));
+
+        _gateway.ImportErrors = [new ErrorDetail(ErrorCodes.Tenancy.DossierAlreadyExists)];
+        page.Find("#dossiers-import-form").Submit();
+        page.WaitForAssertion(() => this.ToastText().Should().StartWith("Ce dossier existe déjà"));
+        page.FindAll("#dossiers-list tbody tr").Should().HaveCount(4);
+    }
+
+    [Fact]
     public void L_ecran_est_traduit_en_anglais()
     {
         LettraCultures.Apply(CultureInfo.GetCultureInfo("en-GB"));
@@ -181,7 +275,9 @@ public sealed class CabinetDossiersPageTests : BunitContext
         IRenderedComponent<CabinetDossiersPage> page = RenderPage();
 
         page.Find("h1").TextContent.Should().Be("Firm dossiers");
-        page.Markup.Should().Contain("Erasure requested").And.Contain("Open dossiers").And.Contain("Cancel erasure");
+        page.Markup.Should().Contain("Erasure requested").And.Contain("Open dossiers").And.Contain("Cancel erasure").And.Contain("Import a dossier");
+        page.Find($"#dossiers-export-{FakeCabinetGateway.Garage:N}").Click();
+        page.Find("#dossiers-export-title").TextContent.Should().Be("Export “Garage du Centre”");
     }
 
     [Fact]
@@ -210,6 +306,10 @@ internal sealed class FakeCabinetDossiersGateway : ICabinetDossiersGateway
 {
     public static readonly Guid Ancien = new("0199e3a0-0000-7000-8000-0000000b0009");
     public static readonly Guid Echu = new("0199e3a0-0000-7000-8000-0000000b0010");
+    public static readonly Guid Imported = new("0199e3a0-0000-7000-8000-0000000b0011");
+
+    /// <summary>Le contenu du paquet remis par l'export, et celui qu'on importe : opaque pour l'écran.</summary>
+    public static readonly byte[] PackageBytes = [0x4c, 0x45, 0x54, 0x54, 0x52, 0x41, 1, 2, 3];
 
     private readonly FakeCabinetGateway _cabinet;
     private readonly List<CabinetDossierResponse> _dossiers;
@@ -233,6 +333,12 @@ internal sealed class FakeCabinetDossiersGateway : ICabinetDossiersGateway
     public IReadOnlyList<ErrorDetail> CancelErrors { get; set; } = [];
 
     public DossierSummary? Created { get; private set; }
+
+    public IReadOnlyList<ErrorDetail> ImportErrors { get; set; } = [];
+
+    public List<(Guid Dossier, string Passphrase)> Exports { get; } = [];
+
+    public List<(byte[] Package, string Passphrase)> Imports { get; } = [];
 
     public int Lists { get; private set; }
 
@@ -281,6 +387,29 @@ internal sealed class FakeCabinetDossiersGateway : ICabinetDossiersGateway
         DossierSummary summary = new(dossierId, dossier.Name);
         _cabinet.Dossiers.Add(summary);
         return Task.FromResult(OperationResult<DossierSummary>.Success(summary));
+    }
+
+    public Task<OperationResult<DossierPackageFile>> ExportAsync(Guid cabinetId, Guid dossierId, ExportDossierRequest request, CancellationToken cancellationToken)
+    {
+        Exports.Add((dossierId, request.Passphrase));
+        string name = _dossiers.Single(d => d.Id == dossierId).Name.Replace(' ', '-');
+        return Task.FromResult(OperationResult<DossierPackageFile>.Success(new DossierPackageFile($"{name}-20261107.lettrapaquet", PackageBytes)));
+    }
+
+    public async Task<OperationResult<DossierSummary>> ImportAsync(Guid cabinetId, Stream package, string passphrase, CancellationToken cancellationToken)
+    {
+        using MemoryStream content = new();
+        await package.CopyToAsync(content, cancellationToken);
+        if (ImportErrors.Count > 0)
+        {
+            return OperationResult<DossierSummary>.Failure([.. ImportErrors]);
+        }
+
+        Imports.Add((content.ToArray(), passphrase));
+        DossierSummary imported = new(Imported, "Dossier rapatrié");
+        _dossiers.Add(new CabinetDossierResponse(imported.Id, imported.Name, CabinetDossierStateDto.Active, true, null));
+        _cabinet.Dossiers.Add(imported);
+        return OperationResult<DossierSummary>.Success(imported);
     }
 
     private CabinetDossierResponse Move(Guid id, CabinetDossierStateDto state, DateTimeOffset? due)

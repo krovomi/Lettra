@@ -143,6 +143,23 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Un_dossier_exporte_puis_importe_chez_un_autre_cabinet_arrive_entier_et_verifiable()
+    {
+        DossierFieldKeys keys = new();
+        ManualClock clock = new(DateTimeOffset.UtcNow);
+        await using TenantHarness harness = DossierTransferScenarios.Harness(new SqliteConfigurator(), clock, keys, id => Database($"arrivee-{id.Value:N}"));
+        await DossierTransferScenarios.RoundTripAsync(harness, clock, keys, DatabaseProvider.Sqlite, Database("depart"));
+    }
+
+    [Fact]
+    public async Task Un_journal_d_avant_le_versionnage_des_cles_se_verifie_apres_import()
+    {
+        await using TenantHarness harness = new(
+            new SqliteConfigurator(), syntheticDocuments: true, configure: s => s.AddDossierTransfer(), provision: id => Database($"ancien-{id.Value:N}"));
+        await DossierTransferScenarios.LegacyChainAsync(harness, DatabaseProvider.Sqlite, Database("ancien"));
+    }
+
+    [Fact]
     public async Task Numerotation_continue_sous_concurrence()
     {
         await using TenantHarness harness = new(new SqliteConfigurator());
@@ -393,6 +410,18 @@ public sealed class SqliteTests : IDisposable
             b => SqliteConfigurator.ConfigureCatalog(b, Database("catalog")),
             new Dictionary<string, string?> { ["Provider"] = "Sqlite", ["Directory"] = Path.Combine(_folder, "srv-a") });
         await CatalogScenarios.ProvisionAndMigrateAsync(harness, DatabaseProvider.Sqlite);
+    }
+
+    [Fact]
+    public async Task Un_dossier_du_catalogue_exporte_retire_puis_reimporte_sous_son_identifiant()
+    {
+        string directory = Path.Combine(_folder, "srv-transfert");
+        await using CatalogHarness harness = new(
+            s => s.AddSqliteProvider(),
+            b => SqliteConfigurator.ConfigureCatalog(b, Database("catalog-transfert")),
+            new Dictionary<string, string?> { ["Provider"] = "Sqlite", ["Directory"] = directory },
+            configure: s => s.AddDossierTransfer());
+        await CatalogTransferScenarios.ExportDiscardAndImportAsync(harness, name => Task.FromResult(File.Exists(Path.Combine(directory, name + ".db"))));
     }
 
     [Fact]
@@ -715,6 +744,16 @@ public sealed class PostgreSqlTests : IAsyncLifetime
         Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new PostgreSqlConfigurator());
         await PaymentListScenarios.SearchSortAndPageInTheDatabaseAsync(harness, DatabaseProvider.PostgreSql, Database("pls"));
+    }
+
+    [SkippableFact]
+    public async Task Un_dossier_exporte_puis_importe_chez_un_autre_cabinet_arrive_entier_et_verifiable()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        DossierFieldKeys keys = new();
+        ManualClock clock = new(DateTimeOffset.UtcNow);
+        await using TenantHarness harness = DossierTransferScenarios.Harness(new PostgreSqlConfigurator(), clock, keys, id => Database($"arrivee_{id.Value:N}"));
+        await DossierTransferScenarios.RoundTripAsync(harness, clock, keys, DatabaseProvider.PostgreSql, Database("depart"));
     }
 
     [SkippableFact]
@@ -1219,6 +1258,16 @@ public sealed class SqlServerTests : IAsyncLifetime
         Skip.IfNot(Docker.Available, "Docker absent");
         await using TenantHarness harness = new(new SqlServerConfigurator());
         await PaymentListScenarios.SearchSortAndPageInTheDatabaseAsync(harness, DatabaseProvider.SqlServer, Database("pls"));
+    }
+
+    [SkippableFact]
+    public async Task Un_dossier_exporte_puis_importe_chez_un_autre_cabinet_arrive_entier_et_verifiable()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        DossierFieldKeys keys = new();
+        ManualClock clock = new(DateTimeOffset.UtcNow);
+        await using TenantHarness harness = DossierTransferScenarios.Harness(new SqlServerConfigurator(), clock, keys, id => Database($"arrivee_{id.Value:N}"));
+        await DossierTransferScenarios.RoundTripAsync(harness, clock, keys, DatabaseProvider.SqlServer, Database("depart"));
     }
 
     [SkippableFact]

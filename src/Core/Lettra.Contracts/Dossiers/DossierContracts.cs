@@ -47,3 +47,38 @@ public sealed record CabinetDossierResponse(
     CabinetDossierStateDto State,
     bool Erasable,
     DateTimeOffset? ErasureDueAt);
+
+/// <summary>
+/// Paquet de réversibilité d'un dossier : tout le dossier (base, pièces, chaîne anti-fraude et ses clés) dans un seul
+/// fichier chiffré par une phrase secrète choisie par l'administrateur du cabinet, pour le rapatrier sur un serveur du
+/// cabinet (modes 2 et 3) ou sur un poste (mode 1), ou le reprendre plus tard en ligne.
+/// </summary>
+public static class DossierPackageRules
+{
+    /// <summary>Extension du fichier ; elle se distingue des manifestes <c>.lettra</c> des dossiers d'un poste.</summary>
+    public const string FileExtension = ".lettrapaquet";
+
+    /// <summary>Type MIME du fichier : un contenu chiffré opaque.</summary>
+    public const string ContentType = "application/octet-stream";
+
+    /// <summary>Longueur minimale de la phrase secrète : le paquet sort du serveur, la phrase est sa seule protection.</summary>
+    public const int MinPassphraseLength = 12;
+
+    public const int MaxPassphraseLength = 1024;
+
+    /// <summary>Taille maximale d'un paquet importé (pièces justificatives comprises).</summary>
+    public const long MaxPackageLength = 512L * 1024 * 1024;
+
+    /// <summary>Noms des champs du formulaire d'import (multipart).</summary>
+    public const string PackageField = "paquet";
+
+    public const string PassphraseField = "phrase";
+}
+
+/// <summary>Export d'un dossier : la phrase secrète qui chiffre le paquet. Mutable pour <c>EditForm</c>.</summary>
+public sealed record ExportDossierRequest
+{
+    [Required(ErrorMessage = ErrorCodes.Tenancy.PassphraseTooShort)]
+    [StringLength(DossierPackageRules.MaxPassphraseLength, MinimumLength = DossierPackageRules.MinPassphraseLength, ErrorMessage = ErrorCodes.Tenancy.PassphraseTooShort)]
+    public string Passphrase { get; set; } = string.Empty;
+}

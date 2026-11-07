@@ -1,8 +1,10 @@
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Infrastructure.Persistence.Sqlite.Local;
+using Lettra.Infrastructure.Persistence.Sqlite.Transfer;
 using Lettra.Infrastructure.Persistence.Tenancy;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Lettra.Infrastructure.Persistence.Sqlite;
 
@@ -35,4 +37,11 @@ public static class DependencyInjection
             registry, sp.GetRequiredService<LocalDossierProvisioner>(), sp.GetRequiredService<TimeProvider>()));
         return services;
     }
+
+    /// <summary>
+    /// Réversibilité : export et import d'un dossier entier dans un paquet chiffré, sur les hôtes qui créent leurs dossiers
+    /// (poste isolé, serveur du cabinet, PostgreSQL dédié, cellule SaaS). Remplace le « aucun » enregistré par l'application.
+    /// </summary>
+    public static IServiceCollection AddDossierTransfer(this IServiceCollection services) =>
+        services.Replace(ServiceDescriptor.Singleton<IDossierTransfer, DossierTransfer>());
 }

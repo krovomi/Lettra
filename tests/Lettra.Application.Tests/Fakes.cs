@@ -128,6 +128,14 @@ internal sealed class RecordingDossierProvisioner : IDossierProvisioner
         Created.Add((organisation, name));
         return Task.FromResult<Result<DossierId>>(new DossierId(Guid.CreateVersion7()));
     }
+
+    public Task<Result<DossierId>> CreateAsync(OrganisationId organisation, DossierId id, string name, CancellationToken cancellationToken)
+    {
+        Created.Add((organisation, name));
+        return Task.FromResult<Result<DossierId>>(id);
+    }
+
+    public Task DiscardAsync(DossierId dossier, CancellationToken cancellationToken) => Task.CompletedTask;
 }
 
 /// <summary>Registre des droits vide : ni utilisateur, ni portée connus.</summary>

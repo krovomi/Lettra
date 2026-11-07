@@ -68,11 +68,16 @@ internal sealed class LocalDossierProvisioner(
         CreateAsync(organisation, new DossierId(Guid.CreateVersion7()), name, cancellationToken);
 
     /// <summary>
-    /// Réplique d'un dossier du serveur sur un poste relié : même identifiant que sur le serveur, pour que la
-    /// synchronisation désigne le même dossier des deux côtés.
+    /// Dossier qui garde un identifiant donné : réplique d'un dossier du serveur sur un poste relié (la synchronisation
+    /// désigne le même dossier des deux côtés), ou dossier importé d'un paquet de réversibilité.
     /// </summary>
     public async Task<Result<DossierId>> CreateAsync(OrganisationId organisation, DossierId id, string name, CancellationToken cancellationToken)
     {
+        if (await registry.FindAsync(id.Value, cancellationToken).ConfigureAwait(false) is not null)
+        {
+            return DossierErrors.AlreadyExists;
+        }
+
         byte[] wrapped = await keyring.CreateWrappedDekAsync(organisation, id, cancellationToken).ConfigureAwait(false);
         LocalDossierManifest manifest = new(id.Value, organisation.Value, name, registry.DatabasePath(id.Value), wrapped, clock.GetUtcNow());
         await registry.SaveAsync(manifest, cancellationToken).ConfigureAwait(false);
@@ -81,4 +86,6 @@ internal sealed class LocalDossierProvisioner(
         await registry.SetActiveAsync(id, cancellationToken).ConfigureAwait(false);
         return id;
     }
+
+    public Task DiscardAsync(DossierId dossier, CancellationToken cancellationToken) => registry.RemoveAsync(dossier.Value, cancellationToken);
 }

@@ -206,8 +206,11 @@ internal static class CatalogScenarios
         wave.Should().BeEquivalentTo(new { Candidates = 2, Migrated = 1, Failed = 0, SkippedLeased = 1, Aborted = false });
         (await harness.DossierAsync(id)).Should().BeEquivalentTo(new { SchemaVersion = latest, LeaseOwner = (string?)null, LastError = (string?)null });
 
-        // Un dossier « en création » (processus arrêté avant la base) est terminé par la reprise.
-        await harness.UpdateDossierAsync(leased, d => d.State = DossierState.Provisioning);
+        // Un dossier « en création » depuis peu est laissé à l'API qui le crée ; arrêté avant la base depuis plus longtemps,
+        // il est terminé par la reprise.
+        await harness.UpdateDossierAsync(leased, d => (d.State, d.UpdatedAt) = (DossierState.Provisioning, DateTimeOffset.UtcNow));
+        (await services.ResumeDossierProvisioningAsync(default)).Should().Be(0, "l'API mène encore cette création");
+        await harness.UpdateDossierAsync(leased, d => d.UpdatedAt = DateTimeOffset.UtcNow - CatalogDossierProvisioner.InterruptedAfter - TimeSpan.FromMinutes(1));
         (await services.ResumeDossierProvisioningAsync(default)).Should().Be(1);
         (await harness.DossierAsync(leased)).State.Should().Be(DossierState.Active);
     }

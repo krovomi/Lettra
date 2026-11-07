@@ -15,6 +15,11 @@ public static partial class ErrorCodes
         public const string ProvisioningFailed = "Dossier.ProvisioningFailed";
         public const string DossierDeclared = "Dossier.Declared";
         public const string ErasureNotCancellable = "Dossier.ErasureNotCancellable";
+        public const string PassphraseTooShort = "Dossier.PassphraseTooShort";
+        public const string PackageUnreadable = "Dossier.PackageUnreadable";
+        public const string PackageTooNew = "Dossier.PackageTooNew";
+        public const string DossierAlreadyExists = "Dossier.AlreadyExists";
+        public const string TransferUnavailable = "Dossier.TransferUnavailable";
     }
 
     public static class Numbering

@@ -2,10 +2,13 @@ using Lettra.Api.Infrastructure;
 using Lettra.Api.Security;
 using Lettra.Application.Abstractions.Identity;
 using Lettra.Application.Abstractions.Messaging;
+using Lettra.Application.Abstractions.Tenancy;
 using Lettra.Application.Features.Dossiers;
 using Lettra.Contracts.Dossiers;
 using Lettra.Domain.Common;
 using Lettra.Domain.SharedKernel;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Mvc;
 using static Lettra.Api.Infrastructure.HttpResults;
 
 namespace Lettra.Api.Endpoints;
@@ -46,6 +49,23 @@ internal static class DossierEndpoints
             .WithName("CancelDossierErasure")
             .Produces<DossierSummary>()
             .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
+        // Réversibilité : le dossier entier dans un paquet chiffré par une phrase secrète, et son import sur un autre hôte.
+        group.MapPost("/{dossierId:guid}/export", ExportAsync)
+            .RequireCabinetPermission(Permission.CabinetAdministrer)
+            .WithName("ExportDossier")
+            .Produces(StatusCodes.Status200OK, contentType: DossierPackageRules.ContentType)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+        group.MapPost("/import", ImportAsync)
+            .RequireCabinetPermission(Permission.CabinetAdministrer)
+            .WithName("ImportDossier")
+            .WithMetadata(new RequestSizeLimitAttribute(DossierPackageRules.MaxPackageLength))
+            .Accepts<IFormFile>("multipart/form-data")
+            .Produces<DossierSummary>(StatusCodes.Status201Created)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status409Conflict);
 
         return group;
@@ -106,4 +126,49 @@ internal static class DossierEndpoints
 
     private static async Task<IResult> CancelErasureAsync(Guid cabinetId, Guid dossierId, ICommandDispatcher commands, CancellationToken cancellationToken) =>
         Ok(await commands.SendAsync(new CancelDossierErasureCommand(new OrganisationId(cabinetId), new DossierId(dossierId)), cancellationToken).ConfigureAwait(false));
+
+    /// <summary>Le paquet en pièce jointe ; son fichier temporaire est effacé une fois envoyé.</summary>
+    private static async Task<IResult> ExportAsync(
+        Guid cabinetId,
+        Guid dossierId,
+        ExportDossierRequest request,
+        ICommandDispatcher commands,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        Result<DossierPackage> exported = await commands
+            .SendAsync(new ExportDossierCommand(new OrganisationId(cabinetId), new DossierId(dossierId), request.Passphrase), cancellationToken)
+            .ConfigureAwait(false);
+        return exported.IsSuccess
+            ? TypedResults.File(exported.Value.Content, DossierPackageRules.ContentType, exported.Value.FileName)
+            : exported.Errors.ToProblem();
+    }
+
+    /// <summary>Formulaire multipart : le paquet (<c>paquet</c>) et sa phrase secrète (<c>phrase</c>).</summary>
+    private static async Task<IResult> ImportAsync(Guid cabinetId, HttpRequest request, ICommandDispatcher commands, CancellationToken cancellationToken)
+    {
+        if (!request.HasFormContentType)
+        {
+            return new[] { DossierErrors.PackageUnreadable }.ToProblem();
+        }
+
+        IFormCollection form = await request
+            .ReadFormAsync(new FormOptions { MultipartBodyLengthLimit = DossierPackageRules.MaxPackageLength }, cancellationToken)
+            .ConfigureAwait(false);
+        if (form.Files.GetFile(DossierPackageRules.PackageField) is not { } file)
+        {
+            return new[] { DossierErrors.PackageUnreadable }.ToProblem();
+        }
+
+        Stream package = file.OpenReadStream();
+        await using (package.ConfigureAwait(false))
+        {
+            Result<DossierSummary> imported = await commands
+                .SendAsync(new ImportDossierCommand(new OrganisationId(cabinetId), package, form[DossierPackageRules.PassphraseField].ToString()), cancellationToken)
+                .ConfigureAwait(false);
+            return imported.IsSuccess
+                ? TypedResults.Created($"/api/v1/cabinets/{cabinetId}/dossiers/{imported.Value.Id}", imported.Value)
+                : imported.Errors.ToProblem();
+        }
+    }
 }
