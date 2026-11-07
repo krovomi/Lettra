@@ -46,7 +46,8 @@ dossiers. Une valeur écrite avant le chiffrement se relit telle quelle et sera 
 - Les **pièces jointes et exports** ne sont pas encore chiffrés par la clé du dossier.
 - OpenBao en **haute disponibilité**, scellé par un HSM ou le KMS de l'hébergeur, et joint par TLS avec
   l'authentification Kubernetes (au lieu d'un jeton) : à installer avec la cellule réelle.
-- L'**export complet** d'un cabinet au départ (FEC, archives, pièces) et la **réversibilité** vers les modes 2 et 3.
+- L'**export automatique** de tous les dossiers d'un cabinet à son départ : chaque dossier s'exporte aujourd'hui un par
+  un (voir [Réversibilité d'un dossier](reversibilite.md)).
 
 ## Effacer un dossier
 
@@ -65,6 +66,8 @@ appartient à qui l'a déclarée, et la demande est refusée avec un message cla
 - **Liste des dossiers** : nom (le dossier ouvert est signalé), état (Ouvert, Effacement demandé, En création), date
   d'effacement. Recherche, filtre d'état et tri (nom, état, date d'effacement), à l'écran. Sur téléphone, chaque
   dossier est une carte.
+- **Exporter** et **Importer un dossier** : un dossier part dans un paquet chiffré par une phrase secrète et arrive
+  entier sur un autre hôte Lettra (voir [Réversibilité d'un dossier](reversibilite.md)).
 - **Nouveau dossier** : un nom suffit. Le dossier reçoit sa base et sa clé, s'ouvre aussitôt aux personnes qui ont
   accès à tout le cabinet, et apparaît dans le sélecteur de dossier. Le toaster propose « Ouvrir ».
 - **Effacer** : demandé dans la ligne, avec une confirmation courte (« Fermer ce dossier ? Il sera effacé dans

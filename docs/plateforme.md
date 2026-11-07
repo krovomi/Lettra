@@ -88,7 +88,8 @@ départ.
 ## Ce qui n'est pas encore fait
 
 - Un serveur d'e-mail réel pour les invitations dans une vraie cellule (envoi d'e-mails réels).
-- L'export complet du cabinet au départ, et la réversibilité vers les modes 2 et 3.
+- L'export automatique de tous les dossiers d'un cabinet à son départ : pendant le délai de 30 jours, son
+  administrateur exporte chaque dossier depuis « Dossiers du cabinet » ([réversibilité](reversibilite.md)).
 - Abonnements et facturation des cabinets.
 - Pour un utilisateur qui n'a aucun dossier (l'administrateur de la plateforme), la barre du haut demande encore
   l'état de la dictée et de l'assistant du dossier, et reçoit un refus : deux erreurs dans la console du navigateur,

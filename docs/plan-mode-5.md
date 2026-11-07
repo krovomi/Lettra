@@ -109,7 +109,9 @@ sensibles, et qu'effacer la DEK rend le dossier illisible, sauvegardes comprises
 **Fait côté serveur et écran de la plateforme** : arrivée et départ d'un cabinet (API, Keycloak, catalogue, KMS,
 Worker, écran « Plateforme »), effacement d'un dossier (demande depuis l'écran « Dossiers du cabinet » ou l'API,
 rétractation de 30 jours, clé détruite puis base supprimée, trace dans le catalogue sans donnée). L'essai `mode5-kind` inscrit le cabinet par l'API, efface un dossier
-et finit par le départ du cabinet. **Reste** : l'export complet au départ, la réversibilité vers les modes 2 et 3.
+et finit par le départ du cabinet. Réversibilité faite : un dossier s'exporte dans un paquet chiffré et s'importe sur un autre hôte
+(modes 1, 2, 3 et 5), avec sa chaîne anti-fraude vérifiable ([reversibilite.md](reversibilite.md)). **Reste** :
+l'export automatique de tous les dossiers d'un cabinet à son départ (aujourd'hui, un par un pendant le délai).
 Voir [plateforme.md](plateforme.md) et [cles-et-chiffrement.md](cles-et-chiffrement.md).
 
 **Objectif** : plus aucune étape manuelle pour ouvrir ou fermer un cabinet.
@@ -124,7 +126,8 @@ Voir [plateforme.md](plateforme.md) et [cles-et-chiffrement.md](cles-et-chiffrem
   puis supprimer la base (`DROP DATABASE` par la connexion d'administration).
 - **Départ d'un cabinet** : remettre au cabinet un export complet (FEC, archives, pièces), puis détruire la KEK.
 - **Réversibilité** : permettre de passer un cabinet du mode 5 au mode 2 ou 3 (export, puis import sur son
-  serveur). Les experts-comptables y tiennent, et c'est un argument commercial.
+  serveur). Les experts-comptables y tiennent, et c'est un argument commercial. **Fait**, dossier par dossier :
+  [reversibilite.md](reversibilite.md).
 - Écran minimal d'administration de la plateforme : liste des cabinets, état des dossiers (`Failed` avec
   `LastError`), bouton « Relancer ».
 
@@ -260,3 +263,17 @@ Le mode 5 est livré quand **tous** ces points sont vrais, et chacun est prouvé
 4. Quelle certification viser (SecNumCloud, ISO 27001…) ?
 5. Quel modèle d'abonnement : par cabinet, par dossier actif ou par utilisateur ?
 6. Le mode 4 (poste relié) doit-il savoir se synchroniser avec la cellule SaaS dès la première version ?
+
+---
+
+## 9. Ce qui a été corrigé en chemin
+
+- **Création d'un dossier en ligne qui échouait parfois** : la passe du Worker qui reprend les créations interrompues
+  prenait aussi la création que l'API était en train de mener ; les deux appliquaient les migrations de la base neuve
+  en même temps, et « Nouveau dossier » répondait « création en échec ». Désormais, une création n'est tenue pour
+  interrompue qu'après 5 minutes sans nouvelle, et le Worker ne réessaie un échec qu'au bout de 30 secondes ; le
+  bouton de l'écran « Plateforme » réessaie toujours les échecs aussitôt.
+- Un import dont la création de base échoue retire aussitôt son dossier, au lieu de le laisser au Worker, qui l'aurait
+  créé vide.
+- **Première connexion en ligne** : l'accueil ne reste plus vide pour un cabinet hébergé (voir
+  [menu-et-aide.md](menu-et-aide.md), « Dossier ouvert à la connexion »).
