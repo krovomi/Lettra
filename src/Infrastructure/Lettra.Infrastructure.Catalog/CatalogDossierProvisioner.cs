@@ -14,7 +14,9 @@ namespace Lettra.Infrastructure.Catalog;
 /// Crée la base d'un nouveau dossier (c'est l'application qui crée les bases, pas l'IaC : ADR-0009). Le dossier est
 /// d'abord inscrit « en création » avec sa DEK enveloppée, puis sa base est créée, migrée et estampillée. Chaque
 /// étape est idempotente : une création interrompue est reprise par le Worker (<see cref="ResumeAsync"/>). Sur un serveur
-/// qui active les rôles par cabinet, la base est donnée au rôle de son cabinet avant d'être migrée.
+/// qui active les rôles par cabinet, la base est donnée au rôle de son cabinet avant d'être migrée. Sur une cellule qui
+/// laisse l'administration des bases au Worker (<see cref="DatabaseAdministration.Worker"/>), l'API inscrit seulement la
+/// demande et attend : le Worker la prend (<see cref="RunRequestsAsync"/>), crée la base et la migre.
 /// </summary>
 internal sealed partial class CatalogDossierProvisioner(
     IDbContextFactory<CatalogDbContext> catalogFactory,
@@ -26,8 +28,13 @@ internal sealed partial class CatalogDossierProvisioner(
     TenantMigrator migrator,
     CabinetDatabaseRoleKeeper cabinetRoles,
     TimeProvider clock,
-    ILogger<CatalogDossierProvisioner> logger) : IDossierProvisioner
+    ILogger<CatalogDossierProvisioner> logger) : IDossierProvisioner, IDossierRequestPass
 {
+    /// <summary>Intervalle entre deux lectures de l'état d'une création menée par le Worker.</summary>
+    private static readonly TimeSpan WorkerPoll = TimeSpan.FromMilliseconds(250);
+
+    private bool ByWorker => options.CurrentValue.Catalog.DatabaseAdministration == DatabaseAdministration.Worker;
+
     public Task<Result<DossierId>> CreateAsync(OrganisationId organisation, string name, CancellationToken cancellationToken) =>
         CreateAsync(organisation, new DossierId(Guid.CreateVersion7()), name, cancellationToken);
 
@@ -85,7 +92,7 @@ internal sealed partial class CatalogDossierProvisioner(
                 ClusterId = cluster.Id,
                 DatabaseName = database,
                 ConnectionSecretRef = cabinetRoles.ConnectionRefFor(cluster.Id, database, organisation.Value),
-                State = DossierState.Provisioning,
+                State = ByWorker ? DossierState.Requested : DossierState.Provisioning,
                 WrappedDek = await keyring.CreateWrappedDekAsync(organisation, id, cancellationToken).ConfigureAwait(false),
                 CreatedAt = now,
                 UpdatedAt = now,
@@ -94,7 +101,10 @@ internal sealed partial class CatalogDossierProvisioner(
             await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        return await CompleteAsync(dossier, cancellationToken).ConfigureAwait(false)
+        bool created = ByWorker
+            ? await AwaitWorkerAsync(dossier.Id, cancellationToken).ConfigureAwait(false)
+            : await CompleteAsync(dossier, cancellationToken).ConfigureAwait(false);
+        return created
             ? new DossierId(dossier.Id)
             : DossierErrors.ProvisioningFailed;
     }
@@ -102,26 +112,81 @@ internal sealed partial class CatalogDossierProvisioner(
     /// <summary>
     /// Retire un dossier dont l'import n'a pas abouti : sa base (vide, la copie ayant été annulée) est supprimée et son
     /// inscription retirée du registre, pour qu'un nouvel essai d'import soit possible. Un dossier déclaré n'est pas touché.
+    /// Quand le Worker administre les bases, le dossier est seulement marqué « à retirer » : le Worker fait le reste.
     /// </summary>
     public async Task DiscardAsync(DossierId dossier, CancellationToken cancellationToken)
     {
+        fieldKeys.Forget(dossier.Value);
+        CatalogDossier? found;
         CatalogDbContext db = await catalogFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
         await using (db.ConfigureAwait(false))
         {
-            CatalogDossier? found = await db.Dossiers.SingleOrDefaultAsync(d => d.Id == dossier.Value && d.ClusterId != null, cancellationToken)
+            found = await db.Dossiers.AsNoTracking().SingleOrDefaultAsync(d => d.Id == dossier.Value && d.ClusterId != null, cancellationToken)
                 .ConfigureAwait(false);
-            if (found is null)
+            if (found is not null && ByWorker)
             {
+                DateTimeOffset now = clock.GetUtcNow();
+                await db.Dossiers.Where(d => d.Id == dossier.Value).ExecuteUpdateAsync(
+                    s => s.SetProperty(d => d.State, DossierState.Discarding).SetProperty(d => d.UpdatedAt, now), cancellationToken).ConfigureAwait(false);
                 return;
             }
+        }
 
-            IDatabaseAdministrator administrator = administrators.Single(a => a.Provider == found.Provider);
-            string admin = await secrets.GetConnectionStringAsync(
-                ClusterSecretSource.AdminRef(found.ClusterId!, found.DatabaseName!), cancellationToken).ConfigureAwait(false);
-            await administrator.DropDatabaseAsync(admin, cancellationToken).ConfigureAwait(false);
-            db.Dossiers.Remove(found);
-            await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            fieldKeys.Forget(dossier.Value);
+        if (found is not null)
+        {
+            await DropAndRemoveAsync(found, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// La passe rapide du Worker quand il administre seul les bases : chaque création demandée est prise (une seule fois,
+    /// même avec plusieurs Workers), menée jusqu'au bout, et chaque import manqué est retiré. Rend le nombre de demandes menées.
+    /// </summary>
+    public async Task<int> RunRequestsAsync(CancellationToken cancellationToken)
+    {
+        List<CatalogDossier> pending;
+        CatalogDbContext db = await catalogFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        await using (db.ConfigureAwait(false))
+        {
+            pending = await db.Dossiers.AsNoTracking()
+                .Where(d => (d.State == DossierState.Requested || d.State == DossierState.Discarding) && d.ClusterId != null)
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        int done = 0;
+        foreach (CatalogDossier dossier in pending.OrderBy(d => d.UpdatedAt))
+        {
+            if (dossier.State == DossierState.Discarding)
+            {
+                done += await TryDiscardAsync(dossier, cancellationToken).ConfigureAwait(false) ? 1 : 0;
+            }
+            else if (await ClaimAsync(dossier.Id, cancellationToken).ConfigureAwait(false))
+            {
+                await CompleteAsync(dossier, cancellationToken).ConfigureAwait(false);
+                done++;
+            }
+        }
+
+        return done;
+    }
+
+    /// <summary>
+    /// Réessai immédiat des créations en échec, demandé par l'administrateur de la plateforme : mené ici, ou rendu au Worker
+    /// quand c'est lui qui administre les bases. Rend le nombre de créations menées ou rendues.
+    /// </summary>
+    public async Task<int> RetryFailuresNowAsync(CancellationToken cancellationToken)
+    {
+        if (!ByWorker)
+        {
+            return await ResumeAsync(retryFailuresNow: true, cancellationToken).ConfigureAwait(false);
+        }
+
+        CatalogDbContext db = await catalogFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        await using (db.ConfigureAwait(false))
+        {
+            DateTimeOffset now = clock.GetUtcNow();
+            return await db.Dossiers.Where(d => d.State == DossierState.Failed && d.ClusterId != null).ExecuteUpdateAsync(
+                s => s.SetProperty(d => d.State, DossierState.Requested).SetProperty(d => d.UpdatedAt, now), cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -179,6 +244,7 @@ internal sealed partial class CatalogDossierProvisioner(
             // Avant les migrations : les tables naissent alors au rôle du cabinet, qui seul ouvre la base.
             await cabinetRoles.AssignAsync(dossier, cancellationToken).ConfigureAwait(false);
             DossierMigrationResult result = await migrator.MigrateAsync(dossier.ToDescriptor(), stampIfMissing: true, cancellationToken).ConfigureAwait(false);
+            // Un import manqué entre-temps (dossier « à retirer ») ne revient pas : l'état ne change que d'une création en cours.
             await SetStateAsync(dossier.Id, DossierState.Active, result.To, error: null, CancellationToken.None).ConfigureAwait(false);
             return true;
         }
@@ -190,13 +256,87 @@ internal sealed partial class CatalogDossierProvisioner(
         }
     }
 
+    /// <summary>
+    /// Attend qu'une création demandée au Worker aboutisse (dossier actif) ou échoue. Au-delà de
+    /// <see cref="CatalogDatabaseOptions.ProvisioningWait"/>, la demande reste au Worker et l'appel rend un échec.
+    /// </summary>
+    private async Task<bool> AwaitWorkerAsync(Guid dossierId, CancellationToken cancellationToken)
+    {
+        using CancellationTokenSource limit = new(options.CurrentValue.Catalog.ProvisioningWait, clock);
+        using CancellationTokenSource linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, limit.Token);
+        try
+        {
+            while (true)
+            {
+                await Task.Delay(WorkerPoll, clock, linked.Token).ConfigureAwait(false);
+                CatalogDbContext db = await catalogFactory.CreateDbContextAsync(linked.Token).ConfigureAwait(false);
+                await using (db.ConfigureAwait(false))
+                {
+                    DossierState? state = await db.Dossiers.Where(d => d.Id == dossierId).Select(d => (DossierState?)d.State)
+                        .SingleOrDefaultAsync(linked.Token).ConfigureAwait(false);
+                    if (state is not (DossierState.Requested or DossierState.Provisioning))
+                    {
+                        return state == DossierState.Active;
+                    }
+                }
+            }
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            LogStillRequested(logger, dossierId);
+            return false;
+        }
+    }
+
+    /// <summary>Prend une demande de création : vrai pour le seul Worker qui l'a fait passer de « demandée » à « en création ».</summary>
+    private async Task<bool> ClaimAsync(Guid dossierId, CancellationToken cancellationToken)
+    {
+        CatalogDbContext db = await catalogFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        await using (db.ConfigureAwait(false))
+        {
+            DateTimeOffset now = clock.GetUtcNow();
+            return await db.Dossiers.Where(d => d.Id == dossierId && d.State == DossierState.Requested).ExecuteUpdateAsync(
+                s => s.SetProperty(d => d.State, DossierState.Provisioning).SetProperty(d => d.UpdatedAt, now), cancellationToken).ConfigureAwait(false) == 1;
+        }
+    }
+
+    private async Task<bool> TryDiscardAsync(CatalogDossier dossier, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await DropAndRemoveAsync(dossier, cancellationToken).ConfigureAwait(false);
+            return true;
+        }
+        catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            LogDiscardFailed(logger, exception, dossier.Id);
+            return false;
+        }
+    }
+
+    /// <summary>Supprime la base d'un dossier par la connexion d'administration de son serveur, puis son inscription.</summary>
+    private async Task DropAndRemoveAsync(CatalogDossier dossier, CancellationToken cancellationToken)
+    {
+        IDatabaseAdministrator administrator = administrators.Single(a => a.Provider == dossier.Provider);
+        string admin = await secrets.GetConnectionStringAsync(
+            ClusterSecretSource.AdminRef(dossier.ClusterId!, dossier.DatabaseName!), cancellationToken).ConfigureAwait(false);
+        await administrator.DropDatabaseAsync(admin, cancellationToken).ConfigureAwait(false);
+        CatalogDbContext db = await catalogFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        await using (db.ConfigureAwait(false))
+        {
+            await db.Dossiers.Where(d => d.Id == dossier.Id).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        fieldKeys.Forget(dossier.Id);
+    }
+
     private async Task SetStateAsync(Guid dossierId, DossierState state, string? schemaVersion, string? error, CancellationToken cancellationToken)
     {
         CatalogDbContext db = await catalogFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
         await using (db.ConfigureAwait(false))
         {
             DateTimeOffset now = clock.GetUtcNow();
-            await db.Dossiers.Where(d => d.Id == dossierId).ExecuteUpdateAsync(
+            await db.Dossiers.Where(d => d.Id == dossierId && (d.State == DossierState.Provisioning || d.State == DossierState.Failed)).ExecuteUpdateAsync(
                 s => s.SetProperty(d => d.State, state)
                     .SetProperty(d => d.SchemaVersion, d => schemaVersion ?? d.SchemaVersion)
                     .SetProperty(d => d.LastError, error)
@@ -231,4 +371,10 @@ internal sealed partial class CatalogDossierProvisioner(
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Création de la base du dossier {DossierId} en échec ; reprise par le Worker")]
     private static partial void LogProvisioningFailed(ILogger logger, Exception exception, Guid dossierId);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Création de la base du dossier {DossierId} pas encore menée par le Worker ; la demande lui reste")]
+    private static partial void LogStillRequested(ILogger logger, Guid dossierId);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Retrait de la base du dossier {DossierId} en échec ; repris à la passe suivante")]
+    private static partial void LogDiscardFailed(ILogger logger, Exception exception, Guid dossierId);
 }

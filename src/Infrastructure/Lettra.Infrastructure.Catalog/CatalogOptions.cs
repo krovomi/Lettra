@@ -50,6 +50,27 @@ public sealed class CatalogDatabaseOptions
     /// ne remplit pas à lui seul un serveur de bases partagé. 500 par défaut, au-delà de la taille XL du dimensionnement.
     /// </summary>
     public int MaxDossiersPerCabinet { get; set; } = 500;
+
+    /// <summary>
+    /// Qui crée et supprime les bases des dossiers. <see cref="DatabaseAdministration.Host"/> (par défaut) : l'hôte qui
+    /// reçoit la demande, avec la connexion d'administration de chaque serveur. <see cref="DatabaseAdministration.Worker"/>
+    /// (cellule en ligne) : l'API inscrit la demande au catalogue et attend que le Worker, seul à détenir cette connexion,
+    /// l'ait menée.
+    /// </summary>
+    public DatabaseAdministration DatabaseAdministration { get; set; } = DatabaseAdministration.Host;
+
+    /// <summary>Attente par l'API d'une création menée par le Worker, au-delà de laquelle la demande lui est laissée (60 s).</summary>
+    public TimeSpan ProvisioningWait { get; set; } = TimeSpan.FromSeconds(60);
+}
+
+/// <summary>Qui détient la connexion d'administration des serveurs de bases (<see cref="CatalogDatabaseOptions.DatabaseAdministration"/>).</summary>
+public enum DatabaseAdministration
+{
+    /// <summary>L'hôte qui reçoit la demande crée la base lui-même (poste, serveur du cabinet, démonstration, tests).</summary>
+    Host,
+
+    /// <summary>Seul le Worker crée et supprime les bases : l'API d'une cellule n'a aucun accès d'administration.</summary>
+    Worker,
 }
 
 public sealed class OrganisationEntry

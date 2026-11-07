@@ -88,6 +88,15 @@ public enum DossierState
     /// <see cref="CatalogDossier.ErasureDueAt"/>. Ensuite, le Worker détruit sa DEK puis supprime sa base.
     /// </summary>
     ErasureScheduled = 4,
+
+    /// <summary>
+    /// Création demandée par l'API d'une cellule qui laisse l'administration des bases au Worker
+    /// (<c>Lettra:Catalog:DatabaseAdministration = Worker</c>) : le Worker prend la demande, crée la base et la migre.
+    /// </summary>
+    Requested = 5,
+
+    /// <summary>Import manqué sur une telle cellule : le Worker supprime la base, puis retire le dossier du registre.</summary>
+    Discarding = 6,
 }
 
 /// <summary>Un dossier client du cabinet et l'emplacement de sa base. Aucune donnée métier du dossier ici.</summary>

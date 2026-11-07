@@ -415,6 +415,22 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Les_bases_creees_et_retirees_par_le_Worker_seul()
+    {
+        string directory = Path.Combine(_folder, "srv-worker");
+        CatalogHarness Harness(IDictionary<string, string?>? extra) => new(
+            s => s.AddSqliteProvider(),
+            b => SqliteConfigurator.ConfigureCatalog(b, Database("catalog-worker")),
+            new Dictionary<string, string?> { ["Provider"] = "Sqlite", ["Directory"] = directory },
+            extra);
+        await using CatalogHarness api = Harness(CatalogWorkerAdministrationScenarios.ByWorker);
+        await using CatalogHarness impatient = Harness(CatalogWorkerAdministrationScenarios.ByImpatientWorker);
+        await using CatalogHarness worker = Harness(CatalogWorkerAdministrationScenarios.ByWorker);
+        await CatalogWorkerAdministrationScenarios.CreateDiscardAndRetryAsync(
+            api, impatient, worker, name => Task.FromResult(File.Exists(Path.Combine(directory, name + ".db"))));
+    }
+
+    [Fact]
     public async Task Un_cabinet_ne_depasse_pas_son_quota_de_dossiers()
     {
         await using CatalogHarness harness = new(
@@ -1010,6 +1026,24 @@ public sealed class PostgreSqlTests : IAsyncLifetime
             new Dictionary<string, string?> { ["Provider"] = "PostgreSql", ["ConnectionString"] = server, ["CabinetRoles"] = "true" },
             configure: CatalogCabinetScenarios.Platform(clock, vault, identity));
         await CatalogCabinetScenarios.OnboardThenLeaveAsync(harness, clock, vault, identity, DatabaseExistsAsync, RoleExistsAsync);
+    }
+
+    [SkippableFact]
+    public async Task Les_bases_creees_et_retirees_par_le_Worker_seul()
+    {
+        Skip.IfNot(Docker.Available, "Docker absent");
+        string server = new Npgsql.NpgsqlConnectionStringBuilder(_container!.GetConnectionString()) { Database = null }.ConnectionString;
+        // L'API n'a aucune connexion d'administration utilisable : toute création ou suppression de base par elle échouerait.
+        const string NoAdmin = "Host=administration.invalid;Username=personne;Password=aucun;Timeout=1";
+        CatalogHarness Harness(IDictionary<string, string?> extra, string? admin) => new(
+            s => s.AddPostgreSqlProvider(),
+            b => PostgreSqlConfigurator.ConfigureCatalog(b, Database("catalog_worker")),
+            new Dictionary<string, string?> { ["Provider"] = "PostgreSql", ["ConnectionString"] = server, ["AdminConnectionString"] = admin, ["CabinetRoles"] = "true" },
+            extra);
+        await using CatalogHarness api = Harness(CatalogWorkerAdministrationScenarios.ByWorker, NoAdmin);
+        await using CatalogHarness impatient = Harness(CatalogWorkerAdministrationScenarios.ByImpatientWorker, NoAdmin);
+        await using CatalogHarness worker = Harness(CatalogWorkerAdministrationScenarios.ByWorker, admin: null);
+        await CatalogWorkerAdministrationScenarios.CreateDiscardAndRetryAsync(api, impatient, worker, DatabaseExistsAsync);
     }
 
     [SkippableFact]

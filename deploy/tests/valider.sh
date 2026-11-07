@@ -47,6 +47,14 @@ grep -q 'name: Lettra__Kms__Provider, value: "Transit"' <<<"$(helm template c le
 grep -q 'ingress: \[\]' <<<"$(helm template c lettra-cell -f lettra-cell/values-taille-S.yaml --set lettra-api.image.tag=ci --set lettra-worker.image.tag=ci \
   --show-only charts/lettra-worker/templates/networkpolicy.yaml)" \
   || { echo "cellule : le Worker accepte des connexions entrantes" >&2; exit 1; }
+# Le Worker seul administre les bases des dossiers : l'API d'une cellule n'a ni la connexion ni le mot de passe d'administration.
+api_cellule=$(helm template c lettra-cell -f lettra-cell/values-taille-S.yaml --set lettra-api.image.tag=ci --set lettra-worker.image.tag=ci \
+  --show-only charts/lettra-api/templates/deployment.yaml)
+grep -q 'name: Lettra__Catalog__DatabaseAdministration, value: "Worker"' <<<"$api_cellule" && ! grep -q 'AdminConnectionString\|ADMIN_PASSWORD' <<<"$api_cellule" \
+  || { echo "cellule : l'API garde un accès d'administration aux serveurs de bases" >&2; exit 1; }
+grep -q 'Lettra__Clusters__pg-a__AdminConnectionString, value: "Host=pg-a-rw;Username=lettra_admin;' <<<"$(helm template c lettra-cell \
+  -f lettra-cell/values-taille-S.yaml --set lettra-api.image.tag=ci --set lettra-worker.image.tag=ci --show-only charts/lettra-worker/templates/deployment.yaml)" \
+  || { echo "cellule : le Worker n'a pas la connexion d'administration (rôle lettra_admin)" >&2; exit 1; }
 
 step "Keycloak de la cellule (lettra-keycloak)"
 KC_REQUIS=(--set hostname=https://auth.example.test --set publicUrl=https://app.example.test)

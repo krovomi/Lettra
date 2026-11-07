@@ -19,18 +19,30 @@ spec:
   imageName: {{ $.Values.postgres.image }}
   primaryUpdateStrategy: unsupervised
   # Rôle applicatif de Lettra (secret {{ $cluster.name }}-app, créé par l'opérateur) et sa base, qui porte le catalogue
-  # sur le cluster désigné par postgres.catalogCluster. Lettra crée lui-même une base par dossier (ADR-0009) : le rôle
-  # reçoit CREATEDB, et l'API comme le Worker passent par une connexion directe au cluster pour CREATE / DROP DATABASE.
-  # Il reçoit aussi CREATEROLE : chaque cabinet a son propre rôle de connexion, seul admis sur ses bases
-  # (Lettra:Clusters:<cluster>:CabinetRoles). Les connexions réservées lui sont ouvertes : le trafic des cabinets ne
-  # peut pas priver le catalogue, les créations de bases ni les migrations du Worker de connexion.
+  # sur le cluster désigné par postgres.catalogCluster. Ce rôle ne crée ni base ni rôle : l'API qui s'en sert n'a aucun
+  # droit d'administration. Les connexions réservées lui sont ouvertes : le trafic des cabinets ne peut pas priver le
+  # catalogue de connexion.
   bootstrap:
     initdb:
       database: {{ $.Values.postgres.database }}
       owner: {{ $.Values.postgres.database }}
       postInitSQL:
-        - ALTER ROLE {{ $.Values.postgres.database }} CREATEDB CREATEROLE
         - GRANT pg_use_reserved_connections TO {{ $.Values.postgres.database }}
+  # Rôle d'administration, réservé au Worker (connexion directe au primaire) : Lettra crée lui-même une base par dossier
+  # (ADR-0009), d'où CREATEDB, et chaque cabinet a son propre rôle de connexion, seul admis sur ses bases
+  # (Lettra:Clusters:<cluster>:CabinetRoles), d'où CREATEROLE. Les connexions réservées lui sont ouvertes aussi : les
+  # créations de bases et les migrations du Worker passent même quand les cabinets prennent tout le budget. Membre du
+  # rôle applicatif, il reprend aussi les bases et les rôles que celui-ci a créés sur une cellule d'avant ce partage.
+  managed:
+    roles:
+      - name: {{ $.Values.postgres.adminRole }}
+        ensure: present
+        login: true
+        createdb: true
+        createrole: true
+        inRoles: [pg_use_reserved_connections, {{ $.Values.postgres.database }}]
+        passwordSecret:
+          name: {{ $cluster.name }}-admin
   postgresql:
     parameters:
       # Budget des dossiers actifs servis par PgBouncer + connexions réservées.

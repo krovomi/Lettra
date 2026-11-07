@@ -36,6 +36,8 @@ lettra-api:
     Lettra__Catalog__DossierErasureDelay: "00:00:15"
     # Délai avant le départ d'un cabinet : 15 s au lieu de 30 jours.
     Lettra__Catalog__CabinetDepartureDelay: "00:00:15"
+    # Attente par l'API d'une création menée par le Worker : 10 s au lieu de 60, l'essai arrête le Worker à l'étape 5.
+    Lettra__Catalog__ProvisioningWait: "00:00:10"
     # Clés DataProtection (état OIDC du BFF) dans un volume : le système de fichiers de l'image est en lecture seule.
     HOME: /data
   extraVolumes:

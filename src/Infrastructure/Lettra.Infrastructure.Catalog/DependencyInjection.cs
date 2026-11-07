@@ -25,7 +25,9 @@ public static class DependencyInjection
         IConfiguration configuration,
         Action<DbContextOptionsBuilder> configureCatalog)
     {
-        services.AddOptions<CatalogOptions>().Bind(configuration.GetSection(CatalogOptions.SectionName));
+        services.AddOptions<CatalogOptions>().Bind(configuration.GetSection(CatalogOptions.SectionName))
+            .Validate(o => o.Catalog.ProvisioningWait > TimeSpan.Zero, $"{CatalogOptions.SectionName}:Catalog:ProvisioningWait doit être strictement positif.")
+            .ValidateOnStart();
         services.AddPooledDbContextFactory<CatalogDbContext>(configureCatalog);
 
         // La configuration reçue est capturée : la composition ne suppose pas qu'IConfiguration soit dans le conteneur.
@@ -45,6 +47,7 @@ public static class DependencyInjection
         services.AddSingleton<CabinetDatabaseRoleKeeper>();
         services.AddSingleton<CatalogDossierProvisioner>();
         services.AddSingleton<IDossierProvisioner>(sp => sp.GetRequiredService<CatalogDossierProvisioner>());
+        services.AddSingleton<IDossierRequestPass>(sp => sp.GetRequiredService<CatalogDossierProvisioner>());
         // Effacement des dossiers créés par le catalogue (remplace le « aucun » du poste enregistré par AddApplication).
         services.AddSingleton<CatalogDossierEraser>();
         services.Replace(ServiceDescriptor.Singleton<IDossierEraser>(sp => sp.GetRequiredService<CatalogDossierEraser>()));

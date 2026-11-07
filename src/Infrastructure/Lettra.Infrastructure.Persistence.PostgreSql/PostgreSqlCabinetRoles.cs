@@ -39,8 +39,9 @@ public sealed class PostgreSqlCabinetRoleAdministrator : ICabinetRoleAdministrat
             await ExecuteAsync(server, $"REVOKE ALL ON DATABASE {target} FROM PUBLIC", cancellationToken).ConfigureAwait(false);
         }
 
-        // Les objets que l'administrateur a créés dans la base (bases d'avant les rôles par cabinet) passent au rôle.
-        // Une table emporte ses index et ses séquences liées ; une séquence libre change de propriétaire seule.
+        // Les objets créés avant les rôles par cabinet, par l'administrateur ou par un rôle dont il est membre (le rôle
+        // applicatif d'une cellule d'avant), passent au rôle. Une table emporte ses index et ses séquences liées ; une
+        // séquence libre change de propriétaire seule.
         builder.Database = database;
         NpgsqlConnection inside = new(builder.ConnectionString);
         await using (inside.ConfigureAwait(false))
@@ -52,7 +53,8 @@ public sealed class PostgreSqlCabinetRoleAdministrator : ICabinetRoleAdministrat
                 BEGIN
                   FOR o IN
                     SELECT c.relname, c.relkind FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
-                    WHERE n.nspname = 'public' AND c.relowner = (SELECT oid FROM pg_roles WHERE rolname = current_user)
+                    WHERE n.nspname = 'public' AND c.relowner <> '{role}'::regrole
+                      AND pg_has_role(current_user, c.relowner, 'USAGE')
                       AND (c.relkind IN ('r', 'p', 'v', 'm')
                         OR (c.relkind = 'S' AND NOT EXISTS (SELECT 1 FROM pg_depend d WHERE d.objid = c.oid AND d.deptype IN ('a', 'i'))))
                   LOOP

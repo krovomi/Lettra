@@ -116,6 +116,9 @@ kubectl -n "$NS" create secret generic lettra-api --dry-run=client -o yaml \
 kubectl -n "$NS" create secret generic lettra-worker --dry-run=client -o yaml \
   --from-literal=Lettra__Observability__ServiceName=lettra-worker \
   --from-literal=Lettra__Identity__Provisioning__ClientSecret="$provisioning_secret" | kubectl apply -f - >/dev/null
+# Rôle d'administration du cluster pg-a (lettra_admin, géré par CloudNativePG), réservé au Worker.
+kubectl -n "$NS" create secret generic pg-a-admin --type=kubernetes.io/basic-auth --dry-run=client -o yaml \
+  --from-literal=username=lettra_admin --from-literal=password="$(openssl rand -hex 24)" | kubectl apply -f - >/dev/null
 kms_token=$(openssl rand -hex 24)
 kubectl -n "$NS" create secret generic lettra-kms --dry-run=client -o yaml \
   --from-literal=token="$kms_token" | kubectl apply -f - >/dev/null
@@ -249,6 +252,13 @@ appel POST "/api/v1/cabinets/$cabinet/attributions" \
 [[ $(statut) == 2* ]] || echec "rôle manager : HTTP $(statut) $(head -c 600 "$SORTIE/reponse.json")"
 
 step "3. Dossier créé par l'API : actif, base d_… sur le cluster"
+# Le rôle de l'API ne crée ni base ni rôle ; seul le rôle d'administration du Worker le peut.
+[[ $(sql postgres "SELECT rolcreatedb OR rolcreaterole FROM pg_roles WHERE rolname = 'lettra'") == f ]] \
+  || echec "le rôle lettra de l'API peut encore créer des bases ou des rôles"
+[[ $(sql postgres "SELECT rolcreatedb AND rolcreaterole FROM pg_roles WHERE rolname = 'lettra_admin'") == t ]] \
+  || echec "rôle d'administration lettra_admin absent ou sans CREATEDB / CREATEROLE"
+kubectl -n "$NS" get deploy lettra-api -o json | jq -e '[.spec.template.spec.containers[].env[]?.name] | map(select(test("Admin|ADMIN"))) | length == 0' >/dev/null \
+  || echec "l'API reçoit une connexion ou un mot de passe d'administration"
 dossier=$(appel POST "/api/v1/cabinets/$cabinet/dossiers" '{"name":"Dossier mode 5 (fictif)"}' | jq -r '.id // empty')
 attendu 201 "création du dossier"
 base="d_${dossier//-/}"
@@ -264,11 +274,13 @@ sql postgres "DROP ROLE IF EXISTS essai_autre_cabinet; CREATE ROLE essai_autre_c
 [[ $(sql postgres "SELECT has_database_privilege('essai_autre_cabinet', '$base', 'CONNECT')") == f ]] \
   || echec "base $base ouverte à un autre rôle que celui du cabinet"
 sql postgres "DROP ROLE essai_autre_cabinet" >/dev/null
+# Ni le rôle de l'API : il n'ouvre que le catalogue.
+[[ $(sql postgres "SELECT has_database_privilege('lettra', '$base', 'CONNECT')") == f ]] || echec "base $base ouverte au rôle de l'API"
 [[ $(catalogue "SELECT octet_length(\"WrappedDek\") FROM catalog.\"Dossiers\" WHERE \"Id\" = '$dossier'") == 60 ]] \
   || echec "DEK du dossier absente ou mal enveloppée"
 appel GET /api/v1/dossiers | jq -e --arg d "$dossier" 'map(.id) | index($d)' >/dev/null || echec "dossier absent de la liste"
 [[ $(enveloppe) == vault:v1:* ]] || echec "KEK du cabinet absente du catalogue ou pas enveloppée par le KMS : $(enveloppe)"
-echo "   dossier $dossier actif ; base $base (propriétaire $role_cabinet, fermée aux autres rôles) ; DEK enveloppée (60 octets) ; KEK enveloppée par le KMS"
+echo "   dossier $dossier actif, base créée par le Worker ; base $base (propriétaire $role_cabinet, fermée aux autres rôles) ; DEK enveloppée (60 octets) ; KEK enveloppée par le KMS"
 
 step "4. Client et facture dans le dossier, validation, relecture"
 appel PUT /api/v1/company-profile '{"name":"Conseil fictif","legalForm":"SAS","shareCapital":10000,"siren":"552100554",
@@ -337,22 +349,21 @@ appel GET /api/v1/sync/devices "" "$dossier" | jq -e --arg p "$poste" 'map(.devi
   || echec "poste absent du registre : $(head -c 400 "$SORTIE/reponse.json")"
 echo "   poste $poste : dossier reçu (e-mails en clair), série FAC-P01 ouverte, intention appliquée une seule fois, poste au registre"
 
-step "5. Création interrompue (serveur de bases indisponible, Worker arrêté), puis reprise par le Worker"
+step "5. Worker arrêté : la création attend le Worker, l'API ne crée aucune base ; reprise au retour du Worker"
 kubectl -n "$NS" scale deploy/lettra-worker --replicas=0 >/dev/null
 kubectl -n "$NS" rollout status deploy/lettra-worker --timeout=2m
-sql postgres "ALTER ROLE lettra NOCREATEDB" >/dev/null
-appel POST "/api/v1/cabinets/$cabinet/dossiers" '{"name":"Dossier interrompu (fictif)"}' >/dev/null
-[[ $(statut) == 5* ]] || echec "création sans droit CREATEDB : HTTP $(statut), échec attendu"
-interrompu=$(catalogue "SELECT \"Id\" FROM catalog.\"Dossiers\" WHERE \"State\" = 2 LIMIT 1")
-[[ -n "$interrompu" ]] || echec "aucun dossier « en échec » dans le catalogue"
-echo "   dossier $interrompu en échec : $(catalogue "SELECT \"LastError\" FROM catalog.\"Dossiers\" WHERE \"Id\" = '$interrompu'")"
-sql postgres "ALTER ROLE lettra CREATEDB" >/dev/null
+appel POST "/api/v1/cabinets/$cabinet/dossiers" '{"name":"Dossier en attente (fictif)"}' >/dev/null
+[[ $(statut) == 5* ]] || echec "création sans Worker : HTTP $(statut), échec attendu"
+interrompu=$(catalogue "SELECT \"Id\" FROM catalog.\"Dossiers\" WHERE \"State\" = 5 LIMIT 1")
+[[ -n "$interrompu" ]] || echec "aucune demande de création au catalogue"
+[[ $(sql postgres "SELECT count(*) FROM pg_database WHERE datname = 'd_${interrompu//-/}'") == 0 ]] || echec "base créée sans le Worker"
+echo "   dossier $interrompu demandé, sans base : l'API n'a pas d'accès d'administration"
 kubectl -n "$NS" scale deploy/lettra-worker --replicas=1 >/dev/null
-attendre 120 "reprise du dossier $interrompu par le Worker" actif "$interrompu"
+attendre 120 "création du dossier $interrompu par le Worker" actif "$interrompu"
 [[ $(sql postgres "SELECT count(*) FROM pg_database WHERE datname = 'd_${interrompu//-/}'") == 1 ]] || echec "base du dossier repris absente"
 appel GET /api/v1/customers "" "$interrompu" >/dev/null
 attendu 200 "lecture du dossier repris"
-echo "   dossier $interrompu repris par le Worker : actif, base créée et migrée"
+echo "   dossier $interrompu créé par le Worker à son retour : actif, base créée et migrée"
 
 step "6. Rotation de la clé racine du cabinet dans le KMS, KEK réenveloppée par le Worker"
 cle_racine="lettra-cabinet-${cabinet//-/}"

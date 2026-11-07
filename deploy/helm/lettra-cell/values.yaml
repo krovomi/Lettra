@@ -22,10 +22,12 @@ lettra-api:
     Lettra__Catalog__Provider: PostgreSql
     # Catalogue : base initiale de pg-a, par PgBouncer.
     ConnectionStrings__Catalog: Host=pg-a-pooler;Database=lettra;Username=lettra;Password=$(LETTRA_PG_A_PASSWORD);No Reset On Close=true
-    # Bases des dossiers : connexion applicative par PgBouncer, CREATE / DROP DATABASE en direct sur le primaire.
+    # Bases des dossiers : connexion applicative par PgBouncer. L'API n'a aucun accès d'administration aux serveurs de
+    # bases : elle inscrit la création d'un dossier au catalogue et le Worker la mène (CREATE / DROP DATABASE, rôles des
+    # cabinets), par sa propre connexion d'administration (réglages de lettra-worker ci-dessous).
+    Lettra__Catalog__DatabaseAdministration: Worker
     Lettra__Clusters__pg-a__Provider: PostgreSql
     Lettra__Clusters__pg-a__ConnectionString: Host=pg-a-pooler;Username=lettra;Password=$(LETTRA_PG_A_PASSWORD);No Reset On Close=true
-    Lettra__Clusters__pg-a__AdminConnectionString: Host=pg-a-rw;Username=lettra;Password=$(LETTRA_PG_A_PASSWORD)
     # Un rôle de connexion par cabinet : chaque base de dossier n'accepte que celui de son cabinet. Son mot de passe se
     # dérive de la clé du cabinet et n'est stocké nulle part ; les bases d'avant passent au rôle à la passe du Worker.
     Lettra__Clusters__pg-a__CabinetRoles: "true"
@@ -43,8 +45,14 @@ lettra-worker:
   enabled: true
   cell: local
   existingSecret: lettra-worker
-  secretEnv: *bases-secrets
-  settings: *bases-reglages
+  secretEnv:
+    <<: *bases-secrets
+    # Mot de passe du rôle d'administration lettra_admin (secret <cluster>-admin, créé par OpenTofu, module cell-bootstrap).
+    LETTRA_PG_A_ADMIN_PASSWORD: { secret: pg-a-admin, key: password }
+  settings:
+    <<: *bases-reglages
+    # CREATE / DROP DATABASE et rôles des cabinets, en direct sur le primaire : le Worker seul détient cette connexion.
+    Lettra__Clusters__pg-a__AdminConnectionString: Host=pg-a-rw;Username=lettra_admin;Password=$(LETTRA_PG_A_ADMIN_PASSWORD)
 
 # Keycloak de la cellule (chart lettra-keycloak) : realm lettra versionné, une organisation par cabinet, MFA
 # obligatoire, base PostgreSQL dédiée. Adresses publiques renseignées par cellule (deploy/cells/<cellule>/values.yaml).
@@ -68,6 +76,9 @@ postgres:
   # Rôle applicatif et base initiale de chaque cluster (secret <cluster>-app, créé par l'opérateur CloudNativePG). La
   # base initiale de pg-a porte le catalogue et la supervision (réglages de lettra-api et lettra-worker ci-dessus).
   database: lettra
+  # Rôle d'administration de chaque cluster, réservé au Worker : il crée et supprime les bases des dossiers et les rôles
+  # des cabinets. Mot de passe dans le secret <cluster>-admin (type basic-auth), créé par OpenTofu (module cell-bootstrap).
+  adminRole: lettra_admin
   # PodMonitor de chaque cluster et de son PgBouncer (Prometheus Operator de la cellule).
   monitoring: true
   clusters:

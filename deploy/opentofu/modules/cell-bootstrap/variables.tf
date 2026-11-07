@@ -57,3 +57,9 @@ variable "storage_credentials" {
   default   = null
   sensitive = true
 }
+
+variable "database_clusters" {
+  description = "Clusters PostgreSQL des dossiers de la cellule (postgres.clusters de lettra-cell) : chacun reçoit le secret <cluster>-admin de son rôle d'administration, réservé au Worker."
+  type        = list(string)
+  default     = ["pg-a"]
+}
