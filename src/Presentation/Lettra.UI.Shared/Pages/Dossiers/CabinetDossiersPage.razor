@@ -3,6 +3,7 @@
 @using Lettra.Contracts.Dossiers
 @using Lettra.UI.Shared.Cabinet
 @inject ICabinetDossiersGateway Gateway
+@inject IFileDownloader Files
 @inject IAdministrationGateway Administration
 @inject CurrentDossier Current
 @inject NavigationManager Navigation
@@ -10,8 +11,9 @@
 @inject TimeProvider Clock
 @inject IStringLocalizer<SharedResource> L
 @* Les dossiers du cabinet, gérés par son administrateur : créer un dossier, demander son effacement (fermé aussitôt,
-   annulable pendant le délai de rétractation, puis clé détruite et base supprimée), annuler cette demande. Liste
-   chargée en entier (quelques centaines de dossiers au plus par cabinet) : tri et filtres à l'écran. *@
+   annulable pendant le délai de rétractation, puis clé détruite et base supprimée), annuler cette demande ; exporter
+   un dossier dans un paquet chiffré par une phrase secrète, importer un paquet (réversibilité). Liste chargée en
+   entier (quelques centaines de dossiers au plus par cabinet) : tri et filtres à l'écran. *@
 
 <PageTitle>@L["CabinetDossiers.Title"] · Lettra</PageTitle>
 
@@ -23,7 +25,10 @@
     @if (_dossiers is not null)
     {
         <div class="lt-page-actions">
-            <button type="button" class="lettra-button" id="dossiers-new" disabled="@_creating" @onclick="StartCreating">
+            <button type="button" class="lettra-button is-secondary" id="dossiers-import" disabled="@(_panel == Panel.Import)" @onclick="StartImporting">
+                <Icon Name="upload" Size="18" /> @L["CabinetDossiers.Import"]
+            </button>
+            <button type="button" class="lettra-button" id="dossiers-new" disabled="@(_panel == Panel.Create)" @onclick="StartCreating">
                 <Icon Name="plus" Size="18" /> @L["CabinetDossiers.New"]
             </button>
         </div>
@@ -49,7 +54,7 @@ else
     }
     else
     {
-        @if (_creating)
+        @if (_panel == Panel.Create)
         {
             <section class="lettra-card" aria-labelledby="dossiers-form-title">
                 <h2 id="dossiers-form-title">@L["CabinetDossiers.Form.Title"]</h2>
@@ -64,9 +69,69 @@ else
                     <GeneralErrors Errors="_formErrors" />
                     <div class="la-actions">
                         <button type="submit" class="lettra-button" id="dossiers-submit" disabled="@_busy"><Icon Name="check" Size="18" />@L["CabinetDossiers.Form.Submit"]</button>
-                        <button type="button" class="lettra-button is-ghost" id="dossiers-cancel" @onclick="CancelCreating">@L["CabinetDossiers.Form.Cancel"]</button>
+                        <button type="button" class="lettra-button is-ghost" id="dossiers-cancel" @onclick="ClosePanel">@L["CabinetDossiers.Form.Cancel"]</button>
                     </div>
                 </EditForm>
+            </section>
+        }
+        else if (_panel == Panel.Export && _exported is { } exported)
+        {
+            <section class="lettra-card" aria-labelledby="dossiers-export-title">
+                <h2 id="dossiers-export-title">@string.Format(Culture, L["CabinetDossiers.Export.Title"], exported.Name)</h2>
+                <EditForm Model="_export" OnValidSubmit="ExportAsync" class="la-form" id="dossiers-export-form">
+                    <DataAnnotationsValidator />
+                    <label class="la-field">
+                        <span>@L["CabinetDossiers.Export.Passphrase"]</span>
+                        <InputText type="password" id="dossiers-export-passphrase" @bind-Value="_export.Passphrase" autocomplete="new-password" />
+                        <FieldErrors Field="@nameof(ExportDossierRequest.Passphrase)" ServerErrors="_formErrors" />
+                    </label>
+                    <label class="la-field">
+                        <span>@L["CabinetDossiers.Export.Confirmation"]</span>
+                        <input type="password" id="dossiers-export-confirmation" @bind="_confirmation" @bind:event="oninput" autocomplete="new-password" />
+                        @if (_mismatch)
+                        {
+                            <div class="validation-message" role="alert">@L["CabinetDossiers.Export.Mismatch"]</div>
+                        }
+                    </label>
+                    <p class="lettra-hint la-callout"><Icon Name="key-round" Size="16" /> @L["CabinetDossiers.Export.Hint"]</p>
+                    <GeneralErrors Errors="_formErrors" />
+                    <div class="la-actions">
+                        <button type="submit" class="lettra-button" id="dossiers-export-submit" disabled="@_busy">
+                            <Icon Name="download" Size="18" />@(_busy ? L["CabinetDossiers.Export.Busy"] : L["CabinetDossiers.Export.Submit"])
+                        </button>
+                        <button type="button" class="lettra-button is-ghost" id="dossiers-export-cancel" @onclick="ClosePanel">@L["CabinetDossiers.Form.Cancel"]</button>
+                    </div>
+                </EditForm>
+            </section>
+        }
+        else if (_panel == Panel.Import)
+        {
+            <section class="lettra-card" aria-labelledby="dossiers-import-title">
+                <h2 id="dossiers-import-title">@L["CabinetDossiers.Import.Title"]</h2>
+                <form class="la-form" id="dossiers-import-form" @onsubmit="ImportAsync">
+                    <label class="la-field">
+                        <span>@L["CabinetDossiers.Import.File"]</span>
+                        <InputFile id="dossiers-import-file" accept="@DossierPackageRules.FileExtension" OnChange="ChoosePackage" />
+                        <FieldErrors Field="Package" ServerErrors="_formErrors" />
+                    </label>
+                    <label class="la-field">
+                        <span>@L["CabinetDossiers.Import.Passphrase"]</span>
+                        <input type="password" id="dossiers-import-passphrase" @bind="_importPassphrase" @bind:event="oninput" autocomplete="off" />
+                        <FieldErrors Field="@nameof(ExportDossierRequest.Passphrase)" ServerErrors="_formErrors" />
+                    </label>
+                    <p class="lettra-hint la-callout"><Icon Name="info" Size="16" /> @L["CabinetDossiers.Import.Hint"]</p>
+                    @if (_importProblem is { } problem)
+                    {
+                        <div class="validation-message" role="alert" id="dossiers-import-problem">@problem</div>
+                    }
+                    <GeneralErrors Errors="_formErrors" />
+                    <div class="la-actions">
+                        <button type="submit" class="lettra-button" id="dossiers-import-submit" disabled="@_busy">
+                            <Icon Name="upload" Size="18" />@(_busy ? L["CabinetDossiers.Import.Busy"] : L["CabinetDossiers.Import.Submit"])
+                        </button>
+                        <button type="button" class="lettra-button is-ghost" id="dossiers-import-cancel" @onclick="ClosePanel">@L["CabinetDossiers.Form.Cancel"]</button>
+                    </div>
+                </form>
             </section>
         }
 
@@ -162,6 +227,10 @@ else
                                         }
                                         else if (dossier.State == CabinetDossierStateDto.Active)
                                         {
+                                            <button type="button" class="lettra-button is-ghost" id="@($"dossiers-export-{dossier.Id:N}")" disabled="@_busy"
+                                                    aria-label="@string.Format(Culture, L["CabinetDossiers.Export.Label"], dossier.Name)" @onclick="() => StartExporting(dossier)">
+                                                <Icon Name="download" Size="18" /> @L["CabinetDossiers.Export"]
+                                            </button>
                                             <RowDelete Label="@string.Format(Culture, L["CabinetDossiers.Erase.Label"], dossier.Name)"
                                                        Question="@L["CabinetDossiers.Erase.Question"]"
                                                        ActionText="@L["CabinetDossiers.Erase.Confirm"]"
@@ -182,6 +251,7 @@ else
                 <li>@L["CabinetDossiers.Rule.Create"]</li>
                 <li>@L["CabinetDossiers.Rule.Erase"]</li>
                 <li>@L["CabinetDossiers.Rule.Keep"]</li>
+                <li>@L["CabinetDossiers.Rule.Export"]</li>
                 <li>@L["CabinetDossiers.Rule.Declared"]</li>
             </ul>
         </Collapsible>
@@ -199,7 +269,14 @@ else
     private IReadOnlyList<ErrorDetail> _errors = [];
     private IReadOnlyList<ErrorDetail> _formErrors = [];
     private CreateDossierRequest _request = new();
-    private bool _creating;
+    private ExportDossierRequest _export = new();
+    private string? _confirmation;
+    private bool _mismatch;
+    private CabinetDossierResponse? _exported;
+    private IBrowserFile? _package;
+    private string? _importPassphrase;
+    private string? _importProblem;
+    private Panel _panel;
     private bool _busy;
     private string? _query;
     private CabinetDossierStateDto? _state;
@@ -258,9 +335,34 @@ else
         (_dossiers, _errors) = (result.Value ?? _dossiers, result.Errors);
     }
 
-    private void StartCreating() => (_creating, _request, _formErrors) = (true, new CreateDossierRequest(), []);
+    /// <summary>Un seul encart à la fois au-dessus de la liste : création, export d'un dossier ou import d'un paquet.</summary>
+    private enum Panel
+    {
+        None,
+        Create,
+        Export,
+        Import,
+    }
 
-    private void CancelCreating() => (_creating, _formErrors) = (false, []);
+    private void StartCreating() => Open(Panel.Create);
+
+    private void StartExporting(CabinetDossierResponse dossier)
+    {
+        Open(Panel.Export);
+        _exported = dossier;
+    }
+
+    private void StartImporting() => Open(Panel.Import);
+
+    private void ClosePanel() => Open(Panel.None);
+
+    /// <summary>Ouvre un encart vierge : les phrases secrètes saisies ne survivent pas à sa fermeture.</summary>
+    private void Open(Panel panel)
+    {
+        (_panel, _formErrors) = (panel, []);
+        (_request, _export, _confirmation, _mismatch, _exported) = (new CreateDossierRequest(), new ExportDossierRequest(), null, false, null);
+        (_package, _importPassphrase, _importProblem) = (null, null, null);
+    }
 
     private async Task CreateAsync()
     {
@@ -274,12 +376,76 @@ else
             return;
         }
 
-        _creating = false;
+        ClosePanel();
         await Current.EnsureLoadedAsync(reload: true);
         Toasts.Show(
             ToastKind.Success,
             string.Format(Culture, L["CabinetDossiers.Toast.Created"], created.Name),
             new ToastAction(L["CabinetDossiers.Open"], () => OpenAsync(created.Id)));
+        await LoadAsync();
+    }
+
+    /// <summary>La phrase est tapée deux fois : une faute de frappe rendrait le paquet illisible pour toujours.</summary>
+    private async Task ExportAsync()
+    {
+        _mismatch = !string.Equals(_export.Passphrase, _confirmation, StringComparison.Ordinal);
+        if (_mismatch || _exported is not { } dossier)
+        {
+            return;
+        }
+
+        _busy = true;
+        _formErrors = [];
+        OperationResult<DossierPackageFile> result = await Gateway.ExportAsync(_cabinetId, dossier.Id, _export, CancellationToken.None);
+        if (result.Value is not { } file)
+        {
+            _busy = false;
+            _formErrors = result.Errors;
+            return;
+        }
+
+        await Files.DownloadAsync(file.FileName, DossierPackageRules.ContentType, file.Content, CancellationToken.None);
+        _busy = false;
+        ClosePanel();
+        Toasts.Show(ToastKind.Success, string.Format(Culture, L["CabinetDossiers.Toast.Exported"], dossier.Name, file.FileName));
+    }
+
+    private void ChoosePackage(InputFileChangeEventArgs e) => (_package, _importProblem) = (e.File, null);
+
+    private async Task ImportAsync()
+    {
+        _formErrors = [];
+        _importProblem = _package switch
+        {
+            null => L["CabinetDossiers.Import.NoFile"].Value,
+            { Size: > DossierPackageRules.MaxPackageLength } => L["CabinetDossiers.Import.TooLarge"].Value,
+            _ => null,
+        };
+        if (_importProblem is not null || _package is null)
+        {
+            return;
+        }
+
+        _busy = true;
+        OperationResult<DossierSummary> result;
+        await using (Stream package = _package.OpenReadStream(DossierPackageRules.MaxPackageLength))
+        {
+            result = await Gateway.ImportAsync(_cabinetId, package, _importPassphrase ?? string.Empty, CancellationToken.None);
+        }
+
+        _busy = false;
+        if (result.Value is not { } imported)
+        {
+            _formErrors = result.Errors;
+            return;
+        }
+
+        ClosePanel();
+        await Current.EnsureLoadedAsync(reload: true);
+        Toasts.Show(
+            ToastKind.Success,
+            string.Format(Culture, L["CabinetDossiers.Toast.Imported"], imported.Name),
+            new ToastAction(L["CabinetDossiers.Open"], () => OpenAsync(imported.Id)));
         await LoadAsync();
     }
 

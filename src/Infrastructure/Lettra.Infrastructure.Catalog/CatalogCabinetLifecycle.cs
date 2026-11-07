@@ -153,7 +153,7 @@ internal sealed partial class CatalogCabinetLifecycle(
     }
 
     public Task<int> RetryFailedDossiersAsync(CancellationToken cancellationToken) =>
-        provisioner.ResumeAsync(cancellationToken);
+        provisioner.ResumeAsync(retryFailuresNow: true, cancellationToken);
 
     /// <summary>
     /// Départs dont le délai est passé, avant l'effacement des dossiers : tous les dossiers du cabinet passent « à

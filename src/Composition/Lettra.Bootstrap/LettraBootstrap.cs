@@ -62,6 +62,7 @@ public static class LettraBootstrap
         {
             DeploymentMode.IsolatedDesktop => services
                 .AddLocalDossiers(LocalDataDirectory(configuration, mode))
+                .AddDossierTransfer()
                 .AddLocalIdentity(configuration)
                 .AddSupervision(configuration)
                 .AddSupervisionDatabase(b => SqliteConfigurator.ConfigureSupervision(
@@ -73,6 +74,7 @@ public static class LettraBootstrap
                 .AddPostgreSqlProvider()
                 .AddSqlServerProvider()
                 .AddCatalogDatabase(configuration, CatalogDatabase(configuration))
+                .AddDossierTransfer()
                 .AddOidcIdentity(configuration)
                 .AddSupervision(configuration)
                 .AddSupervisionDatabase(SupervisionDatabase(configuration))
@@ -83,6 +85,7 @@ public static class LettraBootstrap
             DeploymentMode.OnPremRemote or DeploymentMode.HostedSaaS => services
                 .AddPostgreSqlProvider()
                 .AddCatalogDatabase(configuration, CatalogDatabase(configuration))
+                .AddDossierTransfer()
                 .AddOidcIdentity(configuration)
                 .AddSupervision(configuration)
                 .AddSupervisionDatabase(SupervisionDatabase(configuration))

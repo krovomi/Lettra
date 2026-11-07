@@ -27,11 +27,6 @@ namespace Lettra.Infrastructure.Persistence.Security;
 internal sealed class EnvelopedIntegrityKeyring(TenantDbSession session, ITenantContext tenant, IKekStore kekStore, TimeProvider clock)
     : IIntegrityKeyring
 {
-    private const int NonceSize = 12;
-    private const int TagSize = 16;
-    private const int SecretSize = 64;
-    private static readonly byte[] Purpose = Encoding.ASCII.GetBytes("lettra/integrite/cle/v1");
-
     private readonly Dictionary<string, IntegrityKeyMaterial> _opened = new(StringComparer.Ordinal);
 
     public async Task<Result<IIntegrityKeyVerifier>> VerifierAsync(CancellationToken cancellationToken)
@@ -144,8 +139,42 @@ internal sealed class EnvelopedIntegrityKeyring(TenantDbSession session, ITenant
         return local is not null && (stored is null || local.Version >= stored.Version) ? local : stored;
     }
 
-    private StoredIntegrityKey Wrap(byte[] kek, int version, IntegrityKeyMaterial keys)
+    private StoredIntegrityKey Wrap(byte[] kek, int version, IntegrityKeyMaterial keys) =>
+        IntegrityKeyEnvelope.Wrap(kek, tenant.Current.OrganisationId, tenant.Current.DossierId, version, keys, clock.GetUtcNow());
+
+    private IntegrityKeyMaterial? TryOpen(byte[] kek, StoredIntegrityKey row)
     {
+        if (_opened.TryGetValue(row.KeyId, out IntegrityKeyMaterial? cached) && cached.PublicKey == row.PublicKey)
+        {
+            return cached;
+        }
+
+        IntegrityKeyMaterial? material = IntegrityKeyEnvelope.Open(kek, tenant.Current.OrganisationId, tenant.Current.DossierId, row);
+        if (material is not null)
+        {
+            _opened[row.KeyId] = material;
+        }
+
+        return material;
+    }
+}
+
+/// <summary>
+/// L'enveloppe d'une version de clé : AES-256-GCM par la KEK du cabinet, liée par ses données associées au cabinet, au
+/// dossier, au numéro de version et à l'identifiant de la clé. Le transfert d'un dossier l'ouvre avec la KEK de départ et
+/// la referme avec celle du cabinet d'arrivée.
+/// </summary>
+internal static class IntegrityKeyEnvelope
+{
+    private const int NonceSize = 12;
+    private const int TagSize = 16;
+    private const int SecretSize = 64;
+    private static readonly byte[] Purpose = Encoding.ASCII.GetBytes("lettra/integrite/cle/v1");
+
+    public static StoredIntegrityKey Wrap(
+        byte[] kek, OrganisationId cabinet, DossierId dossier, int version, IntegrityKeyMaterial keys, DateTimeOffset createdAt)
+    {
+        ArgumentNullException.ThrowIfNull(keys);
         byte[] secret = keys.ExportSecret();
         try
         {
@@ -157,8 +186,8 @@ internal sealed class EnvelopedIntegrityKeyring(TenantDbSession session, ITenant
                 secret,
                 wrapped.AsSpan(NonceSize + TagSize),
                 wrapped.AsSpan(NonceSize, TagSize),
-                AssociatedData(version, keys.KeyId));
-            return new StoredIntegrityKey(version, keys.KeyId, keys.PublicKey, wrapped, clock.GetUtcNow());
+                AssociatedData(cabinet, dossier, version, keys.KeyId));
+            return new StoredIntegrityKey(version, keys.KeyId, keys.PublicKey, wrapped, createdAt);
         }
         finally
         {
@@ -166,13 +195,10 @@ internal sealed class EnvelopedIntegrityKeyring(TenantDbSession session, ITenant
         }
     }
 
-    private IntegrityKeyMaterial? TryOpen(byte[] kek, StoredIntegrityKey row)
+    /// <summary>La version ouverte, ou rien si l'enveloppe ne s'ouvre pas (autre KEK, ligne altérée, recopiée ou fabriquée).</summary>
+    public static IntegrityKeyMaterial? Open(byte[] kek, OrganisationId cabinet, DossierId dossier, StoredIntegrityKey row)
     {
-        if (_opened.TryGetValue(row.KeyId, out IntegrityKeyMaterial? cached) && cached.PublicKey == row.PublicKey)
-        {
-            return cached;
-        }
-
+        ArgumentNullException.ThrowIfNull(row);
         if (row.WrappedSecret is not { Length: NonceSize + TagSize + SecretSize })
         {
             return null;
@@ -187,17 +213,11 @@ internal sealed class EnvelopedIntegrityKeyring(TenantDbSession session, ITenant
                 row.WrappedSecret.AsSpan(NonceSize + TagSize),
                 row.WrappedSecret.AsSpan(NonceSize, TagSize),
                 secret,
-                AssociatedData(row.Version, row.KeyId));
+                AssociatedData(cabinet, dossier, row.Version, row.KeyId));
             IntegrityKeyMaterial material = IntegrityKeyMaterial.FromSecret(secret);
 
             // La clé publique du registre doit être celle de la clé privée enveloppée, pas une valeur posée à côté.
-            if (material.KeyId != row.KeyId || material.PublicKey != row.PublicKey)
-            {
-                return null;
-            }
-
-            _opened[row.KeyId] = material;
-            return material;
+            return material.KeyId == row.KeyId && material.PublicKey == row.PublicKey ? material : null;
         }
         catch (CryptographicException)
         {
@@ -209,11 +229,11 @@ internal sealed class EnvelopedIntegrityKeyring(TenantDbSession session, ITenant
         }
     }
 
-    private byte[] AssociatedData(int version, string keyId)
+    private static byte[] AssociatedData(OrganisationId cabinet, DossierId dossier, int version, string keyId)
     {
         byte[] versionBytes = new byte[4];
         BinaryPrimitives.WriteInt32LittleEndian(versionBytes, version);
-        return [.. Purpose, .. tenant.Current.OrganisationId.Value.ToByteArray(), .. tenant.Current.DossierId.Value.ToByteArray(), .. versionBytes, .. Encoding.ASCII.GetBytes(keyId)];
+        return [.. Purpose, .. cabinet.Value.ToByteArray(), .. dossier.Value.ToByteArray(), .. versionBytes, .. Encoding.ASCII.GetBytes(keyId)];
     }
 }
 

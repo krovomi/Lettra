@@ -8,8 +8,13 @@ internal static class HttpFileDownloads
     /// <summary>Télécharge le fichier et le remet sous la forme de la passerelle (<paramref name="map"/> : nom, contenu).</summary>
     public static Task<OperationResult<T>> GetAsync<T>(
         HttpClient http, FormattableString relativeUri, string fallbackName, Func<string, byte[], T> map, CancellationToken cancellationToken) =>
+        ReceiveAsync(ct => http.GetAsync(HttpCalls.Relative(relativeUri), ct), fallbackName, map, cancellationToken);
+
+    /// <summary>Même remise, pour un fichier que produit une autre requête que GET (un export demandé en POST).</summary>
+    public static Task<OperationResult<T>> ReceiveAsync<T>(
+        Func<CancellationToken, Task<HttpResponseMessage>> send, string fallbackName, Func<string, byte[], T> map, CancellationToken cancellationToken) =>
         HttpCalls.SendAsync(
-            ct => http.GetAsync(HttpCalls.Relative(relativeUri), ct),
+            send,
             async (response, ct) =>
             {
                 if (!response.IsSuccessStatusCode)

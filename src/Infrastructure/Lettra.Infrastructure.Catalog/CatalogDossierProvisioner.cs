@@ -19,16 +19,29 @@ internal sealed partial class CatalogDossierProvisioner(
     IEnumerable<IDatabaseAdministrator> administrators,
     ISecretStore secrets,
     IDossierKeyring keyring,
+    CatalogDossierFieldKeys fieldKeys,
     TenantMigrator migrator,
     TimeProvider clock,
     ILogger<CatalogDossierProvisioner> logger) : IDossierProvisioner
 {
-    public async Task<Result<DossierId>> CreateAsync(OrganisationId organisation, string name, CancellationToken cancellationToken)
+    public Task<Result<DossierId>> CreateAsync(OrganisationId organisation, string name, CancellationToken cancellationToken) =>
+        CreateAsync(organisation, new DossierId(Guid.CreateVersion7()), name, cancellationToken);
+
+    /// <summary>
+    /// Un dossier sous un identifiant donné (import d'un paquet de réversibilité). Le registre garde la trace des dossiers
+    /// effacés : un identifiant déjà connu ici, même effacé, est refusé.
+    /// </summary>
+    public async Task<Result<DossierId>> CreateAsync(OrganisationId organisation, DossierId id, string name, CancellationToken cancellationToken)
     {
         CatalogDossier dossier;
         CatalogDbContext db = await catalogFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
         await using (db.ConfigureAwait(false))
         {
+            if (await db.Dossiers.AnyAsync(d => d.Id == id.Value, cancellationToken).ConfigureAwait(false))
+            {
+                return DossierErrors.AlreadyExists;
+            }
+
             var owner = await db.Organisations.Where(o => o.Id == organisation.Value).Select(o => new { o.CellId, o.State })
                 .SingleOrDefaultAsync(cancellationToken).ConfigureAwait(false);
             if (owner is null || owner.State == OrganisationState.Departed)
@@ -50,7 +63,6 @@ internal sealed partial class CatalogDossierProvisioner(
                 return DossierErrors.NoCapacity;
             }
 
-            DossierId id = new(Guid.CreateVersion7());
             string database = $"d_{id.Value:N}";
             DateTimeOffset now = clock.GetUtcNow();
             dossier = new CatalogDossier
@@ -76,17 +88,65 @@ internal sealed partial class CatalogDossierProvisioner(
             : DossierErrors.ProvisioningFailed;
     }
 
-    /// <summary>Reprend les créations restées « en création » ou « en échec » (processus arrêté, serveur indisponible).</summary>
-    public async Task<int> ResumeAsync(CancellationToken cancellationToken)
+    /// <summary>
+    /// Retire un dossier dont l'import n'a pas abouti : sa base (vide, la copie ayant été annulée) est supprimée et son
+    /// inscription retirée du registre, pour qu'un nouvel essai d'import soit possible. Un dossier déclaré n'est pas touché.
+    /// </summary>
+    public async Task DiscardAsync(DossierId dossier, CancellationToken cancellationToken)
     {
+        CatalogDbContext db = await catalogFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        await using (db.ConfigureAwait(false))
+        {
+            CatalogDossier? found = await db.Dossiers.SingleOrDefaultAsync(d => d.Id == dossier.Value && d.ClusterId != null, cancellationToken)
+                .ConfigureAwait(false);
+            if (found is null)
+            {
+                return;
+            }
+
+            IDatabaseAdministrator administrator = administrators.Single(a => a.Provider == found.Provider);
+            string admin = await secrets.GetConnectionStringAsync(
+                ClusterSecretSource.AdminRef(found.ClusterId!, found.DatabaseName!), cancellationToken).ConfigureAwait(false);
+            await administrator.DropDatabaseAsync(admin, cancellationToken).ConfigureAwait(false);
+            db.Dossiers.Remove(found);
+            await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            fieldKeys.Forget(dossier.Value);
+        }
+    }
+
+    /// <summary>
+    /// Temps au-delà duquel une création restée « en création » est tenue pour interrompue. Avant, l'API la mène encore :
+    /// la reprendre en même temps appliquerait deux fois les migrations de la base neuve (colonne déjà présente).
+    /// </summary>
+    public static readonly TimeSpan InterruptedAfter = TimeSpan.FromMinutes(5);
+
+    /// <summary>
+    /// Temps au-delà duquel la passe du Worker réessaie une création en échec. L'API a fini avec elle ; ce court délai
+    /// laisse seulement à l'import d'un paquet manqué le temps de retirer son dossier, que le Worker créerait sinon vide.
+    /// </summary>
+    public static readonly TimeSpan FailureRetryAfter = TimeSpan.FromSeconds(30);
+
+    /// <summary>
+    /// Reprend les créations interrompues (restées « en création » au-delà de <see cref="InterruptedAfter"/>) et les
+    /// créations en échec : après <see cref="FailureRetryAfter"/> pour la passe du Worker (<paramref name="retryFailuresNow"/>
+    /// faux), aussitôt pour l'administrateur de la plateforme.
+    /// </summary>
+    public async Task<int> ResumeAsync(bool retryFailuresNow, CancellationToken cancellationToken)
+    {
+        DateTimeOffset now = clock.GetUtcNow();
+        DateTimeOffset interrupted = now - InterruptedAfter;
+        DateTimeOffset failedLongEnough = retryFailuresNow ? DateTimeOffset.MaxValue : now - FailureRetryAfter;
         List<CatalogDossier> pending;
         CatalogDbContext db = await catalogFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
         await using (db.ConfigureAwait(false))
         {
+            // Peu de lignes (créations en cours ou en échec) ; la date se compare ici, SQLite ne sait pas comparer un DateTimeOffset.
             pending = await db.Dossiers.AsNoTracking()
                 .Where(d => (d.State == DossierState.Provisioning || d.State == DossierState.Failed) && d.ClusterId != null)
                 .ToListAsync(cancellationToken).ConfigureAwait(false);
         }
+
+        pending.RemoveAll(d => d.UpdatedAt >= (d.State == DossierState.Provisioning ? interrupted : failedLongEnough));
 
         int completed = 0;
         foreach (CatalogDossier dossier in pending)

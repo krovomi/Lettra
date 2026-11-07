@@ -14,6 +14,11 @@
   <data name="Error.Dossier.ProvisioningFailed" xml:space="preserve"><value>The client file could not be created. It will be retried automatically.</value></data>
   <data name="Error.Dossier.Declared" xml:space="preserve"><value>This client file is declared in the server configuration: it cannot be erased from Lettra.</value></data>
   <data name="Error.Dossier.ErasureNotCancellable" xml:space="preserve"><value>The erasure of this client file can no longer be cancelled: the withdrawal period has ended or no erasure was requested.</value></data>
+  <data name="Error.Dossier.PassphraseTooShort" xml:space="preserve"><value>Choose a passphrase of at least 12 characters: it is the package's only protection once it leaves the server.</value></data>
+  <data name="Error.Dossier.PackageUnreadable" xml:space="preserve"><value>This package does not open: the passphrase is wrong, or the file is damaged or is not a Lettra client file package.</value></data>
+  <data name="Error.Dossier.PackageTooNew" xml:space="preserve"><value>This package comes from a newer version of Lettra. Update this server first, then import it.</value></data>
+  <data name="Error.Dossier.AlreadyExists" xml:space="preserve"><value>This client file already exists here (or was erased here): it is not imported a second time.</value></data>
+  <data name="Error.Dossier.TransferUnavailable" xml:space="preserve"><value>This device does not export or import client files: do it from the server.</value></data>
   <data name="Error.Numbering.SeriesNotFound" xml:space="preserve"><value>This numbering series does not exist in the client file.</value></data>
   <data name="Error.Numbering.Contention" xml:space="preserve"><value>Too many documents are being validated in this client file at once. Try again.</value></data>
   <data name="Error.CompanyProfile.NameRequired" xml:space="preserve"><value>Enter the company name.</value></data>
@@ -54,7 +59,7 @@
   <data name="Company.Size.Micro" xml:space="preserve"><value>Micro-enterprise</value></data>
   <data name="Company.Size.Hint" xml:space="preserve"><value>E-invoicing: receiving from {0}; issuing, e-reporting and new mandatory mentions from {1}.</value></data>
   <data name="Nav.CabinetDossiers" xml:space="preserve"><value>Firm dossiers</value></data>
-  <data name="Nav.CabinetDossiers.Keywords" xml:space="preserve"><value>dossiers firm create new dossier erase delete erasure withdrawal gdpr</value></data>
+  <data name="Nav.CabinetDossiers.Keywords" xml:space="preserve"><value>dossiers firm create new dossier erase delete erasure withdrawal gdpr export import package reversibility portability passphrase</value></data>
   <data name="CabinetDossiers.Title" xml:space="preserve"><value>Firm dossiers</value></data>
   <data name="CabinetDossiers.Subtitle" xml:space="preserve"><value>Create your clients' dossiers, or ask to erase a dossier the firm no longer handles.</value></data>
   <data name="CabinetDossiers.New" xml:space="preserve"><value>New dossier</value></data>
@@ -96,4 +101,25 @@
   <data name="CabinetDossiers.Rule.Erase" xml:space="preserve"><value>Requesting erasure closes the dossier at once, for everyone. For 30 days you can cancel: the dossier reopens as it was. After that its key is destroyed (its data becomes unreadable, backups included), then its database is deleted.</value></data>
   <data name="CabinetDossiers.Rule.Keep" xml:space="preserve"><value>Before requesting erasure, export what the firm must keep (FEC, document archives): accounting records must still be kept for ten years.</value></data>
   <data name="CabinetDossiers.Rule.Declared" xml:space="preserve"><value>A dossier declared in the server configuration (the firm's own server, the demo), or kept on this device, cannot be erased from Lettra: its database belongs to whoever declared it.</value></data>
+  <data name="CabinetDossiers.Import" xml:space="preserve"><value>Import a dossier</value></data>
+  <data name="CabinetDossiers.Import.Title" xml:space="preserve"><value>Import a dossier</value></data>
+  <data name="CabinetDossiers.Import.File" xml:space="preserve"><value>Dossier package (.lettrapaquet file)</value></data>
+  <data name="CabinetDossiers.Import.Passphrase" xml:space="preserve"><value>Package passphrase</value></data>
+  <data name="CabinetDossiers.Import.Hint" xml:space="preserve"><value>The dossier arrives whole, under its original identifier, with its anti-fraud chain still verifiable. It opens straight away to the people who have access to the whole firm.</value></data>
+  <data name="CabinetDossiers.Import.NoFile" xml:space="preserve"><value>Choose the package file.</value></data>
+  <data name="CabinetDossiers.Import.TooLarge" xml:space="preserve"><value>This file is larger than 512 MB: it is not a package Lettra can import.</value></data>
+  <data name="CabinetDossiers.Import.Submit" xml:space="preserve"><value>Import the dossier</value></data>
+  <data name="CabinetDossiers.Import.Busy" xml:space="preserve"><value>Importing…</value></data>
+  <data name="CabinetDossiers.Export" xml:space="preserve"><value>Export</value></data>
+  <data name="CabinetDossiers.Export.Label" xml:space="preserve"><value>Export dossier “{0}”</value></data>
+  <data name="CabinetDossiers.Export.Title" xml:space="preserve"><value>Export “{0}”</value></data>
+  <data name="CabinetDossiers.Export.Passphrase" xml:space="preserve"><value>Passphrase</value></data>
+  <data name="CabinetDossiers.Export.Confirmation" xml:space="preserve"><value>Type the passphrase again</value></data>
+  <data name="CabinetDossiers.Export.Hint" xml:space="preserve"><value>The file holds the whole dossier, encrypted with this passphrase: at least 12 characters (four words or more are easy to remember and hard to guess). Lettra does not keep it: write it down somewhere safe, away from the file. Without it, the file can no longer be opened.</value></data>
+  <data name="CabinetDossiers.Export.Mismatch" xml:space="preserve"><value>The two passphrases do not match.</value></data>
+  <data name="CabinetDossiers.Export.Submit" xml:space="preserve"><value>Export the dossier</value></data>
+  <data name="CabinetDossiers.Export.Busy" xml:space="preserve"><value>Exporting…</value></data>
+  <data name="CabinetDossiers.Toast.Exported" xml:space="preserve"><value>Dossier “{0}” exported to the file {1}. Keep the passphrase away from the file.</value></data>
+  <data name="CabinetDossiers.Toast.Imported" xml:space="preserve"><value>Dossier “{0}” imported.</value></data>
+  <data name="CabinetDossiers.Rule.Export" xml:space="preserve"><value>“Export” puts a whole dossier into a single file, encrypted with a passphrase you choose: its database in the open SQLite format, its documents and its anti-fraud chain. “Import a dossier” takes it back on another Lettra server, a workstation or another online installation. This is also the data portability provided for by the GDPR.</value></data>
 </root>

@@ -103,7 +103,7 @@ public static class DependencyInjection
 
     /// <summary>Reprise des créations de dossiers interrompues (Worker).</summary>
     public static Task<int> ResumeDossierProvisioningAsync(this IServiceProvider services, CancellationToken cancellationToken) =>
-        services.GetRequiredService<CatalogDossierProvisioner>().ResumeAsync(cancellationToken);
+        services.GetRequiredService<CatalogDossierProvisioner>().ResumeAsync(retryFailuresNow: false, cancellationToken);
 
     /// <summary>Dossiers actifs de la cellule (passes système du Worker).</summary>
     public static Task<IReadOnlyList<TenantDescriptor>> ListActiveDossiersAsync(this IServiceProvider services, CancellationToken cancellationToken) =>

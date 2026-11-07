@@ -18,6 +18,7 @@ internal sealed class TenantHarness : IAsyncDisposable
 {
     private readonly ServiceProvider _root;
     private readonly Dictionary<DossierId, (TenantDescriptor Descriptor, string ConnectionString)> _dossiers = [];
+    private readonly Dictionary<DossierId, string> _names = [];
 
     /// <param name="configurator"></param>
 
@@ -28,13 +29,17 @@ internal sealed class TenantHarness : IAsyncDisposable
     /// <param name="syncJournal">Vrai pour tenir le journal de synchronisation, comme le serveur (phase 4).</param>
     /// <param name="simulatedPlatform">Vrai pour transmettre à la plateforme agréée simulée (phase 5.3) ; sinon aucune.</param>
     /// <param name="configure">Services propres au scénario (gestionnaires de l'outbox, réglages).</param>
+    /// <param name="provision">
+    /// Base d'un dossier créé par l'application (import d'un paquet) : sans elle, le harnais ne crée pas de dossier.
+    /// </param>
     public TenantHarness(
         IDbProviderConfigurator configurator,
         TimeProvider? clock = null,
         bool syntheticDocuments = false,
         bool syncJournal = false,
         bool simulatedPlatform = false,
-        Action<IServiceCollection>? configure = null)
+        Action<IServiceCollection>? configure = null,
+        Func<DossierId, string>? provision = null)
     {
         ServiceCollection services = new();
         services.AddLogging();
@@ -52,7 +57,7 @@ internal sealed class TenantHarness : IAsyncDisposable
         }
 
         services.AddSingleton(configurator);
-        Catalog catalog = new(_dossiers);
+        Catalog catalog = new(_dossiers, _names);
         services.AddSingleton<ITenantCatalog>(catalog);
         services.AddSingleton<IDossierDirectory>(catalog);
         services.AddSingleton<ISecretStore>(new Secrets(_dossiers));
@@ -70,6 +75,11 @@ internal sealed class TenantHarness : IAsyncDisposable
         if (syntheticDocuments)
         {
             services.AddScoped<IJournaledDocumentReader, SyntheticDocuments>();
+        }
+
+        if (provision is not null)
+        {
+            services.AddSingleton<IDossierProvisioner>(sp => new Provisioner(_dossiers, configurator.Provider, provision, sp.GetRequiredService<TenantMigrator>()));
         }
 
         configure?.Invoke(services);
@@ -95,6 +105,9 @@ internal sealed class TenantHarness : IAsyncDisposable
         return id;
     }
 
+    /// <summary>Le nom du dossier dans le registre (par défaut, son identifiant).</summary>
+    public void Rename(DossierId dossier, string name) => _names[dossier] = name;
+
     /// <summary>Ouvre un scope « requête » sur un dossier, comme le fait le filtre de l'API.</summary>
     public async Task<AsyncServiceScope> OpenAsync(DossierId dossier)
     {
@@ -107,17 +120,50 @@ internal sealed class TenantHarness : IAsyncDisposable
 
     public ValueTask DisposeAsync() => _root.DisposeAsync();
 
+    /// <summary>Dossiers créés par l'application : une base neuve du provider du harnais, migrée et estampillée.</summary>
+    private sealed class Provisioner(
+        Dictionary<DossierId, (TenantDescriptor Descriptor, string ConnectionString)> dossiers,
+        DatabaseProvider provider,
+        Func<DossierId, string> provision,
+        TenantMigrator migrator) : IDossierProvisioner
+    {
+        public Task<Domain.Common.Result<DossierId>> CreateAsync(OrganisationId organisation, string name, CancellationToken cancellationToken) =>
+            CreateAsync(organisation, new DossierId(Guid.CreateVersion7()), name, cancellationToken);
+
+        public async Task<Domain.Common.Result<DossierId>> CreateAsync(OrganisationId organisation, DossierId id, string name, CancellationToken cancellationToken)
+        {
+            if (dossiers.ContainsKey(id))
+            {
+                return DossierErrors.AlreadyExists;
+            }
+
+            TenantDescriptor descriptor = new(id, organisation, provider, $"test:{id}");
+            dossiers[id] = (descriptor, provision(id));
+            await migrator.MigrateAsync(descriptor, stampIfMissing: true, cancellationToken);
+            return id;
+        }
+
+        public Task DiscardAsync(DossierId dossier, CancellationToken cancellationToken)
+        {
+            dossiers.Remove(dossier);
+            return Task.CompletedTask;
+        }
+    }
+
     private sealed class DossierSource : IRequestedDossierSource
     {
         public DossierId? RequestedDossier { get; set; }
     }
 
     /// <summary>Le registre des dossiers de test ; le radar de prévention y cherche les pairs du même cabinet.</summary>
-    private sealed class Catalog(Dictionary<DossierId, (TenantDescriptor Descriptor, string ConnectionString)> dossiers) : ITenantCatalog, IDossierDirectory
+    private sealed class Catalog(
+        Dictionary<DossierId, (TenantDescriptor Descriptor, string ConnectionString)> dossiers,
+        Dictionary<DossierId, string> names) : ITenantCatalog, IDossierDirectory
     {
         public Task<IReadOnlyList<DossierSummary>> ListAsync(OrganisationId organisation, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<DossierSummary>>(
-                [.. dossiers.Values.Where(d => d.Descriptor.OrganisationId == organisation).Select(d => new DossierSummary(d.Descriptor.DossierId.Value, d.Descriptor.DossierId.ToString()))]);
+                [.. dossiers.Values.Where(d => d.Descriptor.OrganisationId == organisation)
+                    .Select(d => new DossierSummary(d.Descriptor.DossierId.Value, names.GetValueOrDefault(d.Descriptor.DossierId, d.Descriptor.DossierId.ToString())))]);
 
         public ValueTask<TenantDescriptor?> FindAsync(DossierId dossierId, CancellationToken cancellationToken) =>
             ValueTask.FromResult(dossiers.TryGetValue(dossierId, out var entry) ? entry.Descriptor : null);

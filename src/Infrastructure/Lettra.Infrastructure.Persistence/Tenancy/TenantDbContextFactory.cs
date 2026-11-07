@@ -27,6 +27,13 @@ public interface IDossierDbContextFactory
     ValueTask<LettraDbContext> CreateAsync(TenantDescriptor tenant, bool verifyStamp, CancellationToken cancellationToken);
 
     /// <summary>
+    /// Contexte d'un dossier pour le transfert d'un dossier entier (export, import) : estampille vérifiée, champs sensibles
+    /// chiffrés par sa DEK, mais sans les intercepteurs propres au dossier (journal et faits de synchronisation) : une copie
+    /// n'est pas une suite de changements à répliquer.
+    /// </summary>
+    ValueTask<LettraDbContext> CreateForTransferAsync(TenantDescriptor tenant, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Dernière migration compilée pour ce provider, sans ouvrir de connexion. Les trois assemblies de migrations
     /// portent les mêmes identifiants, ce qui permet au Worker de comparer les versions d'un provider à l'autre.
     /// </summary>
@@ -47,7 +54,14 @@ internal sealed class DossierDbContextFactory(
 
     private readonly IDossierInterceptor[] _interceptors = [.. interceptors];
 
-    public async ValueTask<LettraDbContext> CreateAsync(TenantDescriptor tenant, bool verifyStamp, CancellationToken cancellationToken)
+    public ValueTask<LettraDbContext> CreateAsync(TenantDescriptor tenant, bool verifyStamp, CancellationToken cancellationToken) =>
+        CreateAsync(tenant, verifyStamp, _interceptors, cancellationToken);
+
+    public ValueTask<LettraDbContext> CreateForTransferAsync(TenantDescriptor tenant, CancellationToken cancellationToken) =>
+        CreateAsync(tenant, verifyStamp: true, [], cancellationToken);
+
+    private async ValueTask<LettraDbContext> CreateAsync(
+        TenantDescriptor tenant, bool verifyStamp, IDossierInterceptor[] interceptors, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(tenant);
         IDbProviderConfigurator configurator = ConfiguratorFor(tenant.Provider);
@@ -56,7 +70,7 @@ internal sealed class DossierDbContextFactory(
         DbContextOptionsBuilder<LettraDbContext> builder = new DbContextOptionsBuilder<LettraDbContext>()
             .UseLoggerFactory(loggerFactory);
         configurator.Configure(builder, connectionString, tenant);
-        builder.AddInterceptors(_interceptors);
+        builder.AddInterceptors(interceptors);
         builder.AddInterceptors(new SensitiveFieldInterceptor(await FieldCipherAsync(tenant, cancellationToken).ConfigureAwait(false)));
         LettraDbContext context = new(builder.Options, tenant);
         if (!verifyStamp)
