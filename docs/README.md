@@ -48,6 +48,7 @@ est dans le [README](../README.md#principes-de-conception), le détail, les mesu
 - [Qualité du code et couverture des tests](qualite-du-code.md)
 - [Radar de prévention des difficultés](radar-de-prevention.md)
 - [Relances des factures échues et envoi d'e-mails](relances-et-e-mails.md)
+- [Réversibilité d'un dossier (export et import d'un paquet chiffré)](reversibilite.md)
 - [Révision avant clôture](revision-avant-cloture.md)
 - [Se faire payer plus vite](se-faire-payer.md)
 - [Serveur commun : les mêmes données sur tous les appareils](serveur-commun.md)

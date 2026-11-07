@@ -1396,6 +1396,13 @@ dossiers illisibles, sauvegardes comprises. L'administrateur d'un cabinet crée 
 dossier, annulable pendant 30 jours, depuis l'écran **Dossiers du cabinet** (menu Pilotage). Détails, routes et réglages (`Lettra:Kms`, `Lettra:DossierErasure`) :
 [docs/cles-et-chiffrement.md](docs/cles-et-chiffrement.md).
 
+**Réversibilité (modes 1, 2, 3 et 5).** Sur le même écran, **Exporter** met tout un dossier dans un paquet
+`.lettrapaquet` chiffré par une phrase secrète que Lettra ne garde pas, et **Importer un dossier** le fait arriver
+entier sur un autre hôte Lettra (serveur du cabinet, poste isolé, autre cellule en ligne), sous son identifiant
+d'origine et avec sa chaîne anti-fraude vérifiable. Une fois déchiffré, le paquet contient une base SQLite lisible
+sans Lettra (portabilité RGPD). Vérifié par les tests sur SQLite, PostgreSQL et SQL Server, et à la main dans un
+navigateur contre une cellule locale. Détails : [docs/reversibilite.md](docs/reversibilite.md).
+
 **Plateforme (mode 5).** L'administrateur de la plateforme inscrit les cabinets et organise leur départ depuis l'écran
 **Plateforme** (menu Pilotage) ou l'API `/api/v1/plateforme`, sans script ni redémarrage, et ne voit jamais les
 données d'un cabinet. Au départ, annulable pendant 30 jours, tout ce qui concerne le cabinet est supprimé. Détails,

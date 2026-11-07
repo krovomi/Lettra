@@ -14,7 +14,8 @@ macOS, Android, iOS).
   commentée.
 - **Sections repliables** : un clic sur le titre d'une section (Ventes, Tiers, Comptabilité, Pilotage) la replie ou la
   déplie ; son chevron tourne. Dans Pilotage, « Dossiers du cabinet » n'apparaît qu'à qui administre le cabinet
-  ([cles-et-chiffrement.md](cles-et-chiffrement.md#effacer-un-dossier)), et « Plateforme » qu'à l'administrateur de la plateforme (mode 5,
+  ([cles-et-chiffrement.md](cles-et-chiffrement.md#effacer-un-dossier) ; on le trouve aussi par « exporter », « importer »,
+  « paquet », « réversibilité », « portabilité », « phrase secrète »), et « Plateforme » qu'à l'administrateur de la plateforme (mode 5,
   [plateforme.md](plateforme.md)) ; un utilisateur sans dossier qui administre la plateforme arrive directement dessus.
   « Vérifier les tiers » est dans la section Tiers et se trouve aussi par ses mots-clés
   (bénéficiaires effectifs, RBE, gel des avoirs, BODACC, URSSAF, LCB-FT…). Une section repliée qui contient l'écran affiché porte un point bleu.
