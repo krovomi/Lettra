@@ -121,14 +121,21 @@ internal sealed partial class CatalogDossierProvisioner(
     public static readonly TimeSpan InterruptedAfter = TimeSpan.FromMinutes(5);
 
     /// <summary>
+    /// Temps au-delà duquel la passe du Worker réessaie une création en échec. L'API a fini avec elle ; ce court délai
+    /// laisse seulement à l'import d'un paquet manqué le temps de retirer son dossier, que le Worker créerait sinon vide.
+    /// </summary>
+    public static readonly TimeSpan FailureRetryAfter = TimeSpan.FromSeconds(30);
+
+    /// <summary>
     /// Reprend les créations interrompues (restées « en création » au-delà de <see cref="InterruptedAfter"/>) et les
-    /// créations en échec. La passe du Worker ne reprend un échec qu'après ce même délai (<paramref name="retryFailuresNow"/>
-    /// faux) : l'import d'un paquet manqué a le temps de retirer son dossier. L'administrateur de la plateforme, lui, réessaie
-    /// les échecs aussitôt.
+    /// créations en échec : après <see cref="FailureRetryAfter"/> pour la passe du Worker (<paramref name="retryFailuresNow"/>
+    /// faux), aussitôt pour l'administrateur de la plateforme.
     /// </summary>
     public async Task<int> ResumeAsync(bool retryFailuresNow, CancellationToken cancellationToken)
     {
-        DateTimeOffset interrupted = clock.GetUtcNow() - InterruptedAfter;
+        DateTimeOffset now = clock.GetUtcNow();
+        DateTimeOffset interrupted = now - InterruptedAfter;
+        DateTimeOffset failedLongEnough = retryFailuresNow ? DateTimeOffset.MaxValue : now - FailureRetryAfter;
         List<CatalogDossier> pending;
         CatalogDbContext db = await catalogFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
         await using (db.ConfigureAwait(false))
@@ -139,7 +146,7 @@ internal sealed partial class CatalogDossierProvisioner(
                 .ToListAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        pending.RemoveAll(d => d.UpdatedAt >= interrupted && (d.State == DossierState.Provisioning || !retryFailuresNow));
+        pending.RemoveAll(d => d.UpdatedAt >= (d.State == DossierState.Provisioning ? interrupted : failedLongEnough));
 
         int completed = 0;
         foreach (CatalogDossier dossier in pending)

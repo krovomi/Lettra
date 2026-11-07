@@ -213,6 +213,13 @@ internal static class CatalogScenarios
         await harness.UpdateDossierAsync(leased, d => d.UpdatedAt = DateTimeOffset.UtcNow - CatalogDossierProvisioner.InterruptedAfter - TimeSpan.FromMinutes(1));
         (await services.ResumeDossierProvisioningAsync(default)).Should().Be(1);
         (await harness.DossierAsync(leased)).State.Should().Be(DossierState.Active);
+
+        // Un échec tout juste dit par l'API attend un court instant (un import manqué retire son dossier), puis est réessayé.
+        await harness.UpdateDossierAsync(leased, d => (d.State, d.UpdatedAt) = (DossierState.Failed, DateTimeOffset.UtcNow));
+        (await services.ResumeDossierProvisioningAsync(default)).Should().Be(0, "l'import manqué a encore le temps de retirer son dossier");
+        await harness.UpdateDossierAsync(leased, d => d.UpdatedAt = DateTimeOffset.UtcNow - CatalogDossierProvisioner.FailureRetryAfter - TimeSpan.FromSeconds(5));
+        (await services.ResumeDossierProvisioningAsync(default)).Should().Be(1);
+        (await harness.DossierAsync(leased)).State.Should().Be(DossierState.Active);
     }
 
     /// <summary>Registre des droits dans la base Catalog : import de la configuration, profil et chemins de portée.</summary>
