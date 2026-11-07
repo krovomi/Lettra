@@ -1,6 +1,6 @@
 # Plan de développement du mode 5 : la cellule en ligne (SaaS)
 
-> **Statut : en cours.** Étapes 0, 1 et 2 faites (sauf les points marqués « reste ») ; étapes 3 à 6 à faire. Il ne remplace
+> **Statut : en cours.** Étapes 0, 1 et 2 faites (sauf les points marqués « reste ») ; étape 3 commencée ; étapes 4 à 6 à faire. Il ne remplace
 > pas les ADR (0002, 0008, 0009, 0011) ni les annexes E et F du blueprint : là où il les contredit, ce sont eux qui
 > font foi, et le point est à trancher en revue.
 
@@ -138,6 +138,33 @@ reste ni base, ni clé, ni compte.
 
 **Objectif** : prouver, et pas seulement affirmer, qu'un cabinet ne peut rien voir d'un autre.
 
+**Commencée.** Fait :
+
+- **Matrice d'isolation en CI** (`TenantIsolationApiTests`) : l'administrateur d'un autre cabinet appelle **chaque
+  route** de l'API avec le dossier, le cabinet ou le groupe du cabinet visé. Il n'obtient jamais de réponse réussie,
+  et la réponse est exactement celle d'un identifiant qui n'existe pas (le plus souvent 404 « dossier introuvable ») :
+  rien ne trahit l'existence de ce qu'il vise. Chaque route déclare sur quoi porte sa permission (un dossier, un
+  cabinet, un groupe, la plateforme, ou une liste filtrée par les droits), et un second test échoue si une route
+  nouvelle n'en déclare pas : la matrice couvre donc toujours toute l'API.
+- **Nombre de dossiers par cabinet** : 500 au plus dans une cellule (créés ou importés, effacements en attente
+  compris, dossiers effacés exclus), réglage `Lettra:Catalog:MaxDossiersPerCabinet`. Les autres limites par cabinet
+  existaient déjà : débit de l'API (2 000 requêtes par minute par cabinet, 300 par utilisateur) et taille des envois
+  bornée route par route.
+- **Journaux sans donnée de dossier, Worker compris** : une règle d'architecture vérifie que chaque message de journal
+  de toutes les assemblies, hôtes compris (API et Worker), ne reçoit que des identifiants, des nombres, des dates, des
+  énumérations et des textes techniques nommés (code d'erreur, type d'exception, nom du cas d'usage…). Un nom de
+  client, un libellé ou un montant n'a aucun paramètre où passer. Elle complète `NoDossierDataInLogsTests`. Les traces
+  du Worker passent par les mêmes filtres d'expurgation que celles de l'API.
+- **Le Worker n'accepte aucune connexion entrante** : NetworkPolicy du chart `lettra-worker` (activée par défaut,
+  `networkPolicy.enabled`) ; il ne fait qu'appeler les bases, le coffre de clés, Keycloak et le collecteur.
+  `deploy/tests/valider.sh` vérifie le rendu dans chaque cellule.
+
+**Reste** : un utilisateur PostgreSQL par cabinet (prochaine étape du code) ; le scan ZAP et le test d'intrusion
+externe sur la cellule de recette, qui attendent le feu vert de Leub (la cellule de recette n'existe pas encore, et le
+test d'intrusion fait appel à un prestataire). Le scan ZAP de base tourne déjà en CI sur la démo.
+
+Plan d'origine :
+
 - Tests d'isolation automatiques : un utilisateur du cabinet A appelle chaque route de l'API avec un identifiant
   de dossier du cabinet B, et doit recevoir 404 partout (la même réponse que pour un dossier inexistant).
 - Un utilisateur PostgreSQL **par dossier** (ou au moins par cabinet) plutôt qu'un utilisateur applicatif
@@ -162,6 +189,10 @@ critique ou élevée.
 - Dans les environnements de PR, remplacer le mode 2 sur SQLite (`values-pr.yaml`) par le mode 5.
 - Lancer une charge k6 à la taille S, puis M, pour vérifier la règle de dimensionnement de PgBouncer (budget de
   dossiers actifs par cluster, voir `deploy/helm/lettra-cell/values.yaml`).
+- **Passerelle devant l'API** (pas encore dans les charts) : accepter **513 Mio** de corps sur
+  `POST /api/v1/cabinets/{cabinet}/dossiers/import` (le plus gros paquet de réversibilité, 512 Mio, plus l'enveloppe du
+  formulaire) et laisser à cette route plusieurs minutes avant de couper la requête. À écrire dans le runbook de la
+  cellule.
 
 **Fini quand** : la recette tourne une semaine sans intervention manuelle, avec les tableaux Grafana au vert.
 
