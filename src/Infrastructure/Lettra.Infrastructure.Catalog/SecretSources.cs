@@ -27,11 +27,12 @@ internal sealed class ConfigurationSecretSource(IConfiguration configuration) : 
 }
 
 /// <summary>
-/// Références des bases créées par le catalogue : <c>cluster:{serveur}/{base}</c> (connexion applicative) et
+/// Références des bases créées par le catalogue : <c>cluster:{serveur}/{base}</c> (connexion applicative partagée),
+/// <c>cluster:{serveur}/{base}@{cabinet}</c> (connexion par le rôle du cabinet, <see cref="CabinetDatabaseRoles"/>) et
 /// <c>cluster-admin:{serveur}/{base}</c> (CREATE / DROP DATABASE). Les identifiants du serveur viennent de
 /// <c>Lettra:Clusters:{serveur}</c>, injectés depuis le coffre de la cellule : le catalogue ne contient aucun mot de passe.
 /// </summary>
-internal sealed class ClusterSecretSource(IOptionsMonitor<CatalogOptions> options) : ISecretSource
+internal sealed class ClusterSecretSource(IOptionsMonitor<CatalogOptions> options, CabinetDatabaseRoles roles) : ISecretSource
 {
     public const string AppPrefix = "cluster:";
 
@@ -39,10 +40,27 @@ internal sealed class ClusterSecretSource(IOptionsMonitor<CatalogOptions> option
 
     public static string AppRef(string clusterId, string database) => $"{AppPrefix}{clusterId}/{database}";
 
+    public static string CabinetRef(string clusterId, string database, Guid organisation) => $"{AppRef(clusterId, database)}@{organisation:N}";
+
+    public static bool IsCabinetRef(string secretRef) => secretRef.StartsWith(AppPrefix, StringComparison.Ordinal) && secretRef.Contains('@', StringComparison.Ordinal);
+
     public static string AdminRef(string clusterId, string database) => $"{ClusterAdminSecretSource.AdminPrefix}{clusterId}/{database}";
 
-    public ValueTask<string> ResolveAsync(string secretRef, CancellationToken cancellationToken) =>
-        ValueTask.FromResult(Resolve(options.CurrentValue, secretRef[Prefix.Length..], admin: false));
+    public async ValueTask<string> ResolveAsync(string secretRef, CancellationToken cancellationToken)
+    {
+        string body = secretRef[Prefix.Length..];
+        int at = body.IndexOf('@', StringComparison.Ordinal);
+        if (at < 0)
+        {
+            return Resolve(options.CurrentValue, body, admin: false);
+        }
+
+        string location = body[..at];
+        DatabaseOwner owner = await roles.OwnerAsync(Guid.ParseExact(body[(at + 1)..], "N"), location[..location.IndexOf('/', StringComparison.Ordinal)], cancellationToken)
+            .ConfigureAwait(false);
+        // Les derniers identifiants l'emportent sur ceux du modèle de connexion partagé.
+        return $"{Resolve(options.CurrentValue, location, admin: false)};Username={owner.Role};Password={owner.Password}";
+    }
 
     internal static string Resolve(CatalogOptions options, string body, bool admin)
     {

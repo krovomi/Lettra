@@ -63,6 +63,27 @@ public interface IDatabaseAdministrator
     Task DropDatabaseAsync(string adminConnectionString, CancellationToken cancellationToken);
 }
 
+/// <summary>Le rôle de connexion propre à un cabinet sur un serveur de bases, et son mot de passe.</summary>
+public sealed record DatabaseOwner(string Role, string Password);
+
+/// <summary>
+/// Rôles de connexion par cabinet (PostgreSQL) : chaque base de dossier appartient au rôle de son cabinet et n'accepte
+/// que lui ; une erreur d'aiguillage ne peut donc pas ouvrir la base d'un autre cabinet.
+/// </summary>
+public interface ICabinetRoleAdministrator
+{
+    DatabaseProvider Provider { get; }
+
+    /// <summary>
+    /// Crée le rôle (ou met à jour son mot de passe), lui donne la base et ses objets, puis ferme la base à tout autre
+    /// rôle. Idempotent : sert aussi aux bases créées avant les rôles par cabinet.
+    /// </summary>
+    Task AssignOwnerAsync(string adminConnectionString, DatabaseOwner owner, CancellationToken cancellationToken);
+
+    /// <summary>Supprime le rôle d'un cabinet parti, une fois ses bases supprimées. Sans effet s'il n'existe pas.</summary>
+    Task DropOwnerAsync(string adminConnectionString, string role, CancellationToken cancellationToken);
+}
+
 /// <summary>Dossier courant (scoped). Installé par <see cref="TenantInitializer"/>.</summary>
 public sealed class TenantContext : ITenantContext
 {

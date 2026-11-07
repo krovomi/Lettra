@@ -33,6 +33,7 @@ lettra-api:
     Lettra__Clusters__pg-a__Provider: null
     Lettra__Clusters__pg-a__ConnectionString: null
     Lettra__Clusters__pg-a__AdminConnectionString: null
+    Lettra__Clusters__pg-a__CabinetRoles: null
     Lettra__Kms__Provider: null
     Lettra__Kms__Transit__Address: null
     ConnectionStrings__DossierDemo: Data Source=/data/lettra-dossier-demo.db

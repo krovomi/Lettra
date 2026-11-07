@@ -8,5 +8,6 @@ public static class DependencyInjection
     public static IServiceCollection AddPostgreSqlProvider(this IServiceCollection services) =>
         services
             .AddSingleton<IDbProviderConfigurator, PostgreSqlConfigurator>()
-            .AddSingleton<IDatabaseAdministrator, PostgreSqlDatabaseAdministrator>();
+            .AddSingleton<IDatabaseAdministrator, PostgreSqlDatabaseAdministrator>()
+            .AddSingleton<ICabinetRoleAdministrator, PostgreSqlCabinetRoleAdministrator>();
 }

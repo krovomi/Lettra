@@ -21,16 +21,22 @@ spec:
   # Rôle applicatif de Lettra (secret {{ $cluster.name }}-app, créé par l'opérateur) et sa base, qui porte le catalogue
   # sur le cluster désigné par postgres.catalogCluster. Lettra crée lui-même une base par dossier (ADR-0009) : le rôle
   # reçoit CREATEDB, et l'API comme le Worker passent par une connexion directe au cluster pour CREATE / DROP DATABASE.
+  # Il reçoit aussi CREATEROLE : chaque cabinet a son propre rôle de connexion, seul admis sur ses bases
+  # (Lettra:Clusters:<cluster>:CabinetRoles). Les connexions réservées lui sont ouvertes : le trafic des cabinets ne
+  # peut pas priver le catalogue, les créations de bases ni les migrations du Worker de connexion.
   bootstrap:
     initdb:
       database: {{ $.Values.postgres.database }}
       owner: {{ $.Values.postgres.database }}
       postInitSQL:
-        - ALTER ROLE {{ $.Values.postgres.database }} CREATEDB
+        - ALTER ROLE {{ $.Values.postgres.database }} CREATEDB CREATEROLE
+        - GRANT pg_use_reserved_connections TO {{ $.Values.postgres.database }}
   postgresql:
     parameters:
       # Budget des dossiers actifs servis par PgBouncer + connexions réservées.
       max_connections: {{ $maxConnections | quote }}
+      # Les connexions gardées hors du budget, moins les 3 du superutilisateur (superuser_reserved_connections).
+      reserved_connections: {{ sub (int $.Values.postgres.reservedConnections) 3 | quote }}
       shared_buffers: 512MB
       log_min_duration_statement: "1000"
       # Aucune valeur de paramètre dans les journaux (données de dossier).
@@ -83,7 +89,9 @@ spec:
       default_pool_size: {{ $.Values.postgres.pooler.defaultPoolSize | quote }}
       min_pool_size: "0"
       reserve_pool_size: "0"
-      # Plafond de connexions serveur de cette instance, partagé par tous les dossiers du cluster.
+      # Plafond de connexions serveur de cette instance pour un même rôle : le budget du cluster pour le rôle partagé,
+      # et, avec les rôles par cabinet, ce qu'un seul cabinet peut prendre. Le plafond de l'ensemble est alors
+      # max_connections, dont les connexions réservées restent au rôle applicatif de Lettra.
       max_user_connections: {{ $perPooler | quote }}
       server_idle_timeout: {{ $.Values.postgres.pooler.serverIdleTimeout | quote }}
       max_prepared_statements: {{ $.Values.postgres.pooler.maxPreparedStatements | quote }}

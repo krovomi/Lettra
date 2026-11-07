@@ -26,6 +26,9 @@ lettra-api:
     Lettra__Clusters__pg-a__Provider: PostgreSql
     Lettra__Clusters__pg-a__ConnectionString: Host=pg-a-pooler;Username=lettra;Password=$(LETTRA_PG_A_PASSWORD);No Reset On Close=true
     Lettra__Clusters__pg-a__AdminConnectionString: Host=pg-a-rw;Username=lettra;Password=$(LETTRA_PG_A_PASSWORD)
+    # Un rôle de connexion par cabinet : chaque base de dossier n'accepte que celui de son cabinet. Son mot de passe se
+    # dérive de la clé du cabinet et n'est stocké nulle part ; les bases d'avant passent au rôle à la passe du Worker.
+    Lettra__Clusters__pg-a__CabinetRoles: "true"
     # Clés des cabinets (ADR-0011) : une clé racine par cabinet dans le moteur Transit du KMS de la cellule, la KEK
     # gardée enveloppée dans le catalogue. Le Worker réenveloppe chaque jour après les rotations automatiques.
     Lettra__Kms__Provider: Transit

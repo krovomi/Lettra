@@ -23,6 +23,7 @@ internal sealed partial class CatalogCabinetLifecycle(
     IKekStore keys,
     IEnumerable<ICabinetKeyVault> vaults,
     CatalogDossierProvisioner provisioner,
+    CabinetDatabaseRoleKeeper databaseRoles,
     IIdentityProvisioning identity,
     IOptionsMonitor<CatalogOptions> options,
     TimeProvider clock,
@@ -236,6 +237,9 @@ internal sealed partial class CatalogCabinetLifecycle(
             LogIdentityMissing(logger, cabinet.Value);
             return false;
         }
+
+        // 0. Son rôle de connexion sur chaque serveur de bases : ses bases sont supprimées, le rôle ne sert plus.
+        await databaseRoles.DropAsync(cabinet.Value, cancellationToken).ConfigureAwait(false);
 
         // 1. La clé racine du cabinet : sans elle, rien de ce qu'il a chiffré ne se relit, sauvegardes comprises.
         if (_vault is not null)
