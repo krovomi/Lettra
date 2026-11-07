@@ -76,6 +76,8 @@ Pour qu'un cabinet ne gêne pas les autres dans une cellule partagée : 500 doss
 de l'API borné (2 000 requêtes par minute par cabinet, 300 par utilisateur), taille des envois bornée route par route.
 Un cabinet ne voit jamais rien d'un autre : un test appelle chaque route de l'API au nom d'un autre cabinet et exige la
 même réponse que pour un identifiant inconnu.
+En PostgreSQL, chaque cabinet a son propre rôle de connexion : ses bases n'admettent que lui, et PgBouncer plafonne
+ses connexions. Le départ d'un cabinet supprime son rôle (détail : [plan-mode-5.md](plan-mode-5.md), étape 3).
 
 ## RGPD
 
