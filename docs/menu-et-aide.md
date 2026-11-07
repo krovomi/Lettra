@@ -13,7 +13,8 @@ macOS, Android, iOS).
 - **Hors sections**, en tête : Accueil, En bref, Décisions à prendre, Vue cabinet, Radar de prévention, Comptes intra-groupe (flèches gauche-droite) et Démo
   commentée.
 - **Sections repliables** : un clic sur le titre d'une section (Ventes, Tiers, Comptabilité, Pilotage) la replie ou la
-  déplie ; son chevron tourne. Dans Pilotage, « Plateforme » n'apparaît qu'à l'administrateur de la plateforme (mode 5,
+  déplie ; son chevron tourne. Dans Pilotage, « Dossiers du cabinet » n'apparaît qu'à qui administre le cabinet
+  ([cles-et-chiffrement.md](cles-et-chiffrement.md#effacer-un-dossier)), et « Plateforme » qu'à l'administrateur de la plateforme (mode 5,
   [plateforme.md](plateforme.md)) ; un utilisateur sans dossier qui administre la plateforme arrive directement dessus.
   « Vérifier les tiers » est dans la section Tiers et se trouve aussi par ses mots-clés
   (bénéficiaires effectifs, RBE, gel des avoirs, BODACC, URSSAF, LCB-FT…). Une section repliée qui contient l'écran affiché porte un point bleu.
@@ -76,6 +77,14 @@ macOS, Android, iOS).
 
 Le menu se redessine quand les accès de l'utilisateur arrivent après l'ouverture de session : une entrée réservée
 (« Administration », « Plateforme ») apparaît tout de suite, sans attendre la navigation suivante.
+
+**Dossier ouvert à la connexion.** Quand l'utilisateur peut changer de dossier, l'écran attend la liste de ses
+dossiers avant d'en ouvrir un : le dossier retenu sur l'appareil s'il est encore accessible, sinon le dossier de la
+configuration s'il l'est, sinon le premier dans l'ordre alphabétique. Même règle quand le dossier ouvert est fermé
+(effacement demandé). La barre du haut (assistant, dictée) attend aussi, et relit son état à chaque changement de
+dossier. Un cabinet hébergé, qui ne possède pas le dossier de la configuration, n'a donc plus d'accueil vide à sa
+première connexion. Un message du toaster qui porte une action (« Annuler l'effacement », « Annuler le départ ») met
+son bouton sous le texte, lisible sur téléphone.
 
 **Ajouter une question à l'aide** : une ligne dans `HelpCatalog.All` (écrans où elle remonte, lien facultatif vers
 l'écran qui répond) et ses trois textes en français et en anglais. Un test vérifie que chaque texte existe dans les

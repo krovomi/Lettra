@@ -465,7 +465,7 @@ voir « Repartir de zéro » dans [En cas de problème](#en-cas-de-problème).
 récurrentes**), **Tiers** (**Clients**, **Fournisseurs**, **Factures reçues**, **IBAN à vérifier**,
 **Attestations de vigilance**, **Vérifier les tiers**, **Catalogue**), **Comptabilité** (**Encaissements**,
 **Rapprochement bancaire**, **Relances**, **Journal et balance**, **FEC**, **Déclarations**, **Revue du dossier**, **Lettre de mission**, **Anti-blanchiment**) et
-**Pilotage** (**Tableaux de bord**, **Alertes**, **Bien utiliser l'IA**, **Entreprise**, **Mes préférences**, **Équipe et accès** pour qui
+**Pilotage** (**Tableaux de bord**, **Alertes**, **Bien utiliser l'IA**, **Entreprise**, **Mes préférences**, **Équipe et accès** et **Dossiers du cabinet** pour qui
 administre le cabinet, **Serveur du cabinet**, **Plateforme** pour l'administrateur de la plateforme en mode 5). Sur un
 ordinateur, le menu est à gauche et se replie en icônes ; sur une tablette, c'est une colonne d'icônes ; sur un
 téléphone, des onglets en bas (Accueil, Devis, Factures, Clients, **Plus** pour le reste). En haut, le champ
@@ -1392,8 +1392,8 @@ Le poste crée alors la réplique du dossier du serveur, envoie ses pièces au r
 **Clés et chiffrement (modes 2, 3 et 5).** Sur un serveur, Lettra chiffre lui-même les champs sensibles de chaque
 dossier (IBAN, adresses e-mail des clients et des fournisseurs) avec la clé du dossier. Dans la cellule en ligne, les
 clés des cabinets sont tenues par un KMS (moteur Transit d'OpenBao) : détruire la clé d'un cabinet rend tous ses
-dossiers illisibles, sauvegardes comprises. L'administrateur d'un cabinet peut demander l'effacement d'un dossier,
-annulable pendant 30 jours. Détails, routes et réglages (`Lettra:Kms`, `Lettra:DossierErasure`) :
+dossiers illisibles, sauvegardes comprises. L'administrateur d'un cabinet crée ses dossiers et demande l'effacement d'un
+dossier, annulable pendant 30 jours, depuis l'écran **Dossiers du cabinet** (menu Pilotage). Détails, routes et réglages (`Lettra:Kms`, `Lettra:DossierErasure`) :
 [docs/cles-et-chiffrement.md](docs/cles-et-chiffrement.md).
 
 **Plateforme (mode 5).** L'administrateur de la plateforme inscrit les cabinets et organise leur départ depuis l'écran

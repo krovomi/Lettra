@@ -38,6 +38,7 @@ et dans l'application MAUI, sur tous les appareils.
 | Rapprochement bancaire | Opération, date, montant (ordre du relevé par défaut) | Recherche (libellé, tiers, client proposé), période, montant, à traiter ou toutes | Écran |
 | Alertes | Titre, gravité, portée, état, dernière occurrence, occurrences (gravité puis date par défaut) | Recherche, gravité, état, tout le cabinet, closes | Écran |
 | Vue cabinet | Dossier, chaque indicateur (urgence par défaut) | Recherche, à traiter seulement | Écran |
+| Dossiers du cabinet | Nom, état, date d'effacement | Recherche (nom), état | Écran |
 | Plateforme | Nom, état, dossiers actifs, arrivée | Recherche (nom, cellule), état | Écran |
 | Comptes intra-groupe | Écarts d'abord (par défaut), vendeur, facturé, écart | Recherche par société, « Seulement les écarts » | Écran |
 | Tableaux de bord : Mes dossiers, Administration | Dossier (par défaut), chaque indicateur | Recherche (Mes dossiers) | Écran |
