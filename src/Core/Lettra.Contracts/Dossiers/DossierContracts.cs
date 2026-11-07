@@ -69,6 +69,12 @@ public static class DossierPackageRules
     /// <summary>Taille maximale d'un paquet importé (pièces justificatives comprises).</summary>
     public const long MaxPackageLength = 512L * 1024 * 1024;
 
+    /// <summary>
+    /// Taille maximale de la requête d'import : le paquet le plus gros, plus l'enveloppe du formulaire (délimiteurs,
+    /// en-têtes des champs, phrase secrète). Toute passerelle placée devant l'API doit l'accepter sur cette route.
+    /// </summary>
+    public const long MaxImportRequestLength = MaxPackageLength + (1L * 1024 * 1024);
+
     /// <summary>Noms des champs du formulaire d'import (multipart).</summary>
     public const string PackageField = "paquet";
 

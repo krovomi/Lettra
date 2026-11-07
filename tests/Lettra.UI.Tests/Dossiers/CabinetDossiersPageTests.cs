@@ -239,6 +239,7 @@ public sealed class CabinetDossiersPageTests : BunitContext
         _gateway.Imports.Should().ContainSingle();
         _gateway.Imports[0].Package.Should().Equal(FakeCabinetDossiersGateway.PackageBytes, "le paquet arrive tel quel");
         _gateway.Imports[0].Passphrase.Should().Be(Passphrase);
+        _gateway.ImportedFrom.Should().Equal(["dossiers-import-file"], "dans le navigateur, le fichier part de son champ sans être copié par l'application");
         this.ToastText().Should().Be("Dossier « Dossier rapatrié » importé.");
         page.FindAll("#dossiers-import-form").Should().BeEmpty();
         current.Dossiers.Should().Contain(d => d.Name == "Dossier rapatrié");
@@ -340,6 +341,8 @@ internal sealed class FakeCabinetDossiersGateway : ICabinetDossiersGateway
 
     public List<(byte[] Package, string Passphrase)> Imports { get; } = [];
 
+    public List<string?> ImportedFrom { get; } = [];
+
     public int Lists { get; private set; }
 
     public void Add(CabinetDossierResponse dossier) => _dossiers.Add(dossier);
@@ -396,10 +399,15 @@ internal sealed class FakeCabinetDossiersGateway : ICabinetDossiersGateway
         return Task.FromResult(OperationResult<DossierPackageFile>.Success(new DossierPackageFile($"{name}-20261107.lettrapaquet", PackageBytes)));
     }
 
-    public async Task<OperationResult<DossierSummary>> ImportAsync(Guid cabinetId, Stream package, string passphrase, CancellationToken cancellationToken)
+    public async Task<OperationResult<DossierSummary>> ImportAsync(Guid cabinetId, ChosenFile package, string passphrase, CancellationToken cancellationToken)
     {
+        ImportedFrom.Add(package.InputElementId);
         using MemoryStream content = new();
-        await package.CopyToAsync(content, cancellationToken);
+        await using (Stream file = package.OpenRead())
+        {
+            await file.CopyToAsync(content, cancellationToken);
+        }
+
         if (ImportErrors.Count > 0)
         {
             return OperationResult<DossierSummary>.Failure([.. ImportErrors]);

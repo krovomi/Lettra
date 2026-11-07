@@ -8,7 +8,7 @@ using Lettra.UI.Abstractions;
 namespace Lettra.UI.Gateway.Http;
 
 /// <summary>Routes <c>/api/v1/cabinets/{cabinet}/dossiers/…</c>.</summary>
-internal sealed class HttpCabinetDossiersGateway(HttpClient http) : ICabinetDossiersGateway
+internal sealed class HttpCabinetDossiersGateway(HttpClient http, IEnumerable<IBrowserFileSender> browser) : ICabinetDossiersGateway
 {
     private static ContractsJsonContext Json => ContractsJsonContext.Default;
 
@@ -31,18 +31,41 @@ internal sealed class HttpCabinetDossiersGateway(HttpClient http) : ICabinetDoss
             (name, content) => new DossierPackageFile(name, content),
             cancellationToken);
 
-    /// <summary>Formulaire multipart : le paquet tel quel, sans le charger en mémoire, et sa phrase secrète.</summary>
-    public async Task<OperationResult<DossierSummary>> ImportAsync(Guid cabinetId, Stream package, string passphrase, CancellationToken cancellationToken)
+    /// <summary>
+    /// Formulaire multipart : le paquet tel quel, sans le charger en mémoire, et sa phrase secrète. Dans le navigateur, c'est
+    /// le navigateur qui l'envoie depuis le champ du fichier (un paquet peut faire 512 Mio) ; le cookie de session l'authentifie.
+    /// </summary>
+    public async Task<OperationResult<DossierSummary>> ImportAsync(Guid cabinetId, ChosenFile package, string passphrase, CancellationToken cancellationToken)
     {
-        StreamContent file = new(package);
-        file.Headers.ContentType = new MediaTypeHeaderValue(DossierPackageRules.ContentType);
-        using MultipartFormDataContent form = new()
+        ArgumentNullException.ThrowIfNull(package);
+        Uri route = HttpCalls.Relative($"api/v1/cabinets/{cabinetId}/dossiers/import");
+        if (package.InputElementId is { } input && browser.FirstOrDefault() is { } sender && http.BaseAddress is { } server)
         {
-            { file, DossierPackageRules.PackageField, "dossier" + DossierPackageRules.FileExtension },
-            { new StringContent(passphrase), DossierPackageRules.PassphraseField },
-        };
-        return await HttpCalls.SendAsync(ct => http.PostAsync(HttpCalls.Relative($"api/v1/cabinets/{cabinetId}/dossiers/import"), form, ct), Json.DossierSummary, cancellationToken)
-            .ConfigureAwait(false);
+            return await HttpCalls.SendAsync(
+                    ct => sender.PostAsync(
+                        new Uri(server, route),
+                        input,
+                        DossierPackageRules.PackageField,
+                        new Dictionary<string, string> { [DossierPackageRules.PassphraseField] = passphrase },
+                        new Dictionary<string, string> { [CsrfHeaderHandler.HeaderName] = "1" },
+                        ct),
+                    Json.DossierSummary,
+                    cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        Stream content = package.OpenRead();
+        await using (content.ConfigureAwait(false))
+        {
+            StreamContent file = new(content);
+            file.Headers.ContentType = new MediaTypeHeaderValue(DossierPackageRules.ContentType);
+            using MultipartFormDataContent form = new()
+            {
+                { file, DossierPackageRules.PackageField, "dossier" + DossierPackageRules.FileExtension },
+                { new StringContent(passphrase), DossierPackageRules.PassphraseField },
+            };
+            return await HttpCalls.SendAsync(ct => http.PostAsync(route, form, ct), Json.DossierSummary, cancellationToken).ConfigureAwait(false);
+        }
     }
 
     private static Uri Dossiers(Guid cabinetId) => HttpCalls.Relative($"api/v1/cabinets/{cabinetId}/dossiers");

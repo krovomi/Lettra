@@ -62,7 +62,7 @@ internal static class DossierEndpoints
         group.MapPost("/import", ImportAsync)
             .RequireCabinetPermission(Permission.CabinetAdministrer)
             .WithName("ImportDossier")
-            .WithMetadata(new RequestSizeLimitAttribute(DossierPackageRules.MaxPackageLength))
+            .WithMetadata(new RequestSizeLimitAttribute(DossierPackageRules.MaxImportRequestLength))
             .Accepts<IFormFile>("multipart/form-data")
             .Produces<DossierSummary>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status400BadRequest)
