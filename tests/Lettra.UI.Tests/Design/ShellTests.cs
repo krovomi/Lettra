@@ -67,6 +67,35 @@ public sealed class ShellTests : BunitContext
     }
 
     [Fact]
+    public void Sans_dossier_accessible_l_ecran_attend_la_liste_des_dossiers_puis_s_ouvre_sur_le_premier()
+    {
+        // Le dossier de la configuration du navigateur n'est pas un dossier de l'utilisateur (cellule en ligne).
+        SwitchableDossierSelection none = new(Guid.CreateVersion7());
+        Services.AddSingleton<IDossierSelection>(none);
+
+        IRenderedComponent<MainLayout> coque = Coque();
+
+        // Aucune page ne lit un dossier absent : l'accueil s'affiche une fois le premier dossier ouvert.
+        coque.WaitForAssertion(() => coque.FindAll("#dossier-waiting").Should().BeEmpty());
+        none.CurrentDossierId.Should().Be(FakeCabinetGateway.Atelier);
+        coque.WaitForAssertion(() => coque.FindAll("main h1").Should().NotBeEmpty());
+    }
+
+    [Fact]
+    public async Task Changer_de_dossier_relit_l_etat_de_l_assistant_dans_ce_dossier()
+    {
+        FakeAssistantGateway assistant = new();
+        Services.AddSingleton<IAssistantGateway>(assistant);
+        Services.AddSingleton<IDossierSelection>(new SwitchableDossierSelection(FakeCabinetGateway.Boulangerie));
+        IRenderedComponent<MainLayout> coque = Coque();
+        coque.WaitForAssertion(() => assistant.StatusReads.Should().Be(1));
+
+        await coque.InvokeAsync(() => Services.GetRequiredService<Lettra.UI.Shared.Cabinet.CurrentDossier>().SwitchAsync(FakeCabinetGateway.Garage));
+
+        coque.WaitForAssertion(() => assistant.StatusReads.Should().Be(2));
+    }
+
+    [Fact]
     public void La_feuille_plus_porte_le_reste_de_la_navigation_et_l_apparence_puis_se_ferme_avec_echap()
     {
         IRenderedComponent<MainLayout> coque = Coque();

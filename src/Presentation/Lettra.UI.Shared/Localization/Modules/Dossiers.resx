@@ -53,4 +53,47 @@
   <data name="Company.Size.SmallOrMedium" xml:space="preserve"><value>PME</value></data>
   <data name="Company.Size.Micro" xml:space="preserve"><value>Micro-entreprise</value></data>
   <data name="Company.Size.Hint" xml:space="preserve"><value>Facture électronique : réception à partir du {0}, émission, e-reporting et nouvelles mentions à partir du {1}.</value></data>
+  <data name="Nav.CabinetDossiers" xml:space="preserve"><value>Dossiers du cabinet</value></data>
+  <data name="Nav.CabinetDossiers.Keywords" xml:space="preserve"><value>dossiers cabinet créer nouveau dossier effacer supprimer effacement rétractation rgpd</value></data>
+  <data name="CabinetDossiers.Title" xml:space="preserve"><value>Dossiers du cabinet</value></data>
+  <data name="CabinetDossiers.Subtitle" xml:space="preserve"><value>Créez les dossiers de vos clients, ou demandez l'effacement d'un dossier que le cabinet ne suit plus.</value></data>
+  <data name="CabinetDossiers.New" xml:space="preserve"><value>Nouveau dossier</value></data>
+  <data name="CabinetDossiers.Denied" xml:space="preserve"><value>Seul l'administrateur du cabinet gère ses dossiers. Demandez-lui d'en créer un ou d'en effacer un.</value></data>
+  <data name="CabinetDossiers.Form.Title" xml:space="preserve"><value>Nouveau dossier</value></data>
+  <data name="CabinetDossiers.Form.Name" xml:space="preserve"><value>Nom du dossier</value></data>
+  <data name="CabinetDossiers.Form.NamePlaceholder" xml:space="preserve"><value>Boulangerie du Port</value></data>
+  <data name="CabinetDossiers.Form.Hint" xml:space="preserve"><value>Le dossier reçoit sa propre base et sa propre clé de chiffrement. Il s'ouvre aussitôt aux personnes qui ont accès à tout le cabinet ; donnez l'accès aux autres dans « Équipe et accès ».</value></data>
+  <data name="CabinetDossiers.Form.Submit" xml:space="preserve"><value>Créer le dossier</value></data>
+  <data name="CabinetDossiers.Form.Cancel" xml:space="preserve"><value>Annuler</value></data>
+  <data name="CabinetDossiers.Kpis" xml:space="preserve"><value>Les dossiers en chiffres</value></data>
+  <data name="CabinetDossiers.Kpi.Active" xml:space="preserve"><value>Dossiers ouverts</value></data>
+  <data name="CabinetDossiers.Kpi.ErasureScheduled" xml:space="preserve"><value>Effacements demandés</value></data>
+  <data name="CabinetDossiers.List" xml:space="preserve"><value>Liste des dossiers</value></data>
+  <data name="CabinetDossiers.Search" xml:space="preserve"><value>Rechercher un dossier</value></data>
+  <data name="CabinetDossiers.Column.Name" xml:space="preserve"><value>Dossier</value></data>
+  <data name="CabinetDossiers.Column.State" xml:space="preserve"><value>État</value></data>
+  <data name="CabinetDossiers.Column.ErasureDue" xml:space="preserve"><value>Effacement le</value></data>
+  <data name="CabinetDossiers.State.All" xml:space="preserve"><value>Tous les états</value></data>
+  <data name="CabinetDossiers.State.Active" xml:space="preserve"><value>Ouvert</value></data>
+  <data name="CabinetDossiers.State.ErasureScheduled" xml:space="preserve"><value>Effacement demandé</value></data>
+  <data name="CabinetDossiers.State.Creating" xml:space="preserve"><value>En création</value></data>
+  <data name="CabinetDossiers.Opened" xml:space="preserve"><value>dossier ouvert</value></data>
+  <data name="CabinetDossiers.Erasing" xml:space="preserve"><value>effacement en cours</value></data>
+  <data name="CabinetDossiers.Empty" xml:space="preserve"><value>Aucun dossier</value></data>
+  <data name="CabinetDossiers.Empty.Text" xml:space="preserve"><value>Créez le premier dossier du cabinet avec « Nouveau dossier ».</value></data>
+  <data name="CabinetDossiers.CancelErasure" xml:space="preserve"><value>Annuler l'effacement</value></data>
+  <data name="CabinetDossiers.Erase.Label" xml:space="preserve"><value>Effacer le dossier {0}</value></data>
+  <data name="CabinetDossiers.Erase.Question" xml:space="preserve"><value>Fermer ce dossier ? Il sera effacé dans 30 jours, sauf annulation.</value></data>
+  <data name="CabinetDossiers.Erase.Confirm" xml:space="preserve"><value>Demander l'effacement</value></data>
+  <data name="CabinetDossiers.NotErasable" xml:space="preserve"><value>Ce dossier est déclaré dans la configuration du serveur, ou tenu sur ce poste : il ne s'efface pas depuis Lettra.</value></data>
+  <data name="CabinetDossiers.Open" xml:space="preserve"><value>Ouvrir</value></data>
+  <data name="CabinetDossiers.Toast.Created" xml:space="preserve"><value>Dossier « {0} » créé.</value></data>
+  <data name="CabinetDossiers.Toast.ErasureScheduled" xml:space="preserve"><value>Dossier « {0} » fermé. Son effacement aura lieu le {1}, sauf si vous l'annulez d'ici là.</value></data>
+  <data name="CabinetDossiers.Toast.ErasureCancelled" xml:space="preserve"><value>Effacement annulé : le dossier « {0} » rouvre tel quel.</value></data>
+  <data name="CabinetDossiers.Toast.Failed" xml:space="preserve"><value>L'opération n'a pas abouti. Réessayez.</value></data>
+  <data name="CabinetDossiers.Rules" xml:space="preserve"><value>Comment ça marche</value></data>
+  <data name="CabinetDossiers.Rule.Create" xml:space="preserve"><value>Chaque dossier a sa propre base et sa propre clé de chiffrement, enveloppée par la clé du cabinet. Les données d'un dossier ne se mélangent jamais à celles d'un autre.</value></data>
+  <data name="CabinetDossiers.Rule.Erase" xml:space="preserve"><value>Demander l'effacement ferme le dossier aussitôt, pour tout le monde. Pendant 30 jours, vous pouvez l'annuler : le dossier rouvre tel quel. Ensuite, sa clé est détruite (ses données deviennent illisibles, sauvegardes comprises), puis sa base est supprimée.</value></data>
+  <data name="CabinetDossiers.Rule.Keep" xml:space="preserve"><value>Avant de demander l'effacement, exportez ce que le cabinet doit conserver (FEC, archives des pièces) : la durée légale de conservation des pièces comptables reste de dix ans.</value></data>
+  <data name="CabinetDossiers.Rule.Declared" xml:space="preserve"><value>Un dossier déclaré dans la configuration du serveur (serveur du cabinet, démonstration), ou tenu sur ce poste, ne s'efface pas depuis Lettra : sa base appartient à qui l'a déclarée.</value></data>
 </root>

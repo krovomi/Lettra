@@ -57,6 +57,28 @@ public sealed class CabinetScreensTests : BunitContext
     }
 
     [Fact]
+    public async Task Sans_dossier_choisi_ou_quand_le_dossier_ouvert_est_ferme_le_premier_dossier_s_ouvre()
+    {
+        SwitchableDossierSelection none = new(null);
+        Services.AddSingleton<IDossierSelection>(none);
+        CurrentDossier current = Services.GetRequiredService<CurrentDossier>();
+
+        // Première connexion en ligne : aucun dossier retenu, le premier dans l'ordre alphabétique s'ouvre.
+        await current.EnsureLoadedAsync();
+        none.CurrentDossierId.Should().Be(FakeCabinetGateway.Atelier);
+
+        // Le dossier ouvert est fermé (effacement demandé) : la liste relue en ouvre un autre.
+        _gateway.Dossiers.RemoveAll(d => d.Id == FakeCabinetGateway.Atelier);
+        await current.EnsureLoadedAsync(reload: true);
+        none.CurrentDossierId.Should().Be(FakeCabinetGateway.Boulangerie);
+
+        // Un dossier ouvert encore accessible reste ouvert.
+        await none.SelectAsync(FakeCabinetGateway.Garage, default);
+        await current.EnsureLoadedAsync(reload: true);
+        none.CurrentDossierId.Should().Be(FakeCabinetGateway.Garage);
+    }
+
+    [Fact]
     public void Sur_un_hote_a_dossier_fixe_le_selecteur_ne_propose_pas_d_en_changer()
     {
         Services.AddSingleton<IDossierSelection>(new FixedDossierSelection(FakeCabinetGateway.Boulangerie));

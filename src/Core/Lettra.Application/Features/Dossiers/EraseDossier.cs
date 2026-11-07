@@ -31,6 +31,13 @@ public sealed record ListScheduledDossierErasuresQuery(OrganisationId Organisati
     public Permission Permission => Permission.CabinetAdministrer;
 }
 
+/// <summary>Les dossiers du cabinet (écran « Dossiers du cabinet ») : créer, demander ou annuler un effacement.</summary>
+public sealed record ListCabinetDossiersQuery(OrganisationId Organisation)
+    : IQuery<Result<IReadOnlyList<CabinetDossierResponse>>>, IRequireOrganisationPermission
+{
+    public Permission Permission => Permission.CabinetAdministrer;
+}
+
 internal sealed class ScheduleDossierErasureHandler(IDossierEraser eraser, ICurrentUser user)
     : ICommandHandler<ScheduleDossierErasureCommand, Result<DossierErasureResponse>>
 {
@@ -62,8 +69,19 @@ internal sealed class ListScheduledDossierErasuresHandler(IDossierEraser eraser)
     }
 }
 
+internal sealed class ListCabinetDossiersHandler(IDossierEraser eraser)
+    : IQueryHandler<ListCabinetDossiersQuery, Result<IReadOnlyList<CabinetDossierResponse>>>
+{
+    public async Task<Result<IReadOnlyList<CabinetDossierResponse>>> HandleAsync(ListCabinetDossiersQuery query, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+        return Result<IReadOnlyList<CabinetDossierResponse>>.Success(
+            await eraser.ListAsync(query.Organisation, cancellationToken).ConfigureAwait(false));
+    }
+}
+
 /// <summary>Poste et hôtes sans catalogue : aucun dossier ne s'efface par l'API (la base appartient à qui l'a déclarée).</summary>
-internal sealed class NoDossierEraser : IDossierEraser
+internal sealed class NoDossierEraser(IDossierDirectory directory) : IDossierEraser
 {
     public Task<Result<DossierErasureResponse>> ScheduleAsync(OrganisationId organisation, DossierId dossier, Guid requestedBy, CancellationToken cancellationToken) =>
         Task.FromResult<Result<DossierErasureResponse>>(DossierErrors.Declared);
@@ -73,4 +91,8 @@ internal sealed class NoDossierEraser : IDossierEraser
 
     public Task<IReadOnlyList<DossierErasureResponse>> ListScheduledAsync(OrganisationId organisation, CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<DossierErasureResponse>>([]);
+
+    public async Task<IReadOnlyList<CabinetDossierResponse>> ListAsync(OrganisationId organisation, CancellationToken cancellationToken) =>
+        [.. (await directory.ListAsync(organisation, cancellationToken).ConfigureAwait(false))
+            .Select(d => new CabinetDossierResponse(d.Id, d.Name, CabinetDossierStateDto.Active, Erasable: false, ErasureDueAt: null))];
 }

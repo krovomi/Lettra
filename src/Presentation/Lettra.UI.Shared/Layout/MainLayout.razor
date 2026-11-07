@@ -12,6 +12,8 @@
 @inject HelpPanelState Help
 @inject NavigationManager Navigation
 @inject Lettra.UI.Shared.Cabinet.CurrentDossier Dossier
+@inject SessionState Session
+@inject Lettra.UI.Shared.Voice.VoiceInput Voice
 @inject Lettra.UI.Shared.Preferences.PreferencesSync AccountPreferences
 
 <DeviceLockGate>
@@ -73,8 +75,20 @@
             <main id="main" class="lettra-main lt-main" tabindex="-1">
                 <SyncReminderBanner />
                 <OfflineDraftsBanner />
-                @* Changer de dossier recrée l'écran : chaque page relit ses données dans le nouveau dossier. *@
-                <SessionGate @key="Dossier.Id">@Body</SessionGate>
+                @* Changer de dossier recrée l'écran : chaque page relit ses données dans le nouveau dossier. Quand
+                   l'utilisateur peut changer de dossier, l'écran attend la liste de ses dossiers, qui garde le dossier
+                   ouvert s'il y est, sinon en ouvre un autre (première connexion en ligne, dossier de la configuration
+                   inaccessible, dossier fermé) : aucune page ne lit un dossier qu'il ne peut pas ouvrir. *@
+                <SessionGate @key="Dossier.Id">
+                    @if (WaitingForDossier)
+                    {
+                        <p class="lettra-muted" aria-busy="true" id="dossier-waiting">@L["Loading"]</p>
+                    }
+                    else
+                    {
+                        @Body
+                    }
+                </SessionGate>
             </main>
             <ToastHost />
             <DemoHost />
@@ -114,7 +128,13 @@
         }
 
         <SyncConsentPanel />
-        <SessionGate Redirect="false"><AssistantPanel /></SessionGate>
+        @* L'assistant et la dictée lisent l'état du dossier ouvert : comme l'écran, ils attendent qu'il soit connu. *@
+        <SessionGate Redirect="false">
+            @if (!WaitingForDossier)
+            {
+                <AssistantPanel />
+            }
+        </SessionGate>
     </div>
 </CascadingValue>
 
@@ -122,13 +142,18 @@
 <CommandPalette @ref="_palette" />
 <HelpPanel OnSearchEverywhere="SearchEverywhereAsync" />
 <TourHost />
-<VoiceHost />
+@* Hors de toute garde de session : la dictée attend aussi la liste des dossiers, qui ne se lit qu'une session ouverte. *@
+@if (!(Dossier.CanSwitch && !Dossier.IsLoaded))
+{
+    <VoiceHost />
+}
 </DeviceLockGate>
 
 @code {
     private KeyboardScope _globalScope = default!;
     private CommandPalette? _palette;
     private bool _moreOpen;
+    private Guid? _shownDossier;
 
     // Lien d'évitement vers le contenu, relatif à la page courante (la base <base href> le résoudrait vers l'accueil).
     private string SkipLink => Navigation.ToBaseRelativePath(Navigation.Uri).Split('#')[0] + "#main";
@@ -141,8 +166,9 @@
             .Bind("Ctrl+Shift+D", L["Command.Density"], _ => Preferences.ToggleDensityAsync(), showInBar: false);
         Preferences.Changed += OnPreferencesChanged;
         Assistant.Changed += OnPreferencesChanged;
-        Dossier.Changed += OnPreferencesChanged;
+        Dossier.Changed += OnDossierChanged;
         Navigation.LocationChanged += OnLocationChanged;
+        _shownDossier = Dossier.Id;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -153,6 +179,8 @@
             await AccountPreferences.StartAsync();
         }
     }
+
+    private bool WaitingForDossier => Session.IsAuthenticated && Dossier.CanSwitch && !Dossier.IsLoaded;
 
     private Task OpenPaletteAsync() => _palette?.OpenAsync() ?? Task.CompletedTask;
 
@@ -178,6 +206,20 @@
 
     private void OnPreferencesChanged(object? sender, EventArgs e) => _ = InvokeAsync(StateHasChanged);
 
+    // Un autre dossier ouvert : l'assistant et la dictée relisent leur état dans ce dossier (droits, réglages).
+    private void OnDossierChanged(object? sender, EventArgs e) => _ = InvokeAsync(async () =>
+    {
+        if (Dossier.Id != _shownDossier)
+        {
+            _shownDossier = Dossier.Id;
+            Task assistant = Assistant.LoadAsync(refresh: true);
+            Task voice = Voice.LoadAsync(refresh: true);
+            await Task.WhenAll(assistant, voice);
+        }
+
+        StateHasChanged();
+    });
+
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         if (_moreOpen)
@@ -191,7 +233,7 @@
     {
         Preferences.Changed -= OnPreferencesChanged;
         Assistant.Changed -= OnPreferencesChanged;
-        Dossier.Changed -= OnPreferencesChanged;
+        Dossier.Changed -= OnDossierChanged;
         Navigation.LocationChanged -= OnLocationChanged;
     }
 }

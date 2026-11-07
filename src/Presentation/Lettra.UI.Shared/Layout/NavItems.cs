@@ -78,6 +78,7 @@ public static class NavItems
         new("settings/company", "Nav.Company", "building-2", "Nav.Group.Settings", Match: NavLinkMatch.All),
         new("settings/preferences", "Nav.Preferences", "sliders-horizontal", "Nav.Group.Settings"),
         new("admin", "Nav.Admin", "shield-check", "Nav.Group.Settings", Page: AccessAreaDto.Administration),
+        new("dossiers", "Nav.CabinetDossiers", "folder", "Nav.Group.Settings", Page: AccessAreaDto.Administration),
         new("session/serveur", "Nav.SharedServer", "server", "Nav.Group.Settings"),
         new("platform", "Nav.Platform", "cloud", "Nav.Group.Settings", Page: AccessAreaDto.Platform),
     ];

@@ -22,10 +22,15 @@ internal sealed class FakeAssistantGateway : IAssistantGateway
 
     public int JournalReads { get; private set; }
 
-    public Task<OperationResult<AssistantStatusResponse>> GetStatusAsync(CancellationToken cancellationToken) =>
-        Task.FromResult(StatusRefusal is { } code
+    public int StatusReads { get; private set; }
+
+    public Task<OperationResult<AssistantStatusResponse>> GetStatusAsync(CancellationToken cancellationToken)
+    {
+        StatusReads++;
+        return Task.FromResult(StatusRefusal is { } code
             ? OperationResult<AssistantStatusResponse>.Failure([new ErrorDetail(code, code)])
             : OperationResult<AssistantStatusResponse>.Success(Status));
+    }
 
     public async IAsyncEnumerable<AssistantEvent> AskAsync(AskAssistantRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
     {

@@ -53,4 +53,47 @@
   <data name="Company.Size.SmallOrMedium" xml:space="preserve"><value>SME</value></data>
   <data name="Company.Size.Micro" xml:space="preserve"><value>Micro-enterprise</value></data>
   <data name="Company.Size.Hint" xml:space="preserve"><value>E-invoicing: receiving from {0}; issuing, e-reporting and new mandatory mentions from {1}.</value></data>
+  <data name="Nav.CabinetDossiers" xml:space="preserve"><value>Firm dossiers</value></data>
+  <data name="Nav.CabinetDossiers.Keywords" xml:space="preserve"><value>dossiers firm create new dossier erase delete erasure withdrawal gdpr</value></data>
+  <data name="CabinetDossiers.Title" xml:space="preserve"><value>Firm dossiers</value></data>
+  <data name="CabinetDossiers.Subtitle" xml:space="preserve"><value>Create your clients' dossiers, or ask to erase a dossier the firm no longer handles.</value></data>
+  <data name="CabinetDossiers.New" xml:space="preserve"><value>New dossier</value></data>
+  <data name="CabinetDossiers.Denied" xml:space="preserve"><value>Only the firm administrator manages its dossiers. Ask them to create or erase one.</value></data>
+  <data name="CabinetDossiers.Form.Title" xml:space="preserve"><value>New dossier</value></data>
+  <data name="CabinetDossiers.Form.Name" xml:space="preserve"><value>Dossier name</value></data>
+  <data name="CabinetDossiers.Form.NamePlaceholder" xml:space="preserve"><value>Harbour Bakery</value></data>
+  <data name="CabinetDossiers.Form.Hint" xml:space="preserve"><value>The dossier gets its own database and its own encryption key. It opens at once to people with access to the whole firm; grant access to others in “Team and access”.</value></data>
+  <data name="CabinetDossiers.Form.Submit" xml:space="preserve"><value>Create dossier</value></data>
+  <data name="CabinetDossiers.Form.Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="CabinetDossiers.Kpis" xml:space="preserve"><value>Dossiers in figures</value></data>
+  <data name="CabinetDossiers.Kpi.Active" xml:space="preserve"><value>Open dossiers</value></data>
+  <data name="CabinetDossiers.Kpi.ErasureScheduled" xml:space="preserve"><value>Erasures requested</value></data>
+  <data name="CabinetDossiers.List" xml:space="preserve"><value>Dossier list</value></data>
+  <data name="CabinetDossiers.Search" xml:space="preserve"><value>Search a dossier</value></data>
+  <data name="CabinetDossiers.Column.Name" xml:space="preserve"><value>Dossier</value></data>
+  <data name="CabinetDossiers.Column.State" xml:space="preserve"><value>Status</value></data>
+  <data name="CabinetDossiers.Column.ErasureDue" xml:space="preserve"><value>Erased on</value></data>
+  <data name="CabinetDossiers.State.All" xml:space="preserve"><value>All statuses</value></data>
+  <data name="CabinetDossiers.State.Active" xml:space="preserve"><value>Open</value></data>
+  <data name="CabinetDossiers.State.ErasureScheduled" xml:space="preserve"><value>Erasure requested</value></data>
+  <data name="CabinetDossiers.State.Creating" xml:space="preserve"><value>Being created</value></data>
+  <data name="CabinetDossiers.Opened" xml:space="preserve"><value>open dossier</value></data>
+  <data name="CabinetDossiers.Erasing" xml:space="preserve"><value>erasure in progress</value></data>
+  <data name="CabinetDossiers.Empty" xml:space="preserve"><value>No dossier</value></data>
+  <data name="CabinetDossiers.Empty.Text" xml:space="preserve"><value>Create the firm's first dossier with “New dossier”.</value></data>
+  <data name="CabinetDossiers.CancelErasure" xml:space="preserve"><value>Cancel erasure</value></data>
+  <data name="CabinetDossiers.Erase.Label" xml:space="preserve"><value>Erase dossier {0}</value></data>
+  <data name="CabinetDossiers.Erase.Question" xml:space="preserve"><value>Close this dossier? It will be erased in 30 days unless you cancel.</value></data>
+  <data name="CabinetDossiers.Erase.Confirm" xml:space="preserve"><value>Request erasure</value></data>
+  <data name="CabinetDossiers.NotErasable" xml:space="preserve"><value>This dossier is declared in the server configuration, or kept on this device: it cannot be erased from Lettra.</value></data>
+  <data name="CabinetDossiers.Open" xml:space="preserve"><value>Open</value></data>
+  <data name="CabinetDossiers.Toast.Created" xml:space="preserve"><value>Dossier “{0}” created.</value></data>
+  <data name="CabinetDossiers.Toast.ErasureScheduled" xml:space="preserve"><value>Dossier “{0}” closed. It will be erased on {1} unless you cancel before then.</value></data>
+  <data name="CabinetDossiers.Toast.ErasureCancelled" xml:space="preserve"><value>Erasure cancelled: dossier “{0}” reopens as it was.</value></data>
+  <data name="CabinetDossiers.Toast.Failed" xml:space="preserve"><value>The operation did not go through. Try again.</value></data>
+  <data name="CabinetDossiers.Rules" xml:space="preserve"><value>How it works</value></data>
+  <data name="CabinetDossiers.Rule.Create" xml:space="preserve"><value>Each dossier has its own database and its own encryption key, wrapped by the firm's key. A dossier's data never mixes with another's.</value></data>
+  <data name="CabinetDossiers.Rule.Erase" xml:space="preserve"><value>Requesting erasure closes the dossier at once, for everyone. For 30 days you can cancel: the dossier reopens as it was. After that its key is destroyed (its data becomes unreadable, backups included), then its database is deleted.</value></data>
+  <data name="CabinetDossiers.Rule.Keep" xml:space="preserve"><value>Before requesting erasure, export what the firm must keep (FEC, document archives): accounting records must still be kept for ten years.</value></data>
+  <data name="CabinetDossiers.Rule.Declared" xml:space="preserve"><value>A dossier declared in the server configuration (the firm's own server, the demo), or kept on this device, cannot be erased from Lettra: its database belongs to whoever declared it.</value></data>
 </root>
