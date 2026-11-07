@@ -413,6 +413,17 @@ public sealed class SqliteTests : IDisposable
     }
 
     [Fact]
+    public async Task Un_cabinet_ne_depasse_pas_son_quota_de_dossiers()
+    {
+        await using CatalogHarness harness = new(
+            s => s.AddSqliteProvider(),
+            b => SqliteConfigurator.ConfigureCatalog(b, Database("catalog-quota")),
+            new Dictionary<string, string?> { ["Provider"] = "Sqlite", ["Directory"] = Path.Combine(_folder, "srv-quota") },
+            new Dictionary<string, string?> { ["Lettra:Catalog:MaxDossiersPerCabinet"] = "2" });
+        await CatalogScenarios.QuotaPerCabinetAsync(harness);
+    }
+
+    [Fact]
     public async Task Un_dossier_du_catalogue_exporte_retire_puis_reimporte_sous_son_identifiant()
     {
         string directory = Path.Combine(_folder, "srv-transfert");

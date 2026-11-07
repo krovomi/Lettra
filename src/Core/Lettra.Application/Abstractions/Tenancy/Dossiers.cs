@@ -70,6 +70,7 @@ public static class DossierErrors
     public const string NameTooLongCode = ErrorCodes.Tenancy.DossierNameTooLong;
     public const string OrganisationNotFoundCode = ErrorCodes.Tenancy.OrganisationNotFound;
     public const string NoCapacityCode = ErrorCodes.Tenancy.NoCapacity;
+    public const string QuotaReachedCode = ErrorCodes.Tenancy.QuotaReached;
     public const string ProvisioningFailedCode = ErrorCodes.Tenancy.ProvisioningFailed;
     public const string DeclaredCode = ErrorCodes.Tenancy.DossierDeclared;
     public const string ErasureNotCancellableCode = ErrorCodes.Tenancy.ErasureNotCancellable;
@@ -88,6 +89,9 @@ public static class DossierErrors
 
     /// <summary>Aucun serveur de la cellule n'accepte de nouveau dossier : à traiter par l'exploitation.</summary>
     public static Error NoCapacity => new(NoCapacityCode, ErrorKind.Unexpected);
+
+    /// <summary>Le cabinet tient déjà autant de dossiers que la cellule lui en accorde.</summary>
+    public static Error QuotaReached => Error.Conflict(QuotaReachedCode);
 
     /// <summary>La base n'a pas pu être créée ; le dossier reste en état « échec » et le Worker reprend la création.</summary>
     public static Error ProvisioningFailed => new(ProvisioningFailedCode, ErrorKind.Unexpected);

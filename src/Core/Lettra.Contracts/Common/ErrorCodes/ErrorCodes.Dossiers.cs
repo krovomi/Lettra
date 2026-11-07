@@ -12,6 +12,7 @@ public static partial class ErrorCodes
         public const string DossierNameTooLong = "Dossier.NameTooLong";
         public const string OrganisationNotFound = "Organisation.NotFound";
         public const string NoCapacity = "Dossier.NoCapacity";
+        public const string QuotaReached = "Dossier.QuotaReached";
         public const string ProvisioningFailed = "Dossier.ProvisioningFailed";
         public const string DossierDeclared = "Dossier.Declared";
         public const string ErasureNotCancellable = "Dossier.ErasureNotCancellable";
