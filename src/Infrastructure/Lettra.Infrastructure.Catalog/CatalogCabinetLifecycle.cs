@@ -202,7 +202,8 @@ internal sealed partial class CatalogCabinetLifecycle(
             {
                 departed += await CompleteAsync(new OrganisationId(cabinet), cancellationToken).ConfigureAwait(false) ? 1 : 0;
             }
-            catch (Exception exception) when (exception is not OperationCanceledException)
+            // Fournisseur d'identité ou KMS qui ne répond pas à temps : ce départ est repris, les suivants continuent.
+            catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
             {
                 LogDepartureFailed(logger, exception, cabinet);
             }
@@ -217,8 +218,12 @@ internal sealed partial class CatalogCabinetLifecycle(
         CatalogDbContext db = await catalogFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
         await using (db.ConfigureAwait(false))
         {
-            if (await db.Dossiers.AnyAsync(d => d.OrganisationId == cabinet.Value && d.State != DossierState.Deleted, cancellationToken).ConfigureAwait(false))
+            int remaining = await db.Dossiers.CountAsync(d => d.OrganisationId == cabinet.Value && d.State != DossierState.Deleted, cancellationToken)
+                .ConfigureAwait(false);
+            if (remaining > 0)
             {
+                // Les dossiers dus sont effacés juste avant, dans la même passe : un départ qui attend encore le dit.
+                LogDepartureWaiting(logger, cabinet.Value, remaining);
                 return false;
             }
 
@@ -327,6 +332,9 @@ internal sealed partial class CatalogCabinetLifecycle(
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Départ du cabinet {OrganisationId} en échec, repris à la prochaine passe")]
     private static partial void LogDepartureFailed(ILogger logger, Exception exception, Guid organisationId);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Départ du cabinet {OrganisationId} en attente : {Remaining} dossier(s) pas encore effacé(s)")]
+    private static partial void LogDepartureWaiting(ILogger logger, Guid organisationId, int remaining);
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Départ du cabinet {OrganisationId} en attente : fournisseur d'identité de la plateforme non réglé sur cet hôte")]
     private static partial void LogIdentityMissing(ILogger logger, Guid organisationId);

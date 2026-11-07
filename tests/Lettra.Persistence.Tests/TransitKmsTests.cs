@@ -87,6 +87,7 @@ public sealed class TransitKmsTests : IAsyncLifetime, IDisposable
         await OpenAsync(services, dossier, Fresh(services));
 
         await vault.DestroyAsync(cabinet, default);
+        (await vault.RewrapAllAsync(default)).Should().Be(0, "clé racine détruite : rien à renouveler, et la passe ne s'arrête pas");
         TransitKekStore after = Fresh(services);
         (await after.FindAsync(cabinet, default)).Should().BeNull();
         Func<Task> recreate = async () => await after.GetOrCreateAsync(cabinet, default);

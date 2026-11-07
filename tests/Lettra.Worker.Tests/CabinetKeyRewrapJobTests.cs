@@ -30,13 +30,25 @@ public sealed class CabinetKeyRewrapJobTests
     }
 
     [Fact]
-    public async Task Une_annulation_n_est_pas_avalee()
+    public async Task L_arret_du_Worker_n_est_pas_avale()
     {
-        Vault vault = new(failure: new OperationCanceledException());
+        using CancellationTokenSource stopping = new();
+        await stopping.CancelAsync();
+        Vault vault = new(failure: new OperationCanceledException(stopping.Token));
+
+        Func<Task> pass = () => Job(new ServiceCollection().BuildServiceProvider()).RunPassAsync(vault, stopping.Token);
+
+        await pass.Should().ThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact]
+    public async Task Un_KMS_qui_ne_repond_pas_a_temps_n_arrete_pas_la_passe()
+    {
+        Vault vault = new(failure: new TaskCanceledException("délai dépassé", new TimeoutException()));
 
         Func<Task> pass = () => Job(new ServiceCollection().BuildServiceProvider()).RunPassAsync(vault, default);
 
-        await pass.Should().ThrowAsync<OperationCanceledException>();
+        await pass.Should().NotThrowAsync();
     }
 
     [Fact]

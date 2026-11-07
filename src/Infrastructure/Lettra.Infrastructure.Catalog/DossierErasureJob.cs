@@ -53,7 +53,9 @@ internal sealed partial class DossierErasureJob(
                 LogPass(erased);
             }
         }
-        catch (Exception exception) when (exception is not OperationCanceledException)
+        // Seul l'arrêt du Worker interrompt la boucle : un délai dépassé (TaskCanceledException d'un appel HTTP) est une
+        // panne comme une autre, reprise à la passe suivante.
+        catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
         {
             LogFailed(exception);
         }

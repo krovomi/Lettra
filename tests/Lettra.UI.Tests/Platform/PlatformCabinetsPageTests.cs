@@ -176,22 +176,32 @@ public sealed class PlatformCabinetsPageTests : BunitContext
     }
 
     [Theory]
-    [InlineData(true, "platform")]
-    [InlineData(false, "")]
-    public void Sans_dossier_l_administrateur_de_la_plateforme_arrive_sur_la_plateforme(bool platformOnly, string landing)
+    [InlineData(true, "platform", false)]
+    [InlineData(false, "", false)]
+    [InlineData(true, "platform", true)]
+    [InlineData(false, "", true)]
+    public void Sans_dossier_l_administrateur_de_la_plateforme_arrive_sur_la_plateforme(bool platformOnly, string landing, bool answerLater)
     {
         Services.AddCabinetFakes();
         Services.AddSingleton<IInvoicesGateway>(new FakeInvoicesGateway());
         Services.AddSingleton<IQuotesGateway>(new FakeQuotesGateway());
         Services.AddFakeBillingDashboard();
-        Services.AddSingleton<IAdministrationGateway>(new FakeAdministrationGateway { PlatformOnly = platformOnly });
+        Services.AddSingleton<IAdministrationGateway>(new FakeAdministrationGateway { PlatformOnly = platformOnly, AnswerLater = answerLater });
         Services.AddSingleton<IDossierSelection>(new SwitchableDossierSelection(null));
         NavigationManager navigation = Services.GetRequiredService<NavigationManager>();
 
         IRenderedComponent<Home> home = Render<Home>();
 
         home.WaitForAssertion(() => navigation.Uri.Should().Be(navigation.BaseUri + landing));
-        (home.FindAll("h1").Count > 0).Should().Be(!platformOnly, "la plateforme n'affiche rien du tableau de bord");
+        if (platformOnly)
+        {
+            home.FindAll("h1").Should().BeEmpty("la plateforme n'affiche rien du tableau de bord");
+        }
+        else
+        {
+            // Réponse arrivée plus tard (passerelle HTTP) : le tableau de bord s'affiche quand même.
+            home.WaitForAssertion(() => home.FindAll("h1").Should().NotBeEmpty());
+        }
     }
 
     [Fact]

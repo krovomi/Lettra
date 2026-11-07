@@ -56,6 +56,9 @@ helm template k lettra-keycloak "${KC_REQUIS[@]}" --show-only templates/realm.ya
   | python3 -c 'import json, sys; sys.exit(json.load(sys.stdin) != json.load(open(sys.argv[1])))' "$ROOT/deploy/keycloak/realm-lettra.json" \
   || { echo "le ConfigMap du realm diffère de deploy/keycloak/realm-lettra.json" >&2; exit 1; }
 echo "   realm importé = deploy/keycloak/realm-lettra.json"
+# Le Worker termine le départ d'un cabinet chez Keycloak (organisation et comptes supprimés) : la politique réseau le laisse passer.
+grep -q 'app.kubernetes.io/name: lettra-worker' <<<"$(helm template k lettra-keycloak "${KC_REQUIS[@]}" --show-only templates/networkpolicy.yaml)" \
+  || { echo "Keycloak : la politique réseau bloque le Worker (départ des cabinets)" >&2; exit 1; }
 # Recette : l'API vérifie les jetons auprès du Keycloak de la cellule ; l'émetteur reste l'adresse publique.
 recette=$(helm template c lettra-cell -f lettra-cell/values-taille-S.yaml -f ../cells/recette/values.yaml \
   --set lettra-api.image.tag=ci --set lettra-worker.image.tag=ci)

@@ -29,11 +29,25 @@ public sealed class DossierErasureJobTests
     }
 
     [Fact]
-    public async Task Une_annulation_n_est_pas_avalee()
+    public async Task L_arret_du_Worker_n_est_pas_avale()
     {
-        Func<Task> run = () => Job(new Pass(failure: new OperationCanceledException())).RunPassAsync(default);
+        using CancellationTokenSource stopping = new();
+        await stopping.CancelAsync();
+
+        Func<Task> run = () => Job(new Pass(failure: new OperationCanceledException(stopping.Token))).RunPassAsync(stopping.Token);
 
         await run.Should().ThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact]
+    public async Task Un_appel_qui_depasse_son_delai_n_arrete_pas_la_passe()
+    {
+        // Délai dépassé d'un HttpClient (Keycloak injoignable au départ d'un cabinet) : TaskCanceledException sans arrêt.
+        Pass pass = new(failure: new TaskCanceledException("délai dépassé", new TimeoutException()));
+
+        Func<Task> run = () => Job(pass).RunPassAsync(default);
+
+        await run.Should().NotThrowAsync();
     }
 
     [Fact]

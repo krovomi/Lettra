@@ -48,7 +48,14 @@ diagnostic() {
   kubectl -n "$NS" logs deploy/lettra-worker --tail=-1 > "$SORTIE/worker.log" 2>&1
   kubectl -n "$NS" logs deploy/openbao --tail=300 > "$SORTIE/openbao.log" 2>&1
   kubectl -n cnpg-system logs deploy/cnpg-cloudnative-pg --tail=300 > "$SORTIE/cnpg.log" 2>&1
-  catalogue 'SELECT "Id", "State", "LastError" FROM catalog."Dossiers"' > "$SORTIE/catalogue-dossiers.txt" 2>&1
+  catalogue 'SELECT "Id", "OrganisationId", "State", "ClusterId", "ErasureDueAt", "LastError" FROM catalog."Dossiers"' \
+    > "$SORTIE/catalogue-dossiers.txt" 2>&1
+  catalogue 'SELECT "Id", "State", "DepartureDueAt", "DepartedAt", now() FROM catalog."Organisations"' > "$SORTIE/catalogue-cabinets.txt" 2>&1
+  # Les artefacts ne sont pas toujours lisibles : l'état du catalogue et les passes d'effacement vont aussi dans le journal.
+  echo "--- catalogue : dossiers (id, cabinet, état, cluster, effacement dû, erreur), puis cabinets"
+  cat "$SORTIE/catalogue-dossiers.txt" "$SORTIE/catalogue-cabinets.txt"
+  echo "--- Worker : effacements et départs"
+  grep -E -A2 'DossierErasure|CatalogDossierEraser|CatalogCabinetLifecycle' "$SORTIE/worker.log" | grep -v '^ *at ' | tail -n 40
   tail -n 40 "$SORTIE/api.log" "$SORTIE/worker.log" 2>/dev/null
 }
 pids=()

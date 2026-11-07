@@ -162,7 +162,7 @@ internal sealed partial class CatalogDossierEraser(
             LogErased(logger, dossier.Id);
             return true;
         }
-        catch (Exception exception) when (exception is not OperationCanceledException)
+        catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
         {
             LogErasureFailed(logger, exception, dossier.Id);
             await UpdateAsync(dossier.Id, s => s.SetProperty(d => d.LastError, exception.GetType().Name), CancellationToken.None).ConfigureAwait(false);

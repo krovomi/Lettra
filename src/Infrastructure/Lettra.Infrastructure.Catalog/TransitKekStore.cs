@@ -137,9 +137,11 @@ internal sealed class TransitKekStore(
             return false;
         }
 
-        // Déjà enveloppée par la dernière version : rien à réécrire (le KMS rendrait une autre enveloppe, tout aussi bonne).
-        TransitData key = await GetAsync($"keys/{KeyName(organisation)}", cancellationToken).ConfigureAwait(false);
-        if (wrapped.StartsWith($"vault:v{key.LatestVersion}:", StringComparison.Ordinal))
+        // Clé racine détruite (départ du cabinet en cours) : l'enveloppe ne s'ouvrira plus, il n'y a rien à renouveler et
+        // les autres cabinets de la passe ne doivent pas en pâtir. Déjà enveloppée par la dernière version : rien à
+        // réécrire non plus (le KMS rendrait une autre enveloppe, tout aussi bonne).
+        if (await TryGetAsync($"keys/{KeyName(organisation)}", cancellationToken).ConfigureAwait(false) is not { } key
+            || wrapped.StartsWith($"vault:v{key.LatestVersion}:", StringComparison.Ordinal))
         {
             return false;
         }
@@ -228,11 +230,12 @@ internal sealed class TransitKekStore(
     private async Task<TransitData> PostAsync(string path, TransitRequest body, CancellationToken cancellationToken) =>
         await TryPostAsync(path, body, cancellationToken, throwOnRefusal: true).ConfigureAwait(false) ?? new TransitData();
 
-    private async Task<TransitData> GetAsync(string path, CancellationToken cancellationToken)
+    /// <summary>Lecture au KMS : <c>null</c> si la clé n'existe pas (404) ; une panne lève.</summary>
+    private async Task<TransitData?> TryGetAsync(string path, CancellationToken cancellationToken)
     {
         using HttpClient http = httpClients.CreateClient(HttpClientName);
         using HttpResponseMessage response = await http.SendAsync(Request(HttpMethod.Get, path, content: null), cancellationToken).ConfigureAwait(false);
-        return await DataAsync(response, cancellationToken).ConfigureAwait(false);
+        return response.StatusCode == HttpStatusCode.NotFound ? null : await DataAsync(response, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Un refus du KMS (clé inconnue, enveloppe invalide : 400 ou 404) rend <c>null</c> ; une panne lève.</summary>

@@ -41,7 +41,8 @@ internal sealed partial class CabinetKeyRewrapJob(
             int rewrapped = await vault.RewrapAllAsync(cancellationToken).ConfigureAwait(false);
             LogPass(rewrapped);
         }
-        catch (Exception exception) when (exception is not OperationCanceledException)
+        // Seul l'arrêt du Worker interrompt la boucle : un KMS qui ne répond pas à temps est repris à la passe suivante.
+        catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
         {
             LogFailed(exception);
         }
