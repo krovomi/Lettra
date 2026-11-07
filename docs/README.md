@@ -16,6 +16,7 @@ est dans le [README](../README.md#principes-de-conception), le détail, les mesu
 
 - [Accompagnement, aide à la saisie et voix dans l'interface](aide-a-la-saisie.md)
 - [Annuaire SIRENE](annuaire.md)
+- [Abonnements du service en ligne : formules et options (conception)](abonnements.md)
 - [Anti-blanchiment : connaissance du client](anti-blanchiment.md)
 - [Assistant IA : points ouverts, repli sans IA et transparence](assistant-ia.md)
 - [Lettra dans l'assistant IA du poste (MCP)](assistant-du-poste.md)
@@ -37,6 +38,7 @@ est dans le [README](../README.md#principes-de-conception), le détail, les mesu
 - [Factures récurrentes](factures-recurrentes.md)
 - [Honoraires à déclarer (DAS 2)](honoraires-das2.md)
 - [Indicateurs de pilotage dans Grafana](indicateurs-grafana.md)
+- [ISO 27001 : le plan de certification du service en ligne](iso-27001.md)
 - [Kit contrôle fiscal](kit-controle-fiscal.md)
 - [Lettre de mission et honoraires](lettre-de-mission.md)
 - [Menu réglable et aide](menu-et-aide.md)
@@ -50,6 +52,7 @@ est dans le [README](../README.md#principes-de-conception), le détail, les mesu
 - [Relances des factures échues et envoi d'e-mails](relances-et-e-mails.md)
 - [Réversibilité d'un dossier (export et import d'un paquet chiffré)](reversibilite.md)
 - [Révision avant clôture](revision-avant-cloture.md)
+- [Runbooks de la cellule en ligne](runbooks/README.md)
 - [Se faire payer plus vite](se-faire-payer.md)
 - [Serveur commun : les mêmes données sur tous les appareils](serveur-commun.md)
 - [Seuils à surveiller (franchise et régime de TVA, catégorie, vigilance, DAS 2)](seuils.md)

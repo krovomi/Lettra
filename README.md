@@ -1407,7 +1407,9 @@ navigateur contre une cellule locale. Détails : [docs/reversibilite.md](docs/re
 **Plateforme** (menu Pilotage) ou l'API `/api/v1/plateforme`, sans script ni redémarrage, et ne voit jamais les
 données d'un cabinet. Au départ, annulable pendant 30 jours, tout ce qui concerne le cabinet est supprimé. Détails,
 routes et réglages (`Lettra:Identity:Provisioning`) : [docs/plateforme.md](docs/plateforme.md). L'avancement du mode 5
-est suivi dans [docs/plan-mode-5.md](docs/plan-mode-5.md).
+est suivi dans [docs/plan-mode-5.md](docs/plan-mode-5.md) ; les formules d'abonnement (conception, sans prix) dans
+[docs/abonnements.md](docs/abonnements.md), le plan de certification ISO 27001 dans [docs/iso-27001.md](docs/iso-27001.md)
+et les marches à suivre d'exploitation de la cellule dans [docs/runbooks/](docs/runbooks/README.md).
 
 ### Structure
 

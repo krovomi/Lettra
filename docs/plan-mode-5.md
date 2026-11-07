@@ -219,6 +219,8 @@ critique ou élevée.
   (la cellule ne les donne qu'à la création). En superutilisateur, avant d'activer `CabinetRoles` :
   `ALTER ROLE lettra CREATEROLE` et `GRANT pg_use_reserved_connections TO lettra`. À écrire dans le runbook.
 
+Marche à suivre : [runbooks/cellule-de-recette.md](runbooks/cellule-de-recette.md).
+
 **Fini quand** : la recette tourne une semaine sans intervention manuelle, avec les tableaux Grafana au vert.
 
 ### Étape 5 : exploitation (ce qui permet de dormir la nuit)
@@ -233,7 +235,8 @@ critique ou élevée.
 - Ajouter un cluster PostgreSQL quand `pg-a` est plein (`AcceptsNewDossiers = false`), et savoir déplacer un
   dossier d'un cluster à l'autre.
 - Astreinte : les alertes S1 et S2 sont déjà routées (job `essai-panne`) ; il reste à les brancher sur un vrai canal.
-- Runbooks dans `docs/` : base en échec, cluster plein, KMS injoignable, restauration, rotation de clé.
+- Runbooks dans `docs/` : base en échec, cluster plein, KMS injoignable, restauration, rotation de clé. **Écrits**
+  (huit, dans [runbooks/](runbooks/README.md)) ; restent à jouer sur une vraie cellule.
 
 **Fini quand** : l'équipe a restauré un dossier et une cellule en suivant le runbook, chronomètre en main, en
 respectant les objectifs RPO et RTO.
@@ -315,10 +318,21 @@ Le mode 5 est livré quand **tous** ces points sont vrais, et chacun est prouvé
 1. Quelle option de chiffrement : A, B ou C (étape 1) ? **Tranché : C.**
 2. Quel KMS : OVHcloud KMS, Vault hébergé par Lettra, ou des clés apportées par le cabinet lui-même (BYOK) pour les
    plus exigeants ? **Tranché : OpenBao Transit, une clé racine par cabinet.**
-3. Une cellule partagée par plusieurs cabinets, ou une cellule dédiée pour les gros cabinets (tailles L et XL) ?
-4. Quelle certification viser (SecNumCloud, ISO 27001…) ?
-5. Quel modèle d'abonnement : par cabinet, par dossier actif ou par utilisateur ?
-6. Le mode 4 (poste relié) doit-il savoir se synchroniser avec la cellule SaaS dès la première version ?
+3. Une cellule partagée par plusieurs cabinets, ou une cellule dédiée pour les gros cabinets ? **Tranché : les deux,
+   avec les mêmes charts.** La cellule mutualisée accueille par défaut. Un cabinet passe en cellule dédiée s'il remplit
+   l'un de ces critères :
+   - il a besoin de plus d'un cluster PostgreSQL à lui seul (plus de 600 dossiers actifs en même temps) ;
+   - son contrat exige une isolation physique ;
+   - il apporte ses propres clés (BYOK).
+
+   Voir le § 10.
+4. Quelle certification viser ? **Tranché : ISO 27001** pour Lettra, sur le périmètre du service en ligne. L'hébergeur
+   choisi doit lui-même être qualifié SecNumCloud ou certifié ISO 27001. Voir [iso-27001.md](iso-27001.md).
+5. Quel modèle d'abonnement ? **Tranché : plusieurs formules, plus des options à la carte, selon le profil du client**
+   (conception seulement, sans prix). Voir [abonnements.md](abonnements.md).
+6. Le poste relié (mode 4) se synchronise-t-il avec la cellule dès la première version ? **Tranché : oui, par le même
+   protocole** qu'avec un serveur de cabinet (ADR-0015). L'essai de bout en bout d'un poste relié à la cellule reste à
+   ajouter.
 
 ---
 
@@ -339,3 +353,47 @@ Le mode 5 est livré quand **tous** ces points sont vrais, et chacun est prouvé
   envoie désormais le fichier depuis le disque, et la route d'import admet 513 Mio.
 - **Première connexion en ligne** : l'accueil ne reste plus vide pour un cabinet hébergé (voir
   [menu-et-aide.md](menu-et-aide.md), « Dossier ouvert à la connexion »).
+
+---
+
+## 10. Cellules mutualisées et dédiées
+
+### Règle
+
+| Situation | Cellule | Pourquoi |
+|---|---|---|
+| Petit ou moyen cabinet (taille S ou M) | **Mutualisée** | Coût partagé ; l'isolation est déjà assurée dans la cellule : base par dossier, rôle PostgreSQL par cabinet, clé par cabinet, matrice d'isolation en CI, quotas |
+| Plus de 600 dossiers actifs en même temps (taille L ou XL) | **Dédiée** | Un seul cabinet remplirait un cluster : son activité gênerait les autres |
+| Isolation physique exigée par contrat, ou clés apportées par le cabinet | **Dédiée** | Exigence du client, pas une question de taille |
+| Données chez le cabinet | **Sur site** (modes 2 et 3) | Les mêmes charts, sur son infrastructure |
+
+### Ce qui est déjà prêt
+
+- Les mêmes charts servent les deux types de cellule : `deploy/cells/<cellule>/values.yaml` et
+  `values-taille-<S|M|L|XL>.yaml`.
+- Le Keycloak, le catalogue et le KMS sont déjà propres à chaque cellule. Une cellule dédiée n'est donc qu'une cellule
+  de plus, avec un seul cabinet.
+- Passer de la cellule mutualisée à une cellule dédiée se fait dossier par dossier, par la réversibilité : export du
+  paquet chiffré, puis import dans la nouvelle cellule. L'identifiant de chaque dossier est gardé.
+
+### Ce qui reste
+
+- **Déplacer un cabinet entier en une fois** : aujourd'hui, l'export se fait dossier par dossier (déjà noté dans les
+  manques connus).
+- La passerelle qui envoie chaque cabinet vers sa cellule (sous-domaine ou information du jeton) : dans le plan de
+  contrôle, non réalisé.
+
+---
+
+## 11. Ce qui attend le feu vert de Leub
+
+- Cellule de recette chez l'hébergeur : compte, achat, application OpenTofu, domaine et certificats.
+- Stockage objet sous verrou pour les sauvegardes.
+- Objectifs de perte de données et d'interruption.
+- Test d'intrusion externe et scan ZAP sur la recette.
+- Organisme de certification ISO 27001 et audit.
+- Documents RGPD signés (registre, contrat de sous-traitance, liste des sous-traitants ultérieurs).
+- Prix des formules et des options.
+- Pilote avec des cabinets volontaires.
+
+Les marches à suivre d'exploitation sont dans [runbooks/](runbooks/README.md).
