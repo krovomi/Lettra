@@ -25,6 +25,10 @@ otel:
 # (POC base par dossier), plusieurs Workers sont donc possibles plus tard (KEDA sur la file, ADR-0009).
 replicas: 1
 
+# Aucune connexion entrante vers le Worker (templates/networkpolicy.yaml).
+networkPolicy:
+  enabled: true
+
 resources:
   requests: { cpu: 100m, memory: 256Mi }
   limits: { memory: 512Mi }

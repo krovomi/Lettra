@@ -26,7 +26,7 @@ internal static class RightsSnapshotEndpoints
             .WithTags("Identity")
             .MapPost("/rights-snapshot", IssueAsync)
             // Vérifiée par dossier dans le cas d'usage : un dossier sans droit de données n'entre pas dans l'instantané.
-            .WithMetadata(new RequiredPermissionMetadata(Permission.DossierLire))
+            .WithMetadata(new RequiredPermissionMetadata(Permission.DossierLire, PermissionScopeKind.Filtered))
             .WithName("IssueRightsSnapshot")
             .Produces<RightsSnapshotResponse>()
             .ProducesProblem(StatusCodes.Status400BadRequest)

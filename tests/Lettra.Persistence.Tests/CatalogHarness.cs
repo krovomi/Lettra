@@ -415,6 +415,19 @@ internal static class CatalogScenarios
         result.Errors.Should().ContainSingle().Which.Code.Should().Be(DossierErrors.OrganisationNotFoundCode);
     }
 
+    /// <summary>Quota de la cellule (deux dossiers ici) : un troisième est refusé ; un dossier effacé rend sa place.</summary>
+    public static async Task QuotaPerCabinetAsync(CatalogHarness harness)
+    {
+        await harness.Services.InitializeCatalogAsync(migrate: true, default);
+        DossierId first = (await Create(harness.Services, "Premier")).Value;
+        (await Create(harness.Services, "Deuxième")).IsSuccess.Should().BeTrue();
+
+        (await Create(harness.Services, "Troisième")).Errors.Should().ContainSingle().Which.Code.Should().Be(DossierErrors.QuotaReachedCode);
+
+        await harness.UpdateDossierAsync(first, d => d.State = DossierState.Deleted);
+        (await Create(harness.Services, "Troisième")).IsSuccess.Should().BeTrue("un dossier effacé ne compte plus");
+    }
+
     private static async Task<Result<DossierId>> Create(IServiceProvider services, string name) =>
         await services.GetRequiredService<IDossierProvisioner>().CreateAsync(CatalogHarness.Organisation, name, default);
 }

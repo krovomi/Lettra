@@ -44,6 +44,12 @@ public sealed class CatalogDatabaseOptions
 
     /// <summary>Délai de rétractation du départ d'un cabinet : il travaille et exporte ses données jusqu'à son terme.</summary>
     public TimeSpan CabinetDepartureDelay { get; set; } = TimeSpan.FromDays(30);
+
+    /// <summary>
+    /// Dossiers qu'un cabinet peut tenir dans la cellule (créés ou importés, effacements en attente compris) : un cabinet
+    /// ne remplit pas à lui seul un serveur de bases partagé. 500 par défaut, au-delà de la taille XL du dimensionnement.
+    /// </summary>
+    public int MaxDossiersPerCabinet { get; set; } = 500;
 }
 
 public sealed class OrganisationEntry

@@ -6,6 +6,7 @@ using Lettra.Infrastructure.Persistence.Security;
 using Lettra.Infrastructure.Persistence.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Lettra.Infrastructure.Catalog;
 
@@ -20,6 +21,7 @@ internal sealed partial class CatalogDossierProvisioner(
     ISecretStore secrets,
     IDossierKeyring keyring,
     CatalogDossierFieldKeys fieldKeys,
+    IOptionsMonitor<CatalogOptions> options,
     TenantMigrator migrator,
     TimeProvider clock,
     ILogger<CatalogDossierProvisioner> logger) : IDossierProvisioner
@@ -52,6 +54,13 @@ internal sealed partial class CatalogDossierProvisioner(
             if (owner.State == OrganisationState.Leaving)
             {
                 return PlatformErrors.CabinetLeaving;
+            }
+
+            int held = await db.Dossiers.CountAsync(d => d.OrganisationId == organisation.Value && d.State != DossierState.Deleted, cancellationToken)
+                .ConfigureAwait(false);
+            if (held >= options.CurrentValue.Catalog.MaxDossiersPerCabinet)
+            {
+                return DossierErrors.QuotaReached;
             }
 
             string cellId = owner.CellId;

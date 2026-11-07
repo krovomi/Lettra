@@ -68,26 +68,45 @@ internal static class GroupPermissionEndpointFilter
         PermissionEndpointFilter.RouteScope(http, RouteKey, id => AuthorizationScope.ForGroup(new GroupId(id)));
 }
 
-/// <summary>Permission d'une route, lisible par les tests (toute route de l'API en déclare une).</summary>
-public sealed record RequiredPermissionMetadata(Permission Permission);
+/// <summary>Où porte la permission d'une route : ce que la matrice d'isolation des cabinets essaie d'atteindre.</summary>
+public enum PermissionScopeKind
+{
+    /// <summary>Le dossier de la requête (en-tête <c>X-Dossier</c>).</summary>
+    Dossier,
+
+    /// <summary>Le cabinet de la route (<c>{cabinetId}</c>).</summary>
+    Cabinet,
+
+    /// <summary>Le groupe de la route (<c>{groupId}</c>).</summary>
+    Group,
+
+    /// <summary>La plateforme, hors de tout cabinet.</summary>
+    Platform,
+
+    /// <summary>Le cas d'usage ne rend que ce que l'utilisateur peut voir (liste des dossiers accessibles).</summary>
+    Filtered,
+}
+
+/// <summary>Permission d'une route et sa portée, lisibles par les tests (toute route de l'API en déclare une).</summary>
+public sealed record RequiredPermissionMetadata(Permission Permission, PermissionScopeKind Scope);
 
 public static class PermissionEndpointExtensions
 {
     /// <summary>Exige <paramref name="permission"/> sur le dossier de la requête avant d'appeler le cas d'usage.</summary>
     public static RouteHandlerBuilder RequirePermission(this RouteHandlerBuilder builder, Permission permission) =>
-        builder.Require(permission, PermissionEndpointFilter.DossierOf);
+        builder.Require(permission, PermissionScopeKind.Dossier, PermissionEndpointFilter.DossierOf);
 
     /// <summary>Exige <paramref name="permission"/> sur le cabinet de la route avant d'appeler le cas d'usage.</summary>
     public static RouteHandlerBuilder RequireCabinetPermission(this RouteHandlerBuilder builder, Permission permission) =>
-        builder.Require(permission, CabinetPermissionEndpointFilter.ScopeOf);
+        builder.Require(permission, PermissionScopeKind.Cabinet, CabinetPermissionEndpointFilter.ScopeOf);
 
     /// <summary>Exige <paramref name="permission"/> sur la plateforme (administration des cabinets), hors de tout cabinet.</summary>
     public static RouteHandlerBuilder RequirePlatformPermission(this RouteHandlerBuilder builder, Permission permission) =>
-        builder.Require(permission, _ => AuthorizationScope.Plateforme);
+        builder.Require(permission, PermissionScopeKind.Platform, _ => AuthorizationScope.Plateforme);
 
     /// <summary>Exige <paramref name="permission"/> sur le groupe de la route avant d'appeler le cas d'usage.</summary>
     public static RouteHandlerBuilder RequireGroupPermission(this RouteHandlerBuilder builder, Permission permission) =>
-        builder.Require(permission, GroupPermissionEndpointFilter.ScopeOf);
+        builder.Require(permission, PermissionScopeKind.Group, GroupPermissionEndpointFilter.ScopeOf);
 
     /// <summary>
     /// Route qui ne rend que les éléments où l'utilisateur a <paramref name="permission"/> (liste des dossiers
@@ -96,14 +115,15 @@ public static class PermissionEndpointExtensions
     public static RouteHandlerBuilder FilterByPermission(this RouteHandlerBuilder builder, Permission permission)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        return builder.WithMetadata(new RequiredPermissionMetadata(permission));
+        return builder.WithMetadata(new RequiredPermissionMetadata(permission, PermissionScopeKind.Filtered));
     }
 
-    private static RouteHandlerBuilder Require(this RouteHandlerBuilder builder, Permission permission, Func<HttpContext, Result<AuthorizationScope>> scopeOf)
+    private static RouteHandlerBuilder Require(
+        this RouteHandlerBuilder builder, Permission permission, PermissionScopeKind scope, Func<HttpContext, Result<AuthorizationScope>> scopeOf)
     {
         ArgumentNullException.ThrowIfNull(builder);
         return builder.AddEndpointFilter(new PermissionEndpointFilter(permission, scopeOf))
-            .WithMetadata(new RequiredPermissionMetadata(permission));
+            .WithMetadata(new RequiredPermissionMetadata(permission, scope));
     }
 }
 

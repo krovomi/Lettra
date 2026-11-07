@@ -1,0 +1,20 @@
+{{- if .Values.networkPolicy.enabled }}
+# Le Worker n'écoute rien : il appelle les bases, le coffre de clés, Keycloak et le collecteur, personne ne l'appelle.
+# Toute connexion entrante est refusée (isolation des cabinets, plan du mode 5, étape 3).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: lettra-worker
+  labels:
+    app.kubernetes.io/name: lettra-worker
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/part-of: lettra
+    lettra.fr/cell: {{ .Values.cell | quote }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: lettra-worker
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  policyTypes: [Ingress]
+  ingress: []
+{{- end }}
