@@ -33,7 +33,7 @@ surtout **les assembler, chiffrer, exploiter et prouver**.
 | Essai en CI dans kind | ✅ Le mode 5 est essayé de bout en bout (`essai-mode5.sh`, job `mode5-kind`) ; Keycloak seul en mode 2 reste essayé par `essai-keycloak.sh` | `deploy/tests/kind/` |
 | Arrivée et départ d'un cabinet | ✅ Par l'administrateur de la plateforme, écran « Plateforme » et API : voir [plateforme.md](plateforme.md). Le script reste pour les modes 2 et 3 | `Lettra.Infrastructure.Catalog/CatalogCabinetLifecycle.cs`, `deploy/keycloak/ajouter-cabinet.sh` |
 | Observabilité (Prometheus, Loki, Tempo, Grafana, alertes) | ✅ Écrite, vérifiée sur la démo | `deploy/helm/lettra-observability/`, `deploy/cells/_commun/` |
-| Suppression d'un dossier ou d'un cabinet | ✅ Effacement d'un dossier (délai de rétractation, clé détruite, base supprimée) et départ d'un cabinet ; reste l'écran d'effacement côté cabinet | `Lettra.Infrastructure.Catalog/CatalogDossierEraser.cs` |
+| Suppression d'un dossier ou d'un cabinet | ✅ Effacement d'un dossier (délai de rétractation, clé détruite, base supprimée) et départ d'un cabinet ; écran « Dossiers du cabinet » pour l'administrateur du cabinet | `Lettra.Infrastructure.Catalog/CatalogDossierEraser.cs` |
 | Inscription, abonnement, facturation du service | ❌ Absents | — |
 
 ---
@@ -107,10 +107,10 @@ sensibles, et qu'effacer la DEK rend le dossier illisible, sauvegardes comprises
 ### Étape 2 : arrivée et départ d'un cabinet (cycle de vie)
 
 **Fait côté serveur et écran de la plateforme** : arrivée et départ d'un cabinet (API, Keycloak, catalogue, KMS,
-Worker, écran « Plateforme »), effacement d'un dossier (demande, rétractation de 30 jours, clé détruite puis base
-supprimée, trace dans le catalogue sans donnée). L'essai `mode5-kind` inscrit le cabinet par l'API, efface un dossier
-et finit par le départ du cabinet. **Reste** : l'écran d'effacement côté cabinet, l'export complet au départ, la
-réversibilité vers les modes 2 et 3. Voir [plateforme.md](plateforme.md).
+Worker, écran « Plateforme »), effacement d'un dossier (demande depuis l'écran « Dossiers du cabinet » ou l'API,
+rétractation de 30 jours, clé détruite puis base supprimée, trace dans le catalogue sans donnée). L'essai `mode5-kind` inscrit le cabinet par l'API, efface un dossier
+et finit par le départ du cabinet. **Reste** : l'export complet au départ, la réversibilité vers les modes 2 et 3.
+Voir [plateforme.md](plateforme.md) et [cles-et-chiffrement.md](cles-et-chiffrement.md).
 
 **Objectif** : plus aucune étape manuelle pour ouvrir ou fermer un cabinet.
 

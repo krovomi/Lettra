@@ -46,9 +46,6 @@ dossiers. Une valeur écrite avant le chiffrement se relit telle quelle et sera 
 - Les **pièces jointes et exports** ne sont pas encore chiffrés par la clé du dossier.
 - OpenBao en **haute disponibilité**, scellé par un HSM ou le KMS de l'hébergeur, et joint par TLS avec
   l'authentification Kubernetes (au lieu d'un jeton) : à installer avec la cellule réelle.
-- L'**écran d'effacement** d'un dossier côté cabinet : l'effacement se demande aujourd'hui par l'API (routes
-  ci-dessous). Cet écran rappellera, avant la demande, les durées de conservation légales (pièces comptables : 10 ans),
-  qui restent de la responsabilité du cabinet.
 - L'**export complet** d'un cabinet au départ (FEC, archives, pièces) et la **réversibilité** vers les modes 2 et 3.
 
 ## Effacer un dossier
@@ -59,15 +56,46 @@ Worker) détruit la clé du dossier, supprime sa base et note le dossier « effa
 créées par Lettra s'effacent ainsi : une **base déclarée** dans la configuration (serveur du cabinet, démonstration)
 appartient à qui l'a déclarée, et la demande est refusée avec un message clair.
 
+### L'écran « Dossiers du cabinet »
+
+- **Entrée du menu** « Dossiers du cabinet » (icône dossier), section « Pilotage », visible seulement de qui
+  administre le cabinet (comme « Équipe et accès »). Mots de la recherche du menu : dossiers, cabinet, créer, nouveau
+  dossier, effacer, supprimer, effacement, rétractation, rgpd.
+- **Compteurs** : dossiers ouverts, effacements demandés.
+- **Liste des dossiers** : nom (le dossier ouvert est signalé), état (Ouvert, Effacement demandé, En création), date
+  d'effacement. Recherche, filtre d'état et tri (nom, état, date d'effacement), à l'écran. Sur téléphone, chaque
+  dossier est une carte.
+- **Nouveau dossier** : un nom suffit. Le dossier reçoit sa base et sa clé, s'ouvre aussitôt aux personnes qui ont
+  accès à tout le cabinet, et apparaît dans le sélecteur de dossier. Le toaster propose « Ouvrir ».
+- **Effacer** : demandé dans la ligne, avec une confirmation courte (« Fermer ce dossier ? Il sera effacé dans
+  30 jours, sauf annulation. »). Le dossier est fermé à tous aussitôt ; s'il était le dossier ouvert, un autre dossier
+  prend sa place. Le toaster donne la date d'effacement et propose « Annuler l'effacement », tout comme le bouton de
+  la ligne tant que le délai court. À l'échéance, la ligne disparaît : clé détruite, base supprimée.
+- Un dossier déclaré dans la configuration du serveur (serveur du cabinet, démonstration), ou tenu sur un poste isolé,
+  garde son bouton « Effacer », qui explique pourquoi il ne s'efface pas depuis Lettra.
+- Encart « Comment ça marche » : une base et une clé par dossier ; effacement annulable 30 jours puis définitif,
+  sauvegardes comprises ; exporter avant ce que le cabinet doit conserver (dix ans pour les pièces comptables) ; les
+  bases déclarées ne s'effacent pas d'ici.
+- Sur le poste isolé (application de bureau), l'écran liste et crée les dossiers du poste ; aucun ne s'y efface.
+- Français et anglais ; ordinateur, tablette et téléphone vérifiés dans un vrai navigateur contre une cellule locale
+  (création, ouverture depuis le toaster, effacement demandé puis annulé, effacement réel par le Worker à l'échéance,
+  sans erreur dans la console ni défilement horizontal à 390 px).
+- Limite connue : un dossier neuf n'a pas encore de fiche entreprise ; les « premiers pas » de l'accueil la demandent
+  et reçoivent un refus attendu (une ligne dans la console du navigateur), jusqu'à ce que la fiche soit remplie.
+
+### Les routes
+
 Routes, toutes réservées à l'administrateur du cabinet (« Administrer le cabinet ») :
 
 | Route | Effet |
 |---|---|
+| `GET /api/v1/cabinets/{cabinet}/dossiers` | Les dossiers du cabinet (hors dossiers effacés), leur état, s'ils s'effacent depuis Lettra et la date d'effacement demandée. |
 | `POST /api/v1/cabinets/{cabinet}/dossiers/{dossier}/effacement` | Demande l'effacement : 202, avec la fin du délai de rétractation. 409 `Dossier.Declared` pour une base déclarée dans la configuration. |
 | `DELETE /api/v1/cabinets/{cabinet}/dossiers/{dossier}/effacement` | Annule la demande tant que le délai court : 200, le dossier rouvre tel quel. 409 `Dossier.ErasureNotCancellable` ensuite. |
 | `GET /api/v1/cabinets/{cabinet}/dossiers/effacements` | Les dossiers en attente d'effacement, la fin du délai la plus proche d'abord. |
 
-**RGPD** : un dossier quitte Lettra pour de bon, sauvegardes comprises (sa clé détruite les rend illisibles), après un
+**RGPD** : le cabinet exerce lui-même le droit à l'effacement d'un dossier, depuis l'écran, avec les 30 jours de
+rétractation et le rappel de la conservation légale des pièces comptables avant d'effacer. Un dossier quitte Lettra pour de bon, sauvegardes comprises (sa clé détruite les rend illisibles), après un
 délai qui protège d'une erreur ou d'une malveillance. Le catalogue ne garde que la trace de l'effacement
 (identifiant, nom du dossier, dates, identifiant de qui l'a demandé) : la preuve de l'effacement, sans aucune donnée
 du dossier. Le cabinet reste responsable de ses durées de conservation légales.
