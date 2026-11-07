@@ -331,8 +331,9 @@ Le mode 5 est livré quand **tous** ces points sont vrais, et chacun est prouvé
 5. Quel modèle d'abonnement ? **Tranché : plusieurs formules, plus des options à la carte, selon le profil du client**
    (conception seulement, sans prix). Voir [abonnements.md](abonnements.md).
 6. Le poste relié (mode 4) se synchronise-t-il avec la cellule dès la première version ? **Tranché : oui, par le même
-   protocole** qu'avec un serveur de cabinet (ADR-0015). L'essai de bout en bout d'un poste relié à la cellule reste à
-   ajouter.
+   protocole** qu'avec un serveur de cabinet (ADR-0015). L'essai de bout en bout de la cellule (`essai-mode5.sh`,
+   job `mode5-kind`) le vérifie : un poste relié reçoit le dossier, ouvre sa série de factures et voit son intention
+   appliquée une seule fois, même renvoyée.
 
 ---
 
