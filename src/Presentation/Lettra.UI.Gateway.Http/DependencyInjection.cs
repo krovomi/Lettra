@@ -112,6 +112,7 @@ public static class DependencyInjection
         Configure(services.AddHttpClient<IAdministrationGateway, HttpAdministrationGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IUserPreferencesGateway, HttpUserPreferencesGateway>(client => client.BaseAddress = apiBaseAddress));
         Configure(services.AddHttpClient<IPlatformCabinetsGateway, HttpPlatformCabinetsGateway>(client => client.BaseAddress = apiBaseAddress));
+        Configure(services.AddHttpClient<ICabinetDossiersGateway, HttpCabinetDossiersGateway>(client => client.BaseAddress = apiBaseAddress));
         return services;
     }
 }

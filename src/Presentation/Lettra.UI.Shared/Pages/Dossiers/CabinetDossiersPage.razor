@@ -1,0 +1,352 @@
+@page "/dossiers"
+@using Lettra.Contracts.Administration
+@using Lettra.Contracts.Dossiers
+@using Lettra.UI.Shared.Cabinet
+@inject ICabinetDossiersGateway Gateway
+@inject IAdministrationGateway Administration
+@inject CurrentDossier Current
+@inject NavigationManager Navigation
+@inject ToastService Toasts
+@inject TimeProvider Clock
+@inject IStringLocalizer<SharedResource> L
+@* Les dossiers du cabinet, gérés par son administrateur : créer un dossier, demander son effacement (fermé aussitôt,
+   annulable pendant le délai de rétractation, puis clé détruite et base supprimée), annuler cette demande. Liste
+   chargée en entier (quelques centaines de dossiers au plus par cabinet) : tri et filtres à l'écran. *@
+
+<PageTitle>@L["CabinetDossiers.Title"] · Lettra</PageTitle>
+
+<div class="lt-page-header">
+    <div>
+        <h1 tabindex="-1">@L["CabinetDossiers.Title"]</h1>
+        <p class="lettra-muted">@L["CabinetDossiers.Subtitle"]</p>
+    </div>
+    @if (_dossiers is not null)
+    {
+        <div class="lt-page-actions">
+            <button type="button" class="lettra-button" id="dossiers-new" disabled="@_creating" @onclick="StartCreating">
+                <Icon Name="plus" Size="18" /> @L["CabinetDossiers.New"]
+            </button>
+        </div>
+    }
+</div>
+
+@if (_denied)
+{
+    <EmptyState Id="dossiers-denied" IconName="shield-check" Title="@L["Admin.Denied.Title"]" Text="@L["CabinetDossiers.Denied"]">
+        <a class="lettra-button is-secondary" href="">@L["Admin.Denied.Home"]</a>
+    </EmptyState>
+}
+else
+{
+    <GeneralErrors Errors="_errors" />
+
+    @if (_dossiers is null)
+    {
+        @if (_errors.Count == 0)
+        {
+            <ListSkeleton Columns="3" />
+        }
+    }
+    else
+    {
+        @if (_creating)
+        {
+            <section class="lettra-card" aria-labelledby="dossiers-form-title">
+                <h2 id="dossiers-form-title">@L["CabinetDossiers.Form.Title"]</h2>
+                <EditForm Model="_request" OnValidSubmit="CreateAsync" class="la-form" id="dossiers-form">
+                    <DataAnnotationsValidator />
+                    <label class="la-field">
+                        <span>@L["CabinetDossiers.Form.Name"]</span>
+                        <InputText id="dossiers-name" @bind-Value="_request.Name" autocomplete="organization" placeholder="@L["CabinetDossiers.Form.NamePlaceholder"]" />
+                        <FieldErrors Field="@nameof(CreateDossierRequest.Name)" ServerErrors="_formErrors" />
+                    </label>
+                    <p class="lettra-hint la-callout"><Icon Name="info" Size="16" /> @L["CabinetDossiers.Form.Hint"]</p>
+                    <GeneralErrors Errors="_formErrors" />
+                    <div class="la-actions">
+                        <button type="submit" class="lettra-button" id="dossiers-submit" disabled="@_busy"><Icon Name="check" Size="18" />@L["CabinetDossiers.Form.Submit"]</button>
+                        <button type="button" class="lettra-button is-ghost" id="dossiers-cancel" @onclick="CancelCreating">@L["CabinetDossiers.Form.Cancel"]</button>
+                    </div>
+                </EditForm>
+            </section>
+        }
+
+        <section class="lettra-card" aria-labelledby="dossiers-kpis-title">
+            <h2 id="dossiers-kpis-title" class="lettra-visually-hidden">@L["CabinetDossiers.Kpis"]</h2>
+            <div class="lt-banking-stats" id="dossiers-stats">
+                <div class="lt-banking-stat"><span>@L["CabinetDossiers.Kpi.Active"]</span><strong id="dossiers-active">@Count(CabinetDossierStateDto.Active)</strong></div>
+                <div class="lt-banking-stat @(Count(CabinetDossierStateDto.ErasureScheduled) > 0 ? "is-pending" : null)"><span>@L["CabinetDossiers.Kpi.ErasureScheduled"]</span><strong id="dossiers-erasing">@Count(CabinetDossierStateDto.ErasureScheduled)</strong></div>
+            </div>
+        </section>
+
+        <section class="lettra-card" aria-labelledby="dossiers-list-title">
+            <h2 id="dossiers-list-title" class="lettra-visually-hidden">@L["CabinetDossiers.List"]</h2>
+            <ListFilterBar Id="dossiers-filters" ActiveCount="ActiveFilters" OnReset="ResetFilters">
+                <ChildContent>
+                    <div class="lt-filter">
+                        <label for="dossiers-search">@L["CabinetDossiers.Search"]</label>
+                        <input id="dossiers-search" type="search" autocomplete="off" @bind="_query" @bind:event="oninput" />
+                    </div>
+                </ChildContent>
+                <More>
+                    <div class="lt-filter">
+                        <label for="dossiers-state">@L["CabinetDossiers.Column.State"]</label>
+                        <select id="dossiers-state" @bind="_state">
+                            <option value="">@L["CabinetDossiers.State.All"]</option>
+                            @foreach (CabinetDossierStateDto state in Enum.GetValues<CabinetDossierStateDto>())
+                            {
+                                <option value="@state">@L[$"CabinetDossiers.State.{state}"]</option>
+                            }
+                        </select>
+                    </div>
+                    <SortSelect Id="dossiers-sort" Options="SortOptions" State="_sort" OnSort="StateHasChanged" />
+                </More>
+            </ListFilterBar>
+
+            @if (Dossiers.Count == 0)
+            {
+                <EmptyState Id="dossiers-empty" IconName="folder"
+                            Title="@(ActiveFilters > 0 ? L["Lists.Empty.FilteredTitle"] : L["CabinetDossiers.Empty"])"
+                            Text="@(ActiveFilters > 0 ? L["Lists.Empty.Filtered"] : L["CabinetDossiers.Empty.Text"])">
+                    @if (ActiveFilters > 0)
+                    {
+                        <button type="button" class="lettra-button is-secondary" id="dossiers-empty-reset" @onclick="ResetFilters">@L["Lists.Filters.Reset"]</button>
+                    }
+                </EmptyState>
+            }
+            else
+            {
+                <div class="lt-list-scroll">
+                    <table class="lettra-table lt-cards" id="dossiers-list">
+                        <thead>
+                            <tr>
+                                <SortHeader Option="SortOptions[0]" State="_sort" OnSort="StateHasChanged" Id="dossiers-sort-name" />
+                                <SortHeader Option="SortOptions[1]" State="_sort" OnSort="StateHasChanged" Id="dossiers-sort-state" />
+                                <SortHeader Option="SortOptions[2]" State="_sort" OnSort="StateHasChanged" Id="dossiers-sort-due" />
+                                <th scope="col" class="lt-col-actions"><span class="lettra-visually-hidden">@L["Row.Actions"]</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (CabinetDossierResponse dossier in Dossiers)
+                            {
+                                <tr @key="dossier.Id" id="@($"dossiers-row-{dossier.Id:N}")">
+                                    <td>
+                                        <strong>@dossier.Name</strong>
+                                        @if (dossier.Id == Current.Id)
+                                        {
+                                            <small class="lettra-muted"> · @L["CabinetDossiers.Opened"]</small>
+                                        }
+                                    </td>
+                                    <td data-label="@L["CabinetDossiers.Column.State"]">
+                                        <span class="lettra-status @StatusClass(dossier.State)">@L[$"CabinetDossiers.State.{dossier.State}"]</span>
+                                    </td>
+                                    <td data-label="@L["CabinetDossiers.Column.ErasureDue"]">
+                                        @if (dossier.ErasureDueAt is { } due)
+                                        {
+                                            <span>@When(due)</span>
+                                            @if (!Cancellable(dossier))
+                                            {
+                                                <small class="lettra-muted"> · @L["CabinetDossiers.Erasing"]</small>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="lettra-muted">—</span>
+                                        }
+                                    </td>
+                                    <td class="lt-col-actions">
+                                        @if (Cancellable(dossier))
+                                        {
+                                            <button type="button" class="lettra-button is-ghost" id="@($"dossiers-cancel-{dossier.Id:N}")" disabled="@_busy" @onclick="() => CancelErasureAsync(dossier.Id, dossier.Name)">
+                                                <Icon Name="undo-2" Size="18" /> @L["CabinetDossiers.CancelErasure"]
+                                            </button>
+                                        }
+                                        else if (dossier.State == CabinetDossierStateDto.Active)
+                                        {
+                                            <RowDelete Label="@string.Format(Culture, L["CabinetDossiers.Erase.Label"], dossier.Name)"
+                                                       Question="@L["CabinetDossiers.Erase.Question"]"
+                                                       ActionText="@L["CabinetDossiers.Erase.Confirm"]"
+                                                       BlockedReason="@(dossier.Erasable ? null : L["CabinetDossiers.NotErasable"].Value)"
+                                                       OnDelete="() => ScheduleErasureAsync(dossier)" />
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+
+        <Collapsible Id="dossiers-rules" Title="@L["CabinetDossiers.Rules"]" InitiallyOpen="false">
+            <ul>
+                <li>@L["CabinetDossiers.Rule.Create"]</li>
+                <li>@L["CabinetDossiers.Rule.Erase"]</li>
+                <li>@L["CabinetDossiers.Rule.Keep"]</li>
+                <li>@L["CabinetDossiers.Rule.Declared"]</li>
+            </ul>
+        </Collapsible>
+    }
+}
+
+@code {
+    private const string NameColumn = "name";
+    private const string StateColumn = "state";
+    private const string DueColumn = "due";
+
+    private Guid _cabinetId;
+    private bool _denied;
+    private IReadOnlyList<CabinetDossierResponse>? _dossiers;
+    private IReadOnlyList<ErrorDetail> _errors = [];
+    private IReadOnlyList<ErrorDetail> _formErrors = [];
+    private CreateDossierRequest _request = new();
+    private bool _creating;
+    private bool _busy;
+    private string? _query;
+    private CabinetDossierStateDto? _state;
+    private readonly SortState<string> _sort = new(NameColumn);
+
+    private static CultureInfo Culture => CultureInfo.CurrentCulture;
+
+    private int ActiveFilters => (string.IsNullOrWhiteSpace(_query) ? 0 : 1) + (_state is null ? 0 : 1);
+
+    private IReadOnlyList<SortOption<string>> SortOptions =>
+    [
+        new(NameColumn, L["CabinetDossiers.Column.Name"]),
+        new(StateColumn, L["CabinetDossiers.Column.State"]),
+        new(DueColumn, L["CabinetDossiers.Column.ErasureDue"]),
+    ];
+
+    private IReadOnlyList<CabinetDossierResponse> Dossiers
+    {
+        get
+        {
+            IEnumerable<CabinetDossierResponse> dossiers = (_dossiers ?? [])
+                .Where(d => _state is null || d.State == _state)
+                .Where(d => ListSorting.Matches(d.Name, _query));
+            Dictionary<string, Func<CabinetDossierResponse, object?>> keys = new(StringComparer.Ordinal)
+            {
+                [NameColumn] = d => d.Name,
+                [StateColumn] = d => (int)d.State,
+                [DueColumn] = d => d.ErasureDueAt,
+            };
+            return ListSorting.Sort(dossiers, _sort, keys);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        OperationResult<MyAccessResponse> access = await Administration.GetMyAccessAsync(Current.Id, CancellationToken.None);
+        if (!access.IsSuccess)
+        {
+            _errors = access.Errors;
+            return;
+        }
+
+        if (access.Value is not { CanAdminister: true, CabinetId: Guid cabinet })
+        {
+            _denied = true;
+            return;
+        }
+
+        _cabinetId = cabinet;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        OperationResult<IReadOnlyList<CabinetDossierResponse>> result = await Gateway.ListAsync(_cabinetId, CancellationToken.None);
+        (_dossiers, _errors) = (result.Value ?? _dossiers, result.Errors);
+    }
+
+    private void StartCreating() => (_creating, _request, _formErrors) = (true, new CreateDossierRequest(), []);
+
+    private void CancelCreating() => (_creating, _formErrors) = (false, []);
+
+    private async Task CreateAsync()
+    {
+        _busy = true;
+        _formErrors = [];
+        OperationResult<DossierSummary> result = await Gateway.CreateAsync(_cabinetId, _request, CancellationToken.None);
+        _busy = false;
+        if (result.Value is not { } created)
+        {
+            _formErrors = result.Errors;
+            return;
+        }
+
+        _creating = false;
+        await Current.EnsureLoadedAsync(reload: true);
+        Toasts.Show(
+            ToastKind.Success,
+            string.Format(Culture, L["CabinetDossiers.Toast.Created"], created.Name),
+            new ToastAction(L["CabinetDossiers.Open"], () => OpenAsync(created.Id)));
+        await LoadAsync();
+    }
+
+    private async Task ScheduleErasureAsync(CabinetDossierResponse dossier)
+    {
+        _busy = true;
+        OperationResult<DossierErasureResponse> result = await Gateway.ScheduleErasureAsync(_cabinetId, dossier.Id, CancellationToken.None);
+        _busy = false;
+        if (result.Value is not { } scheduled)
+        {
+            Toasts.Show(ToastKind.Error, Message(result.Errors));
+            await LoadAsync();
+            return;
+        }
+
+        // Le dossier est fermé : le sélecteur ne le propose plus, et s'il était ouvert, un autre dossier prend sa place.
+        await Current.EnsureLoadedAsync(reload: true);
+
+        Toasts.Show(
+            ToastKind.Success,
+            string.Format(Culture, L["CabinetDossiers.Toast.ErasureScheduled"], scheduled.Name, When(scheduled.ErasureDueAt)),
+            new ToastAction(L["CabinetDossiers.CancelErasure"], () => CancelErasureAsync(scheduled.Id, scheduled.Name)));
+        await LoadAsync();
+    }
+
+    private async Task CancelErasureAsync(Guid dossierId, string name)
+    {
+        _busy = true;
+        OperationResult<DossierSummary> result = await Gateway.CancelErasureAsync(_cabinetId, dossierId, CancellationToken.None);
+        _busy = false;
+        if (result.IsSuccess)
+        {
+            await Current.EnsureLoadedAsync(reload: true);
+        }
+
+        Toasts.Show(
+            result.IsSuccess ? ToastKind.Success : ToastKind.Error,
+            result.IsSuccess ? string.Format(Culture, L["CabinetDossiers.Toast.ErasureCancelled"], name) : Message(result.Errors));
+        await LoadAsync();
+        StateHasChanged();
+    }
+
+    private async Task OpenAsync(Guid dossierId)
+    {
+        if (await Current.SwitchAsync(dossierId))
+        {
+            Navigation.NavigateTo(string.Empty);
+        }
+    }
+
+    private void ResetFilters() => (_query, _state) = (null, null);
+
+    private int Count(CabinetDossierStateDto state) => _dossiers?.Count(d => d.State == state) ?? 0;
+
+    /// <summary>Annulable tant que le délai de rétractation court ; ensuite, l'effacement est en cours.</summary>
+    private bool Cancellable(CabinetDossierResponse dossier) =>
+        dossier is { State: CabinetDossierStateDto.ErasureScheduled, ErasureDueAt: { } due } && due > Clock.GetUtcNow();
+
+    private string Message(IReadOnlyList<ErrorDetail> errors) =>
+        errors.Count > 0 ? L.Error(errors[0].Code) : L["CabinetDossiers.Toast.Failed"];
+
+    private static string StatusClass(CabinetDossierStateDto state) => state switch
+    {
+        CabinetDossierStateDto.Active => "is-issued",
+        CabinetDossierStateDto.ErasureScheduled => "is-expired",
+        _ => "is-draft",
+    };
+
+    private static string When(DateTimeOffset at) => at.ToLocalTime().ToString("g", Culture);
+}

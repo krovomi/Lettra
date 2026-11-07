@@ -148,11 +148,13 @@ public sealed class CurrentDossier(ICabinetGateway gateway, IDossierSelection se
         _recents = Parse(await preferences.ReadAsync(RecentsKey).ConfigureAwait(false)).Where(id => Find(id) is not null).ToList();
         IsLoaded = true;
 
-        // Navigateur : rouvre le dernier dossier choisi sur cet appareil, s'il est toujours accessible.
+        // Navigateur : rouvre le dernier dossier choisi sur cet appareil, s'il est toujours accessible ; sinon garde le
+        // dossier ouvert s'il l'est encore ; sinon (première connexion, dossier fermé ou effacé) ouvre le premier.
         Guid? remembered = Parse(await preferences.ReadAsync(CurrentKey).ConfigureAwait(false)).Cast<Guid?>().FirstOrDefault();
-        if (selection is ISelectableDossierSelection selectable && remembered is Guid last && last != Id && Find(last) is not null)
+        Guid? opened = new[] { remembered, Id }.FirstOrDefault(id => id is Guid known && Find(known) is not null) ?? (Dossiers.Count > 0 ? Dossiers[0].Id : null);
+        if (selection is ISelectableDossierSelection selectable && opened is Guid chosen && chosen != Id)
         {
-            await selectable.SelectAsync(last, CancellationToken.None).ConfigureAwait(false);
+            await selectable.SelectAsync(chosen, CancellationToken.None).ConfigureAwait(false);
         }
 
         Changed?.Invoke(this, EventArgs.Empty);

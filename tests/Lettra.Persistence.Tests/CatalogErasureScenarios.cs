@@ -34,6 +34,12 @@ internal static class CatalogErasureScenarios
         DossierId dossier = (await services.GetRequiredService<IDossierProvisioner>().CreateAsync(cabinet, "Dossier à effacer", default)).Value;
         string database = (await harness.DossierAsync(dossier)).DatabaseName!;
         (await databaseExists(database)).Should().BeTrue();
+        (await eraser.ListAsync(cabinet, default)).Should().ContainSingle(d => d.Id == dossier.Value).Which.Should()
+            .Be(new CabinetDossierResponse(dossier.Value, "Dossier à effacer", CabinetDossierStateDto.Active, Erasable: true, ErasureDueAt: null));
+        await harness.UpdateDossierAsync(dossier, d => d.State = DossierState.Failed);
+        (await eraser.ListAsync(cabinet, default)).Should().ContainSingle(d => d.Id == dossier.Value)
+            .Which.Should().Match<CabinetDossierResponse>(d => d.State == CabinetDossierStateDto.Creating && !d.Erasable, "une création en échec est reprise, pas effacée");
+        await harness.UpdateDossierAsync(dossier, d => d.State = DossierState.Active);
 
         // Un autre cabinet ne voit pas le dossier ; un dossier inconnu non plus.
         (await eraser.ScheduleAsync(new OrganisationId(CatalogHarness.OtherCabinet), dossier, admin, default))
@@ -48,6 +54,9 @@ internal static class CatalogErasureScenarios
         (await services.GetRequiredService<IDossierDirectory>().ListAsync(cabinet, default)).Should().NotContain(d => d.Id == dossier.Value);
         (await eraser.ListScheduledAsync(cabinet, default)).Should().Equal(scheduled);
         (await eraser.ListScheduledAsync(new OrganisationId(CatalogHarness.OtherCabinet), default)).Should().BeEmpty();
+        (await eraser.ListAsync(cabinet, default)).Should().ContainSingle(d => d.Id == dossier.Value).Which.Should()
+            .Be(new CabinetDossierResponse(dossier.Value, "Dossier à effacer", CabinetDossierStateDto.ErasureScheduled, Erasable: false, Start.AddDays(30)));
+        (await eraser.ListAsync(new OrganisationId(CatalogHarness.OtherCabinet), default)).Should().NotContain(d => d.Id == dossier.Value);
         (await harness.DossierAsync(dossier)).ErasureRequestedBy.Should().Be(admin);
         (await eraser.ScheduleAsync(cabinet, dossier, admin, default)).Errors.Should().ContainSingle()
             .Which.Code.Should().Be(TenancyErrors.DossierNotFoundCode, "un dossier déjà fermé ne se redemande pas");
@@ -78,6 +87,7 @@ internal static class CatalogErasureScenarios
         (await eraser.CancelAsync(cabinet, dossier, default)).Errors.Should().ContainSingle()
             .Which.Code.Should().Be(TenancyErrors.DossierNotFoundCode);
         (await eraser.ListScheduledAsync(cabinet, default)).Should().BeEmpty();
+        (await eraser.ListAsync(cabinet, default)).Should().NotContain(d => d.Id == dossier.Value, "un dossier effacé n'est plus géré");
     }
 
     /// <summary>Une base déclarée dans la configuration ne s'efface pas par l'API.</summary>
@@ -87,5 +97,8 @@ internal static class CatalogErasureScenarios
         Result<DossierErasureResponse> refused = await harness.Services.GetRequiredService<IDossierEraser>()
             .ScheduleAsync(CatalogHarness.Organisation, new DossierId(CatalogFieldKeyScenarios.DeclaredDossier), Guid.CreateVersion7(), default);
         refused.Errors.Should().ContainSingle().Which.Code.Should().Be(DossierErrors.DeclaredCode);
+        (await harness.Services.GetRequiredService<IDossierEraser>().ListAsync(CatalogHarness.Organisation, default))
+            .Should().ContainSingle(d => d.Id == CatalogFieldKeyScenarios.DeclaredDossier)
+            .Which.Should().Match<CabinetDossierResponse>(d => d.State == CabinetDossierStateDto.Active && !d.Erasable);
     }
 }

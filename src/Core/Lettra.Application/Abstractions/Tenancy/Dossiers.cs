@@ -25,6 +25,12 @@ public interface IDossierEraser
     Task<Result<DossierSummary>> CancelAsync(OrganisationId organisation, DossierId dossier, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<DossierErasureResponse>> ListScheduledAsync(OrganisationId organisation, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Les dossiers du cabinet que son administrateur gère : ouverts, en cours de création, ou dont l'effacement est demandé
+    /// (les dossiers déjà effacés n'y sont plus), chacun avec ce que le serveur sait en faire.
+    /// </summary>
+    Task<IReadOnlyList<CabinetDossierResponse>> ListAsync(OrganisationId organisation, CancellationToken cancellationToken);
 }
 
 /// <summary>Les dossiers actifs d'un cabinet (registre local ou base Catalog).</summary>

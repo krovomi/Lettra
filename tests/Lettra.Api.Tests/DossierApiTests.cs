@@ -92,15 +92,34 @@ public sealed class DossierApiTests(LettraApiFactory factory) : IClassFixture<Le
         (await admin.GetFromJsonAsync(Erasures(LettraApiFactory.CabinetId), ContractsJsonContext.Default.IReadOnlyListDossierErasureResponse))
             .Should().ContainSingle(e => e.Id == created.Id);
         (await manager.GetAsync(customers)).IsSuccessStatusCode.Should().BeFalse();
+        (await ListAsync(admin)).Should().ContainSingle(d => d.Id == created.Id)
+            .Which.Should().Be(new CabinetDossierResponse(created.Id, "Dossier à effacer", CabinetDossierStateDto.ErasureScheduled, false, erasure.ErasureDueAt));
 
         // Annulé : 200, le dossier rouvre tel quel ; une seconde annulation est refusée avec son code.
         HttpResponseMessage cancelled = await admin.DeleteAsync(Erasure(LettraApiFactory.CabinetId, created.Id));
         cancelled.StatusCode.Should().Be(HttpStatusCode.OK);
         (await cancelled.Content.ReadFromJsonAsync(ContractsJsonContext.Default.DossierSummary))!.Name.Should().Be("Dossier à effacer");
         (await manager.GetAsync(customers)).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await ListAsync(admin)).Should().ContainSingle(d => d.Id == created.Id)
+            .Which.Should().Be(new CabinetDossierResponse(created.Id, "Dossier à effacer", CabinetDossierStateDto.Active, true, null));
         HttpResponseMessage again = await admin.DeleteAsync(Erasure(LettraApiFactory.CabinetId, created.Id));
         again.StatusCode.Should().Be(HttpStatusCode.Conflict);
         (await again.Content.ReadAsStringAsync()).Should().Contain(Contracts.Common.ErrorCodes.Tenancy.ErasureNotCancellable);
+    }
+
+    [Fact]
+    public async Task La_liste_des_dossiers_du_cabinet_dit_lesquels_s_effacent()
+    {
+        using HttpClient admin = factory.ClientFor(LettraApiFactory.AdministrateurCabinetId);
+        DossierSummary created = (await (await CreateAsync(admin, LettraApiFactory.CabinetId, "Dossier créé en ligne")).Content
+            .ReadFromJsonAsync(ContractsJsonContext.Default.DossierSummary))!;
+
+        IReadOnlyList<CabinetDossierResponse> listed = await ListAsync(admin);
+
+        // La base déclarée dans la configuration reste listée, sans effacement possible ; le dossier créé s'efface.
+        listed.Should().ContainSingle(d => d.Id == LettraApiFactory.DossierId).Which.Erasable.Should().BeFalse();
+        listed.Should().ContainSingle(d => d.Id == created.Id).Which.Should()
+            .Be(new CabinetDossierResponse(created.Id, "Dossier créé en ligne", CabinetDossierStateDto.Active, true, null));
     }
 
     [Fact]
@@ -134,5 +153,9 @@ public sealed class DossierApiTests(LettraApiFactory factory) : IClassFixture<Le
         (await client.PostAsync(erasure, null)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
         (await client.DeleteAsync(erasure)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
         (await client.GetAsync(Erasures(LettraApiFactory.CabinetId))).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await client.GetAsync(Dossiers(LettraApiFactory.CabinetId))).StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
+
+    private static async Task<IReadOnlyList<CabinetDossierResponse>> ListAsync(HttpClient client) =>
+        (await client.GetFromJsonAsync(Dossiers(LettraApiFactory.CabinetId), ContractsJsonContext.Default.IReadOnlyListCabinetDossierResponse))!;
 }

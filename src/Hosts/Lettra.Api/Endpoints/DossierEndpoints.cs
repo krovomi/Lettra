@@ -17,6 +17,12 @@ internal static class DossierEndpoints
     {
         RouteGroupBuilder group = cabinet.MapGroup("/dossiers").WithTags("Dossiers");
 
+        group.MapGet("/", ListAsync)
+            .RequireCabinetPermission(Permission.CabinetAdministrer)
+            .WithName("ListCabinetDossiers")
+            .Produces<IReadOnlyList<CabinetDossierResponse>>()
+            .ProducesProblem(StatusCodes.Status403Forbidden);
+
         group.MapPost("/", CreateAsync)
             .RequireCabinetPermission(Permission.DossiersCreer)
             .WithName("CreateDossier")
@@ -82,6 +88,9 @@ internal static class DossierEndpoints
             ? TypedResults.Created($"/api/v1/cabinets/{cabinetId}/dossiers/{created.Value.Id}", created.Value)
             : created.Errors.ToProblem();
     }
+
+    private static async Task<IResult> ListAsync(Guid cabinetId, IQueryDispatcher queries, CancellationToken cancellationToken) =>
+        Ok(await queries.QueryAsync(new ListCabinetDossiersQuery(new OrganisationId(cabinetId)), cancellationToken).ConfigureAwait(false));
 
     private static async Task<IResult> ListErasuresAsync(Guid cabinetId, IQueryDispatcher queries, CancellationToken cancellationToken) =>
         Ok(await queries.QueryAsync(new ListScheduledDossierErasuresQuery(new OrganisationId(cabinetId)), cancellationToken).ConfigureAwait(false));

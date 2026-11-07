@@ -110,6 +110,33 @@ internal sealed partial class CatalogDossierEraser(
         }
     }
 
+    public async Task<IReadOnlyList<CabinetDossierResponse>> ListAsync(OrganisationId organisation, CancellationToken cancellationToken)
+    {
+        CatalogDbContext db = await catalogFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        await using (db.ConfigureAwait(false))
+        {
+            var rows = await db.Dossiers.AsNoTracking()
+                .Where(d => d.OrganisationId == organisation.Value && d.State != DossierState.Deleted)
+                .OrderBy(d => d.Name)
+                .Select(d => new { d.Id, d.Name, d.State, Created = d.ClusterId != null, d.ErasureDueAt })
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
+            return
+            [
+                .. rows.Select(r => new CabinetDossierResponse(
+                    r.Id,
+                    r.Name,
+                    r.State switch
+                    {
+                        DossierState.Active => CabinetDossierStateDto.Active,
+                        DossierState.ErasureScheduled => CabinetDossierStateDto.ErasureScheduled,
+                        _ => CabinetDossierStateDto.Creating,
+                    },
+                    Erasable: r.Created && r.State == DossierState.Active,
+                    r.ErasureDueAt is { } due ? new DateTimeOffset(DateTime.SpecifyKind(due, DateTimeKind.Utc)) : null)),
+            ];
+        }
+    }
+
     /// <summary>
     /// Efface les dossiers dont le délai de rétractation est passé : DEK détruite, base supprimée, dossier « effacé ».
     /// Rend le nombre de dossiers effacés ; un dossier en échec (serveur de bases injoignable) est repris à la passe suivante.
