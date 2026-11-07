@@ -229,7 +229,9 @@ Marche à suivre : [runbooks/cellule-de-recette.md](runbooks/cellule-de-recette.
 
 - **Sauvegardes et restauration** : sauvegarde continue CloudNativePG vers S3 (avec verrou d'objet), rétention de
   30 jours. **Exercice de restauration mensuel et automatisé** : d'un dossier seul, puis de toute la cellule.
-- Objectifs écrits : perte de données maximale acceptable (RPO) et durée d'interruption maximale (RTO).
+- Objectifs, par cellule, en deux paliers : pour la version 1, perte de données maximale (RPO) 15 minutes et durée
+  d'interruption maximale (RTO) 4 heures ; en cible, RPO 5 minutes et RTO 1 heure
+  ([runbooks/restaurer-dossier-et-cellule.md](runbooks/restaurer-dossier-et-cellule.md)).
 - **Migrations sans coupure** : le Worker migre les dossiers par lots. Règle : chaque migration reste compatible
   avec la version précédente de l'API (d'abord on étend le schéma, ensuite seulement on retire l'ancien).
 - Ajouter un cluster PostgreSQL quand `pg-a` est plein (`AcceptsNewDossiers = false`), et savoir déplacer un
@@ -390,7 +392,6 @@ Le mode 5 est livré quand **tous** ces points sont vrais, et chacun est prouvé
 
 - Cellule de recette chez l'hébergeur : compte, achat, application OpenTofu, domaine et certificats.
 - Stockage objet sous verrou pour les sauvegardes.
-- Objectifs de perte de données et d'interruption.
 - Test d'intrusion externe et scan ZAP sur la recette.
 - Organisme de certification ISO 27001 et audit.
 - Documents RGPD signés (registre, contrat de sous-traitance, liste des sous-traitants ultérieurs).

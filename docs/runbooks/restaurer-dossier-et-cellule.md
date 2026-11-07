@@ -8,7 +8,13 @@
   restaurée reste illisible : c'est voulu après un effacement.
 - **Une cellule** : restaurer le cluster du catalogue, puis les clusters des dossiers, puis le KMS. Les clés d'abord :
   sans elles, rien ne se relit.
-- **Objectifs à écrire** : perte de données maximale (proposé : 15 minutes, grâce à l'archivage continu des journaux de
-  PostgreSQL) et durée d'interruption maximale (proposé : 4 heures). **À faire valider par Leub.**
+- **Objectifs, par cellule, en deux paliers** :
+
+  | Palier | Perte de données maximale (RPO) | Durée d'interruption maximale (RTO) |
+  |---|---|---|
+  | Version 1 | 15 minutes (archivage continu des journaux de PostgreSQL) | 4 heures |
+  | Cible | 5 minutes | 1 heure |
+
+  L'exercice de restauration se juge sur le palier de la version 1 tant que la cible n'est pas atteinte.
 - **Sauvegardes** : désactivées par défaut dans les valeurs de la cellule (`postgres.backup.enabled`). À activer pour
   la recette, avec un stockage objet sous verrou (**achat : feu vert de Leub**).
