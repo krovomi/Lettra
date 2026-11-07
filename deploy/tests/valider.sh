@@ -43,6 +43,10 @@ grep -q 'name: Lettra__Kms__Provider, value: "Transit"' <<<"$(helm template c le
   || { echo "cellule : clés des cabinets hors du KMS" >&2; exit 1; }
 ! grep -q 'Lettra__Kms__' <<<"$(helm template pr lettra-cell -f lettra-cell/values-pr.yaml --set lettra-api.image.tag=ci)" \
   || { echo "environnement de PR : réglages du KMS restés" >&2; exit 1; }
+# Personne n'appelle le Worker : dans chaque cellule, toute connexion entrante vers lui est refusée.
+grep -q 'ingress: \[\]' <<<"$(helm template c lettra-cell -f lettra-cell/values-taille-S.yaml --set lettra-api.image.tag=ci --set lettra-worker.image.tag=ci \
+  --show-only charts/lettra-worker/templates/networkpolicy.yaml)" \
+  || { echo "cellule : le Worker accepte des connexions entrantes" >&2; exit 1; }
 
 step "Keycloak de la cellule (lettra-keycloak)"
 KC_REQUIS=(--set hostname=https://auth.example.test --set publicUrl=https://app.example.test)
