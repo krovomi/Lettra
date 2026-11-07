@@ -1,6 +1,6 @@
 # Plan de développement du mode 5 : la cellule en ligne (SaaS)
 
-> **Statut : en cours.** Étapes 0, 1 et 2 faites (sauf les points marqués « reste ») ; étape 3 commencée ; étapes 4 à 6 à faire. Il ne remplace
+> **Statut : en cours.** Étapes 0, 1 et 2 faites (sauf les points marqués « reste ») ; étape 3 faite côté code (restent le scan ZAP et le test d'intrusion sur la recette) ; étapes 4 à 6 à faire. Il ne remplace
 > pas les ADR (0002, 0008, 0009, 0011) ni les annexes E et F du blueprint : là où il les contredit, ce sont eux qui
 > font foi, et le point est à trancher en revue.
 
@@ -138,7 +138,7 @@ reste ni base, ni clé, ni compte.
 
 **Objectif** : prouver, et pas seulement affirmer, qu'un cabinet ne peut rien voir d'un autre.
 
-**Commencée.** Fait :
+**Faite côté code.** Fait :
 
 - **Matrice d'isolation en CI** (`TenantIsolationApiTests`) : l'administrateur d'un autre cabinet appelle **chaque
   route** de l'API avec le dossier, le cabinet ou le groupe du cabinet visé. Il n'obtient jamais de réponse réussie,
@@ -170,18 +170,43 @@ reste ni base, ni clé, ni compte.
     de leur cabinet à la passe suivante du Worker, sans coupure. Au départ d'un cabinet, son rôle est supprimé sur
     chaque serveur, après ses bases et avant sa clé.
   - Réglage `Lettra:Clusters:<serveur>:CabinetRoles` (PostgreSQL seulement, désactivé par défaut ; un serveur de
-    cabinet garde son rôle unique), activé dans la cellule. Le rôle d'administration de Lettra doit avoir
-    `CREATEROLE` : la cellule le lui donne à la création du cluster.
-  - Le rôle de Lettra a droit aux connexions réservées (`reserved_connections`) : le trafic des cabinets ne peut pas
+    cabinet garde son rôle unique), activé dans la cellule. Le rôle d'administration (`lettra_admin`, voir plus bas)
+    a `CREATEROLE` : la cellule le lui donne.
+  - Le rôle d'administration a droit aux connexions réservées (`reserved_connections`) : le trafic des cabinets ne peut pas
     priver le catalogue, les créations de bases ni les migrations du Worker de connexion. PgBouncer plafonne chaque
     cabinet (`max_user_connections`) au budget d'une instance.
   - Vérifié par les tests PostgreSQL (le rôle d'un cabinet est refusé sur la base d'un autre ; sans la fermeture de la
     base aux autres rôles, le test d'isolation échoue), sur une cellule locale complète, et par l'essai kind
     (propriétaire de la base, connexion refusée à un autre rôle, plus de rôle après le départ).
 
-**Reste** : l'accès d'administration aux bases seulement depuis le Worker (l'API crée encore elle-même la base d'un
-nouveau dossier par la connexion d'administration, et détient donc la seule clé qui ouvre toutes les bases ; à
-faire : confier la création au Worker, l'API n'inscrivant que la demande) ; le scan ZAP et le test d'intrusion
+- **Les bases des dossiers créées et supprimées par le Worker seul** : l'API d'une cellule n'a plus aucun accès
+  d'administration aux serveurs de bases, ni la connexion d'administration ni son mot de passe. Son rôle PostgreSQL
+  (`lettra`) n'ouvre que le catalogue : il ne crée ni base ni rôle, et n'ouvre aucune base de dossier. Une API
+  compromise ne peut donc ni créer, ni supprimer, ni lire en bloc les bases des dossiers par ce rôle.
+  - **Création d'un dossier** : l'API inscrit la demande au catalogue (état « demandé ») et attend. Le Worker la prend
+    aussitôt (une passe par seconde), crée la base, la donne au rôle du cabinet et la migre ; l'API rend alors le
+    dossier, comme avant. Rien ne change pour l'utilisateur, ni dans les routes. Avec plusieurs Workers, une demande
+    n'est prise qu'une fois.
+  - **Worker en retard ou arrêté** : au-delà de 60 secondes (`Lettra:Catalog:ProvisioningWait`), l'API rend l'erreur
+    habituelle de création ; la demande reste au Worker, qui la mène à son retour. Le dossier apparaît alors « en
+    création », puis ouvert, sur l'écran « Dossiers du cabinet ».
+  - **Import manqué** : l'API marque le dossier « à retirer » ; il disparaît aussitôt de l'écran du cabinet, et le
+    Worker supprime sa base puis son inscription. « Réessayer les créations en échec » (écran « Plateforme ») rend les
+    créations au Worker.
+  - **Rôle d'administration `lettra_admin`**, sur chaque cluster PostgreSQL de la cellule, réservé au Worker : il crée
+    et supprime les bases et les rôles des cabinets, en direct sur le primaire. Il est déclaré par la cellule (rôle
+    géré par l'opérateur CloudNativePG), avec son mot de passe dans le secret `<cluster>-admin` créé par OpenTofu
+    (module `cell-bootstrap`, variable `database_clusters`).
+  - **Réglage** `Lettra:Catalog:DatabaseAdministration` : `Host` (par défaut : poste, serveur du cabinet,
+    démonstration ; l'hôte crée lui-même ses bases) ou `Worker` (la cellule). La validation du déploiement vérifie
+    que l'API d'une cellule n'a pas la connexion d'administration et que le Worker l'a.
+  - Vérifié par les tests SQLite et PostgreSQL (une API sans connexion d'administration utilisable crée un dossier
+    par le Worker ; un import manqué est retiré par le Worker seul ; une demande n'est menée qu'une fois), sur une
+    cellule locale complète, et par l'essai kind (le rôle de l'API ne crée ni base ni rôle et n'ouvre pas les bases
+    des dossiers ; l'API ne reçoit aucune connexion ni aucun mot de passe d'administration ; Worker arrêté, la
+    création reste « demandée » sans base, puis le Worker la mène à son retour).
+
+**Reste** : rien côté code. Le scan ZAP et le test d'intrusion
 externe sur la cellule de recette, qui attendent le feu vert de Leub (la cellule de recette n'existe pas encore, et le
 test d'intrusion fait appel à un prestataire). Le scan ZAP de base tourne déjà en CI sur la démo.
 
@@ -215,9 +240,8 @@ critique ou élevée.
   `POST /api/v1/cabinets/{cabinet}/dossiers/import` (le plus gros paquet de réversibilité, 512 Mio, plus l'enveloppe du
   formulaire) et laisser à cette route plusieurs minutes avant de couper la requête. À écrire dans le runbook de la
   cellule. Le profil HTTPS de la démo (Caddy) ne borne pas la taille des requêtes.
-- **Cluster PostgreSQL créé avant les rôles par cabinet** : il n'a reçu ni `CREATEROLE` ni les connexions réservées
-  (la cellule ne les donne qu'à la création). En superutilisateur, avant d'activer `CabinetRoles` :
-  `ALTER ROLE lettra CREATEROLE` et `GRANT pg_use_reserved_connections TO lettra`. À écrire dans le runbook.
+- **Cluster PostgreSQL créé avant les rôles par cabinet ou avant le rôle d'administration du Worker** : voir
+  [runbooks/cluster-avant-roles-par-cabinet.md](runbooks/cluster-avant-roles-par-cabinet.md).
 
 Marche à suivre : [runbooks/cellule-de-recette.md](runbooks/cellule-de-recette.md).
 
@@ -348,6 +372,9 @@ Le mode 5 est livré quand **tous** ces points sont vrais, et chacun est prouvé
   bouton de l'écran « Plateforme » réessaie toujours les échecs aussitôt.
 - Un import dont la création de base échoue retire aussitôt son dossier, au lieu de le laisser au Worker, qui l'aurait
   créé vide.
+- **Reprise d'une base d'avant par le rôle d'administration** : une base d'avant les rôles par cabinet, créée par le
+  rôle applicatif, gardait ses tables à ce rôle quand le Worker la reprenait avec le nouveau rôle d'administration. Le
+  Worker reprend désormais les objets de tout rôle dont il est membre.
 - **PgBouncer et les vérificateurs SCRAM** : PgBouncer garde les clés SCRAM des connexions ouvertes. Un vérificateur
   recalculé avec un sel neuf à chaque nouvelle base du cabinet faisait refuser ses connexions suivantes. Le sel se
   tire désormais du mot de passe : le même mot de passe donne le même vérificateur.

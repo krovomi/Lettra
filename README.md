@@ -1444,6 +1444,7 @@ deploy/            démo Docker, Helm, OpenTofu, Argo CD, cellules, Keycloak, ob
 | Numérotation sans trou ni doublon sous concurrence | `Numerotation_continue_sous_concurrence` |
 | Chaque code d'erreur est traduit en FR et EN | `ErrorCodeAndResourceTests` |
 | Aucune donnée de dossier dans les journaux (API et Worker) : parcours réel, et règle qui n'admet que des identifiants, nombres, dates et textes techniques dans chaque message | `NoDossierDataInLogsTests`, règle d'architecture des journaux |
+| L'API d'une cellule n'a aucun accès d'administration aux bases : seul le Worker crée et supprime les bases des dossiers et les rôles des cabinets | Tests SQLite et PostgreSQL de l'administration par le Worker, validation du déploiement, essai kind du mode 5 |
 | Un cabinet ne peut pas ouvrir la base d'un autre : en PostgreSQL, chaque base appartient au rôle de son cabinet, seul admis à s'y connecter | Tests PostgreSQL des rôles par cabinet, essai kind du mode 5 |
 | Un cabinet ne voit rien d'un autre : chaque route, appelée au nom d'un autre cabinet, répond comme pour un identifiant inconnu ; chaque route déclare sur quoi porte sa permission | `TenantIsolationApiTests` |
 | Les hôtes (Api, Web, Worker) et le jeu de démonstration ne voient ni EF ni un fournisseur de base ; les endpoints passent par l'application | `HostRulesTests` |
