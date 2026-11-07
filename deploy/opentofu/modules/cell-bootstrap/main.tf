@@ -107,6 +107,29 @@ resource "kubernetes_secret_v1" "redis" {
   }
 }
 
+# Rôle d'administration de chaque cluster des dossiers (lettra_admin, rôle géré par CloudNativePG) : seul le Worker
+# s'en sert, pour créer et supprimer les bases des dossiers et les rôles des cabinets. L'API n'en a pas le mot de passe.
+resource "random_password" "database_admin" {
+  for_each = toset(var.database_clusters)
+
+  length  = 40
+  special = false
+}
+
+resource "kubernetes_secret_v1" "database_admin" {
+  for_each = toset(var.database_clusters)
+
+  metadata {
+    name      = "${each.key}-admin"
+    namespace = kubernetes_namespace_v1.cell["lettra"].metadata[0].name
+  }
+  type = "kubernetes.io/basic-auth"
+  data = {
+    username = "lettra_admin"
+    password = random_password.database_admin[each.key].result
+  }
+}
+
 resource "kubernetes_secret_v1" "backups" {
   count = var.storage_credentials == null ? 0 : 1
 

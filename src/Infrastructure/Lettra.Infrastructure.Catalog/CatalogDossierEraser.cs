@@ -116,7 +116,7 @@ internal sealed partial class CatalogDossierEraser(
         await using (db.ConfigureAwait(false))
         {
             var rows = await db.Dossiers.AsNoTracking()
-                .Where(d => d.OrganisationId == organisation.Value && d.State != DossierState.Deleted)
+                .Where(d => d.OrganisationId == organisation.Value && d.State != DossierState.Deleted && d.State != DossierState.Discarding)
                 .OrderBy(d => d.Name)
                 .Select(d => new { d.Id, d.Name, d.State, Created = d.ClusterId != null, d.ErasureDueAt })
                 .ToListAsync(cancellationToken).ConfigureAwait(false);

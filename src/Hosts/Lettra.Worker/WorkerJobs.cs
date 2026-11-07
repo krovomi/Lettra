@@ -33,6 +33,7 @@ internal static class WorkerJobs
             .ValidatePeriodicJob(CabinetKeyRewrapJobOptions.SectionName);
         services.AddHostedService<CabinetKeyRewrapJob>();
         services.AddDossierErasureJob(configuration);
+        services.AddDossierProvisioningJob(configuration);
         services.AddIntegrityCheckJob(configuration, (sp, token) => sp.ListActiveDossiersAsync(token));
         services.AddFecBulkExport(configuration, (sp, token) => sp.ListActiveDossiersAsync(token));
         services.AddOutboxDispatch(configuration, (sp, token) => sp.ListActiveDossiersAsync(token));

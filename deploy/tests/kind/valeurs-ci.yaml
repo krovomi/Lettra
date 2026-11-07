@@ -29,10 +29,10 @@ lettra-api:
     Lettra__Observability__ServiceName: lettra-api
     # Réglages PostgreSQL des valeurs communes retirés : catalogue SQLite.
     Lettra__Catalog__Provider: null
+    Lettra__Catalog__DatabaseAdministration: null
     ConnectionStrings__Catalog: Data Source=/data/lettra-catalogue.db
     Lettra__Clusters__pg-a__Provider: null
     Lettra__Clusters__pg-a__ConnectionString: null
-    Lettra__Clusters__pg-a__AdminConnectionString: null
     Lettra__Clusters__pg-a__CabinetRoles: null
     Lettra__Kms__Provider: null
     Lettra__Kms__Transit__Address: null
