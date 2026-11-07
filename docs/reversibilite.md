@@ -86,8 +86,14 @@ Testé sur SQLite, PostgreSQL et SQL Server, dans les deux sens.
 - Les dossiers créés avant le versionnage des clés de la chaîne anti-fraude partagent une clé dérivée de celle du
   cabinet : le paquet emporte cette clé, qui sert donc aussi aux autres anciens dossiers du même cabinet.
 - Pendant le remplissage d'un dossier importé, il apparaît déjà dans la liste des dossiers.
-- Taille maximale d'un paquet importé : 512 Mio. Une passerelle placée devant l'API doit accepter des requêtes de
-  cette taille sur la route d'import.
+- Taille maximale d'un paquet importé : 512 Mio. La route d'import admet 513 Mio par requête (le paquet plus
+  l'enveloppe du formulaire : délimiteurs, phrase secrète). Une passerelle placée devant l'API doit accepter 513 Mio de
+  corps sur cette route et lui laisser plusieurs minutes avant de couper la requête. Le profil HTTPS de la démo (Caddy)
+  ne borne pas la taille des requêtes.
+- Dans le navigateur, le paquet choisi est envoyé par le navigateur lui-même, depuis le fichier sur le disque, sans
+  être copié dans la mémoire de l'application ; sur le poste (application de bureau), le fichier part en flux.
+  Vérifié dans Chromium contre une cellule locale : un dossier de 493 Mio exporté en 43 secondes, refusé à l'import
+  tant qu'il est là, puis importé une fois retiré de la cellule, avec toutes ses données.
 
 ## Routes
 
