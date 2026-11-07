@@ -158,8 +158,30 @@ reste ni base, ni clé, ni compte.
 - **Le Worker n'accepte aucune connexion entrante** : NetworkPolicy du chart `lettra-worker` (activée par défaut,
   `networkPolicy.enabled`) ; il ne fait qu'appeler les bases, le coffre de clés, Keycloak et le collecteur.
   `deploy/tests/valider.sh` vérifie le rendu dans chaque cellule.
+- **Un rôle PostgreSQL par cabinet** : chaque cabinet a son rôle de connexion sur chaque serveur PostgreSQL de la
+  cellule (`c_` suivi de l'identifiant du cabinet). Chaque base de dossier appartient au rôle de son cabinet, tables
+  comprises, et le droit de s'y connecter est retiré à tous les autres rôles. Lettra ouvre un dossier par le rôle de
+  son cabinet : une connexion pointée par erreur vers la base d'un autre cabinet est **refusée par le serveur
+  lui-même**, quoi que fasse le code.
+  - Aucun mot de passe stocké : celui d'un rôle se dérive de la clé du cabinet (propre à chaque serveur), et seul son
+    vérificateur SCRAM part au serveur. Au départ du cabinet, sa clé détruite, le mot de passe ne peut plus être
+    recalculé.
+  - Une base neuve est créée, donnée au rôle du cabinet, puis migrée par ce rôle. Les bases d'avant passent au rôle
+    de leur cabinet à la passe suivante du Worker, sans coupure. Au départ d'un cabinet, son rôle est supprimé sur
+    chaque serveur, après ses bases et avant sa clé.
+  - Réglage `Lettra:Clusters:<serveur>:CabinetRoles` (PostgreSQL seulement, désactivé par défaut ; un serveur de
+    cabinet garde son rôle unique), activé dans la cellule. Le rôle d'administration de Lettra doit avoir
+    `CREATEROLE` : la cellule le lui donne à la création du cluster.
+  - Le rôle de Lettra a droit aux connexions réservées (`reserved_connections`) : le trafic des cabinets ne peut pas
+    priver le catalogue, les créations de bases ni les migrations du Worker de connexion. PgBouncer plafonne chaque
+    cabinet (`max_user_connections`) au budget d'une instance.
+  - Vérifié par les tests PostgreSQL (le rôle d'un cabinet est refusé sur la base d'un autre ; sans la fermeture de la
+    base aux autres rôles, le test d'isolation échoue), sur une cellule locale complète, et par l'essai kind
+    (propriétaire de la base, connexion refusée à un autre rôle, plus de rôle après le départ).
 
-**Reste** : un utilisateur PostgreSQL par cabinet (prochaine étape du code) ; le scan ZAP et le test d'intrusion
+**Reste** : l'accès d'administration aux bases seulement depuis le Worker (l'API crée encore elle-même la base d'un
+nouveau dossier par la connexion d'administration, et détient donc la seule clé qui ouvre toutes les bases ; à
+faire : confier la création au Worker, l'API n'inscrivant que la demande) ; le scan ZAP et le test d'intrusion
 externe sur la cellule de recette, qui attendent le feu vert de Leub (la cellule de recette n'existe pas encore, et le
 test d'intrusion fait appel à un prestataire). Le scan ZAP de base tourne déjà en CI sur la démo.
 
@@ -192,7 +214,10 @@ critique ou élevée.
 - **Passerelle devant l'API** (pas encore dans les charts) : accepter **513 Mio** de corps sur
   `POST /api/v1/cabinets/{cabinet}/dossiers/import` (le plus gros paquet de réversibilité, 512 Mio, plus l'enveloppe du
   formulaire) et laisser à cette route plusieurs minutes avant de couper la requête. À écrire dans le runbook de la
-  cellule.
+  cellule. Le profil HTTPS de la démo (Caddy) ne borne pas la taille des requêtes.
+- **Cluster PostgreSQL créé avant les rôles par cabinet** : il n'a reçu ni `CREATEROLE` ni les connexions réservées
+  (la cellule ne les donne qu'à la création). En superutilisateur, avant d'activer `CabinetRoles` :
+  `ALTER ROLE lettra CREATEROLE` et `GRANT pg_use_reserved_connections TO lettra`. À écrire dans le runbook.
 
 **Fini quand** : la recette tourne une semaine sans intervention manuelle, avec les tableaux Grafana au vert.
 
@@ -306,5 +331,11 @@ Le mode 5 est livré quand **tous** ces points sont vrais, et chacun est prouvé
   bouton de l'écran « Plateforme » réessaie toujours les échecs aussitôt.
 - Un import dont la création de base échoue retire aussitôt son dossier, au lieu de le laisser au Worker, qui l'aurait
   créé vide.
+- **PgBouncer et les vérificateurs SCRAM** : PgBouncer garde les clés SCRAM des connexions ouvertes. Un vérificateur
+  recalculé avec un sel neuf à chaque nouvelle base du cabinet faisait refuser ses connexions suivantes. Le sel se
+  tire désormais du mot de passe : le même mot de passe donne le même vérificateur.
+- **Gros paquets de réversibilité** : l'onglet du navigateur plantait vers 250 Mio à l'import (le paquet était copié
+  en mémoire), et l'API aurait refusé un paquet de 512 Mio pile (l'enveloppe du formulaire dépassait). Le navigateur
+  envoie désormais le fichier depuis le disque, et la route d'import admet 513 Mio.
 - **Première connexion en ligne** : l'accueil ne reste plus vide pour un cabinet hébergé (voir
   [menu-et-aide.md](menu-et-aide.md), « Dossier ouvert à la connexion »).
