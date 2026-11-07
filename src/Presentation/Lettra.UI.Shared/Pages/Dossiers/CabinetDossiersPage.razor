@@ -111,7 +111,7 @@ else
                 <form class="la-form" id="dossiers-import-form" @onsubmit="ImportAsync">
                     <label class="la-field">
                         <span>@L["CabinetDossiers.Import.File"]</span>
-                        <InputFile id="dossiers-import-file" accept="@DossierPackageRules.FileExtension" OnChange="ChoosePackage" />
+                        <InputFile id="@ImportFileId" accept="@DossierPackageRules.FileExtension" OnChange="ChoosePackage" />
                         <FieldErrors Field="Package" ServerErrors="_formErrors" />
                     </label>
                     <label class="la-field">
@@ -410,6 +410,8 @@ else
         Toasts.Show(ToastKind.Success, string.Format(Culture, L["CabinetDossiers.Toast.Exported"], dossier.Name, file.FileName));
     }
 
+    private const string ImportFileId = "dossiers-import-file";
+
     private void ChoosePackage(InputFileChangeEventArgs e) => (_package, _importProblem) = (e.File, null);
 
     private async Task ImportAsync()
@@ -427,12 +429,12 @@ else
         }
 
         _busy = true;
-        OperationResult<DossierSummary> result;
-        await using (Stream package = _package.OpenReadStream(DossierPackageRules.MaxPackageLength))
-        {
-            result = await Gateway.ImportAsync(_cabinetId, package, _importPassphrase ?? string.Empty, CancellationToken.None);
-        }
-
+        IBrowserFile chosen = _package;
+        OperationResult<DossierSummary> result = await Gateway.ImportAsync(
+            _cabinetId,
+            new ChosenFile(chosen.Name, chosen.Size, () => chosen.OpenReadStream(DossierPackageRules.MaxPackageLength), ImportFileId),
+            _importPassphrase ?? string.Empty,
+            CancellationToken.None);
         _busy = false;
         if (result.Value is not { } imported)
         {

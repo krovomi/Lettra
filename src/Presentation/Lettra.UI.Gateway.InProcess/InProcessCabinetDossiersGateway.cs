@@ -47,8 +47,15 @@ internal sealed class InProcessCabinetDossiersGateway(IServiceScopeFactory scope
         }
     }
 
-    public Task<OperationResult<DossierSummary>> ImportAsync(Guid cabinetId, Stream package, string passphrase, CancellationToken cancellationToken) =>
-        SendAsync(new ImportDossierCommand(new OrganisationId(cabinetId), package, passphrase), cancellationToken);
+    public async Task<OperationResult<DossierSummary>> ImportAsync(Guid cabinetId, ChosenFile package, string passphrase, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(package);
+        Stream content = package.OpenRead();
+        await using (content.ConfigureAwait(false))
+        {
+            return await SendAsync(new ImportDossierCommand(new OrganisationId(cabinetId), content, passphrase), cancellationToken).ConfigureAwait(false);
+        }
+    }
 
     private Task<OperationResult<T>> QueryAsync<T>(IQuery<Result<T>> query, CancellationToken cancellationToken) =>
         InProcessScope.OutsideDossierAsync(scopes, sp => InProcessScope.QueryAsync(sp, query, cancellationToken));

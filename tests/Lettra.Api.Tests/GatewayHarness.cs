@@ -27,9 +27,10 @@ internal sealed class GatewayHarness(LettraApiFactory factory) : IDisposable
     public static TheoryData<string> Transports => ["http", "in-process"];
 
     /// <summary>Gateways HTTP du navigateur, authentifiées comme <paramref name="user"/> (le manager par défaut).</summary>
-    public ServiceProvider HttpGateway(Guid dossier, Guid? user = null)
+    public ServiceProvider HttpGateway(Guid dossier, Guid? user = null, Action<IServiceCollection>? configure = null)
     {
         ServiceCollection services = new();
+        configure?.Invoke(services);
         services.AddSingleton<IDossierSelection>(new FixedDossierSelection(dossier));
         services.AddHttpGateways(new Uri("http://localhost/"));
         services.ConfigureAll<HttpClientFactoryOptions>(o => o.HttpMessageHandlerBuilderActions.Add(b =>

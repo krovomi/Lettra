@@ -38,6 +38,12 @@ public static class DependencyInjection
         services.TryAddSingleton(TimeProvider.System);
         // Un hôte peut remplacer le téléchargement (enregistrement natif en MAUI) en l'enregistrant avant.
         services.TryAddScoped<IFileDownloader, JsFileDownloader>();
+        if (OperatingSystem.IsBrowser())
+        {
+            // Navigateur seulement : les gros fichiers partent par fetch, sans copie dans WebAssembly. Ailleurs (MAUI), HttpClient les envoie en flux.
+            services.TryAddScoped<IBrowserFileSender, JsBrowserFileSender>();
+        }
+
         services.AddSingleton<IDocumentPdfRenderer, PdfDocumentRenderer>();
         services.AddSingleton<ILetterPdfRenderer, LetterPdfRenderer>();
         // Pièces ouvertes récemment, en tête de la palette quand rien n'est saisi.
